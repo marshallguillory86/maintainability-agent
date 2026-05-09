@@ -2,7 +2,7 @@
 
 A dependency-light maintainability audit tool for Git repositories.
 
-This project turns maintainability review into a repeatable CI check without pretending that a single metric can judge a codebase. It combines:
+This product turns maintainability review into a repeatable CI check without pretending that a single metric can judge a codebase. It combines:
 
 - ISO/IEC 25010 maintainability categories
 - objective code signals such as size, complexity, duplication, and risk patterns

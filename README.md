@@ -209,7 +209,7 @@ The audit model is based on ISO/IEC 25010 maintainability:
 
 See [docs/standard.md](docs/standard.md).
 
-## Project Docs
+## Documentation
 
 - [CLI reference](docs/cli.md)
 - [Config schema](docs/config-schema.md)

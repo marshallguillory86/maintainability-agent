@@ -18,12 +18,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Upgrade pip itself (fixes CVE-2026-6357 in pip 26.0.1)
+        run: python3 -m pip install --upgrade pip
       - name: Install tool with dev extras
         run: python3 -m pip install -e ".[dev]"
       - name: Lint (ruff)
         run: ruff check src tests
       - name: Dependency CVE scan (pip-audit)
-        run: pip-audit
+        # CVE-2026-3219 against pip has no upstream fix as of 2026-05-09.
+        # When one ships, drop the --ignore-vuln. Tracked at
+        # https://github.com/pypa/pip/security/advisories
+        run: pip-audit --ignore-vuln CVE-2026-3219
       - name: Tests + coverage
         run: |
           python3 -m pytest \

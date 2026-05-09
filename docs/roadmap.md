@@ -12,14 +12,12 @@ This project should stay a thin orchestration and prompt layer, not a replacemen
 - Baseline/new-finding gating.
 - AI agent instruction output.
 - Tool-specific maintainability instruction pack generation.
+- SARIF ingest and emit with rule metadata.
+- ISO/IEC 25010-inspired scoring.
 
 ## Near-Term
 
-1. **SARIF ingest and emit**
-   - Read SARIF from Semgrep, CodeQL, ESLint, Sonar-compatible tools, and others.
-   - Emit SARIF so GitHub code scanning can display findings.
-
-2. **Analyzer adapters**
+1. **Analyzer adapters**
    - Semgrep JSON/SARIF.
    - ESLint JSON.
    - Ruff JSON.
@@ -27,21 +25,21 @@ This project should stay a thin orchestration and prompt layer, not a replacemen
    - Pytest/coverage summaries.
    - SonarQube API export where configured.
 
-3. **Prompt packs**
+2. **Prompt packs**
    - richer `claude-code-prompt.md`
    - richer `codex-prompt.md`
    - richer `cursor-prompt.md`
    - richer `github-copilot-prompt.md`
    - `human-reviewer-summary.md`
 
-4. **Policy-as-code**
+3. **Policy-as-code**
    - New code thresholds.
    - Changed-file-only thresholds.
    - Required tests for changed service/API files.
    - Forbidden mass-rewrite patterns.
    - Architecture boundary rules by path.
 
-5. **AI-written-code risk labels**
+4. **AI-written-code risk labels**
    - speculation
    - over-abstraction
    - duplicated helper

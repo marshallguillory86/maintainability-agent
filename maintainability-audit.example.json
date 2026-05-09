@@ -33,7 +33,7 @@
     "max_complexity": 15,
     "warn_complexity": 10,
     "max_duplicate_blocks": 20,
-    "duplicate_block_lines": 6
+    "duplicate_block_lines": 8
   },
   "hard_gates": {
     "require_test_command": false,

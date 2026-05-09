@@ -4,7 +4,7 @@ set -euo pipefail
 python3 -m pytest
 
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --fail-on-gate \
   --output maintainability-report.md \
   --prompt-output maintainability-remediation-prompt.md \

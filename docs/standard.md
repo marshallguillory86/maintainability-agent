@@ -18,7 +18,7 @@ Maintainability is the degree to which a system can be effectively and efficient
 
 ## Scoring
 
-Each category can be scored from 0 to 5 during a human audit.
+The CLI emits an ISO/IEC 25010-inspired score from 0 to 5 for each category plus an overall letter grade. This score is a deterministic triage signal, not a replacement for human review.
 
 | Score | Meaning |
 |---:|---|
@@ -28,6 +28,25 @@ Each category can be scored from 0 to 5 during a human audit.
 | 2 | Fragile. Changes are slow, risky, or require broad context. |
 | 1 | Poor. Frequent regressions, unclear ownership, weak tests, or heavy coupling. |
 | 0 | Unmaintainable in this area. Safe change is not realistic without remediation. |
+
+Current scoring inputs:
+
+- file warnings and failures
+- function/class size and approximate complexity warnings or failures
+- duplicate block count
+- configured risk-pattern findings
+- hard-gate failures
+
+Grades:
+
+| Grade | Overall Score |
+|---|---:|
+| A+ | 4.8 to 5.0 |
+| A | 4.5 to 4.7 |
+| B | 4.0 to 4.4 |
+| C | 3.0 to 3.9 |
+| D | 2.0 to 2.9 |
+| F | below 2.0 |
 
 ## CI Role
 

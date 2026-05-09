@@ -17,7 +17,7 @@ The core loop is:
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --output maintainability-report.md
 ```
 
@@ -25,7 +25,7 @@ maintainability-agent \
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --output maintainability-report.md \
   --prompt-output maintainability-remediation-prompt.md
 ```
@@ -34,7 +34,7 @@ maintainability-agent \
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --output maintainability-report.md \
   --comment-output maintainability-pr-comment.md
 ```
@@ -43,7 +43,7 @@ maintainability-agent \
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --changed-only main...HEAD \
   --output maintainability-report.md
 ```
@@ -52,7 +52,7 @@ maintainability-agent \
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --write-baseline maintainability-baseline.json
 ```
 
@@ -60,7 +60,7 @@ maintainability-agent \
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --baseline maintainability-baseline.json \
   --fail-on-new
 ```
@@ -69,7 +69,7 @@ maintainability-agent \
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --init-agent-standards \
   --target generic \
   --target codex \
@@ -104,21 +104,21 @@ Add `.vscode/tasks.json` to the target repo:
     {
       "label": "Maintainability: Audit",
       "type": "shell",
-      "command": "maintainability-audit --config maintainability-audit.json --output maintainability-report.md --prompt-output maintainability-remediation-prompt.md --comment-output maintainability-pr-comment.md",
+      "command": "maintainability-audit --config maintainability-agent.json --output maintainability-report.md --prompt-output maintainability-remediation-prompt.md --comment-output maintainability-pr-comment.md",
       "group": "test",
       "problemMatcher": []
     },
     {
       "label": "Maintainability: Changed Only",
       "type": "shell",
-      "command": "maintainability-audit --config maintainability-audit.json --changed-only main...HEAD --output maintainability-report.md --prompt-output maintainability-remediation-prompt.md",
+      "command": "maintainability-audit --config maintainability-agent.json --changed-only main...HEAD --output maintainability-report.md --prompt-output maintainability-remediation-prompt.md",
       "group": "test",
       "problemMatcher": []
     },
     {
       "label": "Maintainability: Init Agent Standards",
       "type": "shell",
-      "command": "maintainability-audit --config maintainability-audit.json --init-agent-standards --target generic --target codex --target claude-code --target cursor --target copilot --target windsurf --instructions-output-dir .",
+      "command": "maintainability-audit --config maintainability-agent.json --init-agent-standards --target generic --target codex --target claude-code --target cursor --target copilot --target windsurf --instructions-output-dir .",
       "group": "build",
       "problemMatcher": []
     }
@@ -146,7 +146,7 @@ Generate it:
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --init-agent-standards \
   --target copilot \
   --instructions-output-dir .
@@ -170,7 +170,7 @@ Generate it:
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --init-agent-standards \
   --target cursor \
   --instructions-output-dir .
@@ -195,7 +195,7 @@ Generate it:
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --init-agent-standards \
   --target codex \
   --instructions-output-dir .
@@ -219,7 +219,7 @@ Generate it:
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --init-agent-standards \
   --target claude-code \
   --instructions-output-dir .
@@ -243,7 +243,7 @@ Generate it:
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --init-agent-standards \
   --target windsurf \
   --instructions-output-dir .
@@ -259,7 +259,7 @@ AI-MAINTAINABILITY.md
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --init-agent-standards \
   --target generic \
   --instructions-output-dir .
@@ -283,7 +283,7 @@ Or copy the command:
 
 ```bash
 maintainability-audit \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --fail-on-gate \
   --output maintainability-report.md \
   --prompt-output maintainability-remediation-prompt.md \

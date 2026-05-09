@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/maintainability-agent.schema.json",
+  "$id": "https://github.com/marshallguillory86/maintainability-agent/blob/main/maintainability-agent.schema.json",
   "title": "Maintainability Agent Configuration",
   "type": "object",
   "required": ["version"],

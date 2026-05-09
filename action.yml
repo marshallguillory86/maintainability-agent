@@ -16,6 +16,9 @@ inputs:
 runs:
   using: composite
   steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
     - shell: bash
       run: python3 -m pip install -e "$GITHUB_ACTION_PATH"
     - shell: bash

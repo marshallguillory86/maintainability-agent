@@ -12,7 +12,8 @@
       "maintainability-remediation-prompt.md",
       "maintainability-pr-comment.md",
       "maintainability-baseline.json",
-      "AGENTS-maintainability.md"
+      "AGENTS-maintainability.md",
+      "maintainability.sarif"
     ]
   },
   "thresholds": {
@@ -22,8 +23,8 @@
     "warn_function_lines": 60,
     "max_complexity": 15,
     "warn_complexity": 12,
-    "max_duplicate_blocks": 30,
-    "duplicate_block_lines": 8
+    "max_duplicate_blocks": 0,
+    "duplicate_block_lines": 14
   },
   "hard_gates": {
     "require_test_command": true,
@@ -42,7 +43,13 @@
     "test": ["PYTHONPATH=src python3 -m pytest"],
     "lint": ["python3 -m py_compile src/maintainability_audit/*.py"]
   },
-  "risk_patterns": [],
+  "risk_patterns": [
+    {
+      "name": "dynamic-code-execution",
+      "pattern": "\\b(eval|exec)\\s*\\(",
+      "extensions": [".py", ".js", ".jsx", ".ts", ".tsx"]
+    }
+  ],
   "instruction_pack": {
     "project_name": "Maintainability Agent",
     "strictness": "high",

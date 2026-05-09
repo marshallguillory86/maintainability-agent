@@ -17,10 +17,10 @@ jobs:
         run: python3 -m pip install -e .
       - name: Run maintainability audit on this repo
         run: |
-          cp maintainability-audit.example.json maintainability-audit.json
+          cp maintainability-audit.example.json maintainability-agent.json
           python3 -m pytest
           maintainability-agent \
-            --config maintainability-audit.json \
+            --config maintainability-agent.json \
             --fail-on-gate \
             --output maintainability-report.md \
             --prompt-output maintainability-remediation-prompt.md \

@@ -1,6 +1,6 @@
 # Configuration Schema
 
-The config file is JSON and currently uses `"version": 1`.
+The config file is JSON, conventionally named `maintainability-agent.json`, and currently uses `"version": 1`.
 
 The machine-readable schema lives at:
 
@@ -19,7 +19,7 @@ maintainability-agent.schema.json
 ## Common Fields
 
 - `paths.include_extensions`: file extensions to scan.
-- `paths.exclude_patterns`: directories or glob patterns to ignore.
+- `paths.exclude_patterns`: directories or `fnmatch` glob patterns to ignore, normalized across Unix and Windows path separators.
 - `thresholds`: warning/failure limits for file size, function size, complexity, and duplication.
 - `hard_gates`: rules that can fail CI.
 - `expected_files`: files required by the repo.

@@ -3,7 +3,7 @@
 ## Audit
 
 ```bash
-maintainability-agent --config maintainability-audit.example.json
+maintainability-agent --config maintainability-agent.json
 ```
 
 Aliases:
@@ -16,6 +16,7 @@ Aliases:
 | Option | Purpose |
 |---|---|
 | `--root` | Repository root to scan. Defaults to current directory. |
+| `--version` | Print the CLI version and exit. |
 | `--config` | JSON config path. |
 | `--format` | `markdown` or `json`. |
 | `--output` | Report output path. |
@@ -29,7 +30,7 @@ Aliases:
 | `--fail-on-new` | Exit nonzero only for findings not in baseline. |
 | `--fail-on-gate` | Exit nonzero when hard gates fail. |
 | `--sarif-output` | Write SARIF report for GitHub code scanning. |
-| `--init-agent-standards` | Generate model/tool-specific instruction files. |
+| `--init-agent-standards` | Generate model/tool-specific instruction files and exit without running an audit. |
 | `--target` | Instruction target. Repeatable. |
 | `--instructions-output-dir` | Output directory for generated instruction files. |
 
@@ -37,7 +38,7 @@ Aliases:
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.example.json \
+  --config maintainability-agent.json \
   --output maintainability-report.md \
   --prompt-output maintainability-remediation-prompt.md \
   --comment-output maintainability-pr-comment.md
@@ -45,14 +46,14 @@ maintainability-agent \
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.example.json \
+  --config maintainability-agent.json \
   --changed-only main...HEAD \
   --fail-on-gate
 ```
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.example.json \
+  --config maintainability-agent.json \
   --init-agent-standards \
   --target codex \
   --target claude-code \

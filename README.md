@@ -29,7 +29,7 @@ Run directly from source:
 ```bash
 python3 -m maintainability_audit \
   --root . \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --output maintainability-report.md
 ```
 
@@ -37,23 +37,23 @@ Or install editable during development:
 
 ```bash
 python3 -m pip install -e .
-maintainability-audit --root . --config maintainability-audit.json
-maintainability-agent --root . --config maintainability-audit.json
+maintainability-audit --root . --config maintainability-agent.json
+maintainability-agent --root . --config maintainability-agent.json
 ```
 
 ## Quick Start
 
-Copy `maintainability-audit.example.json` to your repo root:
+Copy the example config to your repo root as `maintainability-agent.json`:
 
 ```bash
-cp maintainability-audit.example.json maintainability-audit.json
+cp maintainability-audit.example.json maintainability-agent.json
 ```
 
 Run:
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --format markdown \
   --output maintainability-report.md
 ```
@@ -62,7 +62,7 @@ Fail CI on hard gates:
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --fail-on-gate \
   --output maintainability-report.md \
   --prompt-output maintainability-remediation-prompt.md \
@@ -75,6 +75,7 @@ maintainability-agent \
 - approximate function/class size
 - approximate cyclomatic complexity
 - duplicate blocks
+- ISO/IEC 25010-inspired 0-5 score and letter grade
 - expected files
 - expected test/lint commands
 - dirty worktree gate, if enabled
@@ -94,7 +95,7 @@ The runner can generate a bounded prompt for a human developer to give to Claude
 
 ```bash
 maintainability-agent \
-  --config maintainability-audit.json \
+  --config maintainability-agent.json \
   --output maintainability-report.md \
   --prompt-output maintainability-remediation-prompt.md
 ```
@@ -147,6 +148,7 @@ Generate persistent agent standards before code is written:
 
 ```bash
 maintainability-audit \
+  --config maintainability-agent.json \
   --init-agent-standards \
   --target codex \
   --target claude-code \
@@ -184,15 +186,15 @@ See [docs/standard.md](docs/standard.md).
 This repo includes `action.yml`, so it can be used as a composite action after publishing:
 
 ```yaml
-- uses: marshallguillory/maintainability-agent@v1
+- uses: marshallguillory86/maintainability-agent@v0.1.0
   with:
-    config: maintainability-audit.json
+    config: maintainability-agent.json
     changed-only: main...HEAD
 ```
 
 ## GitHub Actions
 
-Copy `.github/workflows/maintainability.yml` into the target repo or adapt it for your local CI.
+After publishing, copy `.github/workflows/maintainability.yml` into the target repo or adapt it for your local CI.
 
 ## IDE and Agent Integration
 

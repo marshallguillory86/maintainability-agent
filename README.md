@@ -1,27 +1,34 @@
 # Maintainability Agent
 
-A dependency-light maintainability audit tool for Git repositories.
+A deterministic CI gate + bounded remediation prompt generator for repos that use AI coding agents (Claude, Codex, Cursor, Copilot, Windsurf, …).
 
-This project turns maintainability review into a repeatable CI check without pretending that a single metric can judge a codebase. It combines:
+## Why this exists
 
-- ISO/IEC 25010 maintainability categories
-- objective code signals such as size, complexity, duplication, and risk patterns
-- configurable hard gates for CI
-- coverage gating at a configurable project threshold
-- Markdown and JSON reports
-- a generated AI remediation prompt for human-reviewed AI coding sessions
-- PR comment, agent-instruction, and baseline/new-debt outputs
-- model/tool-specific maintainability instruction packs
+AI-written code fails in recognizable ways: speculative refactors, duplicated helpers, broad rewrites for narrow bugs, stale comments that sound confident, tests that assert implementation details instead of behavior, architecture drift across modules. SonarQube / CodeClimate / Qlty / ESLint / Ruff / Radon all catch some of this. None of them ship a **bounded prompt back to the agent** that says *"fix only these specific findings, do not refactor outside this scope."*
 
-It is intended for public GitHub repos, private repos, and local CI runners.
+That's the point of this tool:
 
-## Why
+1. Run a deterministic local audit — file size, function size, approximate cyclomatic complexity, duplication, configurable risk patterns, ISO/IEC 25010-inspired 0–5 score.
+2. Emit Markdown, JSON, SARIF, a PR comment, and a baseline for incremental adoption.
+3. Generate an **AI remediation prompt scoped to the actual findings** — bounded, with explicit "don't rewrite the codebase" rules.
+4. Hand that prompt to your agent. Get a small, reviewable fix instead of a 600-line speculative cleanup PR.
 
-Maintainability is the cost and confidence level of making future changes.
+The remediation prompt is the differentiator. Every other tool in this space stops at "here's a list of findings."
 
-This tool answers:
+## Who it's for
 
-> Can a competent developer make a normal change quickly, confidently, and with tests that catch likely mistakes?
+- Teams running AI agents in the dev loop who are tired of unbounded agent rewrites and want a CI gate that actively constrains follow-up scope.
+- Repos that want a maintainability gate without paying for SonarQube / CodeClimate / Qlty or sending code to a third party.
+- Solo devs who want a single-binary deterministic audit they can pin in a Makefile, a pre-commit, or a local CI script.
+
+## Design principles
+
+- **Deterministic first, AI optional.** The audit never calls an LLM by default. The remediation prompt is a generated artifact that you choose to hand to an agent.
+- **Bounded scope.** The remediation prompt explicitly tells the agent to fix the listed findings only — not to embark on architecture cleanup.
+- **No vendor lock-in.** All outputs (Markdown, JSON, SARIF, PR comment) are plain files. Pair this tool with mature analyzers (ESLint, Ruff, Radon, Semgrep, SonarQube, Qlty/Code Climate) — don't replace them.
+- **Pass-the-cost-of-disclosure.** A finding that's "just a warning" never blocks CI alone. Hard gates are configurable + opt-in.
+
+See [docs/philosophy.md](docs/philosophy.md) for the longer version.
 
 ## Install
 
@@ -70,25 +77,32 @@ maintainability-agent \
   --comment-output maintainability-pr-comment.md
 ```
 
-## What It Checks
+## What It Analyzes
 
-- largest files
+The deterministic scanner reads code from your repo (no LLM calls) and produces signals on:
+
+- largest files (warn / fail thresholds configurable per-repo)
 - approximate function/class size
 - approximate cyclomatic complexity
-- duplicate blocks
-- ISO/IEC 25010-inspired 0-5 score and letter grade
-- expected files
-- expected test/lint commands
-- dirty worktree gate, if enabled
-- configurable risk patterns
-- AI remediation prompt generation
-- changed-only PR audits
-- baseline/new-finding gates
-- PR comment generation
-- AI agent instruction generation
-- agent standards initialization for Claude Code, Codex, Cursor, Copilot, Windsurf, and generic tools
+- duplicate blocks (≥ N consecutive non-trivial lines, configurable)
+- configurable risk patterns (regex matchers — TODO/FIXME, `eval(`, `exec(`, custom)
+- expected files present (README, LICENSE, etc. — opt-in hard gate)
+- expected test/lint commands declared in the config (opt-in hard gate)
+- worktree-clean state at audit time (opt-in hard gate)
+- ISO/IEC 25010-inspired 0–5 score per category + overall letter grade
 
-The built-in analyzer is intentionally conservative and dependency-free. Mature repos should pair it with native tools such as ESLint, Ruff, Radon, Semgrep, SonarQube, or Qlty/Code Climate.
+The analyzer is intentionally conservative and dependency-free. Mature repos should **pair** this with native tools (ESLint, Ruff, Radon, Semgrep, SonarQube, Qlty / Code Climate) — not replace them. SARIF input from those tools can be folded into this tool's report via `--sarif-input`.
+
+## What It Produces
+
+Each run can emit any combination of:
+
+- `maintainability-report.md` — the full Markdown report with summary, score, hotspots, duplicates, risk findings, external (SARIF) findings.
+- `maintainability-remediation-prompt.md` — bounded AI prompt scoped to the run's findings.
+- `maintainability-pr-comment.md` — short body suitable for a `gh pr comment` post.
+- `maintainability.sarif` — SARIF 2.1.0 output for GitHub Code Scanning ingestion.
+- `maintainability-baseline.json` — fingerprints of current findings, for `--fail-on-new` incremental adoption.
+- Per-tool agent instruction files (`AGENTS.md`, `CLAUDE.md`, `.cursor/rules/maintainability.mdc`, `.github/copilot-instructions.md`, `.windsurf/rules/maintainability.md`, `AI-MAINTAINABILITY.md`) via `--init-agent-standards`.
 
 ## AI Remediation Prompt
 

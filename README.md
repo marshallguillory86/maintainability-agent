@@ -161,6 +161,28 @@ maintainability-audit \
 
 This writes tool-native instruction files such as `AGENTS.md`, `CLAUDE.md`, `.cursor/rules/maintainability.mdc`, `.github/copilot-instructions.md`, and `.windsurf/rules/maintainability.md`.
 
+## Running Tests
+
+```bash
+# Sandbox-friendly invocation (works with PYTEST_DISABLE_PLUGIN_AUTOLOAD=1):
+PYTHONPATH=src python3 -m pytest
+
+# With coverage gate (matches CI):
+PYTHONPATH=src python3 -m pytest \
+  --cov=maintainability_audit --cov-fail-under=92
+
+# With ruff lint + pip-audit (matches CI):
+python3 -m pip install -e ".[dev]"
+ruff check src tests
+pip-audit
+PYTHONPATH=src python3 -m pytest --cov=maintainability_audit --cov-fail-under=92
+```
+
+Coverage is intentionally NOT in `[tool.pytest.ini_options].addopts` so the
+sandbox-friendly invocation (`PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`) doesn't choke
+on `--cov` flags it can't load. Pass coverage flags explicitly when you want
+the gate.
+
 ## Scoring Standard
 
 The audit model is based on ISO/IEC 25010 maintainability:

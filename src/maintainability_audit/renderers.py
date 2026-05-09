@@ -137,15 +137,23 @@ def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
     lines: list[str] = []
     lines.extend(bulleted_section("Start with these hard gates:", report["hard_gate_failures"]))
     hotspot_lines = [
-        f"`{i['path']}:{i['start_line']}` `{i['name']}` has {i['lines']} lines and approximate complexity {i['complexity']} ({i['status']})."
+        f"`{i['path']}:{i['start_line']}` `{i['name']}` has {i['lines']} lines "
+        f"and approximate complexity {i['complexity']} ({i['status']})."
         for i in report["function_hotspots"][:10]
     ]
     lines.extend(bulleted_section("Function hotspots to inspect first:", hotspot_lines))
-    large_files = [f"`{i['path']}` has {i['lines']} lines ({i['status']})." for i in report["largest_files"][:10] if i["status"] in {"warn", "fail"}]
+    large_files = [
+        f"`{i['path']}` has {i['lines']} lines ({i['status']})."
+        for i in report["largest_files"][:10]
+        if i["status"] in {"warn", "fail"}
+    ]
     lines.extend(bulleted_section("Large files to inspect for responsibility splits:", large_files))
     risks = [f"`{i['path']}:{i['line']}` {i['name']}: {i['text']}" for i in report["risk_findings"][:20]]
     lines.extend(bulleted_section("Risk pattern findings to verify:", risks))
-    dupes = [f"Repeated block appears {i['count']} times near: {', '.join(i['locations'][:5])}" for i in report["duplicate_blocks"][:5]]
+    dupes = [
+        f"Repeated block appears {i['count']} times near: {', '.join(i['locations'][:5])}"
+        for i in report["duplicate_blocks"][:5]
+    ]
     lines.extend(bulleted_section("Duplicate blocks to inspect:", dupes))
     return lines
 

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from maintainability_audit.baseline import write_baseline
 from maintainability_audit.cli import (
     DEFAULT_CONFIG,
     build_report,
@@ -17,7 +18,6 @@ from maintainability_audit.cli import (
     read_sarif_inputs,
     report_to_sarif,
 )
-from maintainability_audit.baseline import write_baseline
 from maintainability_audit.metrics import duplicate_blocks, file_status, function_status, is_excluded, read_lines
 from maintainability_audit.renderers import (
     instruction_body,
@@ -243,8 +243,14 @@ def test_fail_on_new_respects_baseline(tmp_path: Path) -> None:
     baseline = tmp_path / "baseline.json"
     write(baseline, json.dumps({"version": 1, "findings": sorted(finding_fingerprints(report))}))
 
-    suppressed = main(["--root", str(tmp_path), "--config", str(config_path), "--baseline", str(baseline), "--fail-on-new"])
-    new_finding = main(["--root", str(tmp_path), "--config", str(config_path), "--baseline", str(tmp_path / "missing.json"), "--fail-on-new"])
+    suppressed = main([
+        "--root", str(tmp_path), "--config", str(config_path),
+        "--baseline", str(baseline), "--fail-on-new",
+    ])
+    new_finding = main([
+        "--root", str(tmp_path), "--config", str(config_path),
+        "--baseline", str(tmp_path / "missing.json"), "--fail-on-new",
+    ])
 
     assert suppressed == 0
     assert new_finding == 1
@@ -419,10 +425,16 @@ def test_renderers_cover_findings_and_instruction_notes(tmp_path: Path) -> None:
         },
         "hard_gate_failures": ["README.md is required but missing."],
         "largest_files": [{"path": "large.py", "lines": 999, "status": "fail"}],
-        "function_hotspots": [{"path": "app.py", "name": "hot", "start_line": 7, "lines": 90, "complexity": 16, "status": "fail"}],
+        "function_hotspots": [{
+            "path": "app.py", "name": "hot", "start_line": 7,
+            "lines": 90, "complexity": 16, "status": "fail",
+        }],
         "risk_findings": [{"path": "app.py", "line": 9, "name": "risk", "text": "unsafe | text"}],
         "duplicate_blocks": [{"locations": ["a.py:1", "b.py:1"], "count": 2}],
-        "external_findings": [{"tool": "semgrep", "rule_id": "x.y", "level": "warning", "path": "app.py", "line": 1, "message": "hello | world"}],
+        "external_findings": [{
+            "tool": "semgrep", "rule_id": "x.y", "level": "warning",
+            "path": "app.py", "line": 1, "message": "hello | world",
+        }],
     }
     config = {
         "instruction_pack": {

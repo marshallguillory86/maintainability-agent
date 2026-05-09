@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "testability"]
 
 

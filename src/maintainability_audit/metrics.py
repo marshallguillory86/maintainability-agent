@@ -10,7 +10,6 @@ from typing import Any
 from .git_tools import run_git
 from .scoring import score_report
 
-
 FUNC_PATTERNS = [
     re.compile(r"^\s*def\s+([A-Za-z_][\w]*)\s*\("),
     re.compile(r"^\s*(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\("),

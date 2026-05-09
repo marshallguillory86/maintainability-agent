@@ -12,8 +12,9 @@
       "maintainability-remediation-prompt.md",
       "maintainability-pr-comment.md",
       "maintainability-baseline.json",
-      "AGENTS-maintainability.md",
-      "maintainability.sarif"
+      "maintainability.sarif",
+      "coverage.xml",
+      "AGENTS-maintainability.md"
     ]
   },
   "thresholds": {
@@ -40,8 +41,12 @@
     "docs/philosophy.md"
   ],
   "expected_commands": {
-    "test": ["PYTHONPATH=src python3 -m pytest"],
-    "lint": ["python3 -m py_compile src/maintainability_audit/*.py"]
+    "test": [
+      "PYTHONPATH=src python3 -m pytest --cov=maintainability_audit --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=92"
+    ],
+    "lint": [
+      "python3 -m py_compile src/maintainability_audit/*.py"
+    ]
   },
   "risk_patterns": [
     {

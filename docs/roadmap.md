@@ -14,6 +14,8 @@ This project should stay a thin orchestration and prompt layer, not a replacemen
 - Tool-specific maintainability instruction pack generation.
 - SARIF ingest and emit with rule metadata.
 - ISO/IEC 25010-inspired scoring.
+- Coverage enforcement at 92% with `coverage.xml` output.
+- SonarQube Cloud starter configuration.
 
 ## Near-Term
 
@@ -25,21 +27,26 @@ This project should stay a thin orchestration and prompt layer, not a replacemen
    - Pytest/coverage summaries.
    - SonarQube API export where configured.
 
-2. **Prompt packs**
+2. **External quality-platform templates**
+   - Qlty configuration once the public repo is connected.
+   - Codacy coverage-upload notes once the public repo is connected.
+   - Example badges after first public scans complete.
+
+3. **Prompt packs**
    - richer `claude-code-prompt.md`
    - richer `codex-prompt.md`
    - richer `cursor-prompt.md`
    - richer `github-copilot-prompt.md`
    - `human-reviewer-summary.md`
 
-3. **Policy-as-code**
+4. **Policy-as-code**
    - New code thresholds.
    - Changed-file-only thresholds.
    - Required tests for changed service/API files.
    - Forbidden mass-rewrite patterns.
    - Architecture boundary rules by path.
 
-4. **AI-written-code risk labels**
+5. **AI-written-code risk labels**
    - speculation
    - over-abstraction
    - duplicated helper

@@ -7,6 +7,7 @@ This project turns maintainability review into a repeatable CI check without pre
 - ISO/IEC 25010 maintainability categories
 - objective code signals such as size, complexity, duplication, and risk patterns
 - configurable hard gates for CI
+- coverage gating at a configurable project threshold
 - Markdown and JSON reports
 - a generated AI remediation prompt for human-reviewed AI coding sessions
 - PR comment, agent-instruction, and baseline/new-debt outputs
@@ -178,6 +179,7 @@ See [docs/standard.md](docs/standard.md).
 - [Config schema](docs/config-schema.md)
 - [Philosophy](docs/philosophy.md)
 - [Analyzer adapters](docs/adapters.md)
+- [External quality tools](docs/external-quality-tools.md)
 - [IDE and agent integration](docs/ide-agent-integration.md)
 - [Roadmap](docs/roadmap.md)
 
@@ -207,6 +209,8 @@ For repos that do not use GitHub Actions, use:
 ```bash
 examples/local-ci.sh
 ```
+
+The local CI script enforces test coverage at `>=92%` and writes `coverage.xml` for SonarQube Cloud, Qlty, Codacy, or any other tool that can ingest Python coverage.
 
 ## License
 

@@ -18,13 +18,18 @@ jobs:
       - name: Run maintainability audit on this repo
         run: |
           cp maintainability-audit.example.json maintainability-agent.json
-          python3 -m pytest
+          python3 -m pytest \
+            --cov=maintainability_audit \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --cov-fail-under=92
           maintainability-agent \
             --config maintainability-agent.json \
             --fail-on-gate \
             --output maintainability-report.md \
             --prompt-output maintainability-remediation-prompt.md \
-            --comment-output maintainability-pr-comment.md
+            --comment-output maintainability-pr-comment.md \
+            --sarif-output maintainability.sarif
       - name: Upload maintainability report
         uses: actions/upload-artifact@v4
         if: always()
@@ -34,3 +39,5 @@ jobs:
             maintainability-report.md
             maintainability-remediation-prompt.md
             maintainability-pr-comment.md
+            maintainability.sarif
+            coverage.xml

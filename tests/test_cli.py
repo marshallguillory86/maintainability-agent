@@ -17,7 +17,17 @@ from maintainability_audit.cli import (
     read_sarif_inputs,
     report_to_sarif,
 )
-from maintainability_audit.metrics import is_excluded
+from maintainability_audit.baseline import write_baseline
+from maintainability_audit.metrics import duplicate_blocks, file_status, function_status, is_excluded, read_lines
+from maintainability_audit.renderers import (
+    instruction_body,
+    render_agent_instructions,
+    render_ai_prompt,
+    render_markdown,
+    render_pr_comment,
+)
+from maintainability_audit.sarif import sarif_level
+from maintainability_audit.scoring import grade_from_score
 
 
 def write(path: Path, text: str) -> None:
@@ -74,6 +84,27 @@ def test_baseline_fingerprints_round_trip(tmp_path: Path) -> None:
     write(baseline, json.dumps({"version": 1, "findings": sorted(finding_fingerprints(report))}))
 
     assert load_baseline(str(baseline)) == finding_fingerprints(report)
+
+
+def test_baseline_helpers_cover_empty_missing_and_written_files(tmp_path: Path) -> None:
+    report = {
+        "root": str(tmp_path),
+        "score": {"overall": 3.0},
+        "largest_files": [{"path": "large.py", "status": "fail"}],
+        "function_hotspots": [{"path": "app.py", "name": "hot", "start_line": 4, "status": "fail"}],
+        "risk_findings": [{"path": "app.py", "line": 5, "name": "risk"}],
+        "duplicate_blocks": [{"locations": ["a.py:1", "b.py:1"], "count": 2}],
+    }
+    baseline = tmp_path / "baseline.json"
+
+    assert load_baseline(None) == set()
+    assert load_baseline(str(tmp_path / "missing.json")) == set()
+
+    write_baseline(str(baseline), report)
+    loaded = json.loads(baseline.read_text(encoding="utf-8"))
+
+    assert loaded["score"] == {"overall": 3.0}
+    assert len(loaded["findings"]) == 4
 
 
 def test_instruction_paths_are_tool_native(tmp_path: Path) -> None:
@@ -164,6 +195,26 @@ def test_report_to_sarif_contains_hotspot_results(tmp_path: Path) -> None:
     assert sarif["runs"][0]["tool"]["driver"]["rules"]
 
 
+def test_sarif_contains_duplicate_risk_and_level_variants(tmp_path: Path) -> None:
+    report = {
+        "largest_files": [{"path": "large.py", "lines": 99, "status": "warn"}],
+        "function_hotspots": [{"path": "app.py", "name": "hot", "start_line": 3, "lines": 90, "complexity": 20, "status": "fail"}],
+        "duplicate_blocks": [{"locations": ["a.py:10", "b.py:20"], "count": 2}],
+        "risk_findings": [{"path": "app.py", "line": 5, "name": "secret-word", "text": "password found"}],
+    }
+
+    sarif = report_to_sarif(report)
+    rule_ids = {rule["id"] for rule in sarif["runs"][0]["tool"]["driver"]["rules"]}
+    levels = {result["ruleId"]: result["level"] for result in sarif["runs"][0]["results"]}
+
+    assert sarif_level("ok") == "note"
+    assert sarif_level("warn") == "warning"
+    assert sarif_level("fail") == "error"
+    assert "maintainability.duplicate_block" in rule_ids
+    assert "maintainability.risk.secret-word" in rule_ids
+    assert levels["maintainability.function_hotspot"] == "error"
+
+
 def test_report_contains_iso_score(tmp_path: Path) -> None:
     write(tmp_path / "README.md", "# Test\n")
     write(tmp_path / "app.py", "def ok():\n    return 1\n")
@@ -173,6 +224,14 @@ def test_report_contains_iso_score(tmp_path: Path) -> None:
     assert report["score"]["overall"] == 5.0
     assert report["score"]["grade"] == "A+"
     assert set(report["score"]["categories"]) == {"modularity", "reusability", "analyzability", "modifiability", "testability"}
+
+
+def test_scoring_grade_boundaries() -> None:
+    assert grade_from_score(4.6) == "A"
+    assert grade_from_score(4.1) == "B"
+    assert grade_from_score(3.2) == "C"
+    assert grade_from_score(2.5) == "D"
+    assert grade_from_score(1.9) == "F"
 
 
 def test_fail_on_new_respects_baseline(tmp_path: Path) -> None:
@@ -227,7 +286,39 @@ def test_exclude_patterns_use_glob_and_normalized_separators() -> None:
 
     assert is_excluded("src\\generated\\client.py", patterns)
     assert is_excluded("node_modules/pkg/index.js", patterns)
+    assert is_excluded("src/vendor/file.py", ["vendor"])
     assert not is_excluded("src/app.py", patterns)
+
+
+def test_file_function_status_warning_paths() -> None:
+    thresholds = {
+        "max_file_lines": 10,
+        "warn_file_lines": 5,
+        "max_function_lines": 10,
+        "warn_function_lines": 5,
+        "max_complexity": 10,
+        "warn_complexity": 5,
+    }
+
+    assert file_status(7, thresholds) == "warn"
+    assert function_status(7, 1, thresholds) == "warn"
+    assert function_status(1, 7, thresholds) == "warn"
+
+
+def test_read_lines_replaces_decode_errors(tmp_path: Path) -> None:
+    path = tmp_path / "bad.py"
+    path.write_bytes(b"ok\n\xff\n")
+
+    assert read_lines(path)[0] == "ok"
+
+
+def test_duplicate_blocks_ignore_repeated_single_line_blocks(tmp_path: Path) -> None:
+    first = tmp_path / "a.py"
+    second = tmp_path / "b.py"
+    write(first, "x = 1\nx = 1\nx = 1\n")
+    write(second, "x = 1\nx = 1\nx = 1\n")
+
+    assert duplicate_blocks(tmp_path, [first, second], 3) == []
 
 
 def test_sarif_input_handles_realistic_semgrep_shape(tmp_path: Path) -> None:
@@ -297,3 +388,52 @@ def test_init_agent_standards_exits_without_audit(tmp_path: Path) -> None:
 
     assert code == 0
     assert (tmp_path / "CLAUDE.md").exists()
+
+
+def test_renderers_cover_findings_and_instruction_notes(tmp_path: Path) -> None:
+    report = {
+        "root": str(tmp_path),
+        "git_branch": "main",
+        "mode": "full",
+        "score": {
+            "standard": "test standard",
+            "overall": 3.2,
+            "grade": "C",
+            "categories": {
+                "modularity": 3.0,
+                "reusability": 3.0,
+                "analyzability": 4.0,
+                "modifiability": 3.0,
+                "testability": 3.0,
+            },
+        },
+        "summary": {
+            "files_scanned": 2,
+            "file_warnings": 1,
+            "file_failures": 1,
+            "function_warnings": 1,
+            "function_failures": 1,
+            "duplicate_blocks": 1,
+            "risk_findings": 1,
+            "hard_gate_failures": 1,
+        },
+        "hard_gate_failures": ["README.md is required but missing."],
+        "largest_files": [{"path": "large.py", "lines": 999, "status": "fail"}],
+        "function_hotspots": [{"path": "app.py", "name": "hot", "start_line": 7, "lines": 90, "complexity": 16, "status": "fail"}],
+        "risk_findings": [{"path": "app.py", "line": 9, "name": "risk", "text": "unsafe | text"}],
+        "duplicate_blocks": [{"locations": ["a.py:1", "b.py:1"], "count": 2}],
+        "external_findings": [{"tool": "semgrep", "rule_id": "x.y", "level": "warning", "path": "app.py", "line": 1, "message": "hello | world"}],
+    }
+    config = {
+        "instruction_pack": {
+            "project_name": "Demo",
+            "test_policy": "high-value tests",
+            "architecture_notes": ["Keep modules focused."],
+        }
+    }
+
+    assert "Risk Pattern Findings" in render_markdown(report)
+    assert "Duplicate blocks to inspect" in render_ai_prompt(report)
+    assert "Top Function Hotspots" in render_pr_comment(report)
+    assert "Current Audit Context" in render_agent_instructions(report)
+    assert "Keep modules focused." in instruction_body("codex", config)

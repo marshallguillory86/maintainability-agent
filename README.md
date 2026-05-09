@@ -234,6 +234,12 @@ examples/local-ci.sh
 
 The local CI script enforces test coverage at `>=92%` and writes `coverage.xml` for SonarQube Cloud, Qlty, Codacy, or any other tool that can ingest Python coverage.
 
+## Get in Touch
+
+- **Bug reports / feature requests / general questions** — open a [GitHub Issue](https://github.com/marshallguillory86/maintainability-agent/issues/new).
+- **Discussion / ideas** — use the [Discussions tab](https://github.com/marshallguillory86/maintainability-agent/discussions) (enable in repo settings if not visible yet).
+- **Security vulnerabilities** — see [`SECURITY.md`](SECURITY.md) and use the [private security advisory flow](https://github.com/marshallguillory86/maintainability-agent/security/advisories/new). Do **not** post vulnerabilities in public issues.
+
 ## License
 
 MIT

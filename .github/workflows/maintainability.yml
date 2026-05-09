@@ -52,11 +52,13 @@ jobs:
         # `sonar-project.properties` for the project key + paths).
         # Requires `SONAR_TOKEN` in repo secrets (sonarcloud.io →
         # My Account → Security → generate token; GitHub repo →
-        # Settings → Secrets → add). Action fails loudly with a
-        # clear error if the token is missing.
+        # Settings → Secrets → add).
+        # SONAR_HOST_URL must point at SonarQube Cloud; the action's
+        # default is a self-hosted server at localhost:9000.
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN:    ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+          GITHUB_TOKEN:   ${{ secrets.GITHUB_TOKEN }}
         uses: SonarSource/sonarqube-scan-action@v2
       - name: Upload maintainability report
         uses: actions/upload-artifact@v4

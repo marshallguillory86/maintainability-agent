@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "paths": {
+    "include_extensions": [".py", ".md", ".json", ".yml", ".yaml"],
+    "exclude_patterns": [
+      ".git/",
+      ".venv/",
+      "__pycache__/",
+      ".pytest_cache/",
+      "examples/reports/",
+      "maintainability-report.md",
+      "maintainability-remediation-prompt.md",
+      "maintainability-pr-comment.md",
+      "maintainability-baseline.json",
+      "AGENTS-maintainability.md"
+    ]
+  },
+  "thresholds": {
+    "max_file_lines": 900,
+    "warn_file_lines": 900,
+    "max_function_lines": 80,
+    "warn_function_lines": 60,
+    "max_complexity": 15,
+    "warn_complexity": 12,
+    "max_duplicate_blocks": 30,
+    "duplicate_block_lines": 8
+  },
+  "hard_gates": {
+    "require_test_command": true,
+    "require_readme": true,
+    "require_clean_worktree": false
+  },
+  "expected_files": [
+    "README.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "maintainability-agent.schema.json",
+    "docs/cli.md",
+    "docs/philosophy.md"
+  ],
+  "expected_commands": {
+    "test": ["PYTHONPATH=src python3 -m pytest"],
+    "lint": ["python3 -m py_compile src/maintainability_audit/*.py"]
+  },
+  "risk_patterns": [],
+  "instruction_pack": {
+    "project_name": "Maintainability Agent",
+    "strictness": "high",
+    "test_policy": "pytest for CLI behavior plus self-audit before release",
+    "architecture_notes": [
+      "Keep deterministic analysis separate from AI prompt generation.",
+      "Do not call LLMs or external services by default.",
+      "Prefer small adapter functions over a monolithic scanner."
+    ]
+  }
+}

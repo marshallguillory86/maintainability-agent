@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/maintainability-agent.schema.json",
+  "title": "Maintainability Agent Configuration",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "paths": {
+      "type": "object",
+      "properties": {
+        "include_extensions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "exclude_patterns": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "thresholds": {
+      "type": "object",
+      "properties": {
+        "max_file_lines": { "type": "integer", "minimum": 1 },
+        "warn_file_lines": { "type": "integer", "minimum": 1 },
+        "max_function_lines": { "type": "integer", "minimum": 1 },
+        "warn_function_lines": { "type": "integer", "minimum": 1 },
+        "max_complexity": { "type": "integer", "minimum": 1 },
+        "warn_complexity": { "type": "integer", "minimum": 1 },
+        "max_duplicate_blocks": { "type": "integer", "minimum": 0 },
+        "duplicate_block_lines": { "type": "integer", "minimum": 2 }
+      },
+      "additionalProperties": false
+    },
+    "hard_gates": {
+      "type": "object",
+      "properties": {
+        "require_test_command": { "type": "boolean" },
+        "require_readme": { "type": "boolean" },
+        "require_clean_worktree": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "expected_files": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "expected_commands": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "instruction_pack": {
+      "type": "object",
+      "properties": {
+        "project_name": { "type": "string" },
+        "strictness": { "type": "string" },
+        "test_policy": { "type": "string" },
+        "architecture_notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "risk_patterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "pattern"],
+        "properties": {
+          "name": { "type": "string" },
+          "pattern": { "type": "string" },
+          "extensions": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

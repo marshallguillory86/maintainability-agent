@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "paths": {
+    "include_extensions": [
+      ".py",
+      ".js",
+      ".jsx",
+      ".ts",
+      ".tsx",
+      ".html",
+      ".css",
+      ".md"
+    ],
+    "exclude_patterns": [
+      ".git/",
+      "node_modules/",
+      ".venv/",
+      "venv/",
+      "dist/",
+      "build/",
+      "coverage/",
+      "__pycache__/",
+      ".pytest_cache/",
+      "_backups/",
+      "assets/fonts/files/"
+    ]
+  },
+  "thresholds": {
+    "max_file_lines": 800,
+    "warn_file_lines": 400,
+    "max_function_lines": 80,
+    "warn_function_lines": 50,
+    "max_complexity": 15,
+    "warn_complexity": 10,
+    "max_duplicate_blocks": 20,
+    "duplicate_block_lines": 6
+  },
+  "hard_gates": {
+    "require_test_command": false,
+    "require_readme": true,
+    "require_clean_worktree": false
+  },
+  "expected_files": [
+    "README.md"
+  ],
+  "expected_commands": {
+    "test": [],
+    "lint": []
+  },
+  "instruction_pack": {
+    "project_name": "this repository",
+    "strictness": "high",
+    "test_policy": "tests for meaningful behavior changes",
+    "architecture_notes": [
+      "Prefer existing architecture, naming, and local helper APIs.",
+      "Keep AI-assisted changes small, bounded, and reviewable.",
+      "Do not introduce broad abstractions just to satisfy a metric."
+    ]
+  },
+  "risk_patterns": [
+    {
+      "name": "public guarantee language",
+      "pattern": "\\b(guarantee|guaranteed|always|never|no exceptions)\\b",
+      "extensions": [".html", ".md"]
+    },
+    {
+      "name": "unsafe html injection",
+      "pattern": "\\.innerHTML\\s*=",
+      "extensions": [".js", ".jsx", ".ts", ".tsx", ".html"]
+    },
+    {
+      "name": "embedded secret wording",
+      "pattern": "\\b(api[_-]?key|secret|private[_-]?key|password)\\b",
+      "extensions": [".py", ".js", ".jsx", ".ts", ".tsx", ".html", ".md"]
+    }
+  ]
+}

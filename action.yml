@@ -1,0 +1,30 @@
+name: Maintainability Agent
+description: Run maintainability audit and generate AI remediation artifacts.
+inputs:
+  config:
+    description: Path to maintainability config.
+    required: false
+    default: maintainability-audit.example.json
+  changed-only:
+    description: Optional git revspec for changed-only mode.
+    required: false
+    default: ""
+  fail-on-gate:
+    description: Fail on hard gates.
+    required: false
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: python3 -m pip install -e "$GITHUB_ACTION_PATH"
+    - shell: bash
+      run: |
+        args=(maintainability-agent --config "${{ inputs.config }}" --output maintainability-report.md --prompt-output maintainability-remediation-prompt.md --comment-output maintainability-pr-comment.md --sarif-output maintainability.sarif)
+        if [ -n "${{ inputs.changed-only }}" ]; then
+          args+=(--changed-only "${{ inputs.changed-only }}")
+        fi
+        if [ "${{ inputs.fail-on-gate }}" = "true" ]; then
+          args+=(--fail-on-gate)
+        fi
+        "${args[@]}"

@@ -1,0 +1,36 @@
+name: Maintainability
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  maintainability:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install tool
+        run: python3 -m pip install -e .
+      - name: Run maintainability audit on this repo
+        run: |
+          cp maintainability-audit.example.json maintainability-audit.json
+          python3 -m pytest
+          maintainability-agent \
+            --config maintainability-audit.json \
+            --fail-on-gate \
+            --output maintainability-report.md \
+            --prompt-output maintainability-remediation-prompt.md \
+            --comment-output maintainability-pr-comment.md
+      - name: Upload maintainability report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: maintainability-audit-artifacts
+          path: |
+            maintainability-report.md
+            maintainability-remediation-prompt.md
+            maintainability-pr-comment.md

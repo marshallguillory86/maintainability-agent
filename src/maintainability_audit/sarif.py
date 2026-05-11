@@ -6,7 +6,6 @@ from typing import Any
 
 from .config import PROJECT_URL
 
-
 SARIF_RULES: dict[str, dict[str, str]] = {
     "maintainability.file_size": {
         "name": "Large file",

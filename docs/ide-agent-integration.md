@@ -48,21 +48,16 @@ maintainability-agent \
   --output maintainability-report.md
 ```
 
-### Create Baseline
+### Create / Use Baseline
 
 ```bash
-maintainability-agent \
-  --config maintainability-agent.json \
+# Snapshot today's findings.
+maintainability-agent --config maintainability-agent.json \
   --write-baseline maintainability-baseline.json
-```
 
-### Fail Only on New Findings
-
-```bash
-maintainability-agent \
-  --config maintainability-agent.json \
-  --baseline maintainability-baseline.json \
-  --fail-on-new
+# Fail only on findings not in the baseline.
+maintainability-agent --config maintainability-agent.json \
+  --baseline maintainability-baseline.json --fail-on-new
 ```
 
 ### Generate Agent Standards
@@ -71,12 +66,8 @@ maintainability-agent \
 maintainability-agent \
   --config maintainability-agent.json \
   --init-agent-standards \
-  --target generic \
-  --target codex \
-  --target claude-code \
-  --target cursor \
-  --target copilot \
-  --target windsurf \
+  --target generic --target codex --target claude-code \
+  --target cursor --target copilot --target windsurf \
   --instructions-output-dir .
 ```
 
@@ -134,142 +125,24 @@ Suggested VS Code workflow:
 4. Run `Maintainability: Changed Only`.
 5. If it fails, give the agent `maintainability-remediation-prompt.md`.
 
-## GitHub Copilot
+## Per-Agent Quick Start
 
-GitHub Copilot can use repository custom instructions from:
-
-```text
-.github/copilot-instructions.md
-```
-
-Generate it:
+Every agent uses the same shape: pick a `--target`, run `--init-agent-standards`, then prompt the agent to follow the generated instruction file and use `maintainability-remediation-prompt.md` as the bounded task.
 
 ```bash
-maintainability-agent \
-  --config maintainability-agent.json \
-  --init-agent-standards \
-  --target copilot \
-  --instructions-output-dir .
+# Replace <TARGET> with one of: copilot, cursor, codex, claude-code, windsurf, generic
+maintainability-agent --config maintainability-agent.json \
+  --init-agent-standards --target <TARGET> --instructions-output-dir .
 ```
 
-Recommended prompt to Copilot Chat:
-
-```text
-Follow .github/copilot-instructions.md. Fix only the findings in maintainability-remediation-prompt.md. Keep the patch small and preserve current behavior unless the report says behavior is wrong.
-```
-
-## Cursor
-
-Cursor rules can live under:
-
-```text
-.cursor/rules/maintainability.mdc
-```
-
-Generate it:
-
-```bash
-maintainability-agent \
-  --config maintainability-agent.json \
-  --init-agent-standards \
-  --target cursor \
-  --instructions-output-dir .
-```
-
-Recommended Cursor workflow:
-
-1. Generate Cursor rules.
-2. Run the audit.
-3. Open `maintainability-remediation-prompt.md`.
-4. Ask Cursor to apply only that prompt.
-
-## Codex
-
-Codex-style repo instructions can use:
-
-```text
-AGENTS.md
-```
-
-Generate it:
-
-```bash
-maintainability-agent \
-  --config maintainability-agent.json \
-  --init-agent-standards \
-  --target codex \
-  --instructions-output-dir .
-```
-
-Recommended Codex prompt:
-
-```text
-Follow AGENTS.md. Use maintainability-report.md and maintainability-remediation-prompt.md as the source of truth. Fix the highest-severity maintainability findings only, with tests where behavior changes.
-```
-
-## Claude Code
-
-Claude Code-style repo instructions can use:
-
-```text
-CLAUDE.md
-```
-
-Generate it:
-
-```bash
-maintainability-agent \
-  --config maintainability-agent.json \
-  --init-agent-standards \
-  --target claude-code \
-  --instructions-output-dir .
-```
-
-Recommended Claude prompt:
-
-```text
-Read CLAUDE.md, maintainability-report.md, and maintainability-remediation-prompt.md. Make a small patch that resolves the hard gates. Do not refactor outside the reported scope.
-```
-
-## Windsurf
-
-Windsurf rules can be stored at:
-
-```text
-.windsurf/rules/maintainability.md
-```
-
-Generate it:
-
-```bash
-maintainability-agent \
-  --config maintainability-agent.json \
-  --init-agent-standards \
-  --target windsurf \
-  --instructions-output-dir .
-```
-
-## Generic Agents
-
-For any other agent, generate:
-
-```text
-AI-MAINTAINABILITY.md
-```
-
-```bash
-maintainability-agent \
-  --config maintainability-agent.json \
-  --init-agent-standards \
-  --target generic \
-  --instructions-output-dir .
-```
-
-Then prompt:
-
-```text
-Follow AI-MAINTAINABILITY.md. Use maintainability-remediation-prompt.md as the bounded task. Keep the patch small, testable, and aligned with existing architecture.
-```
+| Agent | Instruction file | Suggested in-agent prompt |
+|---|---|---|
+| GitHub Copilot | `.github/copilot-instructions.md` | "Follow .github/copilot-instructions.md. Fix only the findings in maintainability-remediation-prompt.md. Keep the patch small and preserve current behavior unless the report says behavior is wrong." |
+| Cursor | `.cursor/rules/maintainability.mdc` | "Use the active Cursor rules. Apply only what maintainability-remediation-prompt.md asks for." |
+| Codex | `AGENTS.md` | "Follow AGENTS.md. Use maintainability-report.md + maintainability-remediation-prompt.md as the source of truth. Fix the highest-severity findings only, with tests where behavior changes." |
+| Claude Code | `CLAUDE.md` | "Read CLAUDE.md, maintainability-report.md, and maintainability-remediation-prompt.md. Make a small patch that resolves the hard gates. Do not refactor outside the reported scope." |
+| Windsurf | `.windsurf/rules/maintainability.md` | "Use the Windsurf rules. Resolve only the items in maintainability-remediation-prompt.md." |
+| Generic | `AI-MAINTAINABILITY.md` | "Follow AI-MAINTAINABILITY.md. Use maintainability-remediation-prompt.md as the bounded task. Keep the patch small, testable, and aligned with existing architecture." |
 
 ## Local CI
 

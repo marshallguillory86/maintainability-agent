@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 
@@ -137,15 +136,23 @@ def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
     lines: list[str] = []
     lines.extend(bulleted_section("Start with these hard gates:", report["hard_gate_failures"]))
     hotspot_lines = [
-        f"`{i['path']}:{i['start_line']}` `{i['name']}` has {i['lines']} lines and approximate complexity {i['complexity']} ({i['status']})."
+        f"`{i['path']}:{i['start_line']}` `{i['name']}` has {i['lines']} lines "
+        f"and approximate complexity {i['complexity']} ({i['status']})."
         for i in report["function_hotspots"][:10]
     ]
     lines.extend(bulleted_section("Function hotspots to inspect first:", hotspot_lines))
-    large_files = [f"`{i['path']}` has {i['lines']} lines ({i['status']})." for i in report["largest_files"][:10] if i["status"] in {"warn", "fail"}]
+    large_files = [
+        f"`{i['path']}` has {i['lines']} lines ({i['status']})."
+        for i in report["largest_files"][:10]
+        if i["status"] in {"warn", "fail"}
+    ]
     lines.extend(bulleted_section("Large files to inspect for responsibility splits:", large_files))
     risks = [f"`{i['path']}:{i['line']}` {i['name']}: {i['text']}" for i in report["risk_findings"][:20]]
     lines.extend(bulleted_section("Risk pattern findings to verify:", risks))
-    dupes = [f"Repeated block appears {i['count']} times near: {', '.join(i['locations'][:5])}" for i in report["duplicate_blocks"][:5]]
+    dupes = [
+        f"Repeated block appears {i['count']} times near: {', '.join(i['locations'][:5])}"
+        for i in report["duplicate_blocks"][:5]
+    ]
     lines.extend(bulleted_section("Duplicate blocks to inspect:", dupes))
     return lines
 
@@ -237,77 +244,3 @@ def render_agent_instructions(report: dict[str, Any]) -> str:
     )
 
 
-def instruction_body(target: str, config: dict[str, Any]) -> str:
-    pack = config.get("instruction_pack", {})
-    project = pack.get("project_name", "this repository")
-    test_policy = pack.get("test_policy", "tests for meaningful behavior changes")
-    notes = pack.get("architecture_notes", [])
-    lines = [
-        "# Maintainability Standards for AI-Assisted Code",
-        "",
-        f"Project: {project}",
-        f"Target: {target}",
-        "",
-        "## Prime Directive",
-        "",
-        "Write code that is easy for the next developer to understand, test, debug, and safely change.",
-        "Do not optimize for passing numeric thresholds while making the implementation less clear.",
-        "",
-        "## Defaults",
-        "",
-        "- Keep changes small, bounded, and reviewable.",
-        "- Preserve existing architecture, naming, and module boundaries.",
-        "- Prefer boring, obvious code over clever abstractions.",
-        "- Separate business logic from UI and infrastructure where the repo supports that boundary.",
-        f"- Follow the repo test policy: {test_policy}.",
-        "- Add tests around meaningful behavior and edge cases, not implementation trivia.",
-        "- Make failure modes visible and debuggable.",
-        "- Avoid broad rewrites unless explicitly requested.",
-        "- Explain false positives or justified complexity instead of contorting code.",
-        "",
-        "## Maintainability Targets",
-        "",
-        "- Functions should generally stay below 50 lines; 80+ requires strong justification.",
-        "- Approximate complexity above 10 deserves review; above 15 needs refactor or justification.",
-        "- Large files should have a clear reason to stay large.",
-        "- Duplicate policy/business logic should be consolidated before it drifts.",
-        "- Public docs, comments, tests, and code should describe the same behavior.",
-        "",
-    ]
-    if notes:
-        lines.extend(["## Project Architecture Notes", ""])
-        lines.extend(f"- {note}" for note in notes)
-        lines.append("")
-    lines.extend(
-        [
-            "## Before Closeout",
-            "",
-            "- Run native tests/lints.",
-            "- Run the maintainability audit.",
-            "- Report commands and results.",
-            "- Keep follow-up recommendations separate from the completed patch.",
-        ]
-    )
-    return "\n".join(lines)
-
-
-def instruction_path_for_target(target: str, output_dir: Path) -> Path:
-    mapping = {
-        "generic": "AI-MAINTAINABILITY.md",
-        "claude-code": "CLAUDE.md",
-        "codex": "AGENTS.md",
-        "cursor": ".cursor/rules/maintainability.mdc",
-        "copilot": ".github/copilot-instructions.md",
-        "windsurf": ".windsurf/rules/maintainability.md",
-    }
-    return output_dir / mapping.get(target, f"{target}-maintainability.md")
-
-
-def write_instruction_pack(targets: list[str], output_dir: Path, config: dict[str, Any]) -> list[str]:
-    written: list[str] = []
-    for target in targets:
-        path = instruction_path_for_target(target, output_dir)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(instruction_body(target, config) + "\n", encoding="utf-8")
-        written.append(str(path))
-    return written

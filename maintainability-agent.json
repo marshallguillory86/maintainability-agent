@@ -18,8 +18,8 @@
     ]
   },
   "thresholds": {
-    "max_file_lines": 900,
-    "warn_file_lines": 900,
+    "max_file_lines": 500,
+    "warn_file_lines": 250,
     "max_function_lines": 80,
     "warn_function_lines": 60,
     "max_complexity": 15,

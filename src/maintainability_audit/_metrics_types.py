@@ -10,7 +10,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-
 FUNC_PATTERNS = [
     re.compile(r"^\s*def\s+([A-Za-z_][\w]*)\s*\("),
     re.compile(r"^\s*(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\("),

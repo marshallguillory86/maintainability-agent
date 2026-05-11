@@ -8,7 +8,11 @@ from pathlib import Path
 from typing import Any
 
 from ._metrics_types import (
-    COMPLEXITY_RE, FUNC_PATTERNS, FileMetric, FunctionMetric, RiskFinding,
+    COMPLEXITY_RE,
+    FUNC_PATTERNS,
+    FileMetric,
+    FunctionMetric,
+    RiskFinding,
 )
 from .git_tools import run_git
 from .scoring import score_report

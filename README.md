@@ -30,6 +30,21 @@ The remediation prompt is the differentiator. Every other tool in this space sto
 
 See [docs/philosophy.md](docs/philosophy.md) for the longer version.
 
+## Self-Audit
+
+This repo eats its own dogfood — the tool is run against this codebase as part of CI, and the latest report is checked in at [docs/self-audit.md](docs/self-audit.md):
+
+| Metric | Value |
+|---|---:|
+| Overall score | **5.0 / 5 (A+)** |
+| File warnings | 0 |
+| Function warnings | 0 |
+| Duplicate blocks | 0 |
+| Risk findings | 0 |
+| Hard gate failures | 0 |
+
+All five ISO/IEC 25010 categories (modularity, reusability, analyzability, modifiability, testability) score 5.0. Regenerate with `maintainability-agent --config maintainability-agent.json --output docs/self-audit.md` (see the file's preamble for the path-sanitization step).
+
 ## Install
 
 Run directly from source:

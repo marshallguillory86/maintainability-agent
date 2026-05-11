@@ -47,7 +47,14 @@ All five ISO/IEC 25010 categories (modularity, reusability, analyzability, modif
 
 ## Install
 
-Run directly from source:
+Install from PyPI:
+
+```bash
+python3 -m pip install maintainability-agent
+maintainability-agent --root . --config maintainability-agent.json
+```
+
+Or run directly from source without installing:
 
 ```bash
 python3 -m maintainability_audit \

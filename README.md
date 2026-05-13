@@ -12,6 +12,7 @@ That's the point of this tool:
 2. Emit Markdown, JSON, SARIF, a PR comment, and a baseline for incremental adoption.
 3. Generate an **AI remediation prompt scoped to the actual findings** — bounded, with explicit "don't rewrite the codebase" rules.
 4. Hand that prompt to your agent. Get a small, reviewable fix instead of a 600-line speculative cleanup PR.
+5. Drop the shipped **portable invokable skill** into Codex, Claude Code, or GitHub Copilot Chat so `/maintainability-agent` is one keystroke away in any of them. See [Invokable Skill](#invokable-skill--slash-command) below.
 
 The remediation prompt is the differentiator. Every other tool in this space stops at "here's a list of findings."
 

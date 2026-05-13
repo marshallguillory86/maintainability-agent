@@ -1,6 +1,15 @@
 # Maintainability Agent
 
-A deterministic CI gate + bounded remediation prompt generator for repos that use AI coding agents (Claude, Codex, Cursor, Copilot, Windsurf, …).
+A deterministic CI gate + bounded remediation prompt generator for repos that use AI coding agents (Claude, Codex, Cursor, Copilot, Windsurf, …) — **ships an invokable skill for Codex, Claude Code, and GitHub Copilot Chat** so `/maintainability-agent` is one keystroke away in any of them.
+
+```bash
+pip install maintainability-agent          # CLI + library
+cp -r skills/maintainability-agent ~/.claude/skills/                                  # Claude Code skill
+cp skills/maintainability-agent/copilot/maintainability-agent.prompt.md .github/prompts/  # Copilot Chat (VS Code)
+# Codex picks up skills/maintainability-agent/ via its own convention.
+```
+
+Jump to [Invokable Skill / Slash Command](#invokable-skill--slash-command) for the full install table.
 
 ## Why this exists
 

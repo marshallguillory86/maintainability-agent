@@ -12,6 +12,7 @@ That's the point of this tool:
 2. Emit Markdown, JSON, SARIF, a PR comment, and a baseline for incremental adoption.
 3. Generate an **AI remediation prompt scoped to the actual findings** — bounded, with explicit "don't rewrite the codebase" rules.
 4. Hand that prompt to your agent. Get a small, reviewable fix instead of a 600-line speculative cleanup PR.
+5. Drop the shipped **portable invokable skill** into Codex, Claude Code, or GitHub Copilot Chat so `/maintainability-agent` is one keystroke away in any of them. See [Invokable Skill](#invokable-skill--slash-command) below.
 
 The remediation prompt is the differentiator. Every other tool in this space stops at "here's a list of findings."
 
@@ -203,7 +204,7 @@ See [docs/standard.md](docs/standard.md).
 This repo includes `action.yml`, so it can be used as a composite action after publishing:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v0.1.0
+- uses: marshallguillory86/maintainability-agent@v0.2.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD
@@ -216,6 +217,32 @@ After publishing, copy `.github/workflows/maintainability.yml` into the target r
 ## IDE and Agent Integration
 
 See [docs/ide-agent-integration.md](docs/ide-agent-integration.md) for VS Code tasks and integration notes for Copilot, Cursor, Codex, Claude Code, Windsurf, generic agents, local CI, and GitHub Actions.
+
+## Invokable Skill / Slash Command
+
+For agents that support invokable skills, this repo ships a portable skill under [`skills/maintainability-agent/`](skills/maintainability-agent/). The `SKILL.md` body is the source of truth; per-host adapters live under `agents/` and `copilot/`.
+
+| Host | Install destination | Invocation |
+|---|---|---|
+| Codex / OpenAI | wired via `skills/maintainability-agent/agents/openai.yaml` | per Codex's skills convention |
+| Claude Code | copy `skills/maintainability-agent/` → `~/.claude/skills/maintainability-agent/` (user-scope) or `<repo>/.claude/skills/maintainability-agent/` (project-scope) | `/maintainability-agent` (or surfaced automatically when description matches) |
+| GitHub Copilot (VS Code) | copy `skills/maintainability-agent/copilot/maintainability-agent.prompt.md` → `<repo>/.github/prompts/maintainability-agent.prompt.md` | `/maintainability-agent` in Copilot Chat |
+
+Quick install (Claude Code, user-scope):
+
+```bash
+mkdir -p ~/.claude/skills
+cp -r skills/maintainability-agent ~/.claude/skills/
+```
+
+Quick install (Copilot, target repo):
+
+```bash
+mkdir -p .github/prompts
+cp skills/maintainability-agent/copilot/maintainability-agent.prompt.md .github/prompts/
+```
+
+For non-invokable, always-on guidance, use `--init-agent-standards` (see [docs/ide-agent-integration.md](docs/ide-agent-integration.md)).
 
 ## Local CI
 

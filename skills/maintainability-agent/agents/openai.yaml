@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maintainability Agent"
+  short_description: "Run maintainability audits and apply bounded remediation."
+  default_prompt: "Use maintainability-agent to audit this repo, read the generated report and remediation prompt, then make only bounded maintainability fixes."

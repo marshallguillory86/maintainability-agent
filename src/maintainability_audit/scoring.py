@@ -31,14 +31,13 @@ def score_report(report: dict[str, Any]) -> dict[str, Any]:
     duplicate_pressure = min(summary["duplicate_blocks"], 20) * 0.08
     risk_pressure = min(summary["risk_findings"], 20) * 0.12
 
-    # Bug #2 fix (2026-05-23 Trovik audit): testability and analyzability
-    # measure how testable/understandable the *production* code is. A
-    # long test function or large test file should not drag those down —
-    # otherwise refactoring duplicate test boilerplate into a fixture
-    # (a clear analyzability win) inverts the score. Fall back to the
-    # combined pressure when the summary lacks the production split so
-    # downstream callers reusing this function with an older summary
-    # still get a valid score.
+    # Testability and analyzability measure how testable/understandable
+    # the *production* code is. A long test function or large test file
+    # should not drag those down — otherwise refactoring duplicate test
+    # boilerplate into a fixture (a clear analyzability win) inverts
+    # the score. Fall back to the combined pressure when the summary
+    # lacks the production split so downstream callers reusing this
+    # function with an older summary still get a valid score.
     prod_file_pressure = summary.get("production_file_failures", summary["file_failures"]) * 1.0 + summary.get(
         "production_file_warnings", summary["file_warnings"]
     ) * 0.35

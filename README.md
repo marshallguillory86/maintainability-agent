@@ -213,7 +213,7 @@ See [docs/standard.md](docs/standard.md).
 This repo includes `action.yml`, so it can be used as a composite action after publishing:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v0.2.0
+- uses: marshallguillory86/maintainability-agent@v0.3.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

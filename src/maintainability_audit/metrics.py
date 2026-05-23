@@ -24,9 +24,8 @@ def is_test_path(rel: str) -> bool:
 
     Used by ``report_summary`` and ``score_report`` so test-code pressure
     can be reported separately and excluded from ``testability`` /
-    ``analyzability`` scoring (Bug #2 from the 2026-05-23 Trovik audit:
-    growing a test file should not lower the score of how testable the
-    production code is).
+    ``analyzability`` scoring: growing a test file should not lower the
+    score of how testable the production code is.
     """
     normalized = rel.replace("\\", "/").lower()
     parts = normalized.split("/")
@@ -173,12 +172,12 @@ def _is_trivial_dup_line(line: str) -> bool:
     """Return True for low-information lines that should not anchor a
     duplicate-block match.
 
-    Bug #3 fix (2026-05-23 Trovik audit): bare-identifier lines such as
-    ``source_name,`` show up identically in INSERT column lists and in
-    function keyword-argument signatures. The shared ordering is the
-    architectural contract — flagging it as a duplicate creates noise
-    and pressures developers to obscure the contract. Pure punctuation
-    (closing brackets/parens) is similarly information-free.
+    Bare-identifier lines such as ``name,`` show up identically in
+    SQL column lists and in function keyword-argument signatures. The
+    shared ordering is often the architectural contract — flagging it
+    as a duplicate creates noise and pressures developers to obscure
+    the contract. Pure punctuation (closing brackets/parens) is
+    similarly information-free.
     """
     if not line:
         return True
@@ -328,10 +327,9 @@ def _compute_gates_and_summary(
     duplicate_count: int,
     risk_count: int,
 ) -> tuple[list[str], dict[str, int]]:
-    # Bug #2 fix (2026-05-23 Trovik audit): the gate list shown to users
-    # still includes every failure (prod + test). But scoring uses a
-    # production-only gate count so a long test function never drags
-    # testability/analyzability down.
+    # The gate list shown to users still includes every failure
+    # (prod + test). But scoring uses a production-only gate count so
+    # a long test function never drags testability/analyzability down.
     failed_files = [metric for metric in file_metrics if metric.status == "fail"]
     failed_functions = [metric for metric in function_metrics if metric.status == "fail"]
     prod_failed_files = [metric for metric in failed_files if not is_test_path(metric.path)]

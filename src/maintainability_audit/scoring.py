@@ -31,12 +31,29 @@ def score_report(report: dict[str, Any]) -> dict[str, Any]:
     duplicate_pressure = min(summary["duplicate_blocks"], 20) * 0.08
     risk_pressure = min(summary["risk_findings"], 20) * 0.12
 
+    # Bug #2 fix (2026-05-23 Trovik audit): testability and analyzability
+    # measure how testable/understandable the *production* code is. A
+    # long test function or large test file should not drag those down —
+    # otherwise refactoring duplicate test boilerplate into a fixture
+    # (a clear analyzability win) inverts the score. Fall back to the
+    # combined pressure when the summary lacks the production split so
+    # downstream callers reusing this function with an older summary
+    # still get a valid score.
+    prod_file_pressure = summary.get("production_file_failures", summary["file_failures"]) * 1.0 + summary.get(
+        "production_file_warnings", summary["file_warnings"]
+    ) * 0.35
+    prod_function_pressure = summary.get("production_function_failures", summary["function_failures"]) * 1.0 + summary.get(
+        "production_function_warnings", summary["function_warnings"]
+    ) * 0.4
+
     categories = {
         "modularity": clamp_score(5.0 - file_pressure - function_pressure * 0.5 - duplicate_pressure),
         "reusability": clamp_score(5.0 - duplicate_pressure * 1.5 - file_pressure * 0.3),
-        "analyzability": clamp_score(5.0 - file_pressure * 0.6 - function_pressure * 0.6 - risk_pressure),
+        "analyzability": clamp_score(5.0 - prod_file_pressure * 0.6 - prod_function_pressure * 0.6 - risk_pressure),
         "modifiability": clamp_score(5.0 - gates * 0.8 - file_pressure * 0.4 - duplicate_pressure - risk_pressure),
-        "testability": clamp_score(5.0 - gates * 0.6 - function_pressure * 0.5 - risk_pressure),
+        "testability": clamp_score(
+            5.0 - summary.get("production_hard_gate_failures", gates) * 0.6 - prod_function_pressure * 0.5 - risk_pressure
+        ),
     }
     overall = clamp_score(sum(categories.values()) / len(categories))
     return {

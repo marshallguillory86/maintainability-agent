@@ -16,9 +16,13 @@ maintainability-remediation-prompt.md
 maintainability-pr-comment.md
 maintainability.sarif
 maintainability-baseline.json
+# Agent standards written by --init-agent-standards. Generated, not
+# authored: leaving them tracked makes a dogfood run dirty the worktree,
+# which can trip this tool's own opt-in worktree-clean hard gate.
 AGENTS-maintainability.md
 AI-MAINTAINABILITY.md
 AGENTS.md
 CLAUDE.md
 .cursor/
 .windsurf/
+.github/copilot-instructions.md

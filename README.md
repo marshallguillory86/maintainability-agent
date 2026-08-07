@@ -11,6 +11,8 @@ cp skills/maintainability-agent/copilot/maintainability-agent.prompt.md .github/
 
 Jump to [Invokable Skill / Slash Command](#invokable-skill--slash-command) for the full install table.
 
+> **v0.4.0** rewrote TypeScript/JavaScript declaration detection — ranges are bounded by their own braces instead of by the next regex match, which had been reporting a 4-line function as 262 lines and grading clean files an F. Details in the [changelog](CHANGELOG.md) and [docs/language-support.md](docs/language-support.md).
+
 ## Why this exists
 
 AI-written code fails in recognizable ways: speculative refactors, duplicated helpers, broad rewrites for narrow bugs, stale comments that sound confident, tests that assert implementation details instead of behavior, architecture drift across modules. SonarQube / CodeClimate / Qlty / ESLint / Ruff / Radon all catch some of this. None of them ship a **bounded prompt back to the agent** that says *"fix only these specific findings, do not refactor outside this scope."*
@@ -47,39 +49,35 @@ This repo eats its own dogfood — the tool is run against this codebase as part
 | Metric | Value |
 |---|---:|
 | Overall score | **5.0 / 5 (A+)** |
+| Files scanned | 54 |
 | File warnings | 0 |
+| File failures | 0 |
 | Function warnings | 0 |
+| Function failures | 0 |
 | Duplicate blocks | 0 |
 | Risk findings | 0 |
 | Hard gate failures | 0 |
 
-All five ISO/IEC 25010 categories (modularity, reusability, analyzability, modifiability, testability) score 5.0. Regenerate with `maintainability-agent --config maintainability-agent.json --output docs/self-audit.md` (see the file's preamble for the path-sanitization step).
+All five ISO/IEC 25010 categories (modularity, reusability, analyzability, modifiability, testability) score 5.0, against thresholds this repo deliberately sets stricter than the shipped defaults — a 250-line file warning versus the default 400.
+
+That grade is maintained, not assumed. The v0.4.0 work initially pushed this repo to 4.4 / 5 (B): four files had grown past the warn threshold. Rather than publish a fix while advertising a stale A+, `metrics.py` was split along its actual responsibilities (`declarations`, `duplication`, `report`), the two oversized test files were split to match, and this README's duplicated content moved into the docs it duplicated. The score is the output of that work, not a claim that preceded it.
+
+Regenerate with `maintainability-agent --config maintainability-agent.json --output docs/self-audit.md` (see the file's preamble for the path-sanitization step).
 
 ## Install
-
-Install from PyPI:
 
 ```bash
 python3 -m pip install maintainability-agent
 maintainability-agent --root . --config maintainability-agent.json
 ```
 
-Or run directly from source without installing:
+Or run from a source checkout without installing:
 
 ```bash
-python3 -m maintainability_audit \
-  --root . \
-  --config maintainability-agent.json \
-  --output maintainability-report.md
+python3 -m maintainability_audit --root . --config maintainability-agent.json
 ```
 
-Or install editable during development:
-
-```bash
-python3 -m pip install -e .
-maintainability-audit --root . --config maintainability-agent.json
-maintainability-agent --root . --config maintainability-agent.json
-```
+For an editable dev install, see [CONTRIBUTING.md](CONTRIBUTING.md#local-verification).
 
 ## Quick Start
 
@@ -114,7 +112,8 @@ maintainability-agent \
 The deterministic scanner reads code from your repo (no LLM calls) and produces signals on:
 
 - largest files (warn / fail thresholds configurable per-repo)
-- approximate function/class size
+- function size and complexity — exact ranges for Python via `ast`, brace-bounded for JS/TS/JSX/TSX/HTML
+- class size, against its own separate budget (`max_class_lines`), on length alone
 - approximate cyclomatic complexity
 - duplicate blocks (≥ N consecutive non-trivial lines, configurable)
 - configurable risk patterns (regex matchers — TODO/FIXME, `eval(`, `exec(`, custom)
@@ -123,7 +122,9 @@ The deterministic scanner reads code from your repo (no LLM calls) and produces 
 - worktree-clean state at audit time (opt-in hard gate)
 - ISO/IEC 25010-inspired 0–5 score per category + overall letter grade
 
-The analyzer is intentionally conservative and dependency-free. Mature repos should **pair** this with native tools (ESLint, Ruff, Radon, Semgrep, SonarQube, Qlty / Code Climate) — not replace them. SARIF input from those tools can be folded into this tool's report via `--sarif-input`.
+The analyzer is intentionally conservative and dependency-free. It is built to **under-report rather than over-report**: a declaration it can't recognize costs one missed finding, never a cascade of false ones. Per-language accuracy, the known limitations, and why classes are graded separately are documented in [docs/language-support.md](docs/language-support.md).
+
+Mature repos should **pair** this with native tools (ESLint, Ruff, Radon, Semgrep, SonarQube, Qlty / Code Climate) — not replace them. SARIF input from those tools can be folded into this tool's report via `--sarif-input`.
 
 ## What It Produces
 
@@ -166,24 +167,10 @@ in [PR and Baseline Workflows](docs/pr-and-baseline-workflows.md).
 ## Running Tests
 
 ```bash
-# Sandbox-friendly invocation (works with PYTEST_DISABLE_PLUGIN_AUTOLOAD=1):
 PYTHONPATH=src python3 -m pytest
-
-# With coverage gate (matches CI):
-PYTHONPATH=src python3 -m pytest \
-  --cov=maintainability_audit --cov-fail-under=92
-
-# With ruff lint + pip-audit (matches CI):
-python3 -m pip install -e ".[dev]"
-ruff check src tests
-pip-audit
-PYTHONPATH=src python3 -m pytest --cov=maintainability_audit --cov-fail-under=92
 ```
 
-Coverage is intentionally NOT in `[tool.pytest.ini_options].addopts` so the
-sandbox-friendly invocation (`PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`) doesn't choke
-on `--cov` flags it can't load. Pass coverage flags explicitly when you want
-the gate.
+The full local verification sequence that matches CI — ruff, pip-audit, the 92% coverage gate, and the self-audit — is in [CONTRIBUTING.md](CONTRIBUTING.md#local-verification), along with the sandbox-friendly invocation for agents that disable plugin autoload.
 
 ## Scoring Standard
 
@@ -201,7 +188,9 @@ See [docs/standard.md](docs/standard.md).
 
 - [CLI reference](docs/cli.md)
 - [Config schema](docs/config-schema.md)
+- [Language support and detection accuracy](docs/language-support.md)
 - [Philosophy](docs/philosophy.md)
+- [Changelog](CHANGELOG.md)
 - [Analyzer adapters](docs/adapters.md)
 - [External quality tools](docs/external-quality-tools.md)
 - [IDE and agent integration](docs/ide-agent-integration.md)
@@ -210,7 +199,7 @@ See [docs/standard.md](docs/standard.md).
 
 ## GitHub Action
 
-This repo includes `action.yml`, so it can be used as a composite action after publishing:
+This repo includes `action.yml`, so it can be used as a composite action:
 
 ```yaml
 - uses: marshallguillory86/maintainability-agent@v0.4.0
@@ -219,9 +208,7 @@ This repo includes `action.yml`, so it can be used as a composite action after p
     changed-only: main...HEAD
 ```
 
-## GitHub Actions
-
-After publishing, copy `.github/workflows/maintainability.yml` into the target repo or adapt it for your local CI.
+Or copy `.github/workflows/maintainability.yml` into the target repo and adapt it.
 
 ## IDE and Agent Integration
 
@@ -237,21 +224,7 @@ For agents that support invokable skills, this repo ships a portable skill under
 | Claude Code | copy `skills/maintainability-agent/` → `~/.claude/skills/maintainability-agent/` (user-scope) or `<repo>/.claude/skills/maintainability-agent/` (project-scope) | `/maintainability-agent` (or surfaced automatically when description matches) |
 | GitHub Copilot (VS Code) | copy `skills/maintainability-agent/copilot/maintainability-agent.prompt.md` → `<repo>/.github/prompts/maintainability-agent.prompt.md` | `/maintainability-agent` in Copilot Chat |
 
-Quick install (Claude Code, user-scope):
-
-```bash
-mkdir -p ~/.claude/skills
-cp -r skills/maintainability-agent ~/.claude/skills/
-```
-
-Quick install (Copilot, target repo):
-
-```bash
-mkdir -p .github/prompts
-cp skills/maintainability-agent/copilot/maintainability-agent.prompt.md .github/prompts/
-```
-
-For non-invokable, always-on guidance, use `--init-agent-standards` (see [docs/ide-agent-integration.md](docs/ide-agent-integration.md)).
+The copy commands are in the [intro block](#maintainability-agent) at the top of this file. For non-invokable, always-on guidance, use `--init-agent-standards` (see [docs/ide-agent-integration.md](docs/ide-agent-integration.md)).
 
 ## Local CI
 

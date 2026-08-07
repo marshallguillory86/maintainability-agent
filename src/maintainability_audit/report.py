@@ -1,0 +1,128 @@
+"""Assembling the audit report: summary counters, gates, and the JSON body.
+
+Extracted from ``metrics.py`` (2026-08-06). This is the top of the
+dependency graph — it pulls together the file scan (``metrics``), the
+declaration scan (``declarations``), the corpus scans (``duplication``),
+and the score (``scoring``) into the single dict every renderer consumes.
+Nothing else in the package imports it, so it is the right place for the
+orchestration to live.
+"""
+from __future__ import annotations
+
+from dataclasses import asdict
+from pathlib import Path
+from typing import Any
+
+from ._metrics_types import FileMetric, FunctionMetric
+from .duplication import duplicate_blocks, risk_findings
+from .git_tools import run_git
+from .metrics import collect_metrics, hard_gate_failures, is_test_path
+from .scoring import score_report
+
+
+def _count_status(metrics: list, status: str) -> int:
+    return sum(1 for metric in metrics if metric.status == status)
+
+
+def _split_by_test_path(metrics: list) -> tuple[list, list]:
+    prod = [metric for metric in metrics if not is_test_path(metric.path)]
+    test = [metric for metric in metrics if is_test_path(metric.path)]
+    return prod, test
+
+
+def report_summary(
+    files: list[Path],
+    file_metrics: list[FileMetric],
+    function_metrics: list[FunctionMetric],
+    duplicate_count: int,
+    risk_count: int,
+    gate_count: int,
+) -> dict[str, int]:
+    prod_files, test_files = _split_by_test_path(file_metrics)
+    prod_funcs, test_funcs = _split_by_test_path(function_metrics)
+    return {
+        "files_scanned": len(files),
+        "file_warnings": _count_status(file_metrics, "warn"),
+        "file_failures": _count_status(file_metrics, "fail"),
+        "function_warnings": _count_status(function_metrics, "warn"),
+        "function_failures": _count_status(function_metrics, "fail"),
+        "production_file_warnings": _count_status(prod_files, "warn"),
+        "production_file_failures": _count_status(prod_files, "fail"),
+        "production_function_warnings": _count_status(prod_funcs, "warn"),
+        "production_function_failures": _count_status(prod_funcs, "fail"),
+        "test_file_count": len(test_files),
+        "test_function_warnings": _count_status(test_funcs, "warn"),
+        "test_function_failures": _count_status(test_funcs, "fail"),
+        "duplicate_blocks": duplicate_count,
+        "risk_findings": risk_count,
+        "hard_gate_failures": gate_count,
+    }
+
+
+def _compute_gates_and_summary(
+    root: Path,
+    config: dict[str, Any],
+    git_status: str,
+    files: list[Path],
+    file_metrics: list[FileMetric],
+    function_metrics: list[FunctionMetric],
+    duplicate_count: int,
+    risk_count: int,
+) -> tuple[list[str], dict[str, int]]:
+    # The gate list shown to users still includes every failure
+    # (prod + test). But scoring uses a production-only gate count so
+    # a long test function never drags testability/analyzability down.
+    failed_files = [metric for metric in file_metrics if metric.status == "fail"]
+    failed_functions = [metric for metric in function_metrics if metric.status == "fail"]
+    prod_failed_files = [metric for metric in failed_files if not is_test_path(metric.path)]
+    prod_failed_functions = [metric for metric in failed_functions if not is_test_path(metric.path)]
+    gates = hard_gate_failures(root, config, git_status, failed_files, failed_functions, duplicate_count)
+    production_gates = hard_gate_failures(
+        root, config, git_status, prod_failed_files, prod_failed_functions, duplicate_count
+    )
+    summary = report_summary(files, file_metrics, function_metrics, duplicate_count, risk_count, len(gates))
+    summary["production_hard_gate_failures"] = len(production_gates)
+    return gates, summary
+
+
+def _function_hotspots(function_metrics: list[FunctionMetric]) -> list[dict[str, Any]]:
+    flagged = [metric for metric in function_metrics if metric.status in {"warn", "fail"}]
+    flagged.sort(key=lambda metric: (metric.status != "fail", -metric.complexity, -metric.lines))
+    return [asdict(metric) for metric in flagged[:50]]
+
+
+def build_report(
+    root: Path,
+    config: dict[str, Any],
+    only_paths: set[str] | None = None,
+    changed_revspec: str | None = None,
+    external_findings: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    files, file_metrics, function_metrics = collect_metrics(root, config, only_paths)
+    thresholds = config["thresholds"]
+    dupes = duplicate_blocks(root, files, int(thresholds["duplicate_block_lines"]))
+    risks = risk_findings(root, files, config)
+    git_status = run_git(["status", "--short"], root)
+    gates, summary = _compute_gates_and_summary(
+        root, config, git_status, files, file_metrics, function_metrics, len(dupes), len(risks)
+    )
+    missing_files = [path for path in config.get("expected_files", []) if not (root / path).exists()]
+    largest_files = sorted(file_metrics, key=lambda metric: metric.lines, reverse=True)[:25]
+
+    report = {
+        "root": str(root),
+        "git_branch": run_git(["branch", "--show-current"], root),
+        "git_status_short": git_status,
+        "mode": "changed-only" if only_paths is not None else "full",
+        "changed_revspec": changed_revspec,
+        "summary": summary,
+        "hard_gate_failures": gates,
+        "missing_files": missing_files,
+        "largest_files": [asdict(metric) for metric in largest_files],
+        "function_hotspots": _function_hotspots(function_metrics),
+        "duplicate_blocks": dupes[:25],
+        "risk_findings": [asdict(finding) for finding in risks[:100]],
+        "external_findings": external_findings or [],
+    }
+    report["score"] = score_report(report)
+    return report

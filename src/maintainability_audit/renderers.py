@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from ._hotspots import hotspot_complexity, hotspot_measure, hotspot_name
+
 
 def summary_table(summary: dict[str, int], score: dict[str, Any]) -> list[str]:
     return [
@@ -60,10 +62,12 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.extend(markdown_table("Largest Files", ["File", "Lines", "Status"], file_rows))
 
     hot_rows = [
-        [f"`{i['path']}`", f"`{i['name']}`", str(i["start_line"]), str(i["lines"]), str(i["complexity"]), i["status"]]
+        [f"`{i['path']}`", hotspot_name(i), str(i["start_line"]), str(i["lines"]), hotspot_complexity(i), i["status"]]
         for i in report["function_hotspots"]
     ]
-    lines.extend(markdown_table("Function Hotspots", ["File", "Function", "Line", "Lines", "Complexity", "Status"], hot_rows))
+    lines.extend(
+        markdown_table("Function Hotspots", ["File", "Declaration", "Line", "Lines", "Complexity", "Status"], hot_rows)
+    )
     lines.extend(render_risk_markdown(report))
     lines.extend(render_duplicate_markdown(report))
     lines.extend(render_external_markdown(report))
@@ -136,8 +140,7 @@ def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
     lines: list[str] = []
     lines.extend(bulleted_section("Start with these hard gates:", report["hard_gate_failures"]))
     hotspot_lines = [
-        f"`{i['path']}:{i['start_line']}` `{i['name']}` has {i['lines']} lines "
-        f"and approximate complexity {i['complexity']} ({i['status']})."
+        f"`{i['path']}:{i['start_line']}` {hotspot_name(i)} ({hotspot_measure(i)})."
         for i in report["function_hotspots"][:10]
     ]
     lines.extend(bulleted_section("Function hotspots to inspect first:", hotspot_lines))
@@ -203,10 +206,7 @@ def render_pr_comment(report: dict[str, Any]) -> str:
     if report["function_hotspots"]:
         lines.extend(["### Top Function Hotspots", ""])
         for item in report["function_hotspots"][:5]:
-            lines.append(
-                f"- `{item['path']}:{item['start_line']}` `{item['name']}` "
-                f"({item['lines']} lines, complexity {item['complexity']}, {item['status']})"
-            )
+            lines.append(f"- `{item['path']}:{item['start_line']}` {hotspot_name(item)} ({hotspot_measure(item)})")
         lines.append("")
     lines.append("See `maintainability-report.md` and `maintainability-remediation-prompt.md` artifacts for details.")
     return "\n".join(lines)

@@ -21,6 +21,7 @@
       "coverage/",
       "__pycache__/",
       ".pytest_cache/",
+      "migrations/",
       "_backups/",
       "assets/fonts/files/"
     ]
@@ -30,6 +31,8 @@
     "warn_file_lines": 400,
     "max_function_lines": 80,
     "warn_function_lines": 50,
+    "max_class_lines": 300,
+    "warn_class_lines": 200,
     "max_complexity": 15,
     "warn_complexity": 10,
     "max_duplicate_blocks": 20,

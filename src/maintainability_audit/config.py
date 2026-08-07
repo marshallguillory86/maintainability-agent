@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 
 PROJECT_URL = "https://github.com/marshallguillory86/maintainability-agent"
 
@@ -20,6 +20,10 @@ DEFAULT_CONFIG: dict[str, Any] = {
             "build/",
             "coverage/",
             "__pycache__/",
+            # Schema migrations are append-only history. Refactoring one
+            # rewrites the past, so a long-but-branchless migration is
+            # correct code, not a maintainability finding.
+            "migrations/",
             "maintainability-baseline.json",
             "maintainability-report.md",
             "maintainability-remediation-prompt.md",
@@ -32,6 +36,10 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "warn_file_lines": 400,
         "max_function_lines": 80,
         "warn_function_lines": 50,
+        # Classes are containers, graded on length alone — see
+        # ``metrics.class_status``.
+        "max_class_lines": 300,
+        "warn_class_lines": 200,
         "max_complexity": 15,
         "warn_complexity": 10,
         "max_duplicate_blocks": 20,

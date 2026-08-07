@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from ._hotspots import hotspot_measure, hotspot_name
 from .config import PROJECT_URL
 
 SARIF_RULES: dict[str, dict[str, str]] = {
@@ -92,7 +93,7 @@ def report_to_sarif(report: dict[str, Any]) -> dict[str, Any]:
         results.append(
             sarif_result(
                 rule_id,
-                f"{item['name']} has {item['lines']} lines and complexity {item['complexity']} ({item['status']}).",
+                f"{hotspot_name(item, quote='')} ({hotspot_measure(item)}).",
                 item["path"],
                 item["start_line"],
                 sarif_level(item["status"]),

@@ -27,6 +27,8 @@
         "warn_file_lines": { "type": "integer", "minimum": 1 },
         "max_function_lines": { "type": "integer", "minimum": 1 },
         "warn_function_lines": { "type": "integer", "minimum": 1 },
+        "max_class_lines": { "type": "integer", "minimum": 1 },
+        "warn_class_lines": { "type": "integer", "minimum": 1 },
         "max_complexity": { "type": "integer", "minimum": 1 },
         "warn_complexity": { "type": "integer", "minimum": 1 },
         "max_duplicate_blocks": { "type": "integer", "minimum": 0 },

@@ -55,6 +55,16 @@ jobs:
         # Settings → Secrets → add).
         # SONAR_HOST_URL must point at SonarQube Cloud; the action's
         # default is a self-hosted server at localhost:9000.
+        #
+        # Advisory, not a gate. This project's rules are "no cloud
+        # service requirement" and "no vendor lock-in" (CONTRIBUTING.md),
+        # so an expired token or a moved SonarCloud project must not
+        # block a PR whose deterministic checks all pass. The gates that
+        # can fail this workflow are the steps above: ruff, pip-audit,
+        # tests + coverage, and the tool's own --fail-on-gate audit.
+        # A red mark here means "go look at the token", not "the code is
+        # broken" — check the step log before assuming a regression.
+        continue-on-error: true
         env:
           SONAR_TOKEN:    ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io

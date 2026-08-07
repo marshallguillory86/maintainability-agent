@@ -1,0 +1,133 @@
+"""Grading a declaration: where it starts, how long it is, what it costs.
+
+Extracted from ``metrics.py`` (2026-08-06). ``metrics`` answers "which
+files, and how big"; this module answers "which declarations inside
+them, and are they within budget". The detection strategies it dispatches
+to live in ``_ranges`` (brace-bounded, for C-family sources) and in the
+stdlib ``ast`` (exact, for Python).
+"""
+from __future__ import annotations
+
+import ast
+import os
+from pathlib import Path
+
+from ._metrics_types import COMPLEXITY_RE, FUNC_PATTERNS, DeclRange, FunctionMetric
+from ._ranges import indent_bounded_end, js_declaration_ranges
+
+# Extensions handled by the brace-bounded scanner in ``_ranges``.
+BRACE_SUFFIXES = {".js", ".jsx", ".ts", ".tsx", ".html"}
+
+# Every extension we attempt declaration detection on at all.
+DECLARATION_SUFFIXES = {".py"} | BRACE_SUFFIXES
+
+
+def function_status(lines: int, complexity: int, thresholds: dict[str, int]) -> str:
+    if lines > thresholds["max_function_lines"] or complexity > thresholds["max_complexity"]:
+        return "fail"
+    if lines > thresholds["warn_function_lines"] or complexity > thresholds["warn_complexity"]:
+        return "warn"
+    return "ok"
+
+
+def class_status(lines: int, thresholds: dict[str, int]) -> str:
+    """Grade a class on length only, against its own budget.
+
+    Two reasons this is not ``function_status``. A class is a container,
+    so the per-function line budget is the wrong yardstick — an ordinary
+    six-method class blew past ``max_function_lines`` and was reported
+    as an over-long "function". And ``ast.walk`` yields a class *and*
+    each of its methods, so the class's complexity is the sum of its
+    methods' branches, already counted against those methods.
+    """
+    if lines > thresholds["max_class_lines"]:
+        return "fail"
+    if lines > thresholds["warn_class_lines"]:
+        return "warn"
+    return "ok"
+
+
+def declaration_status(kind: str, lines: int, complexity: int, thresholds: dict[str, int]) -> str:
+    if kind == "class":
+        return class_status(lines, thresholds)
+    return function_status(lines, complexity, thresholds)
+
+
+def _python_function_ranges(source: str) -> list[DeclRange] | None:
+    """Parse Python source and return a ``DeclRange`` for every top-level
+    or nested function/class definition.
+
+    Uses ``ast.end_lineno`` (Python 3.8+) so the body length reflects the
+    actual indented block, not the distance to the next sibling definition.
+    Returns ``None`` if the source cannot be parsed so the caller can fall
+    back to the regex-based detector.
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return None
+    ranges: list[DeclRange] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            end = getattr(node, "end_lineno", None) or node.lineno
+            kind = "class" if isinstance(node, ast.ClassDef) else "function"
+            ranges.append(DeclRange(node.lineno, end, node.name, kind))
+    ranges.sort(key=lambda item: (item.start, item.end))
+    return ranges
+
+
+def _regex_function_ranges(lines: list[str]) -> list[DeclRange]:
+    """Last-resort detector for unparseable Python and unknown extensions.
+
+    Each body is bounded by indentation rather than by the *next* pattern
+    match. The old "next match minus one" rule silently assumed the
+    pattern list was exhaustive; when it wasn't, one declaration absorbed
+    everything to the following match or to end-of-file.
+    """
+    ranges: list[DeclRange] = []
+    for number, line in enumerate(lines, start=1):
+        for pattern, kind in FUNC_PATTERNS:
+            match = pattern.search(line)
+            if match:
+                end = max(indent_bounded_end(lines, number), number)
+                ranges.append(DeclRange(number, end, match.group(1), kind))
+                break
+    return ranges
+
+
+def _declaration_ranges(path: Path, lines: list[str]) -> tuple[list[DeclRange], list[str]]:
+    """Return declaration ranges plus the lines to score complexity against.
+
+    JS/TS/HTML score against a comment- and string-masked copy of the
+    source so ``if`` in a doc comment or ``?`` in a URL is not counted as
+    a branch.
+    """
+    if path.suffix == ".py":
+        parsed = _python_function_ranges("\n".join(lines))
+        if parsed is not None:
+            return parsed, lines
+    if path.suffix in BRACE_SUFFIXES:
+        return js_declaration_ranges(lines)
+    return _regex_function_ranges(lines), lines
+
+
+def detect_functions(root: Path, path: Path, lines: list[str], thresholds: dict[str, int]) -> list[FunctionMetric]:
+    ranges, code = _declaration_ranges(path, lines)
+    rel = str(path.relative_to(root)).replace(os.sep, "/")
+    funcs: list[FunctionMetric] = []
+    for decl in ranges:
+        block = code[decl.start - 1 : decl.end]
+        complexity = 1 + sum(len(COMPLEXITY_RE.findall(line)) for line in block)
+        count = max(1, len(block))
+        funcs.append(
+            FunctionMetric(
+                path=rel,
+                name=decl.name,
+                start_line=decl.start,
+                lines=count,
+                complexity=complexity,
+                status=declaration_status(decl.kind, count, complexity, thresholds),
+                kind=decl.kind,
+            )
+        )
+    return funcs

@@ -17,7 +17,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from maintainability_audit.cli import DEFAULT_CONFIG, build_report, load_config
-from maintainability_audit.metrics import detect_functions, is_excluded, read_lines
+from maintainability_audit.declarations import detect_functions
+from maintainability_audit.metrics import is_excluded, read_lines
 from maintainability_audit.renderers import render_ai_prompt, render_markdown, render_pr_comment
 from maintainability_audit.sarif import report_to_sarif
 

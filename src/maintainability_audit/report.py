@@ -42,6 +42,13 @@ def report_summary(
     prod_funcs, test_funcs = _split_by_test_path(function_metrics)
     return {
         "files_scanned": len(files),
+        # Denominators. Scoring works in rates, so it needs the size of
+        # the population a finding count is drawn from — 20 oversized
+        # functions mean something different in a 50-file repo than in
+        # Django.
+        "declarations_scanned": len(function_metrics),
+        "production_files_scanned": len(prod_files),
+        "production_declarations_scanned": len(prod_funcs),
         "file_warnings": _count_status(file_metrics, "warn"),
         "file_failures": _count_status(file_metrics, "fail"),
         "function_warnings": _count_status(function_metrics, "warn"),

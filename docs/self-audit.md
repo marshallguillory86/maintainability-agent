@@ -46,7 +46,7 @@ Scoring standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based.
 
 | File | Lines | Status |
 |---|---|---|
-| `README.md` | 249 | ok |
+| `README.md` | 247 | ok |
 | `src/maintainability_audit/scoring.py` | 235 | ok |
 | `src/maintainability_audit/_ranges.py` | 232 | ok |
 | `tests/test_cli.py` | 212 | ok |

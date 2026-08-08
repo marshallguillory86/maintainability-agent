@@ -85,8 +85,44 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.extend(render_dead_code_markdown(report))
     lines.extend(render_idiom_markdown(report))
     lines.extend(render_duplicate_markdown(report))
+    lines.extend(render_history_markdown(report))
     lines.extend(render_external_markdown(report))
     return "\n".join(lines)
+
+
+def render_history_markdown(report: dict[str, Any]) -> list[str]:
+    """What the log says about where change cost is actually being paid.
+
+    Absent entirely — heading and all — when the clone is shallow,
+    because rendering an empty table would read as "no hotspots", which
+    is the opposite of "could not look".
+    """
+    history = report.get("history")
+    if history is None:
+        return []
+    hot_rows = [
+        [f"`{item['file']}`", str(item["commits"]), str(item["lines_changed"]),
+         str(item["complexity"]), str(item["authors"]), str(item["score"])]
+        for item in history["hotspots"]
+    ]
+    lines = markdown_table(
+        f"Hotspots — churn x cognitive complexity ({history['window']})",
+        ["File", "Commits", "Lines +/-", "Cognitive", "Authors", "Score"],
+        hot_rows,
+    )
+    pair_rows = [
+        [f"`{item['files'][0]}`", f"`{item['files'][1]}`",
+         str(item["co_changes"]), f"{item['confidence']:.0%}"]
+        for item in history["change_coupling"]
+    ]
+    lines.extend(
+        markdown_table(
+            "Change Coupling — files that keep changing together",
+            ["File", "Changes with", "Co-changes", "Confidence"],
+            pair_rows,
+        )
+    )
+    return lines
 
 
 def render_risk_markdown(report: dict[str, Any]) -> list[str]:

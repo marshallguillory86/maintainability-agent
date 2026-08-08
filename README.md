@@ -51,7 +51,7 @@ This repo eats its own dogfood — the tool is run against this codebase as part
 | Metric | Value |
 |---|---:|
 | Overall score | **5.0 / 5 (A+)** |
-| Files scanned | 71 |
+| Files scanned | 74 |
 | File warnings | 0 |
 | File failures | 0 |
 | Function warnings | 0 |
@@ -205,7 +205,7 @@ See [docs/standard.md](docs/standard.md).
 This repo includes `action.yml`, so it can be used as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v0.6.0
+- uses: marshallguillory86/maintainability-agent@v0.6.1
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

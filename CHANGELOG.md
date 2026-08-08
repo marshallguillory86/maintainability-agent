@@ -2,6 +2,14 @@
 
 All notable changes to Maintainability Agent will be documented here.
 
+## 0.6.1 - 2026-08-08
+
+Release plumbing and a performance consolidation. No behaviour changes.
+
+- **feat(ci): PyPI publishing is automated on tag push, via Trusted Publishing.** `.github/workflows/release.yml` verifies the tag matches the packaged version *before* building — a mismatch would publish the wrong code under the right name, and PyPI uploads cannot be replaced — then builds, runs `twine check`, installs the wheel, runs the suite and the tool's own `--fail-on-gate` audit against the built artifact, and only then publishes. Authentication is OIDC: GitHub mints a short-lived token scoped to this workflow in this repository. **There is no API token in repository secrets**, so there is nothing to leak and nothing to expire — which is exactly what took the SonarQube scan down for three months.
+- **perf: each file is read once and parsed once per audit.** Five scanners each needed the same lines and the same declarations and each computed them independently, so an audit read every file five times and parsed every source file three times. `SourceIndex` holds both for the life of one audit. On Django (3,153 files, 529 KLOC): **10.4s → 8.5s for +27MB**, 18% faster for 8% more memory. The headline number is modest; the point is that cost no longer scales with the number of scanners — a sixth now costs no additional reads. Deliberately not a global or decorator cache, so a long-lived process does not accumulate every file it has ever seen and a re-audit sees current content.
+- **tests:** +8 in `tests/test_source_index.py` pinning that the work is genuinely shared, that a shared index never changes a result, and that every scanner still runs standalone.
+
 ## 0.6.0 - 2026-08-08
 
 Adds four Tier-1 signals aimed directly at the "AI writes code humans cannot maintain" criticism. Reported as findings; deliberately not yet scored. No breaking changes.

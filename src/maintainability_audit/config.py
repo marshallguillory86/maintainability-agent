@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-VERSION = "0.6.0"
+VERSION = "0.6.1"
 
 PROJECT_URL = "https://github.com/marshallguillory86/maintainability-agent"
 

@@ -48,3 +48,40 @@ Include:
 - why it belongs here
 - commands run
 - any follow-up work
+
+## Releasing
+
+Publishing to PyPI is automated. Pushing a version tag builds, verifies and
+publishes; there are no credentials to manage because authentication uses
+PyPI Trusted Publishing (OIDC), which mints a short-lived token scoped to
+`release.yml` in this repository.
+
+```bash
+# 1. bump the version in all three places
+#      pyproject.toml            version = "X.Y.Z"
+#      src/maintainability_audit/__init__.py   __version__
+#      src/maintainability_audit/config.py     VERSION
+# 2. add the CHANGELOG entry, open a PR, merge it
+# 3. tag the merged commit and push
+git checkout main && git pull
+git tag -a vX.Y.Z -m "vX.Y.Z — one-line summary"
+git push origin vX.Y.Z
+```
+
+The workflow refuses to publish if the tag disagrees with the packaged
+version. It also installs the built wheel and runs both the test suite and
+the tool's own `--fail-on-gate` audit against that artifact, so what ships
+is what was verified.
+
+Then cut the GitHub Release from the CHANGELOG section:
+
+```bash
+gh release create vX.Y.Z --title "vX.Y.Z — summary" --notes-file <(...)
+```
+
+If the default thresholds changed in the release, recalibrate first —
+the constants are the anchor for every score the tool emits:
+
+```bash
+python3 tools/calibration/measure.py --check
+```

@@ -13,25 +13,32 @@ from __future__ import annotations
 
 CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "testability"]
 
-# Median raw pressure per dimension across mature human-written OSS
-# (requests, flask, click, attrs, httpx, express, tornado, lodash, axios,
-# black, pytest) under the default thresholds.
+# Median raw pressure per dimension across the 14-repo reference corpus
+# defined in ``tools/calibration/corpus.json``, measured under the
+# package default thresholds.
 #
 # These live on wildly different scales — measured, not guessed:
-# duplication's median is 15x file_size's and 93x declarations'. Summing
-# raw pressures therefore scores duplication and almost nothing else,
-# which is the same class of bug as the count-based model it replaced.
-# Each dimension is divided by its own reference so that "typical of
-# real code" equals 1.0 everywhere, and the dimensions become
-# commensurable.
+# duplication's median is ~19x file_size's and ~63x declarations'.
+# Summing raw pressures therefore scores duplication and almost nothing
+# else, which is the same class of bug as the count-based model it
+# replaced. Each dimension is divided by its own reference so that
+# "typical of real code" equals 1.0 everywhere, and the dimensions
+# become commensurable.
 #
-# Regenerate these with the corpus harness whenever the default
-# thresholds change; they are the anchor for the entire scale.
+# DO NOT hand-edit. Regenerate with:
+#
+#     python3 tools/calibration/measure.py
+#
+# and re-run whenever the default thresholds change — these are the
+# anchor for every score the tool emits, so changing thresholds without
+# recalibrating silently moves the meaning of every grade.
+# ``tests/test_calibration_corpus.py`` re-derives them offline from the
+# checked-in measurements and fails if they drift.
 DIMENSION_REFERENCES: dict[str, float] = {
-    "file_size": 0.1233,
-    "declarations": 0.0207,
-    "duplication": 1.9245,
-    "risk": 0.0525,
+    "file_size": 0.0779,
+    "declarations": 0.0233,
+    "duplication": 1.4659,
+    "risk": 0.0546,
     "gates": 0.1500,
 }
 
@@ -48,17 +55,21 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 
 # score = 5c/(n+c), where n is the weighted mean of normalized pressures.
 #
-# c is fitted so the *measured* median of the OSS corpus (n = 1.2929)
-# scores exactly 4.0 — a well-run real codebase earns a B and everything
-# above it has to be paid for. Note the corpus median repo sits at 1.29
-# rather than 1.0: no single repo is simultaneously median on all five
-# dimensions, so the median of the means is not the mean of the medians.
-# Fitting to the observed value keeps the documented claim true.
+# c is fitted so the *measured* median of the reference corpus scores
+# exactly 4.0 — a well-run real codebase earns a B and everything above
+# it has to be paid for. Note the corpus median repo does not sit at
+# n = 1.0 even though every reference above is itself a median: no single
+# repo is simultaneously median on all five dimensions, so the median of
+# the means is not the mean of the medians. Fitting to the observed value
+# is what keeps the documented claim literally true.
 #
 # The curve is hyperbolic rather than linear so it never saturates: there
 # is always resolution left between two bad repos, which is exactly what
 # the old count-based model lost.
-CALIBRATION_C = 5.1717
+#
+# Derived by ``_derive.derive_curve_constant``; regenerate with
+# ``tools/calibration/measure.py``.
+CALIBRATION_C = 5.2318
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3

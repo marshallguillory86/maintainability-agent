@@ -20,6 +20,11 @@
       },
       "additionalProperties": false
     },
+    "idiom_groups": {
+      "type": "object",
+      "description": "Concern name -> list of competing package names. Overrides the shipped list.",
+      "additionalProperties": { "type": "array", "items": { "type": "string" } }
+    },
     "thresholds": {
       "type": "object",
       "properties": {

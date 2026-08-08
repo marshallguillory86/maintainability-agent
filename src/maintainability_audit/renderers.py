@@ -83,6 +83,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.extend(render_risk_markdown(report))
     lines.extend(render_near_duplicate_markdown(report))
     lines.extend(render_dead_code_markdown(report))
+    lines.extend(render_idiom_markdown(report))
     lines.extend(render_duplicate_markdown(report))
     lines.extend(render_external_markdown(report))
     return "\n".join(lines)
@@ -118,6 +119,19 @@ def render_near_duplicate_markdown(report: dict[str, Any]) -> list[str]:
         ["Location", "Declaration", "Duplicates", "Named", "Similarity", "Scope"],
         rows,
     )
+
+
+def render_idiom_markdown(report: dict[str, Any]) -> list[str]:
+    """Concerns served by more than one library.
+
+    The cost is not duplication — each call site may be fine — it is that
+    no single mental model covers the codebase.
+    """
+    rows = []
+    for item in report.get("divergent_idioms", []):
+        packages = ", ".join(f"`{p['package']}` ({p['files']} files)" for p in item["packages"])
+        rows.append([item["concern"], packages, f"`{item['packages'][-1]['example']}`"])
+    return markdown_table("Competing Libraries", ["Concern", "Libraries in use", "Least-used example"], rows)
 
 
 def render_dead_code_markdown(report: dict[str, Any]) -> list[str]:

@@ -125,6 +125,38 @@ def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
     lines.extend(bulleted_section("Duplicate blocks to inspect:", dupes))
     lines.extend(near_duplicate_section(report))
     lines.extend(dead_code_section(report))
+    lines.extend(idiom_section(report))
+    return lines
+
+
+def idiom_section(report: dict[str, Any]) -> list[str]:
+    """Two libraries doing one job, with the minority usage named.
+
+    Consolidating on the majority library is usually right, and naming
+    which one is in the minority is what makes the finding actionable.
+    But this is the finding most likely to be a deliberate migration
+    caught mid-flight, so the instruction is to check intent first.
+    """
+    findings = report.get("divergent_idioms") or []
+    if not findings:
+        return []
+    items = []
+    for item in findings:
+        packages = ", ".join(f"`{p['package']}` in {p['files']} file(s)" for p in item["packages"])
+        minority = item["packages"][-1]
+        items.append(
+            f"**{item['concern']}** is served by {packages}. The least-used is "
+            f"`{minority['package']}` — for example `{minority['example']}`."
+        )
+    lines = bulleted_section("Competing libraries for one concern:", items)
+    lines.extend(
+        [
+            "Consolidating on the majority library is usually right, but confirm this is not a "
+            "migration in progress before moving anything. If it is deliberate — a deprecated path "
+            "being retired, or a genuine capability difference — say so and leave it.",
+            "",
+        ]
+    )
     return lines
 
 

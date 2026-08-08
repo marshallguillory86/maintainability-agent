@@ -31,8 +31,9 @@ from pathlib import Path
 from typing import Any
 
 from ._tokens import declaration_tokens
-from .declarations import DECLARATION_SUFFIXES, declaration_ranges
-from .metrics import is_test_path, read_lines
+from .declarations import DECLARATION_SUFFIXES
+from .metrics import is_test_path
+from .source import SourceIndex, index_or_new
 
 # A declaration must reach this many normalized tokens, and contain this
 # much branching, before it is considered at all.
@@ -190,7 +191,9 @@ def find_near_duplicates(
     return pairs
 
 
-def collect_fingerprints(root: Path, files: list[Path], production_only: bool = True) -> list[Fingerprint]:
+def collect_fingerprints(
+    root: Path, files: list[Path], production_only: bool = True, index: SourceIndex | None = None
+) -> list[Fingerprint]:
     """Fingerprint every eligible declaration across the given files.
 
     Production-only by default. In the reference corpus, near-duplicates
@@ -199,6 +202,7 @@ def collect_fingerprints(root: Path, files: list[Path], production_only: bool = 
     ``test_filter_with_name_and_template`` — which are not the defect this
     measures. Excluding them is what makes the signal legible.
     """
+    source = index_or_new(index)
     found: list[Fingerprint] = []
     for path in files:
         if path.suffix not in DECLARATION_SUFFIXES:
@@ -206,8 +210,8 @@ def collect_fingerprints(root: Path, files: list[Path], production_only: bool = 
         rel = str(path.relative_to(root)).replace("\\", "/")
         if production_only and is_test_path(rel):
             continue
-        lines = read_lines(path)
-        ranges, _ = declaration_ranges(path, lines)
+        lines = source.lines(path)
+        ranges, _ = source.declarations(path)
         for decl in ranges:
             if decl.kind != "function":
                 continue
@@ -218,14 +222,16 @@ def collect_fingerprints(root: Path, files: list[Path], production_only: bool = 
     return found
 
 
-def near_duplicate_findings(root: Path, files: list[Path]) -> list[dict[str, Any]]:
+def near_duplicate_findings(
+    root: Path, files: list[Path], index: SourceIndex | None = None
+) -> list[dict[str, Any]]:
     """Near-duplicate declarations, worst first, ready for the report.
 
     Each finding names *both* sides, because the actionable instruction is
     "reuse the one that already exists", and an agent cannot follow that
     without being told where it is.
     """
-    pairs = find_near_duplicates(collect_fingerprints(root, files))
+    pairs = find_near_duplicates(collect_fingerprints(root, files, index=index))
     return [
         {
             "similarity": pair.similarity,

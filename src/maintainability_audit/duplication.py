@@ -13,7 +13,8 @@ from pathlib import Path
 from typing import Any
 
 from ._metrics_types import RiskFinding
-from .metrics import read_lines
+from .metrics import read_lines  # noqa: F401  (re-exported for callers)
+from .source import SourceIndex, index_or_new
 
 
 def normalize_for_dup(line: str) -> str:
@@ -45,10 +46,13 @@ def _is_trivial_dup_line(line: str) -> bool:
     return bool(_TRIVIAL_KWARG_RE.match(line))
 
 
-def duplicate_blocks(root: Path, files: list[Path], block_size: int) -> list[dict[str, Any]]:
+def duplicate_blocks(
+    root: Path, files: list[Path], block_size: int, index: SourceIndex | None = None
+) -> list[dict[str, Any]]:
+    source = index_or_new(index)
     seen: dict[tuple[str, ...], list[str]] = {}
     for path in files:
-        lines = [normalize_for_dup(line) for line in read_lines(path)]
+        lines = [normalize_for_dup(line) for line in source.lines(path)]
         useful = [line for line in lines if line and not line.startswith(("//", "#", "/*", "*", '"', "'"))]
         for idx in range(0, max(0, len(useful) - block_size + 1)):
             block = tuple(useful[idx : idx + block_size])
@@ -69,7 +73,10 @@ def duplicate_blocks(root: Path, files: list[Path], block_size: int) -> list[dic
     return sorted(dupes, key=lambda item: item["count"], reverse=True)
 
 
-def risk_findings(root: Path, files: list[Path], config: dict[str, Any]) -> list[RiskFinding]:
+def risk_findings(
+    root: Path, files: list[Path], config: dict[str, Any], index: SourceIndex | None = None
+) -> list[RiskFinding]:
+    source = index_or_new(index)
     findings: list[RiskFinding] = []
     for rule in config.get("risk_patterns", []):
         pattern = re.compile(rule["pattern"], re.IGNORECASE)
@@ -77,7 +84,7 @@ def risk_findings(root: Path, files: list[Path], config: dict[str, Any]) -> list
         for path in files:
             if allowed and path.suffix not in allowed:
                 continue
-            for idx, line in enumerate(read_lines(path), start=1):
+            for idx, line in enumerate(source.lines(path), start=1):
                 if pattern.search(line):
                     findings.append(
                         RiskFinding(

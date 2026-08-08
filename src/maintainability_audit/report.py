@@ -17,6 +17,7 @@ from ._metrics_types import FileMetric, FunctionMetric
 from .deadcode import dead_declarations
 from .duplication import duplicate_blocks, risk_findings
 from .git_tools import run_git
+from .history import history_section
 from .idioms import divergent_idioms
 from .metrics import collect_metrics, hard_gate_failures, is_test_path
 from .scoring import score_report
@@ -138,22 +139,30 @@ def build_report(
         "largest_files": [asdict(metric) for metric in largest_files],
         "function_hotspots": _function_hotspots(function_metrics),
         "duplicate_blocks": dupes[:25],
-        # Reported as findings, deliberately not yet scored. The corpus
-        # shows the rate separates AI-written from mature human code, but
-        # most repos sit at zero, so a median-based reference would be
-        # unstable — see docs/standard.md. Signals earn a score by
-        # holding up, not by being new.
+        # Reported as findings, deliberately not yet scored: most repos
+        # sit at zero, so a median-based reference would be unstable.
+        # NOT evidence about authorship — the 0.6.0 claim that this rate
+        # separates AI-written from human code is retracted (matched
+        # control, p = 0.546; docs/standard.md "Does this detect
+        # AI-written code?"). Signals earn a score by holding up, not by
+        # being new.
         "near_duplicates": near_duplicates[:25],
-        # Also findings-only. Measured across the corpus the rate barely
-        # separates AI-written from mature human code (median 0.14% vs
-        # 0.0%), so it earns a place in the report as hygiene, not in the
-        # score as evidence.
+        # Also findings-only, and also not evidence about authorship
+        # (p = 0.266 against the matched control). Earns its place in
+        # the report as hygiene.
         "dead_code": dead[:25],
         # Quiet by design: zero findings across the whole reference
         # corpus, one on a repo genuinely running two HTTP clients. High
         # precision, low recall — the right trade here.
         "divergent_idioms": idioms,
         "risk_findings": [asdict(finding) for finding in risks[:100]],
+        # Churn, hotspots (churn x cognitive complexity) and change
+        # coupling from the repo's own log. Findings-only, deliberately
+        # unscored: they have not been validated against an outcome, and
+        # unvalidated signals do not move grades here any more. None —
+        # not empty — when the clone is shallow, because "no history" and
+        # "no changes" are opposite findings.
+        "history": history_section(root, file_metrics, function_metrics),
         "external_findings": external_findings or [],
     }
     report["score"] = score_report(report)

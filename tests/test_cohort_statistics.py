@@ -52,8 +52,12 @@ def test_identical_groups_are_not_a_difference() -> None:
 
     result = mann_whitney(values, list(values))
 
+    # z is a hair below zero, not exactly zero: U sits on its mean and
+    # the continuity correction steps half a unit past it. What matters
+    # is that the step lands on the "no difference" side and p clips to
+    # exactly 1.0 — scipy's behavior on the same input.
     assert result["p"] == 1.0
-    assert result["z"] == 0.0
+    assert result["z"] <= 0.0
 
 
 def test_all_values_tied_does_not_divide_by_zero() -> None:
@@ -78,6 +82,31 @@ def test_cleanly_separated_groups_are_significant() -> None:
     assert result["u"] == 0.0, "no overlap means U collapses to zero"
 
 
+def test_p_values_match_scipy_exactly() -> None:
+    """Pinned against ``scipy.stats.mannwhitneyu(method="asymptotic")``.
+
+    The first version of this suite asserted only ``0 < p <= 1`` for the
+    tie case, which passes with no tie handling at all — and indeed the
+    implementation averaged ranks for ties while keeping the *untied*
+    variance, inflating p by up to 2.4x on tie-heavy metrics. Inflated p
+    in a study concluding "no difference" is the convenient direction to
+    be wrong in, which is precisely why these are pinned numbers rather
+    than shape assertions. Reference values computed with scipy 1.17.1;
+    scipy itself is deliberately not a dependency.
+    """
+    cases = [
+        # separated, no ties
+        ([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [10.0, 11.0, 12.0, 13.0, 14.0, 15.0], 0.0051),
+        # heavy ties at zero — the shape of most metrics in cohorts.json,
+        # and the case the untied variance got most wrong
+        ([0.0, 0.0, 0.0, 1.0, 2.0], [0.0, 0.0, 3.0, 4.0, 5.0], 0.2652),
+        # an interior tie group spanning both samples
+        ([1.0, 5.0, 5.0, 5.0, 9.0, 13.0], [2.0, 6.0, 7.0, 8.0, 10.0, 14.0], 0.3751),
+    ]
+    for left, right, expected in cases:
+        assert mann_whitney(left, right)["p"] == pytest.approx(expected, abs=1e-4)
+
+
 def test_argument_order_does_not_change_the_verdict() -> None:
     """U is reported as the smaller of the two, so the test is two-sided
     and symmetric. If this ever fails, every reported p-value depends on
@@ -85,20 +114,6 @@ def test_argument_order_does_not_change_the_verdict() -> None:
     low, high = [1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0]
 
     assert mann_whitney(low, high) == mann_whitney(high, low)
-
-
-def test_ties_take_the_average_rank() -> None:
-    """Ranks 2, 3 and 4 shared by three tied values must each score 3.
-    Handing them sequential ranks instead would invent an ordering the
-    data does not contain and bias U toward whichever group was sorted
-    first."""
-    tied = [1.0, 5.0, 5.0, 5.0, 9.0, 13.0]
-    spread = [2.0, 6.0, 7.0, 8.0, 10.0, 14.0]
-
-    result = mann_whitney(tied, spread)
-
-    assert result is not None
-    assert 0.0 < result["p"] <= 1.0
 
 
 # ---------------------------------------------------------------------------

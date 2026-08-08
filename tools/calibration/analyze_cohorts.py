@@ -19,8 +19,12 @@ So the claim has to clear three bars, in order:
    restricted to the overlap of their declaration ranges and retested. A
    difference that evaporates here was about size.
 
-Five metrics are tested at once, so a lone p just under 0.05 is what you
-would expect from chance alone. Read the whole table, not the best row.
+Five metrics are tested at once. That does not license waving away every
+sub-0.05 result as chance — the expected chance yield of five tests at
+alpha = 0.05 is a quarter of a test, and two landed under it here. What
+it does mean is that no single row settles anything: the size
+correlation column and the banded re-test are where those two rows get
+their actual explanation. Read the whole table, not the best row.
 
     python3 tools/calibration/analyze_cohorts.py tools/calibration/cohorts.json
 """

@@ -52,13 +52,21 @@ _LIST_MARKERS = (
     "beginner", "interview", "algorithms", "cheatsheet", "checklist", "curriculum",
     "public-apis", "free-programming", "30-seconds", "hellogithub", "iptv",
     "coding-", "learn", "examples", "demo", "course", "notes", "resources",
-    # "concepts" was added after `33-js-concepts` cleared verification on a
-    # technicality: an index.js plus thirty concept-demo test files is
-    # enough declarations to look like a codebase. The exclusion is on what
-    # the repository *is* — a teaching repo, already covered by "tutorial",
-    # "learn" and "examples" — not on how it measured. Note the distinction
-    # matters: filtering the corpus by its own results would manufacture
-    # whatever reference the filter was aimed at.
+    # "concepts" was added for `33-js-concepts`, and honesty requires
+    # saying how it was found: by its measurements. It cleared
+    # verification (an index.js plus thirty concept-demo test files is
+    # enough declarations to look like a codebase) and then showed up as
+    # the corpus outlier on duplication (38.8x the median) and file size
+    # (3x the next repo). The *justification* is that it is a teaching
+    # repo — the category "tutorial", "learn" and "examples" already
+    # encode — but the discovery was outcome-triggered, which is the
+    # failure mode a mechanical corpus exists to prevent. It stays
+    # excluded because the category judgment stands on its own; the line
+    # is deliberately not extended to judgment calls like
+    # tensorflow/models (parallel research examples) or freeCodeCamp,
+    # because pruning repo-by-repo on editorial grounds is the
+    # hand-picking this script replaced. For scale: including the outlier
+    # moves CALIBRATION_C 3.5466 -> 3.5724 — medians barely notice.
     "concepts",
 )
 

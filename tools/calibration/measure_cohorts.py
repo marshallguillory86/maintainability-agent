@@ -139,14 +139,21 @@ def mann_whitney(left: list[float], right: list[float]) -> dict[str, float] | No
 
     Implemented here rather than pulled from scipy because this tool ships
     with no scientific dependencies and one offline comparison does not
-    justify adding them. Ties get average ranks; the p-value uses the
-    normal approximation, which is rough below roughly n=10 per group —
-    reported with the group sizes so a reader can discount it accordingly.
+    justify adding them. The p-value uses the normal approximation with
+    both the **tie correction** and the continuity correction — matching
+    ``scipy.stats.mannwhitneyu(method="asymptotic")``, which the test
+    suite pins numerically. The first version averaged ranks for ties but
+    kept the untied variance; on these metrics, where most repos tie at
+    zero, that inflated p-values by up to 2.4x — and inflated p in a study
+    concluding "no significant difference" is the convenient direction to
+    be wrong in. Still rough below roughly n=10 per group; group sizes are
+    reported so a reader can discount accordingly.
     """
     if len(left) < 3 or len(right) < 3:
         return None
     pooled = sorted([(v, 0) for v in left] + [(v, 1) for v in right])
     ranks: list[float] = [0.0] * len(pooled)
+    tie_term = 0.0  # sum of t^3 - t over tie groups, for the variance
     index = 0
     while index < len(pooled):
         stop = index
@@ -155,18 +162,27 @@ def mann_whitney(left: list[float], right: list[float]) -> dict[str, float] | No
         shared = (index + stop) / 2 + 1
         for position in range(index, stop + 1):
             ranks[position] = shared
+        size = stop - index + 1
+        tie_term += size**3 - size
         index = stop + 1
 
     rank_sum = sum(rank for rank, (_, group) in zip(ranks, pooled, strict=True) if group == 0)
     n_left, n_right = len(left), len(right)
+    total = n_left + n_right
     u_left = rank_sum - n_left * (n_left + 1) / 2
     u = min(u_left, n_left * n_right - u_left)
     mean = n_left * n_right / 2
-    deviation = math.sqrt(n_left * n_right * (n_left + n_right + 1) / 12)
-    if deviation == 0:
-        return None
-    z = (u - mean) / deviation
-    p = 2 * (1 - 0.5 * (1 + math.erf(abs(z) / math.sqrt(2))))
+    variance = n_left * n_right / 12 * (total + 1 - tie_term / (total * (total - 1)))
+    if variance <= 0:
+        # Every value tied: the groups are literally identical in rank.
+        return {"u": u, "z": 0.0, "p": 1.0}
+    # Continuity correction on the *larger* U, signed, doubled and
+    # clipped — scipy's exact formulation. Taking |z| instead looks
+    # equivalent but is not at the boundary: identical groups put U at
+    # its mean, where the correction lands on the far side of zero and
+    # must clip to 1.0 rather than report a small spurious difference.
+    z = (n_left * n_right - u - mean - 0.5) / math.sqrt(variance)
+    p = min(1.0, 2 * (1 - 0.5 * (1 + math.erf(z / math.sqrt(2)))))
     return {"u": u, "z": round(z, 3), "p": round(p, 4)}
 
 

@@ -128,25 +128,25 @@ None of the three is a score dimension yet. Most repositories sit at zero, so a 
 
 ### Does this detect AI-written code?
 
-**No. No metric measured here separates AI-assisted from human-written code once the comparison is controlled.**
+**This tool does not claim to. Its 0.6.0 claim that it could is retracted, and a follow-up study designed to test the claim properly could not measure a difference — which is weaker than "there is no difference", and the distinction matters.**
 
-0.6.0 claimed otherwise, and that claim is retracted. It reported near-duplication at 1.49% for AI-written applications against 0.20% for human-written OSS, and called it "the first signal that separates the two populations". The AI cohort was six young applications; the control was twelve libraries with a decade of maintenance behind them. Authorship, age, domain and size all differed at once, and the conclusion was attributed to the only one of those the project found interesting.
+0.6.0 reported near-duplication at 1.49% for AI-written applications against 0.20% for human-written OSS, and called it "the first signal that separates the two populations". The AI cohort was six young applications; the control was twelve libraries with a decade of maintenance behind them. Authorship, age, domain and size all differed at once, and the conclusion was attributed to the only one of those the project found interesting.
 
-The re-run builds a control matched on **age, popularity, language and size**: repositories from the same creation window, inside the same star band (both cohorts have a median of **zero** stars), in the same language mix, with no AI co-author trailer on any of up to 300 sampled commits. Cohorts are built by [`select_authored.py`](../tools/calibration/select_authored.py), measured by [`measure_cohorts.py`](../tools/calibration/measure_cohorts.py), and the analysis below reproduces offline from the checked-in [`cohorts.json`](../tools/calibration/cohorts.json) via [`analyze_cohorts.py`](../tools/calibration/analyze_cohorts.py).
+The re-run builds a control **selected to match on age, popularity and language** — same creation window, same star band (both cohorts have a median of **zero** stars), same language mix, with no AI co-author trailer on any of up to 300 sampled commits. **Size was not matched at selection**: the AI cohort came out carrying 1.8x the control's median declarations, and size is handled after the fact by re-testing inside a common size band, which is a weaker control than matching would have been. Cohorts are built by [`select_authored.py`](../tools/calibration/select_authored.py) and measured by [`measure_cohorts.py`](../tools/calibration/measure_cohorts.py); the cohort definitions are pinned in [`ai.json`](../tools/calibration/ai.json) and [`human.json`](../tools/calibration/human.json), and the analysis reproduces offline from the checked-in [`cohorts.json`](../tools/calibration/cohorts.json) via [`analyze_cohorts.py`](../tools/calibration/analyze_cohorts.py). The rank-sum test carries tie and continuity corrections and is pinned numerically against scipy — an earlier version lacked the tie correction, which inflated p-values by up to 2.4x on tie-heavy metrics, in the direction that flattered the null.
 
-|metric|AI-assisted (n=20)|matched control (n=18)|mature OSS (n=40)|p|size correlation|
+|metric|AI-assisted (n=20)|no-trailer control (n=18)|mature OSS (n=40)|p|size correlation|
 |---|---|---|---|---|---|
-|near-duplicate rate|1.73%|0.83%|0.64%|0.539|0.10|
-|dead code rate|0.00%|0.00%|0.02%|0.381|0.52|
-|file failure rate|2.89%|0.80%|3.26%|0.044|0.58|
-|function failure rate|9.14%|8.83%|6.70%|0.619|0.12|
-|duplicate block rate|6.70|1.73|6.23|0.041|0.49|
+|near-duplicate rate|1.73%|0.83%|0.64%|0.546|0.10|
+|dead code rate|0.00%|0.00%|0.02%|0.266|0.52|
+|file failure rate|2.89%|0.80%|3.26%|0.043|0.58|
+|function failure rate|9.14%|8.83%|6.70%|0.629|0.12|
+|duplicate block rate|6.70|1.73|6.23|0.042|0.49|
 
-**Read the whole table, not the best row.** Two metrics fall under p = 0.05, and both are the two that correlate most strongly with codebase size (r = 0.58 and 0.49) — while the AI cohort carries 1.8x the declarations of the control. Restricting both cohorts to the declaration range they share (109–3,655) removes it: file failures go to **p = 0.121**, duplicate blocks to **p = 0.113**, near-duplication to **p = 0.857**. Five metrics were tested at once, so one p just under 0.05 is what chance alone produces; neither survives a correction for that.
+**Read the whole table, not the best row.** Two metrics fall under p = 0.05 — more than chance alone would typically yield across five tests, but they are also the two metrics most correlated with codebase size (r = 0.58 and 0.49), and the AI cohort is the larger one. Inside the shared size band (109–3,655 declarations), file failures go to **p = 0.123 with the medians nearly equal** (1.82% vs 1.77%) — that gap really does look like size. Duplicate blocks are less tidy: **p = 0.117, but the banded medians still differ 3.3x** (5.67 vs 1.73), so that comparison is underpowered rather than resolved, and a larger study could plausibly find a real difference there. Near-duplication — the retracted headline — is p = 0.546 unbanded and 0.871 banded: not close.
 
 What actually changed from 0.6.0 is instructive: the AI near-duplication figure barely moved (1.49% → 1.73%). **The control moved**, from 0.20% to 0.83%, because it stopped being decade-old libraries. The signal was maturity wearing authorship's clothes.
 
-**This is a negative result, and it has its own limits.** n = 20 against n = 18 is small, so the test would miss anything subtler than roughly a two-fold difference — absence of evidence here is not evidence of absence. The AI cohort is self-selected toward teams whose tooling writes commit trailers, which plausibly means more deliberate workflows than AI-assisted development at large. And the control is "no trailer on any sampled commit", which is weaker than "written by hand". A larger, better-instrumented study could find what this one cannot.
+**The design has a hole no statistics repair: the control cannot be verified as human.** "No AI trailer on any sampled commit" excludes only tooling that writes trailers — Copilot and pasted LLM output leave none. The control contains zero-star 2024-25 projects whose subject matter (RAG apps, AI platforms) makes LLM assistance likely. If enough of the control is quietly AI-assisted, this study compares AI-with-trailers to AI-without-trailers, and its null is guaranteed and uninformative. That is why the honest conclusion is **"this design could not measure a difference"**, not "there is no difference". Add the usual limits — n = 20 vs 18 misses anything subtler than roughly two-fold, and the trailer-writing cohort self-selects for deliberate workflows — and the study licenses exactly one claim: the 0.6.0 evidence was wrong, and nothing measured so far replaces it. A study that wanted the stronger claim would need a control whose humanity is verifiable, such as code committed before LLM assistants existed, measured at a pinned historical commit.
 
 ### Limits
 

@@ -1,11 +1,22 @@
 {
   "version": 1,
   "paths": {
-    "include_extensions": [".py", ".md", ".json", ".yml", ".yaml"],
+    "include_extensions": [
+      ".py",
+      ".md",
+      ".json",
+      ".yml",
+      ".yaml"
+    ],
     "exclude_patterns": [
       ".git/",
       ".venv/",
       "__pycache__/",
+      "node_modules/",
+      "htmlcov/",
+      "*.egg-info/",
+      "dist/",
+      "build/",
       ".pytest_cache/",
       "examples/reports/",
       "maintainability-report.md",
@@ -52,7 +63,13 @@
     {
       "name": "dynamic-code-execution",
       "pattern": "\\b(eval|exec)\\s*\\(",
-      "extensions": [".py", ".js", ".jsx", ".ts", ".tsx"]
+      "extensions": [
+        ".py",
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx"
+      ]
     }
   ],
   "instruction_pack": {

@@ -134,8 +134,21 @@ def declaration_ranges(path: Path, lines: list[str]) -> tuple[list[DeclRange], l
     return _regex_function_ranges(lines), lines
 
 
-def detect_functions(root: Path, path: Path, lines: list[str], thresholds: dict[str, int]) -> list[FunctionMetric]:
-    ranges, code = declaration_ranges(path, lines)
+def detect_functions(
+    root: Path,
+    path: Path,
+    lines: list[str],
+    thresholds: dict[str, int],
+    parsed: tuple[list[DeclRange], list[str]] | None = None,
+) -> list[FunctionMetric]:
+    """Grade every declaration in one file.
+
+    ``parsed`` lets a caller hand in ranges it has already computed —
+    ``SourceIndex`` does, so a file is parsed once per audit rather than
+    once per scanner. Passing nothing parses here, which keeps this
+    usable standalone.
+    """
+    ranges, code = parsed if parsed is not None else declaration_ranges(path, lines)
     rel = str(path.relative_to(root)).replace(os.sep, "/")
     funcs: list[FunctionMetric] = []
     for decl in ranges:

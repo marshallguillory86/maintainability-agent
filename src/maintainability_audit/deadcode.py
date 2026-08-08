@@ -32,8 +32,9 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from .declarations import DECLARATION_SUFFIXES, declaration_ranges
-from .metrics import is_test_path, read_lines
+from .declarations import DECLARATION_SUFFIXES
+from .metrics import is_test_path
+from .source import SourceIndex, index_or_new
 
 _IDENTIFIER_RE = re.compile(r"[A-Za-z_$][\w$]*")
 
@@ -81,7 +82,7 @@ def _is_decorated(lines: list[str], start: int) -> bool:
     return False
 
 
-def reference_counts(files: list[Path]) -> Counter[str]:
+def reference_counts(files: list[Path], index: SourceIndex | None = None) -> Counter[str]:
     """How often each identifier appears across the repository.
 
     Counted over the **raw** source, deliberately. The masked copy was
@@ -94,9 +95,10 @@ def reference_counts(files: list[Path]) -> Counter[str]:
     string also reads as a reference. That hides a dead function rather
     than inventing one — the direction this tool always errs in.
     """
+    source = index_or_new(index)
     counts: Counter[str] = Counter()
     for path in files:
-        for line in read_lines(path):
+        for line in source.lines(path):
             counts.update(_IDENTIFIER_RE.findall(line))
     return counts
 
@@ -113,9 +115,9 @@ def _scannable(root: Path, files: list[Path]) -> list[tuple[Path, str]]:
     return out
 
 
-def _dead_in_file(path: Path, rel: str, counts: Counter[str]) -> list[dict[str, Any]]:
-    lines = read_lines(path)
-    ranges, _ = declaration_ranges(path, lines)
+def _dead_in_file(path: Path, rel: str, counts: Counter[str], source: SourceIndex) -> list[dict[str, Any]]:
+    lines = source.lines(path)
+    ranges, _ = source.declarations(path)
     findings = []
     for decl in ranges:
         declaration_line = lines[decl.start - 1] if decl.start <= len(lines) else ""
@@ -138,11 +140,14 @@ def _dead_in_file(path: Path, rel: str, counts: Counter[str]) -> list[dict[str, 
     return findings
 
 
-def dead_declarations(root: Path, files: list[Path]) -> list[dict[str, Any]]:
+def dead_declarations(
+    root: Path, files: list[Path], index: SourceIndex | None = None
+) -> list[dict[str, Any]]:
     """Private declarations whose names appear nowhere but their own definition."""
-    counts = reference_counts(files)
+    source = index_or_new(index)
+    counts = reference_counts(files, source)
     findings: list[dict[str, Any]] = []
     for path, rel in _scannable(root, files):
-        findings.extend(_dead_in_file(path, rel, counts))
+        findings.extend(_dead_in_file(path, rel, counts, source))
     findings.sort(key=lambda item: (-item["lines"], item["path"]))
     return findings

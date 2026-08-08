@@ -21,6 +21,7 @@ from .idioms import divergent_idioms
 from .metrics import collect_metrics, hard_gate_failures, is_test_path
 from .scoring import score_report
 from .similarity import near_duplicate_findings
+from .source import SourceIndex
 
 
 def _count_status(metrics: list, status: str) -> int:
@@ -108,13 +109,16 @@ def build_report(
     changed_revspec: str | None = None,
     external_findings: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    files, file_metrics, function_metrics = collect_metrics(root, config, only_paths)
+    # One index for the whole audit: each file is read once and parsed
+    # once, rather than once per scanner.
+    source = SourceIndex()
+    files, file_metrics, function_metrics = collect_metrics(root, config, only_paths, source)
     thresholds = config["thresholds"]
-    dupes = duplicate_blocks(root, files, int(thresholds["duplicate_block_lines"]))
-    near_duplicates = near_duplicate_findings(root, files)
-    dead = dead_declarations(root, files)
-    idioms = divergent_idioms(root, files, config)
-    risks = risk_findings(root, files, config)
+    dupes = duplicate_blocks(root, files, int(thresholds["duplicate_block_lines"]), source)
+    near_duplicates = near_duplicate_findings(root, files, source)
+    dead = dead_declarations(root, files, source)
+    idioms = divergent_idioms(root, files, config, source)
+    risks = risk_findings(root, files, config, source)
     git_status = run_git(["status", "--short"], root)
     gates, summary = _compute_gates_and_summary(
         root, config, git_status, files, file_metrics, function_metrics, len(dupes), len(risks)

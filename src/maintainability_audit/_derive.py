@@ -21,6 +21,22 @@ DIMENSIONS = ("file_size", "declarations", "duplication", "risk", "gates")
 # Enough repos that one unusual codebase cannot move a median on its own.
 MIN_CORPUS_SIZE = 8
 
+# References that are a fixed unit rather than something the corpus
+# measures, and the values themselves.
+#
+# Hard gates are discrete policy breaches a repository opts into, not a
+# rate drawn from a population, so there is no meaningful median to
+# divide by — and once gating became opt-in the corpus median went to
+# zero, which would have made the dimension silently ignore real
+# failures. 0.05 is one gate failure, so one breach reads as 1.0x.
+#
+# **This module is the authority, deliberately.** Reading the value back
+# out of ``_calibration`` instead would make
+# ``test_dimension_references_match_the_measured_corpus`` compare the
+# constant against itself, and a hand-edited ``gates`` would pass the one
+# test written to catch hand-edited constants.
+FIXED_REFERENCES: dict[str, float] = {"gates": 0.05}
+
 
 def derive_references(measurements: list[dict[str, Any]]) -> dict[str, float]:
     """Median raw pressure per dimension across the corpus.
@@ -32,7 +48,11 @@ def derive_references(measurements: list[dict[str, Any]]) -> dict[str, float]:
     if len(measurements) < MIN_CORPUS_SIZE:
         raise ValueError(f"corpus has {len(measurements)} repos; at least {MIN_CORPUS_SIZE} required")
     return {
-        dimension: round(median(entry["dimensions"][dimension] for entry in measurements), 4)
+        dimension: (
+            FIXED_REFERENCES[dimension]
+            if dimension in FIXED_REFERENCES
+            else round(median(entry["dimensions"][dimension] for entry in measurements), 4)
+        )
         for dimension in DIMENSIONS
     }
 
@@ -49,6 +69,8 @@ def normalized_pressures(
         weighted = sum(
             weights[dimension] * entry["dimensions"][dimension] / references[dimension]
             for dimension in DIMENSIONS
+            # A dimension the corpus never exhibits has no reference to
+            # divide by and contributes nothing.
             if references[dimension] > 0
         )
         values.append(weighted / total_weight)

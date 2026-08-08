@@ -24,6 +24,7 @@ import pytest
 from maintainability_audit._calibration import CALIBRATION_C, DIMENSION_REFERENCES, DIMENSION_WEIGHTS
 from maintainability_audit._derive import (
     DIMENSIONS,
+    FIXED_REFERENCES,
     MIN_CORPUS_SIZE,
     derive_curve_constant,
     derive_references,
@@ -49,6 +50,24 @@ def measurements() -> list[dict]:
 
 def test_dimension_references_match_the_measured_corpus(measurements: list[dict]) -> None:
     assert derive_references(measurements) == DIMENSION_REFERENCES
+
+
+def test_the_fixed_gates_reference_is_checked_rather_than_echoed(measurements: list[dict]) -> None:
+    """A hand-edited ``gates`` must fail the suite like any other constant.
+
+    ``gates`` is the one reference the corpus does not measure, so it
+    cannot be re-derived from the measurements — which briefly made it the
+    one constant nothing checked: ``derive_references`` read it back out
+    of ``_calibration`` and the test above compared it to itself. The
+    authority now lives in ``_derive``, and these are two independent
+    statements of the same number.
+    """
+    assert FIXED_REFERENCES["gates"] == DIMENSION_REFERENCES["gates"]
+    assert derive_references(measurements)["gates"] == FIXED_REFERENCES["gates"]
+
+    tampered = dict(DIMENSION_REFERENCES) | {"gates": 0.5}
+
+    assert derive_references(measurements) != tampered, "editing gates by hand must be caught"
 
 
 def test_curve_constant_matches_the_measured_corpus(measurements: list[dict]) -> None:

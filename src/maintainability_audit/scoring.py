@@ -83,7 +83,7 @@ def dimension_pressures(summary: dict[str, Any]) -> dict[str, float]:
 def normalize_production(summary: dict[str, Any]) -> dict[str, float]:
     """Production-only pressures, in the same normalized units."""
     raw = production_pressures(summary)
-    return {name: value / DIMENSION_REFERENCES[name] for name, value in raw.items()}
+    return {name: _relative(value, DIMENSION_REFERENCES[name]) for name, value in raw.items()}
 
 
 def production_pressures(summary: dict[str, Any]) -> dict[str, float]:
@@ -200,7 +200,19 @@ def normalize(pressures: dict[str, float]) -> dict[str, float]:
     the unit the report should speak in, because "duplication 3.1x" is
     actionable in a way that "duplication 0.6346" is not.
     """
-    return {name: value / DIMENSION_REFERENCES[name] for name, value in pressures.items()}
+    return {name: _relative(value, DIMENSION_REFERENCES[name]) for name, value in pressures.items()}
+
+
+def _relative(value: float, reference: float) -> float:
+    """Express a pressure as a multiple of its reference.
+
+    A reference of zero means the corpus showed none of this at all, so
+    there is nothing to be a multiple *of*. Report 0.0 rather than
+    dividing — the dimension simply carries no signal for this scale.
+    """
+    if reference <= 0:
+        return 0.0
+    return value / reference
 
 
 def _weighted_mean(normalized: dict[str, float]) -> float:

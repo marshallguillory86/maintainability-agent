@@ -1,124 +1,125 @@
 {
- "measured_on": "2026-08-07",
+ "measured_on": "2026-08-08",
+ "corpus_size": 40,
  "measurements": [
   {
-   "repo": "requests",
-   "files": 52,
-   "declarations": 807,
+   "repo": "Chart.js",
+   "files": 883,
+   "declarations": 1553,
    "dimensions": {
-    "file_size": 0.1326923076923077,
-    "declarations": 0.027137546468401486,
-    "duplication": 0.6346153846153846,
-    "risk": 0.21153846153846154,
-    "gates": 0.15000000000000002
+    "file_size": 0.02842582106455266,
+    "declarations": 0.02994204764971024,
+    "duplication": 5.522083805209513,
+    "risk": 0.0056625141562853904,
+    "gates": 0.0
    }
   },
   {
-   "repo": "flask",
-   "files": 111,
-   "declarations": 1628,
+   "repo": "angular",
+   "files": 8224,
+   "declarations": 42765,
    "dimensions": {
-    "file_size": 0.06126126126126126,
-    "declarations": 0.01597051597051597,
-    "duplication": 1.0990990990990992,
-    "risk": 0.0,
-    "gates": 0.15000000000000002
+    "file_size": 0.046145428015564205,
+    "declarations": 0.03218519817607857,
+    "duplication": 5.174002918287938,
+    "risk": 0.17424610894941633,
+    "gates": 0.0
    }
   },
   {
-   "repo": "click",
-   "files": 120,
-   "declarations": 1924,
+   "repo": "anime",
+   "files": 268,
+   "declarations": 922,
    "dimensions": {
-    "file_size": 0.12333333333333332,
-    "declarations": 0.02151767151767152,
-    "duplication": 0.6333333333333333,
-    "risk": 0.0,
-    "gates": 0.15000000000000002
+    "file_size": 0.054104477611940295,
+    "declarations": 0.09978308026030369,
+    "duplication": 8.843283582089553,
+    "risk": 0.14925373134328357,
+    "gates": 0.0
    }
   },
   {
-   "repo": "attrs",
-   "files": 87,
-   "declarations": 1833,
+   "repo": "ansible",
+   "files": 1862,
+   "declarations": 12752,
    "dimensions": {
-    "file_size": 0.13793103448275862,
-    "declarations": 0.018930714675395525,
-    "duplication": 1.2873563218390804,
-    "risk": 0.022988505747126436,
-    "gates": 0.15000000000000002
+    "file_size": 0.04967776584317938,
+    "declarations": 0.050094102885821834,
+    "duplication": 1.8839957035445758,
+    "risk": 0.25993555316863587,
+    "gates": 0.0
    }
   },
   {
-   "repo": "httpx",
-   "files": 91,
-   "declarations": 1241,
+   "repo": "ant-design",
+   "files": 4522,
+   "declarations": 6299,
    "dimensions": {
-    "file_size": 0.0945054945054945,
-    "declarations": 0.01506849315068493,
-    "duplication": 4.681318681318682,
-    "risk": 0.01098901098901099,
-    "gates": 0.15000000000000002
+    "file_size": 0.011189739053516144,
+    "declarations": 0.06780441339895221,
+    "duplication": 1.796329057938965,
+    "risk": 0.012162759840778416,
+    "gates": 0.0
    }
   },
   {
-   "repo": "pytest",
-   "files": 278,
-   "declarations": 7016,
+   "repo": "axios",
+   "files": 385,
+   "declarations": 863,
    "dimensions": {
-    "file_size": 0.18741007194244602,
-    "declarations": 0.027807867730900798,
-    "duplication": 1.9244604316546763,
-    "risk": 0.2158273381294964,
-    "gates": 0.2
+    "file_size": 0.03896103896103896,
+    "declarations": 0.040092699884125144,
+    "duplication": 5.867532467532468,
+    "risk": 0.015584415584415584,
+    "gates": 0.0
    }
   },
   {
-   "repo": "black",
-   "files": 381,
-   "declarations": 2929,
+   "repo": "code-server",
+   "files": 110,
+   "declarations": 310,
    "dimensions": {
-    "file_size": 0.05905511811023622,
-    "declarations": 0.03127347217480369,
-    "duplication": 8.464566929133857,
-    "risk": 0.05249343832020997,
-    "gates": 0.15000000000000002
-   }
-  },
-  {
-   "repo": "tornado",
-   "files": 133,
-   "declarations": 3977,
-   "dimensions": {
-    "file_size": 0.1781954887218045,
-    "declarations": 0.020920291677143574,
-    "duplication": 0.924812030075188,
-    "risk": 0.42857142857142855,
-    "gates": 0.2
+    "file_size": 0.04363636363636363,
+    "declarations": 0.02935483870967742,
+    "duplication": 0.6454545454545455,
+    "risk": 0.12727272727272726,
+    "gates": 0.05
    }
   },
   {
    "repo": "django",
-   "files": 3153,
-   "declarations": 42033,
+   "files": 3082,
+   "declarations": 41717,
    "dimensions": {
-    "file_size": 0.06095781795115763,
-    "declarations": 0.021166702352913187,
-    "duplication": 1.2029812876625436,
-    "risk": 0.02093244529019981,
-    "gates": 0.2
+    "file_size": 0.061291369240752756,
+    "declarations": 0.020279502361147735,
+    "duplication": 1.2203114860480209,
+    "risk": 0.018170019467878003,
+    "gates": 0.0
    }
   },
   {
-   "repo": "fastapi",
-   "files": 2839,
-   "declarations": 5681,
+   "repo": "echarts",
+   "files": 1450,
+   "declarations": 6214,
    "dimensions": {
-    "file_size": 0.02476224022543149,
-    "declarations": 0.046259461362436194,
-    "duplication": 1.6118351532229658,
-    "risk": 0.06903839380063402,
-    "gates": 0.15000000000000002
+    "file_size": 0.1,
+    "declarations": 0.08793047956227873,
+    "duplication": 13.567586206896552,
+    "risk": 0.33793103448275863,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "excalidraw",
+   "files": 683,
+   "declarations": 4848,
+   "dimensions": {
+    "file_size": 0.11815519765739385,
+    "declarations": 0.07737211221122112,
+    "duplication": 5.267935578330893,
+    "risk": 0.19472913616398244,
+    "gates": 0.0
    }
   },
   {
@@ -130,31 +131,247 @@
     "declarations": 0.011510791366906475,
     "duplication": 2.267515923566879,
     "risk": 0.18471337579617833,
-    "gates": 0.15000000000000002
+    "gates": 0.05
    }
   },
   {
-   "repo": "axios",
-   "files": 384,
-   "declarations": 862,
+   "repo": "fastapi",
+   "files": 2839,
+   "declarations": 5681,
    "dimensions": {
-    "file_size": 0.0390625,
-    "declarations": 0.04013921113689095,
-    "duplication": 5.885416666666667,
-    "risk": 0.015625,
-    "gates": 0.15000000000000002
+    "file_size": 0.02476224022543149,
+    "declarations": 0.046259461362436194,
+    "duplication": 1.6118351532229658,
+    "risk": 0.06903839380063402,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "flask",
+   "files": 111,
+   "declarations": 1628,
+   "dimensions": {
+    "file_size": 0.06126126126126126,
+    "declarations": 0.01597051597051597,
+    "duplication": 1.0990990990990992,
+    "risk": 0.0,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "freeCodeCamp",
+   "files": 18007,
+   "declarations": 3475,
+   "dimensions": {
+    "file_size": 0.014938634975287388,
+    "declarations": 0.05959712230215827,
+    "duplication": 3.4108402287999113,
+    "risk": 0.06303104348308991,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "github-readme-stats",
+   "files": 89,
+   "declarations": 252,
+   "dimensions": {
+    "file_size": 0.06853932584269662,
+    "declarations": 0.05833333333333333,
+    "duplication": 5.247191011235955,
+    "risk": 0.0,
+    "gates": 0.05
+   }
+  },
+  {
+   "repo": "hackingtool",
+   "files": 92,
+   "declarations": 898,
+   "dimensions": {
+    "file_size": 0.02717391304347826,
+    "declarations": 0.020489977728285078,
+    "duplication": 0.043478260869565216,
+    "risk": 0.07608695652173914,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "hoppscotch",
+   "files": 1118,
+   "declarations": 5857,
+   "dimensions": {
+    "file_size": 0.07075134168157424,
+    "declarations": 0.06697968243127882,
+    "duplication": 6.5,
+    "risk": 0.08228980322003578,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "jquery",
+   "files": 274,
+   "declarations": 797,
+   "dimensions": {
+    "file_size": 0.06605839416058394,
+    "declarations": 0.0806775407779172,
+    "duplication": 15.306569343065693,
+    "risk": 0.05474452554744526,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "keras",
+   "files": 991,
+   "declarations": 16982,
+   "dimensions": {
+    "file_size": 0.1301715438950555,
+    "declarations": 0.051807796490401604,
+    "duplication": 10.203834510595359,
+    "risk": 0.1311806256306761,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "localstack",
+   "files": 1994,
+   "declarations": 34358,
+   "dimensions": {
+    "file_size": 0.08214643931795387,
+    "declarations": 0.03205658070900518,
+    "duplication": 4.233199598796389,
+    "risk": 1.0677031093279838,
+    "gates": 0.0
    }
   },
   {
    "repo": "lodash",
-   "files": 66,
-   "declarations": 1446,
+   "files": 39,
+   "declarations": 852,
    "dimensions": {
-    "file_size": 0.2636363636363636,
-    "declarations": 0.050760719225449516,
-    "duplication": 13.015151515151516,
-    "risk": 2.590909090909091,
-    "gates": 0.15000000000000002
+    "file_size": 0.14358974358974358,
+    "declarations": 0.03814553990610329,
+    "duplication": 4.871794871794871,
+    "risk": 0.0,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "manim",
+   "files": 112,
+   "declarations": 2224,
+   "dimensions": {
+    "file_size": 0.07857142857142857,
+    "declarations": 0.013624100719424461,
+    "duplication": 0.0625,
+    "risk": 0.17857142857142858,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "material-ui",
+   "files": 17329,
+   "declarations": 10093,
+   "dimensions": {
+    "file_size": 0.0052628541750822325,
+    "declarations": 0.06357871792331318,
+    "duplication": 3.7288360551676383,
+    "risk": 0.01315713543770558,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "mermaid",
+   "files": 1304,
+   "declarations": 5267,
+   "dimensions": {
+    "file_size": 0.0687883435582822,
+    "declarations": 0.08262768179229163,
+    "duplication": 12.899539877300613,
+    "risk": 0.1357361963190184,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "models",
+   "files": 2954,
+   "declarations": 23350,
+   "dimensions": {
+    "file_size": 0.06482735274204468,
+    "declarations": 0.07651391862955031,
+    "duplication": 7.858158429248476,
+    "risk": 0.14319566689234936,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "n8n",
+   "files": 19378,
+   "declarations": 67642,
+   "dimensions": {
+    "file_size": 0.059851377851171436,
+    "declarations": 0.0644259483752698,
+    "duplication": 7.70977397048199,
+    "risk": 0.04443182991020745,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "nest",
+   "files": 1735,
+   "declarations": 5463,
+   "dimensions": {
+    "file_size": 0.014582132564841498,
+    "declarations": 0.013820245286472636,
+    "duplication": 2.648414985590778,
+    "risk": 0.001729106628242075,
+    "gates": 0.05
+   }
+  },
+  {
+   "repo": "playwright",
+   "files": 2186,
+   "declarations": 15615,
+   "dimensions": {
+    "file_size": 0.0808783165599268,
+    "declarations": 0.08345180915786103,
+    "duplication": 19.45562671546203,
+    "risk": 0.7012808783165599,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "reveal.js",
+   "files": 132,
+   "declarations": 596,
+   "dimensions": {
+    "file_size": 0.07045454545454545,
+    "declarations": 0.10671140939597315,
+    "duplication": 1.4242424242424243,
+    "risk": 0.007575757575757576,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "scrapy",
+   "files": 494,
+   "declarations": 7038,
+   "dimensions": {
+    "file_size": 0.05465587044534413,
+    "declarations": 0.01170787155441887,
+    "duplication": 2.2935222672064777,
+    "risk": 0.030364372469635626,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "strapi",
+   "files": 5006,
+   "declarations": 13995,
+   "dimensions": {
+    "file_size": 0.03044346783859369,
+    "declarations": 0.0680886030725259,
+    "duplication": 4.095685177786656,
+    "risk": 0.15221733919296843,
+    "gates": 0.0
    }
   },
   {
@@ -166,7 +383,103 @@
     "declarations": 0.060219306129786085,
     "duplication": 1.3200297471492315,
     "risk": 0.05676747645017353,
-    "gates": 0.15000000000000002
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "tabby",
+   "files": 309,
+   "declarations": 1956,
+   "dimensions": {
+    "file_size": 0.020711974110032363,
+    "declarations": 0.049437627811860944,
+    "duplication": 0.9546925566343042,
+    "risk": 0.03559870550161812,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "tailwindcss",
+   "files": 363,
+   "declarations": 2815,
+   "dimensions": {
+    "file_size": 0.10082644628099174,
+    "declarations": 0.07062166962699823,
+    "duplication": 15.59228650137741,
+    "risk": 0.046831955922865015,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "transformers",
+   "files": 6103,
+   "declarations": 76578,
+   "dimensions": {
+    "file_size": 0.13714566606586925,
+    "declarations": 0.058670897646843745,
+    "duplication": 25.567262002293955,
+    "risk": 0.20383417991151892,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "uBlock",
+   "files": 398,
+   "declarations": 4492,
+   "dimensions": {
+    "file_size": 0.11231155778894472,
+    "declarations": 0.11293410507569011,
+    "duplication": 3.741206030150754,
+    "risk": 0.15577889447236182,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "vite",
+   "files": 1954,
+   "declarations": 3393,
+   "dimensions": {
+    "file_size": 0.022364380757420674,
+    "declarations": 0.08591217211906867,
+    "duplication": 1.3060388945752304,
+    "risk": 0.028147389969293755,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "webpack",
+   "files": 12731,
+   "declarations": 13113,
+   "dimensions": {
+    "file_size": 0.00945723038253083,
+    "declarations": 0.076725387020514,
+    "duplication": 1.0205796873772681,
+    "risk": 0.015159846045086797,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "youtube-dl",
+   "files": 917,
+   "declarations": 5786,
+   "dimensions": {
+    "file_size": 0.04045801526717557,
+    "declarations": 0.08686484618043554,
+    "duplication": 0.5845147219193021,
+    "risk": 0.1134133042529989,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "yt-dlp",
+   "files": 1136,
+   "declarations": 9440,
+   "dimensions": {
+    "file_size": 0.06390845070422535,
+    "declarations": 0.06533898305084745,
+    "duplication": 0.4357394366197183,
+    "risk": 0.18045774647887325,
+    "gates": 0.0
    }
   }
  ]

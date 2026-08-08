@@ -13,12 +13,12 @@ from __future__ import annotations
 
 CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "testability"]
 
-# Median raw pressure per dimension across the 14-repo reference corpus
+# Median raw pressure per dimension across the 40-repo reference corpus
 # defined in ``tools/calibration/corpus.json``, measured under the
 # package default thresholds.
 #
 # These live on wildly different scales — measured, not guessed:
-# duplication's median is ~19x file_size's and ~63x declarations'.
+# duplication's median is ~65x file_size's and ~62x declarations'.
 # Summing raw pressures therefore scores duplication and almost nothing
 # else, which is the same class of bug as the count-based model it
 # replaced. Each dimension is divided by its own reference so that
@@ -35,11 +35,15 @@ CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "te
 # ``tests/test_calibration_corpus.py`` re-derives them offline from the
 # checked-in measurements and fails if they drift.
 DIMENSION_REFERENCES: dict[str, float] = {
-    "file_size": 0.0779,
-    "declarations": 0.0243,
-    "duplication": 1.4659,
-    "risk": 0.0546,
-    "gates": 0.1500,
+    "file_size": 0.0576,
+    "declarations": 0.0599,
+    "duplication": 3.7350,
+    "risk": 0.0726,
+    # Fixed, not corpus-derived — see ``_derive.FIXED_REFERENCES``, which
+    # is the authority for this value and carries the reasoning. Stated
+    # again here rather than imported, so the two are independent claims
+    # that ``tests/test_calibration_corpus.py`` can compare.
+    "gates": 0.05,
 }
 
 # Risk patterns are user-configured and their density varies by two
@@ -69,7 +73,7 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 #
 # Derived by ``_derive.derive_curve_constant``; regenerate with
 # ``tools/calibration/measure.py``.
-CALIBRATION_C = 5.2754
+CALIBRATION_C = 3.5466
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3

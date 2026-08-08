@@ -25,6 +25,18 @@ DEFAULT_CONFIG: dict[str, Any] = {
             "build/",
             "coverage/",
             "__pycache__/",
+            # Third-party code the repo did not write. Auditing it
+            # measures someone else's decisions and, worse, calibrated
+            # references drawn from a corpus containing it describe
+            # vendored bundles rather than maintained source. lodash's
+            # entry was 41% vendored.
+            "vendor/",
+            "vendored/",
+            "third_party/",
+            "third-party/",
+            "*.min.js",
+            "*.min.css",
+            "*.bundle.js",
             # Schema migrations are append-only history. Refactoring one
             # rewrites the past, so a long-but-branchless migration is
             # correct code, not a maintainability finding.
@@ -56,10 +68,22 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "max_duplicate_blocks": 20,
         "duplicate_block_lines": 8,
     },
+    # Hard gates block CI, so every one of them is opt-in. Three used to
+    # fire automatically from threshold breaches, which meant a default
+    # run failed the gate on every real codebase measured -- 33 to 5,325
+    # duplicate blocks against a max of 20, plus file and function
+    # breaches. A gate that always fails is not a gate; it is noise that
+    # trains people to pass --fail-on-gate and ignore the result.
     "hard_gates": {
         "require_test_command": False,
         "require_readme": True,
         "require_clean_worktree": False,
+        # These three previously had no switch and fired whenever a
+        # threshold was breached. Default off: a repo opts in to what
+        # should block its CI.
+        "fail_on_file_failures": False,
+        "fail_on_function_failures": False,
+        "fail_on_duplicate_blocks": False,
     },
     "expected_files": ["README.md"],
     "expected_commands": {"test": [], "lint": []},

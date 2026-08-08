@@ -48,7 +48,10 @@
       "properties": {
         "require_test_command": { "type": "boolean" },
         "require_readme": { "type": "boolean" },
-        "require_clean_worktree": { "type": "boolean" }
+        "require_clean_worktree": { "type": "boolean" },
+        "fail_on_file_failures": { "type": "boolean" },
+        "fail_on_function_failures": { "type": "boolean" },
+        "fail_on_duplicate_blocks": { "type": "boolean" }
       },
       "additionalProperties": false
     },

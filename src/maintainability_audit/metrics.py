@@ -121,16 +121,24 @@ def hard_gate_failures(
     expected_commands = config.get("expected_commands", {})
     hard = config.get("hard_gates", {})
     gates: list[str] = []
-    if hard.get("require_readme") and not (root / "README.md").exists():
-        gates.append("README.md is required but missing.")
+    # Any README, not specifically README.md. Django ships README.rst and
+    # was reported as having none, which is the kind of finding that
+    # teaches people the tool does not know what it is looking at.
+    if hard.get("require_readme") and not any(root.glob("README*")):
+        gates.append("A README is required but none was found.")
     if hard.get("require_test_command") and not expected_commands.get("test"):
         gates.append("A documented test command is required but missing from config.")
     if hard.get("require_clean_worktree") and git_status:
         gates.append("Worktree must be clean for this audit gate.")
-    if duplicate_count > int(thresholds["max_duplicate_blocks"]):
+    # Opt-in. Measured across the reference corpus these fired on every
+    # single repository -- duplicate counts of 33 to 5,325 against a
+    # default max of 20 -- so leaving them always-on made --fail-on-gate
+    # useless out of the box and gave the gates score dimension zero
+    # variance. Absent keys default to off.
+    if hard.get("fail_on_duplicate_blocks") and duplicate_count > int(thresholds["max_duplicate_blocks"]):
         gates.append(f"Duplicate block count {duplicate_count} exceeds max {thresholds['max_duplicate_blocks']}.")
-    if failed_files:
+    if hard.get("fail_on_file_failures") and failed_files:
         gates.append(f"{len(failed_files)} files exceed max_file_lines.")
-    if failed_functions:
+    if hard.get("fail_on_function_failures") and failed_functions:
         gates.append(f"{len(failed_functions)} functions exceed max function/complexity thresholds.")
     return gates

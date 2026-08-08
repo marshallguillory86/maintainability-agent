@@ -38,6 +38,10 @@ class DeclRange(NamedTuple):
     end: int
     name: str
     kind: str
+    # Cognitive complexity, when the detector could compute it exactly
+    # (Python, from the AST). ``None`` means the caller should derive it
+    # from the body text instead.
+    cognitive: int | None = None
 
 
 @dataclass
@@ -56,6 +60,10 @@ class FunctionMetric:
     complexity: int
     status: str
     kind: str = "function"
+    # Nesting-weighted reading cost. Reported alongside `complexity`
+    # rather than replacing it: they answer different questions, and a
+    # function can be high in one and low in the other.
+    cognitive: int = 0
 
 
 @dataclass

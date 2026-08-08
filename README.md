@@ -51,7 +51,7 @@ This repo eats its own dogfood — the tool is run against this codebase as part
 | Metric | Value |
 |---|---:|
 | Overall score | **5.0 / 5 (A+)** |
-| Files scanned | 65 |
+| Files scanned | 67 |
 | File warnings | 0 |
 | File failures | 0 |
 | Function warnings | 0 |
@@ -116,7 +116,7 @@ The deterministic scanner reads code from your repo (no LLM calls) and produces 
 - largest files (warn / fail thresholds configurable per-repo)
 - function size and complexity — exact ranges for Python via `ast`, brace-bounded for JS/TS/JSX/TSX/HTML
 - class size, against its own separate budget (`max_class_lines`), on length alone
-- approximate cyclomatic complexity
+- approximate cyclomatic complexity, plus **cognitive complexity** — nesting-weighted reading cost, so five guard clauses no longer score the same as five levels of nesting
 - duplicate blocks (≥ N consecutive non-trivial lines, configurable)
 - near-duplicate declarations — the same helper written twice under different names, compared structurally so renaming can't hide it, each paired with the original to reuse
 - configurable risk patterns (regex matchers — TODO/FIXME, `eval(`, `exec(`, custom)

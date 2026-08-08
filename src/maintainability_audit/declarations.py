@@ -12,6 +12,7 @@ import ast
 import os
 from pathlib import Path
 
+from ._cognitive import brace_cognitive, python_cognitive
 from ._metrics_types import COMPLEXITY_RE, FUNC_PATTERNS, DeclRange, FunctionMetric
 from ._ranges import indent_bounded_end, js_declaration_ranges
 
@@ -22,10 +23,25 @@ BRACE_SUFFIXES = {".js", ".jsx", ".ts", ".tsx", ".html"}
 DECLARATION_SUFFIXES = {".py"} | BRACE_SUFFIXES
 
 
-def function_status(lines: int, complexity: int, thresholds: dict[str, int]) -> str:
-    if lines > thresholds["max_function_lines"] or complexity > thresholds["max_complexity"]:
+def function_status(lines: int, complexity: int, thresholds: dict[str, int], cognitive: int = 0) -> str:
+    """Grade a function on length, branch count, and reading cost.
+
+    ``cognitive`` defaults to 0 so callers that predate it — and configs
+    without the thresholds — behave exactly as before.
+    """
+    max_cognitive = thresholds.get("max_cognitive_complexity")
+    warn_cognitive = thresholds.get("warn_cognitive_complexity")
+    if (
+        lines > thresholds["max_function_lines"]
+        or complexity > thresholds["max_complexity"]
+        or (max_cognitive is not None and cognitive > max_cognitive)
+    ):
         return "fail"
-    if lines > thresholds["warn_function_lines"] or complexity > thresholds["warn_complexity"]:
+    if (
+        lines > thresholds["warn_function_lines"]
+        or complexity > thresholds["warn_complexity"]
+        or (warn_cognitive is not None and cognitive > warn_cognitive)
+    ):
         return "warn"
     return "ok"
 
@@ -47,10 +63,12 @@ def class_status(lines: int, thresholds: dict[str, int]) -> str:
     return "ok"
 
 
-def declaration_status(kind: str, lines: int, complexity: int, thresholds: dict[str, int]) -> str:
+def declaration_status(
+    kind: str, lines: int, complexity: int, thresholds: dict[str, int], cognitive: int = 0
+) -> str:
     if kind == "class":
         return class_status(lines, thresholds)
-    return function_status(lines, complexity, thresholds)
+    return function_status(lines, complexity, thresholds, cognitive)
 
 
 def _python_function_ranges(source: str) -> list[DeclRange] | None:
@@ -70,8 +88,13 @@ def _python_function_ranges(source: str) -> list[DeclRange] | None:
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
             end = getattr(node, "end_lineno", None) or node.lineno
-            kind = "class" if isinstance(node, ast.ClassDef) else "function"
-            ranges.append(DeclRange(node.lineno, end, node.name, kind))
+            is_class = isinstance(node, ast.ClassDef)
+            # A class is a container, not a thing that is read top to
+            # bottom, so it carries no cognitive cost of its own — its
+            # methods are charged individually.
+            cognitive = 0 if is_class else python_cognitive(node)
+            kind = "class" if is_class else "function"
+            ranges.append(DeclRange(node.lineno, end, node.name, kind, cognitive))
     ranges.sort(key=lambda item: (item.start, item.end))
     return ranges
 
@@ -119,6 +142,9 @@ def detect_functions(root: Path, path: Path, lines: list[str], thresholds: dict[
         block = code[decl.start - 1 : decl.end]
         complexity = 1 + sum(len(COMPLEXITY_RE.findall(line)) for line in block)
         count = max(1, len(block))
+        # Python declarations arrive with an exact figure from the AST;
+        # everything else is inferred from brace depth over the body.
+        cognitive = decl.cognitive if decl.cognitive is not None else brace_cognitive(block)
         funcs.append(
             FunctionMetric(
                 path=rel,
@@ -126,8 +152,9 @@ def detect_functions(root: Path, path: Path, lines: list[str], thresholds: dict[
                 start_line=decl.start,
                 lines=count,
                 complexity=complexity,
-                status=declaration_status(decl.kind, count, complexity, thresholds),
+                status=declaration_status(decl.kind, count, complexity, thresholds, cognitive),
                 kind=decl.kind,
+                cognitive=cognitive,
             )
         )
     return funcs

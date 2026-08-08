@@ -21,7 +21,7 @@ Branch: `fix/ts-declaration-ranges`
 | Metric | Value |
 |---|---:|
 | Overall score | 5.0 / 5 (A+) |
-| Files scanned | 65 |
+| Files scanned | 67 |
 | File warnings | 0 |
 | File failures | 0 |
 | Function warnings | 0 |
@@ -57,18 +57,18 @@ Scoring standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based.
 | `tests/test_near_duplicates.py` | 187 | ok |
 | `tests/test_scoring_calibration.py` | 179 | ok |
 | `tests/test_declaration_grading.py` | 177 | ok |
+| `src/maintainability_audit/renderers.py` | 173 | ok |
 | `tools/calibration/measurements.json` | 173 | ok |
 | `tests/test_audit_components.py` | 164 | ok |
-| `src/maintainability_audit/renderers.py` | 161 | ok |
+| `tests/test_cognitive_complexity.py` | 163 | ok |
+| `docs/standard.md` | 161 | ok |
+| `src/maintainability_audit/declarations.py` | 160 | ok |
 | `tests/test_calibration_corpus.py` | 154 | ok |
 | `tests/test_declaration_edge_cases.py` | 153 | ok |
 | `src/maintainability_audit/sarif.py` | 151 | ok |
 | `src/maintainability_audit/report.py` | 143 | ok |
-| `docs/standard.md` | 139 | ok |
 | `tests/test_scanning.py` | 138 | ok |
+| `src/maintainability_audit/_cognitive.py` | 137 | ok |
 | `tools/calibration/measure.py` | 136 | ok |
-| `src/maintainability_audit/declarations.py` | 133 | ok |
 | `tests/test_sarif.py` | 133 | ok |
-| `src/maintainability_audit/_tokens.py` | 129 | ok |
-| `src/maintainability_audit/metrics.py` | 127 | ok |
 

@@ -31,9 +31,26 @@ def hotspot_complexity(item: dict[str, Any]) -> str:
     return "-" if _is_class(item) else str(item["complexity"])
 
 
+def hotspot_cognitive(item: dict[str, Any]) -> str:
+    """The cognitive-complexity table cell, or ``-`` for a class.
+
+    A class is a container rather than something read top to bottom, so
+    it carries no reading cost of its own; its methods are charged
+    individually.
+    """
+    return "-" if _is_class(item) else str(item.get("cognitive", 0))
+
+
 def hotspot_measure(item: dict[str, Any]) -> str:
-    """The parenthetical size/complexity clause used in prose renderings."""
+    """The parenthetical size/complexity clause used in prose renderings.
+
+    Cognitive complexity is named separately from the branch count when
+    present, because they mean different things: a function can have few
+    paths and still be punishing to read if they are deeply nested.
+    """
     size = f"{item['lines']} lines"
     if _is_class(item):
         return f"{size}, {item['status']}"
-    return f"{size}, complexity {item['complexity']}, {item['status']}"
+    cognitive = item.get("cognitive")
+    reading = f", cognitive {cognitive}" if cognitive else ""
+    return f"{size}, complexity {item['complexity']}{reading}, {item['status']}"

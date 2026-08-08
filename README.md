@@ -11,9 +11,9 @@ cp skills/maintainability-agent/copilot/maintainability-agent.prompt.md .github/
 
 Jump to [Invokable Skill / Slash Command](#invokable-skill--slash-command) for the full install table.
 
-> **v0.5.0 rebuilt the scoring engine.** The old model counted findings absolutely, so it scored repo *size* rather than maintainability: measured against a corpus of mature open-source repositories it graded **Django, pytest, black, tornado, click, httpx, attrs, lodash, svelte, axios and fastapi all at 0.0 / F** while a 53-file toy repo scored 4.6 / A. Scores are now rates, normalized per dimension against what real code actually carries, and calibrated so the corpus median earns a B. See [docs/standard.md](docs/standard.md#how-the-scale-was-calibrated-050).
+> **v0.6.0 detects a helper written twice under two names** — clone-instead-of-reuse, the most-cited complaint about AI-written code. Renamed copies defeat text matching, so bodies are compared structurally with identifiers anonymized. Each finding names the declaration to reuse, so the prompt says *`toAtomicAmount` at `TradeTicket.tsx:862` already does this* rather than "there is duplication". Measured across the reference corpus, this is the **first signal that separates AI-written applications from mature human-written OSS** (median 1.49% vs 0.20% of production declarations). See [docs/standard.md](docs/standard.md#signals-reported-but-not-yet-scored).
 >
-> **v0.4.0** rewrote TypeScript/JavaScript declaration detection — ranges are bounded by their own braces instead of by the next regex match, which had been reporting a 4-line function as 262 lines and grading clean files an F. See [docs/language-support.md](docs/language-support.md).
+> **v0.5.0 rebuilt the scoring engine.** The old model counted findings absolutely, so it scored repo *size* rather than maintainability: it graded **Django, pytest, black, tornado, click, httpx, attrs, lodash, svelte, axios and fastapi all at 0.0 / F** while a 53-file toy repo scored 4.6 / A. Scores are now rates, normalized per dimension against what real code carries, and calibrated so the corpus median earns a B. See [docs/standard.md](docs/standard.md#how-the-scale-was-calibrated-050).
 
 ## Why this exists
 
@@ -51,7 +51,7 @@ This repo eats its own dogfood — the tool is run against this codebase as part
 | Metric | Value |
 |---|---:|
 | Overall score | **5.0 / 5 (A+)** |
-| Files scanned | 62 |
+| Files scanned | 65 |
 | File warnings | 0 |
 | File failures | 0 |
 | Function warnings | 0 |
@@ -118,6 +118,7 @@ The deterministic scanner reads code from your repo (no LLM calls) and produces 
 - class size, against its own separate budget (`max_class_lines`), on length alone
 - approximate cyclomatic complexity
 - duplicate blocks (≥ N consecutive non-trivial lines, configurable)
+- near-duplicate declarations — the same helper written twice under different names, compared structurally so renaming can't hide it, each paired with the original to reuse
 - configurable risk patterns (regex matchers — TODO/FIXME, `eval(`, `exec(`, custom)
 - expected files present (README, LICENSE, etc. — opt-in hard gate)
 - expected test/lint commands declared in the config (opt-in hard gate)
@@ -202,7 +203,7 @@ See [docs/standard.md](docs/standard.md).
 This repo includes `action.yml`, so it can be used as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v0.5.0
+- uses: marshallguillory86/maintainability-agent@v0.6.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

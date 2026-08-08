@@ -123,6 +123,40 @@ def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
         for i in report["duplicate_blocks"][:5]
     ]
     lines.extend(bulleted_section("Duplicate blocks to inspect:", dupes))
+    lines.extend(near_duplicate_section(report))
+    return lines
+
+
+def near_duplicate_section(report: dict[str, Any]) -> list[str]:
+    """Name the existing helper each near-copy should collapse into.
+
+    This is the one finding that comes with its own fix. "There is
+    duplication" is not actionable; "``toAtomicAmount`` at
+    ``TradeTicket.tsx:862`` already does this" is. Cross-file pairs lead,
+    because those are the ones where the second copy was written by
+    someone — or something — that did not know the first existed.
+    """
+    findings = report.get("near_duplicates") or []
+    if not findings:
+        return []
+    ordered = sorted(findings, key=lambda item: (not item.get("cross_file"), -item["similarity"]))
+    items = [
+        f"`{item['path']}:{item['start_line']}` `{item['name']}` is {item['similarity']:.0%} identical to "
+        f"`{item['duplicate_of']['name']}` at `{item['duplicate_of']['path']}:{item['duplicate_of']['start_line']}`"
+        + (" (different file — likely written without knowing the first existed)" if item.get("cross_file") else "")
+        for item in ordered[:10]
+    ]
+    lines = bulleted_section(
+        "Near-duplicate logic — prefer reusing the existing declaration over keeping both:", items
+    )
+    lines.extend(
+        [
+            "Collapse a pair only when both copies genuinely represent the same responsibility. "
+            "Two functions that merely look alike today, and would need to change for different reasons "
+            "tomorrow, should stay separate — say so rather than merging them.",
+            "",
+        ]
+    )
     return lines
 
 

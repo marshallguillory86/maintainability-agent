@@ -59,6 +59,25 @@ An average lets a repo hide one bad dimension behind four good ones. The top two
 
 When the score reports `2.5x`, that number is the unit the remediation prompt speaks in: it names the worst dimension and tells the agent to start there, because a letter grade is not actionable.
 
+### Signals reported but not yet scored
+
+**Near-duplicate declarations** (0.6.0) detect a helper written twice under two names — the failure mode most often attributed to AI-written code, where an agent that cannot see your existing helper writes a second one. Exact text matching cannot catch it, so declaration bodies are reduced to a token sequence with identifiers anonymized by order of first appearance; renamed copies produce identical fingerprints.
+
+Measured across the reference corpus (production code only, cross-file pairs, as a share of eligible declarations):
+
+| Cohort | n | Median | Max |
+|---|---|---|---|
+| Mature human-written OSS | 12 | **0.20%** | 2.15% |
+| AI-written applications | 6 | **1.49%** | 12.05% |
+
+Three of the AI-written repos exceed every repository in the OSS corpus. This is the first signal measured here that separates the two populations — on file size, declaration size and complexity they are statistically indistinguishable.
+
+**Read it with the confounds in view.** The OSS corpus is libraries; the AI cohort is applications. Libraries are designed for reuse and have had years of review pressure to remove duplication, while applications accrete. Both samples are small. The direction is consistent with the mechanism and with published findings on AI-assisted commit histories, but this is evidence, not proof.
+
+It is deliberately **not** a score dimension yet. Most repositories sit at zero, so a median-based reference would be unstable — dividing by ~0.002 turns a rounding difference into a large multiple. Signals earn a place in the score by holding up across more repositories, not by being new.
+
+Two false-positive classes were removed by fitting the eligibility thresholds against the corpus rather than guessing them: bodies too short for similarity to mean anything, and thin delegations whose shape is dictated by the API surface (requests' `put`/`patch`, flask's `template_filter`/`template_test`). Test files are excluded — in mature projects nearly all near-duplicates are deliberately parallel test variants, which are not the defect being measured.
+
 ### Limits
 
 These are structural proxies — file size, declaration size, approximate complexity, repetition. They do not measure naming quality, comment accuracy, architectural coherence, or whether a reader can build a correct mental model. Passing on structure is necessary, not sufficient. The corpus is also finite: recalibrate whenever the default thresholds change.

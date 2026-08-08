@@ -2,6 +2,18 @@
 
 All notable changes to Maintainability Agent will be documented here.
 
+## 0.6.0 - 2026-08-08
+
+Adds the first Tier-1 signal aimed directly at the "AI writes code humans cannot maintain" criticism. Reported as findings; deliberately not yet scored. No breaking changes.
+
+- **feat(similarity): near-duplicate declaration detection — a helper written twice under two names.** The most-cited empirical complaint about AI-written code is clone-instead-of-reuse: an agent that cannot see your existing helper writes a second one, the copies drift, and a bug fixed in one survives in the others. Exact text matching cannot catch it, because the second copy is the same *structure* with different identifiers. Declaration bodies are now reduced to a token sequence with identifiers anonymized by order of first appearance (Python via stdlib `tokenize`, C-family via a regex over the `_masking`-scrubbed source), compared as sets of 6-token shingles by Jaccard similarity, and reported at or above 0.8. An inverted shingle index keeps the comparison linear enough to audit Django (3,153 files) in 7.5s.
+- **feat(prompts): the finding names the declaration to reuse.** This is the one finding that ships with its own fix. "There is duplication" is not actionable; "`toAtomicAmount` at `TradeTicket.tsx:862` already does this" is. Cross-file pairs lead, since those are the ones written without knowing the first existed. The prompt also tells the agent *not* to merge two functions that merely look alike but would need to change for different reasons.
+- **measured:** production cross-file near-duplication, as a share of eligible declarations, across the reference corpus — mature human-written OSS **median 0.20%, max 2.15%** (n=12); AI-written applications **median 1.49%, max 12.05%** (n=6). Three of the AI repositories exceed every repository in the OSS corpus. This is the first signal measured here that separates the two populations: on file size, declaration size and complexity they are statistically indistinguishable. The confounds are real and documented — the OSS corpus is libraries, the AI cohort is applications, and both samples are small.
+- **not scored, deliberately.** Most repositories sit at zero, so a median-based reference would be unstable: dividing by ~0.002 turns a rounding difference into a large multiple. Signals earn a place in the score by holding up across more repositories, not by being new.
+- **fitted, not guessed:** the eligibility thresholds (80 normalized tokens, 2+ control-flow tokens) were tuned against the corpus to remove two false-positive classes it exposed — bodies too short for similarity to mean anything, and thin delegations whose shape is dictated by the API surface rather than by what they do (requests' `put`/`patch`, flask's `template_filter`/`template_test`). Test files are excluded: in mature projects nearly every near-duplicate is a deliberately parallel test variant, which is not the defect being measured.
+- **tests:** +10 in `tests/test_near_duplicates.py`, covering renamed-copy detection, comment/string immunity, both false-positive classes, and the reporting shape. One caught a spec error of mine: I had asserted each declaration appears in at most one pair, when the useful behaviour for N copies is N-1 pairs all referencing a single original — one instruction to reuse it, rather than a clique.
+- **dogfood:** self-audit holds at **5.0 / 5 (A+)** across 65 files, with zero near-duplicates of its own.
+
 ## 0.5.0 - 2026-08-07
 
 The scoring engine was rebuilt after being measured against real code and found to be wrong. Config is unchanged; the shape of `report["score"]` gains fields.

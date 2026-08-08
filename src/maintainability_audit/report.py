@@ -18,6 +18,7 @@ from .duplication import duplicate_blocks, risk_findings
 from .git_tools import run_git
 from .metrics import collect_metrics, hard_gate_failures, is_test_path
 from .scoring import score_report
+from .similarity import near_duplicate_findings
 
 
 def _count_status(metrics: list, status: str) -> int:
@@ -108,6 +109,7 @@ def build_report(
     files, file_metrics, function_metrics = collect_metrics(root, config, only_paths)
     thresholds = config["thresholds"]
     dupes = duplicate_blocks(root, files, int(thresholds["duplicate_block_lines"]))
+    near_duplicates = near_duplicate_findings(root, files)
     risks = risk_findings(root, files, config)
     git_status = run_git(["status", "--short"], root)
     gates, summary = _compute_gates_and_summary(
@@ -128,6 +130,12 @@ def build_report(
         "largest_files": [asdict(metric) for metric in largest_files],
         "function_hotspots": _function_hotspots(function_metrics),
         "duplicate_blocks": dupes[:25],
+        # Reported as findings, deliberately not yet scored. The corpus
+        # shows the rate separates AI-written from mature human code, but
+        # most repos sit at zero, so a median-based reference would be
+        # unstable — see docs/standard.md. Signals earn a score by
+        # holding up, not by being new.
+        "near_duplicates": near_duplicates[:25],
         "risk_findings": [asdict(finding) for finding in risks[:100]],
         "external_findings": external_findings or [],
     }

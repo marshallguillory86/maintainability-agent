@@ -69,6 +69,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         markdown_table("Function Hotspots", ["File", "Declaration", "Line", "Lines", "Complexity", "Status"], hot_rows)
     )
     lines.extend(render_risk_markdown(report))
+    lines.extend(render_near_duplicate_markdown(report))
     lines.extend(render_duplicate_markdown(report))
     lines.extend(render_external_markdown(report))
     return "\n".join(lines)
@@ -79,6 +80,31 @@ def render_risk_markdown(report: dict[str, Any]) -> list[str]:
     for item in report["risk_findings"]:
         rows.append([f"`{item['path']}`", str(item["line"]), item["name"], item["text"].replace("|", "\\|")])
     return markdown_table("Risk Pattern Findings", ["File", "Line", "Rule", "Text"], rows)
+
+
+def render_near_duplicate_markdown(report: dict[str, Any]) -> list[str]:
+    """Declarations that are near-copies, each paired with its original.
+
+    Separate from the duplicate-block table because it answers a different
+    question. That one says "these lines repeat"; this one says "this
+    function already exists over there, under another name".
+    """
+    rows = [
+        [
+            f"`{item['path']}:{item['start_line']}`",
+            f"`{item['name']}`",
+            f"`{item['duplicate_of']['path']}:{item['duplicate_of']['start_line']}`",
+            f"`{item['duplicate_of']['name']}`",
+            f"{item['similarity']:.0%}",
+            "cross-file" if item.get("cross_file") else "same file",
+        ]
+        for item in report.get("near_duplicates", [])
+    ]
+    return markdown_table(
+        "Near-Duplicate Declarations",
+        ["Location", "Declaration", "Duplicates", "Named", "Similarity", "Scope"],
+        rows,
+    )
 
 
 def render_duplicate_markdown(report: dict[str, Any]) -> list[str]:

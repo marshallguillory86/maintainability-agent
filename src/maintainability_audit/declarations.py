@@ -95,7 +95,7 @@ def _regex_function_ranges(lines: list[str]) -> list[DeclRange]:
     return ranges
 
 
-def _declaration_ranges(path: Path, lines: list[str]) -> tuple[list[DeclRange], list[str]]:
+def declaration_ranges(path: Path, lines: list[str]) -> tuple[list[DeclRange], list[str]]:
     """Return declaration ranges plus the lines to score complexity against.
 
     JS/TS/HTML score against a comment- and string-masked copy of the
@@ -112,7 +112,7 @@ def _declaration_ranges(path: Path, lines: list[str]) -> tuple[list[DeclRange], 
 
 
 def detect_functions(root: Path, path: Path, lines: list[str], thresholds: dict[str, int]) -> list[FunctionMetric]:
-    ranges, code = _declaration_ranges(path, lines)
+    ranges, code = declaration_ranges(path, lines)
     rel = str(path.relative_to(root)).replace(os.sep, "/")
     funcs: list[FunctionMetric] = []
     for decl in ranges:

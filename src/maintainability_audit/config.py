@@ -8,6 +8,11 @@ VERSION = "0.6.0"
 
 PROJECT_URL = "https://github.com/marshallguillory86/maintainability-agent"
 
+# Concern -> competing packages. Empty means "use the shipped list in
+# ``idioms.DEFAULT_IDIOM_GROUPS``"; set it to override that list entirely
+# with groups meaningful to this repo.
+DEFAULT_IDIOM_GROUPS: dict[str, list[str]] = {}
+
 DEFAULT_CONFIG: dict[str, Any] = {
     "paths": {
         "include_extensions": [".py", ".js", ".jsx", ".ts", ".tsx", ".html", ".css", ".md"],

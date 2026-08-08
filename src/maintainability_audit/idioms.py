@@ -42,7 +42,8 @@ from pathlib import Path
 from typing import Any
 
 from .declarations import DECLARATION_SUFFIXES
-from .metrics import is_test_path, read_lines
+from .metrics import is_test_path
+from .source import SourceIndex, index_or_new
 
 # Concerns where using two at once genuinely means two mental models.
 # Deliberately short: every entry is a claim that these alternatives are
@@ -135,8 +136,11 @@ def idiom_groups(config: dict[str, Any]) -> dict[str, list[str]]:
     return configured if isinstance(configured, dict) and configured else DEFAULT_IDIOM_GROUPS
 
 
-def divergent_idioms(root: Path, files: list[Path], config: dict[str, Any]) -> list[dict[str, Any]]:
+def divergent_idioms(
+    root: Path, files: list[Path], config: dict[str, Any], index: SourceIndex | None = None
+) -> list[dict[str, Any]]:
     """Concerns served by more than one library in production code."""
+    source = index_or_new(index)
     groups = idiom_groups(config)
     membership = {
         member.lower(): concern for concern, members in groups.items() for member in members
@@ -150,7 +154,7 @@ def divergent_idioms(root: Path, files: list[Path], config: dict[str, Any]) -> l
         rel = str(path.relative_to(root)).replace("\\", "/")
         if is_test_path(rel) or _is_standalone(rel):
             continue
-        for package in imported_packages(path, read_lines(path)):
+        for package in imported_packages(path, source.lines(path)):
             concern = membership.get(package)
             if concern and package not in own:
                 users[concern][package].add(rel)

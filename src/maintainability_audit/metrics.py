@@ -16,6 +16,7 @@ from typing import Any
 
 from ._metrics_types import FileMetric, FunctionMetric
 from .declarations import DECLARATION_SUFFIXES, detect_functions
+from .source import SourceIndex, index_or_new
 
 
 def is_test_path(rel: str) -> bool:
@@ -68,6 +69,12 @@ def iter_files(root: Path, config: dict[str, Any], only_paths: set[str] | None =
 
 
 def read_lines(path: Path) -> list[str]:
+    """Read one file, tolerating undecodable bytes.
+
+    Kept as the standalone entry point. Within an audit the same read is
+    served from ``SourceIndex`` instead, so a file is not read once per
+    scanner — see ``source``.
+    """
     try:
         return path.read_text(encoding="utf-8").splitlines()
     except UnicodeDecodeError:
@@ -86,17 +93,19 @@ def collect_metrics(
     root: Path,
     config: dict[str, Any],
     only_paths: set[str] | None,
+    index: SourceIndex | None = None,
 ) -> tuple[list[Path], list[FileMetric], list[FunctionMetric]]:
     thresholds = config["thresholds"]
+    source = index_or_new(index)
     files = iter_files(root, config, only_paths)
     file_metrics: list[FileMetric] = []
     function_metrics: list[FunctionMetric] = []
     for path in files:
-        lines = read_lines(path)
+        lines = source.lines(path)
         rel = str(path.relative_to(root)).replace(os.sep, "/")
         file_metrics.append(FileMetric(path=rel, lines=len(lines), status=file_status(len(lines), thresholds)))
         if path.suffix in DECLARATION_SUFFIXES:
-            function_metrics.extend(detect_functions(root, path, lines, thresholds))
+            function_metrics.extend(detect_functions(root, path, lines, thresholds, source.declarations(path)))
     return files, file_metrics, function_metrics
 
 

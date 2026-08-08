@@ -104,7 +104,13 @@ Two false-positive classes surfaced on first contact with the corpus and are now
 
 Measured rates barely separate the cohorts — mature OSS median 0.0% (max 0.55%), AI-written median 0.14% (max 1.53%). It earns a place in the report as hygiene, **not** as evidence for anything about AI-written code. Note also that a private *method* on a public class can be reached by a downstream subclass, so those findings deserve a look rather than a reflex deletion.
 
-Neither is a score dimension yet. Most repositories sit at zero, so a median-based reference would be unstable — dividing by ~0.002 turns a rounding difference into a large multiple. Signals earn a place in the score by holding up across more repositories, not by being new.
+**Competing libraries for one concern** (0.6.0) flag a codebase where two packages do one job — three HTTP clients means three error shapes and three retry stories, and no single mental model covers the code. This is the one detector that **needs a curated list**, and that cost is real: there is no structural way to know that `moment` and `date-fns` compete while `react` and `react-dom` do not. The shipped list is deliberately small, restricted to concerns whose alternatives are well known and change slowly, and **incomplete by construction** — override it entirely with `idiom_groups` in config.
+
+Its first run against the corpus produced *only* false positives, both now pinned by tests: a package named in a fenced code block inside a Markdown document counted as an import, and `black` was reported as running two HTTP clients when one was `aiohttp` in the `blackd` daemon and the other `urllib3` in a CI helper under `scripts/` — separate programs sharing a repository. After excluding non-source files and standalone script directories it reports **nothing across all 14 corpus repositories** and fires once, correctly, on a repo running `aiohttp` in 27 service files and `httpx` in 3.
+
+That profile is intended: high precision, low recall. Silence means "nothing recognised", never "nothing wrong".
+
+None of the three is a score dimension yet. Most repositories sit at zero, so a median-based reference would be unstable — dividing by ~0.002 turns a rounding difference into a large multiple. Signals earn a place in the score by holding up across more repositories, not by being new.
 
 
 ### Limits

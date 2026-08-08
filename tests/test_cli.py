@@ -23,12 +23,8 @@ from maintainability_audit.cli import (
     main,
 )
 from maintainability_audit.instructions import instruction_body
-from maintainability_audit.renderers import (
-    render_agent_instructions,
-    render_ai_prompt,
-    render_markdown,
-    render_pr_comment,
-)
+from maintainability_audit.prompts import render_agent_instructions, render_ai_prompt
+from maintainability_audit.renderers import render_markdown, render_pr_comment
 
 
 def write(path: Path, text: str) -> None:

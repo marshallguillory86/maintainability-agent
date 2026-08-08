@@ -11,7 +11,9 @@ cp skills/maintainability-agent/copilot/maintainability-agent.prompt.md .github/
 
 Jump to [Invokable Skill / Slash Command](#invokable-skill--slash-command) for the full install table.
 
-> **v0.4.0** rewrote TypeScript/JavaScript declaration detection — ranges are bounded by their own braces instead of by the next regex match, which had been reporting a 4-line function as 262 lines and grading clean files an F. Details in the [changelog](CHANGELOG.md) and [docs/language-support.md](docs/language-support.md).
+> **v0.5.0 rebuilt the scoring engine.** The old model counted findings absolutely, so it scored repo *size* rather than maintainability: measured against a corpus of mature open-source repositories it graded **Django, pytest, black, tornado, click, httpx, attrs, lodash, svelte, axios and fastapi all at 0.0 / F** while a 53-file toy repo scored 4.6 / A. Scores are now rates, normalized per dimension against what real code actually carries, and calibrated so the corpus median earns a B. See [docs/standard.md](docs/standard.md#how-the-scale-was-calibrated-050).
+>
+> **v0.4.0** rewrote TypeScript/JavaScript declaration detection — ranges are bounded by their own braces instead of by the next regex match, which had been reporting a 4-line function as 262 lines and grading clean files an F. See [docs/language-support.md](docs/language-support.md).
 
 ## Why this exists
 
@@ -49,7 +51,7 @@ This repo eats its own dogfood — the tool is run against this codebase as part
 | Metric | Value |
 |---|---:|
 | Overall score | **5.0 / 5 (A+)** |
-| Files scanned | 54 |
+| Files scanned | 57 |
 | File warnings | 0 |
 | File failures | 0 |
 | Function warnings | 0 |
@@ -60,7 +62,7 @@ This repo eats its own dogfood — the tool is run against this codebase as part
 
 All five ISO/IEC 25010 categories (modularity, reusability, analyzability, modifiability, testability) score 5.0, against thresholds this repo deliberately sets stricter than the shipped defaults — a 250-line file warning versus the default 400.
 
-That grade is maintained, not assumed. The v0.4.0 work initially pushed this repo to 4.4 / 5 (B): four files had grown past the warn threshold. Rather than publish a fix while advertising a stale A+, `metrics.py` was split along its actual responsibilities (`declarations`, `duplication`, `report`), the two oversized test files were split to match, and this README's duplicated content moved into the docs it duplicated. The score is the output of that work, not a claim that preceded it.
+That grade is maintained, not assumed, and since v0.5.0 it is also **gated**: an A+ requires every dimension to be clean, so it cannot be reached by averaging one bad dimension against four good ones. When the v0.4.0 work pushed this repo to 4.4 / 5 (B), the response was to split `metrics.py` along its real responsibilities rather than to publish a fix while advertising a stale A+. The score is the output of that work, not a claim that preceded it.
 
 Regenerate with `maintainability-agent --config maintainability-agent.json --output docs/self-audit.md` (see the file's preamble for the path-sanitization step).
 
@@ -202,7 +204,7 @@ See [docs/standard.md](docs/standard.md).
 This repo includes `action.yml`, so it can be used as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v0.4.0
+- uses: marshallguillory86/maintainability-agent@v0.5.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

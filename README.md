@@ -51,7 +51,7 @@ This repo eats its own dogfood — the tool is run against this codebase as part
 | Metric | Value |
 |---|---:|
 | Overall score | **5.0 / 5 (A+)** |
-| Files scanned | 57 |
+| Files scanned | 62 |
 | File warnings | 0 |
 | File failures | 0 |
 | Function warnings | 0 |

@@ -1,0 +1,27 @@
+{
+  "description": "Reference corpus for scoring calibration. Mature, heavily-maintained, widely-reviewed open-source repositories, pinned to exact commits so a recalibration is reproducible rather than a snapshot of whatever HEAD was that day.",
+  "selection_criteria": [
+    "Long maintenance history under many contributors, so the code has actually survived handoff.",
+    "Widely read and depended upon, so 'well-maintained' is a claim others have tested.",
+    "Mixed languages and sizes (52 to 4034 files) so the reference is not an artifact of one ecosystem.",
+    "Bulk authored before LLM coding assistants were in common use, making this a human-written baseline."
+  ],
+  "measured_on": "2026-08-07",
+  "thresholds": "package defaults (DEFAULT_CONFIG); recalibrate whenever those change",
+  "repos": [
+    { "name": "requests", "url": "https://github.com/psf/requests.git", "commit": "1f6589ec3a1ee910f9a65cc3ceac60b26677bc0e" },
+    { "name": "flask", "url": "https://github.com/pallets/flask.git", "commit": "6a2f545bfd8ed31e19066a299296917e034aca58" },
+    { "name": "click", "url": "https://github.com/pallets/click.git", "commit": "00e592cea702e0b2caa0dee42489fdb1c22cd845" },
+    { "name": "attrs", "url": "https://github.com/python-attrs/attrs.git", "commit": "c1dc5dcba16ed827aa6dcad896b41a3afedb4e32" },
+    { "name": "httpx", "url": "https://github.com/encode/httpx.git", "commit": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254" },
+    { "name": "pytest", "url": "https://github.com/pytest-dev/pytest.git", "commit": "28e86a6c2ae0173831e4925a4af89b02a2936d09" },
+    { "name": "black", "url": "https://github.com/psf/black.git", "commit": "74371e2041a3120a049ced8f1cab0e7a6bc8ecd3" },
+    { "name": "tornado", "url": "https://github.com/tornadoweb/tornado.git", "commit": "0096f2897c98facdcd9716009ee934a7381af5ef" },
+    { "name": "django", "url": "https://github.com/django/django.git", "commit": "c9eb16a87e60c305fb3651459639f647cce498db" },
+    { "name": "fastapi", "url": "https://github.com/tiangolo/fastapi.git", "commit": "15410ee4bfd14e3e5048628a0a0b54b07ac9f553" },
+    { "name": "express", "url": "https://github.com/expressjs/express.git", "commit": "a3714473feb3d2908add734d340e7755fd85e0a3" },
+    { "name": "axios", "url": "https://github.com/axios/axios.git", "commit": "a339fe124a4b120ac419f9c8c11b6e9ba74b9421" },
+    { "name": "lodash", "url": "https://github.com/lodash/lodash.git", "commit": "a666ba591064c8011988275790ad7d625279f09c" },
+    { "name": "svelte", "url": "https://github.com/sveltejs/svelte.git", "commit": "26786e92985842a6d563c67049a43bc5857bf792" }
+  ]
+}

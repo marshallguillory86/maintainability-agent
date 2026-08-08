@@ -34,6 +34,25 @@ Three properties now hold, and are pinned by `tests/test_scoring_calibration.py`
 
 The corpus median lands at **4.0 (B)**: a well-run real codebase earns a B, and every grade above it must be paid for.
 
+### The reference corpus
+
+Calibration is reproducible, not a snapshot someone took once. The corpus is defined in [`tools/calibration/corpus.json`](../tools/calibration/corpus.json) — 14 mature open-source repositories **pinned to exact commits**, spanning 52 to 4,034 files across Python and JavaScript/TypeScript:
+
+> requests · flask · click · attrs · httpx · pytest · black · tornado · django · fastapi · express · axios · lodash · svelte
+
+They were selected for long maintenance history under many contributors, wide readership and dependency, mixed size and ecosystem, and a bulk authored before LLM coding assistants were in common use — making this a human-written baseline.
+
+To re-measure and check for drift:
+
+```bash
+python3 tools/calibration/measure.py            # clone at pinned commits, measure, report drift
+python3 tools/calibration/measure.py --check    # exit 1 if stored constants are stale
+```
+
+The measurements themselves are checked in at `tools/calibration/measurements.json`, and `tests/test_calibration_corpus.py` re-derives every constant from them **offline** — no clone, no network. A hand-edited constant, or a re-measurement that wasn't written back, fails the suite. The constants are therefore auditable without taking anyone's word for them, which is the same standard the scores themselves are held to.
+
+Size matters to the selection: a reference drawn only from small libraries would bake in exactly the size bias that made the previous model grade Django an F. Including django, fastapi and svelte moved the file-size reference from 0.1233 to 0.0779 — a 37% shift that a small-repo-only corpus would have hidden.
+
 ### Why A+ is hard
 
 An average lets a repo hide one bad dimension behind four good ones. The top two grades are therefore **gated as well as banded** — a score in the A+ band is withheld unless *every* dimension is clean, and demotion cascades (a repo denied A+ must still satisfy A's ceilings to receive an A). A single hard-gate failure disqualifies both.

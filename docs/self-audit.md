@@ -21,7 +21,7 @@ Branch: `fix/ts-declaration-ranges`
 | Metric | Value |
 |---|---:|
 | Overall score | 5.0 / 5 (A+) |
-| Files scanned | 57 |
+| Files scanned | 62 |
 | File warnings | 0 |
 | File failures | 0 |
 | Function warnings | 0 |
@@ -55,20 +55,20 @@ Scoring standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based.
 | `tests/test_scoring_calibration.py` | 179 | ok |
 | `src/maintainability_audit/prompts.py` | 178 | ok |
 | `tests/test_declaration_grading.py` | 177 | ok |
+| `tools/calibration/measurements.json` | 173 | ok |
 | `tests/test_audit_components.py` | 164 | ok |
+| `tests/test_calibration_corpus.py` | 154 | ok |
 | `tests/test_declaration_edge_cases.py` | 153 | ok |
 | `src/maintainability_audit/sarif.py` | 151 | ok |
 | `tests/test_scanning.py` | 138 | ok |
+| `tools/calibration/measure.py` | 136 | ok |
 | `src/maintainability_audit/renderers.py` | 135 | ok |
 | `src/maintainability_audit/report.py` | 135 | ok |
 | `src/maintainability_audit/declarations.py` | 133 | ok |
 | `tests/test_sarif.py` | 133 | ok |
 | `src/maintainability_audit/metrics.py` | 127 | ok |
+| `docs/standard.md` | 120 | ok |
 | `src/maintainability_audit/cli.py` | 108 | ok |
-| `docs/standard.md` | 101 | ok |
 | `tests/test_python_declarations.py` | 101 | ok |
 | `src/maintainability_audit/_masking.py` | 91 | ok |
-| `maintainability-agent.schema.json` | 90 | ok |
-| `src/maintainability_audit/duplication.py` | 90 | ok |
-| `src/maintainability_audit/instructions.py` | 88 | ok |
 

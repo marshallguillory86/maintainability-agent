@@ -96,9 +96,16 @@ Three of the AI-written repos exceed every repository in the OSS corpus. This is
 
 **Read it with the confounds in view.** The OSS corpus is libraries; the AI cohort is applications. Libraries are designed for reuse and have had years of review pressure to remove duplication, while applications accrete. Both samples are small. The direction is consistent with the mechanism and with published findings on AI-assisted commit histories, but this is evidence, not proof.
 
-It is deliberately **not** a score dimension yet. Most repositories sit at zero, so a median-based reference would be unstable — dividing by ~0.002 turns a rounding difference into a large multiple. Signals earn a place in the score by holding up across more repositories, not by being new.
+Two false-positive classes were removed by fitting the near-duplicate eligibility thresholds against the corpus rather than guessing them: bodies too short for similarity to mean anything, and thin delegations whose shape is dictated by the API surface (requests' `put`/`patch`, flask's `template_filter`/`template_test`). Test files are excluded — in mature projects nearly all near-duplicates are deliberately parallel test variants, which are not the defect being measured.
 
-Two false-positive classes were removed by fitting the eligibility thresholds against the corpus rather than guessing them: bodies too short for similarity to mean anything, and thin delegations whose shape is dictated by the API surface (requests' `put`/`patch`, flask's `template_filter`/`template_test`). Test files are excluded — in mature projects nearly all near-duplicates are deliberately parallel test variants, which are not the defect being measured.
+**Unreferenced private declarations** (0.6.0) find debris — a helper written for an approach abandoned two prompts later. Only declarations the language marks internal are candidates (a leading underscore in Python, no `export` in JS/TS), because privacy is the author's own claim that no external caller exists, which is what makes "no references here" sufficient evidence. Public functions, decorated declarations, dunder methods and test files are left alone.
+
+Two false-positive classes surfaced on first contact with the corpus and are now pinned by tests. Counting identifiers over the *masked* copy blanked f-string interpolations, which are live code — flask's `_get_werkzeug_version` is called from inside one and was reported dead. And an object-literal method (`beforeBreadcrumb(crumb) { … }` in a Sentry config) binds no name and is invoked by whoever receives the object. Fixing both dropped one repo's findings from 15 to 0.
+
+Measured rates barely separate the cohorts — mature OSS median 0.0% (max 0.55%), AI-written median 0.14% (max 1.53%). It earns a place in the report as hygiene, **not** as evidence for anything about AI-written code. Note also that a private *method* on a public class can be reached by a downstream subclass, so those findings deserve a look rather than a reflex deletion.
+
+Neither is a score dimension yet. Most repositories sit at zero, so a median-based reference would be unstable — dividing by ~0.002 turns a rounding difference into a large multiple. Signals earn a place in the score by holding up across more repositories, not by being new.
+
 
 ### Limits
 

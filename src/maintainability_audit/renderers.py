@@ -82,6 +82,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     )
     lines.extend(render_risk_markdown(report))
     lines.extend(render_near_duplicate_markdown(report))
+    lines.extend(render_dead_code_markdown(report))
     lines.extend(render_duplicate_markdown(report))
     lines.extend(render_external_markdown(report))
     return "\n".join(lines)
@@ -117,6 +118,19 @@ def render_near_duplicate_markdown(report: dict[str, Any]) -> list[str]:
         ["Location", "Declaration", "Duplicates", "Named", "Similarity", "Scope"],
         rows,
     )
+
+
+def render_dead_code_markdown(report: dict[str, Any]) -> list[str]:
+    """Private declarations nothing references.
+
+    Only declarations the language marks internal are listed, so each row
+    is something no external caller can reach — see ``deadcode``.
+    """
+    rows = [
+        [f"`{item['path']}:{item['start_line']}`", f"`{item['name']}`", item["kind"], str(item["lines"])]
+        for item in report.get("dead_code", [])
+    ]
+    return markdown_table("Unreferenced Private Declarations", ["Location", "Declaration", "Kind", "Lines"], rows)
 
 
 def render_duplicate_markdown(report: dict[str, Any]) -> list[str]:

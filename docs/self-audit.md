@@ -21,8 +21,8 @@ Branch: `fix/ts-declaration-ranges`
 | Metric | Value |
 |---|---:|
 | Overall score | 5.0 / 5 (A+) |
-| Files scanned | 69 |
-| File warnings | 0 |
+| Files scanned | 71 |
+| File warnings | 1 |
 | File failures | 0 |
 | Function warnings | 0 |
 | Function failures | 0 |
@@ -36,7 +36,7 @@ Scoring standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based.
 
 | Category | Score |
 |---|---|
-| modularity | 5.0 |
+| modularity | 4.9 |
 | reusability | 5.0 |
 | analyzability | 5.0 |
 | modifiability | 5.0 |
@@ -46,29 +46,29 @@ Scoring standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based.
 
 | File | Lines | Status |
 |---|---|---|
-| `README.md` | 249 | ok |
+| `src/maintainability_audit/prompts.py` | 275 | warn |
+| `README.md` | 250 | ok |
 | `src/maintainability_audit/similarity.py` | 244 | ok |
-| `src/maintainability_audit/prompts.py` | 243 | ok |
 | `src/maintainability_audit/scoring.py` | 235 | ok |
 | `src/maintainability_audit/_ranges.py` | 232 | ok |
 | `tests/test_cli.py` | 212 | ok |
+| `src/maintainability_audit/renderers.py` | 201 | ok |
 | `tests/test_declaration_ranges.py` | 190 | ok |
 | `docs/ide-agent-integration.md` | 188 | ok |
-| `src/maintainability_audit/renderers.py` | 187 | ok |
 | `tests/test_near_duplicates.py` | 187 | ok |
 | `tests/test_scoring_calibration.py` | 179 | ok |
 | `tests/test_declaration_grading.py` | 177 | ok |
+| `docs/standard.md` | 174 | ok |
 | `tools/calibration/measurements.json` | 173 | ok |
-| `docs/standard.md` | 168 | ok |
+| `src/maintainability_audit/idioms.py` | 168 | ok |
 | `tests/test_audit_components.py` | 164 | ok |
 | `tests/test_cognitive_complexity.py` | 163 | ok |
 | `src/maintainability_audit/declarations.py` | 160 | ok |
+| `src/maintainability_audit/report.py` | 156 | ok |
 | `tests/test_calibration_corpus.py` | 154 | ok |
 | `tests/test_declaration_edge_cases.py` | 153 | ok |
 | `src/maintainability_audit/sarif.py` | 151 | ok |
-| `src/maintainability_audit/report.py` | 150 | ok |
 | `src/maintainability_audit/deadcode.py` | 148 | ok |
 | `tests/test_scanning.py` | 138 | ok |
 | `src/maintainability_audit/_cognitive.py` | 137 | ok |
-| `tools/calibration/measure.py` | 136 | ok |
 

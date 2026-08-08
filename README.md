@@ -51,7 +51,7 @@ This repo eats its own dogfood — the tool is run against this codebase as part
 | Metric | Value |
 |---|---:|
 | Overall score | **5.0 / 5 (A+)** |
-| Files scanned | 69 |
+| Files scanned | 71 |
 | File warnings | 0 |
 | File failures | 0 |
 | Function warnings | 0 |
@@ -120,6 +120,7 @@ The deterministic scanner reads code from your repo (no LLM calls) and produces 
 - duplicate blocks (≥ N consecutive non-trivial lines, configurable)
 - near-duplicate declarations — the same helper written twice under different names, compared structurally so renaming can't hide it, each paired with the original to reuse
 - unreferenced private declarations — debris nothing in the repo can reach, scoped to internal names so a library's public surface is never flagged
+- competing libraries for one concern — two HTTP clients or two schema validators mean two mental models; curated list, extensible via `idiom_groups`
 - configurable risk patterns (regex matchers — TODO/FIXME, `eval(`, `exec(`, custom)
 - expected files present (README, LICENSE, etc. — opt-in hard gate)
 - expected test/lint commands declared in the config (opt-in hard gate)

@@ -176,13 +176,11 @@ The full local verification sequence that matches CI — ruff, pip-audit, the 92
 
 ## Scoring Standard
 
-The audit model is based on ISO/IEC 25010 maintainability:
+The audit model is based on ISO/IEC 25010 maintainability — modularity, reusability, analyzability, modifiability, testability.
 
-- modularity
-- reusability
-- analyzability
-- modifiability
-- testability
+Scores are **rates calibrated against real code**, not counts. Every pressure is normalized against the median that a pinned 14-repo corpus of mature open-source projects (django, pytest, black, svelte, axios, requests, …) actually exhibits, so `2.5x` means "two and a half times what well-maintained real code carries." The corpus median earns a **B**; **A+ is gated**, requiring every dimension clean rather than a good average.
+
+The calibration is reproducible rather than asserted: `python3 tools/calibration/measure.py --check` re-measures the corpus and fails if the shipped constants have drifted, and `tests/test_calibration_corpus.py` re-derives them offline from checked-in measurements — no network, no trust required.
 
 See [docs/standard.md](docs/standard.md).
 

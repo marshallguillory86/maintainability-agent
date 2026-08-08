@@ -1,0 +1,173 @@
+{
+ "measured_on": "2026-08-07",
+ "measurements": [
+  {
+   "repo": "requests",
+   "files": 52,
+   "declarations": 807,
+   "dimensions": {
+    "file_size": 0.1326923076923077,
+    "declarations": 0.025898389095415118,
+    "duplication": 0.6346153846153846,
+    "risk": 0.21153846153846154,
+    "gates": 0.15000000000000002
+   }
+  },
+  {
+   "repo": "flask",
+   "files": 111,
+   "declarations": 1628,
+   "dimensions": {
+    "file_size": 0.06126126126126126,
+    "declarations": 0.015601965601965601,
+    "duplication": 1.0990990990990992,
+    "risk": 0.0,
+    "gates": 0.15000000000000002
+   }
+  },
+  {
+   "repo": "click",
+   "files": 120,
+   "declarations": 1924,
+   "dimensions": {
+    "file_size": 0.12333333333333332,
+    "declarations": 0.020686070686070687,
+    "duplication": 0.6333333333333333,
+    "risk": 0.0,
+    "gates": 0.15000000000000002
+   }
+  },
+  {
+   "repo": "attrs",
+   "files": 87,
+   "declarations": 1833,
+   "dimensions": {
+    "file_size": 0.13793103448275862,
+    "declarations": 0.018221494817239496,
+    "duplication": 1.2873563218390804,
+    "risk": 0.022988505747126436,
+    "gates": 0.15000000000000002
+   }
+  },
+  {
+   "repo": "httpx",
+   "files": 91,
+   "declarations": 1241,
+   "dimensions": {
+    "file_size": 0.0945054945054945,
+    "declarations": 0.01410153102336825,
+    "duplication": 4.681318681318682,
+    "risk": 0.01098901098901099,
+    "gates": 0.15000000000000002
+   }
+  },
+  {
+   "repo": "pytest",
+   "files": 278,
+   "declarations": 7016,
+   "dimensions": {
+    "file_size": 0.18741007194244602,
+    "declarations": 0.02602622576966933,
+    "duplication": 1.9244604316546763,
+    "risk": 0.2158273381294964,
+    "gates": 0.2
+   }
+  },
+  {
+   "repo": "black",
+   "files": 381,
+   "declarations": 2929,
+   "dimensions": {
+    "file_size": 0.05905511811023622,
+    "declarations": 0.02703994537384773,
+    "duplication": 8.464566929133857,
+    "risk": 0.05249343832020997,
+    "gates": 0.15000000000000002
+   }
+  },
+  {
+   "repo": "tornado",
+   "files": 133,
+   "declarations": 3977,
+   "dimensions": {
+    "file_size": 0.1781954887218045,
+    "declarations": 0.020140809655519235,
+    "duplication": 0.924812030075188,
+    "risk": 0.42857142857142855,
+    "gates": 0.2
+   }
+  },
+  {
+   "repo": "django",
+   "files": 3153,
+   "declarations": 42033,
+   "dimensions": {
+    "file_size": 0.06095781795115763,
+    "declarations": 0.019881997478171914,
+    "duplication": 1.2029812876625436,
+    "risk": 0.02093244529019981,
+    "gates": 0.2
+   }
+  },
+  {
+   "repo": "fastapi",
+   "files": 2839,
+   "declarations": 5681,
+   "dimensions": {
+    "file_size": 0.02476224022543149,
+    "declarations": 0.04544974476324591,
+    "duplication": 1.6118351532229658,
+    "risk": 0.06903839380063402,
+    "gates": 0.15000000000000002
+   }
+  },
+  {
+   "repo": "express",
+   "files": 157,
+   "declarations": 139,
+   "dimensions": {
+    "file_size": 0.055414012738853505,
+    "declarations": 0.00935251798561151,
+    "duplication": 2.267515923566879,
+    "risk": 0.18471337579617833,
+    "gates": 0.15000000000000002
+   }
+  },
+  {
+   "repo": "axios",
+   "files": 384,
+   "declarations": 862,
+   "dimensions": {
+    "file_size": 0.0390625,
+    "declarations": 0.030974477958236657,
+    "duplication": 5.885416666666667,
+    "risk": 0.015625,
+    "gates": 0.15000000000000002
+   }
+  },
+  {
+   "repo": "lodash",
+   "files": 66,
+   "declarations": 1446,
+   "dimensions": {
+    "file_size": 0.2636363636363636,
+    "declarations": 0.035961272475795295,
+    "duplication": 13.015151515151516,
+    "risk": 2.590909090909091,
+    "gates": 0.15000000000000002
+   }
+  },
+  {
+   "repo": "svelte",
+   "files": 4034,
+   "declarations": 5563,
+   "dimensions": {
+    "file_size": 0.008924144769459593,
+    "declarations": 0.05133920546467734,
+    "duplication": 1.3200297471492315,
+    "risk": 0.05676747645017353,
+    "gates": 0.15000000000000002
+   }
+  }
+ ]
+}

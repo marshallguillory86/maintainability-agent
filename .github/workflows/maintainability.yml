@@ -69,7 +69,11 @@ jobs:
           SONAR_TOKEN:    ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
           GITHUB_TOKEN:   ${{ secrets.GITHUB_TOKEN }}
-        uses: SonarSource/sonarqube-scan-action@v2
+        # v8+ runs Java 21. SonarQube Cloud dropped Java 17 support in
+        # 2026-08 and the pinned v2 action still shipped it, so the scan
+        # failed after authenticating successfully. Track the major tag
+        # so scanner-side runtime deprecations arrive as patches.
+        uses: SonarSource/sonarqube-scan-action@v8
       - name: Upload maintainability report
         uses: actions/upload-artifact@v4
         if: always()

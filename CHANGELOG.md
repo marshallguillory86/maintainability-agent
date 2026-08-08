@@ -2,6 +2,19 @@
 
 All notable changes to Maintainability Agent will be documented here.
 
+## 0.5.0 - 2026-08-07
+
+The scoring engine was rebuilt after being measured against real code and found to be wrong. Config is unchanged; the shape of `report["score"]` gains fields.
+
+- **fix(scoring): scores are rates, not counts — the old model was measuring repo size.** Findings were counted absolutely, so 20 oversized files cost the same in a 50-file project as in a 3,000-file one. Run against a corpus of mature open-source repositories, the 0.4.0 model scored **Django, pytest, black, tornado, click, httpx, attrs, lodash, svelte, axios and fastapi all at 0.0 / F**, while a 53-file toy repo scored 4.6 / A. Above roughly a 3% file-warning rate every repo pinned to the floor, so the scale could not distinguish a mediocre codebase from a catastrophic one — and a tool that grades Django unmaintainable cannot be used to argue anything about code quality. Every pressure is now a finding count divided by the population it was drawn from.
+- **fix(scoring): each dimension is normalized against what real code actually carries.** Raw pressures live on wildly different scales — measured across the corpus, duplication runs ~15x file-size pressure and ~93x declaration pressure — so summing them raw scored duplication and essentially nothing else. Each is divided by its own corpus median, and `score["dimensions"]` now reports multiples where **1.0x is typical real-world code**. The curve is hyperbolic and fitted so the corpus median scores exactly 4.0: a well-run real codebase earns a B.
+- **feat(scoring): A+ is gated, not averaged.** A mean lets a repo hide one bad dimension behind four good ones. The top two grades now additionally require every dimension to be clean, and demotion cascades — a repo denied A+ must still satisfy A's ceilings to receive an A, so a single hard-gate failure disqualifies both. `score["grade_blockers"]` names the specific measurement that capped the grade.
+- **feat(prompts): the remediation prompt leads with the dimension costing the most.** A letter grade is not actionable; `duplication at 4.4x` is. The prompt now lists only elevated dimensions (>1.0x), names the worst one as the starting point, and explicitly tells the agent to prefer leaving a repo alone over manufacturing work when nothing is elevated. This is the point of the score — it exists to aim the prompt.
+- **refactor:** `_calibration.py` holds the fitted constants apart from the scoring logic, since they are empirical findings with provenance rather than tunable knobs; `prompts.py` splits agent-facing output from human-facing rendering (`sarif.py` no longer reaches through the markdown renderer).
+- **tests:** +10 in `tests/test_scoring_calibration.py` pinning the properties the old model violated — size independence, non-saturation, corpus calibration, and gated top grades. One of them caught a real bug during development: demotion stepped down exactly one grade without re-checking, letting a hard-gate failure land on an A.
+- **known limits:** these remain structural proxies. They say nothing about naming, comment accuracy, architectural coherence, or whether a reader can build a correct mental model. The corpus is finite — recalibrate `DIMENSION_REFERENCES` whenever the default thresholds change.
+- **dogfood:** self-audit holds at **5.0 / 5 (A+)** across 57 files under the new engine, with the A+ gate satisfied on every dimension.
+
 ## 0.4.0 - 2026-08-06
 
 Bug-fix release for TypeScript/JavaScript function detection, plus two threshold corrections. Config gains two optional keys; no breaking changes.

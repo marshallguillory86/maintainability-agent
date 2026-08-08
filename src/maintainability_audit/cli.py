@@ -9,12 +9,8 @@ from .baseline import finding_fingerprints, load_baseline, write_baseline
 from .config import DEFAULT_CONFIG, VERSION, load_config
 from .git_tools import changed_paths
 from .instructions import instruction_path_for_target, write_instruction_pack
-from .renderers import (
-    render_agent_instructions,
-    render_ai_prompt,
-    render_markdown,
-    render_pr_comment,
-)
+from .prompts import render_agent_instructions, render_ai_prompt
+from .renderers import render_markdown, render_pr_comment
 from .report import build_report
 from .sarif import read_sarif_inputs, report_to_sarif
 

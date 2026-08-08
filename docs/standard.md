@@ -20,6 +20,30 @@ Maintainability is the degree to which a system can be effectively and efficient
 
 The CLI emits an ISO/IEC 25010-inspired score from 0 to 5 for each category plus an overall letter grade. This score is a deterministic triage signal, not a replacement for human review.
 
+### How the scale was calibrated (0.5.0)
+
+Scores are **rates measured against real code**, not counts.
+
+The previous model counted findings absolutely: 20 oversized files cost the same in a 50-file project as in a 3,000-file one. Measured against a corpus of mature open-source repositories, it scored **Django, pytest, black, tornado, click, httpx, attrs, lodash, svelte, axios and fastapi all at 0.0 / F**, while a 53-file toy repo scored 4.6 / A. It was measuring repo size. Every real codebase saturated the floor, so the scale carried no information and could not tell a mediocre codebase from a catastrophic one.
+
+Three properties now hold, and are pinned by `tests/test_scoring_calibration.py`:
+
+1. **Size independence.** Every pressure is a finding count divided by the population it was drawn from. The same proportion of trouble scores the same at any repo size.
+2. **Per-dimension normalization.** Raw pressures live on wildly different scales — measured across the corpus, duplication runs ~15x file-size pressure and ~93x declaration pressure. Summing them raw would score duplication and nothing else. Each dimension is divided by its own corpus median, so a reported `3.1x` means "three times the duplication that real, well-maintained code lives with."
+3. **No saturation.** The curve is hyperbolic, so two bad repos remain distinguishable instead of both reading 0.0.
+
+The corpus median lands at **4.0 (B)**: a well-run real codebase earns a B, and every grade above it must be paid for.
+
+### Why A+ is hard
+
+An average lets a repo hide one bad dimension behind four good ones. The top two grades are therefore **gated as well as banded** — a score in the A+ band is withheld unless *every* dimension is clean, and demotion cascades (a repo denied A+ must still satisfy A's ceilings to receive an A). A single hard-gate failure disqualifies both.
+
+When the score reports `2.5x`, that number is the unit the remediation prompt speaks in: it names the worst dimension and tells the agent to start there, because a letter grade is not actionable.
+
+### Limits
+
+These are structural proxies — file size, declaration size, approximate complexity, repetition. They do not measure naming quality, comment accuracy, architectural coherence, or whether a reader can build a correct mental model. Passing on structure is necessary, not sufficient. The corpus is also finite: recalibrate whenever the default thresholds change.
+
 | Score | Meaning |
 |---:|---|
 | 5 | Strong. Change is localized, tested, and easy to reason about. |

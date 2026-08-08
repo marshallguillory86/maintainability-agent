@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from ._metrics_types import FileMetric, FunctionMetric
+from .deadcode import dead_declarations
 from .duplication import duplicate_blocks, risk_findings
 from .git_tools import run_git
 from .metrics import collect_metrics, hard_gate_failures, is_test_path
@@ -110,6 +111,7 @@ def build_report(
     thresholds = config["thresholds"]
     dupes = duplicate_blocks(root, files, int(thresholds["duplicate_block_lines"]))
     near_duplicates = near_duplicate_findings(root, files)
+    dead = dead_declarations(root, files)
     risks = risk_findings(root, files, config)
     git_status = run_git(["status", "--short"], root)
     gates, summary = _compute_gates_and_summary(
@@ -136,6 +138,11 @@ def build_report(
         # unstable — see docs/standard.md. Signals earn a score by
         # holding up, not by being new.
         "near_duplicates": near_duplicates[:25],
+        # Also findings-only. Measured across the corpus the rate barely
+        # separates AI-written from mature human code (median 0.14% vs
+        # 0.0%), so it earns a place in the report as hygiene, not in the
+        # score as evidence.
+        "dead_code": dead[:25],
         "risk_findings": [asdict(finding) for finding in risks[:100]],
         "external_findings": external_findings or [],
     }

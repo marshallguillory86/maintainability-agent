@@ -31,6 +31,8 @@
         "warn_class_lines": { "type": "integer", "minimum": 1 },
         "max_complexity": { "type": "integer", "minimum": 1 },
         "warn_complexity": { "type": "integer", "minimum": 1 },
+        "max_cognitive_complexity": { "type": "integer", "minimum": 1 },
+        "warn_cognitive_complexity": { "type": "integer", "minimum": 1 },
         "max_duplicate_blocks": { "type": "integer", "minimum": 0 },
         "duplicate_block_lines": { "type": "integer", "minimum": 2 }
       },

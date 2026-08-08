@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ._hotspots import hotspot_complexity, hotspot_measure, hotspot_name
+from ._hotspots import hotspot_cognitive, hotspot_complexity, hotspot_measure, hotspot_name
 
 
 def summary_table(summary: dict[str, int], score: dict[str, Any]) -> list[str]:
@@ -62,11 +62,23 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.extend(markdown_table("Largest Files", ["File", "Lines", "Status"], file_rows))
 
     hot_rows = [
-        [f"`{i['path']}`", hotspot_name(i), str(i["start_line"]), str(i["lines"]), hotspot_complexity(i), i["status"]]
+        [
+            f"`{i['path']}`",
+            hotspot_name(i),
+            str(i["start_line"]),
+            str(i["lines"]),
+            hotspot_complexity(i),
+            hotspot_cognitive(i),
+            i["status"],
+        ]
         for i in report["function_hotspots"]
     ]
     lines.extend(
-        markdown_table("Function Hotspots", ["File", "Declaration", "Line", "Lines", "Complexity", "Status"], hot_rows)
+        markdown_table(
+            "Function Hotspots",
+            ["File", "Declaration", "Line", "Lines", "Complexity", "Cognitive", "Status"],
+            hot_rows,
+        )
     )
     lines.extend(render_risk_markdown(report))
     lines.extend(render_near_duplicate_markdown(report))

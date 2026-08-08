@@ -36,7 +36,7 @@ CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "te
 # checked-in measurements and fails if they drift.
 DIMENSION_REFERENCES: dict[str, float] = {
     "file_size": 0.0779,
-    "declarations": 0.0233,
+    "declarations": 0.0243,
     "duplication": 1.4659,
     "risk": 0.0546,
     "gates": 0.1500,
@@ -69,7 +69,7 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 #
 # Derived by ``_derive.derive_curve_constant``; regenerate with
 # ``tools/calibration/measure.py``.
-CALIBRATION_C = 5.2318
+CALIBRATION_C = 5.2754
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3

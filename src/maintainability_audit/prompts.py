@@ -124,6 +124,37 @@ def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
     ]
     lines.extend(bulleted_section("Duplicate blocks to inspect:", dupes))
     lines.extend(near_duplicate_section(report))
+    lines.extend(dead_code_section(report))
+    return lines
+
+
+def dead_code_section(report: dict[str, Any]) -> list[str]:
+    """Debris an agent can delete outright, with the caveat that matters.
+
+    Every entry is private and unreferenced, so deletion is usually safe.
+    "Usually" is doing real work there: a name reached only through
+    dynamic dispatch looks identical to a dead one from the outside, so
+    the instruction is to verify before removing rather than to trust the
+    finding.
+    """
+    findings = report.get("dead_code") or []
+    if not findings:
+        return []
+    items = [
+        f"`{item['path']}:{item['start_line']}` `{item['name']}` ({item['lines']} lines) is private "
+        "and referenced nowhere in the repository"
+        for item in findings[:10]
+    ]
+    lines = bulleted_section("Unreferenced private declarations — candidates for deletion:", items)
+    lines.extend(
+        [
+            "Confirm each one before deleting. A name reached only through dynamic dispatch — "
+            "`getattr`, a string-keyed lookup table, a framework that resolves by convention — "
+            "is indistinguishable from a dead one here. If a finding is reachable that way, say so "
+            "and leave it.",
+            "",
+        ]
+    )
     return lines
 
 

@@ -59,6 +59,28 @@ An average lets a repo hide one bad dimension behind four good ones. The top two
 
 When the score reports `2.5x`, that number is the unit the remediation prompt speaks in: it names the worst dimension and tells the agent to start there, because a letter grade is not actionable.
 
+### Cognitive complexity (0.6.0)
+
+The cyclomatic figure is a keyword tally, and it is blind to the thing that actually costs a reader. These score identically under it:
+
+```python
+def flat(a,b,c,d,e):          def nested(a,b,c,d,e):
+    if a: return 1                if a:
+    if b: return 2                    if b:
+    if c: return 3                        if c:
+    if d: return 4                            if d:
+    if e: return 5                                if e:
+    return 0                                          return 5
+```
+
+Both are cyclomatic 6. Guard clauses are read one at a time; five levels of nesting must be held in the head at once. Nesting is the strongest driver of how hard code is to read, and it was invisible.
+
+Each flow break is now charged **plus the depth it sits at**, so nesting compounds — the pair above scores 5 and 15. `else` costs one flat point rather than a nested one, because it resolves a branch already being tracked; `elif` chains likewise do not compound; and a run of boolean operators counts once, since `a and b and c` is a single idea to read.
+
+Python is measured exactly from the AST. C-family sources have no parser here, so nesting is inferred from brace depth over the masked copy — approximate, and it under-reports on brace-free single-statement bodies, which is the safe direction.
+
+Thresholds (`max_cognitive_complexity` 25, `warn_cognitive_complexity` 15) were fitted against **21,300 declarations** in the reference corpus, whose distribution is p50 = 1, p90 = 9, p95 = 17, p99 = 49. Warning at 15 flags 5.5% of declarations and failing at 25 flags 2.7% — comparable hit rates to the existing file thresholds. Both figures are reported side by side rather than merged: a function can be low in one and high in the other, and that difference is the point.
+
 ### Signals reported but not yet scored
 
 **Near-duplicate declarations** (0.6.0) detect a helper written twice under two names — the failure mode most often attributed to AI-written code, where an agent that cannot see your existing helper writes a second one. Exact text matching cannot catch it, so declaration bodies are reduced to a token sequence with identifiers anonymized by order of first appearance; renamed copies produce identical fingerprints.

@@ -14,17 +14,17 @@ GitHub.
 # Maintainability CI Report
 
 Root: `.`
-Branch: `perf/consolidate-source-reads`
+Branch: `corpus/expand-and-report`
 
 ## Summary
 
 | Metric | Value |
 |---|---:|
-| Overall score | 5.0 / 5 (A+) |
-| Files scanned | 74 |
-| File warnings | 1 |
+| Overall score | 4.8 / 5 (B) |
+| Files scanned | 81 |
+| File warnings | 8 |
 | File failures | 0 |
-| Function warnings | 0 |
+| Function warnings | 5 |
 | Function failures | 0 |
 | Duplicate blocks | 0 |
 | Risk findings | 0 |
@@ -36,39 +36,134 @@ Scoring standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based.
 
 | Category | Score |
 |---|---|
-| modularity | 5.0 |
-| reusability | 5.0 |
-| analyzability | 5.0 |
-| modifiability | 5.0 |
-| testability | 5.0 |
+| modularity | 4.5 |
+| reusability | 4.9 |
+| analyzability | 4.9 |
+| modifiability | 4.7 |
+| testability | 4.9 |
+
+## Aspect Scores
+
+| Aspect | Score |
+|---|---|
+| file size | 4.3 |
+| declaration size | 4.8 |
+| duplication | 5.0 |
+| risk patterns | 5.0 |
+| policy gates | 5.0 |
+| test presence | 5.0 |
+| dead code | 5.0 |
+| near duplication | 5.0 |
+| idiom consistency | 5.0 |
+| churn hotspots | 5.0 |
+| change coupling | 4.0 |
+| knowledge concentration | 4.0 |
+| documentation | 5.0 |
+
+## Not Scored — no measurement exists
+
+| Aspect | Why |
+|---|---|
+| test effectiveness | requires running the suite (mutation/coverage); this audit never executes code |
+| naming quality | no static proxy survives contact; a wrong-name detector needs semantics |
+| comment accuracy | comments are deliberately unparsed; staleness needs meaning, not structure |
+| indirection depth | call-graph construction is not implemented for the supported languages |
+| architectural coherence | no measurement distinguishes a wrong boundary from an unusual one statically |
 
 ## Largest Files
 
 | File | Lines | Status |
 |---|---|---|
+| `src/maintainability_audit/scoring.py` | 426 | warn |
+| `tools/calibration/select_authored.py` | 336 | warn |
+| `tools/calibration/measure_cohorts.py` | 321 | warn |
+| `src/maintainability_audit/history.py` | 291 | warn |
 | `src/maintainability_audit/prompts.py` | 275 | warn |
-| `README.md` | 250 | ok |
+| `src/maintainability_audit/renderers.py` | 267 | warn |
+| `docs/standard.md` | 261 | warn |
+| `README.md` | 254 | warn |
 | `src/maintainability_audit/similarity.py` | 250 | ok |
-| `src/maintainability_audit/scoring.py` | 235 | ok |
 | `src/maintainability_audit/_ranges.py` | 232 | ok |
 | `tests/test_cli.py` | 212 | ok |
-| `src/maintainability_audit/renderers.py` | 201 | ok |
+| `tests/test_audit_components.py` | 193 | ok |
 | `tests/test_declaration_ranges.py` | 190 | ok |
 | `docs/ide-agent-integration.md` | 188 | ok |
 | `tests/test_near_duplicates.py` | 187 | ok |
+| `src/maintainability_audit/report.py` | 179 | ok |
 | `tests/test_scoring_calibration.py` | 179 | ok |
 | `tests/test_declaration_grading.py` | 177 | ok |
-| `docs/standard.md` | 174 | ok |
 | `src/maintainability_audit/declarations.py` | 173 | ok |
-| `tools/calibration/measurements.json` | 173 | ok |
+| `tests/test_calibration_corpus.py` | 173 | ok |
 | `src/maintainability_audit/idioms.py` | 172 | ok |
-| `tests/test_audit_components.py` | 164 | ok |
 | `tests/test_cognitive_complexity.py` | 163 | ok |
-| `src/maintainability_audit/report.py` | 160 | ok |
-| `tests/test_calibration_corpus.py` | 154 | ok |
+| `tests/test_history.py` | 158 | ok |
+| `tests/test_scanning.py` | 158 | ok |
 | `src/maintainability_audit/deadcode.py` | 153 | ok |
-| `tests/test_declaration_edge_cases.py` | 153 | ok |
-| `src/maintainability_audit/sarif.py` | 151 | ok |
-| `tests/test_scanning.py` | 138 | ok |
-| `src/maintainability_audit/_cognitive.py` | 137 | ok |
+
+## Function Hotspots
+
+| File | Declaration | Line | Lines | Complexity | Cognitive | Status |
+|---|---|---|---|---|---|---|
+| `tools/calibration/measure_cohorts.py` | `main` | 251 | 67 | 15 | 8 | warn |
+| `src/maintainability_audit/scoring.py` | `score_report` | 179 | 68 | 11 | 15 | warn |
+| `src/maintainability_audit/report.py` | `build_report` | 106 | 74 | 9 | 3 | warn |
+| `src/maintainability_audit/history.py` | `_commits` | 132 | 34 | 8 | 17 | warn |
+| `tools/calibration/verify_corpus.py` | `main` | 74 | 65 | 6 | 6 | warn |
+
+## Hotspots — churn x cognitive complexity (12 months ago)
+
+| File | Commits | Lines +/- | Cognitive | Authors | Score |
+|---|---|---|---|---|---|
+| `src/maintainability_audit/metrics.py` | 7 | 952 | 41 | 2 | 287 |
+| `src/maintainability_audit/scoring.py` | 5 | 345 | 48 | 2 | 240 |
+| `src/maintainability_audit/renderers.py` | 9 | 637 | 21 | 2 | 189 |
+| `src/maintainability_audit/declarations.py` | 4 | 197 | 38 | 1 | 152 |
+| `src/maintainability_audit/similarity.py` | 2 | 264 | 46 | 1 | 92 |
+| `src/maintainability_audit/cli.py` | 5 | 1680 | 18 | 2 | 90 |
+| `tools/calibration/measure_cohorts.py` | 2 | 337 | 40 | 1 | 80 |
+| `src/maintainability_audit/idioms.py` | 2 | 178 | 34 | 1 | 68 |
+| `src/maintainability_audit/config.py` | 11 | 134 | 6 | 2 | 66 |
+| `src/maintainability_audit/prompts.py` | 4 | 275 | 16 | 1 | 64 |
+| `src/maintainability_audit/sarif.py` | 3 | 155 | 21 | 2 | 63 |
+| `src/maintainability_audit/duplication.py` | 2 | 107 | 30 | 1 | 60 |
+| `tools/calibration/analyze_cohorts.py` | 2 | 138 | 27 | 1 | 54 |
+| `src/maintainability_audit/deadcode.py` | 2 | 173 | 22 | 1 | 44 |
+| `tools/calibration/measure.py` | 2 | 150 | 22 | 1 | 44 |
+| `src/maintainability_audit/_derive.py` | 2 | 102 | 11 | 1 | 22 |
+| `src/maintainability_audit/report.py` | 7 | 199 | 3 | 1 | 21 |
+| `src/maintainability_audit/_hotspots.py` | 2 | 60 | 9 | 1 | 18 |
+| `tools/calibration/select_corpus.py` | 2 | 165 | 9 | 1 | 18 |
+| `tests/test_calibration_corpus.py` | 2 | 173 | 4 | 1 | 8 |
+| `tests/test_cohort_statistics.py` | 2 | 173 | 2 | 1 | 4 |
+| `tests/test_audit_components.py` | 3 | 574 | 1 | 2 | 3 |
+
+## Change Coupling — files that keep changing together
+
+| File | Changes with | Co-changes | Confidence |
+|---|---|---|---|
+| `CHANGELOG.md` | `README.md` | 14 | 82% |
+| `README.md` | `docs/self-audit.md` | 10 | 100% |
+| `README.md` | `docs/standard.md` | 10 | 100% |
+| `README.md` | `src/maintainability_audit/config.py` | 10 | 91% |
+| `CHANGELOG.md` | `src/maintainability_audit/config.py` | 9 | 82% |
+| `CHANGELOG.md` | `src/maintainability_audit/renderers.py` | 8 | 89% |
+| `README.md` | `src/maintainability_audit/renderers.py` | 8 | 89% |
+| `CHANGELOG.md` | `docs/self-audit.md` | 8 | 80% |
+| `CHANGELOG.md` | `docs/standard.md` | 8 | 80% |
+| `README.md` | `src/maintainability_audit/__init__.py` | 7 | 100% |
+| `src/maintainability_audit/config.py` | `src/maintainability_audit/renderers.py` | 7 | 78% |
+| `CHANGELOG.md` | `src/maintainability_audit/__init__.py` | 6 | 86% |
+| `README.md` | `src/maintainability_audit/report.py` | 6 | 86% |
+| `src/maintainability_audit/__init__.py` | `src/maintainability_audit/config.py` | 6 | 86% |
+| `docs/self-audit.md` | `src/maintainability_audit/renderers.py` | 6 | 67% |
+| `docs/standard.md` | `src/maintainability_audit/renderers.py` | 6 | 67% |
+| `docs/self-audit.md` | `docs/standard.md` | 6 | 60% |
+| `docs/self-audit.md` | `src/maintainability_audit/config.py` | 6 | 60% |
+| `README.md` | `docs/config-schema.md` | 5 | 100% |
+| `README.md` | `src/maintainability_audit/cli.py` | 5 | 100% |
+| `README.md` | `tests/test_cli.py` | 5 | 100% |
+| `docs/config-schema.md` | `maintainability-agent.schema.json` | 5 | 100% |
+| `README.md` | `maintainability-agent.schema.json` | 5 | 83% |
+| `maintainability-agent.schema.json` | `src/maintainability_audit/config.py` | 5 | 83% |
+| `CHANGELOG.md` | `src/maintainability_audit/report.py` | 5 | 71% |
 

@@ -86,14 +86,43 @@ def test_baseline_helpers_cover_empty_missing_and_written_files(tmp_path: Path) 
 # ---------------------------------------------------------------------------
 
 def test_report_contains_iso_score(tmp_path: Path) -> None:
+    """A clean, tested, *documented* toy repo earns the top grade.
+
+    Every artifact here is load-bearing: drop the test file and the
+    grade caps at B; drop the changelog and docs and the documentation
+    aspect scores 3.0, which costs the A+."""
     write(tmp_path / "README.md", "# Test\n")
+    write(tmp_path / "CHANGELOG.md", "## 0.1.0\n- start\n")
+    write(tmp_path / "docs" / "index.md", "# Docs\n")
     write(tmp_path / "app.py", "def ok():\n    return 1\n")
+    write(tmp_path / "test_app.py", "from app import ok\n\ndef test_ok():\n    assert ok() == 1\n")
 
     report = build_report(tmp_path, load_config(None))
 
     assert report["score"]["overall"] == 5.0
     assert report["score"]["grade"] == "A+"
     assert set(report["score"]["categories"]) == {"modularity", "reusability", "analyzability", "modifiability", "testability"}
+    assert report["score"]["aspects"]["test_presence"] == 5.0
+    assert report["score"]["rubric"]["unscored"], "unmeasurable aspects must be named, not omitted"
+
+
+def test_a_grades_require_test_evidence(tmp_path: Path) -> None:
+    """An earlier version of this file asserted the opposite: a README
+    plus one untested function was blessed as A+ with testability 5.0.
+    A hostile audit built a 100-file, zero-test repository and collected
+    exactly that grade. The published meaning of 5 is "localized,
+    tested, and easy to reason about" — so with not one test file, the
+    A-grades are withheld, testability is capped, and the blocker names
+    the reason instead of leaving "why am I not an A" unanswerable."""
+    write(tmp_path / "README.md", "# Test\n")
+    for index in range(20):
+        write(tmp_path / f"m{index}.py", f"def f{index}(x):\n    return x + {index}\n")
+
+    score = build_report(tmp_path, load_config(None))["score"]
+
+    assert score["grade"] == "B"
+    assert score["categories"]["testability"] <= 2.0
+    assert any("test evidence" in blocker for blocker in score["grade_blockers"])
 
 
 def _make_huge_function_source(name: str, body_lines: int = 200) -> str:

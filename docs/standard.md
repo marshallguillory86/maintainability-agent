@@ -20,6 +20,58 @@ Maintainability is the degree to which a system can be effectively and efficient
 
 The CLI emits an ISO/IEC 25010-inspired score from 0 to 5 for each category plus an overall letter grade. This score is a deterministic triage signal, not a replacement for human review.
 
+### The rubric: aspects → categories → overall
+
+The score is a three-layer rollup, and every layer is visible in the report (`score.aspects`, `score.rubric`) and in [`_formula.py`](../src/maintainability_audit/_formula.py), which is the single source both the scorer and the calibration derive from.
+
+**Layer 1 — aspects.** Thirteen measured aspects, each scored 0–5. Two kinds:
+
+|aspect|kind|measured as|
+|---|---|---|
+|file_size|calibrated|file-size pressure vs. corpus median, through the score curve|
+|declaration_size|calibrated|declaration size/complexity pressure (production code only)|
+|duplication|calibrated|exact duplicate-block pressure vs. corpus median|
+|risk_patterns|calibrated|configured risk-pattern density vs. corpus median|
+|policy_gates|calibrated|hard-gate failures vs. the one-failure unit|
+|test_presence|rubric|share of declarations living in test files (0 test files → 0.0)|
+|dead_code|rubric|unreferenced private declarations per production declaration|
+|near_duplication|rubric|near-duplicate declarations per production declaration|
+|idiom_consistency|rubric|count of concerns served by competing libraries|
+|churn_hotspots|rubric|share of changed files that are hotspots (5+ commits and cognitive ≥ 50)|
+|change_coupling|rubric|share of changed files in code-to-code co-change pairs|
+|knowledge_concentration|rubric|share of settled files (3+ commits) with a single author|
+|documentation|rubric|artifact presence: README, changelog, docs directory|
+
+**Calibrated** aspects inherit the corpus anchor — 1.0x the mature-OSS median maps to the same score everywhere. **Rubric** aspects score evidence a corpus median cannot price, against banded thresholds stated in [`scoring.py`](../src/maintainability_audit/scoring.py); the bands are informed by the corpus and cohort measurements where those exist, and they are heuristics — visible, arguable, and **not validated against outcomes** (see *What would validate this scale*, below).
+
+An aspect that cannot be measured — no git history, a pre-0.4.0 baseline without the newer counts — scores **null and its weight renormalizes away**. Unknown never prices as either clean or dirty, and the report prints "not measurable" rather than blanking the row.
+
+**Layer 2 — categories.** Each ISO category is a weighted mean of its aspects (weights in `_formula.CATEGORY_ASPECTS`, renormalized over measured aspects):
+
+|category|aspects (weight)|
+|---|---|
+|modularity|file_size .35, duplication .25, change_coupling .25, churn_hotspots .15|
+|reusability|duplication .30, near_duplication .30, idiom_consistency .25, file_size .15|
+|analyzability|declaration_size .30, documentation .20, dead_code .20, risk_patterns .15, churn_hotspots .15|
+|modifiability|change_coupling .25, duplication .20, churn_hotspots .20, risk_patterns .15, file_size .10, policy_gates .10|
+|testability|test_presence .50, declaration_size .30, policy_gates .20|
+
+**Layer 3 — overall.** Equal-weighted mean of the five categories — ISO orders its sub-characteristics no other way, and an unequal weighting would be a claim nothing here supports. The calibration constant is fitted by bisection so the **corpus median still rolls up to exactly 4.0** through this pipeline; `tests/test_calibration_corpus.py` re-derives it offline.
+
+**Grades on top of the number:** A+/A are gated on per-dimension ceilings (below), and **a repository with production code and zero test files cannot receive an A-grade at all** — its testability is capped at 2.0 and the blocker names the reason. The published meaning of a 5 includes "tested", and that sentence is enforced, not aspirational.
+
+**What is not scored, and why.** These are aspects of maintainability by any honest definition; no measurement in this tool reaches them, so they appear in every report's rubric as unscored rather than being silently absent:
+
+|aspect|why it is not scored|
+|---|---|
+|test_effectiveness|requires running the suite (mutation/coverage); this audit never executes code|
+|naming_quality|no static proxy survives contact; a wrong-name detector needs semantics|
+|comment_accuracy|comments are deliberately unparsed; staleness needs meaning, not structure|
+|indirection_depth|call-graph construction is not implemented for the supported languages|
+|architectural_coherence|no measurement distinguishes a wrong boundary from an unusual one statically|
+
+**What would validate this scale.** ISO defines maintainability as the *effort to modify*. The rubric weights are judgments until the score is tested against that outcome: score repositories at a past commit, then measure the following year's fix-churn, rework and change breadth from their histories, and check that the score predicted them on held-out repositories. That experiment has not been run. Until it has, this is a **calibrated structural-pressure scale with a stated rubric** — reproducible and honest about its judgment layer, but not outcome-validated, and the difference is exactly the one this project's own retraction taught.
+
 ### How the scale was calibrated (0.5.0)
 
 Scores are **rates measured against real code**, not counts.

@@ -127,6 +127,16 @@ def build_report(
     missing_files = [path for path in config.get("expected_files", []) if not (root / path).exists()]
     largest_files = sorted(file_metrics, key=lambda metric: metric.lines, reverse=True)[:25]
 
+    # Full counts for the rubric aspects, taken before the report's
+    # display lists are truncated to 25 — a rate computed from a capped
+    # list would flatten exactly the repositories the score is about.
+    summary["near_duplicate_count"] = len(near_duplicates)
+    summary["dead_code_count"] = len(dead)
+    summary["idiom_concern_count"] = len(idioms)
+    summary["has_readme"] = any(root.glob("README*"))
+    summary["has_changelog"] = any(root.glob("CHANGELOG*"))
+    summary["has_docs_dir"] = (root / "docs").is_dir()
+
     report = {
         "root": str(root),
         "git_branch": run_git(["branch", "--show-current"], root),

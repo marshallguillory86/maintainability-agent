@@ -87,16 +87,8 @@ def table(rows: list[tuple[str, ...]], headers: tuple[str, ...], width: int = 11
         print("".join(c.ljust(26) if i == 0 else c.rjust(width) for i, c in enumerate(row)))
 
 
-def main() -> int:
-    path = Path(sys.argv[1]) if len(sys.argv) > 1 else COHORTS
-    data = json.loads(path.read_text(encoding="utf-8"))
-    cohorts = data["cohorts"]
-    treatment, control = cohorts["ai"]["repos"], cohorts["human"]["repos"]
-    mature = cohorts.get("mature-oss", {}).get("repos", [])
+def _full_rows(treatment: list[dict], control: list[dict], mature: list[dict]) -> list[tuple[str, ...]]:
     pooled = treatment + control
-
-    print(f"n: ai={len(treatment)} human={len(control)} mature-oss={len(mature)}\n")
-
     rows = []
     for metric in METRICS:
         test = mann_whitney([r[metric] for r in treatment], [r[metric] for r in control])
@@ -108,25 +100,38 @@ def main() -> int:
             f"{test['p']:.3f}" if test else "n/a",
             f"{spearman([r['declarations'] for r in pooled], [r[metric] for r in pooled]):.2f}",
         ))
-    table(rows, ("metric", "ai", "human", "mature", "p", "size r"))
+    return rows
+
+
+def _banded_rows(treatment: list[dict], control: list[dict]) -> list[tuple[str, ...]]:
+    rows = []
+    for metric in METRICS:
+        test = mann_whitney([r[metric] for r in treatment], [r[metric] for r in control])
+        rows.append((
+            metric,
+            f"{median(r[metric] for r in treatment):.4f}",
+            f"{median(r[metric] for r in control):.4f}",
+            f"{test['p']:.3f}" if test else "n too small",
+        ))
+    return rows
+
+
+def main() -> int:
+    path = Path(sys.argv[1]) if len(sys.argv) > 1 else COHORTS
+    data = json.loads(path.read_text(encoding="utf-8"))
+    cohorts = data["cohorts"]
+    treatment, control = cohorts["ai"]["repos"], cohorts["human"]["repos"]
+    mature = cohorts.get("mature-oss", {}).get("repos", [])
+
+    print(f"n: ai={len(treatment)} human={len(control)} mature-oss={len(mature)}\n")
+    table(_full_rows(treatment, control, mature), ("metric", "ai", "human", "mature", "p", "size r"))
 
     banded_treatment, banded_control, low, high = size_band(treatment, control)
     print(
         f"\nsize-banded to {low}-{high} declarations: "
         f"ai n={len(banded_treatment)} human n={len(banded_control)}"
     )
-    rows = []
-    for metric in METRICS:
-        test = mann_whitney(
-            [r[metric] for r in banded_treatment], [r[metric] for r in banded_control]
-        )
-        rows.append((
-            metric,
-            f"{median(r[metric] for r in banded_treatment):.4f}",
-            f"{median(r[metric] for r in banded_control):.4f}",
-            f"{test['p']:.3f}" if test else "n too small",
-        ))
-    table(rows, ("metric", "ai", "human", "p"))
+    table(_banded_rows(banded_treatment, banded_control), ("metric", "ai", "human", "p"))
     return 0
 
 

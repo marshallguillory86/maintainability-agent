@@ -34,6 +34,7 @@ name the specific thing dragging the score, not a letter.
 """
 from __future__ import annotations
 
+from pathlib import PurePosixPath
 from typing import Any
 
 from ._calibration import (
@@ -44,6 +45,14 @@ from ._calibration import (
     GRADE_GATES,
     WARN_WEIGHT,
 )
+from ._formula import (
+    CALIBRATED_ASPECTS,
+    CATEGORY_ASPECTS,
+    CATEGORY_WEIGHTS,
+    UNSCORED,
+    overall_from_aspects,
+)
+from .declarations import DECLARATION_SUFFIXES
 
 __all__ = ["CATEGORIES", "score_report", "grade_from_score", "clamp_score"]
 
@@ -167,18 +176,62 @@ def grade_for(score: float, readings: dict[str, float]) -> tuple[str, list[str]]
 
 
 def score_report(report: dict[str, Any]) -> dict[str, Any]:
+    """Aspects -> categories -> overall, by the rubric in ``_formula``.
+
+    Every aspect the tool can measure gets a score; every aspect it
+    cannot gets None and its weight renormalizes away; every aspect of
+    maintainability it cannot measure *at all* is named in
+    ``rubric.unscored`` with the reason — absence is a statement here,
+    never an omission. The calibration constant is fitted so the corpus
+    median still rolls up to 4.0 through this exact pipeline.
+    """
     summary = report["summary"]
     pressures = dimension_pressures(summary)
     normalized = normalize(pressures)
-    overall = _curve(_weighted_mean(normalized))
+    aspects = aspect_scores(report, normalized)
+    overall_raw, categories = overall_from_aspects(aspects)
+    overall = clamp_score(overall_raw if overall_raw is not None else _curve(_weighted_mean(normalized)))
     readings = _gate_readings(summary, pressures)
     grade, blockers = grade_for(overall, readings)
+    # Production code with not one test file cannot take an A-grade,
+    # whatever its structural pressures. The top grades are published as
+    # meaning "tested"; withholding them here is what makes that sentence
+    # true rather than aspirational. Demotion lands on B — the same
+    # landing spot as a failed grade gate — and names its reason.
+    # .get, not [] — reports written before 0.4.0 carry no
+    # test_file_count, and an absent count is "unknown", not "zero".
+    untested = summary.get("test_file_count") == 0 and summary.get("production_declarations_scanned", 0) > 0
+    if untested:
+        # Stated even when the rubric already landed below A on its own:
+        # "why is my grade capped" deserves this answer regardless of
+        # which arithmetic delivered the cap.
+        blockers = [*blockers, "no test files found: A-grades require test evidence"]
+        if grade in GRADE_GATES:
+            grade = "B"
+        if categories.get("testability") is not None:
+            categories["testability"] = min(categories["testability"], UNTESTED_TESTABILITY_CAP)
     worst = sorted(normalized.items(), key=lambda item: -item[1])
     return {
         "standard": "ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based",
         "overall": overall,
         "grade": grade,
-        "categories": _iso_categories(normalized, normalize_production(summary)),
+        "categories": {
+            name: (clamp_score(value) if value is not None else None)
+            for name, value in categories.items()
+        },
+        # The full aspect layer: every score the rubric read, None where
+        # the evidence was unavailable rather than clean.
+        "aspects": {
+            name: (clamp_score(value) if value is not None else None)
+            for name, value in aspects.items()
+        },
+        # The judgment layer, in the open: which aspects feed which
+        # category at what weight, and what is not scored at all.
+        "rubric": {
+            "category_aspects": CATEGORY_ASPECTS,
+            "category_weights": CATEGORY_WEIGHTS,
+            "unscored": UNSCORED,
+        },
         # Multiples of the mature-OSS median: 1.0 is typical real code.
         "dimensions": {name: round(value, 2) for name, value in normalized.items()},
         # Worst-first, so the remediation prompt can lead with the
@@ -224,24 +277,149 @@ def _curve(normalized_pressure: float) -> float:
     return clamp_score(5 * CALIBRATION_C / (normalized_pressure + CALIBRATION_C))
 
 
-def _iso_categories(pressures: dict[str, float], prod: dict[str, float]) -> dict[str, float]:
-    """ISO/IEC 25010 view of the same pressures.
+# A codebase with no tests at all cannot score better than this on
+# testability, whatever its structure looks like. See aspect_scores.
+UNTESTED_TESTABILITY_CAP = 2.0
 
-    Retained because the category model is what the docs and existing
-    baselines speak. Each category is now dominated by a *different*
-    measurement rather than being one number re-weighted five times, so
-    two categories can genuinely disagree — but they are still views onto
-    five inputs, not five independent assessments, and the report says so.
 
-    ``analyzability`` and ``testability`` read the production-only
-    pressures: they describe the code under test, not the tests.
+def _banded(value: float, bands: list[tuple[float, float]], floor: float) -> float:
+    """Score a rate against ascending (ceiling, score) bands.
+
+    The bands are heuristics and every one is visible in this file —
+    that is their entire claim to honesty. They are informed by the
+    corpus and cohort measurements where those exist, and they are not
+    validated against outcomes; docs/standard.md says so in as many
+    words.
     """
-    file_size = pressures["file_size"]
-    dup, risk, gates = pressures["duplication"], pressures["risk"], pressures["gates"]
-    return {
-        "modularity": _curve(file_size + dup),
-        "reusability": _curve(dup * 2 + file_size * 0.3),
-        "analyzability": _curve(prod["declarations"] + risk),
-        "modifiability": _curve(gates + dup + risk + file_size * 0.4),
-        "testability": _curve(prod["declarations"] * 0.8 + prod["gates"]),
+    for ceiling, score in bands:
+        if value <= ceiling:
+            return score
+    return floor
+
+
+def _history_rate_aspect(history: dict[str, Any] | None, count_of: str) -> float | None:
+    """Hotspot or coupling count as a share of files that changed.
+
+    A rate, not a count — a count would score repository size, which is
+    the bug the 0.5.0 rewrite existed to remove. No history means None:
+    a shallow CI clone must not grade as either clean or dirty.
+    """
+    if history is None:
+        return None
+    changed = history.get("files_changed", 0)
+    if changed == 0:
+        return 5.0  # had history to read; nothing changed in the window
+    if count_of == "hotspots":
+        count = sum(
+            1 for item in history["hotspots"] if item["commits"] >= 5 and item["complexity"] >= 50
+        )
+    else:
+        # Code-to-code pairs only. README co-changing with CHANGELOG, or
+        # config.py with the docs that describe it, is discipline — the
+        # wrong-boundary signal this aspect scores lives between source
+        # files. The report still lists every pair; only the score
+        # filters. (Hotspots need no filter: a doc file has cognitive
+        # complexity 0 and never qualifies.)
+        count = sum(
+            1
+            for item in history["change_coupling"]
+            if all(PurePosixPath(path).suffix in DECLARATION_SUFFIXES for path in item["files"])
+        )
+    return _banded(count / changed, [(0.0, 5.0), (0.02, 4.5), (0.05, 4.0), (0.10, 3.0), (0.20, 2.0)], 1.0)
+
+
+def _test_presence_aspect(summary: dict[str, Any]) -> float | None:
+    """Share of *declarations* that live in test files.
+
+    Declarations, not files: a file denominator counts every README and
+    changelog against the test ratio, so documenting a repo would lower
+    its testability. Zero test files is a score of 0.0; an absent count
+    (pre-0.4.0 reports) is None — zero and unknown are different claims.
+    """
+    test_count = summary.get("test_file_count")
+    if test_count is None:
+        return None
+    if test_count == 0:
+        return 0.0
+    total = summary.get("declarations_scanned", 0)
+    if total == 0:
+        return None
+    share = (total - summary.get("production_declarations_scanned", 0)) / total
+    # Tests exist, so the floor is above "none" even if they hold no
+    # parsed declarations (table-driven suites, fixtures-as-data).
+    return max(1.5, _banded(share, [(0.05, 1.5), (0.10, 2.5), (0.20, 3.5), (0.30, 4.5)], 5.0))
+
+
+def _finding_rate_aspect(
+    summary: dict[str, Any], count_key: str, bands: list[tuple[float, float]], floor: float
+) -> float | None:
+    """A finding count as a share of production declarations."""
+    count = summary.get(count_key)
+    production = summary.get("production_declarations_scanned", 0)
+    if count is None or production == 0:
+        return None
+    return _banded(count / production, bands, floor)
+
+
+def _ownership_aspect(history: dict[str, Any] | None) -> float | None:
+    """Share of settled files (3+ commits) that one person owns alone."""
+    if history is None or history.get("multi_commit_files", 0) == 0:
+        return None
+    share = history["single_author_files"] / history["multi_commit_files"]
+    return _banded(share, [(0.2, 5.0), (0.4, 4.0), (0.6, 3.0), (0.8, 2.0)], 1.0)
+
+
+def _documentation_aspect(summary: dict[str, Any]) -> float | None:
+    """Artifact presence: README, changelog, docs directory.
+
+    A proxy for whether anyone can orient, not for whether the words are
+    accurate — accuracy is in UNSCORED and stays there.
+    """
+    readme = summary.get("has_readme")
+    if readme is None:
+        return None
+    extras = int(bool(summary.get("has_changelog"))) + int(bool(summary.get("has_docs_dir")))
+    if not readme:
+        return 1.5 if extras else 0.5
+    return [3.0, 4.0, 5.0][extras]
+
+
+def aspect_scores(report: dict[str, Any], normalized: dict[str, float]) -> dict[str, float | None]:
+    """Every aspect the rubric reads, scored 0-5 or None for unknown.
+
+    Calibrated aspects push their corpus-normalized pressure through the
+    score curve, so they inherit the anchor: the corpus median is worth
+    the same everywhere. Rubric aspects score evidence the corpus cannot
+    price, against the banded thresholds above. None always means "could
+    not measure", never "measured nothing wrong" — old reports and
+    baselines that predate a count simply do not get an opinion on it.
+    """
+    summary = report["summary"]
+    history = report.get("history")
+    scores: dict[str, float | None] = {
+        name: _curve(normalized[dimension]) for name, dimension in CALIBRATED_ASPECTS.items()
     }
+    # declaration_size reads the *production* pressure. Its only rubric
+    # consumers are analyzability and testability, which describe the
+    # code under test — an oversized test function must not drag either
+    # (pinned by test_analyzability_not_penalized_by_test_function_size).
+    scores["declaration_size"] = _curve(normalize_production(summary)["declarations"])
+    scores["test_presence"] = _test_presence_aspect(summary)
+    scores["dead_code"] = _finding_rate_aspect(
+        summary, "dead_code_count", [(0.0, 5.0), (0.001, 4.5), (0.005, 3.5), (0.015, 2.5)], 1.5
+    )
+    scores["near_duplication"] = _finding_rate_aspect(
+        summary,
+        "near_duplicate_count",
+        [(0.0, 5.0), (0.005, 4.5), (0.01, 4.0), (0.02, 3.0), (0.05, 2.0)],
+        1.0,
+    )
+    concerns = summary.get("idiom_concern_count")
+    scores["idiom_consistency"] = (
+        None if concerns is None else _banded(concerns, [(0, 5.0), (1, 3.5), (2, 2.5)], 1.5)
+    )
+    scores["churn_hotspots"] = _history_rate_aspect(history, "hotspots")
+    scores["change_coupling"] = _history_rate_aspect(history, "coupling")
+    scores["knowledge_concentration"] = _ownership_aspect(history)
+    scores["documentation"] = _documentation_aspect(summary)
+    return scores

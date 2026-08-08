@@ -25,7 +25,8 @@
       "maintainability-baseline.json",
       "maintainability.sarif",
       "coverage.xml",
-      "AGENTS-maintainability.md"
+      "AGENTS-maintainability.md",
+      "tools/calibration/*.json"
     ]
   },
   "thresholds": {
@@ -41,7 +42,10 @@
   "hard_gates": {
     "require_test_command": true,
     "require_readme": true,
-    "require_clean_worktree": false
+    "require_clean_worktree": false,
+    "fail_on_file_failures": true,
+    "fail_on_function_failures": true,
+    "fail_on_duplicate_blocks": true
   },
   "expected_files": [
     "README.md",

@@ -52,19 +52,19 @@ This repo eats its own dogfood — the tool is run against this codebase as part
 
 | Metric | Value |
 |---|---:|
-| Overall score | **5.0 / 5 (A+)** |
-| Files scanned | 74 |
-| File warnings | 0 |
+| Overall score | **4.8 / 5 (B)** |
+| Files scanned | 81 |
+| File warnings | 8 |
 | File failures | 0 |
-| Function warnings | 0 |
+| Function warnings | 5 |
 | Function failures | 0 |
 | Duplicate blocks | 0 |
 | Risk findings | 0 |
 | Hard gate failures | 0 |
 
-All five ISO/IEC 25010 categories (modularity, reusability, analyzability, modifiability, testability) score 5.0, against thresholds this repo deliberately sets stricter than the shipped defaults — a 250-line file warning versus the default 400.
+Yes, a **B** — banded A+ on the number, demoted because 8 file warnings and 5 function warnings exceed the A-grade ceilings, against thresholds this repo deliberately sets stricter than the shipped defaults (a 250-line file warning versus the default 400). An earlier revision of this table advertised 5.0/A+ after the codebase had drifted to a B; a hostile audit caught the stale claim, which is precisely the failure mode this tool exists to catch. The table now states what the current run states, and every threshold gate — file, function, duplication — is opted **on** for this repo's own CI, so drifting below the bar fails the build instead of the README.
 
-That grade is maintained, not assumed, and since v0.5.0 it is also **gated**: an A+ requires every dimension to be clean, so it cannot be reached by averaging one bad dimension against four good ones. When the v0.4.0 work pushed this repo to 4.4 / 5 (B), the response was to split `metrics.py` along its real responsibilities rather than to publish a fix while advertising a stale A+. The score is the output of that work, not a claim that preceded it.
+The grade is **gated, not averaged**: A+ requires every dimension clean, and since the rubric rework a repository with production code and zero test files cannot receive an A-grade at all.
 
 Regenerate with `maintainability-agent --config maintainability-agent.json --output docs/self-audit.md` (see the file's preamble for the path-sanitization step).
 

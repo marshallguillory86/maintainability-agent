@@ -231,11 +231,18 @@ def history_section(
     for metric in function_metrics:
         weight[metric.path] = weight.get(metric.path, 0) + metric.cognitive
     churn = file_churn(root, since, tracked)
+    # Ownership concentration, over files with enough commits to have an
+    # opinion. A file touched once has one author by arithmetic, not by
+    # concentration; three commits is the floor for the distinction.
+    settled = [entry for entry in churn.values() if entry.commits >= 3]
+    single = sum(1 for entry in settled if len(entry.authors) == 1)
     return {
         "window": since,
         "files_changed": len(churn),
         "hotspots": hotspots(churn, weight),
         "change_coupling": change_coupling(root, since, tracked),
+        "multi_commit_files": len(settled),
+        "single_author_files": single,
     }
 
 

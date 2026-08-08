@@ -16,6 +16,8 @@ from __future__ import annotations
 from statistics import median
 from typing import Any
 
+from ._formula import CALIBRATED_ASPECTS, overall_from_aspects
+
 DIMENSIONS = ("file_size", "declarations", "duplication", "risk", "gates")
 
 # Enough repos that one unusual codebase cannot move a median on its own.
@@ -77,24 +79,62 @@ def normalized_pressures(
     return values
 
 
+def _structural_overall(entry: dict[str, Any], references: dict[str, float], c: float) -> float:
+    """One repo's rubric rollup, from the aspects the corpus can supply.
+
+    The corpus measurements carry only the five structural dimensions —
+    no test counts, no history, no finding rates — so the rubric aspects
+    are None and their weights renormalize away, exactly as they do for
+    a live report missing the same evidence. This is deliberately the
+    *same* rollup ``scoring.score_report`` uses, imported from
+    ``_formula``, so the anchor and the score cannot drift apart.
+    """
+    scores: dict[str, float | None] = {
+        aspect: 5 * c / (entry["dimensions"][dimension] / references[dimension] + c)
+        for aspect, dimension in CALIBRATED_ASPECTS.items()
+        if references[dimension] > 0
+    }
+    overall, _ = overall_from_aspects(scores)
+    return overall if overall is not None else 0.0
+
+
 def derive_curve_constant(
     measurements: list[dict[str, Any]],
     references: dict[str, float],
     weights: dict[str, float],
     target_score: float = 4.0,
 ) -> float:
-    """Fit ``c`` in ``score = 5c/(n+c)`` so the corpus median hits ``target_score``.
+    """Fit ``c`` so the corpus median *rolls up* to ``target_score``.
 
-    Solving ``5c/(n+c) = t`` for ``c`` gives ``c = n*t/(5-t)``; at the
-    default target of 4.0 that is ``4n``.
+    The overall is no longer ``curve(weighted mean pressure)`` — it is
+    the rubric rollup: each structural pressure curved into an aspect
+    score, aspects averaged into categories, categories into the
+    overall. ``c`` appears inside every per-aspect curve, so there is no
+    closed form any more; the median rollup is monotonic in ``c``, and a
+    bisection recovers it to 4 decimal places.
 
-    Note the median repo does not sit at n = 1.0 even though every
-    reference is a median: no single repo is simultaneously median on all
-    five dimensions, so the median of the means is not the mean of the
-    medians. Fitting to the observed value is what keeps the documented
-    claim — "a well-run real codebase earns a B" — literally true.
+    ``weights`` stays in the signature for the callers and tests that
+    pass it, but the rollup weights now live in ``_formula`` — the
+    dimension weights only steer the fallback score and worst-dimension
+    readout in ``scoring``.
+
+    The median repo still does not sit at 1.0x on every dimension: no
+    single repo is median at everything, so fitting to the observed
+    rollup is what keeps "a well-run real codebase earns a B" literally
+    true rather than approximately intended.
     """
+    del weights  # rollup weights come from _formula; see docstring
     if not 0 < target_score < 5:
         raise ValueError("target_score must be between 0 and 5 exclusive")
-    observed = median(normalized_pressures(measurements, references, weights))
-    return round(observed * target_score / (5 - target_score), 4)
+
+    def median_overall(c: float) -> float:
+        return median(_structural_overall(entry, references, c) for entry in measurements)
+
+    low, high = 1e-3, 1e3
+    for _ in range(200):
+        mid = (low + high) / 2
+        if median_overall(mid) < target_score:
+            low = mid
+        else:
+            high = mid
+    return round((low + high) / 2, 4)

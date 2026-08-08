@@ -73,7 +73,12 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 #
 # Derived by ``_derive.derive_curve_constant``; regenerate with
 # ``tools/calibration/measure.py``.
-CALIBRATION_C = 3.5466
+# Re-fitted when the overall became the rubric rollup (aspects ->
+# categories -> overall) rather than curve(weighted mean): c now sits
+# inside every per-aspect curve, so it is recovered by bisection against
+# the corpus median instead of in closed form. Same anchor either way:
+# the median mature repo rolls up to exactly 4.0.
+CALIBRATION_C = 2.966
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3

@@ -23,7 +23,37 @@ def summary_table(summary: dict[str, int], score: dict[str, Any]) -> list[str]:
 
 def score_table(score: dict[str, Any]) -> list[str]:
     rows = [[name, str(value)] for name, value in score["categories"].items()]
-    return markdown_table("ISO/IEC 25010 Maintainability Score", ["Category", "Score"], rows)
+    lines = markdown_table("ISO/IEC 25010 Maintainability Score", ["Category", "Score"], rows)
+    lines.extend(aspect_table(score))
+    return lines
+
+
+def aspect_table(score: dict[str, Any]) -> list[str]:
+    """Every aspect the rubric read, including the ones it could not.
+
+    "not measurable" is printed, never blanked: a shallow clone with no
+    history and a repo with genuinely quiet history must read
+    differently. The unscored list renders too — what the tool cannot
+    measure at all is part of the score's meaning.
+    """
+    aspects = score.get("aspects")
+    if not aspects:
+        return []
+    rows = [
+        [name.replace("_", " "), str(value) if value is not None else "not measurable"]
+        for name, value in aspects.items()
+    ]
+    lines = markdown_table("Aspect Scores", ["Aspect", "Score"], rows)
+    unscored = score.get("rubric", {}).get("unscored", {})
+    if unscored:
+        lines.extend(
+            markdown_table(
+                "Not Scored — no measurement exists",
+                ["Aspect", "Why"],
+                [[name.replace("_", " "), reason] for name, reason in unscored.items()],
+            )
+        )
+    return lines
 
 
 def markdown_table(title: str, headers: list[str], rows: list[list[str]]) -> list[str]:

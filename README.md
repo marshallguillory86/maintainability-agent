@@ -11,7 +11,9 @@ cp skills/maintainability-agent/copilot/maintainability-agent.prompt.md .github/
 
 Jump to [Invokable Skill / Slash Command](#invokable-skill--slash-command) for the full install table.
 
-> **v0.6.0 detects a helper written twice under two names** — clone-instead-of-reuse, the most-cited complaint about AI-written code. Renamed copies defeat text matching, so bodies are compared structurally with identifiers anonymized. Each finding names the declaration to reuse, so the prompt says *`toAtomicAmount` at `TradeTicket.tsx:862` already does this* rather than "there is duplication". Measured across the reference corpus, this is the **first signal that separates AI-written applications from mature human-written OSS** (median 1.49% vs 0.20% of production declarations). See [docs/standard.md](docs/standard.md#signals-reported-but-not-yet-scored).
+> **Retracted: near-duplication does not distinguish AI-written code.** 0.6.0 claimed here that it was "the first signal that separates AI-written applications from mature human-written OSS" (1.49% vs 0.20%). That compared six young applications against twelve decade-old libraries, so authorship, age, domain and size all differed at once. Re-run against a control matched on age, popularity, language and size, the gap is **not significant (p = 0.539)** — and no other metric survives either once size is held constant. The AI figure was roughly right; the *control* was wrong. See [docs/standard.md](docs/standard.md#does-this-detect-ai-written-code).
+>
+> **v0.6.0 detects a helper written twice under two names** — clone-instead-of-reuse, the most-cited complaint about AI-written code. Renamed copies defeat text matching, so bodies are compared structurally with identifiers anonymized. Each finding names the declaration to reuse, so the prompt says *`toAtomicAmount` at `TradeTicket.tsx:862` already does this* rather than "there is duplication". It is a useful finding on its own terms; it is not evidence about who wrote the code.
 >
 > **v0.5.0 rebuilt the scoring engine.** The old model counted findings absolutely, so it scored repo *size* rather than maintainability: it graded **Django, pytest, black, tornado, click, httpx, attrs, lodash, svelte, axios and fastapi all at 0.0 / F** while a 53-file toy repo scored 4.6 / A. Scores are now rates, normalized per dimension against what real code carries, and calibrated so the corpus median earns a B. See [docs/standard.md](docs/standard.md#how-the-scale-was-calibrated-050).
 
@@ -181,7 +183,9 @@ The full local verification sequence that matches CI — ruff, pip-audit, the 92
 
 The audit model is based on ISO/IEC 25010 maintainability — modularity, reusability, analyzability, modifiability, testability.
 
-Scores are **rates calibrated against real code**, not counts. Every pressure is normalized against the median that a pinned 14-repo corpus of mature open-source projects (django, pytest, black, svelte, axios, requests, …) actually exhibits, so `2.5x` means "two and a half times what well-maintained real code carries." The corpus median earns a **B**; **A+ is gated**, requiring every dimension clean rather than a good average.
+Scores are **rates calibrated against real code**, not counts. Every pressure is normalized against the median that a pinned 40-repo corpus of mature open-source projects (django, angular, transformers, webpack, vite, playwright, …) actually exhibits, so `2.5x` means "two and a half times what well-maintained real code carries." The corpus median earns a **B**; **A+ is gated**, requiring every dimension clean rather than a good average.
+
+The corpus is **selected by query, not by taste** — `stars:>3000 created:<2021-01-01 pushed:>2026-01-01` across Python, TypeScript and JavaScript, then filtered to repositories that actually contain code. An earlier version was fourteen repositories chosen by hand, which is selection bias sitting underneath a scale used to grade everyone else.
 
 The calibration is reproducible rather than asserted: `python3 tools/calibration/measure.py --check` re-measures the corpus and fails if the shipped constants have drifted, and `tests/test_calibration_corpus.py` re-derives them offline from checked-in measurements — no network, no trust required.
 

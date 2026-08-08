@@ -2,6 +2,38 @@
 
 All notable changes to Maintainability Agent will be documented here.
 
+## Unreleased
+
+Recalibration, and a retraction. The reference corpus is now chosen by a query instead of by the author's taste, which moved every constant in the scale — read the table before comparing a score to one from 0.6.x.
+
+### Retracted
+
+- **retract: near-duplication does not distinguish AI-written code.** 0.6.0 reported production cross-file near-duplication at **1.49%** for AI-written applications against **0.20%** for human-written OSS, and the README called it "the first signal that separates AI-written applications from mature human-written OSS". The AI cohort was six young applications; the control was twelve libraries with a decade of maintenance behind them. Authorship, age, domain and size all differed at once, and the release attributed the gap to the one variable it found interesting — while a paragraph further down admitted the confound. Re-run against a control matched on age, popularity (both cohorts median **zero** stars), language and size, the difference is **not significant: p = 0.539**, and **p = 0.857** with the cohorts restricted to a common size band. What moved since 0.6.0 is not the AI figure (1.49% → 1.73%) but the *control*, 0.20% → 0.83%. The signal was maturity, not authorship.
+- **and no other metric replaces it.** File-failure rate (p = 0.044) and duplicate-block rate (p = 0.041) fall nominally under 0.05, but they are the two metrics most correlated with codebase size (r = 0.58, 0.49) and the AI cohort carries 1.8x the declarations. Size-banded, both go non-significant (0.121 and 0.113). Five metrics were tested at once, so one p just under 0.05 is the expected yield of chance. **The honest headline is that nothing measured here separates the populations once the comparison is controlled.**
+- **checkable rather than asserted:** `tools/calibration/cohorts.json` carries all 78 measurements, and `tools/calibration/analyze_cohorts.py` reproduces the tables offline with no network. The negative result is held to the same standard the positive one should have been.
+- **the near-duplicate detector itself is unaffected and still shipped.** A helper written twice under two names is worth finding regardless of who wrote it. What is withdrawn is the claim that finding it tells you anything about authorship.
+
+### Changed
+
+- **feat(calibration): the corpus is selected mechanically — 14 repositories to 40.** The old corpus was fourteen projects picked because the author knew them, which is selection bias sitting directly underneath a scale used to grade other people's code. `tools/calibration/select_corpus.py` now issues a GitHub search anyone can re-run — `stars:>3000 created:<2021-01-01 pushed:>2026-01-01` across Python, TypeScript and JavaScript — and `tools/calibration/verify_corpus.py` clones each candidate and keeps only those holding 20+ source files and 100+ declarations, pinning each to the commit measured. The result spans **32 to 18,789 source files and 463,581 declarations**. Seven candidates were rejected on contents rather than on name (`PayloadsAllTheThings`, 33 declarations; `airbnb/javascript`, 14), and the rejections are recorded in `corpus.json` rather than silently dropped.
+- **`created:<2021-01-01` is load-bearing.** This corpus is the human-written baseline against which AI-assisted code is compared, and today's most-starred repositories include projects begun well into the LLM era. Admitting those would answer the question before measuring it.
+- **the constants moved, and the direction is not uniform:**
+
+  |dimension|0.6.x (14 hand-picked)|now (40 queried)|
+  |---|---|---|
+  |file_size|0.0779|0.0576|
+  |declarations|0.0243|0.0599|
+  |duplication|1.4659|3.7350|
+  |risk|0.0546|0.0726|
+  |`CALIBRATION_C`|5.2754|3.5466|
+
+  **Duplication is 2.5x more lenient**: identical code that scored `5.0x` now scores `2.0x`. The hand-picked corpus was almost entirely libraries, which are built for reuse and have had years of review pressure to remove repetition; sorting by stars also returns applications and tools (n8n, excalidraw, playwright, transformers), which carry far more. The queried corpus describes *widely-used code* rather than *well-factored libraries* — the more honest reference for a tool that grades arbitrary repositories, but the bar is now set by a population that includes application code.
+- **excluded one repository on what it is, not on how it scored.** `33-js-concepts` cleared verification — an `index.js` plus thirty concept-demo test files is enough declarations to look like a codebase — and landed as the corpus outlier on duplication (38.8x the median) and file size (3x the next repo), because parallel teaching examples are supposed to repeat. It is excluded as a teaching repo, alongside the tutorials and courses the name filter already removed. The distinction matters: filtering a corpus by its own measurements manufactures whatever reference the filter was aimed at. Removing it moved `c` 3.5724 → 3.5466, which is what a median is for.
+- **fix(gates): the file, function and duplicate-block gates are opt-in.** Measured across the corpus these fired on **every single repository** — duplicate counts of 33 to 5,325 against a default `max_duplicate_blocks` of 20 — so `--fail-on-gate` failed everywhere out of the box. A gate that always fails is not a gate; it trains people to pass the flag and ignore the result, and it gave the gates dimension zero variance. `fail_on_file_failures`, `fail_on_function_failures` and `fail_on_duplicate_blocks` now default to `false`. **The findings are still reported** — only whether they block CI changed, and a repo opts in to that.
+- **the gates reference is now fixed at 0.05 rather than corpus-derived.** Hard gates are discrete policy breaches a repository opts into, not a rate drawn from a population. Once gating became opt-in the corpus median went to zero, and dividing by zero would have made the dimension silently ignore real failures. One gate failure now reads as `1.0x`. `scoring._relative` reports `0.0` for any zero reference instead of dividing.
+- **fix(config): vendored third-party code is excluded by default.** `vendor/`, `third_party/`, `*.min.js` and friends. Auditing vendored code measures someone else's decisions, and — worse for a reference corpus — constants drawn from a population containing it describe bundles rather than maintained source. **lodash's corpus entry was 41% vendored.**
+- **fix(metrics): the README gate accepts any README.** It required `README.md` exactly, so Django — which ships `README.rst` — was reported as having none. That is the class of finding that teaches people the tool does not know what it is looking at.
+
 ## 0.6.1 - 2026-08-08
 
 Release plumbing and a performance consolidation. No behaviour changes.

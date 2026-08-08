@@ -1,0 +1,1052 @@
+{
+ "measured_on": "2026-08-08",
+ "baseline": "recent-human",
+ "note": "ai-assisted vs recent-human isolates authorship; either against mature-oss confounds authorship with maturity and project type.",
+ "cohorts": {
+  "ai": {
+   "summary": {
+    "near_duplicate_rate": {
+     "n": 20,
+     "median": 0.01728,
+     "p90": 0.08411,
+     "max": 0.47326
+    },
+    "dead_code_rate": {
+     "n": 20,
+     "median": 0.0,
+     "p90": 0.00071,
+     "max": 0.00274
+    },
+    "file_failure_rate": {
+     "n": 20,
+     "median": 0.02893,
+     "p90": 0.12422,
+     "max": 0.17284
+    },
+    "function_failure_rate": {
+     "n": 20,
+     "median": 0.09139,
+     "p90": 0.13045,
+     "max": 0.17904
+    },
+    "duplicate_block_rate": {
+     "n": 20,
+     "median": 6.69631,
+     "p90": 18.81818,
+     "max": 74.95735
+    }
+   },
+   "repos": [
+    {
+     "repo": "time-yide__yide-acompanha",
+     "files": 1759,
+     "declarations": 4102,
+     "eligible_declarations": 1838,
+     "score": 3.1,
+     "near_duplicate_rate": 0.027747551686615888,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.037138927097661624,
+     "function_failure_rate": 0.13044566850275413,
+     "duplicate_block_rate": 20.48624484181568
+    },
+    {
+     "repo": "elfuerte72__oplati_podpisku",
+     "files": 394,
+     "declarations": 945,
+     "eligible_declarations": 288,
+     "score": 4.3,
+     "near_duplicate_rate": 0.024305555555555556,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.016666666666666666,
+     "function_failure_rate": 0.09032258064516129,
+     "duplicate_block_rate": 0.89
+    },
+    {
+     "repo": "rrzu777__agendita",
+     "files": 903,
+     "declarations": 2102,
+     "eligible_declarations": 520,
+     "score": 3.3,
+     "near_duplicate_rate": 0.0057692307692307696,
+     "dead_code_rate": 0.0007057163020465773,
+     "file_failure_rate": 0.08401639344262295,
+     "function_failure_rate": 0.09244883556810163,
+     "duplicate_block_rate": 16.0327868852459
+    },
+    {
+     "repo": "justinleedoyle__Typing-game",
+     "files": 96,
+     "declarations": 1671,
+     "eligible_declarations": 585,
+     "score": 3.4,
+     "near_duplicate_rate": 0.11623931623931624,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.1728395061728395,
+     "function_failure_rate": 0.06810948440483769,
+     "duplicate_block_rate": 7.728395061728395
+    },
+    {
+     "repo": "hhisdagovy__BCS",
+     "files": 506,
+     "declarations": 2647,
+     "eligible_declarations": 981,
+     "score": 3.6,
+     "near_duplicate_rate": 0.009174311926605505,
+     "dead_code_rate": 0.002736512900703675,
+     "file_failure_rate": 0.09387755102040816,
+     "function_failure_rate": 0.09499609069585614,
+     "duplicate_block_rate": 3.9020408163265308
+    },
+    {
+     "repo": "NikoKiru__f1podigami",
+     "files": 112,
+     "declarations": 886,
+     "eligible_declarations": 107,
+     "score": 3.8,
+     "near_duplicate_rate": 0.08411214953271028,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.07272727272727272,
+     "function_failure_rate": 0.03968253968253968,
+     "duplicate_block_rate": 18.818181818181817
+    },
+    {
+     "repo": "open-mercato__cezar",
+     "files": 997,
+     "declarations": 4570,
+     "eligible_declarations": 856,
+     "score": 3.9,
+     "near_duplicate_rate": 0.009345794392523364,
+     "dead_code_rate": 0.0007000350017500875,
+     "file_failure_rate": 0.02072538860103627,
+     "function_failure_rate": 0.06615330766538327,
+     "duplicate_block_rate": 2.082901554404145
+    },
+    {
+     "repo": "labuzniq__finops-dash",
+     "files": 185,
+     "declarations": 620,
+     "eligible_declarations": 204,
+     "score": 3.9,
+     "near_duplicate_rate": 0.004901960784313725,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.01744186046511628,
+     "function_failure_rate": 0.09516129032258064,
+     "duplicate_block_rate": 5.674418604651163
+    },
+    {
+     "repo": "mongle-master__mongle",
+     "files": 462,
+     "declarations": 511,
+     "eligible_declarations": 108,
+     "score": 4.2,
+     "near_duplicate_rate": 0.037037037037037035,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.0069124423963133645,
+     "function_failure_rate": 0.0767590618336887,
+     "duplicate_block_rate": 4.043778801843318
+    },
+    {
+     "repo": "alkhas72__goapsny-mvp",
+     "files": 91,
+     "declarations": 210,
+     "eligible_declarations": 50,
+     "score": 4.3,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.013888888888888888,
+     "function_failure_rate": 0.10555555555555556,
+     "duplicate_block_rate": 1.0972222222222223
+    },
+    {
+     "repo": "TeamVisioneer__PrayU-Api",
+     "files": 59,
+     "declarations": 114,
+     "eligible_declarations": 25,
+     "score": 4.6,
+     "near_duplicate_rate": 0.04,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.01818181818181818,
+     "function_failure_rate": 0.021052631578947368,
+     "duplicate_block_rate": 0.8545454545454545
+    },
+    {
+     "repo": "sergey-levko__macro-mind",
+     "files": 218,
+     "declarations": 109,
+     "eligible_declarations": 40,
+     "score": 4.0,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.007352941176470588,
+     "function_failure_rate": 0.13761467889908258,
+     "duplicate_block_rate": 4.455882352941177
+    },
+    {
+     "repo": "GetDial-AI__cli",
+     "files": 122,
+     "declarations": 229,
+     "eligible_declarations": 100,
+     "score": 4.5,
+     "near_duplicate_rate": 0.03,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.0,
+     "function_failure_rate": 0.04285714285714286,
+     "duplicate_block_rate": 1.5434782608695652
+    },
+    {
+     "repo": "AssetsArt__brust",
+     "files": 654,
+     "declarations": 1418,
+     "eligible_declarations": 313,
+     "score": 3.7,
+     "near_duplicate_rate": 0.022364217252396165,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.10256410256410256,
+     "function_failure_rate": 0.09512485136741974,
+     "duplicate_block_rate": 11.715099715099715
+    },
+    {
+     "repo": "mama-sh__deskmate",
+     "files": 283,
+     "declarations": 271,
+     "eligible_declarations": 82,
+     "score": 3.6,
+     "near_duplicate_rate": 0.012195121951219513,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.017391304347826087,
+     "function_failure_rate": 0.049773755656108594,
+     "duplicate_block_rate": 15.643478260869566
+    },
+    {
+     "repo": "zeveck__zskills-dev",
+     "files": 496,
+     "declarations": 761,
+     "eligible_declarations": 374,
+     "score": 1.9,
+     "near_duplicate_rate": 0.4732620320855615,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.16350710900473933,
+     "function_failure_rate": 0.17903930131004367,
+     "duplicate_block_rate": 74.95734597156398
+    },
+    {
+     "repo": "SWYP14th-Team3__FrontEnd",
+     "files": 173,
+     "declarations": 247,
+     "eligible_declarations": 48,
+     "score": 4.6,
+     "near_duplicate_rate": 0.041666666666666664,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.0,
+     "function_failure_rate": 0.04048582995951417,
+     "duplicate_block_rate": 0.6069364161849711
+    },
+    {
+     "repo": "WayfinderFoundation__wayfinder-paths-sdk",
+     "files": 804,
+     "declarations": 6821,
+     "eligible_declarations": 1832,
+     "score": 3.7,
+     "near_duplicate_rate": 0.003820960698689956,
+     "dead_code_rate": 0.0021119324181626186,
+     "file_failure_rate": 0.06763285024154589,
+     "function_failure_rate": 0.09794086589229145,
+     "duplicate_block_rate": 7.718196457326892
+    },
+    {
+     "repo": "khang859__fleet",
+     "files": 953,
+     "declarations": 2821,
+     "eligible_declarations": 836,
+     "score": 3.4,
+     "near_duplicate_rate": 0.004784688995215311,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.10641399416909621,
+     "function_failure_rate": 0.06649616368286446,
+     "duplicate_block_rate": 16.629737609329446
+    },
+    {
+     "repo": "Section9Labs__rupu",
+     "files": 776,
+     "declarations": 1671,
+     "eligible_declarations": 365,
+     "score": 3.5,
+     "near_duplicate_rate": 0.005479452054794521,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.12422360248447205,
+     "function_failure_rate": 0.1070448307410796,
+     "duplicate_block_rate": 8.229813664596273
+    }
+   ]
+  },
+  "human": {
+   "summary": {
+    "near_duplicate_rate": {
+     "n": 18,
+     "median": 0.00832,
+     "p90": 0.22018,
+     "max": 0.22481
+    },
+    "dead_code_rate": {
+     "n": 18,
+     "median": 0.0,
+     "p90": 0.01351,
+     "max": 0.01543
+    },
+    "file_failure_rate": {
+     "n": 18,
+     "median": 0.008,
+     "p90": 0.09019,
+     "max": 0.11429
+    },
+    "function_failure_rate": {
+     "n": 18,
+     "median": 0.08828,
+     "p90": 0.18605,
+     "max": 0.22846
+    },
+    "duplicate_block_rate": {
+     "n": 18,
+     "median": 1.7274,
+     "p90": 22.98939,
+     "max": 35.93103
+    }
+   },
+   "repos": [
+    {
+     "repo": "abiere__medical-rag-state",
+     "files": 71,
+     "declarations": 592,
+     "eligible_declarations": 310,
+     "score": 3.3,
+     "near_duplicate_rate": 0.0064516129032258064,
+     "dead_code_rate": 0.013513513513513514,
+     "file_failure_rate": 0.11428571428571428,
+     "function_failure_rate": 0.13851351351351351,
+     "duplicate_block_rate": 5.928571428571429
+    },
+    {
+     "repo": "mrdata355__casino-snowflake-streaming-ai-platform",
+     "files": 132,
+     "declarations": 467,
+     "eligible_declarations": 109,
+     "score": 4.2,
+     "near_duplicate_rate": 0.22018348623853212,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.0,
+     "function_failure_rate": 0.018912529550827423,
+     "duplicate_block_rate": 10.166666666666666
+    },
+    {
+     "repo": "SanjibBayen__rental-management-system-odoo-devdaas",
+     "files": 122,
+     "declarations": 185,
+     "eligible_declarations": 58,
+     "score": 4.3,
+     "near_duplicate_rate": 0.10344827586206896,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.0,
+     "function_failure_rate": 0.12432432432432433,
+     "duplicate_block_rate": 0.4098360655737705
+    },
+    {
+     "repo": "Omikaye__Binary-Star-Pokedex",
+     "files": 87,
+     "declarations": 267,
+     "eligible_declarations": 129,
+     "score": 2.3,
+     "near_duplicate_rate": 0.2248062015503876,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.08045977011494253,
+     "function_failure_rate": 0.22846441947565543,
+     "duplicate_block_rate": 35.93103448275862
+    },
+    {
+     "repo": "tompassarelli__north",
+     "files": 361,
+     "declarations": 3655,
+     "eligible_declarations": 864,
+     "score": 3.9,
+     "near_duplicate_rate": 0.008101851851851851,
+     "dead_code_rate": 0.0011727912431587178,
+     "file_failure_rate": 0.06363636363636363,
+     "function_failure_rate": 0.08717748240813135,
+     "duplicate_block_rate": 4.527272727272727
+    },
+    {
+     "repo": "sidcmenon__news-clustering",
+     "files": 28,
+     "declarations": 106,
+     "eligible_declarations": 39,
+     "score": 4.7,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.0,
+     "function_failure_rate": 0.04716981132075472,
+     "duplicate_block_rate": 0.0
+    },
+    {
+     "repo": "juandavid1155__coffee-company-web",
+     "files": 106,
+     "declarations": 226,
+     "eligible_declarations": 102,
+     "score": 3.8,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.0,
+     "function_failure_rate": 0.15486725663716813,
+     "duplicate_block_rate": 0.5
+    },
+    {
+     "repo": "Arth1213__gamechangrs",
+     "files": 388,
+     "declarations": 2074,
+     "eligible_declarations": 820,
+     "score": 2.8,
+     "near_duplicate_rate": 0.00853658536585366,
+     "dead_code_rate": 0.015429122468659595,
+     "file_failure_rate": 0.09018567639257294,
+     "function_failure_rate": 0.1446480231436837,
+     "duplicate_block_rate": 22.989389920424404
+    },
+    {
+     "repo": "timiajayi123__FLEET.MGMT",
+     "files": 150,
+     "declarations": 761,
+     "eligible_declarations": 222,
+     "score": 4.0,
+     "near_duplicate_rate": 0.03153153153153153,
+     "dead_code_rate": 0.001314060446780552,
+     "file_failure_rate": 0.04666666666666667,
+     "function_failure_rate": 0.1011826544021025,
+     "duplicate_block_rate": 0.9466666666666667
+    },
+    {
+     "repo": "polmichel__poker_tool",
+     "files": 125,
+     "declarations": 603,
+     "eligible_declarations": 95,
+     "score": 4.6,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.0,
+     "function_failure_rate": 0.064343163538874,
+     "duplicate_block_rate": 2.125
+    },
+    {
+     "repo": "xbanka__xbanka-web-app",
+     "files": 335,
+     "declarations": 654,
+     "eligible_declarations": 139,
+     "score": 4.1,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0061162079510703364,
+     "file_failure_rate": 0.0,
+     "function_failure_rate": 0.12385321100917432,
+     "duplicate_block_rate": 2.7761194029850746
+    },
+    {
+     "repo": "orderlyapps__orderlyapps",
+     "files": 104,
+     "declarations": 102,
+     "eligible_declarations": 17,
+     "score": 4.7,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.0,
+     "function_failure_rate": 0.020833333333333332,
+     "duplicate_block_rate": 2.2551020408163267
+    },
+    {
+     "repo": "alkispap__english-restaurant-template",
+     "files": 466,
+     "declarations": 1850,
+     "eligible_declarations": 360,
+     "score": 4.3,
+     "near_duplicate_rate": 0.022222222222222223,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.0273972602739726,
+     "function_failure_rate": 0.06327372764786796,
+     "duplicate_block_rate": 1.8047945205479452
+    },
+    {
+     "repo": "Al-Nahari__swater",
+     "files": 98,
+     "declarations": 179,
+     "eligible_declarations": 57,
+     "score": 4.2,
+     "near_duplicate_rate": 0.10526315789473684,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.02040816326530612,
+     "function_failure_rate": 0.0893854748603352,
+     "duplicate_block_rate": 0.6326530612244898
+    },
+    {
+     "repo": "HaraldBregu__friday",
+     "files": 1086,
+     "declarations": 2397,
+     "eligible_declarations": 664,
+     "score": 4.4,
+     "near_duplicate_rate": 0.04066265060240964,
+     "dead_code_rate": 0.0013882461823229986,
+     "file_failure_rate": 0.0010741138560687433,
+     "function_failure_rate": 0.08607126330402591,
+     "duplicate_block_rate": 1.1117078410311494
+    },
+    {
+     "repo": "komariChikaA__gal-yiba",
+     "files": 56,
+     "declarations": 297,
+     "eligible_declarations": 74,
+     "score": 4.2,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.05,
+     "function_failure_rate": 0.06,
+     "duplicate_block_rate": 1.65
+    },
+    {
+     "repo": "KateBeston__TGS-Platform",
+     "files": 67,
+     "declarations": 172,
+     "eligible_declarations": 81,
+     "score": 3.8,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.014925373134328358,
+     "function_failure_rate": 0.18604651162790697,
+     "duplicate_block_rate": 1.373134328358209
+    },
+    {
+     "repo": "otc9513__Project",
+     "files": 204,
+     "declarations": 546,
+     "eligible_declarations": 115,
+     "score": 4.6,
+     "near_duplicate_rate": 0.06086956521739131,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.0,
+     "function_failure_rate": 0.053703703703703705,
+     "duplicate_block_rate": 0.28421052631578947
+    }
+   ]
+  },
+  "mature-oss": {
+   "summary": {
+    "near_duplicate_rate": {
+     "n": 40,
+     "median": 0.00638,
+     "p90": 0.02814,
+     "max": 0.29566
+    },
+    "dead_code_rate": {
+     "n": 40,
+     "median": 0.00021,
+     "p90": 0.00207,
+     "max": 0.0058
+    },
+    "file_failure_rate": {
+     "n": 40,
+     "median": 0.03263,
+     "p90": 0.07091,
+     "max": 0.10345
+    },
+    "function_failure_rate": {
+     "n": 40,
+     "median": 0.06698,
+     "p90": 0.09912,
+     "max": 0.16683
+    },
+    "duplicate_block_rate": {
+     "n": 40,
+     "median": 6.23291,
+     "p90": 23.68201,
+     "max": 37.04704
+    }
+   },
+   "repos": [
+    {
+     "repo": "Chart.js",
+     "files": 883,
+     "declarations": 1553,
+     "eligible_declarations": 340,
+     "score": 4.2,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.020242914979757085,
+     "function_failure_rate": 0.02418682235195997,
+     "duplicate_block_rate": 19.74089068825911
+    },
+    {
+     "repo": "angular",
+     "files": 8224,
+     "declarations": 42765,
+     "eligible_declarations": 4846,
+     "score": 3.9,
+     "near_duplicate_rate": 0.010730499380932727,
+     "dead_code_rate": 0.00020015011258443834,
+     "file_failure_rate": 0.02127659574468085,
+     "function_failure_rate": 0.05093820365273955,
+     "duplicate_block_rate": 8.705196399345336
+    },
+    {
+     "repo": "anime",
+     "files": 268,
+     "declarations": 922,
+     "eligible_declarations": 157,
+     "score": 3.5,
+     "near_duplicate_rate": 0.012738853503184714,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.02666666666666667,
+     "function_failure_rate": 0.10325047801147227,
+     "duplicate_block_rate": 15.8
+    },
+    {
+     "repo": "ansible",
+     "files": 1862,
+     "declarations": 12752,
+     "eligible_declarations": 1644,
+     "score": 3.9,
+     "near_duplicate_rate": 0.006082725060827251,
+     "dead_code_rate": 0.00580334936163157,
+     "file_failure_rate": 0.061823802163833076,
+     "function_failure_rate": 0.06549494279555629,
+     "duplicate_block_rate": 5.421947449768161
+    },
+    {
+     "repo": "ant-design",
+     "files": 4522,
+     "declarations": 6299,
+     "eligible_declarations": 784,
+     "score": 4.4,
+     "near_duplicate_rate": 0.02040816326530612,
+     "dead_code_rate": 0.00022512381809995497,
+     "file_failure_rate": 0.0018577494692144374,
+     "function_failure_rate": 0.07609185051778478,
+     "duplicate_block_rate": 2.1557855626326963
+    },
+    {
+     "repo": "axios",
+     "files": 385,
+     "declarations": 863,
+     "eligible_declarations": 108,
+     "score": 4.1,
+     "near_duplicate_rate": 0.009259259259259259,
+     "dead_code_rate": 0.005494505494505495,
+     "file_failure_rate": 0.019305019305019305,
+     "function_failure_rate": 0.06593406593406594,
+     "duplicate_block_rate": 8.722007722007723
+    },
+    {
+     "repo": "code-server",
+     "files": 110,
+     "declarations": 310,
+     "eligible_declarations": 55,
+     "score": 4.2,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.03333333333333333,
+     "function_failure_rate": 0.021621621621621623,
+     "duplicate_block_rate": 1.1833333333333333
+    },
+    {
+     "repo": "django",
+     "files": 3082,
+     "declarations": 41717,
+     "eligible_declarations": 1770,
+     "score": 4.4,
+     "near_duplicate_rate": 0.0022598870056497176,
+     "dead_code_rate": 0.0004640801930573603,
+     "file_failure_rate": 0.025974025974025976,
+     "function_failure_rate": 0.027566363467607203,
+     "duplicate_block_rate": 3.4888682745825603
+    },
+    {
+     "repo": "echarts",
+     "files": 1450,
+     "declarations": 6214,
+     "eligible_declarations": 1314,
+     "score": 3.0,
+     "near_duplicate_rate": 0.0030441400304414,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.038028169014084505,
+     "function_failure_rate": 0.06806986117330945,
+     "duplicate_block_rate": 27.708450704225353
+    },
+    {
+     "repo": "excalidraw",
+     "files": 683,
+     "declarations": 4848,
+     "eligible_declarations": 1062,
+     "score": 3.5,
+     "near_duplicate_rate": 0.0009416195856873823,
+     "dead_code_rate": 0.00025477707006369424,
+     "file_failure_rate": 0.07090909090909091,
+     "function_failure_rate": 0.07541401273885351,
+     "duplicate_block_rate": 6.541818181818182
+    },
+    {
+     "repo": "express",
+     "files": 157,
+     "declarations": 139,
+     "eligible_declarations": 6,
+     "score": 4.0,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.03225806451612903,
+     "function_failure_rate": 0.027777777777777776,
+     "duplicate_block_rate": 5.741935483870968
+    },
+    {
+     "repo": "fastapi",
+     "files": 2839,
+     "declarations": 5681,
+     "eligible_declarations": 186,
+     "score": 4.4,
+     "near_duplicate_rate": 0.021505376344086023,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.008174386920980926,
+     "function_failure_rate": 0.04015544041450777,
+     "duplicate_block_rate": 2.07811080835604
+    },
+    {
+     "repo": "flask",
+     "files": 111,
+     "declarations": 1628,
+     "eligible_declarations": 89,
+     "score": 4.5,
+     "near_duplicate_rate": 0.011235955056179775,
+     "dead_code_rate": 0.002066115702479339,
+     "file_failure_rate": 0.05660377358490566,
+     "function_failure_rate": 0.030991735537190084,
+     "duplicate_block_rate": 2.30188679245283
+    },
+    {
+     "repo": "freeCodeCamp",
+     "files": 18007,
+     "declarations": 3475,
+     "eligible_declarations": 540,
+     "score": 4.2,
+     "near_duplicate_rate": 0.003703703703703704,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.00401765504753282,
+     "function_failure_rate": 0.07197827071072883,
+     "duplicate_block_rate": 3.475497962879131
+    },
+    {
+     "repo": "github-readme-stats",
+     "files": 89,
+     "declarations": 252,
+     "eligible_declarations": 40,
+     "score": 3.9,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.05357142857142857,
+     "function_failure_rate": 0.08,
+     "duplicate_block_rate": 8.339285714285714
+    },
+    {
+     "repo": "hackingtool",
+     "files": 92,
+     "declarations": 898,
+     "eligible_declarations": 104,
+     "score": 4.6,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.013513513513513514,
+     "function_failure_rate": 0.022222222222222223,
+     "duplicate_block_rate": 0.05405405405405406
+    },
+    {
+     "repo": "hoppscotch",
+     "files": 1118,
+     "declarations": 5857,
+     "eligible_declarations": 1244,
+     "score": 3.8,
+     "near_duplicate_rate": 0.028135048231511254,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.029347826086956522,
+     "function_failure_rate": 0.06802120141342756,
+     "duplicate_block_rate": 7.898913043478261
+    },
+    {
+     "repo": "jquery",
+     "files": 274,
+     "declarations": 797,
+     "eligible_declarations": 57,
+     "score": 3.4,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.02027027027027027,
+     "function_failure_rate": 0.16551724137931034,
+     "duplicate_block_rate": 28.33783783783784
+    },
+    {
+     "repo": "keras",
+     "files": 991,
+     "declarations": 16982,
+     "eligible_declarations": 2320,
+     "score": 3.4,
+     "near_duplicate_rate": 0.021551724137931036,
+     "dead_code_rate": 0.0007457916045173663,
+     "file_failure_rate": 0.08563134978229318,
+     "function_failure_rate": 0.049648412529298955,
+     "duplicate_block_rate": 14.676342525399129
+    },
+    {
+     "repo": "localstack",
+     "files": 1994,
+     "declarations": 34358,
+     "eligible_declarations": 2350,
+     "score": 2.9,
+     "near_duplicate_rate": 0.016595744680851062,
+     "dead_code_rate": 0.0006973756652596806,
+     "file_failure_rate": 0.06290849673202614,
+     "function_failure_rate": 0.01258946595705634,
+     "duplicate_block_rate": 6.896241830065359
+    },
+    {
+     "repo": "lodash",
+     "files": 39,
+     "declarations": 852,
+     "eligible_declarations": 131,
+     "score": 3.8,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0017452006980802793,
+     "file_failure_rate": 0.10344827586206896,
+     "function_failure_rate": 0.04537521815008726,
+     "duplicate_block_rate": 6.551724137931035
+    },
+    {
+     "repo": "manim",
+     "files": 112,
+     "declarations": 2224,
+     "eligible_declarations": 334,
+     "score": 4.2,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.037037037037037035,
+     "function_failure_rate": 0.006469500924214418,
+     "duplicate_block_rate": 0.06481481481481481
+    },
+    {
+     "repo": "material-ui",
+     "files": 17329,
+     "declarations": 10093,
+     "eligible_declarations": 1167,
+     "score": 4.3,
+     "near_duplicate_rate": 0.0805484147386461,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.0019395114855445784,
+     "function_failure_rate": 0.0741444866920152,
+     "duplicate_block_rate": 3.9164191769198133
+    },
+    {
+     "repo": "mermaid",
+     "files": 1304,
+     "declarations": 5267,
+     "eligible_declarations": 1056,
+     "score": 3.4,
+     "near_duplicate_rate": 0.023674242424242424,
+     "dead_code_rate": 0.0018148820326678765,
+     "file_failure_rate": 0.033,
+     "function_failure_rate": 0.10556563823351482,
+     "duplicate_block_rate": 16.821
+    },
+    {
+     "repo": "models",
+     "files": 2954,
+     "declarations": 23350,
+     "eligible_declarations": 4973,
+     "score": 3.6,
+     "near_duplicate_rate": 0.03981500100542932,
+     "dead_code_rate": 0.0018790685188913496,
+     "file_failure_rate": 0.03449841125737631,
+     "function_failure_rate": 0.07361922018656467,
+     "duplicate_block_rate": 10.536995006808898
+    },
+    {
+     "repo": "n8n",
+     "files": 19378,
+     "declarations": 67642,
+     "eligible_declarations": 13956,
+     "score": 3.8,
+     "near_duplicate_rate": 0.02228432215534537,
+     "dead_code_rate": 4.5314482508609755e-05,
+     "file_failure_rate": 0.024311040898718623,
+     "function_failure_rate": 0.07522204096429219,
+     "duplicate_block_rate": 13.11216429699842
+    },
+    {
+     "repo": "nest",
+     "files": 1735,
+     "declarations": 5463,
+     "eligible_declarations": 450,
+     "score": 4.5,
+     "near_duplicate_rate": 0.04666666666666667,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.0030303030303030303,
+     "function_failure_rate": 0.013709260217278842,
+     "duplicate_block_rate": 3.481060606060606
+    },
+    {
+     "repo": "playwright",
+     "files": 2186,
+     "declarations": 15615,
+     "eligible_declarations": 2404,
+     "score": 2.6,
+     "near_duplicate_rate": 0.015391014975041598,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.059233449477351915,
+     "function_failure_rate": 0.05181347150259067,
+     "duplicate_block_rate": 37.04703832752613
+    },
+    {
+     "repo": "reveal.js",
+     "files": 132,
+     "declarations": 596,
+     "eligible_declarations": 155,
+     "score": 4.0,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.049019607843137254,
+     "function_failure_rate": 0.0900562851782364,
+     "duplicate_block_rate": 1.8431372549019607
+    },
+    {
+     "repo": "scrapy",
+     "files": 494,
+     "declarations": 7038,
+     "eligible_declarations": 407,
+     "score": 4.4,
+     "near_duplicate_rate": 0.002457002457002457,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.005154639175257732,
+     "function_failure_rate": 0.008587786259541985,
+     "duplicate_block_rate": 5.84020618556701
+    },
+    {
+     "repo": "strapi",
+     "files": 5006,
+     "declarations": 13995,
+     "eligible_declarations": 2975,
+     "score": 3.9,
+     "near_duplicate_rate": 0.01781512605042017,
+     "dead_code_rate": 0.0014911066141229097,
+     "file_failure_rate": 0.006934412019647501,
+     "function_failure_rate": 0.07828309724145277,
+     "duplicate_block_rate": 5.9240104016180295
+    },
+    {
+     "repo": "svelte",
+     "files": 4034,
+     "declarations": 5563,
+     "eligible_declarations": 706,
+     "score": 4.4,
+     "near_duplicate_rate": 0.00424929178470255,
+     "dead_code_rate": 0.0,
+     "file_failure_rate": 0.039383561643835614,
+     "function_failure_rate": 0.08202511773940345,
+     "duplicate_block_rate": 9.118150684931507
+    },
+    {
+     "repo": "tabby",
+     "files": 309,
+     "declarations": 1956,
+     "eligible_declarations": 394,
+     "score": 4.5,
+     "near_duplicate_rate": 0.005076142131979695,
+     "dead_code_rate": 0.003067484662576687,
+     "file_failure_rate": 0.012944983818770227,
+     "function_failure_rate": 0.03885480572597137,
+     "duplicate_block_rate": 0.9546925566343042
+    },
+    {
+     "repo": "tailwindcss",
+     "files": 363,
+     "declarations": 2815,
+     "eligible_declarations": 402,
+     "score": 3.3,
+     "near_duplicate_rate": 0.024875621890547265,
+     "dead_code_rate": 0.0009871668311944718,
+     "file_failure_rate": 0.03765690376569038,
+     "function_failure_rate": 0.16683119447186576,
+     "duplicate_block_rate": 23.682008368200837
+    },
+    {
+     "repo": "transformers",
+     "files": 6103,
+     "declarations": 76578,
+     "eligible_declarations": 14662,
+     "score": 2.7,
+     "near_duplicate_rate": 0.2956622561724185,
+     "dead_code_rate": 0.0007644210980223054,
+     "file_failure_rate": 0.1027290880852008,
+     "function_failure_rate": 0.04792332268370607,
+     "duplicate_block_rate": 34.621033947193254
+    },
+    {
+     "repo": "uBlock",
+     "files": 398,
+     "declarations": 4492,
+     "eligible_declarations": 1621,
+     "score": 3.5,
+     "near_duplicate_rate": 0.016039481801357187,
+     "dead_code_rate": 0.0002257336343115124,
+     "file_failure_rate": 0.0835509138381201,
+     "function_failure_rate": 0.0927765237020316,
+     "duplicate_block_rate": 3.887728459530026
+    },
+    {
+     "repo": "vite",
+     "files": 1954,
+     "declarations": 3393,
+     "eligible_declarations": 749,
+     "score": 4.3,
+     "near_duplicate_rate": 0.006675567423230975,
+     "dead_code_rate": 0.0011507479861910242,
+     "file_failure_rate": 0.013583441138421734,
+     "function_failure_rate": 0.08975834292289989,
+     "duplicate_block_rate": 1.6507115135834411
+    },
+    {
+     "repo": "webpack",
+     "files": 12731,
+     "declarations": 13113,
+     "eligible_declarations": 1944,
+     "score": 4.4,
+     "near_duplicate_rate": 0.0051440329218107,
+     "dead_code_rate": 0.0006195019204559534,
+     "file_failure_rate": 0.04108681245858184,
+     "function_failure_rate": 0.09912030727295254,
+     "duplicate_block_rate": 8.610337972166999
+    },
+    {
+     "repo": "youtube-dl",
+     "files": 917,
+     "declarations": 5786,
+     "eligible_declarations": 1589,
+     "score": 4.1,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0011571841851494697,
+     "file_failure_rate": 0.022598870056497175,
+     "function_failure_rate": 0.0703953712632594,
+     "duplicate_block_rate": 0.6056497175141243
+    },
+    {
+     "repo": "yt-dlp",
+     "files": 1136,
+     "declarations": 9440,
+     "eligible_declarations": 2443,
+     "score": 4.0,
+     "near_duplicate_rate": 0.0,
+     "dead_code_rate": 0.0022483137646764927,
+     "file_failure_rate": 0.03707136237256719,
+     "function_failure_rate": 0.054209342992755434,
+     "duplicate_block_rate": 0.458758109360519
+    }
+   ]
+  }
+ },
+ "comparisons": {}
+}

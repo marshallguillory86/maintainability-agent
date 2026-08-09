@@ -44,9 +44,9 @@ The score is a three-layer rollup, and every layer is visible in the report (`sc
 
 **Calibrated** aspects inherit the corpus anchor — 1.0x the mature-OSS median maps to the same score everywhere. **Rubric** aspects score evidence a corpus median cannot price, against banded thresholds stated in [`scoring.py`](../src/maintainability_audit/scoring.py), informed by the corpus and cohort measurements where those exist.
 
-An aspect that cannot be measured — no git history, a pre-0.4.0 baseline without the newer counts — scores **null and its weight renormalizes away**. Unknown never prices as either clean or dirty, and the report prints "not measurable" rather than blanking the row.
+An aspect that cannot be measured — no git history, a pre-0.4.0 baseline without the newer counts — reports **null**, prints "not measurable", blocks the A-grades, and **prices at the corpus anchor (4.0) in the numeric rollup**. Renormalizing unknowns away was tried first and audited into retirement: it let a shallow clone outscore the same code with its worst-band history visible, because hiding evidence deleted its weight. Unknown prices as *typical*, never as clean, dirty, or absent.
 
-**Layer 2 — categories.** Each ISO category is a weighted mean of its aspects (weights in `_formula.CATEGORY_ASPECTS`, renormalized over measured aspects):
+**Layer 2 — categories.** Each ISO category is a weighted mean of its aspects (weights in `_formula.CATEGORY_ASPECTS`; unmeasured aspects contribute the anchor value):
 
 |category|aspects (weight)|
 |---|---|
@@ -56,7 +56,7 @@ An aspect that cannot be measured — no git history, a pre-0.4.0 baseline witho
 |modifiability|change_coupling .25, duplication .20, churn_hotspots .20, risk_patterns .15, file_size .10, policy_gates .10|
 |testability|test_presence .50, declaration_size .30, policy_gates .20|
 
-**Layer 3 — overall.** Equal-weighted mean of the five categories — ISO orders its sub-characteristics no other way, and an unequal weighting would be a claim nothing here supports. The testability cap (below) is applied *before* this mean, so the reported overall is always the weighted mean of the reported categories. The calibration constant is fitted by bisection so the **corpus median still rolls up to exactly 4.0 through this same pipeline**, priced by the same aspect functions live reports go through — including the evidence aspects (test presence, dead code, near-duplication, idioms, documentation), which are captured per corpus repo in `measurements.json`. History aspects stay out of the anchor because the corpus is pinned via shallow fetches; they renormalize away in the derivation exactly as they do for any shallow clone. `tests/test_calibration_corpus.py` re-derives the constant offline through this full path.
+**Layer 3 — overall.** Equal-weighted mean of the five categories — ISO orders its sub-characteristics no other way, and an unequal weighting would be a claim nothing here supports. The testability cap (below) is applied before this mean, and the mean is taken over the categories **exactly as displayed** (rounded), so `overall == weighted mean of the printed categories` is arithmetic a reader can check on any report — an audit produced a counterexample when it was computed from hidden unrounded values. The calibration constant is fitted by bisection so the **corpus median still rolls up to exactly 4.0 through this same pipeline**, priced by the same aspect functions live reports go through — including the evidence aspects (test presence, dead code, near-duplication, idioms, documentation), which are captured per corpus repo in `measurements.json`. History aspects price at the anchor in the derivation exactly as they do for any shallow clone, because the corpus is pinned via shallow fetches. `tests/test_calibration_corpus.py` re-derives the constant offline through this full path.
 
 **Grades on top of the number:** A+/A are gated on per-dimension ceilings (below), and two evidence rules bind them:
 
@@ -78,6 +78,25 @@ An aspect that cannot be measured — no git history, a pre-0.4.0 baseline witho
 What *does* require evidence is any empirical claim about the world — "this metric separates AI-written code" was one, and it was retracted when a controlled comparison failed to support it. The two kinds of claim are held to different bars on purpose.
 
 **Tuning the standard against outcomes.** ISO defines maintainability as the *effort to modify*, and an outcome study — score repositories at a past commit, measure the following year's fix-churn, rework and change breadth, check the correlation on held-out repositories — would show whether the rubric's emphasis matches where effort is actually spent. That is worth running not to legitimize the standard but to **tune** it: if observed change effort loads on coupling twice as hard as the weights do, the weights should move. It has not been run yet.
+
+### Does the bounded prompt work? (controlled experiment, pre-registered)
+
+The product's central promise — a findings-bounded prompt produces narrower, more targeted agent fixes than a generic instruction — was tested under a protocol committed before any run ([`PROTOCOL.md`](../tools/experiments/fix_scope/PROTOCOL.md)): six repositories at pinned commits, two `codex exec` runs each (`gpt-5.6-sol`, 10-minute budget), generic instruction versus this tool's generated prompt, with the decision rule and its analyzer written and committed before results existed. Every arm was re-derived against its pinned base after a runner defect was audited (no recorded number changed). Raw data: [`results.json`](../tools/experiments/fix_scope/results.json).
+
+**The registered verdict is INCONCLUSIVE**, and it stands as registered:
+
+|median (n = 6 pairs)|generic|bounded|
+|---|---|---|
+|files touched|2.5|3.0|
+|lines changed|113.5|170|
+|out-of-scope share|0.500|0.484|
+|findings closed|**0.0**|**7.5**|
+
+The bounded arm was **not narrower** on files touched — one of the three registered conditions — so the claim is not SUPPORTED. It was better-targeted (out-of-scope share lower, paired median −0.10) and closed far more findings (positive in 5 of 6 pairs, paired median +14, best single run +78), so the claim does not FAIL either.
+
+What the data descriptively shows is not the contest the protocol anticipated. The registered rule braced for generic-prompt *thrashing* — broad rewrites the bounded prompt would rein in. Under this model and budget the generic instruction instead produced **timid motion**: median zero findings closed, and **three generic-arm runs made the codebase measurably worse** (net −6 and −7 findings). The bounded prompt's measured value here is *effectiveness* — it closed what it named, at comparable breadth — not narrowness.
+
+**Limits, stated with the result:** n = 6 pairs and one agent/model; a 10-minute budget that may cap generic exploration; subject test suites were not executed, so a fix that breaks behavior counts the same as one that does not; and findings-closed is measured by this tool's own ruler while the bounded prompt names exactly what that ruler measures — some closure is teaching-to-the-test by construction. A SUPPORTED claim about narrowness would need an agent and budget under which the generic arm actually rewrites broadly, and an outcome measure not owned by the vendor of the prompt.
 
 ### How the scale was calibrated (0.5.0)
 
@@ -163,7 +182,7 @@ Python is measured exactly from the AST. C-family sources have no parser here, s
 
 Thresholds (`max_cognitive_complexity` 25, `warn_cognitive_complexity` 15) were fitted against **21,300 declarations** in the 14-repo corpus these were calibrated on at 0.6.0, whose distribution is p50 = 1, p90 = 9, p95 = 17, p99 = 49. They have not yet been re-fitted against the 40-repo corpus and its 463,581 declarations; the scoring references have. Warning at 15 flags 5.5% of declarations and failing at 25 flags 2.7% — comparable hit rates to the existing file thresholds. Both figures are reported side by side rather than merged: a function can be low in one and high in the other, and that difference is the point.
 
-### Signals reported but not yet scored
+### Finding-level signals (scored via the rubric since the aspect rework)
 
 **Near-duplicate declarations** (0.6.0) detect a helper written twice under two names — the failure mode most often attributed to AI-written code, where an agent that cannot see your existing helper writes a second one. Exact text matching cannot catch it, so declaration bodies are reduced to a token sequence with identifiers anonymized by order of first appearance; renamed copies produce identical fingerprints.
 
@@ -183,7 +202,7 @@ Its first run against the corpus produced *only* false positives, both now pinne
 
 That profile is intended: high precision, low recall. Silence means "nothing recognised", never "nothing wrong".
 
-None of the three is a score dimension yet. Most repositories sit at zero, so a median-based reference would be unstable — dividing by ~0.002 turns a rounding difference into a large multiple. Signals earn a place in the score by holding up across more repositories, not by being new.
+All three now feed the score as rubric aspects (near_duplication, dead_code, idiom_consistency) — banded against fixed thresholds rather than median-normalized, because most repositories sit at zero and dividing by ~0.002 would turn a rounding difference into a large multiple. An earlier revision of this page said they were unscored after they no longer were; an audit caught the drift.
 
 ### Does this detect AI-written code?
 
@@ -205,7 +224,7 @@ The re-run builds a control **selected to match on age, popularity and language*
 
 What actually changed from 0.6.0 is instructive: the AI near-duplication figure barely moved (1.49% → 1.73%). **The control moved**, from 0.20% to 0.83%, because it stopped being decade-old libraries. The signal was maturity wearing authorship's clothes.
 
-**One process signal did survive the controls: fix breadth.** "Broad rewrites for narrow bugs" is a diff property, not a snapshot property, so it is measured from commit history by [`measure_fix_breadth.py`](../tools/calibration/measure_fix_breadth.py) — over non-merge commits whose subjects mark them as fixes, the files and lines each fix touches. Inside the shared size band (14 vs 11 repos), the AI-assisted cohort's fixes touch more files (median 3 vs 2, p = 0.048), change more lines (61.5 vs 23, p = 0.020), and exceed five files twice as often (21% vs 11%, p = 0.031). Three views of one construct, all pointing the same way, surviving the size control that dissolved every static metric — and read against a no-trailer contamination risk that biases *toward* the null. **Still suggestive, not established**, for one specific reason: fix commits are found by their subject lines, and 19/20 AI-cohort repos had five or more labeled fixes against 11/18 of the control — agent tooling writes `fix:` subjects habitually, humans label selectively, and if humans under-label their *broad* fixes the gap is partly an artifact of detection. Raw data in [`fix_breadth.json`](../tools/calibration/fix_breadth.json); the sentence "AI fixes are broader" waits for a diff-content-based fix detector that does not trust commit messages.
+**Fix breadth showed a direction, then failed to hold significance under pinned inputs — reported here as the exploratory trend it is.** "Broad rewrites for narrow bugs" is a diff property, so [`measure_fix_breadth.py`](../tools/calibration/measure_fix_breadth.py) measures it from commit history: over non-merge commits whose subjects mark them as fixes, the files and lines each fix touches. A first run over unpinned caches produced nominally significant gaps; an audit correctly noted the histories were not reproducible from the pinned manifests, and the re-run at **pinned commits** — which is what `fix_breadth.json` now records, with per-repo commit and actual history depth — keeps the direction (AI-assisted median 3 vs 2 files per fix, 21% vs 13% of fixes touching more than five files) but **no comparison reaches p < 0.05**, banded or not (best banded p = 0.071). Three correlated outcomes were tested with no registered primary, so even the earlier nominal p-values would not have survived a Holm correction; authorship is classified per *repository*, not per fix commit; and fix detection trusts subject lines, which agent tooling writes far more consistently than humans (19/20 vs 11/18 repos cleared the labeled-fix filter). The honest status: **a consistent direction worth a better-designed study — a diff-content fix detector, a registered primary outcome, commit-level authorship — and no claim beyond that.**
 
 **The design has a hole no statistics repair: the control cannot be verified as human.** "No AI trailer on any sampled commit" excludes only tooling that writes trailers — Copilot and pasted LLM output leave none. The control contains zero-star 2024-25 projects whose subject matter (RAG apps, AI platforms) makes LLM assistance likely. If enough of the control is quietly AI-assisted, this study compares AI-with-trailers to AI-without-trailers, and its null is guaranteed and uninformative. That is why the honest conclusion is **"this design could not measure a difference"**, not "there is no difference". Add the usual limits — n = 20 vs 18 misses anything subtler than roughly two-fold, and the trailer-writing cohort self-selects for deliberate workflows — and the study licenses exactly one claim: the 0.6.0 evidence was wrong, and nothing measured so far replaces it. A study that wanted the stronger claim would need a control whose humanity is verifiable, such as code committed before LLM assistants existed, measured at a pinned historical commit.
 
@@ -222,13 +241,14 @@ These are structural proxies — file size, declaration size, approximate comple
 | 1 | Poor. Frequent regressions, unclear ownership, weak tests, or heavy coupling. |
 | 0 | Unmaintainable in this area. Safe change is not realistic without remediation. |
 
-Current scoring inputs:
+Current scoring inputs (the thirteen aspects above, i.e.):
 
-- file warnings and failures
-- function/class size and approximate complexity warnings or failures
-- duplicate block count
-- configured risk-pattern findings
-- hard-gate failures
+- file warnings and failures; function/class size, cyclomatic and cognitive complexity warnings and failures
+- duplicate block count; near-duplicate declarations; unreferenced private declarations; competing-library concerns
+- configured risk-pattern findings; hard-gate failures
+- test presence (share of declarations in test files)
+- documentation artifacts (README, changelog, docs directory)
+- history, when available: churn hotspots, code-to-code change coupling, single-author concentration
 
 Grades:
 

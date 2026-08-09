@@ -24,11 +24,20 @@ Two kinds of aspect:
   them.
 
 An aspect that cannot be measured for a given report — no git history,
-an old baseline without the newer counts — scores ``None`` and its
-weight renormalizes away. "Unknown" must never price as either zero or
-perfect.
+an old baseline without the newer counts — scores ``None`` in the
+report, blocks the A-grades, and **prices at the corpus anchor
+(4.0) in the numeric rollup**. Renormalizing unknowns away was tried
+first and audited into retirement: it let a shallow clone of a clean
+repository outscore the same repository with its worst-band history
+visible by 0.8 points, because hiding evidence deleted its weight.
+Unknown must price as *typical*, never as zero, perfect, or absent.
 """
+
 from __future__ import annotations
+
+# What an unmeasured aspect contributes to the numeric rollup: the
+# corpus anchor, i.e. "assume typical of real code until measured".
+UNKNOWN_ASPECT_SCORE = 4.0
 
 # Aspect -> the dimension pressure it curves (calibrated aspects only).
 CALIBRATED_ASPECTS: dict[str, str] = {
@@ -103,22 +112,23 @@ UNSCORED: dict[str, str] = {
 }
 
 
-def rollup(scores: dict[str, float | None], weights: dict[str, float]) -> float | None:
-    """Weighted mean over the aspects that produced a score.
+def rollup(scores: dict[str, float | None], weights: dict[str, float]) -> float:
+    """Weighted mean, with unmeasured aspects priced at the anchor."""
+    return sum(
+        (UNKNOWN_ASPECT_SCORE if scores.get(name) is None else scores[name]) * weight
+        for name, weight in weights.items()
+    ) / sum(weights.values())
 
-    None when *nothing* under the weights was measurable — a category
-    built entirely on missing evidence has no opinion, and pretending
-    otherwise is how "unknown" quietly becomes "fine".
+
+def overall_from_aspects(aspect_scores: dict[str, float | None]) -> tuple[float, dict[str, float]]:
+    """Category scores and the overall, anchor-imputing unknowns.
+
+    Categories are always numeric: an unmeasured aspect contributes the
+    anchor, so a shallow clone and a full clone of identical code differ
+    only by what the history actually says — not by whether it was
+    visible. The A-grade block for missing evidence lives in scoring,
+    on top of these numbers.
     """
-    known = {name: weight for name, weight in weights.items() if scores.get(name) is not None}
-    total = sum(known.values())
-    if total == 0:
-        return None
-    return sum(scores[name] * weight for name, weight in known.items()) / total
-
-
-def overall_from_aspects(aspect_scores: dict[str, float | None]) -> tuple[float | None, dict[str, float | None]]:
-    """Category scores and the overall, renormalizing at both levels."""
     categories = {
         name: rollup(aspect_scores, weights) for name, weights in CATEGORY_ASPECTS.items()
     }

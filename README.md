@@ -19,7 +19,7 @@ Jump to [Invokable Skill / Slash Command](#invokable-skill--slash-command) for t
 
 ## Why this exists
 
-AI-written code fails in recognizable ways: speculative refactors, duplicated helpers, broad rewrites for narrow bugs, stale comments that sound confident, tests that assert implementation details instead of behavior, architecture drift across modules. SonarQube / CodeClimate / Qlty / ESLint / Ruff / Radon all catch some of this. None of them ship a **bounded prompt back to the agent** that says *"fix only these specific findings, do not refactor outside this scope."*
+Agents produce code faster than humans can review it. Not measurably *worse* code — this project tested its own claim that AI code fails in recognizably different ways, and retracted it — just **more** code, arriving faster than trust can accumulate: duplicated helpers, oversized files, speculative abstractions, the same slop hand-written codebases have always accumulated, now at machine speed. SonarQube / CodeClimate / Qlty / ESLint / Ruff / Radon all catch some of this. None of them ship a **bounded prompt back to the agent** that says *"fix only these specific findings, do not refactor outside this scope."*
 
 That's the point of this tool:
 
@@ -52,11 +52,11 @@ This repo eats its own dogfood — the tool is run against this codebase as part
 
 | Metric | Value |
 |---|---:|
-| Overall score | **4.7 / 5 (B)** |
-| Files scanned | 82 |
+| Overall score | **4.8 / 5 (B)** |
+| Files scanned | 86 |
 | File warnings | 8 |
 | File failures | 0 |
-| Function warnings | 7 |
+| Function warnings | 6 |
 | Function failures | 0 |
 | Duplicate blocks | 0 |
 | Risk findings | 0 |

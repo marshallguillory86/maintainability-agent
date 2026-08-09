@@ -40,7 +40,6 @@ from ._calibration import (
     CALIBRATION_C,
     CATEGORIES,
     DIMENSION_REFERENCES,
-    DIMENSION_WEIGHTS,
     GRADE_GATES,
     WARN_WEIGHT,
 )
@@ -188,14 +187,21 @@ def _is_untested(summary: dict[str, Any]) -> bool:
     return test_count is not None and production > 0 and (test_count == 0 or test_declarations == 0)
 
 
-def _rubric_overall(categories: dict[str, float | None], fallback: float) -> float:
-    """Weighted mean of the measured categories; the curve fallback only
-    when nothing at all was measurable."""
-    known = {name: value for name, value in categories.items() if value is not None}
-    if not known:
-        return clamp_score(fallback)
-    total = sum(CATEGORY_WEIGHTS[name] for name in known)
-    return clamp_score(sum(CATEGORY_WEIGHTS[name] * value for name, value in known.items()) / total)
+def _rubric_overall(rounded_categories: dict[str, float]) -> float:
+    """Weighted mean of the categories exactly as displayed.
+
+    Computed from the *rounded* values, deliberately: an audit produced
+    categories displaying 3.5/4.2/5.0/4.5/2.0 with a reported overall
+    of 3.9 against a displayed mean of 3.8, because the overall was
+    taken from hidden unrounded values. The published sentence is "the
+    overall is the weighted mean of the reported categories" — so it is
+    computed from the reported numbers, and the sentence is arithmetic
+    a reader can check on the report itself.
+    """
+    total = sum(CATEGORY_WEIGHTS[name] for name in rounded_categories)
+    return clamp_score(
+        sum(CATEGORY_WEIGHTS[name] * value for name, value in rounded_categories.items()) / total
+    )
 
 
 def _evidence_rules(
@@ -234,17 +240,17 @@ def score_report(report: dict[str, Any]) -> dict[str, Any]:
     """Aspects -> categories -> overall, by the rubric in ``_formula``.
 
     Every aspect the tool can measure gets a score; every aspect it
-    cannot gets None and its weight renormalizes away; every aspect of
+    cannot gets None in the report, prices at the corpus anchor (4.0)
+    in the numeric rollup, and blocks the A-grades; every aspect of
     maintainability it cannot measure *at all* is named in
     ``rubric.unscored`` with the reason — absence is a statement here,
     never an omission. The calibration constant is fitted so the corpus
     median still rolls up to 4.0 through this exact pipeline.
 
-    The untested cap lands on the category BEFORE the overall is
-    computed: an audit caught the previous ordering reporting an overall
-    that was not the mean of the displayed categories, which turns the
-    published rollup formula into a lie on exactly the repos being
-    penalized.
+    The untested cap lands on the categories BEFORE rounding, and the
+    overall is computed from the categories exactly as displayed — two
+    audits caught two versions of the same lie, an overall that was not
+    the mean of the numbers printed beside it.
     """
     summary = report["summary"]
     pressures = dimension_pressures(summary)
@@ -253,10 +259,11 @@ def score_report(report: dict[str, Any]) -> dict[str, Any]:
     _, categories = overall_from_aspects(aspects)
 
     untested = _is_untested(summary)
-    if untested and categories.get("testability") is not None:
+    if untested:
         categories["testability"] = min(categories["testability"], UNTESTED_TESTABILITY_CAP)
 
-    overall = _rubric_overall(categories, _curve(_weighted_mean(normalized)))
+    rounded_categories = {name: clamp_score(value) for name, value in categories.items()}
+    overall = _rubric_overall(rounded_categories)
     grade, blockers = grade_for(overall, _gate_readings(summary, pressures))
     grade, blockers = _evidence_rules(
         grade, blockers, aspects, untested, report.get("history") is not None
@@ -266,10 +273,9 @@ def score_report(report: dict[str, Any]) -> dict[str, Any]:
         "standard": "ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based",
         "overall": overall,
         "grade": grade,
-        "categories": {
-            name: (clamp_score(value) if value is not None else None)
-            for name, value in categories.items()
-        },
+        # The exact numbers the overall was computed from — the identity
+        # "overall == weighted mean of these" is checkable on the report.
+        "categories": rounded_categories,
         # The full aspect layer: every score the rubric read, None where
         # the evidence was unavailable rather than clean.
         "aspects": {
@@ -317,11 +323,6 @@ def _relative(value: float, reference: float) -> float:
     if reference <= 0:
         return 0.0
     return value / reference
-
-
-def _weighted_mean(normalized: dict[str, float]) -> float:
-    total = sum(DIMENSION_WEIGHTS[name] * value for name, value in normalized.items())
-    return total / sum(DIMENSION_WEIGHTS[name] for name in normalized)
 
 
 def _curve(normalized_pressure: float) -> float:

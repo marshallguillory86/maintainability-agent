@@ -89,7 +89,7 @@ def _corpus_overall(entry: dict[str, Any], references: dict[str, float], c: floa
     the *same function* a live report goes through, so the anchor cannot
     drift from the shipped score. History aspects stay None: the corpus
     is pinned via shallow fetches, so its history is genuinely
-    unmeasurable, and those weights renormalize away here exactly as
+    unmeasurable, and they price at the corpus anchor here exactly as
     they do for any shallow clone. Entries measured before evidence was
     recorded fall back to structural-only.
     """
@@ -112,7 +112,7 @@ def _corpus_overall(entry: dict[str, Any], references: dict[str, float], c: floa
             production = production_pressures(summary)["declarations"] / references["declarations"]
             scores["declaration_size"] = 5 * c / (production + c)
     overall, _ = overall_from_aspects(scores)
-    return overall if overall is not None else 0.0
+    return overall
 
 
 def derive_curve_constant(

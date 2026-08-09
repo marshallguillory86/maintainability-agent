@@ -60,18 +60,48 @@ METRICS = ("median_files_per_fix", "median_lines_per_fix", "broad_fix_share")
 
 
 def clone(entry: dict, cache_dir: Path) -> Path | None:
-    """Reuse the cohort cache; fetch 300 commits of history if absent."""
+    """A clone checked out at the manifest's pinned commit, with ~300
+    commits of history behind it.
+
+    The first version reused whatever cache was present and ran over
+    whatever history it happened to hold — an audit correctly called the
+    result irreproducible from pinned inputs. Every subject is now
+    fetched at its pinned commit and verified before measurement, and
+    the actual history depth is recorded per repo (shallow fetches are
+    approximate: git deepens to a boundary, so counts near 300 vary).
+    """
     target = cache_dir / entry["name"]
-    if (target / ".git").exists():
-        return target
-    result = subprocess.run(
-        ["git", "clone", "--quiet", "--depth", "300", entry["url"], str(target)],
-        capture_output=True, text=True,
-    )
-    if result.returncode != 0:
-        print(f"  !! clone failed {entry['full_name']}: {result.stderr.strip()[:90]}", file=sys.stderr)
-        return None
+    if not (target / ".git").exists():
+        result = subprocess.run(
+            ["git", "clone", "--quiet", "--depth", "300", entry["url"], str(target)],
+            capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            print(f"  !! clone failed {entry['full_name']}: {result.stderr.strip()[:90]}", file=sys.stderr)
+            return None
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=target, capture_output=True, text=True).stdout.strip()
+    if head != entry["commit"]:
+        subprocess.run(["git", "fetch", "--quiet", "--depth", "300", "origin", entry["commit"]],
+                       cwd=target, capture_output=True, text=True)
+        checked = subprocess.run(["git", "checkout", "--quiet", entry["commit"]],
+                                 cwd=target, capture_output=True, text=True)
+        if checked.returncode != 0:
+            print(f"  !! {entry['full_name']}: cannot reach pinned {entry['commit'][:8]}", file=sys.stderr)
+            return None
     return target
+
+
+def _numstat_totals(body: str) -> tuple[int, int]:
+    files = 0
+    lines = 0
+    for row in body.splitlines():
+        fields = row.split("\t")
+        if len(fields) != 3:
+            continue
+        files += 1
+        added, removed, _ = fields
+        lines += (int(added) if added.isdigit() else 0) + (int(removed) if removed.isdigit() else 0)
+    return files, lines
 
 
 def fix_commits(path: Path) -> list[tuple[int, int]]:
@@ -87,15 +117,7 @@ def fix_commits(path: Path) -> list[tuple[int, int]]:
         subject, _, body = block.partition("\n")
         if not _FIX_PATTERN.search(subject):
             continue
-        files = 0
-        lines = 0
-        for row in body.splitlines():
-            fields = row.split("\t")
-            if len(fields) != 3:
-                continue
-            files += 1
-            added, removed, _ = fields
-            lines += (int(added) if added.isdigit() else 0) + (int(removed) if removed.isdigit() else 0)
+        files, lines = _numstat_totals(body)
         if files:
             fixes.append((files, lines))
     return fixes
@@ -109,13 +131,48 @@ def measure(entry: dict, cache_dir: Path) -> dict | None:
     if len(fixes) < MIN_FIX_COMMITS:
         print(f"  -- {entry['full_name']}: only {len(fixes)} fix commits, skipped", file=sys.stderr)
         return None
+    depth = subprocess.run(["git", "rev-list", "--count", "HEAD"], cwd=path,
+                           capture_output=True, text=True).stdout.strip()
     return {
         "repo": entry["full_name"],
+        "pinned_commit": entry["commit"],
+        "history_commits": int(depth) if depth.isdigit() else None,
         "declarations": entry["declarations"],
         "fix_commits": len(fixes),
         "median_files_per_fix": median(files for files, _ in fixes),
         "median_lines_per_fix": median(lines for _, lines in fixes),
         "broad_fix_share": sum(1 for files, _ in fixes if files > BROAD_FILES) / len(fixes),
+    }
+
+
+def banded_comparisons(ai: list[dict], human: list[dict]) -> dict:
+    """Size-banded re-test, computed and stored here — an audit caught
+    the banded numbers living only in documentation, hand-derived from
+    this script's output rather than produced by it."""
+    if not ai or not human:
+        return {}
+    low = max(min(r["declarations"] for r in ai), min(r["declarations"] for r in human))
+    high = min(max(r["declarations"] for r in ai), max(r["declarations"] for r in human))
+    band_ai = [r for r in ai if low <= r["declarations"] <= high]
+    band_human = [r for r in human if low <= r["declarations"] <= high]
+    print(f"\nsize-banded {low}-{high} declarations: ai n={len(band_ai)} human n={len(band_human)}")
+    return {
+        "declaration_range": [low, high],
+        "n_ai": len(band_ai),
+        "n_human": len(band_human),
+        "tests": {metric: _banded_test(metric, band_ai, band_human) for metric in METRICS},
+    }
+
+
+def _banded_test(metric: str, band_ai: list[dict], band_human: list[dict]) -> dict:
+    left, right = [r[metric] for r in band_ai], [r[metric] for r in band_human]
+    test = mann_whitney(left, right)
+    shown = f"{test['p']:.3f}" if test else "n/a"
+    print(f"  {metric:<22} ai={median(left):.3f} human={median(right):.3f} p={shown}")
+    return {
+        "median_ai": round(median(left), 4) if left else None,
+        "median_human": round(median(right), 4) if right else None,
+        "test": test,
     }
 
 
@@ -149,6 +206,8 @@ def main() -> int:
         p = f"{test['p']:.3f}" if test else "n/a"
         print(f"{metric:<24}{median(left):>10.3f}{median(right):>10.3f}{p:>10}{size_r:>9.2f}")
 
+    banded = banded_comparisons(ai, human)
+
     Path(args.out).write_text(
         json.dumps(
             {
@@ -162,6 +221,7 @@ def main() -> int:
                 ),
                 "cohorts": results,
                 "comparisons": comparisons,
+                "banded": banded,
             },
             indent=1,
         )

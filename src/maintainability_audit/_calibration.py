@@ -84,7 +84,10 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 # the corpus is pinned via shallow fetches, so they renormalize away in
 # the derivation exactly as they do for any shallow clone. Same anchor
 # throughout: the median mature repo rolls up to exactly 4.0.
-CALIBRATION_C = 3.1994
+# Third fit: unknown aspects now price at the corpus anchor (4.0)
+# instead of renormalizing away — an audit showed renormalization let a
+# shallow clone outscore the same code with its history visible.
+CALIBRATION_C = 2.8545
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3

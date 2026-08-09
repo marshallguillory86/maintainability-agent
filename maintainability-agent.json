@@ -26,7 +26,8 @@
       "maintainability.sarif",
       "coverage.xml",
       "AGENTS-maintainability.md",
-      "tools/calibration/*.json"
+      "tools/calibration/*.json",
+      "tools/experiments/*/results.json"
     ]
   },
   "thresholds": {

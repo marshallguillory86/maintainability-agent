@@ -3,7 +3,7 @@
  "fix_pattern": "\\b(fix(es|ed)?|bug(fix)?|hotfix|patch)\\b",
  "broad_files_threshold": 5,
  "min_fix_commits": 5,
- "note": "History depth is capped at 300 commits by the cohort clones; medians are per-repo so cross-repo commit-volume differences do not weight the test.",
+ "note": "Measured over the most recent 300 commits from each pinned HEAD (git log -n 300), so a deeper cache cannot change the window \u2014 an audit showed cache-deepening shifting results when the window was 'whatever history was present'. Repos with fewer than 300 commits use what exists; history_commits records clone depth, which may exceed the window. Medians are per-repo so commit volume does not weight the test.",
  "cohorts": {
   "ai": [
    {
@@ -31,20 +31,20 @@
     "pinned_commit": "a7b43785d1fa19a611c9b26754d47b76e7db697a",
     "history_commits": 321,
     "declarations": 2102,
-    "fix_commits": 112,
-    "median_files_per_fix": 4.0,
-    "median_lines_per_fix": 111.0,
-    "broad_fix_share": 0.38392857142857145
+    "fix_commits": 107,
+    "median_files_per_fix": 4,
+    "median_lines_per_fix": 113,
+    "broad_fix_share": 0.3925233644859813
    },
    {
     "repo": "hhisdagovy/BCS",
     "pinned_commit": "9f9ac94c98c98e1bda896a211fee240f751b0ec8",
     "history_commits": 542,
     "declarations": 2647,
-    "fix_commits": 139,
-    "median_files_per_fix": 4,
-    "median_lines_per_fix": 63,
-    "broad_fix_share": 0.2733812949640288
+    "fix_commits": 88,
+    "median_files_per_fix": 5.0,
+    "median_lines_per_fix": 73.0,
+    "broad_fix_share": 0.32954545454545453
    },
    {
     "repo": "NikoKiru/f1podigami",
@@ -61,10 +61,10 @@
     "pinned_commit": "6521acdd82f760263d65169905ce53991e01f3d7",
     "history_commits": 1225,
     "declarations": 4570,
-    "fix_commits": 352,
-    "median_files_per_fix": 3.0,
-    "median_lines_per_fix": 63.5,
-    "broad_fix_share": 0.22443181818181818
+    "fix_commits": 96,
+    "median_files_per_fix": 4.0,
+    "median_lines_per_fix": 87.5,
+    "broad_fix_share": 0.3645833333333333
    },
    {
     "repo": "labuzniq/finops-dash",
@@ -131,10 +131,10 @@
     "pinned_commit": "d04718f40fd31d0728df7a6e48dc2d89aeb19025",
     "history_commits": 583,
     "declarations": 1418,
-    "fix_commits": 107,
-    "median_files_per_fix": 2,
-    "median_lines_per_fix": 60,
-    "broad_fix_share": 0.1588785046728972
+    "fix_commits": 61,
+    "median_files_per_fix": 3,
+    "median_lines_per_fix": 79,
+    "broad_fix_share": 0.19672131147540983
    },
    {
     "repo": "mama-sh/deskmate",
@@ -181,20 +181,20 @@
     "pinned_commit": "6bdd1709df1d6dd2d6ce09a167444d0b60fd587f",
     "history_commits": 389,
     "declarations": 2821,
-    "fix_commits": 70,
-    "median_files_per_fix": 3.0,
-    "median_lines_per_fix": 75.5,
-    "broad_fix_share": 0.24285714285714285
+    "fix_commits": 55,
+    "median_files_per_fix": 3,
+    "median_lines_per_fix": 80,
+    "broad_fix_share": 0.2727272727272727
    },
    {
     "repo": "Section9Labs/rupu",
     "pinned_commit": "3b3485eb5ada177f9c2271c09bb07df7f65b5244",
     "history_commits": 891,
     "declarations": 1671,
-    "fix_commits": 201,
-    "median_files_per_fix": 2,
-    "median_lines_per_fix": 137,
-    "broad_fix_share": 0.20398009950248755
+    "fix_commits": 94,
+    "median_files_per_fix": 2.0,
+    "median_lines_per_fix": 123.0,
+    "broad_fix_share": 0.20212765957446807
    }
   ],
   "human": [
@@ -223,20 +223,20 @@
     "pinned_commit": "4fea8911f991f32ee41670c6844924f9d9c1ef8c",
     "history_commits": 442,
     "declarations": 267,
-    "fix_commits": 76,
-    "median_files_per_fix": 3.0,
-    "median_lines_per_fix": 45.0,
-    "broad_fix_share": 0.13157894736842105
+    "fix_commits": 58,
+    "median_files_per_fix": 2.0,
+    "median_lines_per_fix": 47.5,
+    "broad_fix_share": 0.1206896551724138
    },
    {
     "repo": "tompassarelli/north",
     "pinned_commit": "69d15c3ac02d7c65589b6607682262dcd768efbe",
     "history_commits": 321,
     "declarations": 3655,
-    "fix_commits": 69,
+    "fix_commits": 61,
     "median_files_per_fix": 2,
-    "median_lines_per_fix": 73,
-    "broad_fix_share": 0.2318840579710145
+    "median_lines_per_fix": 61,
+    "broad_fix_share": 0.18032786885245902
    },
    {
     "repo": "Arth1213/gamechangrs",
@@ -313,27 +313,27 @@
  "comparisons": {
   "median_files_per_fix": {
    "test": {
-    "u": 69.0,
-    "z": 1.543,
-    "p": 0.1229
+    "u": 58.5,
+    "z": 2.0,
+    "p": 0.0456
    },
-   "size_correlation": 0.11
+   "size_correlation": 0.2
   },
   "median_lines_per_fix": {
    "test": {
-    "u": 69.0,
-    "z": 1.506,
-    "p": 0.132
+    "u": 59.0,
+    "z": 1.937,
+    "p": 0.0527
    },
-   "size_correlation": 0.35
+   "size_correlation": 0.36
   },
   "broad_fix_share": {
    "test": {
-    "u": 61.0,
-    "z": 1.851,
-    "p": 0.0642
+    "u": 52.0,
+    "z": 2.238,
+    "p": 0.0252
    },
-   "size_correlation": 0.36
+   "size_correlation": 0.38
   }
  },
  "banded": {
@@ -346,29 +346,29 @@
   "tests": {
    "median_files_per_fix": {
     "median_ai": 3.0,
-    "median_human": 2,
+    "median_human": 2.0,
     "test": {
-     "u": 45.5,
-     "z": 1.742,
-     "p": 0.0816
+     "u": 37.5,
+     "z": 2.191,
+     "p": 0.0285
     }
    },
    "median_lines_per_fix": {
-    "median_ai": 61.5,
-    "median_human": 45.0,
+    "median_ai": 76.0,
+    "median_human": 47.5,
     "test": {
-     "u": 47.0,
-     "z": 1.615,
-     "p": 0.1062
+     "u": 40.0,
+     "z": 1.999,
+     "p": 0.0456
     }
    },
    "broad_fix_share": {
-    "median_ai": 0.2131,
-    "median_human": 0.1316,
+    "median_ai": 0.2122,
+    "median_human": 0.125,
     "test": {
-     "u": 43.5,
-     "z": 1.807,
-     "p": 0.0708
+     "u": 38.5,
+     "z": 2.081,
+     "p": 0.0375
     }
    }
   }

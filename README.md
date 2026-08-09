@@ -26,7 +26,7 @@ That's the point of this tool:
 1. Run a deterministic local audit — file size, function size, approximate cyclomatic complexity, duplication, configurable risk patterns, ISO/IEC 25010-inspired 0–5 score.
 2. Emit Markdown, JSON, SARIF, a PR comment, and a baseline for incremental adoption.
 3. Generate an **AI remediation prompt scoped to the actual findings** — bounded, with explicit "don't rewrite the codebase" rules.
-4. Hand that prompt to your agent. Get a small, reviewable fix instead of a 600-line speculative cleanup PR.
+4. Hand that prompt to your agent. The design intent is a scoped, reviewable fix instead of a speculative cleanup PR; the first controlled test of that claim came back **INCONCLUSIVE** — the bounded prompt made the agent far more *effective* at closing findings, not measurably narrower — and the full experiment is in [docs/standard.md](docs/standard.md#does-the-bounded-prompt-work-controlled-experiment-pre-registered).
 5. Drop the shipped **portable invokable skill** into Codex, Claude Code, or GitHub Copilot Chat so `/maintainability-agent` is one keystroke away in any of them. See [Invokable Skill](#invokable-skill--slash-command) below.
 
 The remediation prompt is the differentiator. Every other tool in this space stops at "here's a list of findings."
@@ -48,13 +48,13 @@ See [docs/philosophy.md](docs/philosophy.md) for the longer version.
 
 ## Self-Audit
 
-This repo eats its own dogfood — the tool is run against this codebase as part of CI, and the latest report is checked in at [docs/self-audit.md](docs/self-audit.md):
+This repo eats its own dogfood — the tool runs against this codebase in CI, and a report is checked in at [docs/self-audit.md](docs/self-audit.md). The checked-in copy is stamped with the commit it was generated atop and is **always exactly one commit behind** the HEAD it ships with (a self-report cannot contain its own commit); an audit rightly objected to it being called "the latest report", so it is not called that anymore:
 
 | Metric | Value |
 |---|---:|
-| Overall score | **4.8 / 5 (B)** |
-| Files scanned | 86 |
-| File warnings | 8 |
+| Overall score | **4.7 / 5 (B)** |
+| Files scanned | 92 |
+| File warnings | 9 |
 | File failures | 0 |
 | Function warnings | 6 |
 | Function failures | 0 |
@@ -62,7 +62,7 @@ This repo eats its own dogfood — the tool is run against this codebase as part
 | Risk findings | 0 |
 | Hard gate failures | 0 |
 
-Yes, a **B** — demoted from the A band because warning rates exceed the A-grade ceilings, against thresholds this repo deliberately sets stricter than the shipped defaults (a 250-line file warning versus the default 400). An earlier revision of this table advertised 5.0/A+ after the codebase had drifted to a B; a hostile audit caught the stale claim, which is precisely the failure mode this tool exists to catch. The table now states what the current run states, and every threshold gate — file, function, duplication — is opted **on** for this repo's own CI, so drifting below the bar fails the build instead of the README.
+Yes, a **B** — demoted from the A band because warning rates exceed the A-grade ceilings, against thresholds this repo deliberately sets stricter than the shipped defaults (a 250-line file warning versus the default 400). An earlier revision of this table advertised 5.0/A+ after the codebase had drifted to a B; a hostile audit caught the stale claim, which is precisely the failure mode this tool exists to catch. The table matches the stamped report, and every threshold gate — file, function, duplication — is opted **on** for this repo's own CI, so drifting below the bar fails the build instead of the README.
 
 The grade is **gated, not averaged**: A+ requires every dimension clean, and since the rubric rework a repository with production code and zero test files cannot receive an A-grade at all.
 

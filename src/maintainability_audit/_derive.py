@@ -111,8 +111,15 @@ def _corpus_overall(entry: dict[str, Any], references: dict[str, float], c: floa
         if references["declarations"] > 0:
             production = production_pressures(summary)["declarations"] / references["declarations"]
             scores["declaration_size"] = 5 * c / (production + c)
-    overall, _ = overall_from_aspects(scores)
-    return overall
+    # Mirror the live path to the digit: categories are rounded to one
+    # decimal before the overall, because that is what score_report
+    # ships. An audit found six of forty corpus repos differing between
+    # the rounded and unrounded paths while the docs said "same
+    # pipeline" — the anchor must go through the same rounding or the
+    # word "same" is decoration.
+    _, categories = overall_from_aspects(scores)
+    rounded = {name: round(max(0.0, min(5.0, value)), 1) for name, value in categories.items()}
+    return sum(rounded.values()) / len(rounded)
 
 
 def derive_curve_constant(
@@ -154,4 +161,17 @@ def derive_curve_constant(
             low = mid
         else:
             high = mid
-    return round((low + high) / 2, 4)
+    fitted = (low + high) / 2
+    # The rounded pipeline is a step function, so the bisection can land
+    # on a tread adjacent to the target (median 3.99). Scan the
+    # neighborhood for the plateau where the median hits the target
+    # exactly and return its midpoint; keep the bisection value when no
+    # such plateau exists.
+    plateau = [
+        round(fitted + offset * 0.001, 4)
+        for offset in range(-80, 81)
+        if median_overall(fitted + offset * 0.001) == target_score
+    ]
+    if plateau:
+        return round((plateau[0] + plateau[-1]) / 2, 4)
+    return round(fitted, 4)

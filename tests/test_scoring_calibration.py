@@ -213,3 +213,79 @@ def test_dimensions_can_disagree_with_each_other() -> None:
 
     assert normalized["duplication"] > 1.0
     assert normalized["file_size"] == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Unknown-evidence pricing: what concealment can and cannot buy
+# ---------------------------------------------------------------------------
+
+def _evidence_summary() -> dict:
+    full = summary(500, 1000)
+    full.update({
+        "test_file_count": 100, "production_declarations_scanned": 650,
+        "dead_code_count": 0, "near_duplicate_count": 0, "idiom_concern_count": 0,
+        "has_readme": True, "has_changelog": True, "has_docs_dir": True,
+    })
+    return full
+
+
+def _history(**overrides) -> dict:
+    base = {
+        "window": "12 months ago", "files_changed": 50, "hotspots": [],
+        "change_coupling": [], "qualifying_hotspots": 0, "code_coupling_pairs": 0,
+        "multi_commit_files": 10, "single_author_files": 1,
+    }
+    base.update(overrides)
+    return base
+
+
+def test_concealment_ordering_and_its_stated_limit() -> None:
+    """Unknowns price at the anchor, so the shallow point estimate sits
+    BETWEEN worst-band and clean history — hiding evidence never buys
+    the clean score, but a repo whose true history is worse than the
+    anchor still gains by hiding it. That residual gain is a documented
+    property of any single-value imputation, not a closed exploit; the
+    overall_range below is what makes it visible."""
+    worst = _history(qualifying_hotspots=20, code_coupling_pairs=20, single_author_files=10)
+
+    clean_score = score_report({"summary": _evidence_summary(), "history": _history()})
+    shallow_score = score_report({"summary": _evidence_summary()})
+    worst_score = score_report({"summary": _evidence_summary(), "history": worst})
+
+    assert worst_score["overall"] < shallow_score["overall"] <= clean_score["overall"]
+    # The residual concealment gain exists and is bounded by
+    # (clean - worst); pin it so it cannot silently grow.
+    assert shallow_score["overall"] - worst_score["overall"] <= clean_score["overall"] - worst_score["overall"]
+
+
+def test_overall_range_collapses_only_under_full_evidence() -> None:
+    """The interval is the honest companion to imputation: measured
+    everything -> zero width; anything hidden -> visible width."""
+    full = score_report({"summary": _evidence_summary(), "history": _history()})
+    shallow = score_report({"summary": _evidence_summary()})
+
+    assert full["overall_range"][0] == full["overall_range"][1] == full["overall"]
+    low, high = shallow["overall_range"]
+    assert low < shallow["overall"] < high, "hidden evidence must widen the interval"
+    assert high - low >= 0.5, "three hidden aspects cannot cost less than half a grade of width"
+
+
+def test_corpus_median_rolls_up_to_exactly_four_through_the_rounded_path() -> None:
+    """The anchor claim, at full strength: the derivation now rounds
+    categories exactly as score_report ships them, and c sits mid-plateau
+    where the corpus median is 4.0 -- not 3.9-something "close enough"."""
+    import json
+    from pathlib import Path
+    from statistics import median as _median
+
+    from maintainability_audit._calibration import CALIBRATION_C
+    from maintainability_audit._derive import _corpus_overall, derive_references
+
+    measurements = json.loads(
+        (Path(__file__).resolve().parents[1] / "tools/calibration/measurements.json").read_text()
+    )["measurements"]
+    references = derive_references(measurements)
+
+    values = [_corpus_overall(entry, references, CALIBRATION_C) for entry in measurements]
+
+    assert _median(values) == 4.0

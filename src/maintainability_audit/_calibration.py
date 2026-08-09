@@ -87,7 +87,13 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 # Third fit: unknown aspects now price at the corpus anchor (4.0)
 # instead of renormalizing away — an audit showed renormalization let a
 # shallow clone outscore the same code with its history visible.
-CALIBRATION_C = 2.8545
+# Fourth fit: the derivation now rounds categories to one decimal
+# before the overall, exactly as score_report ships them — an audit
+# found six corpus repos differing between the rounded and unrounded
+# paths while the docs claimed "same pipeline". The rounded pipeline
+# is a step function, so c is the midpoint of the plateau where the
+# corpus median hits 4.0 exactly.
+CALIBRATION_C = 2.8712
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3

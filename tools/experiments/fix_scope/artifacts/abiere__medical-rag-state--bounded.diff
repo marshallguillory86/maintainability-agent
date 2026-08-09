@@ -1,0 +1,218 @@
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..809ad7b
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,31 @@
++# Medical RAG State
++
++Private, local-first retrieval system for medical and acupuncture literature.
++It ingests books and transcripts, stores searchable embeddings in Qdrant, and
++provides a FastAPI web interface for library management, search, images, and
++protocol generation.
++
++## Repository layout
++
++- `web/app.py` contains the FastAPI routes and web interface.
++- `scripts/` contains ingestion, parsing, metadata, maintenance, and test tools.
++- `config/` contains classifications and pipeline settings.
++- `SYSTEM_DOCS/` contains operational and architecture documentation.
++- `data/` contains tracked application state and generated metadata.
++
++## Testing
++
++Run the repository test suite from the project root:
++
++```bash
++python3 scripts/run_tests.py
++```
++
++Focused unit tests can be run without external services:
++
++```bash
++python3 -m unittest discover -s tests
++```
++
++See `CLAUDE.md` and `SYSTEM_DOCS/OPERATIONS.md` for environment-specific setup,
++service operations, and deployment constraints.
+diff --git a/scripts/book_metadata_vision.py b/scripts/book_metadata_vision.py
+index a113c60..7934bf8 100644
+--- a/scripts/book_metadata_vision.py
++++ b/scripts/book_metadata_vision.py
+@@ -16,6 +16,7 @@ Usage:
+ 
+ import json
+ import logging
++import os
+ import re
+ import sys
+ import time
+@@ -26,7 +27,7 @@ from typing import Optional
+ 
+ log = logging.getLogger(__name__)
+ 
+-BASE          = Path("/root/medical-rag")
++BASE          = Path(os.environ.get("MEDICAL_RAG_BASE", "/root/medical-rag"))
+ CACHE_DIR     = BASE / "data/ingest_cache"
+ BOOKS_DIR     = BASE / "books"
+ CFG_PATH      = BASE / "config/book_classifications.json"
+@@ -556,57 +557,8 @@ def _firecrawl_scrape(url: str) -> str:
+ 
+ # ── ISBNsearch.org scraper (Firecrawl) ───────────────────────────
+ 
+-def _fetch_isbnsearch(isbn: str) -> dict:
+-    """
+-    Scrape ISBNsearch.org via Firecrawl (bypasses bot detection).
+-    Falls back to direct urllib request when no Firecrawl API key is set.
+-    """
+-    if not isbn:
+-        return {}
+-    url = f"https://isbnsearch.org/isbn/{isbn}"
+-
+-    key = _get_firecrawl_key()
+-    if key:
+-        md = _firecrawl_scrape(url)
+-        if not md:
+-            return {}
+-        result: dict = {}
+-        for line in md.splitlines():
+-            line = line.strip()
+-            m = re.match(r"\*?\*?([^:*]+)\*?\*?\s*:\s*(.+)", line)
+-            if not m:
+-                continue
+-            label = m.group(1).strip().lower()
+-            value = m.group(2).strip()
+-            if label == "title" and not result.get("title"):
+-                result["title"] = value
+-            elif label in ("author", "authors") and not result.get("authors"):
+-                result["authors"] = [
+-                    a.split(",")[0].strip()
+-                    for a in value.split(";")
+-                    if a.strip()
+-                ]
+-            elif label == "publisher" and not result.get("publisher"):
+-                result["publisher"] = value
+-            elif label in ("published", "year") and not result.get("year"):
+-                ym = re.search(r"\b(\d{4})\b", value)
+-                if ym:
+-                    result["year"] = int(ym.group(1))
+-            elif label in ("isbn-13", "isbn13") and not result.get("isbn_13"):
+-                clean = re.sub(r"[^\d]", "", value)
+-                if len(clean) == 13:
+-                    result["isbn_13"] = clean
+-            elif label in ("isbn-10", "isbn10") and not result.get("isbn_10"):
+-                clean = re.sub(r"[^\d]", "", value)
+-                if len(clean) == 10:
+-                    result["isbn_10"] = clean
+-        if result:
+-            log.info("ISBNsearch (Firecrawl): found %s (%s)",
+-                     result.get("title", "?")[:40],
+-                     result.get("year", "?"))
+-        return result
+-
+-    # Fallback: direct urllib
++def _fetch_isbnsearch_direct(isbn: str, url: str) -> dict:
++    """Fetch and parse ISBNsearch HTML without Firecrawl."""
+     try:
+         req = urllib.request.Request(
+             url,
+@@ -686,6 +638,53 @@ def _fetch_isbnsearch(isbn: str) -> dict:
+ 
+ # ── Library of Congress API ───────────────────────────────────────
+ 
++def _parse_isbnsearch_markdown(markdown: str) -> dict:
++    """Parse the labeled fields returned by ISBNsearch's markdown page."""
++    result: dict = {}
++    for raw_line in markdown.splitlines():
++        match = re.match(r"\*?\*?([^:*]+)\*?\*?\s*:\s*(.+)", raw_line.strip())
++        if not match:
++            continue
++        label = match.group(1).strip().lower()
++        value = match.group(2).strip()
++        if label == "title" and not result.get("title"):
++            result["title"] = value
++        elif label in ("author", "authors") and not result.get("authors"):
++            result["authors"] = [
++                author.split(",")[0].strip()
++                for author in value.split(";") if author.strip()
++            ]
++        elif label == "publisher" and not result.get("publisher"):
++            result["publisher"] = value
++        elif label in ("published", "year") and not result.get("year"):
++            year = re.search(r"\b(\d{4})\b", value)
++            if year:
++                result["year"] = int(year.group(1))
++        elif label in ("isbn-13", "isbn13") and not result.get("isbn_13"):
++            clean = re.sub(r"[^\d]", "", value)
++            if len(clean) == 13:
++                result["isbn_13"] = clean
++        elif label in ("isbn-10", "isbn10") and not result.get("isbn_10"):
++            clean = re.sub(r"[^\d]", "", value)
++            if len(clean) == 10:
++                result["isbn_10"] = clean
++    return result
++
++
++def _fetch_isbnsearch(isbn: str) -> dict:
++    """Fetch ISBNsearch metadata via Firecrawl or direct HTML fallback."""
++    if not isbn:
++        return {}
++    url = f"https://isbnsearch.org/isbn/{isbn}"
++    if not _get_firecrawl_key():
++        return _fetch_isbnsearch_direct(isbn, url)
++    result = _parse_isbnsearch_markdown(_firecrawl_scrape(url))
++    if result:
++        log.info("ISBNsearch (Firecrawl): found %s (%s)",
++                 result.get("title", "?")[:40], result.get("year", "?"))
++    return result
++
++
+ def _fetch_loc(isbn: str) -> dict:
+     """Fetch from Library of Congress catalog API."""
+     if not isbn:
+diff --git a/tests/test_book_metadata_vision.py b/tests/test_book_metadata_vision.py
+new file mode 100644
+index 0000000..a5e26fa
+--- /dev/null
++++ b/tests/test_book_metadata_vision.py
+@@ -0,0 +1,40 @@
++"""Focused tests for book metadata parsing."""
++
++import os
++import sys
++import unittest
++from pathlib import Path
++
++PROJECT_ROOT = Path(__file__).resolve().parents[1]
++os.environ.setdefault("MEDICAL_RAG_BASE", str(PROJECT_ROOT))
++sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
++
++from book_metadata_vision import _parse_isbnsearch_markdown
++
++
++class IsbnsearchMarkdownTests(unittest.TestCase):
++    def test_parses_supported_fields(self):
++        metadata = _parse_isbnsearch_markdown("\n".join([
++            "**Title**: Gray's Anatomy",
++            "Authors: Henry Gray, MD; Susan Standring",
++            "Publisher: Elsevier",
++            "Published: 2020 edition",
++            "ISBN-13: 978-0-443-10028-4",
++            "ISBN-10: 0-443-10028-8",
++        ]))
++        self.assertEqual(metadata["title"], "Gray's Anatomy")
++        self.assertEqual(metadata["authors"], ["Henry Gray", "Susan Standring"])
++        self.assertEqual(metadata["publisher"], "Elsevier")
++        self.assertEqual(metadata["year"], 2020)
++        self.assertEqual(metadata["isbn_13"], "9780443100284")
++        self.assertEqual(metadata["isbn_10"], "0443100288")
++
++    def test_keeps_first_value_and_ignores_noise(self):
++        metadata = _parse_isbnsearch_markdown(
++            "Title: First title\nnot a field\nTitle: Second title\nYear: unknown"
++        )
++        self.assertEqual(metadata, {"title": "First title"})
++
++
++if __name__ == "__main__":
++    unittest.main()

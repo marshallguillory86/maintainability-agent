@@ -1,0 +1,185 @@
+diff --git a/services/server/package.json b/services/server/package.json
+index 93b111f..1f8e9a4 100644
+--- a/services/server/package.json
++++ b/services/server/package.json
+@@ -9,6 +9,7 @@
+     "build": "tsc",
+     "start": "node dist/index.js",
+     "clean": "rm -rf dist",
++    "test": "node --import tsx --test test/**/*.test.ts",
+     "lint": "eslint . --ext .ts",
+     "format": "prettier --write ."
+   },
+@@ -61,4 +62,4 @@
+   "allowScripts": {
+     "esbuild@0.28.1": true
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/services/server/src/middleware/rbac.middleware.ts b/services/server/src/middleware/rbac.middleware.ts
+index 4b37843..83e804e 100644
+--- a/services/server/src/middleware/rbac.middleware.ts
++++ b/services/server/src/middleware/rbac.middleware.ts
+@@ -1,7 +1,6 @@
+ import type { Request, Response, NextFunction } from 'express';
+-import type { JwtPayload } from 'jsonwebtoken';
+-import { verifyToken } from '../utils/jwt.js';
+-import { queryOne } from '../config/database.js';
++
++export { authMiddleware } from './auth.middleware.js';
+ 
+ export interface AuthRequest extends Request {
+   user?: {
+@@ -29,85 +28,6 @@ declare global {
+   }
+ }
+ 
+-export const authMiddleware = async (
+-  req: AuthRequest,
+-  res: Response,
+-  next: NextFunction
+-): Promise<void> => {
+-  try {
+-    const authorization = req.headers.authorization;
+-
+-    if (!authorization) {
+-      res.status(401).json({
+-        success: false,
+-        message: 'Authentication required. Please login first.',
+-      });
+-      return;
+-    }
+-
+-    const [scheme, token] = authorization.split(' ');
+-
+-    if (scheme?.toLowerCase() !== 'bearer' || !token) {
+-      res.status(401).json({
+-        success: false,
+-        message: 'Invalid authorization format.',
+-      });
+-      return;
+-    }
+-
+-    const decoded = verifyToken(token) as string | JwtPayload;
+-
+-    if (!decoded || typeof decoded === 'string') {
+-      res.status(401).json({
+-        success: false,
+-        message: 'Invalid or expired token.',
+-      });
+-      return;
+-    }
+-
+-    if (!decoded.user_id) {
+-      res.status(401).json({
+-        success: false,
+-        message: 'Invalid authentication token.',
+-      });
+-      return;
+-    }
+-
+-    const user = await queryOne(
+-      `SELECT id, email, full_name, phone, role, email_verified, created_at
+-             FROM user_profiles
+-             WHERE id = $1`,
+-      [decoded.user_id]
+-    );
+-
+-    if (!user) {
+-      res.status(401).json({
+-        success: false,
+-        message: 'User no longer exists.',
+-      });
+-      return;
+-    }
+-
+-    req.user = {
+-      id: user.id,
+-      email: user.email,
+-      full_name: user.full_name,
+-      phone: user.phone,
+-      role: user.role,
+-      email_verified: user.email_verified,
+-    };
+-
+-    next();
+-  } catch (error: unknown) {
+-    console.error('Authentication error:', error instanceof Error ? error.message : error);
+-
+-    res.status(401).json({
+-      success: false,
+-      message: 'Authentication failed.',
+-    });
+-  }
+-};
+-
+ export const rbacMiddleware = (allowedRoles: Array<'admin' | 'customer' | 'delivery'>) => {
+   return (req: AuthRequest, res: Response, next: NextFunction) => {
+     const role = req.user?.role;
+diff --git a/services/server/test/rbac.middleware.test.ts b/services/server/test/rbac.middleware.test.ts
+new file mode 100644
+index 0000000..ee93a71
+--- /dev/null
++++ b/services/server/test/rbac.middleware.test.ts
+@@ -0,0 +1,60 @@
++import assert from 'node:assert/strict';
++import test from 'node:test';
++import type { NextFunction, Response } from 'express';
++import { authMiddleware as canonicalAuthMiddleware } from '../src/middleware/auth.middleware.js';
++import {
++  authMiddleware,
++  type AuthRequest,
++  rbacMiddleware,
++} from '../src/middleware/rbac.middleware.js';
++
++const user = {
++  id: 'user-1',
++  email: 'admin@example.com',
++  full_name: 'Admin User',
++  role: 'admin' as const,
++  email_verified: true,
++};
++
++test('re-exports the canonical authentication middleware', () => {
++  assert.equal(authMiddleware, canonicalAuthMiddleware);
++});
++
++test('allows an authenticated user with an allowed role', () => {
++  const req = { user } as AuthRequest;
++  const res = {} as Response;
++  let nextCalled = false;
++
++  rbacMiddleware(['admin'])(req, res, (() => {
++    nextCalled = true;
++  }) as NextFunction);
++
++  assert.equal(nextCalled, true);
++});
++
++test('rejects a missing or disallowed role', () => {
++  for (const req of [{}, { user: { ...user, role: 'customer' as const } }]) {
++    let statusCode: number | undefined;
++    let body: unknown;
++    const res = {
++      status(code: number) {
++        statusCode = code;
++        return this;
++      },
++      json(value: unknown) {
++        body = value;
++        return this;
++      },
++    } as unknown as Response;
++
++    rbacMiddleware(['admin'])(req as AuthRequest, res, (() => {
++      assert.fail('next should not be called');
++    }) as NextFunction);
++
++    assert.equal(statusCode, 403);
++    assert.deepEqual(body, {
++      success: false,
++      message: 'Forbidden: insufficient permissions.',
++    });
++  }
++});

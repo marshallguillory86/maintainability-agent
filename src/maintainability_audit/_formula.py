@@ -112,25 +112,54 @@ UNSCORED: dict[str, str] = {
 }
 
 
-def rollup(scores: dict[str, float | None], weights: dict[str, float]) -> float:
-    """Weighted mean, with unmeasured aspects priced at the anchor."""
+def rollup(
+    scores: dict[str, float | None], weights: dict[str, float], unknown_price: float = UNKNOWN_ASPECT_SCORE
+) -> float:
+    """Weighted mean, with unmeasured aspects priced at ``unknown_price``.
+
+    The default anchor gives the point estimate. Callers pass 0.0 and
+    5.0 to obtain the bounds of the uncertainty interval — the honest
+    companion to any imputation, because no single imputed value can
+    stop concealment from flattering a repo whose true evidence is
+    worse than the imputed one. The interval makes concealment visible
+    instead of pretending a constant makes it impossible.
+    """
     return sum(
-        (UNKNOWN_ASPECT_SCORE if scores.get(name) is None else scores[name]) * weight
+        (unknown_price if scores.get(name) is None else scores[name]) * weight
         for name, weight in weights.items()
     ) / sum(weights.values())
 
 
 def overall_from_aspects(aspect_scores: dict[str, float | None]) -> tuple[float, dict[str, float]]:
-    """Category scores and the overall, anchor-imputing unknowns.
+    """Category scores and the overall point estimate, anchor-imputing
+    unknowns.
 
-    Categories are always numeric: an unmeasured aspect contributes the
-    anchor, so a shallow clone and a full clone of identical code differ
-    only by what the history actually says — not by whether it was
-    visible. The A-grade block for missing evidence lives in scoring,
-    on top of these numbers.
+    The point estimate answers "typical until measured". It does NOT
+    make concealment neutral: a repo whose hidden evidence is worse
+    than the anchor still gains by hiding it, which is why
+    :func:`overall_bounds` exists and the report prints the interval
+    whenever anything is unknown. The A-grade block for missing
+    evidence lives in scoring, on top of these numbers.
     """
     categories = {
         name: rollup(aspect_scores, weights) for name, weights in CATEGORY_ASPECTS.items()
     }
     overall = rollup(categories, {name: CATEGORY_WEIGHTS[name] for name in categories})
     return overall, categories
+
+
+def overall_bounds(aspect_scores: dict[str, float | None]) -> tuple[float, float]:
+    """The overall's floor and ceiling over every unmeasured aspect.
+
+    Equal when everything is measured. The width is the price of the
+    missing evidence, printed rather than hidden: a shallow clone's
+    report says "somewhere in [x, y]" instead of lending its point
+    estimate false precision.
+    """
+    bounds = []
+    for price in (0.0, 5.0):
+        categories = {
+            name: rollup(aspect_scores, weights, price) for name, weights in CATEGORY_ASPECTS.items()
+        }
+        bounds.append(rollup(categories, {name: CATEGORY_WEIGHTS[name] for name in categories}, price))
+    return bounds[0], bounds[1]

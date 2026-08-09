@@ -10,6 +10,11 @@ def summary_table(summary: dict[str, int], score: dict[str, Any]) -> list[str]:
         "| Metric | Value |",
         "|---|---:|",
         f"| Overall score | {score['overall']} / 5 ({score['grade']}) |",
+        *(
+            [f"| Overall range (unmeasured evidence priced 0..5) | {score['overall_range'][0]} – {score['overall_range'][1]} |"]
+            if score.get("overall_range") and score["overall_range"][0] != score["overall_range"][1]
+            else []
+        ),
         f"| Files scanned | {summary['files_scanned']} |",
         f"| File warnings | {summary['file_warnings']} |",
         f"| File failures | {summary['file_failures']} |",

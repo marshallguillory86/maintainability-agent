@@ -48,6 +48,7 @@ from ._formula import (
     CATEGORY_ASPECTS,
     CATEGORY_WEIGHTS,
     UNSCORED,
+    overall_bounds,
     overall_from_aspects,
 )
 
@@ -276,6 +277,14 @@ def score_report(report: dict[str, Any]) -> dict[str, Any]:
         # The exact numbers the overall was computed from — the identity
         # "overall == weighted mean of these" is checkable on the report.
         "categories": rounded_categories,
+        # The interval the overall lives in once unmeasured aspects are
+        # priced at their extremes. Collapses to the overall itself when
+        # everything was measured. This is the honest companion to
+        # anchor imputation: no single imputed value can stop hiding
+        # worse-than-anchor evidence from flattering the point estimate,
+        # so the report prints the width of what is not known instead of
+        # pretending the point is precise.
+        "overall_range": [clamp_score(bound) for bound in overall_bounds(aspects)],
         # The full aspect layer: every score the rubric read, None where
         # the evidence was unavailable rather than clean.
         "aspects": {

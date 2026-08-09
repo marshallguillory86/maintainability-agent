@@ -107,7 +107,7 @@ def _numstat_totals(body: str) -> tuple[int, int]:
 def fix_commits(path: Path) -> list[tuple[int, int]]:
     """(files_touched, lines_changed) per fix commit."""
     result = subprocess.run(
-        ["git", "log", "--no-merges", "--format=%x1e%s", "--numstat"],
+        ["git", "log", "-n", "300", "--no-merges", "--format=%x1e%s", "--numstat"],
         cwd=path, capture_output=True, text=True,
     )
     if result.returncode != 0:
@@ -216,8 +216,11 @@ def main() -> int:
                 "broad_files_threshold": BROAD_FILES,
                 "min_fix_commits": MIN_FIX_COMMITS,
                 "note": (
-                    "History depth is capped at 300 commits by the cohort clones; medians are "
-                    "per-repo so cross-repo commit-volume differences do not weight the test."
+                    "Measured over the most recent 300 commits from each pinned HEAD (git log -n 300), "
+                    "so a deeper cache cannot change the window — an audit showed cache-deepening "
+                    "shifting results when the window was 'whatever history was present'. Repos with "
+                    "fewer than 300 commits use what exists; history_commits records clone depth, "
+                    "which may exceed the window. Medians are per-repo so commit volume does not weight the test."
                 ),
                 "cohorts": results,
                 "comparisons": comparisons,

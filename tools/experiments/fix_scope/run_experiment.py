@@ -69,12 +69,30 @@ def findings_total(summary: dict) -> int:
     return sum(int(summary.get(key, 0)) for key in FINDING_COUNT_KEYS)
 
 
-def fresh_copy(cache: Path, name: str, work: Path, arm: str) -> Path:
+def _git(path: Path, *args: str) -> str:
+    return subprocess.run(["git", *args], cwd=path, capture_output=True, text=True).stdout.strip()
+
+
+def fresh_copy(cache: Path, name: str, work: Path, arm: str, pinned: str) -> tuple[Path, str]:
+    """A pristine copy, validated against the manifest before use.
+
+    Returns the copy and its base SHA. A hostile audit correctly noted
+    the first version trusted the cache blindly and diffed against
+    HEAD — which an agent that commits would move, silently deleting
+    its own changes from measurement. The base SHA is recorded at copy
+    time and every diff is taken against it explicitly.
+    """
+    source = cache / name
+    head = _git(source, "rev-parse", "HEAD")
+    if head != pinned:
+        raise RuntimeError(f"{name}: cache at {head[:8]}, manifest pins {pinned[:8]}")
+    if _git(source, "status", "--short"):
+        raise RuntimeError(f"{name}: cache clone is dirty")
     target = work / f"{name}--{arm}"
     if target.exists():
         shutil.rmtree(target)
-    shutil.copytree(cache / name, target, symlinks=True)
-    return target
+    shutil.copytree(source, target, symlinks=True)
+    return target, head
 
 
 def run_agent(workdir: Path, prompt: str) -> dict:
@@ -98,11 +116,16 @@ def run_agent(workdir: Path, prompt: str) -> dict:
     }
 
 
-def diff_stats(workdir: Path) -> tuple[list[str], int]:
-    """(touched files, lines added+removed) against the pinned base."""
+def diff_stats(workdir: Path, base: str) -> tuple[list[str], int]:
+    """(touched files, lines added+removed) against the recorded base SHA.
+
+    ``git add -A`` first so untracked files the agent created are
+    counted; the diff is then taken from the explicit base, so agent
+    commits — none observed, but possible — cannot hide changes.
+    """
     subprocess.run(["git", "add", "-A"], cwd=workdir, capture_output=True)
     numstat = subprocess.run(
-        ["git", "diff", "--cached", "--numstat"], cwd=workdir, capture_output=True, text=True
+        ["git", "diff", "--cached", base, "--numstat"], cwd=workdir, capture_output=True, text=True
     ).stdout
     touched: list[str] = []
     lines = 0
@@ -116,13 +139,14 @@ def diff_stats(workdir: Path) -> tuple[list[str], int]:
     return touched, lines
 
 
-def measure_arm(workdir: Path, prompt: str, scope: set[str], before_total: int) -> dict:
+def measure_arm(workdir: Path, base: str, prompt: str, scope: set[str], before_total: int) -> dict:
     agent = run_agent(workdir, prompt)
-    touched, lines = diff_stats(workdir)
+    touched, lines = diff_stats(workdir, base)
     after = build_report(workdir, load_config(None))
     out_of_scope = [path for path in touched if path not in scope]
     return {
         "agent": agent,
+        "base_sha": base,
         "files_touched": len(touched),
         "lines_changed": lines,
         "out_of_scope_files": len(out_of_scope),
@@ -132,6 +156,27 @@ def measure_arm(workdir: Path, prompt: str, scope: set[str], before_total: int) 
         "score_after": after["score"]["overall"],
         "touched": touched[:100],
     }
+
+
+def run_arm_with_retry(
+    cache: Path, name: str, work: Path, arm: str, pinned: str, prompt: str, scope: set[str], before_total: int
+) -> dict:
+    """One arm, with the protocol's rerun-once rule implemented.
+
+    A crashed run or one that changed nothing is rerun exactly once
+    from a fresh copy; the rerun is recorded in the result. A second
+    failure stands as the result — the protocol does not allow fishing.
+    """
+    copy, base = fresh_copy(cache, name, work, arm, pinned)
+    result = measure_arm(copy, base, prompt, scope, before_total)
+    crashed = result["agent"]["status"] != "completed"
+    if crashed or result["files_touched"] == 0:
+        reason = "crash" if crashed else "no change"
+        print(f"  arm {arm}: {reason}; protocol rerun (once)")
+        copy, base = fresh_copy(cache, name, work, arm, pinned)
+        result = measure_arm(copy, base, prompt, scope, before_total)
+        result["rerun"] = reason
+    return result
 
 
 def main() -> int:
@@ -157,13 +202,18 @@ def main() -> int:
         }
     )
 
+    manifest: dict[str, str] = {}
+    for cohort_file in ("ai.json", "human.json"):
+        for repo in json.loads((ROOT / "tools/calibration" / cohort_file).read_text())["repos"]:
+            manifest[repo["name"]] = repo["commit"]
+
     for name in args.subjects:
         if name in results["runs"]:
             print(f"{name}: already recorded, skipping")
             continue
         print(f"\n=== {name} ===")
-        base = cache / name
-        before = build_report(base, load_config(None))
+        pinned = manifest[name]
+        before = build_report(cache / name, load_config(None))
         scope = finding_paths(before)
         before_total = findings_total(before["summary"])
         bounded_prompt = render_ai_prompt(before)
@@ -174,11 +224,11 @@ def main() -> int:
             "score_before": before["score"]["overall"],
             "in_scope_files": len(scope),
             "bounded_prompt_chars": len(bounded_prompt),
+            "pinned_commit": pinned,
         }
         for arm, prompt in (("generic", GENERIC_PROMPT), ("bounded", bounded_prompt)):
             print(f"  arm {arm}: running...")
-            copy = fresh_copy(cache, name, work, arm)
-            entry[arm] = measure_arm(copy, prompt, scope, before_total)
+            entry[arm] = run_arm_with_retry(cache, name, work, arm, pinned, prompt, scope, before_total)
             print(
                 f"  arm {arm}: {entry[arm]['agent']['status']} in {entry[arm]['agent']['seconds']}s"
                 f" — files={entry[arm]['files_touched']} lines={entry[arm]['lines_changed']}"

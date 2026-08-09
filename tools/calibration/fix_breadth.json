@@ -1,0 +1,279 @@
+{
+ "measured_on": "2026-08-09",
+ "fix_pattern": "\\b(fix(es|ed)?|bug(fix)?|hotfix|patch)\\b",
+ "broad_files_threshold": 5,
+ "min_fix_commits": 5,
+ "note": "History depth is capped at 300 commits by the cohort clones; medians are per-repo so cross-repo commit-volume differences do not weight the test.",
+ "cohorts": {
+  "ai": [
+   {
+    "repo": "time-yide/yide-acompanha",
+    "declarations": 4102,
+    "fix_commits": 88,
+    "median_files_per_fix": 1.0,
+    "median_lines_per_fix": 21.0,
+    "broad_fix_share": 0.11363636363636363
+   },
+   {
+    "repo": "elfuerte72/oplati_podpisku",
+    "declarations": 945,
+    "fix_commits": 67,
+    "median_files_per_fix": 5,
+    "median_lines_per_fix": 100,
+    "broad_fix_share": 0.44776119402985076
+   },
+   {
+    "repo": "rrzu777/agendita",
+    "declarations": 2102,
+    "fix_commits": 112,
+    "median_files_per_fix": 4.0,
+    "median_lines_per_fix": 111.0,
+    "broad_fix_share": 0.38392857142857145
+   },
+   {
+    "repo": "hhisdagovy/BCS",
+    "declarations": 2647,
+    "fix_commits": 139,
+    "median_files_per_fix": 4,
+    "median_lines_per_fix": 63,
+    "broad_fix_share": 0.2733812949640288
+   },
+   {
+    "repo": "NikoKiru/f1podigami",
+    "declarations": 886,
+    "fix_commits": 45,
+    "median_files_per_fix": 3,
+    "median_lines_per_fix": 51,
+    "broad_fix_share": 0.2222222222222222
+   },
+   {
+    "repo": "open-mercato/cezar",
+    "declarations": 4570,
+    "fix_commits": 353,
+    "median_files_per_fix": 3,
+    "median_lines_per_fix": 63,
+    "broad_fix_share": 0.2237960339943343
+   },
+   {
+    "repo": "labuzniq/finops-dash",
+    "declarations": 620,
+    "fix_commits": 13,
+    "median_files_per_fix": 1,
+    "median_lines_per_fix": 22,
+    "broad_fix_share": 0.0
+   },
+   {
+    "repo": "mongle-master/mongle",
+    "declarations": 511,
+    "fix_commits": 78,
+    "median_files_per_fix": 2.0,
+    "median_lines_per_fix": 37.0,
+    "broad_fix_share": 0.19230769230769232
+   },
+   {
+    "repo": "alkhas72/goapsny-mvp",
+    "declarations": 210,
+    "fix_commits": 17,
+    "median_files_per_fix": 3,
+    "median_lines_per_fix": 88,
+    "broad_fix_share": 0.17647058823529413
+   },
+   {
+    "repo": "TeamVisioneer/PrayU-Api",
+    "declarations": 114,
+    "fix_commits": 8,
+    "median_files_per_fix": 1.0,
+    "median_lines_per_fix": 6.0,
+    "broad_fix_share": 0.125
+   },
+   {
+    "repo": "sergey-levko/macro-mind",
+    "declarations": 109,
+    "fix_commits": 6,
+    "median_files_per_fix": 8.0,
+    "median_lines_per_fix": 148.5,
+    "broad_fix_share": 0.6666666666666666
+   },
+   {
+    "repo": "GetDial-AI/cli",
+    "declarations": 229,
+    "fix_commits": 12,
+    "median_files_per_fix": 3.0,
+    "median_lines_per_fix": 23.5,
+    "broad_fix_share": 0.16666666666666666
+   },
+   {
+    "repo": "AssetsArt/brust",
+    "declarations": 1418,
+    "fix_commits": 107,
+    "median_files_per_fix": 2,
+    "median_lines_per_fix": 60,
+    "broad_fix_share": 0.1588785046728972
+   },
+   {
+    "repo": "mama-sh/deskmate",
+    "declarations": 271,
+    "fix_commits": 26,
+    "median_files_per_fix": 3.0,
+    "median_lines_per_fix": 49.5,
+    "broad_fix_share": 0.2692307692307692
+   },
+   {
+    "repo": "zeveck/zskills-dev",
+    "declarations": 761,
+    "fix_commits": 143,
+    "median_files_per_fix": 5,
+    "median_lines_per_fix": 200,
+    "broad_fix_share": 0.43356643356643354
+   },
+   {
+    "repo": "SWYP14th-Team3/FrontEnd",
+    "declarations": 247,
+    "fix_commits": 9,
+    "median_files_per_fix": 1,
+    "median_lines_per_fix": 20,
+    "broad_fix_share": 0.1111111111111111
+   },
+   {
+    "repo": "WayfinderFoundation/wayfinder-paths-sdk",
+    "declarations": 6821,
+    "fix_commits": 20,
+    "median_files_per_fix": 2.5,
+    "median_lines_per_fix": 91.5,
+    "broad_fix_share": 0.35
+   },
+   {
+    "repo": "khang859/fleet",
+    "declarations": 2821,
+    "fix_commits": 68,
+    "median_files_per_fix": 3.0,
+    "median_lines_per_fix": 75.5,
+    "broad_fix_share": 0.23529411764705882
+   },
+   {
+    "repo": "Section9Labs/rupu",
+    "declarations": 1671,
+    "fix_commits": 201,
+    "median_files_per_fix": 2,
+    "median_lines_per_fix": 137,
+    "broad_fix_share": 0.20398009950248755
+   }
+  ],
+  "human": [
+   {
+    "repo": "mrdata355/casino-snowflake-streaming-ai-platform",
+    "declarations": 467,
+    "fix_commits": 19,
+    "median_files_per_fix": 1,
+    "median_lines_per_fix": 7,
+    "broad_fix_share": 0.05263157894736842
+   },
+   {
+    "repo": "SanjibBayen/rental-management-system-odoo-devdaas",
+    "declarations": 185,
+    "fix_commits": 11,
+    "median_files_per_fix": 2,
+    "median_lines_per_fix": 8,
+    "broad_fix_share": 0.0
+   },
+   {
+    "repo": "Omikaye/Binary-Star-Pokedex",
+    "declarations": 267,
+    "fix_commits": 76,
+    "median_files_per_fix": 3.0,
+    "median_lines_per_fix": 45.0,
+    "broad_fix_share": 0.13157894736842105
+   },
+   {
+    "repo": "tompassarelli/north",
+    "declarations": 3655,
+    "fix_commits": 68,
+    "median_files_per_fix": 2.0,
+    "median_lines_per_fix": 72.5,
+    "broad_fix_share": 0.22058823529411764
+   },
+   {
+    "repo": "Arth1213/gamechangrs",
+    "declarations": 2074,
+    "fix_commits": 38,
+    "median_files_per_fix": 3.0,
+    "median_lines_per_fix": 44.0,
+    "broad_fix_share": 0.13157894736842105
+   },
+   {
+    "repo": "timiajayi123/FLEET.MGMT",
+    "declarations": 761,
+    "fix_commits": 9,
+    "median_files_per_fix": 1,
+    "median_lines_per_fix": 12,
+    "broad_fix_share": 0.1111111111111111
+   },
+   {
+    "repo": "polmichel/poker_tool",
+    "declarations": 603,
+    "fix_commits": 35,
+    "median_files_per_fix": 1,
+    "median_lines_per_fix": 64,
+    "broad_fix_share": 0.11428571428571428
+   },
+   {
+    "repo": "xbanka/xbanka-web-app",
+    "declarations": 654,
+    "fix_commits": 107,
+    "median_files_per_fix": 2,
+    "median_lines_per_fix": 23,
+    "broad_fix_share": 0.2336448598130841
+   },
+   {
+    "repo": "alkispap/english-restaurant-template",
+    "declarations": 1850,
+    "fix_commits": 29,
+    "median_files_per_fix": 4,
+    "median_lines_per_fix": 68,
+    "broad_fix_share": 0.27586206896551724
+   },
+   {
+    "repo": "komariChikaA/gal-yiba",
+    "declarations": 297,
+    "fix_commits": 11,
+    "median_files_per_fix": 1,
+    "median_lines_per_fix": 16,
+    "broad_fix_share": 0.09090909090909091
+   },
+   {
+    "repo": "otc9513/Project",
+    "declarations": 546,
+    "fix_commits": 25,
+    "median_files_per_fix": 1,
+    "median_lines_per_fix": 9,
+    "broad_fix_share": 0.08
+   }
+  ]
+ },
+ "comparisons": {
+  "median_files_per_fix": {
+   "test": {
+    "u": 63.5,
+    "z": 1.792,
+    "p": 0.0731
+   },
+   "size_correlation": 0.18
+  },
+  "median_lines_per_fix": {
+   "test": {
+    "u": 54.0,
+    "z": 2.152,
+    "p": 0.0314
+   },
+   "size_correlation": 0.4
+  },
+  "broad_fix_share": {
+   "test": {
+    "u": 50.0,
+    "z": 2.325,
+    "p": 0.0201
+   },
+   "size_correlation": 0.36
+  }
+ }
+}

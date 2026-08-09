@@ -16,13 +16,16 @@ It is a deterministic audit and prompt-generation layer for teams using AI-assis
 
 ## Why AI-Specific?
 
-AI-written code often fails in recognizable ways:
+**Volume, not pathology.**
 
-- plausible but misplaced abstractions
-- broad rewrites for narrow bugs
-- duplicated helpers with tiny differences
-- stale comments that sound confident
-- tests that assert implementation details instead of behavior
-- architecture drift across modules
+An earlier version of this page claimed AI-written code fails in recognizably different ways. When this project finally tested its best candidate for such a signal against a properly matched control, the claim did not survive ([docs/standard.md](standard.md#does-this-detect-ai-written-code)). And it never needed to be true: anyone who has spent decades in software has seen thousands of lines of unmaintainable code written entirely by hand. Slop is not a new failure mode. It is the oldest one.
 
-Maintainability Agent catches signals of those failures and creates prompts that steer agents toward disciplined, small, reviewable fixes.
+What AI changes is the *rate*. Agents produce code faster than humans can read it, so the ratio of code-written to code-reviewed collapses — and unmaintainable code that used to accumulate over years can now accumulate in an afternoon. That is the problem this tool exists for, and it needs no claim about AI writing *worse* code, only the observable fact that it writes *more*.
+
+**The same volume is the way out.** If agents can produce slop at scale, agents pointed at deterministic findings can fix it at scale — that is the loop this tool closes:
+
+1. The audit finds the specific pressure points, deterministically, with no LLM in the loop.
+2. The score applies one uniform standard, so "better" and "worse" are not arguments.
+3. The remediation prompt hands an agent a bounded work order — *these* findings, *this* scope — so cleanup happens at machine speed without becoming a machine-speed rewrite.
+
+The failure modes commonly attributed to AI — misplaced abstractions, broad rewrites for narrow bugs, duplicated helpers, stale comments, implementation-detail tests — are worth detecting **regardless of who wrote them**, and detectors for them are built or planned on exactly that basis. Whether AI produces them at a different rate than humans is an empirical question; each claim about it gets tested against a matched control before it is made, because this project has retracted one such claim already and intends never to need a second retraction.

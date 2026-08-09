@@ -16,9 +16,12 @@ Two kinds of aspect:
   score everywhere.
 - **rubric** — evidence the corpus reference cannot price (test
   presence, dead code, churn, coupling, ownership, documentation),
-  scored against banded thresholds stated in ``scoring.py``. These are
-  heuristics and the docs say so; their honesty is in being visible,
-  not in being validated.
+  scored against banded thresholds stated in ``scoring.py``. Bands and
+  weights are judgments, which is what every standard is made of — their
+  legitimacy is that they are explicit, deterministic, and applied
+  identically to every repository. An outcome study (docs/standard.md,
+  "Tuning the standard against outcomes") would tune them, not license
+  them.
 
 An aspect that cannot be measured for a given report — no git history,
 an old baseline without the newer counts — scores ``None`` and its
@@ -119,8 +122,5 @@ def overall_from_aspects(aspect_scores: dict[str, float | None]) -> tuple[float 
     categories = {
         name: rollup(aspect_scores, weights) for name, weights in CATEGORY_ASPECTS.items()
     }
-    overall = rollup(
-        {name: value for name, value in categories.items()},
-        {name: CATEGORY_WEIGHTS[name] for name in categories},
-    )
+    overall = rollup(categories, {name: CATEGORY_WEIGHTS[name] for name in categories})
     return overall, categories

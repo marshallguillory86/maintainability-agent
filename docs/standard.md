@@ -42,7 +42,7 @@ The score is a three-layer rollup, and every layer is visible in the report (`sc
 |knowledge_concentration|rubric|share of settled files (3+ commits) with a single author|
 |documentation|rubric|artifact presence: README, changelog, docs directory|
 
-**Calibrated** aspects inherit the corpus anchor — 1.0x the mature-OSS median maps to the same score everywhere. **Rubric** aspects score evidence a corpus median cannot price, against banded thresholds stated in [`scoring.py`](../src/maintainability_audit/scoring.py); the bands are informed by the corpus and cohort measurements where those exist, and they are heuristics — visible, arguable, and **not validated against outcomes** (see *What would validate this scale*, below).
+**Calibrated** aspects inherit the corpus anchor — 1.0x the mature-OSS median maps to the same score everywhere. **Rubric** aspects score evidence a corpus median cannot price, against banded thresholds stated in [`scoring.py`](../src/maintainability_audit/scoring.py), informed by the corpus and cohort measurements where those exist.
 
 An aspect that cannot be measured — no git history, a pre-0.4.0 baseline without the newer counts — scores **null and its weight renormalizes away**. Unknown never prices as either clean or dirty, and the report prints "not measurable" rather than blanking the row.
 
@@ -70,7 +70,11 @@ An aspect that cannot be measured — no git history, a pre-0.4.0 baseline witho
 |indirection_depth|call-graph construction is not implemented for the supported languages|
 |architectural_coherence|no measurement distinguishes a wrong boundary from an unusual one statically|
 
-**What would validate this scale.** ISO defines maintainability as the *effort to modify*. The rubric weights are judgments until the score is tested against that outcome: score repositories at a past commit, then measure the following year's fix-churn, rework and change breadth from their histories, and check that the score predicted them on held-out repositories. That experiment has not been run. Until it has, this is a **calibrated structural-pressure scale with a stated rubric** — reproducible and honest about its judgment layer, but not outcome-validated, and the difference is exactly the one this project's own retraction taught.
+**The rubric is a standard, not a prediction.** Like any standard — ISO/IEC 25010 itself, a building code, a style guide — it is a set of judgments made explicit, applied deterministically, and identical for every repository it grades. That is what gives a standard its authority: it is stated, stable, and uniform, and anyone who disagrees with a weight or a band can read it, argue with it, or override it in config. No validation study is required to license a standard, and this document does not apologize for containing judgments.
+
+What *does* require evidence is any empirical claim about the world — "this metric separates AI-written code" was one, and it was retracted when a controlled comparison failed to support it. The two kinds of claim are held to different bars on purpose.
+
+**Tuning the standard against outcomes.** ISO defines maintainability as the *effort to modify*, and an outcome study — score repositories at a past commit, measure the following year's fix-churn, rework and change breadth, check the correlation on held-out repositories — would show whether the rubric's emphasis matches where effort is actually spent. That is worth running not to legitimize the standard but to **tune** it: if observed change effort loads on coupling twice as hard as the weights do, the weights should move. It has not been run yet.
 
 ### How the scale was calibrated (0.5.0)
 

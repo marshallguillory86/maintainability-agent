@@ -167,11 +167,11 @@ def build_report(
         "divergent_idioms": idioms,
         "risk_findings": [asdict(finding) for finding in risks[:100]],
         # Churn, hotspots (churn x cognitive complexity) and change
-        # coupling from the repo's own log. Findings-only, deliberately
-        # unscored: they have not been validated against an outcome, and
-        # unvalidated signals do not move grades here any more. None —
-        # not empty — when the clone is shallow, because "no history" and
-        # "no changes" are opposite findings.
+        # coupling from the repo's own log. Feeds the churn_hotspots,
+        # change_coupling and knowledge_concentration aspects of the
+        # scoring rubric. None — not empty — when the clone is shallow:
+        # "no history" and "no changes" are opposite findings, and the
+        # rubric renormalizes those aspects away rather than guessing.
         "history": history_section(root, file_metrics, function_metrics),
         "external_findings": external_findings or [],
     }

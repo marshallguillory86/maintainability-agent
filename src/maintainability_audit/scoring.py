@@ -285,11 +285,11 @@ UNTESTED_TESTABILITY_CAP = 2.0
 def _banded(value: float, bands: list[tuple[float, float]], floor: float) -> float:
     """Score a rate against ascending (ceiling, score) bands.
 
-    The bands are heuristics and every one is visible in this file —
-    that is their entire claim to honesty. They are informed by the
-    corpus and cohort measurements where those exist, and they are not
-    validated against outcomes; docs/standard.md says so in as many
-    words.
+    The bands are the standard's judgment calls, written where anyone
+    can read or dispute them, informed by the corpus and cohort
+    measurements where those exist, and applied identically to every
+    repository — which is what makes them a standard rather than an
+    opinion.
     """
     for ceiling, score in bands:
         if value <= ceiling:

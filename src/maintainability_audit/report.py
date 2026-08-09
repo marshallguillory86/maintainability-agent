@@ -10,11 +10,12 @@ orchestration to live.
 from __future__ import annotations
 
 from dataclasses import asdict
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from ._metrics_types import FileMetric, FunctionMetric
 from .deadcode import dead_declarations
+from .declarations import DECLARATION_SUFFIXES
 from .duplication import duplicate_blocks, risk_findings
 from .git_tools import run_git
 from .history import history_section
@@ -62,7 +63,14 @@ def report_summary(
         "production_file_failures": _count_status(prod_files, "fail"),
         "production_function_warnings": _count_status(prod_funcs, "warn"),
         "production_function_failures": _count_status(prod_funcs, "fail"),
-        "test_file_count": len(test_files),
+        # Source files only. A Markdown file under tests/ is
+        # documentation, and an audit found that any path-matching file —
+        # including an empty one — bought testability points. Suffix
+        # filtering closes the empty-artifact hole; the scorer separately
+        # requires the files to contain declarations.
+        "test_file_count": sum(
+            1 for metric in test_files if PurePosixPath(metric.path).suffix in DECLARATION_SUFFIXES
+        ),
         "test_function_warnings": _count_status(test_funcs, "warn"),
         "test_function_failures": _count_status(test_funcs, "fail"),
         "duplicate_blocks": duplicate_count,
@@ -149,17 +157,15 @@ def build_report(
         "largest_files": [asdict(metric) for metric in largest_files],
         "function_hotspots": _function_hotspots(function_metrics),
         "duplicate_blocks": dupes[:25],
-        # Reported as findings, deliberately not yet scored: most repos
-        # sit at zero, so a median-based reference would be unstable.
-        # NOT evidence about authorship — the 0.6.0 claim that this rate
-        # separates AI-written from human code is retracted (matched
-        # control, p = 0.546; docs/standard.md "Does this detect
-        # AI-written code?"). Signals earn a score by holding up, not by
-        # being new.
+        # Feeds the near_duplication rubric aspect (rate over production
+        # declarations, banded — not median-normalized, since most repos
+        # sit at zero). NOT evidence about authorship: the 0.6.0 claim
+        # that this rate separates AI-written from human code is
+        # retracted (matched control, p = 0.546; docs/standard.md "Does
+        # this detect AI-written code?").
         "near_duplicates": near_duplicates[:25],
-        # Also findings-only, and also not evidence about authorship
-        # (p = 0.266 against the matched control). Earns its place in
-        # the report as hygiene.
+        # Feeds the dead_code rubric aspect. Also not evidence about
+        # authorship (p = 0.266 against the matched control).
         "dead_code": dead[:25],
         # Quiet by design: zero findings across the whole reference
         # corpus, one on a repo genuinely running two HTTP clients. High

@@ -150,12 +150,48 @@ def test_a_plus_is_withheld_when_any_single_dimension_is_dirty() -> None:
 
 def test_a_perfect_repo_can_still_reach_a_plus() -> None:
     """The gate must be strict, not unreachable — otherwise it stops
-    being a target and starts being noise."""
-    result = score(500, 1000)
+    being a target and starts being noise.
+
+    "Perfect" now includes *evidence*: tests, docs, and a readable
+    history with nothing wrong in it. A structurally-spotless repo with
+    unknowns is capped at B — an audit showed a shallow clone could
+    otherwise outscore the same repository with its history visible."""
+    full = summary(500, 1000)
+    full.update({
+        "test_file_count": 100,
+        "production_declarations_scanned": 650,
+        "dead_code_count": 0,
+        "near_duplicate_count": 0,
+        "idiom_concern_count": 0,
+        "has_readme": True,
+        "has_changelog": True,
+        "has_docs_dir": True,
+    })
+    history = {
+        "window": "12 months ago",
+        "files_changed": 50,
+        "hotspots": [],
+        "change_coupling": [],
+        "qualifying_hotspots": 0,
+        "code_coupling_pairs": 0,
+        "multi_commit_files": 10,
+        "single_author_files": 1,
+    }
+
+    result = score_report({"summary": full, "history": history})
 
     assert result["overall"] == 5.0
     assert result["grade"] == "A+"
     assert result["grade_blockers"] == []
+
+
+def test_unknown_evidence_blocks_the_top_grades() -> None:
+    """A structurally-perfect repo with unmeasured aspects cannot take
+    A+ on the evidence that happened to be available."""
+    result = score(500, 1000)
+
+    assert result["grade"] == "B"
+    assert any("full evidence" in blocker for blocker in result["grade_blockers"])
 
 
 def test_a_single_hard_gate_failure_blocks_the_top_grades() -> None:

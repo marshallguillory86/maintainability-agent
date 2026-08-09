@@ -68,6 +68,30 @@ def clone(repo: dict[str, str], cache_dir: Path) -> Path | None:
     return target
 
 
+# Summary keys the rubric aspects read. Stored per repo so the anchor
+# can be derived through the same rollup users receive, not through a
+# structural-only approximation. History-based aspects are absent on
+# purpose: the corpus is pinned via shallow fetches, so history is
+# genuinely unmeasurable here and those aspects renormalize away — in
+# the derivation exactly as they would in a shallow-clone report.
+EVIDENCE_KEYS = (
+    "test_file_count",
+    "production_declarations_scanned",
+    "production_files_scanned",
+    "production_file_warnings",
+    "production_file_failures",
+    "production_function_warnings",
+    "production_function_failures",
+    "production_hard_gate_failures",
+    "dead_code_count",
+    "near_duplicate_count",
+    "idiom_concern_count",
+    "has_readme",
+    "has_changelog",
+    "has_docs_dir",
+)
+
+
 def measure(path: Path, name: str) -> dict:
     report = build_report(path, load_config(None))
     summary = report["summary"]
@@ -76,6 +100,7 @@ def measure(path: Path, name: str) -> dict:
         "files": summary["files_scanned"],
         "declarations": summary["declarations_scanned"],
         "dimensions": dimension_pressures(summary),
+        "evidence": {key: summary[key] for key in EVIDENCE_KEYS},
     }
 
 

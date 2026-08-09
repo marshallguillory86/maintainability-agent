@@ -79,21 +79,38 @@ def normalized_pressures(
     return values
 
 
-def _structural_overall(entry: dict[str, Any], references: dict[str, float], c: float) -> float:
-    """One repo's rubric rollup, from the aspects the corpus can supply.
+def _corpus_overall(entry: dict[str, Any], references: dict[str, float], c: float) -> float:
+    """One repo's rubric rollup, from every aspect the corpus can supply.
 
-    The corpus measurements carry only the five structural dimensions —
-    no test counts, no history, no finding rates — so the rubric aspects
-    are None and their weights renormalize away, exactly as they do for
-    a live report missing the same evidence. This is deliberately the
-    *same* rollup ``scoring.score_report`` uses, imported from
-    ``_formula``, so the anchor and the score cannot drift apart.
+    Structural aspects come from the stored dimension pressures; the
+    summary-derived rubric aspects (test presence, dead code,
+    near-duplication, idioms, documentation) come from the stored
+    ``evidence`` block, priced by ``scoring.evidence_aspect_scores`` —
+    the *same function* a live report goes through, so the anchor cannot
+    drift from the shipped score. History aspects stay None: the corpus
+    is pinned via shallow fetches, so its history is genuinely
+    unmeasurable, and those weights renormalize away here exactly as
+    they do for any shallow clone. Entries measured before evidence was
+    recorded fall back to structural-only.
     """
+    from .scoring import evidence_aspect_scores, production_pressures  # local: avoids import cycle at module load
+
     scores: dict[str, float | None] = {
         aspect: 5 * c / (entry["dimensions"][dimension] / references[dimension] + c)
         for aspect, dimension in CALIBRATED_ASPECTS.items()
         if references[dimension] > 0
     }
+    evidence = entry.get("evidence")
+    if evidence is not None:
+        summary = {
+            **evidence,
+            "files_scanned": entry["files"],
+            "declarations_scanned": entry["declarations"],
+        }
+        scores.update(evidence_aspect_scores(summary))
+        if references["declarations"] > 0:
+            production = production_pressures(summary)["declarations"] / references["declarations"]
+            scores["declaration_size"] = 5 * c / (production + c)
     overall, _ = overall_from_aspects(scores)
     return overall if overall is not None else 0.0
 
@@ -128,7 +145,7 @@ def derive_curve_constant(
         raise ValueError("target_score must be between 0 and 5 exclusive")
 
     def median_overall(c: float) -> float:
-        return median(_structural_overall(entry, references, c) for entry in measurements)
+        return median(_corpus_overall(entry, references, c) for entry in measurements)
 
     low, high = 1e-3, 1e3
     for _ in range(200):

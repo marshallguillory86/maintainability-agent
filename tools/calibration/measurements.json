@@ -1,5 +1,5 @@
 {
- "measured_on": "2026-08-08",
+ "measured_on": "2026-08-09",
  "corpus_size": 40,
  "measurements": [
   {
@@ -12,6 +12,22 @@
     "duplication": 5.522083805209513,
     "risk": 0.0056625141562853904,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 636,
+    "production_declarations_scanned": 1199,
+    "production_files_scanned": 247,
+    "production_file_warnings": 15,
+    "production_file_failures": 5,
+    "production_function_warnings": 55,
+    "production_function_failures": 29,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -24,6 +40,22 @@
     "duplication": 5.174002918287938,
     "risk": 0.17424610894941633,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 3307,
+    "production_declarations_scanned": 19985,
+    "production_files_scanned": 4888,
+    "production_file_warnings": 209,
+    "production_file_failures": 104,
+    "production_function_warnings": 964,
+    "production_function_failures": 1018,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 4,
+    "near_duplicate_count": 127,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
    }
   },
   {
@@ -36,6 +68,22 @@
     "duplication": 8.843283582089553,
     "risk": 0.14925373134328357,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 116,
+    "production_declarations_scanned": 523,
+    "production_files_scanned": 150,
+    "production_file_warnings": 6,
+    "production_file_failures": 4,
+    "production_function_warnings": 22,
+    "production_function_failures": 54,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 3,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
    }
   },
   {
@@ -48,6 +96,22 @@
     "duplication": 1.8839957035445758,
     "risk": 0.25993555316863587,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1206,
+    "production_declarations_scanned": 6031,
+    "production_files_scanned": 647,
+    "production_file_warnings": 62,
+    "production_file_failures": 40,
+    "production_function_warnings": 319,
+    "production_function_failures": 395,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 35,
+    "near_duplicate_count": 15,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
    }
   },
   {
@@ -60,6 +124,22 @@
     "duplication": 1.796329057938965,
     "risk": 0.012162759840778416,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 670,
+    "production_declarations_scanned": 4442,
+    "production_files_scanned": 3768,
+    "production_file_warnings": 63,
+    "production_file_failures": 7,
+    "production_function_warnings": 252,
+    "production_function_failures": 338,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 17,
+    "idiom_concern_count": 1,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
    }
   },
   {
@@ -72,6 +152,22 @@
     "duplication": 5.867532467532468,
     "risk": 0.015584415584415584,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 125,
+    "production_declarations_scanned": 364,
+    "production_files_scanned": 259,
+    "production_file_warnings": 14,
+    "production_file_failures": 5,
+    "production_function_warnings": 25,
+    "production_function_failures": 24,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 2,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
    }
   },
   {
@@ -84,6 +180,22 @@
     "duplication": 0.6454545454545455,
     "risk": 0.12727272727272726,
     "gates": 0.05
+   },
+   "evidence": {
+    "test_file_count": 50,
+    "production_declarations_scanned": 185,
+    "production_files_scanned": 60,
+    "production_file_warnings": 4,
+    "production_file_failures": 2,
+    "production_function_warnings": 6,
+    "production_function_failures": 4,
+    "production_hard_gate_failures": 1,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": false,
+    "has_changelog": true,
+    "has_docs_dir": true
    }
   },
   {
@@ -96,6 +208,22 @@
     "duplication": 1.2203114860480209,
     "risk": 0.018170019467878003,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1978,
+    "production_declarations_scanned": 10774,
+    "production_files_scanned": 1078,
+    "production_file_warnings": 93,
+    "production_file_failures": 28,
+    "production_function_warnings": 365,
+    "production_function_failures": 297,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 5,
+    "near_duplicate_count": 21,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -108,6 +236,22 @@
     "duplication": 13.567586206896552,
     "risk": 0.33793103448275863,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 735,
+    "production_declarations_scanned": 4466,
+    "production_files_scanned": 710,
+    "production_file_warnings": 77,
+    "production_file_failures": 27,
+    "production_function_warnings": 338,
+    "production_function_failures": 304,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 4,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
    }
   },
   {
@@ -120,6 +264,22 @@
     "duplication": 5.267935578330893,
     "risk": 0.19472913616398244,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 133,
+    "production_declarations_scanned": 3925,
+    "production_files_scanned": 550,
+    "production_file_warnings": 43,
+    "production_file_failures": 39,
+    "production_function_warnings": 240,
+    "production_function_failures": 296,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 2,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
    }
   },
   {
@@ -132,6 +292,22 @@
     "duplication": 2.267515923566879,
     "risk": 0.18471337579617833,
     "gates": 0.05
+   },
+   "evidence": {
+    "test_file_count": 95,
+    "production_declarations_scanned": 36,
+    "production_files_scanned": 62,
+    "production_file_warnings": 2,
+    "production_file_failures": 2,
+    "production_function_warnings": 1,
+    "production_function_failures": 1,
+    "production_hard_gate_failures": 1,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": false,
+    "has_changelog": false,
+    "has_docs_dir": false
    }
   },
   {
@@ -144,6 +320,22 @@
     "duplication": 1.6118351532229658,
     "risk": 0.06903839380063402,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 610,
+    "production_declarations_scanned": 1544,
+    "production_files_scanned": 2202,
+    "production_file_warnings": 129,
+    "production_file_failures": 18,
+    "production_function_warnings": 44,
+    "production_function_failures": 62,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 6,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -156,6 +348,22 @@
     "duplication": 1.0990990990990992,
     "risk": 0.0,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 57,
+    "production_declarations_scanned": 484,
+    "production_files_scanned": 53,
+    "production_file_warnings": 4,
+    "production_file_failures": 3,
+    "production_function_warnings": 24,
+    "production_function_failures": 15,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -168,6 +376,22 @@
     "duplication": 3.4108402287999113,
     "risk": 0.06303104348308991,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 335,
+    "production_declarations_scanned": 2209,
+    "production_files_scanned": 17672,
+    "production_file_warnings": 624,
+    "production_file_failures": 71,
+    "production_function_warnings": 144,
+    "production_function_failures": 159,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 5,
+    "idiom_concern_count": 2,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
    }
   },
   {
@@ -180,6 +404,22 @@
     "duplication": 5.247191011235955,
     "risk": 0.0,
     "gates": 0.05
+   },
+   "evidence": {
+    "test_file_count": 33,
+    "production_declarations_scanned": 150,
+    "production_files_scanned": 56,
+    "production_file_warnings": 4,
+    "production_file_failures": 3,
+    "production_function_warnings": 9,
+    "production_function_failures": 12,
+    "production_hard_gate_failures": 1,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": false,
+    "has_changelog": false,
+    "has_docs_dir": false
    }
   },
   {
@@ -192,6 +432,22 @@
     "duplication": 0.043478260869565216,
     "risk": 0.07608695652173914,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 18,
+    "production_declarations_scanned": 585,
+    "production_files_scanned": 74,
+    "production_file_warnings": 4,
+    "production_file_failures": 1,
+    "production_function_warnings": 18,
+    "production_function_failures": 13,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -204,6 +460,22 @@
     "duplication": 6.5,
     "risk": 0.08228980322003578,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 198,
+    "production_declarations_scanned": 4528,
+    "production_files_scanned": 920,
+    "production_file_warnings": 43,
+    "production_file_failures": 27,
+    "production_function_warnings": 270,
+    "production_function_failures": 308,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 77,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
    }
   },
   {
@@ -216,6 +488,22 @@
     "duplication": 15.306569343065693,
     "risk": 0.05474452554744526,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 124,
+    "production_declarations_scanned": 145,
+    "production_files_scanned": 148,
+    "production_file_warnings": 3,
+    "production_file_failures": 3,
+    "production_function_warnings": 9,
+    "production_function_failures": 24,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
    }
   },
   {
@@ -228,6 +516,22 @@
     "duplication": 10.203834510595359,
     "risk": 0.1311806256306761,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 302,
+    "production_declarations_scanned": 9386,
+    "production_files_scanned": 689,
+    "production_file_warnings": 84,
+    "production_file_failures": 59,
+    "production_function_warnings": 472,
+    "production_function_failures": 466,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 7,
+    "near_duplicate_count": 128,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
    }
   },
   {
@@ -240,6 +544,22 @@
     "duplication": 4.233199598796389,
     "risk": 1.0677031093279838,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 765,
+    "production_declarations_scanned": 27245,
+    "production_files_scanned": 1224,
+    "production_file_warnings": 71,
+    "production_file_failures": 77,
+    "production_function_warnings": 432,
+    "production_function_failures": 343,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 19,
+    "near_duplicate_count": 102,
+    "idiom_concern_count": 1,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -252,6 +572,22 @@
     "duplication": 4.871794871794871,
     "risk": 0.0,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 10,
+    "production_declarations_scanned": 573,
+    "production_files_scanned": 29,
+    "production_file_warnings": 1,
+    "production_file_failures": 3,
+    "production_function_warnings": 13,
+    "production_function_failures": 26,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
    }
   },
   {
@@ -264,6 +600,22 @@
     "duplication": 0.0625,
     "risk": 0.17857142857142858,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 4,
+    "production_declarations_scanned": 2164,
+    "production_files_scanned": 108,
+    "production_file_warnings": 15,
+    "production_file_failures": 4,
+    "production_function_warnings": 49,
+    "production_function_failures": 14,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -276,6 +628,22 @@
     "duplication": 3.7288360551676383,
     "risk": 0.01315713543770558,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 823,
+    "production_declarations_scanned": 6838,
+    "production_files_scanned": 16499,
+    "production_file_warnings": 85,
+    "production_file_failures": 32,
+    "production_function_warnings": 388,
+    "production_function_failures": 507,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 96,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
    }
   },
   {
@@ -288,6 +656,22 @@
     "duplication": 12.899539877300613,
     "risk": 0.1357361963190184,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 304,
+    "production_declarations_scanned": 3306,
+    "production_files_scanned": 1000,
+    "production_file_warnings": 86,
+    "production_file_failures": 33,
+    "production_function_warnings": 255,
+    "production_function_failures": 349,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 6,
+    "near_duplicate_count": 36,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
    }
   },
   {
@@ -300,6 +684,22 @@
     "duplication": 7.858158429248476,
     "risk": 0.14319566689234936,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 751,
+    "production_declarations_scanned": 14901,
+    "production_files_scanned": 2203,
+    "production_file_warnings": 251,
+    "production_file_failures": 76,
+    "production_function_warnings": 1404,
+    "production_function_failures": 1097,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 28,
+    "near_duplicate_count": 263,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -312,6 +712,22 @@
     "duplication": 7.70977397048199,
     "risk": 0.04443182991020745,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 7968,
+    "production_declarations_scanned": 44136,
+    "production_files_scanned": 11394,
+    "production_file_warnings": 785,
+    "production_file_failures": 277,
+    "production_function_warnings": 2907,
+    "production_function_failures": 3320,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 2,
+    "near_duplicate_count": 465,
+    "idiom_concern_count": 2,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
    }
   },
   {
@@ -324,6 +740,22 @@
     "duplication": 2.648414985590778,
     "risk": 0.001729106628242075,
     "gates": 0.05
+   },
+   "evidence": {
+    "test_file_count": 415,
+    "production_declarations_scanned": 3866,
+    "production_files_scanned": 1320,
+    "production_file_warnings": 16,
+    "production_file_failures": 4,
+    "production_function_warnings": 74,
+    "production_function_failures": 53,
+    "production_hard_gate_failures": 1,
+    "dead_code_count": 0,
+    "near_duplicate_count": 26,
+    "idiom_concern_count": 2,
+    "has_readme": false,
+    "has_changelog": false,
+    "has_docs_dir": false
    }
   },
   {
@@ -336,6 +768,22 @@
     "duplication": 19.45562671546203,
     "risk": 0.7012808783165599,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1003,
+    "production_declarations_scanned": 9264,
+    "production_files_scanned": 1148,
+    "production_file_warnings": 105,
+    "production_file_failures": 68,
+    "production_function_warnings": 413,
+    "production_function_failures": 480,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 51,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -348,6 +796,22 @@
     "duplication": 1.4242424242424243,
     "risk": 0.007575757575757576,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 29,
+    "production_declarations_scanned": 533,
+    "production_files_scanned": 102,
+    "production_file_warnings": 9,
+    "production_file_failures": 5,
+    "production_function_warnings": 52,
+    "production_function_failures": 48,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
    }
   },
   {
@@ -360,6 +824,22 @@
     "duplication": 2.2935222672064777,
     "risk": 0.030364372469635626,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 300,
+    "production_declarations_scanned": 2096,
+    "production_files_scanned": 194,
+    "production_file_warnings": 18,
+    "production_file_failures": 1,
+    "production_function_warnings": 50,
+    "production_function_failures": 18,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 2,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -372,6 +852,22 @@
     "duplication": 4.095685177786656,
     "risk": 0.15221733919296843,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1535,
+    "production_declarations_scanned": 9389,
+    "production_files_scanned": 3461,
+    "production_file_warnings": 130,
+    "production_file_failures": 24,
+    "production_function_warnings": 581,
+    "production_function_failures": 735,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 14,
+    "near_duplicate_count": 72,
+    "idiom_concern_count": 1,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -384,6 +880,22 @@
     "duplication": 1.3200297471492315,
     "risk": 0.05676747645017353,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 3264,
+    "production_declarations_scanned": 2548,
+    "production_files_scanned": 584,
+    "production_file_warnings": 36,
+    "production_file_failures": 23,
+    "production_function_warnings": 158,
+    "production_function_failures": 209,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 5,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
    }
   },
   {
@@ -396,6 +908,22 @@
     "duplication": 0.9546925566343042,
     "risk": 0.03559870550161812,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 0,
+    "production_declarations_scanned": 1956,
+    "production_files_scanned": 309,
+    "production_file_warnings": 8,
+    "production_file_failures": 4,
+    "production_function_warnings": 69,
+    "production_function_failures": 76,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 6,
+    "near_duplicate_count": 4,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -408,6 +936,22 @@
     "duplication": 15.59228650137741,
     "risk": 0.046831955922865015,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 123,
+    "production_declarations_scanned": 1013,
+    "production_files_scanned": 239,
+    "production_file_warnings": 12,
+    "production_file_failures": 9,
+    "production_function_warnings": 92,
+    "production_function_failures": 169,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 14,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
    }
   },
   {
@@ -420,6 +964,22 @@
     "duplication": 25.567262002293955,
     "risk": 0.20383417991151892,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1593,
+    "production_declarations_scanned": 51019,
+    "production_files_scanned": 4507,
+    "production_file_warnings": 583,
+    "production_file_failures": 463,
+    "production_function_warnings": 3414,
+    "production_function_failures": 2445,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 39,
+    "near_duplicate_count": 4393,
+    "idiom_concern_count": 1,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -432,6 +992,22 @@
     "duplication": 3.741206030150754,
     "risk": 0.15577889447236182,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 15,
+    "production_declarations_scanned": 4430,
+    "production_files_scanned": 383,
+    "production_file_warnings": 38,
+    "production_file_failures": 32,
+    "production_function_warnings": 310,
+    "production_function_failures": 411,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 35,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
    }
   },
   {
@@ -444,6 +1020,22 @@
     "duplication": 1.3060388945752304,
     "risk": 0.028147389969293755,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 392,
+    "production_declarations_scanned": 2607,
+    "production_files_scanned": 1546,
+    "production_file_warnings": 36,
+    "production_file_failures": 21,
+    "production_function_warnings": 155,
+    "production_function_failures": 234,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 3,
+    "near_duplicate_count": 7,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -456,6 +1048,22 @@
     "duplication": 1.0205796873772681,
     "risk": 0.015159846045086797,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 10419,
+    "production_declarations_scanned": 8071,
+    "production_files_scanned": 1509,
+    "production_file_warnings": 97,
+    "production_file_failures": 62,
+    "production_function_warnings": 434,
+    "production_function_failures": 800,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 5,
+    "near_duplicate_count": 22,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
    }
   },
   {
@@ -468,6 +1076,22 @@
     "duplication": 0.5845147219193021,
     "risk": 0.1134133042529989,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 32,
+    "production_declarations_scanned": 5185,
+    "production_files_scanned": 885,
+    "production_file_warnings": 43,
+    "production_file_failures": 20,
+    "production_function_warnings": 369,
+    "production_function_failures": 365,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 6,
+    "near_duplicate_count": 3,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
    }
   },
   {
@@ -480,6 +1104,22 @@
     "duplication": 0.4357394366197183,
     "risk": 0.18045774647887325,
     "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 56,
+    "production_declarations_scanned": 8006,
+    "production_files_scanned": 1079,
+    "production_file_warnings": 85,
+    "production_file_failures": 40,
+    "production_function_warnings": 475,
+    "production_function_failures": 434,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 18,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 1,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
    }
   }
  ]

@@ -52,17 +52,17 @@ This repo eats its own dogfood — the tool is run against this codebase as part
 
 | Metric | Value |
 |---|---:|
-| Overall score | **4.8 / 5 (B)** |
-| Files scanned | 81 |
+| Overall score | **4.7 / 5 (B)** |
+| Files scanned | 82 |
 | File warnings | 8 |
 | File failures | 0 |
-| Function warnings | 5 |
+| Function warnings | 7 |
 | Function failures | 0 |
 | Duplicate blocks | 0 |
 | Risk findings | 0 |
 | Hard gate failures | 0 |
 
-Yes, a **B** — banded A+ on the number, demoted because 8 file warnings and 5 function warnings exceed the A-grade ceilings, against thresholds this repo deliberately sets stricter than the shipped defaults (a 250-line file warning versus the default 400). An earlier revision of this table advertised 5.0/A+ after the codebase had drifted to a B; a hostile audit caught the stale claim, which is precisely the failure mode this tool exists to catch. The table now states what the current run states, and every threshold gate — file, function, duplication — is opted **on** for this repo's own CI, so drifting below the bar fails the build instead of the README.
+Yes, a **B** — demoted from the A band because warning rates exceed the A-grade ceilings, against thresholds this repo deliberately sets stricter than the shipped defaults (a 250-line file warning versus the default 400). An earlier revision of this table advertised 5.0/A+ after the codebase had drifted to a B; a hostile audit caught the stale claim, which is precisely the failure mode this tool exists to catch. The table now states what the current run states, and every threshold gate — file, function, duplication — is opted **on** for this repo's own CI, so drifting below the bar fails the build instead of the README.
 
 The grade is **gated, not averaged**: A+ requires every dimension clean, and since the rubric rework a repository with production code and zero test files cannot receive an A-grade at all.
 

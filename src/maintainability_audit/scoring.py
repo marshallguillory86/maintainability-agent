@@ -34,7 +34,6 @@ name the specific thing dragging the score, not a letter.
 """
 from __future__ import annotations
 
-from pathlib import PurePosixPath
 from typing import Any
 
 from ._calibration import (
@@ -52,7 +51,6 @@ from ._formula import (
     UNSCORED,
     overall_from_aspects,
 )
-from .declarations import DECLARATION_SUFFIXES
 
 __all__ = ["CATEGORIES", "score_report", "grade_from_score", "clamp_score"]
 
@@ -175,6 +173,63 @@ def grade_for(score: float, readings: dict[str, float]) -> tuple[str, list[str]]
     return "B", blockers
 
 
+def _is_untested(summary: dict[str, Any]) -> bool:
+    """Production code with no test evidence at all.
+
+    Integer evidence, not the aspect's float: no test files, or test
+    files holding zero declarations (an empty test-shaped artifact),
+    both count. ``.get``, not ``[]`` — reports written before 0.4.0
+    carry no ``test_file_count``, and an absent count is "unknown", not
+    "zero".
+    """
+    test_count = summary.get("test_file_count")
+    production = summary.get("production_declarations_scanned", 0)
+    test_declarations = summary.get("declarations_scanned", 0) - production
+    return test_count is not None and production > 0 and (test_count == 0 or test_declarations == 0)
+
+
+def _rubric_overall(categories: dict[str, float | None], fallback: float) -> float:
+    """Weighted mean of the measured categories; the curve fallback only
+    when nothing at all was measurable."""
+    known = {name: value for name, value in categories.items() if value is not None}
+    if not known:
+        return clamp_score(fallback)
+    total = sum(CATEGORY_WEIGHTS[name] for name in known)
+    return clamp_score(sum(CATEGORY_WEIGHTS[name] * value for name, value in known.items()) / total)
+
+
+def _evidence_rules(
+    grade: str, blockers: list[str], aspects: dict[str, float | None], untested: bool, history_present: bool
+) -> tuple[str, list[str]]:
+    """The two rules that keep A-grades honest about evidence.
+
+    No test evidence demotes, stated even when the rubric already landed
+    below A on its own — "why is my grade capped" deserves the answer
+    regardless of which arithmetic delivered the cap. And an unknown is
+    not clean: a shallow clone hides coupling, hotspots and ownership,
+    so unmeasured aspects withhold the top grades rather than letting
+    "nothing wrong in what could be seen" pass for "nothing is wrong
+    anywhere". (CI note: actions/checkout defaults to depth 1; use
+    fetch-depth: 0 for the full grade.)
+
+    "Couldn't look" blocks; "looked and there was nothing to measure"
+    does not — knowledge_concentration is None on a young repo whose log
+    is fully readable but where no file has three commits yet, and that
+    None carries no penalty.
+    """
+    if untested:
+        blockers = [*blockers, "no test evidence found: A-grades require it"]
+        if grade in GRADE_GATES:
+            grade = "B"
+    missing = sorted(name for name, value in aspects.items() if value is None)
+    if history_present:
+        missing = [name for name in missing if name != "knowledge_concentration"]
+    if missing and grade in GRADE_GATES:
+        blockers = [*blockers, f"unmeasured aspects ({', '.join(missing)}): A-grades require full evidence"]
+        grade = "B"
+    return grade, blockers
+
+
 def score_report(report: dict[str, Any]) -> dict[str, Any]:
     """Aspects -> categories -> overall, by the rubric in ``_formula``.
 
@@ -184,32 +239,28 @@ def score_report(report: dict[str, Any]) -> dict[str, Any]:
     ``rubric.unscored`` with the reason — absence is a statement here,
     never an omission. The calibration constant is fitted so the corpus
     median still rolls up to 4.0 through this exact pipeline.
+
+    The untested cap lands on the category BEFORE the overall is
+    computed: an audit caught the previous ordering reporting an overall
+    that was not the mean of the displayed categories, which turns the
+    published rollup formula into a lie on exactly the repos being
+    penalized.
     """
     summary = report["summary"]
     pressures = dimension_pressures(summary)
     normalized = normalize(pressures)
     aspects = aspect_scores(report, normalized)
-    overall_raw, categories = overall_from_aspects(aspects)
-    overall = clamp_score(overall_raw if overall_raw is not None else _curve(_weighted_mean(normalized)))
-    readings = _gate_readings(summary, pressures)
-    grade, blockers = grade_for(overall, readings)
-    # Production code with not one test file cannot take an A-grade,
-    # whatever its structural pressures. The top grades are published as
-    # meaning "tested"; withholding them here is what makes that sentence
-    # true rather than aspirational. Demotion lands on B — the same
-    # landing spot as a failed grade gate — and names its reason.
-    # .get, not [] — reports written before 0.4.0 carry no
-    # test_file_count, and an absent count is "unknown", not "zero".
-    untested = summary.get("test_file_count") == 0 and summary.get("production_declarations_scanned", 0) > 0
-    if untested:
-        # Stated even when the rubric already landed below A on its own:
-        # "why is my grade capped" deserves this answer regardless of
-        # which arithmetic delivered the cap.
-        blockers = [*blockers, "no test files found: A-grades require test evidence"]
-        if grade in GRADE_GATES:
-            grade = "B"
-        if categories.get("testability") is not None:
-            categories["testability"] = min(categories["testability"], UNTESTED_TESTABILITY_CAP)
+    _, categories = overall_from_aspects(aspects)
+
+    untested = _is_untested(summary)
+    if untested and categories.get("testability") is not None:
+        categories["testability"] = min(categories["testability"], UNTESTED_TESTABILITY_CAP)
+
+    overall = _rubric_overall(categories, _curve(_weighted_mean(normalized)))
+    grade, blockers = grade_for(overall, _gate_readings(summary, pressures))
+    grade, blockers = _evidence_rules(
+        grade, blockers, aspects, untested, report.get("history") is not None
+    )
     worst = sorted(normalized.items(), key=lambda item: -item[1])
     return {
         "standard": "ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based",
@@ -309,22 +360,17 @@ def _history_rate_aspect(history: dict[str, Any] | None, count_of: str) -> float
     changed = history.get("files_changed", 0)
     if changed == 0:
         return 5.0  # had history to read; nothing changed in the window
-    if count_of == "hotspots":
-        count = sum(
-            1 for item in history["hotspots"] if item["commits"] >= 5 and item["complexity"] >= 50
-        )
-    else:
-        # Code-to-code pairs only. README co-changing with CHANGELOG, or
-        # config.py with the docs that describe it, is discipline — the
-        # wrong-boundary signal this aspect scores lives between source
-        # files. The report still lists every pair; only the score
-        # filters. (Hotspots need no filter: a doc file has cognitive
-        # complexity 0 and never qualifies.)
-        count = sum(
-            1
-            for item in history["change_coupling"]
-            if all(PurePosixPath(path).suffix in DECLARATION_SUFFIXES for path in item["files"])
-        )
+    # Full counts computed by history_section before its display lists
+    # are truncated. Reading len() of a capped list here made the rate
+    # fall as repositories grew — the forbidden size-bias class — so an
+    # old report that carries only the capped lists reads as unknown
+    # rather than as a bogus rate. (code_coupling_pairs counts
+    # code-to-code pairs only: README co-changing with CHANGELOG is
+    # discipline, not a wrong boundary.)
+    key = "qualifying_hotspots" if count_of == "hotspots" else "code_coupling_pairs"
+    count = history.get(key)
+    if count is None:
+        return None
     return _banded(count / changed, [(0.0, 5.0), (0.02, 4.5), (0.05, 4.0), (0.10, 3.0), (0.20, 2.0)], 1.0)
 
 
@@ -345,9 +391,13 @@ def _test_presence_aspect(summary: dict[str, Any]) -> float | None:
     if total == 0:
         return None
     share = (total - summary.get("production_declarations_scanned", 0)) / total
-    # Tests exist, so the floor is above "none" even if they hold no
-    # parsed declarations (table-driven suites, fixtures-as-data).
-    return max(1.5, _banded(share, [(0.05, 1.5), (0.10, 2.5), (0.20, 3.5), (0.30, 4.5)], 5.0))
+    # Test files with zero declarations in them are indistinguishable
+    # from empty files, and an audit demonstrated the previous 1.5 floor
+    # here priced exactly that: one empty test-shaped artifact bought an
+    # A. No test declarations scores the same as no tests.
+    if share == 0:
+        return 0.0
+    return _banded(share, [(0.05, 1.5), (0.10, 2.5), (0.20, 3.5), (0.30, 4.5)], 5.0)
 
 
 def _finding_rate_aspect(
@@ -384,6 +434,34 @@ def _documentation_aspect(summary: dict[str, Any]) -> float | None:
     return [3.0, 4.0, 5.0][extras]
 
 
+def evidence_aspect_scores(summary: dict[str, Any]) -> dict[str, float | None]:
+    """The five rubric aspects a summary alone can answer.
+
+    Public and separate from :func:`aspect_scores` because the
+    calibration derivation (``_derive``) must price the corpus through
+    the *identical* code path users' repositories get — a re-statement
+    of these bands in the derivation would drift, and the anchor would
+    quietly stop describing the shipped score.
+    """
+    concerns = summary.get("idiom_concern_count")
+    return {
+        "test_presence": _test_presence_aspect(summary),
+        "dead_code": _finding_rate_aspect(
+            summary, "dead_code_count", [(0.0, 5.0), (0.001, 4.5), (0.005, 3.5), (0.015, 2.5)], 1.5
+        ),
+        "near_duplication": _finding_rate_aspect(
+            summary,
+            "near_duplicate_count",
+            [(0.0, 5.0), (0.005, 4.5), (0.01, 4.0), (0.02, 3.0), (0.05, 2.0)],
+            1.0,
+        ),
+        "idiom_consistency": (
+            None if concerns is None else _banded(concerns, [(0, 5.0), (1, 3.5), (2, 2.5)], 1.5)
+        ),
+        "documentation": _documentation_aspect(summary),
+    }
+
+
 def aspect_scores(report: dict[str, Any], normalized: dict[str, float]) -> dict[str, float | None]:
     """Every aspect the rubric reads, scored 0-5 or None for unknown.
 
@@ -404,22 +482,8 @@ def aspect_scores(report: dict[str, Any], normalized: dict[str, float]) -> dict[
     # code under test — an oversized test function must not drag either
     # (pinned by test_analyzability_not_penalized_by_test_function_size).
     scores["declaration_size"] = _curve(normalize_production(summary)["declarations"])
-    scores["test_presence"] = _test_presence_aspect(summary)
-    scores["dead_code"] = _finding_rate_aspect(
-        summary, "dead_code_count", [(0.0, 5.0), (0.001, 4.5), (0.005, 3.5), (0.015, 2.5)], 1.5
-    )
-    scores["near_duplication"] = _finding_rate_aspect(
-        summary,
-        "near_duplicate_count",
-        [(0.0, 5.0), (0.005, 4.5), (0.01, 4.0), (0.02, 3.0), (0.05, 2.0)],
-        1.0,
-    )
-    concerns = summary.get("idiom_concern_count")
-    scores["idiom_consistency"] = (
-        None if concerns is None else _banded(concerns, [(0, 5.0), (1, 3.5), (2, 2.5)], 1.5)
-    )
+    scores.update(evidence_aspect_scores(summary))
     scores["churn_hotspots"] = _history_rate_aspect(history, "hotspots")
     scores["change_coupling"] = _history_rate_aspect(history, "coupling")
     scores["knowledge_concentration"] = _ownership_aspect(history)
-    scores["documentation"] = _documentation_aspect(summary)
     return scores

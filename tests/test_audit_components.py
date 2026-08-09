@@ -12,6 +12,7 @@ moved to ``test_scanning.py`` and Python declaration detection to
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 from maintainability_audit.baseline import write_baseline
@@ -86,16 +87,23 @@ def test_baseline_helpers_cover_empty_missing_and_written_files(tmp_path: Path) 
 # ---------------------------------------------------------------------------
 
 def test_report_contains_iso_score(tmp_path: Path) -> None:
-    """A clean, tested, *documented* toy repo earns the top grade.
+    """A clean, tested, *documented* toy repo with history earns the top
+    grade.
 
     Every artifact here is load-bearing: drop the test file and the
     grade caps at B; drop the changelog and docs and the documentation
-    aspect scores 3.0, which costs the A+."""
+    aspect scores 3.0, which costs the A+; drop the git history and the
+    unmeasured-evidence rule withholds the A-grades."""
     write(tmp_path / "README.md", "# Test\n")
     write(tmp_path / "CHANGELOG.md", "## 0.1.0\n- start\n")
     write(tmp_path / "docs" / "index.md", "# Docs\n")
     write(tmp_path / "app.py", "def ok():\n    return 1\n")
     write(tmp_path / "test_app.py", "from app import ok\n\ndef test_ok():\n    assert ok() == 1\n")
+    env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t", "PATH": "/usr/bin:/bin", "HOME": str(tmp_path)}
+    for command in (["git", "init", "--quiet"], ["git", "add", "-A"],
+                    ["git", "commit", "--quiet", "-m", "start"]):
+        subprocess.run(command, cwd=tmp_path, check=True, capture_output=True, env=env)
 
     report = build_report(tmp_path, load_config(None))
 

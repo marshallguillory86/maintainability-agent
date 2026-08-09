@@ -149,7 +149,10 @@ def _summary(entry: dict) -> dict:
 
     Populations are carried through so the rates reconstruct exactly;
     warnings are folded into failures because only the combined pressure
-    was recorded.
+    was recorded. The stored ``evidence`` block is merged last so the
+    rubric aspects price here exactly as the derivation priced them —
+    this test exercises the same rollup users receive, which is the
+    point of the anchor.
     """
     files, decls = entry["files"], max(1, entry["declarations"])
     dims = entry["dimensions"]
@@ -170,4 +173,5 @@ def _summary(entry: dict) -> dict:
         "risk_findings": dims["risk"] * files,
         "hard_gate_failures": dims["gates"] / 0.05,
         "production_hard_gate_failures": dims["gates"] / 0.05,
+        **entry.get("evidence", {}),
     }

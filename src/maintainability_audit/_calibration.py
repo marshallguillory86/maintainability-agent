@@ -73,12 +73,18 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 #
 # Derived by ``_derive.derive_curve_constant``; regenerate with
 # ``tools/calibration/measure.py``.
-# Re-fitted when the overall became the rubric rollup (aspects ->
-# categories -> overall) rather than curve(weighted mean): c now sits
-# inside every per-aspect curve, so it is recovered by bisection against
-# the corpus median instead of in closed form. Same anchor either way:
-# the median mature repo rolls up to exactly 4.0.
-CALIBRATION_C = 2.966
+# Re-fitted twice as the overall became the rubric rollup: first with
+# structural aspects only, then again when the corpus measurements
+# began carrying the evidence block (test presence, dead code,
+# near-duplication, idioms, documentation) — an audit correctly noted
+# that an anchor derived through fewer aspects than a live report gets
+# does not describe the shipped score. c sits inside every per-aspect
+# curve, so it is recovered by bisection against the corpus median
+# rather than in closed form. History aspects stay out of the anchor:
+# the corpus is pinned via shallow fetches, so they renormalize away in
+# the derivation exactly as they do for any shallow clone. Same anchor
+# throughout: the median mature repo rolls up to exactly 4.0.
+CALIBRATION_C = 3.1994
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3

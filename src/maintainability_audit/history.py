@@ -20,10 +20,12 @@ no LLM and no extra clone required:
   drawn in the wrong place, and no static metric in this package can
   see it.
 
-**These are reported, not scored.** Adding them to the score would move
-every grade the tool has ever issued, and they have not been validated
-against an outcome yet — which is the same standard the near-duplicate
-signal was held to after it failed one.
+These feed the ``churn_hotspots``, ``change_coupling`` and
+``knowledge_concentration`` aspects of the scoring rubric. The scored
+counts are computed over the *full* result, before the display lists
+are truncated — a rate built from a capped list falls as the repository
+grows, which is the size-bias class the scoring rewrite exists to
+remove.
 
 A shallow clone has no history to read. That is reported as "unknown",
 never as zero, because a file with no recorded commits and a file that
@@ -35,9 +37,10 @@ import os
 import re
 from dataclasses import dataclass, field
 from itertools import combinations
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
+from .declarations import DECLARATION_SUFFIXES
 from .git_tools import run_git
 
 # Commits touching more than this are migrations, reformats, licence
@@ -185,7 +188,7 @@ def file_churn(root: Path, since: str = DEFAULT_SINCE, tracked: set[str] | None 
 
 
 def hotspots(
-    churn: dict[str, FileChurn], complexity: dict[str, int], limit: int = 25
+    churn: dict[str, FileChurn], complexity: dict[str, int], limit: int | None = 25
 ) -> list[dict[str, Any]]:
     """Files ranked by churn x complexity, worst first.
 
@@ -208,7 +211,7 @@ def hotspots(
             "score": measure.commits * weight,
         })
     ranked.sort(key=lambda item: (-item["score"], item["file"]))
-    return ranked[:limit]
+    return ranked if limit is None else ranked[:limit]
 
 
 def history_section(
@@ -236,11 +239,26 @@ def history_section(
     # concentration; three commits is the floor for the distinction.
     settled = [entry for entry in churn.values() if entry.commits >= 3]
     single = sum(1 for entry in settled if len(entry.authors) == 1)
+    # Scored counts come from the FULL results; only the display lists
+    # are truncated. Counting the capped list made hotspot pressure fall
+    # as repositories grew — 100 real hotspots in 1,000 changed files
+    # scored as 25/1000 — which is the size bias this scale forbids.
+    ranked = hotspots(churn, weight, limit=None)
+    pairs = change_coupling(root, since, tracked, limit=None)
+    code_pairs = sum(
+        1
+        for pair in pairs
+        if all(PurePosixPath(path).suffix in DECLARATION_SUFFIXES for path in pair["files"])
+    )
     return {
         "window": since,
         "files_changed": len(churn),
-        "hotspots": hotspots(churn, weight),
-        "change_coupling": change_coupling(root, since, tracked),
+        "hotspots": ranked[:25],
+        "change_coupling": pairs[:25],
+        "qualifying_hotspots": sum(
+            1 for item in ranked if item["commits"] >= 5 and item["complexity"] >= 50
+        ),
+        "code_coupling_pairs": code_pairs,
         "multi_commit_files": len(settled),
         "single_author_files": single,
     }
@@ -250,7 +268,7 @@ def change_coupling(
     root: Path,
     since: str = DEFAULT_SINCE,
     tracked: set[str] | None = None,
-    limit: int = 25,
+    limit: int | None = 25,
 ) -> list[dict[str, Any]]:
     """Pairs of files that keep changing together.
 
@@ -288,4 +306,4 @@ def change_coupling(
             "confidence": round(confidence, 3),
         })
     coupled.sort(key=lambda item: (-item["co_changes"], -item["confidence"], item["files"]))
-    return coupled[:limit]
+    return coupled if limit is None else coupled[:limit]

@@ -101,13 +101,15 @@ APPROVED_BLOCK = re.compile(
 # near-duplication". Including them would either fail the build on
 # rubric and config values or force junk entries into the approved list.
 #
-# The gap that leaves is closed by
-# ``test_a_near_miss_of_an_approved_summary_is_not_allowed_to_pass``:
-# percentage-bearing study claims are approved summaries, and a drifted
-# copy of one is caught by similarity rather than by pattern. What
-# remains manual is a **brand-new** percentage-only claim resembling no
-# existing summary; that relies on review. An audit correctly flagged an
-# earlier description of this guard as overstating its generality.
+# Percentage claims are therefore a review responsibility, not a build
+# one. The canonical wording for the two that exist lives in
+# studies.md so there is something to review against; nothing here
+# detects a paraphrase of them. An audit correctly flagged an earlier
+# description of this guard as overstating its generality, and a
+# similarity heuristic added to cover the gap was removed as false
+# confidence. If automatic enforcement is wanted later, the way is
+# explicit approved-quotation markers and exact normalized comparison —
+# not a threshold.
 STUDY_FIGURE = re.compile(r"\b\d+ of \d+\b|\bp = 0\.\d+\b|\bmedian of \d+(?:\.\d+)?\b")
 QUOTING_DOCS = ("docs/product-intent.md", "README.md")
 
@@ -136,9 +138,8 @@ def test_a_quoted_study_result_matches_an_approved_summary_verbatim() -> None:
     Scope, stated precisely rather than generously: this catches
     sentences containing an "N of M", a p-value, or a "median of N",
     anywhere in the prose. It does **not** catch percentage-only
-    claims; drift in those is caught by the near-miss test below
-    instead, and a brand-new one relies on review. See the note on
-    ``STUDY_FIGURE`` for why a regex cannot do it.
+    claims or paraphrases of any kind; those are review's job. See the
+    note on ``STUDY_FIGURE`` for why a pattern cannot do it.
 
     The previous guard checked whether each figure appeared *somewhere*
     in studies.md and only looked inside blockquotes. An audit showed
@@ -199,37 +200,3 @@ def test_no_markdown_table_is_split_by_prose() -> None:
             real.append(entry)
 
     assert not real, "markdown table rows orphaned from their header:\n" + "\n".join(real)
-
-
-def test_a_near_miss_of_an_approved_summary_is_not_allowed_to_pass() -> None:
-    """A sentence that is almost an approved summary must be exactly one.
-
-    This is what makes the approved list mean something for claims the
-    figure detector cannot see. Percentages are unmatchable by pattern —
-    "0.83% near-duplication" and "92% coverage gate" are the same shape
-    — so an altered percentage inside an otherwise-approved sentence
-    would have slipped through, which made listing those sentences as
-    "approved" hollow.
-
-    Similarity rather than pattern: paraphrasing is already forbidden by
-    the policy, so a sentence that closely resembles an approved summary
-    without matching it is either a drifted copy or a paraphrase, and
-    both are violations.
-    """
-    from difflib import SequenceMatcher
-
-    approved = approved_summaries()
-    drifted: list[str] = []
-    for name in QUOTING_DOCS:
-        for sentence in _sentences((ROOT / name).read_text(encoding="utf-8")):
-            for summary in approved:
-                if summary in sentence:
-                    break
-                if SequenceMatcher(None, sentence, summary).ratio() > 0.85:
-                    drifted.append(f"{name}: {sentence[:120]}\n    approved: {summary[:120]}")
-                    break
-
-    assert not drifted, (
-        "sentences that nearly match an approved summary but are not it "
-        "(quote it verbatim or rewrite so it is clearly not a quotation):\n" + "\n".join(drifted)
-    )

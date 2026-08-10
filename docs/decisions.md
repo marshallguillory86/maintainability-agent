@@ -9,7 +9,7 @@ A decision recorded only as a sentence inside a design document is a decision th
 | ID | Decision | Status | Affects |
 |---|---|---|---|
 | [001](adr-001-evidence-and-verification.md) | Separate maintainability scoring from evidence verification | **Accepted** — stages 1–4 implemented, 5–9 pending | Report schema, scoring, grading, history studies |
-| [002](adr-002-null-verified-grade-in-ci.md) | What a CI gate does when `verified_grade` is null | **Proposed** — blocks ADR 001 stage 5 | CLI exit codes, badges, API consumers |
+| [002](adr-002-null-verified-grade-in-ci.md) | Whether null `verified_grade` needs a CI policy before stage 5 | **Rejected** — premise assumed a grade gate that does not exist | CLI exit codes, ADR 001 stage 5 |
 
 ## Statuses
 

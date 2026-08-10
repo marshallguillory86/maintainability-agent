@@ -109,7 +109,7 @@ Stated rather than hidden, because an architecture document that only describes 
 
 - ~~Scoring consumes raw dictionaries~~ — **resolved (ADR 001 stage 4).** `score_report` normalizes at its entry and every layer below it takes typed evidence. The `.get(name, 0)` fallbacks and the `unmeasured_dimensions` companion list are deleted: a pressure is now computed only from `Measured` inputs, so there is no default left to forget to guard.
 - **`evidence_status` and `verified_grade` do not exist.** The grade is still banded from the pessimistic floor, which ADR 001 rejects as the long-term contract because it conflates missing evidence with demonstrated poor maintainability.
-- **An open decision blocks stage 5:** what CI does when `verified_grade` is null. A null grade that silently passes `--fail-on-gate` would be worse than today's floor grade. Written up as [ADR 002](adr-002-null-verified-grade-in-ci.md), status Proposed.
+- **Stage 5 is ready:** [ADR 002](adr-002-null-verified-grade-in-ci.md) is rejected because it assumed `--fail-on-gate` consumes the grade. The shipped flag checks hard findings only, so adding shadow `evidence_status` and `verified_grade` fields does not require a new CI policy.
 - ~~`docs/standard.md` mixes genres~~ — **resolved.** The empirical studies moved to [studies.md](studies.md); the standard now holds only the rubric, its calibration method, and the reference corpus. Mixing them was the documentation shape that let a Tier 3 claim read as settled.
 - **History window materialization is not separated from analysis.** ADR 001 stage 9.
 

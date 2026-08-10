@@ -54,6 +54,7 @@ from ._pressures import (
     normalize_production,
     production_pressures,
 )
+from ._verification import verification
 from .evidence import NormalizedEvidence, SummaryEvidence, normalize_report_evidence
 
 __all__ = [
@@ -258,7 +259,8 @@ def score_report(report: dict[str, Any]) -> dict[str, Any]:
     measurable = {name: value for name, value in normalized.items() if value is not None}
     worst = sorted(measurable.items(), key=lambda item: -item[1])
     return _score_document(
-        aspects, rounded_categories, overall, (low, high), grade, blockers, normalized, worst
+        aspects, rounded_categories, overall, (low, high), grade, blockers, normalized, worst,
+        verification(evidence, grade),
     )
 
 
@@ -271,6 +273,7 @@ def _score_document(
     blockers: list[str],
     normalized: dict[str, float | None],
     worst: list[tuple[str, float]],
+    verified: dict[str, Any],
 ) -> dict[str, Any]:
     """The score block exactly as it ships, assembled in one place."""
     low, high = interval
@@ -278,6 +281,12 @@ def _score_document(
         "standard": "ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based",
         "overall": overall,
         "grade": grade,
+        # Evidence sufficiency, separate from quality (ADR 001 stage 5).
+        # `grade` keeps its existing evidence-floor meaning for the
+        # compatibility period; `verified_grade` is null unless the
+        # profile's required evidence is complete. Consumers migrate in
+        # stage 7, not here.
+        **verified,
         # The exact numbers the overall was computed from — the identity
         # "overall == weighted mean of these" is checkable on the report.
         "categories": rounded_categories,

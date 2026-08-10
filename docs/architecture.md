@@ -22,6 +22,7 @@ Dependencies point downward only. No cycles.
   scanners                   scoring
   metrics, duplication       scoring -> _aspects -> _pressures
   deadcode, idioms           _formula, _calibration (rubric data)
+  _verification (evidence sufficiency)
   similarity, history        _derive (calibration fit), evidence (boundary)
         |                         |
         +------------+------------+
@@ -36,7 +37,7 @@ Dependencies point downward only. No cycles.
 | **foundations** | Data types, config defaults, git invocation, masking primitives | nothing internal |
 | **parsing** | Reading files once, extracting declarations, complexity, ranges, tokens | foundations |
 | **scanners** | Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history | foundations, parsing |
-| **scoring** | Turning findings into aspects, categories, an overall, and a grade | foundations, parsing (types only) |
+| **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
 | **assembly** | Running the scan, assembling the report dict, invoking the scorer once | anything below |
 | **presentation** | Markdown, PR comment, SARIF, baseline, remediation prompt | foundations, the report dict |
 | **entry** | Argument parsing, output routing, exit codes | anything below |
@@ -108,7 +109,7 @@ Two columns, deliberately. **Property** means the test varies the real input spa
 Stated rather than hidden, because an architecture document that only describes the good parts stops being usable.
 
 - ~~Scoring consumes raw dictionaries~~ — **resolved (ADR 001 stage 4).** `score_report` normalizes at its entry and every layer below it takes typed evidence. The `.get(name, 0)` fallbacks and the `unmeasured_dimensions` companion list are deleted: a pressure is now computed only from `Measured` inputs, so there is no default left to forget to guard.
-- **`evidence_status` and `verified_grade` do not exist.** The grade is still banded from the pessimistic floor, which ADR 001 rejects as the long-term contract because it conflates missing evidence with demonstrated poor maintainability.
+- **The compatibility grade is still banded from the pessimistic floor.** `verified_grade` now exists beside it and is null when evidence is incomplete, which is the contract ADR 001 wants; `score.grade` keeps the floor behaviour until consumers migrate in stage 7.
 - **Stage 5 is ready:** [ADR 002](adr-002-null-verified-grade-in-ci.md) is rejected because it assumed `--fail-on-gate` consumes the grade. The shipped flag checks hard findings only, so adding shadow `evidence_status` and `verified_grade` fields does not require a new CI policy.
 - ~~`docs/standard.md` mixes genres~~ — **resolved.** The empirical studies moved to [studies.md](studies.md); the standard now holds only the rubric, its calibration method, and the reference corpus. Mixing them was the documentation shape that let a Tier 3 claim read as settled.
 - **History window materialization is not separated from analysis.** ADR 001 stage 9.

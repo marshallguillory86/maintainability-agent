@@ -48,6 +48,14 @@ return set(data.get("findings", []))
 
 Consequence, and it is the main decision this inventory drives: **there are no legacy reports to migrate.** The normalizer therefore supports exactly one version and refuses everything else, including unversioned reports, rather than shipping a migration path for a consumer that does not exist. If a genuine rescoring consumer appears later, it arrives with a named, versioned, separately tested migration — which is what ADR 001 §3 asks for.
 
+## The stage 5 fields
+
+`score.evidence_status` reports `complete` or `incomplete` against the named profile `default-v1`, with one reason per unresolved measurement carrying its typed-model path and provenance. `score.verified_grade` is the letter when the evidence supports one and `null` when it does not.
+
+`Measured(0)` and `NotApplicable` are both **complete** evidence — the scanner looked and found none, and the measurement has no population here. Only `Unknown` withholds a grade.
+
+**What did not change.** `score.grade` keeps its existing meaning, including evidence-floor banding, and consumers keep reading it until stage 7. Adding optional fields does not bump the schema version under the policy below. Invalid input still raises `EvidenceValidationError` or `UnsupportedReportSchema`: there is no serialized `invalid` status, because a malformed report must not flow onward carrying numbers nobody should trust.
+
 ## Schema version
 
 New reports carry a top-level integer:

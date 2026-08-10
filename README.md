@@ -26,7 +26,7 @@ That's the point of this tool:
 1. Run a deterministic local audit — file size, function size, approximate cyclomatic complexity, duplication, configurable risk patterns, ISO/IEC 25010-inspired 0–5 score.
 2. Emit Markdown, JSON, SARIF, a PR comment, and a baseline for incremental adoption.
 3. Generate an **AI remediation prompt scoped to the actual findings** — bounded, with explicit "don't rewrite the codebase" rules.
-4. Hand that prompt to your agent. The design intent is a scoped, reviewable fix instead of a speculative cleanup PR; the first controlled test of that claim came back **INCONCLUSIVE** — the bounded prompt made the agent far more *effective* at closing findings, not measurably narrower — and the full experiment is in [docs/studies.md](docs/studies.md#does-the-bounded-prompt-work-controlled-experiment-pre-registered).
+4. Hand that prompt to your agent. In the one pre-registered test of this (6 repos, same model both arms): told generically to "improve the maintainability of this codebase" the agent closed a **median of 0 findings and made 2 of 6 repos worse**; given the bounded work order it closed a **median of 7.5** and improved 5 of 6. The registered hypothesis was *narrower* diffs, which did **not** hold (3.0 vs 2.5 files), so the registered verdict stands at **INCONCLUSIVE**. Limits, method and raw data: [docs/studies.md](docs/studies.md#does-the-bounded-prompt-work-controlled-experiment-pre-registered).
 5. Drop the shipped **portable invokable skill** into Codex, Claude Code, or GitHub Copilot Chat so `/maintainability-agent` is one keystroke away in any of them. See [Invokable Skill](#invokable-skill--slash-command) below.
 
 The remediation prompt is the differentiator. Every other tool in this space stops at "here's a list of findings."
@@ -53,10 +53,10 @@ This repo eats its own dogfood — the tool runs against this codebase in CI, an
 | Metric | Value |
 |---|---:|
 | Overall score | **4.6 / 5 (B)** |
-| Files scanned | 95 |
-| File warnings | 10 |
+| Files scanned | 107 |
+| File warnings | 13 |
 | File failures | 0 |
-| Function warnings | 7 |
+| Function warnings | 8 |
 | Function failures | 0 |
 | Duplicate blocks | 0 |
 | Risk findings | 0 |

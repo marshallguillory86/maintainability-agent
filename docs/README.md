@@ -21,12 +21,15 @@ Every document here has a **genre**, and the genre determines what it may assert
 
 ## Decisions
 
+**[The decision register](decisions.md)** lists every architectural decision and its status, including the ones not yet made. It also holds the ADR template and the rule for when to write one.
+
 | Document | Status |
 |---|---|
 | [ADR 001 — Evidence and verification](adr-001-evidence-and-verification.md) | Accepted; stages 1–3 implemented, 4–9 pending |
+| [ADR 002 — Null verified grade in CI](adr-002-null-verified-grade-in-ci.md) | **Proposed** — open question, blocks ADR 001 stage 5 |
 | [Report contract](report-contract.md) | Current — the report's producers, consumers, and schema-version policy |
 
-New ADRs are `adr-NNN-short-title.md`, numbered in order, and never edited after acceptance except to mark them superseded.
+New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register, and never edited after acceptance except to record implementation progress or mark them superseded.
 
 ## The standard, and what has been measured
 

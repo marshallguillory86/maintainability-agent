@@ -103,7 +103,7 @@ Stated rather than hidden, because an architecture document that only describes 
 
 - **Scoring still consumes raw dictionaries.** `_pressures` and `_aspects` read `summary` and `history` with `.get`, guarded by `unmeasured_dimensions` rather than by types. The typed boundary in `evidence.py` exists and is tested, but nothing consumes it yet. ADR 001 stage 4.
 - **`evidence_status` and `verified_grade` do not exist.** The grade is still banded from the pessimistic floor, which ADR 001 rejects as the long-term contract because it conflates missing evidence with demonstrated poor maintainability.
-- **An open decision blocks stage 5:** what CI does when `verified_grade` is null. A null grade that silently passes `--fail-on-gate` would be worse than today's floor grade. Not yet recorded in the ADR.
+- **An open decision blocks stage 5:** what CI does when `verified_grade` is null. A null grade that silently passes `--fail-on-gate` would be worse than today's floor grade. Written up as [ADR 002](adr-002-null-verified-grade-in-ci.md), status Proposed.
 - **`docs/standard.md` mixes genres** — normative rubric, empirical studies, and audit history in one file, which is the documentation shape that let a Tier 3 claim read as settled. See [product intent](product-intent.md#the-evidence-standard).
 - **History window materialization is not separated from analysis.** ADR 001 stage 9.
 

@@ -91,9 +91,29 @@ Passing the test suite and the self-audit is necessary and is not sufficient. Tw
 
 ## What success looks like
 
-- An agent handed the bounded prompt produces a reviewable, scoped diff instead of a rewrite. *Status: tested once, pre-registered, verdict **INCONCLUSIVE**. The bounded prompt made the agent far more effective at closing findings; it did not measurably narrow the diff. Reported as inconclusive, not as success.*
+- An agent handed the bounded work order acts on the standard instead of wandering.
 - A maintainer can explain any grade by pointing at a named measurement.
 - A hostile audit finds nothing that a stated invariant did not already cover.
+
+### What the evidence currently supports
+
+Stated precisely, because an earlier revision of this section compressed it to "INCONCLUSIVE" and thereby understated the result — the opposite error to the one this document mostly guards against, and still an error.
+
+One pre-registered experiment, six paired repositories, same model in both arms ([protocol](../tools/experiments/fix_scope/PROTOCOL.md), [results](../tools/experiments/fix_scope/results.json)):
+
+| | Generic instruction, no audit | Bounded work order |
+|---|---|---|
+| Median findings closed | 0 | 7.5 |
+| Repositories made worse | 2 of 6 (−7, −6 net new findings) | 1 of 6 (−1) |
+| Median files touched | 2.5 | 3.0 |
+
+**Supported:** an unguided agent told to "improve the maintainability of this codebase" closed nothing on median and introduced net new problems in a third of the repositories. Given the audit's work order, five of six improved. The damage result is the strongest part of the finding because it is the least gameable: those net new findings were counted against an agent that was never shown what to look for.
+
+**Not supported:** the registered hypothesis, which was that bounded prompts produce *narrower* diffs. They did not (3.0 vs 2.5 files). By the pre-registered decision rule the experiment's verdict is therefore **INCONCLUSIVE**, and it stays recorded that way — the rule was fixed before the data existed and does not get reinterpreted afterwards.
+
+**Two limits that must travel with the numbers.** The bounded arm is told which findings to close and is then scored on closing them, which favors it by construction. And "improved" means "closed the findings this tool names" — whether closing them makes a codebase cheaper to change has never been measured. That is the outcome study in the [roadmap](roadmap.md#studies-that-would-earn-a-claim), and until it runs the rubric is a standard, not a predictor.
+
+**The defensible public sentence** is *"unguided agents damaged a third of the repositories we tested; bounded ones did not."* Anything stronger — in particular "this tool makes code more maintainable" — outruns the evidence.
 
 ## What failure looks like
 

@@ -1,5 +1,7 @@
 # Philosophy
 
+> Governed by [product intent](product-intent.md), which is authoritative on what this product is for and what it may claim. This page is the reasoning behind it, not a second definition of it.
+
 Maintainability Agent is not an AI reviewer and it does not send code to an LLM.
 
 It is a deterministic audit and prompt-generation layer for teams using AI-assisted development.

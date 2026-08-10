@@ -44,7 +44,7 @@ The remediation prompt is the differentiator. Every other tool in this space sto
 - **No vendor lock-in.** All outputs (Markdown, JSON, SARIF, PR comment) are plain files. Pair this tool with mature analyzers (ESLint, Ruff, Radon, Semgrep, SonarQube, Qlty/Code Climate) — don't replace them.
 - **Pass-the-cost-of-disclosure.** A finding that's "just a warning" never blocks CI alone. Hard gates are configurable + opt-in.
 
-See [docs/philosophy.md](docs/philosophy.md) for the longer version.
+See [docs/philosophy.md](docs/philosophy.md) for the longer version, and [docs/product-intent.md](docs/product-intent.md) for what this product promises and what it must never claim — that document is authoritative, and this README defers to it wherever the two differ.
 
 ## Self-Audit
 

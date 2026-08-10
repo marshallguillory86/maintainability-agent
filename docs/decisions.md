@@ -8,7 +8,7 @@ A decision recorded only as a sentence inside a design document is a decision th
 
 | ID | Decision | Status | Affects |
 |---|---|---|---|
-| [001](adr-001-evidence-and-verification.md) | Separate maintainability scoring from evidence verification | **Accepted** — stages 1–3 implemented, 4–9 pending | Report schema, scoring, grading, history studies |
+| [001](adr-001-evidence-and-verification.md) | Separate maintainability scoring from evidence verification | **Accepted** — stages 1–4 implemented, 5–9 pending | Report schema, scoring, grading, history studies |
 | [002](adr-002-null-verified-grade-in-ci.md) | What a CI gate does when `verified_grade` is null | **Proposed** — blocks ADR 001 stage 5 | CLI exit codes, badges, API consumers |
 
 ## Statuses

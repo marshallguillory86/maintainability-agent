@@ -14,15 +14,10 @@ gets scored by.
 """
 from __future__ import annotations
 
-from typing import Any
-
 from ._calibration import CALIBRATION_C
 from ._formula import CALIBRATED_ASPECTS, curve
-from ._pressures import (
-    normalize_production,
-    production_declarations_measured,
-    unmeasured_dimensions,
-)
+from ._pressures import measured, normalize_production
+from .evidence import HistoryEvidence, NormalizedEvidence, SummaryEvidence
 
 
 def _curve(normalized_pressure: float) -> float:
@@ -44,16 +39,17 @@ def _banded(value: float, bands: list[tuple[float, float]], floor: float) -> flo
     return floor
 
 
-def _history_rate_aspect(history: dict[str, Any] | None, count_of: str) -> float | None:
+def _history_rate_aspect(history: HistoryEvidence, count_of: str) -> float | None:
     """Hotspot or coupling count as a share of files that changed.
 
     A rate, not a count — a count would score repository size, which is
-    the bug the 0.5.0 rewrite existed to remove. No history means None:
-    a shallow CI clone must not grade as either clean or dirty.
+    the bug the 0.5.0 rewrite existed to remove. Unmeasured history
+    means None: a shallow CI clone must not grade as either clean or
+    dirty.
     """
-    if history is None:
+    changed = measured(history.files_changed)
+    if changed is None:
         return None
-    changed = history.get("files_changed", 0)
     if changed == 0:
         return 5.0  # had history to read; nothing changed in the window
     # Full counts computed by history_section before its display lists
@@ -63,30 +59,32 @@ def _history_rate_aspect(history: dict[str, Any] | None, count_of: str) -> float
     # rather than as a bogus rate. (code_coupling_pairs counts
     # code-to-code pairs only: README co-changing with CHANGELOG is
     # discipline, not a wrong boundary.)
-    key = "qualifying_hotspots" if count_of == "hotspots" else "code_coupling_pairs"
-    count = history.get(key)
+    source = history.qualifying_hotspots if count_of == "hotspots" else history.code_coupling_pairs
+    count = measured(source)
     if count is None:
         return None
     return _banded(count / changed, [(0.0, 5.0), (0.02, 4.5), (0.05, 4.0), (0.10, 3.0), (0.20, 2.0)], 1.0)
 
 
-def _test_presence_aspect(summary: dict[str, Any]) -> float | None:
+def _test_presence_aspect(summary: SummaryEvidence) -> float | None:
     """Share of *declarations* that live in test files.
 
     Declarations, not files: a file denominator counts every README and
     changelog against the test ratio, so documenting a repo would lower
-    its testability. Zero test files is a score of 0.0; an absent count
-    (pre-0.4.0 reports) is None — zero and unknown are different claims.
+    its testability. Zero test files is a score of 0.0; an unmeasured
+    count is None — zero and unknown are different claims, and an audit
+    proved the difference was worth a whole grade.
     """
-    test_count = summary.get("test_file_count")
+    test_count = measured(summary.test_file_count)
     if test_count is None:
         return None
     if test_count == 0:
         return 0.0
-    total = summary.get("declarations_scanned", 0)
-    if total == 0:
+    total = measured(summary.declarations_scanned)
+    production = measured(summary.production_declarations_scanned)
+    if total is None or production is None or total == 0:
         return None
-    share = (total - summary.get("production_declarations_scanned", 0)) / total
+    share = (total - production) / total
     # Test files with zero declarations in them are indistinguishable
     # from empty files, and an audit demonstrated the previous 1.5 floor
     # here priced exactly that: one empty test-shaped artifact bought an
@@ -97,40 +95,46 @@ def _test_presence_aspect(summary: dict[str, Any]) -> float | None:
 
 
 def _finding_rate_aspect(
-    summary: dict[str, Any], count_key: str, bands: list[tuple[float, float]], floor: float
+    count_state: object, production_state: object, bands: list[tuple[float, float]], floor: float
 ) -> float | None:
     """A finding count as a share of production declarations."""
-    count = summary.get(count_key)
-    production = summary.get("production_declarations_scanned", 0)
-    if count is None or production == 0:
+    count = measured(count_state)
+    production = measured(production_state)
+    if count is None or production is None or production == 0:
         return None
     return _banded(count / production, bands, floor)
 
 
-def _ownership_aspect(history: dict[str, Any] | None) -> float | None:
-    """Share of settled files (3+ commits) that one person owns alone."""
-    if history is None or history.get("multi_commit_files", 0) == 0:
+def _ownership_aspect(history: HistoryEvidence) -> float | None:
+    """Share of settled files (3+ commits) that one person owns alone.
+
+    ``None`` covers both "could not look" and "looked, and no file has
+    three commits yet" — the normalizer distinguishes those as Unknown
+    and NotApplicable, and only the first blocks the A-grades.
+    """
+    settled = measured(history.multi_commit_files)
+    owners = measured(history.single_author_files)
+    if not settled or owners is None:
         return None
-    share = history["single_author_files"] / history["multi_commit_files"]
-    return _banded(share, [(0.2, 5.0), (0.4, 4.0), (0.6, 3.0), (0.8, 2.0)], 1.0)
+    return _banded(owners / settled, [(0.2, 5.0), (0.4, 4.0), (0.6, 3.0), (0.8, 2.0)], 1.0)
 
 
-def _documentation_aspect(summary: dict[str, Any]) -> float | None:
+def _documentation_aspect(summary: SummaryEvidence) -> float | None:
     """Artifact presence: README, changelog, docs directory.
 
     A proxy for whether anyone can orient, not for whether the words are
     accurate — accuracy is in UNSCORED and stays there.
     """
-    readme = summary.get("has_readme")
+    readme = measured(summary.has_readme)
     if readme is None:
         return None
-    extras = int(bool(summary.get("has_changelog"))) + int(bool(summary.get("has_docs_dir")))
+    extras = int(bool(measured(summary.has_changelog))) + int(bool(measured(summary.has_docs_dir)))
     if not readme:
         return 1.5 if extras else 0.5
     return [3.0, 4.0, 5.0][extras]
 
 
-def evidence_aspect_scores(summary: dict[str, Any]) -> dict[str, float | None]:
+def evidence_aspect_scores(summary: SummaryEvidence) -> dict[str, float | None]:
     """The five rubric aspects a summary alone can answer.
 
     Public and separate from :func:`aspect_scores` because the
@@ -139,17 +143,17 @@ def evidence_aspect_scores(summary: dict[str, Any]) -> dict[str, float | None]:
     of these bands in the derivation would drift, and the anchor would
     quietly stop describing the shipped score.
     """
-    concerns = summary.get("idiom_concern_count")
+    production = summary.production_declarations_scanned
+    concerns = measured(summary.idiom_concern_count)
     return {
         "test_presence": _test_presence_aspect(summary),
         "dead_code": _finding_rate_aspect(
-            summary, "dead_code_count", [(0.0, 5.0), (0.001, 4.5), (0.005, 3.5), (0.015, 2.5)], 1.5
+            summary.dead_code_count, production,
+            [(0.0, 5.0), (0.001, 4.5), (0.005, 3.5), (0.015, 2.5)], 1.5,
         ),
         "near_duplication": _finding_rate_aspect(
-            summary,
-            "near_duplicate_count",
-            [(0.0, 5.0), (0.005, 4.5), (0.01, 4.0), (0.02, 3.0), (0.05, 2.0)],
-            1.0,
+            summary.near_duplicate_count, production,
+            [(0.0, 5.0), (0.005, 4.5), (0.01, 4.0), (0.02, 3.0), (0.05, 2.0)], 1.0,
         ),
         "idiom_consistency": (
             None if concerns is None else _banded(concerns, [(0, 5.0), (1, 3.5), (2, 2.5)], 1.5)
@@ -158,40 +162,38 @@ def evidence_aspect_scores(summary: dict[str, Any]) -> dict[str, float | None]:
     }
 
 
-def aspect_scores(report: dict[str, Any], normalized: dict[str, float]) -> dict[str, float | None]:
+def aspect_scores(
+    evidence: NormalizedEvidence, normalized: dict[str, float | None]
+) -> dict[str, float | None]:
     """Every aspect the rubric reads, scored 0-5 or None for unknown.
 
     Calibrated aspects push their corpus-normalized pressure through the
     score curve, so they inherit the anchor: the corpus median is worth
     the same everywhere. Rubric aspects score evidence the corpus cannot
     price, against the banded thresholds above. None always means "could
-    not measure", never "measured nothing wrong" — old reports and
-    baselines that predate a count simply do not get an opinion on it.
+    not measure", never "measured nothing wrong" — and since ADR 001
+    stage 4 that is carried by the type rather than by a companion list
+    of which keys had to be present.
     """
-    summary = report["summary"]
-    history = report.get("history")
-    unmeasured = unmeasured_dimensions(summary)
+    summary = evidence.summary
     scores: dict[str, float | None] = {
-        name: (None if dimension in unmeasured else _curve(normalized[dimension]))
+        name: (None if normalized[dimension] is None else _curve(normalized[dimension]))
         for name, dimension in CALIBRATED_ASPECTS.items()
     }
     # declaration_size reads the *production* pressure. Its only rubric
     # consumers are analyzability and testability, which describe the
     # code under test — an oversized test function must not drag either
     # (pinned by test_analyzability_not_penalized_by_test_function_size).
-    scores["declaration_size"] = (
-        _curve(normalize_production(summary)["declarations"])
-        if production_declarations_measured(summary)
-        else None
-    )
+    production = normalize_production(summary)["declarations"]
+    scores["declaration_size"] = None if production is None else _curve(production)
     scores.update(evidence_aspect_scores(summary))
-    scores["churn_hotspots"] = _history_rate_aspect(history, "hotspots")
-    scores["change_coupling"] = _history_rate_aspect(history, "coupling")
-    scores["knowledge_concentration"] = _ownership_aspect(history)
+    scores["churn_hotspots"] = _history_rate_aspect(evidence.history, "hotspots")
+    scores["change_coupling"] = _history_rate_aspect(evidence.history, "coupling")
+    scores["knowledge_concentration"] = _ownership_aspect(evidence.history)
     return scores
 
 
-def is_untested(summary: dict[str, Any]) -> bool | None:
+def is_untested(summary: SummaryEvidence) -> bool | None:
     """Production code with no test evidence at all — or no evidence either way.
 
     Three-valued, and the third value is the point. ``True`` is "there
@@ -205,14 +207,13 @@ def is_untested(summary: dict[str, Any]) -> bool | None:
     reports carrying the evidence, so deleting ``test_file_count``
     escaped it and *raised the evidence floor* — concealment paying
     again, one level below the interval that was supposed to have
-    closed it. Unknown is now carried as unknown and priced by the same
-    dial as every other unknown: typical for the point estimate,
-    worst-case for the floor the grade is banded from.
+    closed it.
     """
-    test_count = summary.get("test_file_count")
-    production = summary.get("production_declarations_scanned")
-    if test_count is None or production is None:
+    test_count = measured(summary.test_file_count)
+    production = measured(summary.production_declarations_scanned)
+    total = measured(summary.declarations_scanned)
+    if test_count is None or production is None or total is None:
         return None
     if production <= 0:
         return False
-    return test_count == 0 or summary.get("declarations_scanned", 0) - production == 0
+    return test_count == 0 or total - production == 0

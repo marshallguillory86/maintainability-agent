@@ -30,7 +30,22 @@ from maintainability_audit._derive import (
     derive_references,
     normalized_pressures,
 )
-from maintainability_audit.scoring import score_report
+from maintainability_audit.evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY
+from maintainability_audit.scoring import score_report as _score_report
+
+
+def score_report(report: dict) -> dict:
+    """Stamp the schema version, then score.
+
+    Production reports carry ``schema_version`` because ``build_report``
+    stamps it, and since ADR 001 stage 4 the scorer validates it at the
+    normalization boundary rather than trusting a raw dictionary. The
+    hand-built fixtures below predate that and would otherwise be
+    rejected. This shim makes them *conform* to the production contract;
+    it does not bypass it — the version gate itself is tested against
+    real reports in ``test_evidence_normalization.py``.
+    """
+    return _score_report({SCHEMA_VERSION_KEY: REPORT_SCHEMA_VERSION, **report})
 
 CORPUS_DIR = Path(__file__).resolve().parents[1] / "tools" / "calibration"
 

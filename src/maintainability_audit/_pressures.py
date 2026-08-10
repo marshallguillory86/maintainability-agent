@@ -6,121 +6,125 @@ a convenience: this layer knows only about counts and populations, the
 aspect layer turns pressures into 0-5 scores, and ``scoring`` bands and
 grades them. Nothing here imports either of the two above it, so the
 dependency runs one way.
+
+**Every count arrives as a typed evidence state** (ADR 001 stage 4). The
+previous version read the summary dictionary with ``get(name, 0)``,
+which silently turned "this report does not say how many risk findings
+there were" into "there were none" — a perfect score for saying
+nothing. Six audit rounds fixed instances of that shape; a seventh
+found four more fields carrying it. The defence was a companion
+function listing which keys had to be present, which worked only for as
+long as someone remembered to extend the list.
+
+A pressure is now computed **only from ``Measured`` inputs**. Any other
+state makes the pressure ``None``, which travels as "unmeasured" all
+the way to the aspect and prices at zero in the evidence floor. There is
+no default to forget to guard.
 """
 from __future__ import annotations
 
-from typing import Any
-
 from ._calibration import DIMENSION_REFERENCES, WARN_WEIGHT
+from .evidence import Measured, SummaryEvidence
+
+
+def measured(state: object) -> float | None:
+    """The number a state carries, or ``None`` if it does not carry one.
+
+    The single place evidence states become arithmetic. ``Measured(0)``
+    returns ``0.0``; ``Unknown`` and ``NotApplicable`` return ``None``
+    and cannot be mistaken for it.
+    """
+    return float(state.value) if isinstance(state, Measured) else None
 
 
 def _rate(count: float, population: float) -> float:
     return count / population if population > 0 else 0.0
 
 
-def dimension_pressures(summary: dict[str, Any]) -> dict[str, float]:
+def _weighted_rate(
+    failures: float | None, warnings: float | None, population: float | None
+) -> float | None:
+    """Failure rate plus discounted warning rate, or None if anything is unknown."""
+    if failures is None or warnings is None or population is None:
+        return None
+    return _rate(failures, population) + WARN_WEIGHT * _rate(warnings, population)
+
+
+def _ratio(count: float | None, population: float | None) -> float | None:
+    if count is None or population is None:
+        return None
+    return _rate(count, population)
+
+
+def dimension_pressures(summary: SummaryEvidence) -> dict[str, float | None]:
     """The five independently-sourced pressures, as rates.
 
     Unlike the previous model's five categories — which were five linear
     re-weightings of the same handful of counts — each of these is drawn
     from a different measurement, so they can disagree with each other.
+
+    ``None`` for a dimension whose inputs were not all measured.
     """
-    files = summary.get("files_scanned", 0)
-    decls = summary.get("declarations_scanned", 0)
+    files = measured(summary.files_scanned)
+    decls = measured(summary.declarations_scanned)
+    gates = measured(summary.hard_gate_failures)
     return {
-        "file_size": _rate(summary.get("file_failures", 0), files)
-        + WARN_WEIGHT * _rate(summary.get("file_warnings", 0), files),
-        "declarations": _rate(summary.get("function_failures", 0), decls)
-        + WARN_WEIGHT * _rate(summary.get("function_warnings", 0), decls),
-        "duplication": _rate(summary.get("duplicate_blocks", 0), files),
-        "risk": _rate(summary.get("risk_findings", 0), files),
+        "file_size": _weighted_rate(
+            measured(summary.file_failures), measured(summary.file_warnings), files
+        ),
+        "declarations": _weighted_rate(
+            measured(summary.function_failures), measured(summary.function_warnings), decls
+        ),
+        "duplication": _ratio(measured(summary.duplicate_blocks), files),
+        "risk": _ratio(measured(summary.risk_findings), files),
         # Gates are discrete policy breaches, not a population sample, so
         # they are scaled to sit on the same footing as a rate.
-        "gates": 0.05 * summary.get("hard_gate_failures", 0),
+        "gates": None if gates is None else 0.05 * gates,
     }
 
 
-def normalize_production(summary: dict[str, Any]) -> dict[str, float]:
-    """Production-only pressures, in the same normalized units."""
-    raw = production_pressures(summary)
-    return {name: _relative(value, DIMENSION_REFERENCES[name]) for name, value in raw.items()}
+def _production(primary: object, fallback: object) -> float | None:
+    """A production-only count, falling back to the combined one.
+
+    The fallback exists because a summary may predate the production
+    split. It falls back to the *combined measurement*, never to zero.
+    """
+    value = measured(primary)
+    return measured(fallback) if value is None else value
 
 
-def production_pressures(summary: dict[str, Any]) -> dict[str, float]:
+def production_pressures(summary: SummaryEvidence) -> dict[str, float | None]:
     """The same pressures, counting production code only.
 
     ``analyzability`` and ``testability`` ask how understandable and how
     testable the *production* code is. Charging them for a long test body
     inverts the incentive — extracting duplicated test setup into a
-    fixture would lower the score for improving the code. Falls back to
-    the combined counts when a summary predates the split.
+    fixture would lower the score for improving the code.
     """
-    files = summary.get("production_files_scanned", summary.get("files_scanned", 0))
-    decls = summary.get("production_declarations_scanned", summary.get("declarations_scanned", 0))
+    files = _production(summary.production_files_scanned, summary.files_scanned)
+    decls = _production(summary.production_declarations_scanned, summary.declarations_scanned)
+    gates = _production(summary.production_hard_gate_failures, summary.hard_gate_failures)
     return {
-        "file_size": _rate(summary.get("production_file_failures", summary.get("file_failures", 0)), files)
-        + WARN_WEIGHT * _rate(summary.get("production_file_warnings", summary.get("file_warnings", 0)), files),
-        "declarations": _rate(
-            summary.get("production_function_failures", summary.get("function_failures", 0)), decls
-        )
-        + WARN_WEIGHT
-        * _rate(summary.get("production_function_warnings", summary.get("function_warnings", 0)), decls),
-        "gates": 0.05 * summary.get("production_hard_gate_failures", summary.get("hard_gate_failures", 0)),
+        "file_size": _weighted_rate(
+            _production(summary.production_file_failures, summary.file_failures),
+            _production(summary.production_file_warnings, summary.file_warnings),
+            files,
+        ),
+        "declarations": _weighted_rate(
+            _production(summary.production_function_failures, summary.function_failures),
+            _production(summary.production_function_warnings, summary.function_warnings),
+            decls,
+        ),
+        "gates": None if gates is None else 0.05 * gates,
     }
 
 
-# The summary counts each dimension's pressure is computed from. A
-# dimension whose inputs are absent was not measured, which is a
-# different statement from "measured and found clean" — see
-# :func:`unmeasured_dimensions`.
-DIMENSION_INPUTS: dict[str, tuple[str, ...]] = {
-    "file_size": ("files_scanned", "file_failures", "file_warnings"),
-    "declarations": ("declarations_scanned", "function_failures", "function_warnings"),
-    "duplication": ("files_scanned", "duplicate_blocks"),
-    "risk": ("files_scanned", "risk_findings"),
-    "gates": ("hard_gate_failures",),
-}
-
-# declaration_size curves the production-only pressure, so it has its
-# own inputs — each falling back to the combined count, as
-# :func:`production_pressures` does.
-PRODUCTION_DECLARATION_INPUTS: tuple[tuple[str, str], ...] = (
-    ("production_declarations_scanned", "declarations_scanned"),
-    ("production_function_failures", "function_failures"),
-    ("production_function_warnings", "function_warnings"),
-)
+def normalize_production(summary: SummaryEvidence) -> dict[str, float | None]:
+    """Production-only pressures, in the same normalized units."""
+    return normalize(production_pressures(summary))
 
 
-def unmeasured_dimensions(summary: dict[str, Any]) -> set[str]:
-    """Dimensions whose input counts the summary does not carry.
-
-    Every pressure above reads its counts with ``.get(name, 0)``, which
-    silently turns "this report does not say how many risk findings
-    there were" into "there were none" — a perfect score for saying
-    nothing. An audit found the same shape in the testability cap and
-    demonstrated that deleting a field *raised* the evidence floor;
-    sweeping every summary key showed three more fields with the
-    identical property (``file_failures``, ``files_scanned``,
-    ``risk_findings``). Absent inputs now make the dimension unmeasured,
-    so its aspect scores None: priced at the anchor for the point
-    estimate and at zero for the floor the grade is banded from.
-    """
-    return {
-        dimension
-        for dimension, inputs in DIMENSION_INPUTS.items()
-        if any(name not in summary for name in inputs)
-    }
-
-
-def production_declarations_measured(summary: dict[str, Any]) -> bool:
-    """Whether the production-only declaration pressure has its inputs."""
-    return all(
-        primary in summary or fallback in summary
-        for primary, fallback in PRODUCTION_DECLARATION_INPUTS
-    )
-
-
-def normalize(pressures: dict[str, float]) -> dict[str, float]:
+def normalize(pressures: dict[str, float | None]) -> dict[str, float | None]:
     """Express each pressure as a multiple of what real code carries.
 
     1.0 means "typical of the mature OSS corpus". 2.0 means twice the
@@ -128,7 +132,10 @@ def normalize(pressures: dict[str, float]) -> dict[str, float]:
     the unit the report should speak in, because "duplication 3.1x" is
     actionable in a way that "duplication 0.6346" is not.
     """
-    return {name: _relative(value, DIMENSION_REFERENCES[name]) for name, value in pressures.items()}
+    return {
+        name: None if value is None else _relative(value, DIMENSION_REFERENCES[name])
+        for name, value in pressures.items()
+    }
 
 
 def _relative(value: float, reference: float) -> float:

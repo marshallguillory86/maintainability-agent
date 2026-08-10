@@ -34,6 +34,7 @@ name the specific thing dragging the score, not a letter.
 """
 from __future__ import annotations
 
+from math import inf
 from typing import Any
 
 from ._aspects import aspect_scores, evidence_aspect_scores, is_untested
@@ -47,12 +48,13 @@ from ._formula import (
     overall_from_aspects,
 )
 from ._pressures import (
-    _rate,
     dimension_pressures,
+    measured,
     normalize,
     normalize_production,
     production_pressures,
 )
+from .evidence import NormalizedEvidence, SummaryEvidence, normalize_report_evidence
 
 __all__ = [
     "CATEGORIES",
@@ -71,18 +73,35 @@ __all__ = [
 _BANDS = [(4.8, "A+"), (4.5, "A"), (4.0, "B"), (3.0, "C"), (2.0, "D"), (0.0, "F")]
 
 
-def _gate_readings(summary: dict[str, Any], pressures: dict[str, float]) -> dict[str, float]:
-    files = summary.get("files_scanned", 0)
-    decls = summary.get("declarations_scanned", 0)
+def _gate_readings(summary: SummaryEvidence, pressures: dict[str, float | None]) -> dict[str, float]:
+    """Readings the A-grade ceilings are checked against.
+
+    An unmeasured reading reports ``inf`` rather than zero, so it fails
+    every ceiling. "Could not look" must never clear a gate that "looked
+    and found none" would have had to earn.
+    """
+    files = measured(summary.files_scanned)
+    decls = measured(summary.declarations_scanned)
+    gates = measured(summary.hard_gate_failures)
     return {
-        "file_fail_rate": _rate(summary.get("file_failures", 0), files),
-        "decl_fail_rate": _rate(summary.get("function_failures", 0), decls),
-        "file_warn_rate": _rate(summary.get("file_warnings", 0), files),
-        "decl_warn_rate": _rate(summary.get("function_warnings", 0), decls),
-        "duplication": pressures["duplication"],
-        "risk": pressures["risk"],
-        "gates": float(summary.get("hard_gate_failures", 0)),
+        "file_fail_rate": _gate_rate(measured(summary.file_failures), files),
+        "decl_fail_rate": _gate_rate(measured(summary.function_failures), decls),
+        "file_warn_rate": _gate_rate(measured(summary.file_warnings), files),
+        "decl_warn_rate": _gate_rate(measured(summary.function_warnings), decls),
+        "duplication": _unknown_fails(pressures["duplication"]),
+        "risk": _unknown_fails(pressures["risk"]),
+        "gates": inf if gates is None else float(gates),
     }
+
+
+def _unknown_fails(value: float | None) -> float:
+    return inf if value is None else value
+
+
+def _gate_rate(count: float | None, population: float | None) -> float:
+    if count is None or population is None:
+        return inf
+    return count / population if population > 0 else 0.0
 
 
 def grade_from_score(score: float) -> str:
@@ -167,9 +186,8 @@ def _evidence_rules(
 
 
 def _grade_on_the_floor(
-    report: dict[str, Any],
-    summary: dict[str, Any],
-    pressures: dict[str, float],
+    evidence: NormalizedEvidence,
+    pressures: dict[str, float | None],
     aspects: dict[str, float | None],
     untested: bool | None,
     interval: tuple[float, float, float],
@@ -188,14 +206,14 @@ def _grade_on_the_floor(
     meet the point estimate.
     """
     overall, low, high = interval
-    grade, blockers = grade_for(low, _gate_readings(summary, pressures))
+    grade, blockers = grade_for(low, _gate_readings(evidence.summary, pressures))
     if low < overall:
         blockers = [
             *blockers,
             f"graded on the evidence floor {low} (point estimate {overall}, ceiling {high}): "
             "unmeasured aspects price at 0 for the grade",
         ]
-    return _evidence_rules(grade, blockers, aspects, untested, report.get("history") is not None)
+    return _evidence_rules(grade, blockers, aspects, untested, evidence.history_present)
 
 
 def score_report(report: dict[str, Any]) -> dict[str, Any]:
@@ -214,10 +232,11 @@ def score_report(report: dict[str, Any]) -> dict[str, Any]:
     audits caught two versions of the same lie, an overall that was not
     the mean of the numbers printed beside it.
     """
-    summary = report["summary"]
+    evidence = normalize_report_evidence(report)
+    summary = evidence.summary
     pressures = dimension_pressures(summary)
     normalized = normalize(pressures)
-    aspects = aspect_scores(report, normalized)
+    aspects = aspect_scores(evidence, normalized)
     untested = is_untested(summary)
     overall, rounded_categories = overall_from_aspects(aspects, untested=untested)
     low, high = overall_bounds(aspects, untested=untested)
@@ -233,8 +252,28 @@ def score_report(report: dict[str, Any]) -> dict[str, Any]:
     # aspect can only widen the interval downward, so it can never raise
     # the grade. Supply the evidence and the floor rises to meet the
     # point estimate.
-    grade, blockers = _grade_on_the_floor(report, summary, pressures, aspects, untested, (overall, low, high))
-    worst = sorted(normalized.items(), key=lambda item: -item[1])
+    grade, blockers = _grade_on_the_floor(
+        evidence, pressures, aspects, untested, (overall, low, high)
+    )
+    measurable = {name: value for name, value in normalized.items() if value is not None}
+    worst = sorted(measurable.items(), key=lambda item: -item[1])
+    return _score_document(
+        aspects, rounded_categories, overall, (low, high), grade, blockers, normalized, worst
+    )
+
+
+def _score_document(
+    aspects: dict[str, float | None],
+    rounded_categories: dict[str, float],
+    overall: float,
+    interval: tuple[float, float],
+    grade: str,
+    blockers: list[str],
+    normalized: dict[str, float | None],
+    worst: list[tuple[str, float]],
+) -> dict[str, Any]:
+    """The score block exactly as it ships, assembled in one place."""
+    low, high = interval
     return {
         "standard": "ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based",
         "overall": overall,
@@ -264,7 +303,9 @@ def score_report(report: dict[str, Any]) -> dict[str, Any]:
             "unscored": UNSCORED,
         },
         # Multiples of the mature-OSS median: 1.0 is typical real code.
-        "dimensions": {name: round(value, 2) for name, value in normalized.items()},
+        "dimensions": {
+            name: (None if value is None else round(value, 2)) for name, value in normalized.items()
+        },
         # Worst-first, so the remediation prompt can lead with the
         # dimension actually costing the most rather than a letter.
         "worst_dimension": worst[0][0] if worst and worst[0][1] > 1.0 else None,

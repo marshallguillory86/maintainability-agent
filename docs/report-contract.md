@@ -4,7 +4,7 @@ Inventory and versioning policy for the dictionary `build_report` returns.
 
 This document exists because [ADR 001](adr-001-evidence-and-verification.md) requires the report's producers and consumers to be *named* before any migration is written: "Compatibility code will not be retained for hypothetical consumers." Everything below was traced in the source, not assumed.
 
-**Status: ADR 001 is not implemented.** This slice adds a schema version, a typed evidence model, and one normalization boundary. Scoring still reads raw dictionaries and is unchanged. `evidence_status` and `verified_grade` do not exist yet. See [Remaining work](#remaining-work).
+**Status: ADR 001 is partially implemented (stages 1–4).** A schema version, a typed evidence model, one normalization boundary, and the scorer migrated behind it. Scoring output is unchanged, verified by re-scoring a fixed pre-migration report. `evidence_status` and `verified_grade` do not exist yet. See [Remaining work](#remaining-work).
 
 ## The single producer
 
@@ -18,9 +18,9 @@ Classified as the task requires: *current* reports only, *persisted* historical 
 
 | Consumer | Reads | Class | Fallbacks | Migration |
 |---|---|---|---|---|
-| [`scoring.score_report`](../src/maintainability_audit/scoring.py) | `summary`, `history`, whole report | current only | **yes** — `_pressures`, `_aspects` | stage 4 |
-| [`_pressures`](../src/maintainability_audit/_pressures.py) | `summary` counts | current only | **yes** — `.get(name, 0)`, guarded by `unmeasured_dimensions` | stage 4 |
-| [`_aspects`](../src/maintainability_audit/_aspects.py) | `summary`, `history` | current only | **yes** — `.get(key)`, `history.get(key)` | stage 4 |
+| [`scoring.score_report`](../src/maintainability_audit/scoring.py) | normalizes the report at entry | current only | none — migrated | done |
+| [`_pressures`](../src/maintainability_audit/_pressures.py) | `SummaryEvidence` states | current only | none — migrated | done |
+| [`_aspects`](../src/maintainability_audit/_aspects.py) | `NormalizedEvidence` | current only | none — migrated | done |
 | [`renderers.render_markdown`](../src/maintainability_audit/renderers.py) | `summary`, `score`, `history`, finding lists | current only | minor — `score.get("grade_blockers")`, `report.get("history")` | stage 7 |
 | [`renderers.render_pr_comment`](../src/maintainability_audit/renderers.py) | `summary`, `score`, `hard_gate_failures`, `function_hotspots` | current only | minor — `report.get("mode", "full")` | stage 7 |
 | [`prompts.render_ai_prompt`](../src/maintainability_audit/prompts.py) | `summary`, `score`, all finding lists | current only | minor — `report.get("dead_code") or []` and siblings | stage 7 |

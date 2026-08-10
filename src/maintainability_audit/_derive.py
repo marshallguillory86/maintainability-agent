@@ -19,6 +19,7 @@ from typing import Any
 from ._aspects import evidence_aspect_scores, is_untested
 from ._formula import CALIBRATED_ASPECTS, curve, overall_from_aspects
 from ._pressures import production_pressures
+from .evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY, normalize_report_evidence
 
 DIMENSIONS = ("file_size", "declarations", "duplication", "risk", "gates")
 
@@ -109,19 +110,24 @@ def _corpus_overall(entry: dict[str, Any], references: dict[str, float], c: floa
         for aspect, dimension in CALIBRATED_ASPECTS.items()
         if references[dimension] > 0
     }
-    untested = False
-    evidence = entry.get("evidence")
-    if evidence is not None:
-        summary = {
-            **evidence,
-            "files_scanned": entry["files"],
-            "declarations_scanned": entry["declarations"],
-        }
+    untested: bool | None = False
+    recorded = entry.get("evidence")
+    if recorded is not None:
+        # Through the shipped normalizer, exactly as a live report goes:
+        # the derivation must not have a private way of reading evidence.
+        summary = normalize_report_evidence({
+            SCHEMA_VERSION_KEY: REPORT_SCHEMA_VERSION,
+            "summary": {
+                **recorded,
+                "files_scanned": entry["files"],
+                "declarations_scanned": entry["declarations"],
+            },
+        }).summary
         scores.update(evidence_aspect_scores(summary))
         untested = is_untested(summary)
-        if references["declarations"] > 0:
-            production = production_pressures(summary)["declarations"] / references["declarations"]
-            scores["declaration_size"] = curve(production, c)
+        production = production_pressures(summary)["declarations"]
+        if references["declarations"] > 0 and production is not None:
+            scores["declaration_size"] = curve(production / references["declarations"], c)
     overall, _ = overall_from_aspects(scores, untested=untested)
     return overall
 

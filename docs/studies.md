@@ -10,7 +10,7 @@ The split exists because mixing the two genres in one document is how this proje
 
 | Study | Question | Status |
 |---|---|---|
-| [Bounded prompt](#does-the-bounded-prompt-work-controlled-experiment-pre-registered) | Does a findings-bounded prompt beat a generic instruction? | Pre-registered; verdict **INCONCLUSIVE** as registered. Unguided agents damaged 2 of 6 repositories; bounded closed a median of 7.5 findings against 0 |
+| [Bounded prompt](#does-the-bounded-prompt-work-controlled-experiment-pre-registered) | Does a findings-bounded prompt beat a generic instruction? | Pre-registered; verdict **INCONCLUSIVE** as registered. Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, closing a median of 7.5 findings against 0 |
 | [AI authorship](#does-this-detect-ai-written-code) | Does any metric distinguish AI-written code? | **Retracted.** Matched control, p = 0.546. This design could not measure a difference |
 | [Fix breadth](#does-this-detect-ai-written-code) | Are AI-assisted fixes broader? | Exploratory only. Three specifications straddle p = 0.05; none survives Holm |
 

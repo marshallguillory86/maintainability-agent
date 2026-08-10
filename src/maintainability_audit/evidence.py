@@ -155,21 +155,53 @@ def walk_evidence(node: Any, prefix: str = "") -> Iterator[tuple[str, EvidenceSt
 # model is a count of things the scanner saw.
 FLAG_FIELDS = frozenset({"has_readme", "has_changelog", "has_docs_dir"})
 
-# Pairs where the first can never exceed the second, because the first
-# counts a subset of what the second counts. Checked only when both are
-# Measured — an unknown constrains nothing.
-SUBSET_INVARIANTS: tuple[tuple[str, str], ...] = (
+# Relationships the *producer* guarantees, enumerated from where it
+# guarantees them rather than from whichever violation an audit
+# happened to demonstrate. ``report.report_summary`` gives every file
+# and every declaration exactly one status, so warnings and failures
+# partition their population; ``history.history_section`` draws
+# hotspots and settled files from the churn set.
+#
+# Two audits closed "the demonstrated examples" here and called the
+# class closed. This table *is* the class: every relation is checked,
+# and ``test_every_declared_invariant_is_enforced`` iterates the table
+# so a relation added below is exercised the day it is added.
+#
+# Deliberately absent: ``code_coupling_pairs`` is a count of *pairs*
+# and can legitimately exceed ``files_changed``.
+
+# part <= whole
+SUMMARY_SUBSETS: tuple[tuple[str, str], ...] = (
     ("production_files_scanned", "files_scanned"),
     ("production_declarations_scanned", "declarations_scanned"),
     ("production_file_failures", "file_failures"),
     ("production_file_warnings", "file_warnings"),
     ("production_function_failures", "function_failures"),
     ("production_function_warnings", "function_warnings"),
+    ("production_hard_gate_failures", "hard_gate_failures"),
+    ("test_file_count", "files_scanned"),
+    ("dead_code_count", "declarations_scanned"),
+    ("near_duplicate_count", "declarations_scanned"),
 )
 
-HISTORY_SUBSET_INVARIANTS: tuple[tuple[str, str], ...] = (
-    ("single_author_files", "multi_commit_files"),
+# sum(parts) <= whole — one status per member of the population
+SUMMARY_SUMS: tuple[tuple[tuple[str, ...], str], ...] = (
+    (("file_failures", "file_warnings"), "files_scanned"),
+    (("function_failures", "function_warnings"), "declarations_scanned"),
+    (("production_file_failures", "production_file_warnings"), "production_files_scanned"),
+    (
+        ("production_function_failures", "production_function_warnings"),
+        "production_declarations_scanned",
+    ),
 )
+
+HISTORY_SUBSETS: tuple[tuple[str, str], ...] = (
+    ("single_author_files", "multi_commit_files"),
+    ("qualifying_hotspots", "files_changed"),
+    ("multi_commit_files", "files_changed"),
+)
+
+HISTORY_SUMS: tuple[tuple[tuple[str, ...], str], ...] = ()
 
 
 def _validated_value(name: str, value: Any, provenance: str) -> float | int | bool:
@@ -197,22 +229,39 @@ def _validated_value(name: str, value: Any, provenance: str) -> float | int | bo
     return value
 
 
-def _check_subsets(
-    states: dict[str, EvidenceState], invariants: tuple[tuple[str, str], ...], prefix: str
+def _check_relations(
+    states: dict[str, EvidenceState],
+    subsets: tuple[tuple[str, str], ...],
+    sums: tuple[tuple[tuple[str, ...], str], ...],
+    prefix: str,
 ) -> None:
-    """Reject a subset count larger than the set it is drawn from.
+    """Reject counts that contradict what the producer guarantees.
 
-    Cross-field validation, which the first version of this boundary had
-    none of: ``single_author_files = 50`` against
-    ``multi_commit_files = 10`` normalized and scored happily, producing
-    an ownership share of 5.0 that no repository can exhibit.
+    Cross-field validation, which the boundary originally had none of
+    and then had only for the pairs an audit named. A subset larger than
+    its set, or statuses summing past their population, describes a
+    repository the scanner could not have produced.
+
+    Only ``Measured`` values participate: an unknown constrains nothing,
+    and must not be treated as zero to manufacture a violation.
     """
-    for part_name, whole_name in invariants:
+    for part_name, whole_name in subsets:
         part, whole = states[part_name], states[whole_name]
         if isinstance(part, Measured) and isinstance(whole, Measured) and part.value > whole.value:
             raise EvidenceValidationError(
                 f"{prefix}.{part_name} ({part.value}) exceeds "
                 f"{prefix}.{whole_name} ({whole.value}): a subset cannot be larger than its set"
+            )
+    for part_names, whole_name in sums:
+        parts = [states[name] for name in part_names]
+        whole = states[whole_name]
+        if not isinstance(whole, Measured) or not all(isinstance(part, Measured) for part in parts):
+            continue
+        total = sum(part.value for part in parts)
+        if total > whole.value:
+            raise EvidenceValidationError(
+                f"{prefix}: {' + '.join(part_names)} ({total}) exceeds "
+                f"{prefix}.{whole_name} ({whole.value}): each member of a population has one status"
             )
 
 
@@ -278,7 +327,7 @@ def _normalize_history(report: dict[str, Any]) -> tuple[HistoryEvidence, bool]:
         return HistoryEvidence(**absent), False
     section = _require_mapping(raw, "history")
     states = _states_for(HistoryEvidence, section, "history", HISTORY_FIELD_ABSENT)
-    _check_subsets(states, HISTORY_SUBSET_INVARIANTS, "history")
+    _check_relations(states, HISTORY_SUBSETS, HISTORY_SUMS, "history")
     settled = states["multi_commit_files"]
     owners = states["single_author_files"]
     if isinstance(settled, Measured) and not settled.value and isinstance(owners, Measured):
@@ -313,7 +362,7 @@ def normalize_report_evidence(report: dict[str, Any]) -> NormalizedEvidence:
         raise EvidenceValidationError("report has no summary: nothing to score")
     history, present = _normalize_history(report)
     summary_states = _states_for(SummaryEvidence, summary, "summary", SUMMARY_FIELD_ABSENT)
-    _check_subsets(summary_states, SUBSET_INVARIANTS, "summary")
+    _check_relations(summary_states, SUMMARY_SUBSETS, SUMMARY_SUMS, "summary")
     return NormalizedEvidence(
         schema_version=version,
         summary=SummaryEvidence(**summary_states),

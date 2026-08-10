@@ -90,3 +90,29 @@ def test_the_standard_carries_no_empirical_study() -> None:
         f"empirical content in the normative standard: {leaked}; "
         "move it to docs/studies.md (see docs/README.md on genres)"
     )
+
+
+APPROVED_QUOTE = re.compile(r"^>\s+(.*)$", re.M)
+FIGURE = re.compile(r"\b\d+(?:\.\d+)?\s+of\s+\d+\b|\bp = 0\.\d+\b|\bmedian of \d+(?:\.\d+)?\b")
+
+
+def test_quoted_figures_also_appear_in_the_source_of_record() -> None:
+    """A governing document may quote a result; it may not diverge from it.
+
+    `studies.md` is the source of record. Governing and public documents
+    may quote an approved one-sentence summary — a document whose job is
+    to say what the product may claim cannot do that job while quoting
+    nothing — but every figure they quote must be present in
+    `studies.md`. This is the check the earlier "empirical claims live
+    only in studies.md" rule lacked, which is how the governing document
+    came to hold a table that disagreed with the study it summarized.
+    """
+    studies = (ROOT / "docs" / "studies.md").read_text(encoding="utf-8")
+    orphans: list[str] = []
+    for path in (ROOT / "docs" / "product-intent.md", ROOT / "README.md"):
+        text = path.read_text(encoding="utf-8")
+        for figure in {f for quote in APPROVED_QUOTE.findall(text) for f in FIGURE.findall(quote)}:
+            if figure not in studies:
+                orphans.append(f"{path.name}: {figure!r} is not in studies.md")
+
+    assert not orphans, "quoted figures absent from the source of record:\n" + "\n".join(orphans)

@@ -8,6 +8,8 @@ Every document here has a **genre**, and the genre determines what it may assert
 | **Normative** | The standard applied to every repository — weights, bands, thresholds | A judgment is deliberately revised |
 | **Decision** | One architectural choice, its context, its consequences | Superseded by a later decision |
 | **Empirical** | What was measured, with pinned inputs and stated limits | New evidence is derived |
+
+**Where empirical numbers may appear.** `studies.md` is the **source of record**: every result lives there in full, with its method, controls and limits. Other documents **may quote an approved one-sentence summary** — a governing document that cannot state what the product may claim is not governing anything — but may not restate a result's interpretation, and every figure they quote must also appear in `studies.md`. `test_docs_links.py` fails the build otherwise. The earlier rule said empirical claims belong *only* in `studies.md`, which the governing document then immediately violated; this states the rule that was actually being followed.
 | **Operational** | How to run, configure, and integrate the tool | Behavior changes |
 | **Generated** | Output of a command; never hand-edited | Regenerated |
 

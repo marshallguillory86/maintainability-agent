@@ -212,8 +212,14 @@ def test_every_test_named_in_the_architecture_doc_exists() -> None:
     assert not missing, f"docs/architecture.md cites tests that do not exist: {sorted(missing)}"
 
 
-def test_adr_implementation_status_is_stated_in_exactly_one_place() -> None:
-    """Stage status lives in the decision register and nowhere else.
+def test_the_summarized_stage_range_appears_only_in_the_register() -> None:
+    """The *summarized range* lives in the register and nowhere else.
+
+    Named for what it checks. An audit correctly pointed out that the
+    previous name claimed single ownership of implementation status
+    while the regex only matched numeric ranges like "stages 1-4" —
+    individual references such as "blocks stage 5" are legitimate and
+    still appear where they are relevant.
 
     It was copied into five documents and a module docstring, and three
     of the copies were already contradicting each other one commit after
@@ -232,6 +238,6 @@ def test_adr_implementation_status_is_stated_in_exactly_one_place() -> None:
             offenders.append(str(path.relative_to(ROOT)))
 
     assert not offenders, (
-        "ADR stage status restated outside docs/decisions.md: "
+        "a summarized ADR stage range appears outside docs/decisions.md: "
         f"{sorted(offenders)}; link to the register instead"
     )

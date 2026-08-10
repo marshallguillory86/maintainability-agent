@@ -97,7 +97,7 @@ Passing the test suite and the self-audit is necessary and is not sufficient. Tw
 
 ### What the evidence currently supports
 
-**[studies.md](studies.md) owns the numbers.** This section deliberately holds none, because the previous revision duplicated the experiment's table and interpretation here and the two copies promptly disagreed — which is the failure the [genre split](README.md) exists to prevent, committed in the governing document itself.
+**[studies.md](studies.md) is the source of record.** This section holds no table and no interpretation — an earlier revision duplicated both and the copies promptly disagreed. What it does hold is the single approved public sentence, because a document whose job is to say what the product may claim cannot do that job while quoting nothing. Every figure below also appears in `studies.md`, and a test enforces that.
 
 One pre-registered experiment has been run: [does the bounded prompt work?](studies.md#does-the-bounded-prompt-work-controlled-experiment-pre-registered). Its registered verdict is **INCONCLUSIVE** and stays recorded that way; the registered hypothesis was that bounded prompts produce narrower diffs, and they did not.
 
@@ -105,7 +105,7 @@ One pre-registered experiment has been run: [does the bounded prompt work?](stud
 
 > Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, under this tool's own finding count.
 
-An earlier revision of this line read "bounded ones did not" — which concealed the bounded arm's own failure and was flagged as a misleading public claim. Two limits travel with that sentence wherever it goes: the bounded arm is told which findings to close and then scored on closing them, and "improved" means "closed the findings this tool names", which no outcome study has yet connected to real maintenance cost.
+An earlier revision read "bounded ones did not", which concealed the bounded arm's own failure; an audit flagged it as a misleading public claim and it is corrected here rather than quietly rewritten. Two limits travel with that sentence wherever it goes: the bounded arm is told which findings to close and then scored on closing them, and "improved" means "closed the findings this tool names", which no outcome study has yet connected to real maintenance cost.
 
 ## What failure looks like
 

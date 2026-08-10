@@ -468,6 +468,46 @@ def test_every_declared_history_subset_is_enforced(tmp_path: Path, part: str, wh
         normalize_report_evidence(report)
 
 
+STATUS_TO_POPULATION = tuple(
+    (part, whole)
+    for part, whole in SUMMARY_SUBSETS
+    if part.endswith(("_failures", "_warnings")) and whole.endswith("_scanned")
+)
+
+
+@pytest.mark.parametrize("part, whole", STATUS_TO_POPULATION, ids=lambda v: str(v))
+def test_a_status_count_is_bounded_even_when_its_sibling_is_unknown(
+    tmp_path: Path, part: str, whole: str
+) -> None:
+    """The sum relation skips on Unknown; the individual one must not.
+
+    An audit found ``files_scanned=5, file_failures=6`` accepted
+    whenever ``file_warnings`` was absent, because the only rule
+    covering it was the sum and the sum needs both siblings Measured.
+    A known count cannot exceed a known population no matter what is
+    unknown beside it. Each pair is checked here with its sibling
+    deleted, which is the exact condition that bypassed the inventory.
+    """
+    sibling = part.replace("_failures", "_warnings") if part.endswith("_failures") else part.replace("_warnings", "_failures")
+    report = _valid_report(tmp_path)
+    summary = dict.fromkeys(
+        (field.name for field in SummaryEvidence.__dataclass_fields__.values()), 0
+    )
+    summary.update({name: True for name in ("has_readme", "has_changelog", "has_docs_dir")})
+    summary["files_scanned"] = summary["declarations_scanned"] = 1_000
+    summary["production_files_scanned"] = summary["production_declarations_scanned"] = 1_000
+    summary[whole] = 5
+    summary[part] = 6
+    for other, other_whole in SUMMARY_SUBSETS:
+        if other != part and summary.get(other, 0) > summary.get(other_whole, 0):
+            summary[other] = summary[other_whole]
+    del summary[sibling]
+    report["summary"] = summary
+
+    with pytest.raises(EvidenceValidationError, match="cannot be larger than its set"):
+        normalize_report_evidence(report)
+
+
 def test_an_unknown_never_manufactures_an_invariant_violation(tmp_path: Path) -> None:
     """An absent count constrains nothing and must not be read as zero.
 

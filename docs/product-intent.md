@@ -44,7 +44,7 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 
 This list exists because the project has already broken it once and retracted. Adding a claim in these shapes requires deleting it from this list first, with the evidence that earns it.
 
-- **That it detects AI-written code**, or that any metric distinguishes AI authorship. Tested with a matched control and retracted (p = 0.546). Any revival needs a pre-registered design with commit-level authorship.
+- **That it detects AI-written code**, or that any metric distinguishes AI authorship. Tested with a matched control and [retracted](studies.md#does-this-detect-ai-written-code). Any revival needs a pre-registered design with commit-level authorship.
 - **That the score predicts business outcomes** — defect rates, delivery speed, cost. No outcome study has been run. The rubric is a standard, not a model of the future.
 - **That a passing grade means the code is maintainable.** It means nothing this tool measures is out of band.
 - **That the architecture, or any ADR, is "fully implemented"** while its consumers and invariants have not migrated.

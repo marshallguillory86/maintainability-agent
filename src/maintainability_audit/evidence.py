@@ -180,6 +180,20 @@ SUMMARY_SUBSETS: tuple[tuple[str, str], ...] = (
     ("production_function_warnings", "function_warnings"),
     ("production_hard_gate_failures", "hard_gate_failures"),
     ("test_file_count", "files_scanned"),
+    # Each status count individually, not only as a sum. The sum
+    # relation below skips when either sibling is Unknown, so an audit
+    # found `files_scanned=5, file_failures=6` accepted whenever
+    # `file_warnings` was absent: a known count cannot exceed a known
+    # population regardless of what is unknown beside it. The sum is an
+    # additional constraint, never a replacement for these.
+    ("file_failures", "files_scanned"),
+    ("file_warnings", "files_scanned"),
+    ("function_failures", "declarations_scanned"),
+    ("function_warnings", "declarations_scanned"),
+    ("production_file_failures", "production_files_scanned"),
+    ("production_file_warnings", "production_files_scanned"),
+    ("production_function_failures", "production_declarations_scanned"),
+    ("production_function_warnings", "production_declarations_scanned"),
     ("dead_code_count", "declarations_scanned"),
     ("near_duplicate_count", "declarations_scanned"),
 )

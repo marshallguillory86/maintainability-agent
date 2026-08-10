@@ -14,6 +14,19 @@ The split exists because mixing the two genres in one document is how this proje
 | [AI authorship](#does-this-detect-ai-written-code) | Does any metric distinguish AI-written code? | **Retracted.** Matched control, p = 0.546. This design could not measure a difference |
 | [Fix breadth](#does-this-detect-ai-written-code) | Are AI-assisted fixes broader? | Exploratory only. Three specifications straddle p = 0.05; none survives Holm |
 
+## Approved summaries
+
+The **only** sentences other documents may use to describe these results. Governing and public documents quote one of these verbatim or say nothing; `test_docs_links.py` compares them character for character, because matching individual numbers cannot detect a swapped attribution or a different sentence built from the same figures.
+
+Changing a sentence here is changing a public claim. Do it when the evidence changes, and correct every document that quotes it in the same commit.
+
+<!-- approved-summaries:start -->
+- Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, under this tool's own finding count.
+- No metric measured here distinguishes AI-written code from human-written code; the one claim that did was retracted.
+- Re-run against a control matched on age, popularity and language, the near-duplication gap is not significant (p = 0.546), and no other metric earns the claim either.
+<!-- approved-summaries:end -->
+
+
 ## Does the bounded prompt work? (controlled experiment, pre-registered)
 
 The product's central promise — a findings-bounded prompt produces narrower, more targeted agent fixes than a generic instruction — was tested under a protocol committed before any run ([`PROTOCOL.md`](../tools/experiments/fix_scope/PROTOCOL.md)): six repositories at pinned commits, two `codex exec` runs each (`gpt-5.6-sol`, 10-minute budget), generic instruction versus this tool's generated prompt. **Provenance, stated precisely:** the protocol — including the decision rule — was committed before the first run began; the analyzer was **not**: its first version landed about a minute into the runs, and it was rewritten mid-run after an audit found it diverged from the protocol's wording. What predates the data is the rule; the code applying it does not, and an earlier revision of this page claimed otherwise. Every arm was re-derived against its pinned base after a runner defect was audited (no recorded number changed). Raw data: [`results.json`](../tools/experiments/fix_scope/results.json), plus [`artifacts/`](../tools/experiments/fix_scope/artifacts/) holding every arm's full diff against its pinned base and every bounded prompt (regenerated deterministically from the pinned inputs; regenerated lengths match the recorded ones byte-for-byte). The agents' full transcripts were not captured — only 2,000-character tails — and cannot be recovered; that loss is permanent and noted here rather than papered over.

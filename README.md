@@ -193,16 +193,28 @@ See [docs/standard.md](docs/standard.md).
 
 ## Documentation
 
+Start with [the documentation index](docs/README.md), which states each document's genre and what it is allowed to assert.
+
+**Governing**
+
+- [Product intent](docs/product-intent.md) — what this is for, what it promises, what it must never claim, and the evidence bar for each kind of claim
+- [Architecture](docs/architecture.md) — layers, dependency rules, enforced invariants, known debt
+- [Philosophy](docs/philosophy.md) — why AI-specific: volume, not pathology
+- [ADR 001](docs/adr-001-evidence-and-verification.md) — evidence states and verification (stages 1–3 implemented)
+
+**Reference and operations**
+
+- [Maintainability standard](docs/standard.md)
+- [Report contract](docs/report-contract.md)
 - [CLI reference](docs/cli.md)
 - [Config schema](docs/config-schema.md)
 - [Language support and detection accuracy](docs/language-support.md)
-- [Philosophy](docs/philosophy.md)
-- [Changelog](CHANGELOG.md)
 - [Analyzer adapters](docs/adapters.md)
 - [External quality tools](docs/external-quality-tools.md)
 - [IDE and agent integration](docs/ide-agent-integration.md)
 - [PR and baseline workflows](docs/pr-and-baseline-workflows.md)
 - [Roadmap](docs/roadmap.md)
+- [Changelog](CHANGELOG.md)
 
 ## GitHub Action
 

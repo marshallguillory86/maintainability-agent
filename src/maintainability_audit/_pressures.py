@@ -83,14 +83,20 @@ def dimension_pressures(summary: SummaryEvidence) -> dict[str, float | None]:
     }
 
 
-def _production(primary: object, fallback: object) -> float | None:
-    """A production-only count, falling back to the combined one.
+def _production(primary: object) -> float | None:
+    """A production-only count. Unknown stays unknown.
 
-    The fallback exists because a summary may predate the production
-    split. It falls back to the *combined measurement*, never to zero.
+    This used to fall back to the combined count when the production
+    figure was absent, on the theory that a summary might predate the
+    production split. An audit killed it twice over: the report contract
+    establishes that **no consumer rescores a historical report**, so the
+    fallback served no real caller, and it silently resurrected an
+    ``Unknown`` as a measured value — deleting
+    ``production_declarations_scanned`` produced a measured pressure and
+    raised the reported overall from 4.3 to 4.6. ADR 001 §3 forbids
+    exactly this: compatibility for a consumer that does not exist.
     """
-    value = measured(primary)
-    return measured(fallback) if value is None else value
+    return measured(primary)
 
 
 def production_pressures(summary: SummaryEvidence) -> dict[str, float | None]:
@@ -101,18 +107,18 @@ def production_pressures(summary: SummaryEvidence) -> dict[str, float | None]:
     inverts the incentive — extracting duplicated test setup into a
     fixture would lower the score for improving the code.
     """
-    files = _production(summary.production_files_scanned, summary.files_scanned)
-    decls = _production(summary.production_declarations_scanned, summary.declarations_scanned)
-    gates = _production(summary.production_hard_gate_failures, summary.hard_gate_failures)
+    files = _production(summary.production_files_scanned)
+    decls = _production(summary.production_declarations_scanned)
+    gates = _production(summary.production_hard_gate_failures)
     return {
         "file_size": _weighted_rate(
-            _production(summary.production_file_failures, summary.file_failures),
-            _production(summary.production_file_warnings, summary.file_warnings),
+            _production(summary.production_file_failures),
+            _production(summary.production_file_warnings),
             files,
         ),
         "declarations": _weighted_rate(
-            _production(summary.production_function_failures, summary.function_failures),
-            _production(summary.production_function_warnings, summary.function_warnings),
+            _production(summary.production_function_failures),
+            _production(summary.production_function_warnings),
             decls,
         ),
         "gates": None if gates is None else 0.05 * gates,

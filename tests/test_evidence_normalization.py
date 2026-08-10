@@ -292,3 +292,101 @@ def test_normalizing_does_not_change_the_report_or_its_score(tmp_path: Path) -> 
     normalize_report_evidence(report)
 
     assert (report["score"], report["summary"], report["history"]) == before
+
+
+# ---------------------------------------------------------------------------
+# Stage 4 hardening: the boundary must reject evidence a scanner could not
+# have produced, and must never resurrect an Unknown as a measurement.
+# ---------------------------------------------------------------------------
+
+def test_unknown_production_evidence_is_never_resurrected(tmp_path: Path) -> None:
+    """The production fallback is gone, and must not come back.
+
+    ``production_pressures`` used to fall back to the combined count
+    when the production figure was absent — nominally for summaries
+    predating the production split, a consumer the report contract
+    proves does not exist. An audit showed the cost: deleting
+    ``production_declarations_scanned`` normalized it to ``Unknown``
+    and the fallback still produced a measured pressure of 0.01,
+    raising the reported overall.
+    """
+    from maintainability_audit._pressures import production_pressures
+
+    _tested_repo(tmp_path)
+    _commit(tmp_path, "start")
+    report = _report(tmp_path)
+    del report["summary"]["production_declarations_scanned"]
+
+    evidence = normalize_report_evidence(report)
+
+    assert isinstance(evidence.summary.production_declarations_scanned, Unknown)
+    assert production_pressures(evidence.summary)["declarations"] is None, (
+        "an Unknown production count produced a measured pressure"
+    )
+
+
+@pytest.mark.parametrize(
+    "field, value, expected",
+    [
+        ("files_scanned", True, "boolean"),
+        ("declarations_scanned", 1.5, "whole"),
+        ("risk_findings", 2.5, "whole"),
+        ("has_readme", 7, "true or false"),
+        ("has_changelog", 1, "true or false"),
+    ],
+)
+def test_a_value_no_scanner_could_produce_is_rejected(
+    tmp_path: Path, field: str, value: object, expected: str
+) -> None:
+    """Counts are whole numbers; flags are booleans.
+
+    One generic numeric check served every field, so the boundary
+    accepted ``files_scanned=True``, ``files_scanned=1.5`` and
+    ``has_readme=7`` and scored them without complaint. A validation
+    boundary that accepts impossible evidence is a boundary in name.
+    """
+    _tested_repo(tmp_path)
+    _commit(tmp_path, "start")
+    report = _report(tmp_path)
+    report["summary"][field] = value
+
+    with pytest.raises(EvidenceValidationError) as caught:
+        normalize_report_evidence(report)
+
+    assert expected in str(caught.value)
+
+
+def test_a_subset_count_larger_than_its_set_is_rejected(tmp_path: Path) -> None:
+    """Cross-field validation, which the boundary previously had none of.
+
+    ``single_author_files = 50`` against ``multi_commit_files = 10``
+    normalized and scored happily, implying an ownership share of 5.0
+    that no repository can exhibit.
+    """
+    _tested_repo(tmp_path)
+    _commit(tmp_path, "start")
+    report = _report(tmp_path)
+    report["history"]["multi_commit_files"] = 10
+    report["history"]["single_author_files"] = 50
+
+    with pytest.raises(EvidenceValidationError) as caught:
+        normalize_report_evidence(report)
+
+    assert "cannot be larger than its set" in str(caught.value)
+
+
+def test_production_counts_cannot_exceed_their_combined_counts(tmp_path: Path) -> None:
+    """The same rule on the summary side, where it caught a real fixture bug.
+
+    The corpus parity fixtures set ``file_warnings`` to 0 while merging
+    a stored ``production_file_warnings`` of 15, so those tests had been
+    scoring a repository that cannot exist.
+    """
+    _tested_repo(tmp_path)
+    _commit(tmp_path, "start")
+    report = _report(tmp_path)
+    report["summary"]["function_failures"] = 0
+    report["summary"]["production_function_failures"] = 5
+
+    with pytest.raises(EvidenceValidationError):
+        normalize_report_evidence(report)

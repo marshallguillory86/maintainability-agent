@@ -200,7 +200,7 @@ Start with [the documentation index](docs/README.md), which states each document
 - [Product intent](docs/product-intent.md) — what this is for, what it promises, what it must never claim, and the evidence bar for each kind of claim
 - [Architecture](docs/architecture.md) — layers, dependency rules, enforced invariants, known debt
 - [Philosophy](docs/philosophy.md) — why AI-specific: volume, not pathology
-- [ADR 001](docs/adr-001-evidence-and-verification.md) — evidence states and verification (stages 1–3 implemented)
+- [Decision register](docs/decisions.md) — every architectural decision and its current status, including [ADR 001](docs/adr-001-evidence-and-verification.md) (evidence states and verification) and the open questions
 
 **Reference and operations**
 

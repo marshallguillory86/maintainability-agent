@@ -4,7 +4,7 @@ Inventory and versioning policy for the dictionary `build_report` returns.
 
 This document exists because [ADR 001](adr-001-evidence-and-verification.md) requires the report's producers and consumers to be *named* before any migration is written: "Compatibility code will not be retained for hypothetical consumers." Everything below was traced in the source, not assumed.
 
-**Status: ADR 001 is partially implemented (stages 1–4).** A schema version, a typed evidence model, one normalization boundary, and the scorer migrated behind it. Scoring output is unchanged, verified by re-scoring a fixed pre-migration report. `evidence_status` and `verified_grade` do not exist yet. See [Remaining work](#remaining-work).
+**Status:** see the [decision register](decisions.md), which is the single place ADR 001's implementation status is stated. This document describes the report contract as it stands today.
 
 ## The single producer
 
@@ -81,6 +81,6 @@ Two behaviors worth recording because they are decisions, not details:
 
 ## Remaining work
 
-ADR 001's stages 4-9 are untouched: migrating aspect scorers behind the boundary, `evidence_status` and `verified_grade`, invariant tests over the nested model, consumer migration, removing the raw-dictionary fallbacks in `_pressures`/`_aspects`, and separating history-window materialization from fix-breadth measurement.
+The stages still open are listed in the [decision register](decisions.md); the work they cover is:
 
 Nothing in this repository should be read as claiming the ADR is implemented.

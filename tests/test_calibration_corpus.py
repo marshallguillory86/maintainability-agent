@@ -21,7 +21,12 @@ from pathlib import Path
 
 import pytest
 
-from maintainability_audit._calibration import CALIBRATION_C, DIMENSION_REFERENCES, DIMENSION_WEIGHTS
+from maintainability_audit._calibration import (
+    CALIBRATION_C,
+    DIMENSION_REFERENCES,
+    DIMENSION_WEIGHTS,
+    WARN_WEIGHT,
+)
 from maintainability_audit._derive import (
     DIMENSIONS,
     FIXED_REFERENCES,
@@ -160,33 +165,42 @@ def test_normalized_pressure_is_one_for_a_repo_at_every_reference() -> None:
 
 
 def _summary(entry: dict) -> dict:
-    """Rebuild a scoreable summary from stored raw pressures.
+    """A scoreable summary whose production counts are a real subset.
 
-    Populations are carried through so the rates reconstruct exactly;
-    warnings are folded into failures because only the combined pressure
-    was recorded. The stored ``evidence`` block is merged last so the
-    rubric aspects price here exactly as the derivation priced them —
-    this test exercises the same rollup users receive, which is the
-    point of the anchor.
+    Rebuilt when cross-field validation landed and immediately rejected
+    the previous version: it set ``file_warnings`` to 0 while merging
+    the stored ``production_file_warnings`` of 15, so this parity test
+    had been scoring a repository that cannot exist. Production counts
+    are now carried through and the combined counts built on top of
+    them, which is both valid and closer to a real report.
+
+    Counts are whole because the boundary requires it — a fractional
+    file is not a measurement. The corpus median still lands on exactly
+    4.0 through this reconstruction.
     """
     files, decls = entry["files"], max(1, entry["declarations"])
-    dims = entry["dimensions"]
-    return {
+    dims, recorded = entry["dimensions"], dict(entry.get("evidence", {}))
+    prod_file_fail = recorded.get("production_file_failures", 0)
+    prod_file_warn = recorded.get("production_file_warnings", 0)
+    prod_func_fail = recorded.get("production_function_failures", 0)
+    prod_func_warn = recorded.get("production_function_warnings", 0)
+    prod_gates = recorded.get("production_hard_gate_failures", 0)
+    summary = dict(recorded)
+    summary.update({
         "files_scanned": files,
         "declarations_scanned": decls,
-        "production_files_scanned": files,
-        "production_declarations_scanned": decls,
-        "file_failures": dims["file_size"] * files,
-        "file_warnings": 0,
-        "function_failures": dims["declarations"] * decls,
-        "function_warnings": 0,
-        "production_file_failures": dims["file_size"] * files,
-        "production_file_warnings": 0,
-        "production_function_failures": dims["declarations"] * decls,
-        "production_function_warnings": 0,
-        "duplicate_blocks": dims["duplication"] * files,
-        "risk_findings": dims["risk"] * files,
-        "hard_gate_failures": dims["gates"] / 0.05,
-        "production_hard_gate_failures": dims["gates"] / 0.05,
-        **entry.get("evidence", {}),
-    }
+        "file_warnings": prod_file_warn,
+        "function_warnings": prod_func_warn,
+        "file_failures": max(
+            prod_file_fail, round(dims["file_size"] * files - WARN_WEIGHT * prod_file_warn)
+        ),
+        "function_failures": max(
+            prod_func_fail, round(dims["declarations"] * decls - WARN_WEIGHT * prod_func_warn)
+        ),
+        "duplicate_blocks": round(dims["duplication"] * files),
+        "risk_findings": round(dims["risk"] * files),
+        "hard_gate_failures": max(prod_gates, round(dims["gates"] / 0.05)),
+    })
+    summary.setdefault("production_files_scanned", files)
+    summary.setdefault("production_declarations_scanned", decls)
+    return summary

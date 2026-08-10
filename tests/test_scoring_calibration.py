@@ -17,7 +17,7 @@ back quietly:
 """
 from __future__ import annotations
 
-from maintainability_audit._calibration import DIMENSION_REFERENCES
+from maintainability_audit._calibration import DIMENSION_REFERENCES, WARN_WEIGHT
 from maintainability_audit.evidence import (
     REPORT_SCHEMA_VERSION,
     SCHEMA_VERSION_KEY,
@@ -354,37 +354,65 @@ def test_derivation_matches_live_score_report_repo_by_repo() -> None:
 
     mismatches = []
     for entry in measurements:
-        derived = _corpus_overall(entry, references, CALIBRATION_C)
-        live = score_report({"summary": _summary_reproducing(entry)})["overall"]
+        summary, matched = _matched_pair(entry)
+        derived = _corpus_overall(matched, references, CALIBRATION_C)
+        live = score_report({"summary": summary})["overall"]
         if derived != live:
             mismatches.append(f"{entry['repo']}: derived {derived} vs live {live}")
 
     assert not mismatches, "derivation and score_report disagree:\n" + "\n".join(mismatches)
 
 
-def _summary_reproducing(entry: dict) -> dict:
-    """A summary whose measured pressures are the entry's stored ones.
+def _matched_pair(entry: dict) -> tuple[dict, dict]:
+    """A summary and an entry that describe exactly the same repository.
 
-    The corpus records rates, not the raw counts they came from, so the
-    counts are back-solved from the rates through the same denominators
-    ``dimension_pressures`` divides by. Warnings are folded into
-    failures because the two enter the rate as one weighted sum.
+    The old version back-solved fractional counts from the stored rates
+    so the live pressures would equal them. Cross-field and whole-number
+    validation now reject that summary — correctly: it described a
+    repository with 25.1 failing files and more production warnings than
+    total warnings.
+
+    So the direction is reversed. Build a *valid* integer summary first,
+    measure its pressures with the shipped function, and hand those same
+    pressures to the derivation. Both paths then start from identical
+    inputs, which is what makes a disagreement meaningful rather than a
+    rounding artifact.
     """
-    files = entry["files"]
-    pressures = entry["dimensions"]
-    return {
-        **entry["evidence"],
+    files, decls = entry["files"], max(1, entry["declarations"])
+    dims, recorded = entry["dimensions"], dict(entry.get("evidence", {}))
+    prod_file_warn = recorded.get("production_file_warnings", 0)
+    prod_func_warn = recorded.get("production_function_warnings", 0)
+    summary = dict(recorded)
+    summary.update({
         "files_scanned": files,
-        "declarations_scanned": entry["declarations"],
-        "file_failures": pressures["file_size"] * files,
-        "file_warnings": 0,
-        "function_failures": pressures["declarations"] * entry["declarations"],
-        "function_warnings": 0,
-        "duplicate_blocks": pressures["duplication"] * files,
-        "risk_findings": pressures["risk"] * files,
-        "hard_gate_failures": round(pressures["gates"] / 0.05),
+        "declarations_scanned": decls,
+        "file_warnings": prod_file_warn,
+        "function_warnings": prod_func_warn,
+        "file_failures": max(
+            recorded.get("production_file_failures", 0),
+            round(dims["file_size"] * files - WARN_WEIGHT * prod_file_warn),
+        ),
+        "function_failures": max(
+            recorded.get("production_function_failures", 0),
+            round(dims["declarations"] * decls - WARN_WEIGHT * prod_func_warn),
+        ),
+        "duplicate_blocks": round(dims["duplication"] * files),
+        "risk_findings": round(dims["risk"] * files),
+        "hard_gate_failures": max(
+            recorded.get("production_hard_gate_failures", 0), round(dims["gates"] / 0.05)
+        ),
+    })
+    summary.setdefault("production_files_scanned", files)
+    summary.setdefault("production_declarations_scanned", decls)
+    measured_dims = dimension_pressures(_evidence_of(summary))
+    matched_entry = {
+        "repo": entry["repo"],
+        "files": files,
+        "declarations": decls,
+        "dimensions": measured_dims,
+        "evidence": {key: summary[key] for key in recorded},
     }
-
+    return summary, matched_entry
 
 # ---------------------------------------------------------------------------
 # Every advertised aspect has to actually do something
@@ -426,3 +454,36 @@ def test_knowledge_concentration_changes_the_score() -> None:
 
     assert concentrated["aspects"]["knowledge_concentration"] < spread["aspects"]["knowledge_concentration"]
     assert concentrated["overall"] < spread["overall"]
+
+
+def test_the_overall_is_the_weighted_mean_of_the_printed_categories() -> None:
+    """P4, checked directly instead of by proxy.
+
+    The architecture table used to map this promise to the corpus-median
+    test, which asserts only that the median is 4.0 — it never checks
+    the arithmetic identity on any individual report. An audit called
+    that out: naming a test is not the same as the test checking the
+    thing. This asserts the published sentence on every report it can
+    reach, including untested and partially-unknown ones, where the
+    testability cap and anchor imputation act.
+    """
+    from maintainability_audit._formula import CATEGORY_WEIGHTS
+
+    reports = [
+        {"summary": summary(500, 1000)},
+        {"summary": summary(500, 1000, file_failures=250, risk_findings=400)},
+        {"summary": _evidence_summary(), "history": _history()},
+        {"summary": _evidence_summary(test_file_count=0), "history": _history()},
+        {"summary": _evidence_summary()},
+        {"summary": _evidence_summary(), "history": _history(single_author_files=10)},
+    ]
+    for report in reports:
+        score = score_report(report)
+        categories = score["categories"]
+        total = sum(CATEGORY_WEIGHTS[name] for name in categories)
+        expected = round(
+            sum(value * CATEGORY_WEIGHTS[name] for name, value in categories.items()) / total, 1
+        )
+        assert score["overall"] == expected, (
+            f"{score['overall']} is not the weighted mean of {categories}"
+        )

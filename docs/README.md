@@ -25,7 +25,7 @@ Every document here has a **genre**, and the genre determines what it may assert
 
 | Document | Status |
 |---|---|
-| [ADR 001 — Evidence and verification](adr-001-evidence-and-verification.md) | Accepted; stages 1–4 implemented, 5–9 pending |
+| [ADR 001 — Evidence and verification](adr-001-evidence-and-verification.md) | Accepted — status in the [register](decisions.md) |
 | [ADR 002 — Null verified grade in CI](adr-002-null-verified-grade-in-ci.md) | **Proposed** — open question, blocks ADR 001 stage 5 |
 | [Report contract](report-contract.md) | Current — the report's producers, consumers, and schema-version policy |
 

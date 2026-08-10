@@ -11,9 +11,11 @@ Each rule was bought by a specific failure; the docstrings say which.
 from __future__ import annotations
 
 import ast
+import re
 from pathlib import Path
 
-PACKAGE = Path(__file__).resolve().parents[1] / "src" / "maintainability_audit"
+ROOT = Path(__file__).resolve().parents[1]
+PACKAGE = ROOT / "src" / "maintainability_audit"
 
 FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "config", "git_tools", "instructions"}
 PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens"}
@@ -180,3 +182,56 @@ def test_the_documented_layering_matches_the_document() -> None:
     missing = sorted(module for module in set().union(*LAYERS.values()) if module not in text)
 
     assert not missing, f"modules absent from docs/architecture.md: {missing}"
+
+
+def _named_tests(text: str) -> set[str]:
+    return set(re.findall(r"`(test_[a-z0-9_]+(?:\.py)?)`", text))
+
+
+def test_every_test_named_in_the_architecture_doc_exists() -> None:
+    """A cited test that does not exist is a claim with nothing behind it.
+
+    An audit found the invariant table asserting enforcement on the
+    strength of test *names*, one of them mapped to a test that checked
+    something else entirely. Names in that table are now verified
+    against the suite, so a renamed or deleted test fails the build
+    instead of quietly downgrading a documented invariant to a promise.
+    """
+    doc = (ROOT / "docs" / "architecture.md").read_text(encoding="utf-8")
+    suite = "\n".join(
+        path.read_text(encoding="utf-8") for path in (ROOT / "tests").glob("test_*.py")
+    )
+    existing_files = {path.name for path in (ROOT / "tests").glob("test_*.py")}
+
+    missing = [
+        name
+        for name in _named_tests(doc)
+        if not (name in existing_files or f"def {name}(" in suite)
+    ]
+
+    assert not missing, f"docs/architecture.md cites tests that do not exist: {sorted(missing)}"
+
+
+def test_adr_implementation_status_is_stated_in_exactly_one_place() -> None:
+    """Stage status lives in the decision register and nowhere else.
+
+    It was copied into five documents and a module docstring, and three
+    of the copies were already contradicting each other one commit after
+    they were written — README said stages 1–3, the report contract said
+    4–9 untouched, and `evidence.py` said scoring did not consume the
+    boundary it had just been migrated onto. A status duplicated is a
+    status that goes stale, so everything else links to the register.
+    """
+    register = ROOT / "docs" / "decisions.md"
+    pattern = re.compile(r"stages? \d\s*[–-]\s*\d", re.I)
+    offenders = []
+    for path in [*ROOT.glob("*.md"), *ROOT.glob("docs/*.md"), *ROOT.glob("src/**/*.py")]:
+        if path == register or path.name == "self-audit.md":
+            continue
+        if pattern.search(path.read_text(encoding="utf-8")):
+            offenders.append(str(path.relative_to(ROOT)))
+
+    assert not offenders, (
+        "ADR stage status restated outside docs/decisions.md: "
+        f"{sorted(offenders)}; link to the register instead"
+    )

@@ -10,12 +10,11 @@ Dependency-light native scanner; Markdown, JSON, SARIF and PR-comment output; bo
 
 ## Next: finish ADR 001
 
-The architecture migration outranks new features. Six audit rounds were spent on one bug class that the typed evidence boundary is meant to end; leaving it half-migrated is how the seventh round happens. Stages 4–9 in [ADR 001](adr-001-evidence-and-verification.md), the immediate ones being:
+The architecture migration outranks new features. Six audit rounds were spent on one bug class that the typed evidence boundary is meant to end; leaving it half-migrated is how the seventh round happens. The open stages and their current status are in the [decision register](decisions.md); the immediate work is:
 
-1. Move aspect scoring behind the typed boundary and delete the raw-dictionary fallbacks.
-2. Introduce `evidence_status` and `verified_grade` alongside the compatibility fields.
-3. **Open decision, blocking stage 5:** what a CI gate does when `verified_grade` is null. Failing open would let a repository turn the gate green by withholding evidence, which is worse than today's floor grade.
-4. Separate history-window materialization from fix-breadth measurement, with checked-in manifests.
+1. Introduce `evidence_status` and `verified_grade` alongside the compatibility fields.
+2. **Open decision** ([ADR 002](adr-002-null-verified-grade-in-ci.md)): what a CI gate does when `verified_grade` is null. Failing open would let a repository turn the gate green by withholding evidence, which is worse than today's floor grade.
+3. Separate history-window materialization from fix-breadth measurement, with checked-in manifests.
 
 ## A known shape problem: this tool is end-of-loop heavy
 

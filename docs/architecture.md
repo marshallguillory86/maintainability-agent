@@ -86,16 +86,22 @@ Two properties of this flow are load-bearing and each has a test:
 
 ## Invariants and where they are enforced
 
-| Invariant | Enforced by |
-|---|---|
-| Layering and acyclicity above | `tests/test_architecture.py` |
-| Withholding any input cannot raise the floor or the grade | `test_withholding_any_single_input_cannot_raise_the_floor_or_the_grade` |
-| `overall_range` always contains `overall` | `test_the_interval_always_contains_the_score` |
-| Overall equals the mean of the printed categories | `test_corpus_median_rolls_up_to_exactly_four_through_the_rounded_path` |
-| Every advertised aspect carries weight somewhere | `test_every_scored_aspect_carries_weight_in_some_category` |
-| Derivation agrees with the live scorer per repository | `test_derivation_matches_live_score_report_repo_by_repo` |
-| Absence never resolves into a better-defined state | `test_deleting_a_field_never_resolves_it_into_a_better_defined_state` |
-| History window is independent of cache depth | `tests/test_fix_breadth_window.py` |
+Two columns, deliberately. **Property** means the test varies the real input space or the real field set, so a case nobody thought of is still covered. **Regression** means it pins specific scenarios — valuable, but it only proves what it enumerates. An audit found this table claiming enforcement on the strength of test *names*, with a promise mapped to a corpus-median test that never checked the arithmetic it was cited for. The distinction is now stated rather than implied, and `test_architecture.py` fails the build if a test named here does not exist.
+
+| Invariant | Enforced by | Strength |
+|---|---|---|
+| Layering and acyclicity above | `test_architecture.py` | Property — reads the real import graph |
+| Withholding any single summary input cannot raise the floor or the grade | `test_withholding_any_single_input_cannot_raise_the_floor_or_the_grade` | Property over summary keys; **regression only** for history, which is removed as a whole block rather than field by field |
+| `overall_range` always contains `overall` | `test_the_interval_always_contains_the_score` | Regression — five named configurations |
+| Overall equals the weighted mean of the printed categories | `test_the_overall_is_the_weighted_mean_of_the_printed_categories` | Regression over six reports, including untested and unknown-bearing ones |
+| Every advertised aspect carries weight somewhere | `test_every_scored_aspect_carries_weight_in_some_category` | Property — compares the declared aspect set against the weighted set |
+| Derivation agrees with the live scorer | `test_derivation_matches_live_score_report_repo_by_repo` | Property over all 40 corpus repositories |
+| Absence never resolves into a better-defined state | `test_deleting_a_field_never_resolves_it_into_a_better_defined_state` | Regression — one field |
+| Unknown production evidence is never resurrected | `test_unknown_production_evidence_is_never_resurrected` | Regression — one field |
+| Impossible values and subset violations are rejected | `test_a_value_no_scanner_could_produce_is_rejected`, `test_a_subset_count_larger_than_its_set_is_rejected` | Regression — enumerated field kinds and one cross-field pair |
+| History window is independent of cache depth | `test_fix_breadth_window.py` | Property over four cache depths |
+
+**What is not yet enforced as a property**, and should be before ADR 001 stage 6 claims it is: recursive variation of `Measured` / `Unknown` / `NotApplicable` across the *whole* typed model, including nested history fields, generated from the production evidence rather than a hand-built summary. ADR 001 §6 asks for exactly that and it does not exist yet. Until it does, the concealment property is demonstrated for summary fields and merely regression-tested for history.
 
 ## Known debt
 

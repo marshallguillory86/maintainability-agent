@@ -1,9 +1,11 @@
 """Typed evidence states and the one normalization boundary.
 
-Stage 2-3 of [ADR 001](../../docs/adr-001-evidence-and-verification.md).
-**Scoring does not consume this yet** — the scorer still reads raw
-dictionaries, and this module runs beside it. What exists here is the
-model and the boundary, not the migration.
+[ADR 001](../../docs/adr-001-evidence-and-verification.md); implementation
+status is tracked in ``docs/decisions.md`` and deliberately not restated
+here, because five copies of it went stale the first time.
+
+``score_report`` normalizes at its entry, so every scoring layer below
+consumes these types rather than raw dictionaries.
 
 The problem it exists to solve: a missing dictionary key currently means
 five different things (measured zero, could not measure, does not
@@ -23,7 +25,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from dataclasses import dataclass, fields
-from math import isnan
+from math import isinf, isnan
 from typing import Any
 
 # The report structure this module understands. Owned by
@@ -149,14 +151,69 @@ def walk_evidence(node: Any, prefix: str = "") -> Iterator[tuple[str, EvidenceSt
         yield from walk_evidence(child, f"{prefix}.{field.name}" if prefix else field.name)
 
 
-def _validated_number(value: Any, provenance: str) -> float | int | bool:
-    if isinstance(value, bool):
+# Fields that are true/false, not quantities. Everything else in the
+# model is a count of things the scanner saw.
+FLAG_FIELDS = frozenset({"has_readme", "has_changelog", "has_docs_dir"})
+
+# Pairs where the first can never exceed the second, because the first
+# counts a subset of what the second counts. Checked only when both are
+# Measured — an unknown constrains nothing.
+SUBSET_INVARIANTS: tuple[tuple[str, str], ...] = (
+    ("production_files_scanned", "files_scanned"),
+    ("production_declarations_scanned", "declarations_scanned"),
+    ("production_file_failures", "file_failures"),
+    ("production_file_warnings", "file_warnings"),
+    ("production_function_failures", "function_failures"),
+    ("production_function_warnings", "function_warnings"),
+)
+
+HISTORY_SUBSET_INVARIANTS: tuple[tuple[str, str], ...] = (
+    ("single_author_files", "multi_commit_files"),
+)
+
+
+def _validated_value(name: str, value: Any, provenance: str) -> float | int | bool:
+    """Reject values a scanner could not have produced.
+
+    An audit found the boundary accepting ``files_scanned=True``,
+    ``files_scanned=1.5`` and ``has_readme=7`` — all normalized and
+    scored without complaint — because one generic numeric check served
+    every field. A validation boundary that accepts impossible evidence
+    is a boundary in name only, so counts and flags are now checked as
+    what they are.
+    """
+    if name in FLAG_FIELDS:
+        if not isinstance(value, bool):
+            raise EvidenceValidationError(f"{provenance}: expected true or false, got {value!r}")
         return value
-    if not isinstance(value, (int, float)) or isnan(value):  # NaN is not a measurement
+    if isinstance(value, bool):
+        raise EvidenceValidationError(f"{provenance}: expected a count, got the boolean {value!r}")
+    if not isinstance(value, (int, float)) or isnan(value) or isinf(value):
         raise EvidenceValidationError(f"{provenance}: expected a number, got {value!r}")
     if value < 0:
         raise EvidenceValidationError(f"{provenance}: counts cannot be negative, got {value!r}")
+    if float(value) != int(value):
+        raise EvidenceValidationError(f"{provenance}: counts are whole, got {value!r}")
     return value
+
+
+def _check_subsets(
+    states: dict[str, EvidenceState], invariants: tuple[tuple[str, str], ...], prefix: str
+) -> None:
+    """Reject a subset count larger than the set it is drawn from.
+
+    Cross-field validation, which the first version of this boundary had
+    none of: ``single_author_files = 50`` against
+    ``multi_commit_files = 10`` normalized and scored happily, producing
+    an ownership share of 5.0 that no repository can exhibit.
+    """
+    for part_name, whole_name in invariants:
+        part, whole = states[part_name], states[whole_name]
+        if isinstance(part, Measured) and isinstance(whole, Measured) and part.value > whole.value:
+            raise EvidenceValidationError(
+                f"{prefix}.{part_name} ({part.value}) exceeds "
+                f"{prefix}.{whole_name} ({whole.value}): a subset cannot be larger than its set"
+            )
 
 
 def _state(source: dict[str, Any], name: str, prefix: str, missing_reason: str) -> EvidenceState:
@@ -172,7 +229,7 @@ def _state(source: dict[str, Any], name: str, prefix: str, missing_reason: str) 
     value = source[name]
     if value is None:
         return Unknown(f"{provenance} is null in the report", provenance)
-    return Measured(_validated_number(value, provenance), provenance)
+    return Measured(_validated_value(name, value, provenance), provenance)
 
 
 def _states_for(cls: type, source: dict[str, Any], prefix: str, missing_reason: str) -> dict[str, EvidenceState]:
@@ -221,6 +278,7 @@ def _normalize_history(report: dict[str, Any]) -> tuple[HistoryEvidence, bool]:
         return HistoryEvidence(**absent), False
     section = _require_mapping(raw, "history")
     states = _states_for(HistoryEvidence, section, "history", HISTORY_FIELD_ABSENT)
+    _check_subsets(states, HISTORY_SUBSET_INVARIANTS, "history")
     settled = states["multi_commit_files"]
     owners = states["single_author_files"]
     if isinstance(settled, Measured) and not settled.value and isinstance(owners, Measured):
@@ -245,9 +303,8 @@ def normalize_report_evidence(report: dict[str, Any]) -> NormalizedEvidence:
     (or :class:`UnsupportedReportSchema`) rather than returning a
     partially trustworthy model.
 
-    Not yet wired into scoring. ``build_report`` stamps the schema
-    version this validates; the scorer still reads the raw dictionaries
-    beside it, and moving it across is the next ADR stage.
+    ``build_report`` stamps the schema version this validates, and
+    ``score_report`` calls this before touching anything.
     """
     _require_mapping(report, "report")
     version = _check_schema_version(report)
@@ -255,9 +312,11 @@ def normalize_report_evidence(report: dict[str, Any]) -> NormalizedEvidence:
     if summary is None:
         raise EvidenceValidationError("report has no summary: nothing to score")
     history, present = _normalize_history(report)
+    summary_states = _states_for(SummaryEvidence, summary, "summary", SUMMARY_FIELD_ABSENT)
+    _check_subsets(summary_states, SUBSET_INVARIANTS, "summary")
     return NormalizedEvidence(
         schema_version=version,
-        summary=SummaryEvidence(**_states_for(SummaryEvidence, summary, "summary", SUMMARY_FIELD_ABSENT)),
+        summary=SummaryEvidence(**summary_states),
         history=history,
         history_present=present,
     )

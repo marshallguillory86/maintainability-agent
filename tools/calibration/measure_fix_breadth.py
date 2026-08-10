@@ -59,6 +59,14 @@ MIN_FIX_COMMITS = 5
 # The measurement window, and therefore the depth every cache must hold.
 WINDOW_COMMITS = 300
 
+# One commit deeper than the window. The oldest commit a shallow clone
+# holds has no parent locally, so git diffs it against the empty tree
+# and its --numstat reports the whole tree as added rather than what the
+# commit actually changed. Fetching one extra commit keeps every commit
+# *in* the window parented, and `_grafted_commits` refuses the boundary
+# outright in case a cache arrives shallow at exactly the window.
+FETCH_DEPTH = WINDOW_COMMITS + 1
+
 METRICS = ("median_files_per_fix", "median_lines_per_fix", "broad_fix_share")
 
 
@@ -90,14 +98,14 @@ def clone(entry: dict, cache_dir: Path) -> Path | None:
     target = cache_dir / entry["name"]
     if not (target / ".git").exists():
         result = subprocess.run(
-            ["git", "clone", "--quiet", "--depth", str(WINDOW_COMMITS), entry["url"], str(target)],
+            ["git", "clone", "--quiet", "--depth", str(FETCH_DEPTH), entry["url"], str(target)],
             capture_output=True, text=True,
         )
         if result.returncode != 0:
             print(f"  !! clone failed {entry['full_name']}: {result.stderr.strip()[:90]}", file=sys.stderr)
             return None
     if _git(target, "rev-parse", "HEAD") != entry["commit"]:
-        subprocess.run(["git", "fetch", "--quiet", "--depth", str(WINDOW_COMMITS), "origin", entry["commit"]],
+        subprocess.run(["git", "fetch", "--quiet", "--depth", str(FETCH_DEPTH), "origin", entry["commit"]],
                        cwd=target, capture_output=True, text=True)
         checked = subprocess.run(["git", "checkout", "--quiet", entry["commit"]],
                                  cwd=target, capture_output=True, text=True)
@@ -117,14 +125,14 @@ def _deepen_to_window(target: Path, entry: dict) -> Path | None:
     refused instead of contributing a truncated window.
     """
     for _ in range(2):
-        if _reachable_commits(target) >= WINDOW_COMMITS:
+        if _reachable_commits(target) >= FETCH_DEPTH:
             return target
         if _git(target, "rev-parse", "--is-shallow-repository") != "true":
             return target  # short history, fully fetched: the window is the repo
-        subprocess.run(["git", "fetch", "--quiet", f"--depth={WINDOW_COMMITS}", "origin", entry["commit"]],
+        subprocess.run(["git", "fetch", "--quiet", f"--depth={FETCH_DEPTH}", "origin", entry["commit"]],
                        cwd=target, capture_output=True, text=True)
     print(f"  !! {entry['full_name']}: only {_reachable_commits(target)} commits reachable after "
-          f"deepening to {WINDOW_COMMITS}; refusing a truncated window", file=sys.stderr)
+          f"deepening to {FETCH_DEPTH}; refusing a truncated window", file=sys.stderr)
     return None
 
 
@@ -141,18 +149,37 @@ def _numstat_totals(body: str) -> tuple[int, int]:
     return files, lines
 
 
+def _grafted_commits(path: Path) -> set[str]:
+    """Commits whose parents this clone does not have.
+
+    Git diffs a parentless commit against the empty tree, so the oldest
+    commit in a shallow clone reports its entire tree as added instead
+    of what it changed. An audit built the case: one fix commit measured
+    (1 file, 75 lines) in a full clone and (2 files, 39 lines) at the
+    shallow boundary — same commit, same window size, different numbers.
+    A true root commit is not listed here, so a repository shorter than
+    the window still measures its first commit normally.
+    """
+    shallow = path / ".git" / "shallow"
+    if not shallow.exists():
+        return set()
+    return {line.strip() for line in shallow.read_text().splitlines() if line.strip()}
+
+
 def fix_commits(path: Path) -> list[tuple[int, int]]:
-    """(files_touched, lines_changed) per fix commit."""
+    """(files_touched, lines_changed) per fix commit in the window."""
     result = subprocess.run(
-        ["git", "log", "-n", str(WINDOW_COMMITS), "--no-merges", "--format=%x1e%s", "--numstat"],
+        ["git", "log", "-n", str(WINDOW_COMMITS), "--no-merges", "--format=%x1e%H%x1f%s", "--numstat"],
         cwd=path, capture_output=True, text=True,
     )
     if result.returncode != 0:
         return []
+    grafted = _grafted_commits(path)
     fixes = []
     for block in result.stdout.split("\x1e"):
-        subject, _, body = block.partition("\n")
-        if not _FIX_PATTERN.search(subject):
+        header, _, body = block.partition("\n")
+        sha, _, subject = header.partition("\x1f")
+        if sha.strip() in grafted or not _FIX_PATTERN.search(subject):
             continue
         files, lines = _numstat_totals(body)
         if files:

@@ -53,7 +53,7 @@ This repo eats its own dogfood — the tool runs against this codebase in CI, an
 | Metric | Value |
 |---|---:|
 | Overall score | **4.6 / 5 (B)** |
-| Files scanned | 94 |
+| Files scanned | 95 |
 | File warnings | 10 |
 | File failures | 0 |
 | Function warnings | 7 |

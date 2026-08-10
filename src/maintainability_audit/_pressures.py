@@ -69,6 +69,57 @@ def production_pressures(summary: dict[str, Any]) -> dict[str, float]:
     }
 
 
+# The summary counts each dimension's pressure is computed from. A
+# dimension whose inputs are absent was not measured, which is a
+# different statement from "measured and found clean" — see
+# :func:`unmeasured_dimensions`.
+DIMENSION_INPUTS: dict[str, tuple[str, ...]] = {
+    "file_size": ("files_scanned", "file_failures", "file_warnings"),
+    "declarations": ("declarations_scanned", "function_failures", "function_warnings"),
+    "duplication": ("files_scanned", "duplicate_blocks"),
+    "risk": ("files_scanned", "risk_findings"),
+    "gates": ("hard_gate_failures",),
+}
+
+# declaration_size curves the production-only pressure, so it has its
+# own inputs — each falling back to the combined count, as
+# :func:`production_pressures` does.
+PRODUCTION_DECLARATION_INPUTS: tuple[tuple[str, str], ...] = (
+    ("production_declarations_scanned", "declarations_scanned"),
+    ("production_function_failures", "function_failures"),
+    ("production_function_warnings", "function_warnings"),
+)
+
+
+def unmeasured_dimensions(summary: dict[str, Any]) -> set[str]:
+    """Dimensions whose input counts the summary does not carry.
+
+    Every pressure above reads its counts with ``.get(name, 0)``, which
+    silently turns "this report does not say how many risk findings
+    there were" into "there were none" — a perfect score for saying
+    nothing. An audit found the same shape in the testability cap and
+    demonstrated that deleting a field *raised* the evidence floor;
+    sweeping every summary key showed three more fields with the
+    identical property (``file_failures``, ``files_scanned``,
+    ``risk_findings``). Absent inputs now make the dimension unmeasured,
+    so its aspect scores None: priced at the anchor for the point
+    estimate and at zero for the floor the grade is banded from.
+    """
+    return {
+        dimension
+        for dimension, inputs in DIMENSION_INPUTS.items()
+        if any(name not in summary for name in inputs)
+    }
+
+
+def production_declarations_measured(summary: dict[str, Any]) -> bool:
+    """Whether the production-only declaration pressure has its inputs."""
+    return all(
+        primary in summary or fallback in summary
+        for primary, fallback in PRODUCTION_DECLARATION_INPUTS
+    )
+
+
 def normalize(pressures: dict[str, float]) -> dict[str, float]:
     """Express each pressure as a multiple of what real code carries.
 

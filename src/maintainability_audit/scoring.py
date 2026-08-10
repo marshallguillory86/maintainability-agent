@@ -129,7 +129,7 @@ def grade_for(score: float, readings: dict[str, float]) -> tuple[str, list[str]]
 
 
 def _evidence_rules(
-    grade: str, blockers: list[str], aspects: dict[str, float | None], untested: bool, history_present: bool
+    grade: str, blockers: list[str], aspects: dict[str, float | None], untested: bool | None, history_present: bool
 ) -> tuple[str, list[str]]:
     """The two rules that keep A-grades honest about evidence.
 
@@ -171,7 +171,7 @@ def _grade_on_the_floor(
     summary: dict[str, Any],
     pressures: dict[str, float],
     aspects: dict[str, float | None],
-    untested: bool,
+    untested: bool | None,
     interval: tuple[float, float, float],
 ) -> tuple[str, list[str]]:
     """Band the grade from the evidence floor, and say so when it bites.

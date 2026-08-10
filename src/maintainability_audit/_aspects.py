@@ -18,7 +18,11 @@ from typing import Any
 
 from ._calibration import CALIBRATION_C
 from ._formula import CALIBRATED_ASPECTS, curve
-from ._pressures import normalize_production
+from ._pressures import (
+    normalize_production,
+    production_declarations_measured,
+    unmeasured_dimensions,
+)
 
 
 def _curve(normalized_pressure: float) -> float:
@@ -166,14 +170,20 @@ def aspect_scores(report: dict[str, Any], normalized: dict[str, float]) -> dict[
     """
     summary = report["summary"]
     history = report.get("history")
+    unmeasured = unmeasured_dimensions(summary)
     scores: dict[str, float | None] = {
-        name: _curve(normalized[dimension]) for name, dimension in CALIBRATED_ASPECTS.items()
+        name: (None if dimension in unmeasured else _curve(normalized[dimension]))
+        for name, dimension in CALIBRATED_ASPECTS.items()
     }
     # declaration_size reads the *production* pressure. Its only rubric
     # consumers are analyzability and testability, which describe the
     # code under test — an oversized test function must not drag either
     # (pinned by test_analyzability_not_penalized_by_test_function_size).
-    scores["declaration_size"] = _curve(normalize_production(summary)["declarations"])
+    scores["declaration_size"] = (
+        _curve(normalize_production(summary)["declarations"])
+        if production_declarations_measured(summary)
+        else None
+    )
     scores.update(evidence_aspect_scores(summary))
     scores["churn_hotspots"] = _history_rate_aspect(history, "hotspots")
     scores["change_coupling"] = _history_rate_aspect(history, "coupling")
@@ -181,16 +191,28 @@ def aspect_scores(report: dict[str, Any], normalized: dict[str, float]) -> dict[
     return scores
 
 
-def is_untested(summary: dict[str, Any]) -> bool:
-    """Production code with no test evidence at all.
+def is_untested(summary: dict[str, Any]) -> bool | None:
+    """Production code with no test evidence at all — or no evidence either way.
 
-    Integer evidence, not the aspect's float: no test files, or test
-    files holding zero declarations (an empty test-shaped artifact),
-    both count. ``.get``, not ``[]`` — reports written before 0.4.0
-    carry no ``test_file_count``, and an absent count is "unknown", not
-    "zero".
+    Three-valued, and the third value is the point. ``True`` is "there
+    are no tests", ``False`` is "there are", and ``None`` is "this
+    report does not say". Integer evidence, not the aspect's float: no
+    test files, or test files holding zero declarations (an empty
+    test-shaped artifact), both count as untested.
+
+    Returning a plain ``False`` for the unknown case is what an audit
+    exploited. The testability cap is a penalty that fired only on
+    reports carrying the evidence, so deleting ``test_file_count``
+    escaped it and *raised the evidence floor* — concealment paying
+    again, one level below the interval that was supposed to have
+    closed it. Unknown is now carried as unknown and priced by the same
+    dial as every other unknown: typical for the point estimate,
+    worst-case for the floor the grade is banded from.
     """
     test_count = summary.get("test_file_count")
-    production = summary.get("production_declarations_scanned", 0)
-    test_declarations = summary.get("declarations_scanned", 0) - production
-    return test_count is not None and production > 0 and (test_count == 0 or test_declarations == 0)
+    production = summary.get("production_declarations_scanned")
+    if test_count is None or production is None:
+        return None
+    if production <= 0:
+        return False
+    return test_count == 0 or summary.get("declarations_scanned", 0) - production == 0

@@ -447,3 +447,46 @@ def test_hiding_evidence_can_never_raise_the_grade() -> None:
     assert hidden["overall"] > visible["overall"], "the point estimate is still flattered — that is why the grade is not it"
     assert order.index(hidden["grade"]) <= order.index(visible["grade"])
     assert hidden["overall_range"][0] <= visible["overall_range"][0]
+
+
+def test_withholding_any_single_input_cannot_raise_the_floor_or_the_grade() -> None:
+    """The concealment property, swept over every field rather than one.
+
+    The previous version of this test hid the whole history object and
+    called the property proven. An audit pointed out — correctly — that
+    its name claimed far more than it checked, then demonstrated the
+    gap: deleting ``test_file_count`` escaped the untested testability
+    cap, because the cap was a penalty that only fired on reports
+    carrying the evidence, and the *floor* rose. Sweeping every key here
+    found three more fields with the identical shape
+    (``file_failures``, ``files_scanned``, ``risk_findings``), where an
+    absent count read as "zero findings" instead of "not measured".
+
+    The sweep is over ``summary`` itself, so a field added later is
+    covered the day it is added rather than the day someone remembers
+    to extend a list.
+    """
+    order = ["F", "D", "C", "B", "A", "A+"]
+    summary = _evidence_summary(
+        test_file_count=0, dead_code_count=40, near_duplicate_count=40, idiom_concern_count=5,
+        has_readme=False, has_changelog=False, has_docs_dir=False,
+        file_failures=60, function_failures=200, duplicate_blocks=300, risk_findings=80,
+    )
+    history = _history(qualifying_hotspots=20, code_coupling_pairs=20, single_author_files=10)
+    baseline = score_report({"summary": dict(summary), "history": history})
+
+    concealments = {key: {"summary": {k: v for k, v in summary.items() if k != key}, "history": history}
+                    for key in summary}
+    concealments["<the whole history object>"] = {"summary": dict(summary)}
+
+    gains = []
+    for label, report in concealments.items():
+        hidden = score_report(report)
+        if (hidden["overall_range"][0] > baseline["overall_range"][0]
+                or order.index(hidden["grade"]) > order.index(baseline["grade"])):
+            gains.append(
+                f"hiding {label}: floor {baseline['overall_range'][0]} -> {hidden['overall_range'][0]}, "
+                f"grade {baseline['grade']} -> {hidden['grade']}"
+            )
+
+    assert not gains, "withholding evidence improved the graded fields:\n" + "\n".join(gains)

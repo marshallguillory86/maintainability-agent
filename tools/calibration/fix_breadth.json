@@ -1,5 +1,5 @@
 {
- "measured_on": "2026-08-09",
+ "measured_on": "2026-08-10",
  "fix_pattern": "\\b(fix(es|ed)?|bug(fix)?|hotfix|patch)\\b",
  "broad_files_threshold": 5,
  "min_fix_commits": 5,
@@ -9,12 +9,12 @@
    {
     "repo": "time-yide/yide-acompanha",
     "pinned_commit": "b5d8fa42f2c025b877a92582d7433bcfdf5b9b4e",
-    "history_commits": 300,
+    "history_commits": 301,
     "declarations": 4102,
     "fix_commits": 88,
     "median_files_per_fix": 1.0,
     "median_lines_per_fix": 21.0,
-    "broad_fix_share": 0.11363636363636363
+    "broad_fix_share": 0.10227272727272728
    },
    {
     "repo": "elfuerte72/oplati_podpisku",
@@ -149,12 +149,12 @@
    {
     "repo": "zeveck/zskills-dev",
     "pinned_commit": "30dc02a87b516d40edd5855baf59e7252046ccac",
-    "history_commits": 300,
+    "history_commits": 301,
     "declarations": 761,
     "fix_commits": 143,
     "median_files_per_fix": 5,
     "median_lines_per_fix": 200,
-    "broad_fix_share": 0.43356643356643354
+    "broad_fix_share": 0.42657342657342656
    },
    {
     "repo": "SWYP14th-Team3/FrontEnd",
@@ -169,7 +169,7 @@
    {
     "repo": "WayfinderFoundation/wayfinder-paths-sdk",
     "pinned_commit": "fe49111b02dee728dde7ec65ed46515cdc6c48fb",
-    "history_commits": 300,
+    "history_commits": 301,
     "declarations": 6821,
     "fix_commits": 20,
     "median_files_per_fix": 2.5,
@@ -329,11 +329,11 @@
   },
   "broad_fix_share": {
    "test": {
-    "u": 52.0,
-    "z": 2.238,
-    "p": 0.0252
+    "u": 53.0,
+    "z": 2.195,
+    "p": 0.0281
    },
-   "size_correlation": 0.38
+   "size_correlation": 0.37
   }
  },
  "banded": {

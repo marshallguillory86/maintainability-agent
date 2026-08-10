@@ -158,10 +158,26 @@ def curve(normalized_pressure: float, constant: float) -> float:
     return clamp_score(5 * constant / (normalized_pressure + constant))
 
 
+def cap_testability(untested: bool | None, unknown_price: float) -> bool:
+    """Whether the untested ceiling applies at this unknown price.
+
+    Unknown test evidence is an unknown like any other, so it is priced
+    by the same dial: typical (no cap) for the point estimate, worst
+    case (cap) for the floor. An audit found the cap firing only when
+    the evidence was present, which meant deleting ``test_file_count``
+    escaped the penalty and *raised* the floor the grade is banded
+    from — concealment paying one level below the interval that was
+    supposed to have closed it.
+    """
+    if untested is None:
+        return unknown_price <= 0.0
+    return untested
+
+
 def overall_from_aspects(
     aspect_scores: dict[str, float | None],
     *,
-    untested: bool = False,
+    untested: bool | None = False,
     unknown_price: float = UNKNOWN_ASPECT_SCORE,
 ) -> tuple[float, dict[str, float]]:
     """The whole rollup: aspects -> displayed categories -> overall.
@@ -183,7 +199,7 @@ def overall_from_aspects(
         name: rollup(aspect_scores, weights, unknown_price)
         for name, weights in CATEGORY_ASPECTS.items()
     }
-    if untested:
+    if cap_testability(untested, unknown_price):
         categories["testability"] = min(categories["testability"], UNTESTED_TESTABILITY_CAP)
     displayed = {name: clamp_score(value) for name, value in categories.items()}
     return overall_from_displayed(displayed), displayed
@@ -207,7 +223,7 @@ def overall_from_displayed(displayed_categories: dict[str, float]) -> float:
 
 
 def overall_bounds(
-    aspect_scores: dict[str, float | None], *, untested: bool = False
+    aspect_scores: dict[str, float | None], *, untested: bool | None = False
 ) -> tuple[float, float]:
     """The overall's floor and ceiling over every unmeasured aspect.
 

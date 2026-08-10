@@ -35,7 +35,8 @@ New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register,
 
 | Document | Genre | Note |
 |---|---|---|
-| [Maintainability standard](standard.md) | Normative **and** Empirical | The rubric, the calibration, and the studies. **Known debt:** this file mixes two genres and should be split — the rubric is a judgment applied uniformly and needs no study; the studies are claims about the world and carry pinned inputs, controls, and stated fragility. Read the study sections as exploratory unless they say otherwise. |
+| [Maintainability standard](standard.md) | Normative | The rubric, its weights and bands, the calibration method, and the reference corpus. Judgments applied uniformly to every repository; requires no study to be legitimate |
+| [Studies and measured results](studies.md) | Empirical | Every claim about the world, with pinned inputs, controls and stated limits — the bounded-prompt experiment, the retracted AI-authorship claim, and fix breadth. Licenses nothing beyond the sentence stated with each result |
 | [Self-audit](self-audit.md) | Generated | This tool run against this repository. Always one commit behind the HEAD it ships with |
 
 ## Operating the tool

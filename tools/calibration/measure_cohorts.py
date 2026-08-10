@@ -2,7 +2,7 @@
 """Measure two cohorts against each other, and say what the comparison means.
 
 ``select_authored.py`` builds the cohorts; this measures them. The output
-is the evidence behind the claims in ``docs/standard.md`` about signals
+is the evidence behind the claims in ``docs/studies.md`` about signals
 that separate AI-assisted code from human-written code — and, just as
 importantly, the ones that do not.
 

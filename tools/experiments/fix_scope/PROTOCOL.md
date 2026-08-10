@@ -94,7 +94,7 @@ Six pairs. Per-repo differences, medians across repos.
   close.
 
 Anything between is reported as **inconclusive**, verbatim, with the
-numbers. A failed result is published in `docs/standard.md` with the
+numbers. A failed result is published in `docs/studies.md` with the
 same prominence a success would receive; the tool's own retraction
 history is the enforcement mechanism for that promise.
 

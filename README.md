@@ -11,7 +11,7 @@ cp skills/maintainability-agent/copilot/maintainability-agent.prompt.md .github/
 
 Jump to [Invokable Skill / Slash Command](#invokable-skill--slash-command) for the full install table.
 
-> **Retracted: the claim that near-duplication distinguishes AI-written code.** 0.6.0 claimed here that it was "the first signal that separates AI-written applications from mature human-written OSS" (1.49% vs 0.20%). That compared six young applications against twelve decade-old libraries, so authorship, age, domain and size all differed at once. Re-run against a control matched on age, popularity and language, the gap is **not significant (p = 0.546)**, and no other metric earns the claim either. The AI figure was roughly right; the *control* was wrong — young no-trailer projects carry 0.83% near-duplication, not 0.20%. The replacement study has its own stated limits (small n, size handled post-hoc, and a control that cannot be verified as human), so the honest summary is "this design could not measure a difference", not "there is no difference". See [docs/standard.md](docs/standard.md#does-this-detect-ai-written-code).
+> **Retracted: the claim that near-duplication distinguishes AI-written code.** 0.6.0 claimed here that it was "the first signal that separates AI-written applications from mature human-written OSS" (1.49% vs 0.20%). That compared six young applications against twelve decade-old libraries, so authorship, age, domain and size all differed at once. Re-run against a control matched on age, popularity and language, the gap is **not significant (p = 0.546)**, and no other metric earns the claim either. The AI figure was roughly right; the *control* was wrong — young no-trailer projects carry 0.83% near-duplication, not 0.20%. The replacement study has its own stated limits (small n, size handled post-hoc, and a control that cannot be verified as human), so the honest summary is "this design could not measure a difference", not "there is no difference". See [docs/studies.md](docs/studies.md#does-this-detect-ai-written-code).
 >
 > **v0.6.0 detects a helper written twice under two names** — clone-instead-of-reuse, the most-cited complaint about AI-written code. Renamed copies defeat text matching, so bodies are compared structurally with identifiers anonymized. Each finding names the declaration to reuse, so the prompt says *`toAtomicAmount` at `TradeTicket.tsx:862` already does this* rather than "there is duplication". It is a useful finding on its own terms; it is not evidence about who wrote the code.
 >
@@ -26,7 +26,7 @@ That's the point of this tool:
 1. Run a deterministic local audit — file size, function size, approximate cyclomatic complexity, duplication, configurable risk patterns, ISO/IEC 25010-inspired 0–5 score.
 2. Emit Markdown, JSON, SARIF, a PR comment, and a baseline for incremental adoption.
 3. Generate an **AI remediation prompt scoped to the actual findings** — bounded, with explicit "don't rewrite the codebase" rules.
-4. Hand that prompt to your agent. The design intent is a scoped, reviewable fix instead of a speculative cleanup PR; the first controlled test of that claim came back **INCONCLUSIVE** — the bounded prompt made the agent far more *effective* at closing findings, not measurably narrower — and the full experiment is in [docs/standard.md](docs/standard.md#does-the-bounded-prompt-work-controlled-experiment-pre-registered).
+4. Hand that prompt to your agent. The design intent is a scoped, reviewable fix instead of a speculative cleanup PR; the first controlled test of that claim came back **INCONCLUSIVE** — the bounded prompt made the agent far more *effective* at closing findings, not measurably narrower — and the full experiment is in [docs/studies.md](docs/studies.md#does-the-bounded-prompt-work-controlled-experiment-pre-registered).
 5. Drop the shipped **portable invokable skill** into Codex, Claude Code, or GitHub Copilot Chat so `/maintainability-agent` is one keystroke away in any of them. See [Invokable Skill](#invokable-skill--slash-command) below.
 
 The remediation prompt is the differentiator. Every other tool in this space stops at "here's a list of findings."
@@ -204,7 +204,8 @@ Start with [the documentation index](docs/README.md), which states each document
 
 **Reference and operations**
 
-- [Maintainability standard](docs/standard.md)
+- [Maintainability standard](docs/standard.md) — the rubric and thresholds
+- [Studies and measured results](docs/studies.md) — what has been tested, and what it does not license
 - [Report contract](docs/report-contract.md)
 - [CLI reference](docs/cli.md)
 - [Config schema](docs/config-schema.md)

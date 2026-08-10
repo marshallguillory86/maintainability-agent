@@ -168,7 +168,7 @@ def build_report(
         # declarations, banded — not median-normalized, since most repos
         # sit at zero). NOT evidence about authorship: the 0.6.0 claim
         # that this rate separates AI-written from human code is
-        # retracted (matched control, p = 0.546; docs/standard.md "Does
+        # retracted (matched control, p = 0.546; docs/studies.md "Does
         # this detect AI-written code?").
         "near_duplicates": near_duplicates[:25],
         # Feeds the dead_code rubric aspect. Also not evidence about

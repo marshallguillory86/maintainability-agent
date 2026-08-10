@@ -20,7 +20,7 @@ It is a deterministic audit and prompt-generation layer for teams using AI-assis
 
 **Volume, not pathology.**
 
-An earlier version of this page claimed AI-written code fails in recognizably different ways. When this project finally tested its best candidate for such a signal against a properly matched control, the claim did not survive ([docs/standard.md](standard.md#does-this-detect-ai-written-code)). And it never needed to be true: anyone who has spent decades in software has seen thousands of lines of unmaintainable code written entirely by hand. Slop is not a new failure mode. It is the oldest one.
+An earlier version of this page claimed AI-written code fails in recognizably different ways. When this project finally tested its best candidate for such a signal against a properly matched control, the claim did not survive ([docs/studies.md](studies.md#does-this-detect-ai-written-code)). And it never needed to be true: anyone who has spent decades in software has seen thousands of lines of unmaintainable code written entirely by hand. Slop is not a new failure mode. It is the oldest one.
 
 What AI changes is the *rate*. Agents produce code faster than humans can read it, so the ratio of code-written to code-reviewed collapses — and unmaintainable code that used to accumulate over years can now accumulate in an afternoon. That is the problem this tool exists for, and it needs no claim about AI writing *worse* code, only the observable fact that it writes *more*.
 

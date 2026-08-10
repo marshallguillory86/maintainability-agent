@@ -187,11 +187,18 @@ def test_a_perfect_repo_can_still_reach_a_plus() -> None:
 
 def test_unknown_evidence_blocks_the_top_grades() -> None:
     """A structurally-perfect repo with unmeasured aspects cannot take
-    A+ on the evidence that happened to be available."""
+    A+ on the evidence that happened to be available.
+
+    The grade bands the evidence *floor*, so missing history costs more
+    than a one-step demotion: the point estimate still reads high, and
+    the gap between them is exactly what the repo has not shown.
+    """
     result = score(500, 1000)
 
-    assert result["grade"] == "B"
+    assert result["grade"] not in {"A+", "A", "B"}
+    assert result["overall"] > result["overall_range"][0]
     assert any("full evidence" in blocker for blocker in result["grade_blockers"])
+    assert any("evidence floor" in blocker for blocker in result["grade_blockers"])
 
 
 def test_a_single_hard_gate_failure_blocks_the_top_grades() -> None:
@@ -219,13 +226,14 @@ def test_dimensions_can_disagree_with_each_other() -> None:
 # Unknown-evidence pricing: what concealment can and cannot buy
 # ---------------------------------------------------------------------------
 
-def _evidence_summary() -> dict:
+def _evidence_summary(**overrides: object) -> dict:
     full = summary(500, 1000)
     full.update({
         "test_file_count": 100, "production_declarations_scanned": 650,
         "dead_code_count": 0, "near_duplicate_count": 0, "idiom_concern_count": 0,
         "has_readme": True, "has_changelog": True, "has_docs_dir": True,
     })
+    full.update(overrides)
     return full
 
 
@@ -289,3 +297,153 @@ def test_corpus_median_rolls_up_to_exactly_four_through_the_rounded_path() -> No
     values = [_corpus_overall(entry, references, CALIBRATION_C) for entry in measurements]
 
     assert _median(values) == 4.0
+
+
+def test_derivation_matches_live_score_report_repo_by_repo() -> None:
+    """The anchor is derived through the *shipped* scorer, per repo.
+
+    The previous version of this claim was checked only at the median,
+    and an audit found corpus member ``tabby`` deriving 3.9 while
+    ``score_report`` gave it 3.8 — the derivation skipped the untested
+    testability cap. A median that survives a per-repo discrepancy is
+    luck, so the comparison is now made repo by repo, from the public
+    entry point, with the derivation given no special path.
+    """
+    import json
+    from pathlib import Path
+
+    from maintainability_audit._calibration import CALIBRATION_C
+    from maintainability_audit._derive import _corpus_overall, derive_references
+
+    measurements = json.loads(
+        (Path(__file__).resolve().parents[1] / "tools/calibration/measurements.json").read_text()
+    )["measurements"]
+    references = derive_references(measurements)
+
+    mismatches = []
+    for entry in measurements:
+        derived = _corpus_overall(entry, references, CALIBRATION_C)
+        live = score_report({"summary": _summary_reproducing(entry)})["overall"]
+        if derived != live:
+            mismatches.append(f"{entry['repo']}: derived {derived} vs live {live}")
+
+    assert not mismatches, "derivation and score_report disagree:\n" + "\n".join(mismatches)
+
+
+def _summary_reproducing(entry: dict) -> dict:
+    """A summary whose measured pressures are the entry's stored ones.
+
+    The corpus records rates, not the raw counts they came from, so the
+    counts are back-solved from the rates through the same denominators
+    ``dimension_pressures`` divides by. Warnings are folded into
+    failures because the two enter the rate as one weighted sum.
+    """
+    files = entry["files"]
+    pressures = entry["dimensions"]
+    return {
+        **entry["evidence"],
+        "files_scanned": files,
+        "declarations_scanned": entry["declarations"],
+        "file_failures": pressures["file_size"] * files,
+        "file_warnings": 0,
+        "function_failures": pressures["declarations"] * entry["declarations"],
+        "function_warnings": 0,
+        "duplicate_blocks": pressures["duplication"] * files,
+        "risk_findings": pressures["risk"] * files,
+        "hard_gate_failures": round(pressures["gates"] / 0.05),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Every advertised aspect has to actually do something
+# ---------------------------------------------------------------------------
+
+def test_every_scored_aspect_carries_weight_in_some_category() -> None:
+    """The rubric advertises thirteen scored aspects; an audit found one
+    of them decorative.
+
+    ``knowledge_concentration`` was measured, printed under "Aspect
+    Scores", and referenced in the docs, while appearing in no
+    category's weights: moving it from 5.0 to 1.0 changed nothing at
+    all. This is the structural block on that class of defect — any
+    aspect added to the scored list without a weight fails here.
+    """
+    from maintainability_audit._formula import (
+        CALIBRATED_ASPECTS,
+        CATEGORY_ASPECTS,
+        RUBRIC_ASPECTS,
+    )
+
+    advertised = set(CALIBRATED_ASPECTS) | set(RUBRIC_ASPECTS)
+    weighted = {aspect for weights in CATEGORY_ASPECTS.values() for aspect in weights}
+
+    assert advertised == weighted, (
+        f"scored but weighted nowhere: {sorted(advertised - weighted)}; "
+        f"weighted but never scored: {sorted(weighted - advertised)}"
+    )
+
+
+def test_knowledge_concentration_changes_the_score() -> None:
+    """The behavioural half of the same finding: a bus factor of one has
+    to cost something."""
+    shared = _history(multi_commit_files=10, single_author_files=0)
+    siloed = _history(multi_commit_files=10, single_author_files=10)
+
+    spread = score_report({"summary": _evidence_summary(), "history": shared})
+    concentrated = score_report({"summary": _evidence_summary(), "history": siloed})
+
+    assert concentrated["aspects"]["knowledge_concentration"] < spread["aspects"]["knowledge_concentration"]
+    assert concentrated["overall"] < spread["overall"]
+
+
+# ---------------------------------------------------------------------------
+# The interval and the grade have to hold under concealment
+# ---------------------------------------------------------------------------
+
+def test_the_interval_always_contains_the_score() -> None:
+    """``low <= overall <= high``, including for untested repositories.
+
+    An audit produced a repo scoring 4.4 with a range of [4.5, 4.5]:
+    the untested testability cap was applied to the point estimate and
+    not to the endpoints, so the "uncertainty interval" excluded the
+    number it claimed to bound. Both endpoints now run the same
+    pipeline, and the untested boundary is checked explicitly because
+    that is the exact case the collapse test missed.
+    """
+    untested = _evidence_summary(test_file_count=0, declarations_scanned=1000)
+    cases = {
+        "clean+history": {"summary": _evidence_summary(), "history": _history()},
+        "clean shallow": {"summary": _evidence_summary()},
+        "untested+history": {"summary": untested, "history": _history()},
+        "untested shallow": {"summary": untested},
+        "worst+history": {
+            "summary": _evidence_summary(file_failures=500, risk_findings=500),
+            "history": _history(qualifying_hotspots=50, code_coupling_pairs=50, single_author_files=10),
+        },
+    }
+    for label, report in cases.items():
+        result = score_report(report)
+        low, high = result["overall_range"]
+        assert low <= result["overall"] <= high, f"{label}: {result['overall']} outside [{low}, {high}]"
+
+
+def test_hiding_evidence_can_never_raise_the_grade() -> None:
+    """The grade bands the evidence floor, which closes the exploit the
+    interval only disclosed.
+
+    With the worst measurable history visible this repo graded C; with
+    the same history withheld the point estimate rose and it graded B.
+    Printing the interval told a careful human and left every machine
+    consumer reading the flattered field. Concealment can only widen the
+    interval downward, so grading the floor makes it unprofitable at
+    every boundary rather than only at A.
+    """
+    worst = _history(qualifying_hotspots=20, code_coupling_pairs=20, single_author_files=10)
+    order = ["F", "D", "C", "B", "A", "A+"]
+
+    visible = score_report({"summary": _evidence_summary(), "history": worst})
+    hidden = score_report({"summary": _evidence_summary()})
+
+    assert hidden["overall"] > visible["overall"], "the point estimate is still flattered — that is why the grade is not it"
+    assert order.index(hidden["grade"]) <= order.index(visible["grade"])
+    assert hidden["overall_range"][0] <= visible["overall_range"][0]

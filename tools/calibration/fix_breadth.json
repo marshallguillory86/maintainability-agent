@@ -3,7 +3,7 @@
  "fix_pattern": "\\b(fix(es|ed)?|bug(fix)?|hotfix|patch)\\b",
  "broad_files_threshold": 5,
  "min_fix_commits": 5,
- "note": "Measured over the most recent 300 commits from each pinned HEAD (git log -n 300), so a deeper cache cannot change the window \u2014 an audit showed cache-deepening shifting results when the window was 'whatever history was present'. Repos with fewer than 300 commits use what exists; history_commits records clone depth, which may exceed the window. Medians are per-repo so commit volume does not weight the test.",
+ "note": "Measured over the most recent 300 commits from each pinned HEAD (git log -n 300). Every cache is verified to hold at least that much history before measurement and deepened if it does not, so neither a deeper nor a shallower cache can change the window: an audit showed a depth-one cache sitting at the correct pinned commit producing zero fix commits where the deep cache produced 96, because the deepening step was gated on the commit matching rather than on the depth. A repository whose entire history is shorter than the window contributes what it has and records it in history_commits; one that cannot be deepened is refused, not measured short. Medians are per-repo so commit volume does not weight the test.",
  "cohorts": {
   "ai": [
    {

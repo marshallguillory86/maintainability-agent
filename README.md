@@ -52,11 +52,11 @@ This repo eats its own dogfood — the tool runs against this codebase in CI, an
 
 | Metric | Value |
 |---|---:|
-| Overall score | **4.7 / 5 (B)** |
-| Files scanned | 92 |
-| File warnings | 9 |
+| Overall score | **4.6 / 5 (B)** |
+| Files scanned | 94 |
+| File warnings | 10 |
 | File failures | 0 |
-| Function warnings | 6 |
+| Function warnings | 7 |
 | Function failures | 0 |
 | Duplicate blocks | 0 |
 | Risk findings | 0 |
@@ -64,7 +64,7 @@ This repo eats its own dogfood — the tool runs against this codebase in CI, an
 
 Yes, a **B** — demoted from the A band because warning rates exceed the A-grade ceilings, against thresholds this repo deliberately sets stricter than the shipped defaults (a 250-line file warning versus the default 400). An earlier revision of this table advertised 5.0/A+ after the codebase had drifted to a B; a hostile audit caught the stale claim, which is precisely the failure mode this tool exists to catch. The table matches the stamped report, and every threshold gate — file, function, duplication — is opted **on** for this repo's own CI, so drifting below the bar fails the build instead of the README.
 
-The grade is **gated, not averaged**: A+ requires every dimension clean, and since the rubric rework a repository with production code and zero test files cannot receive an A-grade at all.
+The grade is **gated, not averaged**: A+ requires every dimension clean, and since the rubric rework a repository with production code and zero test files cannot receive an A-grade at all. It is also **banded from the evidence floor, not the score** — the grade reads `overall_range[0]`, with every unmeasured aspect priced at 0, so withholding evidence can never buy a better letter. This repository measures fully, so its floor and its score are the same number; a shallow clone's would not be, and the report says so in a blocker. (Practical note for CI: `actions/checkout` defaults to `fetch-depth: 1`, which hides history and costs roughly a grade. Use `fetch-depth: 0`.)
 
 Regenerate with `maintainability-agent --config maintainability-agent.json --output docs/self-audit.md` (see the file's preamble for the path-sanitization step).
 

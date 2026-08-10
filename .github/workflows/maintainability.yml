@@ -2,8 +2,10 @@ name: Maintainability
 
 on:
   pull_request:
+  # Every branch, not just the default one. An audit observed that a
+  # pushed feature branch with no open PR ran no checks at all, so the
+  # tool's own gate went unenforced on exactly the commits under review.
   push:
-    branches: [main, master]
 
 jobs:
   maintainability:

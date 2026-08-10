@@ -92,6 +92,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.extend(f"- {gate}" for gate in report["hard_gate_failures"])
         lines.append("")
 
+    lines.extend(render_grade_blockers(report))
     lines.extend(score_table(score))
     file_rows = [[f"`{i['path']}`", str(i["lines"]), i["status"]] for i in report["largest_files"]]
     lines.extend(markdown_table("Largest Files", ["File", "Lines", "Status"], file_rows))
@@ -123,6 +124,21 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.extend(render_history_markdown(report))
     lines.extend(render_external_markdown(report))
     return "\n".join(lines)
+
+
+def render_grade_blockers(report: dict[str, Any]) -> list[str]:
+    """Why the grade is not higher, in the report a human reads.
+
+    These reasons reached the remediation prompt but not the report, so
+    a demotion — capped testability, missing evidence, or a grade banded
+    from the evidence floor rather than the point estimate — arrived
+    unexplained in the artifact people actually open. "Why am I not an
+    A" has to have an answer wherever the grade is printed.
+    """
+    blockers = report["score"].get("grade_blockers") or []
+    if not blockers:
+        return []
+    return ["## Why the grade is capped", "", *(f"- {blocker}" for blocker in blockers), ""]
 
 
 def render_history_markdown(report: dict[str, Any]) -> list[str]:
@@ -262,6 +278,10 @@ def render_pr_comment(report: dict[str, Any]) -> str:
     if report["hard_gate_failures"]:
         lines.extend(["### Hard Gates", ""])
         lines.extend(f"- {gate}" for gate in report["hard_gate_failures"])
+        lines.append("")
+    if score.get("grade_blockers"):
+        lines.extend(["### Why the grade is capped", ""])
+        lines.extend(f"- {blocker}" for blocker in score["grade_blockers"])
         lines.append("")
     if report["function_hotspots"]:
         lines.extend(["### Top Function Hotspots", ""])

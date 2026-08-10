@@ -26,6 +26,19 @@ from maintainability_audit.cli import (
 from maintainability_audit.scoring import grade_from_score
 
 
+def commit_all(root: Path) -> None:
+    """Put the fixture under git so its history is measurable.
+
+    Without this the history aspects read None and every grade
+    assertion is really testing the missing-evidence rule.
+    """
+    env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t", "PATH": "/usr/bin:/bin", "HOME": str(root)}
+    for command in (["git", "init", "--quiet"], ["git", "add", "-A"],
+                    ["git", "commit", "--quiet", "-m", "start"]):
+        subprocess.run(command, cwd=root, check=True, capture_output=True, env=env)
+
+
 def write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
@@ -121,16 +134,26 @@ def test_a_grades_require_test_evidence(tmp_path: Path) -> None:
     exactly that grade. The published meaning of 5 is "localized,
     tested, and easy to reason about" — so with not one test file, the
     A-grades are withheld, testability is capped, and the blocker names
-    the reason instead of leaving "why am I not an A" unanswerable."""
+    the reason instead of leaving "why am I not an A" unanswerable.
+
+    Committed to git so the missing tests are the *only* thing missing:
+    grading on the evidence floor would otherwise demote this fixture
+    for absent history and the assertion would stop testing its own
+    name. The interval must also contain the score — an audit found the
+    cap applied to the point estimate and not to the endpoints, so an
+    untested repo reported 4.4 inside a range of [4.5, 4.5]."""
     write(tmp_path / "README.md", "# Test\n")
     for index in range(20):
         write(tmp_path / f"m{index}.py", f"def f{index}(x):\n    return x + {index}\n")
+    commit_all(tmp_path)
 
     score = build_report(tmp_path, load_config(None))["score"]
 
     assert score["grade"] == "B"
     assert score["categories"]["testability"] <= 2.0
     assert any("test evidence" in blocker for blocker in score["grade_blockers"])
+    low, high = score["overall_range"]
+    assert low <= score["overall"] <= high
 
 
 def _make_huge_function_source(name: str, body_lines: int = 200) -> str:

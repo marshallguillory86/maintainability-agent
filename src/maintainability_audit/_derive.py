@@ -16,7 +16,9 @@ from __future__ import annotations
 from statistics import median
 from typing import Any
 
-from ._formula import CALIBRATED_ASPECTS, overall_from_aspects
+from ._aspects import evidence_aspect_scores, is_untested
+from ._formula import CALIBRATED_ASPECTS, curve, overall_from_aspects
+from ._pressures import production_pressures
 
 DIMENSIONS = ("file_size", "declarations", "duplication", "risk", "gates")
 
@@ -92,14 +94,22 @@ def _corpus_overall(entry: dict[str, Any], references: dict[str, float], c: floa
     unmeasurable, and they price at the corpus anchor here exactly as
     they do for any shallow clone. Entries measured before evidence was
     recorded fall back to structural-only.
-    """
-    from .scoring import evidence_aspect_scores, production_pressures  # local: avoids import cycle at module load
 
+    The rollup itself is ``_formula.overall_from_aspects`` — not a
+    re-implementation of it. Two successive audits found this path
+    differing from the live one by a single step (first the category
+    rounding, then the untested testability cap: corpus member ``tabby``
+    derived 3.9 and scored 3.8 live). "Same pipeline" is only true if
+    there is one pipeline, so the derivation now calls the shipped
+    function and ``test_derivation_matches_live_score_report`` checks
+    the two against each other repo by repo.
+    """
     scores: dict[str, float | None] = {
-        aspect: 5 * c / (entry["dimensions"][dimension] / references[dimension] + c)
+        aspect: curve(entry["dimensions"][dimension] / references[dimension], c)
         for aspect, dimension in CALIBRATED_ASPECTS.items()
         if references[dimension] > 0
     }
+    untested = False
     evidence = entry.get("evidence")
     if evidence is not None:
         summary = {
@@ -108,18 +118,12 @@ def _corpus_overall(entry: dict[str, Any], references: dict[str, float], c: floa
             "declarations_scanned": entry["declarations"],
         }
         scores.update(evidence_aspect_scores(summary))
+        untested = is_untested(summary)
         if references["declarations"] > 0:
             production = production_pressures(summary)["declarations"] / references["declarations"]
-            scores["declaration_size"] = 5 * c / (production + c)
-    # Mirror the live path to the digit: categories are rounded to one
-    # decimal before the overall, because that is what score_report
-    # ships. An audit found six of forty corpus repos differing between
-    # the rounded and unrounded paths while the docs said "same
-    # pipeline" — the anchor must go through the same rounding or the
-    # word "same" is decoration.
-    _, categories = overall_from_aspects(scores)
-    rounded = {name: round(max(0.0, min(5.0, value)), 1) for name, value in categories.items()}
-    return sum(rounded.values()) / len(rounded)
+            scores["declaration_size"] = curve(production, c)
+    overall, _ = overall_from_aspects(scores, untested=untested)
+    return overall
 
 
 def derive_curve_constant(

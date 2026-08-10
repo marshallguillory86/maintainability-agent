@@ -93,7 +93,13 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 # paths while the docs claimed "same pipeline". The rounded pipeline
 # is a step function, so c is the midpoint of the plateau where the
 # corpus median hits 4.0 exactly.
-CALIBRATION_C = 2.8712
+# Fifth fit: the derivation now calls the shipped rollup itself rather
+# than restating it, so the untested testability cap lands on corpus
+# members too, and knowledge_concentration carries weight instead of
+# being scored and ignored. Both change what the median repo rolls up
+# to, so c is re-fitted. The reference medians re-measured byte-identical
+# for the third audit running.
+CALIBRATION_C = 2.6279
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3

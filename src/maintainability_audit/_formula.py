@@ -39,6 +39,12 @@ from __future__ import annotations
 # corpus anchor, i.e. "assume typical of real code until measured".
 UNKNOWN_ASPECT_SCORE = 4.0
 
+# Ceiling on testability for a repository with no test evidence at all.
+# Lives here, with the rest of the rubric, because it is part of the
+# rollup: an audit found the point score applying it and the uncertainty
+# interval not, producing a "range" that excluded the score it bounded.
+UNTESTED_TESTABILITY_CAP = 2.0
+
 # Aspect -> the dimension pressure it curves (calibrated aspects only).
 CALIBRATED_ASPECTS: dict[str, str] = {
     "file_size": "file_size",
@@ -78,17 +84,22 @@ CATEGORY_ASPECTS: dict[str, dict[str, float]] = {
     "analyzability": {
         "declaration_size": 0.30,
         "documentation": 0.20,
-        "dead_code": 0.20,
+        "dead_code": 0.15,
         "risk_patterns": 0.15,
-        "churn_hotspots": 0.15,
+        "churn_hotspots": 0.10,
+        # Code only one person has ever touched is code only one person
+        # can read quickly. An audit found this aspect scored, printed,
+        # and weighted nowhere — thirteen advertised, twelve effective.
+        "knowledge_concentration": 0.10,
     },
     "modifiability": {
         "change_coupling": 0.25,
         "duplication": 0.20,
-        "churn_hotspots": 0.20,
+        "churn_hotspots": 0.15,
         "risk_patterns": 0.15,
-        "file_size": 0.10,
+        "knowledge_concentration": 0.10,
         "policy_gates": 0.10,
+        "file_size": 0.05,
     },
     "testability": {
         "test_presence": 0.50,
@@ -130,36 +141,88 @@ def rollup(
     ) / sum(weights.values())
 
 
-def overall_from_aspects(aspect_scores: dict[str, float | None]) -> tuple[float, dict[str, float]]:
-    """Category scores and the overall point estimate, anchor-imputing
-    unknowns.
+def clamp_score(value: float) -> float:
+    """The one rounding in the system: 0-5, one decimal, as displayed."""
+    return round(max(0.0, min(5.0, value)), 1)
 
-    The point estimate answers "typical until measured". It does NOT
-    make concealment neutral: a repo whose hidden evidence is worse
-    than the anchor still gains by hiding it, which is why
-    :func:`overall_bounds` exists and the report prints the interval
-    whenever anything is unknown. The A-grade block for missing
-    evidence lives in scoring, on top of these numbers.
+
+def curve(normalized_pressure: float, constant: float) -> float:
+    """A pressure in corpus-median units, as a 0-5 aspect score.
+
+    Parameterized by the constant so the calibration fit and the live
+    report share one curve. They previously shared a formula but not a
+    rounding — the live path clamped each aspect to a decimal and the
+    derivation kept full precision, which is the same "same pipeline"
+    claim failing one step further down than the last audit found it.
+    """
+    return clamp_score(5 * constant / (normalized_pressure + constant))
+
+
+def overall_from_aspects(
+    aspect_scores: dict[str, float | None],
+    *,
+    untested: bool = False,
+    unknown_price: float = UNKNOWN_ASPECT_SCORE,
+) -> tuple[float, dict[str, float]]:
+    """The whole rollup: aspects -> displayed categories -> overall.
+
+    Every caller goes through here — the live report, the uncertainty
+    interval, and the corpus derivation that fits the calibration
+    constant. That is the point. Three audits in a row found a score
+    path that differed from a neighbouring one in exactly one step
+    (rounding, then the untested cap, then the cap again in the
+    interval), and each time the published sentence "the same pipeline"
+    was decoration. There is now one pipeline and no second copy of it.
+
+    ``untested`` applies the testability ceiling *before* rounding, so
+    the displayed categories are the numbers the overall is the mean
+    of. ``unknown_price`` is the anchor for the point estimate and 0.0 /
+    5.0 for the interval endpoints.
     """
     categories = {
-        name: rollup(aspect_scores, weights) for name, weights in CATEGORY_ASPECTS.items()
+        name: rollup(aspect_scores, weights, unknown_price)
+        for name, weights in CATEGORY_ASPECTS.items()
     }
-    overall = rollup(categories, {name: CATEGORY_WEIGHTS[name] for name in categories})
-    return overall, categories
+    if untested:
+        categories["testability"] = min(categories["testability"], UNTESTED_TESTABILITY_CAP)
+    displayed = {name: clamp_score(value) for name, value in categories.items()}
+    return overall_from_displayed(displayed), displayed
 
 
-def overall_bounds(aspect_scores: dict[str, float | None]) -> tuple[float, float]:
+def overall_from_displayed(displayed_categories: dict[str, float]) -> float:
+    """Weighted mean of the categories exactly as printed.
+
+    Computed from the *rounded* values, deliberately: an audit produced
+    categories displaying 3.5/4.2/5.0/4.5/2.0 with a reported overall of
+    3.9 against a displayed mean of 3.8, because the overall came from
+    hidden unrounded values. The published sentence is "the overall is
+    the weighted mean of the reported categories", so it is computed
+    from the reported numbers and a reader can check the arithmetic on
+    the report itself.
+    """
+    total = sum(CATEGORY_WEIGHTS[name] for name in displayed_categories)
+    return clamp_score(
+        sum(value * CATEGORY_WEIGHTS[name] for name, value in displayed_categories.items()) / total
+    )
+
+
+def overall_bounds(
+    aspect_scores: dict[str, float | None], *, untested: bool = False
+) -> tuple[float, float]:
     """The overall's floor and ceiling over every unmeasured aspect.
 
-    Equal when everything is measured. The width is the price of the
-    missing evidence, printed rather than hidden: a shallow clone's
-    report says "somewhere in [x, y]" instead of lending its point
-    estimate false precision.
+    Equal to the overall itself when everything was measured, because
+    the endpoints run the identical pipeline with the unknown price
+    swapped — so ``low <= overall <= high`` holds by construction
+    rather than by inspection. An audit caught the previous version
+    computing the endpoints from uncapped aspects: an untested repo
+    reported 4.4 with a "range" of [4.5, 4.5], an interval that
+    excluded its own score.
+
+    The width is the price of the missing evidence, printed rather than
+    hidden: a shallow clone's report says "somewhere in [x, y]" instead
+    of lending its point estimate false precision.
     """
-    bounds = []
-    for price in (0.0, 5.0):
-        categories = {
-            name: rollup(aspect_scores, weights, price) for name, weights in CATEGORY_ASPECTS.items()
-        }
-        bounds.append(rollup(categories, {name: CATEGORY_WEIGHTS[name] for name in categories}, price))
-    return bounds[0], bounds[1]
+    low, _ = overall_from_aspects(aspect_scores, untested=untested, unknown_price=0.0)
+    high, _ = overall_from_aspects(aspect_scores, untested=untested, unknown_price=5.0)
+    return low, high

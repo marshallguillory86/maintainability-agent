@@ -24,6 +24,8 @@ Changing a sentence here is changing a public claim. Do it when the evidence cha
 - Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, under this tool's own finding count.
 - No metric measured here distinguishes AI-written code from human-written code; the one claim that did was retracted.
 - Re-run against a control matched on age, popularity and language, the near-duplication gap is not significant (p = 0.546), and no other metric earns the claim either.
+- 0.6.0 reported near-duplication at 1.49% for AI-written applications against 0.20% for human-written OSS, comparing six young applications against twelve decade-old libraries.
+- The AI figure barely moved (1.49% to 1.73%); the control moved, from 0.20% to 0.83%, because it stopped being decade-old libraries.
 <!-- approved-summaries:end -->
 
 

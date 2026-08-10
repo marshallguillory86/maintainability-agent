@@ -20,6 +20,8 @@ Maintainability is the degree to which a system can be effectively and efficient
 
 The CLI emits an ISO/IEC 25010-inspired score from 0 to 5 for each category plus an overall letter grade. This score is a deterministic triage signal, not a replacement for human review.
 
+> **Architecture decision:** repeated audits showed that the current raw-dictionary scorer conflates maintainability with evidence sufficiency. [ADR 001](adr-001-evidence-and-verification.md) defines the accepted replacement: typed evidence states, versioned normalization, separate estimates and verified grades, and manifest-based history measurements. Its status is implementation pending: the first bounded slice has landed — a versioned report schema, typed evidence states, and one normalization boundary, all running *beside* the scorer and changing no output — and the inventory it rests on is in [the report contract](report-contract.md). Scoring still reads raw dictionaries, `evidence_status` and `verified_grade` do not exist, and this page describes the current behavior until that migration is complete.
+
 ### The rubric: aspects → categories → overall
 
 The score is a three-layer rollup, and every layer is visible in the report (`score.aspects`, `score.rubric`) and in [`_formula.py`](../src/maintainability_audit/_formula.py), which is the single source both the scorer and the calibration derive from.

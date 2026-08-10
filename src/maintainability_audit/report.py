@@ -17,6 +17,7 @@ from ._metrics_types import FileMetric, FunctionMetric
 from .deadcode import dead_declarations
 from .declarations import DECLARATION_SUFFIXES
 from .duplication import duplicate_blocks, risk_findings
+from .evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY
 from .git_tools import run_git
 from .history import history_section
 from .idioms import divergent_idioms
@@ -146,6 +147,12 @@ def build_report(
     summary["has_docs_dir"] = (root / "docs").is_dir()
 
     report = {
+        # The report structure's own version, owned here and validated
+        # by ``evidence.normalize_report_evidence``. Distinct from the
+        # baseline file's ``version``, which numbers a different
+        # artifact with a different lifecycle. See
+        # docs/report-contract.md for the compatibility policy.
+        SCHEMA_VERSION_KEY: REPORT_SCHEMA_VERSION,
         "root": str(root),
         "git_branch": run_git(["branch", "--show-current"], root),
         "git_status_short": git_status,

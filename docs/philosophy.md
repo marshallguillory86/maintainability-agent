@@ -8,7 +8,7 @@ It is a deterministic audit and prompt-generation layer for teams using AI-assis
 
 ## Principles
 
-- Deterministic first, AI optional.
+- Deterministic first, AI optional. **A gate that returns three answers is not a gate** — Addy Osmani reports asking an agent to review the same code twice, getting disagreement, then a third answer on re-run ([Agentic Code Quality](https://addyo.substack.com/p/agentic-code-quality)). Judgment can be probabilistic; the thing that blocks a merge cannot be.
 - Human stays in control.
 - CI produces evidence, not vibes.
 - The remediation prompt is bounded by findings.

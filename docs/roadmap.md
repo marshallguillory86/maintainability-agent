@@ -17,6 +17,12 @@ The architecture migration outranks new features. Six audit rounds were spent on
 3. **Open decision, blocking stage 5:** what a CI gate does when `verified_grade` is null. Failing open would let a repository turn the gate green by withholding evidence, which is worse than today's floor grade.
 4. Separate history-window materialization from fix-breadth measurement, with checked-in manifests.
 
+## A known shape problem: this tool is end-of-loop heavy
+
+Worth stating plainly because it aims several roadmap items. Addy Osmani frames agent constraints as **back-pressure that should exist throughout the loop, not as a single review at the very end** ([Agentic Code Quality](https://addyo.substack.com/p/agentic-code-quality)). Measured against that, this tool is strong where it is cheapest to be strong — a CI gate after the work is done — and thin during the loop, where a constraint is worth far more because it prevents rather than rejects. The shipped IDE and agent skills are a partial answer; a pre-commit path and in-loop signal are not built.
+
+He also names the trade-off available once generation outruns verification: scale verification, slow generation, lower standards, or **relax constraints in low-risk areas while tightening them elsewhere**. Only the last is a real engineering answer, and it is what the policy-as-code item below is for. This is a borrowed frame, not evidence — it tells us where to look, not what is true.
+
 ## Then
 
 **Analyzer adapters** — Semgrep, ESLint, Ruff, Radon, pytest/coverage, SonarQube export. Ingest output, preserve provenance, do not pretend every analyzer has the same semantics.

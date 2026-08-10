@@ -90,6 +90,11 @@ CATEGORY_ASPECTS: dict[str, dict[str, float]] = {
         # Code only one person has ever touched is code only one person
         # can read quickly. An audit found this aspect scored, printed,
         # and weighted nowhere — thirteen advertised, twelve effective.
+        #
+        # In an agentic workflow the reading matters more, not less:
+        # concentration stops being "what if they leave" and becomes
+        # "no human ever built a model of this". See docs/standard.md
+        # on the comprehensibility trap.
         "knowledge_concentration": 0.10,
     },
     "modifiability": {
@@ -119,6 +124,10 @@ UNSCORED: dict[str, str] = {
     "naming_quality": "no static proxy survives contact; a wrong-name detector needs semantics",
     "comment_accuracy": "comments are deliberately unparsed; staleness needs meaning, not structure",
     "indirection_depth": "call-graph construction is not implemented for the supported languages",
+    # Named elsewhere as "architectural drift": every individual change
+    # can satisfy every constraint while the system moves the wrong way.
+    # A per-change gate is structurally the wrong instrument for it, so
+    # this stays unscored rather than approximated.
     "architectural_coherence": "no measurement distinguishes a wrong boundary from an unusual one statically",
 }
 

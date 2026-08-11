@@ -33,6 +33,7 @@ from maintainability_audit.evidence import (
     EvidenceValidationError,
     Measured,
     NotApplicable,
+    Unknown,
     UnsupportedReportSchema,
     normalize_report_evidence,
 )
@@ -134,6 +135,48 @@ def test_not_applicable_is_complete_evidence(tmp_path: Path) -> None:
 
     assert result["evidence_status"]["status"] == "complete"
     assert result["verified_grade"] == "A"
+    assert report["score"]["grade"] in {"A", "A+"}
+    assert not any(
+        "knowledge_concentration" in blocker
+        for blocker in report["score"]["grade_blockers"]
+    )
+
+
+def test_unknown_ownership_blocks_top_grades(tmp_path: Path) -> None:
+    """Deleting one measured ownership count cannot retain an A+.
+
+    Build three real commits by one author so the production history
+    reports measured, maximally concentrated ownership. Deleting only
+    that count changes it to Unknown. The compatibility grade must then
+    demote because stage 7 consumers still read it.
+    """
+    _tested_repo(tmp_path)
+    for index in range(3):
+        (tmp_path / "app.py").write_text(
+            f"def ok():\n    return {index}\n",
+            encoding="utf-8",
+        )
+        _commit(tmp_path, f"change {index}")
+    report = _report(tmp_path)
+    complete_evidence = normalize_report_evidence(report)
+    assert isinstance(complete_evidence.history.single_author_files, Measured)
+    assert complete_evidence.history.single_author_files.value == 1
+    assert report["history"]["multi_commit_files"] == 1
+    assert report["score"]["grade"] == "A+", "fixture must expose the top-grade boundary"
+
+    del report["history"]["single_author_files"]
+    incomplete_evidence = normalize_report_evidence(report)
+    assert isinstance(incomplete_evidence.history.single_author_files, Unknown)
+
+    score = score_report(report)
+
+    assert score["evidence_status"]["status"] == "incomplete"
+    assert score["verified_grade"] is None
+    assert score["grade"] == "B"
+    assert any(
+        "unmeasured aspects (knowledge_concentration)" in blocker
+        for blocker in score["grade_blockers"]
+    )
 
 
 def test_reason_order_is_deterministic(tmp_path: Path) -> None:

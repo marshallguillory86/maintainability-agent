@@ -87,6 +87,7 @@ New reports carry a top-level integer:
 Two behaviors worth recording because they are decisions, not details:
 
 - **History is always a structure.** When a report carries no history, every field is `Unknown` with a reason naming the shallow clone, rather than the object being absent. A caller cannot reach a history number without passing a state that says whether it exists.
+- **The state is the only authority after normalization.** Raw history presence is used only while constructing `Measured`, `Unknown`, and `NotApplicable`; no companion `history_present` flag survives into `NormalizedEvidence` or grading. Two representations can disagree, and one did: an `Unknown` ownership count inherited the `NotApplicable` grade exemption merely because a history object existed.
 - **Absence is never upgraded.** `single_author_files` becomes `NotApplicable` when no file has three commits — but only if the count was actually recorded. A deleted field stays `Unknown` even when the population is empty, because deleting evidence must not resolve it into a *better-defined* state than leaving it in. This was a live bug in the first draft of the module, caught by its own tests.
 
 ## Remaining work

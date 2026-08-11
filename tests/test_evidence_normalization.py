@@ -30,6 +30,7 @@ from maintainability_audit.evidence import (
     EvidenceValidationError,
     HistoryEvidence,
     Measured,
+    NormalizedEvidence,
     NotApplicable,
     SummaryEvidence,
     Unknown,
@@ -85,7 +86,22 @@ def test_a_production_report_normalizes_with_every_scoring_input_present(tmp_pat
     unresolved = [path for path, state in walk_evidence(evidence) if isinstance(state, Unknown)]
     assert not unresolved, f"a complete report left evidence unknown: {unresolved}"
     assert evidence.schema_version == REPORT_SCHEMA_VERSION
-    assert evidence.history_present is True
+
+
+def test_the_normalized_model_has_no_companion_evidence_flags() -> None:
+    """Evidence meaning lives in states, not a second presence channel.
+
+    ``history_present`` once survived normalization beside the typed
+    history states and independently changed grade policy. That let an
+    Unknown ownership count inherit the NotApplicable exemption merely
+    because the history object existed. A scalar companion can disagree
+    with the state it describes; after the boundary there is one source.
+    """
+    assert set(NormalizedEvidence.__dataclass_fields__) == {
+        "schema_version",
+        "summary",
+        "history",
+    }
 
 
 def test_the_walker_reaches_every_field_of_the_typed_model(tmp_path: Path) -> None:
@@ -151,7 +167,6 @@ def test_absent_history_is_unknown_with_a_reason(tmp_path: Path) -> None:
 
     evidence = normalize_report_evidence(report)
 
-    assert evidence.history_present is False
     states = [state for path, state in walk_evidence(evidence.history)]
     assert states and all(isinstance(state, Unknown) for state in states)
     assert all("no history" in state.reason for state in states)
@@ -167,7 +182,9 @@ def test_missing_files_changed_does_not_become_a_measured_zero(tmp_path: Path) -
     evidence = normalize_report_evidence(report)
 
     assert isinstance(evidence.history.files_changed, Unknown)
-    assert evidence.history_present is True, "the block exists; only one count is missing"
+    assert isinstance(evidence.history.qualifying_hotspots, Measured), (
+        "the block exists; only one count is missing"
+    )
 
 
 def test_missing_single_author_files_does_not_raise(tmp_path: Path) -> None:

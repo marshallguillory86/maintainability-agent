@@ -130,7 +130,6 @@ class NormalizedEvidence:
     schema_version: int
     summary: SummaryEvidence
     history: HistoryEvidence
-    history_present: bool
 
 
 def walk_evidence(node: Any, prefix: str = "") -> Iterator[tuple[str, EvidenceState]]:
@@ -326,7 +325,7 @@ SUMMARY_FIELD_ABSENT = "summary does not carry this count"
 NO_SETTLED_FILES = "no file has three or more commits, so ownership concentration has no population"
 
 
-def _normalize_history(report: dict[str, Any]) -> tuple[HistoryEvidence, bool]:
+def _normalize_history(report: dict[str, Any]) -> HistoryEvidence:
     """History evidence, distinguishing 'no history' from 'not recorded'.
 
     Two audit findings live in this function's contract. A shallow clone
@@ -338,7 +337,7 @@ def _normalize_history(report: dict[str, Any]) -> tuple[HistoryEvidence, bool]:
     raw = report.get("history")
     if raw is None:
         absent = {field.name: Unknown(NO_HISTORY, f"history.{field.name}") for field in fields(HistoryEvidence)}
-        return HistoryEvidence(**absent), False
+        return HistoryEvidence(**absent)
     section = _require_mapping(raw, "history")
     states = _states_for(HistoryEvidence, section, "history", HISTORY_FIELD_ABSENT)
     _check_relations(states, HISTORY_SUBSETS, HISTORY_SUMS, "history")
@@ -354,7 +353,7 @@ def _normalize_history(report: dict[str, Any]) -> tuple[HistoryEvidence, bool]:
         # evidence must never resolve it into a *better-defined* state
         # than leaving it in, or concealment buys clarity.
         states["single_author_files"] = NotApplicable(NO_SETTLED_FILES, "history.single_author_files")
-    return HistoryEvidence(**states), True
+    return HistoryEvidence(**states)
 
 
 def normalize_report_evidence(report: dict[str, Any]) -> NormalizedEvidence:
@@ -374,12 +373,11 @@ def normalize_report_evidence(report: dict[str, Any]) -> NormalizedEvidence:
     summary = _require_mapping(report.get("summary", {}), "summary") if "summary" in report else None
     if summary is None:
         raise EvidenceValidationError("report has no summary: nothing to score")
-    history, present = _normalize_history(report)
+    history = _normalize_history(report)
     summary_states = _states_for(SummaryEvidence, summary, "summary", SUMMARY_FIELD_ABSENT)
     _check_relations(summary_states, SUMMARY_SUBSETS, SUMMARY_SUMS, "summary")
     return NormalizedEvidence(
         schema_version=version,
         summary=SummaryEvidence(**summary_states),
         history=history,
-        history_present=present,
     )

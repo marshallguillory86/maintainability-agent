@@ -55,7 +55,13 @@ from ._pressures import (
     production_pressures,
 )
 from ._verification import verification
-from .evidence import NormalizedEvidence, SummaryEvidence, normalize_report_evidence
+from .evidence import (
+    EvidenceState,
+    NormalizedEvidence,
+    NotApplicable,
+    SummaryEvidence,
+    normalize_report_evidence,
+)
 
 __all__ = [
     "CATEGORIES",
@@ -149,7 +155,11 @@ def grade_for(score: float, readings: dict[str, float]) -> tuple[str, list[str]]
 
 
 def _evidence_rules(
-    grade: str, blockers: list[str], aspects: dict[str, float | None], untested: bool | None, history_present: bool
+    grade: str,
+    blockers: list[str],
+    aspects: dict[str, float | None],
+    untested: bool | None,
+    ownership_evidence: EvidenceState,
 ) -> tuple[str, list[str]]:
     """The two rules that keep A-grades honest about evidence.
 
@@ -172,7 +182,7 @@ def _evidence_rules(
         if grade in GRADE_GATES:
             grade = "B"
     missing = sorted(name for name, value in aspects.items() if value is None)
-    if history_present:
+    if isinstance(ownership_evidence, NotApplicable):
         missing = [name for name in missing if name != "knowledge_concentration"]
     if missing:
         # Stated whatever the grade, not only when it is being demoted
@@ -214,7 +224,13 @@ def _grade_on_the_floor(
             f"graded on the evidence floor {low} (point estimate {overall}, ceiling {high}): "
             "unmeasured aspects price at 0 for the grade",
         ]
-    return _evidence_rules(grade, blockers, aspects, untested, evidence.history_present)
+    return _evidence_rules(
+        grade,
+        blockers,
+        aspects,
+        untested,
+        evidence.history.single_author_files,
+    )
 
 
 def score_report(report: dict[str, Any]) -> dict[str, Any]:
@@ -336,5 +352,4 @@ def _score_document(
             "note": "Calibrated so a repo at the OSS median on every dimension scores 4.0.",
         },
     }
-
 

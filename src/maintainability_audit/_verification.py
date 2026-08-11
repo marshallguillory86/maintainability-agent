@@ -32,6 +32,55 @@ from .evidence import NormalizedEvidence, Unknown, walk_evidence
 # under different requirements — ADR 001 §5.
 DEFAULT_PROFILE = "default-v1"
 
+# **The frozen requirement list for that name.** Written out rather than
+# derived from the typed model, and the difference is the whole point:
+# deriving it meant that adding a field to SummaryEvidence or
+# HistoryEvidence silently changed what `default-v1` demanded, so two
+# materially different contracts would both call themselves v1 and the
+# name would guarantee nothing. An audit caught that, and it is exactly
+# the failure a version string exists to prevent.
+#
+# Adding a scoring input therefore forces a decision, enforced by
+# ``test_every_typed_scoring_input_is_classified_by_the_profile``:
+# require it under a **new** profile name, or record here that v1 does
+# not require it. Editing this set in place changes a published
+# contract; that is a v2, not a patch.
+DEFAULT_V1_REQUIRED: frozenset[str] = frozenset({
+    "summary.files_scanned",
+    "summary.declarations_scanned",
+    "summary.file_warnings",
+    "summary.file_failures",
+    "summary.function_warnings",
+    "summary.function_failures",
+    "summary.duplicate_blocks",
+    "summary.risk_findings",
+    "summary.hard_gate_failures",
+    "summary.production_files_scanned",
+    "summary.production_declarations_scanned",
+    "summary.production_file_warnings",
+    "summary.production_file_failures",
+    "summary.production_function_warnings",
+    "summary.production_function_failures",
+    "summary.production_hard_gate_failures",
+    "summary.test_file_count",
+    "summary.dead_code_count",
+    "summary.near_duplicate_count",
+    "summary.idiom_concern_count",
+    "summary.has_readme",
+    "summary.has_changelog",
+    "summary.has_docs_dir",
+    "history.files_changed",
+    "history.qualifying_hotspots",
+    "history.code_coupling_pairs",
+    "history.multi_commit_files",
+    "history.single_author_files",
+})
+
+# Inputs v1 deliberately does not require. Empty today; a scoring input
+# that should not withhold a grade is recorded here so the omission is a
+# decision on the record rather than a gap.
+DEFAULT_V1_NOT_REQUIRED: frozenset[str] = frozenset()
+
 COMPLETE = "complete"
 INCOMPLETE = "incomplete"
 
@@ -39,10 +88,11 @@ INCOMPLETE = "incomplete"
 def verification(evidence: NormalizedEvidence, grade: str) -> dict[str, Any]:
     """``evidence_status`` and ``verified_grade`` for one report.
 
-    ``default-v1`` requires every scoring input in the typed model to be
-    resolved — ``Measured`` or ``NotApplicable``. One ``Unknown`` makes
-    the status incomplete and withholds the verified grade, naming the
-    measurement rather than reporting a bare "insufficient evidence".
+    ``default-v1`` requires the measurements in
+    :data:`DEFAULT_V1_REQUIRED` to be resolved — ``Measured`` or
+    ``NotApplicable``. One ``Unknown`` among them makes the status
+    incomplete and withholds the verified grade, naming the measurement
+    rather than reporting a bare "insufficient evidence".
 
     Returns the two fields as a mapping so the score document can splat
     them in one place instead of threading two more parameters through
@@ -66,10 +116,8 @@ def verification(evidence: NormalizedEvidence, grade: str) -> dict[str, Any]:
 def _unresolved(evidence: NormalizedEvidence) -> list[dict[str, str]]:
     """Every required measurement the report could not establish.
 
-    Walks the typed model rather than a list of field names, so an input
-    added to ``SummaryEvidence`` or ``HistoryEvidence`` is required by
-    the profile the day it is added. Sorted by measurement path: a
-    report diffed against another must not show spurious reordering.
+    Only measurements the profile requires. Sorted by measurement path:
+    a report diffed against another must not show spurious reordering.
     """
     return sorted(
         (
@@ -79,7 +127,7 @@ def _unresolved(evidence: NormalizedEvidence) -> list[dict[str, str]]:
                 "provenance": state.provenance,
             }
             for path, state in walk_evidence(evidence)
-            if isinstance(state, Unknown)
+            if path in DEFAULT_V1_REQUIRED and isinstance(state, Unknown)
         ),
         key=lambda reason: reason["measurement"],
     )

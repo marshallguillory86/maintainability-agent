@@ -22,7 +22,12 @@ from pathlib import Path
 import pytest
 from test_evidence_normalization import _commit, _report, _tested_repo
 
-from maintainability_audit._verification import DEFAULT_PROFILE, verification
+from maintainability_audit._verification import (
+    DEFAULT_PROFILE,
+    DEFAULT_V1_NOT_REQUIRED,
+    DEFAULT_V1_REQUIRED,
+    verification,
+)
 from maintainability_audit.config import load_config
 from maintainability_audit.evidence import (
     EvidenceValidationError,
@@ -164,22 +169,85 @@ def test_invalid_evidence_still_raises_rather_than_scoring(tmp_path: Path, mutat
         score_report(report)
 
 
-def test_the_compatibility_score_is_untouched_by_verification(tmp_path: Path) -> None:
-    """Stage 5 adds fields; it moves nothing.
+PRE_STAGE5_SCORE = Path(__file__).parent / "fixtures" / "pre_stage5_score.json"
 
-    Compares the shipped score against the same rollup with the
-    verification fields stripped, for both complete and incomplete
-    evidence — the incomplete case matters most, since that is where a
-    careless implementation would let a withheld grade leak into the
-    compatibility one.
+
+def _fixture_repo(root: Path) -> Path:
+    """The exact tree the pinned pre-Stage-5 score was captured from.
+
+    Content is fixed here rather than shared with the other helpers,
+    because the pinned JSON is only meaningful against this tree.
     """
+    root.mkdir(parents=True, exist_ok=True)
+    (root / "README.md").write_text("# Fixture\n", encoding="utf-8")
+    (root / "app.py").write_text("def ok(value):\n    return value + 1\n", encoding="utf-8")
+    (root / "test_app.py").write_text(
+        "from app import ok\n\n\ndef test_ok():\n    assert ok(1) == 2\n", encoding="utf-8"
+    )
+    _commit(root, "start")
+    return root
+
+
+def test_the_compatibility_score_matches_the_pre_stage_five_scorer(tmp_path: Path) -> None:
+    """Stage 5 adds fields; it moves nothing — against a real anchor.
+
+    The first version of this test compared the current scorer with
+    another call to the current scorer. An audit pointed out that if
+    Stage 5 had changed a compatibility calculation, both sides would
+    have changed together and the test would still have passed: it
+    could not establish the invariant it was named for. That is the same
+    "self-consistency mistaken for invariance" shape as claiming
+    enforcement from a test name.
+
+    ``fixtures/pre_stage5_score.json`` was captured by running commit
+    1499bad — the last commit before verification metadata existed —
+    against the tree ``_fixture_repo`` builds. Comparison is against
+    that, so a future change to the rollup fails here and has to be
+    deliberate.
+    """
+    report = build_report(_fixture_repo(tmp_path / "fixture"), load_config(None))
+    expected = json.loads(PRE_STAGE5_SCORE.read_text(encoding="utf-8"))
+    assert "verified_grade" not in expected, "the anchor must predate Stage 5"
+
+    shipped = {key: value for key, value in report["score"].items()
+               if key not in {"evidence_status", "verified_grade"}}
+
+    assert shipped == expected
+
+
+def test_verification_does_not_disturb_the_rest_of_the_document(tmp_path: Path) -> None:
+    """The incomplete case, where a withheld grade could leak sideways."""
     for report in (_complete(tmp_path / "full"), _shallow(tmp_path / "shallow")):
         score = report["score"]
         assert set(COMPATIBILITY_FIELDS) <= set(score)
-        recomputed = score_report(report)
-        for field in COMPATIBILITY_FIELDS:
-            assert score[field] == recomputed[field], field
-        assert score["grade_blockers"] == recomputed["grade_blockers"]
+        stripped = {k: v for k, v in score.items() if k not in {"evidence_status", "verified_grade"}}
+        assert set(stripped) == set(COMPATIBILITY_FIELDS), sorted(set(stripped) ^ set(COMPATIBILITY_FIELDS))
+
+
+def test_every_typed_scoring_input_is_classified_by_the_profile() -> None:
+    """A new scoring input must force a versioning decision.
+
+    ``default-v1`` used to be computed as "everything ``walk_evidence``
+    returns", so adding a field to either evidence dataclass silently
+    changed what the name required — two materially different contracts
+    both calling themselves v1, which defeats the reason profiles are
+    named at all.
+
+    The requirement list is frozen now, and this fails until a new input
+    is either required under a **new** profile name or recorded in
+    ``DEFAULT_V1_NOT_REQUIRED``. Editing v1's set in place is a v2.
+    """
+    from maintainability_audit.evidence import HistoryEvidence, SummaryEvidence
+
+    model = {f"summary.{field.name}" for field in SummaryEvidence.__dataclass_fields__.values()}
+    model |= {f"history.{field.name}" for field in HistoryEvidence.__dataclass_fields__.values()}
+    classified = DEFAULT_V1_REQUIRED | DEFAULT_V1_NOT_REQUIRED
+
+    assert model == classified, (
+        f"unclassified scoring inputs: {sorted(model - classified)} — require them under a new "
+        f"profile name or list them in DEFAULT_V1_NOT_REQUIRED; "
+        f"classified but absent from the model: {sorted(classified - model)}"
+    )
 
 
 def test_rendered_artifacts_do_not_mention_the_new_fields(tmp_path: Path) -> None:

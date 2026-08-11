@@ -233,7 +233,19 @@ def score_report(report: dict[str, Any]) -> dict[str, Any]:
     audits caught two versions of the same lie, an overall that was not
     the mean of the numbers printed beside it.
     """
-    evidence = normalize_report_evidence(report)
+    return score_evidence(normalize_report_evidence(report))
+
+
+def score_evidence(evidence: NormalizedEvidence) -> dict[str, Any]:
+    """Score an already-normalized model — the seam validation ends at.
+
+    ``score_report`` is validation plus this. Splitting them lets the
+    stage 6 property suite vary evidence states directly and score them
+    through the *production* pipeline, rather than round-tripping
+    hand-built dictionaries and hoping they reconstruct the states it
+    means to test. There is still exactly one scorer; this is where it
+    begins.
+    """
     summary = evidence.summary
     pressures = dimension_pressures(summary)
     normalized = normalize(pressures)

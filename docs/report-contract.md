@@ -91,6 +91,6 @@ Two behaviors worth recording because they are decisions, not details:
 
 ## Remaining work
 
-The stages still open are listed in the [decision register](decisions.md); the work they cover is:
+The stages still open are listed in the [decision register](decisions.md). Stage 6 landed the recursive property suite over the typed model; **consumer rendering remains stage 7** — Markdown, prompts, PR comments, SARIF and baselines still read the compatibility fields and do not surface `evidence_status` or `verified_grade`. The work still open:
 
 Nothing in this repository should be read as claiming the ADR is implemented.

@@ -124,11 +124,19 @@ def _documentation_aspect(summary: SummaryEvidence) -> float | None:
 
     A proxy for whether anyone can orient, not for whether the words are
     accurate — accuracy is in UNSCORED and stays there.
+
+    All three flags must be known. ``bool(measured(state))`` read an
+    Unknown as *absent*, so a report that did not say whether it had a
+    changelog scored as one that said it had none — the bug class this
+    architecture exists to remove, surviving in the last aspect nobody
+    had swept. Found by the stage 6 property suite, not by an audit.
     """
-    readme = measured(summary.has_readme)
-    if readme is None:
+    flags = [measured(summary.has_readme), measured(summary.has_changelog),
+             measured(summary.has_docs_dir)]
+    if any(flag is None for flag in flags):
         return None
-    extras = int(bool(measured(summary.has_changelog))) + int(bool(measured(summary.has_docs_dir)))
+    readme, changelog, docs = flags
+    extras = int(bool(changelog)) + int(bool(docs))
     if not readme:
         return 1.5 if extras else 0.5
     return [3.0, 4.0, 5.0][extras]

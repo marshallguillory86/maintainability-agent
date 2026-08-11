@@ -22,7 +22,7 @@ PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens"}
 SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "history"}
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive", "_verification"}
 ASSEMBLY = {"report"}
-PRESENTATION = {"renderers", "prompts", "sarif", "baseline"}
+PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view"}
 ENTRY = {"cli", "__main__"}
 BOUNDARY = {"evidence"}
 

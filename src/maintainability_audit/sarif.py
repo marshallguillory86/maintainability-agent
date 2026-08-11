@@ -122,9 +122,45 @@ def report_to_sarif(report: dict[str, Any]) -> dict[str, Any]:
                     }
                 },
                 "results": results,
+                # Evidence completeness rides at run level, deliberately.
+                # It describes the *audit*, not any line of code, so
+                # emitting it as a result would invent a source-code
+                # finding for a shallow clone and put it in the Security
+                # tab next to real defects. SARIF property bags exist for
+                # exactly this (§3.14.3, §3.8).
+                **_evidence_run_properties(report),
             }
         ],
     }
+
+
+def _evidence_run_properties(report: dict[str, Any]) -> dict[str, Any]:
+    """The run's evidence property bag, or nothing at all.
+
+    A report with no score object is not a report whose grade was
+    withheld — it is one that was never scored, which some callers
+    legitimately produce. Emitting ``verifiedGrade: null`` there would
+    assert withholding that never happened, so the whole bag is omitted
+    instead.
+    """
+    score = report.get("score")
+    if not score:
+        return {}
+    status = score.get("evidence_status") or {}
+    return {"properties": {
+        "evidenceProfile": status.get("profile"),
+        "evidenceStatus": status.get("status"),
+        "verifiedGrade": score.get("verified_grade"),
+        "maintainabilityEstimate": score.get("overall"),
+        "evidenceReasons": [
+            {
+                "measurement": item["measurement"],
+                "reason": item["reason"],
+                "provenance": item["provenance"],
+            }
+            for item in status.get("reasons") or []
+        ],
+    }}
 
 
 def read_sarif_inputs(paths: list[str] | None) -> list[dict[str, Any]]:

@@ -40,7 +40,6 @@ from maintainability_audit.evidence import (
 from maintainability_audit.prompts import render_agent_instructions, render_ai_prompt
 from maintainability_audit.renderers import render_markdown, render_pr_comment
 from maintainability_audit.report import build_report
-from maintainability_audit.sarif import report_to_sarif
 from maintainability_audit.scoring import score_report
 
 COMPATIBILITY_FIELDS = (
@@ -317,19 +316,37 @@ def test_every_typed_scoring_input_is_classified_by_the_profile() -> None:
     )
 
 
-def test_rendered_artifacts_do_not_mention_the_new_fields(tmp_path: Path) -> None:
-    """Consumer migration is stage 7; the artifacts must not move yet."""
-    for report in (_complete(tmp_path / "full"), _shallow(tmp_path / "shallow")):
+def test_rendered_artifacts_surface_the_evidence_contract(tmp_path: Path) -> None:
+    """Stage 7 inverted this test, deliberately.
+
+    Through stage 6 it asserted the renderers did **not** mention
+    `evidence_status` or `verified_grade`, because consumer migration was
+    explicitly out of scope and silently half-migrating them would have
+    been worse than leaving them alone. Stage 7 migrates them, so the
+    assertion flips: the artifacts must now carry the distinction.
+
+    The detailed per-consumer behaviour lives in
+    tests/test_consumer_migration.py; this keeps the stage-5 fields
+    tethered to the artifacts so a regression here fails in both places.
+    """
+    from maintainability_audit._evidence_view import NOT_VERIFIED
+
+    complete = _complete(tmp_path / "full")
+    incomplete = _shallow(tmp_path / "shallow")
+
+    for report in (complete, incomplete):
         rendered = "\n".join((
             render_markdown(report),
             render_pr_comment(report),
             render_ai_prompt(report),
             render_agent_instructions(report),
-            json.dumps(report_to_sarif(report)),
         ))
-        assert "verified_grade" not in rendered
-        assert "evidence_status" not in rendered
-        assert "default-v1" not in rendered
+        verified = report["score"]["verified_grade"]
+        if verified:
+            assert verified in rendered
+            assert NOT_VERIFIED not in rendered
+        else:
+            assert NOT_VERIFIED in rendered
 
 
 @pytest.mark.parametrize("committed", [True, False], ids=["complete", "incomplete"])

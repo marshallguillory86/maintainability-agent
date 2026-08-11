@@ -13,7 +13,8 @@ Dependencies point downward only. No cycles.
 ```text
   entry          cli, __main__
                      |
-  presentation   renderers, prompts, sarif, baseline        reads the report dict
+  presentation   renderers, prompts, sarif, baseline,       reads the report dict
+                 _evidence_view (shared phrasing)
                      |
   assembly       report                                     builds the report, calls the scorer
                      |
@@ -39,7 +40,7 @@ Dependencies point downward only. No cycles.
 | **scanners** | Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history | foundations, parsing |
 | **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
 | **assembly** | Running the scan, assembling the report dict, invoking the scorer once | anything below |
-| **presentation** | Markdown, PR comment, SARIF, baseline, remediation prompt | foundations, the report dict |
+| **presentation** | Markdown, PR comment, SARIF, baseline, remediation prompt, and `_evidence_view` — the single place the estimate/range/evidence/verified-grade wording is decided | foundations, the report dict |
 | **entry** | Argument parsing, output routing, exit codes | anything below |
 
 ## The rules, and why each exists

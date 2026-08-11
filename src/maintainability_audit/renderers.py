@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from . import _evidence_view as view
 from ._hotspots import hotspot_cognitive, hotspot_complexity, hotspot_measure, hotspot_name
 
 
@@ -9,12 +10,11 @@ def summary_table(summary: dict[str, int], score: dict[str, Any]) -> list[str]:
     return [
         "| Metric | Value |",
         "|---|---:|",
-        f"| Overall score | {score['overall']} / 5 ({score['grade']}) |",
-        *(
-            [f"| Overall range (unmeasured evidence priced 0..5) | {score['overall_range'][0]} – {score['overall_range'][1]} |"]
-            if score.get("overall_range") and score["overall_range"][0] != score["overall_range"][1]
-            else []
-        ),
+        f"| Maintainability estimate | {view.estimate(score)} |",
+        f"| Range (unmeasured evidence priced 0..5) | {view.score_range(score)} |",
+        f"| Evidence | {view.status_sentence(score)} |",
+        f"| Verified grade | {view.verified_grade(score)} |",
+        f"| Compatibility grade | {view.compatibility_grade(score)} |",
         f"| Files scanned | {summary['files_scanned']} |",
         f"| File warnings | {summary['file_warnings']} |",
         f"| File failures | {summary['file_failures']} |",
@@ -24,6 +24,28 @@ def summary_table(summary: dict[str, int], score: dict[str, Any]) -> list[str]:
         f"| Risk findings | {summary['risk_findings']} |",
         f"| Hard gate failures | {summary['hard_gate_failures']} |",
     ]
+
+
+def render_evidence_markdown(report: dict[str, Any]) -> list[str]:
+    """The measurements the audit could not establish, and why.
+
+    Absent when evidence is complete — a section reading "nothing is
+    missing" is noise on the reports that deserve none. Each row carries
+    the typed path and its provenance so a reader knows which
+    measurement to restore rather than that "history" is vaguely absent.
+    """
+    score = report["score"]
+    if view.is_complete(score) or not view.reasons(score):
+        return []
+    rows = [
+        [f"`{item['measurement']}`", item["reason"], f"`{item['provenance']}`"]
+        for item in view.reasons(score)
+    ]
+    return markdown_table(
+        "Evidence unavailable — no verified grade issued",
+        ["Measurement", "Why", "Provenance"],
+        rows,
+    )
 
 
 def score_table(score: dict[str, Any]) -> list[str]:
@@ -92,6 +114,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.extend(f"- {gate}" for gate in report["hard_gate_failures"])
         lines.append("")
 
+    lines.extend(render_evidence_markdown(report))
     lines.extend(render_grade_blockers(report))
     lines.extend(score_table(score))
     file_rows = [[f"`{i['path']}`", str(i["lines"]), i["status"]] for i in report["largest_files"]]
@@ -263,7 +286,11 @@ def render_pr_comment(report: dict[str, Any]) -> str:
         "",
         f"Status: **{status}**",
         f"Mode: `{report.get('mode', 'full')}`",
-        f"Score: **{score['overall']} / 5 ({score['grade']})**",
+        f"Estimate: **{view.estimate(score)}**  ·  range {view.score_range(score)}",
+        f"Verified grade: **{view.verified_grade(score)}**",
+        view.status_sentence(score),
+        *(view.reason_lines(score) if not view.is_complete(score) else []),
+        f"Compatibility grade: {view.compatibility_grade(score)}",
         "",
         "| Metric | Count |",
         "|---|---:|",

@@ -21,14 +21,14 @@ Classified as the task requires: *current* reports only, *persisted* historical 
 | [`scoring.score_report`](../src/maintainability_audit/scoring.py) | normalizes the report at entry | current only | none — migrated | done |
 | [`_pressures`](../src/maintainability_audit/_pressures.py) | `SummaryEvidence` states | current only | none — migrated | done |
 | [`_aspects`](../src/maintainability_audit/_aspects.py) | `NormalizedEvidence` | current only | none — migrated | done |
-| [`renderers.render_markdown`](../src/maintainability_audit/renderers.py) | `summary`, `score`, `history`, finding lists | current only | minor — `score.get("grade_blockers")`, `report.get("history")` | stage 7 |
-| [`renderers.render_pr_comment`](../src/maintainability_audit/renderers.py) | `summary`, `score`, `hard_gate_failures`, `function_hotspots` | current only | minor — `report.get("mode", "full")` | stage 7 |
-| [`prompts.render_ai_prompt`](../src/maintainability_audit/prompts.py) | `summary`, `score`, all finding lists | current only | minor — `report.get("dead_code") or []` and siblings | stage 7 |
-| [`prompts.render_agent_instructions`](../src/maintainability_audit/prompts.py) | `score.overall`, `score.grade`, four `summary` counts | current only | none (direct indexing) | stage 7 |
-| [`sarif.report_to_sarif`](../src/maintainability_audit/sarif.py) | `largest_files`, `function_hotspots`, `risk_findings`, `duplicate_blocks` | current only | `.get(key, [])` on finding lists; does **not** read `summary`/`score` | stage 7 |
+| [`renderers.render_markdown`](../src/maintainability_audit/renderers.py) | `summary`, `score`, `history`, finding lists | current only | minor | **migrated (stage 7)** — estimate, range, evidence status, verified grade, and a table of unavailable measurements with provenance |
+| [`renderers.render_pr_comment`](../src/maintainability_audit/renderers.py) | `summary`, `score`, `hard_gate_failures`, `function_hotspots` | current only | minor | **migrated (stage 7)** — same four concepts, condensed |
+| [`prompts.render_ai_prompt`](../src/maintainability_audit/prompts.py) | `summary`, `score`, all finding lists | current only | minor | **migrated (stage 7)** — plus an evidence section stating that incomplete evidence is not a code defect and must not widen the work order |
+| [`prompts.render_agent_instructions`](../src/maintainability_audit/prompts.py) | `score.overall`, `score.grade`, four `summary` counts | current only | none | **migrated (stage 7)** — never substitutes the compatibility grade for a withheld one |
+| [`sarif.report_to_sarif`](../src/maintainability_audit/sarif.py) | finding lists, and `score` for run properties | current only | `.get(key, [])` on finding lists | **migrated (stage 7)** — evidence at run level only; results, rule ids and levels unchanged, and missing evidence never becomes a result |
 | [`baseline.write_baseline`](../src/maintainability_audit/baseline.py) | `root`, `score`, finding lists | current only (write side) | `report.get("score", {})` | none |
 | [`baseline.load_baseline`](../src/maintainability_audit/baseline.py) | **persisted file**, `data["findings"]` only | **persisted** | reads a string list, never evidence | **none — see below** |
-| [`cli`](../src/maintainability_audit/cli.py) | orchestrates; passes the report through | current only | none | stage 7 |
+| [`cli`](../src/maintainability_audit/cli.py) | orchestrates; passes the report through | current only | none | **no change (stage 7)** — `--fail-on-gate` still reads hard findings only, per ADR 002 |
 | [`tools/calibration/measure.py`](../tools/calibration/measure.py) | `summary` of a live `build_report` | current only | none | stage 4 |
 | [`tools/calibration/measure_cohorts.py`](../tools/calibration/measure_cohorts.py) | `summary`, `score.overall` of a live `build_report` | current only | none | stage 4 |
 | [`_derive._corpus_overall`](../src/maintainability_audit/_derive.py) | a **synthesized** summary from `measurements.json` `evidence` blocks | persisted *measurements*, not reports | builds its own dict | stage 4 |
@@ -90,8 +90,22 @@ Two behaviors worth recording because they are decisions, not details:
 - **The state is the only authority after normalization.** Raw history presence is used only while constructing `Measured`, `Unknown`, and `NotApplicable`; no companion `history_present` flag survives into `NormalizedEvidence` or grading. Two representations can disagree, and one did: an `Unknown` ownership count inherited the `NotApplicable` grade exemption merely because a history object existed.
 - **Absence is never upgraded.** `single_author_files` becomes `NotApplicable` when no file has three commits — but only if the count was actually recorded. A deleted field stays `Unknown` even when the population is empty, because deleting evidence must not resolve it into a *better-defined* state than leaving it in. This was a live bug in the first draft of the module, caught by its own tests.
 
+## Deliberate no-ops
+
+Confirmed in source during stage 7 rather than assumed:
+
+- **No badge consumer exists.** Nothing in this repository renders or publishes a grade badge, so there was nothing to migrate. One was not created to satisfy the ADR's wording.
+- **No API consumer exists.** The JSON report is the API; it already carries both fields.
+- **`baseline.load_baseline` still reads fingerprints only.** `write_baseline` stores an informational `score` snapshot that nothing reads back, and stage 7 did not promote it into a gating contract. Pinned by `test_the_baseline_still_records_fingerprints_only`.
+
 ## Remaining work
 
-The stages still open are listed in the [decision register](decisions.md). Stage 6 landed the recursive property suite over the typed model; **consumer rendering remains stage 7** — Markdown, prompts, PR comments, SARIF and baselines still read the compatibility fields and do not surface `evidence_status` or `verified_grade`. The work still open:
+Consumer migration is done; see the [decision register](decisions.md) for where the ADR stands. Two stages remain, and they are the whole of what is left:
+
+**Stage 8 — deprecate and remove the ambiguous compatibility fields.** `score.overall`, `score.overall_range` and `score.grade` still ship, and `grade` is still banded from the evidence floor. Stage 7 labelled it everywhere it appears rather than removing it. Removal needs a schema-version bump, a deprecation window, and a decision on whether `overall` survives as `maintainability_estimate`.
+
+**Stage 9 — separate history-window materialization from measurement.** Fix-breadth still resolves, fetches, repairs and measures in one path. The ADR calls for an explicit manifest — pinned head, selection rule, selected commit ids, required parent objects, tool version — checked in, with analysis reading only the manifest and performing no network access.
+
+Older notes on the work those stages cover:
 
 Nothing in this repository should be read as claiming the ADR is implemented.

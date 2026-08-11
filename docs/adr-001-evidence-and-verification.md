@@ -1,6 +1,6 @@
 # ADR 001: Separate Maintainability Scoring from Evidence Verification
 
-- Status: Accepted; implementation pending
+- Status: Accepted. Implementation progress is tracked in the [decision register](decisions.md), which is the single place it is stated
 - Date: 2026-08-09
 - Owners: Maintainability Agent maintainers
 - Scope: Report schema, scoring, grading, legacy-report handling, and history-based studies

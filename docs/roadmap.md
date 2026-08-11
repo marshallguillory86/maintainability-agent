@@ -12,7 +12,6 @@ Dependency-light native scanner; Markdown, JSON, SARIF and PR-comment output; bo
 
 The architecture migration outranks new features. Six audit rounds were spent on one bug class that the typed evidence boundary is meant to end; leaving it half-migrated is how the seventh round happens. The open stages and their current status are in the [decision register](decisions.md); the immediate work is:
 
-1. Introduce `evidence_status` and `verified_grade` alongside the compatibility fields.
 2. Add property tests over the complete nested evidence model.
 3. Migrate actual report consumers deliberately; [ADR 002](adr-002-null-verified-grade-in-ci.md) is rejected because it assumed `--fail-on-gate` consumes a grade when it only checks hard findings.
 4. Separate history-window materialization from fix-breadth measurement, with checked-in manifests.

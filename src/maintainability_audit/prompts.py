@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from . import _evidence_view as view
 from ._hotspots import hotspot_measure, hotspot_name
 
 
@@ -35,7 +36,9 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         "",
         "Audit summary:",
         "",
-        f"- Overall score: {score['overall']} / 5 ({score['grade']})",
+        f"- Maintainability estimate: {view.estimate(score)} (range {view.score_range(score)})",
+        f"- Verified grade: {view.verified_grade(score)}",
+        f"- Compatibility grade: {view.compatibility_grade(score)}",
         f"- Files scanned: {summary['files_scanned']}",
         f"- File failures: {summary['file_failures']}",
         f"- Function failures: {summary['function_failures']}",
@@ -44,6 +47,7 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         f"- Hard gate failures: {summary['hard_gate_failures']}",
         "",
     ]
+    lines.extend(view.remediation_note(score))
     lines.extend(prompt_pressure_section(score))
     lines.extend(prompt_focus_sections(report))
     lines.extend(prompt_deliverable())
@@ -262,7 +266,8 @@ def render_agent_instructions(report: dict[str, Any]) -> str:
             "## Current Audit Context",
             "",
             f"- Mode: `{report.get('mode', 'full')}`",
-            f"- Score: `{report['score']['overall']} / 5 ({report['score']['grade']})`",
+            f"- Maintainability estimate: `{view.estimate(report['score'])}`",
+            f"- Verified grade: `{view.verified_grade(report['score'])}`",
             f"- Files scanned: {report['summary']['files_scanned']}",
             f"- Hard gate failures: {report['summary']['hard_gate_failures']}",
             f"- Function failures: {report['summary']['function_failures']}",

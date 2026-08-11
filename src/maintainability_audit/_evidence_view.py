@@ -59,14 +59,18 @@ def is_complete(score: dict[str, Any]) -> bool:
 def reports_evidence(score: dict[str, Any]) -> bool:
     """Whether this score carries an evidence verdict at all.
 
-    Three states, not two. A score with no ``evidence_status`` was never
-    evaluated for completeness — it is not a score whose grade was
+    Three states, not two. A score with no ``evidence_status`` carries no
+    verdict on completeness — it is not a score whose grade was
     *withheld*. Collapsing those two produced "Evidence incomplete: 0
     required measurements unavailable", which asserts a withholding that
-    never happened and contradicts itself in the same sentence. The same
-    mistake reached SARIF in this stage and was caught there by an
-    existing test; this is its twin, found by probing rather than by an
-    audit.
+    never happened and contradicts itself in the same sentence.
+
+    Why the absence exists is deliberately not guessed at. An earlier
+    revision called it a report that "predates evidence verification",
+    which is a claim about provenance that absence cannot support: it
+    could equally be malformed, hand-built, or an unsupported shape, and
+    the report contract rejects unsupported schemas rather than dating
+    them.
     """
     return bool(score.get("evidence_status"))
 
@@ -101,7 +105,7 @@ def reasons(score: dict[str, Any]) -> list[dict[str, str]]:
 def status_sentence(score: dict[str, Any]) -> str:
     """One line a human can act on, for either state."""
     if not reports_evidence(score):
-        return "This report predates evidence verification; completeness was not evaluated."
+        return "Evidence verification status was not reported."
     if is_complete(score):
         return f"Evidence complete under profile `{profile(score)}`."
     missing = len(reasons(score))

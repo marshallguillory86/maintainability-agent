@@ -373,3 +373,77 @@ def test_a_collapsed_range_never_claims_complete_evidence(
             f"concealing {path} collapsed the range and claimed completeness: {rendered}"
         )
         assert "still incomplete" in rendered
+
+
+# ---------------------------------------------------------------------------
+# The agent-instruction contract, and cause-specific guidance.
+#
+# Both were implemented and then described as covered when they were not:
+# the consumer assertions above only check that a verified-grade string
+# appears, and a regression restoring blanket clone-depth advice would
+# have passed every test in this file.
+# ---------------------------------------------------------------------------
+
+def test_agent_instructions_carry_the_whole_evidence_contract(incomplete_report: dict) -> None:
+    """Not just the grade value — the range, profile, paths and the rule."""
+    score = incomplete_report["score"]
+    instructions = render_agent_instructions(incomplete_report)
+
+    assert NOT_VERIFIED in instructions
+    assert view.score_range(score) in instructions
+    assert score["evidence_status"]["profile"] in instructions
+    for item in score["evidence_status"]["reasons"]:
+        assert item["measurement"] in instructions, item["measurement"]
+        assert item["provenance"] in instructions, item["provenance"]
+    assert "not** a code defect" in instructions
+    assert "do not refactor or widen scope" in instructions
+
+
+def test_complete_agent_instructions_carry_no_evidence_guard(complete_report: dict) -> None:
+    instructions = render_agent_instructions(complete_report)
+
+    assert complete_report["score"]["verified_grade"] in instructions
+    assert "do not refactor or widen scope" not in instructions
+
+
+def _hint_for(report: dict) -> str:
+    return view._restore_hint(report["score"])
+
+
+def test_history_only_gaps_get_clone_depth_advice(incomplete_report: dict) -> None:
+    sections = {r["measurement"].split(".")[0] for r in view.reasons(incomplete_report["score"])}
+    assert sections == {"history"}, "fixture must be history-only"
+
+    assert "fetch-depth" in _hint_for(incomplete_report)
+
+
+def test_summary_only_gaps_do_not_get_clone_depth_advice(complete_report: dict) -> None:
+    """The defect an audit found: a missing scanner count told to fix git."""
+    from maintainability_audit.scoring import score_report
+
+    report = dict(complete_report)
+    report["summary"] = {k: v for k, v in report["summary"].items() if k != "test_file_count"}
+    report["score"] = score_report(report)
+    sections = {r["measurement"].split(".")[0] for r in view.reasons(report["score"])}
+    assert sections == {"summary"}, "fixture must be summary-only"
+
+    hint = _hint_for(report)
+    assert "fetch-depth" not in hint, "summary gaps must not blame clone depth"
+    assert "scanner outputs" in hint
+    assert "fetch-depth" not in render_ai_prompt(report)
+
+
+def test_mixed_gaps_name_more_than_one_producer(complete_report: dict) -> None:
+    """The branch nothing executed: gaps in both summary and history."""
+    from maintainability_audit.scoring import score_report
+
+    report = dict(complete_report)
+    report["summary"] = {k: v for k, v in report["summary"].items() if k != "test_file_count"}
+    report["history"] = {k: v for k, v in report["history"].items() if k != "files_changed"}
+    report["score"] = score_report(report)
+    sections = {r["measurement"].split(".")[0] for r in view.reasons(report["score"])}
+    assert sections == {"summary", "history"}, f"fixture must be mixed, got {sections}"
+
+    hint = _hint_for(report)
+    assert "more than one producer" in hint
+    assert "fetch-depth" not in hint, "mixed causes must not single out clone depth"

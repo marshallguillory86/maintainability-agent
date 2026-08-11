@@ -15,6 +15,12 @@ maintainability-report.md
 maintainability-remediation-prompt.md
 maintainability-pr-comment.md
 maintainability.sarif
+
+# secure-code-agent outputs, same reason: generated per run, never committed.
+secure-code-report.md
+secure-code-remediation-prompt.md
+secure-code-pr-comment.md
+secure-code.sarif
 maintainability-baseline.json
 # Agent standards written by --init-agent-standards. Generated, not
 # authored: leaving them tracked makes a dogfood run dirty the worktree,

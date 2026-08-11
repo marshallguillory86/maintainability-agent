@@ -2,7 +2,7 @@
 
 How the package is layered, which layer may depend on which, and the invariant each one owns.
 
-This describes the code **as it is**, not as intended. Where reality falls short of a decision, it is listed under [Known debt](#known-debt) rather than described aspirationally. Direction of travel is in [ADR 001](adr-001-evidence-and-verification.md).
+This describes the code **as it is**, not as intended. Where reality falls short of a decision, it is listed under [Known debt](#known-debt) rather than described aspirationally. Direction of travel is kept in the [decision register](decisions.md); the explicitly labeled proposal section at the end maps those decisions onto the current layers without claiming they ship.
 
 The layering is enforced by `tests/test_architecture.py`, which reads the real import graph. A rule stated here and not enforced there is decoration, and this document tries not to contain any.
 
@@ -129,3 +129,39 @@ Stated rather than hidden, because an architecture document that only describes 
 - **A new detector** belongs in scanners, returns findings, and adds a count to `report_summary`. It becomes scored only by being given weight in `_formula.CATEGORY_ASPECTS`; an aspect with no weight fails the build.
 - **A new output format** belongs in presentation and reads the report dictionary. It must not compute a score.
 - **A new external analyzer** is ingested as SARIF and kept as `external_findings` with its provenance. Per [adapters](adapters.md), do not pretend every analyzer has the same semantics.
+
+## Proposed extension boundaries — not implemented
+
+Two proposed decisions extend the bounded work order without changing what the
+standard score means:
+
+- [ADR 003](adr-003-deterministic-semantic-policy.md) specifies a type-aware
+  semantic-analysis path. Language-native analyzers and checked-in repository
+  policy may produce universal findings, configured policy violations, or
+  explicitly non-gating design-review candidates. They do not get to modify
+  rubric weights or grade bands.
+- [ADR 004](adr-004-economic-context.md) specifies a separate economic-context
+  path. Repository measurements and user-supplied business context may produce
+  transparent low/base/high impact scenarios. Those scenarios rank the work
+  order; they do not feed scoring or grading and are not predictions until an
+  outcome study earns that word.
+
+The intended dependency direction is:
+
+```text
+language-native analyzers / SARIF     checked-in semantic policy
+                 \                         /
+                  -> normalized semantic findings
+                              |
+repository measurements     configured economic context
+                 \                         /
+                  -> economic impact scenarios
+                              |
+                  bounded prioritized work order
+```
+
+Both paths terminate in report data consumed by presentation. Neither may
+reach backward into `_formula`, `_calibration`, `_aspects`, or grade policy.
+Until the ADRs are accepted and implemented, this diagram is a constraint on
+future work, not a description of shipped behavior; its invariants therefore
+do not appear in the enforced table above.

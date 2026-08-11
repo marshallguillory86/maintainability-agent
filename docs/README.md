@@ -31,6 +31,8 @@ Verbatim, not "contains the same numbers": an earlier guard checked whether each
 |---|---|
 | [ADR 001 — Evidence and verification](adr-001-evidence-and-verification.md) | Accepted — status in the [register](decisions.md) |
 | [ADR 002 — Null verified grade in CI](adr-002-null-verified-grade-in-ci.md) | **Rejected** — assumed a CI grade gate that does not exist |
+| [ADR 003 — Deterministic semantic policy](adr-003-deterministic-semantic-policy.md) | **Proposed** — repository semantics without rubric drift |
+| [ADR 004 — Economic context](adr-004-economic-context.md) | **Proposed** — impact scenarios separate from score and grade |
 | [Report contract](report-contract.md) | Current — the report's producers, consumers, and schema-version policy |
 
 New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register, and never edited after acceptance except to record implementation progress or mark them superseded.

@@ -21,6 +21,36 @@ The loop this product closes:
 
 Step 3 is the product. Steps 1 and 2 are in service of it.
 
+### Unshipped direction: semantic judgment and economic priority
+
+The next useful boundary is not a larger generic smell catalog. It is a way to
+make repository knowledge explicit enough that a deterministic tool can act on
+it. Source code alone can observe that the same bare strings are repeated in
+dispatch, validation and capability checks. It cannot universally know whether
+those strings should be constants, an enum, a value object, or reified
+operations with behavior and generic result types. That choice contains domain
+intent.
+
+[ADR 003](adr-003-deterministic-semantic-policy.md) proposes three honestly
+different outputs: facts established by a language type system, violations of
+checked-in repository policy, and design-review candidates inferred from
+structural or historical friction. Determinism means that the same tree,
+analyzer versions and policy produce the same result; it does not require the
+tool to pretend that one universal rule contains every repository's semantics.
+
+[ADR 004](adr-004-economic-context.md) proposes a second, separate layer for
+prioritization. Change history and engineering telemetry can supply observable
+exposure; a user can supply irreducible context such as loaded labor cost,
+planning horizon, reliability tier and verification burden. The result is a
+transparent scenario range attached to a work item, not a modification of the
+uniform score and not a prediction. The product direction is:
+
+> deterministic finding + explicit repository semantics + configured economic
+> context -> a bounded work order ordered by estimated exposure
+
+Neither proposal is shipped. Both must preserve the offline, no-LLM audit path
+and the evidence standard below.
+
 ## Who it is for
 
 - Teams running agents in the dev loop who are tired of unbounded cleanup PRs.
@@ -46,6 +76,8 @@ This list exists because the project has already broken it once and retracted. A
 
 - **That it detects AI-written code**, or that any metric distinguishes AI authorship. Tested with a matched control and [retracted](studies.md#does-this-detect-ai-written-code). Any revival needs a pre-registered design with commit-level authorship.
 - **That the score predicts business outcomes** — defect rates, delivery speed, cost. No outcome study has been run. The rubric is a standard, not a model of the future.
+- **That a configured economic scenario is a prediction or observed saving.** User inputs make assumptions explicit; they do not validate the model. Scenario ranges must remain separate from the score until held-out outcomes establish predictive performance.
+- **That a heuristic can recover experienced engineering judgment.** A repeated string dispatch or repeatedly patched abstraction can justify a design-review candidate. It does not prove which abstraction is correct.
 - **That a passing grade means the code is maintainable.** It means nothing this tool measures is out of band.
 - **That the architecture, or any ADR, is "fully implemented"** while its consumers and invariants have not migrated.
 - **That a bug class is closed** because the reported instance stopped reproducing. See the closure rules below.

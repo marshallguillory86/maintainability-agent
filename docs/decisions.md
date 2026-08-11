@@ -10,6 +10,8 @@ A decision recorded only as a sentence inside a design document is a decision th
 |---|---|---|---|
 | [001](adr-001-evidence-and-verification.md) | Separate maintainability scoring from evidence verification | **Accepted** — stages 1–6 implemented, 7–9 pending | Report schema, scoring, grading, history studies |
 | [002](adr-002-null-verified-grade-in-ci.md) | Whether null `verified_grade` needs a CI policy before stage 5 | **Rejected** — premise assumed a grade gate that does not exist | CLI exit codes, ADR 001 stage 5 |
+| [003](adr-003-deterministic-semantic-policy.md) | Add deterministic, repository-aware semantic findings without changing the uniform rubric | **Proposed** — TypeScript precision prototype required | Analyzers, configuration, findings, remediation prompts |
+| [004](adr-004-economic-context.md) | Add configured economic-impact scenarios without turning the score into a cost prediction | **Proposed** — historical validation design required | Configuration, report schema, prioritization, studies |
 
 ## Statuses
 

@@ -54,7 +54,7 @@ Consequence, and it is the main decision this inventory drives: **there are no l
 
 The profile's required measurements are **frozen by name** in `_verification.DEFAULT_V1_REQUIRED`. Adding a scoring input does not silently change what `default-v1` demands: it fails a test until the input is required under a new profile name or recorded as not required. Editing v1's set in place is a v2.
 
-`Measured(0)` and `NotApplicable` are both **complete** evidence — the scanner looked and found none, and the measurement has no population here. Only `Unknown` withholds a grade.
+`Measured(0)` and `NotApplicable` are both **complete** evidence — the scanner looked and found none, and the measurement has no population here. Only `Unknown` withholds a grade. In the rollup, `NotApplicable` removes the corresponding aspect from the category denominator under the point estimate and both interval endpoints; it is neither a clean score nor unresolved uncertainty.
 
 **What did not change.** `score.grade` keeps its existing meaning, including evidence-floor banding, and consumers keep reading it until stage 7. Adding optional fields does not bump the schema version under the policy below. Invalid input still raises `EvidenceValidationError` or `UnsupportedReportSchema`: there is no serialized `invalid` status, because a malformed report must not flow onward carrying numbers nobody should trust.
 

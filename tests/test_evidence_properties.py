@@ -32,6 +32,7 @@ from pathlib import Path
 
 import pytest
 
+from maintainability_audit._formula import rollup
 from maintainability_audit._verification import DEFAULT_V1_NOT_REQUIRED, DEFAULT_V1_REQUIRED
 from maintainability_audit.config import load_config
 from maintainability_audit.evidence import (
@@ -348,11 +349,10 @@ def test_restoring_a_concealed_node_recovers_everything(
 # ---------------------------------------------------------------------------
 
 def test_fully_measured_evidence_collapses_the_range(settled_evidence: NormalizedEvidence) -> None:
-    """Only on the fixture where every aspect is genuinely measured.
+    """The direct case where every aspect is genuinely measured.
 
-    Asserting collapse on a repository carrying legitimate
-    NotApplicable uncertainty would be asserting something untrue about
-    the model rather than about the code.
+    The separate NotApplicable test covers resolved evidence with no
+    population; that state also contributes no uncertainty.
     """
     score = score_evidence(settled_evidence)
 
@@ -360,6 +360,18 @@ def test_fully_measured_evidence_collapses_the_range(settled_evidence: Normalize
     assert score["evidence_status"]["status"] == "complete"
     assert score["verified_grade"] == score["grade"]
     assert score["overall_range"] == [score["overall"], score["overall"]]
+
+
+def test_not_applicable_is_excluded_instead_of_priced_as_clean_or_unknown() -> None:
+    """No population contributes neither score nor uncertainty."""
+    scores = {"measured": 2.0, "no_population": None}
+    weights = {"measured": 0.5, "no_population": 0.5}
+    excluded = frozenset({"no_population"})
+
+    assert rollup(scores, weights, unknown_price=0.0, not_applicable=excluded) == 2.0
+    assert rollup(scores, weights, unknown_price=5.0, not_applicable=excluded) == 2.0
+    assert rollup(scores, weights, unknown_price=0.0) == 1.0
+    assert rollup(scores, weights, unknown_price=5.0) == 3.5
 
 
 # ---------------------------------------------------------------------------

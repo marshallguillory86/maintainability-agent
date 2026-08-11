@@ -136,6 +136,10 @@ def test_not_applicable_is_complete_evidence(tmp_path: Path) -> None:
     assert result["evidence_status"]["status"] == "complete"
     assert result["verified_grade"] == "A"
     assert report["score"]["grade"] in {"A", "A+"}
+    assert report["score"]["overall_range"] == [
+        report["score"]["overall"],
+        report["score"]["overall"],
+    ]
     assert not any(
         "knowledge_concentration" in blocker
         for blocker in report["score"]["grade_blockers"]
@@ -163,6 +167,10 @@ def test_unknown_ownership_blocks_top_grades(tmp_path: Path) -> None:
     assert complete_evidence.history.single_author_files.value == 1
     assert report["history"]["multi_commit_files"] == 1
     assert report["score"]["grade"] == "A+", "fixture must expose the top-grade boundary"
+    assert report["score"]["overall_range"] == [
+        report["score"]["overall"],
+        report["score"]["overall"],
+    ]
 
     del report["history"]["single_author_files"]
     incomplete_evidence = normalize_report_evidence(report)
@@ -173,6 +181,7 @@ def test_unknown_ownership_blocks_top_grades(tmp_path: Path) -> None:
     assert score["evidence_status"]["status"] == "incomplete"
     assert score["verified_grade"] is None
     assert score["grade"] == "B"
+    assert score["overall_range"][0] < score["overall_range"][1]
     assert any(
         "unmeasured aspects (knowledge_concentration)" in blocker
         for blocker in score["grade_blockers"]
@@ -231,8 +240,10 @@ def _fixture_repo(root: Path) -> Path:
     return root
 
 
-def test_the_compatibility_score_matches_the_pre_stage_five_scorer(tmp_path: Path) -> None:
-    """Stage 5 adds fields; it moves nothing — against a real anchor.
+def test_not_applicable_rollup_is_the_only_change_to_the_pre_stage_five_anchor(
+    tmp_path: Path,
+) -> None:
+    """Preserve the old anchor and name the one intentional delta.
 
     The first version of this test compared the current scorer with
     another call to the current scorer. An audit pointed out that if
@@ -244,9 +255,11 @@ def test_the_compatibility_score_matches_the_pre_stage_five_scorer(tmp_path: Pat
 
     ``fixtures/pre_stage5_score.json`` was captured by running commit
     1499bad — the last commit before verification metadata existed —
-    against the tree ``_fixture_repo`` builds. Comparison is against
-    that, so a future change to the rollup fails here and has to be
-    deliberate.
+    against the tree ``_fixture_repo`` builds. That fixture has complete
+    NotApplicable ownership evidence. Excluding its absent population
+    now deliberately changes the two affected categories, the interval,
+    and the grade explanation. Everything else must still match the
+    historical anchor exactly.
     """
     report = build_report(_fixture_repo(tmp_path / "fixture"), load_config(None))
     expected = json.loads(PRE_STAGE5_SCORE.read_text(encoding="utf-8"))
@@ -255,7 +268,18 @@ def test_the_compatibility_score_matches_the_pre_stage_five_scorer(tmp_path: Pat
     shipped = {key: value for key, value in report["score"].items()
                if key not in {"evidence_status", "verified_grade"}}
 
-    assert shipped == expected
+    changed = {"categories", "overall_range", "grade", "grade_blockers"}
+    assert {key: value for key, value in shipped.items() if key not in changed} == {
+        key: value for key, value in expected.items() if key not in changed
+    }
+    assert shipped["categories"] == {
+        **expected["categories"],
+        "analyzability": 4.6,
+        "modifiability": 5.0,
+    }
+    assert shipped["overall_range"] == [shipped["overall"], shipped["overall"]]
+    assert shipped["grade"] == "A+"
+    assert shipped["grade_blockers"] == []
 
 
 def test_verification_does_not_disturb_the_rest_of_the_document(tmp_path: Path) -> None:

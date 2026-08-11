@@ -17,7 +17,7 @@ from __future__ import annotations
 from ._calibration import CALIBRATION_C
 from ._formula import CALIBRATED_ASPECTS, curve
 from ._pressures import measured, normalize_production
-from .evidence import HistoryEvidence, NormalizedEvidence, SummaryEvidence
+from .evidence import HistoryEvidence, NormalizedEvidence, NotApplicable, SummaryEvidence
 
 
 def _curve(normalized_pressure: float) -> float:
@@ -109,8 +109,9 @@ def _ownership_aspect(history: HistoryEvidence) -> float | None:
     """Share of settled files (3+ commits) that one person owns alone.
 
     ``None`` covers both "could not look" and "looked, and no file has
-    three commits yet" — the normalizer distinguishes those as Unknown
-    and NotApplicable, and only the first blocks the A-grades.
+    three commits yet". The typed state distinguishes Unknown from
+    NotApplicable; :func:`not_applicable_aspects` carries the latter to
+    the rollup so it is excluded rather than priced as uncertainty.
     """
     settled = measured(history.multi_commit_files)
     owners = measured(history.single_author_files)
@@ -199,6 +200,21 @@ def aspect_scores(
     scores["change_coupling"] = _history_rate_aspect(evidence.history, "coupling")
     scores["knowledge_concentration"] = _ownership_aspect(evidence.history)
     return scores
+
+
+def not_applicable_aspects(evidence: NormalizedEvidence) -> frozenset[str]:
+    """Aspects with a resolved absence of population, not missing data.
+
+    Aspect scores use ``None`` for values that cannot be computed, but
+    the rollup must still distinguish why. Unknown evidence keeps its
+    weight and widens the range; NotApplicable evidence has no member
+    to score and is removed from the category denominator. Derive this
+    from the typed state at the scoring boundary rather than carrying a
+    second applicability flag that can disagree with it.
+    """
+    if isinstance(evidence.history.single_author_files, NotApplicable):
+        return frozenset({"knowledge_concentration"})
+    return frozenset()
 
 
 def is_untested(summary: SummaryEvidence) -> bool | None:

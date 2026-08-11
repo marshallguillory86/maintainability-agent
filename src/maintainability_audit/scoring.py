@@ -37,7 +37,12 @@ from __future__ import annotations
 from math import inf
 from typing import Any
 
-from ._aspects import aspect_scores, evidence_aspect_scores, is_untested
+from ._aspects import (
+    aspect_scores,
+    evidence_aspect_scores,
+    is_untested,
+    not_applicable_aspects,
+)
 from ._calibration import CATEGORIES, GRADE_GATES
 from ._formula import (
     CATEGORY_ASPECTS,
@@ -266,9 +271,18 @@ def score_evidence(evidence: NormalizedEvidence) -> dict[str, Any]:
     pressures = dimension_pressures(summary)
     normalized = normalize(pressures)
     aspects = aspect_scores(evidence, normalized)
+    not_applicable = not_applicable_aspects(evidence)
     untested = is_untested(summary)
-    overall, rounded_categories = overall_from_aspects(aspects, untested=untested)
-    low, high = overall_bounds(aspects, untested=untested)
+    overall, rounded_categories = overall_from_aspects(
+        aspects,
+        untested=untested,
+        not_applicable=not_applicable,
+    )
+    low, high = overall_bounds(
+        aspects,
+        untested=untested,
+        not_applicable=not_applicable,
+    )
 
     # The grade is banded from the *floor*, not the point estimate. The
     # point estimate prices unknowns at the corpus anchor, so a repo
@@ -352,4 +366,3 @@ def _score_document(
             "note": "Calibrated so a repo at the OSS median on every dimension scores 4.0.",
         },
     }
-

@@ -31,6 +31,13 @@ first and audited into retirement: it let a shallow clone of a clean
 repository outscore the same repository with its worst-band history
 visible by 0.8 points, because hiding evidence deleted its weight.
 Unknown must price as *typical*, never as zero, perfect, or absent.
+
+``NotApplicable`` is different: the measurement was completed and has
+no population, so its aspect is excluded from the category denominator.
+It contributes neither a favorable score nor uncertainty. The typed
+evidence boundary decides that applicability; this module receives only
+the resulting aspect names so the point and both interval endpoints use
+the identical rollup.
 """
 
 from __future__ import annotations
@@ -67,7 +74,8 @@ RUBRIC_ASPECTS: tuple[str, ...] = (
 )
 
 # Aspects each ISO/IEC 25010 category reads, with weights. Weights are
-# renormalized over the aspects that actually produced a score.
+# renormalized only over applicable aspects; unknown aspects retain
+# their weight and receive the caller's point/floor/ceiling price.
 CATEGORY_ASPECTS: dict[str, dict[str, float]] = {
     "modularity": {
         "file_size": 0.35,
@@ -133,9 +141,12 @@ UNSCORED: dict[str, str] = {
 
 
 def rollup(
-    scores: dict[str, float | None], weights: dict[str, float], unknown_price: float = UNKNOWN_ASPECT_SCORE
+    scores: dict[str, float | None],
+    weights: dict[str, float],
+    unknown_price: float = UNKNOWN_ASPECT_SCORE,
+    not_applicable: frozenset[str] | None = None,
 ) -> float:
-    """Weighted mean, with unmeasured aspects priced at ``unknown_price``.
+    """Weighted mean over applicable aspects, pricing unknown evidence.
 
     The default anchor gives the point estimate. Callers pass 0.0 and
     5.0 to obtain the bounds of the uncertainty interval — the honest
@@ -143,11 +154,21 @@ def rollup(
     stop concealment from flattering a repo whose true evidence is
     worse than the imputed one. The interval makes concealment visible
     instead of pretending a constant makes it impossible.
+
+    A NotApplicable aspect is absent from both numerator and denominator:
+    there is no population to judge. It is not an unknown and must not
+    widen the interval or receive a synthetic clean score.
     """
+    applicable = {
+        name: weight for name, weight in weights.items()
+        if not_applicable is None or name not in not_applicable
+    }
+    if not applicable:
+        raise ValueError("a category must retain at least one applicable aspect")
     return sum(
         (unknown_price if scores.get(name) is None else scores[name]) * weight
-        for name, weight in weights.items()
-    ) / sum(weights.values())
+        for name, weight in applicable.items()
+    ) / sum(applicable.values())
 
 
 def clamp_score(value: float) -> float:
@@ -188,6 +209,7 @@ def overall_from_aspects(
     *,
     untested: bool | None = False,
     unknown_price: float = UNKNOWN_ASPECT_SCORE,
+    not_applicable: frozenset[str] | None = None,
 ) -> tuple[float, dict[str, float]]:
     """The whole rollup: aspects -> displayed categories -> overall.
 
@@ -202,10 +224,11 @@ def overall_from_aspects(
     ``untested`` applies the testability ceiling *before* rounding, so
     the displayed categories are the numbers the overall is the mean
     of. ``unknown_price`` is the anchor for the point estimate and 0.0 /
-    5.0 for the interval endpoints.
+    5.0 for the interval endpoints. ``not_applicable`` aspects are
+    excluded from category denominators under every price.
     """
     categories = {
-        name: rollup(aspect_scores, weights, unknown_price)
+        name: rollup(aspect_scores, weights, unknown_price, not_applicable)
         for name, weights in CATEGORY_ASPECTS.items()
     }
     if cap_testability(untested, unknown_price):
@@ -232,15 +255,18 @@ def overall_from_displayed(displayed_categories: dict[str, float]) -> float:
 
 
 def overall_bounds(
-    aspect_scores: dict[str, float | None], *, untested: bool | None = False
+    aspect_scores: dict[str, float | None],
+    *,
+    untested: bool | None = False,
+    not_applicable: frozenset[str] | None = None,
 ) -> tuple[float, float]:
     """The overall's floor and ceiling over every unmeasured aspect.
 
-    Equal to the overall itself when everything was measured, because
-    the endpoints run the identical pipeline with the unknown price
-    swapped — so ``low <= overall <= high`` holds by construction
-    rather than by inspection. An audit caught the previous version
-    computing the endpoints from uncapped aspects: an untested repo
+    Equal to the overall itself when every input is resolved as Measured
+    or NotApplicable, because the endpoints run the identical pipeline
+    with the unknown price swapped — so ``low <= overall <= high`` holds
+    by construction rather than by inspection. An audit caught the
+    previous version computing the endpoints from uncapped aspects: an untested repo
     reported 4.4 with a "range" of [4.5, 4.5], an interval that
     excluded its own score.
 
@@ -248,6 +274,16 @@ def overall_bounds(
     hidden: a shallow clone's report says "somewhere in [x, y]" instead
     of lending its point estimate false precision.
     """
-    low, _ = overall_from_aspects(aspect_scores, untested=untested, unknown_price=0.0)
-    high, _ = overall_from_aspects(aspect_scores, untested=untested, unknown_price=5.0)
+    low, _ = overall_from_aspects(
+        aspect_scores,
+        untested=untested,
+        unknown_price=0.0,
+        not_applicable=not_applicable,
+    )
+    high, _ = overall_from_aspects(
+        aspect_scores,
+        untested=untested,
+        unknown_price=5.0,
+        not_applicable=not_applicable,
+    )
     return low, high

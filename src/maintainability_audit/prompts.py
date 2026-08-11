@@ -266,8 +266,12 @@ def render_agent_instructions(report: dict[str, Any]) -> str:
             "## Current Audit Context",
             "",
             f"- Mode: `{report.get('mode', 'full')}`",
-            f"- Maintainability estimate: `{view.estimate(report['score'])}`",
+            f"- Maintainability estimate: `{view.estimate(report['score'])}`"
+            f" (range {view.score_range(report['score'])})",
             f"- Verified grade: `{view.verified_grade(report['score'])}`",
+            f"- Evidence: {view.status_sentence(report['score'])}",
+            *view.reason_lines(report["score"], bullet="  - "),
+            *view.instruction_note(report["score"]),
             f"- Files scanned: {report['summary']['files_scanned']}",
             f"- Hard gate failures: {report['summary']['hard_gate_failures']}",
             f"- Function failures: {report['summary']['function_failures']}",

@@ -18,11 +18,14 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
+from maintainability_audit import _evidence_view as view
 from maintainability_audit._evidence_view import NOT_VERIFIED
+from maintainability_audit._verification import DEFAULT_V1_REQUIRED
 from maintainability_audit.config import load_config
 from maintainability_audit.prompts import render_agent_instructions, render_ai_prompt
 from maintainability_audit.renderers import render_markdown, render_pr_comment
@@ -225,13 +228,53 @@ def test_sarif_carries_evidence_at_run_level_and_invents_no_result(
         assert "evidence" not in json.dumps(result).lower()
 
 
-def test_sarif_results_are_unchanged_by_the_migration(complete_report: dict) -> None:
-    """Rule ids, levels and locations must be exactly as before."""
-    run = report_to_sarif(complete_report)["runs"][0]
+PRE_STAGE7_SARIF = Path(__file__).parent / "fixtures" / "pre_stage7_sarif_run.json"
 
-    for result in run["results"]:
-        assert set(result) >= {"ruleId", "level", "message"}
-        assert result["ruleId"].startswith("maintainability.")
+
+def _findings_repo(root: Path) -> Path:
+    """A tree that actually produces SARIF results.
+
+    The anchor is worthless against a clean repository: zero results
+    compared with zero results proves nothing, which is what the first
+    version of this test did.
+    """
+    root.mkdir(parents=True, exist_ok=True)
+    (root / "README.md").write_text("# F\n", encoding="utf-8")
+    body = "\n".join(f"    step_{i} = {i} * 2" for i in range(120))
+    branch = "\n".join(f"    if step_{i} > 10:\n        step_{i} += 1" for i in range(25))
+    (root / "big.py").write_text(
+        f"def enormous(value):\n{body}\n{branch}\n    return value\n", encoding="utf-8"
+    )
+    dup = "\n".join(f"    value_{i} = {i}" for i in range(14))
+    for name in ("a.py", "b.py", "c.py"):
+        (root / name).write_text(
+            f"def helper_{name[0]}(value):\n{dup}\n    return value\n", encoding="utf-8"
+        )
+    (root / "test_a.py").write_text(
+        "from a import helper_a\n\n\ndef test_a():\n    assert helper_a(1) == 1\n", encoding="utf-8"
+    )
+    return root
+
+
+def test_sarif_results_are_identical_to_the_pre_stage_seven_output(tmp_path: Path) -> None:
+    """Every result, rule, level and location, against a real anchor.
+
+    The first version of this test asserted only that required keys
+    existed and that rule ids began with "maintainability." — it could
+    not have detected a changed level, a moved location or a dropped
+    result, while its name claimed otherwise. An audit called that out.
+
+    `fixtures/pre_stage7_sarif_run.json` was captured by running commit
+    91430f3 — the last commit before consumer migration — against the
+    tree `_findings_repo` builds.
+    """
+    expected = json.loads(PRE_STAGE7_SARIF.read_text(encoding="utf-8"))
+    assert expected["results"], "the anchor must contain real findings"
+
+    run = report_to_sarif(build_report(_findings_repo(tmp_path / "findings"), load_config(None)))["runs"][0]
+
+    assert run["results"] == expected["results"]
+    assert run["tool"]["driver"]["rules"] == expected["rules"]
 
 
 # ---------------------------------------------------------------------------
@@ -298,3 +341,35 @@ def test_the_baseline_still_records_fingerprints_only(complete_report: dict, tmp
 
     assert set(load_baseline(str(path))) == set(data["findings"])
     assert all(isinstance(item, str) for item in data["findings"])
+
+
+@pytest.mark.parametrize("path", sorted(DEFAULT_V1_REQUIRED))
+def test_a_collapsed_range_never_claims_complete_evidence(
+    complete_report: dict, path: str
+) -> None:
+    """Rounding can collapse the bounds; it cannot verify the evidence.
+
+    Swept over every required measurement rather than the one an audit
+    demonstrated. Concealing a lightly-weighted input can leave the
+    endpoints coincident at one decimal while the verified grade is
+    withheld — `[4.9, 4.9]` was being rendered as "no unmeasured
+    evidence" on exactly such a report. Completeness is a property of
+    the typed evidence, never of two numbers that happen to match.
+    """
+    from maintainability_audit.evidence import Unknown, normalize_report_evidence
+    from maintainability_audit.scoring import score_evidence
+
+    evidence = normalize_report_evidence(complete_report)
+    section, _, field = path.partition(".")
+    node = getattr(evidence, section)
+    hidden = replace(evidence, **{section: replace(node, **{field: Unknown("swept", path)})})
+
+    score = score_evidence(hidden)
+    rendered = view.score_range(score)
+
+    assert score["verified_grade"] is None, f"{path} should withhold the grade"
+    if score["overall_range"][0] == score["overall_range"][1]:
+        assert "no unmeasured evidence" not in rendered, (
+            f"concealing {path} collapsed the range and claimed completeness: {rendered}"
+        )
+        assert "still incomplete" in rendered

@@ -108,4 +108,4 @@ Consumer migration is done; see the [decision register](decisions.md) for where 
 
 Older notes on the work those stages cover:
 
-Nothing in this repository should be read as claiming the ADR is implemented.
+ADR 001 is **partially implemented**: stages 8 and 9 remain, and nothing here should be read as claiming otherwise.

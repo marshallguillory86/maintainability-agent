@@ -2,6 +2,9 @@
   "version": 1,
   "analyzers": {
     "_doc": "Which external analyzers may run. See docs/analyzer-pool.md. Resolve with: python tools/resolve_pool.py",
+    "concerns": [
+      "all"
+    ],
     "depth": "moderate",
     "license_policy": "permissive",
     "prompt_when_interactive": true,

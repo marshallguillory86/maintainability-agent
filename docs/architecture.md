@@ -253,6 +253,40 @@ A further wrinkle: eslint's JSON carries no metric field. The value 11 exists **
 
 The scorer consumes 28 typed inputs — 23 on `SummaryEvidence`, 5 on `HistoryEvidence` — and every one is read by `_pressures` or `_aspects`. No dead inputs, none undeclared. Each is a count or a population; **none accepts a measurement**, which is precisely why step 7 exists.
 
+### The product, in one paragraph
+
+A user should not have to know which of 444 analyzers exist, write scripts to invoke them, or reconcile their output formats. They answer two questions — **what do you want examined** and **how deep** — inside a license policy their organization sets once. The agent resolves the toolset, runs it, and returns two things: the compiler-style errors (located, specific, fixable) and the scores (compact, comparable, trendable). Both go in the report; neither replaces the other.
+
+That is the whole value proposition, and every mechanism below exists to serve it.
+
+### Selection by intent: concerns, then density, then policy
+
+Three independent selectors, answered once and persisted so CI is reproducible:
+
+| Selector | Question it answers | Values |
+|---|---|---|
+| **concerns** | What do you want examined? | `complexity`, `duplication`, `dead-code`, `documentation`, `structure`, `testing`, `style`, `types`, `metrics`, or `all` |
+| **depth** | How thorough? | `baseline`, `moderate`, `heavy`, `all` |
+| **license policy** | What may we legally run? | `permissive` … `unverified` |
+
+The pool is the intersection, resolved automatically:
+
+```text
+$ resolve_pool --concerns duplication,dead-code
+  jscpd     measures duplication
+  lizard    measures complexity,duplication,metrics,structure
+  ruff      measures complexity,dead-code,style
+  vulture   measures dead-code
+
+$ resolve_pool --concerns documentation
+  interrogate  measures documentation
+  pydocstyle   measures documentation,style
+```
+
+**The concern vocabulary is the scoring model's, not an invented one**, so an answer to "what do you care about?" maps onto aspects that actually exist and can actually move a score.
+
+It also cannot be sourced from the catalog's upstream data, and that is worth stating plainly: the upstream tags are languages, ecosystems and frameworks — `rails`, `nodejs`, `spring` — and **367 of the 444 eligible tools carry no concern tag at all**. What a tool measures can only be known by running it, so the `measures` field is populated exactly as fast as adapters are written, and the upstream tags are kept separately as `upstream_tags` rather than dressed up as concerns.
+
 ### Which tools run: the catalog, depth and license policy
 
 The pool is not hardcoded. [`data/analyzer-catalog.json`](../data/analyzer-catalog.json) holds **759 tools** — 755 from the analysis-tools.dev database pinned at a recorded commit, plus 4 verified locally — each with its license, license class, languages and source. **444 are eligible**: open-source class, current, language-targeting, not security-only.
@@ -338,8 +372,12 @@ This is also what makes the output usable by a language model rather than merely
 
 Two audiences, two artifacts, and they must not be conflated:
 
-- The **score and pillar view** answer *should we invest here?* — for a lead or a stakeholder.
-- The **work order** answers *what exactly do I change, and how will I know it worked?* — for whoever or whatever does the work.
+- The **score and pillar view** answer *should we invest here?* — for a lead or a stakeholder. Compact, comparable across repositories, and trendable across scans ([ADR 009](adr-009-scan-history.md)). This is what makes pattern recognition possible: one number per category, tracked over time.
+- The **work order and full findings** answer *what exactly do I change, and how will I know it worked?* — for whoever or whatever does the work. Located, specific, verifiable.
+
+**Every finding stays in the report**, whatever its rank. The work order is an *ordering* over findings, not a filter that hides them — a low-ranked item is still a fact about the code, and suppressing it would make the report a summary rather than a record. Ranking decides what leads; it never decides what exists.
+
+The scores are the layer a model or a human uses for comparison and pattern recognition. The findings are the layer that changes code. Prompt generation draws on the findings; comparison draws on the scores; neither substitutes for the other.
 
 An item with no verification command does not belong in the work order. If the tool cannot state how to check the fix, it has not finished thinking about the finding.
 
@@ -366,6 +404,9 @@ Every design point above traces to a record. Nothing here is a preference someon
 | Risk × Effort ordering; Fill-Ins never above Quick Wins | [ADR 007](adr-007-pillars-and-practice.md) |
 | Recurring findings escalate to design-review candidates | [ADR 008](adr-008-translation-and-decision.md) |
 | Depth and license policy select the pool; every deny wins | [analyzer pool](analyzer-pool.md), [config](config-schema.md#analyzer-policy-analyzers) |
+| Selection by intent: the user answers concerns and density, the agent picks tools | [analyzer pool](analyzer-pool.md), [config](config-schema.md#analyzer-policy-analyzers) |
+| Concern vocabulary comes from the scoring model; `measures` grows with adapters | [analyzer pool](analyzer-pool.md) |
+| Every finding stays in the report; ranking orders, never filters | [ADR 008](adr-008-translation-and-decision.md) |
 | Scans append to a durable history; trends over comparable records only | [ADR 009](adr-009-scan-history.md) |
 | Finding identity is content-addressed, never line-coupled | [ADR 009](adr-009-scan-history.md) |
 | Trends describe past scans; forecasting stays forbidden | [ADR 009](adr-009-scan-history.md), [product intent](product-intent.md#what-it-must-never-claim) |

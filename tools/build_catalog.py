@@ -144,6 +144,44 @@ VERIFIED_TIERS = {
 }
 
 
+# What a tool actually measures, in this project's own vocabulary. The upstream
+# database cannot supply this: its tags are languages, ecosystems and frameworks
+# (rails, nodejs, spring), and 367 of the 444 eligible tools carry no concern tag
+# at all. A concern can only be assigned by running the tool and seeing what it
+# emits, so this map grows exactly as fast as the adapters do.
+#
+# The vocabulary is the scoring model's, not an invented one, so a user's answer
+# to "what do you care about?" maps onto aspects that actually exist.
+CONCERNS = (
+    "complexity",     # cyclomatic, cognitive, nesting, declaration size
+    "duplication",    # exact and near clones
+    "dead-code",      # unreachable or unreferenced
+    "documentation",  # docstring and comment coverage
+    "structure",      # file size, coupling, cohesion, dependency shape
+    "testing",        # test presence, coverage, mutation
+    "style",          # naming and convention conformance
+    "types",          # type coverage and soundness
+    "metrics",        # maintainability index, Halstead, raw counts
+)
+
+VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {
+    "lizard":      ("complexity", "structure", "metrics", "duplication"),
+    "radon":       ("complexity", "metrics"),
+    "ruff":        ("style", "complexity", "dead-code"),
+    "jscpd":       ("duplication",),
+    "pylint":      ("structure", "style", "duplication", "complexity"),
+    "flake8":      ("style", "complexity"),
+    "vulture":     ("dead-code",),
+    "eslint":      ("style", "complexity", "structure"),
+    "complexipy":  ("complexity",),
+    "interrogate": ("documentation",),
+    "pydocstyle":  ("documentation", "style"),
+    "cohesion":    ("structure",),
+    "multimetric": ("metrics", "complexity"),
+    "wily":        ("metrics",),
+    "xenon":       ("complexity",),
+}
+
 # Tools this project installed and ran that the source snapshot does not list.
 # Licenses here were read from the installed distribution's own metadata, not
 # recalled: complexipy and interrogate from their OSI classifiers, multimetric
@@ -234,7 +272,8 @@ def build(records: list[dict[str, Any]]) -> dict[str, Any]:
             "deprecated": bool(record.get("deprecated")),
             "categories": sorted(record.get("categories") or []),
             "languages": languages,
-            "concerns": concerns,
+            "upstream_tags": concerns,
+            "measures": sorted(VERIFIED_MEASURES.get(slug, ())),
             "security_only": bool(concerns) and set(concerns) <= SECURITY_TAGS and not languages,
             "source": record.get("source") or record.get("homepage") or "",
             "tier": VERIFIED_TIERS.get(slug, "all"),
@@ -255,7 +294,8 @@ def build(records: list[dict[str, Any]]) -> dict[str, Any]:
             "deprecated": False,
             "categories": extra["categories"],
             "languages": extra["languages"],
-            "concerns": extra["concerns"],
+            "upstream_tags": extra["concerns"],
+            "measures": sorted(VERIFIED_MEASURES.get(extra["slug"], ())),
             "security_only": False,
             "source": extra["source"],
             "tier": VERIFIED_TIERS.get(extra["slug"], "all"),
@@ -283,6 +323,7 @@ def build(records: list[dict[str, Any]]) -> dict[str, Any]:
             "by_tier": dict(Counter(e["tier"] for e in eligible)),
             "by_license_status": dict(Counter(e["license_status"] for e in entries)),
             "by_license_class": dict(Counter(e["license_class"] for e in entries)),
+            "by_measure": dict(Counter(m for e in entries for m in e["measures"])),
             "eligible_by_license_class": dict(Counter(e["license_class"] for e in eligible)),
             "adapters_implemented": sum(1 for e in entries if e["adapter"] == "implemented"),
         },

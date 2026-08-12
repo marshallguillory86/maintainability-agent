@@ -244,6 +244,24 @@
         "timeout_seconds": {
           "type": "integer",
           "minimum": 1
+        },
+        "concerns": {
+          "type": "array",
+          "description": "What to examine. 'all' selects every concern. Filters the tool pool by what each tool measures.",
+          "items": {
+            "enum": [
+              "all",
+              "complexity",
+              "duplication",
+              "dead-code",
+              "documentation",
+              "structure",
+              "testing",
+              "style",
+              "types",
+              "metrics"
+            ]
+          }
         }
       },
       "additionalProperties": false

@@ -43,7 +43,12 @@ LICENSE_POLICIES: dict[str, list[str]] = {
     ],
 }
 
+# "all" means every concern the tool can speak to, not a literal tag.
+CONCERNS = ("complexity", "duplication", "dead-code", "documentation",
+            "structure", "testing", "style", "types", "metrics")
+
 DEFAULTS: dict[str, Any] = {
+    "concerns": ["all"],
     "depth": "moderate",
     "license_policy": "permissive",
     "prompt_when_interactive": True,
@@ -89,8 +94,8 @@ def decide(tool: dict[str, Any], settings: dict[str, Any]) -> tuple[bool, str]:
         return False, "denied by name in deny_tools"
     if tool["license_class"] in settings["deny_license_classes"]:
         return False, f"license class {tool['license_class']} denied"
-    if set(tool["concerns"]) & set(settings["deny_concerns"]):
-        overlap = sorted(set(tool["concerns"]) & set(settings["deny_concerns"]))
+    if set(tool["upstream_tags"]) & set(settings["deny_concerns"]):
+        overlap = sorted(set(tool["upstream_tags"]) & set(settings["deny_concerns"]))
         return False, f"concern {','.join(overlap)} denied"
 
     if slug in settings["allow_tools"]:
@@ -114,13 +119,18 @@ def decide(tool: dict[str, Any], settings: dict[str, Any]) -> tuple[bool, str]:
     if tool["adapter"] != "implemented":
         return False, "no adapter yet -- cataloged, cannot be invoked"
 
-    return True, f"tier {tool['tier']}, license {tool['license_class']}"
+    wanted = settings["concerns"]
+    if "all" not in wanted and not (set(tool["measures"]) & set(wanted)):
+        return False, f"measures {','.join(tool['measures']) or 'nothing declared'}, none requested"
+
+    return True, f"measures {','.join(tool['measures'])}; tier {tool['tier']}, {tool['license_class']}"
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=CONFIG)
     parser.add_argument("--depth", choices=DEPTH_ORDER)
+    parser.add_argument("--concerns", help="comma-separated: " + ",".join(CONCERNS) + ", or all")
     parser.add_argument("--license-policy", dest="license_policy", choices=sorted(LICENSE_POLICIES))
     parser.add_argument("--explain", metavar="SLUG", help="explain one tool's inclusion or exclusion")
     args = parser.parse_args()
@@ -128,7 +138,9 @@ def main() -> int:
     catalog = json.loads(CATALOG.read_text(encoding="utf-8"))
     try:
         settings = load_settings(
-            args.config, {"depth": args.depth, "license_policy": args.license_policy}
+            args.config,
+            {"depth": args.depth, "license_policy": args.license_policy,
+             "concerns": args.concerns.split(",") if args.concerns else None},
         )
     except PolicyError as exc:
         print(f"config error: {exc}")
@@ -151,6 +163,7 @@ def main() -> int:
         print(f"{match['slug']}: {'SELECTED' if selected else 'excluded'} -- {reason}")
         print(f"  license  {match['license']}  ({match['license_class']})")
         print(f"  tier     {match['tier']}   adapter: {match['adapter']}")
+        print(f"  measures  {', '.join(match['measures']) or '(not yet assessed)'}")
         print(f"  languages {', '.join(match['languages'][:12]) or '(none)'}")
         return 0
 
@@ -163,6 +176,7 @@ def main() -> int:
             excluded.setdefault(reason.split(" --")[0], []).append(tool["slug"])
 
     print(f"config      : {args.config.name}")
+    print(f"concerns    : {', '.join(settings['concerns'])}")
     print(f"depth       : {settings['depth']}")
     print(f"policy      : {settings['license_policy']} -> {LICENSE_POLICIES[settings['license_policy']]}")
     for field in ("deny_tools", "deny_license_classes", "deny_concerns", "allow_tools"):

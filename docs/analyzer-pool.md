@@ -34,9 +34,33 @@ A dual license takes the most permissive class on offer, because the licensee ch
 
 Eligible by class: 366 permissive, 44 strong-copyleft, 34 weak-copyleft.
 
-## The two run-time selectors
+## The three run-time selectors
 
-They are independent. Depth asks *how much work do you want done*; license policy asks *what is your organization allowed to run*. The pool is the intersection.
+Independent questions, and the pool is their intersection. **Concerns** asks what you want examined, **depth** how much work you want done, **license policy** what your organization is allowed to run. A user never names a tool.
+
+### Concerns
+
+| Concern | Covers |
+|---|---|
+| `complexity` | Cyclomatic, cognitive, nesting, declaration size |
+| `duplication` | Exact and near clones |
+| `dead-code` | Unreachable or unreferenced |
+| `documentation` | Docstring and comment coverage |
+| `structure` | File size, coupling, cohesion, dependency shape |
+| `testing` | Test presence, coverage, mutation |
+| `style` | Naming and convention conformance |
+| `types` | Type coverage and soundness |
+| `metrics` | Maintainability index, Halstead, raw counts |
+| `all` | Every concern (the default) |
+
+The vocabulary is the scoring model's, so an answer maps onto aspects that exist and can move a score.
+
+**It cannot come from the upstream data.** Those tags are languages, ecosystems and frameworks — `rails`, `nodejs`, `spring` — and 367 of the 444 eligible tools carry no concern tag at all. What a tool measures is knowable only by running it, so `measures` is populated exactly as fast as adapters are written; the upstream tags are kept separately as `upstream_tags`.
+
+```bash
+python tools/resolve_pool.py --concerns duplication,dead-code
+python tools/resolve_pool.py --concerns documentation
+```
 
 ### Depth
 

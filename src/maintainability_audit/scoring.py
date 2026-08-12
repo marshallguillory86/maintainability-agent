@@ -238,7 +238,9 @@ def _grade_on_the_floor(
     )
 
 
-def score_report(report: dict[str, Any]) -> dict[str, Any]:
+def score_report(
+    report: dict[str, Any], external: dict[str, float | None] | None = None
+) -> dict[str, Any]:
     """Aspects -> categories -> overall, by the rubric in ``_formula``.
 
     Every aspect the tool can measure gets a score; every aspect it
@@ -254,10 +256,13 @@ def score_report(report: dict[str, Any]) -> dict[str, Any]:
     audits caught two versions of the same lie, an overall that was not
     the mean of the numbers printed beside it.
     """
-    return score_evidence(normalize_report_evidence(report))
+    return score_evidence(normalize_report_evidence(report), external)
 
 
-def score_evidence(evidence: NormalizedEvidence) -> dict[str, Any]:
+def score_evidence(
+    evidence: NormalizedEvidence,
+    external: dict[str, float | None] | None = None,
+) -> dict[str, Any]:
     """Score an already-normalized model — the seam validation ends at.
 
     ``score_report`` is validation plus this. Splitting them lets the
@@ -283,6 +288,19 @@ def score_evidence(evidence: NormalizedEvidence) -> dict[str, Any]:
         untested=untested,
         not_applicable=not_applicable,
     )
+    # A second, independent measurement of the same dimensions widens the
+    # interval rather than being averaged into the point estimate (ADR
+    # 006 §4). Where the built-in detectors and the external analyzers
+    # disagree, that disagreement is real uncertainty about the code, and
+    # hiding it behind a mean would lend the estimate a precision neither
+    # source earned.
+    #
+    # The point estimate stays on the built-in path, which is the one the
+    # scale is calibrated against. Swapping the sources is a
+    # recalibration, not an interval change.
+    low, high = _widen_for_disagreement(
+        evidence, external, aspects, untested, not_applicable, (low, high)
+    )
 
     # The grade is banded from the *floor*, not the point estimate. The
     # point estimate prices unknowns at the corpus anchor, so a repo
@@ -304,6 +322,50 @@ def score_evidence(evidence: NormalizedEvidence) -> dict[str, Any]:
         aspects, rounded_categories, overall, (low, high), grade, blockers, normalized, worst,
         verification(evidence, grade),
     )
+
+
+def _widen_for_disagreement(
+    evidence: NormalizedEvidence,
+    external: dict[str, float | None] | None,
+    aspects: dict[str, float | None],
+    untested: bool | None,
+    not_applicable: frozenset[str] | None,
+    bounds: tuple[float, float],
+) -> tuple[float, float]:
+    """Stretch the interval to contain what a second source would have scored.
+
+    Only dimensions the analyzers actually measured are substituted; the
+    rest keep their built-in value, so the alternative rollup differs in
+    exactly the places the two sources both spoke to.
+
+    A no-op when nothing external was measured, which keeps every
+    existing report byte-identical unless `--analyzers` ran.
+    """
+    low, high = bounds
+    if not external or all(value is None for value in external.values()):
+        return low, high
+
+    substituted = dict(dimension_pressures(evidence.summary))
+    production = dict(normalize_production(evidence.summary))
+    for dimension, value in external.items():
+        if value is None:
+            continue
+        if dimension in substituted:
+            substituted[dimension] = value
+        # The analyzers do not separate production from test code, so
+        # their reading substitutes for both. Stated rather than hidden:
+        # it makes the alternative rollup slightly pessimistic on a
+        # repository whose tests are worse than its production code, and
+        # the interval is the right place for that to land.
+        if dimension in production:
+            production[dimension] = normalize({dimension: value})[dimension]
+
+    alternative, _ = overall_from_aspects(
+        aspect_scores(evidence, normalize(substituted), production),
+        untested=untested,
+        not_applicable=not_applicable,
+    )
+    return min(low, alternative), max(high, alternative)
 
 
 def _score_document(

@@ -172,7 +172,9 @@ def evidence_aspect_scores(summary: SummaryEvidence) -> dict[str, float | None]:
 
 
 def aspect_scores(
-    evidence: NormalizedEvidence, normalized: dict[str, float | None]
+    evidence: NormalizedEvidence,
+    normalized: dict[str, float | None],
+    production_override: dict[str, float | None] | None = None,
 ) -> dict[str, float | None]:
     """Every aspect the rubric reads, scored 0-5 or None for unknown.
 
@@ -199,7 +201,13 @@ def aspect_scores(
     # consumers are analyzability and testability, which describe the
     # code under test — an oversized test function must not drag either
     # (pinned by test_analyzability_not_penalized_by_test_function_size).
-    production = normalize_production(summary)["declarations"]
+    # `declaration_size` is the only route the declarations dimension
+    # takes into the score, and it reads the *production* pressure rather
+    # than the one in `normalized` — so substituting there alone changes
+    # nothing. A second source has to arrive here or it cannot move the
+    # number at all, which is what a first attempt at the interval
+    # widening discovered by moving it not at all.
+    production = (production_override or normalize_production(summary))["declarations"]
     scores["declaration_size"] = None if production is None else _curve(production)
     scores.update(evidence_aspect_scores(summary))
     scores["churn_hotspots"] = _history_rate_aspect(evidence.history, "hotspots")

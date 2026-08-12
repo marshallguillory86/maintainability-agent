@@ -13,6 +13,8 @@ which is the argument for testing the property rather than trusting the name.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from maintainability_audit._bands import (
@@ -216,3 +218,76 @@ def test_the_rubric_owns_the_threshold_not_the_tool(thresholds: dict) -> None:
 
     assert lenient == 0.0
     assert strict > lenient
+
+
+def test_a_disagreeing_second_source_widens_the_interval() -> None:
+    """ADR 006 §4: disagreement is uncertainty, not something to average away.
+
+    The point estimate stays on the built-in path, which is what the
+    scale is calibrated against; a second reading stretches the interval
+    to contain what it would have scored.
+    """
+    import subprocess
+    import tempfile
+
+    from maintainability_audit.config import load_config
+    from maintainability_audit.evidence import normalize_report_evidence
+    from maintainability_audit.report import build_report
+    from maintainability_audit.scoring import score_evidence
+
+    root = Path(tempfile.mkdtemp()) / "r"
+    root.mkdir()
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    (root / "README.md").write_text("# r\n", encoding="utf-8")
+    for i in range(40):
+        (root / f"m{i}.py").write_text(
+            "\n".join(f"def f{i}_{j}():\n    return {j}\n" for j in range(4)), encoding="utf-8")
+    evidence = normalize_report_evidence(build_report(root, load_config(None)))
+
+    agreed = score_evidence(evidence)
+    disagreed = score_evidence(evidence, {"declarations": 0.3})
+
+    assert agreed["maintainability_range"][0] == agreed["maintainability_range"][1]
+    assert disagreed["maintainability_range"][0] < agreed["maintainability_range"][0]
+    assert disagreed["maintainability_estimate"] == agreed["maintainability_estimate"], (
+        "a second source widens the interval; it does not move the estimate"
+    )
+
+
+def test_a_second_source_must_reach_the_pressure_the_score_reads() -> None:
+    """The defect the first attempt at this had.
+
+    `declaration_size` is the only route the declarations dimension takes
+    into the score, and it reads the *production* pressure rather than
+    the general one — so substituting into `dimension_pressures` alone
+    changed nothing, and the interval stayed collapsed however far the
+    two sources were pushed apart. This asserts the substitution lands
+    where the score actually looks.
+    """
+    from maintainability_audit._aspects import aspect_scores
+    from maintainability_audit._pressures import dimension_pressures, normalize
+    from maintainability_audit.evidence import (
+        HistoryEvidence,
+        Measured,
+        NormalizedEvidence,
+        SummaryEvidence,
+        Unknown,
+    )
+
+    fields = dict.fromkeys(SummaryEvidence.__dataclass_fields__, Measured(0, "t"))
+    fields.update(
+        declarations_scanned=Measured(200, "t"),
+        production_declarations_scanned=Measured(200, "t"),
+        files_scanned=Measured(50, "t"),
+        production_files_scanned=Measured(50, "t"),
+    )
+    history = HistoryEvidence(**dict.fromkeys(
+        HistoryEvidence.__dataclass_fields__, Unknown("no history", "t")))
+    evidence = NormalizedEvidence(
+        schema_version=3, summary=SummaryEvidence(**fields), history=history)
+    normalized = normalize(dimension_pressures(evidence.summary))
+
+    baseline = aspect_scores(evidence, normalized)["declaration_size"]
+    overridden = aspect_scores(evidence, normalized, {"declarations": 3.0})["declaration_size"]
+
+    assert overridden != baseline, "a production override that changes nothing is not an override"

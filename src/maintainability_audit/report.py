@@ -20,6 +20,7 @@ from ._analysis import (
     measurement_document,
 )
 from ._metrics_types import FileMetric, FunctionMetric
+from ._pressures import analyzer_pressures
 from .deadcode import dead_declarations
 from .declarations import DECLARATION_SUFFIXES
 from .duplication import duplicate_blocks, risk_findings
@@ -129,12 +130,16 @@ def _analyzer_sections(
     repeated at each call site.
     """
     if not run_analyzers:
-        return {"coverage": None, "findings": [], "measurements": {}}
+        return {"coverage": None, "findings": [], "measurements": {}, "pressures": None}
     analysis = analyze(root, config)
     return {
         "coverage": coverage_document(analysis),
         "findings": findings_document(analysis, root),
         "measurements": measurement_document(analysis, root),
+        # A second, independent reading of the scorer's own dimensions.
+        # Widens the interval rather than moving the estimate: the point
+        # estimate stays on the path the scale is calibrated against.
+        "pressures": analyzer_pressures(analysis.measurements, config["thresholds"]),
     }
 
 
@@ -285,5 +290,5 @@ def build_report(
         file_metrics, function_metrics, risks, dupes, near_duplicates, dead, idioms,
         external_findings, git_status, only_paths, changed_revspec, config,
     )
-    report["score"] = score_report(report)
+    report["score"] = score_report(report, analyzer["pressures"])
     return report

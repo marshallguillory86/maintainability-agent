@@ -59,7 +59,7 @@ CONCERN_CONCEPTS: dict[str, tuple[str, ...]] = {
     "complexity": (
         "cyclomatic_complexity", "cognitive_complexity", "file_cyclomatic_complexity",
     ),
-    "metrics": ("maintainability_index", "halstead_difficulty", "nloc"),
+    "metrics": ("maintainability_index", "halstead_difficulty", "declaration_lines"),
     "structure": ("parameters",),
 }
 

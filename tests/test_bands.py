@@ -291,3 +291,83 @@ def test_a_second_source_must_reach_the_pressure_the_score_reads() -> None:
     overridden = aspect_scores(evidence, normalized, {"declarations": 3.0})["declaration_size"]
 
     assert overridden != baseline, "a production override that changes nothing is not an override"
+
+
+def test_both_paths_agree_on_every_failure_criterion(thresholds: dict) -> None:
+    """The instrument test, written before the instrument.
+
+    `function_status` fails a declaration on **lines OR complexity OR
+    cognitive complexity**. A bridge that counts only complexity breaches
+    is measuring something narrower and must not be compared against it —
+    but that is exactly what I did, three times, quoting ratios of 4x,
+    0.3x and 0.19x. Every one was an artifact of my own bridge rather
+    than a fact about the tools.
+
+    This sweeps each criterion in isolation: one declaration breaching
+    only that criterion, everything else clean. Both paths must count the
+    same breach, or any ratio between them means nothing.
+    """
+    from maintainability_audit._metrics_types import Measurement
+    from maintainability_audit._pressures import analyzer_pressures, dimension_pressures
+    from maintainability_audit.declarations import function_status
+    from maintainability_audit.evidence import Measured, SummaryEvidence
+
+    clean = {"lines": 1, "complexity": 1, "cognitive": 0}
+    breaches = {
+        "lines": {**clean, "lines": thresholds["max_function_lines"] + 1},
+        "complexity": {**clean, "complexity": thresholds["max_complexity"] + 1},
+        "cognitive": {**clean, "cognitive": thresholds["max_cognitive_complexity"] + 1},
+    }
+
+    for criterion, breaching in breaches.items():
+        assert function_status(
+            breaching["lines"], breaching["complexity"], thresholds, breaching["cognitive"]
+        ) == "fail", f"fixture for {criterion} does not actually breach"
+
+        # The built-in path, told there is one failure among four.
+        fields = dict.fromkeys(SummaryEvidence.__dataclass_fields__, Measured(0, "t"))
+        fields.update(declarations_scanned=Measured(4, "t"), function_failures=Measured(1, "t"))
+        expected = dimension_pressures(SummaryEvidence(**fields))["declarations"]
+
+        # The analyzer path, given the same four declarations as measurements.
+        measurements = [
+            Measurement(concept=concept, unit=f"a.py::f{i}", value=float(value),
+                        tool="lizard", path="a.py")
+            for i, decl in enumerate([breaching, clean, clean, clean])
+            for concept, value in (
+                ("cyclomatic_complexity", decl["complexity"]),
+                ("declaration_lines", decl["lines"]),
+                ("cognitive_complexity", decl["cognitive"]),
+            )
+        ]
+        actual = analyzer_pressures(measurements, thresholds)["declarations"]
+
+        assert actual == pytest.approx(expected), (
+            f"{criterion}: built-in counts this as a failure and the analyzer path "
+            f"does not ({expected} vs {actual}). Any ratio between two paths that "
+            "disagree about what a failure is measures the disagreement, not the code."
+        )
+
+
+def test_every_criterion_the_bridge_reads_is_a_concept_an_adapter_emits() -> None:
+    """A green test over a pipeline that never runs.
+
+    The equivalence test above constructs `declaration_lines`
+    measurements directly, so it passed while lizard emitted `nloc` and
+    the lines criterion silently never fired in production. A test that
+    fabricates the name its subject expects proves the subject consistent
+    with itself and nothing more.
+
+    This checks the two vocabularies actually meet.
+    """
+    from maintainability_audit._pressures import DECLARATION_CRITERIA
+    from maintainability_audit._tool_adapters import ADAPTERS, adapter_for
+
+    emitted = {c for slug in ADAPTERS for c in adapter_for(slug).concepts}
+    needed = {concept for concept, _warn, _fail in DECLARATION_CRITERIA}
+    missing = needed - emitted
+
+    assert not missing, (
+        f"{sorted(missing)} are read by the scoring bridge and emitted by no adapter, "
+        "so those criteria can never fire however green the unit tests are"
+    )

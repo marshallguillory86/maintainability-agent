@@ -68,7 +68,7 @@ class LizardAdapter(BaseAdapter):
     def __init__(self) -> None:
         super().__init__(
             slug="lizard", emits="metric", executable="lizard",
-            concepts=("cyclomatic_complexity", "nloc", "parameters"),
+            concepts=("cyclomatic_complexity", "declaration_lines", "parameters"),
             extra_args=("--csv",), exclude_flag="--exclude",
         )
 
@@ -91,8 +91,13 @@ class LizardAdapter(BaseAdapter):
             # a per-function line count with a per-file index repeats the
             # error one level down. A concept is one measurement, not a
             # family.
+            # `declaration_lines`, not `nloc`: the scoring bridge fails a
+            # declaration on lines the same way `function_status` does, and
+            # it looks the concept up by name. Emitting a synonym meant the
+            # criterion silently never fired while a unit test that
+            # fabricated the right name passed.
             for concept, index in (
-                ("cyclomatic_complexity", 1), ("nloc", 0), ("parameters", 3),
+                ("cyclomatic_complexity", 1), ("declaration_lines", 0), ("parameters", 3),
             ):
                 measurements.append(Measurement(
                     concept=concept, unit=unit, value=float(row[index]),

@@ -160,15 +160,48 @@ def _relative(value: float, reference: float) -> float:
     return value / reference
 
 
-# Which analyzer concept supplies each scoring dimension, and which
-# rubric thresholds decide a breach. Only dimensions a multi-language
-# tool can supply appear: `file_size` needs per-file line counts no
-# permissively-licensed tool in the pool reports, and `risk` and `gates`
-# are configured policy with no external equivalent.
-ANALYZER_DIMENSIONS: dict[str, tuple[str, str, str]] = {
-    # dimension -> (concept, warn threshold key, fail threshold key)
-    "declarations": ("cyclomatic_complexity", "warn_complexity", "max_complexity"),
-}
+# The concepts the `declarations` dimension needs, and the rubric
+# thresholds that decide a breach. All three, because `function_status`
+# fails a declaration on **lines OR complexity OR cognitive complexity**
+# — a bridge counting only complexity measures something narrower and
+# cannot be compared against it. Three ratios were quoted from that
+# mistake before a test comparing every criterion caught it.
+DECLARATION_CRITERIA: tuple[tuple[str, str, str], ...] = (
+    ("cyclomatic_complexity", "warn_complexity", "max_complexity"),
+    ("declaration_lines", "warn_function_lines", "max_function_lines"),
+    ("cognitive_complexity", "warn_cognitive_complexity", "max_cognitive_complexity"),
+)
+
+# Dimensions an analyzer can supply at all. `file_size` needs per-file
+# line counts no permissively-licensed tool in the pool reports, and
+# `risk` and `gates` are configured policy with no external equivalent.
+ANALYZER_DIMENSIONS: tuple[str, ...] = ("declarations",)
+
+
+def _breach_counts(
+    per_unit: dict[str, dict[str, float]], thresholds: dict[str, Any]
+) -> tuple[int, int]:
+    """Units failing or warning on *any* criterion, counted once each.
+
+    Matches `declarations.function_status`: a declaration is one failure
+    however many limits it breaks. Counting per criterion would
+    double-count the worst code, which is the direction that flatters
+    nothing but is wrong all the same.
+    """
+    failures = warnings = 0
+    for values in per_unit.values():
+        failed = warned = False
+        for concept, warn_key, fail_key in DECLARATION_CRITERIA:
+            value = values.get(concept)
+            if value is None or warn_key not in thresholds or fail_key not in thresholds:
+                continue
+            if value > float(thresholds[fail_key]):
+                failed = True
+            elif value > float(thresholds[warn_key]):
+                warned = True
+        failures += failed
+        warnings += warned and not failed
+    return failures, warnings
 
 
 def analyzer_pressures(
@@ -176,34 +209,31 @@ def analyzer_pressures(
 ) -> dict[str, float | None]:
     """The scorer's own dimensions, computed from analyzer measurements.
 
-    A **drop-in for** :func:`dimension_pressures`, not merely something
-    shaped like it. The first version returned a mean band pressure while
-    the built-in path returns a weighted rate of threshold breaches over
-    the population — two different formulas under one key name, which I
-    then compared across forty repositories and read the difference as
-    tool disagreement. It was not: on a file where all three could be
-    checked, the built-in detector, lizard and eslint reported cyclomatic
-    complexity 11, 11 and 11.
+    A **drop-in for** :func:`dimension_pressures`: same formula, same
+    breach criteria, the rubric's thresholds applied to the analyzers'
+    numbers. That is ADR 008's seam — a tool contributes measurements,
+    the rubric decides what they mean.
 
-    So this counts breaches the way the scorer does, applying the
-    **rubric's** thresholds to the analyzers' measurements. That is the
-    whole point of ADR 008's seam: a tool contributes numbers, the rubric
-    decides what they mean.
+    Getting this wrong is not a small error, and it was made three times.
+    An earlier version returned a mean band pressure where the built-in
+    path returns a weighted breach rate; the next counted only complexity
+    where the built-in counts lines, complexity and cognitive complexity.
+    Each produced a confident ratio that described my own bridge rather
+    than the code being audited.
 
-    ``None`` for a dimension no analyzer measured — never zero.
+    ``None`` where nothing was measured — never zero.
     """
-    by_concept: dict[str, list[float]] = defaultdict(list)
+    per_unit: dict[str, dict[str, float]] = defaultdict(dict)
     for measurement in measurements:
-        by_concept[measurement.concept].append(measurement.value)
+        per_unit[measurement.unit][measurement.concept] = measurement.value
 
-    pressures: dict[str, float | None] = {}
-    for dimension, (concept, warn_key, fail_key) in ANALYZER_DIMENSIONS.items():
-        values = by_concept.get(concept)
-        if not values:
-            pressures[dimension] = None
-            continue
-        warn, fail = float(thresholds[warn_key]), float(thresholds[fail_key])
-        failures = sum(1 for value in values if value > fail)
-        warnings = sum(1 for value in values if warn < value <= fail)
-        pressures[dimension] = _weighted_rate(failures, warnings, len(values))
-    return pressures
+    relevant = {
+        unit: values
+        for unit, values in per_unit.items()
+        if any(concept in values for concept, _w, _f in DECLARATION_CRITERIA)
+    }
+    if not relevant:
+        return dict.fromkeys(ANALYZER_DIMENSIONS)
+
+    failures, warnings = _breach_counts(relevant, thresholds)
+    return {"declarations": _weighted_rate(failures, warnings, len(relevant))}

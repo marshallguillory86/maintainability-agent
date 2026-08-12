@@ -178,6 +178,20 @@ def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
             detail=available.detail, concepts=tuple(adapter.concepts),
         )
 
+    needs_config = getattr(adapter, "has_config", None)
+    if needs_config is not None and not needs_config(root):
+        # eslint cannot run without a flat config and will exit having done
+        # nothing. Recording that as "ran, found nothing" would be a clean
+        # result nobody earned.
+        return ToolCoverage(
+            slug=adapter.slug, outcome="no-config", version=recorded,
+            concepts=tuple(adapter.concepts),
+            detail=(
+                f"{adapter.slug} needs a project configuration and none was found; "
+                "add one to have its findings reported"
+            ),
+        )
+
     result = run(adapter.slug, adapter.invocation(root, excludes=excludes),
                  timeout_seconds=timeout)
     extraction = adapter.parse(result)

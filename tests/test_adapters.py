@@ -309,3 +309,49 @@ def test_an_adapter_without_an_exclusion_flag_is_visible_as_such() -> None:
 
     assert naked.exclusions((".venv/",)) == (), "no flag means no exclusions to add"
     assert naked.exclude_flag == "", "and the adapter says so plainly"
+
+
+def test_eslint_classifies_its_rules_and_locates_findings() -> None:
+    payload = json.dumps([{
+        "filePath": "/repo/m.js",
+        "messages": [
+            {"ruleId": "complexity", "line": 1, "message": "complexity of 11"},
+            {"ruleId": "max-params", "line": 1, "message": "too many parameters"},
+            {"ruleId": "no-unused-vars", "line": 4, "message": "'x' is unused"},
+            {"ruleId": "semi", "line": 6, "message": "missing semicolon"},
+        ],
+    }])
+    extraction = adapter_for("eslint").parse(_ran(payload))
+
+    by_rule = {f.rule: f.concept for f in extraction.findings}
+    assert by_rule == {
+        "complexity": "complexity", "max-params": "structure",
+        "no-unused-vars": "dead-code", "semi": "style",
+    }
+    assert not extraction.measurements, "eslint is a verdict emitter"
+
+
+def test_eslint_knows_when_it_cannot_run(tmp_path: Path) -> None:
+    """Flat config is mandatory from v9.
+
+    Without one eslint exits having done nothing, and recording that as
+    "ran, found nothing" would be a clean result nobody earned.
+    """
+    adapter = adapter_for("eslint")
+    assert not adapter.has_config(tmp_path)
+
+    (tmp_path / "eslint.config.mjs").write_text("export default [];\n", encoding="utf-8")
+    assert adapter.has_config(tmp_path)
+
+
+def test_xenon_is_deliberately_unadapted() -> None:
+    """A gate over radon adds no independent reading.
+
+    xenon re-ranks radon's own cyclomatic numbers against thresholds. An
+    adapter would put a fourth "independent" complexity source into the
+    pool that is strictly derived from one already counted, inflating
+    apparent corroboration without adding evidence. Two tools agreeing
+    because one *is* the other is worse than one tool alone, because it
+    looks like confirmation.
+    """
+    assert adapter_for("xenon") is None

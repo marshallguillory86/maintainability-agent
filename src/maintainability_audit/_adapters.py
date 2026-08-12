@@ -644,7 +644,82 @@ class PydocstyleAdapter(BaseAdapter):
         return Extraction(findings=tuple(findings))
 
 
+class EslintAdapter(BaseAdapter):
+    """JavaScript and TypeScript lint findings.
+
+    A verdict emitter, and one that cannot run at all without a project
+    configuration: eslint flat config is mandatory from v9, and invoked
+    in a tree without one it exits having done nothing. That is reported
+    as unavailable-no-config rather than as a clean result, which is the
+    honest answer and the one that tells the user what to do.
+
+    Running under the project's own config is deliberate. Their rule
+    selection shapes their findings — that is their policy about their
+    code — and cannot shape their score, because a verdict emitter
+    contributes no rate.
+    """
+
+    _CONFIGS = (
+        "eslint.config.js", "eslint.config.mjs", "eslint.config.cjs",
+        "eslint.config.ts", ".eslintrc.json", ".eslintrc.js", ".eslintrc.yml",
+    )
+    _CONCEPTS = (("complexity", "complexity"), ("max-depth", "complexity"),
+                 ("max-params", "structure"), ("max-lines", "structure"),
+                 ("no-unused-vars", "dead-code"))
+
+    def __init__(self) -> None:
+        super().__init__(
+            slug="eslint", emits="verdict", executable="eslint",
+            concepts=("style", "complexity", "structure", "dead-code"),
+            findings_exit_codes=(0, 1), exclude_flag="--ignore-pattern",
+        )
+
+    def version_argv(self) -> tuple[str, ...]:
+        return _npx("eslint", "--version")
+
+    def has_config(self, root: Path) -> bool:
+        return any((root / name).exists() for name in self._CONFIGS)
+
+    def invocation(
+        self, root: Path, paths: Iterable[str] | None = None,
+        excludes: Sequence[str] = (),
+    ) -> Invocation:
+        ignore: tuple[str, ...] = ()
+        for pattern in excludes:
+            ignore += ("--ignore-pattern", f"{pattern.rstrip('/')}/**")
+        targets = tuple(paths) if paths else (str(root),)
+        return Invocation(
+            argv=(*_npx("eslint"), *targets, "--format", "json", *ignore),
+            findings_exit_codes=self.findings_exit_codes,
+        )
+
+    def _read(self, result: ToolResult) -> Extraction:
+        payload = json.loads(result.stdout or "[]")
+        if not isinstance(payload, list):
+            raise ValueError(f"expected a JSON array of results, got {type(payload).__name__}")
+        findings = tuple(
+            Finding(
+                concept=self._concept(message.get("ruleId") or ""),
+                path=entry.get("filePath", ""),
+                line=message.get("line"),
+                message=message.get("message", ""),
+                tool=self.slug,
+                rule=message.get("ruleId"),
+            )
+            for entry in payload
+            for message in entry.get("messages", [])
+        )
+        return Extraction(findings=findings)
+
+    def _concept(self, rule: str) -> str:
+        for prefix, concept in self._CONCEPTS:
+            if rule.startswith(prefix):
+                return concept
+        return "style"
+
+
 ADAPTERS: dict[str, Callable[[], BaseAdapter]] = {
+    "eslint": EslintAdapter,
     "complexipy": ComplexipyAdapter,
     "multimetric": MultimetricAdapter,
     "pydocstyle": PydocstyleAdapter,

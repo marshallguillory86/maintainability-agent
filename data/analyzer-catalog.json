@@ -10,9 +10,9 @@
     "in_source": 760,
     "eligible": 445,
     "by_tier": {
-      "all": 430,
+      "all": 431,
       "baseline": 10,
-      "moderate": 4,
+      "moderate": 3,
       "heavy": 1
     },
     "by_license_status": {
@@ -34,7 +34,7 @@
       "documentation": 4,
       "metrics": 5,
       "structure": 4,
-      "complexity": 9,
+      "complexity": 8,
       "style": 5,
       "duplication": 3,
       "dead-code": 2
@@ -44,7 +44,7 @@
       "weak-copyleft": 34,
       "strong-copyleft": 45
     },
-    "adapters_implemented": 16
+    "adapters_implemented": 15
   },
   "tools": [
     {
@@ -17548,13 +17548,11 @@
         "python"
       ],
       "upstream_tags": [],
-      "measures": [
-        "complexity"
-      ],
+      "measures": [],
       "security_only": false,
       "source": "https://github.com/rubik/xenon",
-      "tier": "moderate",
-      "adapter": "implemented"
+      "tier": "all",
+      "adapter": "none"
     },
     {
       "slug": "xo",

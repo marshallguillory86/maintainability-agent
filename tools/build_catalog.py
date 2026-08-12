@@ -143,7 +143,6 @@ VERIFIED_TIERS = {
     "pylint": "moderate",
     "flake8": "moderate",
     "eslint": "moderate",
-    "xenon": "moderate",
     "cohesion": "moderate",
     # heavy: builds history, or needs an ecosystem runtime
     "wily": "heavy",
@@ -170,6 +169,20 @@ CONCERNS = (
     "metrics",        # maintainability index, Halstead, raw counts
 )
 
+# Deliberately unadapted, with the reason, so nobody writes one later
+# believing it was an oversight.
+#
+# xenon is a pass/fail gate layered on radon: it re-ranks radon's own
+# cyclomatic numbers against thresholds and emits nothing radon has not
+# already given. Adding it would put a fourth "independent" reading on
+# complexity that is strictly derived from one already counted --
+# inflating apparent corroboration without adding evidence. Two tools
+# agreeing because one *is* the other is worse than one tool alone,
+# because it looks like confirmation.
+NOT_ADAPTED: dict[str, str] = {
+    "xenon": "a threshold gate over radon; contributes no independent measurement",
+}
+
 VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {
     "lizard":      ("complexity", "structure", "metrics", "duplication"),
     "radon":       ("complexity", "metrics"),
@@ -186,7 +199,6 @@ VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {
     "multimetric": ("metrics", "complexity", "documentation"),
     "cloc": ("metrics", "documentation"),
     "wily":        ("metrics",),
-    "xenon":       ("complexity",),
 }
 
 # Tools this project installed and ran that the source snapshot does not list.

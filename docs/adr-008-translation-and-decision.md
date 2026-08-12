@@ -134,6 +134,10 @@ It is also what makes the output usable by a language model rather than merely r
 
 An item with no verification command does not belong in the work order. If the tool cannot say how to check the fix, it has not finished thinking about the finding.
 
+**The work order is a queryable set, not a narrative.** A run produces all three layers — raw tool output, work items, scores — so the consumer chooses the slice: *all severity 1*, *just the Quick Wins*, *everything under `payments/`*, *only what recurred*. Work items are therefore structured records with orthogonal dimensions (severity, Risk × Effort class, concern, pillar, aspect, path, producing tool, recurrence count, score delta), and raw tool output is retained and addressable so a reader can reach what the analyzer actually said.
+
+**Set deltas are recomputed, never summed.** The impact of clearing a *selection* is not the sum of its items' individual deltas: findings share denominators, the pressure-to-score curve is non-linear, and the aspect → category → overall rollup rounds at each step. Ten items each worth "+0.05" do not make "+0.5". Any interface offering a slice must quote the rubric recomputed with that whole slice removed.
+
 ### The agent never calls an LLM
 
 The audit stays deterministic, offline, and LLM-free — promise **P1** is unchanged. What the agent produces is the *input* to a language model:
@@ -197,3 +201,5 @@ Such findings **escalate** out of the nit class into a design-review candidate, 
 14. Every report states its scan scope, and a scope-limited run whose population falls short recommends a whole-repository rescan.
 15. Every work item carries a location, a clearing target and a verification command; an item missing any of the three is not emitted.
 16. A work item's score delta equals the score obtained by recomputing the rubric with that finding removed.
+17. A selection's score delta is obtained by recomputing the rubric with the whole selection removed, and is never a sum of per-item deltas.
+18. Work items are addressable by severity, class, concern, pillar, aspect, path, tool and recurrence, and the raw tool output behind each is retrievable.

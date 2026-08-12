@@ -89,6 +89,8 @@ Implements [ADR 007](adr-007-pillars-and-practice.md) and the actionable half of
 | 4.4 | Risk × Effort metadata per finding class | Declared in `standard.md` as a stated judgment, not buried in code |
 | 4.5 | Work order with computed score deltas | Each item's delta equals a rubric recomputation with that finding removed |
 | 4.6 | Verification command per item | An item lacking location, target or verification is not emitted |
+| 4.7 | Work items addressable by every dimension | Filter by severity, class, concern, pillar, path, tool, recurrence; raw tool output reachable per item |
+| 4.8 | Recomputed deltas for a selection | Clearing a filtered set quotes a recomputed figure; test asserts it differs from the sum of per-item deltas |
 
 ## Phase 5 — Scan history and trends
 

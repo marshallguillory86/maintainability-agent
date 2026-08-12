@@ -385,6 +385,29 @@ The scores are the layer a model or a human uses for comparison and pattern reco
 
 An item with no verification command does not belong in the work order. If the tool cannot state how to check the fix, it has not finished thinking about the finding.
 
+### The output is a queryable set, not a narrative
+
+Because a run produces *all three* layers — every raw tool output, every work item, and the scores — the consumer chooses the slice. *"Fix all severity 1."* *"Just the Quick Wins."* *"Everything in the payments module."* *"Only what recurred."* None of those need a different scan; they are selections over one dataset.
+
+So work items are **structured records with orthogonal dimensions**, and the agent does not pre-bake a single narrative:
+
+| Dimension | Slice it enables |
+|---|---|
+| severity | "all sev 1" |
+| Risk × Effort class | "just the Quick Wins" |
+| concern | "only duplication" |
+| pillar and aspect | "whatever is hurting testability" |
+| path and module | "everything under `payments/`" |
+| producing tool | "what did semgrep say" |
+| recurrence count | "only what we've already tried to fix" |
+| score delta | "the ten items that move the number most" |
+
+Raw tool output is retained and addressable alongside, so a reader can always get back to what the analyzer actually said rather than the agent's summary of it.
+
+**Deltas do not add, and this is the trap.** The score impact of clearing a *set* of findings is not the sum of their individual deltas: they share denominators, the pressure-to-score curve is non-linear, and the aspect → category → overall rollup rounds at each step. Ten items each worth "+0.05" do not make "+0.5."
+
+So a selection's delta is computed by **recomputing the rubric with that whole selection removed** — same mechanism as the single-item delta, applied to the set. Any interface that lets a user pick a slice must quote the recomputed figure for that slice, never a sum of per-item numbers. Summing would be fabrication of exactly the kind [P7](product-intent.md#what-it-promises) forbids, arriving through arithmetic instead of absence.
+
 ## Decisions embodied in this document
 
 Every design point above traces to a record. Nothing here is a preference someone remembered.
@@ -411,6 +434,8 @@ Every design point above traces to a record. Nothing here is a preference someon
 | Selection by intent: the user answers concerns and density, the agent picks tools | [analyzer pool](analyzer-pool.md), [config](config-schema.md#analyzer-policy-analyzers) |
 | Concern vocabulary comes from the scoring model; `measures` grows with adapters | [analyzer pool](analyzer-pool.md) |
 | Every finding stays in the report; ranking orders, never filters | [ADR 008](adr-008-translation-and-decision.md) |
+| Work order is a queryable set; the consumer picks the slice | [ADR 008](adr-008-translation-and-decision.md) |
+| Set deltas are recomputed, never summed from per-item deltas | [ADR 008](adr-008-translation-and-decision.md) |
 | Scans append to a durable history; trends over comparable records only | [ADR 009](adr-009-scan-history.md) |
 | Finding identity is content-addressed, never line-coupled | [ADR 009](adr-009-scan-history.md) |
 | Trends describe past scans; forecasting stays forbidden | [ADR 009](adr-009-scan-history.md), [product intent](product-intent.md#what-it-must-never-claim) |

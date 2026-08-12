@@ -371,3 +371,84 @@ def test_every_criterion_the_bridge_reads_is_a_concept_an_adapter_emits() -> Non
         f"{sorted(missing)} are read by the scoring bridge and emitted by no adapter, "
         "so those criteria can never fire however green the unit tests are"
     )
+
+
+def test_a_declaration_breaching_two_limits_counts_once(thresholds: dict) -> None:
+    """`function_status` grades a declaration, not its individual limits.
+
+    A function that is both too long and too complex is one failure.
+    Counting per criterion would inflate the worst code by a factor of
+    however many limits it happens to break, and the two paths would
+    diverge exactly where a codebase is in most trouble.
+
+    This was asserted in a comment until it was asserted here, which is
+    the same gap as claiming enforcement from a test's name.
+    """
+    from maintainability_audit._metrics_types import Measurement
+    from maintainability_audit._pressures import analyzer_pressures
+    from maintainability_audit.declarations import function_status
+
+    long_and_complex = {
+        "cyclomatic_complexity": thresholds["max_complexity"] + 1,
+        "declaration_lines": thresholds["max_function_lines"] + 1,
+        "cognitive_complexity": thresholds["max_cognitive_complexity"] + 1,
+    }
+    assert function_status(
+        long_and_complex["declaration_lines"],
+        long_and_complex["cyclomatic_complexity"],
+        thresholds,
+        long_and_complex["cognitive_complexity"],
+    ) == "fail"
+
+    def _pressure(units: list[dict[str, float]]) -> float:
+        return analyzer_pressures(
+            [
+                Measurement(concept=concept, unit=f"a.py::f{i}", value=float(value),
+                            tool="lizard", path="a.py")
+                for i, unit in enumerate(units)
+                for concept, value in unit.items()
+            ],
+            thresholds,
+        )["declarations"]
+
+    clean = {"cyclomatic_complexity": 1.0, "declaration_lines": 1.0, "cognitive_complexity": 0.0}
+    breaks_three = _pressure([long_and_complex, clean, clean, clean])
+    breaks_one = _pressure([{**clean, "cyclomatic_complexity": thresholds["max_complexity"] + 1},
+                            clean, clean, clean])
+
+    assert breaks_three == pytest.approx(breaks_one), (
+        "one declaration is one failure however many limits it breaks"
+    )
+
+
+def test_a_warning_is_weighted_below_a_failure(thresholds: dict) -> None:
+    """Both paths discount warnings identically, or the rates diverge.
+
+    The equivalence test above only exercises failures, so a bridge that
+    ignored warnings entirely would still have passed it.
+    """
+    from maintainability_audit._metrics_types import Measurement
+    from maintainability_audit._pressures import analyzer_pressures, dimension_pressures
+    from maintainability_audit.evidence import Measured, SummaryEvidence
+
+    warning = {
+        "cyclomatic_complexity": (thresholds["warn_complexity"] + thresholds["max_complexity"]) / 2,
+        "declaration_lines": 1.0,
+        "cognitive_complexity": 0.0,
+    }
+    clean = {"cyclomatic_complexity": 1.0, "declaration_lines": 1.0, "cognitive_complexity": 0.0}
+    measurements = [
+        Measurement(concept=concept, unit=f"a.py::f{i}", value=float(value),
+                    tool="lizard", path="a.py")
+        for i, unit in enumerate([warning, clean, clean, clean])
+        for concept, value in unit.items()
+    ]
+
+    fields = dict.fromkeys(SummaryEvidence.__dataclass_fields__, Measured(0, "t"))
+    fields.update(declarations_scanned=Measured(4, "t"), function_warnings=Measured(1, "t"))
+
+    from_analyzers = analyzer_pressures(measurements, thresholds)["declarations"]
+    from_builtin = dimension_pressures(SummaryEvidence(**fields))["declarations"]
+
+    assert from_analyzers == pytest.approx(from_builtin)
+    assert 0 < from_analyzers < 1 / 4, "a warning weighs less than a failure would"

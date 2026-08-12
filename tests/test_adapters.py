@@ -386,10 +386,14 @@ def test_a_tool_emitting_a_standard_format_needs_no_parser() -> None:
     assert len(extraction.findings) == 1
     assert (extraction.findings[0].path, extraction.findings[0].line) == ("a.py", 3)
     assert not extraction.measurements, "a declared tool contributes findings, never a rate"
-    assert DECLARED == {}, (
-        "declared tools are still a promise the tool works; each is verified "
-        "by running it before it is listed"
+    # Every declared entry is a promise the tool works, earned by running
+    # it — the same rule the depth tiers follow.
+    assert set(DECLARED) == {"pylint", "mypy"}, (
+        "a declared tool is listed only after its output has been read"
     )
+    for spec in DECLARED.values():
+        assert spec.output_format in {"sarif", "checkstyle", "json-findings", "json-lines"}
+        assert spec.concerns, f"{spec.slug} declares no concern, so nothing selects it"
 
 
 def test_a_declared_tool_with_an_unknown_format_fails_loudly() -> None:

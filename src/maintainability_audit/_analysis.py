@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from ._adapters import Extraction, Finding, Measurement, adapter_for, measurements_only
-from ._catalog import CONCERNS, PolicyError, resolve_pool, settings_from
+from ._catalog import CONCERNS, PolicyError, concepts_for, resolve_pool, settings_from
 from ._corroborate import agreement, combine, single_source_concepts
 from ._generic import declared_adapter
 from ._runner import Outcome, Probe, run
@@ -76,12 +76,23 @@ class Analysis:
         code" is a result, and "nobody looked for dead code" is a gap, and
         collapsing them is exactly the mistake that produced the A+.
         """
-        return {
+        # Adapters declare *concepts* (cyclomatic_complexity) while users
+        # select *concerns* (complexity), so the two vocabularies are
+        # mapped rather than compared directly. Comparing them made
+        # `metrics` and `structure` read as unexamined the moment concepts
+        # were split out — a gap report that invents gaps is as bad as one
+        # that hides them.
+        measured = {
             concept
             for item in self.coverage
             if item.contributed
             for concept in item.concepts
         }
+        return {
+            concern
+            for concern in CONCERNS
+            if measured & set(concepts_for(concern))
+        } | (measured & set(CONCERNS))
 
     def gaps(self) -> list[str]:
         """Concerns the operator asked for that nothing spoke to.

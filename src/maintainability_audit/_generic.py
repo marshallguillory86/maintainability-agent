@@ -52,6 +52,21 @@ class ToolSpec:
     json_keys: tuple[str, str, str] = ("path", "line", "message")
 
 
+# Tools name their rules under different keys, and a rule id is what
+# makes a finding groupable and suppressible. pylint's `symbol` is
+# preferred over its `message-id` because `missing-module-docstring`
+# tells a reader more than `C0114`.
+_RULE_KEYS = ("symbol", "rule", "code", "ruleId", "check_name", "message-id")
+
+
+def _rule_id(item: dict[str, Any]) -> str | None:
+    for key in _RULE_KEYS:
+        value = item.get(key)
+        if value:
+            return str(value)
+    return None
+
+
 def _dig(payload: Any, dotted: str) -> Any:
     for part in filter(None, dotted.split(".")):
         if isinstance(payload, dict):
@@ -131,7 +146,7 @@ def parse_json_findings(text: str, spec: ToolSpec, concern: str) -> Extraction:
             line=_dig(item, line_key),
             message=str(_dig(item, message_key) or ""),
             tool=spec.slug,
-            rule=item.get("rule") or item.get("code") or item.get("ruleId"),
+            rule=_rule_id(item),
         )
         for item in items
         if isinstance(item, dict)
@@ -139,7 +154,34 @@ def parse_json_findings(text: str, spec: ToolSpec, concern: str) -> Extraction:
     return Extraction(findings=findings)
 
 
-PARSERS = {"sarif", "checkstyle", "json-findings"}
+def parse_json_lines(text: str, spec: ToolSpec, concern: str) -> Extraction:
+    """One JSON object per line — what mypy and several others emit.
+
+    A distinct format from a JSON array and worth its own parser rather
+    than a special case: streaming tools prefer it precisely because the
+    document is never complete, so no array wrapper ever arrives.
+    """
+    path_key, line_key, message_key = spec.json_keys
+    findings = []
+    for raw in (text or "").splitlines():
+        stripped = raw.strip()
+        if not stripped.startswith("{"):
+            # Summary lines and progress noise share the stream. Skipping
+            # non-objects rather than failing keeps a chatty tool usable.
+            continue
+        item = json.loads(stripped)
+        findings.append(Finding(
+            concept=concern,
+            path=str(_dig(item, path_key) or ""),
+            line=_dig(item, line_key),
+            message=str(_dig(item, message_key) or ""),
+            tool=spec.slug,
+            rule=_rule_id(item),
+        ))
+    return Extraction(findings=tuple(findings))
+
+
+PARSERS = {"sarif", "checkstyle", "json-findings", "json-lines"}
 
 
 class DeclaredAdapter(BaseAdapter):
@@ -171,6 +213,8 @@ class DeclaredAdapter(BaseAdapter):
             return parse_checkstyle(text, self.spec.slug, concern)
         if self.spec.output_format == "json-findings":
             return parse_json_findings(text, self.spec, concern)
+        if self.spec.output_format == "json-lines":
+            return parse_json_lines(text, self.spec, concern)
         raise ValueError(
             f"{self.spec.slug}: unknown output_format {self.spec.output_format!r}; "
             f"expected one of {sorted(PARSERS)}"
@@ -184,7 +228,31 @@ class DeclaredAdapter(BaseAdapter):
 #
 # Empty until each is verified by running it, on the same rule the tiers
 # follow: an entry is a promise the tool works.
-DECLARED: dict[str, ToolSpec] = {}
+DECLARED: dict[str, ToolSpec] = {
+    # Verified by running each and reading real output, on the same rule
+    # the tiers follow: an entry is a promise the tool works.
+    "pylint": ToolSpec(
+        slug="pylint", executable="pylint", output_format="json-findings",
+        concerns=("style", "structure"),
+        args=("--output-format=json", "--score=n"),
+        exclude_flag="--ignore-paths",
+        # pylint's exit status is a bitmask of message categories -- 1
+        # fatal, 2 error, 4 warning, 8 refactor, 16 convention -- so any
+        # value below 32 means "ran and found things". Only 32 (usage
+        # error) is a real failure. Treating 16 as failure discarded every
+        # finding from a run that worked perfectly.
+        findings_exit_codes=tuple(range(32)),
+    ),
+    "mypy": ToolSpec(
+        # Closes `types`, which nothing else in the pool examines.
+        slug="mypy", executable="mypy", output_format="json-lines",
+        concerns=("types",),
+        args=("--output", "json", "--no-error-summary", "--ignore-missing-imports"),
+        json_keys=("file", "line", "message"),
+        exclude_flag="--exclude",
+        findings_exit_codes=(0, 1, 2),
+    ),
+}
 
 
 def declared_adapter(slug: str) -> DeclaredAdapter | None:

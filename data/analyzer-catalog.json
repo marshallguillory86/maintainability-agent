@@ -8,43 +8,44 @@
   },
   "counts": {
     "in_source": 760,
-    "eligible": 445,
+    "eligible": 446,
     "by_tier": {
       "all": 431,
       "baseline": 10,
-      "moderate": 3,
+      "moderate": 4,
       "heavy": 1
     },
     "by_license_status": {
-      "foss": 578,
+      "foss": 579,
       "source-available": 5,
       "proprietary": 102,
-      "unverified": 75
+      "unverified": 74
     },
     "by_license_class": {
-      "permissive": 464,
+      "permissive": 465,
       "weak-copyleft": 42,
       "strong-copyleft": 72,
       "source-available": 5,
       "proprietary": 70,
       "proprietary-free-tier": 32,
-      "unverified": 75
+      "unverified": 74
     },
     "by_measure": {
       "documentation": 4,
       "metrics": 5,
       "structure": 4,
-      "complexity": 8,
+      "complexity": 7,
       "style": 5,
-      "duplication": 3,
+      "duplication": 2,
+      "types": 1,
       "dead-code": 2
     },
     "eligible_by_license_class": {
-      "permissive": 366,
+      "permissive": 367,
       "weak-copyleft": 34,
       "strong-copyleft": 45
     },
-    "adapters_implemented": 15
+    "adapters_implemented": 16
   },
   "tools": [
     {
@@ -53,6 +54,7 @@
       "license": "MIT license",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -74,6 +76,7 @@
       "license": "LGPL-3.0-only license",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -95,6 +98,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -116,6 +120,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -137,6 +142,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -158,6 +164,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -181,6 +188,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -202,6 +210,7 @@
       "license": "GPL v2",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -223,6 +232,7 @@
       "license": "BSD 2-Clause \"Simplified\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -245,6 +255,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -266,6 +277,7 @@
       "license": "GPL v2",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -287,6 +299,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -308,6 +321,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -329,6 +343,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -350,6 +365,7 @@
       "license": "Android Software Development Kit License Agreement",
       "license_status": "source-available",
       "license_class": "source-available",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -371,6 +387,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -392,6 +409,7 @@
       "license": "Android Software Development Kit License Agreement",
       "license_status": "source-available",
       "license_class": "source-available",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -414,6 +432,7 @@
       "license": "BSD 2-Clause \"Simplified\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -435,6 +454,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -457,6 +477,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -478,6 +499,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -502,6 +524,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -536,6 +559,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -568,6 +592,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -608,6 +633,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -630,6 +656,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -651,6 +678,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -672,6 +700,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -706,6 +735,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -728,6 +758,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -763,6 +794,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -803,6 +835,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -824,6 +857,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -845,6 +879,7 @@
       "license": "MPL-2.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -866,6 +901,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -890,6 +926,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -914,6 +951,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -935,6 +973,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -956,6 +995,7 @@
       "license": "Elastic License 2.0",
       "license_status": "source-available",
       "license_class": "source-available",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -990,6 +1030,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1011,6 +1052,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -1049,6 +1091,7 @@
       "license": "AGPL-3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": true,
       "categories": [
@@ -1087,6 +1130,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1108,6 +1152,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1129,6 +1174,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1153,6 +1199,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1174,6 +1221,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1195,6 +1243,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1216,6 +1265,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1259,6 +1309,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1280,6 +1331,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1301,6 +1353,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1322,6 +1375,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1345,6 +1399,7 @@
       "license": "GNU Affero General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1366,6 +1421,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1387,6 +1443,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": true,
       "categories": [
@@ -1413,6 +1470,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1436,6 +1494,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1457,6 +1516,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1478,6 +1538,7 @@
       "license": "GNU GPL",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1499,6 +1560,7 @@
       "license": "GNU General Public License",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1541,6 +1603,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1562,6 +1625,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1583,6 +1647,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1606,6 +1671,7 @@
       "license": "MPL-2.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1627,6 +1693,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1648,6 +1715,7 @@
       "license": "Apache License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1669,6 +1737,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1690,6 +1759,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1711,6 +1781,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1732,6 +1803,7 @@
       "license": "Apache License (Version 2.0) or MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1753,6 +1825,7 @@
       "license": "MIT / Apache 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1774,6 +1847,7 @@
       "license": "Apache 2.0 / MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1795,6 +1869,7 @@
       "license": "MIT License / Apache 2.0 license",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1816,6 +1891,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1837,6 +1913,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1871,6 +1948,7 @@
       "license": "BSD-4-Clause-UC",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1893,6 +1971,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1914,6 +1993,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1935,6 +2015,7 @@
       "license": "GPL v2",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1956,6 +2037,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1977,6 +2059,7 @@
       "license": "GPL with Classpath exception / MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -1998,6 +2081,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2020,6 +2104,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2066,6 +2151,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2087,6 +2173,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2108,6 +2195,7 @@
       "license": "GNU Public License version 2 or greater",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -2129,6 +2217,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2150,6 +2239,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2171,6 +2261,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2195,6 +2286,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2216,6 +2308,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2237,6 +2330,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2258,6 +2352,7 @@
       "license": "Apache License v2.0 with LLVM Exceptions",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2280,6 +2375,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2303,6 +2399,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2327,6 +2424,7 @@
       "license": "LGPL",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2349,6 +2447,7 @@
       "license": "Apache-2.0, MIT license",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2370,6 +2469,7 @@
       "license": "Eclipse Public License 1.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2499,6 +2599,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2520,6 +2621,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -2541,6 +2643,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2565,6 +2668,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2586,6 +2690,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2607,6 +2712,7 @@
       "license": "GNU General Public License v2.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2629,6 +2735,7 @@
       "license": "AGPL-3.0-only",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -2654,6 +2761,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -2678,6 +2786,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -2726,6 +2835,7 @@
       "license": "AGPL-3.0 License",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2747,6 +2857,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2768,6 +2879,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2797,6 +2909,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2824,6 +2937,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -2854,6 +2968,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2881,6 +2996,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2905,6 +3021,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -2926,6 +3043,7 @@
       "license": "GPL",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -2947,6 +3065,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -2993,6 +3112,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -3023,6 +3143,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -3049,6 +3170,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -3070,6 +3192,7 @@
       "license": "GNU AFFERO GENERAL PUBLIC LICENSE 3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3092,6 +3215,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3113,6 +3237,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3143,6 +3268,7 @@
       "license": "Sustainable Use License",
       "license_status": "source-available",
       "license_class": "source-available",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3169,6 +3295,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -3190,6 +3317,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3214,6 +3342,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3238,6 +3367,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -3278,6 +3408,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -3304,6 +3435,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3328,6 +3460,7 @@
       "license": "GNU General Public License v2.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3349,6 +3482,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -3383,6 +3517,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -3418,6 +3553,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3439,6 +3575,7 @@
       "license": "Eclipse Public License 2.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3460,6 +3597,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3483,6 +3621,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3504,6 +3643,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3551,6 +3691,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -3572,6 +3713,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3596,6 +3738,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3617,6 +3760,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -3651,6 +3795,7 @@
       "license": "GNU General Public License v2.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -3674,6 +3819,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -3708,6 +3854,7 @@
       "license": "Apache 2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3729,6 +3876,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3754,6 +3902,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3776,6 +3925,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3798,6 +3948,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3820,6 +3971,7 @@
       "license": "BSD-3-Clause (original text)",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3846,6 +3998,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3868,6 +4021,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3889,6 +4043,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3910,6 +4065,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3931,6 +4087,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3953,6 +4110,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3974,6 +4132,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3995,6 +4154,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4016,6 +4176,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4037,6 +4198,7 @@
       "license": "GNU Lesser General Public License v3.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4058,6 +4220,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4079,6 +4242,7 @@
       "license": "Boost Software License 1.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4100,6 +4264,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -4121,6 +4286,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4142,6 +4308,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4165,6 +4332,7 @@
       "license": "GPL with Classpath exception / MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4186,6 +4354,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4208,6 +4377,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4231,6 +4401,7 @@
       "license": "BSD-3-Clause License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4252,6 +4423,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4273,6 +4445,7 @@
       "license": "GPL-3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4294,6 +4467,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4315,6 +4489,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -4341,6 +4516,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -4362,6 +4538,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -4390,6 +4567,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4416,6 +4594,7 @@
       "license": "LGPL-3.0-only license",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4437,6 +4616,7 @@
       "license": "BSD-3-Clause",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4458,6 +4638,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4479,6 +4660,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4503,6 +4685,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4524,6 +4707,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4545,6 +4729,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4566,6 +4751,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4619,6 +4805,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4640,6 +4827,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4661,6 +4849,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4682,6 +4871,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4703,6 +4893,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4724,6 +4915,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4752,6 +4944,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4773,6 +4966,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4794,6 +4988,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4816,6 +5011,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -4839,6 +5035,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4860,6 +5057,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4882,6 +5080,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4903,6 +5102,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4924,6 +5124,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4945,6 +5146,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4969,6 +5171,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -4990,6 +5193,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5011,6 +5215,7 @@
       "license": "UPL",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5032,6 +5237,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5053,6 +5259,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5074,6 +5281,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5098,6 +5306,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5119,6 +5328,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5140,6 +5350,7 @@
       "license": "MIT License / Apache 2.0 license",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5161,6 +5372,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5182,6 +5394,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5203,6 +5416,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5224,6 +5438,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5245,6 +5460,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5266,6 +5482,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5287,6 +5504,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5308,6 +5526,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -5337,6 +5556,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5369,6 +5589,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5401,6 +5622,7 @@
       "license": "LGPL-3.0 License",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5425,6 +5647,7 @@
       "license": "LGPL-2.1 license",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5447,6 +5670,7 @@
       "license": "LGPL-2.1 license",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5468,6 +5692,7 @@
       "license": "LGPL-2.1 license",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5489,6 +5714,7 @@
       "license": "LGPL-2.1 license",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5510,6 +5736,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5535,6 +5762,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5559,6 +5787,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5580,6 +5809,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5601,6 +5831,7 @@
       "license": "BSD 3-Clause License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5622,6 +5853,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5643,6 +5875,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5665,6 +5898,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5686,6 +5920,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5713,6 +5948,7 @@
       "license": "BSD 2-Clause \"Simplified\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5734,6 +5970,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5757,6 +5994,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5779,6 +6017,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5800,6 +6039,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5821,6 +6061,7 @@
       "license": "GNU Lesser General Public License v2.1",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5842,6 +6083,7 @@
       "license": "LGPL-3.0-only",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5866,6 +6108,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5887,6 +6130,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5908,6 +6152,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5929,6 +6174,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5955,6 +6201,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -5978,6 +6225,7 @@
       "license": "GNU General Public License v2.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6000,6 +6248,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6021,6 +6270,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6042,6 +6292,7 @@
       "license": "Boost Software License 1.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -6064,6 +6315,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6085,6 +6337,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6106,6 +6359,7 @@
       "license": "GNU Lesser General Public License v2.1",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6127,6 +6381,7 @@
       "license": "GPL-3",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6148,6 +6403,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6169,6 +6425,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6190,6 +6447,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6237,6 +6495,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6258,6 +6517,7 @@
       "license": "NOASSERTION",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6279,6 +6539,7 @@
       "license": "GNU Lesser General Public License v2.1",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6300,6 +6561,7 @@
       "license": "GPL-2.0-or-later",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6323,6 +6585,7 @@
       "license": "unknown",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6344,6 +6607,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6365,6 +6629,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6386,6 +6651,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6407,6 +6673,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6428,6 +6695,7 @@
       "license": "GPL",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6450,6 +6718,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6471,6 +6740,7 @@
       "license": "ISC License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6492,6 +6762,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6513,6 +6784,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6540,6 +6812,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6561,6 +6834,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6582,6 +6856,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6603,6 +6878,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6624,6 +6900,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -6647,6 +6924,7 @@
       "license": "BSD-3-Clause (original text)",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6668,6 +6946,7 @@
       "license": "BSD-3-Clause (original text)",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6689,6 +6968,7 @@
       "license": "BSD-3-Clause (original text)",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6710,6 +6990,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6731,6 +7012,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6754,6 +7036,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6775,6 +7058,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6796,6 +7080,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6817,6 +7102,7 @@
       "license": "BSD-3-Clause (original text)",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6839,6 +7125,7 @@
       "license": "BSD-3",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6860,6 +7147,7 @@
       "license": "BSD-3-Clause (original text)",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6881,6 +7169,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6904,6 +7193,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6925,6 +7215,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6946,6 +7237,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6970,6 +7262,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -6991,6 +7284,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7012,6 +7306,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7034,6 +7329,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7057,6 +7353,7 @@
       "license": "BSD 2-Clause \"Simplified\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7078,6 +7375,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7099,6 +7397,7 @@
       "license": "3-Clause BSD License + Patent Grant",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7120,6 +7419,7 @@
       "license": "BSD-3-Clause",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7141,6 +7441,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7162,6 +7463,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7192,6 +7494,7 @@
       "license": "ISC License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7213,6 +7516,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7234,6 +7538,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7255,6 +7560,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7277,6 +7583,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7298,6 +7605,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7319,6 +7627,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7340,6 +7649,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -7362,6 +7672,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7383,6 +7694,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7404,6 +7716,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7426,6 +7739,7 @@
       "license": "Mozilla Public License 2.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7447,6 +7761,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7468,6 +7783,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7489,6 +7805,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -7513,6 +7830,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7534,6 +7852,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7560,6 +7879,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -7581,6 +7901,7 @@
       "license": "Custom",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7602,6 +7923,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7624,6 +7946,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7648,6 +7971,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7669,6 +7993,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -7690,6 +8015,7 @@
       "license": "Eclipse Public License 1.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7711,6 +8037,7 @@
       "license": "Eclipse Public License 1.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7732,6 +8059,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7754,6 +8082,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7775,6 +8104,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7797,6 +8127,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7823,6 +8154,7 @@
       "license": "GNU Public License version 2 or greater",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7847,6 +8179,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7868,6 +8201,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7892,6 +8226,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7913,6 +8248,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -7934,6 +8270,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -7955,6 +8292,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -8002,6 +8340,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8023,6 +8362,7 @@
       "license": "GNU General Public License v2.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -8044,6 +8384,7 @@
       "license": "GNU General Public License v2.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8065,6 +8406,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8086,6 +8428,7 @@
       "license": "BSD-4-Clause-UC (original text)",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8107,6 +8450,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8128,6 +8472,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8149,6 +8494,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8170,6 +8516,7 @@
       "license": "MIT license",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8191,6 +8538,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8227,6 +8575,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8364,6 +8713,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8385,6 +8735,7 @@
       "license": "Llvm release license",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8406,6 +8757,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8427,6 +8779,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -8448,6 +8801,7 @@
       "license": "MIT & Apache 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8471,6 +8825,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8497,6 +8852,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8524,6 +8880,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8554,6 +8911,7 @@
       "license": "UIUC open source license",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8576,6 +8934,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8597,6 +8956,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8621,6 +8981,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8642,6 +9003,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8664,6 +9026,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8685,6 +9048,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8707,6 +9071,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8729,6 +9094,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8750,6 +9116,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8771,6 +9138,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8792,6 +9160,7 @@
       "license": "Apache 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8813,6 +9182,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8834,6 +9204,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -8855,6 +9226,7 @@
       "license": "GPL",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8876,6 +9248,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8908,6 +9281,7 @@
       "license": "GNU Lesser General Public License v2.1",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8929,6 +9303,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8952,6 +9327,7 @@
       "license": "GNU Affero General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -8973,6 +9349,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8995,6 +9372,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9026,6 +9404,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9047,6 +9426,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9068,6 +9448,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9089,6 +9470,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9110,6 +9492,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9131,6 +9514,7 @@
       "license": "GNU General Public License v2.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9152,6 +9536,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9173,6 +9558,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9194,6 +9580,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9215,6 +9602,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9255,6 +9643,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9276,6 +9665,7 @@
       "license": "BSD-3-Clause",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9297,6 +9687,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9319,6 +9710,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9340,6 +9732,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9361,6 +9754,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9382,6 +9776,7 @@
       "license": "Apache License Version 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9403,6 +9798,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9425,6 +9821,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -9447,6 +9844,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9468,6 +9866,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9489,6 +9888,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9512,6 +9912,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9533,6 +9934,7 @@
       "license": "BSD-3-Clause",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9555,6 +9957,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9579,6 +9982,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9600,6 +10004,7 @@
       "license": "AGPL-3.0 License",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9621,6 +10026,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9642,6 +10048,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9663,6 +10070,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9684,6 +10092,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9758,6 +10167,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9781,6 +10191,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9802,6 +10213,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9823,6 +10235,7 @@
       "license": "GPL-3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9845,6 +10258,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9866,6 +10280,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9887,6 +10302,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9908,6 +10324,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9929,6 +10346,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9956,6 +10374,7 @@
       "license": "CC-BY-SA-3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9977,6 +10396,7 @@
       "license": "GNU Lesser General Public License v3.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -9999,6 +10419,7 @@
       "license": "ISC License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10054,9 +10475,10 @@
     {
       "slug": "mypy",
       "name": "mypy",
-      "license": "Other",
-      "license_status": "unverified",
-      "license_class": "unverified",
+      "license": "MIT",
+      "license_status": "foss",
+      "license_class": "permissive",
+      "license_evidence": "License-Expression in the installed distribution",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10066,11 +10488,13 @@
         "python"
       ],
       "upstream_tags": [],
-      "measures": [],
+      "measures": [
+        "types"
+      ],
       "security_only": false,
       "source": "https://github.com/python/mypy",
-      "tier": "all",
-      "adapter": "none"
+      "tier": "moderate",
+      "adapter": "implemented"
     },
     {
       "slug": "mythril",
@@ -10078,6 +10502,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10099,6 +10524,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10120,6 +10546,7 @@
       "license": "GPL v2",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10141,6 +10568,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10162,6 +10590,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10183,6 +10612,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10204,6 +10634,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10225,6 +10656,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10246,6 +10678,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10268,6 +10701,7 @@
       "license": "GPL-3.0 License",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10289,6 +10723,7 @@
       "license": "LGPL-2.1 License",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10311,6 +10746,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10335,6 +10771,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10356,6 +10793,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10378,6 +10816,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10399,6 +10838,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10438,6 +10878,7 @@
       "license": "BSD-3-Clause (original text)",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10461,6 +10902,7 @@
       "license": "BSD 2-Clause \"Simplified\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10482,6 +10924,7 @@
       "license": "European Union Public Licence (EUPL) v1.2",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -10508,6 +10951,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10539,6 +10983,7 @@
       "license": "LGPL-2.1 License",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10560,6 +11005,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10583,6 +11029,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10605,6 +11052,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10626,6 +11074,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10649,6 +11098,7 @@
       "license": "LGPL-3.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10670,6 +11120,7 @@
       "license": "AGPL-3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10691,6 +11142,7 @@
       "license": "GNU Affero General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10712,6 +11164,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10733,6 +11186,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10757,6 +11211,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10778,6 +11233,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10799,6 +11255,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10820,6 +11277,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10841,6 +11299,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10863,6 +11322,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10884,6 +11344,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10905,6 +11366,7 @@
       "license": "Artistic License (2.0)",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10926,6 +11388,7 @@
       "license": "GPL v2",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10947,6 +11410,7 @@
       "license": "GPL-2.0 license",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10968,6 +11432,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -11000,6 +11465,7 @@
       "license": "PostgreSQL License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11021,6 +11487,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11042,6 +11509,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11064,6 +11532,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11085,6 +11554,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11106,6 +11576,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11127,6 +11598,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11148,6 +11620,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11169,6 +11642,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11190,6 +11664,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11211,6 +11686,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11232,6 +11708,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11253,6 +11730,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11274,6 +11752,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -11295,6 +11774,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -11316,6 +11796,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11337,6 +11818,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11358,6 +11840,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11379,6 +11862,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -11400,6 +11884,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11421,6 +11906,7 @@
       "license": "BSD-3-Clause",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11442,6 +11928,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11463,6 +11950,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11484,6 +11972,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11505,6 +11994,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11526,6 +12016,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11547,6 +12038,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11568,6 +12060,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11589,6 +12082,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11610,6 +12104,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11631,6 +12126,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11652,6 +12148,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11673,6 +12170,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11696,6 +12194,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [],
@@ -11716,6 +12215,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -11737,6 +12237,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11765,6 +12266,7 @@
       "license": "BSD-3-Clause (original text)",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11787,6 +12289,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11809,6 +12312,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11831,6 +12335,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11852,6 +12357,7 @@
       "license": "BSD License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11874,6 +12380,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11895,6 +12402,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11916,6 +12424,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11940,6 +12449,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -11961,6 +12471,7 @@
       "license": "Business Source License 1.1",
       "license_status": "source-available",
       "license_class": "source-available",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -11987,6 +12498,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12010,6 +12522,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12031,6 +12544,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12052,6 +12566,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12073,6 +12588,7 @@
       "license": "GPL-3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12094,6 +12610,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12115,6 +12632,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12144,6 +12662,7 @@
       "license": "BSD-3-Clause",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12165,6 +12684,7 @@
       "license": "GNU General Public License v2.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12188,6 +12708,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12209,6 +12730,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12230,6 +12752,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12251,6 +12774,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -12278,6 +12802,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12299,6 +12824,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12320,6 +12846,7 @@
       "license": "Mozilla Public License 2.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12341,6 +12868,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12362,6 +12890,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12383,6 +12912,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12410,6 +12940,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12434,6 +12965,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -12455,6 +12987,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12476,6 +13009,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12497,6 +13031,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12521,6 +13056,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12542,6 +13078,7 @@
       "license": "LGPL-3.0 License",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12566,6 +13103,7 @@
       "license": "GNU General Public License v2.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12576,8 +13114,6 @@
       ],
       "upstream_tags": [],
       "measures": [
-        "complexity",
-        "duplication",
         "structure",
         "style"
       ],
@@ -12592,6 +13128,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12613,6 +13150,7 @@
       "license": "MPL-2.0 license",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12634,6 +13172,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -12655,6 +13194,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12676,6 +13216,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12697,6 +13238,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12718,6 +13260,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12739,6 +13282,7 @@
       "license": "GNU General Public License v2.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -12760,6 +13304,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12781,6 +13326,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12802,6 +13348,7 @@
       "license": "GNU Affero General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12823,6 +13370,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12844,6 +13392,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12867,6 +13416,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12889,6 +13439,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -12913,6 +13464,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12934,6 +13486,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12955,6 +13508,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12985,6 +13539,7 @@
       "license": "MIT + file LICENSE",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13006,6 +13561,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13030,6 +13586,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13051,6 +13608,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13072,6 +13630,7 @@
       "license": "GPL-3",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13093,6 +13652,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13114,6 +13674,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13135,6 +13696,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13156,6 +13718,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13180,6 +13743,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13203,6 +13767,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13224,6 +13789,7 @@
       "license": "GPL-3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13245,6 +13811,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13266,6 +13833,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13294,6 +13862,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13315,6 +13884,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13341,6 +13911,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13362,6 +13933,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13387,6 +13959,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13410,6 +13983,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13431,6 +14005,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13452,6 +14027,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13476,6 +14052,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13497,6 +14074,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13520,6 +14098,7 @@
       "license": "GNU Lesser General Public License v3.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13543,6 +14122,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13564,6 +14144,7 @@
       "license": "GNU General Public License v2.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13585,6 +14166,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13606,6 +14188,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13627,6 +14210,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13648,6 +14232,7 @@
       "license": "Mozilla Public License, version 2.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -13669,6 +14254,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13690,6 +14276,7 @@
       "license": "Apache",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13711,6 +14298,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13736,6 +14324,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13757,6 +14346,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13778,6 +14368,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13801,6 +14392,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13822,6 +14414,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13843,6 +14436,7 @@
       "license": "Apache License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13864,6 +14458,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13885,6 +14480,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13908,6 +14504,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13929,6 +14526,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13952,6 +14550,7 @@
       "license": "BSD License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -13973,6 +14572,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -13994,6 +14594,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -14015,6 +14616,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -14041,6 +14643,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14062,6 +14665,7 @@
       "license": "Apache License v2.0 with LLVM Exceptions",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14084,6 +14688,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14105,6 +14710,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14126,6 +14732,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": true,
       "categories": [
@@ -14155,6 +14762,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -14176,6 +14784,7 @@
       "license": "GNU Lesser General Public License v3.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14203,6 +14812,7 @@
       "license": "GNU Lesser General Public License v2.1",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14245,6 +14855,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14273,6 +14884,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14300,6 +14912,7 @@
       "license": "BSD-3-Clause License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14321,6 +14934,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14342,6 +14956,7 @@
       "license": "MPL-2.0 License",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14363,6 +14978,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -14403,6 +15019,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -14427,6 +15044,7 @@
       "license": "AGPL-3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14449,6 +15067,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14497,6 +15116,7 @@
       "license": "BSD 3-Clause Revised License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14524,6 +15144,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14547,6 +15168,7 @@
       "license": "Apache 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14572,6 +15194,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14593,6 +15216,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14614,6 +15238,7 @@
       "license": "GNU Affero General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14635,6 +15260,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -14667,6 +15293,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14688,6 +15315,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14709,6 +15337,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14730,6 +15359,7 @@
       "license": "LGPL-3.0-only license",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14751,6 +15381,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -14802,6 +15433,7 @@
       "license": "GNU Lesser General Public License v3.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14848,6 +15480,7 @@
       "license": "GNU Lesser General Public License v3.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14899,6 +15532,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14942,6 +15576,7 @@
       "license": "GNU Lesser General Public License v2.1",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14963,6 +15598,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -14984,6 +15620,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15011,6 +15648,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -15036,6 +15674,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15057,6 +15696,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15078,6 +15718,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15100,6 +15741,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15122,6 +15764,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15143,6 +15786,7 @@
       "license": "GNU Lesser General Public License v2.1",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15164,6 +15808,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15185,6 +15830,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15207,6 +15853,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15228,6 +15875,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15250,6 +15898,7 @@
       "license": "GPL-3.0 License",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15271,6 +15920,7 @@
       "license": "Mozilla Public License 2.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15292,6 +15942,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15315,6 +15966,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15336,6 +15988,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15357,6 +16010,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15378,6 +16032,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15433,6 +16088,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15454,6 +16110,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15475,6 +16132,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -15496,6 +16154,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -15520,6 +16179,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15541,6 +16201,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15562,6 +16223,7 @@
       "license": "GPL-3.0-only (original text)",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15583,6 +16245,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15605,6 +16268,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15626,6 +16290,7 @@
       "license": "GPL-3",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15647,6 +16312,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15682,6 +16348,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15709,6 +16376,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15731,6 +16399,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15752,6 +16421,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15773,6 +16443,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15794,6 +16465,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15818,6 +16490,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -15852,6 +16525,7 @@
       "license": "GPL-2.0 License",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15873,6 +16547,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15894,6 +16569,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -15915,6 +16591,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -15939,6 +16616,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -15975,6 +16653,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -15996,6 +16675,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16023,6 +16703,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16044,6 +16725,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16065,6 +16747,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16086,6 +16769,7 @@
       "license": "BSD-3-Clause (original text)",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16107,6 +16791,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16128,6 +16813,7 @@
       "license": "MIT Licence",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16149,6 +16835,7 @@
       "license": "Mozilla Public License 2.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16170,6 +16857,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16192,6 +16880,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16225,6 +16914,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16260,6 +16950,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16283,6 +16974,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16310,6 +17002,7 @@
       "license": "AGPL-3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16331,6 +17024,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary-free-tier",
+      "license_evidence": "upstream catalog",
       "free_tier": true,
       "deprecated": false,
       "categories": [
@@ -16368,6 +17062,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16390,6 +17085,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16414,6 +17110,7 @@
       "license": "Apache-2.0 license",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -16435,6 +17132,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16456,6 +17154,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -16477,6 +17176,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16498,6 +17198,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16519,6 +17220,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16540,6 +17242,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16561,6 +17264,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16582,6 +17286,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16604,6 +17309,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16625,6 +17331,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16646,6 +17353,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16667,6 +17375,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16688,6 +17397,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16709,6 +17419,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16733,6 +17444,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16770,6 +17482,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16804,6 +17517,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16826,6 +17540,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16847,6 +17562,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16873,6 +17589,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16894,6 +17611,7 @@
       "license": "GPL-3.0-only (original text)",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16915,6 +17633,7 @@
       "license": "BSL-1.0 (original text)",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -16937,6 +17656,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16967,6 +17687,7 @@
       "license": "Apache-2.0 License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -16988,6 +17709,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17009,6 +17731,7 @@
       "license": "GPL v3 or Perl Artistic License Version 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17030,6 +17753,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17052,6 +17776,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17073,6 +17798,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17097,6 +17823,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17118,6 +17845,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17139,6 +17867,7 @@
       "license": "GNU General Public License v2.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17160,6 +17889,7 @@
       "license": "AGPL-3.0 License",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17181,6 +17911,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17204,6 +17935,7 @@
       "license": "Eclipse Public License 2.0",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17226,6 +17958,7 @@
       "license": "GNU GPL",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17247,6 +17980,7 @@
       "license": "MIT / Apache 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17268,6 +18002,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17289,6 +18024,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17311,6 +18047,7 @@
       "license": "BSD 3-Clause \"New\" or \"Revised\" License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17332,6 +18069,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17356,6 +18094,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17377,6 +18116,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17408,6 +18148,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17431,6 +18172,7 @@
       "license": "Other",
       "license_status": "unverified",
       "license_class": "unverified",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17452,6 +18194,7 @@
       "license": "Apache License 2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17474,6 +18217,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17495,6 +18239,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17516,6 +18261,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17539,6 +18285,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17560,6 +18307,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17581,6 +18329,7 @@
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17610,6 +18359,7 @@
       "license": "GNU General Public License v3.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17633,6 +18383,7 @@
       "license": "Apache-2.0",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17654,6 +18405,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": true,
       "categories": [
@@ -17675,6 +18427,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17696,6 +18449,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17717,6 +18471,7 @@
       "license": "LGPL-3.0 License",
       "license_status": "foss",
       "license_class": "weak-copyleft",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -17738,6 +18493,7 @@
       "license": "MIT License",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "upstream catalog",
       "free_tier": false,
       "deprecated": false,
       "categories": [

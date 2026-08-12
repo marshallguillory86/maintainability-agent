@@ -141,6 +141,7 @@ VERIFIED_TIERS = {
     "pydocstyle": "baseline",   # Python docstring conventions
     # moderate: needs configuration, tuning, or noticeably more time
     "pylint": "moderate",
+    "mypy": "moderate",
     "flake8": "moderate",
     "eslint": "moderate",
     "cohesion": "moderate",
@@ -188,7 +189,8 @@ VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {
     "radon":       ("complexity", "metrics"),
     "ruff":        ("style", "complexity", "dead-code"),
     "jscpd":       ("duplication",),
-    "pylint":      ("structure", "style", "duplication", "complexity"),
+    "pylint":      ("structure", "style"),
+    "mypy":        ("types",),
     "flake8":      ("style", "complexity"),
     "vulture":     ("dead-code",),
     "eslint":      ("style", "complexity", "structure"),
@@ -199,6 +201,22 @@ VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {
     "multimetric": ("metrics", "complexity", "documentation"),
     "cloc": ("metrics", "documentation"),
     "wily":        ("metrics",),
+}
+
+# Licences the upstream snapshot could not classify, resolved here from the
+# installed distribution's own metadata. `unverified` is the honest default
+# for a licence nobody confirmed, but leaving a genuinely permissive tool
+# there hides it from every policy except the loosest -- so verifying beats
+# both guessing and shrugging.
+#
+# Each entry names the evidence, and each is recoverable by running the
+# command in the comment.
+VERIFIED_LICENSES: dict[str, tuple[str, str]] = {
+    # importlib.metadata License-Expression: MIT, plus a bundled LICENSE
+    # opening "Mypy (and mypyc) are licensed under the terms of the MIT
+    # license". Upstream records "Other" because GitHub's detector could
+    # not map the file.
+    "mypy": ("MIT", "License-Expression in the installed distribution"),
 }
 
 # Tools this project installed and ran that the source snapshot does not list.
@@ -275,8 +293,11 @@ def build(records: list[dict[str, Any]]) -> dict[str, Any]:
         tags = set(record.get("tags") or [])
         languages = sorted(tags & LANGUAGE_TAGS)
         concerns = sorted(tags - LANGUAGE_TAGS)
-        status, license_name = normalize_license(record.get("license"))
         slug = record["_slug"]
+        verified = VERIFIED_LICENSES.get(slug)
+        status, license_name = normalize_license(
+            verified[0] if verified else record.get("license")
+        )
 
         # A proprietary tool with a free or OSS plan is a different policy
         # question from one that is paid-only: some organizations permit the
@@ -294,6 +315,7 @@ def build(records: list[dict[str, Any]]) -> dict[str, Any]:
             "license": license_name,
             "license_status": status,
             "license_class": license_class,
+            "license_evidence": verified[1] if verified else "upstream catalog",
             "free_tier": free_tier,
             "deprecated": bool(record.get("deprecated")),
             "categories": sorted(record.get("categories") or []),

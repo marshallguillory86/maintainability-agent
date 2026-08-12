@@ -185,9 +185,15 @@ def aspect_scores(
     of which keys had to be present.
     """
     summary = evidence.summary
+    # Same shape as the rollup: bind the value, then test it. Testing
+    # `normalized[dimension]` and then indexing again reads as one
+    # operation and is two, which is how a None reaches `_curve`.
+    def curved(dimension: str) -> float | None:
+        pressure = normalized[dimension]
+        return None if pressure is None else _curve(pressure)
+
     scores: dict[str, float | None] = {
-        name: (None if normalized[dimension] is None else _curve(normalized[dimension]))
-        for name, dimension in CALIBRATED_ASPECTS.items()
+        name: curved(dimension) for name, dimension in CALIBRATED_ASPECTS.items()
     }
     # declaration_size reads the *production* pressure. Its only rubric
     # consumers are analyzability and testability, which describe the

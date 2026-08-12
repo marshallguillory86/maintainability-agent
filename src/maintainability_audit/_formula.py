@@ -236,9 +236,16 @@ def rollup(
     }
     if not applicable:
         raise ValueError("a category must retain at least one applicable aspect")
+    # Bound once rather than looked up twice: `scores.get(name) is None`
+    # tells a reader nothing about `scores[name]`, and it told the type
+    # checker nothing either -- it flagged `None * float` here, which is
+    # unreachable but only because of an invariant the code never states.
+    def priced(name: str) -> float:
+        value = scores.get(name)
+        return unknown_price if value is None else value
+
     return sum(
-        (unknown_price if scores.get(name) is None else scores[name]) * weight
-        for name, weight in applicable.items()
+        priced(name) * weight for name, weight in applicable.items()
     ) / sum(applicable.values())
 
 

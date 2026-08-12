@@ -200,3 +200,35 @@ def test_no_markdown_table_is_split_by_prose() -> None:
             real.append(entry)
 
     assert not real, "markdown table rows orphaned from their header:\n" + "\n".join(real)
+
+
+SELF_AUDIT_DISTANCE_CLAIMS = (
+    "one commit behind",
+    "exactly one commit",
+    "always current",
+    "the latest report",
+)
+
+
+def test_the_self_audit_claims_provenance_not_distance() -> None:
+    """The stamp says which commit; it must not promise how far.
+
+    "Always exactly one commit behind" was true only on an unmerged
+    feature branch. Every merge strategy breaks it — a merge commit puts
+    the stamp two or more back, a squash makes it not an ancestor, a
+    rebase rewrites the hash — and defending it meant regenerating the
+    report whenever anything landed on top, which is a loop with no
+    termination. It was regenerated three times in one session for
+    exactly that reason.
+
+    A stamped commit is a provenance record. Any claim about distance
+    from HEAD is unmaintainable, so none may be made.
+    """
+    offenders = []
+    for name in ("README.md", "docs/self-audit.md"):
+        text = (ROOT / name).read_text(encoding="utf-8").lower()
+        offenders += [f"{name}: {claim!r}" for claim in SELF_AUDIT_DISTANCE_CLAIMS if claim in text]
+
+    assert not offenders, (
+        "the self-audit must claim provenance, not distance from HEAD:\n" + "\n".join(offenders)
+    )

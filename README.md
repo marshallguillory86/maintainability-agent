@@ -48,7 +48,7 @@ See [docs/philosophy.md](docs/philosophy.md) for the longer version, and [docs/p
 
 ## Self-Audit
 
-This repo eats its own dogfood — the tool runs against this codebase in CI, and a report is checked in at [docs/self-audit.md](docs/self-audit.md). The checked-in copy is stamped with the commit it was generated atop and is **always exactly one commit behind** the HEAD it ships with (a self-report cannot contain its own commit); an audit rightly objected to it being called "the latest report", so it is not called that anymore:
+This repo eats its own dogfood — the tool runs against this codebase in CI, and a report is checked in at [docs/self-audit.md](docs/self-audit.md). The checked-in copy is **stamped with the exact source commit it was generated against** — a provenance record, not a promise that it reflects the current HEAD. It deliberately makes no claim about distance: a self-report cannot contain its own commit, and no merge strategy preserves a fixed gap. Check the stamp against the commit you care about:
 
 | Metric | Value |
 |---|---:|

@@ -1,9 +1,16 @@
 <!--
 Generated from the tree at commit 8027c9c343b021a19b680b20366a11f4cc21ebba plus the staged release
-changes; the commit that ships this file postdates that tree by
-construction, so this report is always exactly one commit behind the
-HEAD it travels with. That is a property of checking in a self-report,
-not a promise of currency — regenerate for the current tree with:
+changes. This is a **provenance record, not a promise of currency**: it
+states the exact source commit it was generated against, and says
+nothing about how far that is from the current HEAD.
+
+An earlier version promised a fixed distance from HEAD — that it trailed
+by a single commit. That could not survive a merge — a merge commit puts it two or
+more behind, a squash makes the stamped commit not an ancestor at all,
+and a rebase rewrites the hash entirely. Worse, defending the claim
+meant regenerating the report every time anything landed on top of it,
+which is a loop with no end. Compare the stamp against the commit you
+care about instead. Regenerate for the current tree with:
 
     maintainability-agent --config maintainability-agent.json \
         --output /tmp/self-audit.md \

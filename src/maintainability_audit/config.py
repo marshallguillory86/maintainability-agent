@@ -87,12 +87,65 @@ DEFAULT_CONFIG: dict[str, Any] = {
     },
     "expected_files": ["README.md"],
     "expected_commands": {"test": [], "lint": []},
+    # Shipped patterns are bug *classes*, each one earned by a defect that
+    # actually happened rather than invented from a checklist. The first
+    # three come from this project's own failures, which is the only
+    # evidence any of them has and is better than none.
     "risk_patterns": [
         {
             "name": "debt-marker",
             "pattern": r"\b(TODO|FIXME|HACK)\b",
             "extensions": [".py", ".js", ".jsx", ".ts", ".tsx", ".html", ".css", ".md"],
-        }
+        },
+        {
+            # Absence read as a value. `counts.get("x", 0)` cannot
+            # distinguish "measured none" from "never measured", and the
+            # zero then flows into a rate as though it were evidence.
+            #
+            # This project shipped that defect at least four times: a
+            # repository with one function scored 5.0/A+ because six
+            # detectors found nothing; analyzer coverage derived from
+            # emitted output made a clean scan read as unexamined; a
+            # metric adapter returning no measurements reported success.
+            # Every instance was written by someone who knew the rule.
+            #
+            # Deliberately narrow. `counts.get(k, 0) + 1` is an accumulator
+            # and not this defect, and a pattern that flags it produces the
+            # nit loop this tool exists to avoid. Matching only a default
+            # that is *returned or assigned* dropped the finding count on
+            # this repository from 22 to a handful, nearly all real.
+            #
+            # Still a review prompt rather than a defect assertion, and one
+            # of the survivors on this repository is a false positive: a
+            # zero used immediately as a skip sentinel. That is the
+            # intended precision profile -- the finding says "look here",
+            # and looking is cheap.
+            "name": "absence-as-zero",
+            "pattern": r"(?:return|=)\s*[\w.\[\]\"\']+\.get\([^)]+,\s*0\s*\)\s*$",
+            "extensions": [".py"],
+        },
+        {
+            # An assertion that cannot fail. A test built against a path
+            # that did not exist compared two identical empty results and
+            # passed, which is how a gap survived the test written to
+            # catch it. A test that cannot fail is worse than no test: it
+            # buys confidence it has not earned.
+            "name": "vacuous-assertion",
+            "pattern": r"assert\s+(True|1)\s*(?:,|$)|assert\s+(\w+)\s*==\s*\2\b",
+            "extensions": [".py"],
+        },
+        {
+            # Output cut without saying so. A reader who believes a
+            # truncated list is complete draws conclusions from a
+            # fragment. Slicing is fine; silent slicing is not.
+            #
+            # Only a literal cut on a *returned* collection. Slicing into a
+            # local, or with a named limit, is ordinary; silently returning
+            # a shortened result to a caller who cannot tell is not.
+            "name": "silent-truncation",
+            "pattern": r"return\s+[\w.\[\]()]+\[:\s*\d{2,}\s*\]\s*$",
+            "extensions": [".py"],
+        },
     ],
     "instruction_pack": {
         "project_name": "this repository",

@@ -6,6 +6,14 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Added
 
+- **Three new default risk patterns, each earned by a defect this project actually shipped.**
+  `absence-as-zero` catches a measurement default that conflates "measured none" with
+  "never measured" — the bug behind a one-function repository scoring 5.0/A+, and behind
+  a clean scan reading as unexamined. `vacuous-assertion` catches assertions that cannot
+  fail, after one let a gap survive the test written to catch it. `silent-truncation`
+  catches a returned collection cut without saying so. They are review prompts, not defect
+  assertions: narrowed until they stay quiet on accumulators and named limits.
+
 - **`--analyzers` runs external quality tools and reports coverage.** Nine adapters ship
   working: lizard, radon, ruff, vulture, interrogate, jscpd, complexipy, multimetric
   and pydocstyle. Every report states which

@@ -225,3 +225,58 @@ def test_scoring_grade_boundaries() -> None:
     assert grade_from_score(3.2) == "C"
     assert grade_from_score(2.5) == "D"
     assert grade_from_score(1.9) == "F"
+
+
+def test_shipped_risk_patterns_catch_the_defects_this_project_actually_made() -> None:
+    """Each shipped pattern is a bug class that really happened here.
+
+    Absence-as-value cost this project four separate defects — a
+    one-function repository scoring 5.0/A+, coverage derived from emitted
+    output turning a clean scan into an unexamined one, an adapter
+    returning nothing and reporting success. A vacuous assertion let a
+    gap survive the test written to catch it. Encoding them here is what
+    makes the lesson available to users of the tool rather than only to
+    whoever wrote the fix.
+    """
+    import re
+
+    from maintainability_audit.config import load_config
+
+    patterns = {p["name"]: re.compile(p["pattern"]) for p in load_config(None)["risk_patterns"]}
+
+    real_defects = [
+        ("absence-as-zero", 'count = summary.get("dead_code", 0)'),
+        ("absence-as-zero", '    return counts.get("files", 0)'),
+        ("vacuous-assertion", "assert True"),
+        ("vacuous-assertion", "assert excluded == excluded"),
+        ("silent-truncation", "    return findings[:40]"),
+        ("debt-marker", "# TODO: fix this"),
+    ]
+    for name, line in real_defects:
+        assert patterns[name].search(line), f"{name} missed a defect it exists for: {line}"
+
+
+def test_shipped_risk_patterns_stay_quiet_on_ordinary_code() -> None:
+    """Precision matters more than recall for a review prompt.
+
+    A pattern that fires on accumulators produces the nit loop this tool
+    exists to avoid. The first draft of `absence-as-zero` flagged 22
+    lines here, most of them `counter.get(k, 0) + 1`; narrowing it to a
+    returned or assigned default cut that to a handful.
+    """
+    import re
+
+    from maintainability_audit.config import load_config
+
+    patterns = {p["name"]: re.compile(p["pattern"]) for p in load_config(None)["risk_patterns"]}
+
+    ordinary = [
+        "touches[path] = touches.get(path, 0) + 1",   # accumulator
+        "value = data.get('k', None)",                # a real default
+        "assert result == expected",                  # a real assertion
+        "return findings[:limit]",                    # a named limit
+        "items = everything[:20]",                    # a local slice
+    ]
+    for line in ordinary:
+        fired = [name for name, pattern in patterns.items() if pattern.search(line)]
+        assert not fired, f"{fired} fired on ordinary code: {line}"

@@ -16,7 +16,8 @@ Dependencies point downward only. No cycles.
   presentation   renderers, prompts, sarif, baseline,       reads the report dict
                  _evidence_view (shared phrasing)
                      |
-  assembly       report                                     builds the report, calls the scorer
+  assembly       report, _analysis                          builds the report, calls the scorer
+                                                             _analysis runs the analyzer pool
                      |
         +------------+------------+
         |                         |
@@ -40,7 +41,7 @@ Dependencies point downward only. No cycles.
 | **parsing** | Reading files once, extracting declarations, complexity, ranges, tokens | foundations |
 | **scanners** | Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history, and — via `_adapters` — whatever the external analyzers report | foundations, parsing, `_runner` |
 | **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
-| **assembly** | Running the scan, assembling the report dict, invoking the scorer once | anything below |
+| **assembly** | Running the scan, running the analyzer pool (`_analysis`), assembling the report dict, invoking the scorer once | anything below |
 | **presentation** | Markdown, PR comment, SARIF, baseline, remediation prompt, and `_evidence_view` — the single place the estimate/range/evidence/verified-grade wording is decided | foundations, the report dict |
 | **entry** | Argument parsing, transport, output routing, exit codes | anything below |
 

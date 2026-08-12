@@ -13,6 +13,7 @@ from dataclasses import asdict
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from ._analysis import analyze, coverage_document
 from ._metrics_types import FileMetric, FunctionMetric
 from .deadcode import dead_declarations
 from .declarations import DECLARATION_SUFFIXES
@@ -118,9 +119,21 @@ def build_report(
     only_paths: set[str] | None = None,
     changed_revspec: str | None = None,
     external_findings: list[dict[str, Any]] | None = None,
+    run_analyzers: bool = False,
 ) -> dict[str, Any]:
+    """Assemble one report.
+
+    ``run_analyzers`` invokes the external analyzer pool (ADR 006). Off by
+    default while adapters are still being written: turning it on changes
+    what every existing caller measures, and a coverage section listing
+    five unimplemented adapters is worse than none. The CLI exposes it as
+    ``--analyzers``.
+    """
     # One index for the whole audit: each file is read once and parsed
     # once, rather than once per scanner.
+    analyzer_coverage = (
+        coverage_document(analyze(root, config)) if run_analyzers else None
+    )
     source = SourceIndex()
     files, file_metrics, function_metrics = collect_metrics(root, config, only_paths, source)
     thresholds = config["thresholds"]
@@ -158,6 +171,9 @@ def build_report(
         "git_status_short": git_status,
         "mode": "changed-only" if only_paths is not None else "full",
         "changed_revspec": changed_revspec,
+        # Beside the score, never behind it: two reports with different
+        # analyzer coverage are not comparable (P8).
+        "analyzer_coverage": analyzer_coverage,
         "summary": summary,
         "hard_gate_failures": gates,
         "missing_files": missing_files,

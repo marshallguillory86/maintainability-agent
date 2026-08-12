@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 import time
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -110,16 +111,36 @@ class Probe:
         return self._answers[slug]
 
 
+def locate(executable: str) -> str | None:
+    """Find a tool, looking in the agent's own environment first.
+
+    Python analyzers install alongside the agent, so a package in a
+    virtualenv has lizard and radon in the same ``bin`` directory as the
+    interpreter running this code — and that directory is usually *not*
+    on the caller's ``PATH``. Searching it first is what makes the tools
+    that ship with the package actually reachable; without it a normal
+    `maintainability-audit --analyzers` finds almost nothing and reports
+    an honest but useless "not installed" for every one of them.
+    """
+    own_bin = Path(sys.executable).parent
+    candidate = own_bin / executable
+    if candidate.is_file():
+        return str(candidate)
+    return shutil.which(executable)
+
+
 def _probe(slug: str, argv: tuple[str, ...]) -> ToolResult:
     executable = argv[0]
-    if shutil.which(executable) is None:
+    resolved = locate(executable)
+    if resolved is None:
         return ToolResult(
             slug=slug,
             outcome=Outcome.NOT_INSTALLED,
-            detail=f"{executable} is not on PATH",
+            detail=f"{executable} is not installed or not on PATH",
         )
 
-    result = run(slug, Invocation(argv=argv), timeout_seconds=PROBE_TIMEOUT_SECONDS)
+    result = run(slug, Invocation(argv=(resolved, *argv[1:])),
+                 timeout_seconds=PROBE_TIMEOUT_SECONDS)
     if result.outcome is not Outcome.RAN:
         return result
 
@@ -177,9 +198,13 @@ def run(
 ) -> ToolResult:
     """Execute one tool. Never raises; every failure becomes an outcome."""
     started = time.monotonic()
+    argv = list(invocation.argv)
+    resolved = locate(argv[0])
+    if resolved:
+        argv[0] = resolved
     try:
         completed = subprocess.run(  # noqa: S603 - argv is built by adapters, never a shell string
-            list(invocation.argv),
+            argv,
             cwd=str(cwd) if cwd else None,
             capture_output=True,
             text=True,

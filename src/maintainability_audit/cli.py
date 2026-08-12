@@ -30,6 +30,12 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--baseline", help="Existing baseline JSON. With --fail-on-new, only new findings fail.")
     parser.add_argument("--write-baseline", help="Write current findings to a baseline JSON file.")
     parser.add_argument("--fail-on-new", action="store_true", help="Fail only when findings are not in --baseline.")
+    parser.add_argument(
+        "--analyzers", action="store_true",
+        help="Run the configured external analyzer pool and report its coverage "
+             "(see docs/analyzer-pool.md). Off by default while adapters are "
+             "still being written.",
+    )
     parser.add_argument("--fail-on-gate", action="store_true", help="Exit 1 when hard gates fail.")
     parser.add_argument("--init-agent-standards", action="store_true", help="Write model/tool-specific instruction files and exit.")
     parser.add_argument(
@@ -82,7 +88,10 @@ def main(argv: list[str] | None = None) -> int:
 
     only_paths = changed_paths(root, args.changed_only) if args.changed_only else None
     external_findings = read_sarif_inputs(args.sarif_input)
-    report = build_report(root, config, only_paths=only_paths, changed_revspec=args.changed_only, external_findings=external_findings)
+    report = build_report(root, config, only_paths=only_paths,
+                          changed_revspec=args.changed_only,
+                          external_findings=external_findings,
+                          run_analyzers=args.analyzers)
     rendered = json.dumps(report, indent=2, sort_keys=True) if args.format == "json" else render_markdown(report)
     write_outputs(args, report, rendered)
     return audit_exit_code(args, report)

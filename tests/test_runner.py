@@ -162,3 +162,38 @@ def test_running_a_real_tool_end_to_end() -> None:
 
     assert result.outcome is Outcome.RAN
     assert "Python" in (result.version or "")
+
+
+def test_a_tool_beside_the_interpreter_is_found_without_being_on_path(
+    tmp_path, monkeypatch
+) -> None:
+    """Python analyzers install alongside the agent, not on the caller's PATH.
+
+    A package in a virtualenv has lizard and radon in the same `bin`
+    directory as the interpreter running it, and that directory is
+    usually absent from the shell's PATH. Without this, a normal
+    `--analyzers` run finds almost nothing and reports an honest but
+    useless "not installed" for every tool that shipped with the package.
+    """
+    from maintainability_audit import _runner
+
+    fake_bin = tmp_path / "venv" / "bin"
+    fake_bin.mkdir(parents=True)
+    _script(fake_bin, "sibling", 'echo "sibling 2.0"')
+    monkeypatch.setattr(_runner.sys, "executable", str(fake_bin / "python"))
+    monkeypatch.setenv("PATH", "/nonexistent")
+
+    result = Probe().check("sibling", ("sibling", "--version"))
+
+    assert result.usable
+    assert result.version == "sibling 2.0"
+
+
+def test_path_is_still_searched_when_the_tool_is_not_a_sibling(on_path) -> None:
+    """The agent's own environment is preferred, not exclusive.
+
+    Node and ecosystem binaries live elsewhere and must still be found.
+    """
+    _script(on_path, "elsewhere", 'echo "elsewhere 1.0"')
+
+    assert Probe().check("elsewhere", ("elsewhere", "--version")).usable

@@ -35,7 +35,10 @@ PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens"}
 # the looking (ADR 006).
 SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "history", "_adapters"}
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive", "_verification"}
-ASSEMBLY = {"report"}
+# `_analysis` orchestrates: it calls the catalog, the runner and the
+# adapters and hands `report` a coverage document. That makes it assembly,
+# not a scanner — it composes rather than measures.
+ASSEMBLY = {"report", "_analysis"}
 PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view", "_identity"}
 ENTRY = {"cli", "__main__", "mcp_server"}
 BOUNDARY = {"evidence"}

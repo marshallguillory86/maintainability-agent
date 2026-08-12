@@ -174,7 +174,7 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.07178008591235999,
+    "declarations": 0.05160790744283502,
     "duplication": 0.25
    },
    "analyzer_coverage": {
@@ -366,7 +366,7 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.020992137346927765,
+    "declarations": 0.014414414414414415,
     "duplication": 0.5
    },
    "analyzer_coverage": {
@@ -558,7 +558,7 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.0033993201359728054,
+    "declarations": 0.006798640271945611,
     "duplication": 1.0
    },
    "analyzer_coverage": {
@@ -607,7 +607,7 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.0085455223004312,
+    "declarations": 0.007137883008356546,
     "duplication": 0.0
    },
    "analyzer_coverage": {
@@ -752,7 +752,7 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.034839901792793025,
+    "declarations": 0.040171606864274574,
     "duplication": 0.0
    },
    "analyzer_coverage": {
@@ -897,7 +897,7 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.03032742738010193,
+    "declarations": 0.02683690280065898,
     "duplication": 0.75
    },
    "analyzer_coverage": {
@@ -946,7 +946,7 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.01896056063016172,
+    "declarations": 0.017513820263196516,
     "duplication": 1.0
    },
    "analyzer_coverage": {
@@ -1041,7 +1041,7 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.013082723754469078,
+    "declarations": 0.01450601150026137,
     "duplication": 0.0
    },
    "analyzer_coverage": {
@@ -1186,7 +1186,7 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.025305063430267744,
+    "declarations": 0.021519543258673692,
     "duplication": 0.75
    },
    "analyzer_coverage": {
@@ -1427,7 +1427,7 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.006455307452151487,
+    "declarations": 0.007014388489208633,
     "duplication": 0.5
    },
    "analyzer_coverage": {
@@ -1668,7 +1668,7 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.05174469080032136,
+    "declarations": 0.038688768103710205,
     "duplication": 1.0
    },
    "analyzer_coverage": {
@@ -1862,7 +1862,7 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.08048340777348113,
+    "declarations": 0.08292771963981505,
     "duplication": 0.0
    },
    "analyzer_coverage": {
@@ -1911,7 +1911,7 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.06393763887019106,
+    "declarations": 0.07092921642877949,
     "duplication": 0.0
    },
    "analyzer_coverage": {

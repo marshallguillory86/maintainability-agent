@@ -144,87 +144,75 @@ def test_population_pressure_is_a_mean_not_a_worst_case(thresholds: dict) -> Non
     assert pressure > 0, "and must not vanish either"
 
 
-def test_analyzer_pressures_match_the_scorers_shape(thresholds: dict) -> None:
-    """The same dimension names, so the two sources are comparable.
+def test_analyzer_pressures_are_a_drop_in_for_the_built_in_ones(thresholds: dict) -> None:
+    """Same formula, not merely the same key names.
 
-    That comparison is the point of the bridge: replacing the built-in
-    detectors with external tools moves every corpus score, and the size
-    of that move has to be measured rather than guessed. On this
-    repository the analyzers report roughly four times the declaration
-    pressure the built-in detector does.
+    The first version returned a mean band pressure while the built-in
+    path returns a weighted rate of threshold breaches. Two formulas
+    under one name, compared across forty repositories, and the
+    difference read as tool disagreement — when on a file where all three
+    could be checked, the built-in detector, lizard and eslint reported
+    cyclomatic complexity 11, 11 and 11.
     """
     from maintainability_audit._metrics_types import Measurement
-    from maintainability_audit._pressures import ANALYZER_DIMENSIONS, analyzer_pressures
+    from maintainability_audit._pressures import (
+        ANALYZER_DIMENSIONS,
+        analyzer_pressures,
+        dimension_pressures,
+    )
+    from maintainability_audit.evidence import Measured, SummaryEvidence
 
-    # Both concepts the `declarations` dimension is composed from. A
-    # partial set is deliberately unmeasured — see the next test.
+    # Four declarations: one above max_complexity, one between warn and
+    # max, two clean. The built-in path is handed the same counts.
+    values = [thresholds["max_complexity"] + 5, thresholds["warn_complexity"] + 1, 1, 1]
     measurements = [
-        Measurement(concept=concept, unit=f"a.py::f{i}", value=float(v),
-                    tool=tool, path="a.py")
-        for concept, tool in (("cyclomatic_complexity", "lizard"),
-                              ("cognitive_complexity", "complexipy"))
-        for i, v in enumerate([1, 2, 30, 40])
-    ]
-    pressures = analyzer_pressures(measurements, thresholds)
-
-    assert set(pressures) == set(ANALYZER_DIMENSIONS)
-    assert pressures["declarations"] is not None
-    assert pressures["duplication"] is None, "no duplication reading is unmeasured, not zero"
-
-
-def test_a_partial_concept_set_is_unmeasured_rather_than_averaged(thresholds: dict) -> None:
-    """The flaw the corpus run exposed.
-
-    `declarations` is composed from cyclomatic *and* cognitive complexity.
-    The first version averaged whichever had data, so a Python repository
-    used both while a TypeScript one used lizard alone — complexipy and
-    radon being Python-only — and the two numbers were compared as if
-    they meant the same thing. Median ratio against the built-in detector
-    came out 0.88x on Python and 0.23x on TypeScript, a split entirely
-    explained by which tools speak which language rather than by any
-    property of the code.
-    """
-    from maintainability_audit._metrics_types import Measurement
-    from maintainability_audit._pressures import analyzer_pressures
-
-    only_one = [
         Measurement(concept="cyclomatic_complexity", unit=f"a.py::f{i}", value=float(v),
                     tool="lizard", path="a.py")
-        for i, v in enumerate([1, 2, 30, 40])
+        for i, v in enumerate(values)
     ]
+    fields = dict.fromkeys(SummaryEvidence.__dataclass_fields__, Measured(0, "t"))
+    fields.update(
+        declarations_scanned=Measured(4, "t"),
+        function_failures=Measured(1, "t"),
+        function_warnings=Measured(1, "t"),
+    )
 
-    assert analyzer_pressures(only_one, thresholds)["declarations"] is None
+    from_analyzers = analyzer_pressures(measurements, thresholds)["declarations"]
+    from_builtin = dimension_pressures(SummaryEvidence(**fields))["declarations"]
+
+    assert from_analyzers == pytest.approx(from_builtin), (
+        "identical breach counts over an identical population must give an "
+        "identical pressure, or the two sources are not comparable"
+    )
+    assert set(ANALYZER_DIMENSIONS) <= set(dimension_pressures(SummaryEvidence(**fields)))
 
 
-def test_a_dimension_nothing_measured_is_unmeasured_not_zero(thresholds: dict) -> None:
+def test_a_dimension_no_analyzer_measured_is_unmeasured_not_zero(thresholds: dict) -> None:
     """The defect this whole project exists to remove, one layer out."""
     from maintainability_audit._pressures import analyzer_pressures
 
-    assert all(value is None for value in analyzer_pressures([], thresholds).values())
+    assert all(v is None for v in analyzer_pressures([], thresholds).values())
 
 
-def test_a_concept_mapped_without_a_band_fails_loudly(thresholds: dict, monkeypatch) -> None:
-    """A wiring error must not look like a measurement gap.
+def test_the_rubric_owns_the_threshold_not_the_tool(thresholds: dict) -> None:
+    """ADR 008's seam: a tool contributes numbers, the rubric decides meaning.
 
-    The first version skipped an unbanded concept silently, so jscpd's
-    duplication reading arrived, found no band, and was reported
-    unmeasured — a measured value turned into an absence by a missing
-    table entry.
+    The same measurements under a stricter rubric must produce more
+    pressure. If they do not, a threshold is coming from somewhere other
+    than the configuration.
     """
-    from maintainability_audit import _pressures
+    from maintainability_audit._metrics_types import Measurement
+    from maintainability_audit._pressures import analyzer_pressures
 
-    monkeypatch.setitem(_pressures.ANALYZER_DIMENSIONS, "declarations", ("not_a_concept",))
-    with pytest.raises(KeyError, match="no band"):
-        _pressures.analyzer_pressures([], thresholds)
+    measurements = [
+        Measurement(concept="cyclomatic_complexity", unit=f"a.py::f{i}", value=float(v),
+                    tool="lizard", path="a.py")
+        for i, v in enumerate([3, 8, 12, 20])
+    ]
+    lenient = analyzer_pressures(measurements, {**thresholds, "warn_complexity": 30,
+                                                "max_complexity": 50})["declarations"]
+    strict = analyzer_pressures(measurements, {**thresholds, "warn_complexity": 2,
+                                               "max_complexity": 4})["declarations"]
 
-
-def test_every_analyzer_dimension_names_a_real_scoring_dimension() -> None:
-    """A mapping to a dimension the scorer does not read does nothing."""
-    from maintainability_audit._pressures import ANALYZER_DIMENSIONS, dimension_pressures
-    from maintainability_audit.evidence import Measured, SummaryEvidence
-
-    fields = {f: Measured(1, "t") for f in SummaryEvidence.__dataclass_fields__}
-    scorer_dimensions = set(dimension_pressures(SummaryEvidence(**fields)))
-
-    unknown = set(ANALYZER_DIMENSIONS) - scorer_dimensions
-    assert not unknown, f"{sorted(unknown)} are not dimensions the scorer reads"
+    assert lenient == 0.0
+    assert strict > lenient

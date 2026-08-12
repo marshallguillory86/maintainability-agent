@@ -24,10 +24,8 @@ no default to forget to guard.
 from __future__ import annotations
 
 from collections import defaultdict
-from statistics import fmean
 from typing import Any
 
-from ._bands import CONCEPTS, population_pressure
 from ._calibration import DIMENSION_REFERENCES, WARN_WEIGHT
 from ._metrics_types import Measurement
 from .evidence import Measured, SummaryEvidence
@@ -162,73 +160,50 @@ def _relative(value: float, reference: float) -> float:
     return value / reference
 
 
-# Which analyzer concepts speak to which scoring dimension, and through
-# which band. Only two dimensions have an analyzer source today:
-# `file_size` needs per-file line counts that no permissively-licensed
-# tool in the pool reports, and `risk` and `gates` are configured policy
-# with no external equivalent. Stating the gap beats implying coverage.
-ANALYZER_DIMENSIONS: dict[str, tuple[str, ...]] = {
-    "declarations": ("cyclomatic_complexity", "cognitive_complexity"),
-    "duplication": ("duplication",),
+# Which analyzer concept supplies each scoring dimension, and which
+# rubric thresholds decide a breach. Only dimensions a multi-language
+# tool can supply appear: `file_size` needs per-file line counts no
+# permissively-licensed tool in the pool reports, and `risk` and `gates`
+# are configured policy with no external equivalent.
+ANALYZER_DIMENSIONS: dict[str, tuple[str, str, str]] = {
+    # dimension -> (concept, warn threshold key, fail threshold key)
+    "declarations": ("cyclomatic_complexity", "warn_complexity", "max_complexity"),
 }
 
 
 def analyzer_pressures(
     measurements: list[Measurement], thresholds: dict[str, Any]
 ) -> dict[str, float | None]:
-    """The same dimensions the scorer reads, computed from analyzer output.
+    """The scorer's own dimensions, computed from analyzer measurements.
 
-    Deliberately the *same shape* as :func:`dimension_pressures` so the two
-    can be compared directly. That comparison is the point: replacing the
-    built-in detectors with external tools moves every corpus score, and
-    the size of that move is a measurement rather than a guess.
+    A **drop-in for** :func:`dimension_pressures`, not merely something
+    shaped like it. The first version returned a mean band pressure while
+    the built-in path returns a weighted rate of threshold breaches over
+    the population — two different formulas under one key name, which I
+    then compared across forty repositories and read the difference as
+    tool disagreement. It was not: on a file where all three could be
+    checked, the built-in detector, lizard and eslint reported cyclomatic
+    complexity 11, 11 and 11.
 
-    ``None`` for a dimension no analyzer spoke to — never zero. A
-    dimension nothing measured is unmeasured, and this is precisely the
-    module where treating that as clean would undo the whole project.
+    So this counts breaches the way the scorer does, applying the
+    **rubric's** thresholds to the analyzers' measurements. That is the
+    whole point of ADR 008's seam: a tool contributes numbers, the rubric
+    decides what they mean.
+
+    ``None`` for a dimension no analyzer measured — never zero.
     """
     by_concept: dict[str, list[float]] = defaultdict(list)
     for measurement in measurements:
         by_concept[measurement.concept].append(measurement.value)
 
-    # A concept mapped to a dimension but missing a band is a wiring
-    # error, not a measurement gap, and it must not look like one. The
-    # first version skipped it silently, so jscpd's duplication reading
-    # arrived, found no band, and was reported unmeasured -- a measured
-    # value turned into an absence by a missing table entry, which is the
-    # exact defect this project exists to remove.
-    unbanded = sorted(
-        concept
-        for concepts in ANALYZER_DIMENSIONS.values()
-        for concept in concepts
-        if concept not in CONCEPTS
-    )
-    if unbanded:
-        raise KeyError(
-            f"{unbanded} are mapped to a scoring dimension but have no band; "
-            "add them to _bands.CONCEPTS or remove the mapping"
-        )
-
     pressures: dict[str, float | None] = {}
-    for dimension, concepts in ANALYZER_DIMENSIONS.items():
-        present = [concept for concept in concepts if by_concept.get(concept)]
-        # Composed only from the full concept set, never a subset. The
-        # first version averaged whichever concepts happened to have data,
-        # so a Python repository averaged lizard's cyclomatic with
-        # complexipy's cognitive while a TypeScript one used lizard alone
-        # -- and the two numbers were then compared as though they meant
-        # the same thing. Across the corpus that produced a median ratio
-        # of 0.88x on Python and 0.23x on TypeScript, a split entirely
-        # explained by which tools speak which language.
-        #
-        # A partial set is unmeasured rather than averaged, for the same
-        # reason two reports with different analyzer coverage are not
-        # comparable (ADR 006). Widening coverage is what fixes it.
-        if len(present) != len(concepts):
+    for dimension, (concept, warn_key, fail_key) in ANALYZER_DIMENSIONS.items():
+        values = by_concept.get(concept)
+        if not values:
             pressures[dimension] = None
             continue
-        pressures[dimension] = fmean(
-            population_pressure(CONCEPTS[concept], by_concept[concept], thresholds)
-            for concept in concepts
-        )
+        warn, fail = float(thresholds[warn_key]), float(thresholds[fail_key])
+        failures = sum(1 for value in values if value > fail)
+        warnings = sum(1 for value in values if warn < value <= fail)
+        pressures[dimension] = _weighted_rate(failures, warnings, len(values))
     return pressures

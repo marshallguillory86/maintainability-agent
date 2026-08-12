@@ -76,6 +76,10 @@ CONCEPTS: dict[str, Concept] = {
         "documentation_coverage", "percent", "warn_doc_coverage", "min_doc_coverage",
         higher_is_worse=False,
     ),
+    "duplication": Concept(
+        "duplication", "percent of lines", "warn_duplication_percent",
+        "max_duplication_percent",
+    ),
     "maintainability_index": Concept(
         "maintainability_index", "index", "warn_maintainability_index",
         "min_maintainability_index", higher_is_worse=False,
@@ -88,6 +92,12 @@ CONCEPTS: dict[str, Concept] = {
 # and as defensible a starting point as any; the maintainability index bands
 # follow radon's published A–C ranks.
 FALLBACK_THRESHOLDS: dict[str, float] = {
+    # jscpd's own default gate is 5% duplicated lines, and 10% is the
+    # figure most teams that set one settle on. Both are conventions
+    # rather than measurements, which is why they are here and named
+    # rather than buried in the band function.
+    "warn_duplication_percent": 5.0,
+    "max_duplication_percent": 10.0,
     "warn_doc_coverage": 80.0,
     "min_doc_coverage": 50.0,
     "warn_maintainability_index": 20.0,

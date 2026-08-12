@@ -142,3 +142,61 @@ def test_population_pressure_is_a_mean_not_a_worst_case(thresholds: dict) -> Non
     assert pressure is not None
     assert pressure < 0.05, "a single outlier must not swamp the population"
     assert pressure > 0, "and must not vanish either"
+
+
+def test_analyzer_pressures_match_the_scorers_shape(thresholds: dict) -> None:
+    """The same dimension names, so the two sources are comparable.
+
+    That comparison is the point of the bridge: replacing the built-in
+    detectors with external tools moves every corpus score, and the size
+    of that move has to be measured rather than guessed. On this
+    repository the analyzers report roughly four times the declaration
+    pressure the built-in detector does.
+    """
+    from maintainability_audit._metrics_types import Measurement
+    from maintainability_audit._pressures import ANALYZER_DIMENSIONS, analyzer_pressures
+
+    measurements = [
+        Measurement(concept="cyclomatic_complexity", unit=f"a.py::f{i}", value=float(v),
+                    tool="lizard", path="a.py")
+        for i, v in enumerate([1, 2, 30, 40])
+    ]
+    pressures = analyzer_pressures(measurements, thresholds)
+
+    assert set(pressures) == set(ANALYZER_DIMENSIONS)
+    assert pressures["declarations"] is not None
+    assert pressures["duplication"] is None, "no duplication reading is unmeasured, not zero"
+
+
+def test_a_dimension_nothing_measured_is_unmeasured_not_zero(thresholds: dict) -> None:
+    """The defect this whole project exists to remove, one layer out."""
+    from maintainability_audit._pressures import analyzer_pressures
+
+    assert all(value is None for value in analyzer_pressures([], thresholds).values())
+
+
+def test_a_concept_mapped_without_a_band_fails_loudly(thresholds: dict, monkeypatch) -> None:
+    """A wiring error must not look like a measurement gap.
+
+    The first version skipped an unbanded concept silently, so jscpd's
+    duplication reading arrived, found no band, and was reported
+    unmeasured — a measured value turned into an absence by a missing
+    table entry.
+    """
+    from maintainability_audit import _pressures
+
+    monkeypatch.setitem(_pressures.ANALYZER_DIMENSIONS, "declarations", ("not_a_concept",))
+    with pytest.raises(KeyError, match="no band"):
+        _pressures.analyzer_pressures([], thresholds)
+
+
+def test_every_analyzer_dimension_names_a_real_scoring_dimension() -> None:
+    """A mapping to a dimension the scorer does not read does nothing."""
+    from maintainability_audit._pressures import ANALYZER_DIMENSIONS, dimension_pressures
+    from maintainability_audit.evidence import Measured, SummaryEvidence
+
+    fields = {f: Measured(1, "t") for f in SummaryEvidence.__dataclass_fields__}
+    scorer_dimensions = set(dimension_pressures(SummaryEvidence(**fields)))
+
+    unknown = set(ANALYZER_DIMENSIONS) - scorer_dimensions
+    assert not unknown, f"{sorted(unknown)} are not dimensions the scorer reads"

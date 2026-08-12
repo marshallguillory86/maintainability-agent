@@ -23,7 +23,13 @@ no default to forget to guard.
 """
 from __future__ import annotations
 
+from collections import defaultdict
+from statistics import fmean
+from typing import Any
+
+from ._bands import CONCEPTS, population_pressure
 from ._calibration import DIMENSION_REFERENCES, WARN_WEIGHT
+from ._metrics_types import Measurement
 from .evidence import Measured, SummaryEvidence
 
 
@@ -154,3 +160,61 @@ def _relative(value: float, reference: float) -> float:
     if reference <= 0:
         return 0.0
     return value / reference
+
+
+# Which analyzer concepts speak to which scoring dimension, and through
+# which band. Only two dimensions have an analyzer source today:
+# `file_size` needs per-file line counts that no permissively-licensed
+# tool in the pool reports, and `risk` and `gates` are configured policy
+# with no external equivalent. Stating the gap beats implying coverage.
+ANALYZER_DIMENSIONS: dict[str, tuple[str, ...]] = {
+    "declarations": ("cyclomatic_complexity", "cognitive_complexity"),
+    "duplication": ("duplication",),
+}
+
+
+def analyzer_pressures(
+    measurements: list[Measurement], thresholds: dict[str, Any]
+) -> dict[str, float | None]:
+    """The same dimensions the scorer reads, computed from analyzer output.
+
+    Deliberately the *same shape* as :func:`dimension_pressures` so the two
+    can be compared directly. That comparison is the point: replacing the
+    built-in detectors with external tools moves every corpus score, and
+    the size of that move is a measurement rather than a guess.
+
+    ``None`` for a dimension no analyzer spoke to — never zero. A
+    dimension nothing measured is unmeasured, and this is precisely the
+    module where treating that as clean would undo the whole project.
+    """
+    by_concept: dict[str, list[float]] = defaultdict(list)
+    for measurement in measurements:
+        by_concept[measurement.concept].append(measurement.value)
+
+    # A concept mapped to a dimension but missing a band is a wiring
+    # error, not a measurement gap, and it must not look like one. The
+    # first version skipped it silently, so jscpd's duplication reading
+    # arrived, found no band, and was reported unmeasured -- a measured
+    # value turned into an absence by a missing table entry, which is the
+    # exact defect this project exists to remove.
+    unbanded = sorted(
+        concept
+        for concepts in ANALYZER_DIMENSIONS.values()
+        for concept in concepts
+        if concept not in CONCEPTS
+    )
+    if unbanded:
+        raise KeyError(
+            f"{unbanded} are mapped to a scoring dimension but have no band; "
+            "add them to _bands.CONCEPTS or remove the mapping"
+        )
+
+    pressures: dict[str, float | None] = {}
+    for dimension, concepts in ANALYZER_DIMENSIONS.items():
+        parts = [
+            population_pressure(CONCEPTS[concept], by_concept[concept], thresholds)
+            for concept in concepts
+            if by_concept.get(concept)
+        ]
+        pressures[dimension] = fmean(parts) if parts else None
+    return pressures

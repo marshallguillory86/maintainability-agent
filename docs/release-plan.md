@@ -81,6 +81,10 @@ Implements [ADR 008](adr-008-translation-and-decision.md)'s normalization half. 
 
 **Order within this phase is forced.** 3.1–3.3 stand alone and are done. 3.4 cannot precede 3.5/3.6 for the reason in its row. Until then, tool disagreement is reported beside the score and explicitly marked as not affecting it.
 
+**Measured, not guessed: the swap is roughly 4x on declaration pressure.** `_pressures.analyzer_pressures` computes the scorer's own dimensions from analyzer output, in the same shape, so the two sources can be compared directly. On this repository the built-in detector reports 0.0041 declaration pressure and the analyzers report 0.0162 — external tools see about four times the complexity the homegrown ones do. Duplication agrees at zero. `file_size`, `risk` and `gates` have no analyzer source at all: no permissively-licensed tool in the pool reports per-file line counts, and the other two are configured policy.
+
+That ratio is the recalibration input. Whatever the corpus says, the constant moves by roughly this much, and the old and new values are both published.
+
 **3.6 is the risk item.** Replacing homegrown detectors with external tools will move every corpus score. The calibration constant must be re-derived and [studies.md](studies.md) updated, and the old and new numbers must both be recorded so the shift is visible rather than silent.
 
 ## Phase 4 — Pillars, practice level, work order

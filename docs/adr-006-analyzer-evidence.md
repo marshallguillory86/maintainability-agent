@@ -101,7 +101,7 @@ Missing tools degrade evidence strength and are reported. They never fail the ru
 - Report schema gains an analyzer-coverage section and per-measurement provenance listing contributing tools. Another contract version.
 - `docs/adapters.md` "planned adapters" is superseded by this record.
 - The six built-in detector modules become a fallback tier and must be labelled as such in code and docs, so nobody mistakes them for the primary path again.
-- Scoring must handle contested measurements, which is new behaviour in `_formula.py` and the interval logic.
+- Scoring must handle contested measurements, which is new behavior in `_formula.py` and the interval logic.
 
 ## Invariants
 

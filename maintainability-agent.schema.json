@@ -3,19 +3,28 @@
   "$id": "https://github.com/marshallguillory86/maintainability-agent/blob/main/maintainability-agent.schema.json",
   "title": "Maintainability Agent Configuration",
   "type": "object",
-  "required": ["version"],
+  "required": [
+    "version"
+  ],
   "properties": {
-    "version": { "type": "integer", "const": 1 },
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
     "paths": {
       "type": "object",
       "properties": {
         "include_extensions": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "exclude_patterns": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false
@@ -23,58 +32,123 @@
     "idiom_groups": {
       "type": "object",
       "description": "Concern name -> list of competing package names. Overrides the shipped list.",
-      "additionalProperties": { "type": "array", "items": { "type": "string" } }
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
     },
     "thresholds": {
       "type": "object",
       "properties": {
-        "max_file_lines": { "type": "integer", "minimum": 1 },
-        "warn_file_lines": { "type": "integer", "minimum": 1 },
-        "max_function_lines": { "type": "integer", "minimum": 1 },
-        "warn_function_lines": { "type": "integer", "minimum": 1 },
-        "max_class_lines": { "type": "integer", "minimum": 1 },
-        "warn_class_lines": { "type": "integer", "minimum": 1 },
-        "max_complexity": { "type": "integer", "minimum": 1 },
-        "warn_complexity": { "type": "integer", "minimum": 1 },
-        "max_cognitive_complexity": { "type": "integer", "minimum": 1 },
-        "warn_cognitive_complexity": { "type": "integer", "minimum": 1 },
-        "max_duplicate_blocks": { "type": "integer", "minimum": 0 },
-        "duplicate_block_lines": { "type": "integer", "minimum": 2 }
+        "max_file_lines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "warn_file_lines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_function_lines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "warn_function_lines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_class_lines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "warn_class_lines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_complexity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "warn_complexity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_cognitive_complexity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "warn_cognitive_complexity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_duplicate_blocks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "duplicate_block_lines": {
+          "type": "integer",
+          "minimum": 2
+        }
       },
       "additionalProperties": false
     },
     "hard_gates": {
       "type": "object",
       "properties": {
-        "require_test_command": { "type": "boolean" },
-        "require_readme": { "type": "boolean" },
-        "require_clean_worktree": { "type": "boolean" },
-        "fail_on_file_failures": { "type": "boolean" },
-        "fail_on_function_failures": { "type": "boolean" },
-        "fail_on_duplicate_blocks": { "type": "boolean" }
+        "require_test_command": {
+          "type": "boolean"
+        },
+        "require_readme": {
+          "type": "boolean"
+        },
+        "require_clean_worktree": {
+          "type": "boolean"
+        },
+        "fail_on_file_failures": {
+          "type": "boolean"
+        },
+        "fail_on_function_failures": {
+          "type": "boolean"
+        },
+        "fail_on_duplicate_blocks": {
+          "type": "boolean"
+        }
       },
       "additionalProperties": false
     },
     "expected_files": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "expected_commands": {
       "type": "object",
       "additionalProperties": {
         "type": "array",
-        "items": { "type": "string" }
+        "items": {
+          "type": "string"
+        }
       }
     },
     "instruction_pack": {
       "type": "object",
       "properties": {
-        "project_name": { "type": "string" },
-        "strictness": { "type": "string" },
-        "test_policy": { "type": "string" },
+        "project_name": {
+          "type": "string"
+        },
+        "strictness": {
+          "type": "string"
+        },
+        "test_policy": {
+          "type": "string"
+        },
         "architecture_notes": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false
@@ -83,17 +157,96 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name", "pattern"],
+        "required": [
+          "name",
+          "pattern"
+        ],
         "properties": {
-          "name": { "type": "string" },
-          "pattern": { "type": "string" },
+          "name": {
+            "type": "string"
+          },
+          "pattern": {
+            "type": "string"
+          },
           "extensions": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           }
         },
         "additionalProperties": false
       }
+    },
+    "analyzers": {
+      "type": "object",
+      "description": "Which external analysis tools may run. See docs/analyzer-pool.md.",
+      "properties": {
+        "_doc": {
+          "type": "string"
+        },
+        "depth": {
+          "enum": [
+            "baseline",
+            "moderate",
+            "heavy",
+            "all"
+          ],
+          "description": "Cumulative size of the tool pool."
+        },
+        "license_policy": {
+          "enum": [
+            "permissive",
+            "copyleft-weak",
+            "copyleft-any",
+            "commercial-free-tier",
+            "unverified"
+          ],
+          "description": "Cumulative license classes admitted."
+        },
+        "prompt_when_interactive": {
+          "type": "boolean"
+        },
+        "allow_tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Catalog slugs admitted despite policy."
+        },
+        "deny_tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Catalog slugs never run. Deny always wins."
+        },
+        "deny_license_classes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "permissive",
+              "weak-copyleft",
+              "strong-copyleft",
+              "proprietary",
+              "proprietary-free-tier",
+              "source-available",
+              "unverified"
+            ]
+          }
+        },
+        "deny_concerns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

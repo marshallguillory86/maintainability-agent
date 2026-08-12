@@ -30,6 +30,44 @@ maintainability-agent.schema.json
 - `risk_patterns`: regex checks for project-specific risk language or unsafe patterns.
 - `instruction_pack`: context used when generating AI agent standards.
 
+## Analyzer policy (`analyzers`)
+
+Controls which external analysis tools may run. Full background, including the tool inventory and what each class means, is in [the analyzer pool](analyzer-pool.md).
+
+```json
+"analyzers": {
+  "depth": "moderate",
+  "license_policy": "permissive",
+  "prompt_when_interactive": true,
+  "allow_tools": [],
+  "deny_tools": [],
+  "deny_license_classes": [],
+  "deny_concerns": ["security"],
+  "timeout_seconds": 120
+}
+```
+
+- `depth`: `baseline` | `moderate` | `heavy` | `all`. Cumulative — `heavy` includes everything in `baseline` and `moderate`. Larger pools take longer and produce better-supported scores.
+- `license_policy`: `permissive` | `copyleft-weak` | `copyleft-any` | `commercial-free-tier` | `unverified`. Also cumulative. Defaults to `permissive`, the setting fewest organizations have to argue about.
+- `prompt_when_interactive`: ask for depth and policy on first run when attached to a terminal. Ignored in CI and whenever `--tool-depth` or `--license-policy` is passed, because an audit that blocks on a question in a pipeline is a broken audit.
+- `allow_tools`: tool slugs admitted even when the policy tiers would exclude them — for a commercial analyzer you hold a license for, say.
+- `deny_tools`: tool slugs never run, whatever else permits them.
+- `deny_license_classes`: whole classes never run, e.g. `["strong-copyleft"]`.
+- `deny_concerns`: concern tags never run. `security` is denied by default; that work belongs to `secure-code-agent` and duplicating it here would produce two tools disagreeing about the same repository.
+- `timeout_seconds`: per-tool wall clock. A tool that exceeds it is recorded as unavailable-timeout, never as a clean result.
+
+**Precedence is fixed and not configurable:** every deny wins, including over `allow_tools`. An organization's prohibition must not be overridable by a per-repository opt-in. Within what remains, `allow_tools` admits, then the depth and license tiers decide.
+
+Slugs come from [`data/analyzer-catalog.json`](../data/analyzer-catalog.json). To see exactly what a configuration selects, and why everything else was left out:
+
+```bash
+python tools/resolve_pool.py                    # resolve the current config
+python tools/resolve_pool.py --explain pylint   # why is one tool in or out?
+python tools/resolve_pool.py --depth all        # what-if, without editing the file
+```
+
+A slug that is not in the catalog is a config error, not a silent no-op.
+
 ## Validation
 
 Any JSON Schema validator that supports draft 2020-12 can validate the config.

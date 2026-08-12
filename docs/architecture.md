@@ -149,7 +149,7 @@ This is not complicated, and the rest of this section is detail on top of it. En
 2.  run every quality tool that is available and speaks one of its languages
        -- twenty-four tools is fine; more sources is better, not worse
 3.  each tool emits its own findings and metrics, in its own format
-4.  normalise each output onto shared measurement concepts
+4.  normalize each output onto shared measurement concepts
        -- "cyclomatic complexity", "duplication ratio", "dead code", "docstring coverage"
 5.  where several tools measured one concept, combine them with weights
        -- a weighted mean, and record the spread; disagreement is variance, not a crisis

@@ -2,13 +2,13 @@
 
 - Status: Accepted
 - Date: 2026-08-12
-- Scope: Reporting taxonomy, the score's meaning, remediation prioritisation, scope boundaries
+- Scope: Reporting taxonomy, the score's meaning, remediation prioritization, scope boundaries
 - Source: *Code Quality Framework — Readability · Maintainability · Efficiency & Scalability · Security · Testability*, July 2026
 - Related: [ADR 006](adr-006-analyzer-evidence.md), [ADR 005](adr-005-insufficient-population.md), [product intent](product-intent.md)
 
 ## Context
 
-An internal framework document defines code quality across five pillars, gives each a 1–5 maturity rubric, a cost/risk table and a standards checklist, and adds a Risk × Effort prioritisation matrix and a per-stack tooling template.
+An internal framework document defines code quality across five pillars, gives each a 1–5 maturity rubric, a cost/risk table and a standards checklist, and adds a Risk × Effort prioritization matrix and a per-stack tooling template.
 
 Two things make it worth adopting rather than noting.
 
@@ -58,7 +58,7 @@ Declaring scope per pillar is itself a fix. Today the tool is silent about effic
 
 **Practice level (1–5)** — the framework's maturity rubric, scored from detectable evidence of enforcement: does a linter config exist, is it wired into CI, is there a coverage gate, are complexity thresholds configured, are ADRs maintained, is there a duplication check. This is measured by looking at the repository's configuration and CI, not its source.
 
-**Code condition** — what the analyzers found, normalised over population, as the tool scores today.
+**Code condition** — what the analyzers found, normalized over population, as the tool scores today.
 
 The two are orthogonal and both are needed:
 
@@ -71,7 +71,7 @@ The hello-world sits in the bottom-right cell. Today the tool calls that A+. Und
 
 Combining them into one number is forbidden. They answer different questions and the framework's own document keeps them apart.
 
-### 3. Findings are prioritised by Risk × Effort, and the prompt leads with Quick Wins
+### 3. Findings are prioritized by Risk × Effort, and the prompt leads with Quick Wins
 
 Every finding class carries a risk weighting (its cost driver, from the framework's cost/risk tables) and an effort estimate. The remediation prompt orders by that matrix rather than by count or severity alone:
 

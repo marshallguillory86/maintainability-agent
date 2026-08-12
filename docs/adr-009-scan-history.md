@@ -73,6 +73,22 @@ With a history the deterministic engine can compute, as arithmetic over stored r
 
 Every one of these is a statement about scans that happened. **Extrapolating forward is a prediction and remains forbidden** under [what the product must never claim](product-intent.md#what-it-must-never-claim) until an outcome study earns it. "Complexity rose 18% over six months" is a fact; "will keep rising" is not, and the report must not blur them.
 
+### 3b. Remediation outcomes are recorded, not just finding recurrence
+
+Recurrence alone is a weak signal. Code churns for many reasons, so "this finding came back" says only that the file changed twice.
+
+The tool has a stronger signal available and should use it: **it generates the remediation prompt, so it knows which findings that prompt targeted.** Recording the targeted set, then checking on the next run whether those specific findings cleared, closes a loop nothing else in the design closes — *did the advice work?*
+
+Three outcomes, each meaning something different:
+
+- **cleared and stayed cleared** — the advice worked; nothing more to say.
+- **never cleared** — the advice was ignored, or was not actionable. Repeated across findings of one kind, it indicts the prompt rather than the developer.
+- **cleared, then returned** — the strongest signal in the system. Someone was told exactly what to change, changed it, and the problem came back. That is evidence the finding is a symptom and the advice addressed the symptom, which is precisely the case that should escalate to a design-review candidate rather than being re-issued as the same nit a third time.
+
+This is what separates the tool from a linter with a database. A linter can tell you a rule fired again. Only something that remembers what it *advised* can tell you its own advice is not working — and a model, which has no accumulated friction signal, cannot hold that across sessions no matter how much context it is given.
+
+Requires the prompt to record its targeted finding identities alongside the scan record. Cheap once identity is stable, which it now is.
+
 ### 4. Comparability is checked, never assumed
 
 Two scans are comparable only when the rubric version, analyzer coverage and scope match. A trend computed across a coverage change measures the tooling, not the code — precisely the error [ADR 006](adr-006-analyzer-evidence.md) exists to prevent, arriving through the time dimension.
@@ -112,3 +128,5 @@ A first run need not be blind. Past commits can be scanned by materializing them
 6. Every trend statement describes scans that occurred. No output extrapolates beyond the last recorded scan.
 7. Identical tree, config and history produce identical output, and the report names the history it consumed.
 8. Compaction never occurs as a side effect of a normal scan.
+9. Every remediation prompt records the finding identities it targeted, and a later run reports whether each cleared, never cleared, or cleared and returned.
+10. A finding that returns after a recorded remediation attempt escalates out of the nit class; a finding that returns after unrelated churn does not.

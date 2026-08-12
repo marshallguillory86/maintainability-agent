@@ -106,6 +106,7 @@ Implements [ADR 009](adr-009-scan-history.md). Needs 0.3 (identity) and Phase 3 
 | 5.2 | Comparability gate | A trend across differing coverage, rubric version or scope is segmented or withheld with a reason |
 | 5.3 | Trend computation | Debt velocity, growth-versus-quality, trajectory with interval, recurrence, stability |
 | 5.4 | Recurrence escalation | A finding cleared and returned twice is emitted as a design-review candidate |
+| 5.4b | Remediation outcome tracking | Each prompt records the finding identities it targeted; the next run reports cleared / never-cleared / returned per target |
 | 5.5 | Backfill command | Scans a commit range into history via worktrees; never implicit in a normal run |
 | 5.6 | Compaction policy | Documented, explicit, never a side effect of a scan |
 

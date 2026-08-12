@@ -38,11 +38,23 @@ The pipeline's first act is to run the available FOSS quality analyzers over the
 
 The built-in detectors are **demoted, not deleted**. They remain as a fallback tier for languages and environments where nothing else runs, and for the zero-install path. Every measurement they produce is tagged single-source (see §3) and carries the weaker evidence strength that implies.
 
-### 2. Availability is reported, never assumed
+### 2. Availability is reported, never assumed — and proven by invocation
+
+Presence on `PATH` is not availability, and a zero exit code is not success. Both were measured on this machine: `/usr/bin/java` exists and `command -v java` succeeds, but it is the macOS stub with no JDK behind it, and `java -version` **exits 0** while printing *"Unable to locate a Java Runtime"* to stderr. PMD, launched through it, simply refused to run.
+
+Had the runner trusted either signal, PMD would have been recorded as run, found nothing, and contributed a clean result — the A+ failure arriving through a new door. So a tool counts as available only when invoked and its output validated against an expected shape. Version capture doubles as the probe.
 
 Each run records which analyzers were attempted, which ran, which were unavailable and why (not installed, unsupported language, timed out, crashed). A tool that did not run is **not a clean result**. `secure-code-agent` already reports `scanners run:` and `unavailable:`; this agent adopts the same discipline.
 
 This is the concept whose absence produced the A+. With coverage reporting, "twelve analyzers found nothing" and "one fallback detector found nothing" stop being the same output.
+
+### 2c. Coverage gaps are reported with the remedy, and never remedied automatically
+
+Language detection, the catalog and the availability probe compose into an answer no current tool gives: what part of this codebase was not examined, and what would it take. The gap is rarely total — multi-language tools reach nearly everything — so it is reported per language *and per concern*. Measured on a 60%-Java tree: complexity, duplication, documentation, structure and metrics covered; **dead-code, testing, style and types covered by nothing**, with 58 cataloged tools that could.
+
+Each gap names the tools that would close it and the prerequisite runtime — a JDK for PMD and Checkstyle, Node, the Go or Rust toolchain, the .NET SDK.
+
+**The agent never installs anything.** Installation is a network and privilege action belonging to the user. The agent emits an *environment work order* in the same shape as the code work order — what is missing, why it matters, the exact command — so a person can run it or hand it to their own AI agent. One artifact, either consumer.
 
 ### 3. Several tools measure each concept, and their readings are combined with weights
 
@@ -106,6 +118,7 @@ Missing tools degrade evidence strength and are reported. They never fail the ru
 ## Invariants
 
 1. Every report names every analyzer attempted, with an outcome for each: ran, unavailable, failed.
+1b. Availability is established by invoking the tool and validating its output shape, never by `PATH` presence or exit code alone.
 2. No measurement is reported without the list of tools that produced it and their count.
 3. A concept measured by zero tools is `Unknown` with the attempted-tool list as its reason — never a default, never a zero, never a 5.0.
 4. Where two or more tools measure one concept, the report carries the combined value, the spread and the tool attribution. No tool is silently dropped.

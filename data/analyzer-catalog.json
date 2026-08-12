@@ -7,16 +7,16 @@
     "note": "Facts in this file (name, license, languages, source URL) come from the snapshot above. Tier and adapter fields are this project's own and are not claims made by the source."
   },
   "counts": {
-    "in_source": 759,
-    "eligible": 444,
+    "in_source": 760,
+    "eligible": 445,
     "by_tier": {
       "all": 430,
-      "heavy": 4,
-      "moderate": 6,
-      "baseline": 4
+      "baseline": 10,
+      "moderate": 4,
+      "heavy": 1
     },
     "by_license_status": {
-      "foss": 577,
+      "foss": 578,
       "source-available": 5,
       "proprietary": 102,
       "unverified": 75
@@ -24,27 +24,27 @@
     "by_license_class": {
       "permissive": 464,
       "weak-copyleft": 42,
-      "strong-copyleft": 71,
+      "strong-copyleft": 72,
       "source-available": 5,
       "proprietary": 70,
       "proprietary-free-tier": 32,
       "unverified": 75
     },
     "by_measure": {
+      "documentation": 4,
+      "metrics": 5,
       "structure": 4,
       "complexity": 9,
       "style": 5,
-      "documentation": 2,
       "duplication": 3,
-      "metrics": 4,
       "dead-code": 2
     },
     "eligible_by_license_class": {
       "permissive": 366,
       "weak-copyleft": 34,
-      "strong-copyleft": 44
+      "strong-copyleft": 45
     },
-    "adapters_implemented": 15
+    "adapters_implemented": 16
   },
   "tools": [
     {
@@ -2386,6 +2386,114 @@
       "adapter": "none"
     },
     {
+      "slug": "cloc",
+      "name": "cloc",
+      "license": "GNU General Public License v2.0",
+      "license_status": "foss",
+      "license_class": "strong-copyleft",
+      "free_tier": false,
+      "deprecated": false,
+      "categories": [
+        "linter"
+      ],
+      "languages": [
+        "abap",
+        "ada",
+        "apex",
+        "assembly",
+        "awk",
+        "bash",
+        "c",
+        "clojure",
+        "cmake",
+        "cobol",
+        "coffeescript",
+        "coldfusion",
+        "cpp",
+        "crystal",
+        "csharp",
+        "css",
+        "d",
+        "dart",
+        "delphi",
+        "dockerfile",
+        "elixir",
+        "elm",
+        "erlang",
+        "fortran",
+        "fsharp",
+        "gherkin",
+        "go",
+        "graphql",
+        "groovy",
+        "haskell",
+        "haxe",
+        "hcl",
+        "html",
+        "java",
+        "javascript",
+        "json",
+        "jsx",
+        "julia",
+        "kotlin",
+        "latex",
+        "lisp",
+        "lua",
+        "makefile",
+        "markdown",
+        "matlab",
+        "nim",
+        "objectivec",
+        "ocaml",
+        "opa",
+        "openapi",
+        "pascal",
+        "perl",
+        "php",
+        "powershell",
+        "prolog",
+        "protobuf",
+        "puppet",
+        "python",
+        "r",
+        "raku",
+        "reason",
+        "ruby",
+        "rust",
+        "sass",
+        "scala",
+        "scheme",
+        "shell",
+        "solidity",
+        "sql",
+        "svelte",
+        "swift",
+        "tcl",
+        "terraform",
+        "toml",
+        "typescript",
+        "vala",
+        "vhdl",
+        "viml",
+        "vue",
+        "xml",
+        "yaml",
+        "zig"
+      ],
+      "upstream_tags": [
+        "metrics"
+      ],
+      "measures": [
+        "documentation",
+        "metrics"
+      ],
+      "security_only": false,
+      "source": "https://github.com/AlDanial/cloc",
+      "tier": "baseline",
+      "adapter": "implemented",
+      "provenance": "verified locally, version 2.06"
+    },
+    {
       "slug": "closure-compiler",
       "name": "Closure Compiler",
       "license": "Apache License 2.0",
@@ -3366,7 +3474,7 @@
       ],
       "security_only": false,
       "source": "https://github.com/mschwager/cohesion",
-      "tier": "heavy",
+      "tier": "moderate",
       "adapter": "implemented"
     },
     {
@@ -3433,7 +3541,7 @@
       ],
       "security_only": false,
       "source": "https://github.com/rohaquinlop/complexipy",
-      "tier": "moderate",
+      "tier": "baseline",
       "adapter": "implemented",
       "provenance": "verified locally, version 7.0.0"
     },
@@ -7884,7 +7992,7 @@
       ],
       "security_only": false,
       "source": "https://github.com/econchick/interrogate",
-      "tier": "moderate",
+      "tier": "baseline",
       "adapter": "implemented",
       "provenance": "verified locally, version 1.7.0"
     },
@@ -9934,11 +10042,12 @@
       ],
       "measures": [
         "complexity",
+        "documentation",
         "metrics"
       ],
       "security_only": false,
       "source": "https://github.com/priv-kweihmann/multimetric",
-      "tier": "heavy",
+      "tier": "baseline",
       "adapter": "implemented",
       "provenance": "verified locally, version 2.4.4"
     },
@@ -12403,7 +12512,7 @@
       ],
       "security_only": false,
       "source": "https://github.com/PyCQA/pydocstyle",
-      "tier": "moderate",
+      "tier": "baseline",
       "adapter": "implemented"
     },
     {
@@ -17086,7 +17195,7 @@
       ],
       "security_only": false,
       "source": "https://github.com/jendrikseipp/vulture",
-      "tier": "moderate",
+      "tier": "baseline",
       "adapter": "implemented"
     },
     {
@@ -17444,7 +17553,7 @@
       ],
       "security_only": false,
       "source": "https://github.com/rubik/xenon",
-      "tier": "heavy",
+      "tier": "moderate",
       "adapter": "implemented"
     },
     {

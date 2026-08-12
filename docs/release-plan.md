@@ -52,12 +52,15 @@ Implements the executable half of [ADR 006](adr-006-analyzer-evidence.md). The l
 | # | Task | Exit condition |
 |---|---|---|
 | 2.1 | `_runner`: subprocess, timeout, isolation, version capture | A crashing or hanging tool produces `Unknown` with a reason and never fails the run |
+| 2.1b | Availability proven by invocation, not `PATH` | A stub on `PATH` that exits 0 while failing (macOS `java`) is recorded unavailable, not clean |
 | 2.2 | `_catalog`: resolve the pool from concerns, depth, policy | Matches `tools/resolve_pool.py` output exactly; the script becomes a thin wrapper |
 | 2.3 | Adapter protocol, metric and verdict shapes | Adding an adapter requires no change outside its own module |
-| 2.4 | Four baseline adapters: lizard, radon, ruff, jscpd | Each parses real output on the corpus; per-adapter fixture tests |
+| 2.4 | Ten baseline adapters: lizard, cloc, multimetric, jscpd, radon, ruff, vulture, complexipy, interrogate, pydocstyle | Each parses real output on the corpus; per-adapter fixture tests |
 | 2.5 | Coverage reporting in the report | Every run states tools attempted, run, unavailable and why, with versions |
+| 2.5b | Coverage gaps per language and concern | A concern with no tool running against it is `Unknown`, never clean |
+| 2.5c | Environment work order | Names missing prerequisites and the install command; the agent never installs |
 | 2.6 | Rubric-driven tool configuration | Changing a project's `eslint.config.mjs` provably does not move the score |
-| 2.7 | Six moderate adapters | pylint, flake8, vulture, eslint, complexipy, interrogate parse real output |
+| 2.7 | Five moderate adapters | pylint, flake8, eslint, xenon, cohesion parse real output |
 | 2.8 | Determinism under pinned versions | Two runs on one tree with identical tool versions are byte-identical |
 
 **Watch item:** P1 weakens here from "deterministic" to "deterministic given pinned analyzer versions." [Product intent](product-intent.md#what-it-promises) must be edited in the same commit that makes it true.
@@ -144,6 +147,6 @@ If the finish line has to move nearer, these can be deferred without making the 
 
 - **Phase 5 backfill (5.5)** — history still accumulates going forward.
 - **Phase 6 MCP (6.2, 6.3)** — the CLI covers CI, which is the load-bearing entry point.
-- **Adapters beyond the four baseline ones (2.7)** — the pool grows over time by design; `all` already reports honestly what it could not run.
+- **Adapters beyond the ten baseline ones (2.7)** — the pool grows over time by design; `all` already reports honestly what it could not run.
 
 What cannot be cut without the tool lying: population floors (Phase 1), coverage reporting (2.5), and rubric-driven tool configuration (2.6). Those three are what stop the score from being fiction.

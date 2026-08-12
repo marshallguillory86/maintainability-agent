@@ -323,6 +323,33 @@ Each pillar reports **two values that are never combined**:
 
 The hello-world that scored 5.0/A+ is *practice level 1, condition unmeasured*. That is the truth, and no single composite number can express it. This is the concept the six original promises lacked, and why [product intent](product-intent.md#what-it-promises) gained **P7** (a score only where enough was examined) and **P8** (every report states what examined it).
 
+### Coverage gaps, and telling the user how to close them
+
+Detecting what the repository is written in, knowing which tools cover it, and knowing which of those can actually run are three facts the agent already has. Composed, they answer a question no current tool answers: **what part of this codebase did nobody look at, and what would it take to look?**
+
+The gap is rarely "no coverage." Multi-language tools reach almost everything, so the honest gap is *depth per concern*. On a tree that is 60% Java:
+
+```text
+  complexity     lizard, multimetric
+  duplication    jscpd, lizard
+  dead-code      NONE -- 58 cataloged tools could cover it
+  documentation  cloc, multimetric
+  structure      lizard
+  testing        NONE -- 58 cataloged tools could cover it
+  style          NONE -- 58 cataloged tools could cover it
+  types          NONE -- 58 cataloged tools could cover it
+```
+
+Four of nine concerns unexamined on the majority language. Without this section a reader sees scores and assumes they were earned across the board.
+
+So every report carries a coverage gap list, and each gap says what would close it: the tools, and the prerequisite runtime — a JDK for PMD and Checkstyle, Node for the JS toolchain, the Go or Rust toolchain, the .NET SDK.
+
+**The agent never installs anything.** Installing is a network and privilege action and it is the user's decision. What the agent emits is an *environment work order* in the same shape as the code work order — what is missing, why it matters, and the exact command — so a human can run it or hand it to their own AI agent to run. Same artifact, either consumer.
+
+**Availability is proven by invocation, never by `PATH`.** Measured here: `/usr/bin/java` exists, `command -v java` succeeds, and it is the macOS stub with no JDK behind it — and `java -version` **exits 0** while printing *"Unable to locate a Java Runtime"* to stderr. A runner trusting either signal would record PMD as having run, found nothing, and contributed a clean result. That is the A+ failure arriving through a new door, so a tool counts as available only when it has been invoked and its output validated against an expected shape.
+
+A language or concern with nothing running against it is `Unknown` in the score, never clean.
+
 ### Outputs: the report is the product, the prompt is one use of it
 
 The tool already emits a Markdown report, a JSON report, a PR comment, SARIF and a baseline. Those stay. What changes is what the report has to *say* once analyzers, pillars and population floors exist — a report that shows scores without showing what produced them is the same failure as the A+, one layer out.
@@ -436,6 +463,8 @@ Every design point above traces to a record. Nothing here is a preference someon
 | Every finding stays in the report; ranking orders, never filters | [ADR 008](adr-008-translation-and-decision.md) |
 | Work order is a queryable set; the consumer picks the slice | [ADR 008](adr-008-translation-and-decision.md) |
 | Set deltas are recomputed, never summed from per-item deltas | [ADR 008](adr-008-translation-and-decision.md) |
+| Coverage gaps reported per language and concern, with the prerequisite named | [ADR 006](adr-006-analyzer-evidence.md) |
+| Availability proven by invocation; the agent never installs anything | [ADR 006](adr-006-analyzer-evidence.md) |
 | Scans append to a durable history; trends over comparable records only | [ADR 009](adr-009-scan-history.md) |
 | Finding identity is content-addressed, never line-coupled | [ADR 009](adr-009-scan-history.md) |
 | Trends describe past scans; forecasting stays forbidden | [ADR 009](adr-009-scan-history.md), [product intent](product-intent.md#what-it-must-never-claim) |

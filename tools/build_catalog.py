@@ -126,21 +126,27 @@ def classify_license(name: str, status: str) -> str:
 # moderate  + mainstream per-language linters, still cheap
 # heavy     + slower or config-hungry tools
 VERIFIED_TIERS = {
-    "lizard": "baseline",
-    "radon": "baseline",
-    "ruff": "baseline",
-    "jscpd": "baseline",
+    # baseline: zero project configuration, fast, runs on whatever languages
+    # are present. Not "multi-language only" -- a zero-config Python tool is
+    # baseline for a Python repository.
+    "lizard": "baseline",       # multi-language CCN/NLOC/params/tokens
+    "cloc": "baseline",         # ~200-language populations and comment ratio
+    "multimetric": "baseline",  # multi-language MI, Halstead, 25 metrics
+    "jscpd": "baseline",        # multi-language clone detection
+    "radon": "baseline",        # Python MI, CC, Halstead
+    "ruff": "baseline",         # Python lint, ~800 rules
+    "vulture": "baseline",      # Python dead code
+    "complexipy": "baseline",   # Python cognitive complexity
+    "interrogate": "baseline",  # Python docstring coverage
+    "pydocstyle": "baseline",   # Python docstring conventions
+    # moderate: needs configuration, tuning, or noticeably more time
     "pylint": "moderate",
-    "vulture": "moderate",
-    "eslint": "moderate",
     "flake8": "moderate",
-    "complexipy": "moderate",
-    "interrogate": "moderate",
-    "pydocstyle": "moderate",
-    "cohesion": "heavy",
-    "multimetric": "heavy",
+    "eslint": "moderate",
+    "xenon": "moderate",
+    "cohesion": "moderate",
+    # heavy: builds history, or needs an ecosystem runtime
     "wily": "heavy",
-    "xenon": "heavy",
 }
 
 
@@ -177,7 +183,8 @@ VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {
     "interrogate": ("documentation",),
     "pydocstyle":  ("documentation", "style"),
     "cohesion":    ("structure",),
-    "multimetric": ("metrics", "complexity"),
+    "multimetric": ("metrics", "complexity", "documentation"),
+    "cloc": ("metrics", "documentation"),
     "wily":        ("metrics",),
     "xenon":       ("complexity",),
 }
@@ -188,6 +195,13 @@ VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {
 # from its ``License-Expression``, jscpd from the npm registry. Each is a fact
 # recoverable by running the command in the comment.
 LOCAL_ADDITIONS = [
+    {
+        # npx cloc --version ; https://github.com/AlDanial/cloc  (GPL-2.0)
+        "slug": "cloc", "name": "cloc", "license": "GNU General Public License v2.0",
+        "version_seen": "2.06", "categories": ["linter"], "concerns": ["metrics"],
+        "languages": sorted(LANGUAGE_TAGS),
+        "source": "https://github.com/AlDanial/cloc",
+    },
     {
         # npm view jscpd license
         "slug": "jscpd", "name": "jscpd", "license": "MIT", "version_seen": "5.0.14",

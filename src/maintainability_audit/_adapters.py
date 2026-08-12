@@ -39,7 +39,6 @@ from typing import Protocol
 from ._metrics_types import Finding, Measurement
 from ._runner import Invocation, ToolResult
 
-
 # How much raw output to keep inline per tool. Enough for a language model
 # to reason over the shape of a result, bounded so a report stays a
 # document. The full text is written beside the report when a sidecar

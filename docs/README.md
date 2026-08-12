@@ -64,6 +64,7 @@ New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register,
 | [External quality tools](external-quality-tools.md) | Sitting alongside SonarQube and friends |
 | [IDE and agent integration](ide-agent-integration.md) | Claude Code, Codex, Copilot Chat, Cursor |
 | [Roadmap](roadmap.md) | What is planned, and what is deliberately refused |
+| [Release plan](release-plan.md) | The ordered work from here to 1.0, with an exit condition per task |
 
 ## Adding a claim to any of these
 

@@ -57,7 +57,7 @@ They are the judgment layer — weights, bands, grade gates, the calibration con
 `renderers`, `prompts`, and `sarif` consume the report dictionary. Today they import only `_hotspots` (a formatting helper) and `config`. This keeps one path to a score: if a renderer could compute one, two numbers could disagree, which is the class of bug that produced an overall contradicting the categories printed beside it.
 
 **4. `evidence` imports nothing internal.**
-The normalization boundary is deliberately a leaf. Everything it needs arrives as an argument. This is what makes it a *boundary* rather than another participant — see ADR 001 §3.
+The normalization boundary is deliberately a leaf. Everything it needs arrives as an argument. This is what makes it a *boundary* rather than another participant — see [ADR 001](adr-001-evidence-and-verification.md) §3.
 
 **5. The calibration derivation calls the shipped scorer.**
 `_derive` imports `_aspects`, `_formula`, and `_pressures` and runs the same functions a live report runs. It may not restate the rollup. Three consecutive audits found the derivation differing from the live path by exactly one step — category rounding, then the untested cap, then per-aspect rounding — and each time the corpus median survived while the per-repository claim did not. "The same pipeline" is only true when there is one pipeline.
@@ -126,7 +126,11 @@ Stated rather than hidden, because an architecture document that only describes 
 - ~~The compatibility grade is still banded from the pessimistic floor~~ — **resolved (stage 8).** `score.grade` is removed; `verified_grade` is the only letter a report carries, and it is null when the evidence does not support one.
 - **Stage 5 is implemented:** `score.evidence_status` and `score.verified_grade` ship alongside the compatibility fields. [ADR 002](adr-002-null-verified-grade-in-ci.md) is rejected because it assumed `--fail-on-gate` consumes the grade; the shipped flag checks hard findings only, so no CI policy changed. The requirement list for the `default-v1` profile is frozen in `_verification.py` rather than derived from the typed model — deriving it let a new field silently change what the name demanded.
 - ~~`docs/standard.md` mixes genres~~ — **resolved.** The empirical studies moved to [studies.md](studies.md); the standard now holds only the rubric, its calibration method, and the reference corpus. Mixing them was the documentation shape that let a Tier 3 claim read as settled.
-- **History window materialization is not separated from analysis.** ADR 001 stage 9.
+- **History window materialization is not separated from analysis.** [ADR 001](adr-001-evidence-and-verification.md) stage 9.
+- **Two live defects in shipped flags**, both reproduced and both blocking later work:
+  - `--changed-only` reports a whole-repository grade for a diff. On this repository it returns `maintainability_estimate 4.2`, `evidence_status complete`, over 2 files and **zero declarations**. Any PR-scoped CI run inherits it. [ADR 005](adr-005-insufficient-population.md).
+  - `--fail-on-new` false-fires on moved code. Finding identity embeds the start line, so inserting one import above an untouched function makes it read as simultaneously fixed and new. This also makes recurrence tracking impossible. [ADR 009](adr-009-scan-history.md).
+- **[ADR 005](adr-005-insufficient-population.md) through [009](adr-009-scan-history.md) are accepted and unimplemented.** Ten proposed modules — `_runner`, `_analyzers`, `_concepts`, `_corroborate`, `_bands`, `_catalog`, `_practice`, `_pillars`, `_scan_history`, `_identity` — do not exist. The target architecture section describes them; `src/` does not contain them, and this document must not read as though it does.
 
 ## Extension points
 

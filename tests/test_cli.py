@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from maintainability_audit.baseline import BASELINE_VERSION
 from maintainability_audit.cli import (
     build_report,
     finding_fingerprints,
@@ -88,7 +89,8 @@ def test_fail_on_new_respects_baseline(tmp_path: Path) -> None:
     write(config_path, json.dumps({"version": 1, "thresholds": {"max_file_lines": 10}}))
     report = build_report(tmp_path, load_config(str(config_path)))
     baseline = tmp_path / "baseline.json"
-    write(baseline, json.dumps({"version": 1, "findings": sorted(finding_fingerprints(report))}))
+    write(baseline, json.dumps({"version": BASELINE_VERSION,
+                                "findings": sorted(finding_fingerprints(report))}))
 
     suppressed = main([
         "--root", str(tmp_path), "--config", str(config_path),

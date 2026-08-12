@@ -15,7 +15,7 @@ import json
 import subprocess
 from pathlib import Path
 
-from maintainability_audit.baseline import write_baseline
+from maintainability_audit.baseline import BASELINE_VERSION, write_baseline
 from maintainability_audit.cli import (
     DEFAULT_CONFIG,
     build_report,
@@ -69,7 +69,8 @@ def test_baseline_fingerprints_round_trip(tmp_path: Path) -> None:
     config["thresholds"]["max_file_lines"] = 10
     report = build_report(tmp_path, config)
     baseline = tmp_path / "baseline.json"
-    write(baseline, json.dumps({"version": 1, "findings": sorted(finding_fingerprints(report))}))
+    write(baseline, json.dumps({"version": BASELINE_VERSION,
+                                "findings": sorted(finding_fingerprints(report))}))
 
     assert load_baseline(str(baseline)) == finding_fingerprints(report)
 

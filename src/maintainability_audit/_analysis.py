@@ -206,6 +206,47 @@ def _collect(extraction: Extraction, adapter: Any, analysis: Analysis) -> None:
     analysis.findings.extend(extraction.findings)
 
 
+def _relative(path: str, root: Path) -> str:
+    """Repo-relative, so findings read and diff like the rest of the report.
+
+    Tools are handed absolute paths and hand them back. Left as-is the
+    report is unreadable, and two runs from different checkout
+    directories produce diffs that are entirely path noise.
+    """
+    try:
+        return str(Path(path).resolve().relative_to(root.resolve()))
+    except (ValueError, OSError):
+        return path
+
+
+def findings_document(analysis: Analysis, root: Path) -> list[dict[str, Any]]:
+    """Every located finding the analyzers produced, report-shaped.
+
+    The point of running the tools. Coverage says *that* they ran;
+    without this the report says nine analyzers examined the repository
+    and then tells the reader nothing they found — which is worse than
+    not running them, because it looks thorough.
+
+    Sorted by path and line so the list is stable between runs and
+    diffable, and carrying the producing tool so a reader can go back to
+    the raw output behind any row.
+    """
+    return sorted(
+        (
+            {
+                "concept": finding.concept,
+                "path": _relative(finding.path, root),
+                "line": finding.line,
+                "message": finding.message,
+                "tool": finding.tool,
+                "rule": finding.rule,
+            }
+            for finding in analysis.findings
+        ),
+        key=lambda item: (item["path"], item["line"] or 0, item["tool"], item["message"]),
+    )
+
+
 def coverage_document(analysis: Analysis) -> dict[str, Any]:
     """The coverage section, as it appears in a report.
 

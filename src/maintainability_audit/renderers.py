@@ -139,6 +139,51 @@ def analyzer_coverage_markdown(coverage: dict[str, Any] | None) -> list[str]:
     return lines
 
 
+# How many analyzer findings to print in full. The rest are summarised by
+# concern and tool, with the complete list left in the JSON report: a
+# Markdown document with eight hundred rows stops being read, and a reader
+# who stops reading learns nothing.
+ANALYZER_FINDING_LIMIT = 40
+
+
+def analyzer_findings_markdown(findings: list[dict[str, Any]]) -> list[str]:
+    """What the analyzers found, located and attributed.
+
+    The point of running them. Coverage says *that* they ran; this says
+    what they saw, and every row carries a path, a line and the tool that
+    produced it so the reader can act on it or go back to the source.
+    """
+    if not findings:
+        return []
+
+    by_concept: dict[str, int] = {}
+    for finding in findings:
+        by_concept[finding["concept"]] = by_concept.get(finding["concept"], 0) + 1
+    tally = ", ".join(f"{count} {concept}" for concept, count in sorted(by_concept.items()))
+
+    lines = [
+        "## Analyzer Findings", "",
+        f"{len(findings)} findings from external analyzers — {tally}.", "",
+        "| File | Line | Concern | Tool | Rule | Finding |",
+        "|---|---|---|---|---|---|",
+    ]
+    for finding in findings[:ANALYZER_FINDING_LIMIT]:
+        lines.append(
+            f"| `{finding['path']}` | {finding['line'] or '—'} | {finding['concept']} | "
+            f"`{finding['tool']}` | {finding['rule'] or '—'} | {finding['message'][:70]} |"
+        )
+    lines.append("")
+    if len(findings) > ANALYZER_FINDING_LIMIT:
+        # Stated, never silent: a truncated list a reader believes is
+        # complete is worse than an obviously partial one.
+        lines.extend([
+            f"Showing {ANALYZER_FINDING_LIMIT} of {len(findings)}. "
+            "The complete list is in the JSON report under `analyzer_findings`.",
+            "",
+        ])
+    return lines
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     summary = report["summary"]
     score = report["score"]
@@ -156,6 +201,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
     ]
     lines.extend(analyzer_coverage_markdown(report.get("analyzer_coverage")))
+    lines.extend(analyzer_findings_markdown(report.get("analyzer_findings") or []))
     if report["hard_gate_failures"]:
         lines.extend(["## Hard Gate Failures", ""])
         lines.extend(f"- {gate}" for gate in report["hard_gate_failures"])

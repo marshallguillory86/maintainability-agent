@@ -177,3 +177,58 @@ def test_a_broken_adapter_cannot_fail_the_audit(tmp_path: Path, monkeypatch) -> 
     assert "RuntimeError" in only.detail
     assert "defect in the adapter" in only.detail
     assert analysis.gaps() == ["complexity"], "a broken adapter covers nothing"
+
+
+def test_analyzer_findings_reach_the_report(tmp_path: Path) -> None:
+    """Coverage without findings is worse than not running the tools.
+
+    It reports that nine analyzers examined the repository and then tells
+    the reader nothing they saw — thorough-looking and useless. This is
+    the payload, and it was missing on the first pass: `_analysis`
+    collected findings and nothing wrote them anywhere.
+    """
+    from maintainability_audit._analysis import findings_document
+
+    analysis = Analysis(findings=[
+        Finding(concept="dead-code", path=str(tmp_path / "a.py"), line=7,
+                message="unused import 'os'", tool="ruff", rule="F401"),
+    ])
+    document = findings_document(analysis, tmp_path)
+
+    assert len(document) == 1
+    only = document[0]
+    assert only["path"] == "a.py", "paths are repo-relative or the report is unreadable"
+    assert (only["line"], only["tool"], only["rule"]) == (7, "ruff", "F401")
+    assert only["message"]
+
+
+def test_findings_are_ordered_so_two_runs_diff_cleanly(tmp_path: Path) -> None:
+    """Stable ordering, or every run's diff is noise."""
+    from maintainability_audit._analysis import findings_document
+
+    def _finding(path: str, line: int, tool: str) -> Finding:
+        return Finding(concept="style", path=str(tmp_path / path), line=line,
+                       message="m", tool=tool)
+
+    scrambled = Analysis(findings=[
+        _finding("b.py", 1, "ruff"), _finding("a.py", 9, "ruff"),
+        _finding("a.py", 2, "vulture"), _finding("a.py", 2, "ruff"),
+    ])
+    order = [(f["path"], f["line"], f["tool"]) for f in findings_document(scrambled, tmp_path)]
+
+    assert order == sorted(order)
+
+
+def test_a_path_outside_the_root_is_kept_rather_than_mangled(tmp_path: Path) -> None:
+    """Relativising must not corrupt what it cannot place.
+
+    A tool may report a path outside the tree — a config elsewhere, a
+    symlink target. Losing it would be worse than showing it absolute.
+    """
+    from maintainability_audit._analysis import findings_document
+
+    outside = Analysis(findings=[
+        Finding(concept="style", path="/elsewhere/x.py", line=1, message="m", tool="ruff"),
+    ])
+
+    assert findings_document(outside, tmp_path)[0]["path"] == "/elsewhere/x.py"

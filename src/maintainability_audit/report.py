@@ -13,7 +13,7 @@ from dataclasses import asdict
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from ._analysis import analyze, coverage_document
+from ._analysis import analyze, coverage_document, findings_document
 from ._metrics_types import FileMetric, FunctionMetric
 from .deadcode import dead_declarations
 from .declarations import DECLARATION_SUFFIXES
@@ -131,9 +131,9 @@ def build_report(
     """
     # One index for the whole audit: each file is read once and parsed
     # once, rather than once per scanner.
-    analyzer_coverage = (
-        coverage_document(analyze(root, config)) if run_analyzers else None
-    )
+    analysis = analyze(root, config) if run_analyzers else None
+    analyzer_coverage = coverage_document(analysis) if analysis else None
+    analyzer_findings = findings_document(analysis, root) if analysis else []
     source = SourceIndex()
     files, file_metrics, function_metrics = collect_metrics(root, config, only_paths, source)
     thresholds = config["thresholds"]
@@ -174,6 +174,10 @@ def build_report(
         # Beside the score, never behind it: two reports with different
         # analyzer coverage are not comparable (P8).
         "analyzer_coverage": analyzer_coverage,
+        # What the analyzers actually found. Coverage without findings
+        # would report that nine tools examined the repository and then
+        # tell the reader nothing they saw.
+        "analyzer_findings": analyzer_findings,
         "summary": summary,
         "hard_gate_failures": gates,
         "missing_files": missing_files,

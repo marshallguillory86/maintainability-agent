@@ -348,7 +348,17 @@ class JscpdAdapter(BaseAdapter):
         self, root: Path, paths: Iterable[str] | None = None,
         excludes: Sequence[str] = (),
     ) -> Invocation:
-        ignore = ("--ignore", ",".join(f"**/{e.rstrip('/')}/**" for e in excludes)) if excludes else ()
+        # Directory patterns end in "/", file and glob patterns do not, and
+        # wrapping a file in `**/name/**` produces a glob that can never
+        # match. The self-audit found 254 duplication findings in a
+        # generated data file that was in the exclude list the whole time.
+        patterns = []
+        for exclude in excludes:
+            if exclude.endswith("/"):
+                patterns.append(f"**/{exclude.rstrip('/')}/**")
+            else:
+                patterns.extend((exclude, f"**/{exclude}"))
+        ignore = ("--ignore", ",".join(patterns)) if patterns else ()
         return Invocation(
             argv=(*_npx("jscpd"), str(root), "--reporters", "json", "--silent",
                   *ignore, "--output", str(self._report_dir)),

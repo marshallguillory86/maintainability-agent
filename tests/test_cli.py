@@ -215,3 +215,41 @@ def test_renderers_cover_findings_and_instruction_notes(tmp_path: Path) -> None:
     assert "Top Function Hotspots" in render_pr_comment(report)
     assert "Current Audit Context" in render_agent_instructions(report)
     assert "Keep modules focused." in instruction_body("codex", config)
+
+
+def test_a_repositorys_own_config_is_used_without_being_named(tmp_path: Path) -> None:
+    """A tool that ignores the config beside it is a trap.
+
+    This project audited itself for an entire session against built-in
+    defaults rather than its own exclusions, and the difference was 422
+    findings versus 162 — most of the excess from a generated data file
+    the config had excluded all along. Nothing warned; the run simply
+    measured something other than what the repository asked for.
+    """
+    from maintainability_audit.cli import CONFIG_FILENAME, _discovered_config
+
+    assert _discovered_config(tmp_path) is None, "no config means defaults, not an error"
+
+    (tmp_path / CONFIG_FILENAME).write_text(
+        json.dumps({"version": 1, "paths": {"exclude_patterns": ["generated/"]}}),
+        encoding="utf-8",
+    )
+    discovered = _discovered_config(tmp_path)
+
+    assert discovered is not None
+    assert load_config(discovered)["paths"]["exclude_patterns"] == ["generated/"]
+
+
+def test_an_explicit_config_still_wins_over_the_discovered_one(tmp_path: Path) -> None:
+    """Discovery is a default, not an override."""
+    from maintainability_audit.cli import CONFIG_FILENAME
+
+    (tmp_path / CONFIG_FILENAME).write_text(
+        json.dumps({"version": 1, "paths": {"exclude_patterns": ["beside/"]}}), encoding="utf-8",
+    )
+    explicit = tmp_path / "other.json"
+    explicit.write_text(
+        json.dumps({"version": 1, "paths": {"exclude_patterns": ["named/"]}}), encoding="utf-8",
+    )
+
+    assert load_config(str(explicit))["paths"]["exclude_patterns"] == ["named/"]

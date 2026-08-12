@@ -23,6 +23,15 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Fixed
 
+- **The repository's own `maintainability-agent.json` is used without `--config`.** The CLI
+  previously fell back to built-in defaults when no config was named, so a repository with
+  a config file beside it was audited against different exclusions than it asked for. On
+  this project the difference was 422 findings versus 162, most of the excess from a
+  generated data file its config had excluded all along. An explicit `--config` still wins.
+- **File patterns in `exclude_patterns` now reach the external analyzers.** Directory and
+  file patterns were both wrapped as directory globs, so `data/generated.json` became
+  `**/data/generated.json/**` and never matched.
+
 - **`--changed-only` no longer reports a whole-repository grade for a diff.** It previously
   returned an estimate and `evidence_status: complete` over as few as zero declarations, and
   every PR-scoped CI run inherited it. A scope-limited scan now withholds the estimate, the

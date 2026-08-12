@@ -74,13 +74,33 @@ def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
     return 0
 
 
+# The conventional config filename, looked for beside the audited tree.
+CONFIG_FILENAME = "maintainability-agent.json"
+
+
+def _discovered_config(root: Path) -> str | None:
+    """The repository's own config, when the caller did not name one.
+
+    A tool that sits next to its configuration and silently ignores it is
+    a trap: this project audited itself for an entire session against
+    built-in defaults rather than its own exclusions, and the difference
+    was 422 findings versus 162 — most of the excess from a generated
+    data file the config had excluded all along.
+
+    An explicit `--config` still wins, and a repository without the file
+    still gets the defaults.
+    """
+    candidate = root / CONFIG_FILENAME
+    return str(candidate) if candidate.is_file() else None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     add_arguments(parser)
     args = parser.parse_args(argv)
 
     root = Path(args.root).resolve()
-    config = load_config(args.config)
+    config = load_config(args.config or _discovered_config(root))
     if args.init_agent_standards:
         targets = args.target or ["generic", "claude-code", "codex", "cursor", "copilot", "windsurf"]
         write_instruction_pack(targets, Path(args.instructions_output_dir).resolve(), config)

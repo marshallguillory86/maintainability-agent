@@ -20,7 +20,8 @@ Verbatim, not "contains the same numbers": an earlier guard checked whether each
 | Document | Genre | What it settles |
 |---|---|---|
 | [Product intent](product-intent.md) | Governing | What this is, what it promises, what it must never claim, and the bar each kind of claim must clear. **When another document disagrees with this one, this one is right.** |
-| [Architecture](architecture.md) | Governing | Layers, dependency rules, invariants and where each is enforced, and the known debt |
+| [Architecture](architecture.md) | Governing | Layers, dependency rules, invariants and where each is enforced, and the known debt — **as the code is today** |
+| [Target architecture](target-architecture.md) | Decision | Where the design is going: analyzer pipeline, pillars, band matrix, work order. Nothing here ships |
 | [Philosophy](philosophy.md) | Governing | Why the tool is AI-specific — volume, not pathology |
 
 ## Decisions

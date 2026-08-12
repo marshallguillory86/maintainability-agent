@@ -118,46 +118,43 @@ def _function_hotspots(function_metrics: list[FunctionMetric]) -> list[dict[str,
     return [asdict(metric) for metric in flagged[:50]]
 
 
-def build_report(
-    root: Path,
-    config: dict[str, Any],
-    only_paths: set[str] | None = None,
-    changed_revspec: str | None = None,
-    external_findings: list[dict[str, Any]] | None = None,
-    run_analyzers: bool = False,
+def _analyzer_sections(
+    root: Path, config: dict[str, Any], run_analyzers: bool
 ) -> dict[str, Any]:
-    """Assemble one report.
+    """The three analyzer sections, or their empty forms.
 
-    ``run_analyzers`` invokes the external analyzer pool (ADR 006). Off by
-    default while adapters are still being written: turning it on changes
-    what every existing caller measures, and a coverage section listing
-    five unimplemented adapters is worse than none. The CLI exposes it as
-    ``--analyzers``.
+    Extracted because `build_report` reached complexity 15 against this
+    project's own limit. Four conditionals all asking the same question
+    belong behind one, and the empty forms are stated here rather than
+    repeated at each call site.
     """
-    # One index for the whole audit: each file is read once and parsed
-    # once, rather than once per scanner.
-    analysis = analyze(root, config) if run_analyzers else None
-    analyzer_coverage = coverage_document(analysis) if analysis else None
-    analyzer_findings = findings_document(analysis, root) if analysis else []
-    analyzer_measurements = measurement_document(analysis, root) if analysis else {}
-    source = SourceIndex()
-    files, file_metrics, function_metrics = collect_metrics(root, config, only_paths, source)
-    thresholds = config["thresholds"]
-    dupes = duplicate_blocks(root, files, int(thresholds["duplicate_block_lines"]), source)
-    near_duplicates = near_duplicate_findings(root, files, source)
-    dead = dead_declarations(root, files, source)
-    idioms = divergent_idioms(root, files, config, source)
-    risks = risk_findings(root, files, config, source)
-    git_status = run_git(["status", "--short"], root)
-    gates, summary = _compute_gates_and_summary(
-        root, config, git_status, files, file_metrics, function_metrics, len(dupes), len(risks)
-    )
-    missing_files = [path for path in config.get("expected_files", []) if not (root / path).exists()]
-    largest_files = sorted(file_metrics, key=lambda metric: metric.lines, reverse=True)[:25]
+    if not run_analyzers:
+        return {"coverage": None, "findings": [], "measurements": {}}
+    analysis = analyze(root, config)
+    return {
+        "coverage": coverage_document(analysis),
+        "findings": findings_document(analysis, root),
+        "measurements": measurement_document(analysis, root),
+    }
 
-    # Full counts for the rubric aspects, taken before the report's
-    # display lists are truncated to 25 — a rate computed from a capped
-    # list would flatten exactly the repositories the score is about.
+
+def _add_full_counts(
+    summary: dict[str, Any],
+    root: Path,
+    near_duplicates: list[Any],
+    dead: list[Any],
+    idioms: list[Any],
+) -> None:
+    """Counts the rubric reads, taken before display lists are truncated.
+
+    Separated because `build_report` ran to 99 lines against this
+    project's own 80-line limit. These are one job: everything the scorer
+    needs that the display lists would otherwise have capped.
+
+    Taken before truncation to 25 deliberately -- a rate computed from a
+    capped list would flatten exactly the repositories the score exists
+    to distinguish.
+    """
     summary["near_duplicate_count"] = len(near_duplicates)
     summary["dead_code_count"] = len(dead)
     summary["idiom_concern_count"] = len(idioms)
@@ -165,7 +162,35 @@ def build_report(
     summary["has_changelog"] = any(root.glob("CHANGELOG*"))
     summary["has_docs_dir"] = (root / "docs").is_dir()
 
-    report = {
+
+def _assemble(
+    root: Path,
+    analyzer: dict[str, Any],
+    summary: dict[str, Any],
+    gates: list[str],
+    missing_files: list[str],
+    largest_files: list[Any],
+    file_metrics: list[Any],
+    function_metrics: list[Any],
+    risks: list[Any],
+    dupes: list[Any],
+    near_duplicates: list[Any],
+    dead: list[Any],
+    idioms: list[Any],
+    external_findings: list[dict[str, Any]] | None,
+    git_status: str,
+    only_paths: set[str] | None,
+    changed_revspec: str | None,
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    """The report document, assembled in one place.
+
+    Split from `build_report` when it reached 99 lines against this
+    project's own 80-line limit. Scanning and assembly were two jobs
+    sharing a function: everything above gathers evidence, this shapes
+    it into the published contract.
+    """
+    return {
         # The report structure's own version, owned here and validated
         # by ``evidence.normalize_report_evidence``. Distinct from the
         # baseline file's ``version``, which numbers a different
@@ -179,15 +204,15 @@ def build_report(
         "changed_revspec": changed_revspec,
         # Beside the score, never behind it: two reports with different
         # analyzer coverage are not comparable (P8).
-        "analyzer_coverage": analyzer_coverage,
+        "analyzer_coverage": analyzer["coverage"],
         # What the analyzers actually found. Coverage without findings
         # would report that nine tools examined the repository and then
         # tell the reader nothing they saw.
-        "analyzer_findings": analyzer_findings,
+        "analyzer_findings": analyzer["findings"],
         # Measurements and their distributions, kept alongside the counts
         # the score consumes. Collapsing everything into counts would
         # discard the shape a reader needs.
-        "analyzer_measurements": analyzer_measurements,
+        "analyzer_measurements": analyzer["measurements"],
         "summary": summary,
         "hard_gate_failures": gates,
         "missing_files": missing_files,
@@ -218,5 +243,47 @@ def build_report(
         "history": history_section(root, file_metrics, function_metrics),
         "external_findings": external_findings or [],
     }
+
+
+def build_report(
+    root: Path,
+    config: dict[str, Any],
+    only_paths: set[str] | None = None,
+    changed_revspec: str | None = None,
+    external_findings: list[dict[str, Any]] | None = None,
+    run_analyzers: bool = False,
+) -> dict[str, Any]:
+    """Assemble one report.
+
+    ``run_analyzers`` invokes the external analyzer pool (ADR 006). Off by
+    default while adapters are still being written: turning it on changes
+    what every existing caller measures, and a coverage section listing
+    five unimplemented adapters is worse than none. The CLI exposes it as
+    ``--analyzers``.
+    """
+    analyzer = _analyzer_sections(root, config, run_analyzers)
+    # One index for the whole audit: each file is read once and parsed
+    # once, rather than once per scanner.
+    source = SourceIndex()
+    files, file_metrics, function_metrics = collect_metrics(root, config, only_paths, source)
+    thresholds = config["thresholds"]
+    dupes = duplicate_blocks(root, files, int(thresholds["duplicate_block_lines"]), source)
+    near_duplicates = near_duplicate_findings(root, files, source)
+    dead = dead_declarations(root, files, source)
+    idioms = divergent_idioms(root, files, config, source)
+    risks = risk_findings(root, files, config, source)
+    git_status = run_git(["status", "--short"], root)
+    gates, summary = _compute_gates_and_summary(
+        root, config, git_status, files, file_metrics, function_metrics, len(dupes), len(risks)
+    )
+    missing_files = [path for path in config.get("expected_files", []) if not (root / path).exists()]
+    largest_files = sorted(file_metrics, key=lambda metric: metric.lines, reverse=True)[:25]
+
+    _add_full_counts(summary, root, near_duplicates, dead, idioms)
+    report = _assemble(
+        root, analyzer, summary, gates, missing_files, largest_files,
+        file_metrics, function_metrics, risks, dupes, near_duplicates, dead, idioms,
+        external_findings, git_status, only_paths, changed_revspec, config,
+    )
     report["score"] = score_report(report)
     return report

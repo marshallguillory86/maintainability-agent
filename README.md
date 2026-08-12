@@ -54,10 +54,10 @@ This repo eats its own dogfood — the tool runs against this codebase in CI, an
 |---|---:|
 | Maintainability estimate | **4.4 / 5** |
 | Verified grade | **B** |
-| Files scanned | 118 |
-| File warnings | 16 |
+| Files scanned | 117 |
+| File warnings | 17 |
 | File failures | 0 |
-| Function warnings | 8 |
+| Function warnings | 9 |
 | Function failures | 0 |
 | Duplicate blocks | 0 |
 | Risk findings | 0 |

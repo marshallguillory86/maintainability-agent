@@ -34,7 +34,10 @@ PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens"}
 # import scoring. The difference is only that an external process does
 # the looking (ADR 006).
 SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "history", "_adapters"}
-SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive", "_verification"}
+# `_bands` joins the rubric-data leaves: it is the band matrix, a table
+# of judgments like `_formula`, and imports nothing internal.
+SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive",
+           "_verification", "_bands"}
 # `_analysis` orchestrates: it calls the catalog, the runner and the
 # adapters and hands `report` a coverage document. That makes it assembly,
 # not a scanner — it composes rather than measures.

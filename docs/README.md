@@ -36,6 +36,7 @@ Verbatim, not "contains the same numbers": an earlier guard checked whether each
 | [ADR 005 — Insufficient population](adr-005-insufficient-population.md) | **Accepted, not implemented** — no rate without a denominator that supports one |
 | [ADR 006 — Analyzer evidence](adr-006-analyzer-evidence.md) | **Accepted, not implemented** — FOSS analyzers produce the evidence, corroborated across tools |
 | [ADR 007 — Pillars and practice](adr-007-pillars-and-practice.md) | **Accepted, not implemented** — five-pillar taxonomy; practice maturity separate from code condition |
+| [ADR 008 — Translation and decision](adr-008-translation-and-decision.md) | **Accepted, not implemented** — tool output to scoring input, the LLM boundary, CLI and MCP |
 | [Report contract](report-contract.md) | Current — the report's producers, consumers, and schema-version policy |
 
 New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register, and never edited after acceptance except to record implementation progress or mark them superseded.

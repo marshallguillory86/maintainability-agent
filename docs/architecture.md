@@ -148,21 +148,79 @@ This is not complicated, and the rest of this section is detail on top of it. En
 1.  a commit, or a working tree
 2.  run every quality tool that is available and speaks one of its languages
        -- twenty-four tools is fine; more sources is better, not worse
+       -- the agent sets each tool's thresholds from the rubric, ignoring
+          project-local lint config, so no tool's opinion moves the score
 3.  each tool emits its own findings and metrics, in its own format
 4.  normalize each output onto shared measurement concepts
        -- "cyclomatic complexity", "duplication ratio", "dead code", "docstring coverage"
 5.  where several tools measured one concept, combine them with weights
        -- a weighted mean, and record the spread; disagreement is variance, not a crisis
-6.  divide counts by the population they came from, so the result is a rate, not a size
-7.  apply the rubric's aspect weights          -> aspect scores    (0-5)
-8.  apply the rubric's category weights        -> category scores  (0-5)
-9.  weighted mean of categories                -> OVERALL SCORE    (1-5)
-10. separately, detect enforcement evidence    -> MATURITY LEVEL   (1-5)
+6.  the agent attributes each unit as production or test -- tools don't know
+7.  apply the RUBRIC's thresholds to the measurements   -> counts
+8.  divide counts by the population they came from, so the result is a rate, not a size
+9.  apply the rubric's aspect weights          -> aspect scores    (0-5)
+10. apply the rubric's category weights        -> category scores  (0-5)
+11. weighted mean of categories                -> OVERALL SCORE    (1-5)
+12. separately, detect enforcement evidence    -> MATURITY LEVEL   (1-5)
        -- linter wired to CI? coverage gate? complexity thresholds configured?
-11. rank the weak areas by risk x effort
-12. hand the ranked weak areas + their real findings to the user's LLM
+13. rank the weak areas by risk x effort, escalating recurring findings
+14. hand the rubric + scores + ranked areas + real findings to the user's LLM
        -> improvement prompts aimed at what actually scored badly
 ```
+
+Step 7 is the seam. **Everything above it is tool-shaped; everything below it is rubric-shaped.** No tool's threshold survives it — only its measurements.
+
+The agent itself never calls a language model. Step 14 hands structured input to *the user's* model, which keeps the audit deterministic and offline (promise **P1**) and keeps everything the agent asserts reproducible from a pinned run.
+
+### Two kinds of tool, and why the difference decides everything
+
+Auditing the scoring contract against what real tools emit produced one finding that constrains the whole design:
+
+| Kind | Reports | Can supply | Examples |
+|---|---|---|---|
+| **Metric emitter** | A value for *every* unit, threshold-free | Numerators **and denominators** | lizard, radon, multimetric, jscpd statistics |
+| **Verdict emitter** | Only units breaching *its own* threshold | Located findings only | eslint, ruff, pylint, most linters |
+
+Two measurements make this concrete. The same one-function file, cyclomatic complexity 11, through eslint:
+
+```text
+eslint threshold  5 -> 1 finding
+eslint threshold 10 -> 1 finding
+eslint threshold 15 -> 0 findings     <- identical code
+eslint threshold 20 -> 0 findings
+```
+
+Consume those verdicts and the score becomes a function of the repository's `eslint.config.mjs`, which falsifies **P2** — one uniform rubric for every repository. And at threshold 15 the output is *empty*: nothing reveals that a function exists, so no denominator can be formed. lizard on the same file reports one function at CCN 11 — numerator and denominator together.
+
+That is why rates may come only from metric emitters. Feeding verdict-only output into a rate would reintroduce the 0.5.0 bug — counting absolutely and therefore scoring repository *size* — from a new direction.
+
+A further wrinkle: eslint's JSON carries no metric field. The value 11 exists **only inside the human-readable message string**, so recovering it means parsing prose that changes between releases. Pinned versions and tests, or the tool stays verdict-only.
+
+### What no tool can supply
+
+- `idiom_concern_count` and `risk_findings` have no FOSS equivalent and stay native permanently.
+- Production/test attribution is the agent's path classification. Tools measure; the agent attributes. Eleven of the 23 summary inputs are production-only variants that depend on it.
+
+### The scoring contract is exact
+
+The scorer consumes 28 typed inputs — 23 on `SummaryEvidence`, 5 on `HistoryEvidence` — and every one is read by `_pressures` or `_aspects`. No dead inputs, none undeclared. Each is a count or a population; **none accepts a measurement**, which is precisely why step 7 exists.
+
+### Entry points
+
+| Entry point | For | Contract |
+|---|---|---|
+| **CLI** | CI runners, Makefiles, merge gates | Exit codes, files on disk, never prompts, deterministic |
+| **MCP server** | Chat, slash commands, agentic loops | `tools` run the audit, `resources` expose rubric and report, `prompts` are the slash command |
+
+MCP's three primitives cover the chat requirement without inventing anything. CI does not go through MCP — a protocol hop between a runner and an exit code costs determinism and buys nothing. Each agent ships its own server as a subcommand; there is no combined server, because independent releasability is worth more than cross-tool synthesis today.
+
+### The friction signal
+
+A language model has no accumulated-friction signal — no *"I have touched this module four times and it keeps fighting me."* Each turn evaluates cold, so it will patch the same bad abstraction indefinitely without ever raising the design question.
+
+The agent has git history and a persistent baseline, so it can integrate what the model cannot: a file repeatedly patched whose findings never clear, a finding recurring after two remediation attempts, files that keep changing together. Those **escalate** out of the nit class into design-review candidates.
+
+This is the answer to nit-loops, and it needs stable finding identity across runs, which today's baseline lacks.
 
 Two outputs, both 1–5, never averaged together: **a score for the condition of the code** and **a maturity level for the practices around it**. Both fall out of the same run. Step 12 is the product's point — the score exists so the prompt has somewhere true to aim.
 

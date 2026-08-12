@@ -1,0 +1,143 @@
+# ADR 008: The translation layer, the decision engine, and the two entry points
+
+- Status: Accepted
+- Date: 2026-08-12
+- Scope: How tool output becomes scoring input, who calls the LLM, and how the agent is invoked
+- Related: [ADR 006](adr-006-analyzer-evidence.md), [ADR 005](adr-005-insufficient-population.md), [ADR 007](adr-007-pillars-and-practice.md)
+
+## Context: what the audit found
+
+[ADR 006](adr-006-analyzer-evidence.md) decided that external analyzers produce the evidence. Before writing a line of connector code, the existing scoring contract was audited against what real tools actually emit. Six findings, four of them load-bearing.
+
+### 1. The input contract is fully wired
+
+The scorer consumes exactly 28 typed inputs — 23 on `SummaryEvidence`, 5 on `HistoryEvidence`. Every one is read by `_pressures` or `_aspects`. There are no dead inputs and no undeclared ones, so the target the translation layer must hit is exact and small.
+
+### 2. The contract is count-shaped; tools are not
+
+Every scoring input is a **count** (`function_failures`, `duplicate_blocks`, `dead_code_count`) or a **population** (`declarations_scanned`). No input accepts a measurement.
+
+Tools emit one of two very different things, and conflating them is the trap:
+
+- **Metric emitters** report a value for *every* unit: lizard gives cyclomatic complexity, NLOC and parameter count for every function; radon gives a Maintainability Index per file. Threshold-free, complete, and therefore able to supply both numerator and denominator.
+- **Verdict emitters** report only units that violated *the tool's own configured threshold*: eslint, ruff, pylint, most linters. A pass produces no output at all.
+
+### 3. Verdict emitters import their thresholds into the score — measured
+
+The same file, one function, cyclomatic complexity 11, run through eslint at four thresholds:
+
+| eslint `complexity` threshold | findings reported |
+|---|---|
+| 5 | 1 |
+| 10 | 1 |
+| 15 | 0 |
+| 20 | 0 |
+
+Consuming those verdicts makes the score a function of the repository's `eslint.config.mjs`. Two repositories with identical code and different lint configs would score differently, which falsifies promise **P2** — one uniform rubric applied to every repository. The rubric's threshold must be the only threshold that decides a count.
+
+Worse, the value itself is not machine-readable. eslint's JSON carries `ruleId`, `severity`, `line`, `column` and a human sentence — *"Function 'tangled' has a complexity of 11"*. **The number 11 exists only inside the message string.** Recovering it means regex-parsing prose that changes between releases.
+
+### 4. Verdict emitters cannot supply a denominator — measured
+
+The same one-function file at eslint threshold 15 produces **zero messages**. Nothing in that output reveals that a function exists. lizard on the identical file reports one function with CCN 11 — numerator and denominator together.
+
+This matters more than it looks. Rates-not-counts is the property that fixed the 0.5.0 model, where Django, pytest and black all scored 0.0/F while a 53-file toy scored 4.6/A because the model counted absolutely and therefore scored repository *size*. Feeding verdict-only output into a rate would reintroduce exactly that bug from a new direction.
+
+### 5. Two inputs have no FOSS equivalent
+
+`idiom_concern_count` (competing libraries for one concern) and `risk_findings` (repository-configured regex patterns) are not measured by any catalogued tool. They stay native, permanently, and should be stated as such rather than left looking like a gap.
+
+### 6. Production/test classification belongs to the agent
+
+Eleven of the 23 summary inputs are production-only variants. No analyzer knows which files are tests — that is the agent's path classification. Tools measure; the agent attributes.
+
+## Decision
+
+### Every tool is classified, and the classification constrains its use
+
+The catalog gains a required `emits` field: `metric`, `verdict`, or `both`.
+
+- **Only metric emitters may supply populations or feed rate-based aspects.** They are the sole source of denominators.
+- **Verdict emitters may contribute findings** — a named problem at a location — and may never contribute a rate or a population.
+- **A tool with a rubric-drivable threshold is promoted to metric-equivalent** for that concept, by the next rule.
+
+### The rubric drives the tools, not the reverse
+
+Where a tool's threshold is configurable from the command line or a generated config, the agent **sets it from the rubric** and ignores any project-local configuration for scoring purposes. eslint invoked with the rubric's complexity limit produces counts that mean what the rubric says they mean.
+
+Where a threshold cannot be forced, the tool is verdict-only for that concept and its output never becomes a rate.
+
+Project-local lint configuration is still honored for the developer's own workflow; it simply does not get to move the score. A score that moves with a config file is not a measurement of the code.
+
+### Normalization is a pipeline with one shape
+
+```text
+tool process output (JSON/CSV/XML/text)
+  -> adapter            parse into per-unit measurements or located findings
+  -> concept            "cyclomatic complexity" on this function, from this tool
+  -> combine            several tools measuring one concept -> weighted mean + spread
+  -> attribute          agent classifies each unit as production or test
+  -> threshold          apply the RUBRIC's thresholds to measurements -> counts
+  -> populate           the 28 typed inputs, each Measured / Unknown / NotApplicable
+  -> score              unchanged from here down
+```
+
+The seam is deliberate: **everything above `threshold` is tool-shaped, everything below is rubric-shaped.** No tool's opinion survives the seam, only its measurements.
+
+Combination happens *before* thresholding, and only among measurements. Averaging a verdict with a number is meaningless and is not attempted.
+
+### The agent never calls an LLM
+
+The audit stays deterministic, offline, and LLM-free — promise **P1** is unchanged. What the agent produces is the *input* to a language model:
+
+- the rubric that was applied,
+- the scores and the maturity level,
+- the ranked target areas, ordered by Risk × Effort per [ADR 007](adr-007-pillars-and-practice.md),
+- the real findings backing each area, with locations.
+
+The **user's** model consumes that and writes the improvement prompt. This keeps the boundary that makes the tool trustworthy: everything the agent asserts is reproducible from a pinned run, and everything a model says about it is downstream and disposable.
+
+### Two entry points over one core
+
+| Entry point | For | Contract |
+|---|---|---|
+| **CLI** | CI runners, Makefiles, pre-merge gates | Exit codes, files on disk, no prompting, fully deterministic |
+| **MCP server** | Chat, slash commands, agentic loops | Model Context Protocol: `tools` to run the audit, `resources` for the rubric and report, `prompts` for the slash command |
+
+MCP's three primitives map onto the requirement without inventing anything: a slash command *is* an MCP prompt, "let the model read the rubric and scores" *is* MCP resources, and "run the audit" *is* an MCP tool.
+
+The MCP server ships as a subcommand of this package rather than a separate distribution, and `secure-code-agent` does the same for itself. **No combined server.** Two independent servers keep the two tools independently releasable, which is the property that just survived a release cycle. An aggregator that synthesizes both is a reasonable later idea and a bad first one.
+
+CI does not go through MCP. A protocol hop between a runner and an exit code buys nothing and costs determinism.
+
+### Recurrence is tracked, because the model cannot
+
+A finding that has been fixed and returned is not a nit; it is evidence that the abstraction is wrong. Language models have no accumulated-friction signal — no "I have touched this module four times and it keeps fighting me" — so each turn re-evaluates cold and will patch the same bad shape indefinitely.
+
+The agent has git history and a persistent baseline and can integrate what the model cannot:
+
+- a file repeatedly modified whose findings never clear,
+- a finding recurring after two or more remediation attempts,
+- files that keep changing together.
+
+Such findings **escalate** out of the nit class into a design-review candidate, and the remediation input says so. This requires stable finding identity across runs, which today's baseline does not have; that is the prerequisite work.
+
+## Consequences
+
+- The catalog needs an `emits` classification per tool, and it cannot be inferred from the database — it requires running each tool. Another reason tiers grow one verified tool at a time.
+- Adapters are not uniform. A metric adapter parses a table; a verdict adapter parses located findings. Two adapter shapes, not one.
+- Invoking tools with generated configuration is now a requirement, not an optimization, which enlarges `_runner`.
+- Message-string parsing is accepted for verdict emitters where no structured value exists, and must be pinned to a tool version and tested, because it breaks silently on upgrade.
+- The remediation prompt gains ordering and escalation metadata it does not have today.
+- Recurrence tracking needs stable finding fingerprints — new persistent state, and a migration for the existing baseline.
+
+## Invariants
+
+1. No scoring input is derived from a tool's own threshold verdict unless the agent set that threshold from the rubric.
+2. Populations and rates come only from tools classified `metric` or `both`.
+3. A verdict-only tool can contribute findings and can never change a denominator.
+4. Combination across tools happens on measurements, before thresholding, never on verdicts.
+5. Production/test attribution is performed by the agent, never taken from a tool.
+6. The audit performs no network access and invokes no language model.
+7. The CLI path never prompts and never varies its pool between runs given the same configuration.
+8. A finding's identity is stable across runs, so recurrence is a fact rather than a coincidence of formatting.

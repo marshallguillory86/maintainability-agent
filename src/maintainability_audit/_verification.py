@@ -25,6 +25,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from ._formula import ROOT_POPULATIONS, population_floor
+from ._pressures import measured
 from .evidence import SCOPE_FULL, NormalizedEvidence, Unknown, walk_evidence
 
 # The named evidence contract a report was verified under. Reports state
@@ -142,6 +144,9 @@ def _out_of_scale(evidence: NormalizedEvidence) -> list[dict[str, str]]:
     estimate 4.2 with status "complete" over *zero* declarations, and
     every PR-scoped CI run inherited it.
     """
+    thin = _below_root_floor(evidence)
+    if thin:
+        return thin
     if evidence.scope == SCOPE_FULL:
         return []
     return [{
@@ -155,6 +160,34 @@ def _out_of_scale(evidence: NormalizedEvidence) -> list[dict[str, str]]:
         # case: a reason without provenance sends the reader hunting.
         "provenance": "report.mode",
     }]
+
+
+def _below_root_floor(evidence: NormalizedEvidence) -> list[dict[str, str]]:
+    """Populations too small for anything drawn from this tree to mean something.
+
+    Gated at the root rather than per aspect because the history rates
+    describe the same codebase: "0 hotspots over 5 changed files" is no
+    more informative than "0 dead code over 1 declaration". A repository
+    with one production function and one test reported 5.0/A+ with every
+    count genuinely zero, and per-aspect floors alone left it scoring on
+    the history aspects that have no corpus-derived floor.
+    """
+    reasons: list[dict[str, str]] = []
+    for population in ROOT_POPULATIONS:
+        floor = population_floor(population)
+        observed = measured(getattr(evidence.summary, population))
+        if floor is None or observed is None or observed >= floor:
+            continue
+        reasons.append({
+            "measurement": f"summary.{population}",
+            "reason": (
+                f"{int(observed)} is below the {floor} the scale was calibrated on; the "
+                "smallest repository in the reference corpus carries 39 files and 139 "
+                "declarations, so no rate drawn from a smaller tree is supported"
+            ),
+            "provenance": f"summary.{population}",
+        })
+    return reasons
 
 
 def _unresolved(evidence: NormalizedEvidence) -> list[dict[str, str]]:

@@ -21,7 +21,7 @@ Two consequences, both bad:
 - A new repository earns A+ on its first commit and gets *worse* as real code arrives. The scale rewards emptiness.
 - The verified grade — the field stage 5 introduced specifically so that a grade means something — is issued in exactly the case where it cannot.
 
-The scale is calibrated against 40 mature repositories. The smallest carries **39 files and 139 declarations** (36 production declarations). Below that, the tool is extrapolating outside the range it was calibrated on, and saying so is cheaper than pretending otherwise.
+The scale is calibrated against 40 mature repositories. The smallest carries **32 source files and 139 declarations** (lodash). Below that, the tool is extrapolating outside the range it was calibrated on, and saying so is cheaper than pretending otherwise.
 
 ## Options
 
@@ -50,7 +50,15 @@ evidence_status.status    "insufficient"
 evidence_status.reasons   names the population and the floor
 ```
 
-Each aspect declares the minimum denominator at which its rate is meaningful, in the same rubric table that declares its weight. The floors are anchored on the reference corpus, whose smallest member carries **39 files, 139 declarations and 36 production declarations** — the scale's meaning derives from that corpus, so extrapolating beneath it is unsupported by construction. They are thresholds, not measurements: a Tier 2 judgment under [product intent](product-intent.md#the-evidence-standard), stated explicitly, applied identically everywhere, and arguable by changing one visible number.
+Two levels, because one cannot do the job alone.
+
+**Root.** If the tree is smaller than anything the scale was calibrated on, nothing drawn from it means anything — *including* the history rates, which describe the same tiny codebase. `files_scanned` and `declarations_scanned` gate the whole score. Per-aspect floors alone left the hello-world scoring on `churn_hotspots` and `change_coupling`, which have no corpus-derived floor and were reporting "0 hotspots over 5 changed files".
+
+**Per aspect.** Inside a scorable repository, an aspect whose own denominator is thin is withheld individually, so a config-heavy tree with many files and few declarations keeps its file-based rates and loses only its declaration-based ones.
+
+Each aspect declares the population its rate divides by, in the same rubric table that declares its weight. The floors are the reference corpus minima, **recomputed from `tools/calibration/corpus.json` rather than recalled: 32 source files and 139 declarations, both lodash** — the scale's meaning derives from that corpus, so extrapolating beneath it is unsupported by construction. They are thresholds, not measurements: a Tier 2 judgment under [product intent](product-intent.md#the-evidence-standard), stated explicitly, applied identically everywhere, and arguable by changing one visible number.
+
+**A floor may never exceed the corpus minimum.** An earlier draft of this record said 39 files, from memory. The measured minimum is 32, so that floor would have made lodash — a calibration member — unscoreable by the scale it helps define. `test_no_calibration_member_is_unscoreable_by_the_scale_it_calibrates` recomputes from the corpus and fails on any recurrence, and the floors are deliberately not configurable: a floor a repository could lower is not a floor, and P2 promises one rubric applied identically everywhere.
 
 Findings are never suppressed. A two-file repository with a 300-line function still reports it, because that is an observation about a specific line of code and needs no population to be true. What is withheld is every *rate* — the aspect scores and the rollup — because a rate over a denominator of one is arithmetic, not evidence.
 
@@ -75,3 +83,5 @@ Findings are never suppressed. A two-file repository with a 300-line function st
 7. Every insufficiency reason names both the observed population and the floor, and is distinguishable from an analyzer-unavailability reason.
 8. Every report states its scan scope, and a scope-limited run whose population falls short recommends a whole-repository rescan rather than only withholding.
 9. `--changed-only` never reports a whole-repository grade for a diff.
+10. No floor exceeds the corresponding reference-corpus minimum, so no calibration member is unscoreable by the scale it calibrates.
+11. Population floors are not configurable; one rubric applies identically to every repository.

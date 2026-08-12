@@ -121,6 +121,77 @@ CATEGORY_ASPECTS: dict[str, dict[str, float]] = {
     },
 }
 
+# The smallest population each rate needs before it means anything.
+#
+# A rate over a denominator of one is arithmetic, not evidence. A
+# repository holding one production function and one test scored
+# 5.0/A+ with every finding count genuinely zero: `dead_code 5.0` meant
+# "no dead code among one declaration", and `test_presence 5.0` meant
+# "one of two declarations is a test". The arithmetic was right and the
+# number was empty.
+#
+# The floors are the smallest repository in the reference corpus,
+# recomputed from tools/calibration/corpus.json rather than recalled:
+# 32 source files (lodash) and 139 declarations (lodash). The scale's
+# meaning is derived from that corpus, so extrapolating beneath it is
+# unsupported by construction — and a floor *above* the corpus minimum
+# would make a calibration member unscoreable by the scale it
+# calibrates, which an earlier draft of this table did to lodash.
+#
+# `files_scanned` counts every included extension, so it is at least
+# `source_files`; using the source-file minimum is therefore the
+# conservative direction. The production-declaration floor comes from
+# the corpus production-split measurement and is bounded above by the
+# declaration minimum it is a subset of.
+#
+# Thresholds, not measurements: a Tier 2 judgment, stated here where
+# anyone can dispute one by changing a number, applied identically to
+# every repository.
+#
+# History populations are deliberately absent. No corpus minimum was
+# derived for them, and inventing one would be exactly the fabrication
+# this table exists to prevent. Repositories with no history are
+# already handled as NotApplicable by the evidence model.
+# The populations that gate the *whole* score. If the tree itself is
+# smaller than anything the scale was calibrated on, no rate drawn from
+# it means anything -- including the history rates, which describe the
+# same tiny codebase. Per-aspect floors then handle the case of a
+# scorable repository with one thin denominator, e.g. a config-heavy
+# tree with plenty of files and few declarations.
+ROOT_POPULATIONS: tuple[str, ...] = ("files_scanned", "declarations_scanned")
+
+POPULATION_FLOORS: dict[str, int] = {
+    "files_scanned": 32,
+    "declarations_scanned": 139,
+    "production_declarations_scanned": 36,
+}
+
+# Which population each aspect's rate divides by. An aspect absent from
+# this map has no population — `documentation` reads presence flags and
+# `policy_gates` counts discrete policy breaches — so no floor applies
+# and none is pretended.
+ASPECT_POPULATIONS: dict[str, str] = {
+    "file_size": "files_scanned",
+    "duplication": "files_scanned",
+    "risk_patterns": "files_scanned",
+    "declaration_size": "production_declarations_scanned",
+    "dead_code": "production_declarations_scanned",
+    "near_duplication": "production_declarations_scanned",
+    "idiom_consistency": "production_declarations_scanned",
+    "test_presence": "declarations_scanned",
+}
+
+def population_floor(population: str) -> int | None:
+    """The floor for one population, looked up at call time.
+
+    An accessor rather than a direct read of the table because callers
+    that bind the dict at import cannot see a later change to it, and a
+    floor nobody can vary is a floor no test can exercise without
+    growing every fixture past the corpus minimum.
+    """
+    return POPULATION_FLOORS.get(population)
+
+
 # ISO gives the five sub-characteristics no ordering; equal weight is
 # the least-arguable default and is stated rather than implied.
 CATEGORY_WEIGHTS: dict[str, float] = dict.fromkeys(CATEGORY_ASPECTS, 0.2)

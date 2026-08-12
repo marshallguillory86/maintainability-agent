@@ -40,12 +40,23 @@ ENV = {
 
 
 def _source(root: Path) -> None:
+    """A tree large enough for the scale to speak to it.
+
+    Deliberately above the ADR 005 population floors. Tests running
+    in-process get the conftest lift, but these drive the CLI in a
+    subprocess where it does not reach — and an end-to-end contract test
+    should exercise a repository the tool would really score, not one it
+    correctly refuses.
+    """
     root.mkdir(parents=True, exist_ok=True)
     (root / "README.md").write_text("# Fixture\n", encoding="utf-8")
     (root / "app.py").write_text("def ok(value):\n    return value + 1\n", encoding="utf-8")
     (root / "test_app.py").write_text(
         "from app import ok\n\n\ndef test_ok():\n    assert ok(1) == 2\n", encoding="utf-8"
     )
+    for i in range(40):
+        body = "\n".join(f"def f{i}_{j}(v):\n    return v + {j}\n" for j in range(4))
+        (root / f"mod{i}.py").write_text(body, encoding="utf-8")
 
 
 def _commit(root: Path) -> None:

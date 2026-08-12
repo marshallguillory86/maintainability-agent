@@ -29,14 +29,22 @@ from maintainability_audit.evidence import (
 from maintainability_audit.report import build_report
 from maintainability_audit.scoring import score_report
 
+# Every test here is *about* the floors, so the suite-wide lift in
+# conftest must not apply. Declared once for the module rather than
+# threaded through each signature.
+pytestmark = pytest.mark.usefixtures("real_population_floors")
+
 
 def _repo(tmp_path: Path) -> Path:
     root = tmp_path / "r"
     root.mkdir()
     subprocess.run(["git", "init", "-q", str(root)], check=True)
     (root / "README.md").write_text("# r\n", encoding="utf-8")
-    for i in range(6):
-        (root / f"m{i}.py").write_text(f"def f{i}():\n    return {i}\n", encoding="utf-8")
+    # Above the population floors on purpose: this module is about scope,
+    # so the tree must be one the scale would otherwise happily score.
+    for i in range(40):
+        body = "\n".join(f"def f{i}_{j}():\n    return {j}\n" for j in range(4))
+        (root / f"m{i}.py").write_text(body, encoding="utf-8")
     subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
     subprocess.run(
         ["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t",

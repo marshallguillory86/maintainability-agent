@@ -16,6 +16,13 @@ All notable changes to Maintainability Agent will be documented here.
   fixed and new — a false failure for `--fail-on-new` after any refactor that shifts lines.
   Identity is now content-addressed.
 
+- **A repository too small to measure gets no score.** A tree holding one production
+  function and one test reported 5.0/A+ with every finding count genuinely zero — the
+  arithmetic was right and the number was empty. Rates now require a population the scale
+  was calibrated on: the whole score is gated on the tree's size, and inside a scorable
+  repository each aspect is gated on its own denominator. Findings are never suppressed,
+  only rates.
+
 ### Changed
 
 - **Report schema version 3.** `maintainability_estimate` and `maintainability_range` are

@@ -15,7 +15,7 @@ gets scored by.
 from __future__ import annotations
 
 from ._calibration import CALIBRATION_C
-from ._formula import CALIBRATED_ASPECTS, curve
+from ._formula import ASPECT_POPULATIONS, CALIBRATED_ASPECTS, curve, population_floor
 from ._pressures import measured, normalize_production
 from .evidence import HistoryEvidence, NormalizedEvidence, NotApplicable, SummaryEvidence
 
@@ -199,6 +199,45 @@ def aspect_scores(
     scores["churn_hotspots"] = _history_rate_aspect(evidence.history, "hotspots")
     scores["change_coupling"] = _history_rate_aspect(evidence.history, "coupling")
     scores["knowledge_concentration"] = _ownership_aspect(evidence.history)
+    return _withhold_undersupported(scores, summary)
+
+
+def undersupported_aspects(summary: SummaryEvidence) -> dict[str, tuple[int, int]]:
+    """Aspects whose population is too small for their rate to mean anything.
+
+    Maps aspect -> (observed, floor). A rate over a denominator of one is
+    arithmetic, not evidence: a repository with one production function
+    once scored ``dead_code 5.0``, which said only that one declaration
+    was not dead.
+
+    An unmeasured population is *not* undersupported — that is an Unknown
+    with its own reason, and conflating the two would tell a reader to
+    grow a repository whose size nobody established.
+    """
+    thin: dict[str, tuple[int, int]] = {}
+    for aspect, population in ASPECT_POPULATIONS.items():
+        floor = population_floor(population)
+        observed = measured(getattr(summary, population))
+        if floor is None or observed is None:
+            continue
+        if observed < floor:
+            thin[aspect] = (int(observed), floor)
+    return thin
+
+
+def _withhold_undersupported(
+    scores: dict[str, float | None], summary: SummaryEvidence
+) -> dict[str, float | None]:
+    """Blank aspects the population cannot support.
+
+    ``None`` here means the same thing it always has — could not measure
+    — so the rollup, the interval and the grade gate need no new concept:
+    an unsupported aspect widens the range and blocks a verified grade
+    exactly as an unmeasured one does.
+    """
+    for aspect in undersupported_aspects(summary):
+        if aspect in scores:
+            scores[aspect] = None
     return scores
 
 

@@ -80,17 +80,31 @@ def test_a_full_scan_is_unchanged(tmp_path: Path) -> None:
     assert score["evidence_status"]["status"] != "insufficient"
 
 
-def test_the_reason_names_the_scope_and_the_remedy(tmp_path: Path) -> None:
+def test_the_reason_states_the_cause_and_the_remedy_states_the_action(
+    tmp_path: Path,
+) -> None:
+    """Split deliberately, in one place each.
+
+    The reason said "re-run without --changed-only" and the remedy said
+    it again, so the rendered sentence advised the same thing twice. More
+    importantly, advice living in two places drifts from its cause; now
+    `remedy` selects on the reason's *measurement*, so it cannot.
+    """
+    from maintainability_audit._evidence_view import WIDEN_THE_SCAN, remedy, status_sentence
+
     report = build_report(_repo(tmp_path), load_config(None))
     report["mode"] = "changed-only"
-    reasons = score_report(report)["evidence_status"]["reasons"]
+    score = score_report(report)
+    reasons = score["evidence_status"]["reasons"]
 
     assert len(reasons) == 1
     only = reasons[0]
     assert only["measurement"] == "scan.scope"
     assert "changed-only" in only["reason"]
-    assert "Re-run" in only["reason"], "a reason without a remedy leaves the reader stuck"
     assert only["provenance"], "every reason carries provenance or consumers special-case it"
+
+    assert remedy(score) == WIDEN_THE_SCAN
+    assert status_sentence(score).count("Re-run") == 1, "the advice was given twice"
 
 
 def test_findings_survive_a_scope_limited_scan(tmp_path: Path) -> None:

@@ -46,7 +46,7 @@ CORPUS = Path(__file__).resolve().parent.parent / "tools" / "calibration" / "cor
 
 def _repo(tmp_path: Path, files: int, decls_per_file: int = 1) -> Path:
     root = tmp_path / "r"
-    root.mkdir()
+    root.mkdir(parents=True)
     subprocess.run(["git", "init", "-q", str(root)], check=True)
     (root / "README.md").write_text("# r\n", encoding="utf-8")
     for i in range(files):
@@ -192,3 +192,52 @@ def test_a_large_repository_is_unaffected(tmp_path: Path) -> None:
 
     assert isinstance(score["maintainability_estimate"], float)
     assert score["evidence_status"]["status"] != "insufficient"
+
+
+def test_a_withheld_score_names_the_path_out(tmp_path: Path) -> None:
+    """"Insufficient" alone leaves the reader with nowhere to go.
+
+    ADR 005 names three situations and they are not workarounds for each
+    other, so the message has to say which one this is.
+    """
+    from maintainability_audit._evidence_view import (
+        TAKE_THE_FINDINGS,
+        WIDEN_THE_SCAN,
+        remedy,
+        status_sentence,
+    )
+
+    tiny = score_report(build_report(_repo(tmp_path, files=3), load_config(None)))
+    assert remedy(tiny) == TAKE_THE_FINDINGS, (
+        "no re-scan enlarges a genuinely small repository; telling the reader "
+        "to widen the scan would send them in a circle"
+    )
+    assert "complete" in status_sentence(tiny), (
+        "the audit is complete even when the score is withheld, and a reader "
+        "who thinks the run failed will not read the findings"
+    )
+
+    scoped = build_report(_repo(tmp_path / "b", files=40, decls_per_file=4), load_config(None))
+    scoped["mode"] = "changed-only"
+    assert remedy(score_report(scoped)) == WIDEN_THE_SCAN
+
+
+def test_a_reason_follows_the_floor_it_reports(tmp_path: Path, monkeypatch) -> None:
+    """Reasons are generated from the table, never written out in prose.
+
+    An earlier version spelled the corpus minima into the sentence and
+    went stale the moment a floor was corrected — it kept saying 39 after
+    the value became 32. Checking the *text* for a stale number cannot
+    catch that in general, so this varies the floor and asserts the
+    sentence follows it.
+    """
+    from maintainability_audit import _formula
+
+    root = _repo(tmp_path, files=3)
+    monkeypatch.setattr(
+        _formula, "POPULATION_FLOORS", {**POPULATION_FLOORS, "files_scanned": 999}
+    )
+    reasons = score_report(build_report(root, load_config(None)))["evidence_status"]["reasons"]
+    files_reason = next(r for r in reasons if r["measurement"] == "summary.files_scanned")
+
+    assert "999" in files_reason["reason"], "the sentence did not follow the table"

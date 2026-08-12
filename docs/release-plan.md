@@ -42,6 +42,7 @@ Implements [ADR 005](adr-005-insufficient-population.md). No external tools requ
 | 1.3 | `evidence_status: insufficient` and null estimate/range/grade | Property test: no report with zero measurable aspects carries a number |
 | 1.4 | Scope in the report; scope-escalation advice | A subset scan recommends a whole-repository rescan, naming the observed population |
 | 1.5 | Consumer migration | Markdown, PR comment, SARIF, prompt all render insufficiency without a dash or a zero |
+| 1.6 | Name the path out | A withheld score states which applies: widen the scan, take the findings, or calibrate a fitting scale — never a bare "insufficient" |
 
 **Exit for the phase:** the fixture that started all of this reports "practice level 1, condition unmeasured" rather than 5.0/A+.
 
@@ -109,6 +110,12 @@ Implements [ADR 009](adr-009-scan-history.md). Needs 0.3 (identity) and Phase 3 
 | 5.6 | Compaction policy | Documented, explicit, never a side effect of a scan |
 
 **5.4 is Miles's feature** and the sharpest differentiator: the accumulated-friction signal a language model structurally cannot hold.
+
+## Deferred, deliberately — calibration profiles
+
+An organization whose whole estate is small services needs a scale fitted to that, not a lowered floor on a scale fitted to mature repositories. That means a **calibration profile**: a corpus, the constant fitted to it, floors from its minima, bands from its percentiles — distinct from the *evidence* profile (`default-v1`) which declares what must be measured.
+
+Not in this plan. It needs its own ADR, a second corpus, and a re-derivation, and shipping the first instrument correctly comes first. Recorded here so it is a deferred decision rather than a forgotten one.
 
 ## Phase 6 — Entry points
 

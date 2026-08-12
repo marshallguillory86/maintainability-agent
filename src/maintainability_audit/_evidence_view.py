@@ -106,14 +106,40 @@ def is_insufficient(score: dict[str, Any]) -> bool:
     return score["evidence_status"]["status"] == "insufficient"
 
 
+# What to do about a withheld score depends on which situation you are in,
+# and a bare "insufficient" leaves the reader unable to tell. ADR 005 names
+# three, and they are not workarounds for each other.
+WIDEN_THE_SCAN = (
+    "The population exists but this scan did not look at it. Re-run over the "
+    "whole repository for a comparable score."
+)
+TAKE_THE_FINDINGS = (
+    "This repository is smaller than anything the scale was calibrated on, and "
+    "no re-scan will change that. The audit is complete: every finding and every "
+    "work item below is real and actionable. Only the rates are withheld."
+)
+
+
+def remedy(score: dict[str, Any]) -> str:
+    """Which of ADR 005's three paths applies to this report.
+
+    Chosen from the reason's measurement rather than from prose, so the
+    advice cannot drift from what actually withheld the score.
+    """
+    measurements = {item["measurement"] for item in reasons(score)}
+    if "scan.scope" in measurements:
+        return WIDEN_THE_SCAN
+    return TAKE_THE_FINDINGS
+
+
 def status_sentence(score: dict[str, Any]) -> str:
     """One line a human can act on, for any state."""
     if is_insufficient(score):
-        # The reason is the whole message here, because the reader's next
-        # action is to widen the scan rather than to restore evidence.
+        # The remedy is the message here: the reader's next action is to
+        # widen the scan or to read the findings, not to restore evidence.
         detail = reasons(score)
         why = detail[0]["reason"] if detail else "the scan cannot support a score"
-        return f"No score issued: {why}"
+        return f"No score issued — {why}. {remedy(score)}"
     if is_complete(score):
         return f"Evidence complete under profile `{profile(score)}`."
     missing = len(reasons(score))

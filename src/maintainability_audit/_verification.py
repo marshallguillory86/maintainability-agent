@@ -151,10 +151,12 @@ def _out_of_scale(evidence: NormalizedEvidence) -> list[dict[str, str]]:
         return []
     return [{
         "measurement": "scan.scope",
+        # States the fact only. What to do about it is one place --
+        # `_evidence_view.remedy` -- so advice cannot drift from the cause,
+        # and a reason plus a remedy do not read as the same sentence twice.
         "reason": (
-            f"scan scope is {evidence.scope}, not a whole repository; the scale is "
-            "calibrated over whole repositories. Re-run without --changed-only for "
-            "a comparable score."
+            f"scan scope is {evidence.scope}, not a whole repository, and the scale "
+            "is calibrated over whole repositories"
         ),
         # Same shape as every other reason, so consumers need no special
         # case: a reason without provenance sends the reader hunting.
@@ -180,10 +182,12 @@ def _below_root_floor(evidence: NormalizedEvidence) -> list[dict[str, str]]:
             continue
         reasons.append({
             "measurement": f"summary.{population}",
+            # Built from the floor table rather than written out: an
+            # earlier version restated the corpus minima in prose and went
+            # stale the moment a floor was corrected.
             "reason": (
-                f"{int(observed)} is below the {floor} the scale was calibrated on; the "
-                "smallest repository in the reference corpus carries 39 files and 139 "
-                "declarations, so no rate drawn from a smaller tree is supported"
+                f"{int(observed)} is below the calibration floor of {floor} for "
+                f"{population}, so no rate drawn from this tree is supported"
             ),
             "provenance": f"summary.{population}",
         })

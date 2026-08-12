@@ -62,6 +62,23 @@ Each aspect declares the population its rate divides by, in the same rubric tabl
 
 Findings are never suppressed. A two-file repository with a 300-line function still reports it, because that is an observation about a specific line of code and needs no population to be true. What is withheld is every *rate* — the aspect scores and the rollup — because a rate over a denominator of one is arithmetic, not evidence.
 
+## Three legitimate paths below the floor
+
+Withholding a score is not the end of the conversation, and a reader who lands there needs to know which of these applies to them. They serve different situations and none is a workaround for the others.
+
+**1. Widen the scan.** For a monorepo of small packages, or a diff, the population exists — the scan just did not look at it. Aggregate scope clears the floor and yields a comparable score, so the report recommends this whenever the scope was limited. This is the common case and the cheapest.
+
+**2. Take the findings without a score.** For a genuinely small repository, the population does not exist and no rescan will conjure it. That is not a failure state: **findings are never suppressed**, so a twelve-file service still gets every located, verifiable work item — a 300-line function, a duplicated block, a risk pattern — each with its line, its target and its verification command. Everything in the work order survives; only the rates are withheld. A user in this situation should be told they have a complete audit and no score, not shown an error.
+
+**3. Calibrate a scale that fits.** For an organization whose whole estate is small services, a scale fitted to 40 mature repositories is the wrong instrument, and lowering its floor would not make it the right one — it would only resume extrapolating. The honest path is a **calibration profile**: a named bundle of a reference corpus, the constant fitted to it, the population floors derived from its minima, and the band boundaries drawn from its percentiles.
+
+That requires separating two things this codebase currently calls by one word:
+
+- an **evidence profile** (`default-v1`) declares *which measurements must be resolved* before a grade is verified;
+- a **calibration profile** would declare *which corpus the scale is fitted to*, and therefore what the constant, floors and bands are.
+
+They are independent axes and conflating them would produce exactly the ambiguity the frozen `default-v1` requirement list exists to prevent. A calibration profile is a larger piece of work than this record covers and needs its own ADR before anyone builds one; what matters here is that it is the *shape* of the answer, and that it is not the same thing as a configurable floor. The cost of the honest path — supply a corpus, re-derive the constant, publish both — is precisely what makes it honest.
+
 ## Consequences
 
 - A new or tiny repository gets findings and no grade, instead of an A+ it did not earn.
@@ -84,4 +101,5 @@ Findings are never suppressed. A two-file repository with a 300-line function st
 8. Every report states its scan scope, and a scope-limited run whose population falls short recommends a whole-repository rescan rather than only withholding.
 9. `--changed-only` never reports a whole-repository grade for a diff.
 10. No floor exceeds the corresponding reference-corpus minimum, so no calibration member is unscoreable by the scale it calibrates.
-11. Population floors are not configurable; one rubric applies identically to every repository.
+11. Population floors are not configurable; one rubric applies identically to every repository. A scale that does not fit a population is replaced by a named calibration profile, never by lowering a floor.
+12. A report that withholds a score still carries every finding and every work item, and says which of the three paths applies.

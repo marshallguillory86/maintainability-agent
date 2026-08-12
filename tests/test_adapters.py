@@ -219,3 +219,51 @@ def test_jscpd_writes_its_report_outside_the_audited_tree(tmp_path: Path) -> Non
     output = argv[argv.index("--output") + 1]
 
     assert not Path(output).is_relative_to(tmp_path)
+
+
+@pytest.mark.parametrize("slug", sorted(ADAPTERS))
+def test_raw_output_survives_a_parse_failure(slug: str) -> None:
+    """The case where raw output matters most.
+
+    A parse error means *this agent* could not read the output. A language
+    model reading the report usually can, and discarding it would throw
+    away the one artifact that still had value. Swept over every adapter,
+    because the adapter most likely to break is the one nobody expected to.
+    """
+    unreadable = _ran("!!! not the shape this parser expects !!!")
+    extraction = adapter_for(slug).parse(unreadable)
+
+    if extraction.parse_error:
+        assert extraction.raw, f"{slug} discarded output its parser could not read"
+        assert "retained" in extraction.parse_error, (
+            "the reader must be told the output is still there"
+        )
+
+
+def test_raw_output_is_bounded_but_marked_when_cut() -> None:
+    """A report is a document, not a log.
+
+    Truncating silently would let a reader draw conclusions from a
+    fragment they believed was the whole.
+    """
+    from maintainability_audit._adapters import RAW_INLINE_LIMIT
+
+    extraction = adapter_for("lizard").parse(_ran("x" * (RAW_INLINE_LIMIT + 500)))
+
+    assert len(extraction.raw) == RAW_INLINE_LIMIT
+    assert extraction.truncated
+
+
+def test_a_successful_parse_also_keeps_the_raw_output() -> None:
+    """Not only a failure path.
+
+    The engine maps output onto nine concerns, which is lossy by design;
+    a model reading the report is not bound by that vocabulary.
+    """
+    payload = json.dumps([{"code": "F401", "filename": "m.py",
+                           "location": {"row": 1}, "message": "unused"}])
+    extraction = adapter_for("ruff").parse(_ran(payload))
+
+    assert extraction.findings
+    assert not extraction.parse_error
+    assert extraction.raw == payload

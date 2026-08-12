@@ -31,7 +31,7 @@ import json
 import shutil
 import tempfile
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Protocol
 
@@ -67,6 +67,13 @@ class Finding:
     rule: str | None = None
 
 
+# How much raw output to keep inline per tool. Enough for a language model
+# to reason over the shape of a result, bounded so a report stays a
+# document. The full text is written beside the report when a sidecar
+# directory is supplied.
+RAW_INLINE_LIMIT = 64_000
+
+
 @dataclass(frozen=True)
 class Extraction:
     """Everything one adapter produced from one run."""
@@ -78,6 +85,24 @@ class Extraction:
     # is a gap, and reporting it as clean is the failure ADR 006 exists
     # to prevent.
     parse_error: str | None = None
+    # What the tool actually said, kept whether or not the parser
+    # understood it.
+    #
+    # Two consumers with different constraints. The scoring engine is
+    # deliberately conservative: it reads only measurements, refuses
+    # threshold-contaminated verdicts as rates, and maps everything onto
+    # nine concerns. That is lossy by design. A language model reading the
+    # report is bound by none of it, and can see what the engine
+    # structurally cannot -- that forty unused-import findings cluster in
+    # one module, that every complexity warning sits on one code path,
+    # that a whole rule category is missing because nobody enabled it.
+    #
+    # Retained on parse failure especially. A parse error means *this
+    # agent* could not read the output; a model usually can, and
+    # discarding it would throw away the one artifact that still had
+    # value.
+    raw: str = ""
+    truncated: bool = False
 
 
 class Adapter(Protocol):
@@ -128,19 +153,33 @@ class BaseAdapter:
         if not result.usable:
             return Extraction(parse_error=result.detail or f"{self.slug} did not run")
         try:
-            return self._read(result)
+            return self._with_raw(self._read(result), result)
         except (ValueError, KeyError, IndexError, TypeError, AttributeError,
                 json.JSONDecodeError) as error:
             # Output shapes drift between tool releases, and a message-text
             # parser drifts faster. Failing to a stated gap keeps a version
             # bump from quietly turning findings into a clean result.
-            return Extraction(
-                parse_error=(
-                    f"{self.slug} ran but its output could not be read "
-                    f"({type(error).__name__}: {error}). Pin the tool version or "
-                    "update the adapter."
-                )
+            return self._with_raw(
+                Extraction(
+                    parse_error=(
+                        f"{self.slug} ran but its output could not be read "
+                        f"({type(error).__name__}: {error}). Pin the tool version or "
+                        "update the adapter. The raw output is retained: a reader, "
+                        "human or model, can still use it."
+                    )
+                ),
+                result,
             )
+
+    @staticmethod
+    def _with_raw(extraction: Extraction, result: ToolResult) -> Extraction:
+        """Attach what the tool said, bounded but never dropped."""
+        text = result.stdout or result.stderr
+        return replace(
+            extraction,
+            raw=text[:RAW_INLINE_LIMIT],
+            truncated=len(text) > RAW_INLINE_LIMIT,
+        )
 
     def _read(self, result: ToolResult) -> Extraction:
         raise NotImplementedError

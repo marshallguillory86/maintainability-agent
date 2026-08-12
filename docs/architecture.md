@@ -464,6 +464,7 @@ Every design point above traces to a record. Nothing here is a preference someon
 | Selection by intent: the user answers concerns and density, the agent picks tools | [analyzer pool](analyzer-pool.md), [config](config-schema.md#analyzer-policy-analyzers) |
 | Concern vocabulary comes from the scoring model; `measures` grows with adapters | [analyzer pool](analyzer-pool.md) |
 | Every finding stays in the report; ranking orders, never filters | [ADR 008](adr-008-translation-and-decision.md) |
+| Raw analyzer output is retained for the model, especially on parse failure | [ADR 008](adr-008-translation-and-decision.md) |
 | Work order is a queryable set; the consumer picks the slice | [ADR 008](adr-008-translation-and-decision.md) |
 | Set deltas are recomputed, never summed from per-item deltas | [ADR 008](adr-008-translation-and-decision.md) |
 | Coverage gaps reported per language and concern, with the prerequisite named | [ADR 006](adr-006-analyzer-evidence.md) |
@@ -503,6 +504,18 @@ looks FIXED:                function:big.py:huge:1
 ```
 
 That is a live false-positive source for the shipped `--fail-on-new` flag on any refactor that shifts lines, and it makes recurrence tracking impossible. Identity becomes content-addressed — kind, path, unit name and a hash of the unit's normalized content — with line numbers reported but never part of identity.
+
+### Two readers, different constraints
+
+The scoring engine and the user's language model read the same run and are bound by different rules, and the design serves both rather than collapsing them.
+
+**The engine is deliberately conservative.** It consumes only measurements, refuses verdict output as a rate because thresholds contaminate it, and maps everything onto nine concerns. All three are lossy on purpose — that is what makes a score reproducible and comparable between repositories.
+
+**The model is bound by none of that.** Given the raw analyzer output it can see what the engine structurally cannot: that forty unused-import findings cluster in one module and suggest a dead subsystem, that every complexity warning sits on one code path, that a whole rule category is absent because nobody enabled it. Those are real judgments about maintainability, and refusing verdict output for *scoring* was never a reason to withhold it from *reading*.
+
+So **raw tool output is retained and exposed**, bounded per tool and marked when truncated — and kept **especially on parse failure**, which is where it matters most. A parse error means this agent could not read the output; a model usually can, and discarding it would throw away the one artifact that still had value.
+
+One boundary holds firm: a model's judgment is never a score. It is commentary on a report, downstream and disposable, while the score stays a deterministic function of measurements. Conflating them would make the number unreproducible, which is most of what it is for.
 
 ### The friction signal
 

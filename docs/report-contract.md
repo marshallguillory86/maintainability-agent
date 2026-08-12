@@ -60,6 +60,11 @@ The profile's required measurements are **frozen by name** in `_verification.DEF
 
 ## Schema version
 
+**Version 3 (ADR 005).** `maintainability_estimate` and `maintainability_range` are nullable, and `evidence_status.status` gains `insufficient`. A scan whose scope is not a whole repository carries no score: the scale is calibrated over whole repositories, so a diff is a different kind of object rather than a small one. Consumers that assumed a number must handle null; the shared presentation helper renders `Not scored`, never a dash or a zero.
+
+Findings, aspects, categories and dimensions are unaffected — only the rolled-up judgment is withheld.
+
+
 New reports carry a top-level integer:
 
 ```json

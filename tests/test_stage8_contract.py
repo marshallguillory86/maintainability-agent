@@ -137,14 +137,15 @@ def test_blockers_explain_an_issued_grade_only(name: str, tmp_path: Path) -> Non
         assert score["evidence_status"]["reasons"], "the gap must be named somewhere"
 
 
-def test_the_report_stamps_schema_version_two(tmp_path: Path) -> None:
+def test_the_report_stamps_the_current_schema_version(tmp_path: Path) -> None:
     report = _live("complete", tmp_path)
 
-    assert report[SCHEMA_VERSION_KEY] == 2 == REPORT_SCHEMA_VERSION
+    assert report[SCHEMA_VERSION_KEY] == 3 == REPORT_SCHEMA_VERSION
 
 
-@pytest.mark.parametrize("version", [1, None, 99, "2"], ids=["v1", "unversioned", "v99", "string"])
-def test_only_version_two_is_accepted(version: object, tmp_path: Path) -> None:
+@pytest.mark.parametrize("version", [1, 2, None, 99, "3"],
+                         ids=["v1", "v2", "unversioned", "v99", "string"])
+def test_only_the_current_version_is_accepted(version: object, tmp_path: Path) -> None:
     """Version 1 is rejected, not migrated.
 
     Deliberate: the consumer inventory established that nothing rescores
@@ -160,7 +161,7 @@ def test_only_version_two_is_accepted(version: object, tmp_path: Path) -> None:
         score_report(report)
 
 
-def test_cli_json_carries_the_version_two_contract(tmp_path: Path) -> None:
+def test_cli_json_carries_the_current_contract(tmp_path: Path) -> None:
     result = subprocess.run(
         [sys.executable, "-m", "maintainability_audit", "--root", str(_tree(tmp_path / "cli", 1)),
          "--format", "json"],
@@ -168,7 +169,7 @@ def test_cli_json_carries_the_version_two_contract(tmp_path: Path) -> None:
     )
     report = json.loads(result.stdout)
 
-    assert report[SCHEMA_VERSION_KEY] == 2
+    assert report[SCHEMA_VERSION_KEY] == REPORT_SCHEMA_VERSION
     assert set(CANONICAL) == set(report["score"])
     for removed in REMOVED:
         assert removed not in report["score"]

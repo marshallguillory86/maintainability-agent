@@ -59,7 +59,7 @@ from ._pressures import (
     normalize_production,
     production_pressures,
 )
-from ._verification import verification
+from ._verification import INSUFFICIENT, verification
 from .evidence import (
     EvidenceState,
     NormalizedEvidence,
@@ -319,9 +319,16 @@ def _score_document(
 ) -> dict[str, Any]:
     """The score block exactly as it ships, assembled in one place."""
     low, high = interval
+    # A run the scale cannot speak to carries no number at all. Not a
+    # zero, not a dash, not a pessimistic floor -- ADR 001 §1 already
+    # rejected reporting unknown quality as bad quality, and ADR 005
+    # extends that to quality measured over the wrong kind of population.
+    # The aspects and every finding stay: they are observations, and only
+    # the rolled-up judgment is withheld.
+    withheld = verified["evidence_status"]["status"] == INSUFFICIENT
     return {
         "standard": "ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based",
-        "maintainability_estimate": overall,
+        "maintainability_estimate": None if withheld else overall,
         # Evidence sufficiency, separate from quality (ADR 001 stage 5).
         # `grade` keeps its existing evidence-floor meaning for the
         # compatibility period; `verified_grade` is null unless the
@@ -338,7 +345,7 @@ def _score_document(
         # worse-than-anchor evidence from flattering the point estimate,
         # so the report prints the width of what is not known instead of
         # pretending the point is precise.
-        "maintainability_range": [low, high],
+        "maintainability_range": None if withheld else [low, high],
         # The full aspect layer: every score the rubric read, None where
         # the evidence was unavailable rather than clean.
         "aspects": {

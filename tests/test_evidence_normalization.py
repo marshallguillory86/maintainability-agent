@@ -101,6 +101,13 @@ def test_the_normalized_model_has_no_companion_evidence_flags() -> None:
         "schema_version",
         "summary",
         "history",
+        # `scope` is a scalar and deliberately not an EvidenceState: it
+        # describes what the run *looked at*, not something the scanner
+        # measured, so there is no Measured/Unknown/NotApplicable to make
+        # of it. The rule this test guards is that no scalar may shadow a
+        # state's meaning, and scope shadows nothing -- no state reports
+        # scan extent.
+        "scope",
     }
 
 

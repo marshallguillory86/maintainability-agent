@@ -4,6 +4,30 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+### Fixed
+
+- **`--changed-only` no longer reports a whole-repository grade for a diff.** It previously
+  returned an estimate and `evidence_status: complete` over as few as zero declarations, and
+  every PR-scoped CI run inherited it. A scope-limited scan now withholds the estimate, the
+  range and the verified grade, with a reason naming the scope and the remedy. Findings and
+  aspects are unaffected, and `--fail-on-gate` exit codes are unchanged.
+- **Finding identity survives edits elsewhere in the file.** Fingerprints embedded the start
+  line, so inserting one import above an untouched function made it read as simultaneously
+  fixed and new — a false failure for `--fail-on-new` after any refactor that shifts lines.
+  Identity is now content-addressed.
+
+### Changed
+
+- **Report schema version 3.** `maintainability_estimate` and `maintainability_range` are
+  nullable and `evidence_status.status` may be `insufficient`. Consumers assuming a number
+  must handle null.
+- **Baseline format version 2.** Old fingerprints cannot be converted, so a version-1 baseline
+  is rejected with an instruction to regenerate rather than silently suppressing nothing.
+  Regenerate with `--write-baseline`.
+
+
+## Unreleased
+
 Recalibration, and a retraction. The reference corpus is now chosen by a query instead of by the author's taste, which moved every constant in the scale — read the table before comparing a score to one from 0.6.x.
 
 ### Changed — ADR 001 stage 8 (**breaking report contract**)

@@ -40,7 +40,20 @@ from typing import Any
 # decision rather than an omission: the consumer inventory in
 # docs/report-contract.md established that nothing rescores a persisted
 # report, so a migration would serve no caller.
-REPORT_SCHEMA_VERSION = 2
+#
+# Version 3 (ADR 005) makes ``maintainability_estimate`` and
+# ``maintainability_range`` nullable and adds ``insufficient`` to
+# ``evidence_status.status``. A scope-limited scan carries no
+# whole-repository score, so consumers must handle null where they
+# previously assumed a number.
+REPORT_SCHEMA_VERSION = 3
+
+# What a run examined. ``full`` is the whole tree; anything else is a
+# subset and cannot carry a whole-repository grade (ADR 005).
+SCOPE_FULL = "full"
+SCOPE_CHANGED = "changed-only"
+SCOPE_SUBSET = "subset"
+KNOWN_SCOPES = frozenset({SCOPE_FULL, SCOPE_CHANGED, SCOPE_SUBSET})
 
 SCHEMA_VERSION_KEY = "schema_version"
 
@@ -138,6 +151,12 @@ class NormalizedEvidence:
     schema_version: int
     summary: SummaryEvidence
     history: HistoryEvidence
+    # What the scan looked at. The scale is calibrated over whole
+    # repositories, so a diff is not a small repository -- it is a
+    # different kind of thing, and scoring it on this scale is a
+    # category error rather than a precision problem. Carried through the
+    # boundary so the scorer never reads the raw report to learn it.
+    scope: str = SCOPE_FULL
 
 
 def walk_evidence(node: Any, prefix: str = "") -> Iterator[tuple[str, EvidenceState]]:
@@ -390,4 +409,21 @@ def normalize_report_evidence(report: dict[str, Any]) -> NormalizedEvidence:
         schema_version=version,
         summary=SummaryEvidence(**summary_states),
         history=history,
+        scope=_scope_of(report),
     )
+
+
+def _scope_of(report: dict[str, Any]) -> str:
+    """What the run examined, validated at the boundary like everything else.
+
+    An unrecognized scope is rejected rather than defaulted to ``full``:
+    defaulting would silently grant a whole-repository grade to a scan
+    whose extent nobody could describe, which is the failure this field
+    exists to prevent.
+    """
+    mode = report.get("mode", SCOPE_FULL)
+    if mode not in KNOWN_SCOPES:
+        raise EvidenceValidationError(
+            f"unknown scan scope {mode!r}; expected one of {sorted(KNOWN_SCOPES)}"
+        )
+    return mode

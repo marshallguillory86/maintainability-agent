@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .evidence import NormalizedEvidence, Unknown, walk_evidence
+from .evidence import SCOPE_FULL, NormalizedEvidence, Unknown, walk_evidence
 
 # The named evidence contract a report was verified under. Reports state
 # it so that CI, badges and APIs cannot silently compare results issued
@@ -83,6 +83,11 @@ DEFAULT_V1_NOT_REQUIRED: frozenset[str] = frozenset()
 
 COMPLETE = "complete"
 INCOMPLETE = "incomplete"
+# The evidence resolved, but not over a population this scale can speak
+# to. Distinct from INCOMPLETE, which means a required measurement was
+# never established: here everything was measured and the measuring is
+# what does not apply (ADR 005).
+INSUFFICIENT = "insufficient"
 
 
 def verification(evidence: NormalizedEvidence, grade: str) -> dict[str, Any]:
@@ -98,6 +103,20 @@ def verification(evidence: NormalizedEvidence, grade: str) -> dict[str, Any]:
     them in one place instead of threading two more parameters through
     the rollup.
     """
+    scope_reasons = _out_of_scale(evidence)
+    if scope_reasons:
+        # Scope is checked before completeness because it dominates: a
+        # diff with every measurement resolved still cannot carry a
+        # whole-repository grade, and reporting "complete" beside a
+        # withheld score would read as a contradiction.
+        return {
+            "evidence_status": {
+                "status": INSUFFICIENT,
+                "profile": DEFAULT_PROFILE,
+                "reasons": scope_reasons,
+            },
+            "verified_grade": None,
+        }
     reasons = _unresolved(evidence)
     complete = not reasons
     return {
@@ -111,6 +130,31 @@ def verification(evidence: NormalizedEvidence, grade: str) -> dict[str, Any]:
         # 001 §1 rejects reporting unknown quality as bad quality.
         "verified_grade": grade if complete else None,
     }
+
+
+def _out_of_scale(evidence: NormalizedEvidence) -> list[dict[str, str]]:
+    """Reasons this run cannot carry a whole-repository score.
+
+    The scale is calibrated over whole repositories. A diff is not a
+    small repository; it is a different kind of object, so scoring one
+    on this scale is a category error rather than a precision problem.
+    Before this check a two-file diff of this repository reported
+    estimate 4.2 with status "complete" over *zero* declarations, and
+    every PR-scoped CI run inherited it.
+    """
+    if evidence.scope == SCOPE_FULL:
+        return []
+    return [{
+        "measurement": "scan.scope",
+        "reason": (
+            f"scan scope is {evidence.scope}, not a whole repository; the scale is "
+            "calibrated over whole repositories. Re-run without --changed-only for "
+            "a comparable score."
+        ),
+        # Same shape as every other reason, so consumers need no special
+        # case: a reason without provenance sends the reader hunting.
+        "provenance": "report.mode",
+    }]
 
 
 def _unresolved(evidence: NormalizedEvidence) -> list[dict[str, str]]:

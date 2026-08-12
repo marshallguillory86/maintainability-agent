@@ -29,10 +29,26 @@ from __future__ import annotations
 from typing import Any
 
 NOT_VERIFIED = "Not verified"
+# One phrase for "no number was issued", used wherever a number would
+# otherwise go. Never a dash and never a zero: both read as a value, and
+# a reader scanning a table cannot tell a withheld score from a bad one.
+NO_SCORE = "Not scored"
+
+
+def is_scored(score: dict[str, Any]) -> bool:
+    """Whether this run produced a number at all.
+
+    Consults the estimate rather than the status so a consumer cannot
+    render a number the scorer withheld, whatever new status values
+    arrive later.
+    """
+    return score.get("maintainability_estimate") is not None
 
 
 def estimate(score: dict[str, Any]) -> str:
     """The point estimate, always labelled as an estimate."""
+    if not is_scored(score):
+        return NO_SCORE
     return f"{score['maintainability_estimate']} / 5"
 
 
@@ -48,7 +64,10 @@ def score_range(score: dict[str, Any]) -> str:
     two numbers that happen to match after rounding, so this consults
     the status rather than inferring it.
     """
-    low, high = score["maintainability_range"]
+    interval = score["maintainability_range"]
+    if interval is None:
+        return NO_SCORE
+    low, high = interval
     if low != high:
         return f"{low} – {high}"
     if is_complete(score):
@@ -83,8 +102,18 @@ def grade_blockers(score: dict[str, Any]) -> list[str]:
     return list(score["verified_grade_blockers"])
 
 
+def is_insufficient(score: dict[str, Any]) -> bool:
+    return score["evidence_status"]["status"] == "insufficient"
+
+
 def status_sentence(score: dict[str, Any]) -> str:
-    """One line a human can act on, for either state."""
+    """One line a human can act on, for any state."""
+    if is_insufficient(score):
+        # The reason is the whole message here, because the reader's next
+        # action is to widen the scan rather than to restore evidence.
+        detail = reasons(score)
+        why = detail[0]["reason"] if detail else "the scan cannot support a score"
+        return f"No score issued: {why}"
     if is_complete(score):
         return f"Evidence complete under profile `{profile(score)}`."
     missing = len(reasons(score))

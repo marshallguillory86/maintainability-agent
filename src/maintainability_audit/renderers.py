@@ -92,6 +92,53 @@ def markdown_table(title: str, headers: list[str], rows: list[list[str]]) -> lis
     return lines
 
 
+def analyzer_coverage_markdown(coverage: dict[str, Any] | None) -> list[str]:
+    """What examined this repository, and what nothing examined.
+
+    Placed immediately after the summary rather than in an appendix: two
+    reports with different coverage are not comparable, so a reader who
+    sees a score must see what produced it in the same glance (P8).
+    """
+    if not coverage:
+        return []
+    if coverage.get("error"):
+        return ["## Analyzer Coverage", "",
+                f"No analyzers ran: {coverage['error']}", ""]
+
+    selection = coverage["selection"]
+    lines = [
+        "## Analyzer Coverage", "",
+        f"{coverage['tools_contributed']} of {coverage['tools_attempted']} tools "
+        f"contributed — concerns `{', '.join(selection['concerns'])}`, "
+        f"depth `{selection['depth']}`, license policy `{selection['license_policy']}`.",
+        "",
+        "| Tool | Outcome | Version | Measurements | Findings | Note |",
+        "|---|---|---|---|---|---|",
+    ]
+    for outcome, entries in sorted(coverage["by_outcome"].items()):
+        for entry in sorted(entries, key=lambda item: item["tool"]):
+            note = entry.get("parse_error") or entry.get("detail") or ""
+            lines.append(
+                f"| `{entry['tool']}` | {outcome} | {entry.get('version', '—')} | "
+                f"{entry.get('measurements', '—')} | {entry.get('findings', '—')} | "
+                f"{note[:80]} |"
+            )
+    lines.append("")
+
+    unexamined = coverage["concepts_unexamined"]
+    if unexamined:
+        # The point of the whole section. Silence about a concern is not
+        # health, and a reader who is not told will assume it is.
+        lines.extend([
+            "**Nothing examined:** " + ", ".join(f"`{c}`" for c in unexamined) + ".",
+            "",
+            "These concerns are unmeasured, not clean. Install a tool that covers them, "
+            "or widen `analyzers.depth`, to have them reported.",
+            "",
+        ])
+    return lines
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     summary = report["summary"]
     score = report["score"]
@@ -108,6 +155,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"Scoring standard: {score['standard']}.",
         "",
     ]
+    lines.extend(analyzer_coverage_markdown(report.get("analyzer_coverage")))
     if report["hard_gate_failures"]:
         lines.extend(["## Hard Gate Failures", ""])
         lines.extend(f"- {gate}" for gate in report["hard_gate_failures"])

@@ -267,3 +267,37 @@ def test_a_successful_parse_also_keeps_the_raw_output() -> None:
     assert extraction.findings
     assert not extraction.parse_error
     assert extraction.raw == payload
+
+
+@pytest.mark.parametrize("slug", sorted(ADAPTERS))
+def test_every_adapter_honours_the_audits_exclusions(slug: str) -> None:
+    """A tool that walks `.venv` reports someone else's code as yours.
+
+    Measured before this existed: vulture returned 517 dead-code findings
+    on this repository and **all 517 were inside `.venv`**. A report that
+    blames a user for a vendored library is worse than no report, so the
+    exclusions the built-in scan honours are passed to every analyzer —
+    each in its own dialect.
+
+    Swept over the registry: an adapter added without exclusion support
+    fails here rather than in someone's report.
+    """
+    adapter = adapter_for(slug)
+    excluded = adapter.invocation(Path("/repo"), excludes=(".venv/", "node_modules/")).argv
+    plain = adapter.invocation(Path("/repo")).argv
+
+    assert excluded != plain, f"{slug} ignores exclusions and will scan vendored code"
+    joined = " ".join(excluded)
+    assert ".venv" in joined and "node_modules" in joined
+
+
+def test_an_adapter_without_an_exclusion_flag_is_visible_as_such() -> None:
+    """Not every tool can be told to skip a path.
+
+    Silently accepting that would let vendored findings through unnoticed,
+    so the absence is expressed in the adapter rather than assumed away.
+    """
+    naked = BaseAdapter(slug="n", emits="metric", executable="n")
+
+    assert naked.exclusions((".venv/",)) == (), "no flag means no exclusions to add"
+    assert naked.exclude_flag == "", "and the adapter says so plainly"

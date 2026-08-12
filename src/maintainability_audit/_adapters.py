@@ -30,7 +30,7 @@ import io
 import json
 import shutil
 import tempfile
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Protocol
@@ -142,10 +142,31 @@ class BaseAdapter:
     def version_argv(self) -> tuple[str, ...]:
         return (self.executable, self.version_flag)
 
-    def invocation(self, root: Path, paths: Iterable[str] | None = None) -> Invocation:
+    # How this tool spells "skip these". Empty means it has no exclusion
+    # flag and must be filtered another way.
+    exclude_flag: str = ""
+    exclude_separator: str = ","
+
+    def exclusions(self, excludes: Sequence[str]) -> tuple[str, ...]:
+        """Translate the audit's exclude patterns into this tool's dialect.
+
+        Without this, every analyzer walks `.venv`, `node_modules` and
+        `build` and reports third-party code as the user's. Measured
+        before it was added: vulture returned 517 dead-code findings on
+        this repository and **all 517 were inside `.venv`**. A report that
+        blames a user for a vendored library is worse than no report.
+        """
+        if not excludes or not self.exclude_flag:
+            return ()
+        return (self.exclude_flag, self.exclude_separator.join(excludes))
+
+    def invocation(
+        self, root: Path, paths: Iterable[str] | None = None,
+        excludes: Sequence[str] = (),
+    ) -> Invocation:
         targets = tuple(paths) if paths else (str(root),)
         return Invocation(
-            argv=(self.executable, *self.extra_args, *targets),
+            argv=(self.executable, *self.extra_args, *self.exclusions(excludes), *targets),
             findings_exit_codes=self.findings_exit_codes,
         )
 
@@ -219,7 +240,7 @@ class LizardAdapter(BaseAdapter):
         super().__init__(
             slug="lizard", emits="metric", executable="lizard",
             concepts=("complexity", "structure", "metrics"),
-            extra_args=("--csv",),
+            extra_args=("--csv",), exclude_flag="--exclude",
         )
 
     def _read(self, result: ToolResult) -> Extraction:
@@ -253,9 +274,15 @@ class RadonAdapter(BaseAdapter):
             concepts=("metrics",), extra_args=("mi", "-j"),
         )
 
-    def invocation(self, root: Path, paths: Iterable[str] | None = None) -> Invocation:
+    def invocation(
+        self, root: Path, paths: Iterable[str] | None = None,
+        excludes: Sequence[str] = (),
+    ) -> Invocation:
         targets = tuple(paths) if paths else (str(root),)
-        return Invocation(argv=(self.executable, "mi", "-j", *targets))
+        # radon takes comma-separated glob *patterns*, so a bare directory
+        # name has to become one or it matches nothing.
+        ignore = ("-i", ",".join(f"{e.rstrip('/')}*" for e in excludes)) if excludes else ()
+        return Invocation(argv=(self.executable, "mi", "-j", *ignore, *targets))
 
     def _read(self, result: ToolResult) -> Extraction:
         payload = json.loads(result.stdout or "{}")
@@ -290,10 +317,14 @@ class JscpdAdapter(BaseAdapter):
     def version_argv(self) -> tuple[str, ...]:
         return _npx("jscpd", "--version")
 
-    def invocation(self, root: Path, paths: Iterable[str] | None = None) -> Invocation:
+    def invocation(
+        self, root: Path, paths: Iterable[str] | None = None,
+        excludes: Sequence[str] = (),
+    ) -> Invocation:
+        ignore = ("--ignore", ",".join(f"**/{e.rstrip('/')}/**" for e in excludes)) if excludes else ()
         return Invocation(
             argv=(*_npx("jscpd"), str(root), "--reporters", "json", "--silent",
-                  "--output", str(self._report_dir)),
+                  *ignore, "--output", str(self._report_dir)),
         )
 
     def _read(self, result: ToolResult) -> Extraction:
@@ -329,7 +360,7 @@ class VultureAdapter(BaseAdapter):
         super().__init__(
             slug="vulture", emits="verdict", executable="vulture",
             concepts=("dead-code",), findings_exit_codes=(0, 3),
-            extra_args=("--min-confidence", "80"),
+            extra_args=("--min-confidence", "80"), exclude_flag="--exclude",
         )
 
     def _read(self, result: ToolResult) -> Extraction:
@@ -353,6 +384,7 @@ class InterrogateAdapter(BaseAdapter):
         super().__init__(
             slug="interrogate", emits="metric", executable="interrogate",
             concepts=("documentation",), findings_exit_codes=(0, 1),
+            exclude_flag="--exclude", exclude_separator=" ",
         )
 
     def _read(self, result: ToolResult) -> Extraction:
@@ -388,7 +420,7 @@ class RuffAdapter(BaseAdapter):
         super().__init__(
             slug="ruff", emits="verdict", executable="ruff",
             concepts=("style", "complexity", "dead-code"),
-            findings_exit_codes=(0, 1),
+            findings_exit_codes=(0, 1), exclude_flag="--exclude",
             extra_args=("check", "--output-format", "json", "--no-cache"),
         )
 

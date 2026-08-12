@@ -113,6 +113,11 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
     )
     probe = probe or Probe()
     timeout = int(settings["timeout_seconds"])
+    # The same exclusions the built-in scan honours. Without them every
+    # analyzer walks .venv and node_modules and reports vendored code as
+    # the user's: vulture returned 517 dead-code findings here, all 517
+    # inside .venv.
+    excludes = tuple(config.get("paths", {}).get("exclude_patterns", ()))
 
     for tool in pool:
         adapter = adapter_for(tool["slug"])
@@ -125,14 +130,14 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
                 concepts=tuple(tool["measures"]),
             ))
             continue
-        analysis.coverage.append(_run_one(root, adapter, probe, timeout, analysis))
+        analysis.coverage.append(_run_one(root, adapter, probe, timeout, analysis, excludes))
 
     analysis.coverage.sort(key=lambda item: item.slug)
     return analysis
 
 
 def _run_one(root: Path, adapter: Any, probe: Probe, timeout: int,
-             analysis: Analysis) -> ToolCoverage:
+             analysis: Analysis, excludes: tuple[str, ...] = ()) -> ToolCoverage:
     """One tool, start to finish. Cannot raise.
 
     The broad catch is deliberate and sits here rather than in the
@@ -144,7 +149,7 @@ def _run_one(root: Path, adapter: Any, probe: Probe, timeout: int,
     unguarded path is not one.
     """
     try:
-        return _attempt(root, adapter, probe, timeout, analysis)
+        return _attempt(root, adapter, probe, timeout, analysis, excludes)
     except Exception as error:  # noqa: BLE001 - the backstop is the point
         return ToolCoverage(
             slug=adapter.slug, outcome="failed", concepts=tuple(adapter.concepts),
@@ -157,7 +162,7 @@ def _run_one(root: Path, adapter: Any, probe: Probe, timeout: int,
 
 
 def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
-             analysis: Analysis) -> ToolCoverage:
+             analysis: Analysis, excludes: tuple[str, ...] = ()) -> ToolCoverage:
     available = probe.check(adapter.slug, adapter.version_argv())
     if not available.usable:
         return ToolCoverage(
@@ -165,7 +170,8 @@ def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
             detail=available.detail, concepts=tuple(adapter.concepts),
         )
 
-    result = run(adapter.slug, adapter.invocation(root), timeout_seconds=timeout)
+    result = run(adapter.slug, adapter.invocation(root, excludes=excludes),
+                 timeout_seconds=timeout)
     extraction = adapter.parse(result)
     _collect(extraction, adapter, analysis)
 

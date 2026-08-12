@@ -12,6 +12,11 @@ A decision recorded only as a sentence inside a design document is a decision th
 | [002](adr-002-null-verified-grade-in-ci.md) | Whether null `verified_grade` needs a CI policy before stage 5 | **Rejected** — premise assumed a grade gate that does not exist | CLI exit codes, ADR 001 stage 5 |
 | [003](adr-003-deterministic-semantic-policy.md) | Add deterministic, repository-aware semantic findings without changing the uniform rubric | **Proposed** — TypeScript precision prototype required | Analyzers, configuration, findings, remediation prompts |
 | [004](adr-004-economic-context.md) | Add configured economic-impact scenarios without turning the score into a cost prediction | **Proposed** — historical validation design required | Configuration, report schema, prioritization, studies |
+| [005](adr-005-insufficient-population.md) | Withhold rates, per aspect, where the denominator is too small to support one | **Accepted** — not implemented | Scoring, grade profile, report contract, every consumer |
+| [006](adr-006-analyzer-evidence.md) | External analyzers produce the evidence; the agent orchestrates and corroborates across tools | **Accepted** — not implemented | Whole evidence layer, determinism promise, installation, CI, report contract |
+| [007](adr-007-pillars-and-practice.md) | Adopt the five-pillar framework; separate practice maturity from code condition | **Accepted** — not implemented | Reporting taxonomy, scope boundaries, remediation prioritisation |
+
+Decisions 005–007 were written together after a repository containing one production function was reported as 5.0 / A+, evidence complete, verified. They address three distinct causes of that single result: no rate has a minimum population (005), the evidence comes from six homegrown detectors rather than the mature analyzers the README says to pair with (006), and nothing distinguishes *a clean scan* from *an enforced standard* (007).
 
 ## Statuses
 

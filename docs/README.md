@@ -33,6 +33,9 @@ Verbatim, not "contains the same numbers": an earlier guard checked whether each
 | [ADR 002 — Null verified grade in CI](adr-002-null-verified-grade-in-ci.md) | **Rejected** — assumed a CI grade gate that does not exist |
 | [ADR 003 — Deterministic semantic policy](adr-003-deterministic-semantic-policy.md) | **Proposed** — repository semantics without rubric drift |
 | [ADR 004 — Economic context](adr-004-economic-context.md) | **Proposed** — impact scenarios separate from score and grade |
+| [ADR 005 — Insufficient population](adr-005-insufficient-population.md) | **Accepted, not implemented** — no rate without a denominator that supports one |
+| [ADR 006 — Analyzer evidence](adr-006-analyzer-evidence.md) | **Accepted, not implemented** — FOSS analyzers produce the evidence, corroborated across tools |
+| [ADR 007 — Pillars and practice](adr-007-pillars-and-practice.md) | **Accepted, not implemented** — five-pillar taxonomy; practice maturity separate from code condition |
 | [Report contract](report-contract.md) | Current — the report's producers, consumers, and schema-version policy |
 
 New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register, and never edited after acceptance except to record implementation progress or mark them superseded.
@@ -44,6 +47,7 @@ New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register,
 | [Maintainability standard](standard.md) | Normative | The rubric, its weights and bands, the calibration method, and the reference corpus. Judgments applied uniformly to every repository; requires no study to be legitimate |
 | [Studies and measured results](studies.md) | Empirical | Every claim about the world, with pinned inputs, controls and stated limits — the bounded-prompt experiment, the retracted AI-authorship claim, and fix breadth. Licenses nothing beyond the sentence stated with each result |
 | [Self-audit](self-audit.md) | Generated | This tool run against this repository. Always one commit behind the HEAD it ships with |
+| [FOSS tool inventory](tool-inventory.md) | Empirical | Every free quality analyzer this agent could run, which were installed and executed here, and what each one found. Separates proven from listed |
 
 ## Operating the tool
 

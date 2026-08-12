@@ -69,6 +69,16 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 | P4 | The overall equals the weighted mean of the categories printed beside it | A report where the arithmetic does not check |
 | P5 | The remediation prompt names only findings the audit actually produced | A prompt instruction with no corresponding finding |
 | P6 | Every empirical claim in this repo is reproducible from checked-in pinned inputs | A quoted number that cannot be re-derived offline |
+| P7 | A score is issued only where enough was examined to support it, and never as a consequence of not looking | A number a reader with the repository in front of them would call absurd |
+| P8 | Every report states what examined it — which analyzers ran, which did not, and what measured each value | A reported value with no attributable source, or a run whose coverage cannot be recovered from its output |
+
+### Why P7 and P8 were added
+
+P1–P6 are all **self-consistency** promises: the machine agrees with itself, the arithmetic checks, nothing is concealed. A repository holding one function and one test passed all six while being reported as **5.0 / A+, evidence complete, verified** — deterministically, under the same rubric, with the arithmetic correct and nothing withheld. Six for six, and the result was worthless.
+
+Nothing in P1–P6 asks whether a number corresponds to anything about the code, so four days of hostile audits could not see it. Worse, the [evidence standard](#the-evidence-standard) classifies the rubric as Tier 2 — a judgment that "needs no validation study and no apology" — which is right for *weights* and became a principled-sounding reason never to ask whether a specific score was defensible.
+
+P7 is that missing question, stated as a falsifiable property. P8 makes it checkable: a score cannot be judged sufficient unless the report says what produced it. See [ADR 005](adr-005-insufficient-population.md) and [ADR 006](adr-006-analyzer-evidence.md).
 
 ## What it must never claim
 

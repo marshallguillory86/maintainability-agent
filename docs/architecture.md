@@ -132,7 +132,97 @@ Stated rather than hidden, because an architecture document that only describes 
 
 - **A new detector** belongs in scanners, returns findings, and adds a count to `report_summary`. It becomes scored only by being given weight in `_formula.CATEGORY_ASPECTS`; an aspect with no weight fails the build.
 - **A new output format** belongs in presentation and reads the report dictionary. It must not compute a score.
-- **A new external analyzer** is ingested as SARIF and kept as `external_findings` with its provenance. Per [adapters](adapters.md), do not pretend every analyzer has the same semantics.
+- **A new external analyzer** is ingested as SARIF and kept as `external_findings` with its provenance. Per [adapters](adapters.md), do not pretend every analyzer has the same semantics. **[ADR 006](adr-006-analyzer-evidence.md) supersedes this extension point** — analyzers become the primary evidence source rather than an ingested side-channel. Until it ships, SARIF ingest is the only path.
+
+## Target architecture — ADR 006 and 007, not implemented
+
+The layer model above is what the code does today. [ADR 006](adr-006-analyzer-evidence.md) and [ADR 007](adr-007-pillars-and-practice.md) change it materially, and the shape is recorded here so the work has a target rather than a direction.
+
+The current design inverts its own stated principle. The README says *"pair this tool with mature analyzers … don't replace them"*, and `src/` contains six homegrown reimplementations of exactly those analyzers, with external tools relegated to optional SARIF ingest. ADR 006 turns that the right way up.
+
+### The pipeline, plainly
+
+This is not complicated, and the rest of this section is detail on top of it. End to end:
+
+```text
+1.  a commit, or a working tree
+2.  run every quality tool that is available and speaks one of its languages
+       -- twenty-four tools is fine; more sources is better, not worse
+3.  each tool emits its own findings and metrics, in its own format
+4.  normalise each output onto shared measurement concepts
+       -- "cyclomatic complexity", "duplication ratio", "dead code", "docstring coverage"
+5.  where several tools measured one concept, combine them with weights
+       -- a weighted mean, and record the spread; disagreement is variance, not a crisis
+6.  divide counts by the population they came from, so the result is a rate, not a size
+7.  apply the rubric's aspect weights          -> aspect scores    (0-5)
+8.  apply the rubric's category weights        -> category scores  (0-5)
+9.  weighted mean of categories                -> OVERALL SCORE    (1-5)
+10. separately, detect enforcement evidence    -> MATURITY LEVEL   (1-5)
+       -- linter wired to CI? coverage gate? complexity thresholds configured?
+11. rank the weak areas by risk x effort
+12. hand the ranked weak areas + their real findings to the user's LLM
+       -> improvement prompts aimed at what actually scored badly
+```
+
+Two outputs, both 1–5, never averaged together: **a score for the condition of the code** and **a maturity level for the practices around it**. Both fall out of the same run. Step 12 is the product's point — the score exists so the prompt has somewhere true to aim.
+
+**On tools disagreeing.** Three tools measuring the same function returned 14, 14 and 8, because radon and lizard count boolean operators and comprehensions while mccabe's path graph does not. That is ordinary measurement variance and needs no special ceremony: combine the readings with weights, keep the spread, and report the spread as the interval. The one thing not permitted is silently picking one tool and presenting its convention as the property of the code — which is what a single-source score does today, invisibly.
+
+**Why more tools is strictly better.** Every additional tool measuring a concept adds an independent reading, and a rate built from four readings is better supported than the same rate from one. Redundancy is the point, not waste. It is also what makes step 5's spread meaningful: one tool has no spread and therefore no honest interval.
+
+```text
+  entry          cli, __main__
+                     |
+  presentation   renderers, prompts, sarif, baseline, _evidence_view
+                     |
+  assembly       report                        assembles pillars + categories
+                     |
+        +------------+-------------+-----------------+
+        |            |             |                 |
+  acquisition   practice      scoring           corroboration
+  _runner       _practice     scoring ->        _concepts (registry)
+  _analyzers/*  reads CI and  _aspects ->       _corroborate (spread,
+  (one adapter  linter and    _pressures         strength, tolerance)
+   per tool)    coverage      _formula
+        |       config, not   _calibration
+  fallback      source        _verification
+  scanners                    evidence (boundary)
+  (demoted)
+        |
+  parsing        source, declarations, _ranges, _tokens
+        |
+  foundations    _metrics_types, _masking, _hotspots, config, git_tools
+```
+
+### New components and what each owns
+
+| Component | Owns | May import |
+|---|---|---|
+| **`_runner`** | Subprocess invocation, timeouts, failure isolation, version capture. **The only module permitted to spawn a process** apart from `git_tools`. | foundations |
+| **`_analyzers/*`** | One adapter per tool: which languages it speaks, which concepts it measures, how to invoke it, how to parse its output into concept measurements. Adapters are leaves and know nothing of scoring. | foundations, `_runner` |
+| **`_concepts`** | The measurement-concept registry — for each concept, its contributing tools, its agreement tolerance, its denominator and that denominator's floor ([ADR 005](adr-005-insufficient-population.md)). Data, like `_formula`. | nothing internal |
+| **`_corroborate`** | Combining several tools' measurements of one concept into a single evidence value plus strength (corroborated / contested / single-source / unavailable) and the observed spread. | foundations, `_concepts` |
+| **`_practice`** | Detecting enforcement evidence — CI workflows, linter configuration, coverage thresholds, hook definitions — to score the ADR 007 practice level. **Reads repository configuration, never source.** | foundations |
+| **`_pillars`** | The five-pillar taxonomy and each pillar's declared scope: owned, partial, delegated, out of scope. Data. | nothing internal |
+
+### Rules the new layers add
+
+**7. Only `_runner` and `git_tools` may spawn a process.** Analyzer adapters describe invocations; they do not perform them. This keeps timeout, isolation and version-capture policy in one place, and keeps determinism (P1) auditable — a promise that now depends on pinned analyzer versions.
+
+**8. Analyzer adapters may not import scoring.** The same rule scanners already live under, for the same reason: an adapter that could see the rubric would eventually be tuned to it.
+
+**9. Corroboration happens before the evidence boundary.** `evidence` receives already-combined values with their strength and provenance. The boundary stays a leaf and stays the single normalization point; it does not learn about tools.
+
+**10. `_practice` may not read source files.** Practice level is a claim about enforcement, not about code. If it could read source, it would drift into being a second, uncalibrated condition score.
+
+**11. Practice level and code condition are never combined.** No function returns their average. [ADR 007](adr-007-pillars-and-practice.md) invariant 2 exists because a single composite number would destroy both.
+
+### What this costs
+
+- **Determinism becomes conditional.** P1 currently holds because the tool is pure computation over a file tree. With external analyzers it holds only for pinned versions on a given platform, and the report must record the versions that produced it. This weakens the strongest promise in [product intent](product-intent.md) and the promise's wording has to change with it.
+- **Runtime rises** from milliseconds to seconds or minutes, making `--changed-only` load-bearing rather than convenient.
+- **Failure modes multiply**: a tool can be absent, wrong-versioned, slow, crash, or emit unparseable output. Each is a distinct `Unknown` reason, and none may fail the run or improve a score.
+- **The fallback scanners must be labelled** in code as the demoted single-source tier, or a future reader will mistake them for the primary path exactly as this one did.
 
 ## Proposed extension boundaries — not implemented
 

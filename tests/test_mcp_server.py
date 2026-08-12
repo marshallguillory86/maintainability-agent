@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
+from maintainability_audit.config import VERSION
 from maintainability_audit.mcp_server import (
     PathNotAllowed,
     audit_repository,
@@ -111,5 +113,29 @@ def test_sdk_exposes_only_the_two_read_only_tools(tmp_path: Path) -> None:
             result = await client.call_tool("audit_repository", {"repository_root": str(root)})
             assert not result.is_error
             assert result.structured_content["report"]["root"] == str(root.resolve())
+
+    asyncio.run(exercise())
+
+
+def test_real_stdio_process_initializes_and_reports_its_boundary(tmp_path: Path) -> None:
+    """Exercise the installed transport, not only the in-memory SDK seam."""
+    from mcp import Client, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+
+    async def exercise() -> None:
+        parameters = StdioServerParameters(
+            command=sys.executable,
+            args=["-m", "maintainability_audit.mcp_server", "--allow-root", str(tmp_path)],
+        )
+        async with Client(stdio_client(parameters)) as client:
+            result = await client.call_tool("get_agent_info")
+            assert not result.is_error
+            assert result.structured_content == {
+                "agent": "maintainability-agent",
+                "agent_version": VERSION,
+                "transport": "stdio",
+                "read_only": True,
+                "allowed_roots": [str(tmp_path.resolve())],
+            }
 
     asyncio.run(exercise())

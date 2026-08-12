@@ -11,7 +11,7 @@ The layering is enforced by `tests/test_architecture.py`, which reads the real i
 Dependencies point downward only. No cycles.
 
 ```text
-  entry          cli, __main__
+  entry          cli, __main__, mcp_server
                      |
   presentation   renderers, prompts, sarif, baseline,       reads the report dict
                  _evidence_view (shared phrasing)
@@ -41,7 +41,7 @@ Dependencies point downward only. No cycles.
 | **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
 | **assembly** | Running the scan, assembling the report dict, invoking the scorer once | anything below |
 | **presentation** | Markdown, PR comment, SARIF, baseline, remediation prompt, and `_evidence_view` — the single place the estimate/range/evidence/verified-grade wording is decided | foundations, the report dict |
-| **entry** | Argument parsing, output routing, exit codes | anything below |
+| **entry** | Argument parsing, transport, output routing, exit codes | anything below |
 
 ## The rules, and why each exists
 

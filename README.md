@@ -4,6 +4,7 @@ A deterministic CI gate + bounded remediation prompt generator for repos that us
 
 ```bash
 pip install maintainability-agent          # CLI + library
+pip install "maintainability-agent[mcp]"   # optional local MCP server for Codex / VS Code
 cp -r skills/maintainability-agent ~/.claude/skills/                                  # Claude Code skill
 cp skills/maintainability-agent/copilot/maintainability-agent.prompt.md .github/prompts/  # Copilot Chat (VS Code)
 # Codex picks up skills/maintainability-agent/ via its own convention.
@@ -234,6 +235,11 @@ Or copy `.github/workflows/maintainability.yml` into the target repo and adapt i
 ## IDE and Agent Integration
 
 See [docs/ide-agent-integration.md](docs/ide-agent-integration.md) for VS Code tasks and integration notes for Copilot, Cursor, Codex, Claude Code, Windsurf, generic agents, local CI, and GitHub Actions.
+
+The optional local MCP server exposes the same deterministic audit and bounded
+remediation prompt directly to Visual Studio, VS Code and Codex. It is read-only,
+uses stdio rather than a network port, and rejects repository or config paths
+outside its explicit allow-list. See [Local MCP server](docs/ide-agent-integration.md#local-mcp-server-visual-studio-vs-code-and-codex).
 
 ## Invokable Skill / Slash Command
 

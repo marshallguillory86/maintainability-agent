@@ -28,7 +28,7 @@ SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "histo
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive", "_verification"}
 ASSEMBLY = {"report"}
 PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view", "_identity"}
-ENTRY = {"cli", "__main__"}
+ENTRY = {"cli", "__main__", "mcp_server"}
 BOUNDARY = {"evidence"}
 
 LAYERS = {

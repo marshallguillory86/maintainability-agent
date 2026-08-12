@@ -37,6 +37,10 @@ All notable changes to Maintainability Agent will be documented here.
 
 Recalibration, and a retraction. The reference corpus is now chosen by a query instead of by the author's taste, which moved every constant in the scale — read the table before comparing a score to one from 0.6.x.
 
+### Added — local MCP server
+
+- **A read-only stdio MCP boundary for Codex and its VS Code extension.** `maintainability-agent-mcp` exposes the production audit and its bounded remediation prompt together; it does not restate scanning, scoring or rendering. Canonical repository allow-lists block path and symlink escapes, config files must remain inside the audited repository, changed-only input cannot inject git options, and the server accepts no command strings or output paths. MCP remains an optional install extra, so the base CLI keeps its dependency footprint.
+
 ### Changed — ADR 001 stage 8 (**breaking report contract**)
 
 **The report schema is now version 2, and version 1 is rejected rather than migrated.** The four ambiguous compatibility score fields are gone with no aliases:

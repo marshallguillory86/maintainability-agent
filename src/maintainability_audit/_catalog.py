@@ -51,6 +51,23 @@ CONCERNS: tuple[str, ...] = (
     "structure", "testing", "style", "types", "metrics",
 )
 
+# A concern is what a *user* asks for; a concept is what a tool measures.
+# "complexity" covers two genuinely different metrics — cyclomatic counts
+# branches, cognitive weights nesting — and they must not be averaged
+# together, so the vocabularies are kept apart and mapped here.
+CONCERN_CONCEPTS: dict[str, tuple[str, ...]] = {
+    "complexity": (
+        "cyclomatic_complexity", "cognitive_complexity", "file_cyclomatic_complexity",
+    ),
+    "metrics": ("maintainability_index", "halstead_difficulty", "nloc"),
+    "structure": ("parameters",),
+}
+
+
+def concepts_for(concern: str) -> tuple[str, ...]:
+    return CONCERN_CONCEPTS.get(concern, (concern,))
+
+
 DEFAULTS: dict[str, Any] = {
     "concerns": ["all"],
     "depth": "moderate",

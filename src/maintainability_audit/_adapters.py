@@ -253,7 +253,7 @@ class LizardAdapter(BaseAdapter):
     def __init__(self) -> None:
         super().__init__(
             slug="lizard", emits="metric", executable="lizard",
-            concepts=("complexity", "structure", "metrics"),
+            concepts=("cyclomatic_complexity", "nloc", "parameters"),
             extra_args=("--csv",), exclude_flag="--exclude",
         )
 
@@ -265,7 +265,20 @@ class LizardAdapter(BaseAdapter):
                 continue
             path, name = row[6], row[7]
             unit = f"{path}::{name}"
-            for concept, index in (("complexity", 1), ("metrics", 0), ("structure", 3)):
+            # `cyclomatic_complexity`, not `complexity`: complexipy
+            # measures *cognitive* complexity, and averaging a branch count
+            # with a nesting-weighted score produces a number about
+            # neither. Emitted under one family name they looked
+            # corroborated on 812 units with 107% disagreement, which is
+            # the data saying the model is wrong.
+            # `nloc`, not `metrics`: radon and multimetric report a
+            # maintainability *index* per file under that name, and pooling
+            # a per-function line count with a per-file index repeats the
+            # error one level down. A concept is one measurement, not a
+            # family.
+            for concept, index in (
+                ("cyclomatic_complexity", 1), ("nloc", 0), ("parameters", 3),
+            ):
                 measurements.append(Measurement(
                     concept=concept, unit=unit, value=float(row[index]),
                     tool=self.slug, path=path,
@@ -285,7 +298,7 @@ class RadonAdapter(BaseAdapter):
     def __init__(self) -> None:
         super().__init__(
             slug="radon", emits="metric", executable="radon",
-            concepts=("metrics",), extra_args=("mi", "-j"),
+            concepts=("maintainability_index",), extra_args=("mi", "-j"),
         )
 
     def invocation(
@@ -301,8 +314,8 @@ class RadonAdapter(BaseAdapter):
     def _read(self, result: ToolResult) -> Extraction:
         payload = json.loads(result.stdout or "{}")
         measurements = [
-            Measurement(concept="metrics", unit=path, value=float(entry["mi"]),
-                        tool=self.slug, path=path)
+            Measurement(concept="maintainability_index", unit=path,
+                        value=float(entry["mi"]), tool=self.slug, path=path)
             for path, entry in payload.items()
             if isinstance(entry, dict) and "mi" in entry
         ]
@@ -486,7 +499,7 @@ class ComplexipyAdapter(BaseAdapter):
     def __init__(self) -> None:
         super().__init__(
             slug="complexipy", emits="metric", executable="complexipy",
-            concepts=("complexity",), findings_exit_codes=(0, 1),
+            concepts=("cognitive_complexity",), findings_exit_codes=(0, 1),
         )
         self._work = Path(tempfile.mkdtemp(prefix="complexipy-"))
 
@@ -511,7 +524,7 @@ class ComplexipyAdapter(BaseAdapter):
         entries = json.loads(report.read_text(encoding="utf-8"))
         measurements = tuple(
             Measurement(
-                concept="complexity",
+                concept="cognitive_complexity",
                 unit=f"{entry['path']}::{entry['function_name']}",
                 value=float(entry["complexity"]),
                 tool=self.slug, path=entry["path"],
@@ -530,11 +543,14 @@ class MultimetricAdapter(BaseAdapter):
     rest stay in the retained raw output where a reader can still use them.
     """
 
+    # Each metric keeps its own concept. `maintainability_index` is the
+    # one radon also reports, so these two genuinely corroborate: same
+    # measurement, same unit granularity, independent implementations.
     _WANTED = (
-        ("maintainability_index", "metrics"),
-        ("cyclomatic_complexity", "complexity"),
+        ("maintainability_index", "maintainability_index"),
+        ("cyclomatic_complexity", "file_cyclomatic_complexity"),
         ("comment_ratio", "documentation"),
-        ("halstead_difficulty", "metrics"),
+        ("halstead_difficulty", "halstead_difficulty"),
     )
 
     # Takes file paths, not a directory: given a directory it returns a
@@ -544,7 +560,8 @@ class MultimetricAdapter(BaseAdapter):
     def __init__(self) -> None:
         super().__init__(
             slug="multimetric", emits="metric", executable="multimetric",
-            concepts=("metrics", "complexity", "documentation"),
+            concepts=("maintainability_index", "file_cyclomatic_complexity",
+                      "documentation", "halstead_difficulty"),
             version_flag="--help", distribution="multimetric",
         )
 
@@ -562,7 +579,10 @@ class MultimetricAdapter(BaseAdapter):
             for key, concept in self._WANTED:
                 if key in metrics:
                     measurements.append(Measurement(
-                        concept=concept, unit=f"{path}::{key}",
+                        # Unit is the file, not file::metric: radon names
+                        # the same file, and a per-metric suffix would keep
+                        # two readings of one thing from ever meeting.
+                        concept=concept, unit=path,
                         value=float(metrics[key]), tool=self.slug, path=path,
                     ))
         if not measurements:

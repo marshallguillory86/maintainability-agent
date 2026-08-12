@@ -150,3 +150,54 @@ def test_agreement_ignores_uncorroborated_readings() -> None:
     lonely = combine([_m("lizard", 5)])
 
     assert agreement(lonely) == {}
+
+
+def test_a_concept_is_one_measurement_not_a_family() -> None:
+    """The error this cost two rounds to see.
+
+    `complexity` first covered both lizard's cyclomatic count and
+    complexipy's cognitive score, so 812 unit pairs looked corroborated
+    while disagreeing by 107% — averaging a branch count with a
+    nesting-weighted score produces a number about neither. `metrics`
+    repeated it one level down, pooling a per-function line count with a
+    per-file maintainability index.
+
+    The signal that exposed both was the disagreement figure itself:
+    genuine corroboration between careful tools does not sit at 100%.
+    A concept must therefore name one measurement at one granularity.
+    """
+    from maintainability_audit._adapters import ADAPTERS, adapter_for
+
+    families = {"complexity", "metrics", "structure"}
+    for slug in ADAPTERS:
+        adapter = adapter_for(slug)
+        if adapter.emits == "verdict":
+            # Verdict emitters carry findings, which are grouped by the
+            # user-facing concern rather than by a measured concept.
+            continue
+        overlap = families & set(adapter.concepts)
+        assert not overlap, (
+            f"{slug} emits {sorted(overlap)}, which name families rather than "
+            "measurements; two different metrics under one name produce false "
+            "corroboration"
+        )
+
+
+def test_every_measured_concept_belongs_to_a_user_facing_concern() -> None:
+    """A concept nothing maps to is unreachable.
+
+    Users select concerns; tools emit concepts. A concept absent from
+    the map can never be requested, so its tool would silently never run.
+    """
+    from maintainability_audit._adapters import ADAPTERS, adapter_for
+    from maintainability_audit._catalog import CONCERNS, concepts_for
+
+    reachable = {concept for concern in CONCERNS for concept in concepts_for(concern)}
+    for slug in ADAPTERS:
+        adapter = adapter_for(slug)
+        if adapter.emits == "verdict":
+            continue
+        unreachable = set(adapter.concepts) - reachable
+        assert not unreachable, (
+            f"{slug} measures {sorted(unreachable)}, which no concern selects"
+        )

@@ -107,7 +107,8 @@ def test_lizard_parses_real_csv() -> None:
           '"history_section( a , b )",217,264'
     extraction = adapter_for("lizard").parse(_ran(row))
 
-    complexity = [m for m in extraction.measurements if m.concept == "complexity"]
+    complexity = [m for m in extraction.measurements
+                  if m.concept == "cyclomatic_complexity"]
     assert len(complexity) == 1
     assert complexity[0].value == 14.0
     assert complexity[0].unit == "src/h.py::history_section"

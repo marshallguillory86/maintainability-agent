@@ -13,7 +13,12 @@ from dataclasses import asdict
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from ._analysis import analyze, coverage_document, findings_document
+from ._analysis import (
+    analyze,
+    coverage_document,
+    findings_document,
+    measurement_document,
+)
 from ._metrics_types import FileMetric, FunctionMetric
 from .deadcode import dead_declarations
 from .declarations import DECLARATION_SUFFIXES
@@ -134,6 +139,7 @@ def build_report(
     analysis = analyze(root, config) if run_analyzers else None
     analyzer_coverage = coverage_document(analysis) if analysis else None
     analyzer_findings = findings_document(analysis, root) if analysis else []
+    analyzer_measurements = measurement_document(analysis, root) if analysis else {}
     source = SourceIndex()
     files, file_metrics, function_metrics = collect_metrics(root, config, only_paths, source)
     thresholds = config["thresholds"]
@@ -178,6 +184,10 @@ def build_report(
         # would report that nine tools examined the repository and then
         # tell the reader nothing they saw.
         "analyzer_findings": analyzer_findings,
+        # Measurements and their distributions, kept alongside the counts
+        # the score consumes. Collapsing everything into counts would
+        # discard the shape a reader needs.
+        "analyzer_measurements": analyzer_measurements,
         "summary": summary,
         "hard_gate_failures": gates,
         "missing_files": missing_files,

@@ -26,6 +26,7 @@ from typing import Any
 
 from ._adapters import Extraction, Finding, Measurement, adapter_for, measurements_only
 from ._catalog import CONCERNS, PolicyError, resolve_pool, settings_from
+from ._corroborate import agreement, combine, single_source_concepts
 from ._runner import Outcome, Probe, run
 
 
@@ -259,6 +260,56 @@ def findings_document(analysis: Analysis, root: Path) -> list[dict[str, Any]]:
         ),
         key=lambda item: (item["path"], item["line"] or 0, item["tool"], item["message"]),
     )
+
+
+def measurement_document(analysis: Analysis, root: Path) -> dict[str, Any]:
+    """Combined readings, their spread, and the distribution behind them.
+
+    Three kinds of data survive here, deliberately. The **score** needs
+    counts and populations; the **report** carries the measurements too,
+    because a distribution is what a reader — human or model — can
+    actually reason with. "Seven functions failed" supports a sentence;
+    "seven failed, worst 45, median 6, and two tools disagree by 60%"
+    supports a plan.
+
+    Per-unit readings are summarised rather than listed: a thousand
+    functions is a dataset, not a document. The full set stays in the
+    findings and the retained raw output.
+    """
+    combined = combine(analysis.measurements, root)
+    spreads = agreement(combined)
+    single = single_source_concepts(combined)
+
+    per_concept: dict[str, Any] = {}
+    for concept in sorted({item.concept for item in combined}):
+        readings = [item for item in combined if item.concept == concept]
+        values = sorted(item.value for item in readings)
+        corroborated = [item for item in readings if item.corroborated]
+        per_concept[concept] = {
+            "units": len(readings),
+            "tools": sorted({tool for item in readings for tool in item.tools}),
+            "corroborated_units": len(corroborated),
+            # A lone reading carries a counting convention nobody checked.
+            "single_source": concept in single,
+            # Mean relative disagreement between tools, absent when only
+            # one spoke — zero would read as perfect agreement, which is
+            # absence-as-value wearing a statistics hat.
+            "tool_disagreement": round(spreads[concept], 3) if concept in spreads else None,
+            "distribution": _distribution(values),
+        }
+    return per_concept
+
+
+def _distribution(values: list[float]) -> dict[str, float]:
+    """Enough shape to reason about, without shipping the raw vector."""
+    if not values:
+        return {}
+    return {
+        "min": round(values[0], 2),
+        "median": round(values[len(values) // 2], 2),
+        "p90": round(values[min(int(len(values) * 0.9), len(values) - 1)], 2),
+        "max": round(values[-1], 2),
+    }
 
 
 def coverage_document(analysis: Analysis) -> dict[str, Any]:

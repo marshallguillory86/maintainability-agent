@@ -6,8 +6,9 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Added
 
-- **`--analyzers` runs external quality tools and reports coverage.** Six adapters ship
-  working: lizard, radon, ruff, vulture, interrogate and jscpd. Every report states which
+- **`--analyzers` runs external quality tools and reports coverage.** Nine adapters ship
+  working: lizard, radon, ruff, vulture, interrogate, jscpd, complexipy, multimetric
+  and pydocstyle. Every report states which
   tools were attempted, which ran, which were unavailable and why, their versions, and
   **which concerns nothing examined** — a concern nobody looked at is reported unexamined,
   never clean. Off by default while the remaining adapters are written.

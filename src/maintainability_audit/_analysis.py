@@ -164,6 +164,14 @@ def _run_one(root: Path, adapter: Any, probe: Probe, timeout: int,
 def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
              analysis: Analysis, excludes: tuple[str, ...] = ()) -> ToolCoverage:
     available = probe.check(adapter.slug, adapter.version_argv())
+    # A tool whose CLI has no version flag is still a tool. Falling back to
+    # package metadata keeps the version record complete, which P1 now
+    # depends on -- determinism is promised for *pinned* versions, so a
+    # blank version is a hole in the promise rather than a cosmetic gap.
+    # Metadata first where a distribution is declared: it is the tool a
+    # `--help` probe cannot name, and recording a usage banner as the
+    # version would put noise where P1 expects a pinned identifier.
+    recorded = adapter.installed_version() or available.version
     if not available.usable:
         return ToolCoverage(
             slug=adapter.slug, outcome=available.outcome.value,
@@ -178,7 +186,7 @@ def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
     return ToolCoverage(
         slug=adapter.slug,
         outcome=result.outcome.value,
-        version=available.version,
+        version=recorded,
         detail=result.detail,
         measurements=len(measurements_only(extraction, adapter)),
         findings=len(extraction.findings),

@@ -270,7 +270,7 @@ def test_a_successful_parse_also_keeps_the_raw_output() -> None:
 
 
 @pytest.mark.parametrize("slug", sorted(ADAPTERS))
-def test_every_adapter_honours_the_audits_exclusions(slug: str) -> None:
+def test_every_adapter_honours_the_audits_exclusions(slug: str, tmp_path: Path) -> None:
     """A tool that walks `.venv` reports someone else's code as yours.
 
     Measured before this existed: vulture returned 517 dead-code findings
@@ -283,12 +283,20 @@ def test_every_adapter_honours_the_audits_exclusions(slug: str) -> None:
     fails here rather than in someone's report.
     """
     adapter = adapter_for(slug)
-    excluded = adapter.invocation(Path("/repo"), excludes=(".venv/", "node_modules/")).argv
-    plain = adapter.invocation(Path("/repo")).argv
+    # A real tree: adapters whose tool has no exclusion flag apply the
+    # filter by choosing which files to name, so an empty directory would
+    # make both invocations identical and the assertion vacuous.
+    repo = tmp_path / "repo"
+    (repo / "src").mkdir(parents=True)
+    (repo / ".venv" / "lib").mkdir(parents=True)
+    (repo / "src" / "real.py").write_text("x = 1\n", encoding="utf-8")
+    (repo / ".venv" / "lib" / "vendored.py").write_text("y = 2\n", encoding="utf-8")
+
+    excluded = " ".join(adapter.invocation(repo, excludes=(".venv/", "node_modules/")).argv)
+    plain = " ".join(adapter.invocation(repo).argv)
 
     assert excluded != plain, f"{slug} ignores exclusions and will scan vendored code"
-    joined = " ".join(excluded)
-    assert ".venv" in joined and "node_modules" in joined
+    assert "vendored.py" not in excluded, f"{slug} still names a vendored file"
 
 
 def test_an_adapter_without_an_exclusion_flag_is_visible_as_such() -> None:

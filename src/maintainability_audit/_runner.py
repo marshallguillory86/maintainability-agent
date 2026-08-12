@@ -67,6 +67,10 @@ class Invocation:
     # the tool produced.
     findings_exit_codes: tuple[int, ...] = (0,)
     parse_stderr: bool = False
+    # Where to run. Tools that write output to a fixed filename in the
+    # working directory need somewhere that is not the tree under audit,
+    # or the audit changes what later tools see.
+    cwd: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -205,7 +209,7 @@ def run(
     try:
         completed = subprocess.run(  # noqa: S603 - argv is built by adapters, never a shell string
             argv,
-            cwd=str(cwd) if cwd else None,
+            cwd=str(cwd or invocation.cwd) if (cwd or invocation.cwd) else None,
             capture_output=True,
             text=True,
             timeout=timeout_seconds,

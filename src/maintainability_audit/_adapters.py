@@ -32,6 +32,7 @@ import shutil
 import tempfile
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field, replace
+from importlib import metadata
 from pathlib import Path
 from typing import Protocol
 
@@ -142,10 +143,25 @@ class BaseAdapter:
     def version_argv(self) -> tuple[str, ...]:
         return (self.executable, self.version_flag)
 
+    def installed_version(self) -> str | None:
+        """The version from package metadata, when the CLI cannot say."""
+        if not self.distribution:
+            return None
+        try:
+            return f"{self.distribution} {metadata.version(self.distribution)}"
+        except metadata.PackageNotFoundError:
+            return None
+
     # How this tool spells "skip these". Empty means it has no exclusion
     # flag and must be filtered another way.
     exclude_flag: str = ""
     exclude_separator: str = ","
+    # Installed distribution name, for tools whose CLI has no version flag.
+    # multimetric is one: `--version` is not an option, so it exits 2 with
+    # usage text and a CLI-only probe reports a working tool as broken.
+    # P1 now depends on recording which version ran, so a tool that cannot
+    # say must be asked another way rather than left blank.
+    distribution: str = ""
 
     def exclusions(self, excludes: Sequence[str]) -> tuple[str, ...]:
         """Translate the audit's exclude patterns into this tool's dialect.
@@ -208,6 +224,33 @@ class BaseAdapter:
 
 def _rows(text: str) -> list[list[str]]:
     return [row for row in csv.reader(io.StringIO(text)) if row]
+
+
+SOURCE_SUFFIXES = (".py", ".js", ".ts", ".java", ".c", ".cpp", ".h", ".go", ".rb", ".php")
+# A tool asked about thousands of files still has to fit on a command line.
+# Beyond this the list is capped -- and the cap is a stated limit rather
+# than a silent truncation, because a shortened file list is a shortened
+# audit.
+MAX_EXPANDED_FILES = 400
+
+
+def expand_files(
+    root: Path, excludes: Sequence[str], suffixes: Sequence[str] = SOURCE_SUFFIXES
+) -> tuple[str, ...]:
+    """Explicit file paths, honouring exclusions without a tool flag.
+
+    Some analyzers have no `--exclude` at all. Handing them a directory
+    means they walk `.venv` and `node_modules` and report vendored code as
+    the user's, so the exclusion is applied here by choosing what to name.
+    """
+    skip = tuple(e.rstrip("/") for e in excludes)
+    return tuple(
+        str(path)
+        for path in sorted(root.rglob("*"))
+        if path.suffix in suffixes
+        and path.is_file()
+        and not any(part in skip for part in path.parts)
+    )[:MAX_EXPANDED_FILES]
 
 
 def _npx(tool: str, *args: str) -> tuple[str, ...]:
@@ -456,7 +499,155 @@ def _ruff_concept(code: str) -> str:
     return "style"
 
 
+class ComplexipyAdapter(BaseAdapter):
+    """Cognitive complexity per function — nesting-weighted reading cost.
+
+    A different measurement from cyclomatic complexity, not a second
+    opinion on it: cyclomatic counts branches and is blind to nesting, so
+    five guard clauses and five levels of nesting score the same under it.
+    Keeping both is the point — where they disagree is informative.
+
+    Writes its JSON to a fixed filename in the working directory, so the
+    invocation runs from a scratch directory to avoid dropping a file into
+    the tree under audit.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(
+            slug="complexipy", emits="metric", executable="complexipy",
+            concepts=("complexity",), findings_exit_codes=(0, 1),
+        )
+        self._work = Path(tempfile.mkdtemp(prefix="complexipy-"))
+
+    def invocation(
+        self, root: Path, paths: Iterable[str] | None = None,
+        excludes: Sequence[str] = (),
+    ) -> Invocation:
+        # complexipy has no exclusion flag, so the filtering is done by
+        # naming files rather than handing it a directory. Without this it
+        # walks .venv and attributes vendored complexity to the user.
+        targets = tuple(paths) if paths else expand_files(root.resolve(), excludes)
+        return Invocation(
+            argv=(self.executable, *targets, "--output-format", "json", "--quiet"),
+            findings_exit_codes=self.findings_exit_codes,
+            cwd=self._work,
+        )
+
+    def _read(self, result: ToolResult) -> Extraction:
+        report = self._work / "complexipy-results.json"
+        if not report.exists():
+            raise ValueError("complexipy wrote no results file")
+        entries = json.loads(report.read_text(encoding="utf-8"))
+        measurements = tuple(
+            Measurement(
+                concept="complexity",
+                unit=f"{entry['path']}::{entry['function_name']}",
+                value=float(entry["complexity"]),
+                tool=self.slug, path=entry["path"],
+            )
+            for entry in entries
+            if isinstance(entry, dict) and "complexity" in entry
+        )
+        return Extraction(measurements=measurements)
+
+
+class MultimetricAdapter(BaseAdapter):
+    """Halstead, maintainability index and comment ratio, multi-language.
+
+    Twenty-five metrics over C, C++, Java, JavaScript, Go, Ruby, PHP and
+    Python. Only the ones this project has a concern for are lifted; the
+    rest stay in the retained raw output where a reader can still use them.
+    """
+
+    _WANTED = (
+        ("maintainability_index", "metrics"),
+        ("cyclomatic_complexity", "complexity"),
+        ("comment_ratio", "documentation"),
+        ("halstead_difficulty", "metrics"),
+    )
+
+    # Takes file paths, not a directory: given a directory it returns a
+    # single meaningless entry for the directory itself, which parsed as
+    # "ran, found nothing".
+
+    def __init__(self) -> None:
+        super().__init__(
+            slug="multimetric", emits="metric", executable="multimetric",
+            concepts=("metrics", "complexity", "documentation"),
+            version_flag="--help", distribution="multimetric",
+        )
+
+    def invocation(
+        self, root: Path, paths: Iterable[str] | None = None,
+        excludes: Sequence[str] = (),
+    ) -> Invocation:
+        targets = tuple(paths) if paths else expand_files(root, excludes)
+        return Invocation(argv=(self.executable, *targets))
+
+    def _read(self, result: ToolResult) -> Extraction:
+        payload = json.loads(result.stdout or "{}")
+        measurements = []
+        for path, metrics in (payload.get("files") or {}).items():
+            for key, concept in self._WANTED:
+                if key in metrics:
+                    measurements.append(Measurement(
+                        concept=concept, unit=f"{path}::{key}",
+                        value=float(metrics[key]), tool=self.slug, path=path,
+                    ))
+        if not measurements:
+            # A metric emitter that produced nothing examined nothing. The
+            # earlier version accepted this whenever an `overall` key was
+            # present, which turned "given a directory it cannot read" into
+            # a clean result -- absence-as-value, one more time.
+            raise ValueError(
+                "multimetric returned no per-file metrics; it takes file paths "
+                "rather than a directory"
+            )
+        return Extraction(measurements=tuple(measurements))
+
+
+class PydocstyleAdapter(BaseAdapter):
+    """Docstring convention violations, as located findings.
+
+    Complements interrogate rather than repeating it: interrogate measures
+    how *much* is documented, this reports where the documentation
+    breaches convention. Coverage and conformance are different questions.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(
+            slug="pydocstyle", emits="verdict", executable="pydocstyle",
+            concepts=("documentation", "style"), findings_exit_codes=(0, 1),
+            exclude_flag="--match-dir", exclude_separator="|",
+        )
+
+    def _read(self, result: ToolResult) -> Extraction:
+        # Two lines per finding: "path:line in scope `name`:" then an
+        # indented "Dxxx: message". Parsed as a pair rather than by regex
+        # over the whole text, so a message containing a colon cannot
+        # shift the location.
+        findings = []
+        lines = (result.stdout or result.stderr).splitlines()
+        for index, line in enumerate(lines):
+            if ":" not in line or line.startswith(" ") or index + 1 >= len(lines):
+                continue
+            head, _, _ = line.partition(" in ")
+            path, _, number = head.rpartition(":")
+            if not number.strip().isdigit():
+                continue
+            detail = lines[index + 1].strip()
+            code, _, message = detail.partition(":")
+            findings.append(Finding(
+                concept="documentation", path=path, line=int(number),
+                message=message.strip() or detail, tool=self.slug, rule=code.strip(),
+            ))
+        return Extraction(findings=tuple(findings))
+
+
 ADAPTERS: dict[str, Callable[[], BaseAdapter]] = {
+    "complexipy": ComplexipyAdapter,
+    "multimetric": MultimetricAdapter,
+    "pydocstyle": PydocstyleAdapter,
     "lizard": LizardAdapter,
     "radon": RadonAdapter,
     "jscpd": JscpdAdapter,

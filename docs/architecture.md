@@ -366,8 +366,41 @@ Every design point above traces to a record. Nothing here is a preference someon
 | Risk × Effort ordering; Fill-Ins never above Quick Wins | [ADR 007](adr-007-pillars-and-practice.md) |
 | Recurring findings escalate to design-review candidates | [ADR 008](adr-008-translation-and-decision.md) |
 | Depth and license policy select the pool; every deny wins | [analyzer pool](analyzer-pool.md), [config](config-schema.md#analyzer-policy-analyzers) |
+| Scans append to a durable history; trends over comparable records only | [ADR 009](adr-009-scan-history.md) |
+| Finding identity is content-addressed, never line-coupled | [ADR 009](adr-009-scan-history.md) |
+| Trends describe past scans; forecasting stays forbidden | [ADR 009](adr-009-scan-history.md), [product intent](product-intent.md#what-it-must-never-claim) |
 
 MCP's three primitives cover the chat requirement without inventing anything. CI does not go through MCP — a protocol hop between a runner and an exit code costs determinism and buys nothing. Each agent ships its own server as a subcommand; there is no combined server, because independent releasability is worth more than cross-tool synthesis today.
+
+### Scans accumulate: maintainability is a trend, not a snapshot
+
+Everything above describes one scan, and a single reading is the weaker half of the evidence. Practitioners judge a codebase by its direction — *this is getting worse*, *they keep patching around that module*, *complexity has climbed since the rewrite*. A repository at 3.8 and improving is in a different position from one at 3.8 and sliding, and no snapshot distinguishes them.
+
+Today nothing records what a repository scored last month. `history.py` measures churn and coupling but recomputes them every run and retains nothing; `maintainability-baseline.json` is a flat list of finding fingerprints with no timestamp, commit, score or population — a suppression list for `--fail-on-new`, overwritten rather than appended.
+
+So scans append to a durable record ([ADR 009](adr-009-scan-history.md)), default `.maintainability/history.jsonl`, one line per scan carrying the commit, scope, rubric version, analyzer coverage, populations, band distributions, scores, pillar values and finding identities. Populations and distributions are retained deliberately: a score that moved with nothing beneath it cannot be diagnosed.
+
+The engine then computes, as arithmetic over stored records:
+
+- **debt velocity** — findings introduced versus cleared per period; clearing faster than adding is improvement at any absolute score
+- **growth versus quality** — is the finding rate outpacing the population? separates *getting bigger* from *getting worse*
+- **score trajectory**, with the interval, so noise is not read as movement
+- **recurrence** — cleared and returned, with counts and commits
+- **stability** — units that keep changing while their findings never clear
+
+Two guards. **Trends describe scans that happened**; extrapolating forward is a prediction and stays forbidden until an outcome study earns it. And **comparability is checked, not assumed** — a trend computed across a change in analyzer coverage measures the tooling, not the code, so such a series is segmented or withheld with a reason.
+
+Determinism is restated accordingly: identical tree, config *and history* produce identical output. History is an input, and the report names the history it consumed.
+
+**A prerequisite defect blocks all of it.** Finding identity is line-coupled — `function:{path}:{name}:{start_line}` — so inserting one import above an untouched function makes it look simultaneously fixed and new:
+
+```text
+before: function:big.py:huge:1        after: function:big.py:huge:2
+looks NEW to --fail-on-new: function:big.py:huge:2
+looks FIXED:                function:big.py:huge:1
+```
+
+That is a live false-positive source for the shipped `--fail-on-new` flag on any refactor that shifts lines, and it makes recurrence tracking impossible. Identity becomes content-addressed — kind, path, unit name and a hash of the unit's normalized content — with line numbers reported but never part of identity.
 
 ### The friction signal
 
@@ -416,6 +449,8 @@ Two outputs, both 1–5, never averaged together: **a score for the condition of
 | **`_concepts`** | The measurement-concept registry — for each concept, its contributing tools, its agreement tolerance, its denominator and that denominator's floor ([ADR 005](adr-005-insufficient-population.md)). Data, like `_formula`. | nothing internal |
 | **`_bands`** | The band matrix: ordered measurement ranges mapping to pressures, boundaries drawn from corpus percentiles. Data, like `_formula`. | nothing internal |
 | **`_catalog`** | Reading `data/analyzer-catalog.json` and resolving the pool from the configured depth and license policy. | foundations |
+| **`_scan_history`** | Appending one record per scan, reading prior records, and computing trends over comparable ones ([ADR 009](adr-009-scan-history.md)). | foundations |
+| **`_identity`** | Content-addressed finding fingerprints, stable across moves and reindentation. | foundations, parsing |
 | **`_corroborate`** | Combining several tools' measurements of one concept into a single evidence value plus strength (corroborated / contested / single-source / unavailable) and the observed spread. | foundations, `_concepts` |
 | **`_practice`** | Detecting enforcement evidence — CI workflows, linter configuration, coverage thresholds, hook definitions — to score the ADR 007 practice level. **Reads repository configuration, never source.** | foundations |
 | **`_pillars`** | The five-pillar taxonomy and each pillar's declared scope: owned, partial, delegated, out of scope. Data. | nothing internal |

@@ -16,6 +16,7 @@ A decision recorded only as a sentence inside a design document is a decision th
 | [006](adr-006-analyzer-evidence.md) | External analyzers produce the evidence; the agent orchestrates and corroborates across tools | **Accepted** — not implemented | Whole evidence layer, determinism promise, installation, CI, report contract |
 | [007](adr-007-pillars-and-practice.md) | Adopt the five-pillar framework; separate practice maturity from code condition | **Accepted** — not implemented | Reporting taxonomy, scope boundaries, remediation prioritization |
 | [008](adr-008-translation-and-decision.md) | Translation layer from tool output to scoring input; the LLM boundary; CLI and MCP entry points | **Accepted** — not implemented | Evidence normalization, thresholds, remediation, entry points |
+| [009](adr-009-scan-history.md) | Persist a scan history so the engine can measure change over time | **Accepted** — not implemented | Persistence, finding identity, determinism, report, `--fail-on-new` |
 
 Decisions 005–007 were written together after a repository containing one production function was reported as 5.0 / A+, evidence complete, verified. They address three distinct causes of that single result: no rate has a minimum population (005), the evidence comes from six homegrown detectors rather than the mature analyzers the README says to pair with (006), and nothing distinguishes *a clean scan* from *an enforced standard* (007).
 

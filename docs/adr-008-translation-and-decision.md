@@ -13,9 +13,11 @@
 
 The scorer consumes exactly 28 typed inputs — 23 on `SummaryEvidence`, 5 on `HistoryEvidence`. Every one is read by `_pressures` or `_aspects`. There are no dead inputs and no undeclared ones, so the target the translation layer must hit is exact and small.
 
-### 2. The contract is count-shaped; tools are not
+### 2. The scoring inputs are count-shaped; tools emit measurements
 
-Every scoring input is a **count** (`function_failures`, `duplicate_blocks`, `dead_code_count`) or a **population** (`declarations_scanned`). No input accepts a measurement.
+Every scoring input is a **count** (`function_failures`, `duplicate_blocks`, `dead_code_count`) or a **population** (`declarations_scanned`). No input accepts a measurement — because a *rate* needs a numerator and a denominator, and that is what the score is built from.
+
+That is a fact about the score's needs, not a reason to discard the measurements. See "All three data kinds survive" below.
 
 Tools emit one of two very different things, and conflating them is the trap:
 
@@ -69,6 +71,22 @@ Where a threshold cannot be forced, the tool is verdict-only for that concept an
 
 Project-local lint configuration is still honored for the developer's own workflow; it simply does not get to move the score. A score that moves with a config file is not a measurement of the code.
 
+### All three data kinds survive; bands do the normalizing
+
+An earlier draft of this record described step 7 as "apply the rubric's thresholds to the measurements, producing counts." That is lossy in two ways, and both matter.
+
+**It discards the measurements.** Counts, populations and measurements are distinct, useful taxonomies. The score needs counts and populations because a rate needs a numerator and a denominator; that is a fact about the *score*, not a licence to throw the underlying values away. All three reach the report. The distribution is the part a model can reason with: *"seven functions failed"* supports a sentence, *"seven failed, worst CCN 45, median 6, clustered in two modules"* supports a plan.
+
+**It flattens severity.** A binary threshold makes CCN 14 and CCN 45 the same fact. The difference between extracting a guard clause and redesigning a module is precisely the information the reader wanted.
+
+So measurements are normalized through a **band matrix** — ordered ranges, each mapping to a pressure between 0 and 1, weighted and averaged over the population — with boundaries drawn from corpus percentiles rather than invented. Hard gates stay binary: bands drive the score, gates drive the exit code.
+
+### Scan scope is part of the result
+
+A five-line function and a 4,500-line multi-module commit are different measurement problems, and the small one reaches a high score trivially. The tool must encode that rather than assume the reader supplies it.
+
+Every report states its scope, and a scope-limited run with a small population recommends a whole-repository rescan. Withholding is the floor case; **scope escalation is the useful case**, because widening the scan usually yields a real answer.
+
 ### Normalization is a pipeline with one shape
 
 ```text
@@ -77,14 +95,15 @@ tool process output (JSON/CSV/XML/text)
   -> concept            "cyclomatic complexity" on this function, from this tool
   -> combine            several tools measuring one concept -> weighted mean + spread
   -> attribute          agent classifies each unit as production or test
-  -> threshold          apply the RUBRIC's thresholds to measurements -> counts
+  -> band               RUBRIC band matrix maps each measurement to a pressure
+                        (measurements, counts and populations all retained)
   -> populate           the 28 typed inputs, each Measured / Unknown / NotApplicable
   -> score              unchanged from here down
 ```
 
-The seam is deliberate: **everything above `threshold` is tool-shaped, everything below is rubric-shaped.** No tool's opinion survives the seam, only its measurements.
+The seam is deliberate: **everything above `band` is tool-shaped, everything below is rubric-shaped.** No tool's opinion survives the seam, only its measurements.
 
-Combination happens *before* thresholding, and only among measurements. Averaging a verdict with a number is meaningless and is not attempted.
+Combination happens *before* banding, and only among measurements. Averaging a verdict with a number is meaningless and is not attempted.
 
 ### The report is a first-class output, not a by-product of the prompt
 
@@ -153,7 +172,7 @@ Such findings **escalate** out of the nit class into a design-review candidate, 
 1. No scoring input is derived from a tool's own threshold verdict unless the agent set that threshold from the rubric.
 2. Populations and rates come only from tools classified `metric` or `both`.
 3. A verdict-only tool can contribute findings and can never change a denominator.
-4. Combination across tools happens on measurements, before thresholding, never on verdicts.
+4. Combination across tools happens on measurements, before banding, never on verdicts.
 5. Production/test attribution is performed by the agent, never taken from a tool.
 6. The audit performs no network access and invokes no language model.
 7. The CLI path never prompts and never varies its pool between runs given the same configuration.
@@ -161,3 +180,6 @@ Such findings **escalate** out of the nit class into a design-review candidate, 
 9. A full report is produced on every run, whether or not a remediation prompt is generated or a model is ever invoked.
 10. Every report states its analyzer coverage, and no score is presented without it.
 11. The Markdown report is retrievable as a file from every entry point, and any chat-rendered summary is a strict subset of it.
+12. Measurements, counts and populations all reach the report; the score consumes counts and populations without the measurements being discarded.
+13. Two measurements in different bands never produce the same pressure.
+14. Every report states its scan scope, and a scope-limited run whose population falls short recommends a whole-repository rescan.

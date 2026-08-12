@@ -14,6 +14,8 @@ The arithmetic is right. The number is meaningless, and the tool says it with fu
 
 This is the same family of mistake the evidence model was built to remove, one level up. [ADR 001](adr-001-evidence-and-verification.md) separated *measured zero* from *could not measure* from *does not apply*. It never introduced **measured, but over a population too small to support a conclusion**. `evidence_status: complete` today asserts that every required measurement was resolved. It asserts nothing about whether resolving them told us anything.
 
+**This is already shipping.** The hello-world was a fixture, but `--changed-only` is a documented flag intended for PR-scoped CI. Run against this repository it reports **`maintainability_estimate: 4.2`, `evidence_status: complete`, over 2 files and *zero* declarations** — a whole-repository scale applied to a diff. Every PR-scoped run inherits it.
+
 Two consequences, both bad:
 
 - A new repository earns A+ on its first commit and gets *worse* as real code arrives. The scale rewards emptiness.
@@ -71,3 +73,5 @@ Findings are never suppressed. A two-file repository with a 300-line function st
 5. No consumer renders a suppressed score as a number, a dash, or a zero.
 6. `--fail-on-gate` exit codes are unchanged by insufficiency.
 7. Every insufficiency reason names both the observed population and the floor, and is distinguishable from an analyzer-unavailability reason.
+8. Every report states its scan scope, and a scope-limited run whose population falls short recommends a whole-repository rescan rather than only withholding.
+9. `--changed-only` never reports a whole-repository grade for a diff.

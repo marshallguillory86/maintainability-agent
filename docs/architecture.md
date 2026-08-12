@@ -156,7 +156,11 @@ This is not complicated, and the rest of this section is detail on top of it. En
 5.  where several tools measured one concept, combine them with weights
        -- a weighted mean, and record the spread; disagreement is variance, not a crisis
 6.  the agent attributes each unit as production or test -- tools don't know
-7.  apply the RUBRIC's thresholds to the measurements   -> counts
+7.  normalize measurements through the RUBRIC's band matrix -> per-unit pressure
+       -- bands, not a binary threshold; CCN 14 and CCN 45 must not
+          both collapse into "1 failure"
+       -- measurements, counts and populations all survive this step;
+          the report carries all three, the score reads what it needs
 8.  divide counts by the population they came from, so the result is a rate, not a size
 9.  apply the rubric's aspect weights          -> aspect scores    (0-5)
 10. apply the rubric's category weights        -> category scores  (0-5)
@@ -172,6 +176,47 @@ This is not complicated, and the rest of this section is detail on top of it. En
 Steps 14 and 15 are both first-class. The **report** is the record of what was examined and what was found; the **prompt** is one thing you can do with it. A user who only wants to read the findings never has to invoke a model.
 
 Step 7 is the seam. **Everything above it is tool-shaped; everything below it is rubric-shaped.** No tool's threshold survives it — only its measurements.
+
+### Three kinds of data, all kept
+
+Counts, populations and measurements are different taxonomies of fact about the code, and forcing them into one shape destroys information the reader needs.
+
+| Kind | Example | Who needs it |
+|---|---|---|
+| **Measurement** | this function has CCN 14; this file has MI 42.23 | The band matrix, the report, and any model reading the report |
+| **Count** | 7 declarations exceed the complexity band | The rate, and the finding tables |
+| **Population** | 629 declarations across 123 files | The denominator, and the sufficiency check |
+
+The scoring inputs are counts and populations because that is what a *rate* needs. That is a fact about the score, not a reason to throw the measurements away. All three travel to the report; the score reads the two it needs.
+
+The raw distribution is the part a language model can actually reason with. "Seven functions failed" supports one sentence. "Seven functions failed, worst at CCN 45, median 6, and they cluster in two modules" supports a plan.
+
+### Bands, not binary thresholds
+
+A threshold turns CCN 14 and CCN 45 into the same fact — one failure each — and the difference between a function that needs a guard clause extracted and one that needs redesigning is exactly the information the reader wanted.
+
+So a measurement is normalized through a **band matrix**: ordered ranges, each mapping to a normalized pressure between 0 and 1, weighted and averaged across the population.
+
+```text
+cyclomatic complexity      band     pressure
+    1 - 5                  clean       0.00
+    6 - 10                 mild        0.25
+   11 - 15                 elevated    0.50
+   16 - 25                 high        0.75
+   26 +                    severe      1.00
+```
+
+Band boundaries are corpus percentiles rather than invented numbers, which is the grounding this project already uses elsewhere — the cognitive-complexity thresholds sit at the 94th and 97th percentiles of 21,300 corpus declarations. Boundaries are rubric data, visible in `_formula`, arguable by changing one row.
+
+Hard gates keep their binary character: a gate is a policy line, and a line is meant to be crossed or not. Bands drive the *score*; gates drive the *exit code*.
+
+### Scan scope is part of the result
+
+A five-line function and a 4,500-line multi-module commit are not the same measurement problem. The small one reaches a high score trivially, and saying so is common sense that the tool must encode rather than assume the reader supplies.
+
+Every report therefore states its **scope** — whole repository, changed-only, or a path subset — and when the scanned population is small relative to the repository, the report says so and recommends a whole-repository rescan for a meaningful reading. Withholding a score ([ADR 005](adr-005-insufficient-population.md)) is the floor case; **scope escalation is the useful case**, because the user usually can get a real answer by widening the scan.
+
+This is a live defect, not a hypothetical. Today `--changed-only HEAD~1` on this repository reports **estimate 4.2, evidence status complete, over 2 files and zero declarations**, against a scale calibrated on whole repositories. Any PR-scoped CI run inherits it.
 
 The agent itself never calls a language model. Step 14 hands structured input to *the user's* model, which keeps the audit deterministic and offline (promise **P1**) and keeps everything the agent asserts reproducible from a pinned run.
 

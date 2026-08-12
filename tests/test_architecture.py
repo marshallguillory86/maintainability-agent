@@ -37,7 +37,13 @@ SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "histo
             # `_generic` is the same layer: it turns tool output into
             # findings, differing only in that its parsers are shared
             # across tools rather than written per tool.
-            "_generic"}
+            "_generic",
+            # Adapters split by emitter kind when `_adapters` breached this
+            # project's own 500-line limit: `_metric_adapters` for tools
+            # reporting every unit, `_verdict_adapters` for tools reporting
+            # only threshold breaches, `_tool_adapters` for the registry
+            # naming them. The base module keeps only shared plumbing.
+            "_metric_adapters", "_verdict_adapters", "_tool_adapters"}
 # `_bands` joins the rubric-data leaves: it is the band matrix, a table
 # of judgments like `_formula`, and imports nothing internal.
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive",

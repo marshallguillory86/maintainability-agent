@@ -84,39 +84,10 @@ _PERMISSIVE = (
 )
 
 
-def classify_license(name: str, status: str) -> str:
-    """Map a license string to a policy class. Unmatched means unmatched."""
-    if status == "proprietary":
-        return "proprietary"
-    if status == "unverified":
-        return "unverified"
-    low = name.lower()
+# Separators that actually appear in the data: "MIT / Apache 2.0",
+# "Apache-2.0, MIT license", "GPL v3 or Perl Artistic License 2.0".
+_DUAL_SEPARATORS = (" / ", "/", " or ", ", ", " & ", " + ")
 
-    if any(token in low for token in _SOURCE_AVAILABLE):
-        return "source-available"
-
-    # A dual license gives the licensee the choice, so it takes the most
-    # permissive class on offer. Split on the separators actually present in
-    # the data: "MIT / Apache 2.0", "Apache-2.0, MIT license", "GPL v3 or ...".
-    parts = [low]
-    for sep in (" / ", "/", " or ", ", ", " & ", " + "):
-        if sep in low:
-            parts = [p.strip() for p in low.split(sep) if p.strip()]
-            break
-    if len(parts) > 1:
-        classes = {classify_license(part, "foss") for part in parts}
-        for best in ("permissive", "weak-copyleft", "strong-copyleft"):
-            if best in classes:
-                return best
-        return "unverified"
-
-    if any(token in low for token in _WEAK_COPYLEFT):
-        return "weak-copyleft"
-    if any(token in low for token in _STRONG_COPYLEFT):
-        return "strong-copyleft"
-    if any(token in low for token in _PERMISSIVE):
-        return "permissive"
-    return "unverified"
 
 # Tools this project has actually installed and executed, with the tier they
 # are assigned to. Nothing reaches a tier below "all" without being run:
@@ -148,6 +119,52 @@ VERIFIED_TIERS = {
     # heavy: builds history, or needs an ecosystem runtime
     "wily": "heavy",
 }
+
+
+def _split_dual(low: str) -> list[str]:
+    for separator in _DUAL_SEPARATORS:
+        if separator in low:
+            return [part.strip() for part in low.split(separator) if part.strip()]
+    return [low]
+
+
+def _single_class(low: str) -> str:
+    """The class of one license name, with no dual-license handling."""
+    if any(token in low for token in _SOURCE_AVAILABLE):
+        return "source-available"
+    if any(token in low for token in _WEAK_COPYLEFT):
+        return "weak-copyleft"
+    if any(token in low for token in _STRONG_COPYLEFT):
+        return "strong-copyleft"
+    if any(token in low for token in _PERMISSIVE):
+        return "permissive"
+    return "unverified"
+
+
+def classify_license(name: str, status: str) -> str:
+    """Map a license string to a policy class. Unmatched means unmatched.
+
+    Split into three because the audit flagged this at complexity 19
+    against a limit of 15 — the ladder of token tests and the
+    dual-license resolution are separate jobs that happened to share a
+    function.
+    """
+    if status in {"proprietary", "unverified"}:
+        return status
+    low = name.lower()
+    if any(token in low for token in _SOURCE_AVAILABLE):
+        return "source-available"
+
+    # A dual license gives the licensee the choice, so it takes the most
+    # permissive class on offer.
+    parts = _split_dual(low)
+    if len(parts) > 1:
+        classes = {_single_class(part) for part in parts}
+        for best in ("permissive", "weak-copyleft", "strong-copyleft"):
+            if best in classes:
+                return best
+        return "unverified"
+    return _single_class(low)
 
 
 # What a tool actually measures, in this project's own vocabulary. The upstream
@@ -287,72 +304,79 @@ def load(source: Path) -> list[dict[str, Any]]:
     return out
 
 
+def _entry(record: dict[str, Any]) -> dict[str, Any]:
+    """One catalog row, from one source record.
+
+    Split out of ``build`` when the audit put that function at complexity
+    22 against a limit of 15. Row construction and the counting pass were
+    two jobs sharing a loop.
+    """
+    tags = set(record.get("tags") or [])
+    languages = sorted(tags & LANGUAGE_TAGS)
+    concerns = sorted(tags - LANGUAGE_TAGS)
+    slug = record["_slug"]
+    verified = VERIFIED_LICENSES.get(slug)
+    status, license_name = normalize_license(
+        verified[0] if verified else record.get("license")
+    )
+
+    # A proprietary tool with a free or OSS plan is a different policy
+    # question from one that is paid-only.
+    plans = record.get("plans") if isinstance(record.get("plans"), dict) else {}
+    free_tier = bool(plans.get("free") or plans.get("oss"))
+    license_class = classify_license(license_name, status)
+    if license_class == "proprietary" and free_tier:
+        license_class = "proprietary-free-tier"
+
+    return {
+        "slug": slug,
+        "name": record.get("name", slug),
+        "license": license_name,
+        "license_status": status,
+        "license_class": license_class,
+        "license_evidence": verified[1] if verified else "upstream catalog",
+        "free_tier": free_tier,
+        "deprecated": bool(record.get("deprecated")),
+        "categories": sorted(record.get("categories") or []),
+        "languages": languages,
+        "upstream_tags": concerns,
+        "measures": sorted(VERIFIED_MEASURES.get(slug, ())),
+        "security_only": bool(concerns) and set(concerns) <= SECURITY_TAGS and not languages,
+        "source": record.get("source") or record.get("homepage") or "",
+        "tier": VERIFIED_TIERS.get(slug, "all"),
+        "adapter": "implemented" if slug in VERIFIED_TIERS else "none",
+    }
+
+
+def _local_entry(extra: dict[str, Any]) -> dict[str, Any]:
+    """A row for a tool this project verified but the source does not list."""
+    return {
+        "slug": extra["slug"],
+        "name": extra["name"],
+        "license": extra["license"],
+        "license_status": "foss",
+        "license_class": classify_license(extra["license"], "foss"),
+        "license_evidence": f"verified locally, version {extra['version_seen']}",
+        "free_tier": False,
+        "deprecated": False,
+        "categories": extra["categories"],
+        "languages": extra["languages"],
+        "upstream_tags": extra["concerns"],
+        "measures": sorted(VERIFIED_MEASURES.get(extra["slug"], ())),
+        "security_only": False,
+        "source": extra["source"],
+        "tier": VERIFIED_TIERS.get(extra["slug"], "all"),
+        "adapter": "implemented" if extra["slug"] in VERIFIED_TIERS else "none",
+    }
+
+
 def build(records: list[dict[str, Any]]) -> dict[str, Any]:
-    entries = []
-    for record in records:
-        tags = set(record.get("tags") or [])
-        languages = sorted(tags & LANGUAGE_TAGS)
-        concerns = sorted(tags - LANGUAGE_TAGS)
-        slug = record["_slug"]
-        verified = VERIFIED_LICENSES.get(slug)
-        status, license_name = normalize_license(
-            verified[0] if verified else record.get("license")
-        )
+    entries = [_entry(record) for record in records]
+    known = {entry["slug"] for entry in entries}
+    entries.extend(_local_entry(extra) for extra in LOCAL_ADDITIONS if extra["slug"] not in known)
+    entries.sort(key=lambda entry: entry["slug"])
+    eligible = [entry for entry in entries if is_eligible(entry)]
 
-        # A proprietary tool with a free or OSS plan is a different policy
-        # question from one that is paid-only: some organizations permit the
-        # former for open work. The distinction comes from the source's own
-        # ``plans`` block, so it is a recorded fact rather than an inference.
-        plans = record.get("plans") if isinstance(record.get("plans"), dict) else {}
-        free_tier = bool(plans.get("free") or plans.get("oss"))
-        license_class = classify_license(license_name, status)
-        if license_class == "proprietary" and free_tier:
-            license_class = "proprietary-free-tier"
-
-        entries.append({
-            "slug": slug,
-            "name": record.get("name", slug),
-            "license": license_name,
-            "license_status": status,
-            "license_class": license_class,
-            "license_evidence": verified[1] if verified else "upstream catalog",
-            "free_tier": free_tier,
-            "deprecated": bool(record.get("deprecated")),
-            "categories": sorted(record.get("categories") or []),
-            "languages": languages,
-            "upstream_tags": concerns,
-            "measures": sorted(VERIFIED_MEASURES.get(slug, ())),
-            "security_only": bool(concerns) and set(concerns) <= SECURITY_TAGS and not languages,
-            "source": record.get("source") or record.get("homepage") or "",
-            "tier": VERIFIED_TIERS.get(slug, "all"),
-            "adapter": "implemented" if slug in VERIFIED_TIERS else "none",
-        })
-
-    known = {e["slug"] for e in entries}
-    for extra in LOCAL_ADDITIONS:
-        if extra["slug"] in known:
-            continue
-        entries.append({
-            "slug": extra["slug"],
-            "name": extra["name"],
-            "license": extra["license"],
-            "license_status": "foss",
-            "license_class": classify_license(extra["license"], "foss"),
-            "free_tier": False,
-            "deprecated": False,
-            "categories": extra["categories"],
-            "languages": extra["languages"],
-            "upstream_tags": extra["concerns"],
-            "measures": sorted(VERIFIED_MEASURES.get(extra["slug"], ())),
-            "security_only": False,
-            "source": extra["source"],
-            "tier": VERIFIED_TIERS.get(extra["slug"], "all"),
-            "adapter": "implemented" if extra["slug"] in VERIFIED_TIERS else "none",
-            "provenance": f"verified locally, version {extra['version_seen']}",
-        })
-
-    entries.sort(key=lambda e: e["slug"])
-    eligible = [e for e in entries if is_eligible(e)]
     return {
         "provenance": {
             "source": SOURCE_REPO,

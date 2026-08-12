@@ -17,13 +17,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from maintainability_audit._adapters import BaseAdapter, Extraction, Finding, Measurement
+from maintainability_audit._adapters import BaseAdapter, Extraction
 from maintainability_audit._analysis import (
     Analysis,
     ToolCoverage,
     analyze,
     coverage_document,
 )
+from maintainability_audit._metrics_types import Finding, Measurement
 from maintainability_audit._runner import Outcome
 
 

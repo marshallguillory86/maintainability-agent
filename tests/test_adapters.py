@@ -21,15 +21,10 @@ from pathlib import Path
 
 import pytest
 
-from maintainability_audit._adapters import (
-    ADAPTERS,
-    BaseAdapter,
-    Extraction,
-    Measurement,
-    adapter_for,
-    measurements_only,
-)
+from maintainability_audit._adapters import BaseAdapter, Extraction, measurements_only
+from maintainability_audit._metrics_types import Measurement
 from maintainability_audit._runner import Outcome, ToolResult
+from maintainability_audit._tool_adapters import ADAPTERS, adapter_for
 
 
 def _ran(stdout: str = "", stderr: str = "") -> ToolResult:

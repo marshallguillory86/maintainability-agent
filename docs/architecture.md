@@ -24,7 +24,10 @@ Dependencies point downward only. No cycles.
   scanners                   scoring
   metrics, duplication       scoring -> _aspects -> _pressures
   deadcode, idioms           _formula, _calibration, _bands (rubric data)
-  _adapters, _generic        _corroborate (several tools -> one reading)
+  _adapters (protocol)       _corroborate (several tools -> one reading)
+  _metric_adapters,
+  _verdict_adapters,
+  _tool_adapters, _generic
   similarity, history        _verification (evidence sufficiency)
                              _derive (calibration fit), evidence (boundary)
         |                         |

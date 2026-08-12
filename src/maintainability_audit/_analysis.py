@@ -24,11 +24,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from ._adapters import Extraction, Finding, Measurement, adapter_for, measurements_only
+from ._adapters import Extraction, measurements_only
 from ._catalog import CONCERNS, PolicyError, concepts_for, resolve_pool, settings_from
 from ._corroborate import agreement, combine, single_source_concepts
 from ._generic import declared_adapter
+from ._metrics_types import Finding, Measurement
 from ._runner import Outcome, Probe, run
+from ._tool_adapters import adapter_for
 
 
 @dataclass(frozen=True)

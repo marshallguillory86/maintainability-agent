@@ -21,7 +21,6 @@ from pathlib import Path
 
 import pytest
 
-from maintainability_audit._adapters import Measurement
 from maintainability_audit._corroborate import (
     agreement,
     canonical_unit,
@@ -29,6 +28,7 @@ from maintainability_audit._corroborate import (
     single_source_concepts,
     weight_for,
 )
+from maintainability_audit._metrics_types import Measurement
 
 
 def _m(tool: str, value: float, unit: str = "a.py::f", concept: str = "complexity") -> Measurement:
@@ -166,7 +166,7 @@ def test_a_concept_is_one_measurement_not_a_family() -> None:
     genuine corroboration between careful tools does not sit at 100%.
     A concept must therefore name one measurement at one granularity.
     """
-    from maintainability_audit._adapters import ADAPTERS, adapter_for
+    from maintainability_audit._tool_adapters import ADAPTERS, adapter_for
 
     families = {"complexity", "metrics", "structure"}
     for slug in ADAPTERS:
@@ -189,8 +189,8 @@ def test_every_measured_concept_belongs_to_a_user_facing_concern() -> None:
     Users select concerns; tools emit concepts. A concept absent from
     the map can never be requested, so its tool would silently never run.
     """
-    from maintainability_audit._adapters import ADAPTERS, adapter_for
     from maintainability_audit._catalog import CONCERNS, concepts_for
+    from maintainability_audit._tool_adapters import ADAPTERS, adapter_for
 
     reachable = {concept for concern in CONCERNS for concept in concepts_for(concern)}
     for slug in ADAPTERS:

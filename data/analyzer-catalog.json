@@ -2491,6 +2491,7 @@
       "license": "GNU General Public License v2.0",
       "license_status": "foss",
       "license_class": "strong-copyleft",
+      "license_evidence": "verified locally, version 2.06",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -2590,8 +2591,7 @@
       "security_only": false,
       "source": "https://github.com/AlDanial/cloc",
       "tier": "baseline",
-      "adapter": "implemented",
-      "provenance": "verified locally, version 2.06"
+      "adapter": "implemented"
     },
     {
       "slug": "closure-compiler",
@@ -3665,6 +3665,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "verified locally, version 7.0.0",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -3682,8 +3683,7 @@
       "security_only": false,
       "source": "https://github.com/rohaquinlop/complexipy",
       "tier": "baseline",
-      "adapter": "implemented",
-      "provenance": "verified locally, version 7.0.0"
+      "adapter": "implemented"
     },
     {
       "slug": "complexity-report",
@@ -8314,6 +8314,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "verified locally, version 1.7.0",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8331,8 +8332,7 @@
       "security_only": false,
       "source": "https://github.com/econchick/interrogate",
       "tier": "baseline",
-      "adapter": "implemented",
-      "provenance": "verified locally, version 1.7.0"
+      "adapter": "implemented"
     },
     {
       "slug": "ionide-analyzers",
@@ -8606,6 +8606,7 @@
       "license": "MIT",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "verified locally, version 5.0.14",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -8704,8 +8705,7 @@
       "security_only": false,
       "source": "https://github.com/kucherenko/jscpd",
       "tier": "baseline",
-      "adapter": "implemented",
-      "provenance": "verified locally, version 5.0.14"
+      "adapter": "implemented"
     },
     {
       "slug": "jshint",
@@ -10443,6 +10443,7 @@
       "license": "Zlib",
       "license_status": "foss",
       "license_class": "permissive",
+      "license_evidence": "verified locally, version 2.4.4",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -10469,8 +10470,7 @@
       "security_only": false,
       "source": "https://github.com/priv-kweihmann/multimetric",
       "tier": "baseline",
-      "adapter": "implemented",
-      "provenance": "verified locally, version 2.4.4"
+      "adapter": "implemented"
     },
     {
       "slug": "mypy",

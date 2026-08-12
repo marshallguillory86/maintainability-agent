@@ -32,7 +32,15 @@ from typing import Any
 # ``report.build_report``, which stamps it; see docs/report-contract.md
 # for the compatibility policy. Deliberately not the baseline file's
 # ``version``, which numbers a different artifact.
-REPORT_SCHEMA_VERSION = 1
+#
+# Version 2 (ADR 001 stage 8) removed the ambiguous compatibility score
+# fields — ``overall``, ``overall_range``, ``grade``, ``grade_blockers``
+# — in favour of ``maintainability_estimate``, ``maintainability_range``
+# and ``verified_grade``. No version-1 migration exists, and that is a
+# decision rather than an omission: the consumer inventory in
+# docs/report-contract.md established that nothing rescores a persisted
+# report, so a migration would serve no caller.
+REPORT_SCHEMA_VERSION = 2
 
 SCHEMA_VERSION_KEY = "schema_version"
 
@@ -314,7 +322,9 @@ def _check_schema_version(report: dict[str, Any]) -> int:
     if version != REPORT_SCHEMA_VERSION:
         raise UnsupportedReportSchema(
             f"unsupported {SCHEMA_VERSION_KEY} {version!r}; this build normalizes "
-            f"version {REPORT_SCHEMA_VERSION} only"
+            f"version {REPORT_SCHEMA_VERSION} only. Version 1 carried the compatibility "
+            "score fields removed in ADR 001 stage 8 and is not migrated, because no "
+            "consumer rescores a persisted report (docs/report-contract.md)"
         )
     return version
 

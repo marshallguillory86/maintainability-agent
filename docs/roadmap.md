@@ -12,10 +12,9 @@ Dependency-light native scanner; Markdown, JSON, SARIF and PR-comment output; bo
 
 The architecture migration outranks new features. Six audit rounds were spent on one bug class that the typed evidence boundary is meant to end; leaving it half-migrated is how the seventh round happens. The open stages and their current status are in the [decision register](decisions.md); the immediate work is:
 
-1. Deprecate and remove the ambiguous compatibility fields — `overall`, `overall_range` and `grade` — behind a schema-version bump. `grade` is still banded from the evidence floor; consumer migration labelled it rather than removing it.
-2. Separate history-window materialization from fix-breadth measurement, with checked-in manifests: pinned head, selection rule, selected commit ids, required parent objects and tool version, so analysis reads only the manifest and touches no network.
+1. Separate history-window materialization from fix-breadth measurement, with checked-in manifests: pinned head, selection rule, selected commit ids, required parent objects and tool version, so analysis reads only the manifest and touches no network.
 
-The evidence model, its property tests and consumer migration are done; [ADR 002](adr-002-null-verified-grade-in-ci.md) stays rejected because it assumed `--fail-on-gate` consumes a grade when it only checks hard findings.
+The evidence model, its property tests, consumer migration and the version-2 contract are done; [ADR 002](adr-002-null-verified-grade-in-ci.md) stays rejected because it assumed `--fail-on-gate` consumes a grade when it only checks hard findings.
 
 ## A known shape problem: this tool is end-of-loop heavy
 

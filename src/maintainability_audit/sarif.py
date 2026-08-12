@@ -151,7 +151,7 @@ def _evidence_run_properties(report: dict[str, Any]) -> dict[str, Any]:
         "evidenceProfile": status.get("profile"),
         "evidenceStatus": status.get("status"),
         "verifiedGrade": score.get("verified_grade"),
-        "maintainabilityEstimate": score.get("overall"),
+        "maintainabilityEstimate": score["maintainability_estimate"],
         "evidenceReasons": [
             {
                 "measurement": item["measurement"],

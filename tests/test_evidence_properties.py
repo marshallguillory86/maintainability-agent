@@ -48,8 +48,6 @@ from maintainability_audit.evidence import (
 from maintainability_audit.report import build_report
 from maintainability_audit.scoring import score_evidence
 
-GRADE_ORDER = ["F", "D", "C", "B", "A", "A+"]
-
 MODEL_PATHS = tuple(
     [f"summary.{field.name}" for field in SummaryEvidence.__dataclass_fields__.values()]
     + [f"history.{field.name}" for field in HistoryEvidence.__dataclass_fields__.values()]
@@ -168,7 +166,7 @@ def test_both_fixtures_start_complete_and_verified(
     for evidence in (settled_evidence, young_evidence):
         score = score_evidence(evidence)
         assert score["evidence_status"]["status"] == "complete"
-        assert score["verified_grade"] == score["grade"]
+        assert score["verified_grade"] is not None
 
     assert any(
         isinstance(state, NotApplicable) for _, state in walk_evidence(young_evidence)
@@ -205,8 +203,7 @@ def test_concealing_any_required_node_withholds_verification(
     assert hidden["verified_grade"] is None
     named = [reason["measurement"] for reason in hidden["evidence_status"]["reasons"]]
     assert named == [path], f"reasons must name exactly {path}, got {named}"
-    assert hidden["overall_range"][0] <= baseline["overall_range"][0], "the evidence floor rose"
-    assert GRADE_ORDER.index(hidden["grade"]) <= GRADE_ORDER.index(baseline["grade"])
+    assert hidden["maintainability_range"][0] <= baseline["maintainability_range"][0], "the evidence floor rose"
     unmeasured = [
         name for name, value in hidden["aspects"].items()
         if value is None and baseline["aspects"][name] is not None
@@ -218,10 +215,10 @@ def test_concealing_any_required_node_withholds_verification(
         # as clean — passing the sweep because the floor merely stayed
         # equal. When concealment does unmeasure an aspect, that aspect
         # prices at zero and the floor must actually move.
-        assert hidden["overall_range"][0] < baseline["overall_range"][0], (
+        assert hidden["maintainability_range"][0] < baseline["maintainability_range"][0], (
             f"concealing {path} unmeasured {unmeasured} without lowering the floor"
         )
-    assert hidden["overall_range"][0] <= hidden["overall"] <= hidden["overall_range"][1]
+    assert hidden["maintainability_range"][0] <= hidden["maintainability_estimate"] <= hidden["maintainability_range"][1]
     untouched = {
         other: state for other, state in walk_evidence(hidden_model) if other != path
     }
@@ -248,8 +245,8 @@ def test_concealing_a_not_applicable_node_also_withholds_verification(
 
     assert hidden["evidence_status"]["status"] == "incomplete"
     assert hidden["verified_grade"] is None
-    assert hidden["overall_range"][0] <= baseline["overall_range"][0]
-    assert GRADE_ORDER.index(hidden["grade"]) <= GRADE_ORDER.index(baseline["grade"])
+    assert hidden["maintainability_range"][0] <= baseline["maintainability_range"][0]
+    assert hidden["verified_grade"] is None
 
 
 @pytest.mark.parametrize("path", MODEL_PATHS)
@@ -338,8 +335,8 @@ def test_restoring_a_concealed_node_recovers_everything(
     assert restored_model == settled_evidence, "the original model was not recovered"
     assert state_at(restored_model, path) == original_state, "state, value or provenance changed"
     assert restored["verified_grade"] == baseline["verified_grade"] is not None
-    restored_width = restored["overall_range"][1] - restored["overall_range"][0]
-    hidden_width = hidden["overall_range"][1] - hidden["overall_range"][0]
+    restored_width = restored["maintainability_range"][1] - restored["maintainability_range"][0]
+    hidden_width = hidden["maintainability_range"][1] - hidden["maintainability_range"][0]
     assert restored_width <= hidden_width, "adding evidence widened the range"
     assert restored == baseline, "the score did not return to its original result"
 
@@ -358,8 +355,8 @@ def test_fully_measured_evidence_collapses_the_range(settled_evidence: Normalize
 
     assert [name for name, value in score["aspects"].items() if value is None] == []
     assert score["evidence_status"]["status"] == "complete"
-    assert score["verified_grade"] == score["grade"]
-    assert score["overall_range"] == [score["overall"], score["overall"]]
+    assert score["verified_grade"] is not None
+    assert score["maintainability_range"] == [score["maintainability_estimate"], score["maintainability_estimate"]]
 
 
 def test_not_applicable_is_excluded_instead_of_priced_as_clean_or_unknown() -> None:

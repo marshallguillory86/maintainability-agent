@@ -24,13 +24,13 @@ Classified as the task requires: *current* reports only, *persisted* historical 
 | [`renderers.render_markdown`](../src/maintainability_audit/renderers.py) | `summary`, `score`, `history`, finding lists | current only | minor | **migrated (stage 7)** — estimate, range, evidence status, verified grade, and a table of unavailable measurements with provenance |
 | [`renderers.render_pr_comment`](../src/maintainability_audit/renderers.py) | `summary`, `score`, `hard_gate_failures`, `function_hotspots` | current only | minor | **migrated (stage 7)** — same four concepts, condensed |
 | [`prompts.render_ai_prompt`](../src/maintainability_audit/prompts.py) | `summary`, `score`, all finding lists | current only | minor | **migrated (stage 7)** — plus an evidence section stating that incomplete evidence is not a code defect and must not widen the work order |
-| [`prompts.render_agent_instructions`](../src/maintainability_audit/prompts.py) | `score.overall`, `score.grade`, four `summary` counts | current only | none | **migrated (stage 7)** — never substitutes the compatibility grade for a withheld one |
+| [`prompts.render_agent_instructions`](../src/maintainability_audit/prompts.py) | canonical score fields, four `summary` counts | current only | none | **migrated** — reads `maintainability_estimate` and `verified_grade`; there is no other letter to substitute |
 | [`sarif.report_to_sarif`](../src/maintainability_audit/sarif.py) | finding lists, and `score` for run properties | current only | `.get(key, [])` on finding lists | **migrated (stage 7)** — evidence at run level only; results, rule ids and levels unchanged, and missing evidence never becomes a result |
 | [`baseline.write_baseline`](../src/maintainability_audit/baseline.py) | `root`, `score`, finding lists | current only (write side) | `report.get("score", {})` | none |
 | [`baseline.load_baseline`](../src/maintainability_audit/baseline.py) | **persisted file**, `data["findings"]` only | **persisted** | reads a string list, never evidence | **none — see below** |
 | [`cli`](../src/maintainability_audit/cli.py) | orchestrates; passes the report through | current only | none | **no change (stage 7)** — `--fail-on-gate` still reads hard findings only, per ADR 002 |
 | [`tools/calibration/measure.py`](../tools/calibration/measure.py) | `summary` of a live `build_report` | current only | none | stage 4 |
-| [`tools/calibration/measure_cohorts.py`](../tools/calibration/measure_cohorts.py) | `summary`, `score.overall` of a live `build_report` | current only | none | stage 4 |
+| [`tools/calibration/measure_cohorts.py`](../tools/calibration/measure_cohorts.py) | `summary`, `score.maintainability_estimate` of a live `build_report` | current only | none | **migrated (stage 8)** |
 | [`_derive._corpus_overall`](../src/maintainability_audit/_derive.py) | a **synthesized** summary from `measurements.json` `evidence` blocks | persisted *measurements*, not reports | builds its own dict | stage 4 |
 
 Tests and fixtures that construct or consume report shapes: `test_audit_components.py`, `test_scanning.py`, `test_cli.py`, `test_sarif.py`, `test_near_duplicates.py`, `test_declaration_grading.py` (all via `build_report`), plus `test_scoring_calibration.py` and `test_calibration_corpus.py` (hand-built summary dictionaries passed directly to `score_report`). The hand-built ones are the reason ADR 001 §6 requires production-model tests: they carry whichever keys the scorer needs and cannot demonstrate a property of real reports. `test_evidence_normalization.py` starts from `build_report` for exactly that reason.
@@ -56,20 +56,35 @@ The profile's required measurements are **frozen by name** in `_verification.DEF
 
 `Measured(0)` and `NotApplicable` are both **complete** evidence — the scanner looked and found none, and the measurement has no population here. Only `Unknown` withholds a grade. In the rollup, `NotApplicable` removes the corresponding aspect from the category denominator under the point estimate and both interval endpoints; it is neither a clean score nor unresolved uncertainty.
 
-**What did not change.** `score.grade` keeps its existing meaning, including evidence-floor banding, and consumers keep reading it until stage 7. Adding optional fields does not bump the schema version under the policy below. Invalid input still raises `EvidenceValidationError` or `UnsupportedReportSchema`: there is no serialized `invalid` status, because a malformed report must not flow onward carrying numbers nobody should trust.
+**What stage 8 changed.** `score.grade` is gone; `verified_grade` is the only letter a report carries. `verified_grade_blockers` explains an *issued* grade and is empty when none was issued — what is missing is named in `evidence_status.reasons` instead. Adding optional fields does not bump the schema version, but removing or renaming public fields does, which is why this is version 2. Invalid input still raises `EvidenceValidationError` or `UnsupportedReportSchema`: there is no serialized `invalid` status, because a malformed report must not flow onward carrying numbers nobody should trust.
 
 ## Schema version
 
 New reports carry a top-level integer:
 
 ```json
-{ "schema_version": 1, "root": "...", "summary": { ... } }
+{ "schema_version": 2, "root": "...", "summary": { ... } }
 ```
+
+**Version 2 (ADR 001 stage 8)** removed the ambiguous compatibility score fields. The public `score` object is now:
+
+| Field | Type |
+|---|---|
+| `standard` | string |
+| `maintainability_estimate` | number |
+| `maintainability_range` | `[number, number]` |
+| `evidence_status` | `{status, profile, reasons[]}` |
+| `verified_grade` | string or `null` |
+| `verified_grade_blockers` | string[] — empty whenever no grade was issued |
+| `categories`, `aspects`, `rubric`, `dimensions`, `reference` | unchanged structures |
+| `worst_dimension` | string or `null` |
+
+`overall`, `overall_range`, `grade` and `grade_blockers` are gone, with no aliases. **Version 1 is rejected, not migrated** — the inventory below established that nothing rescores a persisted report, so a migration would serve no caller.
 
 - **Owner.** `build_report` stamps it. The constant lives in [`evidence.py`](../src/maintainability_audit/evidence.py) as `REPORT_SCHEMA_VERSION`, next to the code that validates it.
 - **Not the baseline version.** `baseline.write_baseline` writes its own `"version": 1`. That numbers a different artifact with a different lifecycle and is deliberately left alone; overloading it would tie the report structure to the baseline format.
 - **What forces a bump.** Removing or renaming a scoring input, or changing the meaning of an existing field. Adding a new optional field does not, because absent inputs already normalize to `Unknown` rather than to a value.
-- **Compatibility policy.** `normalize_report_evidence` accepts version 1 only. An unsupported or absent version raises `UnsupportedReportSchema`. Nothing is silently interpreted under the latest rubric.
+- **Compatibility policy.** `normalize_report_evidence` accepts version 2 only. An unsupported or absent version raises `UnsupportedReportSchema`. Nothing is silently interpreted under the latest rubric.
 - **Non-normalizing consumers are unaffected.** Renderers, SARIF, prompts and baselines read named keys; an added top-level key is inert to them. Verified by comparing a full report before and after this slice: `score`, `summary` and `history` are byte-identical.
 
 ## Evidence states
@@ -100,9 +115,7 @@ Confirmed in source during stage 7 rather than assumed:
 
 ## Remaining work
 
-Consumer migration is done; see the [decision register](decisions.md) for where the ADR stands. Two stages remain, and they are the whole of what is left:
-
-**Stage 8 — deprecate and remove the ambiguous compatibility fields.** `score.overall`, `score.overall_range` and `score.grade` still ship, and `grade` is still banded from the evidence floor. Stage 7 labelled it everywhere it appears rather than removing it. Removal needs a schema-version bump, a deprecation window, and a decision on whether `overall` survives as `maintainability_estimate`.
+The contract migration is done; see the [decision register](decisions.md) for where the ADR stands. One stage remains:
 
 **Stage 9 — separate history-window materialization from measurement.** Fix-breadth still resolves, fetches, repairs and measures in one path. The ADR calls for an explicit manifest — pinned head, selection rule, selected commit ids, required parent objects, tool version — checked in, with analysis reading only the manifest and performing no network access.
 

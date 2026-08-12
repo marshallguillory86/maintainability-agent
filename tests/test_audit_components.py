@@ -77,7 +77,6 @@ def test_baseline_fingerprints_round_trip(tmp_path: Path) -> None:
 def test_baseline_helpers_cover_empty_missing_and_written_files(tmp_path: Path) -> None:
     report = {
         "root": str(tmp_path),
-        "score": {"overall": 3.0},
         "largest_files": [{"path": "large.py", "status": "fail"}],
         "function_hotspots": [{"path": "app.py", "name": "hot", "start_line": 4, "status": "fail"}],
         "risk_findings": [{"path": "app.py", "line": 5, "name": "risk"}],
@@ -91,7 +90,10 @@ def test_baseline_helpers_cover_empty_missing_and_written_files(tmp_path: Path) 
     write_baseline(str(baseline), report)
     loaded = json.loads(baseline.read_text(encoding="utf-8"))
 
-    assert loaded["score"] == {"overall": 3.0}
+    assert "score" not in loaded, (
+        "stage 8 stopped writing the informational score snapshot: nothing read it back, "
+        "and keeping it would freeze an obsolete contract into every new baseline"
+    )
     assert len(loaded["findings"]) == 4
 
 
@@ -120,8 +122,8 @@ def test_report_contains_iso_score(tmp_path: Path) -> None:
 
     report = build_report(tmp_path, load_config(None))
 
-    assert report["score"]["overall"] == 5.0
-    assert report["score"]["grade"] == "A+"
+    assert report["score"]["maintainability_estimate"] == 5.0
+    assert report["score"]["verified_grade"] == "A+"
     assert set(report["score"]["categories"]) == {"modularity", "reusability", "analyzability", "modifiability", "testability"}
     assert report["score"]["aspects"]["test_presence"] == 5.0
     assert report["score"]["rubric"]["unscored"], "unmeasurable aspects must be named, not omitted"
@@ -149,11 +151,11 @@ def test_a_grades_require_test_evidence(tmp_path: Path) -> None:
 
     score = build_report(tmp_path, load_config(None))["score"]
 
-    assert score["grade"] == "B"
+    assert score["verified_grade"] == "B"
     assert score["categories"]["testability"] <= 2.0
-    assert any("test evidence" in blocker for blocker in score["grade_blockers"])
-    low, high = score["overall_range"]
-    assert low <= score["overall"] <= high
+    assert any("test evidence" in blocker for blocker in score["verified_grade_blockers"])
+    low, high = score["maintainability_range"]
+    assert low <= score["maintainability_estimate"] <= high
 
 
 def _make_huge_function_source(name: str, body_lines: int = 200) -> str:

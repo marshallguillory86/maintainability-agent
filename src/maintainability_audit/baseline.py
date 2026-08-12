@@ -32,10 +32,15 @@ def load_baseline(path: str | None) -> set[str]:
 
 
 def write_baseline(path: str, report: dict[str, Any]) -> None:
+    # No score snapshot. Nothing ever read it back — `load_baseline`
+    # takes the fingerprint list alone — and writing one would freeze an
+    # obsolete report contract into every new baseline for no consumer.
+    # The file version stays 1: the format a reader depends on has not
+    # changed, and older baselines carrying a score still load because
+    # the loader ignores the field.
     data = {
         "version": 1,
         "root": report["root"],
-        "score": report.get("score", {}),
         "findings": sorted(finding_fingerprints(report)),
     }
     Path(path).write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")

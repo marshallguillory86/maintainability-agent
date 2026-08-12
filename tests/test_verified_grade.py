@@ -42,8 +42,10 @@ from maintainability_audit.renderers import render_markdown, render_pr_comment
 from maintainability_audit.report import build_report
 from maintainability_audit.scoring import score_report
 
-COMPATIBILITY_FIELDS = (
-    "overall", "overall_range", "grade", "grade_blockers",
+# The version-2 public score contract, minus the two evidence fields the
+# tests below strip explicitly.
+SCORE_V2_FIELDS = (
+    "maintainability_estimate", "maintainability_range", "verified_grade_blockers",
     "categories", "aspects", "dimensions", "rubric", "reference", "worst_dimension", "standard",
 )
 
@@ -59,13 +61,13 @@ def _shallow(tmp_path: Path) -> dict:
     return _report(tmp_path)
 
 
-def test_complete_evidence_verifies_and_agrees_with_the_compatibility_grade(tmp_path: Path) -> None:
+def test_complete_evidence_issues_a_verified_grade(tmp_path: Path) -> None:
     score = _complete(tmp_path)["score"]
 
     assert score["evidence_status"]["status"] == "complete"
     assert score["evidence_status"]["profile"] == DEFAULT_PROFILE
     assert score["evidence_status"]["reasons"] == []
-    assert score["verified_grade"] == score["grade"]
+    assert score["verified_grade"] is not None
 
 
 def test_a_report_without_history_is_incomplete_and_names_what_is_missing(tmp_path: Path) -> None:
@@ -85,7 +87,7 @@ def test_a_report_without_history_is_incomplete_and_names_what_is_missing(tmp_pa
         "history.qualifying_hotspots", "history.single_author_files",
     }
     assert all(reason["reason"] and reason["provenance"] for reason in score["evidence_status"]["reasons"])
-    assert score["grade"], "the compatibility grade must still be issued"
+    assert score["verified_grade"] is None, "an incomplete report issues no grade at all"
 
 
 def test_one_unknown_summary_measurement_withholds_the_verified_grade(tmp_path: Path) -> None:
@@ -134,14 +136,14 @@ def test_not_applicable_is_complete_evidence(tmp_path: Path) -> None:
 
     assert result["evidence_status"]["status"] == "complete"
     assert result["verified_grade"] == "A"
-    assert report["score"]["grade"] in {"A", "A+"}
-    assert report["score"]["overall_range"] == [
-        report["score"]["overall"],
-        report["score"]["overall"],
+    assert report["score"]["verified_grade"] in {"A", "A+"}
+    assert report["score"]["maintainability_range"] == [
+        report["score"]["maintainability_estimate"],
+        report["score"]["maintainability_estimate"],
     ]
     assert not any(
         "knowledge_concentration" in blocker
-        for blocker in report["score"]["grade_blockers"]
+        for blocker in report["score"]["verified_grade_blockers"]
     )
 
 
@@ -165,10 +167,10 @@ def test_unknown_ownership_blocks_top_grades(tmp_path: Path) -> None:
     assert isinstance(complete_evidence.history.single_author_files, Measured)
     assert complete_evidence.history.single_author_files.value == 1
     assert report["history"]["multi_commit_files"] == 1
-    assert report["score"]["grade"] == "A+", "fixture must expose the top-grade boundary"
-    assert report["score"]["overall_range"] == [
-        report["score"]["overall"],
-        report["score"]["overall"],
+    assert report["score"]["verified_grade"] == "A+", "fixture must expose the top-grade boundary"
+    assert report["score"]["maintainability_range"] == [
+        report["score"]["maintainability_estimate"],
+        report["score"]["maintainability_estimate"],
     ]
 
     del report["history"]["single_author_files"]
@@ -179,12 +181,12 @@ def test_unknown_ownership_blocks_top_grades(tmp_path: Path) -> None:
 
     assert score["evidence_status"]["status"] == "incomplete"
     assert score["verified_grade"] is None
-    assert score["grade"] == "B"
-    assert score["overall_range"][0] < score["overall_range"][1]
+    assert score["verified_grade_blockers"] == [], "no grade was issued, so nothing caps one"
+    assert score["maintainability_range"][0] < score["maintainability_range"][1]
     assert any(
-        "unmeasured aspects (knowledge_concentration)" in blocker
-        for blocker in score["grade_blockers"]
-    )
+        reason["measurement"] == "history.single_author_files"
+        for reason in score["evidence_status"]["reasons"]
+    ), "the unmeasured ownership must still be named, now as an evidence reason"
 
 
 def test_reason_order_is_deterministic(tmp_path: Path) -> None:
@@ -264,30 +266,42 @@ def test_not_applicable_rollup_is_the_only_change_to_the_pre_stage_five_anchor(
     expected = json.loads(PRE_STAGE5_SCORE.read_text(encoding="utf-8"))
     assert "verified_grade" not in expected, "the anchor must predate Stage 5"
 
+    # The anchor predates two renames. Stage 8 changed public field
+    # names without changing any value, so the anchor is compared under
+    # its own historical names rather than being rewritten — rewriting a
+    # frozen artifact to match new code destroys what makes it an anchor.
+    renamed = {"overall": "maintainability_estimate", "overall_range": "maintainability_range",
+               "grade_blockers": "verified_grade_blockers"}
+    expected = {renamed.get(key, key): value for key, value in expected.items()}
+
     shipped = {key: value for key, value in report["score"].items()
                if key not in {"evidence_status", "verified_grade"}}
 
-    changed = {"categories", "overall_range", "grade", "grade_blockers"}
+    changed = {"categories", "maintainability_range", "grade", "verified_grade_blockers"}
     assert {key: value for key, value in shipped.items() if key not in changed} == {
-        key: value for key, value in expected.items() if key not in changed
+        key: value for key, value in expected.items() if key not in changed | {"grade"}
     }
     assert shipped["categories"] == {
         **expected["categories"],
         "analyzability": 4.6,
         "modifiability": 5.0,
     }
-    assert shipped["overall_range"] == [shipped["overall"], shipped["overall"]]
-    assert shipped["grade"] == "A+"
-    assert shipped["grade_blockers"] == []
+    assert shipped["maintainability_range"] == [shipped["maintainability_estimate"], shipped["maintainability_estimate"]]
+    # The anchor recorded "A" and the verified grade is "A+". That delta
+    # is stage 6's NotApplicable exclusion, documented above — not a
+    # stage 8 effect, which renamed fields without moving any value.
+    assert report["score"]["verified_grade"] == "A+"
+    assert "grade" not in shipped, "stage 8 removed the compatibility grade"
+    assert shipped["verified_grade_blockers"] == []
 
 
 def test_verification_does_not_disturb_the_rest_of_the_document(tmp_path: Path) -> None:
     """The incomplete case, where a withheld grade could leak sideways."""
     for report in (_complete(tmp_path / "full"), _shallow(tmp_path / "shallow")):
         score = report["score"]
-        assert set(COMPATIBILITY_FIELDS) <= set(score)
+        assert set(SCORE_V2_FIELDS) <= set(score)
         stripped = {k: v for k, v in score.items() if k not in {"evidence_status", "verified_grade"}}
-        assert set(stripped) == set(COMPATIBILITY_FIELDS), sorted(set(stripped) ^ set(COMPATIBILITY_FIELDS))
+        assert set(stripped) == set(SCORE_V2_FIELDS), sorted(set(stripped) ^ set(SCORE_V2_FIELDS))
 
 
 def test_every_typed_scoring_input_is_classified_by_the_profile() -> None:

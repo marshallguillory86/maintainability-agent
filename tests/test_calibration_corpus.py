@@ -100,7 +100,7 @@ def test_the_corpus_median_repo_scores_exactly_a_b(measurements: list[dict]) -> 
     """The headline calibration claim, checked rather than asserted:
     a well-run real codebase earns a 4.0."""
     scores = sorted(
-        score_report({"summary": _summary(entry)})["overall"] for entry in measurements
+        score_report({"summary": _summary(entry)})["maintainability_estimate"] for entry in measurements
     )
     middle = scores[len(scores) // 2] if len(scores) % 2 else (scores[len(scores) // 2 - 1] + scores[len(scores) // 2]) / 2
 

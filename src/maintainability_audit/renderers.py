@@ -14,7 +14,6 @@ def summary_table(summary: dict[str, int], score: dict[str, Any]) -> list[str]:
         f"| Range (unmeasured evidence priced 0..5) | {view.score_range(score)} |",
         f"| Evidence | {view.status_sentence(score)} |",
         f"| Verified grade | {view.verified_grade(score)} |",
-        f"| Compatibility grade | {view.compatibility_grade(score)} |",
         f"| Files scanned | {summary['files_scanned']} |",
         f"| File warnings | {summary['file_warnings']} |",
         f"| File failures | {summary['file_failures']} |",
@@ -158,10 +157,15 @@ def render_grade_blockers(report: dict[str, Any]) -> list[str]:
     unexplained in the artifact people actually open. "Why am I not an
     A" has to have an answer wherever the grade is printed.
     """
-    blockers = report["score"].get("grade_blockers") or []
+    blockers = view.grade_blockers(report["score"])
     if not blockers:
         return []
-    return ["## Why the grade is capped", "", *(f"- {blocker}" for blocker in blockers), ""]
+    return [
+        "## Why the verified grade is not higher",
+        "",
+        *(f"- {blocker}" for blocker in blockers),
+        "",
+    ]
 
 
 def render_history_markdown(report: dict[str, Any]) -> list[str]:
@@ -290,7 +294,6 @@ def render_pr_comment(report: dict[str, Any]) -> str:
         f"Verified grade: **{view.verified_grade(score)}**",
         view.status_sentence(score),
         *(view.reason_lines(score) if not view.is_complete(score) else []),
-        f"Compatibility grade: {view.compatibility_grade(score)}",
         "",
         "| Metric | Count |",
         "|---|---:|",
@@ -306,9 +309,9 @@ def render_pr_comment(report: dict[str, Any]) -> str:
         lines.extend(["### Hard Gates", ""])
         lines.extend(f"- {gate}" for gate in report["hard_gate_failures"])
         lines.append("")
-    if score.get("grade_blockers"):
-        lines.extend(["### Why the grade is capped", ""])
-        lines.extend(f"- {blocker}" for blocker in score["grade_blockers"])
+    if view.grade_blockers(score):
+        lines.extend(["### Why the verified grade is not higher", ""])
+        lines.extend(f"- {blocker}" for blocker in view.grade_blockers(score))
         lines.append("")
     if report["function_hotspots"]:
         lines.extend(["### Top Function Hotspots", ""])

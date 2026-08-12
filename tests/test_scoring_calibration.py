@@ -92,14 +92,14 @@ def test_identical_proportions_score_identically_at_any_repo_size() -> None:
     small = score(100, 200, file_failures=5, function_failures=10)
     large = score(5000, 10000, file_failures=250, function_failures=500)
 
-    assert small["overall"] == large["overall"]
+    assert small["maintainability_estimate"] == large["maintainability_estimate"]
 
 
 def test_a_big_clean_repo_outscores_a_small_dirty_one() -> None:
     big_clean = score(5000, 10000, file_failures=50)
     small_dirty = score(40, 80, file_failures=20)
 
-    assert big_clean["overall"] > small_dirty["overall"]
+    assert big_clean["maintainability_estimate"] > small_dirty["maintainability_estimate"]
 
 
 # ---------------------------------------------------------------------------
@@ -112,8 +112,8 @@ def test_two_bad_repos_remain_distinguishable() -> None:
     bad = score(1000, 2000, file_failures=100, function_failures=200)
     worse = score(1000, 2000, file_failures=400, function_failures=800)
 
-    assert bad["overall"] > worse["overall"]
-    assert worse["overall"] > 0.0
+    assert bad["maintainability_estimate"] > worse["maintainability_estimate"]
+    assert worse["maintainability_estimate"] > 0.0
 
 
 def test_score_never_leaves_the_scale() -> None:
@@ -122,7 +122,7 @@ def test_score_never_leaves_the_scale() -> None:
         hard_gate_failures=50,
     )
 
-    assert 0.0 <= catastrophic["overall"] <= 5.0
+    assert 0.0 <= catastrophic["maintainability_estimate"] <= 5.0
 
 
 # ---------------------------------------------------------------------------
@@ -144,7 +144,7 @@ def test_a_repo_at_the_corpus_median_scores_in_the_b_range() -> None:
     }
     result = score_report({"summary": summary(files, files, **at_median)})
 
-    assert 3.5 <= result["overall"] <= 4.5, result["overall"]
+    assert 3.5 <= result["maintainability_estimate"] <= 4.5, result["maintainability_estimate"]
 
 
 def test_dimensions_are_reported_as_multiples_of_real_world_normal() -> None:
@@ -212,9 +212,9 @@ def test_a_perfect_repo_can_still_reach_a_plus() -> None:
 
     result = score_report({"summary": full, "history": history})
 
-    assert result["overall"] == 5.0
-    assert result["grade"] == "A+"
-    assert result["grade_blockers"] == []
+    assert result["maintainability_estimate"] == 5.0
+    assert result["verified_grade"] == "A+"
+    assert result["verified_grade_blockers"] == []
 
 
 def test_unknown_evidence_blocks_the_top_grades() -> None:
@@ -227,16 +227,23 @@ def test_unknown_evidence_blocks_the_top_grades() -> None:
     """
     result = score(500, 1000)
 
-    assert result["grade"] not in {"A+", "A", "B"}
-    assert result["overall"] > result["overall_range"][0]
-    assert any("full evidence" in blocker for blocker in result["grade_blockers"])
-    assert any("evidence floor" in blocker for blocker in result["grade_blockers"])
+    # Stage 8: an incomplete report issues no grade at all, which is a
+    # stronger statement than "not an A". The compatibility letter this
+    # used to read is gone.
+    assert result["verified_grade"] is None
+    assert result["maintainability_estimate"] > result["maintainability_range"][0]
+    # Stage 8: an unissued grade has no blockers. What is missing is
+    # named in evidence_status.reasons instead, so an evidence gap can no
+    # longer read as a quality demotion.
+    assert result["verified_grade_blockers"] == []
+    assert result["evidence_status"]["status"] == "incomplete"
+    assert result["evidence_status"]["reasons"], "the gap must still be named"
 
 
 def test_a_single_hard_gate_failure_blocks_the_top_grades() -> None:
     result = score(500, 1000, hard_gate_failures=1)
 
-    assert result["grade"] not in {"A+", "A"}
+    assert result["verified_grade"] is None
 
 
 # ---------------------------------------------------------------------------
@@ -292,10 +299,12 @@ def test_concealment_ordering_and_its_stated_limit() -> None:
     shallow_score = score_report({"summary": _evidence_summary()})
     worst_score = score_report({"summary": _evidence_summary(), "history": worst})
 
-    assert worst_score["overall"] < shallow_score["overall"] <= clean_score["overall"]
+    assert worst_score["maintainability_estimate"] < shallow_score["maintainability_estimate"] <= clean_score["maintainability_estimate"]
     # The residual concealment gain exists and is bounded by
     # (clean - worst); pin it so it cannot silently grow.
-    assert shallow_score["overall"] - worst_score["overall"] <= clean_score["overall"] - worst_score["overall"]
+    shallow_gain = shallow_score['maintainability_estimate'] - worst_score['maintainability_estimate']
+    clean_gain = clean_score['maintainability_estimate'] - worst_score['maintainability_estimate']
+    assert shallow_gain <= clean_gain
 
 
 def test_overall_range_collapses_only_under_full_evidence() -> None:
@@ -304,9 +313,9 @@ def test_overall_range_collapses_only_under_full_evidence() -> None:
     full = score_report({"summary": _evidence_summary(), "history": _history()})
     shallow = score_report({"summary": _evidence_summary()})
 
-    assert full["overall_range"][0] == full["overall_range"][1] == full["overall"]
-    low, high = shallow["overall_range"]
-    assert low < shallow["overall"] < high, "hidden evidence must widen the interval"
+    assert full["maintainability_range"][0] == full["maintainability_range"][1] == full["maintainability_estimate"]
+    low, high = shallow["maintainability_range"]
+    assert low < shallow["maintainability_estimate"] < high, "hidden evidence must widen the interval"
     assert high - low >= 0.5, "three hidden aspects cannot cost less than half a grade of width"
 
 
@@ -356,7 +365,7 @@ def test_derivation_matches_live_score_report_repo_by_repo() -> None:
     for entry in measurements:
         summary, matched = _matched_pair(entry)
         derived = _corpus_overall(matched, references, CALIBRATION_C)
-        live = score_report({"summary": summary})["overall"]
+        live = score_report({"summary": summary})["maintainability_estimate"]
         if derived != live:
             mismatches.append(f"{entry['repo']}: derived {derived} vs live {live}")
 
@@ -453,7 +462,7 @@ def test_knowledge_concentration_changes_the_score() -> None:
     concentrated = score_report({"summary": _evidence_summary(), "history": siloed})
 
     assert concentrated["aspects"]["knowledge_concentration"] < spread["aspects"]["knowledge_concentration"]
-    assert concentrated["overall"] < spread["overall"]
+    assert concentrated["maintainability_estimate"] < spread["maintainability_estimate"]
 
 
 def test_the_overall_is_the_weighted_mean_of_the_printed_categories() -> None:
@@ -484,6 +493,6 @@ def test_the_overall_is_the_weighted_mean_of_the_printed_categories() -> None:
         expected = round(
             sum(value * CATEGORY_WEIGHTS[name] for name, value in categories.items()) / total, 1
         )
-        assert score["overall"] == expected, (
-            f"{score['overall']} is not the weighted mean of {categories}"
+        assert score["maintainability_estimate"] == expected, (
+            f"{score['maintainability_estimate']} is not the weighted mean of {categories}"
         )

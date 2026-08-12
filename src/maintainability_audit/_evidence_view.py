@@ -16,18 +16,24 @@ status and the verified grade.
 The one rule every phrasing here obeys: **a null verified grade is
 never rendered as a letter, a dash, or a blank.** Each of those reads
 as a result, and the point of the field is that no result was issued.
+
+Since ADR 001 stage 8 there is no second letter to fall back to. The
+compatibility grade is gone from the contract, so a report either
+carries a verified grade or carries none, and this module has no
+fallback interpretation to apply. A score dictionary missing the
+canonical fields is malformed and raises rather than being handed
+compatibility semantics.
 """
 from __future__ import annotations
 
 from typing import Any
 
 NOT_VERIFIED = "Not verified"
-NOT_REPORTED = "Not reported"
 
 
 def estimate(score: dict[str, Any]) -> str:
     """The point estimate, always labelled as an estimate."""
-    return f"{score['overall']} / 5"
+    return f"{score['maintainability_estimate']} / 5"
 
 
 def score_range(score: dict[str, Any]) -> str:
@@ -42,70 +48,43 @@ def score_range(score: dict[str, Any]) -> str:
     two numbers that happen to match after rounding, so this consults
     the status rather than inferring it.
     """
-    low, high = score.get("overall_range", [score["overall"], score["overall"]])
+    low, high = score["maintainability_range"]
     if low != high:
         return f"{low} – {high}"
-    if not reports_evidence(score):
-        return f"{low}"
     if is_complete(score):
         return f"{low} (no unmeasured evidence)"
     return f"{low} (bounds coincide after rounding; evidence is still incomplete)"
 
 
 def is_complete(score: dict[str, Any]) -> bool:
-    return (score.get("evidence_status") or {}).get("status") == "complete"
-
-
-def reports_evidence(score: dict[str, Any]) -> bool:
-    """Whether this score carries an evidence verdict at all.
-
-    Three states, not two. A score with no ``evidence_status`` carries no
-    verdict on completeness — it is not a score whose grade was
-    *withheld*. Collapsing those two produced "Evidence incomplete: 0
-    required measurements unavailable", which asserts a withholding that
-    never happened and contradicts itself in the same sentence.
-
-    Why the absence exists is deliberately not guessed at. An earlier
-    revision called it a report that "predates evidence verification",
-    which is a claim about provenance that absence cannot support: it
-    could equally be malformed, hand-built, or an unsupported shape, and
-    the report contract rejects unsupported schemas rather than dating
-    them.
-    """
-    return bool(score.get("evidence_status"))
+    return score["evidence_status"]["status"] == "complete"
 
 
 def profile(score: dict[str, Any]) -> str:
-    return (score.get("evidence_status") or {}).get("profile", "unknown")
+    return score["evidence_status"]["profile"]
 
 
 def verified_grade(score: dict[str, Any]) -> str:
-    """The verified grade, the words that mean there isn't one, or the
-    words that mean the question was never asked."""
-    if not reports_evidence(score):
-        return NOT_REPORTED
-    return score.get("verified_grade") or NOT_VERIFIED
-
-
-def compatibility_grade(score: dict[str, Any]) -> str:
-    """The legacy grade, labelled so it is not mistaken for a verdict.
-
-    It stays visible through the compatibility period because CI, the
-    prompt and the report have all read it for releases — but it is
-    banded from the evidence floor, so on an incomplete report it says
-    "this is the worst the evidence allows", not "this is the grade".
-    """
-    return f"{score['grade']} (compatibility, evidence-floor)"
+    """The verified grade, or the words that mean there isn't one."""
+    return score["verified_grade"] or NOT_VERIFIED
 
 
 def reasons(score: dict[str, Any]) -> list[dict[str, str]]:
-    return list((score.get("evidence_status") or {}).get("reasons") or [])
+    return list(score["evidence_status"]["reasons"])
+
+
+def grade_blockers(score: dict[str, Any]) -> list[str]:
+    """Why an *issued* grade is not higher.
+
+    Empty whenever no grade was issued: there is nothing to cap. What is
+    missing is explained by :func:`reasons` instead, and conflating the
+    two is what let an evidence gap read as a quality demotion.
+    """
+    return list(score["verified_grade_blockers"])
 
 
 def status_sentence(score: dict[str, Any]) -> str:
     """One line a human can act on, for either state."""
-    if not reports_evidence(score):
-        return "Evidence verification status was not reported."
     if is_complete(score):
         return f"Evidence complete under profile `{profile(score)}`."
     missing = len(reasons(score))
@@ -138,7 +117,7 @@ def remediation_note(score: dict[str, Any]) -> list[str]:
     evidence is a separate, usually one-line, change to how the audit
     was invoked.
     """
-    if is_complete(score) or not reports_evidence(score):
+    if is_complete(score):
         return []
     return [
         "",
@@ -163,7 +142,7 @@ def instruction_note(score: dict[str, Any]) -> list[str]:
     audit found this consumer showing only the grade value while
     claiming the whole contract was migrated.
     """
-    if is_complete(score) or not reports_evidence(score):
+    if is_complete(score):
         return []
     return [
         "- Missing evidence is **not** a code defect: do not refactor or widen scope for it. "

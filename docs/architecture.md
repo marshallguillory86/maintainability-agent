@@ -75,8 +75,10 @@ files on disk
   -> dimension_pressures  counts as rates over their populations
   -> aspect_scores        13 aspects, 0-5 or None for unmeasured
   -> categories           five ISO categories, weighted means, rounded as displayed
-  -> overall + range      point estimate; interval with unknowns priced 0 and 5
-  -> grade                banded from the interval floor, with named blockers
+  -> estimate + range     point estimate; interval with unknowns priced 0 and 5
+  -> verified grade       banded from the interval floor when evidence allows,
+                          null when it does not, with blockers only for a grade
+                          that was actually issued
   -> report dict          + schema_version
   -> renderers / prompts / sarif / baseline
 ```
@@ -94,8 +96,8 @@ Two columns, deliberately. **Property** means the test varies the real input spa
 |---|---|---|
 | Layering and acyclicity above | `test_architecture.py` | Property — reads the real import graph |
 | Withholding any single summary input cannot raise the floor or the grade | `test_withholding_any_single_input_cannot_raise_the_floor_or_the_grade` | Property over summary keys; **regression only** for history, which is removed as a whole block rather than field by field |
-| `overall_range` always contains `overall` | `test_the_interval_always_contains_the_score` | Regression — five named configurations |
-| Overall equals the weighted mean of the printed categories | `test_the_overall_is_the_weighted_mean_of_the_printed_categories` | Regression over six reports, including untested and unknown-bearing ones |
+| `maintainability_range` always contains `maintainability_estimate` | `test_the_interval_always_contains_the_score` | Regression — five named configurations |
+| The estimate equals the weighted mean of the printed categories | `test_the_overall_is_the_weighted_mean_of_the_printed_categories` | Regression over six reports, including untested and unknown-bearing ones |
 | Every advertised aspect carries weight somewhere | `test_every_scored_aspect_carries_weight_in_some_category` | Property — compares the declared aspect set against the weighted set |
 | Derivation agrees with the live scorer | `test_derivation_matches_live_score_report_repo_by_repo` | Property over all 40 corpus repositories |
 | Absence never resolves into a better-defined state | `test_deleting_a_field_never_resolves_it_into_a_better_defined_state` | Regression — one field |
@@ -121,7 +123,7 @@ Recursive variation across the whole typed model now exists (`tests/test_evidenc
 Stated rather than hidden, because an architecture document that only describes the good parts stops being usable.
 
 - ~~Scoring consumes raw dictionaries~~ — **resolved (ADR 001 stage 4).** `score_report` normalizes at its entry and every layer below it takes typed evidence. The `.get(name, 0)` fallbacks and the `unmeasured_dimensions` companion list are deleted: a pressure is now computed only from `Measured` inputs, so there is no default left to forget to guard.
-- **The compatibility grade is still banded from the pessimistic floor.** `verified_grade` now exists beside it and is null when evidence is incomplete, which is the contract ADR 001 wants; `score.grade` keeps the floor behaviour until consumers migrate in stage 7.
+- ~~The compatibility grade is still banded from the pessimistic floor~~ — **resolved (stage 8).** `score.grade` is removed; `verified_grade` is the only letter a report carries, and it is null when the evidence does not support one.
 - **Stage 5 is implemented:** `score.evidence_status` and `score.verified_grade` ship alongside the compatibility fields. [ADR 002](adr-002-null-verified-grade-in-ci.md) is rejected because it assumed `--fail-on-gate` consumes the grade; the shipped flag checks hard findings only, so no CI policy changed. The requirement list for the `default-v1` profile is frozen in `_verification.py` rather than derived from the typed model — deriving it let a new field silently change what the name demanded.
 - ~~`docs/standard.md` mixes genres~~ — **resolved.** The empirical studies moved to [studies.md](studies.md); the standard now holds only the rubric, its calibration method, and the reference corpus. Mixing them was the documentation shape that let a Tier 3 claim read as settled.
 - **History window materialization is not separated from analysis.** ADR 001 stage 9.

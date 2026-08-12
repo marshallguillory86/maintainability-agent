@@ -321,8 +321,7 @@ def _score_document(
     low, high = interval
     return {
         "standard": "ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based",
-        "overall": overall,
-        "grade": grade,
+        "maintainability_estimate": overall,
         # Evidence sufficiency, separate from quality (ADR 001 stage 5).
         # `grade` keeps its existing evidence-floor meaning for the
         # compatibility period; `verified_grade` is null unless the
@@ -339,7 +338,7 @@ def _score_document(
         # worse-than-anchor evidence from flattering the point estimate,
         # so the report prints the width of what is not known instead of
         # pretending the point is precise.
-        "overall_range": [low, high],
+        "maintainability_range": [low, high],
         # The full aspect layer: every score the rubric read, None where
         # the evidence was unavailable rather than clean.
         "aspects": {
@@ -360,7 +359,11 @@ def _score_document(
         # Worst-first, so the remediation prompt can lead with the
         # dimension actually costing the most rather than a letter.
         "worst_dimension": worst[0][0] if worst and worst[0][1] > 1.0 else None,
-        "grade_blockers": blockers,
+        # Only ever explains a grade that was issued. When verification is
+        # withheld there is no grade to cap, and the reasons live in
+        # evidence_status.reasons instead — mixing the two is what let an
+        # evidence gap read as a quality demotion.
+        "verified_grade_blockers": blockers if verified.get("verified_grade") else [],
         "reference": {
             "unit": "multiple of the median mature-OSS repo (1.0 = typical real code)",
             "note": "Calibrated so a repo at the OSS median on every dimension scores 4.0.",

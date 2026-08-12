@@ -153,7 +153,7 @@ def measure_arm(workdir: Path, base: str, prompt: str, scope: set[str], before_t
         "out_of_scope_share": round(len(out_of_scope) / len(touched), 3) if touched else None,
         "findings_after": findings_total(after["summary"]),
         "findings_closed": before_total - findings_total(after["summary"]),
-        "score_after": after["score"]["overall"],
+        "score_after": after["score"]["maintainability_estimate"],
         "touched": touched[:100],
     }
 
@@ -221,7 +221,7 @@ def main() -> int:
 
         entry: dict = {
             "findings_before": before_total,
-            "score_before": before["score"]["overall"],
+            "score_before": before["score"]["maintainability_estimate"],
             "in_scope_files": len(scope),
             "bounded_prompt_chars": len(bounded_prompt),
             "pinned_commit": pinned,

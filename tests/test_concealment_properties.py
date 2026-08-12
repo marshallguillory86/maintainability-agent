@@ -37,8 +37,8 @@ def test_the_interval_always_contains_the_score() -> None:
     }
     for label, report in cases.items():
         result = score_report(report)
-        low, high = result["overall_range"]
-        assert low <= result["overall"] <= high, f"{label}: {result['overall']} outside [{low}, {high}]"
+        low, high = result["maintainability_range"]
+        assert low <= result["maintainability_estimate"] <= high, f"{label}: {result['maintainability_estimate']} outside [{low}, {high}]"
 
 
 def test_hiding_evidence_can_never_raise_the_grade() -> None:
@@ -53,14 +53,18 @@ def test_hiding_evidence_can_never_raise_the_grade() -> None:
     every boundary rather than only at A.
     """
     worst = _history(qualifying_hotspots=20, code_coupling_pairs=20, single_author_files=10)
-    order = ["F", "D", "C", "B", "A", "A+"]
 
     visible = score_report({"summary": _evidence_summary(), "history": worst})
     hidden = score_report({"summary": _evidence_summary()})
 
-    assert hidden["overall"] > visible["overall"], "the point estimate is still flattered — that is why the grade is not it"
-    assert order.index(hidden["grade"]) <= order.index(visible["grade"])
-    assert hidden["overall_range"][0] <= visible["overall_range"][0]
+    # The point estimate is still flattered by concealment — which is
+    # precisely why the grade is not read from it.
+    assert hidden["maintainability_estimate"] > visible["maintainability_estimate"]
+
+    # Stage 8: there is no compatibility grade to compare. Withholding
+    # verification is the stronger property and is asserted directly.
+    assert hidden["verified_grade"] is None
+    assert hidden["maintainability_range"][0] <= visible["maintainability_range"][0]
 
 
 def test_withholding_any_single_input_cannot_raise_the_floor_or_the_grade() -> None:
@@ -80,7 +84,6 @@ def test_withholding_any_single_input_cannot_raise_the_floor_or_the_grade() -> N
     covered the day it is added rather than the day someone remembers
     to extend a list.
     """
-    order = ["F", "D", "C", "B", "A", "A+"]
     summary = _evidence_summary(
         test_file_count=0, dead_code_count=40, near_duplicate_count=40, idiom_concern_count=5,
         has_readme=False, has_changelog=False, has_docs_dir=False,
@@ -96,10 +99,10 @@ def test_withholding_any_single_input_cannot_raise_the_floor_or_the_grade() -> N
     gains = []
     for label, report in concealments.items():
         hidden = score_report(report)
-        if (hidden["overall_range"][0] > baseline["overall_range"][0]
-                or order.index(hidden["grade"]) > order.index(baseline["grade"])):
+        if (hidden["maintainability_range"][0] > baseline["maintainability_range"][0]
+                ):
             gains.append(
-                f"hiding {label}: floor {baseline['overall_range'][0]} -> {hidden['overall_range'][0]}, "
+                f"hiding {label}: floor {baseline['maintainability_range'][0]} -> {hidden['maintainability_range'][0]}, "
                 f"grade {baseline['grade']} -> {hidden['grade']}"
             )
 

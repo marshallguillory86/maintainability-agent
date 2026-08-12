@@ -27,7 +27,9 @@
       "coverage.xml",
       "AGENTS-maintainability.md",
       "tools/calibration/*.json",
-      "tools/experiments/*/results.json"
+      "tools/experiments/*/results.json",
+      "tests/fixtures/*.json",
+      "tests/fixtures/*/*.json"
     ]
   },
   "thresholds": {

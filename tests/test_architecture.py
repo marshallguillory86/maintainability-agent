@@ -241,3 +241,50 @@ def test_the_summarized_stage_range_appears_only_in_the_register() -> None:
         "a summarized ADR stage range appears outside docs/decisions.md: "
         f"{sorted(offenders)}; link to the register instead"
     )
+
+
+REMOVED_PUBLIC_KEYS = ("overall", "overall_range", "grade", "grade_blockers")
+
+# Reading a removed key out of a report dictionary. Deliberately narrow:
+# it matches subscript and .get access with a string literal, so internal
+# variables named `overall`, `low`, `high` or `grade` are untouched — the
+# scorer still uses them and the brief permits it. Prose, changelog
+# history and ADR explanations are not code and are never scanned.
+_REMOVED_READ = re.compile(
+    r"""\[\s*["'](?:overall|overall_range|grade|grade_blockers)["']\s*\]"""
+    r"""|\.get\(\s*["'](?:overall|overall_range|grade|grade_blockers)["']"""
+)
+
+
+def test_production_code_never_reads_a_removed_public_key() -> None:
+    """The version-2 contract, enforced against reintroduction.
+
+    ADR 001 stage 8 removed `overall`, `overall_range`, `grade` and
+    `grade_blockers` from the public score. A consumer that starts
+    reading one again would either KeyError in production or, worse,
+    silently fall back — which is the class of defect the whole evidence
+    architecture exists to remove.
+
+    Scans `src/` and `tools/` only. Tests legitimately reference the old
+    names when comparing against captured anchors from before the
+    migration.
+    """
+    offenders: list[str] = []
+    for path in [*(ROOT / "src").rglob("*.py"), *(ROOT / "tools").rglob("*.py")]:
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            if _REMOVED_READ.search(line):
+                offenders.append(f"{path.relative_to(ROOT)}:{number}: {line.strip()[:90]}")
+
+    assert not offenders, (
+        "production code reads a score key removed in ADR 001 stage 8:\n" + "\n".join(offenders)
+    )
+
+
+def test_production_code_never_emits_a_removed_public_key() -> None:
+    """The producer side of the same rule."""
+    scoring = (ROOT / "src" / "maintainability_audit" / "scoring.py").read_text(encoding="utf-8")
+    emitted = re.findall(r'^\s{8}"([a-z_]+)":', scoring, re.M)
+
+    assert not set(emitted) & set(REMOVED_PUBLIC_KEYS), (
+        f"the score document emits removed keys: {sorted(set(emitted) & set(REMOVED_PUBLIC_KEYS))}"
+    )

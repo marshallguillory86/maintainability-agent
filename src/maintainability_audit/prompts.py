@@ -38,7 +38,6 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         "",
         f"- Maintainability estimate: {view.estimate(score)} (range {view.score_range(score)})",
         f"- Verified grade: {view.verified_grade(score)}",
-        f"- Compatibility grade: {view.compatibility_grade(score)}",
         f"- Files scanned: {summary['files_scanned']}",
         f"- File failures: {summary['file_failures']}",
         f"- Function failures: {summary['function_failures']}",
@@ -99,9 +98,9 @@ def prompt_pressure_section(score: dict[str, Any]) -> list[str]:
                 "",
             ]
         )
-    for blocker in score.get("grade_blockers") or []:
+    for blocker in view.grade_blockers(score):
         lines.append(f"- Grade capped: {blocker}")
-    if score.get("grade_blockers"):
+    if view.grade_blockers(score):
         lines.append("")
     return lines
 

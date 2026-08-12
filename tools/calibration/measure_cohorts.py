@@ -115,7 +115,7 @@ def measure(path: Path, name: str) -> dict | None:
         "files": summary["files_scanned"],
         "declarations": summary["declarations_scanned"],
         "eligible_declarations": eligible,
-        "score": report["score"]["overall"],
+        "score": report["score"]["maintainability_estimate"],
         "near_duplicate_rate": cross_file / eligible,
         "dead_code_rate": dead / production_declarations,
         "file_failure_rate": summary["production_file_failures"] / production_files,

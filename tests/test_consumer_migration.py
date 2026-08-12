@@ -131,22 +131,28 @@ def test_unknown_history_says_not_verified_in_every_consumer(incomplete_report: 
         assert NOT_VERIFIED in text, f"{name} does not say the grade was withheld"
 
 
-def test_the_compatibility_grade_is_never_presented_as_authoritative(
+def test_no_second_letter_grade_survives_anywhere(
     incomplete_report: dict,
 ) -> None:
-    """It stays visible, labelled for what it is.
+    """Stage 8 removed the compatibility grade; nothing may replace it.
 
-    Removing it is stage 8. Until then it must not appear as *the* grade
-    on a report that issued none — it is banded from the evidence floor,
-    so on an incomplete report it means "the worst the evidence allows".
+    Through stage 7 the report still carried a floor-banded `grade`,
+    labelled as a compatibility value. It is gone from the contract, so
+    an incomplete report must expose **no** letter anywhere — not in the
+    JSON, not in a renderer, not relabelled as an estimate grade. The
+    former wording is also forbidden: a reader must not be told about a
+    "compatibility" or "evidence-floor" grade that no longer exists.
     """
-    for name, text in _all_artifacts(incomplete_report).items():
-        if "Compatibility grade" in text or "compatibility" in text:
-            assert "compatibility" in text.lower(), name
+    score = incomplete_report["score"]
+    assert score["verified_grade"] is None
+    assert "grade" not in score, "the compatibility grade must be gone from the contract"
+
     markdown = render_markdown(incomplete_report)
     assert "Verified grade | Not verified" in markdown
-    assert "compatibility, evidence-floor" in markdown
-
+    for name, text in _all_artifacts(incomplete_report).items():
+        lowered = text.lower()
+        assert "compatibility grade" not in lowered, name
+        assert "evidence-floor" not in lowered, name
 
 def test_every_reason_reaches_the_reader_with_path_and_provenance(
     incomplete_report: dict,
@@ -368,7 +374,7 @@ def test_a_collapsed_range_never_claims_complete_evidence(
     rendered = view.score_range(score)
 
     assert score["verified_grade"] is None, f"{path} should withhold the grade"
-    if score["overall_range"][0] == score["overall_range"][1]:
+    if score["maintainability_range"][0] == score["maintainability_range"][1]:
         assert "no unmeasured evidence" not in rendered, (
             f"concealing {path} collapsed the range and claimed completeness: {rendered}"
         )

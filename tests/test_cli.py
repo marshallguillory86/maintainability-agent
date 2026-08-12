@@ -164,8 +164,11 @@ def test_renderers_cover_findings_and_instruction_notes(tmp_path: Path) -> None:
         "mode": "full",
         "score": {
             "standard": "test standard",
-            "overall": 3.2,
-            "grade": "C",
+            "maintainability_estimate": 3.2,
+            "maintainability_range": [3.2, 3.2],
+            "evidence_status": {"status": "complete", "profile": "default-v1", "reasons": []},
+            "verified_grade": "C",
+            "verified_grade_blockers": [],
             "categories": {
                 "modularity": 3.0,
                 "reusability": 3.0,

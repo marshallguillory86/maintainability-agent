@@ -346,7 +346,9 @@ So every report carries a coverage gap list, and each gap says what would close 
 
 **The agent never installs anything.** Installing is a network and privilege action and it is the user's decision. What the agent emits is an *environment work order* in the same shape as the code work order — what is missing, why it matters, and the exact command — so a human can run it or hand it to their own AI agent to run. Same artifact, either consumer.
 
-**Availability is proven by invocation, never by `PATH`.** Measured here: `/usr/bin/java` exists, `command -v java` succeeds, and it is the macOS stub with no JDK behind it — and `java -version` **exits 0** while printing *"Unable to locate a Java Runtime"* to stderr. A runner trusting either signal would record PMD as having run, found nothing, and contributed a clean result. That is the A+ failure arriving through a new door, so a tool counts as available only when it has been invoked and its output validated against an expected shape.
+**Availability is proven by invocation, never by `PATH`.** Measured here: `/usr/bin/java` exists and `command -v java` succeeds, but it is the macOS stub with no JDK behind it, so PMD refused to run through it. Presence on `PATH` says nothing about whether a tool works.
+
+Exit codes are no better a signal on their own — many linters exit non-zero to report findings, and a launcher can exit zero having done nothing. So a tool counts as available only when it has been invoked and its output validated against an expected shape. A tool that would otherwise be recorded as having run, found nothing, and contributed a clean result is the hello-world A+ arriving through a new door.
 
 A language or concern with nothing running against it is `Unknown` in the score, never clean.
 

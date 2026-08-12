@@ -40,9 +40,11 @@ The built-in detectors are **demoted, not deleted**. They remain as a fallback t
 
 ### 2. Availability is reported, never assumed — and proven by invocation
 
-Presence on `PATH` is not availability, and a zero exit code is not success. Both were measured on this machine: `/usr/bin/java` exists and `command -v java` succeeds, but it is the macOS stub with no JDK behind it, and `java -version` **exits 0** while printing *"Unable to locate a Java Runtime"* to stderr. PMD, launched through it, simply refused to run.
+Presence on `PATH` is not availability. Measured: `/usr/bin/java` exists and `command -v java` succeeds, but it is the macOS stub with no JDK behind it, and PMD refused to launch through it.
 
-Had the runner trusted either signal, PMD would have been recorded as run, found nothing, and contributed a clean result — the A+ failure arriving through a new door. So a tool counts as available only when invoked and its output validated against an expected shape. Version capture doubles as the probe.
+Exit codes are not a sufficient signal either, in both directions: many linters exit non-zero precisely to report findings, so treating that as failure discards real evidence, while a launcher can exit zero having done nothing. Either mistake ends the same way — a tool recorded as having run, found nothing, and contributed a clean result, which is the hello-world A+ arriving through a new door.
+
+So a tool counts as available only when invoked and its output validated against an expected shape. Version capture doubles as the probe.
 
 Each run records which analyzers were attempted, which ran, which were unavailable and why (not installed, unsupported language, timed out, crashed). A tool that did not run is **not a clean result**. `secure-code-agent` already reports `scanners run:` and `unavailable:`; this agent adopts the same discipline.
 

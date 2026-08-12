@@ -52,7 +52,7 @@ Implements the executable half of [ADR 006](adr-006-analyzer-evidence.md). The l
 | # | Task | Exit condition |
 |---|---|---|
 | 2.1 | `_runner`: subprocess, timeout, isolation, version capture | A crashing or hanging tool produces `Unknown` with a reason and never fails the run |
-| 2.1b | Availability proven by invocation, not `PATH` | A stub on `PATH` that exits 0 while failing (macOS `java`) is recorded unavailable, not clean |
+| 2.1b | Availability proven by invocation, not `PATH` | A stub on `PATH` that fails when run (macOS `java`) is recorded unavailable, not clean; a tool that exits 0 saying nothing is too |
 | 2.2 | `_catalog`: resolve the pool from concerns, depth, policy | Matches `tools/resolve_pool.py` output exactly; the script becomes a thin wrapper |
 | 2.3 | Adapter protocol, metric and verdict shapes | Adding an adapter requires no change outside its own module |
 | 2.4 | Ten baseline adapters: lizard, cloc, multimetric, jscpd, radon, ruff, vulture, complexipy, interrogate, pydocstyle | Each parses real output on the corpus; per-adapter fixture tests |

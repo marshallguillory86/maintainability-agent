@@ -17,7 +17,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "src" / "maintainability_audit"
 
-FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "config", "git_tools", "instructions"}
+# `_runner` sits in foundations beside `git_tools` for the same reason:
+# both spawn processes and depend on nothing internal. ADR 006 rule 7
+# makes them the only two modules permitted to, so keeping them in one
+# layer is what makes that rule checkable.
+FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "config", "git_tools", "instructions",
+               "_runner"}
 PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens"}
 SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "history"}
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive", "_verification"}

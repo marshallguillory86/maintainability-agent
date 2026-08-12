@@ -35,7 +35,6 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
 from maintainability_audit._analysis import analyze  # noqa: E402
-from maintainability_audit.evidence import normalize_report_evidence  # noqa: E402
 from maintainability_audit._calibration import (  # noqa: E402
     CALIBRATION_C,
     DIMENSION_REFERENCES,
@@ -44,6 +43,7 @@ from maintainability_audit._calibration import (  # noqa: E402
 from maintainability_audit._derive import derive_curve_constant, derive_references  # noqa: E402
 from maintainability_audit._pressures import analyzer_pressures  # noqa: E402
 from maintainability_audit.config import load_config  # noqa: E402
+from maintainability_audit.evidence import normalize_report_evidence  # noqa: E402
 from maintainability_audit.report import build_report  # noqa: E402
 from maintainability_audit.scoring import dimension_pressures  # noqa: E402
 

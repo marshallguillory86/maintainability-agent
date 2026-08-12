@@ -34,11 +34,18 @@ CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "te
 # recalibrating silently moves the meaning of every grade.
 # ``tests/test_calibration_corpus.py`` re-derives them offline from the
 # checked-in measurements and fails if they drift.
+# risk moved 0.0726 -> 0.0733 on 2026-08-12, re-measured across the same
+# 40 repositories. The cause is this release adding three default risk
+# patterns (absence-as-zero, vacuous-assertion, silent-truncation), all
+# Python-only, which fire on the 13 Python repositories in the corpus and
+# nudge the median. Every other reference and the curve constant are
+# unchanged, which is the check that the move is the patterns rather than
+# drift in the pipeline.
 DIMENSION_REFERENCES: dict[str, float] = {
     "file_size": 0.0576,
     "declarations": 0.0599,
     "duplication": 3.7350,
-    "risk": 0.0726,
+    "risk": 0.0733,
     # Fixed, not corpus-derived — see ``_derive.FIXED_REFERENCES``, which
     # is the authority for this value and carries the reasoning. Stated
     # again here rather than imported, so the two are independent claims

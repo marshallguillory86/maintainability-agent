@@ -1,5 +1,5 @@
 {
- "measured_on": "2026-08-09",
+ "measured_on": "2026-08-12",
  "corpus_size": 40,
  "measurements": [
   {
@@ -28,6 +28,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.01141215106732348,
+    "duplication": 1.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -56,6 +76,26 @@
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.010894978023005705,
+    "duplication": 1.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -84,6 +124,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.029404178488522052,
+    "duplication": 1.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -94,7 +154,7 @@
     "file_size": 0.04967776584317938,
     "declarations": 0.050094102885821834,
     "duplication": 1.8839957035445758,
-    "risk": 0.25993555316863587,
+    "risk": 0.2620837808807734,
     "gates": 0.0
    },
    "evidence": {
@@ -112,6 +172,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.07178008591235999,
+    "duplication": 0.25
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -140,6 +220,26 @@
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.008262861169837914,
+    "duplication": 0.5
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -168,6 +268,26 @@
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.007089848926583621,
+    "duplication": 1.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -196,6 +316,26 @@
     "has_readme": false,
     "has_changelog": true,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.005239520958083832,
+    "duplication": 0.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -206,7 +346,7 @@
     "file_size": 0.061291369240752756,
     "declarations": 0.020279502361147735,
     "duplication": 1.2203114860480209,
-    "risk": 0.018170019467878003,
+    "risk": 0.018494484101232965,
     "gates": 0.0
    },
    "evidence": {
@@ -224,6 +364,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.020992137346927765,
+    "duplication": 0.5
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -252,6 +412,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.0345367525407705,
+    "duplication": 1.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -280,6 +460,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.023473261136541253,
+    "duplication": 0.5
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -308,6 +508,26 @@
     "has_readme": false,
     "has_changelog": false,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.001425217974513749,
+    "duplication": 0.75
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -318,7 +538,7 @@
     "file_size": 0.02476224022543149,
     "declarations": 0.046259461362436194,
     "duplication": 1.6118351532229658,
-    "risk": 0.06903839380063402,
+    "risk": 0.07044734061289186,
     "gates": 0.0
    },
    "evidence": {
@@ -336,6 +556,27 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.0033993201359728054,
+    "duplication": 1.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -364,6 +605,27 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.0085455223004312,
+    "duplication": 0.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -392,6 +654,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.008688783570300158,
+    "duplication": 1.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -420,6 +702,26 @@
     "has_readme": false,
     "has_changelog": false,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.012065637065637066,
+    "duplication": 0.5
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -448,6 +750,27 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.034839901792793025,
+    "duplication": 0.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -476,6 +799,26 @@
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.015188151730391416,
+    "duplication": 0.5
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -504,6 +847,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.021232876712328767,
+    "duplication": 0.75
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -514,7 +877,7 @@
     "file_size": 0.1301715438950555,
     "declarations": 0.051807796490401604,
     "duplication": 10.203834510595359,
-    "risk": 0.1311806256306761,
+    "risk": 0.13319878910191726,
     "gates": 0.0
    },
    "evidence": {
@@ -532,6 +895,27 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.03032742738010193,
+    "duplication": 0.75
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -542,7 +926,7 @@
     "file_size": 0.08214643931795387,
     "declarations": 0.03205658070900518,
     "duplication": 4.233199598796389,
-    "risk": 1.0677031093279838,
+    "risk": 1.0727181544633901,
     "gates": 0.0
    },
    "evidence": {
@@ -560,6 +944,25 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.01896056063016172,
+    "duplication": 1.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -588,6 +991,26 @@
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.010513245033112583,
+    "duplication": 0.5
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -616,6 +1039,27 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.013082723754469078,
+    "duplication": 0.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -644,6 +1088,26 @@
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.005302818866871337,
+    "duplication": 1.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -672,6 +1136,26 @@
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.023497368664019944,
+    "duplication": 1.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -682,7 +1166,7 @@
     "file_size": 0.06482735274204468,
     "declarations": 0.07651391862955031,
     "duplication": 7.858158429248476,
-    "risk": 0.14319566689234936,
+    "risk": 0.14522681110358834,
     "gates": 0.0
    },
    "evidence": {
@@ -700,6 +1184,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.025305063430267744,
+    "duplication": 0.75
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -710,7 +1214,7 @@
     "file_size": 0.059851377851171436,
     "declarations": 0.0644259483752698,
     "duplication": 7.70977397048199,
-    "risk": 0.04443182991020745,
+    "risk": 0.04453503973578285,
     "gates": 0.0
    },
    "evidence": {
@@ -728,6 +1232,26 @@
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.010507689926407474,
+    "duplication": 0.75
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -756,6 +1280,26 @@
     "has_readme": false,
     "has_changelog": false,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.0015600976756805643,
+    "duplication": 1.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -784,6 +1328,27 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.023411064741709904,
+    "duplication": 0.75
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -812,6 +1377,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.0368997175141243,
+    "duplication": 0.5
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -822,7 +1407,7 @@
     "file_size": 0.05465587044534413,
     "declarations": 0.01170787155441887,
     "duplication": 2.2935222672064777,
-    "risk": 0.030364372469635626,
+    "risk": 0.03441295546558704,
     "gates": 0.0
    },
    "evidence": {
@@ -840,6 +1425,27 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.006455307452151487,
+    "duplication": 0.5
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -868,6 +1474,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.010365713114964018,
+    "duplication": 0.75
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -896,6 +1522,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.019538576966362384,
+    "duplication": 0.5
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -924,6 +1570,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.020714285714285713,
+    "duplication": 0.75
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -952,6 +1618,26 @@
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.024410609037328095,
+    "duplication": 0.5
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -962,7 +1648,7 @@
     "file_size": 0.13714566606586925,
     "declarations": 0.058670897646843745,
     "duplication": 25.567262002293955,
-    "risk": 0.20383417991151892,
+    "risk": 0.2074389644437162,
     "gates": 0.0
    },
    "evidence": {
@@ -980,6 +1666,27 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.05174469080032136,
+    "duplication": 1.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -1008,6 +1715,27 @@
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.06002883031301483,
+    "duplication": 0.25
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -1036,6 +1764,26 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.01681409181027909,
+    "duplication": 0.5
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -1064,6 +1812,26 @@
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.02081199863457928,
+    "duplication": 0.75
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -1074,7 +1842,7 @@
     "file_size": 0.04045801526717557,
     "declarations": 0.08686484618043554,
     "duplication": 0.5845147219193021,
-    "risk": 0.1134133042529989,
+    "risk": 0.12213740458015267,
     "gates": 0.0
    },
    "evidence": {
@@ -1092,6 +1860,27 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.08048340777348113,
+    "duplication": 0.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   },
   {
@@ -1102,7 +1891,7 @@
     "file_size": 0.06390845070422535,
     "declarations": 0.06533898305084745,
     "duplication": 0.4357394366197183,
-    "risk": 0.18045774647887325,
+    "risk": 0.1875,
     "gates": 0.0
    },
    "evidence": {
@@ -1120,6 +1909,27 @@
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.06393763887019106,
+    "duplication": 0.0
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "complexipy",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "pydocstyle",
+     "radon",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ]
    }
   }
  ]

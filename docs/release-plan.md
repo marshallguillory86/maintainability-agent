@@ -81,9 +81,21 @@ Implements [ADR 008](adr-008-translation-and-decision.md)'s normalization half. 
 
 **Order within this phase is forced.** 3.1–3.3 stand alone and are done. 3.4 cannot precede 3.5/3.6 for the reason in its row. Until then, tool disagreement is reported beside the score and explicitly marked as not affecting it.
 
-**Measured, not guessed: the swap is roughly 4x on declaration pressure.** `_pressures.analyzer_pressures` computes the scorer's own dimensions from analyzer output, in the same shape, so the two sources can be compared directly. On this repository the built-in detector reports 0.0041 declaration pressure and the analyzers report 0.0162 — external tools see about four times the complexity the homegrown ones do. Duplication agrees at zero. `file_size`, `risk` and `gates` have no analyzer source at all: no permissively-licensed tool in the pool reports per-file line counts, and the other two are configured policy.
+**Measured across the corpus, and it corrected an earlier claim.** This document previously reported the swap as "roughly 4x on declaration pressure", from a single measurement on this repository. Running all 40 corpus repositories gives a median ratio of **0.3x** — the analyzers see *less* pressure than the built-in detectors on most of them, not more.
 
-That ratio is the recalibration input. Whatever the corpus says, the constant moves by roughly this much, and the old and new values are both published.
+The split is by language, and it was a defect rather than a finding:
+
+| Language | Repos | Median ratio |
+|---|---|---|
+| Python | 13 | 0.88x |
+| JavaScript | 12 | 0.27x |
+| TypeScript | 15 | 0.23x |
+
+`complexipy` and `radon` are Python-only, so a Python repository's `declarations` dimension averaged lizard's cyclomatic complexity with complexipy's cognitive complexity while a TypeScript one used lizard alone — and the two were then compared as though they measured the same thing. `analyzer_pressures` now composes a dimension only from its full concept set and reports `None` otherwise, for the same reason two reports with different analyzer coverage are not comparable.
+
+The 4x figure came from this repository being Python-heavy. Generalizing from n=1 is the mistake this plan warns against two sections down, and it survived a commit message and this document before forty repositories caught it.
+
+**What the corpus run settled.** Every reference and the curve constant reproduced exactly except `risk`, which moved 0.0726 to 0.0733 — traced to this release adding three Python-only default risk patterns that fire on the 13 Python repositories. Both values and the cause are recorded in `_calibration.py`. Corpus median still rolls up to 4.0.
 
 **3.6 is the risk item.** Replacing homegrown detectors with external tools will move every corpus score. The calibration constant must be re-derived and [studies.md](studies.md) updated, and the old and new numbers must both be recorded so the shift is visible rather than silent.
 

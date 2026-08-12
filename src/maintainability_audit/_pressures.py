@@ -211,10 +211,24 @@ def analyzer_pressures(
 
     pressures: dict[str, float | None] = {}
     for dimension, concepts in ANALYZER_DIMENSIONS.items():
-        parts = [
+        present = [concept for concept in concepts if by_concept.get(concept)]
+        # Composed only from the full concept set, never a subset. The
+        # first version averaged whichever concepts happened to have data,
+        # so a Python repository averaged lizard's cyclomatic with
+        # complexipy's cognitive while a TypeScript one used lizard alone
+        # -- and the two numbers were then compared as though they meant
+        # the same thing. Across the corpus that produced a median ratio
+        # of 0.88x on Python and 0.23x on TypeScript, a split entirely
+        # explained by which tools speak which language.
+        #
+        # A partial set is unmeasured rather than averaged, for the same
+        # reason two reports with different analyzer coverage are not
+        # comparable (ADR 006). Widening coverage is what fixes it.
+        if len(present) != len(concepts):
+            pressures[dimension] = None
+            continue
+        pressures[dimension] = fmean(
             population_pressure(CONCEPTS[concept], by_concept[concept], thresholds)
             for concept in concepts
-            if by_concept.get(concept)
-        ]
-        pressures[dimension] = fmean(parts) if parts else None
+        )
     return pressures

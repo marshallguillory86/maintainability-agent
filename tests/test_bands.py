@@ -156,9 +156,13 @@ def test_analyzer_pressures_match_the_scorers_shape(thresholds: dict) -> None:
     from maintainability_audit._metrics_types import Measurement
     from maintainability_audit._pressures import ANALYZER_DIMENSIONS, analyzer_pressures
 
+    # Both concepts the `declarations` dimension is composed from. A
+    # partial set is deliberately unmeasured — see the next test.
     measurements = [
-        Measurement(concept="cyclomatic_complexity", unit=f"a.py::f{i}", value=float(v),
-                    tool="lizard", path="a.py")
+        Measurement(concept=concept, unit=f"a.py::f{i}", value=float(v),
+                    tool=tool, path="a.py")
+        for concept, tool in (("cyclomatic_complexity", "lizard"),
+                              ("cognitive_complexity", "complexipy"))
         for i, v in enumerate([1, 2, 30, 40])
     ]
     pressures = analyzer_pressures(measurements, thresholds)
@@ -166,6 +170,30 @@ def test_analyzer_pressures_match_the_scorers_shape(thresholds: dict) -> None:
     assert set(pressures) == set(ANALYZER_DIMENSIONS)
     assert pressures["declarations"] is not None
     assert pressures["duplication"] is None, "no duplication reading is unmeasured, not zero"
+
+
+def test_a_partial_concept_set_is_unmeasured_rather_than_averaged(thresholds: dict) -> None:
+    """The flaw the corpus run exposed.
+
+    `declarations` is composed from cyclomatic *and* cognitive complexity.
+    The first version averaged whichever had data, so a Python repository
+    used both while a TypeScript one used lizard alone — complexipy and
+    radon being Python-only — and the two numbers were compared as if
+    they meant the same thing. Median ratio against the built-in detector
+    came out 0.88x on Python and 0.23x on TypeScript, a split entirely
+    explained by which tools speak which language rather than by any
+    property of the code.
+    """
+    from maintainability_audit._metrics_types import Measurement
+    from maintainability_audit._pressures import analyzer_pressures
+
+    only_one = [
+        Measurement(concept="cyclomatic_complexity", unit=f"a.py::f{i}", value=float(v),
+                    tool="lizard", path="a.py")
+        for i, v in enumerate([1, 2, 30, 40])
+    ]
+
+    assert analyzer_pressures(only_one, thresholds)["declarations"] is None
 
 
 def test_a_dimension_nothing_measured_is_unmeasured_not_zero(thresholds: dict) -> None:

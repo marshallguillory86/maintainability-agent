@@ -28,6 +28,8 @@ from __future__ import annotations
 import csv
 import io
 import json
+import shutil
+import tempfile
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -127,7 +129,8 @@ class BaseAdapter:
             return Extraction(parse_error=result.detail or f"{self.slug} did not run")
         try:
             return self._read(result)
-        except (ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+        except (ValueError, KeyError, IndexError, TypeError, AttributeError,
+                json.JSONDecodeError) as error:
             # Output shapes drift between tool releases, and a message-text
             # parser drifts faster. Failing to a stated gap keeps a version
             # bump from quietly turning findings into a clean result.
@@ -145,6 +148,23 @@ class BaseAdapter:
 
 def _rows(text: str) -> list[list[str]]:
     return [row for row in csv.reader(io.StringIO(text)) if row]
+
+
+def _npx(tool: str, *args: str) -> tuple[str, ...]:
+    """Invoke a Node tool, using a local install when there is one.
+
+    Prefers a globally installed binary and falls back to ``npx --yes``,
+    which fetches the package if absent. That fetch is a network action, so
+    P1 separates analysis from acquisition: the analysis never touches the
+    network and never transmits the code being audited, while acquiring a
+    tool may. The version that ran is recorded either way.
+
+    Install ahead of time (``npm install -g jscpd``) to pin a version or to
+    build air-gapped; the local binary is then used directly.
+    """
+    if shutil.which(tool):
+        return (tool, *args)
+    return ("npx", "--yes", tool, *args)
 
 
 class LizardAdapter(BaseAdapter):
@@ -221,19 +241,26 @@ class JscpdAdapter(BaseAdapter):
             slug="jscpd", emits="both", executable="jscpd",
             concepts=("duplication",),
         )
+        # jscpd writes its JSON to a file rather than stdout, so the adapter
+        # picks the destination when it builds the invocation and reads it
+        # back when parsing. A scratch directory rather than the scanned
+        # tree: writing into the repository under audit would change what
+        # the next tool sees.
+        self._report_dir = Path(tempfile.mkdtemp(prefix="jscpd-"))
+
+    def version_argv(self) -> tuple[str, ...]:
+        return _npx("jscpd", "--version")
 
     def invocation(self, root: Path, paths: Iterable[str] | None = None) -> Invocation:
-        # Invoked as a locally installed binary, never through `npx --yes`.
-        # That would download a package mid-audit, which is a network action
-        # and breaks P1 (no network). A jscpd that is not installed is
-        # reported unavailable, which is the honest answer.
         return Invocation(
-            argv=(self.executable, str(root), "--reporters", "json", "--silent",
-                  "--output", str(root / ".jscpd-out")),
+            argv=(*_npx("jscpd"), str(root), "--reporters", "json", "--silent",
+                  "--output", str(self._report_dir)),
         )
 
     def _read(self, result: ToolResult) -> Extraction:
-        payload = json.loads(result.stdout or "{}")
+        report = self._report_dir / "jscpd-report.json"
+        raw = report.read_text(encoding="utf-8") if report.exists() else result.stdout
+        payload = json.loads(raw or "{}")
         totals = payload.get("statistics", {}).get("total", {})
         measurements = []
         if "percentage" in totals:
@@ -304,10 +331,65 @@ class InterrogateAdapter(BaseAdapter):
         ),))
 
 
+class RuffAdapter(BaseAdapter):
+    """~800 lint rules, as located findings.
+
+    A verdict emitter, so it contributes findings and never a rate — but
+    the findings are most of why anyone would run it. The goal is improving
+    code, not only scoring it, and "unused import at line 12" is directly
+    actionable in a way no aggregate is.
+
+    A project's own rule selection therefore shapes its *findings*, which is
+    correct: that is their policy about their code. It cannot shape their
+    *score*, which is also correct: two repositories must be comparable
+    regardless of how each configured its linter (P2).
+    """
+
+    def __init__(self) -> None:
+        super().__init__(
+            slug="ruff", emits="verdict", executable="ruff",
+            concepts=("style", "complexity", "dead-code"),
+            findings_exit_codes=(0, 1),
+            extra_args=("check", "--output-format", "json", "--no-cache"),
+        )
+
+    def _read(self, result: ToolResult) -> Extraction:
+        payload = json.loads(result.stdout or "[]")
+        if not isinstance(payload, list):
+            raise ValueError(f"expected a JSON array of diagnostics, got {type(payload).__name__}")
+        findings = tuple(
+            Finding(
+                concept=_ruff_concept(item.get("code") or ""),
+                path=item.get("filename", ""),
+                line=(item.get("location") or {}).get("row"),
+                message=item.get("message", ""),
+                tool=self.slug,
+                rule=item.get("code"),
+            )
+            for item in payload
+        )
+        return Extraction(findings=findings)
+
+
+# Ruff rule prefixes mapped onto this project's concern vocabulary, so a
+# finding lands under the concern a user asked about. Anything unmapped is
+# style, which is the honest default for a linter rule nobody classified.
+_RUFF_CONCEPTS = (("C90", "complexity"), ("F401", "dead-code"), ("F841", "dead-code"),
+                  ("ERA", "dead-code"), ("D", "documentation"))
+
+
+def _ruff_concept(code: str) -> str:
+    for prefix, concern in _RUFF_CONCEPTS:
+        if code.startswith(prefix):
+            return concern
+    return "style"
+
+
 ADAPTERS: dict[str, Callable[[], BaseAdapter]] = {
     "lizard": LizardAdapter,
     "radon": RadonAdapter,
     "jscpd": JscpdAdapter,
+    "ruff": RuffAdapter,
     "vulture": VultureAdapter,
     "interrogate": InterrogateAdapter,
 }

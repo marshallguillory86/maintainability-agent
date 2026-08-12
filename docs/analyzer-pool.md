@@ -93,6 +93,26 @@ Prompted interactively on first run when attached to a terminal, then written to
 
 The chosen depth and policy are recorded in the report, because a score computed from four tools and a score computed from forty are not the same measurement and must not be silently comparable.
 
+## Runtime prerequisites
+
+Analyzers live in ecosystems, and the agent runs the ones it can reach. Nothing here is required — a missing runtime costs coverage, never a failed run — but each absence is reported with what would close it.
+
+| Runtime | Needed for | Install |
+|---|---|---|
+| Python 3.11+ | The agent itself, and lizard, radon, ruff, vulture, complexipy, interrogate, pydocstyle, multimetric, xenon | ships with the package |
+| **Node.js 18+** | **jscpd** (multi-language clone detection), eslint, and the JS/TS toolchain | `brew install node` / your platform's package manager |
+| JDK 17+ | PMD, Checkstyle, SpotBugs (no adapters yet) | `brew install openjdk` |
+| Go toolchain | golangci-lint (no adapter yet) | `brew install go` |
+| Rust toolchain | clippy (no adapter yet) | `brew install rust` |
+
+**Node tools may be fetched on first use.** `jscpd` is invoked through `npx`, which downloads the package if it is not already present. That is a network action, so [P1](product-intent.md#what-it-promises) separates analysis from acquisition: the analysis itself never touches the network and never transmits your code, while acquiring a tool may. The fetched version is recorded in the report.
+
+To avoid the fetch entirely — in an air-gapped build, or to pin a version — install the tool ahead of time and it will be used directly:
+
+```bash
+npm install -g jscpd@5
+```
+
 ## Adapter status, stated plainly
 
 **15 tools have adapters** — meaning this project has run them and parsed their machine-readable output. Every one of the other 429 eligible tools is an inventory entry, not a capability.

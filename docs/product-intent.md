@@ -63,7 +63,7 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 
 | # | Promise | Falsified by |
 |---|---|---|
-| P1 | The audit is deterministic: same tree and config in, same findings out, no network, no LLM | Two runs disagreeing on identical input |
+| P1 | The audit is deterministic: same tree, config and pinned analyzer versions in, same findings out. **The analysis itself performs no network access and invokes no language model**; acquiring a tool may, on first run, and the acquired version is recorded | Two runs disagreeing on identical input at identical tool versions, or any network access during analysis |
 | P2 | The score applies the same rubric to every repository, and the rubric is readable in source | A repo-specific code path changing a weight or band |
 | P3 | Withholding evidence cannot improve the reported grade | Any input whose removal raises the graded field |
 | P4 | The overall equals the weighted mean of the categories printed beside it | A report where the arithmetic does not check |
@@ -71,6 +71,14 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 | P6 | Every empirical claim in this repo is reproducible from checked-in pinned inputs | A quoted number that cannot be re-derived offline |
 | P7 | A score is issued only where enough was examined to support it, and never as a consequence of not looking | A number a reader with the repository in front of them would call absurd |
 | P8 | Every report states what examined it — which analyzers ran, which did not, and what measured each value | A reported value with no attributable source, or a run whose coverage cannot be recovered from its output |
+
+### Why P1 was amended
+
+P1 read "no network, no LLM" when the tool was pure computation over a file tree. Under [ADR 006](adr-006-analyzer-evidence.md) it invokes external analyzers, and some of those live in ecosystems whose normal installation path is a fetch — `npx` for the Node tools most obviously.
+
+Two honest options existed: refuse to acquire tools, which makes the multi-language story depend on every user hand-installing a dozen ecosystems; or acquire them and say so. The second was chosen, so the promise now separates **analysis** from **acquisition**. Analysis still touches no network and no model: the code being audited is never transmitted anywhere, which is the property the promise existed to protect. Acquisition may fetch a tool, on first run, and the version it fetched is recorded in the report so the run remains reproducible.
+
+The prerequisites this creates are listed in [the analyzer pool](analyzer-pool.md#runtime-prerequisites) rather than left for a user to discover from a failure.
 
 ### Why P7 and P8 were added
 

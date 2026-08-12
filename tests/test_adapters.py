@@ -45,7 +45,9 @@ def test_every_adapter_declares_its_shape_and_concepts(slug: str) -> None:
     assert adapter.emits in {"metric", "verdict", "both"}
     assert adapter.concepts, f"{slug} measures nothing, so nothing can select it"
     assert adapter.executable, f"{slug} has no executable to invoke"
-    assert adapter.version_argv()[0] == adapter.executable
+    # A Node tool may be reached through `npx`, so the executable need only
+    # appear in the probe rather than lead it.
+    assert adapter.executable in adapter.version_argv()
 
 
 @pytest.mark.parametrize("slug", sorted(ADAPTERS))
@@ -143,22 +145,77 @@ def test_vulture_locates_its_findings() -> None:
     assert not extraction.measurements, "vulture is a verdict emitter"
 
 
-def test_jscpd_is_never_invoked_through_a_downloader() -> None:
-    """`npx --yes` would fetch a package mid-audit.
-
-    That is a network action, and P1 promises none. A jscpd that is not
-    installed must be reported unavailable rather than downloaded.
-    """
-    argv = adapter_for("jscpd").invocation(Path("/tmp/x")).argv
-
-    assert argv[0] == "jscpd"
-    assert "npx" not in argv
-    assert "--yes" not in argv
-
-
 def test_an_unknown_slug_has_no_adapter_rather_than_raising() -> None:
     """The catalog lists far more tools than have adapters.
 
     A missing adapter is an ordinary reportable state, not an error.
     """
     assert adapter_for("some-tool-nobody-wrote") is None
+
+
+def test_ruff_findings_are_located_and_classified() -> None:
+    """Ruff is a verdict emitter whose findings are most of its value.
+
+    The tool exists to improve code, not only to score it, and "unused
+    import at line 12" is directly actionable in a way no aggregate is.
+    """
+    payload = json.dumps([
+        {"code": "F401", "filename": "m.py", "location": {"row": 1},
+         "message": "`os` imported but unused"},
+        {"code": "C901", "filename": "m.py", "location": {"row": 9},
+         "message": "`f` is too complex"},
+        {"code": "E501", "filename": "m.py", "location": {"row": 3},
+         "message": "line too long"},
+    ])
+    extraction = adapter_for("ruff").parse(_ran(payload))
+
+    assert not extraction.measurements, "a verdict emitter contributes no rate"
+    by_rule = {f.rule: f for f in extraction.findings}
+    assert by_rule["F401"].concept == "dead-code"
+    assert by_rule["C901"].concept == "complexity"
+    assert by_rule["E501"].concept == "style", "unclassified rules default to style"
+    assert all(f.path and f.line for f in extraction.findings), "findings must be locatable"
+
+
+def test_a_projects_lint_config_shapes_findings_but_never_a_rate() -> None:
+    """Both halves are deliberate.
+
+    A team's rule selection is their policy about their code, so it should
+    change what they are told. It must not change their score, or two
+    repositories stop being comparable (P2) — and ruff cannot affect a
+    score because it contributes no measurements at all.
+    """
+    adapter = adapter_for("ruff")
+
+    assert adapter.emits == "verdict"
+    assert measurements_only(
+        Extraction(measurements=(
+            Measurement(concept="style", unit="u", value=1.0, tool="ruff", path="m.py"),
+        )),
+        adapter,
+    ) == ()
+
+
+def test_a_node_tool_prefers_a_local_install_over_fetching(monkeypatch) -> None:
+    """Fetching is permitted but should not be the first choice.
+
+    P1 separates analysis from acquisition: analysis never touches the
+    network, acquisition may. Using an installed binary when one exists
+    keeps the fetch to first run and lets a user pin a version.
+    """
+    from maintainability_audit import _adapters
+
+    monkeypatch.setattr(_adapters.shutil, "which", lambda _tool: "/usr/local/bin/jscpd")
+    assert _adapters._npx("jscpd", "--version") == ("jscpd", "--version")
+
+    monkeypatch.setattr(_adapters.shutil, "which", lambda _tool: None)
+    assert _adapters._npx("jscpd", "--version") == ("npx", "--yes", "jscpd", "--version")
+
+
+def test_jscpd_writes_its_report_outside_the_audited_tree(tmp_path: Path) -> None:
+    """Writing into the repository would change what later tools see."""
+    adapter = adapter_for("jscpd")
+    argv = adapter.invocation(tmp_path).argv
+    output = argv[argv.index("--output") + 1]
+
+    assert not Path(output).is_relative_to(tmp_path)

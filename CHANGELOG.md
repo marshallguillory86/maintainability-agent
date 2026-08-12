@@ -25,6 +25,13 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Changed
 
+- **Promise P1 amended: analysis performs no network access; tool *acquisition* may.**
+  The audit now invokes external analyzers, and some live in ecosystems whose normal
+  install path is a fetch — `npx` for the Node tools. The property the promise protected
+  is intact: the analysis itself touches no network and your code is never transmitted
+  anywhere. Acquiring a tool may fetch it on first run, and the version acquired is
+  recorded. Install ahead of time (`npm install -g jscpd`) to pin a version or build
+  air-gapped. Prerequisites are listed in `docs/analyzer-pool.md`.
 - **Report schema version 3.** `maintainability_estimate` and `maintainability_range` are
   nullable and `evidence_status.status` may be `insufficient`. Consumers assuming a number
   must handle null.

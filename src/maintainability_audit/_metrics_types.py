@@ -72,3 +72,34 @@ class RiskFinding:
     line: int
     name: str
     text: str
+
+
+@dataclass(frozen=True)
+class Measurement:
+    """One value, for one unit, from one tool.
+
+    Lives here rather than beside the adapters because both scanners and
+    scoring touch it: an adapter produces measurements, corroboration
+    reduces them, and the layering rule forbids scoring from importing a
+    scanner. A shared type in foundations is what lets both sides speak
+    without one depending on the other.
+    """
+
+    concept: str
+    unit: str
+    value: float
+    tool: str
+    path: str
+    line: int | None = None
+
+
+@dataclass(frozen=True)
+class Finding:
+    """A located problem a tool named, with no rate attached."""
+
+    concept: str
+    path: str
+    line: int | None
+    message: str
+    tool: str
+    rule: str | None = None

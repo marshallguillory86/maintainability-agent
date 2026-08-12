@@ -37,7 +37,12 @@ SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "histo
 # `_bands` joins the rubric-data leaves: it is the band matrix, a table
 # of judgments like `_formula`, and imports nothing internal.
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive",
-           "_verification", "_bands"}
+           "_verification", "_bands",
+           # `_corroborate` reduces several tools' readings of one concept to
+           # a single value plus its spread. That is scoring input
+           # preparation, and like the rest of this layer it reads
+           # measurements and never scanners.
+           "_corroborate"}
 # `_analysis` orchestrates: it calls the catalog, the runner and the
 # adapters and hands `report` a coverage document. That makes it assembly,
 # not a scanner — it composes rather than measures.

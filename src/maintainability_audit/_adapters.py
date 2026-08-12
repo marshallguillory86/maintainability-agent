@@ -36,36 +36,8 @@ from importlib import metadata
 from pathlib import Path
 from typing import Protocol
 
+from ._metrics_types import Finding, Measurement
 from ._runner import Invocation, ToolResult
-
-
-@dataclass(frozen=True)
-class Measurement:
-    """One value, for one unit, from one tool.
-
-    ``unit`` is the thing measured — a function or a file — identified the way
-    the report identifies it, so measurements from different tools about the
-    same function can be combined.
-    """
-
-    concept: str
-    unit: str
-    value: float
-    tool: str
-    path: str
-    line: int | None = None
-
-
-@dataclass(frozen=True)
-class Finding:
-    """A located problem a tool named, with no rate attached."""
-
-    concept: str
-    path: str
-    line: int | None
-    message: str
-    tool: str
-    rule: str | None = None
 
 
 # How much raw output to keep inline per tool. Enough for a language model

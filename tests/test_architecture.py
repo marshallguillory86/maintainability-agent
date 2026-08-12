@@ -29,7 +29,11 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "config", "git_tools",
                # a leaf that reads the shipped catalog and nothing else.
                "_runner", "_catalog"}
 PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens"}
-SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "history"}
+# `_adapters` is a scanner: it produces findings and measurements from a
+# tree, exactly as the built-in detectors do, and like them it may not
+# import scoring. The difference is only that an external process does
+# the looking (ADR 006).
+SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "history", "_adapters"}
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive", "_verification"}
 ASSEMBLY = {"report"}
 PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view", "_identity"}

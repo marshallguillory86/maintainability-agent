@@ -23,21 +23,22 @@ Dependencies point downward only. No cycles.
   scanners                   scoring
   metrics, duplication       scoring -> _aspects -> _pressures
   deadcode, idioms           _formula, _calibration (rubric data)
-  _verification (evidence sufficiency)
-  similarity, history        _derive (calibration fit), evidence (boundary)
+  similarity, history        _verification (evidence sufficiency)
+  _adapters (external)       _derive (calibration fit), evidence (boundary)
         |                         |
         +------------+------------+
                      |
   parsing        source, declarations, _cognitive, _ranges, _tokens
                      |
-  foundations    _metrics_types, _masking, _hotspots, config, git_tools, instructions
+  foundations    _metrics_types, _masking, _hotspots, config, git_tools,
+                 instructions, _runner (process execution), _catalog (tool selection)
 ```
 
 | Layer | Owns | May import |
 |---|---|---|
 | **foundations** | Data types, config defaults, git invocation, masking primitives | nothing internal |
 | **parsing** | Reading files once, extracting declarations, complexity, ranges, tokens | foundations |
-| **scanners** | Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history | foundations, parsing |
+| **scanners** | Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history, and — via `_adapters` — whatever the external analyzers report | foundations, parsing, `_runner` |
 | **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
 | **assembly** | Running the scan, assembling the report dict, invoking the scorer once | anything below |
 | **presentation** | Markdown, PR comment, SARIF, baseline, remediation prompt, and `_evidence_view` — the single place the estimate/range/evidence/verified-grade wording is decided | foundations, the report dict |

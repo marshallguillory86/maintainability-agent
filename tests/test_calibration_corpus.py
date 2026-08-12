@@ -204,3 +204,38 @@ def _summary(entry: dict) -> dict:
     summary.setdefault("production_files_scanned", files)
     summary.setdefault("production_declarations_scanned", decls)
     return summary
+
+
+def test_the_corpus_harness_still_runs() -> None:
+    """The calibration must stay reproducible — P6.
+
+    `tools/calibration/measure.py` handed a raw summary dict to
+    `dimension_pressures`, which has taken typed evidence since ADR 001
+    stage 4. It therefore raised on every repository from 2026-08-10
+    onward while `measurements.json` is dated 08-09: the constants behind
+    every score this tool emits could not be re-derived for two days, and
+    nothing noticed because no test imported this file.
+
+    This is that test. It measures one small tree rather than the corpus
+    — the network half stays manual — but it exercises the same function
+    the corpus run calls, so a signature change breaks the suite instead
+    of the next recalibration.
+    """
+    import subprocess
+    import sys
+    import tempfile
+
+    sys.path.insert(0, str(CORPUS_DIR))
+    from measure import measure  # noqa: PLC0415
+
+    root = Path(tempfile.mkdtemp()) / "tiny"
+    root.mkdir()
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    (root / "README.md").write_text("# tiny\n", encoding="utf-8")
+    (root / "m.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+
+    row = measure(root, "tiny")
+
+    assert row["repo"] == "tiny"
+    assert isinstance(row["dimensions"], dict) and row["dimensions"]
+    assert set(row["evidence"]), "evidence keys are what the constants are derived from"

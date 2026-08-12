@@ -34,12 +34,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
+from maintainability_audit._analysis import analyze  # noqa: E402
+from maintainability_audit.evidence import normalize_report_evidence  # noqa: E402
 from maintainability_audit._calibration import (  # noqa: E402
     CALIBRATION_C,
     DIMENSION_REFERENCES,
     DIMENSION_WEIGHTS,
 )
 from maintainability_audit._derive import derive_curve_constant, derive_references  # noqa: E402
+from maintainability_audit._pressures import analyzer_pressures  # noqa: E402
 from maintainability_audit.config import load_config  # noqa: E402
 from maintainability_audit.report import build_report  # noqa: E402
 from maintainability_audit.scoring import dimension_pressures  # noqa: E402
@@ -92,16 +95,54 @@ EVIDENCE_KEYS = (
 )
 
 
-def measure(path: Path, name: str) -> dict:
-    report = build_report(path, load_config(None))
+def measure(path: Path, name: str, *, with_analyzers: bool = False) -> dict:
+    """One repository, under the built-in detectors and optionally the analyzers.
+
+    Both sources are recorded side by side rather than one replacing the
+    other, because the question the corpus run has to answer is *how far
+    apart are they* — on this repository the analyzers report about four
+    times the declaration pressure the built-in detector does, and whether
+    that holds across forty repositories decides whether the swap is a
+    recalibration or a redesign.
+
+    A repository where the analyzers could not run is recorded with
+    ``analyzer_dimensions: null`` rather than dropped, so a partial corpus
+    is visible instead of quietly smaller.
+    """
+    config = load_config(None)
+    report = build_report(path, config)
     summary = report["summary"]
-    return {
+    # Normalized rather than passed raw. `dimension_pressures` has taken
+    # typed evidence since ADR 001 stage 4, and this script kept handing
+    # it the summary dict -- so it has raised on every repository since
+    # 2026-08-10 while measurements.json is dated 08-09. The calibration
+    # was not reproducible for two days, which is P6's whole promise, and
+    # nothing noticed because no test runs this file.
+    evidence = normalize_report_evidence(report)
+    row = {
         "repo": name,
         "files": summary["files_scanned"],
         "declarations": summary["declarations_scanned"],
-        "dimensions": dimension_pressures(summary),
+        "dimensions": dimension_pressures(evidence.summary),
         "evidence": {key: summary[key] for key in EVIDENCE_KEYS},
     }
+    if with_analyzers:
+        row["analyzer_dimensions"], row["analyzer_coverage"] = _analyzer_row(path, config)
+    return row
+
+
+def _analyzer_row(path: Path, config: dict) -> tuple[dict | None, dict | None]:
+    """Analyzer pressures for one repository, or a stated absence."""
+    analysis = analyze(path, config)
+    if analysis.error or not any(item.contributed for item in analysis.coverage):
+        return None, {"error": analysis.error or "no tool contributed"}
+    return (
+        analyzer_pressures(analysis.measurements, config["thresholds"]),
+        {
+            "tools": sorted(item.slug for item in analysis.coverage if item.contributed),
+            "unexamined": analysis.gaps(),
+        },
+    )
 
 
 def report_drift(references: dict[str, float], curve: float) -> bool:
@@ -123,6 +164,12 @@ def report_drift(references: dict[str, float], curve: float) -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cache-dir", help="Directory to clone into. Defaults to a temp dir.")
+    parser.add_argument(
+        "--with-analyzers", action="store_true",
+        help="Also run the external analyzer pool on each repository and record its "
+             "pressures beside the built-in ones. Slower by orders of magnitude, and "
+             "the input the Phase 3.6 recalibration needs.",
+    )
     parser.add_argument("--check", action="store_true", help="Exit 1 if stored constants differ from measured.")
     args = parser.parse_args()
 
@@ -136,7 +183,7 @@ def main() -> int:
         path = clone(repo, cache_dir)
         if path is None:
             continue
-        entry = measure(path, repo["name"])
+        entry = measure(path, repo["name"], with_analyzers=args.with_analyzers)
         measurements.append(entry)
         print(f"  {entry['repo']:<12} files={entry['files']:<6} " + " ".join(
             f"{k}={v:.4f}" for k, v in entry["dimensions"].items()))

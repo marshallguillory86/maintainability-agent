@@ -77,7 +77,9 @@ That requires separating two things this codebase currently calls by one word:
 - an **evidence profile** (`default-v1`) declares *which measurements must be resolved* before a grade is verified;
 - a **calibration profile** would declare *which corpus the scale is fitted to*, and therefore what the constant, floors and bands are.
 
-They are independent axes and conflating them would produce exactly the ambiguity the frozen `default-v1` requirement list exists to prevent. A calibration profile is a larger piece of work than this record covers and needs its own ADR before anyone builds one; what matters here is that it is the *shape* of the answer, and that it is not the same thing as a configurable floor. The cost of the honest path — supply a corpus, re-derive the constant, publish both — is precisely what makes it honest.
+They are independent axes and conflating them would produce exactly the ambiguity the frozen `default-v1` requirement list exists to prevent. A calibration profile is a larger piece of work than this record covers and needs its own ADR before anyone builds one; what matters here is that it is the *shape* of the answer, and that it is not the same thing as a configurable floor.
+
+Two constraints on doing it, recorded now because both are easy to discover too late. It cannot precede the analyzer migration: the shipped constant was fitted to the homegrown-detector pipeline, so replacing that evidence source moves every corpus score and forces the primary calibration to be re-derived first. And its **sampling frame** is a study-design decision, not a convenience — the existing corpus means something because its frame is *mature OSS*, whereas a random sample of small public repositories would anchor the scale to "typical abandoned toy". The frame is written down before anything is cloned. The cost of the honest path — supply a corpus, re-derive the constant, publish both — is precisely what makes it honest.
 
 ## Consequences
 

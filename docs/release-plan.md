@@ -111,11 +111,15 @@ Implements [ADR 009](adr-009-scan-history.md). Needs 0.3 (identity) and Phase 3 
 
 **5.4 is Miles's feature** and the sharpest differentiator: the accumulated-friction signal a language model structurally cannot hold.
 
-## Deferred, deliberately — calibration profiles
+## Deferred, deliberately — a calibration profile for small repositories
 
-An organization whose whole estate is small services needs a scale fitted to that, not a lowered floor on a scale fitted to mature repositories. That means a **calibration profile**: a corpus, the constant fitted to it, floors from its minima, bands from its percentiles — distinct from the *evidence* profile (`default-v1`) which declares what must be measured.
+An organization whose whole estate is small services needs a scale fitted to that, not a lowered floor on a scale fitted to mature repositories. That means a **calibration profile**: a corpus, the constant fitted to it, floors from its minima, bands from its percentiles — distinct from the *evidence* profile (`default-v1`), which declares what must be measured.
 
-Not in this plan. It needs its own ADR, a second corpus, and a re-derivation, and shipping the first instrument correctly comes first. Recorded here so it is a deferred decision rather than a forgotten one.
+**Sequencing is forced, not preferred.** The shipped constant was fitted to the homegrown-detector pipeline. Phase 2 replaces that evidence source, so every corpus score moves and the *primary* calibration must be re-derived (3.6) before anything else is fitted. Calibrating a second profile against a pipeline still in motion would have to be thrown away. The order is: build, test, audit, re-derive the primary, then gather the small-repository data using the finished instrument — which is also the first real exercise of it at scale.
+
+**The sampling frame is the hard part, and it is a study-design decision.** The existing corpus has a defensible frame: *mature OSS*, standing in for "what good looks like". A small-repository corpus does not inherit that justification. A random sample of small public repositories is mostly abandoned toys, and fitting to those would anchor the scale to "typical small repository" — a materially weaker claim than the current one, and one nobody asked for. The frame likely needs to be *small repositories from organizations with demonstrated practice*: a real service from a team that ships, not a weekend project. Whatever is chosen changes what the resulting scale means, so it is decided and written down before any repository is cloned, under the Tier 3 bar in [product intent](product-intent.md#the-evidence-standard) — pinned inputs, a stated frame, stated limits.
+
+Until that exists, a small repository gets path 2: a complete audit, every finding, and no score.
 
 ## Phase 6 — Entry points
 

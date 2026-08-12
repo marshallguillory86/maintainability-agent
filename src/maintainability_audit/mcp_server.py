@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .config import VERSION, load_config
+from .config import VERSION, discovered_config, load_config
 from .git_tools import changed_paths, run_git
 from .prompts import render_ai_prompt
 from .renderers import render_markdown
@@ -88,16 +88,33 @@ def audit_repository(
     repository_root: str,
     config_path: str | None = None,
     changed_only: str | None = None,
+    run_analyzers: bool = False,
     *,
     roots: tuple[Path, ...] | None = None,
 ) -> dict[str, Any]:
-    """Run the production audit and return its report plus bounded work order."""
+    """Run the production audit and return its report plus bounded work order.
+
+    ``run_analyzers`` invokes the external analyzer pool (ADR 006), adding
+    coverage, findings and measurements from the configured tools. Off by
+    default to match the CLI: it costs seconds rather than milliseconds,
+    and a caller polling for a gate result should not pay for it.
+
+    Worth exposing here more than anywhere else, though. A model reading
+    this report is the reader those findings were collected for -- it can
+    see what the scoring engine structurally cannot, and without this flag
+    it receives the six built-in detectors while ten tools sit unused.
+    """
     authorized_roots = roots if roots is not None else allowed_roots()
     root = authorize_repository(repository_root, authorized_roots)
-    config = load_config(authorize_config(config_path, root))
+    config = load_config(authorize_config(config_path, root) or discovered_config(root))
     revspec = validate_revspec(changed_only)
     only_paths = changed_paths(root, revspec) if revspec else None
-    report = build_report(root, config, only_paths=only_paths, changed_revspec=revspec)
+    report = build_report(
+        root, config,
+        only_paths=only_paths,
+        changed_revspec=revspec,
+        run_analyzers=run_analyzers,
+    )
     status = report.get("git_status_short", "")
     return {
         "agent": "maintainability-agent",
@@ -105,6 +122,10 @@ def audit_repository(
         "source_commit": run_git(["rev-parse", "HEAD"], root) or None,
         "worktree_dirty": bool(status),
         "gate_passed": not report["hard_gate_failures"],
+        # Stated at the top level so a caller cannot mistake an audit that
+        # ran six built-in detectors for one that ran ten tools. Two
+        # reports with different coverage are not comparable (P8).
+        "analyzers_run": run_analyzers,
         "report": report,
         "report_markdown": render_markdown(report),
         "remediation_prompt": render_ai_prompt(report),
@@ -150,12 +171,18 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
         repository_root: str,
         config_path: str | None = None,
         changed_only: str | None = None,
+        run_analyzers: bool = False,
     ) -> dict[str, Any]:
-        """Audit one authorized repository and return findings plus a bounded remediation prompt."""
+        """Audit one authorized repository and return findings plus a bounded remediation prompt.
+
+        Set ``run_analyzers`` to also run the external quality tools and
+        receive their coverage, findings and measurements.
+        """
         return audit_repository(
             repository_root,
             config_path,
             changed_only,
+            run_analyzers,
             roots=authorized_roots,
         )
 

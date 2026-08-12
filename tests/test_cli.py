@@ -217,8 +217,13 @@ def test_renderers_cover_findings_and_instruction_notes(tmp_path: Path) -> None:
     assert "Keep modules focused." in instruction_body("codex", config)
 
 
-def test_a_repositorys_own_config_is_used_without_being_named(tmp_path: Path) -> None:
+def test_every_entry_point_uses_a_repositorys_own_config(tmp_path: Path) -> None:
     """A tool that ignores the config beside it is a trap.
+
+    Fixed in the CLI first, which was not enough: the MCP server then
+    returned 405 findings where the CLI returned 162 on the same
+    repository, because discovery lived in one caller. It lives in
+    `config` now, and both entry points are asserted here.
 
     This project audited itself for an entire session against built-in
     defaults rather than its own exclusions, and the difference was 422
@@ -226,15 +231,15 @@ def test_a_repositorys_own_config_is_used_without_being_named(tmp_path: Path) ->
     the config had excluded all along. Nothing warned; the run simply
     measured something other than what the repository asked for.
     """
-    from maintainability_audit.cli import CONFIG_FILENAME, _discovered_config
+    from maintainability_audit.config import CONFIG_FILENAME, discovered_config
 
-    assert _discovered_config(tmp_path) is None, "no config means defaults, not an error"
+    assert discovered_config(tmp_path) is None, "no config means defaults, not an error"
 
     (tmp_path / CONFIG_FILENAME).write_text(
         json.dumps({"version": 1, "paths": {"exclude_patterns": ["generated/"]}}),
         encoding="utf-8",
     )
-    discovered = _discovered_config(tmp_path)
+    discovered = discovered_config(tmp_path)
 
     assert discovered is not None
     assert load_config(discovered)["paths"]["exclude_patterns"] == ["generated/"]
@@ -242,7 +247,7 @@ def test_a_repositorys_own_config_is_used_without_being_named(tmp_path: Path) ->
 
 def test_an_explicit_config_still_wins_over_the_discovered_one(tmp_path: Path) -> None:
     """Discovery is a default, not an override."""
-    from maintainability_audit.cli import CONFIG_FILENAME
+    from maintainability_audit.config import CONFIG_FILENAME
 
     (tmp_path / CONFIG_FILENAME).write_text(
         json.dumps({"version": 1, "paths": {"exclude_patterns": ["beside/"]}}), encoding="utf-8",
@@ -253,3 +258,22 @@ def test_an_explicit_config_still_wins_over_the_discovered_one(tmp_path: Path) -
     )
 
     assert load_config(str(explicit))["paths"]["exclude_patterns"] == ["named/"]
+
+
+def test_the_mcp_server_discovers_the_same_config_as_the_cli(tmp_path: Path) -> None:
+    """One fix, every entry point.
+
+    Config discovery lived in `cli` and the MCP server did not get it, so
+    the same repository audited through two doors produced 405 findings
+    and 162. A rule that only one caller obeys is not a rule.
+    """
+    from maintainability_audit.config import CONFIG_FILENAME, discovered_config
+
+    (tmp_path / CONFIG_FILENAME).write_text(
+        json.dumps({"version": 1, "paths": {"exclude_patterns": ["shared/"]}}),
+        encoding="utf-8",
+    )
+    discovered = discovered_config(tmp_path)
+
+    assert discovered is not None
+    assert load_config(discovered)["paths"]["exclude_patterns"] == ["shared/"]

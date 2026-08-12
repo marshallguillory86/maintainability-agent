@@ -164,6 +164,27 @@ def deep_update(base: dict[str, Any], override: dict[str, Any]) -> None:
             base[key] = value
 
 
+CONFIG_FILENAME = "maintainability-agent.json"
+
+
+def discovered_config(root: Path) -> str | None:
+    """The repository's own config, when a caller did not name one.
+
+    A tool that sits next to its configuration and silently ignores it is
+    a trap: this project audited itself for a session against built-in
+    defaults rather than its own exclusions, and the difference was 422
+    findings versus 162 -- most of the excess from a generated data file
+    the config had excluded all along.
+
+    Lives here rather than in `cli` because every entry point needs it.
+    Fixed in the CLI first, and the MCP server then returned 405 findings
+    where the CLI returned 162 on the same repository, which is what a
+    fix living in one caller looks like from the outside.
+    """
+    candidate = root / CONFIG_FILENAME
+    return str(candidate) if candidate.is_file() else None
+
+
 def load_config(path: str | None) -> dict[str, Any]:
     config = json.loads(json.dumps(DEFAULT_CONFIG))
     if not path:

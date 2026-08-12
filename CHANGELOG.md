@@ -6,6 +6,11 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Added
 
+- **The MCP server can run the analyzer pool.** `audit_repository` takes `run_analyzers`
+  and returns the coverage, findings and measurements alongside the report, with
+  `analyzers_run` stated at the top level so a caller cannot mistake a six-detector audit
+  for a ten-tool one.
+
 - **Three new default risk patterns, each earned by a defect this project actually shipped.**
   `absence-as-zero` catches a measurement default that conflates "measured none" with
   "never measured" — the bug behind a one-function repository scoring 5.0/A+, and behind
@@ -23,6 +28,9 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Fixed
 
+- **Every entry point uses the repository's own `maintainability-agent.json`.** Discovery
+  lived in the CLI at first, which was not enough — the MCP server returned 405 findings
+  where the CLI returned 162 on the same repository. It now lives in `config`.
 - **The repository's own `maintainability-agent.json` is used without `--config`.** The CLI
   previously fell back to built-in defaults when no config was named, so a repository with
   a config file beside it was audited against different exclusions than it asked for. On

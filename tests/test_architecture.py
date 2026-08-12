@@ -33,7 +33,11 @@ PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens"}
 # tree, exactly as the built-in detectors do, and like them it may not
 # import scoring. The difference is only that an external process does
 # the looking (ADR 006).
-SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "history", "_adapters"}
+SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "history", "_adapters",
+            # `_generic` is the same layer: it turns tool output into
+            # findings, differing only in that its parsers are shared
+            # across tools rather than written per tool.
+            "_generic"}
 # `_bands` joins the rubric-data leaves: it is the band matrix, a table
 # of judgments like `_formula`, and imports nothing internal.
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive",

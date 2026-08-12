@@ -724,11 +724,15 @@ ADAPTERS: dict[str, Callable[[], BaseAdapter]] = {
 
 
 def adapter_for(slug: str) -> BaseAdapter | None:
-    """The adapter for one catalog slug, or None if nobody wrote it yet.
+    """The hand-written adapter for one slug, or None.
+
+    Only the bespoke ones. Declared tools live in `_generic`, and
+    composing the two is `_analysis`'s job — reaching for `_generic` from
+    here would make this module and that one mutually dependent, which
+    the acyclicity test catches and is right to.
 
     Returning None rather than raising: the catalog lists far more tools
-    than have adapters, and a missing adapter is an ordinary, reportable
-    state rather than an error.
+    than have adapters, and a missing one is an ordinary reportable state.
     """
     factory = ADAPTERS.get(slug)
     return factory() if factory else None

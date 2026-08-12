@@ -27,6 +27,7 @@ from typing import Any
 from ._adapters import Extraction, Finding, Measurement, adapter_for, measurements_only
 from ._catalog import CONCERNS, PolicyError, resolve_pool, settings_from
 from ._corroborate import agreement, combine, single_source_concepts
+from ._generic import declared_adapter
 from ._runner import Outcome, Probe, run
 
 
@@ -121,7 +122,10 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
     excludes = tuple(config.get("paths", {}).get("exclude_patterns", ()))
 
     for tool in pool:
-        adapter = adapter_for(tool["slug"])
+        # A hand-written adapter where the output is genuinely bespoke, a
+        # declared one where the tool emits a standard format. Composing
+        # the two here keeps `_adapters` and `_generic` independent.
+        adapter = adapter_for(tool["slug"]) or declared_adapter(tool["slug"])
         if adapter is None:
             # Selected but unwritten: the catalog and the adapter set are
             # allowed to disagree, and saying so beats pretending.

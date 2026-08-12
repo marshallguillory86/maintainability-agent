@@ -75,9 +75,11 @@ Implements [ADR 008](adr-008-translation-and-decision.md)'s normalization half. 
 | 3.1 | `_concepts` registry: tools, weights, denominators, floors | Data only; imports nothing internal, enforced by the layering test |
 | 3.2 | `_bands`: band matrix with corpus-percentile boundaries | Two measurements in different bands never yield the same pressure |
 | 3.3 | `_corroborate`: weighted mean and spread across tools | lizard 14 + radon 14 + mccabe 8 yields 12.0 with spread 8–14 and three sources |
-| 3.4 | Spread drives `maintainability_range` | The interval narrows when tools agree and widens when they do not |
+| 3.4 | Spread drives `maintainability_range` | The interval narrows when tools agree and widens when they do not. **Depends on 3.5 and 3.6**: until the score consumes analyzer measurements, widening its interval with tool disagreement would claim uncertainty about a number those tools never touched |
 | 3.5 | Measurements, counts and populations all reach the report | Report carries distributions, not only counts |
 | 3.6 | Recalibrate against the 40-repo corpus | Corpus median returns to 4.0 under the new pipeline, or the constant is re-derived and the change is documented |
+
+**Order within this phase is forced.** 3.1–3.3 stand alone and are done. 3.4 cannot precede 3.5/3.6 for the reason in its row. Until then, tool disagreement is reported beside the score and explicitly marked as not affecting it.
 
 **3.6 is the risk item.** Replacing homegrown detectors with external tools will move every corpus score. The calibration constant must be re-derived and [studies.md](studies.md) updated, and the old and new numbers must both be recorded so the shift is visible rather than silent.
 

@@ -356,3 +356,49 @@ def test_xenon_is_deliberately_unadapted() -> None:
     looks like confirmation.
     """
     assert adapter_for("xenon") is None
+
+
+def test_a_tool_emitting_a_standard_format_needs_no_parser() -> None:
+    """Ten adapters against 759 tools implies 749 more to write.
+
+    That is not a plan, and it is not necessary: most analyzers emit one
+    of a few standard formats, and a format needs one parser rather than
+    one per tool. A declared tool is a command line and a format name.
+    """
+    from maintainability_audit._generic import DECLARED, DeclaredAdapter, ToolSpec
+
+    spec = ToolSpec(
+        slug="semgrep-quality", executable="semgrep", output_format="sarif",
+        concerns=("style",), args=("--sarif",),
+    )
+    adapter = DeclaredAdapter(spec)
+    sarif = json.dumps({"runs": [{
+        "tool": {"driver": {"name": "semgrep"}},
+        "results": [{
+            "ruleId": "r1", "message": {"text": "found"},
+            "locations": [{"physicalLocation": {
+                "artifactLocation": {"uri": "a.py"}, "region": {"startLine": 3},
+            }}],
+        }],
+    }]})
+    extraction = adapter.parse(_ran(sarif))
+
+    assert len(extraction.findings) == 1
+    assert (extraction.findings[0].path, extraction.findings[0].line) == ("a.py", 3)
+    assert not extraction.measurements, "a declared tool contributes findings, never a rate"
+    assert DECLARED == {}, (
+        "declared tools are still a promise the tool works; each is verified "
+        "by running it before it is listed"
+    )
+
+
+def test_a_declared_tool_with_an_unknown_format_fails_loudly() -> None:
+    """A typo in a format name must not become a silently empty result."""
+    from maintainability_audit._generic import DeclaredAdapter, ToolSpec
+
+    adapter = DeclaredAdapter(ToolSpec(
+        slug="x", executable="x", output_format="yaml-ish", concerns=("style",),
+    ))
+    extraction = adapter.parse(_ran("{}"))
+
+    assert extraction.parse_error and "unknown output_format" in extraction.parse_error

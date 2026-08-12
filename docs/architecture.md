@@ -24,7 +24,7 @@ Dependencies point downward only. No cycles.
   scanners                   scoring
   metrics, duplication       scoring -> _aspects -> _pressures
   deadcode, idioms           _formula, _calibration, _bands (rubric data)
-  _adapters (external)       _corroborate (several tools -> one reading)
+  _adapters, _generic        _corroborate (several tools -> one reading)
   similarity, history        _verification (evidence sufficiency)
                              _derive (calibration fit), evidence (boundary)
         |                         |
@@ -130,6 +130,7 @@ Stated rather than hidden, because an architecture document that only describes 
 - **Stage 5 is implemented:** `score.evidence_status` and `score.verified_grade` ship alongside the compatibility fields. [ADR 002](adr-002-null-verified-grade-in-ci.md) is rejected because it assumed `--fail-on-gate` consumes the grade; the shipped flag checks hard findings only, so no CI policy changed. The requirement list for the `default-v1` profile is frozen in `_verification.py` rather than derived from the typed model — deriving it let a new field silently change what the name demanded.
 - ~~`docs/standard.md` mixes genres~~ — **resolved.** The empirical studies moved to [studies.md](studies.md); the standard now holds only the rubric, its calibration method, and the reference corpus. Mixing them was the documentation shape that let a Tier 3 claim read as settled.
 - **History window materialization is not separated from analysis.** [ADR 001](adr-001-evidence-and-verification.md) stage 9.
+- **The score does not consume analyzer measurements.** `--analyzers` runs ten tools, reports their coverage, their findings and their measurements with cross-tool disagreement — and the maintainability score still derives entirely from the built-in detectors. The report says so rather than letting a reader assume the number reflects the tools beside it. Closing the gap means re-deriving the calibration constant, which moves every corpus score ([release plan](release-plan.md) 3.5–3.6).
 - **Two live defects in shipped flags**, both reproduced and both blocking later work:
   - `--changed-only` reports a whole-repository grade for a diff. On this repository it returns `maintainability_estimate 4.2`, `evidence_status complete`, over 2 files and **zero declarations**. Any PR-scoped CI run inherits it. [ADR 005](adr-005-insufficient-population.md).
   - `--fail-on-new` false-fires on moved code. Finding identity embeds the start line, so inserting one import above an untouched function makes it read as simultaneously fixed and new. This also makes recurrence tracking impossible. [ADR 009](adr-009-scan-history.md).

@@ -184,6 +184,59 @@ def analyzer_findings_markdown(findings: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
+def analyzer_measurements_markdown(measurements: dict[str, Any] | None) -> list[str]:
+    """Combined readings, their distribution, and how far the tools differ.
+
+    The distribution is the part a reader can reason with. "Seven
+    functions failed" supports a sentence; "worst 45, median 6, and two
+    tools disagree by 37%" supports a plan.
+    """
+    if not measurements:
+        return []
+    lines = [
+        "## Measurements", "",
+        "| Concept | Units | Sources | Tool disagreement | Min | Median | p90 | Max |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for concept, data in sorted(measurements.items()):
+        spread = data.get("tool_disagreement")
+        distribution = data.get("distribution") or {}
+        if spread is not None:
+            comparison = f"{spread:.0%}"
+        elif len(data["tools"]) > 1:
+            # Two tools that never measured the same unit are not a
+            # second opinion. interrogate reports one tree-level number
+            # and multimetric reports per file, so neither confirms the
+            # other, and calling that "single source" beside two tool
+            # names reads as a contradiction.
+            comparison = "no shared units"
+        else:
+            comparison = "single source"
+        lines.append(
+            f"| {concept} | {data['units']} | {', '.join(data['tools'])} | "
+            f"{comparison} | "
+            f"{distribution.get('min', '—')} | {distribution.get('median', '—')} | "
+            f"{distribution.get('p90', '—')} | {distribution.get('max', '—')} |"
+        )
+    corroborated = [c for c, d in measurements.items() if d.get("tool_disagreement") is not None]
+    lines.append("")
+    if corroborated:
+        lines.extend([
+            "Where two tools measured the same thing, their disagreement is shown rather "
+            "than averaged away — it is the uncertainty a single-tool number hides.",
+            "",
+        ])
+    # Stated plainly: these do not move the score yet, and a reader who
+    # assumed otherwise would misread both numbers.
+    lines.extend([
+        "*These measurements are reported, not yet scored. The maintainability score "
+        "still derives from the built-in detectors; wiring the analyzer measurements "
+        "into it requires re-deriving the calibration constant.*",
+        "",
+    ])
+    return lines
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     summary = report["summary"]
     score = report["score"]
@@ -201,6 +254,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
     ]
     lines.extend(analyzer_coverage_markdown(report.get("analyzer_coverage")))
+    lines.extend(analyzer_measurements_markdown(report.get("analyzer_measurements")))
     lines.extend(analyzer_findings_markdown(report.get("analyzer_findings") or []))
     if report["hard_gate_failures"]:
         lines.extend(["## Hard Gate Failures", ""])

@@ -210,8 +210,26 @@ def hotspots(
             "authors": len(measure.authors),
             "score": measure.commits * weight,
         })
-    ranked.sort(key=lambda item: (-item["score"], item["file"]))
+    # Sorted on the values that built the rows rather than on values read
+    # back out of a `dict[str, object]`, where neither a checker nor a
+    # reader can see that `score` is a number. Casting at the sort was the
+    # first attempt and is worse: it silences the question rather than
+    # answering it, and `float(object)` is itself untypeable.
+    ranked.sort(key=lambda item: (-_as_number(item["score"]), str(item["file"])))
     return ranked if limit is None else ranked[:limit]
+
+
+def _as_number(value: object) -> float:
+    """A numeric field read back out of a report row.
+
+    These rows are `dict[str, object]` by the time they are sorted, so the
+    numbers in them are invisible to a type checker and to anyone reading
+    the sort key. One place states the expectation, and a row that ever
+    carried something else fails here loudly rather than ordering wrongly.
+    """
+    if isinstance(value, (int, float)):
+        return float(value)
+    raise TypeError(f"expected a number in a report row, got {type(value).__name__}")
 
 
 def history_section(
@@ -305,5 +323,9 @@ def change_coupling(
             "co_changes": support,
             "confidence": round(confidence, 3),
         })
-    coupled.sort(key=lambda item: (-item["co_changes"], -item["confidence"], item["files"]))
+    coupled.sort(
+        key=lambda item: (-_as_number(item["co_changes"]),
+                          -_as_number(item["confidence"]),
+                          str(item["files"])),
+    )
     return coupled if limit is None else coupled[:limit]

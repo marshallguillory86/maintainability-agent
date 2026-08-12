@@ -293,11 +293,16 @@ def _check_relations(
                 f"{prefix}.{whole_name} ({whole.value}): a subset cannot be larger than its set"
             )
     for part_names, whole_name in sums:
-        parts = [states[name] for name in part_names]
+        # Narrowed by construction rather than by `all(isinstance(...))`,
+        # which tells a reader — and a type checker — nothing about the
+        # list it just tested. A relation is only checkable when every
+        # participant was actually measured.
         whole = states[whole_name]
-        if not isinstance(whole, Measured) or not all(isinstance(part, Measured) for part in parts):
+        parts = [states[name] for name in part_names]
+        measured = [part for part in parts if isinstance(part, Measured)]
+        if not isinstance(whole, Measured) or len(measured) != len(parts):
             continue
-        total = sum(part.value for part in parts)
+        total = sum(part.value for part in measured)
         if total > whole.value:
             raise EvidenceValidationError(
                 f"{prefix}: {' + '.join(part_names)} ({total}) exceeds "

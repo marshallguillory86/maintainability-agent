@@ -164,9 +164,12 @@ This is not complicated, and the rest of this section is detail on top of it. En
 12. separately, detect enforcement evidence    -> MATURITY LEVEL   (1-5)
        -- linter wired to CI? coverage gate? complexity thresholds configured?
 13. rank the weak areas by risk x effort, escalating recurring findings
-14. hand the rubric + scores + ranked areas + real findings to the user's LLM
-       -> improvement prompts aimed at what actually scored badly
+14. emit the REPORT -- scan results, scores, coverage, evidence  (the record)
+15. hand the rubric + scores + ranked areas + real findings to the user's LLM
+       -> improvement prompts aimed at what actually scored badly  (the action)
 ```
+
+Steps 14 and 15 are both first-class. The **report** is the record of what was examined and what was found; the **prompt** is one thing you can do with it. A user who only wants to read the findings never has to invoke a model.
 
 Step 7 is the seam. **Everything above it is tool-shaped; everything below it is rubric-shaped.** No tool's threshold survives it — only its measurements.
 
@@ -205,12 +208,32 @@ A further wrinkle: eslint's JSON carries no metric field. The value 11 exists **
 
 The scorer consumes 28 typed inputs — 23 on `SummaryEvidence`, 5 on `HistoryEvidence` — and every one is read by `_pressures` or `_aspects`. No dead inputs, none undeclared. Each is a count or a population; **none accepts a measurement**, which is precisely why step 7 exists.
 
+### Outputs: the report is the product, the prompt is one use of it
+
+The tool already emits a Markdown report, a JSON report, a PR comment, SARIF and a baseline. Those stay. What changes is what the report has to *say* once analyzers, pillars and population floors exist — a report that shows scores without showing what produced them is the same failure as the A+, one layer out.
+
+Every report gains:
+
+| Section | Answers |
+|---|---|
+| **Analyzer coverage** | Which tools ran, which were unavailable and why, their versions, the depth and license policy in force |
+| **Score with attribution** | Each measurement's contributing tools, their spread, and its evidence strength |
+| **Pillar view** | All five pillars with scope status; practice level and code condition side by side, never averaged |
+| **Withheld measures** | Every aspect suppressed for insufficient population, naming the observed count and the floor |
+| **Findings** | Unchanged — locations, severities, the existing tables |
+| **Recurrence** | Findings that have returned after remediation, escalated as design-review candidates |
+| **Ranked work** | Risk × Effort ordering: Quick Wins first, Fill-Ins never above them |
+
+Two reports with different analyzer coverage are not comparable, so coverage is not an appendix — it belongs beside the score.
+
 ### Entry points
 
 | Entry point | For | Contract |
 |---|---|---|
 | **CLI** | CI runners, Makefiles, merge gates | Exit codes, files on disk, never prompts, deterministic |
 | **MCP server** | Chat, slash commands, agentic loops | `tools` run the audit, `resources` expose rubric and report, `prompts` are the slash command |
+
+**Getting the Markdown out.** From the CLI it is already a file: `--format markdown --output report.md`. From chat the same document is exposed as an MCP resource with a Markdown media type, so the client can display it inline *and* the user can save it — one rendering, two ways to reach it. The chat path must never produce a summary that the downloadable file does not contain; if the two disagree, the file is authoritative and the summary is the bug.
 
 MCP's three primitives cover the chat requirement without inventing anything. CI does not go through MCP — a protocol hop between a runner and an exit code costs determinism and buys nothing. Each agent ships its own server as a subcommand; there is no combined server, because independent releasability is worth more than cross-tool synthesis today.
 

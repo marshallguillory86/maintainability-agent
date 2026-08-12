@@ -86,6 +86,23 @@ The seam is deliberate: **everything above `threshold` is tool-shaped, everythin
 
 Combination happens *before* thresholding, and only among measurements. Averaging a verdict with a number is meaningless and is not attempted.
 
+### The report is a first-class output, not a by-product of the prompt
+
+The tool already emits Markdown, JSON, a PR comment, SARIF and a baseline, and those remain. But a design that describes the pipeline as ending in an improvement prompt gets built as one, and the reader who simply wants to know *what is wrong with this repository* is left invoking a language model to find out.
+
+So the pipeline has two terminal outputs, both first-class: the **report** is the record of what was examined and found; the **prompt** is one action taken from it. Neither depends on the other, and a user who never invokes a model still gets the full record.
+
+What the report must gain, because the new architecture produces information the current report has no place for:
+
+- **Analyzer coverage** — tools attempted, ran, unavailable-and-why, their versions, and the depth and license policy in force. Two reports with different coverage are not comparable, so this sits beside the score, not in an appendix.
+- **Attribution and spread** — per measurement, which tools produced it and how far apart they were.
+- **The pillar view** — five pillars with scope status, practice level and code condition side by side and never averaged.
+- **Withheld measures** — each aspect suppressed for insufficient population, with the observed count and the floor.
+- **Recurrence** — findings that returned after remediation, escalated as design-review candidates.
+- **Ranked work** — Risk × Effort ordering.
+
+**Markdown delivery.** From the CLI this exists: `--format markdown --output report.md`. From chat, the identical document is exposed as an MCP resource with a Markdown media type, so a client can render it inline and the user can save it. One rendering reached two ways — the chat summary may never contain a claim the downloadable file does not, and if they disagree the file is authoritative.
+
 ### The agent never calls an LLM
 
 The audit stays deterministic, offline, and LLM-free — promise **P1** is unchanged. What the agent produces is the *input* to a language model:
@@ -141,3 +158,6 @@ Such findings **escalate** out of the nit class into a design-review candidate, 
 6. The audit performs no network access and invokes no language model.
 7. The CLI path never prompts and never varies its pool between runs given the same configuration.
 8. A finding's identity is stable across runs, so recurrence is a fact rather than a coincidence of formatting.
+9. A full report is produced on every run, whether or not a remediation prompt is generated or a model is ever invoked.
+10. Every report states its analyzer coverage, and no score is presented without it.
+11. The Markdown report is retrievable as a file from every entry point, and any chat-rendered summary is a strict subset of it.

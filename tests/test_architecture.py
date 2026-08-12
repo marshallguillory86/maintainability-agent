@@ -22,7 +22,12 @@ PACKAGE = ROOT / "src" / "maintainability_audit"
 # makes them the only two modules permitted to, so keeping them in one
 # layer is what makes that rule checkable.
 FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "config", "git_tools", "instructions",
-               "_runner"}
+               # `_runner` sits beside `git_tools`: both spawn processes and
+               # import nothing internal, and ADR 006 rule 7 makes them the
+               # only two permitted to, so one layer is what makes that
+               # rule checkable. `_catalog` is analyzer selection data --
+               # a leaf that reads the shipped catalog and nothing else.
+               "_runner", "_catalog"}
 PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens"}
 SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "history"}
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive", "_verification"}

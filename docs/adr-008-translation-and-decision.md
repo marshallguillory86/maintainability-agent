@@ -122,6 +122,18 @@ What the report must gain, because the new architecture produces information the
 
 **Markdown delivery.** From the CLI this exists: `--format markdown --output report.md`. From chat, the identical document is exposed as an MCP resource with a Markdown media type, so a client can render it inline and the user can save it. One rendering reached two ways — the chat summary may never contain a claim the downloadable file does not, and if they disagree the file is authoritative.
 
+### The work order is the actionable artifact
+
+A compiler is useful because of exactly what it emits: `file:line:col`, a specific defect, and a check you can re-run. It never reports "your code is 4.2 out of 5." Fix, recompile, the message is gone or it is not — that loop is the value.
+
+Scores close no loop, and an unranked finding list produces nit loops. So alongside the report the agent emits a **work order**, every entry locatable, measured, targeted and verifiable: location, unit, measurement, band and clearing target, tool attribution, computed score delta, Risk × Effort class, recurrence count, and a verification command.
+
+**The score delta is arithmetic, not prophecy.** The rubric is a deterministic function of counts over populations, so removing a finding and recomputing yields the exact resulting score. "Clearing this function moves modularity 3.1 → 3.4" is computed. That makes prioritization honest — work sorts by measured impact rather than by severity labels or row counts.
+
+It is also what makes the output usable by a language model rather than merely readable. "Reduce complexity" invites slop; *"`history_section` at `history.py:217`, CCN 14 across three tools, target below 10, clears modularity 3.1 → 3.4, verify with `lizard …`"* is a bounded task with a finish line and its own test.
+
+An item with no verification command does not belong in the work order. If the tool cannot say how to check the fix, it has not finished thinking about the finding.
+
 ### The agent never calls an LLM
 
 The audit stays deterministic, offline, and LLM-free — promise **P1** is unchanged. What the agent produces is the *input* to a language model:
@@ -183,3 +195,5 @@ Such findings **escalate** out of the nit class into a design-review candidate, 
 12. Measurements, counts and populations all reach the report; the score consumes counts and populations without the measurements being discarded.
 13. Two measurements in different bands never produce the same pressure.
 14. Every report states its scan scope, and a scope-limited run whose population falls short recommends a whole-repository rescan.
+15. Every work item carries a location, a clearing target and a verification command; an item missing any of the three is not emitted.
+16. A work item's score delta equals the score obtained by recomputing the rubric with that finding removed.

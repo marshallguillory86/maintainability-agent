@@ -253,6 +253,38 @@ A further wrinkle: eslint's JSON carries no metric field. The value 11 exists **
 
 The scorer consumes 28 typed inputs — 23 on `SummaryEvidence`, 5 on `HistoryEvidence` — and every one is read by `_pressures` or `_aspects`. No dead inputs, none undeclared. Each is a count or a population; **none accepts a measurement**, which is precisely why step 7 exists.
 
+### Which tools run: the catalog, depth and license policy
+
+The pool is not hardcoded. [`data/analyzer-catalog.json`](../data/analyzer-catalog.json) holds **759 tools** — 755 from the analysis-tools.dev database pinned at a recorded commit, plus 4 verified locally — each with its license, license class, languages and source. **444 are eligible**: open-source class, current, language-targeting, not security-only.
+
+Two independent selectors narrow it, because *how much work* and *what may we legally run* are different questions:
+
+- **depth** — `baseline`(4) / `moderate`(10) / `heavy`(14) / `all`(444). A tier below `all` is a promise the tool works; nothing enters one until it has been installed, run and parsed.
+- **license policy** — `permissive`(366) / `copyleft-weak`(400) / `copyleft-any`(444) / `commercial-free-tier`(476) / `unverified`. Some organizations forbid copyleft outright, so the policy is enforceable rather than advisory.
+
+Both are set in the `analyzers` block of the config file, or answered interactively on first run at a terminal, and both are **recorded in the report** — a score from four tools and a score from forty are not the same measurement and must not be silently comparable. Individual tools and whole license classes can be denied; **every deny wins, including over an explicit allow**, because an organization's prohibition must not be overridable per repository.
+
+Full inventory and the classification rules: [the analyzer pool](analyzer-pool.md). Config fields: [config schema](config-schema.md#analyzer-policy-analyzers).
+
+### The five pillars, and the two axes that are never averaged
+
+Reporting is organized by the five-pillar framework ([ADR 007](adr-007-pillars-and-practice.md)), with each pillar's scope declared rather than left silent:
+
+| Pillar | Position |
+|---|---|
+| **Readability** | Partial — linter conformance, docstring coverage, declaration size |
+| **Maintainability** | Owned — the existing ISO 25010 decomposition is this pillar's detail view |
+| **Efficiency & Scalability** | Out of scope permanently — needs profiling and runtime telemetry |
+| **Security** | Delegated to `secure-code-agent`, named so silence is not read as safety |
+| **Testability** | Partial — test presence, declaration size, policy gates |
+
+Each pillar reports **two values that are never combined**:
+
+- **Practice level (1–5)** — is the standard *enforced*? Detected from CI configuration, linter configuration, coverage gates and thresholds. `_practice` reads configuration, never source.
+- **Code condition** — what the analyzers found, as rates over populations.
+
+The hello-world that scored 5.0/A+ is *practice level 1, condition unmeasured*. That is the truth, and no single composite number can express it. This is the concept the six original promises lacked, and why [product intent](product-intent.md#what-it-promises) gained **P7** (a score only where enough was examined) and **P8** (every report states what examined it).
+
 ### Outputs: the report is the product, the prompt is one use of it
 
 The tool already emits a Markdown report, a JSON report, a PR comment, SARIF and a baseline. Those stay. What changes is what the report has to *say* once analyzers, pillars and population floors exist — a report that shows scores without showing what produced them is the same failure as the A+, one layer out.
@@ -279,6 +311,61 @@ Two reports with different analyzer coverage are not comparable, so coverage is 
 | **MCP server** | Chat, slash commands, agentic loops | `tools` run the audit, `resources` expose rubric and report, `prompts` are the slash command |
 
 **Getting the Markdown out.** From the CLI it is already a file: `--format markdown --output report.md`. From chat the same document is exposed as an MCP resource with a Markdown media type, so the client can display it inline *and* the user can save it — one rendering, two ways to reach it. The chat path must never produce a summary that the downloadable file does not contain; if the two disagree, the file is authoritative and the summary is the bug.
+
+### What a compiler outputs, and what this must output
+
+A compiler is useful because of what it emits, and it is worth being precise about what that is: **`file:line:col`, a specific defect, and a check you can re-run.** It never says "your code is 4.2 out of 5." It says *this, here, is wrong* — and when you fix it and recompile, the message is gone or it is not. That loop is the entire value.
+
+Scores do not close a loop. "Modularity 3.8" tells nobody what to change, and a bare finding list produces nit loops because nothing says which items matter. So the agent's primary actionable artifact is a **work order**: every entry locatable, measured, targeted and verifiable.
+
+Each work item carries:
+
+| Field | Example | Why it is there |
+|---|---|---|
+| **Location** | `src/maintainability_audit/history.py:217` | A compiler's first token. Without it nothing is actionable |
+| **Unit** | `history_section` | What to open |
+| **Measurement** | cyclomatic complexity 14 | The fact, not a grade |
+| **Band and target** | `elevated`; clears below 10 | **The definition of done** |
+| **Attribution** | lizard 14, radon 14, mccabe 8 | How well supported, and by what |
+| **Score delta** | modularity 3.1 → 3.4 if cleared | Computed, not predicted — see below |
+| **Class** | Quick Win / Major Project / Fill-In | Risk × Effort, so ordering is not by count |
+| **Recurrence** | cleared twice, returned twice | Escalates to design-review candidate |
+| **Verification** | `lizard src/maintainability_audit/history.py` | Re-run this and check. The compiler loop |
+
+**The score delta is arithmetic, not prophecy.** Removing a finding and re-running the rubric gives the exact resulting score, because the rubric is a deterministic function of counts over populations. So "fixing this one function moves modularity from 3.1 to 3.4" is a computed fact, and it is what makes prioritization honest: work sorts by measured impact rather than by severity labels or by whatever produced the most rows.
+
+This is also what makes the output usable by a language model rather than merely readable. "Reduce complexity" invites slop. *"`history_section` at `history.py:217` measures CCN 14 across three tools, target is below 10, clearing it moves modularity 3.1 → 3.4, verify with `lizard …`"* is a bounded task with a stated finish line and its own test — which is precisely the bounded-prompt shape this project already has evidence for.
+
+Two audiences, two artifacts, and they must not be conflated:
+
+- The **score and pillar view** answer *should we invest here?* — for a lead or a stakeholder.
+- The **work order** answers *what exactly do I change, and how will I know it worked?* — for whoever or whatever does the work.
+
+An item with no verification command does not belong in the work order. If the tool cannot state how to check the fix, it has not finished thinking about the finding.
+
+## Decisions embodied in this document
+
+Every design point above traces to a record. Nothing here is a preference someone remembered.
+
+| Design point | Recorded in |
+|---|---|
+| FOSS analyzers produce the evidence; built-ins demoted to a labelled fallback | [ADR 006](adr-006-analyzer-evidence.md) |
+| Several tools per concept, combined with weights; spread becomes the interval | [ADR 006](adr-006-analyzer-evidence.md) |
+| Analyzer coverage always reported; unavailable is never a clean result | [ADR 006](adr-006-analyzer-evidence.md), P8 |
+| Metric emitters vs verdict emitters; only metric emitters supply denominators | [ADR 008](adr-008-translation-and-decision.md) |
+| The rubric sets tool thresholds; project lint config never moves the score | [ADR 008](adr-008-translation-and-decision.md) |
+| Measurements, counts and populations all survive to the report | [ADR 008](adr-008-translation-and-decision.md) |
+| Band matrix instead of binary thresholds; gates stay binary | [ADR 008](adr-008-translation-and-decision.md) |
+| The agent never calls an LLM; it produces that model's input | [ADR 008](adr-008-translation-and-decision.md), P1 |
+| CLI for CI, MCP for chat, one core, no combined server | [ADR 008](adr-008-translation-and-decision.md) |
+| The report is first-class; Markdown retrievable from every entry point | [ADR 008](adr-008-translation-and-decision.md) |
+| Work order with location, target, computed delta and verification | [ADR 008](adr-008-translation-and-decision.md) |
+| No rate without a denominator that supports it, per aspect | [ADR 005](adr-005-insufficient-population.md), P7 |
+| Scan scope is part of the result; scope escalation over silent scoring | [ADR 005](adr-005-insufficient-population.md) |
+| Five pillars with declared scope; practice level never averaged with condition | [ADR 007](adr-007-pillars-and-practice.md) |
+| Risk × Effort ordering; Fill-Ins never above Quick Wins | [ADR 007](adr-007-pillars-and-practice.md) |
+| Recurring findings escalate to design-review candidates | [ADR 008](adr-008-translation-and-decision.md) |
+| Depth and license policy select the pool; every deny wins | [analyzer pool](analyzer-pool.md), [config](config-schema.md#analyzer-policy-analyzers) |
 
 MCP's three primitives cover the chat requirement without inventing anything. CI does not go through MCP — a protocol hop between a runner and an exit code costs determinism and buys nothing. Each agent ships its own server as a subcommand; there is no combined server, because independent releasability is worth more than cross-tool synthesis today.
 
@@ -327,6 +414,8 @@ Two outputs, both 1–5, never averaged together: **a score for the condition of
 | **`_runner`** | Subprocess invocation, timeouts, failure isolation, version capture. **The only module permitted to spawn a process** apart from `git_tools`. | foundations |
 | **`_analyzers/*`** | One adapter per tool: which languages it speaks, which concepts it measures, how to invoke it, how to parse its output into concept measurements. Adapters are leaves and know nothing of scoring. | foundations, `_runner` |
 | **`_concepts`** | The measurement-concept registry — for each concept, its contributing tools, its agreement tolerance, its denominator and that denominator's floor ([ADR 005](adr-005-insufficient-population.md)). Data, like `_formula`. | nothing internal |
+| **`_bands`** | The band matrix: ordered measurement ranges mapping to pressures, boundaries drawn from corpus percentiles. Data, like `_formula`. | nothing internal |
+| **`_catalog`** | Reading `data/analyzer-catalog.json` and resolving the pool from the configured depth and license policy. | foundations |
 | **`_corroborate`** | Combining several tools' measurements of one concept into a single evidence value plus strength (corroborated / contested / single-source / unavailable) and the observed spread. | foundations, `_concepts` |
 | **`_practice`** | Detecting enforcement evidence — CI workflows, linter configuration, coverage thresholds, hook definitions — to score the ADR 007 practice level. **Reads repository configuration, never source.** | foundations |
 | **`_pillars`** | The five-pillar taxonomy and each pillar's declared scope: owned, partial, delegated, out of scope. Data. | nothing internal |

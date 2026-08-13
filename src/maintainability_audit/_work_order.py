@@ -34,6 +34,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
+from ._identity import declaration_fingerprint, file_fingerprint, finding_fingerprints
 from .scoring import score_report
 
 
@@ -207,6 +208,7 @@ def _items_from_hotspots(report: dict[str, Any]) -> list[dict[str, Any]]:
             # — telling a reader to start with whichever file sorted
             # first rather than with the 803-line one.
             "severity": float(hotspot["lines"]) + 4.0 * float(hotspot["complexity"]),
+            "fingerprint": declaration_fingerprint(hotspot["path"], hotspot["name"], 0),
             "weight": weight,
         })
     return items
@@ -222,6 +224,7 @@ def _items_from_files(report: dict[str, Any]) -> list[dict[str, Any]]:
             "line": None,
             "target": "split below the configured file-length limit",
             "severity": float(metric["lines"]),
+            "fingerprint": file_fingerprint(metric["path"]),
             "weight": weight,
         }
         for metric in report.get("largest_files") or []
@@ -364,15 +367,27 @@ def combined_delta(report: dict[str, Any], items: list[dict[str, Any]]) -> float
     return round(max(0.0, (after or before) - before), 3)
 
 
-def prompt_items(items: list[dict[str, Any]], limit: int = 12) -> list[dict[str, Any]]:
+def prompt_items(items: list[dict[str, Any]], limit: int = 12,
+                 escalated: set[str] | None = None) -> list[dict[str, Any]]:
     """The subset safe to hand an agent.
 
     Major Projects are named in the report and withheld here. An agent
     told to deduplicate a pattern across forty files produces exactly the
     sprawling, unreviewable diff the bounded prompt exists to prevent —
     the work is real, and it needs a human to scope it first.
+
+    `escalated` withholds findings that have already been fixed and come
+    back twice. Re-issuing advice the history shows does not hold is the
+    nit-loop: the same patch produces the same return, and the evidence
+    says the finding is a symptom. Naming it in the report while the
+    prompt asks for it a third time would change nothing.
     """
-    return [item for item in items if item["band"] != Band.MAJOR_PROJECT.value][:limit]
+    blocked = escalated or set()
+    return [
+        item for item in items
+        if item["band"] != Band.MAJOR_PROJECT.value
+        and item.get("fingerprint") not in blocked
+    ][:limit]
 
 
 # The axes a reader can narrow by. Every one is a field already on the
@@ -405,3 +420,41 @@ def select(items: list[dict[str, Any]], **criteria: str) -> list[dict[str, Any]]
         )
 
     return [item for item in items if matches(item)]
+
+
+def prompt_targets(report: dict[str, Any]) -> tuple[str, ...]:
+    """The identities a generated prompt actually asked somebody to fix.
+
+    In the same identity space the history stores, so a later run can
+    ask whether *this specific thing* cleared. Derived from the same
+    `prompt_items` the prompt renders, rather than recomputed alongside
+    it — two derivations of "what did we ask for" would drift, and the
+    one that drifts is the one nobody reads.
+
+    This is what makes recurrence a strong signal. "A rule fired again"
+    says only that a file changed twice. "The thing we told you to fix
+    came back" says the advice did not hold, and only something that
+    remembers what it advised can say it.
+    """
+    from ._identity import risk_fingerprint
+
+    builders = {
+        "oversized-file": lambda item: file_fingerprint(item["path"]),
+        "oversized-declaration": lambda item: declaration_fingerprint(
+            item["path"], item["title"].split(" in ", 1)[0], 0),
+        "risk-pattern": lambda item: risk_fingerprint(item["path"], item["title"], 0),
+    }
+    known = set(finding_fingerprints(report))
+    targets = set()
+    for item in prompt_items(report.get("work_order") or []):
+        build = builders.get(item["finding_class"])
+        if build is None:
+            continue
+        fingerprint = build(item)
+        # Only identities this scan actually produced. A target the
+        # report cannot corroborate would record advice about a finding
+        # that does not exist, and a later run would score it as never
+        # cleared forever.
+        if fingerprint in known:
+            targets.add(fingerprint)
+    return tuple(sorted(targets))

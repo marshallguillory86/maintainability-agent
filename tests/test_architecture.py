@@ -50,7 +50,7 @@ SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "id
 # `_bands` joins the rubric-data leaves: it is the band matrix, a table
 # of judgments like `_formula`, and imports nothing internal.
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive",
-           "_pillars", "_trends",
+           "_pillars", "_trends", "_recurrence",
            "_verification", "_bands",
            # `_corroborate` reduces several tools' readings of one concept to
            # a single value plus its spread. That is scoring input

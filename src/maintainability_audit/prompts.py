@@ -48,11 +48,33 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         "",
     ]
     lines.extend(view.remediation_note(score))
+    lines.extend(prompt_escalation_note(report))
     lines.extend(prompt_work_order(report))
     lines.extend(prompt_pressure_section(score))
     lines.extend(prompt_focus_sections(report))
     lines.extend(prompt_deliverable())
     return "\n".join(lines)
+
+
+def prompt_escalation_note(report: dict[str, Any]) -> list[str]:
+    """Tell the agent what is deliberately absent, and why.
+
+    Silence would leave it to re-derive the same finding from the
+    report's own tables and offer the patch anyway. Naming the exclusion
+    is what makes it hold.
+    """
+    escalated = report.get("design_review_candidates") or []
+    if not escalated:
+        return []
+    return [
+        f"**{len(escalated)} finding(s) are deliberately excluded from this "
+        "prompt.** Each was fixed before and came back, so the same advice is "
+        "known not to hold and repeating it would produce the same patch and "
+        "the same return. They are listed in the report as design review "
+        "candidates and need a human decision about the surrounding design, "
+        "not another edit. Do not fix them here, and do not work around them.",
+        "",
+    ]
 
 
 def prompt_work_order(report: dict[str, Any]) -> list[str]:
@@ -67,7 +89,13 @@ def prompt_work_order(report: dict[str, Any]) -> list[str]:
     told to deduplicate a pattern across forty files produces exactly the
     sprawling, unreviewable diff a bounded prompt exists to prevent.
     """
-    items = prompt_items(report.get("work_order") or [])
+    # Withhold anything the history shows was fixed and came back
+    # twice. Naming it as a design candidate while asking an agent to
+    # patch it a third time would change nothing.
+    escalated = {
+        item["fingerprint"] for item in report.get("design_review_candidates") or []
+    }
+    items = prompt_items(report.get("work_order") or [], escalated=escalated)
     if not items:
         return []
     lines = [
@@ -156,18 +184,37 @@ def prompt_pressure_section(score: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _escalated_fingerprints(report: dict[str, Any]) -> set[str]:
+    """Findings the history shows do not stay fixed.
+
+    Read by every section that names work, not only the work order. The
+    first version withheld them from `prompt_work_order` alone and this
+    function went on listing the same finding under "inspect first" —
+    verified end to end on a real fix/return/fix/return history. A rule
+    enforced on one path and not another is not enforced.
+    """
+    return {
+        item["fingerprint"] for item in report.get("design_review_candidates") or []
+    }
+
+
 def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
+    from ._identity import declaration_fingerprint, file_fingerprint
+
+    escalated = _escalated_fingerprints(report)
     lines: list[str] = []
     lines.extend(bulleted_section("Start with these hard gates:", report["hard_gate_failures"]))
     hotspot_lines = [
         f"`{i['path']}:{i['start_line']}` {hotspot_name(i)} ({hotspot_measure(i)})."
         for i in report["function_hotspots"][:10]
+        if declaration_fingerprint(i["path"], i["name"], 0) not in escalated
     ]
     lines.extend(bulleted_section("Function hotspots to inspect first:", hotspot_lines))
     large_files = [
         f"`{i['path']}` has {i['lines']} lines ({i['status']})."
         for i in report["largest_files"][:10]
         if i["status"] in {"warn", "fail"}
+        and file_fingerprint(i["path"]) not in escalated
     ]
     lines.extend(bulleted_section("Large files to inspect for responsibility splits:", large_files))
     risks = [f"`{i['path']}:{i['line']}` {i['name']}: {i['text']}" for i in report["risk_findings"][:20]]

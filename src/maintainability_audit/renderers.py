@@ -8,6 +8,7 @@ from ._scan_view import (
     analyzer_coverage_markdown,
     analyzer_findings_markdown,
     analyzer_measurements_markdown,
+    escalations_markdown,
     pillars_markdown,
     scan_history_markdown,
     unread_source_markdown,
@@ -122,6 +123,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     # Printing all 41 items below a narrowed set of 2 means the filter
     # bought the reader nothing, which is what the first version did.
     # The JSON still carries both, so no consumer loses anything.
+    lines.extend(escalations_markdown(report.get("design_review_candidates")))
     lines.extend(scan_history_markdown(report.get("scan_history")))
     selection = report.get("work_order_selection")
     if selection:

@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from ._calibration import CALIBRATION_C
+from ._recurrence import escalations
 from ._scan_history import (
     DEFAULT_HISTORY_PATH,
     append_scan,
@@ -14,7 +15,7 @@ from ._scan_history import (
     segments,
 )
 from ._trends import trend_report
-from ._work_order import SELECTABLE, combined_delta, select
+from ._work_order import SELECTABLE, combined_delta, prompt_targets, select
 from .baseline import finding_fingerprints, load_baseline, write_baseline
 from .config import DEFAULT_CONFIG, VERSION, discovered_config, load_config
 from .git_tools import changed_paths
@@ -152,15 +153,23 @@ def main(argv: list[str] | None = None) -> int:
     if args.record_history:
         append_scan(history_path, record_of(
             report, config, VERSION, CALIBRATION_C,
-            tuple(sorted(finding_fingerprints(report)))))
+            tuple(sorted(finding_fingerprints(report))),
+            # What the prompt actually asked somebody to fix, when one was
+            # generated. This is what turns recurrence from "a rule fired
+            # again" into "the thing we told you to fix came back" — the
+            # loop nothing else in the design closes, and the one a model
+            # cannot hold across sessions.
+            targeted=prompt_targets(report) if args.prompt_output else ()))
     # Read without being asked. Reading has no side effect, and a trend
-    # nobody is shown is a trend nobody benefits from — but the series is
-    # segmented first, so nothing is ever computed across a change in the
-    # instrument.
-    # One trend report per segment, never one across them. The gate ran
-    # first, so nothing here can be computed over a change in the
-    # instrument.
-    report["scan_history"] = [trend_report(s) for s in segments(read_history(history_path))]
+    # nobody is shown is a trend nobody benefits from. One report per
+    # segment, never one across them: the gate ran first, so nothing here
+    # can be computed over a change in the instrument.
+    series = segments(read_history(history_path))
+    report["scan_history"] = [trend_report(s) for s in series]
+    # Findings the history shows do not stay fixed. Computed over the
+    # most recent comparable series only: an escalation drawn across a
+    # change in the instrument would blame the code for a tooling fix.
+    report["design_review_candidates"] = escalations(series[-1]) if series else []
     rendered = json.dumps(report, indent=2, sort_keys=True) if args.format == "json" else render_markdown(report)
     write_outputs(args, report, rendered)
     return audit_exit_code(args, report)

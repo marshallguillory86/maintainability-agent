@@ -239,7 +239,7 @@ def _tree(root: Path) -> Path:
     _repo(root)
     (root / "README.md").write_text("# r\n", encoding="utf-8")
     for n in range(60):
-        (root / f"pkg").mkdir(exist_ok=True)
+        (root / "pkg").mkdir(exist_ok=True)
         (root / "pkg" / f"mod{n}.py").write_text("def f():\n    return 1\n", encoding="utf-8")
     subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
     subprocess.run(["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t",
@@ -348,3 +348,28 @@ def test_a_record_identifies_the_commit_it_describes(tmp_path: Path) -> None:
 
     assert record.commit == expected
     assert record.branch, "and the branch it was on"
+
+
+def test_every_sequence_field_survives_the_round_trip(tmp_path: Path) -> None:
+    """JSON has one list type, so a missed field returns as a list.
+
+    `targeted` was added and not converted, so a stored record stopped
+    comparing equal to a freshly built one — silently, because a list
+    and a tuple of the same items look identical in most assertions.
+    Swept over the dataclass so the next sequence field cannot be
+    forgotten the same way.
+    """
+    from dataclasses import fields
+
+    history = tmp_path / "roundtrip.jsonl"
+    original = _record(targeted=("t1",))
+    append_scan(history, original)
+
+    restored = read_history(history)[0]
+
+    assert restored == original, "the record did not survive its own storage"
+    for spec in fields(ScanRecord):
+        value = getattr(restored, spec.name)
+        assert not isinstance(value, list), (
+            f"{spec.name} came back as a list; it must be converted in read_history"
+        )

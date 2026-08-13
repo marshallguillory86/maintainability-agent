@@ -92,6 +92,12 @@ class ScanRecord:
     populations: dict[str, int] = field(default_factory=dict)
     # Stable finding identities, for the recurrence work that follows.
     fingerprints: tuple[str, ...] = ()
+    # Which of those a remediation prompt actually asked somebody to fix.
+    # This is what makes recurrence a strong signal rather than a weak
+    # one: "a rule fired again" says only that the file changed twice,
+    # while "the thing we told you to fix came back" says the advice did
+    # not hold. Only something that remembers what it advised can say it.
+    targeted: tuple[str, ...] = ()
 
     def as_line(self) -> str:
         payload: dict[str, Any] = {
@@ -186,6 +192,13 @@ def append_scan(path: Path, record: ScanRecord) -> None:
         handle.write(record.as_line() + "\n")
 
 
+# Fields stored as sequences, derived from the dataclass rather than
+# listed by hand so a new one is handled the day it is added.
+_SEQUENCE_FIELDS: tuple[str, ...] = (
+    "analyzers", "scored_languages", "fingerprints", "targeted",
+)
+
+
 def read_history(path: Path) -> list[ScanRecord]:
     """Every readable record, oldest first.
 
@@ -203,11 +216,15 @@ def read_history(path: Path) -> list[ScanRecord]:
         try:
             payload = json.loads(line)
             payload.pop("history_schema_version", None)
+            # Every sequence field back to a tuple. JSON has one list
+            # type, so a field missed here returns as a list and the
+            # record stops comparing equal to a freshly built one —
+            # `targeted` was missed exactly that way and a test caught
+            # it. Driven off the field list rather than named one by one,
+            # so the next tuple field added cannot be forgotten.
             records.append(ScanRecord(
                 **{**payload,
-                   "analyzers": tuple(payload.get("analyzers", ())),
-                   "scored_languages": tuple(payload.get("scored_languages", ())),
-                   "fingerprints": tuple(payload.get("fingerprints", ()))}))
+                   **{name: tuple(payload.get(name, ())) for name in _SEQUENCE_FIELDS}}))
         except (ValueError, TypeError):
             continue
     return records
@@ -228,7 +245,8 @@ def thresholds_digest(thresholds: dict[str, Any]) -> str:
 
 
 def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
-              calibration: float, fingerprints: tuple[str, ...]) -> ScanRecord:
+              calibration: float, fingerprints: tuple[str, ...],
+              targeted: tuple[str, ...] = ()) -> ScanRecord:
     """Build a record from a finished report.
 
     Every comparability field is taken from what the run actually did,
@@ -268,4 +286,5 @@ def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
             if isinstance(summary.get(key), int)
         },
         fingerprints=fingerprints,
+        targeted=targeted,
     )

@@ -461,3 +461,32 @@ def scan_history_markdown(history: list[dict[str, Any]] | None) -> list[str]:
         "",
     ])
     return lines
+
+
+def escalations_markdown(escalated: list[dict[str, Any]] | None) -> list[str]:
+    """Findings that have earned a design conversation, not another patch.
+
+    Placed above the work order because it changes what the reader
+    should do rather than adding to it: these are the items the prompt
+    now deliberately withholds, and a reader who sees them re-issued
+    would be right to distrust the rest.
+    """
+    if not escalated:
+        return []
+    lines = [
+        "## Design Review Candidates", "",
+        "Each of these was fixed and came back. Re-issuing the same advice "
+        "produces the same patch and the same return, so the remediation "
+        "prompt withholds them — they need a design decision, not another "
+        "edit.",
+        "",
+    ]
+    for item in escalated:
+        commits = ", ".join(f"`{c[:8]}`" for c in item["commits"])
+        lines.extend([
+            f"- **`{item['fingerprint']}`** — returned {item['returns']} times.",
+            f"  - {item['reason']}.",
+            f"  - Returned in: {commits}.",
+        ])
+    lines.append("")
+    return lines

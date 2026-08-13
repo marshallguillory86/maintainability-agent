@@ -1,6 +1,6 @@
 # ADR 007: Adopt the five-pillar framework, and separate practice maturity from code condition
 
-- Status: Accepted
+- Status: Accepted. Implementation progress is tracked in the [decision register](decisions.md), which is the single place it is stated
 - Date: 2026-08-12
 - Scope: Reporting taxonomy, the score's meaning, remediation prioritization, scope boundaries
 - Source: *Code Quality Framework — Readability · Maintainability · Efficiency & Scalability · Security · Testability*, July 2026

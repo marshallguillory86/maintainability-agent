@@ -1,6 +1,6 @@
 # ADR 006: External analyzers produce the evidence; the agent orchestrates and corroborates
 
-- Status: Accepted
+- Status: Accepted. Implementation progress is tracked in the [decision register](decisions.md), which is the single place it is stated
 - Date: 2026-08-12
 - Scope: The whole evidence layer, the score, the report contract, installation, CI
 - Supersedes the "planned adapters" position in [adapters.md](adapters.md)

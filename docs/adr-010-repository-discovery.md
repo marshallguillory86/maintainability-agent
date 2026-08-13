@@ -1,6 +1,6 @@
 # ADR 010: Discovery — what is in this tree, and whose code is it
 
-- Status: Accepted
+- Status: Accepted. Implementation progress is tracked in the [decision register](decisions.md), which is the single place it is stated
 - Date: 2026-08-12
 - Scope: What gets scanned, what gets scored, which analyzers are applicable, what the report states about the tree
 - Related: [ADR 005](adr-005-insufficient-population.md), [ADR 006](adr-006-analyzer-evidence.md), [ADR 007](adr-007-pillars-and-practice.md)

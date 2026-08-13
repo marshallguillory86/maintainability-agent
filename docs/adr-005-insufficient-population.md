@@ -1,6 +1,6 @@
 # ADR 005: Report no score when the population is too small to measure
 
-- Status: Accepted
+- Status: Accepted. Implementation progress is tracked in the [decision register](decisions.md), which is the single place it is stated
 - Date: 2026-08-12
 - Scope: Grade profile, the public score contract, every consumer
 - Depends on: [ADR 001](adr-001-evidence-and-verification.md) — implementation status in the [register](decisions.md)

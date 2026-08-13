@@ -308,3 +308,106 @@ def test_the_readme_table_matches_the_stamped_self_audit() -> None:
         f"README advertises figures the stamped self-audit does not support "
         f"(readme, audit): {mismatched}"
     )
+
+
+# ---------------------------------------------------------------------------
+# The decision register is the single status source
+# ---------------------------------------------------------------------------
+
+# Statuses an ADR may carry on its own Status line. Implementation
+# progress is not among them: it lives in the register, which is the one
+# place it is stated.
+ADR_STATES = ("Accepted", "Proposed", "Rejected", "Superseded")
+
+# Words that turn a pointer into a competing status claim.
+PROGRESS_CLAIMS = ("implemented", "not implemented")
+
+
+def _adr_files() -> list[Path]:
+    return sorted((ROOT / "docs").glob("adr-*.md"))
+
+
+def _status_line(path: Path) -> str:
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("- Status:"):
+            return line
+    return ""
+
+
+def test_every_adr_declares_a_status() -> None:
+    """An ADR with no status is a document nobody can act on."""
+    missing = sorted(p.name for p in _adr_files() if not _status_line(p))
+
+    assert not missing, f"ADRs with no `- Status:` line: {missing}"
+
+
+def test_every_accepted_adr_appears_in_the_register() -> None:
+    """The register answers "what are we still arguing about?" — once.
+
+    ADR 010 was written, accepted and implemented without ever being
+    added, so the register listed nine decisions where ten existed. A
+    renamed ADR or a new `adr-011.md` must fail here the day it lands,
+    not whenever somebody happens to read both files.
+    """
+    register = (ROOT / "docs" / "decisions.md").read_text(encoding="utf-8")
+    missing = []
+    for path in _adr_files():
+        if "Accepted" not in _status_line(path):
+            continue
+        number = re.match(r"adr-(\d+)", path.name)
+        assert number, f"{path.name} does not follow adr-NNN-title.md"
+        if f"({path.name})" not in register:
+            missing.append(path.name)
+
+    assert not missing, (
+        f"Accepted ADRs absent from the register: {missing}. "
+        "Add a row to docs/decisions.md."
+    )
+
+
+def test_no_adr_carries_its_own_implementation_claim() -> None:
+    """One status source, not two that can disagree.
+
+    Before this, five ADRs said "Accepted", one said "Accepted and
+    implemented", the register said "not implemented" for all of them,
+    and docs/README.md said "Implemented" for all of them. Four answers
+    to one question, and three of them wrong.
+
+    An ADR's Status line points at the register or names a bare state.
+    Progress belongs to the register alone.
+    """
+    offenders = {}
+    for path in _adr_files():
+        line = _status_line(path)
+        lowered = line.lower()
+        if any(claim in lowered for claim in PROGRESS_CLAIMS) and "register" not in lowered:
+            offenders[path.name] = line
+        elif not any(state in line for state in ADR_STATES):
+            offenders[path.name] = line
+
+    assert not offenders, (
+        "ADR Status lines carrying their own progress claim, or naming no "
+        f"recognised state: {offenders}"
+    )
+
+
+def test_the_readme_adr_table_points_at_the_register_rather_than_competing() -> None:
+    """A second status table is a second thing to forget to update.
+
+    The README's ADR rows may gloss what a decision is *about*. They may
+    not carry an Implemented / not implemented flag, because that is the
+    register's job and a duplicate drifts from it — which is exactly how
+    ADR 007's refused rename came to be advertised as "outstanding" in
+    one file and "refused" in another.
+    """
+    page = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+    offenders = [
+        line for line in page.splitlines()
+        if line.startswith("| [ADR ")
+        and any(claim in line.lower() for claim in PROGRESS_CLAIMS)
+    ]
+
+    assert not offenders, (
+        "docs/README.md ADR rows state implementation status; that belongs "
+        f"to docs/decisions.md: {offenders}"
+    )

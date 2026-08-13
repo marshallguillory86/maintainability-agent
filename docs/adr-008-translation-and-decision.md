@@ -1,6 +1,6 @@
 # ADR 008: The translation layer, the decision engine, and the two entry points
 
-- Status: Accepted
+- Status: Accepted. Implementation progress is tracked in the [decision register](decisions.md), which is the single place it is stated
 - Date: 2026-08-12
 - Scope: How tool output becomes scoring input, who calls the LLM, and how the agent is invoked
 - Related: [ADR 006](adr-006-analyzer-evidence.md), [ADR 005](adr-005-insufficient-population.md), [ADR 007](adr-007-pillars-and-practice.md)

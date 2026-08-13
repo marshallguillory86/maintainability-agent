@@ -1,6 +1,6 @@
 # ADR 009: Scan history — maintainability is a trend, not a snapshot
 
-- Status: Accepted and implemented
+- Status: Accepted. Implementation progress is tracked in the [decision register](decisions.md), which is the single place it is stated
 - Date: 2026-08-12
 - Scope: Persistence, finding identity, the report, trend analysis, determinism
 - Related: [ADR 005](adr-005-insufficient-population.md), [ADR 006](adr-006-analyzer-evidence.md), [ADR 008](adr-008-translation-and-decision.md)

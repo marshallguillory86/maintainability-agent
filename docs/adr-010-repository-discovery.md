@@ -52,9 +52,23 @@ That bias was tested immediately and in the right direction. The first banner ru
 
 A tool whose catalog languages do not intersect the tree records `not-applicable` with a reason naming both halves — *"reads python; this tree is C, so it had nothing to examine"* — and claims no concern coverage.
 
-Any overlap is enough. lizard reads a dozen languages and must not be excluded from a C repository for the absence of Kotlin. Suppressing a tool removes real evidence, so an inapplicable verdict has to be positively supported by a language list sharing nothing with the tree.
+Any overlap is enough to *run* a tool. lizard reads a dozen languages and must not be excluded from a C repository for the absence of Kotlin. Suppressing a tool removes real evidence, so an inapplicable verdict has to be positively supported by a language list sharing nothing with the tree.
+
+**Running a tool and covering a language are different questions, and treating them as one was wrong.** This section originally stopped here, and the validation sample showed what that costs: `json` holds 6 Python files among 305 C++ ones and `lapack` 1 among 2,884 C files, so a single build script made every Python-only tool applicable and both repositories claimed `types` and `style` for the whole tree. Binary applicability is right at the extremes — curl, with no Python at all, correctly reported 3 of 11 — and wrong everywhere in between. See §3a.
 
 The two vocabularies are mapped explicitly. The inventory says `C++` and `C#`; the catalog says `cpp` and `csharp`. Comparing them directly finds no overlap and marks every C++ tool inapplicable — the same defect as concerns against concepts, and the third instance of it in this codebase. `CATALOG_LANGUAGE` is held complete against `KNOWN_SOURCE_SUFFIXES` by a test.
+
+### 3a. Coverage is claimed per language, without a threshold
+
+Amended 2026-08-13, superseding the repository-wide coverage claim above.
+
+The obvious fix for §3's gap is a share threshold — *a language must be at least N% of the tree for its tools to count* — and it is the wrong fix. It tunes a number until the two repositories in front of you behave, and that number then applies to every repository forever, distorting a genuinely polyglot tree to make a mostly-C++ one read correctly.
+
+**Per-language coverage needs no cutoff.** "mypy covers `types` for Python" is true when Python is 2% of the tree and true when it is 98%, so there is nothing to tune and no way for a rule fitted to one repository to distort another. `test_the_answer_does_not_depend_on_the_language_mix` holds exactly that property.
+
+The repository-wide claim is then **scoped to the languages that were scored**, not composed across every language present. The first attempt intersected across all of them and erased click's coverage entirely — a healthy Python library holding one shell script that no tool reads, where one unscanned file rewrote the answer for six hundred scanned ones. A language the scan never opened is reported by the unread-source rule and must not also rewrite the coverage claim.
+
+Scoping is necessary and not sufficient: `concepts_covered: [types]` still reads as *"this repository is type-checked"* on a tree that is 98% unread C++. So the record carries `scored_languages` beside it and the report renders the full matrix. A claim that cannot be read without its scope is a claim that will be misread.
 
 ### 4. Generated and vendored code leaves the scored population
 
@@ -86,6 +100,7 @@ Recorded because the sequencing is load-bearing. Widening what the tool reads wi
 
 1. Every non-first-party classification carries the evidence that produced it.
 2. A file with no evidence against it is first-party. Doubt leaves code in the audit.
-3. A tool whose languages do not appear in the tree records `not-applicable` and claims no coverage; any overlap makes it applicable.
+3. A tool whose languages do not appear in the tree records `not-applicable`; any overlap makes it applicable *to run*.
+3a. Coverage is claimed per language and never by a share threshold. The repository-wide claim covers only the scored languages, and is published with those languages named.
 4. Generated and vendored files are excluded from the scored population **and counted in the report**.
 5. Classification reads the repository's own declarations. No rule may be a bare list of directory names.

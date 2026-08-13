@@ -96,3 +96,30 @@ def test_the_overall_is_the_weighted_mean_of_the_printed_categories() -> None:
         assert score["maintainability_estimate"] == expected, (
             f"{score['maintainability_estimate']} is not the weighted mean of {categories}"
         )
+
+
+def test_the_ownership_aspect_does_not_claim_to_be_bus_factor() -> None:
+    """ADR 007 §4 asks for the shared term. The shared term would be wrong.
+
+    Bus factor is a count of people: how many would have to leave before
+    the project stalls. `knowledge_concentration` is the share of settled
+    files that exactly one person has touched — related, cheaper, and a
+    different quantity. A repository where one author owns 80% of files
+    can still have a bus factor of four.
+
+    Adopting the name would claim a measurement this tool does not make,
+    which is the defect the whole project exists to prevent. The
+    vocabulary is reconciled in `standard.md` by stating the relationship
+    instead, and ADR 007 §4 records the deviation.
+
+    This test exists so nobody closes that ADR item by renaming the key.
+    """
+    from maintainability_audit._formula import CATEGORY_ASPECTS
+
+    emitted = {name for aspects in CATEGORY_ASPECTS.values() for name in aspects}
+
+    assert "knowledge_concentration" in emitted
+    assert "bus_factor" not in emitted, (
+        "renaming the ownership proxy to `bus_factor` claims a count of "
+        "people the tool never computes; see standard.md for the mapping"
+    )

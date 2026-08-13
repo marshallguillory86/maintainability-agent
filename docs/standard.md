@@ -239,6 +239,20 @@ Grades:
 | D | 2.0 to 2.9 |
 | F | below 2.0 |
 
+## Shared vocabulary, and where this tool's terms differ
+
+**Genre: judgment.** The quality framework this standard aligns with publishes a glossary — cyclomatic complexity, duplication %, code churn, bus factor, coverage %. Where this tool measures the same quantity it uses the same word. Where it measures something *related but different*, it keeps its own name and states the relationship here, because adopting a term for a quantity you do not compute is how a report comes to claim more than it measured.
+
+| Framework term | This tool | Relationship |
+|---|---|---|
+| cyclomatic complexity | `cyclomatic_complexity` | same measurement |
+| duplication % | `duplication` | same measurement, expressed as a rate over files |
+| code churn | `churn` | same measurement, over a stated window |
+| coverage % | — | **not measured.** Supplied by the operator or absent; never inferred |
+| **bus factor** | `knowledge_concentration` | **different quantity.** Bus factor counts the people whose loss would stall the project. This counts the share of settled files (3+ commits) that exactly one person has touched. A repository where one author owns 80% of files can still have a bus factor of four, so the names are not interchangeable |
+
+`test_the_ownership_aspect_does_not_claim_to_be_bus_factor` fails the build if the ownership key is renamed to the framework's term.
+
 ## Risk and effort per finding class
 
 **Genre: judgment.** These weightings are this project's opinion about what

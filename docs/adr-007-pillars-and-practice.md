@@ -86,6 +86,8 @@ This is the structural answer to nit-loops: a prompt that opens with eighty line
 
 The framework's glossary — cyclomatic complexity, duplication %, code churn, bus factor, coverage % — becomes the tool's published vocabulary. The tool already measures churn and a bus-factor proxy under the name `knowledge_concentration`; that aspect is renamed or aliased to the shared term so a report and the framework can be read side by side.
 
+**Amended 2026-08-13: the rename is refused, and the mapping is published instead.** `knowledge_concentration` is the share of settled files (3+ commits) that exactly one person has touched. Bus factor is a *count of people* whose loss would stall the project. A repository where one author owns 80% of files can still have a bus factor of four, so these are different quantities and the shared term would claim a measurement this tool never makes — the defect the rest of this record exists to prevent. The glossary reconciliation lives in [`standard.md`](standard.md#shared-vocabulary-and-where-this-tools-terms-differ), which states the relationship for every term including the two the tool does not measure at all. `test_the_ownership_aspect_does_not_claim_to_be_bus_factor` fails the build if someone closes this item by renaming the key.
+
 The framework's action thresholds (below 2.5 urgent, 2.5–3.5 targeted, above 3.5 maintain) apply to **practice level**, where they were designed to apply. They are not applied to the condition scale, whose bands are separately calibrated.
 
 ## Options considered

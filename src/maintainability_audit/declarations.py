@@ -104,7 +104,14 @@ def _python_function_ranges(source: str) -> list[DeclRange] | None:
 
 
 def _regex_function_ranges(lines: list[str]) -> list[DeclRange]:
-    """Last-resort detector for unparseable Python and unknown extensions.
+    """Last-resort detector for Python that ``ast`` could not parse.
+
+    That is its whole live domain. ``SourceIndex`` and ``collect_metrics``
+    both gate on ``DECLARATION_SUFFIXES``, so no unknown extension reaches
+    here — and none should: ``FUNC_PATTERNS`` matches ``def``, ``function``
+    and arrows, so running it over Java or Go would report zero
+    declarations found rather than no parser available, which is the
+    difference between a wrong answer and an honest withhold.
 
     Each body is bounded by indentation rather than by the *next* pattern
     match. The old "next match minus one" rule silently assumed the

@@ -40,6 +40,7 @@ Markdown and test scripts are simpler than the code they describe.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -386,4 +387,101 @@ def test_the_floor_is_never_blamed_when_a_missing_parser_explains_it(
         "the score was withheld on the declarations floor while the files "
         "were read and unparseable — the floor is the symptom, the missing "
         f"parser is the cause. Reasons: {[r['measurement'] for r in reasons]}"
+    )
+
+
+# Phrases that assert the last-resort pattern scan as a working detector.
+# Only positive claims: "not parsed for declarations" describes the same
+# module truthfully and must stay sayable.
+#
+# Two patterns because the two contexts differ. A table cell is terse,
+# so "Approximate" alone is the whole claim there. Prose is not, and
+# reading the same word as a claim in prose caught a sentence saying the
+# opposite ("does not get an approximate population") along with one
+# about complexity scoring that has no bearing on this at all -- a lint
+# that fails on the correction it was written to require is worse than
+# no lint.
+_SCAN_CLAIM = re.compile(
+    r"(line-pattern|pattern scan|last[- ]resort|bounded by indentation|approximate)",
+    re.I,
+)
+_PROSE_CLAIM = re.compile(r"(line-pattern|pattern scan|last[- ]resort)", re.I)
+# A claim tied to the one case that is real -- Python whose AST parse
+# failed -- is allowed anywhere.
+_REAL_CASE = re.compile(r"(python|syntax error|unparseable|`?ast`?\b)", re.I)
+_SUFFIX = re.compile(r"`(\.[a-z]+)`")
+
+
+def _language_table(text: str) -> list[str]:
+    """The rows of the per-language table, excluding header and rule."""
+    rows = [line for line in text.splitlines() if line.startswith("|")]
+    return [row for row in rows[2:] if row.count("|") >= 3]
+
+
+def _declarations_through_production(root: Path, suffix: str) -> int:
+    """Declarations the real scan path finds, with `suffix` opted in."""
+    from maintainability_audit.metrics import collect_metrics
+
+    config = load_config(None)
+    config["paths"]["include_extensions"] = [*config["paths"]["include_extensions"], suffix]
+    _, _, functions = collect_metrics(root, config, None)
+    return len(functions)
+
+
+def test_the_language_table_does_not_market_a_detector_that_never_runs(
+    tmp_path: Path,
+) -> None:
+    """A row claiming the pattern scan must name a suffix that reaches it.
+
+    The table read "Everything else | line-pattern scan, bounded by
+    indentation | Approximate; used only as a last resort" while the
+    paragraph directly beneath it said only the listed extensions get
+    declaration-level findings. Both could not be true, and the false
+    one was the row a reader consults to decide whether this tool reads
+    their language.
+
+    `_regex_function_ranges` is real code, and its patterns match `def`,
+    `function` and arrows. Reaching it with Java would not approximate
+    anything; it would return zero declarations and let the report call
+    that a measurement. The gate in `SourceIndex` and `collect_metrics`
+    is what keeps that from happening, so the document may not advertise
+    around it.
+
+    Self-lifting by construction: the day `.java` joins
+    `DECLARATION_SUFFIXES` behind a real detector, a row naming `.java`
+    passes. What stays blocked is the claim that the *ungated* languages
+    are scanned.
+    """
+    from maintainability_audit.declarations import DECLARATION_SUFFIXES
+
+    root = _repo(tmp_path / "table", {f"src/Thing{n}.java": JAVA % {"n": n} for n in range(3)})
+    if _declarations_through_production(root, ".java"):
+        return  # a detector shipped; this page is somebody's to rewrite
+
+    text = (Path(__file__).resolve().parents[1] / "docs" / "language-support.md").read_text(
+        encoding="utf-8"
+    )
+
+    offenders = [
+        row for row in _language_table(text)
+        if _SCAN_CLAIM.search(row)
+        and not (set(_SUFFIX.findall(row)) & set(DECLARATION_SUFFIXES))
+    ]
+    assert not offenders, (
+        "docs/language-support.md offers a declaration scan for languages "
+        "production never parses. A row claiming the pattern scan has to "
+        "name a suffix in DECLARATION_SUFFIXES:\n" + "\n".join(offenders)
+    )
+
+    prose = [
+        sentence.strip()
+        for sentence in re.split(r"(?<=[.!?])\s+", text)
+        if not sentence.lstrip().startswith("|")
+        and _PROSE_CLAIM.search(sentence)
+        and not _REAL_CASE.search(sentence)
+    ]
+    assert not prose, (
+        "docs/language-support.md presents the last-resort scan as a "
+        "detector for languages outside DECLARATION_SUFFIXES. It runs for "
+        "Python that `ast` could not parse, and nothing else:\n" + "\n".join(prose)
     )

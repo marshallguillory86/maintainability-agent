@@ -10,11 +10,20 @@ ends, and — deliberately — where it under-reports.
 | Python (`.py`) | `ast` — exact `end_lineno` | Exact. Falls back to the pattern scan only if the file has a syntax error. |
 | JS / TS / JSX / TSX (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`) | brace/paren depth over a comment- and string-masked copy | Bounded by the declaration's own braces. |
 | HTML (`.html`) | same brace scanner, so inline `<script>` bodies are measured | Bounded. |
-| Everything else | line-pattern scan, bounded by indentation | Approximate; used only as a last resort. |
+| Anything else | not parsed for declarations | File length, duplication and risk only. Adding the suffix to `include_extensions` does not produce a declaration population. |
 
 Only these extensions get declaration-level findings. Every other
 extension in `include_extensions` is still measured for file length,
 duplication, and risk patterns.
+
+The pattern scan named in the Python row is the only place it runs.
+`SourceIndex` asks for declaration ranges only when the suffix is one of
+the three rows above, so a `.java` or `.go` file is never handed to it —
+which is deliberate, because its patterns match `def` and `function` and
+would report a Java file as containing no declarations rather than as
+unparsed. A repository whose code is mostly outside those extensions has
+its declaration rates **withheld**, naming the missing parser as the
+reason; it does not get an approximate population.
 
 ## The rule that matters: a range never runs past its own body
 

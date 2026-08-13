@@ -92,6 +92,12 @@ class ScanRecord:
     populations: dict[str, int] = field(default_factory=dict)
     # Stable finding identities, for the recurrence work that follows.
     fingerprints: tuple[str, ...] = ()
+    # Whether this scan was reconstructed rather than observed. A commit
+    # audited today carries today's tooling, config and analyzer
+    # versions, which is not the scan that would have happened then. The
+    # comparability gate already segments on those; this is the reader's
+    # distinction between "we watched this" and "we went back and looked".
+    backfilled: bool = False
     # Which of those a remediation prompt actually asked somebody to fix.
     # This is what makes recurrence a strong signal rather than a weak
     # one: "a rule fired again" says only that the file changed twice,
@@ -246,7 +252,7 @@ def thresholds_digest(thresholds: dict[str, Any]) -> str:
 
 def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
               calibration: float, fingerprints: tuple[str, ...],
-              targeted: tuple[str, ...] = ()) -> ScanRecord:
+              targeted: tuple[str, ...] = (), backfilled: bool = False) -> ScanRecord:
     """Build a record from a finished report.
 
     Every comparability field is taken from what the run actually did,
@@ -287,4 +293,5 @@ def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
         },
         fingerprints=fingerprints,
         targeted=targeted,
+        backfilled=backfilled,
     )

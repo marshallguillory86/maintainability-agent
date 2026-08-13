@@ -356,7 +356,7 @@ def test_the_trend_reaches_the_rendered_report(tmp_path: Path) -> None:
 
 def test_a_break_is_named_in_the_rendered_report() -> None:
     """Two series with the reason, never one line through both."""
-    from maintainability_audit._scan_view import scan_history_markdown
+    from maintainability_audit._history_view import scan_history_markdown
 
     rendered = "\n".join(scan_history_markdown([
         {"scans": 3, "from": "a", "to": "b", "break_reason": "",
@@ -376,3 +376,27 @@ def test_a_break_is_named_in_the_rendered_report() -> None:
     assert "2 separate series" in rendered
     assert "different instrument" in rendered
     assert "Series 1" in rendered and "Series 2" in rendered
+
+
+def test_a_quiet_period_is_not_described_as_getting_worse() -> None:
+    """Nothing introduced and nothing cleared is neither direction.
+
+    The rendered line read "0 introduced, 0 cleared (adding faster than
+    clearing)" — a claim the two numbers printed beside it contradict.
+    `improving` was `net < 0`, so a net of zero fell through to the
+    pessimistic branch. Found by reading the real output of a backfill,
+    not by a unit test.
+    """
+    from maintainability_audit._history_view import scan_history_markdown
+
+    quiet = debt_velocity(_segment(_scan(0, findings=("a",)), _scan(1, findings=("a",))))
+
+    assert quiet.net == 0
+    assert quiet.improving is False
+    assert quiet.worsening is False, "a net of zero is not a decline"
+
+    rendered = "\n".join(scan_history_markdown([trend_report(_segment(
+        _scan(0, findings=("a",)), _scan(1, findings=("a",))))]))
+
+    assert "adding faster than clearing" not in rendered
+    assert "unchanged" in rendered.lower()

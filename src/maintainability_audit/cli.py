@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from ._backfill import backfill
 from ._calibration import CALIBRATION_C
 from ._recurrence import escalations
 from ._scan_history import (
@@ -60,6 +61,20 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
              ".maintainability/history.jsonl). Opt-in, like every other write "
              "this tool performs. Once the file exists, later runs read it "
              "without being asked.",
+    )
+    parser.add_argument(
+        "--backfill", metavar="REVSPEC",
+        help="Scan each commit in a range into the history and exit, for "
+             "example --backfill HEAD~50..HEAD. Each commit is checked out in "
+             "a temporary worktree, so the working tree is never touched. "
+             "Expensive and therefore explicit: it never runs as part of a "
+             "normal scan. Records are marked as reconstructed.",
+    )
+    parser.add_argument(
+        "--backfill-interval", type=int, default=1, metavar="N",
+        help="With --backfill, scan every Nth commit instead of all of them. "
+             "The shape of a series is what a trend reads, and a thousand "
+             "commits is hours of work nobody asked for.",
     )
     parser.add_argument("--fail-on-gate", action="store_true", help="Exit 1 when hard gates fail.")
     parser.add_argument("--init-agent-standards", action="store_true", help="Write model/tool-specific instruction files and exit.")
@@ -129,6 +144,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.init_agent_standards:
         targets = args.target or ["generic", "claude-code", "codex", "cursor", "copilot", "windsurf"]
         write_instruction_pack(targets, Path(args.instructions_output_dir).resolve(), config)
+        return 0
+
+    if args.backfill:
+        history_path = root / (config.get("paths", {}).get("history") or DEFAULT_HISTORY_PATH)
+        try:
+            count = backfill(root, args.backfill, config, VERSION, CALIBRATION_C,
+                             history_path, interval=args.backfill_interval)
+        except ValueError as error:
+            parser.error(str(error))
+        print(f"recorded {count} scan(s) to {history_path}")
         return 0
 
     selection = _selection_from(parser, args.work)

@@ -295,7 +295,7 @@ def test_an_escalation_reaches_the_report_and_stops_the_prompt_repeating_it() ->
     the same nit a third time has changed nothing. The point is that the
     tool stops giving advice it has evidence does not work.
     """
-    from maintainability_audit._scan_view import escalations_markdown
+    from maintainability_audit._history_view import escalations_markdown
 
     rendered = "\n".join(escalations_markdown([{
         "fingerprint": "function:src/a.py:tangled#0",

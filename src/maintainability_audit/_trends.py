@@ -67,6 +67,17 @@ class Velocity:
         """
         return self.net < 0
 
+    @property
+    def worsening(self) -> bool:
+        """Adding more than clearing.
+
+        Deliberately not `not improving`. A net of zero is neither, and
+        collapsing the three states into two produced a rendered line
+        reading "0 introduced, 0 cleared (adding faster than clearing)"
+        — a claim contradicted by the two numbers printed beside it.
+        """
+        return self.net > 0
+
 
 @dataclass(frozen=True)
 class Trajectory:
@@ -238,6 +249,7 @@ def trend_report(segment: Segment) -> dict[str, Any]:
             "cleared": velocity.cleared,
             "net": velocity.net,
             "improving": velocity.improving,
+            "worsening": velocity.worsening,
         },
         "growth": {
             "population_change": growth.population_change,

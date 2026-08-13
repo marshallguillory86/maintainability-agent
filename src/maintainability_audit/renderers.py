@@ -3,14 +3,13 @@ from __future__ import annotations
 from typing import Any
 
 from . import _evidence_view as view
+from ._history_view import escalations_markdown, scan_history_markdown
 from ._hotspots import hotspot_cognitive, hotspot_complexity, hotspot_measure, hotspot_name
 from ._scan_view import (
     analyzer_coverage_markdown,
     analyzer_findings_markdown,
     analyzer_measurements_markdown,
-    escalations_markdown,
     pillars_markdown,
-    scan_history_markdown,
     unread_source_markdown,
     work_order_markdown,
     work_order_selection_markdown,

@@ -16,9 +16,11 @@ Dependencies point downward only. No cycles.
   presentation   renderers, prompts, sarif, baseline,       reads the report dict
                  _evidence_view (shared phrasing)
                  _scan_view (what was examined, what was not)
+                 _history_view (what several scans show)
                      |
   assembly       report, _analysis, _documents,             builds the report, calls the scorer
-                 _built_ins, _work_order
+                 _built_ins, _work_order,
+                 _backfill (scanning the past)
                                                              _analysis runs the analyzer pool
                                                              _built_ins places the fallback tier
                      |

@@ -25,8 +25,10 @@ from pathlib import Path
 from typing import Any
 
 from ._adapters import Extraction, measurements_only
+from ._built_ins import BUILT_IN_SOURCES
 from ._catalog import CONCERNS, PolicyError, concepts_for, resolve_pool, settings_from
 from ._corroborate import agreement, combine, single_source_concepts
+from ._discovery import discover
 from ._generic import declared_adapter
 from ._metrics_types import Finding, Measurement
 from ._runner import Outcome, Probe, run
@@ -45,6 +47,14 @@ class ToolCoverage:
     findings: int = 0
     concepts: tuple[str, ...] = ()
     duration_seconds: float = 0.0
+    # Which tier produced this: "analyzer" for an external tool, "built-in"
+    # for one of this package's own detectors. Built-ins belong in the
+    # record because they reach concepts no adapter emits — per-file line
+    # counts, configured risk patterns, competing libraries, churn and
+    # ownership — and because they are the only source at all when no
+    # analyzer is installed. Omitting them made the coverage section
+    # describe a fraction of what actually examined the code.
+    tier: str = "analyzer"
     parse_error: str | None = None
     raw: str = ""
     truncated: bool = False
@@ -68,16 +78,8 @@ class Analysis:
     # a missing catalog. Distinct from "every tool was unavailable".
     error: str | None = None
 
-    def measured_concepts(self) -> set[str]:
-        """Concerns something actually examined.
-
-        Derived from which tools *ran*, not from what they emitted. A tool
-        that ran and found nothing examined its concern — reporting that
-        as unexamined would be the absence-as-value defect this project
-        exists to remove, arriving one layer out: "vulture found no dead
-        code" is a result, and "nobody looked for dead code" is a gap, and
-        collapsing them is exactly the mistake that produced the A+.
-        """
+    def _concerns_from(self, tier: str) -> set[str]:
+        """Concerns examined by one tier of source."""
         # Adapters declare *concepts* (cyclomatic_complexity) while users
         # select *concerns* (complexity), so the two vocabularies are
         # mapped rather than compared directly. Comparing them made
@@ -87,7 +89,7 @@ class Analysis:
         measured = {
             concept
             for item in self.coverage
-            if item.contributed
+            if item.contributed and item.tier == tier
             for concept in item.concepts
         }
         return {
@@ -95,6 +97,33 @@ class Analysis:
             for concern in CONCERNS
             if measured & set(concepts_for(concern))
         } | (measured & set(CONCERNS))
+
+    def measured_concepts(self) -> set[str]:
+        """Concerns an *external analyzer* examined.
+
+        Derived from which tools *ran*, not from what they emitted. A tool
+        that ran and found nothing examined its concern — reporting that
+        as unexamined would be the absence-as-value defect this project
+        exists to remove, arriving one layer out: "vulture found no dead
+        code" is a result, and "nobody looked for dead code" is a gap, and
+        collapsing them is exactly the mistake that produced the A+.
+
+        Deliberately analyzer-tier only. The built-in detectors always run,
+        so counting them here would make almost nothing a gap and would
+        quietly convert "no independent tool examined this" into "covered"
+        — the same collapse, re-entering through the door marked fallback.
+        `single_source_concerns` carries what the built-ins did reach.
+        """
+        return self._concerns_from("analyzer")
+
+    def single_source_concerns(self) -> list[str]:
+        """Concerns only the built-in detectors reached.
+
+        Not a gap — something did look — but not corroborated either, and
+        a reader weighing a finding is owed that distinction (ADR 006 §3).
+        """
+        wanted = set(CONCERNS) if "all" in self.concerns else set(self.concerns)
+        return sorted((wanted & self._concerns_from("built-in")) - self.measured_concepts())
 
     def gaps(self) -> list[str]:
         """Concerns the operator asked for that nothing spoke to.
@@ -105,7 +134,7 @@ class Analysis:
         a reader needs.
         """
         wanted = set(CONCERNS) if "all" in self.concerns else set(self.concerns)
-        return sorted(wanted - self.measured_concepts())
+        return sorted(wanted - self.measured_concepts() - set(self.single_source_concerns()))
 
 
 def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> Analysis:
@@ -133,8 +162,24 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
     # the user's: vulture returned 517 dead-code findings here, all 517
     # inside .venv.
     excludes = tuple(config.get("paths", {}).get("exclude_patterns", ()))
+    # What languages are actually here. Without this, six Python-only
+    # tools ran over a single C file, produced nothing between them, and
+    # the coverage section reported documentation, style, types and
+    # dead-code as *examined* — a tool with no input examining a concern.
+    inventory = discover(root, config)
 
     for tool in pool:
+        if not inventory.applicable(tool.get("languages")):
+            present = ", ".join(sorted(inventory.languages)) or "no recognised source"
+            analysis.coverage.append(ToolCoverage(
+                slug=tool["slug"], outcome="not-applicable",
+                detail=(
+                    f"reads {', '.join(tool['languages'][:4])}; this tree is "
+                    f"{present}, so it had nothing to examine"
+                ),
+                concepts=tuple(tool["measures"]),
+            ))
+            continue
         # A hand-written adapter where the output is genuinely bespoke, a
         # declared one where the tool emits a standard format. Composing
         # the two here keeps `_adapters` and `_generic` independent.
@@ -150,7 +195,8 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
             continue
         analysis.coverage.append(_run_one(root, adapter, probe, timeout, analysis, excludes))
 
-    analysis.coverage.sort(key=lambda item: item.slug)
+    analysis.coverage.extend(built_in_coverage())
+    analysis.coverage.sort(key=lambda item: (item.tier != "built-in", item.slug))
     return analysis
 
 
@@ -329,6 +375,43 @@ def _distribution(values: list[float]) -> dict[str, float]:
     }
 
 
+def built_in_coverage() -> list[ToolCoverage]:
+    """The built-in detectors, recorded as the source they are.
+
+    They always run and always contribute, so their outcome is fixed.
+    Listing them beside the analyzers is what makes the coverage section
+    a statement about *everything that examined the code* rather than
+    about the external half of it.
+    """
+    return [
+        ToolCoverage(slug=slug, outcome=Outcome.RAN.value, tier="built-in",
+                     concepts=concepts, detail=note)
+        for slug, concepts, note in BUILT_IN_SOURCES
+    ]
+
+
+def _coverage_entry(item: ToolCoverage) -> dict[str, Any]:
+    """One source's row, carrying only the fields it actually has."""
+    entry: dict[str, Any] = {
+        "tool": item.slug, "tier": item.tier, "concepts": list(item.concepts),
+    }
+    if item.version:
+        entry["version"] = item.version
+    if item.contributed:
+        entry["measurements"] = item.measurements
+        entry["findings"] = item.findings
+        entry["seconds"] = item.duration_seconds
+    if item.parse_error:
+        entry["parse_error"] = item.parse_error
+    elif item.detail:
+        # Shipped even when the source contributed. Detail used to mean
+        # "why this failed"; for a built-in it means "where this stands
+        # against the external tools", which a successful run needs to
+        # state more than a failed one does.
+        entry["detail"] = item.detail
+    return entry
+
+
 def coverage_document(analysis: Analysis) -> dict[str, Any]:
     """The coverage section, as it appears in a report.
 
@@ -337,21 +420,18 @@ def coverage_document(analysis: Analysis) -> dict[str, Any]:
     """
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for item in analysis.coverage:
-        entry: dict[str, Any] = {"tool": item.slug, "concepts": list(item.concepts)}
-        if item.version:
-            entry["version"] = item.version
-        if item.contributed:
-            entry["measurements"] = item.measurements
-            entry["findings"] = item.findings
-            entry["seconds"] = item.duration_seconds
-        if item.parse_error:
-            entry["parse_error"] = item.parse_error
-        elif item.detail and not item.contributed:
-            entry["detail"] = item.detail
-        grouped["parse-error" if item.parse_error else item.outcome].append(entry)
+        key = "parse-error" if item.parse_error else item.outcome
+        grouped[key].append(_coverage_entry(item))
 
     ran = [item for item in analysis.coverage if item.contributed]
     return {
+        # Both tiers, because a reader asking what examined this code is
+        # owed the whole answer. Built-ins are single-source by
+        # definition; analyzers may corroborate each other.
+        "sources": {
+            "built_in": sum(1 for i in analysis.coverage if i.tier == "built-in"),
+            "analyzers": sum(1 for i in ran if i.tier == "analyzer"),
+        },
         "selection": {
             "concerns": list(analysis.concerns),
             "depth": analysis.depth,
@@ -359,10 +439,14 @@ def coverage_document(analysis: Analysis) -> dict[str, Any]:
         },
         # Two reports with different coverage are not comparable, so this
         # is stated beside the score rather than filed behind it.
-        "tools_attempted": len(analysis.coverage),
-        "tools_contributed": len(ran),
+        "tools_attempted": sum(1 for i in analysis.coverage if i.tier == "analyzer"),
+        "tools_contributed": sum(1 for i in ran if i.tier == "analyzer"),
         "by_outcome": dict(grouped),
         "concepts_covered": sorted(analysis.measured_concepts()),
+        # Examined, but by one source that cannot corroborate itself.
+        # Between covered and unexamined, and reported as its own thing so
+        # neither number overstates.
+        "concepts_single_source": analysis.single_source_concerns(),
         # A concern nobody examined is Unknown, never clean. Naming it is
         # the difference between a gap and a silence.
         "concepts_unexamined": analysis.gaps(),

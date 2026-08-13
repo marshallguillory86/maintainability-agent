@@ -122,6 +122,11 @@ class SummaryEvidence:
     dead_code_count: EvidenceState
     near_duplicate_count: EvidenceState
     idiom_concern_count: EvidenceState
+    # The share of the repository the score describes. Typed like every
+    # other input so "we do not know what we failed to read" cannot be
+    # silently read as "we read everything".
+    unread_source_files: EvidenceState
+    read_source_files: EvidenceState
     has_readme: EvidenceState
     has_changelog: EvidenceState
     has_docs_dir: EvidenceState

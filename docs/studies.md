@@ -13,6 +13,7 @@ The split exists because mixing the two genres in one document is how this proje
 | [Bounded prompt](#does-the-bounded-prompt-work-controlled-experiment-pre-registered) | Does a findings-bounded prompt beat a generic instruction? | Pre-registered; verdict **INCONCLUSIVE** as registered. Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, closing a median of 7.5 findings against 0 |
 | [AI authorship](#does-this-detect-ai-written-code) | Does any metric distinguish AI-written code? | **Retracted.** Matched control, p = 0.546. This design could not measure a difference |
 | [Fix breadth](#does-this-detect-ai-written-code) | Are AI-assisted fixes broader? | Exploratory only. Three specifications straddle p = 0.05; none survives Holm |
+| [Report validation](#is-the-output-any-use-on-real-code) | Is the output any use on real code? | **Complete, and it failed.** 14 of 14 repositories audited without a crash; the tool was found scoring code it had never read |
 
 ## Approved summaries
 
@@ -26,6 +27,8 @@ Changing a sentence here is changing a public claim. Do it when the evidence cha
 - Re-run against a control matched on age, popularity and language, the near-duplication gap is not significant (p = 0.546), and no other metric earns the claim either.
 - 0.6.0 reported near-duplication at 1.49% for AI-written applications against 0.20% for human-written OSS, comparing six young applications against twelve decade-old libraries.
 - The AI figure barely moved (1.49% to 1.73%); the control moved, from 0.20% to 0.83%, because it stopped being decade-old libraries.
+- On a 14-repository sample chosen for language variety, the tool scored three repositories from a minority of their source and named the wrong cause on three more; both defects are fixed and held by tests written before the fix.
+- curl reported 4.3 computed from 1,041 declarations of Markdown and Python test scripts while 20,547 declarations of its C went unread.
 <!-- approved-summaries:end -->
 
 
@@ -73,3 +76,28 @@ What actually changed from 0.6.0 is instructive: the AI near-duplication figure 
 It was not. A sixth audit found the remaining hole: **the oldest commit a shallow clone holds has no parent**, so git diffs it against the empty tree and its `--numstat` reports the entire tree as added instead of what the commit changed. A synthetic fix commit measured 1 file / 75 lines in a full clone and 2 files / 39 lines at the shallow boundary. This was not hypothetical here — **two AI-cohort repositories had a fix commit sitting on that boundary, and its fabricated whole-tree diff counted as a "broad" fix**, so the bug inflated the AI cohort's broad-fix share in exactly the direction that flattered the hypothesis. Clones now fetch one commit deeper than the window so every commit *in* the window is parented, and grafted boundary commits are excluded outright. Corrected figures: `broad_fix_share` **p = 0.025 → 0.028** unbanded, with two per-repo shares falling (0.114 → 0.102, 0.434 → 0.427). The banded tests and the medians quoted above are unchanged. `tests/test_fix_breadth_window.py` now pins the property across cache depths with synthetic repositories, rather than pinning the one repository whose failure had been demonstrated. A result that crosses the 0.05 line depending on window choice is fragile by demonstration, none of the three specifications survives a Holm correction for the three correlated outcomes (threshold 0.0167), no primary outcome was registered, authorship is classified per *repository* rather than per fix commit, and fix detection trusts subject lines, which agent tooling writes far more consistently than humans (19/20 vs 11/18 repos cleared the labeled-fix filter). The honest status is unchanged by the friendlier third run: **a consistent direction worth a better-designed study — a diff-content fix detector, a registered primary outcome, commit-level authorship — and no claim beyond that.**
 
 **The design has a hole no statistics repair: the control cannot be verified as human.** "No AI trailer on any sampled commit" excludes only tooling that writes trailers — Copilot and pasted LLM output leave none. The control contains zero-star 2024-25 projects whose subject matter (RAG apps, AI platforms) makes LLM assistance likely. If enough of the control is quietly AI-assisted, this study compares AI-with-trailers to AI-without-trailers, and its null is guaranteed and uninformative. That is why the honest conclusion is **"this design could not measure a difference"**, not "there is no difference". Add the usual limits — n = 20 vs 18 misses anything subtler than roughly two-fold, and the trailer-writing cohort self-selects for deliberate workflows — and the study licenses exactly one claim: the 0.6.0 evidence was wrong, and nothing measured so far replaces it. A study that wanted the stronger claim would need a control whose humanity is verifiable, such as code committed before LLM assistants existed, measured at a pinned historical commit.
+
+
+## Is the output any use on real code?
+
+**Genre: empirical, and the only study here whose subject is this tool's own output rather than the code it examines.** Full record, per-repository: [`tools/validation/results.md`](../tools/validation/results.md), from data in [`results.json`](../tools/validation/results.json).
+
+The [frame](../tools/validation/sample-frame.md) was committed before any repository was selected, and the [sample](../tools/validation/sample.json) pinned to exact commits before any repository was cloned — fourteen repositories across Python, TypeScript, JavaScript, Java, Go, Rust, C, C++, C# and Fortran, deliberately including cases expected to be handled badly. Five pass criteria were stated in the frame in advance.
+
+**Deliberately not the calibration corpus.** That set is Python, TypeScript and JavaScript by selection, because its job is to fit the *scale*. A corpus chosen to fit a scale cannot also be the sample that tests whether the output is any good, and this study is the demonstration: the largest defect it found is invisible on every repository the scale was ever fitted against.
+
+**Result: three of five criteria failed.**
+
+| Criterion | Verdict |
+|---|---|
+| Completes on every repository | Pass — 14 of 14, no crash, no hang |
+| Findings are locatable | 37 of 40 sampled findings landed on a real line; the 3 failures shared one cause |
+| Coverage is honest | **Failed.** The score was computed from a different file set than the coverage section described |
+| The floor behaves | **Failed.** It fired for the wrong reason on 5 repositories |
+| Nothing is fabricated | Pass as process — no failure dropped — **failed as substance** |
+
+The finding: `paths.include_extensions` omitted every language outside Python and JS/TS, so the scan that produces the score could not open the source while the analyzer pool read it fine. curl reported **4.3** computed from 1,041 declarations of Markdown and Python test scripts while lizard measured 20,547 declarations of its C. gson withheld its score saying "0 is below the calibration floor of 139" while holding 9,639 unread Java declarations.
+
+Every defect found is fixed, each with a test written before the fix ([`tests/test_unread_code.py`](../tests/test_unread_code.py)), and the four affected repositories are pinned as regressions against the recorded run.
+
+**Limits.** A convenience sample, not a random one: nothing here supports a claim about repositories in general. It cannot say a score is *correct* — no ground truth for maintainability exists to check against. It shows the output is coherent, located and honest about its gaps, and that the largest failure mode found was one the tool had been shipping silently. Tier 3 under [the evidence standard](product-intent.md#the-evidence-standard).

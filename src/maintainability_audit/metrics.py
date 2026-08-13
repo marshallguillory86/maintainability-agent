@@ -11,31 +11,19 @@ from __future__ import annotations
 
 import fnmatch
 import os
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from ._metrics_types import FileMetric, FunctionMetric
+from ._metrics_types import KNOWN_SOURCE_SUFFIXES, FileMetric, FunctionMetric
+
+# Moved down to the foundation layer so `_pressures` can make the same
+# production/test split without a scoring module importing a scanner.
+# Re-exported because `metrics.is_test_path` is the import path a dozen
+# callers already use, and the move is not their business.
+from ._metrics_types import is_test_path as is_test_path
 from .declarations import DECLARATION_SUFFIXES, detect_functions
 from .source import SourceIndex, index_or_new
-
-
-def is_test_path(rel: str) -> bool:
-    """Identify test files by conventional path/name shape.
-
-    Used by ``report.report_summary`` and ``score_report`` so test-code
-    pressure can be reported separately and excluded from ``testability``
-    / ``analyzability`` scoring: growing a test file should not lower the
-    score of how testable the production code is.
-    """
-    normalized = rel.replace("\\", "/").lower()
-    parts = normalized.split("/")
-    if any(segment in {"tests", "test", "__tests__", "spec", "specs"} for segment in parts[:-1]):
-        return True
-    name = parts[-1]
-    if name.startswith(("test_", "test.")):
-        return True
-    stem = name.rsplit(".", 1)[0]
-    return stem.endswith(("_test", ".test", ".spec", "_spec"))
 
 
 def is_excluded(rel: str, patterns: list[str]) -> bool:
@@ -68,6 +56,38 @@ def iter_files(root: Path, config: dict[str, Any], only_paths: set[str] | None =
     return sorted(out)
 
 
+def unread_source(root: Path, config: dict[str, Any]) -> tuple[list[dict[str, Any]], int]:
+    """Source files present in the tree that the scan is not configured to read.
+
+    Returns the per-suffix breakdown and the count of source files that
+    *were* read, which together give the share of the repository the
+    score actually describes.
+
+    Exclusions are honoured, so vendored trees and build output do not
+    count as unread code — the question is what of *this project's*
+    source went unopened, not what was deliberately skipped.
+    """
+    include_ext = set(config["paths"]["include_extensions"])
+    excludes = config["paths"]["exclude_patterns"]
+    unread: Counter[str] = Counter()
+    read = 0
+    for path in root.rglob("*"):
+        if not path.is_file() or path.suffix not in KNOWN_SOURCE_SUFFIXES:
+            continue
+        rel = str(path.relative_to(root)).replace(os.sep, "/")
+        if is_excluded(rel, excludes):
+            continue
+        if path.suffix in include_ext:
+            read += 1
+        else:
+            unread[path.suffix] += 1
+    breakdown = [
+        {"suffix": suffix, "language": KNOWN_SOURCE_SUFFIXES[suffix], "files": count}
+        for suffix, count in sorted(unread.items(), key=lambda item: (-item[1], item[0]))
+    ]
+    return breakdown, read
+
+
 def read_lines(path: Path) -> list[str]:
     """Read one file, tolerating undecodable bytes.
 
@@ -94,10 +114,24 @@ def collect_metrics(
     config: dict[str, Any],
     only_paths: set[str] | None,
     index: SourceIndex | None = None,
+    excluded: set[str] | None = None,
 ) -> tuple[list[Path], list[FileMetric], list[FunctionMetric]]:
+    """Measure every file the audit should score.
+
+    `excluded` carries the relative paths the inventory classified as
+    generated or vendored. They are dropped here rather than filtered
+    later so they never reach a population, a rate or a finding: 10,759
+    generated icon files moved a calibration constant, and code the team
+    did not write must not move their score in either direction.
+    """
     thresholds = config["thresholds"]
     source = index_or_new(index)
     files = iter_files(root, config, only_paths)
+    if excluded:
+        files = [
+            path for path in files
+            if str(path.relative_to(root)).replace(os.sep, "/") not in excluded
+        ]
     file_metrics: list[FileMetric] = []
     function_metrics: list[FunctionMetric] = []
     for path in files:

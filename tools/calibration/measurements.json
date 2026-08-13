@@ -1,22 +1,22 @@
 {
- "measured_on": "2026-08-12",
+ "measured_on": "2026-08-13",
  "corpus_size": 40,
  "measurements": [
   {
    "repo": "Chart.js",
-   "files": 883,
-   "declarations": 1553,
+   "files": 888,
+   "declarations": 1554,
    "dimensions": {
-    "file_size": 0.02842582106455266,
-    "declarations": 0.02994204764971024,
-    "duplication": 5.522083805209513,
-    "risk": 0.0056625141562853904,
+    "file_size": 0.028265765765765765,
+    "declarations": 0.029922779922779925,
+    "duplication": 5.490990990990991,
+    "risk": 0.00563063063063063,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 636,
+    "test_file_count": 638,
     "production_declarations_scanned": 1199,
-    "production_files_scanned": 247,
+    "production_files_scanned": 250,
     "production_file_warnings": 15,
     "production_file_failures": 5,
     "production_function_warnings": 55,
@@ -30,44 +30,59 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.004039408866995074
+    "declarations": 0.029819694868238558
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.02149280575539568
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.038,
+    "declarations": 0.03794829024186823,
+    "gates": 0.0
    }
   },
   {
    "repo": "angular",
-   "files": 8224,
-   "declarations": 42765,
+   "files": 8254,
+   "declarations": 42819,
    "dimensions": {
-    "file_size": 0.046145428015564205,
-    "declarations": 0.03218519817607857,
-    "duplication": 5.174002918287938,
-    "risk": 0.17424610894941633,
+    "file_size": 0.0460140537921008,
+    "declarations": 0.03218197529134263,
+    "duplication": 5.161618609159196,
+    "risk": 0.17397625393748486,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 3307,
-    "production_declarations_scanned": 19985,
-    "production_files_scanned": 4888,
+    "test_file_count": 3311,
+    "production_declarations_scanned": 20003,
+    "production_files_scanned": 4914,
     "production_file_warnings": 209,
     "production_file_failures": 104,
-    "production_function_warnings": 964,
-    "production_function_failures": 1018,
+    "production_function_warnings": 966,
+    "production_function_failures": 1019,
     "production_hard_gate_failures": 0,
     "dead_code_count": 4,
     "near_duplicate_count": 127,
@@ -77,23 +92,38 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.006130178621528102
+    "declarations": 0.05515802307043046
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.04256957579032694
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.03392348392348392,
+    "declarations": 0.06543018547217917,
+    "gates": 0.0
    }
   },
   {
@@ -124,23 +154,38 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.02004126902244003
+    "declarations": 0.049629629629629635
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.046861404599129894
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.03866666666666667,
+    "declarations": 0.1158699808795411,
+    "gates": 0.0
    }
   },
   {
@@ -171,40 +216,57 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.03547417327138563
+    "declarations": 0.053540401322364886
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07340110667867714
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.09057187017001544,
+    "declarations": 0.08136295805007461,
+    "gates": 0.0
    }
   },
   {
    "repo": "ant-design",
-   "files": 4522,
-   "declarations": 6299,
+   "files": 4523,
+   "declarations": 6300,
    "dimensions": {
-    "file_size": 0.011189739053516144,
-    "declarations": 0.06780441339895221,
-    "duplication": 1.796329057938965,
-    "risk": 0.012162759840778416,
+    "file_size": 0.011187265089542339,
+    "declarations": 0.0677936507936508,
+    "duplication": 1.7959319036038028,
+    "risk": 0.014370992703957551,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 670,
-    "production_declarations_scanned": 4442,
-    "production_files_scanned": 3768,
+    "production_declarations_scanned": 4443,
+    "production_files_scanned": 3769,
     "production_file_warnings": 63,
     "production_file_failures": 7,
     "production_function_warnings": 252,
@@ -218,38 +280,53 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.0046723044397463
+    "declarations": 0.09044289044289044
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.08352239953855027
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.006871849296895729,
+    "declarations": 0.0930902543326581,
+    "gates": 0.0
    }
   },
   {
    "repo": "axios",
-   "files": 385,
-   "declarations": 863,
+   "files": 407,
+   "declarations": 908,
    "dimensions": {
-    "file_size": 0.03896103896103896,
-    "declarations": 0.040092699884125144,
-    "duplication": 5.867532467532468,
-    "risk": 0.015584415584415584,
+    "file_size": 0.036855036855036855,
+    "declarations": 0.03909691629955947,
+    "duplication": 7.27027027027027,
+    "risk": 0.014742014742014743,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 125,
+    "test_file_count": 147,
     "production_declarations_scanned": 364,
     "production_files_scanned": 259,
     "production_file_warnings": 14,
@@ -265,40 +342,55 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.004108136761197985
+    "declarations": 0.0755632582322357
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.04938271604938271
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.035521235521235525,
+    "declarations": 0.08653846153846154,
+    "gates": 0.0
    }
   },
   {
    "repo": "code-server",
-   "files": 110,
+   "files": 111,
    "declarations": 310,
    "dimensions": {
-    "file_size": 0.04363636363636363,
+    "file_size": 0.043243243243243246,
     "declarations": 0.02935483870967742,
-    "duplication": 0.6454545454545455,
-    "risk": 0.12727272727272726,
+    "duplication": 0.6396396396396397,
+    "risk": 0.13513513513513514,
     "gates": 0.05
    },
    "evidence": {
     "test_file_count": 50,
     "production_declarations_scanned": 185,
-    "production_files_scanned": 60,
+    "production_files_scanned": 61,
     "production_file_warnings": 4,
     "production_file_failures": 2,
     "production_function_warnings": 6,
@@ -312,23 +404,38 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.0022954091816367265
+    "declarations": 0.05597014925373134
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.02709677419354839
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.05245901639344262,
+    "declarations": 0.03135135135135135,
+    "gates": 0.05
    }
   },
   {
@@ -359,38 +466,55 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.008558558558558558
+    "declarations": 0.019205526770293607
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.036028287461773695
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.05185528756957329,
+    "declarations": 0.03772971969556339,
+    "gates": 0.0
    }
   },
   {
    "repo": "echarts",
-   "files": 1450,
+   "files": 1451,
    "declarations": 6214,
    "dimensions": {
-    "file_size": 0.1,
+    "file_size": 0.09993108201240525,
     "declarations": 0.08793047956227873,
-    "duplication": 13.567586206896552,
-    "risk": 0.33793103448275863,
+    "duplication": 13.558235699517574,
+    "risk": 0.33769813921433495,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 735,
+    "test_file_count": 736,
     "production_declarations_scanned": 4466,
     "production_files_scanned": 710,
     "production_file_warnings": 77,
@@ -406,40 +530,55 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.019699834554478848
+    "declarations": 0.07791217895608947
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07832426127527216
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.07056338028169014,
+    "declarations": 0.09077474249888043,
+    "gates": 0.0
    }
   },
   {
    "repo": "excalidraw",
-   "files": 683,
-   "declarations": 4848,
+   "files": 682,
+   "declarations": 4847,
    "dimensions": {
-    "file_size": 0.11815519765739385,
-    "declarations": 0.07737211221122112,
-    "duplication": 5.267935578330893,
-    "risk": 0.19472913616398244,
+    "file_size": 0.11832844574780059,
+    "declarations": 0.07738807509799876,
+    "duplication": 5.249266862170088,
+    "risk": 0.19501466275659823,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 133,
-    "production_declarations_scanned": 3925,
-    "production_files_scanned": 550,
+    "production_declarations_scanned": 3924,
+    "production_files_scanned": 549,
     "production_file_warnings": 43,
     "production_file_failures": 39,
     "production_function_warnings": 240,
@@ -453,23 +592,38 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.015820029027576198
+    "declarations": 0.09976865240023135
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.09428473648186174
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.09453551912568306,
+    "declarations": 0.09378185524974515,
+    "gates": 0.0
    }
   },
   {
@@ -500,23 +654,38 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.0007712944332662643
+    "declarations": 0.12611111111111112
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.025945945945945945
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.04193548387096774,
+    "declarations": 0.03611111111111111,
+    "gates": 0.05
    }
   },
   {
@@ -547,24 +716,41 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.003999200159968006
+    "declarations": 0.045850314931456096
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.03704164077066501
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "interrogate",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.025749318801089917,
+    "declarations": 0.04870466321243523,
+    "gates": 0.0
    }
   },
   {
@@ -595,41 +781,58 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.003551532033426184
+    "declarations": 0.010380779691749773
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.026825842696629215
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "interrogate",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.07924528301886792,
+    "declarations": 0.045867768595041325,
+    "gates": 0.0
    }
   },
   {
    "repo": "freeCodeCamp",
-   "files": 18007,
-   "declarations": 3475,
+   "files": 18035,
+   "declarations": 3483,
    "dimensions": {
-    "file_size": 0.014938634975287388,
-    "declarations": 0.05959712230215827,
-    "duplication": 3.4108402287999113,
-    "risk": 0.06303104348308991,
+    "file_size": 0.014915442195730523,
+    "declarations": 0.05946023542922768,
+    "duplication": 3.4060992514555033,
+    "risk": 0.06321042417521486,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 335,
-    "production_declarations_scanned": 2209,
-    "production_files_scanned": 17672,
+    "test_file_count": 340,
+    "production_declarations_scanned": 2211,
+    "production_files_scanned": 17695,
     "production_file_warnings": 624,
     "production_file_failures": 71,
     "production_function_warnings": 144,
@@ -643,40 +846,55 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.004107424960505529
+    "declarations": 0.09213303485769107
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07838915470494418
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.01459169256852218,
+    "declarations": 0.09145183175033922,
+    "gates": 0.0
    }
   },
   {
    "repo": "github-readme-stats",
-   "files": 89,
+   "files": 90,
    "declarations": 252,
    "dimensions": {
-    "file_size": 0.06853932584269662,
+    "file_size": 0.06777777777777778,
     "declarations": 0.05833333333333333,
-    "duplication": 5.247191011235955,
-    "risk": 0.0,
+    "duplication": 5.188888888888889,
+    "risk": 0.011111111111111112,
     "gates": 0.05
    },
    "evidence": {
     "test_file_count": 33,
     "production_declarations_scanned": 150,
-    "production_files_scanned": 56,
+    "production_files_scanned": 57,
     "production_file_warnings": 4,
     "production_file_failures": 3,
     "production_function_warnings": 9,
@@ -690,40 +908,57 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.0028957528957528956
+    "declarations": 0.17329842931937173
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.1083916083916084
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.07368421052631578,
+    "declarations": 0.098,
+    "gates": 0.05
    }
   },
   {
    "repo": "hackingtool",
-   "files": 92,
+   "files": 91,
    "declarations": 898,
    "dimensions": {
-    "file_size": 0.02717391304347826,
+    "file_size": 0.027472527472527472,
     "declarations": 0.020489977728285078,
-    "duplication": 0.043478260869565216,
-    "risk": 0.07608695652173914,
+    "duplication": 0.04395604395604396,
+    "risk": 0.07692307692307693,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 18,
     "production_declarations_scanned": 585,
-    "production_files_scanned": 74,
+    "production_files_scanned": 73,
     "production_file_warnings": 4,
     "production_file_failures": 1,
     "production_function_warnings": 18,
@@ -737,88 +972,120 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.023088923556942278
+    "declarations": 0.024462809917355374
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.04736
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "interrogate",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.03013698630136986,
+    "declarations": 0.031452991452991456,
+    "gates": 0.0
    }
   },
   {
    "repo": "hoppscotch",
-   "files": 1118,
-   "declarations": 5857,
+   "files": 1135,
+   "declarations": 5876,
    "dimensions": {
-    "file_size": 0.07075134168157424,
-    "declarations": 0.06697968243127882,
-    "duplication": 6.5,
-    "risk": 0.08228980322003578,
+    "file_size": 0.06969162995594713,
+    "declarations": 0.06676310415248468,
+    "duplication": 6.496035242290749,
+    "risk": 0.08105726872246696,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 198,
-    "production_declarations_scanned": 4528,
-    "production_files_scanned": 920,
+    "production_declarations_scanned": 4547,
+    "production_files_scanned": 937,
     "production_file_warnings": 43,
     "production_file_failures": 27,
     "production_function_warnings": 270,
     "production_function_failures": 308,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
-    "near_duplicate_count": 77,
+    "near_duplicate_count": 79,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.00929424210367236
+    "declarations": 0.07296673716592963
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.0550256937307297
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.04258271077908218,
+    "declarations": 0.0855509126896855,
+    "gates": 0.0
    }
   },
   {
    "repo": "jquery",
-   "files": 274,
-   "declarations": 797,
+   "files": 290,
+   "declarations": 812,
    "dimensions": {
-    "file_size": 0.06605839416058394,
-    "declarations": 0.0806775407779172,
-    "duplication": 15.306569343065693,
-    "risk": 0.05474452554744526,
+    "file_size": 0.06344827586206897,
+    "declarations": 0.0791871921182266,
+    "duplication": 14.472413793103449,
+    "risk": 0.05172413793103448,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 124,
+    "test_file_count": 139,
     "production_declarations_scanned": 145,
-    "production_files_scanned": 148,
+    "production_files_scanned": 149,
     "production_file_warnings": 3,
     "production_file_failures": 3,
     "production_function_warnings": 9,
@@ -832,40 +1099,55 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.01382316313823163
+    "declarations": 0.07097581317764805
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.079957805907173
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.0261744966442953,
+    "declarations": 0.18413793103448275,
+    "gates": 0.0
    }
   },
   {
    "repo": "keras",
-   "files": 991,
+   "files": 858,
    "declarations": 16982,
    "dimensions": {
-    "file_size": 0.1301715438950555,
+    "file_size": 0.15034965034965037,
     "declarations": 0.051807796490401604,
-    "duplication": 10.203834510595359,
-    "risk": 0.13319878910191726,
+    "duplication": 9.994172494172494,
+    "risk": 0.15384615384615385,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 302,
     "production_declarations_scanned": 9386,
-    "production_files_scanned": 689,
+    "production_files_scanned": 556,
     "production_file_warnings": 84,
     "production_file_failures": 59,
     "production_function_warnings": 472,
@@ -879,43 +1161,60 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.016342668863261942
+    "declarations": 0.0448318573109556
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.05684395776300352
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "interrogate",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.15143884892086332,
+    "declarations": 0.06473471127210739,
+    "gates": 0.0
    }
   },
   {
    "repo": "localstack",
-   "files": 1994,
-   "declarations": 34358,
+   "files": 1995,
+   "declarations": 34352,
    "dimensions": {
-    "file_size": 0.08214643931795387,
-    "declarations": 0.03205658070900518,
-    "duplication": 4.233199598796389,
-    "risk": 1.0727181544633901,
+    "file_size": 0.08160401002506265,
+    "declarations": 0.032062179785747554,
+    "duplication": 4.234085213032581,
+    "risk": 1.0721804511278195,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 765,
-    "production_declarations_scanned": 27245,
-    "production_files_scanned": 1224,
+    "test_file_count": 770,
+    "production_declarations_scanned": 27236,
+    "production_files_scanned": 1220,
     "production_file_warnings": 71,
-    "production_file_failures": 77,
+    "production_file_failures": 76,
     "production_function_warnings": 432,
     "production_function_failures": 343,
     "production_hard_gate_failures": 0,
@@ -927,22 +1226,39 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.009407563230761706
+    "declarations": 0.03685288095934484
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.02277663465935071
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.07975409836065574,
+    "declarations": 0.017352034072551037,
+    "gates": 0.0
    }
   },
   {
@@ -973,23 +1289,38 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.006241721854304635
+    "declarations": 0.04395688991531948
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.04598393574297189
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.11379310344827587,
+    "declarations": 0.052181500872600345,
+    "gates": 0.0
    }
   },
   {
@@ -1020,92 +1351,124 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.005436487192890747
+    "declarations": 0.00718232044198895
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.006442080378250591
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "interrogate",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.07870370370370369,
+    "declarations": 0.013262476894639556,
+    "gates": 0.0
    }
   },
   {
    "repo": "material-ui",
-   "files": 17329,
-   "declarations": 10093,
+   "files": 6627,
+   "declarations": 10217,
    "dimensions": {
-    "file_size": 0.0052628541750822325,
-    "declarations": 0.06357871792331318,
-    "duplication": 3.7288360551676383,
-    "risk": 0.01315713543770558,
+    "file_size": 0.013746793420854083,
+    "declarations": 0.0640501125575022,
+    "duplication": 9.316281877169157,
+    "risk": 0.03591368643428399,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 823,
-    "production_declarations_scanned": 6838,
-    "production_files_scanned": 16499,
-    "production_file_warnings": 85,
-    "production_file_failures": 32,
-    "production_function_warnings": 388,
-    "production_function_failures": 507,
+    "test_file_count": 832,
+    "production_declarations_scanned": 6931,
+    "production_files_scanned": 5788,
+    "production_file_warnings": 87,
+    "production_file_failures": 31,
+    "production_function_warnings": 397,
+    "production_function_failures": 517,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
-    "near_duplicate_count": 96,
+    "near_duplicate_count": 97,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.0027382392160511058
+    "declarations": 0.08288930194134655
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07399253250933435
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.00986523842432619,
+    "declarations": 0.09177607848795268,
+    "gates": 0.0
    }
   },
   {
    "repo": "mermaid",
-   "files": 1304,
-   "declarations": 5267,
+   "files": 1309,
+   "declarations": 5273,
    "dimensions": {
-    "file_size": 0.0687883435582822,
-    "declarations": 0.08262768179229163,
-    "duplication": 12.899539877300613,
-    "risk": 0.1357361963190184,
+    "file_size": 0.06852559205500382,
+    "declarations": 0.08291295277830457,
+    "duplication": 12.850267379679144,
+    "risk": 0.13521772345301758,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 304,
-    "production_declarations_scanned": 3306,
-    "production_files_scanned": 1000,
+    "production_declarations_scanned": 3312,
+    "production_files_scanned": 1005,
     "production_file_warnings": 86,
     "production_file_failures": 33,
     "production_function_warnings": 255,
-    "production_function_failures": 349,
+    "production_function_failures": 351,
     "production_hard_gate_failures": 0,
     "dead_code_count": 6,
     "near_duplicate_count": 36,
@@ -1115,40 +1478,55 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.016480472717200628
+    "declarations": 0.12600896860986546
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.0912896691424713
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.05850746268656716,
+    "declarations": 0.12907608695652173,
+    "gates": 0.0
    }
   },
   {
    "repo": "models",
-   "files": 2954,
+   "files": 2952,
    "declarations": 23350,
    "dimensions": {
-    "file_size": 0.06482735274204468,
+    "file_size": 0.06487127371273713,
     "declarations": 0.07651391862955031,
-    "duplication": 7.858158429248476,
-    "risk": 0.14522681110358834,
+    "duplication": 7.85230352303523,
+    "risk": 0.14532520325203252,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 751,
     "production_declarations_scanned": 14901,
-    "production_files_scanned": 2203,
+    "production_files_scanned": 2201,
     "production_file_warnings": 251,
     "production_file_failures": 76,
     "production_function_warnings": 1404,
@@ -1162,87 +1540,121 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.011008637095593618
+    "declarations": 0.06261052430339817
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.08826678904696345
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.06874148114493411,
+    "declarations": 0.10188577947788739,
+    "gates": 0.0
    }
   },
   {
    "repo": "n8n",
-   "files": 19378,
-   "declarations": 67642,
+   "files": 19627,
+   "declarations": 68461,
    "dimensions": {
-    "file_size": 0.059851377851171436,
-    "declarations": 0.0644259483752698,
-    "duplication": 7.70977397048199,
-    "risk": 0.04453503973578285,
+    "file_size": 0.059178682427268564,
+    "declarations": 0.06453309183330655,
+    "duplication": 7.623732613236868,
+    "risk": 0.04468334437254802,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 7968,
-    "production_declarations_scanned": 44136,
-    "production_files_scanned": 11394,
-    "production_file_warnings": 785,
-    "production_file_failures": 277,
-    "production_function_warnings": 2907,
-    "production_function_failures": 3320,
+    "test_file_count": 8002,
+    "production_declarations_scanned": 44857,
+    "production_files_scanned": 11609,
+    "production_file_warnings": 792,
+    "production_file_failures": 276,
+    "production_function_warnings": 2964,
+    "production_function_failures": 3363,
     "production_hard_gate_failures": 0,
     "dead_code_count": 2,
-    "near_duplicate_count": 465,
+    "near_duplicate_count": 466,
     "idiom_concern_count": 2,
     "has_readme": true,
     "has_changelog": true,
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.0056542886759442966
+    "declarations": 0.08623423196703263
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.04877610195778732
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.04424153673873718,
+    "declarations": 0.09479456940945671,
+    "gates": 0.0
    }
   },
   {
    "repo": "nest",
-   "files": 1735,
-   "declarations": 5463,
+   "files": 1774,
+   "declarations": 5449,
    "dimensions": {
-    "file_size": 0.014582132564841498,
-    "declarations": 0.013820245286472636,
-    "duplication": 2.648414985590778,
-    "risk": 0.001729106628242075,
+    "file_size": 0.014261555806087936,
+    "declarations": 0.013855753349238394,
+    "duplication": 2.603720405862458,
+    "risk": 0.0016910935738444193,
     "gates": 0.05
    },
    "evidence": {
     "test_file_count": 415,
-    "production_declarations_scanned": 3866,
-    "production_files_scanned": 1320,
+    "production_declarations_scanned": 3852,
+    "production_files_scanned": 1359,
     "production_file_warnings": 16,
     "production_file_failures": 4,
     "production_function_warnings": 74,
@@ -1256,44 +1668,59 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.0005245545808085375
+    "declarations": 0.05697865353037767
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.010023980815347722
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.006475349521707138,
+    "declarations": 0.019522326064382138,
+    "gates": 0.05
    }
   },
   {
    "repo": "playwright",
-   "files": 2186,
-   "declarations": 15615,
+   "files": 2210,
+   "declarations": 15627,
    "dimensions": {
-    "file_size": 0.0808783165599268,
-    "declarations": 0.08345180915786103,
-    "duplication": 19.45562671546203,
-    "risk": 0.7012808783165599,
+    "file_size": 0.08013574660633484,
+    "declarations": 0.08347091572278749,
+    "duplication": 19.24841628959276,
+    "risk": 0.6941176470588235,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 1003,
-    "production_declarations_scanned": 9264,
-    "production_files_scanned": 1148,
-    "production_file_warnings": 105,
+    "test_file_count": 1010,
+    "production_declarations_scanned": 9275,
+    "production_files_scanned": 1165,
+    "production_file_warnings": 106,
     "production_file_failures": 68,
-    "production_function_warnings": 413,
-    "production_function_failures": 480,
+    "production_function_warnings": 414,
+    "production_function_failures": 481,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 51,
@@ -1303,24 +1730,41 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.01569196932100158
+    "declarations": 0.05155711932924091
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.03709911574501781
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "interrogate",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.08566523605150214,
+    "declarations": 0.06525067385444744,
+    "gates": 0.0
    }
   },
   {
@@ -1351,23 +1795,38 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.02577683615819209
+    "declarations": 0.08888888888888889
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.0867557715674362
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.07549019607843137,
+    "declarations": 0.11932457786116323,
+    "gates": 0.0
    }
   },
   {
@@ -1398,45 +1857,62 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.0016007194244604317
+    "declarations": 0.004243683692442306
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.00679611650485437
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "interrogate",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.032989690721649485,
+    "declarations": 0.015744274809160304,
+    "gates": 0.0
    }
   },
   {
    "repo": "strapi",
-   "files": 5006,
-   "declarations": 13995,
+   "files": 5159,
+   "declarations": 14010,
    "dimensions": {
-    "file_size": 0.03044346783859369,
-    "declarations": 0.0680886030725259,
-    "duplication": 4.095685177786656,
-    "risk": 0.15221733919296843,
+    "file_size": 0.029734444659817796,
+    "declarations": 0.06810849393290506,
+    "duplication": 3.991277379337081,
+    "risk": 0.1477030432254313,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 1535,
-    "production_declarations_scanned": 9389,
-    "production_files_scanned": 3461,
+    "test_file_count": 1536,
+    "production_declarations_scanned": 9404,
+    "production_files_scanned": 3613,
     "production_file_warnings": 130,
-    "production_file_failures": 24,
-    "production_function_warnings": 581,
-    "production_function_failures": 735,
+    "production_file_failures": 25,
+    "production_function_warnings": 582,
+    "production_function_failures": 736,
     "production_hard_gate_failures": 0,
     "dead_code_count": 14,
     "near_duplicate_count": 72,
@@ -1446,44 +1922,59 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.005693139037570108
+    "declarations": 0.10454246214614878
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07423288355822089
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.017713811237199003,
+    "declarations": 0.09683113568694172,
+    "gates": 0.0
    }
   },
   {
    "repo": "svelte",
-   "files": 4034,
-   "declarations": 5563,
+   "files": 4035,
+   "declarations": 5565,
    "dimensions": {
-    "file_size": 0.008924144769459593,
-    "declarations": 0.060219306129786085,
-    "duplication": 1.3200297471492315,
-    "risk": 0.05676747645017353,
+    "file_size": 0.008921933085501859,
+    "declarations": 0.06037735849056604,
+    "duplication": 1.3197026022304832,
+    "risk": 0.05675340768277571,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 3264,
-    "production_declarations_scanned": 2548,
-    "production_files_scanned": 584,
+    "production_declarations_scanned": 2550,
+    "production_files_scanned": 585,
     "production_file_warnings": 36,
     "production_file_failures": 23,
     "production_function_warnings": 158,
-    "production_function_failures": 209,
+    "production_function_failures": 210,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 5,
@@ -1493,40 +1984,55 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.013655120670251344
+    "declarations": 0.03774545454545454
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.06341005166744951
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.057777777777777775,
+    "declarations": 0.10094117647058823,
+    "gates": 0.0
    }
   },
   {
    "repo": "tabby",
-   "files": 309,
+   "files": 343,
    "declarations": 1956,
    "dimensions": {
-    "file_size": 0.020711974110032363,
+    "file_size": 0.018658892128279883,
     "declarations": 0.049437627811860944,
-    "duplication": 0.9546925566343042,
-    "risk": 0.03559870550161812,
+    "duplication": 0.9504373177842566,
+    "risk": 0.03206997084548105,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 0,
     "production_declarations_scanned": 1956,
-    "production_files_scanned": 309,
+    "production_files_scanned": 343,
     "production_file_warnings": 8,
     "production_file_failures": 4,
     "production_function_warnings": 69,
@@ -1540,40 +2046,55 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.01322857142857143
+    "declarations": 0.027217835578262888
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.027217835578262888
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.018658892128279883,
+    "declarations": 0.049437627811860944,
+    "gates": 0.0
    }
   },
   {
    "repo": "tailwindcss",
-   "files": 363,
-   "declarations": 2815,
+   "files": 372,
+   "declarations": 2820,
    "dimensions": {
-    "file_size": 0.10082644628099174,
-    "declarations": 0.07062166962699823,
-    "duplication": 15.59228650137741,
-    "risk": 0.046831955922865015,
+    "file_size": 0.09838709677419355,
+    "declarations": 0.07049645390070922,
+    "duplication": 15.233870967741936,
+    "risk": 0.0456989247311828,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 123,
-    "production_declarations_scanned": 1013,
-    "production_files_scanned": 239,
+    "production_declarations_scanned": 1018,
+    "production_files_scanned": 248,
     "production_file_warnings": 12,
     "production_file_failures": 9,
     "production_function_warnings": 92,
@@ -1587,92 +2108,124 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.017583497053045186
+    "declarations": 0.10249687890137328
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.10178432893716059
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.05080645161290323,
+    "declarations": 0.1931237721021611,
+    "gates": 0.0
    }
   },
   {
    "repo": "transformers",
-   "files": 6103,
-   "declarations": 76578,
+   "files": 5525,
+   "declarations": 60641,
    "dimensions": {
-    "file_size": 0.13714566606586925,
-    "declarations": 0.058670897646843745,
-    "duplication": 25.567262002293955,
-    "risk": 0.2074389644437162,
+    "file_size": 0.11770135746606336,
+    "declarations": 0.061723916162332415,
+    "duplication": 13.689592760180995,
+    "risk": 0.20705882352941177,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 1593,
-    "production_declarations_scanned": 51019,
-    "production_files_scanned": 4507,
-    "production_file_warnings": 583,
-    "production_file_failures": 463,
-    "production_function_warnings": 3414,
-    "production_function_failures": 2445,
+    "production_declarations_scanned": 35082,
+    "production_files_scanned": 3929,
+    "production_file_warnings": 434,
+    "production_file_failures": 321,
+    "production_function_warnings": 2391,
+    "production_function_failures": 2002,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 39,
-    "near_duplicate_count": 4393,
+    "dead_code_count": 41,
+    "near_duplicate_count": 1331,
     "idiom_concern_count": 1,
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.02425643968805915
+    "declarations": 0.06386748673313053
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.08931291589834042
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "interrogate",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.1148383812674981,
+    "declarations": 0.07751268456758452,
+    "gates": 0.0
    }
   },
   {
    "repo": "uBlock",
-   "files": 398,
-   "declarations": 4492,
+   "files": 400,
+   "declarations": 4494,
    "dimensions": {
-    "file_size": 0.11231155778894472,
-    "declarations": 0.11293410507569011,
-    "duplication": 3.741206030150754,
-    "risk": 0.15577889447236182,
+    "file_size": 0.11175,
+    "declarations": 0.11310636404094349,
+    "duplication": 3.7375,
+    "risk": 0.155,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 15,
-    "production_declarations_scanned": 4430,
-    "production_files_scanned": 383,
+    "production_declarations_scanned": 4432,
+    "production_files_scanned": 385,
     "production_file_warnings": 38,
     "production_file_failures": 32,
     "production_function_warnings": 310,
-    "production_function_failures": 411,
+    "production_function_failures": 412,
     "production_hard_gate_failures": 0,
     "dead_code_count": 1,
     "near_duplicate_count": 35,
@@ -1682,41 +2235,58 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.03787067545304777
+    "declarations": 0.08033838973162194
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.08014619883040935
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "interrogate",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.11272727272727273,
+    "declarations": 0.11394404332129963,
+    "gates": 0.0
    }
   },
   {
    "repo": "vite",
-   "files": 1954,
-   "declarations": 3393,
+   "files": 1989,
+   "declarations": 3400,
    "dimensions": {
-    "file_size": 0.022364380757420674,
-    "declarations": 0.08591217211906867,
-    "duplication": 1.3060388945752304,
-    "risk": 0.028147389969293755,
+    "file_size": 0.02197083961789844,
+    "declarations": 0.08573529411764706,
+    "duplication": 1.2840623428858724,
+    "risk": 0.027652086475615886,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 392,
-    "production_declarations_scanned": 2607,
-    "production_files_scanned": 1546,
+    "test_file_count": 405,
+    "production_declarations_scanned": 2608,
+    "production_files_scanned": 1568,
     "production_file_warnings": 36,
     "production_file_failures": 21,
     "production_function_warnings": 155,
@@ -1730,44 +2300,59 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.011148391032484368
+    "declarations": 0.07363281249999999
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07381069151544875
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.02028061224489796,
+    "declarations": 0.10755368098159508,
+    "gates": 0.0
    }
   },
   {
    "repo": "webpack",
-   "files": 12731,
-   "declarations": 13113,
+   "files": 12815,
+   "declarations": 12777,
    "dimensions": {
-    "file_size": 0.00945723038253083,
-    "declarations": 0.076725387020514,
-    "duplication": 1.0205796873772681,
-    "risk": 0.015159846045086797,
+    "file_size": 0.009340616465079984,
+    "declarations": 0.07868826798152932,
+    "duplication": 0.9731564572766289,
+    "risk": 0.015294576667967226,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 10419,
-    "production_declarations_scanned": 8071,
-    "production_files_scanned": 1509,
+    "test_file_count": 10604,
+    "production_declarations_scanned": 7526,
+    "production_files_scanned": 1408,
     "production_file_warnings": 97,
-    "production_file_failures": 62,
-    "production_function_warnings": 434,
-    "production_function_failures": 800,
+    "production_file_failures": 60,
+    "production_function_warnings": 432,
+    "production_function_failures": 791,
     "production_hard_gate_failures": 0,
     "dead_code_count": 5,
     "near_duplicate_count": 22,
@@ -1777,23 +2362,38 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.01460573476702509
+    "declarations": 0.05527734018738081
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.09286851884622191
    },
    "analyzer_coverage": {
     "tools": [
-     "complexipy",
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "jscpd",
      "lizard",
      "multimetric",
-     "mypy",
-     "pydocstyle",
-     "radon",
-     "ruff",
-     "vulture"
+     "near-duplicates",
+     "risk-patterns"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
     ]
+   },
+   "production_dimensions": {
+    "file_size": 0.06328125,
+    "declarations": 0.12232261493489237,
+    "gates": 0.0
    }
   },
   {
@@ -1824,41 +2424,58 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.0565100997809686
+    "declarations": 0.0723391812865497
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.08354823304680038
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "interrogate",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.03717514124293785,
+    "declarations": 0.09174541947926712,
+    "gates": 0.0
    }
   },
   {
    "repo": "yt-dlp",
-   "files": 1136,
+   "files": 1135,
    "declarations": 9440,
    "dimensions": {
-    "file_size": 0.06390845070422535,
+    "file_size": 0.0639647577092511,
     "declarations": 0.06533898305084745,
-    "duplication": 0.4357394366197183,
-    "risk": 0.1875,
+    "duplication": 0.43612334801762115,
+    "risk": 0.18766519823788547,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 56,
     "production_declarations_scanned": 8006,
-    "production_files_scanned": 1079,
+    "production_files_scanned": 1078,
     "production_file_warnings": 85,
     "production_file_failures": 40,
     "production_function_warnings": 475,
@@ -1872,24 +2489,41 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.046082143897465774
+    "declarations": 0.051586919932676126
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.06450209474701901
    },
    "analyzer_coverage": {
     "tools": [
+     "competing-libraries",
      "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
      "interrogate",
      "jscpd",
      "lizard",
      "multimetric",
      "mypy",
+     "near-duplicates",
      "pydocstyle",
      "radon",
+     "risk-patterns",
      "ruff",
      "vulture"
     ],
     "unexamined": [
      "testing"
-    ]
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.06076066790352505,
+    "declarations": 0.07200849362977767,
+    "gates": 0.0
    }
   }
  ]

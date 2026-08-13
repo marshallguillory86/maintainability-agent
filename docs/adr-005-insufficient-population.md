@@ -62,6 +62,25 @@ Each aspect declares the population its rate divides by, in the same rubric tabl
 
 Findings are never suppressed. A two-file repository with a 300-line function still reports it, because that is an observation about a specific line of code and needs no population to be true. What is withheld is every *rate* — the aspect scores and the rollup — because a rate over a denominator of one is arithmetic, not evidence.
 
+## A fourth cause, found in the field: the population was never read
+
+Amended 2026-08-12, after the [report-validation sample](../tools/validation/results.md) ran against fourteen repositories chosen for language variety.
+
+The floor answers *is this population large enough to draw a rate from*. It does not answer *is this population the repository*. On six of fourteen repositories it was not, because `paths.include_extensions` did not list the language they are written in:
+
+- **curl** reported **4.3**, computed from 1,041 declarations of Markdown and Python test scripts, while lizard measured 20,547 declarations of the C nobody read. **whisper.cpp** reported 3.5 from `.js`, `.md`, `.html` and `.py`. **machinelearning-samples** reported 3.1 from 162 files of a C# tree.
+- **gson**, **ripgrep**, **cobra** and **lapack** withheld correctly but said *"0 is below the calibration floor of 139"*. gson has 9,639 declarations. That sentence sends a reader to look for more code when the code is already there.
+
+Both halves are failures of the same kind, and the first is the worse one: a score describing a minority of a repository, presented as a score describing the repository, biased upward because documentation and scripts are simpler than the code they document.
+
+So a fourth path joins the three below, and it is checked **before** the floors, because it explains them:
+
+**0. Read the source.** The population exists, is the right population, and the scan never opened it. `summary.unread_source` names every extension present in the tree that `include_extensions` omits, with its language and file count; `unread_source_files` and `read_source_files` are required typed evidence, so a report that cannot say what it failed to read cannot carry a verified grade. Above **20% unread**, the score is withheld and the remedy points at the configuration rather than at the repository.
+
+The threshold is a judgment and the sample shows it is not a close call: everything scored was 0–8.5% unread, everything withheld was 95.6–100%. It is stated in `_verification.MAX_UNREAD_SHARE` with that evidence beside it.
+
+**Why six audit rounds missed this.** The calibration corpus is Python, TypeScript and JavaScript by selection, so the defect is invisible on every repository the tool had ever been measured against. That is an argument about method, not about this bug: a corpus chosen to fit a scale cannot also serve as the sample that tests whether the output is any good, and the two need different frames.
+
 ## Three legitimate paths below the floor
 
 Withholding a score is not the end of the conversation, and a reader who lands there needs to know which of these applies to them. They serve different situations and none is a workaround for the others.
@@ -98,6 +117,8 @@ Two constraints on doing it, recorded now because both are easy to discover too 
 3. An aspect at or above its floor is unaffected — same value as before this decision.
 4. Findings are never suppressed by insufficiency, only rates.
 5. No consumer renders a suppressed score as a number, a dash, or a zero.
+6. **A report may not carry a score for code it did not read.** Every report states which source extensions went unopened; above `MAX_UNREAD_SHARE` of the source files, the estimate, range and grade are all null and the reason names the configuration rather than the repository's size.
+7. Unread source is checked before the population floors, so a repository whose language the scan cannot read is never told it is too small.
 6. `--fail-on-gate` exit codes are unchanged by insufficiency.
 7. Every insufficiency reason names both the observed population and the floor, and is distinguishable from an analyzer-unavailability reason.
 8. Every report states its scan scope, and a scope-limited run whose population falls short recommends a whole-repository rescan rather than only withholding.

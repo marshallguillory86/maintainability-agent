@@ -4,6 +4,13 @@ from typing import Any
 
 from . import _evidence_view as view
 from ._hotspots import hotspot_cognitive, hotspot_complexity, hotspot_measure, hotspot_name
+from ._scan_view import (
+    analyzer_coverage_markdown,
+    analyzer_findings_markdown,
+    analyzer_measurements_markdown,
+    pillars_markdown,
+    unread_source_markdown,
+)
 
 
 def summary_table(summary: dict[str, int], score: dict[str, Any]) -> list[str]:
@@ -92,151 +99,6 @@ def markdown_table(title: str, headers: list[str], rows: list[list[str]]) -> lis
     return lines
 
 
-def analyzer_coverage_markdown(coverage: dict[str, Any] | None) -> list[str]:
-    """What examined this repository, and what nothing examined.
-
-    Placed immediately after the summary rather than in an appendix: two
-    reports with different coverage are not comparable, so a reader who
-    sees a score must see what produced it in the same glance (P8).
-    """
-    if not coverage:
-        return []
-    if coverage.get("error"):
-        return ["## Analyzer Coverage", "",
-                f"No analyzers ran: {coverage['error']}", ""]
-
-    selection = coverage["selection"]
-    lines = [
-        "## Analyzer Coverage", "",
-        f"{coverage['tools_contributed']} of {coverage['tools_attempted']} tools "
-        f"contributed — concerns `{', '.join(selection['concerns'])}`, "
-        f"depth `{selection['depth']}`, license policy `{selection['license_policy']}`.",
-        "",
-        "| Tool | Outcome | Version | Measurements | Findings | Note |",
-        "|---|---|---|---|---|---|",
-    ]
-    for outcome, entries in sorted(coverage["by_outcome"].items()):
-        for entry in sorted(entries, key=lambda item: item["tool"]):
-            note = entry.get("parse_error") or entry.get("detail") or ""
-            lines.append(
-                f"| `{entry['tool']}` | {outcome} | {entry.get('version', '—')} | "
-                f"{entry.get('measurements', '—')} | {entry.get('findings', '—')} | "
-                f"{note[:80]} |"
-            )
-    lines.append("")
-
-    unexamined = coverage["concepts_unexamined"]
-    if unexamined:
-        # The point of the whole section. Silence about a concern is not
-        # health, and a reader who is not told will assume it is.
-        lines.extend([
-            "**Nothing examined:** " + ", ".join(f"`{c}`" for c in unexamined) + ".",
-            "",
-            "These concerns are unmeasured, not clean. Install a tool that covers them, "
-            "or widen `analyzers.depth`, to have them reported.",
-            "",
-        ])
-    return lines
-
-
-# How many analyzer findings to print in full. The rest are summarised by
-# concern and tool, with the complete list left in the JSON report: a
-# Markdown document with eight hundred rows stops being read, and a reader
-# who stops reading learns nothing.
-ANALYZER_FINDING_LIMIT = 40
-
-
-def analyzer_findings_markdown(findings: list[dict[str, Any]]) -> list[str]:
-    """What the analyzers found, located and attributed.
-
-    The point of running them. Coverage says *that* they ran; this says
-    what they saw, and every row carries a path, a line and the tool that
-    produced it so the reader can act on it or go back to the source.
-    """
-    if not findings:
-        return []
-
-    by_concept: dict[str, int] = {}
-    for finding in findings:
-        by_concept[finding["concept"]] = by_concept.get(finding["concept"], 0) + 1
-    tally = ", ".join(f"{count} {concept}" for concept, count in sorted(by_concept.items()))
-
-    lines = [
-        "## Analyzer Findings", "",
-        f"{len(findings)} findings from external analyzers — {tally}.", "",
-        "| File | Line | Concern | Tool | Rule | Finding |",
-        "|---|---|---|---|---|---|",
-    ]
-    for finding in findings[:ANALYZER_FINDING_LIMIT]:
-        lines.append(
-            f"| `{finding['path']}` | {finding['line'] or '—'} | {finding['concept']} | "
-            f"`{finding['tool']}` | {finding['rule'] or '—'} | {finding['message'][:70]} |"
-        )
-    lines.append("")
-    if len(findings) > ANALYZER_FINDING_LIMIT:
-        # Stated, never silent: a truncated list a reader believes is
-        # complete is worse than an obviously partial one.
-        lines.extend([
-            f"Showing {ANALYZER_FINDING_LIMIT} of {len(findings)}. "
-            "The complete list is in the JSON report under `analyzer_findings`.",
-            "",
-        ])
-    return lines
-
-
-def analyzer_measurements_markdown(measurements: dict[str, Any] | None) -> list[str]:
-    """Combined readings, their distribution, and how far the tools differ.
-
-    The distribution is the part a reader can reason with. "Seven
-    functions failed" supports a sentence; "worst 45, median 6, and two
-    tools disagree by 37%" supports a plan.
-    """
-    if not measurements:
-        return []
-    lines = [
-        "## Measurements", "",
-        "| Concept | Units | Sources | Tool disagreement | Min | Median | p90 | Max |",
-        "|---|---|---|---|---|---|---|---|",
-    ]
-    for concept, data in sorted(measurements.items()):
-        spread = data.get("tool_disagreement")
-        distribution = data.get("distribution") or {}
-        if spread is not None:
-            comparison = f"{spread:.0%}"
-        elif len(data["tools"]) > 1:
-            # Two tools that never measured the same unit are not a
-            # second opinion. interrogate reports one tree-level number
-            # and multimetric reports per file, so neither confirms the
-            # other, and calling that "single source" beside two tool
-            # names reads as a contradiction.
-            comparison = "no shared units"
-        else:
-            comparison = "single source"
-        lines.append(
-            f"| {concept} | {data['units']} | {', '.join(data['tools'])} | "
-            f"{comparison} | "
-            f"{distribution.get('min', '—')} | {distribution.get('median', '—')} | "
-            f"{distribution.get('p90', '—')} | {distribution.get('max', '—')} |"
-        )
-    corroborated = [c for c, d in measurements.items() if d.get("tool_disagreement") is not None]
-    lines.append("")
-    if corroborated:
-        lines.extend([
-            "Where two tools measured the same thing, their disagreement is shown rather "
-            "than averaged away — it is the uncertainty a single-tool number hides.",
-            "",
-        ])
-    # Stated plainly: these do not move the score yet, and a reader who
-    # assumed otherwise would misread both numbers.
-    lines.extend([
-        "*These measurements are reported, not yet scored. The maintainability score "
-        "still derives from the built-in detectors; wiring the analyzer measurements "
-        "into it requires re-deriving the calibration constant.*",
-        "",
-    ])
-    return lines
-
-
 def render_markdown(report: dict[str, Any]) -> str:
     summary = report["summary"]
     score = report["score"]
@@ -253,6 +115,8 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"Scoring standard: {score['standard']}.",
         "",
     ]
+    lines.extend(pillars_markdown(report.get("pillars"), report.get("practice")))
+    lines.extend(unread_source_markdown(summary))
     lines.extend(analyzer_coverage_markdown(report.get("analyzer_coverage")))
     lines.extend(analyzer_measurements_markdown(report.get("analyzer_measurements")))
     lines.extend(analyzer_findings_markdown(report.get("analyzer_findings") or []))

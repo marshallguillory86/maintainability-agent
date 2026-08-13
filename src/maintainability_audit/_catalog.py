@@ -4,7 +4,7 @@ Resolves the shipped catalog against three independent selectors, so a user
 answers *what do you want examined*, *how deep* and *what may we legally run*
 and never names a tool.
 
-The catalog is data: 759 entries with licence, licence class, languages and
+The catalog is data: 760 entries with licence, licence class, languages and
 what each measures, built by ``tools/build_catalog.py`` from a pinned snapshot
 of the analysis-tools.dev database plus locally verified additions. Nothing
 here decides whether a tool *works* — that is the runner's job, proven by

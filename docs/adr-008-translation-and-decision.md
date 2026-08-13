@@ -105,6 +105,14 @@ The seam is deliberate: **everything above `band` is tool-shaped, everything bel
 
 Combination happens *before* banding, and only among measurements. Averaging a verdict with a number is meaningless and is not attempted.
 
+**`attribute` is not optional, and skipping it was measured.** The scorer keeps two populations — every declaration scanned, and production declarations only — because `analyzability`, `testability` and `declaration_size` ask about the production code, and growing a test suite must not change the answer. The first bridge produced only one number and the scorer substituted it into **both** slots, so production aspects were charged for the state of the test suite. The compromise was written down in a code comment and then forgotten, which is what a compromise written in a code comment does.
+
+The gap it papered over is not small. On flask, 1,494 of the 2,206 declarations the analyzers see are test code, and the reading moves 0.0049 → 0.0138; on scrapy, 5,938 of 9,143. Left alone, the alternative rollup was pessimistic on exactly the repositories that test themselves well.
+
+So the bridge now produces both readings, and they are passed together in one `ExternalPressures` value rather than as a dict a caller can use twice. Supplying one and getting the old behaviour is no longer expressible.
+
+This is the same defect class as the three wrong formulas before it: a bridge that describes itself rather than the code. The defence is the same too — `test_analyzer_production_pressure_excludes_test_declarations` fixes the population, `test_analyzer_pressures_are_a_drop_in_for_the_built_in_ones` fixes the formula, and `test_each_population_is_substituted_from_its_own_reading` fixes the wiring between them.
+
 ### The report is a first-class output, not a by-product of the prompt
 
 The tool already emits Markdown, JSON, a PR comment, SARIF and a baseline, and those remain. But a design that describes the pipeline as ending in an improvement prompt gets built as one, and the reader who simply wants to know *what is wrong with this repository* is left invoking a language model to find out.

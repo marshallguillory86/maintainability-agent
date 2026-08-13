@@ -53,6 +53,7 @@ from ._formula import (
     overall_from_aspects,
 )
 from ._pressures import (
+    ExternalPressures,
     dimension_pressures,
     measured,
     normalize,
@@ -239,7 +240,7 @@ def _grade_on_the_floor(
 
 
 def score_report(
-    report: dict[str, Any], external: dict[str, float | None] | None = None
+    report: dict[str, Any], external: ExternalPressures | None = None
 ) -> dict[str, Any]:
     """Aspects -> categories -> overall, by the rubric in ``_formula``.
 
@@ -261,7 +262,7 @@ def score_report(
 
 def score_evidence(
     evidence: NormalizedEvidence,
-    external: dict[str, float | None] | None = None,
+    external: ExternalPressures | None = None,
 ) -> dict[str, Any]:
     """Score an already-normalized model — the seam validation ends at.
 
@@ -326,7 +327,7 @@ def score_evidence(
 
 def _widen_for_disagreement(
     evidence: NormalizedEvidence,
-    external: dict[str, float | None] | None,
+    external: ExternalPressures | None,
     aspects: dict[str, float | None],
     untested: bool | None,
     not_applicable: frozenset[str] | None,
@@ -342,22 +343,22 @@ def _widen_for_disagreement(
     existing report byte-identical unless `--analyzers` ran.
     """
     low, high = bounds
-    if not external or all(value is None for value in external.values()):
+    if not external or not external.measured_anything():
         return low, high
 
+    # Each population substituted from the reading taken over that same
+    # population. Until the bridge could tell test code from production
+    # code, one all-code number went into both slots, which charged
+    # production for the state of the test suite; on flask two thirds of
+    # the declarations the analyzers see are tests.
     substituted = dict(dimension_pressures(evidence.summary))
-    production = dict(normalize_production(evidence.summary))
-    for dimension, value in external.items():
-        if value is None:
-            continue
-        if dimension in substituted:
+    for dimension, value in external.all_code.items():
+        if value is not None and dimension in substituted:
             substituted[dimension] = value
-        # The analyzers do not separate production from test code, so
-        # their reading substitutes for both. Stated rather than hidden:
-        # it makes the alternative rollup slightly pessimistic on a
-        # repository whose tests are worse than its production code, and
-        # the interval is the right place for that to land.
-        if dimension in production:
+
+    production = dict(normalize_production(evidence.summary))
+    for dimension, value in external.production.items():
+        if value is not None and dimension in production:
             production[dimension] = normalize({dimension: value})[dimension]
 
     alternative, _ = overall_from_aspects(

@@ -24,10 +24,11 @@ no default to forget to guard.
 from __future__ import annotations
 
 from collections import defaultdict
+from dataclasses import dataclass
 from typing import Any
 
 from ._calibration import DIMENSION_REFERENCES, WARN_WEIGHT
-from ._metrics_types import Measurement
+from ._metrics_types import Measurement, is_test_path
 from .evidence import Measured, SummaryEvidence
 
 
@@ -204,27 +205,35 @@ def _breach_counts(
     return failures, warnings
 
 
-def analyzer_pressures(
-    measurements: list[Measurement], thresholds: dict[str, Any]
-) -> dict[str, float | None]:
-    """The scorer's own dimensions, computed from analyzer measurements.
+@dataclass(frozen=True)
+class ExternalPressures:
+    """A second source's reading of the scorer's dimensions, both populations.
 
-    A **drop-in for** :func:`dimension_pressures`: same formula, same
-    breach criteria, the rubric's thresholds applied to the analyzers'
-    numbers. That is ADR 008's seam — a tool contributes measurements,
-    the rubric decides what they mean.
-
-    Getting this wrong is not a small error, and it was made three times.
-    An earlier version returned a mean band pressure where the built-in
-    path returns a weighted breach rate; the next counted only complexity
-    where the built-in counts lines, complexity and cognitive complexity.
-    Each produced a confident ratio that described my own bridge rather
-    than the code being audited.
-
-    ``None`` where nothing was measured — never zero.
+    Both, in one object, because the scorer keeps two populations and
+    substituting one reading into both slots is a real distortion rather
+    than a rounding error: it charges production code for the state of
+    the test suite. That was the previous behaviour, and it was invisible
+    at the call site — a single dict went in and got used twice. Pairing
+    them makes supplying only one impossible to do by accident.
     """
+
+    all_code: dict[str, float | None]
+    production: dict[str, float | None]
+
+    def measured_anything(self) -> bool:
+        return any(value is not None for value in self.all_code.values()) or any(
+            value is not None for value in self.production.values()
+        )
+
+
+def _declaration_pressure(
+    measurements: list[Measurement], thresholds: dict[str, Any], production_only: bool
+) -> dict[str, float | None]:
+    """Weighted breach rate over the analyzers' declarations."""
     per_unit: dict[str, dict[str, float]] = defaultdict(dict)
     for measurement in measurements:
+        if production_only and is_test_path(measurement.path or measurement.unit):
+            continue
         per_unit[measurement.unit][measurement.concept] = measurement.value
 
     relevant = {
@@ -237,3 +246,46 @@ def analyzer_pressures(
 
     failures, warnings = _breach_counts(relevant, thresholds)
     return {"declarations": _weighted_rate(failures, warnings, len(relevant))}
+
+
+def analyzer_pressures(
+    measurements: list[Measurement], thresholds: dict[str, Any]
+) -> dict[str, float | None]:
+    """The scorer's own dimensions, computed from analyzer measurements.
+
+    A **drop-in for** :func:`dimension_pressures`: same formula, same
+    breach criteria, the same population — every declaration, test code
+    included, because that is what `declarations_scanned` counts. The
+    rubric's thresholds applied to the analyzers' numbers. That is ADR
+    008's seam — a tool contributes measurements, the rubric decides what
+    they mean.
+
+    Getting this wrong is not a small error, and it was made three times.
+    An earlier version returned a mean band pressure where the built-in
+    path returns a weighted breach rate; the next counted only complexity
+    where the built-in counts lines, complexity and cognitive complexity.
+    Each produced a confident ratio that described my own bridge rather
+    than the code being audited.
+
+    ``None`` where nothing was measured — never zero.
+    """
+    return _declaration_pressure(measurements, thresholds, production_only=False)
+
+
+def analyzer_production_pressures(
+    measurements: list[Measurement], thresholds: dict[str, Any]
+) -> dict[str, float | None]:
+    """The same reading, over production code only.
+
+    The drop-in for :func:`production_pressures`, which is what
+    `analyzability` and `declaration_size` actually consume. Both
+    populations are needed because the scorer keeps both: substituting an
+    all-declarations reading into the production slot was a stated
+    compromise from when this bridge could not tell the two apart, and it
+    made the alternative rollup pessimistic on any repository whose tests
+    are rougher than its production code.
+
+    The gap is not small. On flask, 1,494 of 2,206 declarations the
+    analyzers see are test code; the pressure moves 0.0049 → 0.0138.
+    """
+    return _declaration_pressure(measurements, thresholds, production_only=True)

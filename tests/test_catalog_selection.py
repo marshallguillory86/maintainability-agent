@@ -165,3 +165,56 @@ def test_the_defaults_alone_are_a_valid_configuration() -> None:
     assert settings["depth"] in DEPTH_ORDER
     assert settings["license_policy"] in LICENSE_POLICIES
     assert settings["deny_concerns"] == ["security"]
+
+
+def test_the_pool_document_states_the_catalogs_own_counts() -> None:
+    """docs/analyzer-pool.md is prose over data, and prose drifts.
+
+    Every count on that page had drifted from `analyzer-catalog.json`:
+    759 tools against 760, 464 permissive against 465, 444 eligible
+    against 446, ten adapters against sixteen. Each number was true when
+    written and silently wrong afterwards, which is worse than never
+    having stated it — a reader has no way to tell a stale figure from a
+    current one.
+
+    Regenerating the catalog now fails this test until the page is
+    updated with it.
+    """
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    counts = json.loads(
+        (root / "data" / "analyzer-catalog.json").read_text(encoding="utf-8"))["counts"]
+    text = (root / "docs" / "analyzer-pool.md").read_text(encoding="utf-8")
+
+    expected = {
+        "total tools": f"**{counts['in_source']} tools.**",
+        "eligible": f"**{counts['eligible']} tools** are eligible",
+        "adapters": f"**{counts['adapters_implemented']} tools have adapters**",
+        **{
+            f"license class {name}": f"| `{name}` | {count} |"
+            for name, count in counts["by_license_class"].items()
+        },
+    }
+    missing = sorted(label for label, phrase in expected.items() if phrase not in text)
+
+    assert not missing, (
+        f"docs/analyzer-pool.md no longer states the catalog's counts for: {missing}. "
+        "Regenerate the page from data/analyzer-catalog.json."
+    )
+
+    # The same figures are quoted elsewhere and drifted there too. Each
+    # page is checked for the counts it actually states, not for all of
+    # them — docs/README.md names the catalog's size and nothing else.
+    also_quoting = {
+        "README.md": (counts["in_source"],),
+        "target-architecture.md": (counts["in_source"], counts["eligible"]),
+    }
+    for name, values in also_quoting.items():
+        page = (root / "docs" / name).read_text(encoding="utf-8")
+        stale = [str(value) for value in values if str(value) not in page]
+        assert not stale, (
+            f"docs/{name} quotes catalog counts but not the current {stale}; "
+            "update it from data/analyzer-catalog.json"
+        )

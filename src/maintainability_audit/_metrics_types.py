@@ -103,3 +103,63 @@ class Finding:
     message: str
     tool: str
     rule: str | None = None
+
+
+def is_test_path(rel: str) -> bool:
+    """Identify test files by conventional path/name shape.
+
+    Lives in the foundation layer because *both* tiers need it and they
+    sit on opposite sides of the graph: the built-in scanners split
+    production from test code before counting, and `_pressures` must make
+    the identical split on analyzer measurements or the two numbers are
+    computed over different populations. Importing it upward from
+    `metrics` would have put a scanner in the scoring layer's
+    dependencies, which `test_scoring_never_imports_scanners_or_assembly`
+    correctly refused.
+
+    Used so test-code pressure is reported separately and excluded from
+    `testability` / `analyzability` scoring: growing a test file should
+    not lower the score of how testable the production code is.
+    """
+    normalized = rel.replace("\\", "/").lower()
+    parts = normalized.split("/")
+    if any(segment in {"tests", "test", "__tests__", "spec", "specs"} for segment in parts[:-1]):
+        return True
+    name = parts[-1]
+    if name.startswith(("test_", "test.")):
+        return True
+    stem = name.rsplit(".", 1)[0]
+    return stem.endswith(("_test", ".test", ".spec", "_spec"))
+
+
+# Every file extension this project recognises as source code, and the
+# language it belongs to. Wider on purpose than `include_extensions`: the
+# point is to notice code the scan is *not* configured to read, which
+# cannot be done from the include list alone.
+#
+# The validation sample is why this exists. curl reported 4.3 from its
+# Markdown and Python test scripts while 20,547 declarations of C went
+# unopened; gson withheld its score citing "below the calibration floor"
+# while holding 9,639 unread Java declarations. A score computed from a
+# minority of a repository is a false report about the repository, and it
+# is false in the flattering direction — documentation and scripts are
+# simpler than the code they describe.
+KNOWN_SOURCE_SUFFIXES: dict[str, str] = {
+    ".py": "Python", ".pyi": "Python",
+    ".js": "JavaScript", ".jsx": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
+    ".ts": "TypeScript", ".tsx": "TypeScript",
+    ".java": "Java", ".kt": "Kotlin", ".kts": "Kotlin", ".scala": "Scala",
+    ".c": "C", ".h": "C", ".cc": "C++", ".cpp": "C++", ".cxx": "C++",
+    ".hh": "C++", ".hpp": "C++", ".hxx": "C++",
+    ".cs": "C#", ".fs": "F#", ".vb": "Visual Basic",
+    ".go": "Go", ".rs": "Rust", ".swift": "Swift", ".m": "Objective-C", ".mm": "Objective-C",
+    ".rb": "Ruby", ".php": "PHP", ".pl": "Perl", ".pm": "Perl",
+    ".lua": "Lua", ".r": "R", ".jl": "Julia", ".dart": "Dart",
+    ".ex": "Elixir", ".exs": "Elixir", ".erl": "Erlang", ".hrl": "Erlang",
+    ".hs": "Haskell", ".ml": "OCaml", ".mli": "OCaml", ".clj": "Clojure", ".cljs": "Clojure",
+    ".f": "Fortran", ".f90": "Fortran", ".f95": "Fortran", ".f03": "Fortran",
+    ".for": "Fortran", ".ftn": "Fortran",
+    ".sh": "Shell", ".bash": "Shell", ".zsh": "Shell", ".ps1": "PowerShell",
+    ".sql": "SQL", ".groovy": "Groovy", ".vue": "Vue", ".svelte": "Svelte",
+    ".zig": "Zig", ".nim": "Nim", ".cr": "Crystal", ".d": "D", ".ada": "Ada", ".adb": "Ada",
+}

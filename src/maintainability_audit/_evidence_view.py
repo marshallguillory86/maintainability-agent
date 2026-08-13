@@ -113,6 +113,12 @@ WIDEN_THE_SCAN = (
     "The population exists but this scan did not look at it. Re-run over the "
     "whole repository for a comparable score."
 )
+READ_THE_SOURCE = (
+    "The repository's source is present but this scan never opened it: those "
+    "file extensions are not in `paths.include_extensions`. Add them and re-run "
+    "for a score that describes this codebase. Until then the findings below "
+    "come only from the files that were read."
+)
 TAKE_THE_FINDINGS = (
     "This repository is smaller than anything the scale was calibrated on, and "
     "no re-scan will change that. The audit is complete: every finding and every "
@@ -127,6 +133,11 @@ def remedy(score: dict[str, Any]) -> str:
     advice cannot drift from what actually withheld the score.
     """
     measurements = {item["measurement"] for item in reasons(score)}
+    # Checked first: unread source explains a thin population, so
+    # "this repository is too small" would be the wrong advice for a
+    # repository whose code is simply unreadable to this configuration.
+    if "summary.unread_source_files" in measurements:
+        return READ_THE_SOURCE
     if "scan.scope" in measurements:
         return WIDEN_THE_SCAN
     return TAKE_THE_FINDINGS

@@ -354,7 +354,7 @@ def test_xenon_is_deliberately_unadapted() -> None:
 
 
 def test_a_tool_emitting_a_standard_format_needs_no_parser() -> None:
-    """Ten adapters against 759 tools implies 749 more to write.
+    """A handful of adapters against a 760-entry catalog implies hundreds more.
 
     That is not a plan, and it is not necessary: most analyzers emit one
     of a few standard formats, and a format needs one parser rather than
@@ -401,3 +401,73 @@ def test_a_declared_tool_with_an_unknown_format_fails_loudly() -> None:
     extraction = adapter.parse(_ran("{}"))
 
     assert extraction.parse_error and "unknown output_format" in extraction.parse_error
+
+
+def test_lizard_declaration_lines_means_the_same_lines_the_rubric_thresholds() -> None:
+    """`nloc` and `lines` are different measurements wearing one name.
+
+    The rubric's `max_function_lines` is a threshold on a declaration's
+    **line span** — that is what the built-in detector counts and what a
+    user reads the config as meaning. lizard's CSV offers both: `nloc`
+    at index 0, which excludes blanks and comments, and `length` at
+    index 4, which is the span. The adapter shipped `nloc` under the
+    name `declaration_lines`.
+
+    Measured on the corpus cache, matching declarations by path and name:
+    `length` equals the built-in count on 780 of 781 flask declarations
+    and 992 of 1044 in Chart.js; `nloc` on 21% and 51%. Median 7 against
+    12 on flask. The threshold therefore fired far less often on the
+    analyzer path, and the corpus comparison came out at 0.49 — a number
+    about two definitions of "lines", not about the code.
+
+    This is the fifth wrong ratio from the same root cause, so the check
+    is structural: the concept must carry a span, and a span is at least
+    as large as the non-blank count of the same declaration.
+    """
+    from maintainability_audit._runner import Outcome, ToolResult
+    from maintainability_audit._tool_adapters import adapter_for
+
+    adapter = adapter_for("lizard")
+    assert adapter is not None
+    # nloc=3, ccn=1, token=9, param=0, length=11, location, file, name
+    row = "3,1,9,0,11,f@4-14@a.py,a.py,f,\"\",4,14"
+    result = ToolResult(slug="lizard", outcome=Outcome.RAN, stdout=f"{row}\n")
+    values = {m.concept: m.value for m in adapter.parse(result).measurements}
+
+    assert values["declaration_lines"] == 11.0, (
+        "declaration_lines must carry the line span the rubric thresholds, "
+        f"not lizard's nloc; got {values['declaration_lines']}"
+    )
+    assert values["cyclomatic_complexity"] == 1.0
+
+
+def test_jscpd_paths_drop_the_embedded_format_tag() -> None:
+    """A finding must point at a file, and jscpd sometimes appends a tag.
+
+    For a fenced code block inside Markdown, jscpd reports the file name
+    as `docs/api/formik.md:javascript` — the path plus the embedded
+    language it detected. Passed through unchanged, the finding points at
+    a file that does not exist, which is the one thing a located finding
+    must never do.
+
+    Found by the validation sample: 3 of 40 sampled findings across 14
+    repositories were unopenable, all of this shape (`:javascript`,
+    `:markdown`, `:text`). Every other sampled finding landed on a real
+    line of the file it named.
+    """
+    from maintainability_audit._runner import Outcome, ToolResult
+    from maintainability_audit._tool_adapters import adapter_for
+
+    adapter = adapter_for("jscpd")
+    assert adapter is not None
+    payload = {"statistics": {"total": {"percentage": 1.0}}, "duplicates": [
+        {"lines": 20, "firstFile": {"name": "docs/api/formik.md:javascript", "start": 412}},
+        {"lines": 9, "firstFile": {"name": "src/a.ts", "start": 7}},
+        # A directory with a dot in it must survive: the tag is a bare
+        # word, and stripping on any colon would corrupt real paths.
+        {"lines": 5, "firstFile": {"name": "pkgs/v1.2/b.js", "start": 3}},
+    ]}
+    result = ToolResult(slug="jscpd", outcome=Outcome.RAN, stdout=json.dumps(payload))
+
+    paths = [f.path for f in adapter.parse(result).findings]
+    assert paths == ["docs/api/formik.md", "src/a.ts", "pkgs/v1.2/b.js"]

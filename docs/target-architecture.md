@@ -123,7 +123,7 @@ The scorer consumes 28 typed inputs — 23 on `SummaryEvidence`, 5 on `HistoryEv
 
 ### The product, in one paragraph
 
-A user should not have to know which of 444 analyzers exist, write scripts to invoke them, or reconcile their output formats. They answer two questions — **what do you want examined** and **how deep** — inside a license policy their organization sets once. The agent resolves the toolset, runs it, and returns two things: the compiler-style errors (located, specific, fixable) and the scores (compact, comparable, trendable). Both go in the report; neither replaces the other.
+A user should not have to know which of 446 analyzers exist, write scripts to invoke them, or reconcile their output formats. They answer two questions — **what do you want examined** and **how deep** — inside a license policy their organization sets once. The agent resolves the toolset, runs it, and returns two things: the compiler-style errors (located, specific, fixable) and the scores (compact, comparable, trendable). Both go in the report; neither replaces the other.
 
 That is the whole value proposition, and every mechanism below exists to serve it.
 
@@ -153,11 +153,11 @@ $ resolve_pool --concerns documentation
 
 **The concern vocabulary is the scoring model's, not an invented one**, so an answer to "what do you care about?" maps onto aspects that actually exist and can actually move a score.
 
-It also cannot be sourced from the catalog's upstream data, and that is worth stating plainly: the upstream tags are languages, ecosystems and frameworks — `rails`, `nodejs`, `spring` — and **367 of the 444 eligible tools carry no concern tag at all**. What a tool measures can only be known by running it, so the `measures` field is populated exactly as fast as adapters are written, and the upstream tags are kept separately as `upstream_tags` rather than dressed up as concerns.
+It also cannot be sourced from the catalog's upstream data, and that is worth stating plainly: the upstream tags are languages, ecosystems and frameworks — `rails`, `nodejs`, `spring` — and **only 5 of the 446 eligible tools carry an upstream tag naming one of this project's concerns**. What a tool measures can only be known by running it, so the `measures` field is populated exactly as fast as adapters are written, and the upstream tags are kept separately as `upstream_tags` rather than dressed up as concerns.
 
 ### Which tools run: the catalog, depth and license policy
 
-The pool is not hardcoded. [`data/analyzer-catalog.json`](../data/analyzer-catalog.json) holds **759 tools** — 755 from the analysis-tools.dev database pinned at a recorded commit, plus 4 verified locally — each with its license, license class, languages and source. **444 are eligible**: open-source class, current, language-targeting, not security-only.
+The pool is not hardcoded. [`data/analyzer-catalog.json`](../data/analyzer-catalog.json) holds **760 tools** — 755 from the analysis-tools.dev database pinned at a recorded commit, plus 5 verified locally — each with its license, license class, languages and source. **446 are eligible**: open-source class, current, language-targeting, not security-only.
 
 Two independent selectors narrow it, because *how much work* and *what may we legally run* are different questions:
 

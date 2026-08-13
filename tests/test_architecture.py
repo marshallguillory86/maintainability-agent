@@ -33,7 +33,9 @@ PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens"}
 # tree, exactly as the built-in detectors do, and like them it may not
 # import scoring. The difference is only that an external process does
 # the looking (ADR 006).
-SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "history", "_adapters",
+SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "idioms",
+            "similarity",
+            "history", "_adapters",
             # `_generic` is the same layer: it turns tool output into
             # findings, differing only in that its parsers are shared
             # across tools rather than written per tool.
@@ -47,6 +49,7 @@ SCANNERS = {"metrics", "duplication", "deadcode", "idioms", "similarity", "histo
 # `_bands` joins the rubric-data leaves: it is the band matrix, a table
 # of judgments like `_formula`, and imports nothing internal.
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive",
+           "_pillars",
            "_verification", "_bands",
            # `_corroborate` reduces several tools' readings of one concept to
            # a single value plus its spread. That is scoring input
@@ -56,8 +59,9 @@ SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_de
 # `_analysis` orchestrates: it calls the catalog, the runner and the
 # adapters and hands `report` a coverage document. That makes it assembly,
 # not a scanner — it composes rather than measures.
-ASSEMBLY = {"report", "_analysis"}
-PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view", "_identity"}
+ASSEMBLY = {"report", "_analysis", "_built_ins"}
+PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
+                "_scan_view", "_identity"}
 ENTRY = {"cli", "__main__", "mcp_server"}
 BOUNDARY = {"evidence"}
 

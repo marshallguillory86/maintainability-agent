@@ -41,7 +41,11 @@ from maintainability_audit._calibration import (  # noqa: E402
     DIMENSION_WEIGHTS,
 )
 from maintainability_audit._derive import derive_curve_constant, derive_references  # noqa: E402
-from maintainability_audit._pressures import analyzer_pressures  # noqa: E402
+from maintainability_audit._pressures import (  # noqa: E402
+    analyzer_pressures,
+    analyzer_production_pressures,
+    production_pressures,
+)
 from maintainability_audit.config import load_config  # noqa: E402
 from maintainability_audit.evidence import normalize_report_evidence  # noqa: E402
 from maintainability_audit.report import build_report  # noqa: E402
@@ -100,10 +104,17 @@ def measure(path: Path, name: str, *, with_analyzers: bool = False) -> dict:
 
     Both sources are recorded side by side rather than one replacing the
     other, because the question the corpus run has to answer is *how far
-    apart are they* — on this repository the analyzers report about four
-    times the declaration pressure the built-in detector does, and whether
-    that holds across forty repositories decides whether the swap is a
-    recalibration or a redesign.
+    apart are they*, and whether the gap holds across forty repositories
+    decides whether swapping them is a recalibration or a redesign.
+
+    Four ratios were quoted from this comparison before it was
+    trustworthy — 4.0x, 0.3x, 0.19x and 0.77x — each an artifact of a
+    bridge that measured something narrower than the built-in path it was
+    being divided by. It is only worth reading now because
+    `test_both_paths_agree_on_every_failure_criterion` holds the two
+    formulas to each other and
+    `test_analyzer_production_pressure_excludes_test_declarations` holds
+    them to the same population.
 
     A repository where the analyzers could not run is recorded with
     ``analyzer_dimensions: null`` rather than dropped, so a partial corpus
@@ -127,20 +138,29 @@ def measure(path: Path, name: str, *, with_analyzers: bool = False) -> dict:
         "evidence": {key: summary[key] for key in EVIDENCE_KEYS},
     }
     if with_analyzers:
-        row["analyzer_dimensions"], row["analyzer_coverage"] = _analyzer_row(path, config)
+        analyzer, production, coverage = _analyzer_row(path, config)
+        row["analyzer_dimensions"] = analyzer
+        row["analyzer_production_dimensions"] = production
+        row["analyzer_coverage"] = coverage
+        # The built-in production reading, so the production comparison
+        # has a denominator measured the same way on both sides.
+        row["production_dimensions"] = production_pressures(evidence.summary)
     return row
 
 
-def _analyzer_row(path: Path, config: dict) -> tuple[dict | None, dict | None]:
-    """Analyzer pressures for one repository, or a stated absence."""
+def _analyzer_row(path: Path, config: dict) -> tuple[dict | None, dict | None, dict | None]:
+    """Analyzer pressures for one repository, both populations, or a stated absence."""
     analysis = analyze(path, config)
     if analysis.error or not any(item.contributed for item in analysis.coverage):
-        return None, {"error": analysis.error or "no tool contributed"}
+        return None, None, {"error": analysis.error or "no tool contributed"}
+    thresholds = config["thresholds"]
     return (
-        analyzer_pressures(analysis.measurements, config["thresholds"]),
+        analyzer_pressures(analysis.measurements, thresholds),
+        analyzer_production_pressures(analysis.measurements, thresholds),
         {
             "tools": sorted(item.slug for item in analysis.coverage if item.contributed),
             "unexamined": analysis.gaps(),
+            "single_source": analysis.single_source_concerns(),
         },
     )
 

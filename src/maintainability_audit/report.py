@@ -19,8 +19,16 @@ from ._analysis import (
     findings_document,
     measurement_document,
 )
+from ._built_ins import record_built_in_counts
+from ._discovery import Provenance, discover
 from ._metrics_types import FileMetric, FunctionMetric
-from ._pressures import analyzer_pressures
+from ._pillars import pillar_report
+from ._practice import practice_level
+from ._pressures import (
+    ExternalPressures,
+    analyzer_pressures,
+    analyzer_production_pressures,
+)
 from .deadcode import dead_declarations
 from .declarations import DECLARATION_SUFFIXES
 from .duplication import duplicate_blocks, risk_findings
@@ -28,7 +36,7 @@ from .evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY
 from .git_tools import run_git
 from .history import history_section
 from .idioms import divergent_idioms
-from .metrics import collect_metrics, hard_gate_failures, is_test_path
+from .metrics import collect_metrics, hard_gate_failures, is_test_path, unread_source
 from .scoring import score_report
 from .similarity import near_duplicate_findings
 from .source import SourceIndex
@@ -139,13 +147,20 @@ def _analyzer_sections(
         # A second, independent reading of the scorer's own dimensions.
         # Widens the interval rather than moving the estimate: the point
         # estimate stays on the path the scale is calibrated against.
-        "pressures": analyzer_pressures(analysis.measurements, config["thresholds"]),
+        # Both populations, because the scorer keeps both and the
+        # production aspects are the ones that actually read this.
+        "pressures": ExternalPressures(
+            all_code=analyzer_pressures(analysis.measurements, config["thresholds"]),
+            production=analyzer_production_pressures(
+                analysis.measurements, config["thresholds"]),
+        ),
     }
 
 
 def _add_full_counts(
     summary: dict[str, Any],
     root: Path,
+    config: dict[str, Any],
     near_duplicates: list[Any],
     dead: list[Any],
     idioms: list[Any],
@@ -160,12 +175,36 @@ def _add_full_counts(
     capped list would flatten exactly the repositories the score exists
     to distinguish.
     """
+    # What the scan could not read, before anything is scored on what it
+    # could. A repository whose source is invisible to `include_extensions`
+    # still produces files, declarations and a tidy-looking rate — drawn
+    # from its Markdown and its scripts.
+    breakdown, read = unread_source(root, config)
+    summary["unread_source"] = breakdown
+    summary["unread_source_files"] = sum(entry["files"] for entry in breakdown)
+    summary["read_source_files"] = read
     summary["near_duplicate_count"] = len(near_duplicates)
     summary["dead_code_count"] = len(dead)
     summary["idiom_concern_count"] = len(idioms)
     summary["has_readme"] = any(root.glob("README*"))
     summary["has_changelog"] = any(root.glob("CHANGELOG*"))
     summary["has_docs_dir"] = (root / "docs").is_dir()
+
+
+def _add_inventory(summary: dict[str, Any], inventory: Any) -> None:
+    """What the tree is made of, beside what was measured in it.
+
+    Counted, not just excluded. "600 files were not yours" is a fact a
+    reader needs in order to interpret every number beside it, and
+    silently dropping them would replace one kind of dishonesty with
+    another.
+    """
+    counts = inventory.counts()
+    summary["languages"] = dict(sorted(inventory.languages.items(),
+                                       key=lambda item: (-item[1], item[0])))
+    summary["generated_files"] = counts[Provenance.GENERATED.value]
+    summary["vendored_files"] = counts[Provenance.VENDORED.value]
+    summary["classifications"] = inventory.classifications
 
 
 def _assemble(
@@ -267,10 +306,20 @@ def build_report(
     ``--analyzers``.
     """
     analyzer = _analyzer_sections(root, config, run_analyzers)
+    # Before anything is measured: what languages are here, and whose
+    # code is it. Everything downstream reads this rather than guessing
+    # from directory names, which is what let a vendored tree and 10,759
+    # generated files into a repository's score.
+    inventory = discover(root, config)
+    not_ours = {
+        path for path, verdict in inventory.provenance.items()
+        if verdict in (Provenance.GENERATED, Provenance.VENDORED)
+    }
     # One index for the whole audit: each file is read once and parsed
     # once, rather than once per scanner.
     source = SourceIndex()
-    files, file_metrics, function_metrics = collect_metrics(root, config, only_paths, source)
+    files, file_metrics, function_metrics = collect_metrics(
+        root, config, only_paths, source, excluded=not_ours)
     thresholds = config["thresholds"]
     dupes = duplicate_blocks(root, files, int(thresholds["duplicate_block_lines"]), source)
     near_duplicates = near_duplicate_findings(root, files, source)
@@ -284,11 +333,22 @@ def build_report(
     missing_files = [path for path in config.get("expected_files", []) if not (root / path).exists()]
     largest_files = sorted(file_metrics, key=lambda metric: metric.lines, reverse=True)[:25]
 
-    _add_full_counts(summary, root, near_duplicates, dead, idioms)
+    _add_full_counts(summary, root, config, near_duplicates, dead, idioms)
+    _add_inventory(summary, inventory)
     report = _assemble(
         root, analyzer, summary, gates, missing_files, largest_files,
         file_metrics, function_metrics, risks, dupes, near_duplicates, dead, idioms,
         external_findings, git_status, only_paths, changed_revspec, config,
     )
+    # After assembly, because the history section is the last input the
+    # built-in coverage rows need. Without it those rows shipped zeros.
+    if analyzer["coverage"]:
+        record_built_in_counts(analyzer["coverage"], report)
     report["score"] = score_report(report, analyzer["pressures"])
+    # After scoring, because condition rolls up the aspect scores. The two
+    # axes stay separate all the way out (ADR 007 §2): practice says
+    # whether anything is enforced, condition says what the analyzers
+    # found, and no field anywhere offers their mean.
+    report["practice"] = practice_level(root).as_dict()
+    report["pillars"] = pillar_report(report["score"], report["practice"])
     return report

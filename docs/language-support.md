@@ -8,7 +8,7 @@ ends, and — deliberately — where it under-reports.
 | Language | Declaration ranges | Accuracy |
 |---|---|---|
 | Python (`.py`) | `ast` — exact `end_lineno` | Exact. Falls back to the pattern scan only if the file has a syntax error. |
-| JS / TS / JSX / TSX (`.js`, `.jsx`, `.ts`, `.tsx`) | brace/paren depth over a comment- and string-masked copy | Bounded by the declaration's own braces. |
+| JS / TS / JSX / TSX (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`) | brace/paren depth over a comment- and string-masked copy | Bounded by the declaration's own braces. |
 | HTML (`.html`) | same brace scanner, so inline `<script>` bodies are measured | Bounded. |
 | Everything else | line-pattern scan, bounded by indentation | Approximate; used only as a last resort. |
 

@@ -77,7 +77,7 @@ Implements [ADR 008](adr-008-translation-and-decision.md)'s normalization half. 
 | 3.3 | `_corroborate`: weighted mean and spread across tools | lizard 14 + radon 14 + mccabe 8 yields 12.0 with spread 8–14 and three sources |
 | 3.4 | Spread drives `maintainability_range` | The interval narrows when tools agree and widens when they do not. **Depends on 3.5 and 3.6**: until the score consumes analyzer measurements, widening its interval with tool disagreement would claim uncertainty about a number those tools never touched |
 | 3.5 | Measurements, counts and populations all reach the report | Report carries distributions, not only counts |
-| 3.6 | Recalibrate against the 40-repo corpus | Corpus median returns to 4.0 under the new pipeline, or the constant is re-derived and the change is documented |
+| 3.6 | Recalibrate against the 40-repo corpus | **Blocked on provenance detection — do not re-derive yet.** Corpus median returns to 4.0 under the new pipeline, or the constant is re-derived and the change is documented |
 
 **Order within this phase is forced.** 3.1–3.3 stand alone and are done. 3.4 cannot precede 3.5/3.6 for the reason in its row. Until then, tool disagreement is reported beside the score and explicitly marked as not affecting it.
 
@@ -98,6 +98,16 @@ The 4x figure came from this repository being Python-heavy. Generalizing from n=
 **What the corpus run settled.** Every reference and the curve constant reproduced exactly except `risk`, which moved 0.0726 to 0.0733 — traced to this release adding three Python-only default risk patterns that fire on the 13 Python repositories. Both values and the cause are recorded in `_calibration.py`. Corpus median still rolls up to 4.0.
 
 **3.6 is the risk item.** Replacing homegrown detectors with external tools will move every corpus score. The calibration constant must be re-derived and [studies.md](studies.md) updated, and the old and new numbers must both be recorded so the shift is visible rather than silent.
+
+### Why 3.6 is blocked (2026-08-12)
+
+Adding `.mjs`/`.cjs` to `include_extensions` moved `CALIBRATION_C` from 2.6279 to 2.6414 and the duplication reference from 3.735 to 3.5718. **That drift is contamination, not correction, and the constant was deliberately not updated.**
+
+material-ui gained 10,802 files, of which 10,759 are `packages/mui-icons-material/lib/*.mjs` — six-line SVG icon wrappers written by `builder.mjs` in the same package, one per icon. They are committed to git, so "tracked means source" does not separate them. Their effect is mechanical: 10,759 tiny near-identical generated files dropped material-ui's duplication from 3.729 to 2.321 and dragged the corpus reference down with it.
+
+The `.mjs`/`.cjs` inclusion itself is correct and stays — babel's 1,480 previously-unread ES-module files are genuine source, and its estimate held at 4.4 once they were read. What the episode shows is that **the corpus cannot be re-derived until the pipeline can tell first-party source from generated and vendored code**, because widening what is read widens what is contaminated by exactly the same act.
+
+`tools/calibration/measurements.json` carries the current measurement, which is reproducible and honest about what the code does today. `_calibration.py` is untouched. A re-derivation is a separate, deliberate act after provenance detection lands.
 
 ## Phase 4 — Pillars, practice level, work order
 

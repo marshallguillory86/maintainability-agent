@@ -26,6 +26,18 @@ from maintainability_audit._metrics_types import Measurement
 from maintainability_audit._runner import ToolResult
 
 
+def _analyzer_row(analysis):
+    """The single analyzer-tier row, ignoring the always-present built-ins.
+
+    Built-in detectors are now part of the coverage record (ADR 006 §2:
+    demoted, not deleted), so indexing position zero would read one of
+    them instead of the tool under test.
+    """
+    rows = [item for item in analysis.coverage if item.tier == "analyzer"]
+    assert len(rows) == 1, f"expected one analyzer row, got {[r.slug for r in rows]}"
+    return rows[0]
+
+
 def _stub(directory: Path, name: str, body: str) -> None:
     path = directory / name
     path.write_text(f"#!/bin/sh\n{body}\n", encoding="utf-8")
@@ -77,8 +89,8 @@ def test_a_tool_selected_without_an_adapter_is_reported_not_skipped(
     _pool(monkeypatch, ["pmd"], {})
     analysis = analyze(tmp_path, {})
 
-    assert len(analysis.coverage) == 1
-    only = analysis.coverage[0]
+    _analyzer_row(analysis)
+    only = _analyzer_row(analysis)
     assert only.outcome == "no-adapter"
     assert not only.contributed
     assert "no adapter" in only.detail
@@ -88,9 +100,10 @@ def test_a_missing_executable_is_reported_with_its_outcome(tmp_path, monkeypatch
     _pool(monkeypatch, ["stubtool"], {"stubtool": _Echoing()})
     analysis = analyze(tmp_path, {})
 
-    assert analysis.coverage[0].outcome == "not-installed"
-    assert not analysis.coverage[0].contributed
-    assert analysis.gaps(), "a tool that never ran covers nothing"
+    assert _analyzer_row(analysis).outcome == "not-installed"
+    assert not _analyzer_row(analysis).contributed
+    assert "complexity" not in analysis.measured_concepts(), \
+        "a tool that never ran corroborates nothing"
 
 
 def test_a_working_tool_contributes_and_is_recorded(tmp_path, stub_path, monkeypatch) -> None:
@@ -99,7 +112,7 @@ def test_a_working_tool_contributes_and_is_recorded(tmp_path, stub_path, monkeyp
     _pool(monkeypatch, ["stubtool"], {"stubtool": _Echoing()})
 
     analysis = analyze(tmp_path, {})
-    only = analysis.coverage[0]
+    only = _analyzer_row(analysis)
 
     assert only.contributed
     assert only.version == "stubtool 9.9"
@@ -125,9 +138,9 @@ def test_a_tool_needing_config_it_cannot_find_is_not_a_clean_result(
     _pool(monkeypatch, ["stubtool"], {"stubtool": _NeedsConfig()})
 
     analysis = analyze(tmp_path, {})
-    assert analysis.coverage[0].outcome == "no-config"
-    assert not analysis.coverage[0].contributed
-    assert "add one" in analysis.coverage[0].detail
+    assert _analyzer_row(analysis).outcome == "no-config"
+    assert not _analyzer_row(analysis).contributed
+    assert "add one" in _analyzer_row(analysis).detail
 
     (tmp_path / "stub.config").write_text("{}", encoding="utf-8")
     assert analyze(tmp_path, {}).coverage[0].contributed
@@ -142,8 +155,8 @@ def test_a_timing_out_tool_is_recorded_rather_than_hanging(
 
     analysis = analyze(tmp_path, {"analyzers": {"timeout_seconds": 1}})
 
-    assert analysis.coverage[0].outcome == "timed-out"
-    assert not analysis.coverage[0].contributed
+    assert _analyzer_row(analysis).outcome == "timed-out"
+    assert not _analyzer_row(analysis).contributed
 
 
 def test_the_measurement_document_summarises_rather_than_dumps(

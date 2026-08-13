@@ -51,7 +51,7 @@ New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register,
 | [Studies and measured results](studies.md) | Empirical | Every claim about the world, with pinned inputs, controls and stated limits — the bounded-prompt experiment, the retracted AI-authorship claim, and fix breadth. Licenses nothing beyond the sentence stated with each result |
 | [Self-audit](self-audit.md) | Generated | This tool run against this repository. Always one commit behind the HEAD it ships with |
 | [FOSS tool inventory](tool-inventory.md) | Empirical | Every free quality analyzer this agent could run, which were installed and executed here, and what each one found. Separates proven from listed |
-| [The analyzer pool](analyzer-pool.md) | Reference | The 759-tool catalog, its license classification, and the depth and license-policy selectors that narrow it at run time |
+| [The analyzer pool](analyzer-pool.md) | Reference | The 760-tool catalog, its license classification, and the depth and license-policy selectors that narrow it at run time |
 
 ## Operating the tool
 
@@ -66,6 +66,7 @@ New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register,
 | [IDE and agent integration](ide-agent-integration.md) | Claude Code, Codex, Copilot Chat, Cursor |
 | [Roadmap](roadmap.md) | What is planned, and what is deliberately refused |
 | [Release plan](release-plan.md) | The ordered work from here to 1.0, with an exit condition per task |
+| [Report validation](../tools/validation/results.md) | Fourteen real repositories against a frame written before selection: what the output actually looked like, and the defect it exposed |
 
 ## Adding a claim to any of these
 

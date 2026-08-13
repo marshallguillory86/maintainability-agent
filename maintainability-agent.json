@@ -35,6 +35,7 @@
       "build/",
       ".pytest_cache/",
       "examples/reports/",
+      "tools/validation/reports/",
       "maintainability-report.md",
       "maintainability-remediation-prompt.md",
       "maintainability-pr-comment.md",
@@ -43,6 +44,7 @@
       "coverage.xml",
       "AGENTS-maintainability.md",
       "tools/calibration/*.json",
+      "tools/validation/*.json",
       "tools/experiments/*/results.json",
       "tests/fixtures/*.json",
       "tests/fixtures/*/*.json",
@@ -91,6 +93,8 @@
         ".py",
         ".js",
         ".jsx",
+        ".mjs",
+        ".cjs",
         ".ts",
         ".tsx"
       ]

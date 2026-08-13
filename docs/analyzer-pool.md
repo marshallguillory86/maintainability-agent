@@ -6,7 +6,9 @@ The machine-readable form is [`data/analyzer-catalog.json`](../data/analyzer-cat
 
 ## What is in the catalog
 
-**759 tools.** 755 from the [analysis-tools.dev database](https://github.com/analysis-tools-dev/static-analysis) at commit `66668c6`, captured 2026-06-10 (the database itself is CC0), plus 4 this project installed and ran that the database does not list.
+**760 tools.** 755 from the [analysis-tools.dev database](https://github.com/analysis-tools-dev/static-analysis) at commit `66668c6`, captured 2026-06-10 (the database itself is CC0), plus 5 this project installed and ran that the database does not list.
+
+Every count on this page is read from `data/analyzer-catalog.json` and held to it by `test_the_pool_document_states_the_catalogs_own_counts` — they drifted by a tool and a licence class before that test existed, which is exactly long enough for a reader to start trusting them.
 
 Every entry carries the source's own facts — name, license, languages, homepage — and two fields that are **this project's judgment, not the source's**: `tier` and `adapter`.
 
@@ -16,9 +18,9 @@ License strings in the wild are messy: 89 distinct spellings, from `MIT License`
 
 | Class | Count | Meaning |
 |---|---|---|
-| `permissive` | 464 | MIT, BSD, Apache, ISC, Zlib, Boost, Artistic, UPL and similar |
-| `unverified` | 75 | License could not be confirmed from the source data. **Not a claim that the tool is unfree** — flake8 (MIT) and checkstyle (LGPL) both land here because GitHub could not map their text to an SPDX id |
-| `strong-copyleft` | 71 | GPL, AGPL, CC-BY-SA, EUPL |
+| `permissive` | 465 | MIT, BSD, Apache, ISC, Zlib, Boost, Artistic, UPL and similar |
+| `unverified` | 74 | License could not be confirmed from the source data. **Not a claim that the tool is unfree** — flake8 (MIT) and checkstyle (LGPL) both land here because GitHub could not map their text to an SPDX id |
+| `strong-copyleft` | 72 | GPL, AGPL, CC-BY-SA, EUPL |
 | `proprietary` | 70 | Paid, no free tier recorded |
 | `weak-copyleft` | 42 | LGPL, MPL, EPL, CDDL |
 | `proprietary-free-tier` | 32 | Commercial, with a free or open-source plan recorded in the source's `plans` block |
@@ -30,7 +32,7 @@ A dual license takes the most permissive class on offer, because the licensee ch
 
 ### Eligible pool
 
-**444 tools** are eligible: open-source license class, not deprecated, targets at least one language, and not security-only. Security scanning is [`secure-code-agent`'s](https://github.com/marshallguillory86/secure-code-agent) job — those tools are cataloged and marked, never run from here.
+**446 tools** are eligible: open-source license class, not deprecated, targets at least one language, and not security-only. Security scanning is [`secure-code-agent`'s](https://github.com/marshallguillory86/secure-code-agent) job — those tools are cataloged and marked, never run from here.
 
 Eligible by class: 366 permissive, 44 strong-copyleft, 34 weak-copyleft.
 
@@ -55,7 +57,7 @@ Independent questions, and the pool is their intersection. **Concerns** asks wha
 
 The vocabulary is the scoring model's, so an answer maps onto aspects that exist and can move a score.
 
-**It cannot come from the upstream data.** Those tags are languages, ecosystems and frameworks — `rails`, `nodejs`, `spring` — and 367 of the 444 eligible tools carry no concern tag at all. What a tool measures is knowable only by running it, so `measures` is populated exactly as fast as adapters are written; the upstream tags are kept separately as `upstream_tags`.
+**It cannot come from the upstream data.** Those tags are languages, ecosystems and frameworks — `rails`, `nodejs`, `spring` — and only 5 of the 446 eligible tools carry an upstream tag that names one of this project's concerns. What a tool measures is knowable only by running it, so `measures` is populated exactly as fast as adapters are written; the upstream tags are kept separately as `upstream_tags`.
 
 ```bash
 python tools/resolve_pool.py --concerns duplication,dead-code
@@ -69,7 +71,7 @@ python tools/resolve_pool.py --concerns documentation
 | `baseline` | 4 | Multi-language, one install, no project config, seconds to run |
 | `moderate` | 10 | Baseline plus the mainstream per-language linters |
 | `heavy` | 14 | Moderate plus slower or configuration-hungry tools |
-| `all` | up to 444 | Every eligible tool that speaks a detected language |
+| `all` | up to 446 | Every eligible tool that speaks a detected language |
 
 **A tier below `all` is a promise that the tool works.** Nothing is placed in `baseline`, `moderate` or `heavy` until this project has installed it, run it, and parsed its output. That is why those numbers are small and why they will grow one verified tool at a time.
 
@@ -81,7 +83,7 @@ python tools/resolve_pool.py --concerns documentation
 |---|---|---|
 | `permissive` | MIT, BSD, Apache, ISC, Zlib… | 366 |
 | `copyleft-weak` | + LGPL, MPL, EPL | 400 |
-| `copyleft-any` | + GPL, AGPL | 444 |
+| `copyleft-any` | + GPL, AGPL | 446 |
 | `commercial-free-tier` | + proprietary tools with a free or OSS plan | 476 |
 | `unverified` | + tools whose license could not be confirmed | opt-in, never a default |
 
@@ -115,7 +117,7 @@ npm install -g jscpd@5
 
 ## Adapter status, stated plainly
 
-**15 tools have adapters** — meaning this project has run them and parsed their machine-readable output. Every one of the other 429 eligible tools is an inventory entry, not a capability.
+**16 tools have adapters** — meaning this project has run them and parsed their machine-readable output. Every one of the other 430 eligible tools is an inventory entry, not a capability.
 
 | Verified | Depth | Concern | Evidence |
 |---|---|---|---|

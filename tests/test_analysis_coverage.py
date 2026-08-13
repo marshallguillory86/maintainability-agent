@@ -103,7 +103,8 @@ def test_every_attempted_tool_appears_with_an_outcome() -> None:
     ])
     document = coverage_document(analysis)
 
-    listed = {entry["tool"] for entries in document["by_outcome"].values() for entry in entries}
+    listed = {entry["tool"] for entries in document["by_outcome"].values()
+              for entry in entries if entry["tier"] == "analyzer"}
     assert listed == {"lizard", "jscpd", "pmd"}
     assert document["tools_attempted"] == 3
     assert document["tools_contributed"] == 1
@@ -172,12 +173,18 @@ def test_a_broken_adapter_cannot_fail_the_audit(tmp_path: Path, monkeypatch) -> 
 
     analysis = analyze(tmp_path, {"analyzers": {"concerns": ["complexity"]}})
 
-    assert len(analysis.coverage) == 1
-    only = analysis.coverage[0]
+    # Built-in detectors are always in the record, so the broken analyzer
+    # is the single *analyzer*-tier entry rather than the only entry.
+    analyzers = [item for item in analysis.coverage if item.tier == "analyzer"]
+    assert len(analyzers) == 1
+    only = analyzers[0]
     assert not only.contributed
     assert "RuntimeError" in only.detail
     assert "defect in the adapter" in only.detail
-    assert analysis.gaps() == ["complexity"], "a broken adapter covers nothing"
+    # Not a gap — the built-in declaration-size detector still looked —
+    # but no *analyzer* corroborated it, which is the fact under test.
+    assert "complexity" not in analysis.measured_concepts()
+    assert analysis.single_source_concerns() == ["complexity"]
 
 
 def test_analyzer_findings_reach_the_report(tmp_path: Path) -> None:
@@ -233,3 +240,166 @@ def test_a_path_outside_the_root_is_kept_rather_than_mangled(tmp_path: Path) -> 
     ])
 
     assert findings_document(outside, tmp_path)[0]["path"] == "/elsewhere/x.py"
+
+
+def _no_analyzers(**extra: object) -> dict[str, object]:
+    """A config that selects the built-in tier and nothing else.
+
+    Built by denying whatever the default pool resolves to, so the test
+    keeps meaning "no external tool ran" when the catalog changes rather
+    than quietly admitting a newly-added analyzer.
+    """
+    from maintainability_audit._catalog import resolve_pool
+
+    pool, _ = resolve_pool({})
+    return {"analyzers": {"deny_tools": [tool["slug"] for tool in pool], **extra}}
+
+
+def test_the_built_in_detectors_appear_in_the_coverage_record(tmp_path: Path) -> None:
+    """A reader asking what examined this code is owed the whole answer.
+
+    The built-ins were demoted, not deleted (ADR 006 §2). While they were
+    absent from coverage, the section described the external half of the
+    work and silently implied the other half did not happen — a report
+    that under-claims its own evidence is still a report that misleads.
+    """
+    from maintainability_audit._built_ins import BUILT_IN_SOURCES
+
+    (tmp_path / "a.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    document = coverage_document(analyze(tmp_path, _no_analyzers()))
+
+    listed = {entry["tool"]: entry for entries in document["by_outcome"].values()
+              for entry in entries if entry["tier"] == "built-in"}
+    assert set(listed) == {slug for slug, _, _ in BUILT_IN_SOURCES}
+    assert document["sources"] == {"built_in": len(BUILT_IN_SOURCES), "analyzers": 0}
+    # The tool counts stay a statement about the analyzer pool, or
+    # "3 of 12 tools ran" would quietly become "11 of 20".
+    assert document["tools_attempted"] == 0
+
+
+def test_a_concern_only_a_built_in_reached_is_neither_covered_nor_a_gap(
+    tmp_path: Path,
+) -> None:
+    """Three states, not two: corroborated, single-source, unexamined.
+
+    Collapsing single-source into covered would let a fallback stand in
+    for independent evidence. Collapsing it into a gap would claim
+    nobody looked when something did. Both are the same lie in opposite
+    directions, so the report carries all three.
+    """
+    (tmp_path / "a.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    analysis = analyze(tmp_path, _no_analyzers(concerns=["duplication"]))
+
+    assert analysis.measured_concepts() == set()
+    assert analysis.single_source_concerns() == ["duplication"]
+    assert analysis.gaps() == []
+
+
+def test_no_built_in_claims_to_be_unique_when_an_adapter_exists() -> None:
+    """The uniqueness claims are held to the registry, not to memory.
+
+    Each built-in's note says either "no adapter emits this" or names the
+    tools that do. Those notes were written against the adapter list on
+    one particular day; the day an adapter for churn or file_lines lands,
+    the note becomes false and nothing else would notice.
+    """
+    from maintainability_audit._built_ins import BUILT_IN_SOURCES
+    from maintainability_audit._generic import DECLARED
+    from maintainability_audit._tool_adapters import ADAPTERS
+
+    emitted = {concept for factory in ADAPTERS.values()
+               for concept in factory().concepts}
+    emitted |= {concern for spec in DECLARED.values() for concern in spec.concerns}
+
+    claimed_unique = {
+        concept
+        for _, concepts, note in BUILT_IN_SOURCES
+        for concept in concepts
+        if "no adapter emits" in note
+    }
+    assert claimed_unique and not claimed_unique & emitted, (
+        f"an adapter now emits {sorted(claimed_unique & emitted)}; the built-in's "
+        "note claims nothing external does"
+    )
+
+    # And the converse: a built-in that names its external equivalents
+    # must actually have them, or the demotion is on paper only.
+    shared = {
+        concept
+        for _, concepts, note in BUILT_IN_SOURCES
+        for concept in concepts
+        if "no adapter emits" not in note and "config" not in note
+    }
+    assert shared <= emitted, f"claimed covered but nothing emits {sorted(shared - emitted)}"
+
+
+def test_a_built_in_row_reports_the_population_it_examined(tmp_path: Path) -> None:
+    """`0 measurements, 0 findings` is the defect, inside the table built to stop it.
+
+    Coverage rows are assembled before the scan finishes, so every
+    built-in shipped zeros — a detector that examined 981 declarations
+    and found 16 problems appeared to have examined nothing. Read from
+    the same summary the scorer consumes, so the table cannot disagree
+    with the score computed beside it.
+    """
+    from maintainability_audit._built_ins import BUILT_IN_COUNTS, record_built_in_counts
+
+    coverage = {"by_outcome": {"ran": [
+        {"tool": "declaration-size", "tier": "built-in", "measurements": 0, "findings": 0},
+        {"tool": "lizard", "tier": "analyzer", "measurements": 7, "findings": 0},
+    ]}}
+    report = {
+        "summary": {"declarations_scanned": 981, "function_failures": 11,
+                    "function_warnings": 5},
+        "history": {"files_changed": 3, "qualifying_hotspots": 1, "code_coupling_pairs": 2},
+    }
+
+    record_built_in_counts(coverage, report)
+    rows = {row["tool"]: row for row in coverage["by_outcome"]["ran"]}
+
+    assert rows["declaration-size"]["measurements"] == 981
+    assert rows["declaration-size"]["findings"] == 16, "failures and warnings both count"
+    assert rows["lizard"]["measurements"] == 7, "an analyzer row is not rewritten"
+    # Every built-in that reports counts must have a source for them, or
+    # it silently keeps its zeros.
+    from maintainability_audit._built_ins import BUILT_IN_SOURCES
+
+    assert {slug for slug, _, _ in BUILT_IN_SOURCES} - set(BUILT_IN_COUNTS) == {"history"}
+
+
+def test_history_without_a_git_tree_is_unmeasured_not_quiet(tmp_path: Path) -> None:
+    """A shallow clone has no churn to report and no right to say zero."""
+    from maintainability_audit._built_ins import record_built_in_counts
+
+    coverage = {"by_outcome": {"ran": [
+        {"tool": "history", "tier": "built-in", "measurements": 0, "findings": 0},
+    ]}}
+    record_built_in_counts(coverage, {"summary": {}, "history": None})
+    # Regrouped, not just relabelled — every renderer reads the bucket.
+    row = coverage["by_outcome"]["no-history"][0]
+
+    assert row["outcome"] == "no-history"
+    assert "unmeasured rather than absent" in row["detail"]
+
+
+def test_a_row_whose_outcome_changes_moves_to_that_outcomes_group() -> None:
+    """The grouping is the display; changing a field under it is not enough.
+
+    `by_outcome` buckets rows before the history section is known, so
+    setting `entry["outcome"] = "no-history"` left the row sitting in the
+    `ran` bucket. Every renderer reads the bucket key, not the field, so
+    a shallow clone of `kilo` printed `history ... ran, 0 measurements` —
+    "looked and found no churn" instead of "could not look". Found by
+    running the tool on a real repository, which is what the validation
+    sample is for.
+    """
+    from maintainability_audit._built_ins import record_built_in_counts
+
+    coverage = {"by_outcome": {"ran": [
+        {"tool": "history", "tier": "built-in", "measurements": 0, "findings": 0},
+        {"tool": "file-size", "tier": "built-in", "measurements": 0, "findings": 0},
+    ]}}
+    record_built_in_counts(coverage, {"summary": {"files_scanned": 9}, "history": None})
+
+    assert [row["tool"] for row in coverage["by_outcome"]["no-history"]] == ["history"]
+    assert [row["tool"] for row in coverage["by_outcome"]["ran"]] == ["file-size"]

@@ -1,0 +1,119 @@
+{
+  "description": "The report-validation sample. Selected against the axes in sample-frame.md, pinned to exact commits resolved 2026-08-12 before any repository was cloned. Not the calibration corpus: no repository here appears in tools/calibration/corpus.json.",
+  "frame": "tools/validation/sample-frame.md",
+  "resolved": "2026-08-12",
+  "repos": [
+    {
+      "name": "click",
+      "url": "https://github.com/pallets/click",
+      "commit": "9c4dfdaebe0e6b2aabc566eb81f6f10eb5cd6ea1",
+      "language": "python",
+      "size": "mid",
+      "why": "Python with the full tool set available - complexipy, radon, ruff, vulture, mypy, pydocstyle, interrogate all apply. The best case, included so the worst cases have something to be compared against."
+    },
+    {
+      "name": "requests",
+      "url": "https://github.com/psf/requests",
+      "commit": "8068356288978c4f54661ae6f95afe0e0831885e",
+      "language": "python",
+      "size": "mid",
+      "why": "A second Python repository, deliberately: one is an anecdote."
+    },
+    {
+      "name": "date-fns",
+      "url": "https://github.com/date-fns/date-fns",
+      "commit": "a0a39220522ed1228445792c768ed887709aea5f",
+      "language": "typescript",
+      "size": "large",
+      "why": "TypeScript, thousands of small single-purpose functions. Exercises the declaration population at a shape Python repositories do not produce."
+    },
+    {
+      "name": "formik",
+      "url": "https://github.com/jaredpalmer/formik",
+      "commit": "91475adbf33579561e580eceea0c031f4ec2e992",
+      "language": "typescript",
+      "size": "mid",
+      "why": "TypeScript with visibly reduced maintenance activity. The condition axis: a report that only works on actively-tended code is a report for nobody."
+    },
+    {
+      "name": "babel",
+      "url": "https://github.com/babel/babel",
+      "commit": "1eac4481473df52fbbcb452c4dca8d79039dbb63",
+      "language": "javascript",
+      "size": "large",
+      "why": "The monorepo case - many packages under one root. Exercises paths, exclusions and whether one score over a hundred packages means anything."
+    },
+    {
+      "name": "gson",
+      "url": "https://github.com/google/gson",
+      "commit": "119818bc666d3b9f897d6c0ca7546ce28e9bbcac",
+      "language": "java",
+      "size": "mid",
+      "why": "Java, where only lizard and jscpd apply of the installed pool. Coverage must say so rather than scoring the gap as clean."
+    },
+    {
+      "name": "cobra",
+      "url": "https://github.com/spf13/cobra",
+      "commit": "adbc8813901bba65827259daa8e22ff94ec1f30e",
+      "language": "go",
+      "size": "mid",
+      "why": "Go: same partial-coverage case as Java, different language, to separate 'the Java adapter is broken' from 'non-Python coverage is thin'."
+    },
+    {
+      "name": "ripgrep",
+      "url": "https://github.com/BurntSushi/ripgrep",
+      "commit": "3fce3b5bb0236da2df6d99672afb8a719642eca7",
+      "language": "rust",
+      "size": "large",
+      "why": "Rust, actively maintained, large. lizard supports it; nothing else installed does."
+    },
+    {
+      "name": "kilo",
+      "url": "https://github.com/antirez/kilo",
+      "commit": "323d93b29bd89a2cb446de90c4ed4fea1764176e",
+      "language": "c",
+      "size": "below-floor",
+      "why": "A text editor in roughly a thousand lines of C, one source file, untouched for years. Two axes at once: far below the population floor, and visibly unmaintained. The report must withhold the score and name the shortfall - this is the hello-world A+ case, in the wild."
+    },
+    {
+      "name": "curl",
+      "url": "https://github.com/curl/curl",
+      "commit": "3089e7eec8b694ff36a3aa700c4a319d656806e7",
+      "language": "c",
+      "size": "large",
+      "why": "Large C, thirty years old, actively maintained, famously careful about quality. If the tool calls this bad code, the tool is wrong."
+    },
+    {
+      "name": "json",
+      "url": "https://github.com/nlohmann/json",
+      "commit": "cdf52ae9bef77a0844e02e42df6d2df83a55c4b9",
+      "language": "cpp",
+      "size": "mid",
+      "why": "Header-only C++, where a single file legitimately runs to tens of thousands of lines. Exercises whether the file-size dimension can distinguish a convention from a defect."
+    },
+    {
+      "name": "whisper.cpp",
+      "url": "https://github.com/ggerganov/whisper.cpp",
+      "commit": "592feef04a1802b18cbeffd0fd0eb5d02570c2ec",
+      "language": "cpp",
+      "size": "large",
+      "why": "C++ with vendored dependencies in-tree. Exercises whether exclusions keep third-party code out of the user's score - the defect that had vulture reporting 517 findings, all inside .venv."
+    },
+    {
+      "name": "lapack",
+      "url": "https://github.com/Reference-LAPACK/lapack",
+      "commit": "51b349470b3b26c948d068deb45c9b120a47ed32",
+      "language": "fortran",
+      "size": "large",
+      "why": "Fortran, and the hardest case in the sample: numerical code whose conventions predate every threshold in the rubric. Included precisely because it is expected to score badly for reasons that are not defects."
+    },
+    {
+      "name": "machinelearning-samples",
+      "url": "https://github.com/dotnet/machinelearning-samples",
+      "commit": "427ccb68ab1da8f0600bf7653b5158ec1f04c3cb",
+      "language": "csharp",
+      "size": "large",
+      "why": "C#, and a tree of many independent sample projects rather than one library. Exercises the case where 'this repository' is not one codebase at all."
+    }
+  ]
+}

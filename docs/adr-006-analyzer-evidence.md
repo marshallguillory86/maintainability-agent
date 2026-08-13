@@ -38,6 +38,10 @@ The pipeline's first act is to run the available FOSS quality analyzers over the
 
 The built-in detectors are **demoted, not deleted**. They remain as a fallback tier for languages and environments where nothing else runs, and for the zero-install path. Every measurement they produce is tagged single-source (see §3) and carries the weaker evidence strength that implies.
 
+Demotion means a lower tier, not a hidden one. The eight built-in sources appear in the coverage record beside the analyzers, each carrying `tier: built-in` and a note saying where it stands: which external tools cover the same concept, or that no adapter emits it at all. Four are in that second group — `file_lines`, `risk`, `idioms`, and the history concepts `churn` / `coupling` / `ownership` — so they are not merely a fallback but the only source the tool has for those. `test_no_built_in_claims_to_be_unique_when_an_adapter_exists` holds each of those notes against the adapter registry, so a claim of uniqueness fails the build on the day an adapter contradicts it.
+
+Leaving them out of coverage was itself a reporting defect, and the same one in mirror image: a section headed "what examined this code" that omitted half of what examined it. Coverage now reports **three** states per concern rather than two — corroborated by an external tool, single-source (a built-in looked and nothing else did), and unexamined. Collapsing single-source into "covered" would let a fallback pass for independent evidence; collapsing it into "unexamined" would claim nobody looked when something did.
+
 ### 2. Availability is reported, never assumed — and proven by invocation
 
 Presence on `PATH` is not availability. Measured: `/usr/bin/java` exists and `command -v java` succeeds, but it is the macOS stub with no JDK behind it, and PMD refused to launch through it.

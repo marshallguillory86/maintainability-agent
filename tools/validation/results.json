@@ -1,0 +1,981 @@
+{
+ "frame": "tools/validation/sample-frame.md",
+ "runs": [
+  {
+   "analyzer_findings": 74,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 10,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 1925,
+   "estimate": 4.3,
+   "evidence_reasons": [
+    {
+     "measurement": "history.code_coupling_pairs",
+     "provenance": "history.code_coupling_pairs",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.files_changed",
+     "provenance": "history.files_changed",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.multi_commit_files",
+     "provenance": "history.multi_commit_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.qualifying_hotspots",
+     "provenance": "history.qualifying_hotspots",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.single_author_files",
+     "provenance": "history.single_author_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    }
+   ],
+   "evidence_status": "incomplete",
+   "expected_size": "mid",
+   "files_scanned": 120,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "python",
+   "production_declarations": 754,
+   "range": [
+    3.4,
+    4.5
+   ],
+   "read_source_files": 78,
+   "repo": "click",
+   "seconds": 7.4,
+   "unread_source": [
+    {
+     "files": 1,
+     "language": "Shell",
+     "suffix": ".sh"
+    }
+   ],
+   "unread_source_files": 1,
+   "verified_grade": null
+  },
+  {
+   "analyzer_findings": 90,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 10,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 807,
+   "estimate": 4.1,
+   "evidence_reasons": [
+    {
+     "measurement": "history.code_coupling_pairs",
+     "provenance": "history.code_coupling_pairs",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.files_changed",
+     "provenance": "history.files_changed",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.multi_commit_files",
+     "provenance": "history.multi_commit_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.qualifying_hotspots",
+     "provenance": "history.qualifying_hotspots",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.single_author_files",
+     "provenance": "history.single_author_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    }
+   ],
+   "evidence_status": "incomplete",
+   "expected_size": "mid",
+   "files_scanned": 52,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "python",
+   "production_declarations": 321,
+   "range": [
+    3.2,
+    4.3
+   ],
+   "read_source_files": 37,
+   "repo": "requests",
+   "seconds": 4.0,
+   "unread_source": [],
+   "unread_source_files": 0,
+   "verified_grade": null
+  },
+  {
+   "analyzer_findings": 2314,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 9,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 1663,
+   "estimate": 4.0,
+   "evidence_reasons": [
+    {
+     "measurement": "history.code_coupling_pairs",
+     "provenance": "history.code_coupling_pairs",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.files_changed",
+     "provenance": "history.files_changed",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.multi_commit_files",
+     "provenance": "history.multi_commit_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.qualifying_hotspots",
+     "provenance": "history.qualifying_hotspots",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.single_author_files",
+     "provenance": "history.single_author_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    }
+   ],
+   "evidence_status": "incomplete",
+   "expected_size": "large",
+   "files_scanned": 1747,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "typescript",
+   "production_declarations": 897,
+   "range": [
+    3.1,
+    4.3
+   ],
+   "read_source_files": 1619,
+   "repo": "date-fns",
+   "seconds": 7.5,
+   "unread_source": [
+    {
+     "files": 14,
+     "language": "Shell",
+     "suffix": ".sh"
+    }
+   ],
+   "unread_source_files": 14,
+   "verified_grade": null
+  },
+  {
+   "analyzer_findings": 112,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 9,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 351,
+   "estimate": 4.0,
+   "evidence_reasons": [
+    {
+     "measurement": "history.code_coupling_pairs",
+     "provenance": "history.code_coupling_pairs",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.files_changed",
+     "provenance": "history.files_changed",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.multi_commit_files",
+     "provenance": "history.multi_commit_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.qualifying_hotspots",
+     "provenance": "history.qualifying_hotspots",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.single_author_files",
+     "provenance": "history.single_author_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    }
+   ],
+   "evidence_status": "incomplete",
+   "expected_size": "mid",
+   "files_scanned": 197,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "typescript",
+   "production_declarations": 269,
+   "range": [
+    3.2,
+    4.3
+   ],
+   "read_source_files": 126,
+   "repo": "formik",
+   "seconds": 3.5,
+   "unread_source": [
+    {
+     "files": 2,
+     "language": "Shell",
+     "suffix": ".sh"
+    }
+   ],
+   "unread_source_files": 2,
+   "verified_grade": null
+  },
+  {
+   "analyzer_findings": 14909,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 9,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 23594,
+   "estimate": 4.4,
+   "evidence_reasons": [
+    {
+     "measurement": "history.code_coupling_pairs",
+     "provenance": "history.code_coupling_pairs",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.files_changed",
+     "provenance": "history.files_changed",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.multi_commit_files",
+     "provenance": "history.multi_commit_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.qualifying_hotspots",
+     "provenance": "history.qualifying_hotspots",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.single_author_files",
+     "provenance": "history.single_author_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    }
+   ],
+   "evidence_status": "incomplete",
+   "expected_size": "large",
+   "files_scanned": 17818,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "javascript",
+   "production_declarations": 6498,
+   "range": [
+    3.5,
+    4.6
+   ],
+   "read_source_files": 17606,
+   "repo": "babel",
+   "seconds": 32.8,
+   "unread_source": [
+    {
+     "files": 22,
+     "language": "Shell",
+     "suffix": ".sh"
+    },
+    {
+     "files": 1,
+     "language": "Vue",
+     "suffix": ".vue"
+    }
+   ],
+   "unread_source_files": 23,
+   "verified_grade": null
+  },
+  {
+   "analyzer_findings": 704,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 9,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 0,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "264 of 264 source files (100%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "mid",
+   "files_scanned": 16,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "java",
+   "production_declarations": 0,
+   "range": null,
+   "read_source_files": 0,
+   "repo": "gson",
+   "seconds": 5.3,
+   "unread_source": [
+    {
+     "files": 264,
+     "language": "Java",
+     "suffix": ".java"
+    }
+   ],
+   "unread_source_files": 264,
+   "verified_grade": null
+  },
+  {
+   "analyzer_findings": 115,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 9,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 0,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "36 of 36 source files (100%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "mid",
+   "files_scanned": 17,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "go",
+   "production_declarations": 0,
+   "range": null,
+   "read_source_files": 0,
+   "repo": "cobra",
+   "seconds": 2.9,
+   "unread_source": [
+    {
+     "files": 36,
+     "language": "Go",
+     "suffix": ".go"
+    }
+   ],
+   "unread_source_files": 36,
+   "verified_grade": null
+  },
+  {
+   "analyzer_findings": 438,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 9,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 0,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "115 of 115 source files (100%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "large",
+   "files_scanned": 23,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "rust",
+   "production_declarations": 0,
+   "range": null,
+   "read_source_files": 0,
+   "repo": "ripgrep",
+   "seconds": 3.0,
+   "unread_source": [
+    {
+     "files": 110,
+     "language": "Rust",
+     "suffix": ".rs"
+    },
+    {
+     "files": 2,
+     "language": "Shell",
+     "suffix": ".sh"
+    },
+    {
+     "files": 1,
+     "language": "Lua",
+     "suffix": ".lua"
+    },
+    {
+     "files": 1,
+     "language": "Ruby",
+     "suffix": ".rb"
+    },
+    {
+     "files": 1,
+     "language": "Shell",
+     "suffix": ".zsh"
+    }
+   ],
+   "unread_source_files": 115,
+   "verified_grade": null
+  },
+  {
+   "analyzer_findings": 1,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 9,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 0,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "1 of 1 source files (100%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "below-floor",
+   "files_scanned": 1,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "c",
+   "production_declarations": 0,
+   "range": null,
+   "read_source_files": 0,
+   "repo": "kilo",
+   "seconds": 2.2,
+   "unread_source": [
+    {
+     "files": 1,
+     "language": "C",
+     "suffix": ".c"
+    }
+   ],
+   "unread_source_files": 1,
+   "verified_grade": null
+  },
+  {
+   "analyzer_findings": 4379,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 10,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 1041,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "1120 of 1172 source files (96%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "large",
+   "files_scanned": 981,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "c",
+   "production_declarations": 0,
+   "range": null,
+   "read_source_files": 52,
+   "repo": "curl",
+   "seconds": 11.3,
+   "unread_source": [
+    {
+     "files": 758,
+     "language": "C",
+     "suffix": ".c"
+    },
+    {
+     "files": 257,
+     "language": "C",
+     "suffix": ".h"
+    },
+    {
+     "files": 59,
+     "language": "Perl",
+     "suffix": ".pl"
+    },
+    {
+     "files": 29,
+     "language": "Shell",
+     "suffix": ".sh"
+    },
+    {
+     "files": 15,
+     "language": "Perl",
+     "suffix": ".pm"
+    },
+    {
+     "files": 2,
+     "language": "C++",
+     "suffix": ".cpp"
+    }
+   ],
+   "unread_source_files": 1120,
+   "verified_grade": null
+  },
+  {
+   "analyzer_findings": 2056,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 10,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 65,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "502 of 509 source files (99%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "mid",
+   "files_scanned": 281,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "cpp",
+   "production_declarations": 60,
+   "range": null,
+   "read_source_files": 7,
+   "repo": "json",
+   "seconds": 8.3,
+   "unread_source": [
+    {
+     "files": 423,
+     "language": "C++",
+     "suffix": ".cpp"
+    },
+    {
+     "files": 57,
+     "language": "C++",
+     "suffix": ".hpp"
+    },
+    {
+     "files": 17,
+     "language": "C",
+     "suffix": ".h"
+    },
+    {
+     "files": 1,
+     "language": "C",
+     "suffix": ".c"
+    },
+    {
+     "files": 1,
+     "language": "Lua",
+     "suffix": ".lua"
+    },
+    {
+     "files": 1,
+     "language": "Shell",
+     "suffix": ".sh"
+    },
+    {
+     "files": 1,
+     "language": "SQL",
+     "suffix": ".sql"
+    },
+    {
+     "files": 1,
+     "language": "Swift",
+     "suffix": ".swift"
+    }
+   ],
+   "unread_source_files": 502,
+   "verified_grade": null
+  },
+  {
+   "analyzer_findings": 7229,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 10,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 296,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "998 of 1039 source files (96%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "large",
+   "files_scanned": 89,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "cpp",
+   "production_declarations": 219,
+   "range": null,
+   "read_source_files": 41,
+   "repo": "whisper.cpp",
+   "seconds": 22.6,
+   "unread_source": [
+    {
+     "files": 437,
+     "language": "C++",
+     "suffix": ".cpp"
+    },
+    {
+     "files": 217,
+     "language": "C",
+     "suffix": ".h"
+    },
+    {
+     "files": 114,
+     "language": "C",
+     "suffix": ".c"
+    },
+    {
+     "files": 70,
+     "language": "C++",
+     "suffix": ".hpp"
+    },
+    {
+     "files": 45,
+     "language": "Java",
+     "suffix": ".java"
+    },
+    {
+     "files": 33,
+     "language": "Ruby",
+     "suffix": ".rb"
+    },
+    {
+     "files": 33,
+     "language": "Shell",
+     "suffix": ".sh"
+    },
+    {
+     "files": 18,
+     "language": "Go",
+     "suffix": ".go"
+    },
+    {
+     "files": 12,
+     "language": "Kotlin",
+     "suffix": ".kt"
+    },
+    {
+     "files": 9,
+     "language": "Objective-C",
+     "suffix": ".m"
+    },
+    {
+     "files": 8,
+     "language": "Swift",
+     "suffix": ".swift"
+    },
+    {
+     "files": 1,
+     "language": "Objective-C",
+     "suffix": ".mm"
+    },
+    {
+     "files": 1,
+     "language": "PowerShell",
+     "suffix": ".ps1"
+    }
+   ],
+   "unread_source_files": 998,
+   "verified_grade": null
+  },
+  {
+   "analyzer_findings": 71633,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 10,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 46,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "6508 of 6509 source files (100%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "large",
+   "files_scanned": 8,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "fortran",
+   "production_declarations": 46,
+   "range": null,
+   "read_source_files": 1,
+   "repo": "lapack",
+   "seconds": 28.7,
+   "unread_source": [
+    {
+     "files": 3568,
+     "language": "Fortran",
+     "suffix": ".f"
+    },
+    {
+     "files": 2895,
+     "language": "C",
+     "suffix": ".c"
+    },
+    {
+     "files": 31,
+     "language": "Fortran",
+     "suffix": ".f90"
+    },
+    {
+     "files": 12,
+     "language": "C",
+     "suffix": ".h"
+    },
+    {
+     "files": 2,
+     "language": "Julia",
+     "suffix": ".jl"
+    }
+   ],
+   "unread_source_files": 6508,
+   "verified_grade": null
+  },
+  {
+   "analyzer_findings": 1965,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 9,
+   "built_in_sources": 8,
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 1871,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "605 of 625 source files (97%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "large",
+   "files_scanned": 162,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "csharp",
+   "production_declarations": 1871,
+   "range": null,
+   "read_source_files": 20,
+   "repo": "machinelearning-samples",
+   "seconds": 14.2,
+   "unread_source": [
+    {
+     "files": 562,
+     "language": "C#",
+     "suffix": ".cs"
+    },
+    {
+     "files": 34,
+     "language": "F#",
+     "suffix": ".fs"
+    },
+    {
+     "files": 8,
+     "language": "C",
+     "suffix": ".h"
+    },
+    {
+     "files": 1,
+     "language": "PowerShell",
+     "suffix": ".ps1"
+    }
+   ],
+   "unread_source_files": 605,
+   "verified_grade": null
+  }
+ ],
+ "sample": "sample.json"
+}

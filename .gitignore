@@ -32,3 +32,9 @@ CLAUDE.md
 .cursor/
 .windsurf/
 .github/copilot-instructions.md
+
+# Per-repository reports from the validation sample. Reproducible from a
+# pinned manifest by tools/validation/run_sample.py, and roughly a
+# megabyte of generated JSON; the summary the regression tests assert on
+# (tools/validation/results.json) is committed.
+tools/validation/reports/

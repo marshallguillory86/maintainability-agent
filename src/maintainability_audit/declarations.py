@@ -17,7 +17,11 @@ from ._metrics_types import COMPLEXITY_RE, FUNC_PATTERNS, DeclRange, FunctionMet
 from ._ranges import indent_bounded_end, js_declaration_ranges
 
 # Extensions handled by the brace-bounded scanner in ``_ranges``.
-BRACE_SUFFIXES = {".js", ".jsx", ".ts", ".tsx", ".html"}
+# `.mjs` and `.cjs` are the same JavaScript as `.js` — only the module
+# system differs, and that is invisible to a brace-bounded scan. Their
+# absence was not a decision: babel carried 1,503 unread `.mjs`/`.cjs`
+# files, 8.5% of its source, while its `.js` was read normally.
+BRACE_SUFFIXES = {".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".html"}
 
 # Every extension we attempt declaration detection on at all.
 DECLARATION_SUFFIXES = {".py"} | BRACE_SUFFIXES

@@ -15,7 +15,8 @@ DEFAULT_IDIOM_GROUPS: dict[str, list[str]] = {}
 
 DEFAULT_CONFIG: dict[str, Any] = {
     "paths": {
-        "include_extensions": [".py", ".js", ".jsx", ".ts", ".tsx", ".html", ".css", ".md"],
+        "include_extensions": [".py", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx",
+                               ".html", ".css", ".md"],
         "exclude_patterns": [
             ".git/",
             "node_modules/",
@@ -95,7 +96,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
         {
             "name": "debt-marker",
             "pattern": r"\b(TODO|FIXME|HACK)\b",
-            "extensions": [".py", ".js", ".jsx", ".ts", ".tsx", ".html", ".css", ".md"],
+            "extensions": [".py", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx",
+                           ".html", ".css", ".md"],
         },
         {
             # Absence read as a value. `counts.get("x", 0)` cannot

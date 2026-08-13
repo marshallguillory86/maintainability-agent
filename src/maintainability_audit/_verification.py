@@ -68,6 +68,14 @@ DEFAULT_V1_REQUIRED: frozenset[str] = frozenset({
     "summary.dead_code_count",
     "summary.near_duplicate_count",
     "summary.idiom_concern_count",
+    # Required, and the most load-bearing pair in the list: a report that
+    # cannot say what it failed to read cannot be trusted to have read
+    # anything. Unknown here means a report predating the field, and the
+    # correct response to that is a withheld grade rather than a
+    # confident one — the validation sample showed a 4.3 computed from a
+    # quarter of curl's source with nothing in the output saying so.
+    "summary.unread_source_files",
+    "summary.read_source_files",
     "summary.has_readme",
     "summary.has_changelog",
     "summary.has_docs_dir",
@@ -144,6 +152,14 @@ def _out_of_scale(evidence: NormalizedEvidence) -> list[dict[str, str]]:
     estimate 4.2 with status "complete" over *zero* declarations, and
     every PR-scoped CI run inherited it.
     """
+    # Checked before the population floors, because it explains them. A
+    # Java repository reads as "0 declarations, below the floor of 139",
+    # which sends the reader to look for more code when the code is
+    # already there and simply was not opened. The true cause has to be
+    # the reason printed, or the remedy is wrong.
+    unread = _unread_source(evidence)
+    if unread:
+        return unread
     thin = _below_root_floor(evidence)
     if thin:
         return thin
@@ -161,6 +177,62 @@ def _out_of_scale(evidence: NormalizedEvidence) -> list[dict[str, str]]:
         # Same shape as every other reason, so consumers need no special
         # case: a reason without provenance sends the reader hunting.
         "provenance": "report.mode",
+    }]
+
+
+# The share of a repository's source that may go unread before a score
+# stops describing the repository. A judgment, stated rather than buried:
+# below this, the unread files are a fringe — a stray shell script in a
+# Python project — and naming them is enough. At or above it, the score
+# is drawn from a minority of the code while being presented as a
+# statement about all of it.
+#
+# Set from the validation sample, where the failures were not marginal:
+# curl read 25% of its source, whisper.cpp 23%, gson and ripgrep 0%. A
+# tighter threshold would withhold scores from healthy polyglot
+# repositories; a looser one would have let curl through.
+MAX_UNREAD_SHARE = 0.20
+
+
+def _unread_source(evidence: NormalizedEvidence) -> list[dict[str, str]]:
+    """Source files that exist, that this scan never opened.
+
+    The most complete form of the defect this project exists to remove.
+    Every earlier instance was a *count* that was absent and read as
+    zero; this is the **population** being absent — code present in the
+    tree, invisible to `include_extensions`, and silently outside the
+    number the report prints.
+
+    Measured, not hypothesised: curl reported 4.3 computed from 1,041
+    declarations of Markdown and Python test scripts while lizard, in the
+    same report, measured 20,547 declarations of the C nobody read.
+    """
+    unread = measured(evidence.summary.unread_source_files)
+    read = measured(evidence.summary.read_source_files)
+    if unread is None or read is None or unread == 0:
+        # Unknown here means a report that predates this field, not a
+        # clean tree. It cannot be treated as evidence either way, and
+        # `build_report` always stamps it — see
+        # `test_every_report_states_what_it_could_not_read`.
+        return []
+
+    total = unread + read
+    share = unread / total if total else 1.0
+    if share < MAX_UNREAD_SHARE:
+        return []
+    return [{
+        "measurement": "summary.unread_source_files",
+        # The fact only. Which extensions, and what to do about them,
+        # come from `summary.unread_source` through `_evidence_view` —
+        # naming them here too would put the same fact in two places that
+        # can disagree, which is the companion-flag defect the evidence
+        # model forbids.
+        "reason": (
+            f"{int(unread)} of {int(total)} source files ({share:.0%}) were not read: "
+            "their extensions are absent from paths.include_extensions, so no score "
+            "drawn from this tree describes the repository"
+        ),
+        "provenance": "summary.unread_source",
     }]
 
 

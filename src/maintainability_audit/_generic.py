@@ -1,6 +1,6 @@
 """Adapters without bespoke code — ADR 006.
 
-Ten hand-written adapters against a catalog of 759 tools implies 749 more to
+Sixteen hand-written adapters against a catalog of 760 tools implies hundreds more to
 write, which is not a plan. It is also unnecessary: most analyzers emit one of
 a few standard formats, and a format needs one parser, not one per tool.
 

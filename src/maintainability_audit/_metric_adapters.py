@@ -26,7 +26,8 @@ def _rows(text: str) -> list[list[str]]:
     return [row for row in csv.reader(io.StringIO(text)) if row]
 
 
-SOURCE_SUFFIXES = (".py", ".js", ".ts", ".java", ".c", ".cpp", ".h", ".go", ".rb", ".php")
+SOURCE_SUFFIXES = (".py", ".js", ".mjs", ".cjs", ".ts", ".java", ".c", ".cpp",
+                   ".h", ".go", ".rb", ".php")
 # A tool asked about thousands of files still has to fit on a command line.
 # Beyond this the list is capped -- and the cap is a stated limit rather
 # than a silent truncation, because a shortened file list is a shortened
@@ -96,8 +97,19 @@ class LizardAdapter(BaseAdapter):
             # it looks the concept up by name. Emitting a synonym meant the
             # criterion silently never fired while a unit test that
             # fabricated the right name passed.
+            #
+            # And it comes from `length` (index 4), not `nloc` (index 0).
+            # Renaming the concept was only half the fix: `nloc` excludes
+            # blanks and comments, while `max_function_lines` thresholds a
+            # declaration's line *span* — which is what the built-in
+            # detector counts and what the config reads as meaning. On the
+            # corpus, `length` matches the built-in count on 780 of 781
+            # flask declarations; `nloc` on 162. Feeding a span threshold a
+            # non-blank count made the analyzer path fire far less often
+            # and produced a corpus ratio of 0.49 that described two
+            # definitions of "lines" rather than the code.
             for concept, index in (
-                ("cyclomatic_complexity", 1), ("declaration_lines", 0), ("parameters", 3),
+                ("cyclomatic_complexity", 1), ("declaration_lines", 4), ("parameters", 3),
             ):
                 measurements.append(Measurement(
                     concept=concept, unit=unit, value=float(row[index]),
@@ -142,6 +154,25 @@ class RadonAdapter(BaseAdapter):
         ]
         return Extraction(measurements=tuple(measurements))
 
+
+
+def _without_format_tag(name: str) -> str:
+    """`docs/api/formik.md:javascript` -> `docs/api/formik.md`.
+
+    For a fenced code block inside Markdown, jscpd names the file and
+    then the language it detected inside it. A finding carrying that
+    string points at a path that does not exist, and a finding that
+    cannot be opened is worse than no finding — it teaches a reader to
+    stop checking.
+
+    Only a bare trailing word is stripped: a segment containing `/`, `.`
+    or nothing at all is part of the path, and `pkgs/v1.2/b.js` has to
+    survive unchanged.
+    """
+    head, separator, tail = name.rpartition(":")
+    if separator and head and tail.isalnum():
+        return head
+    return name
 
 
 class JscpdAdapter(BaseAdapter):
@@ -199,7 +230,7 @@ class JscpdAdapter(BaseAdapter):
             ))
         findings = tuple(
             Finding(concept="duplication",
-                    path=clone.get("firstFile", {}).get("name", ""),
+                    path=_without_format_tag(clone.get("firstFile", {}).get("name", "")),
                     line=clone.get("firstFile", {}).get("start"),
                     message=f"{clone.get('lines', '?')} duplicated lines",
                     tool=self.slug)

@@ -119,6 +119,14 @@ READ_THE_SOURCE = (
     "for a score that describes this codebase. Until then the findings below "
     "come only from the files that were read."
 )
+NO_DECLARATION_PARSER = (
+    "These files were read — their length, duplication and risk are measured — "
+    "but this tool has no declaration parser for their language, so it found no "
+    "functions or classes to draw a rate from. Adding the extension to "
+    "`paths.include_extensions` will not change that, and the repository is not "
+    "too small. Run with `--analyzers` for located findings from tools that do "
+    "read these languages; the rates stay withheld until a parser exists."
+)
 TAKE_THE_FINDINGS = (
     "This repository is smaller than anything the scale was calibrated on, and "
     "no re-scan will change that. The audit is complete: every finding and every "
@@ -138,6 +146,11 @@ def remedy(score: dict[str, Any]) -> str:
     # repository whose code is simply unreadable to this configuration.
     if "summary.unread_source_files" in measurements:
         return READ_THE_SOURCE
+    # Before the size advice, and distinct from it: "add the extension"
+    # is wrong because it is already added, and "too small" is wrong
+    # because the files are there and unparseable.
+    if "summary.undetected_declaration_files" in measurements:
+        return NO_DECLARATION_PARSER
     if "scan.scope" in measurements:
         return WIDEN_THE_SCAN
     return TAKE_THE_FINDINGS

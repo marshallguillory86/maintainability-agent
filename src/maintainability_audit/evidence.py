@@ -127,6 +127,10 @@ class SummaryEvidence:
     # silently read as "we read everything".
     unread_source_files: EvidenceState
     read_source_files: EvidenceState
+    # Files opened for length, duplication and risk that no declaration
+    # parser understands. Typed like the rest so "we do not know" cannot
+    # read as "there were none".
+    undetected_declaration_files: EvidenceState
     has_readme: EvidenceState
     has_changelog: EvidenceState
     has_docs_dir: EvidenceState

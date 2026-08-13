@@ -76,6 +76,10 @@ DEFAULT_V1_REQUIRED: frozenset[str] = frozenset({
     # quarter of curl's source with nothing in the output saying so.
     "summary.unread_source_files",
     "summary.read_source_files",
+    # Required for the same reason as the two above: a report that
+    # cannot say whether it could parse what it opened cannot be trusted
+    # to have measured the population it scored.
+    "summary.undetected_declaration_files",
     "summary.has_readme",
     "summary.has_changelog",
     "summary.has_docs_dir",
@@ -160,6 +164,15 @@ def _out_of_scale(evidence: NormalizedEvidence) -> list[dict[str, str]]:
     unread = _unread_source(evidence)
     if unread:
         return unread
+    # Before the floors for the same reason unread source is: it
+    # explains them. A repository whose language has no declaration
+    # parser reports "0 declarations, below the floor of 139", which
+    # tells a reader with forty files that their repository is too
+    # small. The cause has to be the reason printed, or the remedy is
+    # wrong — and here the remedy was "no re-scan will change that".
+    blind = _no_declaration_parser(evidence)
+    if blind:
+        return blind
     thin = _below_root_floor(evidence)
     if thin:
         return thin
@@ -233,6 +246,37 @@ def _unread_source(evidence: NormalizedEvidence) -> list[dict[str, str]]:
             "drawn from this tree describes the repository"
         ),
         "provenance": "summary.unread_source",
+    }]
+
+
+def _no_declaration_parser(evidence: NormalizedEvidence) -> list[dict[str, str]]:
+    """Files were read, and nothing could parse declarations out of them.
+
+    Fires only where the declarations floor would otherwise fire: a tree
+    with plenty of Python and a handful of Go still has a real
+    declaration population, and saying "no parser" there would be a
+    warning about nothing.
+
+    The reason names the *cause* and points at `summary.
+    undetected_declarations` for the extensions rather than restating
+    them. Two copies of one list drift, which is why `_unread_source`
+    refuses to restate its own list too.
+    """
+    blind = measured(evidence.summary.undetected_declaration_files)
+    declarations = measured(evidence.summary.declarations_scanned)
+    floor = population_floor("declarations_scanned")
+    if not blind or declarations is None or floor is None or declarations >= floor:
+        return []
+    return [{
+        "measurement": "summary.undetected_declaration_files",
+        "reason": (
+            f"{int(blind)} scanned files are in a language this tool has no "
+            "declaration parser for, so it measured their length, duplication "
+            "and risk but found no functions or classes in them. The "
+            "declaration population is empty because nothing could read it, "
+            "not because the repository is small"
+        ),
+        "provenance": "summary.undetected_declarations",
     }]
 
 

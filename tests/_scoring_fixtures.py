@@ -44,6 +44,8 @@ def summary(files: int, decls: int, **overrides: int) -> dict[str, int]:
         # A fixture wanting a grade claims a full read; Unknown withholds one.
         "unread_source_files": 0,
         "read_source_files": files,
+        # ...and that everything it read could be parsed.
+        "undetected_declaration_files": 0,
     }
     base.update(overrides)
     return base

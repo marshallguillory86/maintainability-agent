@@ -175,22 +175,96 @@ def test_a_fully_read_repository_is_not_penalised(tmp_path: Path) -> None:
     assert report["score"]["maintainability_estimate"] is not None
 
 
-def test_widening_the_configuration_makes_the_code_readable(tmp_path: Path) -> None:
-    """The remedy the report names has to actually work.
+SOURCE_BY_SUFFIX: dict[str, str] = {
+    ".java": JAVA,
+    ".go": "package a\n\nfunc Compute%(n)d(v int) int {\n\tif v > 0 {\n\t\treturn v\n\t}\n\treturn -v\n}\n",
+    ".c": "int compute_%(n)d(int v) {\n    if (v > 0) { return v; }\n    return -v;\n}\n",
+    ".rs": "pub fn compute_%(n)d(v: i32) -> i32 {\n    if v > 0 { v } else { -v }\n}\n",
+}
 
-    Adding `.java` to `include_extensions` must move those files from
-    unread into the population — otherwise the advice is a dead end and
-    the repository can never be scored at all.
+
+@pytest.mark.parametrize("suffix", sorted(SOURCE_BY_SUFFIX))
+def test_following_the_remedy_does_not_produce_a_smaller_lie(
+    tmp_path: Path, suffix: str, real_population_floors: dict,
+) -> None:
+    """The named remedy has to be true after it is followed.
+
+    Default Java is honest: the files are unread, `unread_source` names
+    `.java`, and the remedy says add it to `include_extensions`. Doing
+    exactly that produced a *different* false statement — the files are
+    now read for length, duplication and risk, but nothing extracts
+    declarations from them, so `declarations_scanned` is 0, the
+    calibration floor fires, and the reader is told:
+
+        "This repository is smaller than anything the scale was
+         calibrated on, and no re-scan will change that."
+
+    The repository is not small. It has forty files and no declaration
+    detector for its language. Walking a reader into that sentence by
+    following our own advice is P7's failure — a withhold reason that is
+    a consequence of not looking while claiming something else.
+
+    Parametrized over suffixes that are in `include_extensions` once the
+    test adds them and are absent from `DECLARATION_SUFFIXES`, because
+    this is a property of that gap and not a fact about Java.
+
+    Takes `real_population_floors` because the shipped floor is what
+    produces the false sentence; with the suite's lifted floors the
+    repository would score and the defect would be invisible.
     """
-    root = _repo(tmp_path / "widened",
-                 {f"src/Thing{n}.java": JAVA % {"n": n} for n in range(40)})
+    body = SOURCE_BY_SUFFIX[suffix]
+    root = _repo(tmp_path / f"widened{suffix.lstrip('.')}",
+                 {f"src/Thing{n}{suffix}": body % {"n": n} for n in range(40)})
     config = load_config(None)
-    config["paths"]["include_extensions"] = [*config["paths"]["include_extensions"], ".java"]
+    config["paths"]["include_extensions"] = [*config["paths"]["include_extensions"], suffix]
 
     report = build_report(root, config)
+    summary, score = report["summary"], report["score"]
 
-    assert report["summary"]["unread_source"] == []
-    assert report["summary"]["files_scanned"] >= 40, "the Java is in the population now"
+    # The file half of the remedy did work, and that is the trap: it
+    # looks like success.
+    assert summary["unread_source"] == []
+    assert summary["files_scanned"] >= 40
+    assert summary["declarations_scanned"] == 0
+
+    assert score["maintainability_estimate"] is None
+    reasons = " ".join(item["reason"] for item in score["evidence_status"]["reasons"])
+    assert "declaration" in reasons.lower(), (
+        f"the withhold must name the missing detector; said: {reasons!r}"
+    )
+    assert "calibration floor" not in reasons, (
+        "the floor is a symptom here, not the cause: there are 40 files and "
+        "no parser, not too few files"
+    )
+
+    rendered = render_markdown(report)
+    assert "smaller than anything the scale was calibrated on" not in rendered, (
+        "the report told a 40-file repository it was too small"
+    )
+    assert suffix in rendered, "the report names the extension it cannot parse"
+
+
+def test_a_genuinely_small_repository_still_gets_take_the_findings(
+    tmp_path: Path, real_population_floors: dict,
+) -> None:
+    """The path that must not break.
+
+    A tiny Python tree really is below the scale, no re-scan changes
+    that, and "take the findings" is the correct and only honest advice.
+    A fix for the missing-detector case that swallowed this one would
+    trade a false statement for a vaguer one.
+    """
+    from maintainability_audit._evidence_view import TAKE_THE_FINDINGS, remedy
+
+    root = _repo(tmp_path / "tiny", {"pkg/mod.py": PYTHON % {"n": 0}})
+
+    report = build_report(root, load_config(None))
+    reasons = " ".join(
+        item["reason"] for item in report["score"]["evidence_status"]["reasons"])
+
+    assert report["score"]["maintainability_estimate"] is None
+    assert "calibration floor" in reasons, "this one genuinely is below the floor"
+    assert remedy(report["score"]) == TAKE_THE_FINDINGS
 
 
 @pytest.mark.parametrize("name", ["curl", "gson", "whisper.cpp", "ripgrep"])
@@ -248,4 +322,68 @@ def test_es_module_javascript_is_read_like_every_other_javascript(tmp_path: Path
     assert report["summary"]["declarations_scanned"] >= 40, (
         "an extension in the include list whose declarations are never "
         "detected is unread code wearing a read label"
+    )
+
+
+# --------------------------------------------------------------------
+# CI lint: the class, not the four instances
+# --------------------------------------------------------------------
+
+
+def test_every_default_extension_is_parseable_or_has_a_stated_reason() -> None:
+    """Each suffix the tool opens by default either yields declarations
+    or is a suffix nobody expects declarations from.
+
+    `include_extensions` and `DECLARATION_SUFFIXES` are two lists that
+    drift apart silently, and the gap between them is where the false
+    "too small" sentence lived. `.md` and `.css` are in the first and
+    not the second on purpose — nobody expects a function from a
+    stylesheet — so the rule is not "they must match", it is that a
+    *source* suffix in the scan must be parseable or be reported as
+    unparseable.
+    """
+    from maintainability_audit._metrics_types import KNOWN_SOURCE_SUFFIXES
+    from maintainability_audit.declarations import DECLARATION_SUFFIXES
+
+    included = set(load_config(None)["paths"]["include_extensions"])
+    source = {s for s in included if s in KNOWN_SOURCE_SUFFIXES}
+    unparseable = sorted(source - set(DECLARATION_SUFFIXES))
+
+    assert not unparseable, (
+        f"default include_extensions opens {unparseable} as source, and no "
+        "declaration parser reads them. Either add a parser, drop them from "
+        "the default, or — if this is deliberate — extend "
+        "`test_following_the_remedy_does_not_produce_a_smaller_lie` to cover "
+        "them so the withhold reason is asserted."
+    )
+
+
+def test_the_floor_is_never_blamed_when_a_missing_parser_explains_it(
+    tmp_path: Path, real_population_floors: dict,
+) -> None:
+    """The structural form of the defect, asserted directly.
+
+    A withheld score may not cite the declarations floor while
+    `unread_source` is empty and scanned files carry suffixes no parser
+    reads. That combination is precisely the false sentence: the files
+    are present, they were opened, and the floor is a consequence of not
+    being able to parse them rather than of the repository's size.
+    """
+    root = _repo(tmp_path / "blamed",
+                 {f"src/Thing{n}.java": JAVA % {"n": n} for n in range(40)})
+    config = load_config(None)
+    config["paths"]["include_extensions"] = [*config["paths"]["include_extensions"], ".java"]
+
+    report = build_report(root, config)
+    summary, score = report["summary"], report["score"]
+    reasons = score["evidence_status"]["reasons"]
+
+    blames_floor = any(r["measurement"] == "summary.declarations_scanned" for r in reasons)
+    unread_empty = not summary["unread_source"]
+    has_unparseable = bool(summary["undetected_declarations"])
+
+    assert not (blames_floor and unread_empty and has_unparseable), (
+        "the score was withheld on the declarations floor while the files "
+        "were read and unparseable — the floor is the symptom, the missing "
+        f"parser is the cause. Reasons: {[r['measurement'] for r in reasons]}"
     )

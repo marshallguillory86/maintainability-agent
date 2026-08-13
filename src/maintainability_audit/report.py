@@ -33,7 +33,13 @@ from .evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY
 from .git_tools import run_git
 from .history import history_section
 from .idioms import divergent_idioms
-from .metrics import collect_metrics, hard_gate_failures, is_test_path, unread_source
+from .metrics import (
+    collect_metrics,
+    hard_gate_failures,
+    is_test_path,
+    undetected_declarations,
+    unread_source,
+)
 from .scoring import score_report
 from .similarity import near_duplicate_findings
 from .source import SourceIndex
@@ -180,6 +186,12 @@ def _add_full_counts(
     summary["unread_source"] = breakdown
     summary["unread_source_files"] = sum(entry["files"] for entry in breakdown)
     summary["read_source_files"] = read
+    # Opened, but not parseable for declarations. Between read and
+    # unread, and the state that made a 40-file Java repository report
+    # that it was smaller than the calibration set.
+    blind = undetected_declarations(root, config)
+    summary["undetected_declarations"] = blind
+    summary["undetected_declaration_files"] = sum(entry["files"] for entry in blind)
     summary["near_duplicate_count"] = len(near_duplicates)
     summary["dead_code_count"] = len(dead)
     summary["idiom_concern_count"] = len(idioms)

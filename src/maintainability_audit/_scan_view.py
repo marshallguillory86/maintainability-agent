@@ -230,6 +230,43 @@ def analyzer_measurements_markdown(measurements: dict[str, Any] | None) -> list[
     return lines
 
 
+def undetected_declarations_markdown(summary: dict[str, Any]) -> list[str]:
+    """Files that were read and could not be parsed for declarations.
+
+    Distinct from unread source, and the distinction is the whole point:
+    these files *were* opened. Their length, duplication and risk are
+    measured and their findings are real. What is missing is a parser
+    for their language, so no rate can be drawn from them — which is a
+    statement about this tool, not about the repository's size.
+    """
+    blind = summary.get("undetected_declarations") or []
+    if not blind:
+        return []
+    total = sum(entry["files"] for entry in blind)
+    lines = [
+        "## Read, But Not Parsed for Declarations", "",
+        f"{total} scanned file(s) are in a language this tool has no declaration "
+        "parser for. They were read — their length, duplication and risk are "
+        "measured below — but no functions or classes were extracted, so no "
+        "rate is drawn from them.",
+        "",
+        "| Extension | Language | Files |",
+        "|---|---|---|",
+    ]
+    lines.extend(
+        f"| `{entry['suffix']}` | {entry['language']} | {entry['files']} |"
+        for entry in blind
+    )
+    lines.extend([
+        "",
+        "Adding these to `paths.include_extensions` does not help — they are "
+        "already there. Run with `--analyzers` for located findings from tools "
+        "that do read these languages.",
+        "",
+    ])
+    return lines
+
+
 def unread_source_markdown(summary: dict[str, Any]) -> list[str]:
     """Source the scan never opened, named where a reader will see it.
 

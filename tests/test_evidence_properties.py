@@ -451,6 +451,6 @@ def test_the_sweep_covers_both_summary_and_nested_history(
     """
     swept = resolved_required_paths(settled_evidence)
 
-    assert len([p for p in swept if p.startswith("summary.")]) == 25
+    assert len([p for p in swept if p.startswith("summary.")]) == 26
     assert len([p for p in swept if p.startswith("history.")]) == 5
     assert len(swept) == len(DEFAULT_V1_REQUIRED)

@@ -88,6 +88,47 @@ def unread_source(root: Path, config: dict[str, Any]) -> tuple[list[dict[str, An
     return breakdown, read
 
 
+def undetected_declarations(root: Path, config: dict[str, Any]) -> list[dict[str, Any]]:
+    """Files the scan opened but cannot extract declarations from.
+
+    A third state, between read and unread, and the one that produced a
+    false sentence. `include_extensions` decides what is *opened* for
+    length, duplication and risk; `DECLARATION_SUFFIXES` decides what is
+    *parsed* for functions and classes. Adding `.java` to the first does
+    not add it to the second.
+
+    So a reader who follows the remedy the unread-source rule gives them
+    lands here: forty files read, zero declarations, and the population
+    floor announcing that the repository is smaller than anything the
+    scale was calibrated on. It has forty files. It has no Java parser.
+    Naming that is the difference between an honest withhold and a
+    withheld score wearing the wrong explanation.
+    """
+    include_ext = set(config["paths"]["include_extensions"])
+    excludes = config["paths"]["exclude_patterns"]
+    # Only suffixes this project recognises as source. `.md` and `.css`
+    # are in the include list on purpose and nobody expects declarations
+    # from them; naming those would be noise, not honesty.
+    blind = {
+        suffix for suffix in include_ext
+        if suffix in KNOWN_SOURCE_SUFFIXES and suffix not in DECLARATION_SUFFIXES
+    }
+    if not blind:
+        return []
+
+    counted: Counter[str] = Counter()
+    for path in root.rglob("*"):
+        if not path.is_file() or path.suffix not in blind:
+            continue
+        rel = str(path.relative_to(root)).replace(os.sep, "/")
+        if not is_excluded(rel, excludes):
+            counted[path.suffix] += 1
+    return [
+        {"suffix": suffix, "language": KNOWN_SOURCE_SUFFIXES[suffix], "files": count}
+        for suffix, count in sorted(counted.items(), key=lambda item: (-item[1], item[0]))
+    ]
+
+
 def read_lines(path: Path) -> list[str]:
     """Read one file, tolerating undecodable bytes.
 

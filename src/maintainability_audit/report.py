@@ -29,6 +29,7 @@ from ._pressures import (
     analyzer_pressures,
     analyzer_production_pressures,
 )
+from ._work_order import work_order
 from .deadcode import dead_declarations
 from .declarations import DECLARATION_SUFFIXES
 from .duplication import duplicate_blocks, risk_findings
@@ -351,4 +352,7 @@ def build_report(
     # found, and no field anywhere offers their mean.
     report["practice"] = practice_level(root).as_dict()
     report["pillars"] = pillar_report(report["score"], report["practice"])
+    # Last, because every item's delta is a rubric recomputation and the
+    # rubric needs the scored report to recompute against.
+    report["work_order"] = work_order(report)
     return report

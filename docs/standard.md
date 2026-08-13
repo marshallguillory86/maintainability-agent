@@ -239,6 +239,46 @@ Grades:
 | D | 2.0 to 2.9 |
 | F | below 2.0 |
 
+## Risk and effort per finding class
+
+**Genre: judgment.** These weightings are this project's opinion about what
+each kind of finding costs to leave alone and what it costs to fix. They are
+published here, rather than buried in code, so a team that disagrees has a
+number to point at. `test_the_declared_weightings_are_published_in_the_standard`
+fails the build if a class is weighted in code and missing from this table.
+
+Risk and effort each run 1–5. A finding is **high risk** at 3 or
+above and **high effort** at 3 or above, and the two together
+place it in one of four bands:
+
+| | low effort | high effort |
+|---|---|---|
+| **high risk** | **Quick Win** — lead with these | **Major Project** — name it, never inline it into a prompt |
+| **low risk** | Fill-In — offer opportunistically | Reconsider — suppressed unless asked for |
+
+| Finding class | Risk | Effort | Band | Why |
+|---|---:|---:|---|---|
+| `risk-pattern` | 5 | 1 | **quick-win** | a configured risk pattern is a rule this project chose to enforce on itself, and each hit is a single located line |
+| `oversized-declaration` | 4 | 2 | **quick-win** | a long, branching function is where defects concentrate and where every future change has to be understood first; extracting one is bounded, local work |
+| `duplicate-block` | 4 | 4 | **major-project** | duplicated logic means a fix applied in one place and missed in the others; deduplicating across a codebase is a design change, not a tidy-up |
+| `oversized-file` | 3 | 3 | **major-project** | a file past the limit hides its own structure, but splitting one touches every importer and is a change worth reviewing on its own |
+| `near-duplicate` | 3 | 4 | **major-project** | near-copies drift apart silently, which is worse than exact duplication; reconciling them requires deciding which behaviour was intended |
+| `dead-code` | 2 | 1 | **fill-in** | unreachable code costs reading time and misleads a search, but deleting it is the cheapest change there is |
+| `competing-libraries` | 2 | 4 | **reconsider** | two libraries doing one job is a decision nobody made; converging on one is a migration across every call site |
+
+**Why Major Projects are withheld from the agent prompt.** An agent told to
+deduplicate a pattern across forty files produces exactly the sprawling,
+unreviewable diff a bounded prompt exists to prevent. The work is real and
+appears in the report; scoping it is a human's job first.
+
+**What a work item's delta means.** Each item carries two numbers. `delta` is
+what clearing that single finding moves the published score — honestly zero
+more often than not, because the overall is the mean of the *rounded*
+categories and is therefore a step function. `class_delta` is what clearing
+every finding of that class is worth, and it is what the ordering uses.
+Neither is estimated: both come from re-running `score_report` over a summary
+with those findings removed. Per-item deltas do not sum to the whole.
+
 ## CI Role
 
 CI should not pretend to fully grade maintainability by itself.

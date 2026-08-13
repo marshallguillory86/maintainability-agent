@@ -10,6 +10,7 @@ from ._scan_view import (
     analyzer_measurements_markdown,
     pillars_markdown,
     unread_source_markdown,
+    work_order_markdown,
 )
 
 
@@ -115,6 +116,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"Scoring standard: {score['standard']}.",
         "",
     ]
+    lines.extend(work_order_markdown(report.get("work_order")))
     lines.extend(pillars_markdown(report.get("pillars"), report.get("practice")))
     lines.extend(unread_source_markdown(summary))
     lines.extend(analyzer_coverage_markdown(report.get("analyzer_coverage")))

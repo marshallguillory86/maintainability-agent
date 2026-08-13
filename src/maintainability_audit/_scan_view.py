@@ -18,6 +18,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from ._work_order import work_order_rows
+
 
 def analyzer_coverage_markdown(coverage: dict[str, Any] | None) -> list[str]:
     """What examined this repository, and what nothing examined.
@@ -282,4 +284,48 @@ def pillars_markdown(
     if practice.get("caps"):
         lines.extend([f"Held at level {practice['level']}: {cap}" for cap in practice["caps"]])
         lines.append("")
+    return lines
+
+
+# How many items a report prints before it stops being a plan and starts
+# being a backlog. The rest are counted, not listed.
+WORK_ORDER_LIMIT = 20
+
+
+def work_order_markdown(items: list[dict[str, Any]] | None) -> list[str]:
+    """The ordered work, worth first, with a way to check each item.
+
+    Quick Wins lead and Major Projects are named — the report shows the
+    whole picture even where the prompt will not, because deciding to
+    take on a forty-file deduplication is a human's call and they cannot
+    make it if nothing tells them it is there.
+    """
+    if not items:
+        return []
+    lines = [
+        "## Work Order", "",
+        "Ordered by what it costs to leave against what it costs to fix "
+        "(see the standard). `Worth` is what clearing the whole class moves "
+        "the score, recomputed through the rubric rather than estimated.",
+        "",
+        "| # | Band | Item | Worth | Target |",
+        "|---:|---|---|---:|---|",
+    ]
+    for index, row in enumerate(work_order_rows(items)[:WORK_ORDER_LIMIT], start=1):
+        location = f"`{row['path']}`" + (f":{row['line']}" if row.get("line") else "")
+        lines.append(
+            f"| {index} | {row['band']} | {row['title']} ({location}) | "
+            f"{row['worth']} | {row['target']} |"
+        )
+    lines.append("")
+    if len(items) > WORK_ORDER_LIMIT:
+        lines.extend([
+            f"...and {len(items) - WORK_ORDER_LIMIT} more. A list longer than "
+            f"{WORK_ORDER_LIMIT} is a backlog, not a plan.",
+            "",
+        ])
+    lines.extend([
+        f"Verify with: `{items[0]['verification']}`",
+        "",
+    ])
     return lines

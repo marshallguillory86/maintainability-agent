@@ -12,6 +12,7 @@ from typing import Any
 
 from . import _evidence_view as view
 from ._hotspots import hotspot_measure, hotspot_name
+from ._work_order import prompt_items
 
 
 def render_ai_prompt(report: dict[str, Any]) -> str:
@@ -47,10 +48,60 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         "",
     ]
     lines.extend(view.remediation_note(score))
+    lines.extend(prompt_work_order(report))
     lines.extend(prompt_pressure_section(score))
     lines.extend(prompt_focus_sections(report))
     lines.extend(prompt_deliverable())
     return "\n".join(lines)
+
+
+def prompt_work_order(report: dict[str, Any]) -> list[str]:
+    """The ordered work, leading the prompt, Major Projects withheld.
+
+    This is ADR 007 §3's structural answer to nit-loops. A prompt that
+    opens with eighty line-length violations is handing an agent Fill-Ins
+    in the position reserved for the work that matters, and the agent
+    will dutifully spend its budget there.
+
+    Major Projects are named in the report and excluded here: an agent
+    told to deduplicate a pattern across forty files produces exactly the
+    sprawling, unreviewable diff a bounded prompt exists to prevent.
+    """
+    items = prompt_items(report.get("work_order") or [])
+    if not items:
+        return []
+    lines = [
+        "Work in this order. The first items are the highest value for the "
+        "least change; stop when the change stops being reviewable.",
+        "",
+    ]
+    for index, item in enumerate(items, start=1):
+        location = item["path"] + (f":{item['line']}" if item.get("line") else "")
+        lines.append(f"{index}. **{item['title']}** — {item['target']}")
+        lines.append(f"   - Location: `{location}`")
+        lines.append(f"   - Why it matters: {item['rationale']}")
+        if item["class_delta"]:
+            lines.append(
+                f"   - Clearing all {item['class_count']} of these is worth "
+                f"+{item['class_delta']:.2f} to the maintainability estimate."
+            )
+    lines.extend([
+        "",
+        f"Verify with: `{items[0]['verification']}`",
+        "",
+    ])
+
+    withheld = [i for i in (report.get("work_order") or [])
+                if i["band"] == "major-project"]
+    if withheld:
+        names = ", ".join(sorted({i["title"] for i in withheld})[:3])
+        lines.extend([
+            f"**Not in scope for this change:** {len(withheld)} finding(s) need a "
+            f"design decision before code moves ({names}). They are in the report. "
+            "Do not attempt them here.",
+            "",
+        ])
+    return lines
 
 
 DIMENSION_GUIDANCE = {

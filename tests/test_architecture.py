@@ -59,7 +59,7 @@ SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_de
 # `_analysis` orchestrates: it calls the catalog, the runner and the
 # adapters and hands `report` a coverage document. That makes it assembly,
 # not a scanner — it composes rather than measures.
-ASSEMBLY = {"report", "_analysis", "_built_ins"}
+ASSEMBLY = {"report", "_analysis", "_built_ins", "_work_order"}
 PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 "_scan_view", "_identity"}
 ENTRY = {"cli", "__main__", "mcp_server"}

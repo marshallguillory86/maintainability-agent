@@ -63,7 +63,7 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 
 | # | Promise | Falsified by |
 |---|---|---|
-| P1 | The audit is deterministic: same tree, config and pinned analyzer versions in, same findings out. **The analysis itself performs no network access and invokes no language model**; acquiring a tool may, on first run, and the acquired version is recorded | Two runs disagreeing on identical input at identical tool versions, or any network access during analysis |
+| P1 | The audit is deterministic: same tree, config, pinned analyzer versions **and scan history** in, same report out. History is an input, not decoration — a finding that cleared and returned twice is different information from one seen for the first time, so an identical tree reports differently against different histories, and that is the feature working. **The analysis itself performs no network access and invokes no language model**; acquiring a tool may, on first run, and the acquired version is recorded | Two runs disagreeing on identical tree, config, versions and history, or any network access during analysis |
 | P2 | The score applies the same rubric to every repository, and the rubric is readable in source | A repo-specific code path changing a weight or band |
 | P3 | Withholding evidence cannot improve the reported grade | Any input whose removal raises the graded field |
 | P4 | The overall equals the weighted mean of the categories printed beside it | A report where the arithmetic does not check |

@@ -21,7 +21,8 @@ PACKAGE = ROOT / "src" / "maintainability_audit"
 # both spawn processes and depend on nothing internal. ADR 006 rule 7
 # makes them the only two modules permitted to, so keeping them in one
 # layer is what makes that rule checkable.
-FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "config", "git_tools", "instructions",
+FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "config",
+               "git_tools", "instructions",
                # `_runner` sits beside `git_tools`: both spawn processes and
                # import nothing internal, and ADR 006 rule 7 makes them the
                # only two permitted to, so one layer is what makes that

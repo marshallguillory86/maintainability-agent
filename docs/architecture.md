@@ -43,6 +43,7 @@ Dependencies point downward only. No cycles.
   parsing        source, declarations, _cognitive, _ranges, _tokens
                      |
   foundations    _metrics_types, _masking, _hotspots, config, git_tools,
+                 _scan_history (append-only record + comparability),
                  instructions, _runner (process execution), _catalog (tool selection)
 ```
 

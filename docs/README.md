@@ -67,6 +67,7 @@ New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register,
 | [IDE and agent integration](ide-agent-integration.md) | Claude Code, Codex, Copilot Chat, Cursor |
 | [Roadmap](roadmap.md) | What is planned, and what is deliberately refused |
 | [Release plan](release-plan.md) | The ordered work from here to 1.0, with an exit condition per task |
+| [Migrating to 0.7](migration-0.7.md) | Reference | What breaks — baselines and the nullable estimate — what is new and optional, and what you can ignore |
 | [Report validation](../tools/validation/results.md) | Fourteen real repositories against a frame written before selection: what the output actually looked like, and the defect it exposed |
 
 ## Adding a claim to any of these

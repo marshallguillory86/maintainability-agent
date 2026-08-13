@@ -66,6 +66,33 @@ def analyzer_coverage_markdown(coverage: dict[str, Any] | None) -> list[str]:
             )
     lines.append("")
 
+    by_language = coverage.get("by_language") or {}
+    scored = coverage.get("scored_languages") or []
+    if len(by_language) > 1:
+        # Per language, because a repository is not one language and the
+        # union rounds up: one Python build script among three hundred
+        # C++ files claimed `types` for the whole tree.
+        lines.extend([
+            "### Coverage by language", "",
+            "| Language | Scored | Examined | Unexamined |",
+            "|---|---|---|---|",
+        ])
+        gaps = coverage.get("gaps_by_language") or {}
+        for name, covered in by_language.items():
+            missing = gaps.get(name) or []
+            lines.append(
+                f"| {name} | {'yes' if name in scored else 'not read'} | "
+                f"{', '.join(f'`{c}`' for c in covered) or '—'} | "
+                f"{', '.join(f'`{c}`' for c in missing) or '—'} |"
+            )
+        lines.extend([
+            "",
+            "The score is drawn from the scored languages only. Anything "
+            "marked `not read` is listed under Source Not Read with its "
+            "file count.",
+            "",
+        ])
+
     single = coverage.get("concepts_single_source") or []
     if single:
         # Between covered and unexamined. A reader deciding how much

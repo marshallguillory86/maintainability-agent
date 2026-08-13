@@ -20,7 +20,7 @@ clean result.
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -28,9 +28,9 @@ from ._adapters import Extraction, measurements_only
 from ._built_ins import BUILT_IN_SOURCES
 from ._catalog import CONCERNS, PolicyError, concepts_for, resolve_pool, settings_from
 from ._corroborate import agreement, combine, single_source_concepts
-from ._discovery import discover
+from ._discovery import CATALOG_LANGUAGE, discover
 from ._generic import declared_adapter
-from ._metrics_types import Finding, Measurement
+from ._metrics_types import KNOWN_SOURCE_SUFFIXES, Finding, Measurement
 from ._runner import Outcome, Probe, run
 from ._tool_adapters import adapter_for
 
@@ -55,6 +55,11 @@ class ToolCoverage:
     # analyzer is installed. Omitting them made the coverage section
     # describe a fraction of what actually examined the code.
     tier: str = "analyzer"
+    # The catalog languages this tool reads, in the catalog's vocabulary.
+    # Carried on the record because coverage is claimed per language: a
+    # Python-only linter covers nothing for C++ at any language mix, and
+    # that fact is unrecoverable once the pool is out of scope.
+    languages: tuple[str, ...] = ()
     parse_error: str | None = None
     raw: str = ""
     truncated: bool = False
@@ -74,6 +79,16 @@ class Analysis:
     depth: str = ""
     license_policy: str = ""
     concerns: tuple[str, ...] = ()
+    # Languages present in the tree, display name -> catalog slug, from
+    # the discovery pass. Empty when nothing recognisable was found, in
+    # which case per-language coverage has nothing to key on and the
+    # repository-wide answer stands alone.
+    languages: dict[str, str] = field(default_factory=dict)
+    # The subset of those languages the scan actually scored, i.e. whose
+    # extensions are in `include_extensions`. Coverage describes what was
+    # scored: a language the scan never opened is reported by the
+    # unread-source rule and must not also rewrite the coverage claim.
+    scored_languages: tuple[str, ...] = ()
     # Set when the pool could not be resolved at all — a broken config,
     # a missing catalog. Distinct from "every tool was unavailable".
     error: str | None = None
@@ -98,6 +113,52 @@ class Analysis:
             if measured & set(concepts_for(concern))
         } | (measured & set(CONCERNS))
 
+    def coverage_by_language(self) -> dict[str, set[str]]:
+        """Concerns examined, per language present in the tree.
+
+        The honest unit. `json` holds 6 Python files among 305 C++ ones,
+        and a repository-wide union let that one file claim `types` for
+        the whole tree — a reader concludes their C++ is type-checked.
+
+        Deliberately not a share threshold. "mypy covers types for
+        Python" is true at 2% Python and at 98%, so there is no cutoff to
+        tune and no way for a rule fitted to one repository to distort
+        another. `test_the_answer_does_not_depend_on_the_language_mix`
+        holds exactly that.
+        """
+        covered: dict[str, set[str]] = {name: set() for name in self.languages}
+        for item in self.coverage:
+            if not item.contributed or item.tier != "analyzer":
+                continue
+            concerns = self._concerns_of(item.concepts)
+            for name, slug in self.languages.items():
+                # No declared languages means the catalog does not say,
+                # and an unstated capability is not evidence of absence:
+                # the tool counts wherever it ran, as it did before.
+                if not item.languages or slug in item.languages:
+                    covered[name] |= concerns
+        return covered
+
+    def gaps_by_language(self) -> dict[str, set[str]]:
+        """Concerns nothing examined, per language.
+
+        "types unexamined" is false for a tree containing Python.
+        "types unexamined for C++" is true and is what a reader acts on.
+        """
+        wanted = set(CONCERNS) if "all" in self.concerns else set(self.concerns)
+        return {
+            name: wanted - covered
+            for name, covered in self.coverage_by_language().items()
+        }
+
+    def _concerns_of(self, concepts: tuple[str, ...]) -> set[str]:
+        """The concerns a set of emitted concepts speaks to."""
+        emitted = set(concepts)
+        return {
+            concern for concern in CONCERNS
+            if emitted & set(concepts_for(concern))
+        } | (emitted & set(CONCERNS))
+
     def measured_concepts(self) -> set[str]:
         """Concerns an *external analyzer* examined.
 
@@ -113,8 +174,27 @@ class Analysis:
         quietly convert "no independent tool examined this" into "covered"
         — the same collapse, re-entering through the door marked fallback.
         `single_source_concerns` carries what the built-ins did reach.
+
+        **Composed across languages, not unioned.** A concern is claimed
+        for the repository only where every language present has it. The
+        union is what overstated: one Python file among three hundred C++
+        ones made `types` a repository-wide claim. Where a concern holds
+        for some languages and not others, `coverage_by_language` is the
+        statement that is true.
         """
-        return self._concerns_from("analyzer")
+        per_language = self.coverage_by_language()
+        # Only over languages the scan scored. Intersecting across *every*
+        # language present erased a healthy Python library's coverage
+        # because it held one shell script that no tool reads — one
+        # unscanned file rewriting the answer for six hundred scanned
+        # ones, which is the edge case distorting the norm.
+        scored = [
+            covered for name, covered in per_language.items()
+            if name in self.scored_languages
+        ]
+        if not scored:
+            return self._concerns_from("analyzer")
+        return set.intersection(*scored)
 
     def single_source_concerns(self) -> list[str]:
         """Concerns only the built-in detectors reached.
@@ -167,6 +247,15 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
     # the coverage section reported documentation, style, types and
     # dead-code as *examined* — a tool with no input examining a concern.
     inventory = discover(root, config)
+    analysis.languages = {
+        name: CATALOG_LANGUAGE[name] for name in inventory.languages
+        if name in CATALOG_LANGUAGE
+    }
+    included = set((config.get("paths") or {}).get("include_extensions", ()))
+    analysis.scored_languages = tuple(
+        name for name in analysis.languages
+        if any(KNOWN_SOURCE_SUFFIXES.get(suffix) == name for suffix in included)
+    )
 
     for tool in pool:
         if not inventory.applicable(tool.get("languages")):
@@ -193,7 +282,9 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
                 concepts=tuple(tool["measures"]),
             ))
             continue
-        analysis.coverage.append(_run_one(root, adapter, probe, timeout, analysis, excludes))
+        recorded = _run_one(root, adapter, probe, timeout, analysis, excludes)
+        analysis.coverage.append(replace(
+            recorded, languages=tuple(str(n).lower() for n in tool.get("languages") or ())))
 
     analysis.coverage.extend(built_in_coverage())
     analysis.coverage.sort(key=lambda item: (item.tier != "built-in", item.slug))
@@ -442,7 +533,23 @@ def coverage_document(analysis: Analysis) -> dict[str, Any]:
         "tools_attempted": sum(1 for i in analysis.coverage if i.tier == "analyzer"),
         "tools_contributed": sum(1 for i in ran if i.tier == "analyzer"),
         "by_outcome": dict(grouped),
+        # The languages this coverage claim is *about*. Without it,
+        # `concepts_covered: [types]` reads as "this repository is
+        # type-checked" on a tree that is 98% unread C++.
+        "scored_languages": sorted(analysis.scored_languages),
         "concepts_covered": sorted(analysis.measured_concepts()),
+        # The precise statement. mypy covers types for Python and nothing
+        # for C++, at any language mix — no threshold, so a rule fitted
+        # to one repository cannot distort another.
+        "by_language": {
+            name: sorted(covered)
+            for name, covered in sorted(analysis.coverage_by_language().items())
+        },
+        "gaps_by_language": {
+            name: sorted(missing)
+            for name, missing in sorted(analysis.gaps_by_language().items())
+            if missing
+        },
         # Examined, but by one source that cannot corroborate itself.
         # Between covered and unexamined, and reported as its own thing so
         # neither number overstates.

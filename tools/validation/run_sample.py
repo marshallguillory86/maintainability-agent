@@ -108,6 +108,14 @@ def row(repo: dict, report: dict) -> dict:
         "analyzer_findings": len(report.get("analyzer_findings") or []),
         "hard_gate_failures": report.get("hard_gate_failures"),
         "has_history": report.get("history") is not None,
+        # Discovery and the work order, so a later run can be compared
+        # against this one on the things that now decide the score.
+        "generated_files": summary.get("generated_files"),
+        "vendored_files": summary.get("vendored_files"),
+        "classifications": summary.get("classifications"),
+        "languages": summary.get("languages"),
+        "practice_level": (report.get("practice") or {}).get("level"),
+        "work_order_items": len(report.get("work_order") or []),
     }
 
 

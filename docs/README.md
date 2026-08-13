@@ -34,11 +34,12 @@ Verbatim, not "contains the same numbers": an earlier guard checked whether each
 | [ADR 002 — Null verified grade in CI](adr-002-null-verified-grade-in-ci.md) | **Rejected** — assumed a CI grade gate that does not exist |
 | [ADR 003 — Deterministic semantic policy](adr-003-deterministic-semantic-policy.md) | **Proposed** — repository semantics without rubric drift |
 | [ADR 004 — Economic context](adr-004-economic-context.md) | **Proposed** — impact scenarios separate from score and grade |
-| [ADR 005 — Insufficient population](adr-005-insufficient-population.md) | **Accepted, not implemented** — no rate without a denominator that supports one |
-| [ADR 006 — Analyzer evidence](adr-006-analyzer-evidence.md) | **Accepted, not implemented** — FOSS analyzers produce the evidence, corroborated across tools |
-| [ADR 007 — Pillars and practice](adr-007-pillars-and-practice.md) | **Accepted, not implemented** — five-pillar taxonomy; practice maturity separate from code condition |
-| [ADR 008 — Translation and decision](adr-008-translation-and-decision.md) | **Accepted, not implemented** — tool output to scoring input, the LLM boundary, CLI and MCP |
-| [ADR 009 — Scan history](adr-009-scan-history.md) | **Accepted, not implemented** — maintainability is a trend; content-addressed finding identity |
+| [ADR 005 — Insufficient population](adr-005-insufficient-population.md) | **Implemented** — no rate without a denominator that supports one; four causes of a withheld score, unread source checked before the floors |
+| [ADR 006 — Analyzer evidence](adr-006-analyzer-evidence.md) | **Implemented** — FOSS analyzers produce the evidence, corroborated across tools; twelve adapters against a 760-entry catalog, so coverage is real but partial |
+| [ADR 007 — Pillars and practice](adr-007-pillars-and-practice.md) | **Implemented except §4** — five-pillar taxonomy, practice maturity separate from code condition, Risk × Effort work order. The shared-vocabulary rename (`knowledge_concentration` to bus factor) is outstanding |
+| [ADR 008 — Translation and decision](adr-008-translation-and-decision.md) | **Implemented** — tool output to scoring input, the LLM boundary, CLI and MCP; the bridge supplies the `declarations` dimension only |
+| [ADR 009 — Scan history](adr-009-scan-history.md) | **Accepted, not implemented** — maintainability is a trend; content-addressed finding identity. Finding identity shipped; history, trends and recurrence have not |
+| [ADR 010 — Repository discovery](adr-010-repository-discovery.md) | What is in this tree and whose code it is; classification by evidence the repository provides, never by a list of directory names |
 | [Report contract](report-contract.md) | Current — the report's producers, consumers, and schema-version policy |
 
 New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register, and never edited after acceptance except to record implementation progress or mark them superseded.

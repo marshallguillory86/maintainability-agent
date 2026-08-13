@@ -159,11 +159,16 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
         version=VERSION,
         instructions=SERVER_INSTRUCTIONS,
     )
+    # Field names, not the camelCase aliases. Both construct an identical
+    # object — the aliases are pydantic's *serialisation* names and the
+    # wire form is unchanged (`readOnlyHint` either way) — but only the
+    # field names type-check, and four standing mypy errors that everyone
+    # knows are harmless is how a real one gets missed.
     read_only = ToolAnnotations(
-        readOnlyHint=True,
-        destructiveHint=False,
-        idempotentHint=True,
-        openWorldHint=False,
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=False,
     )
 
     @server.tool(name="audit_repository", annotations=read_only, structured_output=True)

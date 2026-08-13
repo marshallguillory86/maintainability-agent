@@ -282,12 +282,16 @@ def test_generated_and_vendored_code_leaves_the_scored_population(tmp_path: Path
     assert summary["vendored_files"] == 300
 
 
-@pytest.mark.parametrize(("name", "expected"), [
-    ("whisper.cpp", "ggml"),
-    ("lapack", "TESTING"),
-])
+@pytest.mark.parametrize(("name", "expected"), [("whisper.cpp", "ggml")])
 def test_the_sample_repositories_are_classified(name: str, expected: str) -> None:
     """Held against the recorded run, not re-cloned.
+
+    Only the classes that *carry evidence* are checked here. Test code is
+    identified by convention rather than by a declaration the repository
+    makes, so it records no evidence entry and cannot appear in this
+    list — lapack's 1,270 `TESTING/` files are covered by
+    `test_an_upper_case_testing_directory_is_test_code` instead, which
+    asserts the provenance directly.
 
     Skipped rather than failed when the sample has not been run: a
     missing artifact is not evidence of correctness either way.

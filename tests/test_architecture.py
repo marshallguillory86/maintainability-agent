@@ -18,16 +18,16 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "src" / "maintainability_audit"
 
 # `_runner` sits in foundations beside `git_tools` for the same reason:
-# both spawn processes and depend on nothing internal. ADR 006 rule 7
-# makes them the only two modules permitted to, so keeping them in one
-# layer is what makes that rule checkable.
+# both spawn processes and depend on nothing internal. Rule 7 names
+# those two plus `_backfill` (assembly; git for history backfill).
+# Keeping the foundation spawners in one layer is what makes the
+# analyzer half of that rule checkable.
 FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "config",
                "git_tools", "instructions",
                # `_runner` sits beside `git_tools`: both spawn processes and
-               # import nothing internal, and ADR 006 rule 7 makes them the
-               # only two permitted to, so one layer is what makes that
-               # rule checkable. `_catalog` is analyzer selection data --
-               # a leaf that reads the shipped catalog and nothing else.
+               # import nothing internal. `_catalog` is analyzer selection
+               # data -- a leaf that reads the shipped catalog and nothing
+               # else.
                "_runner", "_catalog"}
 PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens"}
 # `_adapters` is a scanner: it produces findings and measurements from a
@@ -328,4 +328,111 @@ def test_production_code_never_emits_a_removed_public_key() -> None:
 
     assert not set(emitted) & set(REMOVED_PUBLIC_KEYS), (
         f"the score document emits removed keys: {sorted(set(emitted) & set(REMOVED_PUBLIC_KEYS))}"
+    )
+
+
+# The as-is document once listed shipped modules as unimplemented while
+# the layering test still passed: a name appearing *anywhere* satisfied
+# it, including a Known-debt sentence that said the file did not exist.
+# The proposal section at the end may name future work; everything
+# above it may not deny a file that is in the tree.
+_PROPOSAL_HEADING = "## Proposed extension boundaries"
+_MODULE_DENIAL = re.compile(
+    r"(do not exist|does not exist|did not exist|"
+    r"unimplemented|not shipped|never created|"
+    r"were never created|was never created|"
+    r"does not ship|do not ship)",
+    re.I,
+)
+_BACKTICK_NAME = re.compile(r"`([A-Za-z_][A-Za-z0-9_]*)`")
+_KNOWN_DEBT_SECTION = re.compile(r"^## Known debt\n(.*?)(?=^## )", re.S | re.M)
+# Phrases that were true of an earlier tree and are now false. Mentioning
+# them as *resolved* ("no longer", strikethrough) is fine; asserting them
+# as current debt is the class of lie this file existed to stop.
+_RESOLVED_AS_CURRENT = (
+    (re.compile(r"today nothing records", re.I),
+     "scans append through _scan_history"),
+    (re.compile(r"finding identity is line-coupled", re.I),
+     "identity is function:{path}:{name}#{ordinal} in _identity"),
+    (re.compile(r"function:\{path\}:\{name\}:\{start_line\}"),
+     "line-coupled identity format is gone"),
+    (re.compile(r"ten modules do not exist", re.I),
+     "the named modules mostly shipped under other names"),
+    (re.compile(r"ADR 00[5-9].{0,20}unimplemented", re.I),
+     "005-009 landed in code; remaining gaps are listed as specific debt"),
+)
+
+
+def _asis_architecture(text: str) -> str:
+    idx = text.find(_PROPOSAL_HEADING)
+    return text if idx < 0 else text[:idx]
+
+
+def test_architecture_doc_does_not_deny_modules_that_exist() -> None:
+    """A claim that a module does not exist must be true of the tree.
+
+    Inverse of ``test_the_documented_layering_matches_the_document``.
+    Only names in the clause that carries the denial are checked, so a
+    Known-debt sentence can say ``_analyzers`` was never created and
+    then name the files that absorbed the role.
+    """
+    text = (ROOT / "docs" / "architecture.md").read_text(encoding="utf-8")
+    asis = _asis_architecture(text)
+    offenders: list[str] = []
+    for match in _MODULE_DENIAL.finditer(asis):
+        window = asis[max(0, match.start() - 160):match.end()]
+        for name in _BACKTICK_NAME.findall(window):
+            py = PACKAGE / f"{name}.py"
+            pkg = PACKAGE / name
+            if py.exists() or pkg.is_dir():
+                located = py if py.exists() else pkg
+                offenders.append(
+                    f"{name} is denied but {located.relative_to(ROOT)} exists:\n"
+                    f"  {window.strip()[:220]}"
+                )
+
+    assert not offenders, (
+        "docs/architecture.md denies modules that exist:\n" + "\n".join(offenders)
+    )
+
+
+def test_architecture_known_debt_does_not_reassert_resolved_defects() -> None:
+    """Live Known-debt bullets may not resurrect defects that already shipped."""
+    text = (ROOT / "docs" / "architecture.md").read_text(encoding="utf-8")
+    match = _KNOWN_DEBT_SECTION.search(text)
+    assert match, "docs/architecture.md is missing a Known debt section"
+    live = "\n".join(
+        line
+        for line in match.group(1).splitlines()
+        if not line.lstrip().startswith(("~~", "- ~~"))
+        and "no longer" not in line.lower()
+    )
+    offenders = [
+        f"{reason}: /{pattern.pattern}/ matched live Known debt"
+        for pattern, reason in _RESOLVED_AS_CURRENT
+        if pattern.search(live)
+    ]
+
+    assert not offenders, (
+        "docs/architecture.md Known debt reasserts resolved defects:\n"
+        + "\n".join(offenders)
+    )
+
+
+ALLOWED_SPAWN = {"_runner", "git_tools", "_backfill"}
+
+
+def test_only_documented_modules_spawn_processes() -> None:
+    """Rule 7: analyzers go through `_runner`; git is `git_tools` and `_backfill`."""
+    offenders = [
+        path.name
+        for path in sorted(PACKAGE.glob("*.py"))
+        if path.stem not in ALLOWED_SPAWN
+        and re.search(r"\bsubprocess\b", path.read_text(encoding="utf-8"))
+    ]
+
+    assert not offenders, (
+        "modules outside rule 7 import subprocess: "
+        f"{offenders}; add them to the architecture rule or route through "
+        f"{sorted(ALLOWED_SPAWN)}"
     )

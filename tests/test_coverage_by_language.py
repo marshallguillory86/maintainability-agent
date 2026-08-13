@@ -233,7 +233,7 @@ def test_two_scored_languages_narrow_the_claim_honestly(tmp_path: Path) -> None:
     """
     root = _repo(tmp_path / "polyglot", {
         **{f"pkg/mod{n}.py": PY % {"n": n} for n in range(40)},
-        **{f"web/mod{n}.ts": "export function f%(n)d(): number { return %(n)d; }\n" % {"n": n}
+        **{f"web/mod{n}.ts": f"export function f{n}(): number {{ return {n}; }}\n"
            for n in range(40)},
     })
 

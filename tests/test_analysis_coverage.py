@@ -22,8 +22,8 @@ from maintainability_audit._analysis import (
     Analysis,
     ToolCoverage,
     analyze,
-    coverage_document,
 )
+from maintainability_audit._documents import coverage_document
 from maintainability_audit._metrics_types import Finding, Measurement
 from maintainability_audit._runner import Outcome
 
@@ -195,7 +195,7 @@ def test_analyzer_findings_reach_the_report(tmp_path: Path) -> None:
     the payload, and it was missing on the first pass: `_analysis`
     collected findings and nothing wrote them anywhere.
     """
-    from maintainability_audit._analysis import findings_document
+    from maintainability_audit._documents import findings_document
 
     analysis = Analysis(findings=[
         Finding(concept="dead-code", path=str(tmp_path / "a.py"), line=7,
@@ -212,7 +212,7 @@ def test_analyzer_findings_reach_the_report(tmp_path: Path) -> None:
 
 def test_findings_are_ordered_so_two_runs_diff_cleanly(tmp_path: Path) -> None:
     """Stable ordering, or every run's diff is noise."""
-    from maintainability_audit._analysis import findings_document
+    from maintainability_audit._documents import findings_document
 
     def _finding(path: str, line: int, tool: str) -> Finding:
         return Finding(concept="style", path=str(tmp_path / path), line=line,
@@ -233,7 +233,7 @@ def test_a_path_outside_the_root_is_kept_rather_than_mangled(tmp_path: Path) -> 
     A tool may report a path outside the tree — a config elsewhere, a
     symlink target. Losing it would be worse than showing it absolute.
     """
-    from maintainability_audit._analysis import findings_document
+    from maintainability_audit._documents import findings_document
 
     outside = Analysis(findings=[
         Finding(concept="style", path="/elsewhere/x.py", line=1, message="m", tool="ruff"),

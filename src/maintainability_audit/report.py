@@ -13,14 +13,10 @@ from dataclasses import asdict
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from ._analysis import (
-    analyze,
-    coverage_document,
-    findings_document,
-    measurement_document,
-)
+from ._analysis import analyze
 from ._built_ins import record_built_in_counts
 from ._discovery import Provenance, discover
+from ._documents import coverage_document, findings_document, measurement_document
 from ._metrics_types import FileMetric, FunctionMetric
 from ._pillars import pillar_report
 from ._practice import practice_level

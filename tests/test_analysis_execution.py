@@ -21,7 +21,8 @@ from pathlib import Path
 import pytest
 
 from maintainability_audit._adapters import BaseAdapter, Extraction
-from maintainability_audit._analysis import analyze, coverage_document, measurement_document
+from maintainability_audit._analysis import analyze
+from maintainability_audit._documents import coverage_document, measurement_document
 from maintainability_audit._metrics_types import Measurement
 from maintainability_audit._runner import ToolResult
 

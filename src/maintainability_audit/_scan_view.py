@@ -21,6 +21,43 @@ from typing import Any
 from ._work_order import work_order_rows
 
 
+def _by_language_rows(coverage: dict[str, Any]) -> list[str]:
+    """The per-language coverage table, or nothing for a single language.
+
+    Split out because `analyzer_coverage_markdown` reached complexity 15
+    against this project's own limit — a section added per fact, each
+    reasonable alone.
+    """
+    rows: list[str] = []
+    by_language = coverage.get("by_language") or {}
+    scored = coverage.get("scored_languages") or []
+    if len(by_language) > 1:
+        # Per language, because a repository is not one language and the
+        # union rounds up: one Python build script among three hundred
+        # C++ files claimed `types` for the whole tree.
+        rows.extend([
+            "### Coverage by language", "",
+            "| Language | Scored | Examined | Unexamined |",
+            "|---|---|---|---|",
+        ])
+        gaps = coverage.get("gaps_by_language") or {}
+        for name, covered in by_language.items():
+            missing = gaps.get(name) or []
+            rows.append(
+                f"| {name} | {'yes' if name in scored else 'not read'} | "
+                f"{', '.join(f'`{c}`' for c in covered) or '—'} | "
+                f"{', '.join(f'`{c}`' for c in missing) or '—'} |"
+            )
+        rows.extend([
+            "",
+            "The score is drawn from the scored languages only. Anything "
+            "marked `not read` is listed under Source Not Read with its "
+            "file count.",
+            "",
+        ])
+    return rows
+
+
 def analyzer_coverage_markdown(coverage: dict[str, Any] | None) -> list[str]:
     """What examined this repository, and what nothing examined.
 
@@ -66,32 +103,7 @@ def analyzer_coverage_markdown(coverage: dict[str, Any] | None) -> list[str]:
             )
     lines.append("")
 
-    by_language = coverage.get("by_language") or {}
-    scored = coverage.get("scored_languages") or []
-    if len(by_language) > 1:
-        # Per language, because a repository is not one language and the
-        # union rounds up: one Python build script among three hundred
-        # C++ files claimed `types` for the whole tree.
-        lines.extend([
-            "### Coverage by language", "",
-            "| Language | Scored | Examined | Unexamined |",
-            "|---|---|---|---|",
-        ])
-        gaps = coverage.get("gaps_by_language") or {}
-        for name, covered in by_language.items():
-            missing = gaps.get(name) or []
-            lines.append(
-                f"| {name} | {'yes' if name in scored else 'not read'} | "
-                f"{', '.join(f'`{c}`' for c in covered) or '—'} | "
-                f"{', '.join(f'`{c}`' for c in missing) or '—'} |"
-            )
-        lines.extend([
-            "",
-            "The score is drawn from the scored languages only. Anything "
-            "marked `not read` is listed under Source Not Read with its "
-            "file count.",
-            "",
-        ])
+    lines.extend(_by_language_rows(coverage))
 
     single = coverage.get("concepts_single_source") or []
     if single:

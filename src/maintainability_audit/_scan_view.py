@@ -398,3 +398,66 @@ def work_order_selection_markdown(selection: dict[str, Any] | None) -> list[str]
         lines.append(f"| {index} | {item['band']} | {item['title']} ({location}) | {item['target']} |")
     lines.extend(["", f"Verify with: `{items[0]['verification']}`", ""])
     return lines
+
+
+# What each trajectory means in a sentence, so the word is never left to
+# carry the meaning alone. "indistinguishable" in particular reads as a
+# hedge unless the reason is beside it.
+DIRECTION_NOTE: dict[str, str] = {
+    "improving": "the estimate rose beyond either interval",
+    "declining": "the estimate fell beyond either interval",
+    "flat": "the estimate did not move",
+    "indistinguishable": "moved, but by less than the evidence can resolve",
+    "unknown": "not computable from these scans",
+}
+
+
+def scan_history_markdown(history: list[dict[str, Any]] | None) -> list[str]:
+    """Trends over each comparable segment, and the breaks between them.
+
+    Per segment and never across, because a series spliced over a change
+    in the instrument measures the tooling. Where a break happened it is
+    named, so a reader can see *why* there are two lines rather than one
+    and judge whether the split was warranted.
+
+    Nothing here forecasts. Every figure is a statement about scans that
+    happened.
+    """
+    if not history:
+        return []
+    lines = ["## Trend", ""]
+    if len(history) > 1:
+        lines.extend([
+            f"{len(history)} separate series. Scans either side of a break were "
+            "produced by different instruments and cannot be compared, so they "
+            "are reported apart rather than joined into one line.",
+            "",
+        ])
+    for index, segment in enumerate(history, start=1):
+        if segment["break_reason"]:
+            lines.extend([f"**Break before this series:** {segment['break_reason']}.", ""])
+        window = f"{segment['from']} to {segment['to']}"
+        moved = segment["trajectory"]
+        note = DIRECTION_NOTE.get(moved["direction"], moved["direction"])
+        lines.append(
+            f"**Series {index}** — {segment['scans']} scans, {window}."
+            if len(history) > 1 else
+            f"{segment['scans']} scans, {window}."
+        )
+        lines.extend([
+            "",
+            f"- **Direction:** {moved['direction']} — {note}."
+            + (f" Change {moved['change']:+.2f}." if moved["change"] is not None else ""),
+            f"- **Debt velocity:** {segment['velocity']['introduced']} introduced, "
+            f"{segment['velocity']['cleared']} cleared "
+            f"({'clearing faster than adding' if segment['velocity']['improving'] else 'adding faster than clearing'}).",
+            f"- **Growth:** {segment['growth']['verdict']}.",
+            f"- **Never cleared in this window:** {segment['persistent_findings']} findings.",
+            "",
+        ])
+    lines.extend([
+        "Every figure above describes scans that happened. This tool does not "
+        "forecast, and no number here should be read as one.",
+        "",
+    ])
+    return lines

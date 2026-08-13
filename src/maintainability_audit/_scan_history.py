@@ -83,6 +83,12 @@ class ScanRecord:
     analyzers: tuple[str, ...]
     scored_languages: tuple[str, ...]
     estimate: float | None
+    # The interval the estimate could occupy on evidence not gathered.
+    # Stored so a later run can tell a real move from a move inside the
+    # uncertainty — without it, trend direction would need a threshold
+    # invented for the purpose when the report already publishes one.
+    range_low: float | None = None
+    range_high: float | None = None
     populations: dict[str, int] = field(default_factory=dict)
     # Stable finding identities, for the recurrence work that follows.
     fingerprints: tuple[str, ...] = ()
@@ -253,6 +259,8 @@ def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
         analyzers=contributed,
         scored_languages=tuple(sorted(coverage.get("scored_languages") or ())),
         estimate=score.get("maintainability_estimate"),
+        range_low=(score.get("maintainability_range") or [None, None])[0],
+        range_high=(score.get("maintainability_range") or [None, None])[-1],
         populations={
             key: int(summary[key])
             for key in ("files_scanned", "declarations_scanned",

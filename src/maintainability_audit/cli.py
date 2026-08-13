@@ -13,6 +13,7 @@ from ._scan_history import (
     record_of,
     segments,
 )
+from ._trends import trend_report
 from ._work_order import SELECTABLE, combined_delta, select
 from .baseline import finding_fingerprints, load_baseline, write_baseline
 from .config import DEFAULT_CONFIG, VERSION, discovered_config, load_config
@@ -156,11 +157,10 @@ def main(argv: list[str] | None = None) -> int:
     # nobody is shown is a trend nobody benefits from — but the series is
     # segmented first, so nothing is ever computed across a change in the
     # instrument.
-    report["scan_history"] = [
-        {"records": len(s.records), "break_reason": s.break_reason,
-         "comparable_trend": s.comparable_trend}
-        for s in segments(read_history(history_path))
-    ]
+    # One trend report per segment, never one across them. The gate ran
+    # first, so nothing here can be computed over a change in the
+    # instrument.
+    report["scan_history"] = [trend_report(s) for s in segments(read_history(history_path))]
     rendered = json.dumps(report, indent=2, sort_keys=True) if args.format == "json" else render_markdown(report)
     write_outputs(args, report, rendered)
     return audit_exit_code(args, report)

@@ -27,6 +27,7 @@ Dependencies point downward only. No cycles.
   scanners                   scoring
   _discovery (what is here,  scoring -> _aspects -> _pressures
    and whose code it is)     _pillars (five-pillar taxonomy)
+                             _trends (arithmetic over checked segments)
   _practice (what is
    enforced, from config)
   metrics, duplication

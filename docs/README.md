@@ -38,7 +38,7 @@ Verbatim, not "contains the same numbers": an earlier guard checked whether each
 | [ADR 006 — Analyzer evidence](adr-006-analyzer-evidence.md) | **Implemented** — FOSS analyzers produce the evidence, corroborated across tools; twelve adapters against a 760-entry catalog, so coverage is real but partial |
 | [ADR 007 — Pillars and practice](adr-007-pillars-and-practice.md) | **Implemented except §4** — five-pillar taxonomy, practice maturity separate from code condition, Risk × Effort work order. The shared-vocabulary rename (`knowledge_concentration` to bus factor) is outstanding |
 | [ADR 008 — Translation and decision](adr-008-translation-and-decision.md) | **Implemented** — tool output to scoring input, the LLM boundary, CLI and MCP; the bridge supplies the `declarations` dimension only |
-| [ADR 009 — Scan history](adr-009-scan-history.md) | **Accepted, not implemented** — maintainability is a trend; content-addressed finding identity. Finding identity shipped; history, trends and recurrence have not |
+| [ADR 009 — Scan history](adr-009-scan-history.md) | **Implemented** — append-only history, comparability gate, trends over checked segments only, recurrence escalation, backfill and compaction. Trends never forecast |
 | [ADR 010 — Repository discovery](adr-010-repository-discovery.md) | What is in this tree and whose code it is; classification by evidence the repository provides, never by a list of directory names |
 | [Report contract](report-contract.md) | Current — the report's producers, consumers, and schema-version policy |
 

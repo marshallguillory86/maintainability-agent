@@ -4,18 +4,25 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 ## Where this actually stands
 
+*Measured 2026-08-13. Regenerate the counts before quoting them; the previous version of this table survived fifty-five commits past the point it stopped being true, which is the drift this project exists to catch.*
+
 | Fact | Value |
 |---|---|
 | Shipped version | 0.6.1 |
-| This branch, ahead of `main` | 53 commits |
-| Production code | 5,517 lines across 33 modules |
-| Tests | 450 across 28 files, 96% coverage, self-gate 0 |
-| ADRs accepted and **implemented** | 001 (through stage 8) |
-| ADRs accepted and **not implemented** | 005, 006, 007, 008, 009 |
-| Proposed modules that exist | **0 of 10** |
-| Live defects in shipped flags | 2, both reproduced |
+| This branch, ahead of `main` | 108 commits |
+| Production code | 12,612 lines across 58 modules |
+| Tests | 825 across 53 files, 93% coverage, self-gate 0 |
+| ADRs accepted and **implemented** | 001, 005, 006, 007 (except §4, refused with reason), 008, 009, 010 |
+| ADRs accepted and **not implemented** | none |
+| Phases complete | 0–5 |
+| Phases outstanding | 6 (entry points, partly done), 7 (release) |
 
-The design is complete and the implementation of it has not started. That is a fair summary and the plan below assumes it.
+Phases 0 through 5 are built. What remains is Phase 6's interactive entry points and CI recipes, and Phase 7's release work — reconciling documents, the migration guide, and a hostile audit against the shipped artifact.
+
+Two things are deliberately open rather than done:
+
+- **The calibration constant stays at 2.6279.** A 2,000-resample bootstrap puts the 95% interval at [2.2522, 3.4718]; the re-derived alternative sits inside it, both roll the corpus median to exactly 4.0000, and they differ on one repository in forty by 0.1. See `tools/calibration/sampling_error.py`.
+- **ADR 007 §4's rename is refused**, and the deviation is recorded there and in `standard.md`: the ownership aspect measures the share of settled files one person owns, which is not the bus factor, and adopting the name would claim a measurement the tool never makes.
 
 ## Phase 0 — Land what exists, fix what is broken
 

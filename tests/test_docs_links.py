@@ -232,3 +232,79 @@ def test_the_self_audit_claims_provenance_not_distance() -> None:
     assert not offenders, (
         "the self-audit must claim provenance, not distance from HEAD:\n" + "\n".join(offenders)
     )
+
+
+def test_every_cli_flag_is_documented_and_every_documented_flag_exists() -> None:
+    """docs/cli.md is prose over an interface, and prose drifts.
+
+    Six flags shipped across Phases 4 and 5 — `--analyzers`, `--work`,
+    `--record-history`, `--backfill`, `--backfill-interval` — and none
+    reached the page a user reads to find out what the tool can do. A
+    capability nobody can discover is a capability nobody has.
+
+    Both directions: an undocumented flag is invisible, and a documented
+    flag that no longer exists sends someone to a parser error.
+    """
+    import argparse
+    import re
+
+    from maintainability_audit.cli import add_arguments
+
+    parser = argparse.ArgumentParser()
+    add_arguments(parser)
+    shipped = {
+        option
+        for action in parser._actions  # noqa: SLF001 - argparse exposes no public list
+        for option in action.option_strings
+        if option.startswith("--")
+    } - {"--help"}
+
+    page = (ROOT / "docs" / "cli.md").read_text(encoding="utf-8")
+    documented = set(re.findall(r"\| `(--[a-z-]+)", page))
+
+    assert not shipped - documented, (
+        f"flags with no entry in docs/cli.md: {sorted(shipped - documented)}"
+    )
+    assert not documented - shipped, (
+        f"docs/cli.md documents flags the CLI does not have: "
+        f"{sorted(documented - shipped)}"
+    )
+
+
+def test_the_readme_table_matches_the_stamped_self_audit() -> None:
+    """A README that advertises a stale score is the defect this tool catches.
+
+    It has happened before: an earlier revision advertised 5.0/A+ after
+    the codebase had drifted to a B, and a hostile audit caught it. It
+    happened again across Phases 4 and 5 — every row was from a
+    117-file tree that now has 184 files.
+
+    Compared row by row against `docs/self-audit.md` rather than by
+    eye, because "the numbers look about right" is exactly how the last
+    two drifts survived review.
+    """
+    import re
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    audit = (ROOT / "docs" / "self-audit.md").read_text(encoding="utf-8")
+
+    def rows(text: str) -> dict[str, str]:
+        return {
+            name.strip(): value.strip().replace("*", "")
+            for name, value in re.findall(r"^\| ([A-Z][^|]+?) \| ([^|]+?) \|$",
+                                          text, re.M)
+        }
+
+    stamped, advertised = rows(audit), rows(readme)
+    shared = set(stamped) & set(advertised)
+    assert shared, "the README no longer quotes any metric from the self-audit"
+
+    mismatched = {
+        name: (advertised[name], stamped[name])
+        for name in shared
+        if advertised[name] != stamped[name]
+    }
+    assert not mismatched, (
+        f"README advertises figures the stamped self-audit does not support "
+        f"(readme, audit): {mismatched}"
+    )

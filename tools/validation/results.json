@@ -69,7 +69,7 @@
    ],
    "read_source_files": 78,
    "repo": "click",
-   "seconds": 6.6,
+   "seconds": 7.2,
    "unread_source": [
     {
      "files": 1,
@@ -149,7 +149,7 @@
    ],
    "read_source_files": 37,
    "repo": "requests",
-   "seconds": 3.7,
+   "seconds": 3.9,
    "unread_source": [],
    "unread_source_files": 0,
    "vendored_files": 0,
@@ -164,7 +164,6 @@
    "classifications": [],
    "concepts_covered": [
     "complexity",
-    "documentation",
     "duplication",
     "metrics",
     "structure"
@@ -173,6 +172,7 @@
     "dead-code"
    ],
    "concepts_unexamined": [
+    "documentation",
     "style",
     "testing",
     "types"
@@ -226,7 +226,7 @@
    ],
    "read_source_files": 1619,
    "repo": "date-fns",
-   "seconds": 7.0,
+   "seconds": 7.4,
    "unread_source": [
     {
      "files": 14,
@@ -247,7 +247,6 @@
    "classifications": [],
    "concepts_covered": [
     "complexity",
-    "documentation",
     "duplication",
     "metrics",
     "structure"
@@ -256,6 +255,7 @@
     "dead-code"
    ],
    "concepts_unexamined": [
+    "documentation",
     "style",
     "testing",
     "types"
@@ -309,7 +309,7 @@
    ],
    "read_source_files": 126,
    "repo": "formik",
-   "seconds": 2.8,
+   "seconds": 3.0,
    "unread_source": [
     {
      "files": 2,
@@ -406,7 +406,6 @@
    ],
    "concepts_covered": [
     "complexity",
-    "documentation",
     "duplication",
     "metrics",
     "structure"
@@ -415,6 +414,7 @@
     "dead-code"
    ],
    "concepts_unexamined": [
+    "documentation",
     "style",
     "testing",
     "types"
@@ -468,7 +468,7 @@
    ],
    "read_source_files": 17606,
    "repo": "babel",
-   "seconds": 33.4,
+   "seconds": 34.8,
    "unread_source": [
     {
      "files": 22,
@@ -531,7 +531,7 @@
    "range": null,
    "read_source_files": 0,
    "repo": "gson",
-   "seconds": 4.2,
+   "seconds": 4.5,
    "unread_source": [
     {
      "files": 264,
@@ -589,7 +589,7 @@
    "range": null,
    "read_source_files": 0,
    "repo": "cobra",
-   "seconds": 1.9,
+   "seconds": 2.0,
    "unread_source": [
     {
      "files": 36,
@@ -650,7 +650,7 @@
    "range": null,
    "read_source_files": 0,
    "repo": "ripgrep",
-   "seconds": 1.9,
+   "seconds": 2.1,
    "unread_source": [
     {
      "files": 110,
@@ -728,7 +728,7 @@
    "range": null,
    "read_source_files": 0,
    "repo": "kilo",
-   "seconds": 1.0,
+   "seconds": 1.2,
    "unread_source": [
     {
      "files": 1,
@@ -845,7 +845,7 @@
    "range": null,
    "read_source_files": 52,
    "repo": "curl",
-   "seconds": 9.6,
+   "seconds": 10.5,
    "unread_source": [
     {
      "files": 758,
@@ -931,7 +931,7 @@
    "range": null,
    "read_source_files": 7,
    "repo": "json",
-   "seconds": 8.0,
+   "seconds": 8.7,
    "unread_source": [
     {
      "files": 423,
@@ -993,17 +993,18 @@
    ],
    "concepts_covered": [
     "complexity",
-    "dead-code",
     "documentation",
     "duplication",
     "metrics",
-    "structure",
-    "style",
-    "types"
+    "structure"
    ],
-   "concepts_single_source": [],
+   "concepts_single_source": [
+    "dead-code"
+   ],
    "concepts_unexamined": [
-    "testing"
+    "style",
+    "testing",
+    "types"
    ],
    "declarations_scanned": 275,
    "estimate": null,
@@ -1040,7 +1041,7 @@
    "range": null,
    "read_source_files": 41,
    "repo": "whisper.cpp",
-   "seconds": 22.6,
+   "seconds": 24.5,
    "unread_source": [
     {
      "files": 437,
@@ -1160,7 +1161,7 @@
    "range": null,
    "read_source_files": 1,
    "repo": "lapack",
-   "seconds": 28.8,
+   "seconds": 31.9,
    "unread_source": [
     {
      "files": 3568,

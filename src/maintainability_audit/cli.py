@@ -5,6 +5,14 @@ import json
 import sys
 from pathlib import Path
 
+from ._calibration import CALIBRATION_C
+from ._scan_history import (
+    DEFAULT_HISTORY_PATH,
+    append_scan,
+    read_history,
+    record_of,
+    segments,
+)
 from ._work_order import SELECTABLE, combined_delta, select
 from .baseline import finding_fingerprints, load_baseline, write_baseline
 from .config import DEFAULT_CONFIG, VERSION, discovered_config, load_config
@@ -43,6 +51,13 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
              "--work path=src/. Repeatable; every criterion must match. "
              "Axes: band, finding_class, path, verification. Narrowing "
              "changes what is shown and never what anything scored.",
+    )
+    parser.add_argument(
+        "--record-history", action="store_true",
+        help="Append this scan to the history at paths.history (default "
+             ".maintainability/history.jsonl). Opt-in, like every other write "
+             "this tool performs. Once the file exists, later runs read it "
+             "without being asked.",
     )
     parser.add_argument("--fail-on-gate", action="store_true", help="Exit 1 when hard gates fail.")
     parser.add_argument("--init-agent-standards", action="store_true", help="Write model/tool-specific instruction files and exit.")
@@ -132,6 +147,20 @@ def main(argv: list[str] | None = None) -> int:
         }
         report["work_order_selection"]["worth"] = combined_delta(
             report, report["work_order_selection"]["items"])
+    history_path = root / (config.get("paths", {}).get("history") or DEFAULT_HISTORY_PATH)
+    if args.record_history:
+        append_scan(history_path, record_of(
+            report, config, VERSION, CALIBRATION_C,
+            tuple(sorted(finding_fingerprints(report)))))
+    # Read without being asked. Reading has no side effect, and a trend
+    # nobody is shown is a trend nobody benefits from — but the series is
+    # segmented first, so nothing is ever computed across a change in the
+    # instrument.
+    report["scan_history"] = [
+        {"records": len(s.records), "break_reason": s.break_reason,
+         "comparable_trend": s.comparable_trend}
+        for s in segments(read_history(history_path))
+    ]
     rendered = json.dumps(report, indent=2, sort_keys=True) if args.format == "json" else render_markdown(report)
     write_outputs(args, report, rendered)
     return audit_exit_code(args, report)

@@ -205,3 +205,59 @@ def read_history(path: Path) -> list[ScanRecord]:
         except (ValueError, TypeError):
             continue
     return records
+
+
+def thresholds_digest(thresholds: dict[str, Any]) -> str:
+    """A stable digest of the thresholds in force.
+
+    Stored rather than the thresholds themselves because the comparison
+    is equality: a digest cannot be half-compared by a later reader who
+    checks three keys and forgets the fourth. Sorted so key order in a
+    config file is not mistaken for a change in the rubric.
+    """
+    import hashlib
+
+    payload = json.dumps(thresholds, sort_keys=True, default=str)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
+def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
+              calibration: float, fingerprints: tuple[str, ...]) -> ScanRecord:
+    """Build a record from a finished report.
+
+    Every comparability field is taken from what the run actually did,
+    never from what it was asked to do: `analyzers` is the tools that
+    *contributed*, not the pool that was selected, because a tool that
+    failed to run changes the coverage exactly as much as one that was
+    never chosen.
+    """
+    from datetime import UTC, datetime
+
+    coverage = report.get("analyzer_coverage") or {}
+    contributed = tuple(sorted(
+        entry["tool"]
+        for entries in (coverage.get("by_outcome") or {}).values()
+        for entry in entries
+        if entry.get("tier") == "analyzer" and entry.get("measurements") is not None
+    ))
+    summary = report.get("summary") or {}
+    score = report.get("score") or {}
+    return ScanRecord(
+        recorded_at=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        commit=report.get("git_commit") or "",
+        branch=report.get("git_branch") or "",
+        scope=report.get("mode") or "full",
+        rubric_version=version,
+        calibration=calibration,
+        thresholds_digest=thresholds_digest(config.get("thresholds") or {}),
+        analyzers=contributed,
+        scored_languages=tuple(sorted(coverage.get("scored_languages") or ())),
+        estimate=score.get("maintainability_estimate"),
+        populations={
+            key: int(summary[key])
+            for key in ("files_scanned", "declarations_scanned",
+                        "production_files_scanned", "production_declarations_scanned")
+            if isinstance(summary.get(key), int)
+        },
+        fingerprints=fingerprints,
+    )

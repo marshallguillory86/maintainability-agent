@@ -204,6 +204,28 @@ def _add_inventory(summary: dict[str, Any], inventory: Any) -> None:
     summary["classifications"] = inventory.classifications
 
 
+def _provenance(
+    root: Path, git_status: str, only_paths: set[str] | None, changed_revspec: str | None
+) -> dict[str, Any]:
+    """Which tree this report describes, and how much of it was examined.
+
+    Grouped because `_assemble` crossed this project's own 80-line
+    function limit when the commit was added, and because these five
+    fields answer one question — *what was audited* — that the rest of
+    the document assumes an answer to.
+    """
+    return {
+        "git_branch": run_git(["branch", "--show-current"], root),
+        # The commit this report describes. Without it a scan history is
+        # a list of scores with no anchor, and recurrence — "cleared,
+        # then returned, in these commits" — has nothing to name.
+        "git_commit": run_git(["rev-parse", "HEAD"], root),
+        "git_status_short": git_status,
+        "mode": "changed-only" if only_paths is not None else "full",
+        "changed_revspec": changed_revspec,
+    }
+
+
 def _assemble(
     root: Path,
     analyzer: dict[str, Any],
@@ -239,10 +261,7 @@ def _assemble(
         # docs/report-contract.md for the compatibility policy.
         SCHEMA_VERSION_KEY: REPORT_SCHEMA_VERSION,
         "root": str(root),
-        "git_branch": run_git(["branch", "--show-current"], root),
-        "git_status_short": git_status,
-        "mode": "changed-only" if only_paths is not None else "full",
-        "changed_revspec": changed_revspec,
+        **_provenance(root, git_status, only_paths, changed_revspec),
         # Beside the score, never behind it: two reports with different
         # analyzer coverage are not comparable (P8).
         "analyzer_coverage": analyzer["coverage"],

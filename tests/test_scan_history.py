@@ -34,6 +34,7 @@ from pathlib import Path
 import pytest
 
 from maintainability_audit._scan_history import (
+    COMPARABILITY_FIELDS,
     HISTORY_SCHEMA_VERSION,
     ScanRecord,
     append_scan,
@@ -227,3 +228,123 @@ def test_a_single_scan_is_a_segment_and_not_a_trend() -> None:
 def test_an_empty_history_yields_no_segments_rather_than_an_error() -> None:
     """A first run has no history, which is a state and not a failure."""
     assert segments([]) == []
+
+
+# --------------------------------------------------------------------
+# Wiring: recording is asked for, reading is not
+# --------------------------------------------------------------------
+
+
+def _tree(root: Path) -> Path:
+    _repo(root)
+    (root / "README.md").write_text("# r\n", encoding="utf-8")
+    for n in range(60):
+        (root / f"pkg").mkdir(exist_ok=True)
+        (root / "pkg" / f"mod{n}.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+    subprocess.run(["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t",
+                    "commit", "-qm", "init"], check=True)
+    return root
+
+
+def test_an_audit_writes_no_history_unless_asked(tmp_path: Path) -> None:
+    """Every write in this tool is an explicit flag, and this is a write.
+
+    `--write-baseline`, `--sarif-output`, `--output`: nothing touches
+    disk unasked. A scan that silently created a file inside someone's
+    repository would break that convention for a feature they may not
+    want, and the file is one they would then have to decide whether to
+    commit.
+    """
+    from maintainability_audit.cli import main
+
+    root = _tree(tmp_path / "quiet")
+
+    assert main(["--root", str(root), "--output", str(tmp_path / "r.md")]) == 0
+    assert not (root / ".maintainability").exists(), "an unasked-for file appeared"
+
+
+def test_recording_appends_one_scan(tmp_path: Path) -> None:
+    """`--record-history` is the opt-in, and it opts in permanently.
+
+    Once the file exists, later runs read it without being asked —
+    reading has no side effect, and a trend nobody is shown is a trend
+    nobody benefits from.
+    """
+    from maintainability_audit.cli import main
+
+    root = _tree(tmp_path / "recorded")
+    history = root / ".maintainability" / "history.jsonl"
+
+    main(["--root", str(root), "--output", str(tmp_path / "a.md"), "--record-history"])
+    main(["--root", str(root), "--output", str(tmp_path / "b.md"), "--record-history"])
+
+    records = read_history(history)
+    assert len(records) == 2
+    assert records[0].scope == "full"
+    assert records[0].populations["files_scanned"] >= 60
+    assert records[0].rubric_version, "the rubric that produced it is recorded"
+
+
+def test_a_recorded_scan_carries_what_the_gate_needs(tmp_path: Path) -> None:
+    """Every comparability field, populated from the real run.
+
+    A record missing one of them cannot be compared and silently joins a
+    series it does not belong to.
+    """
+    from maintainability_audit.cli import main
+
+    root = _tree(tmp_path / "complete")
+    main(["--root", str(root), "--output", str(tmp_path / "a.md"), "--record-history"])
+
+    record = read_history(root / ".maintainability" / "history.jsonl")[0]
+
+    for name in COMPARABILITY_FIELDS:
+        value = getattr(record, name)
+        assert value not in (None, ""), f"{name} was not recorded"
+
+
+def test_a_changed_only_scan_does_not_join_a_whole_repository_series(
+    tmp_path: Path,
+) -> None:
+    """The case that will happen constantly: CI diffs beside local full scans.
+
+    Both are legitimate scans and both belong in the history. Joining
+    them into one trend would compare a two-file diff against a whole
+    repository, which is the scope error ADR 005 already refuses in the
+    snapshot — arriving through the time dimension.
+    """
+    from maintainability_audit.cli import main
+
+    root = _tree(tmp_path / "mixed")
+    history = root / ".maintainability" / "history.jsonl"
+
+    main(["--root", str(root), "--output", str(tmp_path / "a.md"), "--record-history"])
+    main(["--root", str(root), "--output", str(tmp_path / "b.md"), "--record-history",
+          "--changed-only", "HEAD"])
+
+    found = segments(read_history(history))
+
+    assert len(found) == 2, "a scope change must split the series"
+    assert "scope" in found[1].break_reason
+
+
+def test_a_record_identifies_the_commit_it_describes(tmp_path: Path) -> None:
+    """Without it the history is a list of scores with no anchor.
+
+    The first wiring stored `report["git_commit"]`, which the report has
+    never had — so every record carried an empty string and nothing
+    noticed, because no test asked. Recurrence work lands on top of this:
+    "cleared, then returned, in these commits" needs the commits.
+    """
+    from maintainability_audit.cli import main
+
+    root = _tree(tmp_path / "anchored")
+    expected = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"],
+                              capture_output=True, text=True, check=True).stdout.strip()
+
+    main(["--root", str(root), "--output", str(tmp_path / "a.md"), "--record-history"])
+    record = read_history(root / ".maintainability" / "history.jsonl")[0]
+
+    assert record.commit == expected
+    assert record.branch, "and the branch it was on"

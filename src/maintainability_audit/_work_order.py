@@ -373,3 +373,35 @@ def prompt_items(items: list[dict[str, Any]], limit: int = 12) -> list[dict[str,
     the work is real, and it needs a human to scope it first.
     """
     return [item for item in items if item["band"] != Band.MAJOR_PROJECT.value][:limit]
+
+
+# The axes a reader can narrow by. Every one is a field already on the
+# item — filtering reads what the audit gathered and shows less of it.
+# It computes nothing, which is the property that keeps one rubric
+# applying to every repository: a filter that could move a number would
+# mean two people scoring the same tree differently because they asked
+# different questions.
+SELECTABLE: tuple[str, ...] = ("band", "finding_class", "path", "verification")
+
+
+def select(items: list[dict[str, Any]], **criteria: str) -> list[dict[str, Any]]:
+    """The subset matching every criterion given.
+
+    `path` matches a prefix, so a directory selects everything under it;
+    the rest match exactly. Unknown axes raise rather than silently
+    returning everything — a filter that quietly ignores what it was
+    asked is worse than one that refuses, because the caller believes
+    the narrowing happened.
+    """
+    unknown = sorted(set(criteria) - set(SELECTABLE))
+    if unknown:
+        raise ValueError(f"cannot select on {unknown}; available axes are {list(SELECTABLE)}")
+
+    def matches(item: dict[str, Any]) -> bool:
+        return all(
+            str(item.get(axis, "")).startswith(value) if axis == "path"
+            else item.get(axis) == value
+            for axis, value in criteria.items()
+        )
+
+    return [item for item in items if matches(item)]

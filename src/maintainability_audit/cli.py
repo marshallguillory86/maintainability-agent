@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from ._work_order import SELECTABLE, combined_delta, select
 from .baseline import finding_fingerprints, load_baseline, write_baseline
 from .config import DEFAULT_CONFIG, VERSION, discovered_config, load_config
 from .git_tools import changed_paths
@@ -36,6 +37,13 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
              "(see docs/analyzer-pool.md). Off by default while adapters are "
              "still being written.",
     )
+    parser.add_argument(
+        "--work", action="append", metavar="AXIS=VALUE",
+        help="Narrow the work order, for example --work band=quick-win or "
+             "--work path=src/. Repeatable; every criterion must match. "
+             "Axes: band, finding_class, path, verification. Narrowing "
+             "changes what is shown and never what anything scored.",
+    )
     parser.add_argument("--fail-on-gate", action="store_true", help="Exit 1 when hard gates fail.")
     parser.add_argument("--init-agent-standards", action="store_true", help="Write model/tool-specific instruction files and exit.")
     parser.add_argument(
@@ -45,6 +53,26 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         help="Instruction target. Repeatable. Used with --init-agent-standards.",
     )
     parser.add_argument("--instructions-output-dir", default=".", help="Directory for generated instruction files.")
+
+
+def _selection_from(
+    parser: argparse.ArgumentParser, pairs: list[str] | None
+) -> dict[str, str]:
+    """Parse `--work axis=value` into criteria, or exit naming the mistake.
+
+    Refused rather than ignored. A filter that silently drops an axis it
+    does not recognise hands back the full list while the caller
+    believes it was narrowed, which is the more expensive failure.
+    """
+    criteria: dict[str, str] = {}
+    for pair in pairs or []:
+        axis, separator, value = pair.partition("=")
+        if not separator or not value:
+            parser.error(f"--work expects AXIS=VALUE, got {pair!r}")
+        if axis not in SELECTABLE:
+            parser.error(f"--work cannot select on {axis!r}; axes are {list(SELECTABLE)}")
+        criteria[axis] = value
+    return criteria
 
 
 def write_outputs(args: argparse.Namespace, report: dict, rendered: str) -> None:
@@ -86,12 +114,24 @@ def main(argv: list[str] | None = None) -> int:
         write_instruction_pack(targets, Path(args.instructions_output_dir).resolve(), config)
         return 0
 
+    selection = _selection_from(parser, args.work)
     only_paths = changed_paths(root, args.changed_only) if args.changed_only else None
     external_findings = read_sarif_inputs(args.sarif_input)
     report = build_report(root, config, only_paths=only_paths,
                           changed_revspec=args.changed_only,
                           external_findings=external_findings,
                           run_analyzers=args.analyzers)
+    if selection:
+        # A view over the work already gathered. The score block is
+        # untouched by construction — `select` returns a subset of the
+        # items and computes nothing — so one rubric still applies to
+        # every repository however a reader narrows the list.
+        report["work_order_selection"] = {
+            "criteria": selection,
+            "items": select(report["work_order"], **selection),
+        }
+        report["work_order_selection"]["worth"] = combined_delta(
+            report, report["work_order_selection"]["items"])
     rendered = json.dumps(report, indent=2, sort_keys=True) if args.format == "json" else render_markdown(report)
     write_outputs(args, report, rendered)
     return audit_exit_code(args, report)

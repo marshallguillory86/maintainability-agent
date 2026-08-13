@@ -11,6 +11,7 @@ from ._scan_view import (
     pillars_markdown,
     unread_source_markdown,
     work_order_markdown,
+    work_order_selection_markdown,
 )
 
 
@@ -116,7 +117,15 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"Scoring standard: {score['standard']}.",
         "",
     ]
-    lines.extend(work_order_markdown(report.get("work_order")))
+    # A selection *replaces* the full list rather than sitting above it.
+    # Printing all 41 items below a narrowed set of 2 means the filter
+    # bought the reader nothing, which is what the first version did.
+    # The JSON still carries both, so no consumer loses anything.
+    selection = report.get("work_order_selection")
+    if selection:
+        lines.extend(work_order_selection_markdown(selection))
+    else:
+        lines.extend(work_order_markdown(report.get("work_order")))
     lines.extend(pillars_markdown(report.get("pillars"), report.get("practice")))
     lines.extend(unread_source_markdown(summary))
     lines.extend(analyzer_coverage_markdown(report.get("analyzer_coverage")))

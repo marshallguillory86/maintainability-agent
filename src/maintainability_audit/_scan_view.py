@@ -329,3 +329,33 @@ def work_order_markdown(items: list[dict[str, Any]] | None) -> list[str]:
         "",
     ])
     return lines
+
+
+def work_order_selection_markdown(selection: dict[str, Any] | None) -> list[str]:
+    """What the reader asked for, and what clearing exactly that is worth.
+
+    Recomputed for the selection rather than summed from its items:
+    findings of one class share a denominator, so a sum overstates a
+    work order by more the longer it gets.
+    """
+    if not selection:
+        return []
+    criteria = ", ".join(f"`{axis}={value}`" for axis, value in sorted(selection["criteria"].items()))
+    items = selection["items"]
+    if not items:
+        return ["## Selected Work", "", f"Nothing matches {criteria}.", ""]
+    worth = f"+{selection['worth']:.2f}" if selection["worth"] else "no measurable movement"
+    lines = [
+        "## Selected Work", "",
+        f"{len(items)} item(s) matching {criteria}. Clearing all of them is worth "
+        f"**{worth}** to the maintainability estimate — recomputed for this "
+        "selection, not summed from the items.",
+        "",
+        "| # | Band | Item | Target |",
+        "|---:|---|---|---|",
+    ]
+    for index, item in enumerate(items[:WORK_ORDER_LIMIT], start=1):
+        location = f"`{item['path']}`" + (f":{item['line']}" if item.get("line") else "")
+        lines.append(f"| {index} | {item['band']} | {item['title']} ({location}) | {item['target']} |")
+    lines.extend(["", f"Verify with: `{items[0]['verification']}`", ""])
+    return lines

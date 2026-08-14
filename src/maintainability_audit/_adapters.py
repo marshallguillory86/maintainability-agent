@@ -83,6 +83,50 @@ def exclusions_for(config: dict, inventory: object) -> Exclusions:
     patterns = tuple((config.get("paths") or {}).get("exclude_patterns", ()))
     return Exclusions(patterns, inventory.exclusions())
 
+
+def _posix(base: Path, tree: str) -> str:
+    return (base / tree).as_posix()
+
+
+def _format_fnmatch(base: Path, tree: str) -> tuple[str, ...]:
+    path = _posix(base, tree)
+    return (path, f"{path}/*")
+
+
+def _format_regex(base: Path, tree: str) -> tuple[str, ...]:
+    return (f"^{re.escape(_posix(base, tree))}(?:/|$)",)
+
+
+def _format_rel_regex(_base: Path, tree: str) -> tuple[str, ...]:
+    return (f"^{re.escape(tree)}(?:/|$)",)
+
+
+def _format_vulture(base: Path, tree: str) -> tuple[str, ...]:
+    path = _posix(base, tree)
+    return (path,) if "." in Path(tree).name else (f"{path}/*",)
+
+
+def _format_abspath(base: Path, tree: str) -> tuple[str, ...]:
+    return (_posix(base, tree),)
+
+
+def _format_gitignore(_base: Path, tree: str) -> tuple[str, ...]:
+    return (f"/{tree}", f"/{tree}/**")
+
+
+def _format_default(_base: Path, tree: str) -> tuple[str, ...]:
+    return (tree, f"{tree}/**")
+
+
+_TREE_FORMATTERS = {
+    "fnmatch": _format_fnmatch,
+    "regex": _format_regex,
+    "rel_regex": _format_rel_regex,
+    "vulture": _format_vulture,
+    "abspath": _format_abspath,
+    "gitignore": _format_gitignore,
+}
+
 # How much raw output to keep inline per tool. Enough for a language model
 # to reason over the shape of a result, bounded so a report stays a
 # document. The full text is written beside the report when a sidecar
@@ -238,39 +282,8 @@ class BaseAdapter:
         # becomes `/private/var` and a resolved pattern matches nothing
         # the tool is walking.
         base = Path(root) if root is not None else Path(".")
-        if self.exclude_dialect == "fnmatch":
-            return tuple(
-                pattern
-                for tree in trees
-                for pattern in (
-                    (base / tree).as_posix(),
-                    f"{(base / tree).as_posix()}/*",
-                )
-            )
-        if self.exclude_dialect == "regex":
-            return tuple(
-                f"^{re.escape((base / tree).as_posix())}(?:/|$)" for tree in trees
-            )
-        if self.exclude_dialect == "rel_regex":
-            return tuple(f"^{re.escape(tree)}(?:/|$)" for tree in trees)
-        if self.exclude_dialect == "vulture":
-            return tuple(
-                (base / tree).as_posix()
-                if "." in Path(tree).name
-                else f"{(base / tree).as_posix()}/*"
-                for tree in trees
-            )
-        if self.exclude_dialect == "abspath":
-            return tuple((base / tree).as_posix() for tree in trees)
-        if self.exclude_dialect == "gitignore":
-            return tuple(
-                pattern
-                for tree in trees
-                for pattern in (f"/{tree}", f"/{tree}/**")
-            )
-        return tuple(
-            pattern for tree in trees for pattern in (tree, f"{tree}/**")
-        )
+        formatter = _TREE_FORMATTERS.get(self.exclude_dialect, _format_default)
+        return tuple(pattern for tree in trees for pattern in formatter(base, tree))
 
     def received_trees(self, excludes: Sequence[str]) -> bool:
         """Whether this adapter can keep foreign files out of its own run.

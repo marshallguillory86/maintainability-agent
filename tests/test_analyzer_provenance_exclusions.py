@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 import subprocess
 from collections.abc import Callable, Iterable, Sequence
-from fnmatch import fnmatch
 from pathlib import Path
 
 import pytest
@@ -14,11 +13,9 @@ from maintainability_audit import _analysis
 from maintainability_audit._adapters import BaseAdapter, Exclusions, Extraction, exclusions_for
 from maintainability_audit._analysis import analyze, ours_only
 from maintainability_audit._discovery import discover
-from maintainability_audit._generic import DECLARED, declared_adapter
 from maintainability_audit._metric_adapters import InterrogateAdapter, JscpdAdapter, expand_files
 from maintainability_audit._metrics_types import Finding, Measurement
 from maintainability_audit._runner import Invocation, Outcome, ToolResult
-from maintainability_audit._tool_adapters import ADAPTERS, adapter_for
 from maintainability_audit.config import load_config
 from maintainability_audit.metrics import is_excluded
 from maintainability_audit.report import build_report
@@ -334,28 +331,6 @@ def test_a_nested_generated_prefix_does_not_exclude_another_lib_directory(
     assert "packages/icons/lib/Icon.mjs" not in named
 
 
-_ALL_ADAPTER_SLUGS = tuple(sorted((*ADAPTERS, *DECLARED)))
-_FILE_LIST_ADAPTERS = {"complexipy", "multimetric", "pydocstyle"}
-
-
-def _adapter(slug: str) -> BaseAdapter:
-    found = adapter_for(slug) or declared_adapter(slug)
-    assert found is not None, f"registry entry {slug} has no adapter"
-    return found
-
-
-def _argv_file_paths(argv: tuple[str, ...], root: Path) -> set[str]:
-    named: set[str] = set()
-    for argument in argv:
-        try:
-            path = Path(argument).resolve().relative_to(root.resolve())
-        except (OSError, ValueError):
-            continue
-        if (root / path).is_file():
-            named.add(path.as_posix())
-    return named
-
-
 def _dialect_pieces(argv: tuple[str, ...]) -> set[str]:
     return {
         piece
@@ -363,105 +338,6 @@ def _dialect_pieces(argv: tuple[str, ...]) -> set[str]:
         for piece in re.split(r"[,| ]+", argument)
         if piece
     }
-
-
-def _names_root_location(pieces: set[str], root: Path, relative: str) -> bool:
-    absolute = (root / relative).as_posix()
-    return any(
-        piece == absolute
-        or piece.startswith(f"{absolute}/")
-        or piece == f"/{relative}"
-        or piece.startswith(f"/{relative}/")
-        or piece.startswith(f"{relative}/")
-        for piece in pieces
-    )
-
-
-@pytest.mark.parametrize("slug", _ALL_ADAPTER_SLUGS)
-def test_every_registered_adapter_preserves_inventory_location_semantics(
-    tmp_path: Path, slug: str
-) -> None:
-    """Each real CLI dialect must receive paths, not a global directory-name list.
-
-    Pydocstyle's ``--match-dir`` is an include regex over directory names,
-    not a repository-relative exclusion flag. Its safe dialect is therefore
-    the same as complexipy and multimetric: explicitly name first-party files.
-    """
-    root = _same_named_directory_tree(tmp_path / "dialects")
-    config = load_config(None)
-    excludes = exclusions_for(config, discover(root, config))
-    argv = _adapter(slug).invocation(root, excludes=excludes).argv
-
-    if slug in _FILE_LIST_ADAPTERS:
-        named = _argv_file_paths(argv, root)
-        assert {"src/app.py", "src/lib/owned.py"} <= named
-        assert not named & {
-            "lib/generated.py", "src/pb2.py", "ggml/core.py",
-            "node_modules/package.py", ".venv/package.py",
-        }
-        if slug == "pydocstyle":
-            assert "--match-dir" not in argv, (
-                "an include regex over directory names cannot encode inventory paths"
-            )
-        return
-
-    pieces = _dialect_pieces(argv)
-    patterns = _adapter(slug).tree_patterns(("lib", "ggml", "src/pb2.py"), root)
-    assert patterns, f"{slug} emitted no location patterns"
-    assert any(pattern in "\n".join(argv) for pattern in patterns), (
-        f"{slug} did not put its location patterns on the command line: {argv}"
-    )
-    generated = (root / "lib/generated.py").as_posix()
-    owned = (root / "src/lib/owned.py").as_posix()
-    dialect = _adapter(slug).exclude_dialect
-    if dialect == "fnmatch":
-        assert any(fnmatch(generated, pattern) for pattern in patterns)
-        assert not any(fnmatch(owned, pattern) for pattern in patterns)
-    elif dialect == "regex":
-        assert any(re.match(pattern, generated) for pattern in patterns)
-        assert not any(re.match(pattern, owned) for pattern in patterns)
-    elif dialect == "rel_regex":
-        assert any(re.search(pattern, "lib/generated.py") for pattern in patterns)
-        assert not any(re.search(pattern, "src/lib/owned.py") for pattern in patterns)
-    elif dialect == "vulture":
-        def _vulture(path: str, pattern: str) -> bool:
-            if not any(char in pattern for char in "*?["):
-                pattern = f"*{pattern}*"
-            return fnmatch(path, pattern)
-        assert any(_vulture(generated, pattern) for pattern in patterns)
-        assert not any(_vulture(owned, pattern) for pattern in patterns)
-    else:
-        assert _names_root_location(pieces, root, "lib")
-        assert _names_root_location(pieces, root, "ggml")
-    assert "node_modules" in "\n".join(argv)
-    assert ".venv" in "\n".join(argv)
-    assert "lib*" not in pieces
-    assert "**/lib" not in pieces
-    assert "**/lib/**" not in pieces
-    if slug == "vulture":
-        patterns = argv[argv.index("--exclude") + 1].split(",")
-        assert "lib" not in patterns, (
-            "vulture wraps a glob-less pattern in wildcards against absolute paths"
-        )
-
-
-@pytest.mark.parametrize(
-    "slug",
-    tuple(slug for slug in _ALL_ADAPTER_SLUGS if _adapter(slug).exclude_flag),
-)
-def test_inventory_trees_survive_empty_config_exclusions(tmp_path: Path, slug: str) -> None:
-    root = _repo(tmp_path / "empty-config", {
-        "src/lib/owned.py": "def owned():\n    return 1\n",
-        "lib/generated.py": "def generated():\n    return 2\n",
-    })
-    adapter = _adapter(slug)
-
-    without_tree = adapter.invocation(root, excludes=Exclusions()).argv
-    with_tree = adapter.invocation(root, excludes=Exclusions((), ("lib",))).argv
-
-    assert with_tree != without_tree, (
-        f"{slug} discarded inventory trees because the config-pattern tuple was empty"
-    )
 
 
 def test_analyzer_coverage_counts_only_evidence_that_survives_provenance_filtering(

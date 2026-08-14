@@ -110,36 +110,35 @@ def test_no_adapter_receives_a_bare_tree_token(slug: str, tmp_path: Path) -> Non
     )
 
 
+def _vulture_hits(pattern: str, absolute: str) -> bool:
+    if not any(char in pattern for char in "*?["):
+        pattern = f"*{pattern}*"
+    return fnmatch(absolute, pattern)
+
+
+def _gitignore_hits(pattern: str, relative: str) -> bool:
+    rooted = pattern[1:] if pattern.startswith("/") else pattern
+    stem = rooted.rstrip("*").rstrip("/")
+    return relative == rooted or relative.startswith(f"{stem}/")
+
+
+_ENGINE = {
+    "fnmatch": lambda pats, root, rel: any(fnmatch((root / rel).as_posix(), p) for p in pats),
+    "regex": lambda pats, root, rel: any(re.match(p, (root / rel).as_posix()) for p in pats),
+    "rel_regex": lambda pats, _root, rel: any(re.search(p, rel) for p in pats),
+    "vulture": lambda pats, root, rel: any(_vulture_hits(p, (root / rel).as_posix()) for p in pats),
+    "abspath": lambda pats, root, rel: any(
+        (root / rel).as_posix() == p or (root / rel).as_posix().startswith(f"{p.rstrip('/')}/")
+        for p in pats
+    ),
+    "gitignore": lambda pats, _root, rel: any(_gitignore_hits(p, rel) for p in pats),
+}
+
+
 def _engine_hits(slug: str, patterns: tuple[str, ...], root: Path, relative: str) -> bool:
     """Whether this tool's real matcher would skip `relative`."""
-    dialect = _adapter(slug).exclude_dialect
-    absolute = (root / relative).as_posix()
-    if dialect == "fnmatch":
-        return any(fnmatch(absolute, pattern) for pattern in patterns)
-    if dialect == "regex":
-        return any(re.match(pattern, absolute) is not None for pattern in patterns)
-    if dialect == "rel_regex":
-        return any(re.search(pattern, relative) is not None for pattern in patterns)
-    if dialect == "vulture":
-        def matches(pattern: str) -> bool:
-            if not any(char in pattern for char in "*?["):
-                pattern = f"*{pattern}*"
-            return fnmatch(absolute, pattern)
-        return any(matches(pattern) for pattern in patterns)
-    if dialect == "abspath":
-        return any(
-            absolute == pattern or absolute.startswith(f"{pattern.rstrip('/')}/")
-            for pattern in patterns
-        )
-    if dialect == "gitignore":
-        return any(
-            pattern == f"/{relative}"
-            or pattern == f"/{relative.split('/')[0]}"
-            or (pattern.endswith("/**") and relative.startswith(pattern[1:-3]))
-            or (pattern.startswith("/") and relative.startswith(pattern[1:].rstrip("*").rstrip("/")))
-            for pattern in patterns
-        )
-    return False
+    matcher = _ENGINE.get(_adapter(slug).exclude_dialect)
+    return bool(matcher and matcher(patterns, root, relative))
 
 
 @pytest.mark.parametrize(

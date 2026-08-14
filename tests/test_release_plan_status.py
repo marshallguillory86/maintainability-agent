@@ -3,7 +3,6 @@
 import re
 from pathlib import Path
 
-
 RELEASE_PLAN = Path(__file__).parents[1] / "docs" / "release-plan.md"
 
 

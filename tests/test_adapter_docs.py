@@ -7,7 +7,6 @@ from maintainability_audit._catalog import load_catalog
 from maintainability_audit._generic import declared_adapter
 from maintainability_audit._tool_adapters import adapter_for
 
-
 ROOT = Path(__file__).parents[1]
 
 

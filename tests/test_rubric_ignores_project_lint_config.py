@@ -22,7 +22,6 @@ from maintainability_audit.config import load_config
 from maintainability_audit.report import build_report
 from maintainability_audit.scoring import score_report
 
-
 SCORE_FIELDS = ("maintainability_estimate", "maintainability_range")
 
 

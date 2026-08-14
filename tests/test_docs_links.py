@@ -380,9 +380,11 @@ def test_no_adr_carries_its_own_implementation_claim() -> None:
     for path in _adr_files():
         line = _status_line(path)
         lowered = line.lower()
-        if any(claim in lowered for claim in PROGRESS_CLAIMS) and "register" not in lowered:
-            offenders[path.name] = line
-        elif not any(state in line for state in ADR_STATES):
+        progress_without_register = (
+            any(claim in lowered for claim in PROGRESS_CLAIMS)
+            and "register" not in lowered
+        )
+        if progress_without_register or not any(state in line for state in ADR_STATES):
             offenders[path.name] = line
 
     assert not offenders, (

@@ -28,7 +28,6 @@ from pathlib import Path
 from maintainability_audit.config import load_config
 from maintainability_audit.report import build_report
 
-
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 
 

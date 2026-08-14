@@ -113,6 +113,8 @@ The 4x figure came from this repository being Python-heavy. Generalizing from n=
 
 **3.6 is the risk item.** Replacing homegrown detectors with external tools will move every corpus score. The calibration constant must be re-derived and [studies.md](studies.md) updated, and the old and new numbers must both be recorded so the shift is visible rather than silent.
 
+This is also how Java, Go, C, C++, C# and Rust get a declaration population. They will not get a new function in `_ranges`. See the [register](decisions.md) on ADR 006.
+
 ### Why 3.6 is blocked (2026-08-12)
 
 Adding `.mjs`/`.cjs` to `include_extensions` moved `CALIBRATION_C` from 2.6279 to 2.6414 and the duplication reference from 3.735 to 3.5718. **That drift is contamination, not correction, and the constant was deliberately not updated.**

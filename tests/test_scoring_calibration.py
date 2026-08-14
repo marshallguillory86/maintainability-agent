@@ -434,6 +434,12 @@ def _matched_pair(entry: dict) -> tuple[dict, dict]:
         "files": files,
         "declarations": decls,
         "dimensions": measured_dims,
+        # Explicitly null, not absent. The live side of this comparison is
+        # `score_report` with no `ExternalPressures`, so the matched entry
+        # is a built-in-only reading — which is a measured fact about this
+        # pair, while a missing key means the row predates
+        # `--with-analyzers` and the derivation refuses it.
+        "analyzer_production_dimensions": None,
         "evidence": {key: summary[key] for key in recorded},
     }
     return summary, matched_entry

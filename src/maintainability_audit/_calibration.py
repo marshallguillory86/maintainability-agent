@@ -41,11 +41,28 @@ CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "te
 # nudge the median. Every other reference and the curve constant are
 # unchanged, which is the check that the move is the patterns rather than
 # drift in the pipeline.
+#
+# **2026-08-14, Phase 3.6.** Provenance exclusions plus the analyzer-primary
+# mix. Re-measured 40 pinned repos with `--with-analyzers`. 13 of 40
+# supplied an analyzer declaration pressure (the Python members, where
+# lizard + complexipy cover all three criteria); 27 fell back to the
+# built-in reading. Old -> new:
+#
+#     file_size      0.0576 -> 0.0573
+#     declarations   0.0599 -> 0.0860
+#     duplication    3.7350 -> 3.8644
+#     risk           0.0733 -> 0.0737
+#     gates          0.05   -> 0.05
+#     CALIBRATION_C  2.6279 -> 2.2658
+#
+# declarations moved because the analyzers' population is larger and
+# differently shaped than the built-in parser's; the denominator had
+# to move with the numerator.
 DIMENSION_REFERENCES: dict[str, float] = {
-    "file_size": 0.0576,
-    "declarations": 0.0599,
-    "duplication": 3.7350,
-    "risk": 0.0733,
+    "file_size": 0.0573,
+    "declarations": 0.0860,
+    "duplication": 3.8644,
+    "risk": 0.0737,
     # Fixed, not corpus-derived — see ``_derive.FIXED_REFERENCES``, which
     # is the authority for this value and carries the reasoning. Stated
     # again here rather than imported, so the two are independent claims
@@ -106,7 +123,8 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 # being scored and ignored. Both change what the median repo rolls up
 # to, so c is re-fitted. The reference medians re-measured byte-identical
 # for the third audit running.
-CALIBRATION_C = 2.6279
+# 2026-08-14: 2.6279 -> 2.2658, fitted against the analyzer-primary mix.
+CALIBRATION_C = 2.2658
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3

@@ -12,12 +12,11 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 | This branch, ahead of `main` | 108 commits |
 | Production code | 12,612 lines across 58 modules |
 | Tests | 825 across 53 files, 93% coverage, self-gate 0 |
-| ADRs accepted and **implemented** | 001, 005, 006, 007 (except §4, refused with reason), 008, 009, 010 |
-| ADRs accepted and **not implemented** | none |
-| Phases complete | 0–5 |
-| Phases outstanding | 6 (entry points, partly done), 7 (release) |
+| ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
+| Known open exit conditions in Phases 0–5 | Phase 2 still has 2.5c (environment work order), 2.6 (configuration-invariance test), 2.7 (moderate adapters), and 2.8 (analyzer-run determinism) open. Phase 3 also retains open exit conditions described below. |
+| Later phases outstanding | Phase 6 still has 6.1 (interactive prompt), 6.3 (MCP resources), and 6.4 (consumer workflow recipe) open; Phase 7 remains release work. |
 
-Phases 0 through 5 are built. What remains is Phase 6's interactive entry points and CI recipes, and Phase 7's release work — reconciling documents, the migration guide, and a hostile audit against the shipped artifact.
+This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; open work remains in the earlier phases as well as Phases 6 and 7.
 
 Two things are deliberately open rather than done:
 

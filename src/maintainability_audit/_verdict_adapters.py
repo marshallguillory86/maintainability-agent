@@ -17,6 +17,7 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 from ._adapters import BaseAdapter, Extraction, _npx
+from ._metric_adapters import expand_files
 from ._metrics_types import Finding
 from ._runner import Invocation, ToolResult
 
@@ -33,6 +34,7 @@ class VultureAdapter(BaseAdapter):
             slug="vulture", emits="verdict", executable="vulture",
             concepts=("dead-code",), findings_exit_codes=(0, 3),
             extra_args=("--min-confidence", "80"), exclude_flag="--exclude",
+            exclude_dialect="vulture",
         )
 
     def _read(self, result: ToolResult) -> Extraction:
@@ -69,6 +71,7 @@ class RuffAdapter(BaseAdapter):
             slug="ruff", emits="verdict", executable="ruff",
             concepts=("style", "complexity", "dead-code"),
             findings_exit_codes=(0, 1), exclude_flag="--exclude",
+            exclude_dialect="gitignore",
             extra_args=("check", "--output-format", "json", "--no-cache"),
         )
 
@@ -117,7 +120,30 @@ class PydocstyleAdapter(BaseAdapter):
         super().__init__(
             slug="pydocstyle", emits="verdict", executable="pydocstyle",
             concepts=("documentation", "style"), findings_exit_codes=(0, 1),
-            exclude_flag="--match-dir", exclude_separator="|",
+            exclude_flag="--match-dir", exclude_separator="|", exclude_dialect="files",
+        )
+
+    def invocation(
+        self, root: Path, paths: Iterable[str] | None = None,
+        excludes: Sequence[str] = (),
+    ) -> Invocation:
+        """Explicit targets, because `--match-dir` cannot say "skip this".
+
+        It is an *include* filter over directory names: handing it `lib`
+        would tell pydocstyle to look only at directories called lib,
+        which is the opposite of the intent and would also match
+        `src/lib`. So the classified trees are honoured by choosing what
+        to name instead, the same way the no-flag adapters do.
+
+        `--match-dir` is dropped entirely rather than kept for the
+        operator's patterns: the target list already honours those, and
+        an include regex sitting beside an explicit file list can only
+        narrow it further in ways nobody asked for.
+        """
+        targets = tuple(paths) if paths else expand_files(root, excludes, suffixes=(".py",))
+        return Invocation(
+            argv=(self.executable, *self.extra_args, *targets),
+            findings_exit_codes=self.findings_exit_codes,
         )
 
     def _read(self, result: ToolResult) -> Extraction:
@@ -187,6 +213,11 @@ class EslintAdapter(BaseAdapter):
         ignore: tuple[str, ...] = ()
         for pattern in excludes:
             ignore += ("--ignore-pattern", f"{pattern.rstrip('/')}/**")
+        # eslint's ignore patterns are gitignore syntax, where a bare
+        # `lib` matches any directory of that name at any depth — the
+        # name-list behaviour again. A leading slash roots it.
+        for tree in getattr(excludes, "trees", ()):
+            ignore += ("--ignore-pattern", f"/{tree}", "--ignore-pattern", f"/{tree}/**")
         targets = tuple(paths) if paths else (str(root),)
         return Invocation(
             argv=(*_npx("eslint"), *targets, "--format", "json", *ignore),

@@ -142,6 +142,33 @@ class Inventory:
     provenance: dict[str, Provenance] = field(default_factory=dict)
     # One entry per non-first-party path, each naming what proved it.
     classifications: list[dict[str, str]] = field(default_factory=list)
+    # Directories proved generated or vendored, kept from the pass that
+    # found them so consumers can exclude a tree by naming it once
+    # instead of naming its 10,759 files.
+    directories: dict[str, str] = field(default_factory=dict)
+
+    def not_ours(self) -> set[str]:
+        """Relative paths whose code the team did not write."""
+        return {
+            path for path, verdict in self.provenance.items()
+            if verdict in (Provenance.GENERATED, Provenance.VENDORED)
+        }
+
+    def exclusions(self) -> tuple[str, ...]:
+        """What to keep an analyzer away from: directories, then strays.
+
+        Directories first and files only where no directory covers them.
+        A banner-generated `pb2.py` sitting beside hand-written code
+        cannot be excluded by its directory without taking the
+        hand-written code with it, so it is named on its own; everything
+        under a classified tree is covered by the tree.
+        """
+        directories = tuple(sorted(self.directories))
+        strays = tuple(sorted(
+            path for path in self.not_ours()
+            if not any(_under(path, directory) for directory in directories)
+        ))
+        return directories + strays
 
     def speaks(self, language: str) -> bool:
         return self.languages.get(language, 0) > 0
@@ -331,6 +358,11 @@ def discover(root: Path, config: dict[str, Any]) -> Inventory:
     vendored_dirs = _vendored_directories(root)
 
     inventory = Inventory()
+    inventory.directories = {
+        **{name: Provenance.VENDORED.value for name in vendored_dirs},
+        **{name: Provenance.GENERATED.value for name in generated_dirs
+           if name not in vendored_dirs},
+    }
     seen_directories: set[tuple[str, str]] = set()
     for path in sorted(root.rglob("*")):
         if not path.is_file() or path.suffix not in KNOWN_SOURCE_SUFFIXES:

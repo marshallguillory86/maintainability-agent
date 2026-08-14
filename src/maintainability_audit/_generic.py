@@ -45,6 +45,9 @@ class ToolSpec:
     args: tuple[str, ...] = ()
     version_flag: str = "--version"
     exclude_flag: str = ""
+    # See `BaseAdapter.exclude_dialect`. Both declared tools take regexes.
+    exclude_dialect: str = "path"
+    exclude_repeat: bool = False
     findings_exit_codes: tuple[int, ...] = (0, 1)
     # Where findings live in a JSON document, for the json-findings format:
     # a dotted path, plus the keys holding path, line and message.
@@ -199,6 +202,8 @@ class DeclaredAdapter(BaseAdapter):
             concepts=spec.concerns,
             version_flag=spec.version_flag,
             exclude_flag=spec.exclude_flag,
+            exclude_dialect=spec.exclude_dialect,
+            exclude_repeat=spec.exclude_repeat,
             findings_exit_codes=spec.findings_exit_codes,
             extra_args=spec.args,
         )
@@ -235,7 +240,7 @@ DECLARED: dict[str, ToolSpec] = {
         slug="pylint", executable="pylint", output_format="json-findings",
         concerns=("style", "structure"),
         args=("--output-format=json", "--score=n"),
-        exclude_flag="--ignore-paths",
+        exclude_flag="--ignore-paths", exclude_dialect="regex",
         # pylint's exit status is a bitmask of message categories -- 1
         # fatal, 2 error, 4 warning, 8 refactor, 16 convention -- so any
         # value below 32 means "ran and found things". Only 32 (usage
@@ -249,7 +254,8 @@ DECLARED: dict[str, ToolSpec] = {
         concerns=("types",),
         args=("--output", "json", "--no-error-summary", "--ignore-missing-imports"),
         json_keys=("file", "line", "message"),
-        exclude_flag="--exclude",
+        exclude_flag="--exclude", exclude_dialect="rel_regex",
+        exclude_repeat=True,
         findings_exit_codes=(0, 1, 2),
     ),
 }

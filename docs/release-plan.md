@@ -93,7 +93,7 @@ Implements [ADR 008](adr-008-translation-and-decision.md)'s normalization half. 
 | 3.5 | Measurements, counts and populations all reach the report | Report carries distributions, not only counts |
 | 3.6 | Recalibrate against the 40-repo corpus | **Done 2026-08-14.** `CALIBRATION_C` 2.6279 → 2.2658; declarations reference 0.0599 → 0.0860. 13/40 repos used analyzer declarations; 27 fell back. Median rollup is 4.0. |
 
-**Order within this phase is forced.** 3.1–3.3 stand alone and are done. 3.4 cannot precede 3.5/3.6 for the reason in its row. Until then, tool disagreement is reported beside the score and explicitly marked as not affecting it.
+**Order within this phase is forced.** 3.1–3.3 stand alone and are done. 3.5 and 3.6 have landed, so the interval now widens around the analyzer estimate to contain the built-in rollup. 3.4 as specified — per-concept spread becoming the interval — is still open.
 
 **Measured across the corpus, and it corrected an earlier claim.** This document previously reported the swap as "roughly 4x on declaration pressure", from a single measurement on this repository. Running all 40 corpus repositories gives a median ratio of **0.3x** — the analyzers see *less* pressure than the built-in detectors on most of them, not more.
 
@@ -111,7 +111,7 @@ The 4x figure came from this repository being Python-heavy. Generalizing from n=
 
 **What the corpus run settled.** Every reference and the curve constant reproduced exactly except `risk`, which moved 0.0726 to 0.0733 — traced to this release adding three Python-only default risk patterns that fire on the 13 Python repositories. Both values and the cause are recorded in `_calibration.py`. Corpus median still rolls up to 4.0.
 
-**3.6 is the risk item.** Replacing homegrown detectors with external tools will move every corpus score. The calibration constant must be re-derived and [studies.md](studies.md) updated, and the old and new numbers must both be recorded so the shift is visible rather than silent.
+**3.6 was the risk item and is done.** Replacing homegrown detectors with external tools moved the corpus scores. The constant was re-derived, [studies.md](studies.md) records the shift, and the old and new numbers are both in `_calibration.py`.
 
 This is how Go, C, C++, C# and Rust get a declaration population. Java already has a zero-install fallback in `_ranges`; there will not be another language clone. See the [register](decisions.md) on ADR 006.
 
@@ -166,7 +166,7 @@ Implements [ADR 009](adr-009-scan-history.md). Needs 0.3 (identity) and Phase 3 
 
 An organization whose whole estate is small services needs a scale fitted to that, not a lowered floor on a scale fitted to mature repositories. That means a **calibration profile**: a corpus, the constant fitted to it, floors from its minima, bands from its percentiles — distinct from the *evidence* profile (`default-v1`), which declares what must be measured.
 
-**Sequencing is forced, not preferred.** The shipped constant was fitted to the homegrown-detector pipeline. Phase 2 replaces that evidence source, so every corpus score moves and the *primary* calibration must be re-derived (3.6) before anything else is fitted. Calibrating a second profile against a pipeline still in motion would have to be thrown away. The order is: build, test, audit, re-derive the primary, then gather the small-repository data using the finished instrument — which is also the first real exercise of it at scale.
+**Sequencing is forced, not preferred.** The shipped constant is the 2026-08-14 analyzer-primary fit. A second profile still waits on a sampling frame; it must not be fitted until that frame is written down. The order was: build, test, audit, re-derive the primary (3.6), then gather the small-repository data using the finished instrument — which is also the first real exercise of it at scale.
 
 **The sampling frame is the hard part, and it is a study-design decision.** The existing corpus has a defensible frame: *mature OSS*, standing in for "what good looks like". A small-repository corpus does not inherit that justification. A random sample of small public repositories is mostly abandoned toys, and fitting to those would anchor the scale to "typical small repository" — a materially weaker claim than the current one, and one nobody asked for. The frame likely needs to be *small repositories from organizations with demonstrated practice*: a real service from a team that ships, not a weekend project. Whatever is chosen changes what the resulting scale means, so it is decided and written down before any repository is cloned, under the Tier 3 bar in [product intent](product-intent.md#the-evidence-standard) — pinned inputs, a stated frame, stated limits.
 

@@ -13,8 +13,8 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 | Production code | 12,612 lines across 58 modules |
 | Tests | 825 across 53 files, 93% coverage, self-gate 0 |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
-| Known open exit conditions in Phases 0–5 | Phase 2 still has 2.5c (environment work order), 2.6 (configuration-invariance test), 2.7 (moderate adapters), and 2.8 (analyzer-run determinism) open. Phase 3 also retains open exit conditions described below. |
-| Later phases outstanding | Phase 6 still has 6.1 (interactive prompt), 6.3 (MCP resources), and 6.4 (consumer workflow recipe) open; Phase 7 remains release work. |
+| Known open exit conditions in Phases 0–5 | Phase 2 still has 2.5c (environment work order) and 2.7 (moderate adapters) open. Phase 3 also retains open exit conditions described below, including the unused band matrix. |
+| Later phases outstanding | Phase 6 still has 6.1 (interactive prompt) and 6.3 (MCP resources) open. For 6.4, the consumer workflow recipe shipped, but history caching remains open. Phase 7 remains release work. |
 
 This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; open work remains in the earlier phases as well as Phases 6 and 7.
 
@@ -69,6 +69,11 @@ Implements the executable half of [ADR 006](adr-006-analyzer-evidence.md). The l
 | 2.6 | Rubric-driven tool configuration | Changing a project's `eslint.config.mjs` provably does not move the score |
 | 2.7 | Five moderate adapters | pylint, flake8, eslint, xenon, cohesion parse real output |
 | 2.8 | Determinism under pinned versions | Two runs on one tree with identical tool versions are byte-identical |
+
+The exit-condition tests for 2.6 and 2.8 have landed. The latter compares
+recorded tool versions after removing terminal paint; it does not claim every
+consumer pins analyzer versions in CI. Their rows remain here as the historical
+definition of the work.
 
 **Watch item:** P1 weakens here from "deterministic" to "deterministic given pinned analyzer versions." [Product intent](product-intent.md#what-it-promises) must be edited in the same commit that makes it true.
 

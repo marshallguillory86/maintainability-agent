@@ -50,7 +50,7 @@ New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register,
 |---|---|---|
 | [Maintainability standard](standard.md) | Normative | The rubric, its weights and bands, the calibration method, and the reference corpus. Judgments applied uniformly to every repository; requires no study to be legitimate |
 | [Studies and measured results](studies.md) | Empirical | Every claim about the world, with pinned inputs, controls and stated limits — the bounded-prompt experiment, the retracted AI-authorship claim, and fix breadth. Licenses nothing beyond the sentence stated with each result |
-| [Self-audit](self-audit.md) | Generated | This tool run against this repository. Always one commit behind the HEAD it ships with |
+| [Self-audit](self-audit.md) | Generated | This tool run against this repository, stamped with the source commit that produced it; provenance is the stamp, not a fixed distance from current HEAD |
 | [FOSS tool inventory](tool-inventory.md) | Empirical | Every free quality analyzer this agent could run, which were installed and executed here, and what each one found. Separates proven from listed |
 | [The analyzer pool](analyzer-pool.md) | Reference | The 760-tool catalog, its license classification, and the depth and license-policy selectors that narrow it at run time |
 

@@ -7,6 +7,14 @@ from pathlib import Path
 RELEASE_PLAN = Path(__file__).parents[1] / "docs" / "release-plan.md"
 
 
+def _standing_table() -> str:
+    text = RELEASE_PLAN.read_text(encoding="utf-8")
+    section = text.split("## Where this actually stands", maxsplit=1)[1].split(
+        "Two things are deliberately open", maxsplit=1
+    )[0]
+    return section
+
+
 def test_release_plan_does_not_claim_phases_zero_through_five_are_finished() -> None:
     text = RELEASE_PLAN.read_text(encoding="utf-8")
 
@@ -16,6 +24,16 @@ def test_release_plan_does_not_claim_phases_zero_through_five_are_finished() -> 
     )
     for pattern in stale_claims:
         assert re.search(pattern, text, flags=re.IGNORECASE) is None
+
+
+def test_standing_table_does_not_list_shipped_phase_two_tests_as_open() -> None:
+    table = _standing_table()
+    open_row = next(
+        line for line in table.splitlines() if "Known open exit conditions" in line
+    )
+
+    assert "2.6" not in open_row
+    assert "2.8" not in open_row
 
 
 def test_release_plan_does_not_claim_all_accepted_adrs_are_implemented() -> None:

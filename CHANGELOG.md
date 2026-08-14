@@ -4,6 +4,22 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+### Changed
+
+- **The point estimate uses analyzer measurements where the full concept set
+  was measured.** `--analyzers` is no longer a coverage-only side channel:
+  `scoring._primary_pressures` takes the analyzer reading per dimension and
+  keeps the built-in fallback where the analyzers were silent. The range
+  widens to contain both sources; they are never averaged. The Markdown
+  report, the remediation prompt, CLI `--help`, and the README name that
+  mix rather than claiming the opposite.
+
+- **Calibration 3.6.** `CALIBRATION_C` 2.6279 → 2.2658 and the declarations
+  reference 0.0599 → 0.0860, fitted to the analyzer-primary mix after
+  generated and vendored code left the scored population. 13 of 40 corpus
+  members supplied an analyzer declaration reading; 27 stayed on the
+  built-in fallback. Old and new numbers are in `_calibration.py`.
+
 ## 0.7.0 - 2026-08-13
 
 Scores the evidence cannot support are withheld. `--fail-on-new` no longer
@@ -31,8 +47,8 @@ version 2**. See [docs/migration-0.7.md](docs/migration-0.7.md).
   and pydocstyle. Every report states which
   tools were attempted, which ran, which were unavailable and why, their versions, and
   **which concerns nothing examined** — a concern nobody looked at is reported unexamined,
-  never clean. Off by default because analyzer measurements do not move the point
-  estimate, not because the pool is unfinished.
+  never clean. Off by default in 0.7.0 because analyzer measurements did not
+  move the point estimate, not because the pool was unfinished.
 - **A copy-paste GitHub Actions recipe** at `.github/workflows/maintainability.yml`,
   the file the README already named.
 

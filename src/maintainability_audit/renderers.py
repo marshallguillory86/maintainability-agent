@@ -134,7 +134,10 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.extend(unread_source_markdown(summary))
     lines.extend(undetected_declarations_markdown(summary))
     lines.extend(analyzer_coverage_markdown(report.get("analyzer_coverage")))
-    lines.extend(analyzer_measurements_markdown(report.get("analyzer_measurements")))
+    lines.extend(analyzer_measurements_markdown(
+        report.get("analyzer_measurements"),
+        (score.get("analyzer_scored_dimensions") or []),
+    ))
     lines.extend(analyzer_findings_markdown(report.get("analyzer_findings") or []))
     if report["hard_gate_failures"]:
         lines.extend(["## Hard Gate Failures", ""])

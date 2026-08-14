@@ -329,9 +329,10 @@ def build_report(
     """Assemble one report.
 
     ``run_analyzers`` invokes the external analyzer pool (ADR 006). It is off
-    by default because running external tools is optional and may be expensive;
-    their measurements are reported but do not yet move the point estimate.
-    The CLI exposes it as ``--analyzers``.
+    by default because running external tools is optional and may be expensive.
+    A complete concept set moves the point estimate; a partial one stays on
+    the built-in fallback and the range widens to contain both. The CLI
+    exposes it as ``--analyzers``.
     """
     analyzer = _analyzer_sections(root, config, run_analyzers)
     # Before anything is measured: what languages are here, and whose

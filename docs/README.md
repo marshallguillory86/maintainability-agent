@@ -35,7 +35,7 @@ Verbatim, not "contains the same numbers": an earlier guard checked whether each
 | [ADR 003 — Deterministic semantic policy](adr-003-deterministic-semantic-policy.md) | **Proposed** — repository semantics without rubric drift |
 | [ADR 004 — Economic context](adr-004-economic-context.md) | **Proposed** — impact scenarios separate from score and grade |
 | [ADR 005 — Insufficient population](adr-005-insufficient-population.md) | Accepted — status in the [register](decisions.md). No rate without a denominator that supports one |
-| [ADR 006 — Analyzer evidence](adr-006-analyzer-evidence.md) | Accepted — status and remaining gaps in the [register](decisions.md). Optional analyzers report measurements, findings, provenance, and coverage; their measurements do not yet drive the point estimate |
+| [ADR 006 — Analyzer evidence](adr-006-analyzer-evidence.md) | Accepted — status and remaining gaps in the [register](decisions.md). Optional analyzers report measurements, findings, provenance, and coverage; a complete concept set is the primary evidence for the point estimate, and the built-in detectors remain the fallback |
 | [ADR 007 — Pillars and practice](adr-007-pillars-and-practice.md) | Accepted — status in the [register](decisions.md). Five-pillar taxonomy; practice maturity separate from code condition. The §4 rename was refused, not deferred |
 | [ADR 008 — Translation and decision](adr-008-translation-and-decision.md) | Accepted — status in the [register](decisions.md). Tool output to scoring input, the LLM boundary, CLI and MCP |
 | [ADR 009 — Scan history](adr-009-scan-history.md) | Accepted — status in the [register](decisions.md). Maintainability is a trend; comparability is checked before any of it is computed |

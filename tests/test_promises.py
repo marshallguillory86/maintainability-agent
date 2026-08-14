@@ -64,6 +64,8 @@ ENFORCEMENT: dict[str, tuple[str, ...]] = {
         "test_the_built_in_detectors_appear_in_the_coverage_record",
         "test_a_python_only_tool_covers_nothing_for_cpp",
         "test_a_concern_no_tool_reads_for_a_language_is_named_as_a_gap",
+        "test_live_surfaces_do_not_claim_analyzers_leave_the_estimate_alone",
+        "test_scored_measurements_name_the_estimate_source",
     ),
 }
 

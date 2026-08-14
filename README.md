@@ -12,7 +12,7 @@ cp skills/maintainability-agent/copilot/maintainability-agent.prompt.md .github/
 
 Jump to [Invokable Skill / Slash Command](#invokable-skill--slash-command) for the full install table.
 
-**0.7.0** withholds a score when the evidence cannot support one — a `--changed-only` diff is not a repository grade, and a tree smaller than the calibration population is not a 5.0. External analyzers (`--analyzers`) report coverage and findings; they widen the range and do not move the point estimate. Two incompatibilities from 0.6: report schema version 3 (nullable estimate) and baseline format version 2. See [docs/migration-0.7.md](docs/migration-0.7.md).
+**0.7.0** withholds a score when the evidence cannot support one — a `--changed-only` diff is not a repository grade, and a tree smaller than the calibration population is not a 5.0. External analyzers (`--analyzers`) are the primary evidence where they measured a full concept set; the built-in detectors remain the fallback, and disagreement widens the range rather than being averaged. Two incompatibilities from 0.6: report schema version 3 (nullable estimate) and baseline format version 2. See [docs/migration-0.7.md](docs/migration-0.7.md).
 
 > **Retracted: the claim that near-duplication distinguishes AI-written code.** It was called "the first signal that separates AI-written applications from mature human-written OSS". 0.6.0 reported near-duplication at 1.49% for AI-written applications against 0.20% for human-written OSS, comparing six young applications against twelve decade-old libraries. Authorship, age, domain and size all differed at once. Re-run against a control matched on age, popularity and language, the near-duplication gap is not significant (p = 0.546), and no other metric earns the claim either. The AI figure barely moved (1.49% to 1.73%); the control moved, from 0.20% to 0.83%, because it stopped being decade-old libraries. The replacement study has its own stated limits (small n, size handled post-hoc, and a control that cannot be verified as human), so the honest summary is "this design could not measure a difference", not "there is no difference". See [docs/studies.md](docs/studies.md#does-this-detect-ai-written-code).
 >
@@ -57,8 +57,8 @@ This repo eats its own dogfood — the tool runs against this codebase in CI, an
 |---|---:|
 | Maintainability estimate | **4.7 / 5** |
 | Verified grade | **B** |
-| Files scanned | 196 |
-| File warnings | 56 |
+| Files scanned | 207 |
+| File warnings | 62 |
 | File failures | 0 |
 | Function warnings | 28 |
 | Function failures | 0 |

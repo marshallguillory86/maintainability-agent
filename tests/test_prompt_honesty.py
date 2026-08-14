@@ -1,9 +1,10 @@
 """What the AI prompt says about its own evidence.
 
-The Markdown report is careful: it prints the evidence status in every
-state, and it labels analyzer measurements as reported-but-not-scored.
-The prompt is the artifact an agent is told to obey, and it was the less
-honest of the two.
+The Markdown report and the prompt both have to name the estimate
+source. A complete concept set is primary evidence; findings-only or
+incomplete analyzer output stays on the built-in fallback. An earlier
+revision of this file described the report as labelling measurements
+reported-but-not-scored — that sentence outlived the mix.
 
 Two omissions, both silent:
 

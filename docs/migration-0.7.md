@@ -113,19 +113,19 @@ Inside `analyzer_coverage`: `scored_languages`, `by_language`, `gaps_by_language
 
 `paths.include_extensions` gains `.mjs` and `.cjs`. They are the same JavaScript the scanner already parses, and their absence meant real source went unread — babel carried 1,503 such files.
 
-**If your repository is not Python, JavaScript or TypeScript, read the limitation below before changing anything.** Adding your extensions here changes what gets *scanned*; it does not, on its own, produce a score.
+**If your repository is not Python, JavaScript, TypeScript or Java, read the limitation below before changing anything.** Adding your extensions here changes what gets *scanned*; it does not, on its own, produce a score.
 
 ```json
 { "paths": { "include_extensions": [".py", ".java", ".go"] } }
 ```
 
-### Known limitation: only Python and JS/TS repositories receive a score
+### Known limitation: Go, Rust, C, C++, C# and Fortran still have no built-in declaration population
 
-The declaration scanner reads `.py`, `.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx` and `.html`. **No others.** A Java, Go, Rust, C, C++, C# or Fortran repository therefore measures zero declarations, and declarations are half the rubric, so the score is withheld on the population floor no matter what `include_extensions` says.
+The declaration scanner reads `.py`, `.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.html` and `.java`. Java has a zero-install range detector (`java_declaration_ranges`); that shipped after 0.7.0. A Go, Rust, C, C++, C# or Fortran repository still has no built-in declaration population, and declarations are half the rubric, so the score is withheld on the population floor no matter what `include_extensions` says.
 
-Measured on a 40-file Java repository: adding `.java` moved `files_scanned` from 1 to 41 and `declarations_scanned` stayed at **0**. With `--analyzers`, lizard measured **120 declarations** in the same tree — the evidence exists, and the scoring path cannot reach it.
+At 0.7.0, Java was in that set: adding `.java` moved `files_scanned` and left declarations at zero until the range detector landed. That measurement is not the current tree.
 
-What you *do* get on those languages today, and it is not nothing:
+What you *do* get on the languages without a built-in population, and it is not nothing:
 
 - **Findings**, located and actionable, from lizard and jscpd via `--analyzers`
 - **A work order** ordered by risk against effort, with verification commands
@@ -134,7 +134,7 @@ What you *do* get on those languages today, and it is not nothing:
 
 What you do not get is the score, and 0.7 tells you that instead of computing one from your Markdown — which is precisely what 0.6 did. curl reported **4.3** under 0.6, calculated from its documentation and Python test scripts while 20,547 declarations of C went unread.
 
-This is the honest state and it is the next thing on the roadmap: the analyzer bridge already supplies the `declarations` dimension for interval widening, so the measurements are present and the work is to let them supply the population as well.
+Analyzer measurements supply the `declarations` dimension where the full concept set was measured; lizard alone cannot compose that set, so those languages stay on the built-in fallback, which for them is still no population.
 
 `paths.history` optionally relocates the history file. Everything else is unchanged.
 
@@ -144,4 +144,4 @@ This is the honest state and it is the next thing on the roadmap: the analyzer b
 
 - **Report fields you already read.** All still present, same meanings.
 - **`--fail-on-gate` in CI.** Same behaviour, same exit codes.
-- **The rubric.** Thresholds, weights and bands are unchanged, and `CALIBRATION_C` stays at 2.6279 — a 2,000-resample bootstrap put the 95% interval at [2.2522, 3.4718], so the re-derived alternative was not distinguishable from it. Two repositories scored under 0.6 and 0.7 differ only where 0.7 read different *code*, never because the scale moved.
+- **The rubric at 0.7.0.** Thresholds, weights and bands were unchanged, and `CALIBRATION_C` stayed at 2.6279 — a 2,000-resample bootstrap put the 95% interval at [2.2522, 3.4718], so the re-derived alternative was not distinguishable from it. Two repositories scored under 0.6 and 0.7 differed only where 0.7 read different *code*. After 0.7.0, 3.6 re-derived `CALIBRATION_C` to 2.2658 against the analyzer-primary mix; old and new values are in `_calibration.py`.

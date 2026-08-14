@@ -6,6 +6,11 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Changed
 
+- **The report contract, 0.7 migration note, and tool inventory match the
+  shipped tree.** Schema version 3 (nullable estimate), Java has a declaration
+  population, `CALIBRATION_C` is 2.2658 after 3.6, and coverage is reported.
+  A structural lint fails the build if those pages revert to the 0.7-era story.
+
 - **Docs no longer describe the first-run prompt or MCP resources as present.**
   `prompt_when_interactive` is stored and never read (6.1). MCP is two tools on
   `maintainability-agent-mcp`; resources and the prompts primitive are 6.3 / 6.2.

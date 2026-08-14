@@ -20,7 +20,7 @@ Maintainability is the degree to which a system can be effectively and efficient
 
 The CLI emits an ISO/IEC 25010-inspired score from 0 to 5 for each category plus an overall letter grade. This score is a deterministic triage signal, not a replacement for human review.
 
-> **Architecture decision:** repeated audits showed that the current raw-dictionary scorer conflates maintainability with evidence sufficiency. [ADR 001](adr-001-evidence-and-verification.md) defines the accepted replacement: typed evidence states, versioned normalization, separate estimates and verified grades, and manifest-based history measurements. Its implementation status is tracked in one place, the [decision register](decisions.md). `score.evidence_status` and `score.verified_grade` ship and every consumer surfaces them; this page describes the compatibility scoring behaviour, which stages 8 and 9 will finish changing.
+> **Architecture decision:** repeated audits showed that the current raw-dictionary scorer conflates maintainability with evidence sufficiency. [ADR 001](adr-001-evidence-and-verification.md) defines the accepted replacement: typed evidence states, versioned normalization, separate estimates and verified grades, and manifest-based history measurements. Its implementation status is tracked in one place, the [decision register](decisions.md). `score.evidence_status` and `score.verified_grade` ship and every consumer surfaces them; this page describes the shipped scoring behaviour. Stage 9 (history-window materialization) remains.
 
 ### The rubric: aspects → categories → overall
 

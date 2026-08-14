@@ -86,6 +86,8 @@ The [frame](../tools/validation/sample-frame.md) was committed before any reposi
 
 **Deliberately not the calibration corpus.** That set is Python, TypeScript and JavaScript by selection, because its job is to fit the *scale*. A corpus chosen to fit a scale cannot also be the sample that tests whether the output is any good, and this study is the demonstration: the largest defect it found is invisible on every repository the scale was ever fitted against.
 
+The scale itself moved on 2026-08-14 (Phase 3.6): `CALIBRATION_C` 2.6279 → 2.2658 and the declarations reference 0.0599 → 0.0860, fitted to the analyzer-primary mix after generated/vendored code left the scored population. 13 of 40 corpus members used the analyzer declaration reading; 27 stayed on the built-in fallback. Both old and new numbers are in `_calibration.py`. This study's *validation* figures were measured under the previous constant and are not re-stated here as if they were re-run.
+
 **Result: three of five criteria failed.**
 
 | Criterion | Verdict |

@@ -156,46 +156,7 @@ def _report_markdown(repository_root: str, roots: tuple[Path, ...]) -> str:
     return render_markdown(build_report(root, config, run_analyzers=False))
 
 
-def create_server(*, roots: tuple[Path, ...] | None = None):
-    """Create the SDK server; importing the base package does not require MCP."""
-    try:
-        from mcp.server import MCPServer
-        from mcp.server.mcpserver.resources import FunctionResource
-        from mcp.server.mcpserver.resources.templates import ResourceSecurity
-        from mcp.types import ToolAnnotations
-    except ImportError as error:  # pragma: no cover - exercised by the console entry point
-        raise RuntimeError(
-            'MCP support is not installed. Install with: pip install "maintainability-agent[mcp]"'
-        ) from error
-
-    authorized_roots = roots if roots is not None else allowed_roots()
-    server = MCPServer(
-        "maintainability-agent",
-        version=VERSION,
-        instructions=SERVER_INSTRUCTIONS,
-    )
-    # Field names, not the camelCase aliases. Both construct an identical
-    # object — the aliases are pydantic's *serialisation* names and the
-    # wire form is unchanged (`readOnlyHint` either way) — but only the
-    # field names type-check, and four standing mypy errors that everyone
-    # knows are harmless is how a real one gets missed.
-    read_only = ToolAnnotations(
-        read_only_hint=True,
-        destructive_hint=False,
-        idempotent_hint=True,
-        open_world_hint=False,
-    )
-
-    class AuthorizedRootSecurity(ResourceSecurity):
-        """Validate an absolute template argument against this server's allow-list."""
-
-        def validate(self, params: dict[str, Any]) -> str | None:
-            root = params.get("root")
-            if not isinstance(root, str):
-                return "root"
-            authorize_repository(root, authorized_roots)
-            return None
-
+def _bind_tools(server: Any, authorized_roots: tuple[Path, ...], read_only: Any) -> None:
     @server.tool(name="audit_repository", annotations=read_only, structured_output=True)
     def audit_repository_tool(
         repository_root: str,
@@ -220,6 +181,23 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
     def get_agent_info_tool() -> dict[str, Any]:
         """Return the installed agent version, transport and authorized repository roots."""
         return server_info(authorized_roots)
+
+
+def _bind_resources(
+    server: Any,
+    authorized_roots: tuple[Path, ...],
+    function_resource: Any,
+    resource_security: Any,
+) -> None:
+    class AuthorizedRootSecurity(resource_security):
+        """Validate an absolute template argument against this server's allow-list."""
+
+        def validate(self, params: dict[str, Any]) -> str | None:
+            root = params.get("root")
+            if not isinstance(root, str):
+                return "root"
+            authorize_repository(root, authorized_roots)
+            return None
 
     @server.resource(
         "maintainability://standard",
@@ -253,7 +231,7 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
         """Replace ``{root}`` with an authorized absolute repository path."""
         return "Use maintainability://report/{root} with an authorized repository root."
 
-    server.add_resource(FunctionResource.from_function(
+    server.add_resource(function_resource.from_function(
         fn=report_template_descriptor,
         uri="maintainability://report/{root}",
         name="maintainability-report-template",
@@ -261,6 +239,8 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
         mime_type="text/markdown",
     ))
 
+
+def _bind_prompts(server: Any) -> None:
     @server.prompt(name="maintainability-agent")
     def maintainability_agent_prompt() -> str:
         """Audit an authorized repository and perform only its bounded work order."""
@@ -270,6 +250,39 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
             "invent or fabricate findings."
         )
 
+
+def create_server(*, roots: tuple[Path, ...] | None = None):
+    """Create the SDK server; importing the base package does not require MCP."""
+    try:
+        from mcp.server import MCPServer
+        from mcp.server.mcpserver.resources import FunctionResource
+        from mcp.server.mcpserver.resources.templates import ResourceSecurity
+        from mcp.types import ToolAnnotations
+    except ImportError as error:  # pragma: no cover - exercised by the console entry point
+        raise RuntimeError(
+            'MCP support is not installed. Install with: pip install "maintainability-agent[mcp]"'
+        ) from error
+
+    authorized_roots = roots if roots is not None else allowed_roots()
+    server = MCPServer(
+        "maintainability-agent",
+        version=VERSION,
+        instructions=SERVER_INSTRUCTIONS,
+    )
+    # Field names, not the camelCase aliases. Both construct an identical
+    # object — the aliases are pydantic's *serialisation* names and the
+    # wire form is unchanged (`readOnlyHint` either way) — but only the
+    # field names type-check, and four standing mypy errors that everyone
+    # knows are harmless is how a real one gets missed.
+    read_only = ToolAnnotations(
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=False,
+    )
+    _bind_tools(server, authorized_roots, read_only)
+    _bind_resources(server, authorized_roots, FunctionResource, ResourceSecurity)
+    _bind_prompts(server)
     return server
 
 

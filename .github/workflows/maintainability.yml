@@ -1,0 +1,73 @@
+# Maintainability audit for a pull request.
+#
+# This is the file README.md tells you to copy into your own repository.
+# It is deliberately the smallest thing that works: check out, audit the
+# diff, keep the artifacts. This repository's own pipeline lives in
+# quality-gates.yml and is not a starting point — it runs two agents, a
+# SonarQube scan and code-scanning uploads, none of which you need to
+# find out whether your pull request made the codebase harder to change.
+#
+# Copy, commit, open a pull request. Nothing else is required: with no
+# config file the audit runs on built-in defaults, and if you add a
+# `maintainability-agent.json` at your repository root it is discovered
+# and used automatically.
+
+name: Maintainability
+
+on:
+  pull_request:
+
+# The audit reads the tree and writes files into the workspace. It needs
+# nothing else, and asking for nothing else means a compromised
+# dependency in this job cannot write to your repository.
+permissions:
+  contents: read
+
+jobs:
+  maintainability:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # `changed-only` resolves a revspec against the base branch.
+          # The default fetch-depth of 1 checks out a single commit with
+          # no base to diff against, so the revspec cannot resolve.
+          fetch-depth: 0
+
+      - uses: marshallguillory86/maintainability-agent@v0.6.1
+        with:
+          # Empty means "discover it". A `maintainability-agent.json` at
+          # the repository root is picked up; without one the audit runs
+          # on built-in defaults. Name a path here to use something else.
+          config: ""
+
+          # Audit the diff rather than the whole repository.
+          #
+          # A pull request touching four files does not tell you what the
+          # codebase scores, and the tool refuses to pretend otherwise: on
+          # a change too small to support a rate it withholds the estimate
+          # and the grade, and names the scope as the reason (ADR 005).
+          # You get findings on what changed and no invented number.
+          #
+          # Blank this to audit the whole tree on every pull request.
+          changed-only: origin/${{ github.base_ref }}...HEAD
+
+          # Hard gates only — a missing README, an undocumented test
+          # command, a configured threshold breached. The job does not
+          # fail on a letter grade, and does not fail on a withheld
+          # estimate: withheld means the evidence was too thin to judge,
+          # which is a fact about the diff's size, not a defect in it.
+          fail-on-gate: "true"
+
+      # `always()` so a gate failure still hands back the report that
+      # explains it. Without this the run that most needs reading is the
+      # one that uploads nothing.
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maintainability
+          path: |
+            maintainability-report.md
+            maintainability-remediation-prompt.md
+            maintainability-pr-comment.md
+          if-no-files-found: warn

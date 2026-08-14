@@ -411,3 +411,58 @@ def test_the_readme_adr_table_points_at_the_register_rather_than_competing() -> 
         "docs/README.md ADR rows state implementation status; that belongs "
         f"to docs/decisions.md: {offenders}"
     )
+
+
+# --------------------------------------------------------------------
+# A file the docs tell you to copy has to be in the tree
+# --------------------------------------------------------------------
+
+_COPY_INSTRUCTION = re.compile(
+    r"\b(copy|copied|copying|adapt|starting point|from this repo|repo includes)\b",
+    re.I,
+)
+# A repo-relative path: at least one directory component and an
+# extension. Bare filenames are deliberately out of scope — the docs
+# also name `maintainability-report.md` and friends, which the tool
+# *produces* and which are correctly absent from the tree. A path with a
+# directory in it is unambiguously a file this repository ships.
+_REPO_PATH = re.compile(r"`([A-Za-z0-9_.\-]+(?:/[A-Za-z0-9_.\-]+)+\.[A-Za-z0-9]+)`")
+
+
+def _copy_instructions(text: str) -> list[tuple[str, str]]:
+    """Every (path, sentence) where a reader is told to copy or adapt a file."""
+    plain = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
+    found: list[tuple[str, str]] = []
+    for sentence in re.split(r"(?<=[.!?])\s+|\n", plain):
+        if _COPY_INSTRUCTION.search(sentence):
+            found.extend((path, sentence.strip()) for path in _REPO_PATH.findall(sentence))
+    return found
+
+
+def test_every_file_the_docs_tell_you_to_copy_exists() -> None:
+    """The class: an instruction naming a file this repository does not ship.
+
+    README and the integration guide both said to copy
+    `.github/workflows/maintainability.yml`. There was no such file —
+    only `quality-gates.yml`, which is this project's own dual-agent
+    dogfood pipeline and the wrong thing to hand a consumer. A reader
+    following the documented path landed on nothing.
+
+    Internal *links* were already checked; this is the other half. A
+    path inside backticks is not a link, so nothing looked at it, and
+    the instruction most likely to be a reader's first action was the
+    one nothing verified.
+    """
+    offenders: list[str] = []
+    for doc in AUTHORED:
+        for path, sentence in _copy_instructions(doc.read_text(encoding="utf-8")):
+            if not (ROOT / path).exists():
+                offenders.append(
+                    f"{doc.relative_to(ROOT)} names {path}, which does not exist:\n"
+                    f"    {sentence[:120]}"
+                )
+
+    assert not offenders, (
+        "documentation tells a reader to copy a file this repository does not "
+        "ship:\n  " + "\n  ".join(offenders)
+    )

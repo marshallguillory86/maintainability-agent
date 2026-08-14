@@ -6,6 +6,12 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Changed
 
+- **MCP ships all three primitives.** Resources expose the rubric, the
+  analyzer catalog, and a Markdown report that is byte-identical to the
+  CLI rendering. The `maintainability-agent` prompt is the slash command.
+  Start it with `maintainability-agent mcp`; `maintainability-agent-mcp`
+  remains for existing IDE configs.
+
 - **A 1.0 migration note.** [docs/migration-1.0.md](docs/migration-1.0.md)
   names the post-0.7 breaks: `--analyzers` moves the point estimate, and
   `CALIBRATION_C` 2.6279 → 2.2658. Schema 3 and baseline v2 do not break
@@ -16,10 +22,9 @@ All notable changes to Maintainability Agent will be documented here.
   population, `CALIBRATION_C` is 2.2658 after 3.6, and coverage is reported.
   A structural lint fails the build if those pages revert to the 0.7-era story.
 
-- **Docs no longer describe the first-run prompt or MCP resources as present.**
-  `prompt_when_interactive` is stored and never read (6.1). MCP is two tools on
-  `maintainability-agent-mcp`; resources and the prompts primitive are 6.3 / 6.2.
-  A structural lint fails the build if those sentences return while the gaps hold.
+- **Docs no longer describe the first-run prompt as present.**
+  `prompt_when_interactive` is stored and never read (6.1). A structural
+  lint fails the build if that sentence returns while the key is unread.
 
 - **The point estimate uses analyzer measurements where the full concept set
   was measured.** `--analyzers` is no longer a coverage-only side channel:

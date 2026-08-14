@@ -128,11 +128,15 @@ Suggested VS Code workflow:
 ## Local MCP server: Visual Studio, VS Code and Codex
 
 The optional MCP server removes the file handoff for Codex and the Codex VS
-Code extension. It exposes two read-only tools over stdio:
+Code extension. It exposes all three MCP primitives over stdio:
 
 - `audit_repository` runs the same production scan as the CLI and returns the
   structured report, rendered Markdown and bounded remediation prompt together.
 - `get_agent_info` reports the installed version and authorized roots.
+- Resources expose the applied standard, analyzer catalog and byte-identical
+  Markdown report without introducing a second rendering path.
+- The `maintainability-agent` prompt tells the model to call the audit tool and
+  stay inside its returned remediation work order.
 
 It is deliberately not another scanner. The MCP module calls the existing
 configuration, report, renderer and prompt functions directly, so CLI and MCP
@@ -143,6 +147,10 @@ Install the extra:
 ```bash
 python3 -m pip install "maintainability-agent[mcp]"
 ```
+
+The package subcommand is `maintainability-agent mcp --allow-root <path>`.
+IDE examples retain `maintainability-agent-mcp` because it is a direct stdio
+console script and remains part of the public interface.
 
 For Visual Studio, put this in `%USERPROFILE%\\.mcp.json` or
 `<SOLUTIONDIR>\\.mcp.json` (replace both absolute paths):

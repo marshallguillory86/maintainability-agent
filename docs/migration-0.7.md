@@ -21,7 +21,7 @@ maintainability-agent --root . --record-history
 
 ### 1. Baselines must be regenerated
 
-Finding identity is **content-addressed** in 0.7. A fingerprint is derived from what a finding *is* — its kind, its file, the declaration's name and a hash of the normalized content — not from where it currently sits.
+In 0.7, declaration fingerprints change from the line-coupled `function:{path}:{name}:{start_line}` shape to `function:{path}:{name}#{ordinal}`. The path, declaration name, and same-name ordinal now identify the finding; a declaration-body hash did not ship.
 
 The practical effect is the reason for the change: a finding no longer changes identity because somebody inserted a line above it. Under 0.6, `--fail-on-new` fired on code that had only moved, which trained people to ignore it.
 

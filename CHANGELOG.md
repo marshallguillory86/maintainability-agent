@@ -48,7 +48,7 @@ All notable changes to Maintainability Agent will be documented here.
 - **Finding identity survives edits elsewhere in the file.** Fingerprints embedded the start
   line, so inserting one import above an untouched function made it read as simultaneously
   fixed and new — a false failure for `--fail-on-new` after any refactor that shifts lines.
-  Identity is now content-addressed.
+  Identity now uses the path, declaration name and same-name ordinal instead of the start line.
 - **Two same-named declarations in one file are two findings everywhere, not just in the
   baseline.** `finding_fingerprints` numbered overloads `#0` and `#1` correctly, but the work
   order, `prompt_targets` and the prompt's escalation check each rebuilt the identity with a

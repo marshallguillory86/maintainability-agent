@@ -44,7 +44,7 @@ data = json.loads(baseline_path.read_text(encoding="utf-8"))
 return set(data.get("findings", []))
 ```
 
-`findings` is a sorted list of fingerprint **strings** (`file-lines:<path>`, `function:<path>:<name>:<line>`, …). The baseline file also stores a `score` snapshot, but **no code reads it back** — it is informational. No evidence, no summary, and no history is ever re-read, so no historical report is ever rescored under a newer rubric.
+`findings` is a sorted list of fingerprint **strings** (`file-lines:<path>`, `function:{path}:{name}#{ordinal}`, …). The baseline file also stores a `score` snapshot, but **no code reads it back** — it is informational. No evidence, no summary, and no history is ever re-read, so no historical report is ever rescored under a newer rubric.
 
 Consequence, and it is the main decision this inventory drives: **there are no legacy reports to migrate.** The normalizer therefore supports exactly one version and refuses everything else, including unversioned reports, rather than shipping a migration path for a consumer that does not exist. If a genuine rescoring consumer appears later, it arrives with a named, versioned, separately tested migration — which is what ADR 001 §3 asks for.
 

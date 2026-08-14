@@ -17,7 +17,7 @@ Dependencies point downward only. No cycles.
                  _evidence_view (shared phrasing)
                  _scan_view (what was examined, what was not)
                  _history_view (what several scans show)
-                 _identity (content-addressed fingerprints)
+                 _identity (path + name + ordinal fingerprints)
                      |
   assembly       report, _analysis, _documents,             builds the report, calls the scorer
                  _built_ins, _work_order,
@@ -164,7 +164,7 @@ Stated rather than hidden, because an architecture document that only describes 
 - **The score does not consume analyzer measurements.** `--analyzers` runs ten tools, reports their coverage, their findings and their measurements with cross-tool disagreement — and the maintainability *point estimate* still derives entirely from the built-in detectors. Analyzer disagreement only widens `maintainability_range`. The report says so rather than letting a reader assume the number reflects the tools beside it. Closing the gap means re-deriving the calibration constant, which moves every corpus score ([release plan](release-plan.md) 3.5–3.6).
 - **The band matrix does not drive the score.** `_bands.py` exists, holds the table, and is imported by nothing under `src/` — `_pressures._weighted_rate` still computes a binary warn/fail rate over the population, so CCN 16 and CCN 45 are one failure each and the severity ADR 008 §"All three data kinds survive" was written to keep is discarded at the point the score is formed. Closing it is a recalibration, not an import: banding changes every pressure the corpus was fitted to, so the constant and the dimension references move with it ([ADR 008](adr-008-translation-and-decision.md) invariant 13; `tests/test_bands.py` exercises the table in isolation).
 - **The proposed `_analyzers` package and `_concepts` registry were never created as named modules.** Their roles landed in `_tool_adapters`, `_metric_adapters`, `_verdict_adapters`, `_generic`, and `_corroborate`. This document names the files that exist.
-- **Declaration extraction is gated on `DECLARATION_SUFFIXES`** (Python plus JS/TS/HTML). Including another suffix makes the file readable for length, duplication and risk; it does not produce a declaration population. That is a scanner limit, not a layering defect. `--changed-only` and `--fail-on-new` no longer have the defects previously listed here: a thin diff withholds ([ADR 005](adr-005-insufficient-population.md); `test_scan_scope.py`), and identity is `function:{path}:{name}#{ordinal}` ([ADR 009](adr-009-scan-history.md); `_identity`).
+- **Declaration extraction is gated on `DECLARATION_SUFFIXES`** (Python plus JS/TS/HTML). Including another suffix makes the file readable for length, duplication and risk; it does not produce a declaration population. That is a scanner limit, not a layering defect. `--changed-only` and `--fail-on-new` no longer have the defects previously listed here: a thin diff withholds ([ADR 005](adr-005-insufficient-population.md); `test_scan_scope.py`), and identity is `function:{path}:{name}#{ordinal}`. The declaration-body hash proposed by [ADR 009](adr-009-scan-history.md) did not ship; the [decision register](decisions.md) records that gap.
 
 ## Extension points
 
@@ -208,7 +208,7 @@ Every design point above traces to a record. Nothing here is a preference someon
 | Coverage gaps reported per language and concern, with the prerequisite named | [ADR 006](adr-006-analyzer-evidence.md) |
 | Availability proven by invocation; the agent never installs anything | [ADR 006](adr-006-analyzer-evidence.md) |
 | Scans append to a durable history; trends over comparable records only | [ADR 009](adr-009-scan-history.md) |
-| Finding identity is content-addressed, never line-coupled | [ADR 009](adr-009-scan-history.md) |
+| Finding identity uses path + declaration name + same-name ordinal, never a line number; see [Known debt](#known-debt) for the unshipped body hash | [ADR 009](adr-009-scan-history.md) |
 | Trends describe past scans; forecasting stays forbidden | [ADR 009](adr-009-scan-history.md), [product intent](product-intent.md#what-it-must-never-claim) |
 
 MCP's three primitives cover the chat requirement without inventing anything. CI does not go through MCP — a protocol hop between a runner and an exit code costs determinism and buys nothing. Each agent ships its own server as a subcommand; there is no combined server, because independent releasability is worth more than cross-tool synthesis today.

@@ -1,5 +1,5 @@
 {
- "measured_on": "2026-08-13",
+ "measured_on": "2026-08-14",
  "corpus_size": 40,
  "measurements": [
   {
@@ -30,10 +30,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.029819694868238558
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.02149280575539568
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -50,6 +50,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -92,10 +93,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.05515802307043046
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.04256957579032694
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -112,6 +113,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -154,10 +156,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.049629629629629635
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.046861404599129894
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -280,10 +282,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.09044289044289044
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.08352239953855027
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -300,6 +302,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -342,10 +345,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.0755632582322357
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.04938271604938271
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -362,6 +365,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -404,10 +408,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.05597014925373134
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.02709677419354839
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -424,6 +428,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -492,9 +497,13 @@
      "vulture"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
     ],
-    "single_source": []
+    "single_source": [
+     "dead-code"
+    ]
    },
    "production_dimensions": {
     "file_size": 0.05185528756957329,
@@ -530,10 +539,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.07791217895608947
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07832426127527216
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -550,6 +559,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -592,10 +602,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.09976865240023135
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.09428473648186174
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -612,6 +622,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -654,10 +665,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.12611111111111112
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.025945945945945945
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -743,9 +754,13 @@
      "vulture"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
     ],
-    "single_source": []
+    "single_source": [
+     "dead-code"
+    ]
    },
    "production_dimensions": {
     "file_size": 0.025749318801089917,
@@ -846,10 +861,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.09213303485769107
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07838915470494418
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -866,6 +881,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -908,10 +924,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.17329842931937173
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.1083916083916084
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -934,9 +950,14 @@
      "vulture"
     ],
     "unexamined": [
-     "testing"
+     "documentation",
+     "style",
+     "testing",
+     "types"
     ],
-    "single_source": []
+    "single_source": [
+     "dead-code"
+    ]
    },
    "production_dimensions": {
     "file_size": 0.07368421052631578,
@@ -1037,10 +1058,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.07296673716592963
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.0550256937307297
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -1057,6 +1078,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -1099,10 +1121,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.07097581317764805
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.079957805907173
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -1161,10 +1183,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.0448318573109556
+    "declarations": 0.042480840193017316
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.05684395776300352
+    "declarations": 0.05536650418467764
    },
    "analyzer_coverage": {
     "tools": [
@@ -1188,9 +1210,13 @@
      "vulture"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
     ],
-    "single_source": []
+    "single_source": [
+     "dead-code"
+    ]
    },
    "production_dimensions": {
     "file_size": 0.15143884892086332,
@@ -1200,17 +1226,17 @@
   },
   {
    "repo": "localstack",
-   "files": 1995,
-   "declarations": 34352,
+   "files": 2003,
+   "declarations": 34384,
    "dimensions": {
-    "file_size": 0.08160401002506265,
-    "declarations": 0.032062179785747554,
-    "duplication": 4.234085213032581,
-    "risk": 1.0721804511278195,
+    "file_size": 0.08127808287568647,
+    "declarations": 0.03203234062354583,
+    "duplication": 4.243634548177734,
+    "risk": 1.0678981527708438,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 770,
+    "test_file_count": 778,
     "production_declarations_scanned": 27236,
     "production_files_scanned": 1220,
     "production_file_warnings": 71,
@@ -1226,10 +1252,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.03685288095934484
+    "declarations": 0.03685904133060303
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.02277663465935071
+    "declarations": 0.022781843128287217
    },
    "analyzer_coverage": {
     "tools": [
@@ -1289,10 +1315,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.04395688991531948
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.04598393574297189
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -1416,10 +1442,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.08288930194134655
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07399253250933435
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -1436,6 +1462,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -1478,10 +1505,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.12600896860986546
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.0912896691424713
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -1498,6 +1525,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -1566,9 +1594,13 @@
      "vulture"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
     ],
-    "single_source": []
+    "single_source": [
+     "dead-code"
+    ]
    },
    "production_dimensions": {
     "file_size": 0.06874148114493411,
@@ -1604,10 +1636,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.08623423196703263
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.04877610195778732
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -1630,9 +1662,14 @@
      "vulture"
     ],
     "unexamined": [
-     "testing"
+     "documentation",
+     "style",
+     "testing",
+     "types"
     ],
-    "single_source": []
+    "single_source": [
+     "dead-code"
+    ]
    },
    "production_dimensions": {
     "file_size": 0.04424153673873718,
@@ -1668,10 +1705,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.05697865353037767
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.010023980815347722
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -1688,6 +1725,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -1704,36 +1742,36 @@
   },
   {
    "repo": "playwright",
-   "files": 2210,
-   "declarations": 15627,
+   "files": 2212,
+   "declarations": 15660,
    "dimensions": {
-    "file_size": 0.08013574660633484,
-    "declarations": 0.08347091572278749,
-    "duplication": 19.24841628959276,
-    "risk": 0.6941176470588235,
+    "file_size": 0.0801989150090416,
+    "declarations": 0.08348659003831417,
+    "duplication": 19.231012658227847,
+    "risk": 0.6934900542495479,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 1010,
-    "production_declarations_scanned": 9275,
-    "production_files_scanned": 1165,
-    "production_file_warnings": 106,
+    "production_declarations_scanned": 9308,
+    "production_files_scanned": 1167,
+    "production_file_warnings": 107,
     "production_file_failures": 68,
     "production_function_warnings": 414,
-    "production_function_failures": 481,
+    "production_function_failures": 484,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
-    "near_duplicate_count": 51,
+    "near_duplicate_count": 52,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.05155711932924091
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.03709911574501781
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -1757,13 +1795,18 @@
      "vulture"
     ],
     "unexamined": [
-     "testing"
+     "documentation",
+     "style",
+     "testing",
+     "types"
     ],
-    "single_source": []
+    "single_source": [
+     "dead-code"
+    ]
    },
    "production_dimensions": {
-    "file_size": 0.08566523605150214,
-    "declarations": 0.06525067385444744,
+    "file_size": 0.08577549271636675,
+    "declarations": 0.06534164159862484,
     "gates": 0.0
    }
   },
@@ -1795,10 +1838,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.08888888888888889
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.0867557715674362
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -1815,6 +1858,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -1922,10 +1966,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.10454246214614878
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07423288355822089
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -1942,6 +1986,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -1984,10 +2029,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.03774545454545454
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.06341005166744951
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -2004,6 +2049,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -2046,10 +2092,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.027217835578262888
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.027217835578262888
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -2066,6 +2112,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -2108,10 +2155,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.10249687890137328
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.10178432893716059
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -2128,6 +2175,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -2170,10 +2218,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.06386748673313053
+    "declarations": 0.0628965275692985
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.08931291589834042
+    "declarations": 0.09384336803983703
    },
    "analyzer_coverage": {
     "tools": [
@@ -2235,10 +2283,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.08033838973162194
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.08014619883040935
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -2262,9 +2310,13 @@
      "vulture"
     ],
     "unexamined": [
-     "testing"
+     "style",
+     "testing",
+     "types"
     ],
-    "single_source": []
+    "single_source": [
+     "dead-code"
+    ]
    },
    "production_dimensions": {
     "file_size": 0.11272727272727273,
@@ -2300,10 +2352,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.07363281249999999
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07381069151544875
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -2320,6 +2372,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -2362,10 +2415,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.05527734018738081
+    "declarations": null
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.09286851884622191
+    "declarations": null
    },
    "analyzer_coverage": {
     "tools": [
@@ -2382,6 +2435,7 @@
      "risk-patterns"
     ],
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"

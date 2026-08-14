@@ -19,7 +19,7 @@ This table is a navigation summary, not a second implementation register. Phase 
 
 Two things are deliberately open rather than done:
 
-- **The calibration constant stays at 2.6279.** A 2,000-resample bootstrap puts the 95% interval at [2.2522, 3.4718]; the re-derived alternative sits inside it, both roll the corpus median to exactly 4.0000, and they differ on one repository in forty by 0.1. See `tools/calibration/sampling_error.py`.
+- **The calibration constant is 2.2658** (was 2.6279). Re-derived 2026-08-14 against the analyzer-primary mix after provenance exclusions. Corpus median still rolls up to 4.0. Old and new values are recorded in `_calibration.py`.
 - **ADR 007 §4's rename is refused**, and the deviation is recorded there and in `standard.md`: the ownership aspect measures the share of settled files one person owns, which is not the bus factor, and adopting the name would claim a measurement the tool never makes.
 
 ## Phase 0 — Land what exists, fix what is broken
@@ -91,7 +91,7 @@ Implements [ADR 008](adr-008-translation-and-decision.md)'s normalization half. 
 | 3.3 | `_corroborate`: weighted mean and spread across tools | lizard 14 + radon 14 + mccabe 8 yields 12.0 with spread 8–14 and three sources |
 | 3.4 | Spread drives `maintainability_range` | The interval narrows when tools agree and widens when they do not. **Depends on 3.5 and 3.6**: until the score consumes analyzer measurements, widening its interval with tool disagreement would claim uncertainty about a number those tools never touched |
 | 3.5 | Measurements, counts and populations all reach the report | Report carries distributions, not only counts |
-| 3.6 | Recalibrate against the 40-repo corpus | **Blocked on provenance detection — do not re-derive yet.** Corpus median returns to 4.0 under the new pipeline, or the constant is re-derived and the change is documented |
+| 3.6 | Recalibrate against the 40-repo corpus | **Done 2026-08-14.** `CALIBRATION_C` 2.6279 → 2.2658; declarations reference 0.0599 → 0.0860. 13/40 repos used analyzer declarations; 27 fell back. Median rollup is 4.0. |
 
 **Order within this phase is forced.** 3.1–3.3 stand alone and are done. 3.4 cannot precede 3.5/3.6 for the reason in its row. Until then, tool disagreement is reported beside the score and explicitly marked as not affecting it.
 
@@ -115,15 +115,21 @@ The 4x figure came from this repository being Python-heavy. Generalizing from n=
 
 This is how Go, C, C++, C# and Rust get a declaration population. Java already has a zero-install fallback in `_ranges`; there will not be another language clone. See the [register](decisions.md) on ADR 006.
 
-### Why 3.6 is blocked (2026-08-12)
+### What 3.6 did (2026-08-14)
 
-Adding `.mjs`/`.cjs` to `include_extensions` moved `CALIBRATION_C` from 2.6279 to 2.6414 and the duplication reference from 3.735 to 3.5718. **That drift is contamination, not correction, and the constant was deliberately not updated.**
+The 2026-08-12 block was real: widening include_extensions without provenance would have fitted material-ui's 10,759 generated icon wrappers into the scale. Provenance now excludes generated/vendored files from the scored population, and the point estimate uses analyzer declaration pressure where the full concept set was measured.
 
-material-ui gained 10,802 files, of which 10,759 are `packages/mui-icons-material/lib/*.mjs` — six-line SVG icon wrappers written by `builder.mjs` in the same package, one per icon. They are committed to git, so "tracked means source" does not separate them. Their effect is mechanical: 10,759 tiny near-identical generated files dropped material-ui's duplication from 3.729 to 2.321 and dragged the corpus reference down with it.
+Re-measured the 40 pinned repos with `--with-analyzers`. The fit replays the shipped mix (`_derive.primary_declarations`). **13 of 40** (the Python members) supplied an analyzer declaration pressure; **27** fell back because lizard alone cannot compose the three-criterion set. Constants moved:
 
-The `.mjs`/`.cjs` inclusion itself is correct and stays — babel's 1,480 previously-unread ES-module files are genuine source, and its estimate held at 4.4 once they were read. What the episode shows is that **the corpus cannot be re-derived until the pipeline can tell first-party source from generated and vendored code**, because widening what is read widens what is contaminated by exactly the same act.
+| | old | new |
+|---|---:|---:|
+| file_size | 0.0576 | 0.0573 |
+| declarations | 0.0599 | 0.0860 |
+| duplication | 3.7350 | 3.8644 |
+| risk | 0.0733 | 0.0737 |
+| CALIBRATION_C | 2.6279 | 2.2658 |
 
-`tools/calibration/measurements.json` carries the current measurement, which is reproducible and honest about what the code does today. `_calibration.py` is untouched. A re-derivation is a separate, deliberate act after provenance detection lands.
+Corpus median rollup is 4.0. Previous values remain in `_calibration.py`.
 
 ## Phase 4 — Pillars, practice level, work order
 

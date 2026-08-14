@@ -137,6 +137,14 @@ def measure(path: Path, name: str, *, with_analyzers: bool = False) -> dict:
         "dimensions": dimension_pressures(evidence.summary),
         "evidence": {key: summary[key] for key in EVIDENCE_KEYS},
     }
+    # Always present, null when the pool did not contribute. The
+    # derivation refuses a row without the key, because a file from the
+    # pre-analyzer pipeline is indistinguishable from a current one until
+    # the constant comes out unchanged — and "the pool ran and measured
+    # nothing" is a different fact from "nobody asked the pool".
+    row["analyzer_dimensions"] = None
+    row["analyzer_production_dimensions"] = None
+    row["analyzer_coverage"] = None
     if with_analyzers:
         analyzer, production, coverage = _analyzer_row(path, config)
         row["analyzer_dimensions"] = analyzer

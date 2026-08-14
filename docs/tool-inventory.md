@@ -2,7 +2,7 @@
 
 Every free tool this agent could run to gather maintainability evidence, what each one actually produces, and whether it has been **proven to run** rather than merely listed.
 
-This exists because the agent currently reimplements a fraction of these in `src/` — its own complexity approximation, its own clone detector, its own dead-code pass — while the README says *"pair this tool with mature analyzers … don't replace them."* The implementation contradicts the principle. The inventory below is the first step to inverting that: the FOSS tools produce the evidence, and the rubric becomes a metric computed over their output.
+This exists because the agent used to reimplement a fraction of these in `src/` — its own complexity approximation, its own clone detector, its own dead-code pass — while the README said *"pair this tool with mature analyzers … don't replace them."* [ADR 006](adr-006-analyzer-evidence.md) inverted that: `--analyzers` runs the FOSS tools, coverage is reported, and the point estimate uses their readings where the full concept set was measured. The inventory below is the proven table that decision was built from.
 
 **Scope: maintainability and code quality only.** Security scanning belongs to `secure-code-agent` and is deliberately absent here. Duplicating it would be the same replace-don't-pair mistake in a different direction.
 
@@ -50,11 +50,11 @@ Listed with what they add beyond the proven set. Nothing here should be describe
 
 Three things follow from the table, and they are the actual work:
 
-**Availability must be reported, never assumed.** A tool that is not installed is not a clean result. `secure-code-agent` already does this — it prints `scanners run:` and `unavailable:` — and this agent does not, which is precisely why a repository with one function scored 5.0/A+: six shallow built-in checks found nothing, and the rubric read that as excellence. Coverage is the missing concept.
+**Availability must be reported, never assumed.** A tool that is not installed is not a clean result. That was the hole behind a one-function repository scoring 5.0/A+: six shallow built-in checks found nothing, and the rubric read that as excellence. `--analyzers` now prints which tools were attempted, which ran, which were unavailable and why. A concern nobody looked at is reported unexamined, never clean.
 
-**Installation has to be explicit and layered.** Python tools install with the package; Node tools need `npx`; Java, Go, Rust and C tools are per-ecosystem binaries. The honest design ships a small proven core (lizard, jscpd, ruff, radon), detects what else is present, and reports the rest as unavailable rather than pretending to have looked.
+**Installation has to be explicit and layered.** Python tools install with the package; Node tools need `npx`; Java, Go, Rust and C tools are per-ecosystem binaries. The agent never installs. A small proven core (lizard, jscpd, ruff, radon) runs when present; the rest is reported unavailable rather than pretended to have looked.
 
-**The rubric becomes a metric over their findings**, not over homegrown detectors. That is a scoring-model change and needs its own decision record before any code moves.
+**The rubric is a metric over their findings** where they measured a full concept set, with the built-in detectors as the labelled fallback. That change is [ADR 006](adr-006-analyzer-evidence.md).
 
 ## Method
 

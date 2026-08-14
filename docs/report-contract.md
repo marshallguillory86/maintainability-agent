@@ -56,7 +56,7 @@ The profile's required measurements are **frozen by name** in `_verification.DEF
 
 `Measured(0)` and `NotApplicable` are both **complete** evidence — the scanner looked and found none, and the measurement has no population here. Only `Unknown` withholds a grade. In the rollup, `NotApplicable` removes the corresponding aspect from the category denominator under the point estimate and both interval endpoints; it is neither a clean score nor unresolved uncertainty.
 
-**What stage 8 changed.** `score.grade` is gone; `verified_grade` is the only letter a report carries. `verified_grade_blockers` explains an *issued* grade and is empty when none was issued — what is missing is named in `evidence_status.reasons` instead. Adding optional fields does not bump the schema version, but removing or renaming public fields does, which is why this is version 2. Invalid input still raises `EvidenceValidationError` or `UnsupportedReportSchema`: there is no serialized `invalid` status, because a malformed report must not flow onward carrying numbers nobody should trust.
+**What stage 8 changed.** `score.grade` is gone; `verified_grade` is the only letter a report carries. `verified_grade_blockers` explains an *issued* grade and is empty when none was issued — what is missing is named in `evidence_status.reasons` instead. Adding optional fields does not bump the schema version, but removing or renaming public fields does, which is why stage 8 became version 2. ADR 005 then made the estimate nullable as version 3. Invalid input still raises `EvidenceValidationError` or `UnsupportedReportSchema`: there is no serialized `invalid` status, because a malformed report must not flow onward carrying numbers nobody should trust.
 
 ## Schema version
 
@@ -68,16 +68,16 @@ Findings, aspects, categories and dimensions are unaffected — only the rolled-
 New reports carry a top-level integer:
 
 ```json
-{ "schema_version": 2, "root": "...", "summary": { ... } }
+{ "schema_version": 3, "root": "...", "summary": { ... } }
 ```
 
-**Version 2 (ADR 001 stage 8)** removed the ambiguous compatibility score fields. The public `score` object is now:
+**Version 2 (ADR 001 stage 8)** removed the ambiguous compatibility score fields. **Version 3 (ADR 005)** made the estimate and range nullable. The public `score` object is now:
 
 | Field | Type |
 |---|---|
 | `standard` | string |
-| `maintainability_estimate` | number |
-| `maintainability_range` | `[number, number]` |
+| `maintainability_estimate` | number or `null` |
+| `maintainability_range` | `[number, number]` or `null` |
 | `evidence_status` | `{status, profile, reasons[]}` |
 | `verified_grade` | string or `null` |
 | `verified_grade_blockers` | string[] — empty whenever no grade was issued |
@@ -90,7 +90,7 @@ New reports carry a top-level integer:
 - **Owner.** `build_report` stamps it. The constant lives in [`evidence.py`](../src/maintainability_audit/evidence.py) as `REPORT_SCHEMA_VERSION`, next to the code that validates it.
 - **Not the baseline version.** `baseline.write_baseline` writes its own `"version": 1`. That numbers a different artifact with a different lifecycle and is deliberately left alone; overloading it would tie the report structure to the baseline format.
 - **What forces a bump.** Removing or renaming a scoring input, or changing the meaning of an existing field. Adding a new optional field does not, because absent inputs already normalize to `Unknown` rather than to a value.
-- **Compatibility policy.** `normalize_report_evidence` accepts version 2 only. An unsupported or absent version raises `UnsupportedReportSchema`. Nothing is silently interpreted under the latest rubric.
+- **Compatibility policy.** `normalize_report_evidence` accepts version 3 only. An unsupported or absent version raises `UnsupportedReportSchema`. Nothing is silently interpreted under the latest rubric.
 - **Non-normalizing consumers are unaffected.** Renderers, SARIF, prompts and baselines read named keys; an added top-level key is inert to them. Verified by comparing a full report before and after this slice: `score`, `summary` and `history` are byte-identical.
 
 ## Evidence states
@@ -127,4 +127,4 @@ The contract migration is done; see the [decision register](decisions.md) for wh
 
 Older notes on the work those stages cover:
 
-ADR 001 is **partially implemented**: stages 8 and 9 remain, and nothing here should be read as claiming otherwise.
+ADR 001 is **partially implemented**: stage 8 shipped; stage 9 remains. Nothing here should be read as claiming otherwise.

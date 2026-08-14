@@ -4,6 +4,7 @@ A deterministic CI gate + bounded remediation prompt generator for repos that us
 
 ```bash
 pip install maintainability-agent          # CLI + library
+pip install "maintainability-agent[mcp]"   # optional local MCP server for Codex / VS Code
 cp -r skills/maintainability-agent ~/.claude/skills/                                  # Claude Code skill
 cp skills/maintainability-agent/copilot/maintainability-agent.prompt.md .github/prompts/  # Copilot Chat (VS Code)
 # Codex picks up skills/maintainability-agent/ via its own convention.
@@ -11,20 +12,22 @@ cp skills/maintainability-agent/copilot/maintainability-agent.prompt.md .github/
 
 Jump to [Invokable Skill / Slash Command](#invokable-skill--slash-command) for the full install table.
 
-> **v0.6.0 detects a helper written twice under two names** — clone-instead-of-reuse, the most-cited complaint about AI-written code. Renamed copies defeat text matching, so bodies are compared structurally with identifiers anonymized. Each finding names the declaration to reuse, so the prompt says *`toAtomicAmount` at `TradeTicket.tsx:862` already does this* rather than "there is duplication". Measured across the reference corpus, this is the **first signal that separates AI-written applications from mature human-written OSS** (median 1.49% vs 0.20% of production declarations). See [docs/standard.md](docs/standard.md#signals-reported-but-not-yet-scored).
+> **Retracted: the claim that near-duplication distinguishes AI-written code.** It was called "the first signal that separates AI-written applications from mature human-written OSS". 0.6.0 reported near-duplication at 1.49% for AI-written applications against 0.20% for human-written OSS, comparing six young applications against twelve decade-old libraries. Authorship, age, domain and size all differed at once. Re-run against a control matched on age, popularity and language, the near-duplication gap is not significant (p = 0.546), and no other metric earns the claim either. The AI figure barely moved (1.49% to 1.73%); the control moved, from 0.20% to 0.83%, because it stopped being decade-old libraries. The replacement study has its own stated limits (small n, size handled post-hoc, and a control that cannot be verified as human), so the honest summary is "this design could not measure a difference", not "there is no difference". See [docs/studies.md](docs/studies.md#does-this-detect-ai-written-code).
+>
+> **v0.6.0 detects a helper written twice under two names** — clone-instead-of-reuse, the most-cited complaint about AI-written code. Renamed copies defeat text matching, so bodies are compared structurally with identifiers anonymized. Each finding names the declaration to reuse, so the prompt says *`toAtomicAmount` at `TradeTicket.tsx:862` already does this* rather than "there is duplication". It is a useful finding on its own terms; it is not evidence about who wrote the code.
 >
 > **v0.5.0 rebuilt the scoring engine.** The old model counted findings absolutely, so it scored repo *size* rather than maintainability: it graded **Django, pytest, black, tornado, click, httpx, attrs, lodash, svelte, axios and fastapi all at 0.0 / F** while a 53-file toy repo scored 4.6 / A. Scores are now rates, normalized per dimension against what real code carries, and calibrated so the corpus median earns a B. See [docs/standard.md](docs/standard.md#how-the-scale-was-calibrated-050).
 
 ## Why this exists
 
-AI-written code fails in recognizable ways: speculative refactors, duplicated helpers, broad rewrites for narrow bugs, stale comments that sound confident, tests that assert implementation details instead of behavior, architecture drift across modules. SonarQube / CodeClimate / Qlty / ESLint / Ruff / Radon all catch some of this. None of them ship a **bounded prompt back to the agent** that says *"fix only these specific findings, do not refactor outside this scope."*
+Agents produce code faster than humans can review it. Not measurably *worse* code — this project tested its own claim that AI code fails in recognizably different ways, and retracted it — just **more** code, arriving faster than trust can accumulate: duplicated helpers, oversized files, speculative abstractions, the same slop hand-written codebases have always accumulated, now at machine speed. SonarQube / CodeClimate / Qlty / ESLint / Ruff / Radon all catch some of this. None of them ship a **bounded prompt back to the agent** that says *"fix only these specific findings, do not refactor outside this scope."*
 
 That's the point of this tool:
 
 1. Run a deterministic local audit — file size, function size, approximate cyclomatic complexity, duplication, configurable risk patterns, ISO/IEC 25010-inspired 0–5 score.
 2. Emit Markdown, JSON, SARIF, a PR comment, and a baseline for incremental adoption.
 3. Generate an **AI remediation prompt scoped to the actual findings** — bounded, with explicit "don't rewrite the codebase" rules.
-4. Hand that prompt to your agent. Get a small, reviewable fix instead of a 600-line speculative cleanup PR.
+4. Hand that prompt to your agent. One pre-registered experiment has tested this: Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, under this tool's own finding count. The registered hypothesis was *narrower* diffs and it did not hold, so the registered verdict stands at **INCONCLUSIVE**. Method, limits and raw data: [docs/studies.md](docs/studies.md#does-the-bounded-prompt-work-controlled-experiment-pre-registered).
 5. Drop the shipped **portable invokable skill** into Codex, Claude Code, or GitHub Copilot Chat so `/maintainability-agent` is one keystroke away in any of them. See [Invokable Skill](#invokable-skill--slash-command) below.
 
 The remediation prompt is the differentiator. Every other tool in this space stops at "here's a list of findings."
@@ -42,27 +45,28 @@ The remediation prompt is the differentiator. Every other tool in this space sto
 - **No vendor lock-in.** All outputs (Markdown, JSON, SARIF, PR comment) are plain files. Pair this tool with mature analyzers (ESLint, Ruff, Radon, Semgrep, SonarQube, Qlty/Code Climate) — don't replace them.
 - **Pass-the-cost-of-disclosure.** A finding that's "just a warning" never blocks CI alone. Hard gates are configurable + opt-in.
 
-See [docs/philosophy.md](docs/philosophy.md) for the longer version.
+See [docs/philosophy.md](docs/philosophy.md) for the longer version, and [docs/product-intent.md](docs/product-intent.md) for what this product promises and what it must never claim — that document is authoritative, and this README defers to it wherever the two differ.
 
 ## Self-Audit
 
-This repo eats its own dogfood — the tool is run against this codebase as part of CI, and the latest report is checked in at [docs/self-audit.md](docs/self-audit.md):
+This repo eats its own dogfood — the tool runs against this codebase in CI, and a report is checked in at [docs/self-audit.md](docs/self-audit.md). The checked-in copy is **stamped with the exact source commit it was generated against** — a provenance record, not a promise that it reflects the current HEAD. It deliberately makes no claim about distance: a self-report cannot contain its own commit, and no merge strategy preserves a fixed gap. Check the stamp against the commit you care about:
 
 | Metric | Value |
 |---|---:|
-| Overall score | **5.0 / 5 (A+)** |
-| Files scanned | 74 |
-| File warnings | 0 |
+| Maintainability estimate | **4.3 / 5** |
+| Verified grade | **B** |
+| Files scanned | 184 |
+| File warnings | 52 |
 | File failures | 0 |
-| Function warnings | 0 |
+| Function warnings | 25 |
 | Function failures | 0 |
 | Duplicate blocks | 0 |
 | Risk findings | 0 |
 | Hard gate failures | 0 |
 
-All five ISO/IEC 25010 categories (modularity, reusability, analyzability, modifiability, testability) score 5.0, against thresholds this repo deliberately sets stricter than the shipped defaults — a 250-line file warning versus the default 400.
+Yes, a **B** — demoted from the A band because warning rates exceed the A-grade ceilings, against thresholds this repo deliberately sets stricter than the shipped defaults (a 250-line file warning versus the default 400). An earlier revision of this table advertised 5.0/A+ after the codebase had drifted to a B; a hostile audit caught the stale claim, which is precisely the failure mode this tool exists to catch. The table matches the stamped report, and every threshold gate — file, function, duplication — is opted **on** for this repo's own CI, so drifting below the bar fails the build instead of the README.
 
-That grade is maintained, not assumed, and since v0.5.0 it is also **gated**: an A+ requires every dimension to be clean, so it cannot be reached by averaging one bad dimension against four good ones. When the v0.4.0 work pushed this repo to 4.4 / 5 (B), the response was to split `metrics.py` along its real responsibilities rather than to publish a fix while advertising a stale A+. The score is the output of that work, not a claim that preceded it.
+The grade is **gated, not averaged**: A+ requires every dimension clean, and since the rubric rework a repository with production code and zero test files cannot receive an A-grade at all. It is also **banded from the evidence floor, not the score** — the grade reads `overall_range[0]`, with every unmeasured aspect priced at 0, so withholding evidence can never buy a better letter. This repository measures fully, so its floor and its score are the same number; a shallow clone's would not be, and the report says so in a blocker. (Practical note for CI: `actions/checkout` defaults to `fetch-depth: 1`, which hides history and costs roughly a grade. Use `fetch-depth: 0`.)
 
 Regenerate with `maintainability-agent --config maintainability-agent.json --output docs/self-audit.md` (see the file's preamble for the path-sanitization step).
 
@@ -181,7 +185,9 @@ The full local verification sequence that matches CI — ruff, pip-audit, the 92
 
 The audit model is based on ISO/IEC 25010 maintainability — modularity, reusability, analyzability, modifiability, testability.
 
-Scores are **rates calibrated against real code**, not counts. Every pressure is normalized against the median that a pinned 14-repo corpus of mature open-source projects (django, pytest, black, svelte, axios, requests, …) actually exhibits, so `2.5x` means "two and a half times what well-maintained real code carries." The corpus median earns a **B**; **A+ is gated**, requiring every dimension clean rather than a good average.
+Scores are **rates calibrated against real code**, not counts. Every pressure is normalized against the median that a pinned 40-repo corpus of mature open-source projects (django, angular, transformers, webpack, vite, playwright, …) actually exhibits, so `2.5x` means "two and a half times what well-maintained real code carries." The corpus median earns a **B**; **A+ is gated**, requiring every dimension clean rather than a good average.
+
+The corpus is **selected by query, not by taste** — `stars:>3000 created:<2021-01-01 pushed:>2026-01-01` across Python, TypeScript and JavaScript, then filtered to repositories that actually contain code. An earlier version was fourteen repositories chosen by hand, which is selection bias sitting underneath a scale used to grade everyone else.
 
 The calibration is reproducible rather than asserted: `python3 tools/calibration/measure.py --check` re-measures the corpus and fails if the shipped constants have drifted, and `tests/test_calibration_corpus.py` re-derives them offline from checked-in measurements — no network, no trust required.
 
@@ -189,23 +195,36 @@ See [docs/standard.md](docs/standard.md).
 
 ## Documentation
 
+Start with [the documentation index](docs/README.md), which states each document's genre and what it is allowed to assert.
+
+**Governing**
+
+- [Product intent](docs/product-intent.md) — what this is for, what it promises, what it must never claim, and the evidence bar for each kind of claim
+- [Architecture](docs/architecture.md) — layers, dependency rules, enforced invariants, known debt
+- [Philosophy](docs/philosophy.md) — why AI-specific: volume, not pathology
+- [Decision register](docs/decisions.md) — every architectural decision and its current status, including [ADR 001](docs/adr-001-evidence-and-verification.md) (evidence states and verification) and the open questions
+
+**Reference and operations**
+
+- [Maintainability standard](docs/standard.md) — the rubric and thresholds
+- [Studies and measured results](docs/studies.md) — what has been tested, and what it does not license
+- [Report contract](docs/report-contract.md)
 - [CLI reference](docs/cli.md)
 - [Config schema](docs/config-schema.md)
 - [Language support and detection accuracy](docs/language-support.md)
-- [Philosophy](docs/philosophy.md)
-- [Changelog](CHANGELOG.md)
 - [Analyzer adapters](docs/adapters.md)
 - [External quality tools](docs/external-quality-tools.md)
 - [IDE and agent integration](docs/ide-agent-integration.md)
 - [PR and baseline workflows](docs/pr-and-baseline-workflows.md)
 - [Roadmap](docs/roadmap.md)
+- [Changelog](CHANGELOG.md)
 
 ## GitHub Action
 
 This repo includes `action.yml`, so it can be used as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v0.6.1
+- uses: marshallguillory86/maintainability-agent@v0.7.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD
@@ -216,6 +235,11 @@ Or copy `.github/workflows/maintainability.yml` into the target repo and adapt i
 ## IDE and Agent Integration
 
 See [docs/ide-agent-integration.md](docs/ide-agent-integration.md) for VS Code tasks and integration notes for Copilot, Cursor, Codex, Claude Code, Windsurf, generic agents, local CI, and GitHub Actions.
+
+The optional local MCP server exposes the same deterministic audit and bounded
+remediation prompt directly to Visual Studio, VS Code and Codex. It is read-only,
+uses stdio rather than a network port, and rejects repository or config paths
+outside its explicit allow-list. See [Local MCP server](docs/ide-agent-integration.md#local-mcp-server-visual-studio-vs-code-and-codex).
 
 ## Invokable Skill / Slash Command
 

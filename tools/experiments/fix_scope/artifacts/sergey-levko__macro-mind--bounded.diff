@@ -1,0 +1,235 @@
+diff --git a/frontend/src/lib/api.ts b/frontend/src/lib/api.ts
+index 053dc18..bc01d79 100644
+--- a/frontend/src/lib/api.ts
++++ b/frontend/src/lib/api.ts
+@@ -45,61 +45,53 @@ async function doRefresh(): Promise<boolean> {
+   }
+ }
+ 
+-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+-  const token = getToken()
++function requestHeaders(options: RequestInit, token: string | null): HeadersInit {
++  return {
++    'Content-Type': 'application/json',
++    ...(token ? { Authorization: `Bearer ${token}` } : {}),
++    ...(options.headers ?? {}),
++  }
++}
+ 
+-  const res = await fetch(path, {
++function send(path: string, options: RequestInit): Promise<Response> {
++  return fetch(path, {
+     ...options,
+-    headers: {
+-      'Content-Type': 'application/json',
+-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+-      ...(options.headers ?? {}),
+-    },
++    headers: requestHeaders(options, getToken()),
+   })
++}
+ 
+-  if (res.status === 401) {
+-    if (!refreshing) {
+-      refreshing = doRefresh().finally(() => { refreshing = null })
+-    }
+-    const ok = await refreshing
+-    if (!ok) {
+-      clearTokens()
+-      window.location.href = '/login'
+-      throw new Error('401: Unauthorized')
+-    }
+-
+-    const newToken = getToken()
+-    const retry = await fetch(path, {
+-      ...options,
+-      headers: {
+-        'Content-Type': 'application/json',
+-        ...(newToken ? { Authorization: `Bearer ${newToken}` } : {}),
+-        ...(options.headers ?? {}),
+-      },
+-    })
++async function parseResponse<T>(response: Response): Promise<T> {
++  if (!response.ok) {
++    const text = await response.text().catch(() => response.statusText)
++    throw new Error(`${response.status}: ${text}`)
++  }
+ 
+-    if (retry.status === 401) {
+-      clearTokens()
+-      window.location.href = '/login'
+-      throw new Error('401: Unauthorized')
+-    }
++  if (response.status === 204) return undefined as T
++  return response.json() as Promise<T>
++}
+ 
+-    if (!retry.ok) {
+-      const text = await retry.text().catch(() => retry.statusText)
+-      throw new Error(`${retry.status}: ${text}`)
+-    }
++function redirectToLogin(): never {
++  clearTokens()
++  window.location.href = '/login'
++  throw new Error('401: Unauthorized')
++}
+ 
+-    if (retry.status === 204) return undefined as T
+-    return retry.json() as Promise<T>
++async function refreshAccessToken(): Promise<boolean> {
++  if (!refreshing) {
++    refreshing = doRefresh().finally(() => { refreshing = null })
+   }
++  return refreshing
++}
+ 
+-  if (!res.ok) {
+-    const text = await res.text().catch(() => res.statusText)
+-    throw new Error(`${res.status}: ${text}`)
+-  }
++async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
++  const response = await send(path, options)
++
++  if (response.status !== 401) return parseResponse<T>(response)
++  if (!await refreshAccessToken()) return redirectToLogin()
+ 
+-  if (res.status === 204) return undefined as T
+-  return res.json() as Promise<T>
++  const retry = await send(path, options)
++  if (retry.status === 401) return redirectToLogin()
++  return parseResponse<T>(retry)
+ }
+ 
+ export const api = {
+diff --git a/frontend/src/pages/Coach.tsx b/frontend/src/pages/Coach.tsx
+index 6298787..50a5b54 100644
+--- a/frontend/src/pages/Coach.tsx
++++ b/frontend/src/pages/Coach.tsx
+@@ -112,9 +112,10 @@ const dayPickerClassNames = {
+   outside: 'opacity-0 pointer-events-none',
+ }
+ 
+-function DayNavDatePicker({ selected, onSelect }: {
++function NavDatePicker({ selected, onSelect, period }: {
+   selected: string
+   onSelect: (iso: string) => void
++  period: 'day' | 'week'
+ }) {
+   const [open, setOpen] = useState(false)
+   const containerRef = useRef<HTMLDivElement>(null)
+@@ -130,66 +131,27 @@ function DayNavDatePicker({ selected, onSelect }: {
+     return () => document.removeEventListener('mousedown', onMouseDown)
+   }, [open])
+ 
+-  return (
+-    <div ref={containerRef} className="relative">
+-      <button
+-        onClick={() => setOpen(o => !o)}
+-        className="px-3 py-1.5 text-sm rounded-lg border bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-200 transition-colors"
+-        title="Pick a date"
+-      >
+-        {formatDateLabel(selected)}
+-      </button>
+-      {open && (
+-        <div className="absolute left-0 top-full mt-1 z-50">
+-          <DayPicker
+-            mode="single"
+-            ISOWeek
+-            selected={new Date(selected + 'T12:00:00')}
+-            defaultMonth={new Date(selected + 'T12:00:00')}
+-            onSelect={date => {
+-              if (date) {
+-                const y = date.getFullYear()
+-                const m = String(date.getMonth() + 1).padStart(2, '0')
+-                const d = String(date.getDate()).padStart(2, '0')
+-                onSelect(`${y}-${m}-${d}`)
+-                setOpen(false)
+-              }
+-            }}
+-            disabled={{ after: new Date() }}
+-            classNames={dayPickerClassNames}
+-          />
+-        </div>
+-      )}
+-    </div>
+-  )
+-}
+-
+-function WeekNavDatePicker({ selected, onSelect }: {
+-  selected: string
+-  onSelect: (iso: string) => void
+-}) {
+-  const [open, setOpen] = useState(false)
+-  const containerRef = useRef<HTMLDivElement>(null)
+-
+-  useEffect(() => {
+-    if (!open) return
+-    function onMouseDown(e: MouseEvent) {
+-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+-        setOpen(false)
+-      }
+-    }
+-    document.addEventListener('mousedown', onMouseDown)
+-    return () => document.removeEventListener('mousedown', onMouseDown)
+-  }, [open])
++  const isWeek = period === 'week'
++  const label = isWeek ? formatWeekLabel(selected) : formatDateLabel(selected)
++
++  function selectDate(date: Date | undefined) {
++    if (!date) return
++    const y = date.getFullYear()
++    const m = String(date.getMonth() + 1).padStart(2, '0')
++    const d = String(date.getDate()).padStart(2, '0')
++    const iso = `${y}-${m}-${d}`
++    onSelect(isWeek ? mondayOf(iso) : iso)
++    setOpen(false)
++  }
+ 
+   return (
+     <div ref={containerRef} className="relative">
+       <button
+         onClick={() => setOpen(o => !o)}
+         className="px-3 py-1.5 text-sm rounded-lg border bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-200 transition-colors"
+-        title="Pick a week"
++        title={`Pick a ${period}`}
+       >
+-        {formatWeekLabel(selected)}
++        {label}
+       </button>
+       {open && (
+         <div className="absolute left-0 top-full mt-1 z-50">
+@@ -198,15 +160,7 @@ function WeekNavDatePicker({ selected, onSelect }: {
+             ISOWeek
+             selected={new Date(selected + 'T12:00:00')}
+             defaultMonth={new Date(selected + 'T12:00:00')}
+-            onSelect={date => {
+-              if (date) {
+-                const y = date.getFullYear()
+-                const m = String(date.getMonth() + 1).padStart(2, '0')
+-                const d = String(date.getDate()).padStart(2, '0')
+-                onSelect(mondayOf(`${y}-${m}-${d}`))
+-                setOpen(false)
+-              }
+-            }}
++            onSelect={selectDate}
+             disabled={{ after: new Date() }}
+             classNames={dayPickerClassNames}
+           />
+@@ -546,7 +500,7 @@ export default function Coach() {
+                 >
+                   ←
+                 </button>
+-                <DayNavDatePicker selected={selectedDate} onSelect={setSelectedDate} />
++                <NavDatePicker period="day" selected={selectedDate} onSelect={setSelectedDate} />
+                 <button
+                   onClick={() => setSelectedDate(shiftDay(selectedDate, 1))}
+                   disabled={selectedDate === todayStr()}
+@@ -597,7 +551,7 @@ export default function Coach() {
+                 >
+                   ←
+                 </button>
+-                <WeekNavDatePicker selected={selectedWeek} onSelect={setSelectedWeek} />
++                <NavDatePicker period="week" selected={selectedWeek} onSelect={setSelectedWeek} />
+                 <button
+                   onClick={() => setSelectedWeek(shiftDay(selectedWeek, 7))}
+                   disabled={selectedWeek === mondayStr()}

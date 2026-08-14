@@ -1,0 +1,128 @@
+# ADR 005: Report no score when the population is too small to measure
+
+- Status: Accepted. Implementation progress is tracked in the [decision register](decisions.md), which is the single place it is stated
+- Date: 2026-08-12
+- Scope: Grade profile, the public score contract, every consumer
+- Depends on: [ADR 001](adr-001-evidence-and-verification.md) — implementation status in the [register](decisions.md)
+- Related: [ADR 006](adr-006-analyzer-evidence.md), [ADR 007](adr-007-pillars-and-practice.md)
+
+## Context
+
+A repository containing one production function, one test, a README and a changelog currently scores **5.0 / A+, evidence complete, verified**. Every finding count is genuinely zero, every rate is zero over a tiny denominator, and every aspect lands on 5.0.
+
+The arithmetic is right. The number is meaningless, and the tool says it with full confidence.
+
+This is the same family of mistake the evidence model was built to remove, one level up. [ADR 001](adr-001-evidence-and-verification.md) separated *measured zero* from *could not measure* from *does not apply*. It never introduced **measured, but over a population too small to support a conclusion**. `evidence_status: complete` today asserts that every required measurement was resolved. It asserts nothing about whether resolving them told us anything.
+
+**This is already shipping.** The hello-world was a fixture, but `--changed-only` is a documented flag intended for PR-scoped CI. Run against this repository it reports **`maintainability_estimate: 4.2`, `evidence_status: complete`, over 2 files and *zero* declarations** — a whole-repository scale applied to a diff. Every PR-scoped run inherits it.
+
+Two consequences, both bad:
+
+- A new repository earns A+ on its first commit and gets *worse* as real code arrives. The scale rewards emptiness.
+- The verified grade — the field stage 5 introduced specifically so that a grade means something — is issued in exactly the case where it cannot.
+
+The scale is calibrated against 40 mature repositories. The smallest carries **32 source files and 139 declarations** (lodash). Below that, the tool is extrapolating outside the range it was calibrated on, and saying so is cheaper than pretending otherwise.
+
+## Options
+
+**A. Do nothing; document the limitation.** Rejected. The number is published, machine-readable, and flattering. A caveat in `docs/standard.md` does not reach a CI badge or a JSON consumer, and "the tool gives new repos an A+" is the kind of result that discredits a scale.
+
+**B. Withhold only the verified grade.** Rejected as insufficient. It was the author's first proposal and it is half a fix: `maintainability_estimate: 5.0` is fabricated whether or not a letter accompanies it, and consumers that read the estimate — the PR comment, the prompt, SARIF — would still carry it.
+
+**C. Suppress the rolled-up score below a repository-wide population floor, keep every aspect.** Rejected on review, and the reasoning is worth keeping because it was the author's second mistake in the same hour. The claim was that "the aspects are still true statements about what was seen." They are not. `dead_code: 5.0` computed over one production declaration is the identical fabrication one level down, and a reader of the aspect table draws the identical false conclusion. Suppressing the rollup while publishing thirteen unsupported aspects fixes the symptom and keeps the disease.
+
+**D. Scale confidence continuously with population.** Rejected for now. It needs a model of how rate variance falls with denominator, which is an empirical claim this project has no evidence for, and inventing one would breach the evidence standard in a decision about not inventing numbers.
+
+**E. Apply the rule per aspect, at the denominator each aspect actually divides by.** Accepted. An aspect whose denominator is too small to support a rate reports **not measurable** instead of a number, using the `Unknown` state ADR 001 already built and every consumer already renders. The rollup then falls out for free: a score over mostly-unmeasurable aspects has nothing to roll up, and the existing "withholding cannot improve a grade" property does the rest.
+
+This is strictly better than a repository-wide floor because denominators differ per aspect. A repository with 400 declarations in one enormous file has ample material to judge `declaration_size` and none to judge `file_size`; a single repository-level gate cannot express that, and per-aspect denominators can.
+
+## Decision
+
+An aspect is scored only where its own denominator supports a rate. Below that, the aspect is `Unknown` with a reason naming the population and the floor, and the rollup withholds the score.
+
+```text
+maintainability_estimate  null
+maintainability_range     null
+verified_grade            null
+verified_grade_blockers   []
+evidence_status.status    "insufficient"
+evidence_status.reasons   names the population and the floor
+```
+
+Two levels, because one cannot do the job alone.
+
+**Root.** If the tree is smaller than anything the scale was calibrated on, nothing drawn from it means anything — *including* the history rates, which describe the same tiny codebase. `files_scanned` and `declarations_scanned` gate the whole score. Per-aspect floors alone left the hello-world scoring on `churn_hotspots` and `change_coupling`, which have no corpus-derived floor and were reporting "0 hotspots over 5 changed files".
+
+**Per aspect.** Inside a scorable repository, an aspect whose own denominator is thin is withheld individually, so a config-heavy tree with many files and few declarations keeps its file-based rates and loses only its declaration-based ones.
+
+Each aspect declares the population its rate divides by, in the same rubric table that declares its weight. The floors are the reference corpus minima, **recomputed from `tools/calibration/corpus.json` rather than recalled: 32 source files and 139 declarations, both lodash** — the scale's meaning derives from that corpus, so extrapolating beneath it is unsupported by construction. They are thresholds, not measurements: a Tier 2 judgment under [product intent](product-intent.md#the-evidence-standard), stated explicitly, applied identically everywhere, and arguable by changing one visible number.
+
+**A floor may never exceed the corpus minimum.** An earlier draft of this record said 39 files, from memory. The measured minimum is 32, so that floor would have made lodash — a calibration member — unscoreable by the scale it helps define. `test_no_calibration_member_is_unscoreable_by_the_scale_it_calibrates` recomputes from the corpus and fails on any recurrence, and the floors are deliberately not configurable: a floor a repository could lower is not a floor, and P2 promises one rubric applied identically everywhere.
+
+Findings are never suppressed. A two-file repository with a 300-line function still reports it, because that is an observation about a specific line of code and needs no population to be true. What is withheld is every *rate* — the aspect scores and the rollup — because a rate over a denominator of one is arithmetic, not evidence.
+
+## A fourth cause, found in the field: the population was never read
+
+Amended 2026-08-12, after the [report-validation sample](../tools/validation/results.md) ran against fourteen repositories chosen for language variety.
+
+The floor answers *is this population large enough to draw a rate from*. It does not answer *is this population the repository*. On six of fourteen repositories it was not, because `paths.include_extensions` did not list the language they are written in:
+
+- **curl** reported **4.3**, computed from 1,041 declarations of Markdown and Python test scripts, while lizard measured 20,547 declarations of the C nobody read. **whisper.cpp** reported 3.5 from `.js`, `.md`, `.html` and `.py`. **machinelearning-samples** reported 3.1 from 162 files of a C# tree.
+- **gson**, **ripgrep**, **cobra** and **lapack** withheld correctly but said *"0 is below the calibration floor of 139"*. gson has 9,639 declarations. That sentence sends a reader to look for more code when the code is already there.
+
+Both halves are failures of the same kind, and the first is the worse one: a score describing a minority of a repository, presented as a score describing the repository, biased upward because documentation and scripts are simpler than the code they document.
+
+So a fourth path joins the three below, and it is checked **before** the floors, because it explains them:
+
+**0. Read the source.** The population exists, is the right population, and the scan never opened it. `summary.unread_source` names every extension present in the tree that `include_extensions` omits, with its language and file count; `unread_source_files` and `read_source_files` are required typed evidence, so a report that cannot say what it failed to read cannot carry a verified grade. Above **20% unread**, the score is withheld and the remedy points at the configuration rather than at the repository.
+
+The threshold is a judgment and the sample shows it is not a close call: everything scored was 0–8.5% unread, everything withheld was 95.6–100%. It is stated in `_verification.MAX_UNREAD_SHARE` with that evidence beside it.
+
+**Why six audit rounds missed this.** The calibration corpus is Python, TypeScript and JavaScript by selection, so the defect is invisible on every repository the tool had ever been measured against. That is an argument about method, not about this bug: a corpus chosen to fit a scale cannot also serve as the sample that tests whether the output is any good, and the two need different frames.
+
+## Three legitimate paths below the floor
+
+Withholding a score is not the end of the conversation, and a reader who lands there needs to know which of these applies to them. They serve different situations and none is a workaround for the others.
+
+**1. Widen the scan.** For a monorepo of small packages, or a diff, the population exists — the scan just did not look at it. Aggregate scope clears the floor and yields a comparable score, so the report recommends this whenever the scope was limited. This is the common case and the cheapest.
+
+**2. Take the findings without a score.** For a genuinely small repository, the population does not exist and no rescan will conjure it. That is not a failure state: **findings are never suppressed**, so a twelve-file service still gets every located, verifiable work item — a 300-line function, a duplicated block, a risk pattern — each with its line, its target and its verification command. Everything in the work order survives; only the rates are withheld. A user in this situation should be told they have a complete audit and no score, not shown an error.
+
+**3. Calibrate a scale that fits.** For an organization whose whole estate is small services, a scale fitted to 40 mature repositories is the wrong instrument, and lowering its floor would not make it the right one — it would only resume extrapolating. The honest path is a **calibration profile**: a named bundle of a reference corpus, the constant fitted to it, the population floors derived from its minima, and the band boundaries drawn from its percentiles.
+
+That requires separating two things this codebase currently calls by one word:
+
+- an **evidence profile** (`default-v1`) declares *which measurements must be resolved* before a grade is verified;
+- a **calibration profile** would declare *which corpus the scale is fitted to*, and therefore what the constant, floors and bands are.
+
+They are independent axes and conflating them would produce exactly the ambiguity the frozen `default-v1` requirement list exists to prevent. A calibration profile is a larger piece of work than this record covers and needs its own ADR before anyone builds one; what matters here is that it is the *shape* of the answer, and that it is not the same thing as a configurable floor.
+
+Two constraints on doing it, recorded now because both are easy to discover too late. It cannot precede the analyzer migration: the shipped constant was fitted to the homegrown-detector pipeline, so replacing that evidence source moves every corpus score and forces the primary calibration to be re-derived first. And its **sampling frame** is a study-design decision, not a convenience — the existing corpus means something because its frame is *mature OSS*, whereas a random sample of small public repositories would anchor the scale to "typical abandoned toy". The frame is written down before anything is cloned. The cost of the honest path — supply a corpus, re-derive the constant, publish both — is precisely what makes it honest.
+
+## Consequences
+
+- A new or tiny repository gets findings and no grade, instead of an A+ it did not earn.
+- `maintainability_estimate` and `maintainability_range` become nullable. This is a public contract change and rides with the schema-version bump it requires.
+- `evidence_status.status` gains a third value. Consumers that branch on `complete`/`incomplete` must handle it; the shared presentation helper does this in one place.
+- Partial suppression becomes normal and must render well: a mid-sized repository may measure eight aspects and withhold five, and the report has to make that legible rather than alarming.
+- CI is unaffected: `--fail-on-gate` reads hard findings, never a score, so a repository below the floor still fails on real gate breaches and passes when clean.
+- The floors are visible and arguable. Someone who thinks 139 declarations is the wrong line changes one constant and says why.
+- This interacts with [ADR 006](adr-006-analyzer-evidence.md): population insufficiency and analyzer unavailability are different causes of the same `Unknown`, and the reason string must distinguish them. "Nothing measured it" and "it was measured over three declarations" call for different responses.
+
+## Invariants
+
+1. An aspect whose denominator is below its declared floor is `Unknown`, never a number.
+2. When no aspect in a category is measurable, the category is `Unknown`; when the rollup has no measurable categories, `maintainability_estimate`, `maintainability_range` and `verified_grade` are all null and `evidence_status.status == "insufficient"`.
+3. An aspect at or above its floor is unaffected — same value as before this decision.
+4. Findings are never suppressed by insufficiency, only rates.
+5. No consumer renders a suppressed score as a number, a dash, or a zero.
+6. **A report may not carry a score for code it did not read.** Every report states which source extensions went unopened; above `MAX_UNREAD_SHARE` of the source files, the estimate, range and grade are all null and the reason names the configuration rather than the repository's size.
+7. Unread source is checked before the population floors, so a repository whose language the scan cannot read is never told it is too small.
+6. `--fail-on-gate` exit codes are unchanged by insufficiency.
+7. Every insufficiency reason names both the observed population and the floor, and is distinguishable from an analyzer-unavailability reason.
+8. Every report states its scan scope, and a scope-limited run whose population falls short recommends a whole-repository rescan rather than only withholding.
+9. `--changed-only` never reports a whole-repository grade for a diff.
+10. No floor exceeds the corresponding reference-corpus minimum, so no calibration member is unscoreable by the scale it calibrates.
+11. Population floors are not configurable; one rubric applies identically to every repository. A scale that does not fit a population is replaced by a named calibration profile, never by lowering a floor.
+12. A report that withholds a score still carries every finding and every work item, and says which of the three paths applies.

@@ -1,9 +1,27 @@
+# Maintainability audit for a pull request.
+#
+# This is the file README.md tells you to copy into your own repository.
+# It is deliberately the smallest thing that works: check out, audit the
+# diff, keep the artifacts. This repository's own pipeline lives in
+# quality-gates.yml and is not a starting point — it runs two agents, a
+# SonarQube scan and code-scanning uploads, none of which you need to
+# find out whether your pull request made the codebase harder to change.
+#
+# Copy, commit, open a pull request. Nothing else is required: with no
+# config file the audit runs on built-in defaults, and if you add a
+# `maintainability-agent.json` at your repository root it is discovered
+# and used automatically.
+
 name: Maintainability
 
 on:
   pull_request:
-  push:
-    branches: [main, master]
+
+# The audit reads the tree and writes files into the workspace. It needs
+# nothing else, and asking for nothing else means a compromised
+# dependency in this job cannot write to your repository.
+permissions:
+  contents: read
 
 jobs:
   maintainability:
@@ -11,77 +29,56 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # SonarQube Cloud needs full git history to compute new-code
-          # metrics (lines added since main, blame attribution, etc.).
-          # Shallow clone breaks the new-code gate.
+          # `changed-only` resolves a revspec against the base branch.
+          # The default fetch-depth of 1 checks out a single commit with
+          # no base to diff against, so the revspec cannot resolve.
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+
+      # This repository runs the action from the same tree so a release
+      # is not blocked on the tag this file pins. Copy-paste consumers
+      # hit the second step and pin v0.7.0.
+      - if: github.repository == 'marshallguillory86/maintainability-agent'
+        uses: ./
         with:
-          python-version: "3.12"
-      - name: Upgrade pip itself (fixes CVE-2026-6357 in pip 26.0.1)
-        run: python3 -m pip install --upgrade pip
-      - name: Install tool with dev extras
-        run: python3 -m pip install -e ".[dev]"
-      - name: Lint (ruff)
-        run: ruff check src tests
-      - name: Dependency CVE scan (pip-audit)
-        # CVE-2026-3219 against pip has no upstream fix as of 2026-05-09.
-        # When one ships, drop the --ignore-vuln. Tracked at
-        # https://github.com/pypa/pip/security/advisories
-        run: pip-audit --ignore-vuln CVE-2026-3219
-      - name: Tests + coverage
-        run: |
-          python3 -m pytest \
-            --cov=maintainability_audit \
-            --cov-report=term-missing \
-            --cov-report=xml:coverage.xml \
-            --cov-fail-under=92
-      - name: Run maintainability audit on this repo
-        run: |
-          maintainability-agent \
-            --config maintainability-agent.json \
-            --fail-on-gate \
-            --output maintainability-report.md \
-            --prompt-output maintainability-remediation-prompt.md \
-            --comment-output maintainability-pr-comment.md \
-            --sarif-output maintainability.sarif
-      - name: SonarQube Cloud scan
-        # Cross-validates the local maintainability audit against
-        # SonarQube Cloud's analysis. Reads coverage from the
-        # `coverage.xml` written by the test step above (see
-        # `sonar-project.properties` for the project key + paths).
-        # Requires `SONAR_TOKEN` in repo secrets (sonarcloud.io →
-        # My Account → Security → generate token; GitHub repo →
-        # Settings → Secrets → add).
-        # SONAR_HOST_URL must point at SonarQube Cloud; the action's
-        # default is a self-hosted server at localhost:9000.
-        #
-        # Advisory, not a gate. This project's rules are "no cloud
-        # service requirement" and "no vendor lock-in" (CONTRIBUTING.md),
-        # so an expired token or a moved SonarCloud project must not
-        # block a PR whose deterministic checks all pass. The gates that
-        # can fail this workflow are the steps above: ruff, pip-audit,
-        # tests + coverage, and the tool's own --fail-on-gate audit.
-        # A red mark here means "go look at the token", not "the code is
-        # broken" — check the step log before assuming a regression.
-        continue-on-error: true
-        env:
-          SONAR_TOKEN:    ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
-          GITHUB_TOKEN:   ${{ secrets.GITHUB_TOKEN }}
-        # v8+ runs Java 21. SonarQube Cloud dropped Java 17 support in
-        # 2026-08 and the pinned v2 action still shipped it, so the scan
-        # failed after authenticating successfully. Track the major tag
-        # so scanner-side runtime deprecations arrive as patches.
-        uses: SonarSource/sonarqube-scan-action@v8
-      - name: Upload maintainability report
+          config: ""
+          changed-only: origin/${{ github.base_ref }}...HEAD
+          fail-on-gate: "true"
+
+      - if: github.repository != 'marshallguillory86/maintainability-agent'
+        uses: marshallguillory86/maintainability-agent@v0.7.0
+        with:
+          # Empty means "discover it". A `maintainability-agent.json` at
+          # the repository root is picked up; without one the audit runs
+          # on built-in defaults. Name a path here to use something else.
+          config: ""
+
+          # Audit the diff rather than the whole repository.
+          #
+          # A pull request touching four files does not tell you what the
+          # codebase scores, and the tool refuses to pretend otherwise: on
+          # a change too small to support a rate it withholds the estimate
+          # and the grade, and names the scope as the reason (ADR 005).
+          # You get findings on what changed and no invented number.
+          #
+          # Blank this to audit the whole tree on every pull request.
+          changed-only: origin/${{ github.base_ref }}...HEAD
+
+          # Hard gates only — a missing README, an undocumented test
+          # command, a configured threshold breached. The job does not
+          # fail on a letter grade, and does not fail on a withheld
+          # estimate: withheld means the evidence was too thin to judge,
+          # which is a fact about the diff's size, not a defect in it.
+          fail-on-gate: "true"
+
+      # `always()` so a gate failure still hands back the report that
+      # explains it. Without this the run that most needs reading is the
+      # one that uploads nothing.
+      - if: always()
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: maintainability-audit-artifacts
+          name: maintainability
           path: |
             maintainability-report.md
             maintainability-remediation-prompt.md
             maintainability-pr-comment.md
-            maintainability.sarif
-            coverage.xml
+          if-no-files-found: warn

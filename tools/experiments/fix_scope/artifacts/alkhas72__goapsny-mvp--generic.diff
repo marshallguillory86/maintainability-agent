@@ -1,0 +1,226 @@
+diff --git a/src/components/AddWizard.tsx b/src/components/AddWizard.tsx
+index 7f01181..b1b2aad 100644
+--- a/src/components/AddWizard.tsx
++++ b/src/components/AddWizard.tsx
+@@ -1,10 +1,11 @@
+ import React, { useState, useEffect } from "react";
+-import type { AddDraft, Place, AccessibilityStatus, Profile } from "../types";
++import type { AddDraft, Place, Profile } from "../types";
+ import { categoriesList, api } from "../services/api";
+ import { telegram } from "../utils/telegram";
+ import { prepareFacadePhoto, FacadePhotoError } from "../utils/photo";
+ import { LeafletMap } from "./LeafletMap";
+ import { Camera, MapPin, Sparkles, AlertCircle, ArrowLeft, ArrowRight, Check } from "lucide-react";
++import { buildPlaceData, canAdvance, isRampType, type WizardStep } from "./addWizardLogic";
+ 
+ interface AddWizardProps {
+   profile: Profile;
+@@ -32,7 +33,7 @@ const initialDraft: AddDraft = {
+ };
+ 
+ export function AddWizard({ profile, theme, onSave, onCancel }: AddWizardProps) {
+-  const [step, setStep] = useState(1);
++  const [step, setStep] = useState<WizardStep>(1);
+   const [draft, setDraft] = useState<AddDraft>(initialDraft);
+   const [locating, setLocating] = useState(false);
+   const [locationError, setLocationError] = useState<string | null>(null);
+@@ -108,48 +109,26 @@ export function AddWizard({ profile, theme, onSave, onCancel }: AddWizardProps)
+   };
+ 
+   const handleNextStep = () => {
+-    if (canGoNext()) {
+-      setStep(prev => prev + 1);
++    if (canAdvance(step, draft)) {
++      setStep(prev => prev === 1 ? 2 : prev === 2 ? 3 : 4);
+       telegram.hapticSelection();
+     }
+   };
+ 
+   const handlePrevStep = () => {
+     if (step > 1) {
+-      setStep(prev => prev - 1);
++      setStep(prev => prev === 4 ? 3 : prev === 3 ? 2 : 1);
+       telegram.hapticSelection();
+     } else {
+       onCancel();
+     }
+   };
+ 
+-  const canGoNext = () => {
+-    if (step === 1) return !!draft.photoUrl && !!draft.lat;
+-    if (step === 2) return !!draft.name && !!draft.category;
+-    if (step === 3) return !!draft.status;
+-    return true;
+-  };
+-
+   const handleSave = async () => {
+     if (isSaving) return;
+     setIsSaving(true);
+     try {
+-      const placeData: Partial<Place> = {
+-        name: draft.name,
+-        category: draft.category,
+-        lat: draft.lat || 43.0033,
+-        lng: draft.lng || 41.0237,
+-        status: draft.status as AccessibilityStatus,
+-        stepsCount: draft.stepsCount ? parseInt(draft.stepsCount) : null,
+-        stepHeightCm: draft.stepHeightCm ? parseInt(draft.stepHeightCm) : null,
+-        rampType: draft.rampType,
+-        doorWidthCm: draft.doorWidthCm ? parseInt(draft.doorWidthCm) : null,
+-        entranceNotes: draft.entranceNotes,
+-        toiletExists: draft.toiletExists,
+-        toiletAccessible: draft.toiletAccessible,
+-        comment: draft.comment,
+-        source: "operator"
+-      };
++      const placeData = buildPlaceData(draft);
+ 
+       const created = await api.createPlace(placeData, draft.photoFile || undefined);
+ 
+@@ -193,7 +172,7 @@ export function AddWizard({ profile, theme, onSave, onCancel }: AddWizardProps)
+         text: step === 4 ? saveText : nextText,
+         color: btnColor,
+         textColor: "#FFFFFF",
+-        isVisible: canGoNext(),
++        isVisible: canAdvance(step, draft),
+         isActive: !isSaving
+       },
+       step === 4 ? handleSave : handleNextStep
+@@ -347,7 +326,12 @@ export function AddWizard({ profile, theme, onSave, onCancel }: AddWizardProps)
+             <select 
+               className="form-select"
+               value={draft.rampType}
+-              onChange={e => setDraft(prev => ({ ...prev, rampType: e.target.value as any }))}
++              onChange={e => {
++                const rampType = e.target.value;
++                if (isRampType(rampType)) {
++                  setDraft(prev => ({ ...prev, rampType }));
++                }
++              }}
+             >
+               <option value="none">Нет пандуса</option>
+               <option value="permanent">Стационарный пандус</option>
+@@ -481,7 +465,7 @@ export function AddWizard({ profile, theme, onSave, onCancel }: AddWizardProps)
+               className="primary-btn" 
+               style={{ flex: 1 }} 
+               onClick={handleNextStep} 
+-              disabled={!canGoNext()}
++              disabled={!canAdvance(step, draft)}
+             >
+               Далее <ArrowRight size={16} />
+             </button>
+diff --git a/src/components/addWizardLogic.test.ts b/src/components/addWizardLogic.test.ts
+new file mode 100644
+index 0000000..52ad2f8
+--- /dev/null
++++ b/src/components/addWizardLogic.test.ts
+@@ -0,0 +1,58 @@
++import { describe, expect, it } from "vitest";
++import type { AddDraft } from "../types";
++import { buildPlaceData, canAdvance, isRampType } from "./addWizardLogic";
++
++const draft: AddDraft = {
++  photoFile: null,
++  photoUrl: null,
++  name: "",
++  category: "food",
++  lat: null,
++  lng: null,
++  status: "",
++  stepsCount: "",
++  stepHeightCm: "",
++  rampType: "none",
++  doorWidthCm: "",
++  entranceNotes: "",
++  toiletExists: "unknown",
++  toiletAccessible: "unknown",
++  comment: "",
++};
++
++describe("add wizard rules", () => {
++  it("describes the requirements for each step", () => {
++    expect(canAdvance(1, draft)).toBe(false);
++    expect(canAdvance(1, { ...draft, photoUrl: "preview", lat: 43 })).toBe(true);
++    expect(canAdvance(2, draft)).toBe(false);
++    expect(canAdvance(2, { ...draft, name: "Кафе" })).toBe(true);
++    expect(canAdvance(3, draft)).toBe(false);
++    expect(canAdvance(3, { ...draft, status: "green" })).toBe(true);
++    expect(canAdvance(4, draft)).toBe(true);
++  });
++
++  it("converts form strings into the create-place payload", () => {
++    expect(buildPlaceData({
++      ...draft,
++      name: "Кафе",
++      status: "yellow",
++      stepsCount: "2",
++      stepHeightCm: "15",
++      doorWidthCm: "90",
++    })).toMatchObject({
++      name: "Кафе",
++      lat: 43.0033,
++      lng: 41.0237,
++      status: "yellow",
++      stepsCount: 2,
++      stepHeightCm: 15,
++      doorWidthCm: 90,
++      source: "operator",
++    });
++  });
++
++  it("accepts only supported ramp values", () => {
++    expect(isRampType("portable_available")).toBe(true);
++    expect(isRampType("temporary")).toBe(false);
++  });
++});
+diff --git a/src/components/addWizardLogic.ts b/src/components/addWizardLogic.ts
+new file mode 100644
+index 0000000..8d1fd38
+--- /dev/null
++++ b/src/components/addWizardLogic.ts
+@@ -0,0 +1,45 @@
++import type { AccessibilityStatus, AddDraft, Place } from "../types";
++
++export type WizardStep = 1 | 2 | 3 | 4;
++
++const DEFAULT_LOCATION = { lat: 43.0033, lng: 41.0237 } as const;
++
++export function canAdvance(step: WizardStep, draft: AddDraft): boolean {
++  switch (step) {
++    case 1:
++      return Boolean(draft.photoUrl && draft.lat);
++    case 2:
++      return Boolean(draft.name && draft.category);
++    case 3:
++      return Boolean(draft.status);
++    case 4:
++      return true;
++  }
++}
++
++export function isRampType(value: string): value is AddDraft["rampType"] {
++  return ["none", "permanent", "portable_on_request", "portable_available"].includes(value);
++}
++
++function optionalInteger(value: string): number | null {
++  return value ? Number.parseInt(value, 10) : null;
++}
++
++export function buildPlaceData(draft: AddDraft): Partial<Place> {
++  return {
++    name: draft.name,
++    category: draft.category,
++    lat: draft.lat || DEFAULT_LOCATION.lat,
++    lng: draft.lng || DEFAULT_LOCATION.lng,
++    status: draft.status as AccessibilityStatus,
++    stepsCount: optionalInteger(draft.stepsCount),
++    stepHeightCm: optionalInteger(draft.stepHeightCm),
++    rampType: draft.rampType,
++    doorWidthCm: optionalInteger(draft.doorWidthCm),
++    entranceNotes: draft.entranceNotes,
++    toiletExists: draft.toiletExists,
++    toiletAccessible: draft.toiletAccessible,
++    comment: draft.comment,
++    source: "operator",
++  };
++}

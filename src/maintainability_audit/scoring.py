@@ -34,93 +34,87 @@ name the specific thing dragging the score, not a letter.
 """
 from __future__ import annotations
 
+from math import inf
 from typing import Any
 
-from ._calibration import (
-    CALIBRATION_C,
-    CATEGORIES,
-    DIMENSION_REFERENCES,
-    DIMENSION_WEIGHTS,
-    GRADE_GATES,
-    WARN_WEIGHT,
+from ._aspects import (
+    aspect_scores,
+    evidence_aspect_scores,
+    is_untested,
+    not_applicable_aspects,
+)
+from ._calibration import CATEGORIES, GRADE_GATES
+from ._formula import (
+    CATEGORY_ASPECTS,
+    CATEGORY_WEIGHTS,
+    UNSCORED,
+    clamp_score,
+    overall_bounds,
+    overall_from_aspects,
+)
+from ._pressures import (
+    ExternalPressures,
+    dimension_pressures,
+    measured,
+    normalize,
+    normalize_production,
+    production_pressures,
+)
+from ._verification import INSUFFICIENT, verification
+from .evidence import (
+    EvidenceState,
+    NormalizedEvidence,
+    NotApplicable,
+    SummaryEvidence,
+    normalize_report_evidence,
 )
 
-__all__ = ["CATEGORIES", "score_report", "grade_from_score", "clamp_score"]
+__all__ = [
+    "CATEGORIES",
+    "aspect_scores",
+    "clamp_score",
+    "dimension_pressures",
+    "evidence_aspect_scores",
+    "grade_from_score",
+    "is_untested",
+    "normalize",
+    "normalize_production",
+    "production_pressures",
+    "score_report",
+]
 
 _BANDS = [(4.8, "A+"), (4.5, "A"), (4.0, "B"), (3.0, "C"), (2.0, "D"), (0.0, "F")]
 
 
-def clamp_score(value: float) -> float:
-    return round(max(0.0, min(5.0, value)), 1)
+def _gate_readings(summary: SummaryEvidence, pressures: dict[str, float | None]) -> dict[str, float]:
+    """Readings the A-grade ceilings are checked against.
+
+    An unmeasured reading reports ``inf`` rather than zero, so it fails
+    every ceiling. "Could not look" must never clear a gate that "looked
+    and found none" would have had to earn.
+    """
+    files = measured(summary.files_scanned)
+    decls = measured(summary.declarations_scanned)
+    gates = measured(summary.hard_gate_failures)
+    return {
+        "file_fail_rate": _gate_rate(measured(summary.file_failures), files),
+        "decl_fail_rate": _gate_rate(measured(summary.function_failures), decls),
+        "file_warn_rate": _gate_rate(measured(summary.file_warnings), files),
+        "decl_warn_rate": _gate_rate(measured(summary.function_warnings), decls),
+        "duplication": _unknown_fails(pressures["duplication"]),
+        "risk": _unknown_fails(pressures["risk"]),
+        "gates": inf if gates is None else float(gates),
+    }
 
 
-def _rate(count: float, population: float) -> float:
+def _unknown_fails(value: float | None) -> float:
+    return inf if value is None else value
+
+
+def _gate_rate(count: float | None, population: float | None) -> float:
+    if count is None or population is None:
+        return inf
     return count / population if population > 0 else 0.0
-
-
-def dimension_pressures(summary: dict[str, Any]) -> dict[str, float]:
-    """The five independently-sourced pressures, as rates.
-
-    Unlike the previous model's five categories — which were five linear
-    re-weightings of the same handful of counts — each of these is drawn
-    from a different measurement, so they can disagree with each other.
-    """
-    files = summary.get("files_scanned", 0)
-    decls = summary.get("declarations_scanned", 0)
-    return {
-        "file_size": _rate(summary.get("file_failures", 0), files)
-        + WARN_WEIGHT * _rate(summary.get("file_warnings", 0), files),
-        "declarations": _rate(summary.get("function_failures", 0), decls)
-        + WARN_WEIGHT * _rate(summary.get("function_warnings", 0), decls),
-        "duplication": _rate(summary.get("duplicate_blocks", 0), files),
-        "risk": _rate(summary.get("risk_findings", 0), files),
-        # Gates are discrete policy breaches, not a population sample, so
-        # they are scaled to sit on the same footing as a rate.
-        "gates": 0.05 * summary.get("hard_gate_failures", 0),
-    }
-
-
-def normalize_production(summary: dict[str, Any]) -> dict[str, float]:
-    """Production-only pressures, in the same normalized units."""
-    raw = production_pressures(summary)
-    return {name: value / DIMENSION_REFERENCES[name] for name, value in raw.items()}
-
-
-def production_pressures(summary: dict[str, Any]) -> dict[str, float]:
-    """The same pressures, counting production code only.
-
-    ``analyzability`` and ``testability`` ask how understandable and how
-    testable the *production* code is. Charging them for a long test body
-    inverts the incentive — extracting duplicated test setup into a
-    fixture would lower the score for improving the code. Falls back to
-    the combined counts when a summary predates the split.
-    """
-    files = summary.get("production_files_scanned", summary.get("files_scanned", 0))
-    decls = summary.get("production_declarations_scanned", summary.get("declarations_scanned", 0))
-    return {
-        "file_size": _rate(summary.get("production_file_failures", summary.get("file_failures", 0)), files)
-        + WARN_WEIGHT * _rate(summary.get("production_file_warnings", summary.get("file_warnings", 0)), files),
-        "declarations": _rate(
-            summary.get("production_function_failures", summary.get("function_failures", 0)), decls
-        )
-        + WARN_WEIGHT
-        * _rate(summary.get("production_function_warnings", summary.get("function_warnings", 0)), decls),
-        "gates": 0.05 * summary.get("production_hard_gate_failures", summary.get("hard_gate_failures", 0)),
-    }
-
-
-def _gate_readings(summary: dict[str, Any], pressures: dict[str, float]) -> dict[str, float]:
-    files = summary.get("files_scanned", 0)
-    decls = summary.get("declarations_scanned", 0)
-    return {
-        "file_fail_rate": _rate(summary.get("file_failures", 0), files),
-        "decl_fail_rate": _rate(summary.get("function_failures", 0), decls),
-        "file_warn_rate": _rate(summary.get("file_warnings", 0), files),
-        "decl_warn_rate": _rate(summary.get("function_warnings", 0), decls),
-        "duplication": pressures["duplication"],
-        "risk": pressures["risk"],
-        "gates": float(summary.get("hard_gate_failures", 0)),
-    }
 
 
 def grade_from_score(score: float) -> str:
@@ -166,70 +160,282 @@ def grade_for(score: float, readings: dict[str, float]) -> tuple[str, list[str]]
     return "B", blockers
 
 
-def score_report(report: dict[str, Any]) -> dict[str, Any]:
-    summary = report["summary"]
+def _evidence_rules(
+    grade: str,
+    blockers: list[str],
+    aspects: dict[str, float | None],
+    untested: bool | None,
+    ownership_evidence: EvidenceState,
+) -> tuple[str, list[str]]:
+    """The two rules that keep A-grades honest about evidence.
+
+    No test evidence demotes, stated even when the rubric already landed
+    below A on its own — "why is my grade capped" deserves the answer
+    regardless of which arithmetic delivered the cap. And an unknown is
+    not clean: a shallow clone hides coupling, hotspots and ownership,
+    so unmeasured aspects withhold the top grades rather than letting
+    "nothing wrong in what could be seen" pass for "nothing is wrong
+    anywhere". (CI note: actions/checkout defaults to depth 1; use
+    fetch-depth: 0 for the full grade.)
+
+    "Couldn't look" blocks; "looked and there was nothing to measure"
+    does not — knowledge_concentration is None on a young repo whose log
+    is fully readable but where no file has three commits yet, and that
+    None carries no penalty.
+    """
+    if untested:
+        blockers = [*blockers, "no test evidence found: A-grades require it"]
+        if grade in GRADE_GATES:
+            grade = "B"
+    missing = sorted(name for name, value in aspects.items() if value is None)
+    if isinstance(ownership_evidence, NotApplicable):
+        missing = [name for name in missing if name != "knowledge_concentration"]
+    if missing:
+        # Stated whatever the grade, not only when it is being demoted
+        # from an A. Grading on the evidence floor can push a repo well
+        # below A on missing evidence alone, and a demotion nobody
+        # explains is the failure mode this whole blocker list exists to
+        # prevent.
+        blockers = [*blockers, f"unmeasured aspects ({', '.join(missing)}): A-grades require full evidence"]
+        if grade in GRADE_GATES:
+            grade = "B"
+    return grade, blockers
+
+
+def _grade_on_the_floor(
+    evidence: NormalizedEvidence,
+    pressures: dict[str, float | None],
+    aspects: dict[str, float | None],
+    untested: bool | None,
+    interval: tuple[float, float, float],
+) -> tuple[str, list[str]]:
+    """Band the grade from the evidence floor, and say so when it bites.
+
+    The point estimate prices unknowns at the corpus anchor, so a repo
+    whose hidden evidence is worse than typical is flattered by hiding
+    it — an audit demonstrated 3.9/C with the history visible against
+    4.5/B with the same history withheld. Printing the interval made
+    that visible to a careful reader while every machine consumer (CI
+    gate, badge, ranking, API) kept reading the flattered field.
+    Grading the floor makes concealment monotonically unprofitable:
+    hiding an aspect can only widen the interval downward, so it can
+    never raise the grade. Supply the evidence and the floor rises to
+    meet the point estimate.
+    """
+    overall, low, high = interval
+    grade, blockers = grade_for(low, _gate_readings(evidence.summary, pressures))
+    if low < overall:
+        blockers = [
+            *blockers,
+            f"graded on the evidence floor {low} (point estimate {overall}, ceiling {high}): "
+            "unmeasured aspects price at 0 for the grade",
+        ]
+    return _evidence_rules(
+        grade,
+        blockers,
+        aspects,
+        untested,
+        evidence.history.single_author_files,
+    )
+
+
+def score_report(
+    report: dict[str, Any], external: ExternalPressures | None = None
+) -> dict[str, Any]:
+    """Aspects -> categories -> overall, by the rubric in ``_formula``.
+
+    Every aspect the tool can measure gets a score; every aspect it
+    cannot gets None in the report, prices at the corpus anchor (4.0)
+    in the numeric rollup, and blocks the A-grades; every aspect of
+    maintainability it cannot measure *at all* is named in
+    ``rubric.unscored`` with the reason — absence is a statement here,
+    never an omission. The calibration constant is fitted so the corpus
+    median still rolls up to 4.0 through this exact pipeline.
+
+    The untested cap lands on the categories BEFORE rounding, and the
+    overall is computed from the categories exactly as displayed — two
+    audits caught two versions of the same lie, an overall that was not
+    the mean of the numbers printed beside it.
+    """
+    return score_evidence(normalize_report_evidence(report), external)
+
+
+def score_evidence(
+    evidence: NormalizedEvidence,
+    external: ExternalPressures | None = None,
+) -> dict[str, Any]:
+    """Score an already-normalized model — the seam validation ends at.
+
+    ``score_report`` is validation plus this. Splitting them lets the
+    stage 6 property suite vary evidence states directly and score them
+    through the *production* pipeline, rather than round-tripping
+    hand-built dictionaries and hoping they reconstruct the states it
+    means to test. There is still exactly one scorer; this is where it
+    begins.
+    """
+    summary = evidence.summary
     pressures = dimension_pressures(summary)
     normalized = normalize(pressures)
-    overall = _curve(_weighted_mean(normalized))
-    readings = _gate_readings(summary, pressures)
-    grade, blockers = grade_for(overall, readings)
-    worst = sorted(normalized.items(), key=lambda item: -item[1])
+    aspects = aspect_scores(evidence, normalized)
+    not_applicable = not_applicable_aspects(evidence)
+    untested = is_untested(summary)
+    overall, rounded_categories = overall_from_aspects(
+        aspects,
+        untested=untested,
+        not_applicable=not_applicable,
+    )
+    low, high = overall_bounds(
+        aspects,
+        untested=untested,
+        not_applicable=not_applicable,
+    )
+    # A second, independent measurement of the same dimensions widens the
+    # interval rather than being averaged into the point estimate (ADR
+    # 006 §4). Where the built-in detectors and the external analyzers
+    # disagree, that disagreement is real uncertainty about the code, and
+    # hiding it behind a mean would lend the estimate a precision neither
+    # source earned.
+    #
+    # The point estimate stays on the built-in path, which is the one the
+    # scale is calibrated against. Swapping the sources is a
+    # recalibration, not an interval change.
+    low, high = _widen_for_disagreement(
+        evidence, external, aspects, untested, not_applicable, (low, high)
+    )
+
+    # The grade is banded from the *floor*, not the point estimate. The
+    # point estimate prices unknowns at the corpus anchor, so a repo
+    # whose hidden evidence is worse than typical is flattered by hiding
+    # it — an audit demonstrated 3.9/C with the history visible against
+    # 4.5/B with the same history withheld. Printing the interval made
+    # that visible to a careful reader and left every machine consumer
+    # (CI gate, badge, ranking) reading the flattered field. Grading the
+    # floor makes concealment monotonically unprofitable: hiding an
+    # aspect can only widen the interval downward, so it can never raise
+    # the grade. Supply the evidence and the floor rises to meet the
+    # point estimate.
+    grade, blockers = _grade_on_the_floor(
+        evidence, pressures, aspects, untested, (overall, low, high)
+    )
+    measurable = {name: value for name, value in normalized.items() if value is not None}
+    worst = sorted(measurable.items(), key=lambda item: -item[1])
+    return _score_document(
+        aspects, rounded_categories, overall, (low, high), grade, blockers, normalized, worst,
+        verification(evidence, grade),
+    )
+
+
+def _widen_for_disagreement(
+    evidence: NormalizedEvidence,
+    external: ExternalPressures | None,
+    aspects: dict[str, float | None],
+    untested: bool | None,
+    not_applicable: frozenset[str] | None,
+    bounds: tuple[float, float],
+) -> tuple[float, float]:
+    """Stretch the interval to contain what a second source would have scored.
+
+    Only dimensions the analyzers actually measured are substituted; the
+    rest keep their built-in value, so the alternative rollup differs in
+    exactly the places the two sources both spoke to.
+
+    A no-op when nothing external was measured, which keeps every
+    existing report byte-identical unless `--analyzers` ran.
+    """
+    low, high = bounds
+    if not external or not external.measured_anything():
+        return low, high
+
+    # Each population substituted from the reading taken over that same
+    # population. Until the bridge could tell test code from production
+    # code, one all-code number went into both slots, which charged
+    # production for the state of the test suite; on flask two thirds of
+    # the declarations the analyzers see are tests.
+    substituted = dict(dimension_pressures(evidence.summary))
+    for dimension, value in external.all_code.items():
+        if value is not None and dimension in substituted:
+            substituted[dimension] = value
+
+    production = dict(normalize_production(evidence.summary))
+    for dimension, value in external.production.items():
+        if value is not None and dimension in production:
+            production[dimension] = normalize({dimension: value})[dimension]
+
+    alternative, _ = overall_from_aspects(
+        aspect_scores(evidence, normalize(substituted), production),
+        untested=untested,
+        not_applicable=not_applicable,
+    )
+    return min(low, alternative), max(high, alternative)
+
+
+def _score_document(
+    aspects: dict[str, float | None],
+    rounded_categories: dict[str, float],
+    overall: float,
+    interval: tuple[float, float],
+    grade: str,
+    blockers: list[str],
+    normalized: dict[str, float | None],
+    worst: list[tuple[str, float]],
+    verified: dict[str, Any],
+) -> dict[str, Any]:
+    """The score block exactly as it ships, assembled in one place."""
+    low, high = interval
+    # A run the scale cannot speak to carries no number at all. Not a
+    # zero, not a dash, not a pessimistic floor -- ADR 001 §1 already
+    # rejected reporting unknown quality as bad quality, and ADR 005
+    # extends that to quality measured over the wrong kind of population.
+    # The aspects and every finding stay: they are observations, and only
+    # the rolled-up judgment is withheld.
+    withheld = verified["evidence_status"]["status"] == INSUFFICIENT
     return {
         "standard": "ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based",
-        "overall": overall,
-        "grade": grade,
-        "categories": _iso_categories(normalized, normalize_production(summary)),
+        "maintainability_estimate": None if withheld else overall,
+        # Evidence sufficiency, separate from quality (ADR 001 stage 5).
+        # `grade` keeps its existing evidence-floor meaning for the
+        # compatibility period; `verified_grade` is null unless the
+        # profile's required evidence is complete. Consumers migrate in
+        # stage 7, not here.
+        **verified,
+        # The exact numbers the overall was computed from — the identity
+        # "overall == weighted mean of these" is checkable on the report.
+        "categories": rounded_categories,
+        # The interval the overall lives in once unmeasured aspects are
+        # priced at their extremes. Collapses to the overall itself when
+        # everything was measured. This is the honest companion to
+        # anchor imputation: no single imputed value can stop hiding
+        # worse-than-anchor evidence from flattering the point estimate,
+        # so the report prints the width of what is not known instead of
+        # pretending the point is precise.
+        "maintainability_range": None if withheld else [low, high],
+        # The full aspect layer: every score the rubric read, None where
+        # the evidence was unavailable rather than clean.
+        "aspects": {
+            name: (clamp_score(value) if value is not None else None)
+            for name, value in aspects.items()
+        },
+        # The judgment layer, in the open: which aspects feed which
+        # category at what weight, and what is not scored at all.
+        "rubric": {
+            "category_aspects": CATEGORY_ASPECTS,
+            "category_weights": CATEGORY_WEIGHTS,
+            "unscored": UNSCORED,
+        },
         # Multiples of the mature-OSS median: 1.0 is typical real code.
-        "dimensions": {name: round(value, 2) for name, value in normalized.items()},
+        "dimensions": {
+            name: (None if value is None else round(value, 2)) for name, value in normalized.items()
+        },
         # Worst-first, so the remediation prompt can lead with the
         # dimension actually costing the most rather than a letter.
         "worst_dimension": worst[0][0] if worst and worst[0][1] > 1.0 else None,
-        "grade_blockers": blockers,
+        # Only ever explains a grade that was issued. When verification is
+        # withheld there is no grade to cap, and the reasons live in
+        # evidence_status.reasons instead — mixing the two is what let an
+        # evidence gap read as a quality demotion.
+        "verified_grade_blockers": blockers if verified.get("verified_grade") else [],
         "reference": {
             "unit": "multiple of the median mature-OSS repo (1.0 = typical real code)",
             "note": "Calibrated so a repo at the OSS median on every dimension scores 4.0.",
         },
-    }
-
-
-def normalize(pressures: dict[str, float]) -> dict[str, float]:
-    """Express each pressure as a multiple of what real code carries.
-
-    1.0 means "typical of the mature OSS corpus". 2.0 means twice the
-    trouble a well-run real codebase shows on that dimension. This is
-    the unit the report should speak in, because "duplication 3.1x" is
-    actionable in a way that "duplication 0.6346" is not.
-    """
-    return {name: value / DIMENSION_REFERENCES[name] for name, value in pressures.items()}
-
-
-def _weighted_mean(normalized: dict[str, float]) -> float:
-    total = sum(DIMENSION_WEIGHTS[name] * value for name, value in normalized.items())
-    return total / sum(DIMENSION_WEIGHTS[name] for name in normalized)
-
-
-def _curve(normalized_pressure: float) -> float:
-    return clamp_score(5 * CALIBRATION_C / (normalized_pressure + CALIBRATION_C))
-
-
-def _iso_categories(pressures: dict[str, float], prod: dict[str, float]) -> dict[str, float]:
-    """ISO/IEC 25010 view of the same pressures.
-
-    Retained because the category model is what the docs and existing
-    baselines speak. Each category is now dominated by a *different*
-    measurement rather than being one number re-weighted five times, so
-    two categories can genuinely disagree — but they are still views onto
-    five inputs, not five independent assessments, and the report says so.
-
-    ``analyzability`` and ``testability`` read the production-only
-    pressures: they describe the code under test, not the tests.
-    """
-    file_size = pressures["file_size"]
-    dup, risk, gates = pressures["duplication"], pressures["risk"], pressures["gates"]
-    return {
-        "modularity": _curve(file_size + dup),
-        "reusability": _curve(dup * 2 + file_size * 0.3),
-        "analyzability": _curve(prod["declarations"] + risk),
-        "modifiability": _curve(gates + dup + risk + file_size * 0.4),
-        "testability": _curve(prod["declarations"] * 0.8 + prod["gates"]),
     }

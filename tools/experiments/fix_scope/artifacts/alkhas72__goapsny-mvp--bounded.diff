@@ -1,0 +1,133 @@
+diff --git a/src/services/submit-place.test.ts b/src/services/submit-place.test.ts
+index c9e3147..62db2e0 100644
+--- a/src/services/submit-place.test.ts
++++ b/src/services/submit-place.test.ts
+@@ -139,12 +139,22 @@ describe('classifySubmitError', () => {
+   });
+ 
+   it('falls back to SQLSTATE kind on message drift, then unknown', () => {
+-    // Unmapped code -> unknown regardless of message.
+-    expect(classifySubmitError({ code: '42P01', message: 'syntax error' }).kind).toBe('unknown');
+-    // Mapped SQLSTATE with drifted message -> still classified by the code
+-    // (defensive against RPC message wording changes).
+-    expect(classifySubmitError({ code: '23505', message: 'something else unique' }).kind).toBe('already_submitted');
+-    expect(classifySubmitError({ code: '22P02', message: 'wat' }).kind).toBe('coordinates_invalid');
++    const cases = [
++      { code: '42501', kind: 'role_required' },
++      { code: '23502', kind: 'name_required' },
++      { code: '23503', kind: 'category_invalid' },
++      { code: '23505', kind: 'already_submitted' },
++      { code: '22P02', kind: 'coordinates_invalid' },
++      { code: '42P01', kind: 'unknown' },
++    ];
++    for (const { code, kind } of cases) {
++      const raw = { code, message: `drifted message for ${code}` };
++      const err = classifySubmitError(raw);
++      expect(err.kind, code).toBe(kind);
++      expect(err.message).toBe(raw.message);
++      expect(err.code).toBe(code);
++      expect(err.cause).toBe(raw);
++    }
+     // No shape at all -> unknown with null code.
+     expect(classifySubmitError(null).kind).toBe('unknown');
+     expect(classifySubmitError('boom').kind).toBe('unknown');
+diff --git a/src/services/submit-place.ts b/src/services/submit-place.ts
+index e3d759d..898ba52 100644
+--- a/src/services/submit-place.ts
++++ b/src/services/submit-place.ts
+@@ -135,6 +135,33 @@ export function isPlaceId(value: unknown): value is string {
+ 
+ type RpcErrorLike = { code?: unknown; message?: unknown } | null | undefined;
+ 
++type SubmitErrorRule = readonly [kind: SubmitPlaceErrorKind, defaultMessage: string];
++type SubmitMessageRule = readonly [fragment: string, kind: SubmitPlaceErrorKind, defaultMessage: string];
++
++const SUBMIT_MESSAGE_RULES: readonly SubmitMessageRule[] = [
++  ['authentication required', 'auth_required', 'Authentication required'],
++  ['profile not found', 'profile_required', 'Profile not found'],
++  ['caller must be public_user', 'role_required', 'Caller must be public_user'],
++  ['name is required', 'name_required', 'Name is required'],
++  ['inactive or unknown category', 'category_invalid', 'Inactive or unknown category'],
++  ['owned facade object not found', 'facade_object_missing', 'Owned facade object not found'],
++  ['public submission already used', 'already_submitted', 'Public submission already used'],
++  ['place_id already used', 'place_id_reused', 'place_id already used'],
++  ['facade already indexed', 'facade_reused', 'facade already indexed'],
++  ['invalid coordinates', 'coordinates_invalid', 'Invalid coordinates'],
++  ['storage_path must equal', 'storage_path_invalid', 'storage_path must equal {place_id}/facade.jpg'],
++];
++
++const SUBMIT_SQLSTATE_RULES: Readonly<Record<string, SubmitErrorRule>> = {
++  '42501': ['role_required', 'Authorization error'],
++  '23502': ['name_required', 'Name is required'],
++  '23503': ['category_invalid', 'Category or referenced object missing'],
++  '23505': ['already_submitted', 'Submission already used'],
++  '22P02': ['coordinates_invalid', 'Invalid value'],
++};
++
++const UNKNOWN_SUBMIT_ERROR: SubmitErrorRule = ['unknown', 'Submission failed'];
++
+ /** RPC must return the inserted `places` row; empty/mismatched data is a failed submit. */
+ export function parseRpcPlaceRow(data: unknown, expectedPlaceId: string): PlaceRow | null {
+   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+@@ -160,55 +187,12 @@ export function classifySubmitError(raw: unknown): SubmitPlaceError {
+   const message = typeof err?.message === 'string' ? err.message : '';
+ 
+   // Prefer the deterministic server message; fall back to SQLSTATE.
+-  if (message.includes('authentication required')) {
+-    return new SubmitPlaceError('auth_required', message || 'Authentication required', code, raw);
+-  }
+-  if (message.includes('profile not found')) {
+-    return new SubmitPlaceError('profile_required', message || 'Profile not found', code, raw);
+-  }
+-  if (message.includes('caller must be public_user')) {
+-    return new SubmitPlaceError('role_required', message || 'Caller must be public_user', code, raw);
+-  }
+-  if (message.includes('name is required')) {
+-    return new SubmitPlaceError('name_required', message || 'Name is required', code, raw);
+-  }
+-  if (message.includes('inactive or unknown category')) {
+-    return new SubmitPlaceError('category_invalid', message || 'Inactive or unknown category', code, raw);
+-  }
+-  if (message.includes('owned facade object not found')) {
+-    return new SubmitPlaceError('facade_object_missing', message || 'Owned facade object not found', code, raw);
+-  }
+-  if (message.includes('public submission already used')) {
+-    return new SubmitPlaceError('already_submitted', message || 'Public submission already used', code, raw);
+-  }
+-  if (message.includes('place_id already used')) {
+-    return new SubmitPlaceError('place_id_reused', message || 'place_id already used', code, raw);
+-  }
+-  if (message.includes('facade already indexed')) {
+-    return new SubmitPlaceError('facade_reused', message || 'facade already indexed', code, raw);
+-  }
+-  if (message.includes('invalid coordinates')) {
+-    return new SubmitPlaceError('coordinates_invalid', message || 'Invalid coordinates', code, raw);
+-  }
+-  if (message.includes('storage_path must equal')) {
+-    return new SubmitPlaceError('storage_path_invalid', message || 'storage_path must equal {place_id}/facade.jpg', code, raw);
+-  }
+-
+-  // SQLSTATE fallback when the message is absent or drifted.
+-  switch (code) {
+-    case '42501':
+-      return new SubmitPlaceError('role_required', message || 'Authorization error', code, raw);
+-    case '23502':
+-      return new SubmitPlaceError('name_required', message || 'Name is required', code, raw);
+-    case '23503':
+-      return new SubmitPlaceError('category_invalid', message || 'Category or referenced object missing', code, raw);
+-    case '23505':
+-      return new SubmitPlaceError('already_submitted', message || 'Submission already used', code, raw);
+-    case '22P02':
+-      return new SubmitPlaceError('coordinates_invalid', message || 'Invalid value', code, raw);
+-    default:
+-      return new SubmitPlaceError('unknown', message || 'Submission failed', code, raw);
+-  }
++  const messageRule = SUBMIT_MESSAGE_RULES.find(([fragment]) => message.includes(fragment));
++  const rule: SubmitErrorRule = messageRule
++    ? [messageRule[1], messageRule[2]]
++    : (SUBMIT_SQLSTATE_RULES[code ?? ''] ?? UNKNOWN_SUBMIT_ERROR);
++  const [kind, defaultMessage] = rule;
++  return new SubmitPlaceError(kind, message || defaultMessage, code, raw);
+ }
+ 
+ /**

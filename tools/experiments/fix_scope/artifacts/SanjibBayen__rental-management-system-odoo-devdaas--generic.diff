@@ -1,0 +1,282 @@
+diff --git a/services/server/src/controllers/user.controller.ts b/services/server/src/controllers/user.controller.ts
+index b228722..9e26c14 100644
+--- a/services/server/src/controllers/user.controller.ts
++++ b/services/server/src/controllers/user.controller.ts
+@@ -1,7 +1,7 @@
+ 
+ import { Request, Response } from "express";
+ import bcrypt from "bcryptjs";
+-import { query } from "../config/database.js";
++import { query, queryOne } from "../config/database.js";
+ 
+ type AuthenticatedRequest = Request & {
+   user?: {
+@@ -11,6 +11,13 @@ type AuthenticatedRequest = Request & {
+   };
+ };
+ 
++type UserRecord = Record<string, unknown>;
++
++const isPostgresError = (error: unknown): error is { code: string } =>
++  typeof error === "object" &&
++  error !== null &&
++  "code" in error &&
++  typeof error.code === "string";
+ 
+ export class UserController {
+   async getProfile(
+@@ -27,7 +34,7 @@ export class UserController {
+         });
+       }
+ 
+-      const result: any = await query(
++      const user = await queryOne<UserRecord>(
+         `
+         SELECT id,organization_id,email,full_name,phone,role,email_verified,is_active,created_at,updated_at FROM user_profiles
+         WHERE id = $1
+@@ -36,7 +43,7 @@ export class UserController {
+         [userId]
+       );
+ 
+-      if (result.rows.length === 0) {
++      if (!user) {
+         return res.status(404).json({
+           success: false,
+           message: "User profile not found",
+@@ -45,7 +52,7 @@ export class UserController {
+ 
+       return res.status(200).json({
+         success: true,
+-        data: result.rows[0],
++        data: user,
+       });
+     } catch (error) {
+       console.error("Get profile error:", error);
+@@ -81,7 +88,7 @@ export class UserController {
+         });
+       }
+ 
+-      const result: any = await query(
++      const user = await queryOne<UserRecord>(
+         `
+         UPDATE user_profiles
+         SET
+@@ -108,7 +115,7 @@ export class UserController {
+         ]
+       );
+ 
+-      if (result.rows.length === 0) {
++      if (!user) {
+         return res.status(404).json({
+           success: false,
+           message: "User profile not found",
+@@ -118,7 +125,7 @@ export class UserController {
+       return res.status(200).json({
+         success: true,
+         message: "Profile updated successfully",
+-        data: result.rows[0],
++        data: user,
+       });
+     } catch (error) {
+       console.error("Update profile error:", error);
+@@ -156,7 +163,7 @@ export class UserController {
+ 
+       const normalizedEmail = email.trim().toLowerCase();
+ 
+-      const existingUser = (await query(
++      const existingUser = await queryOne<{ id: string }>(
+         `
+         SELECT id
+         FROM user_profiles
+@@ -165,16 +172,16 @@ export class UserController {
+         LIMIT 1
+         `,
+         [normalizedEmail, userId]
+-      )) as { rows?: Array<Record<string, unknown>> };
++      );
+ 
+-      if ((existingUser.rows?.length ?? 0) > 0) {
++      if (existingUser) {
+         return res.status(409).json({
+           success: false,
+           message: "Email address is already in use",
+         });
+       }
+ 
+-      const result = (await query(
++      const user = await queryOne<UserRecord>(
+         `
+         UPDATE user_profiles
+         SET
+@@ -195,9 +202,9 @@ export class UserController {
+           updated_at
+         `,
+         [normalizedEmail, userId]
+-      )) as { rows?: Array<Record<string, unknown>> };
++      );
+ 
+-      if ((result.rows?.length ?? 0) === 0) {
++      if (!user) {
+         return res.status(404).json({
+           success: false,
+           message: "User profile not found",
+@@ -207,12 +214,12 @@ export class UserController {
+       return res.status(200).json({
+         success: true,
+         message: "Email updated. Please verify your new email address.",
+-        data: result.rows?.[0],
++        data: user,
+       });
+-    } catch (error: any) {
++    } catch (error: unknown) {
+       console.error("Update email error:", error);
+ 
+-      if (error.code === "23505") {
++      if (isPostgresError(error) && error.code === "23505") {
+         return res.status(409).json({
+           success: false,
+           message: "Email address is already in use",
+@@ -257,16 +264,16 @@ export class UserController {
+         });
+       }
+ 
+-      const userResult = (await query(
++      const user = await queryOne<{ password_hash: string }>(
+         `SELECT password_hash
+         FROM user_profiles
+         WHERE id = $1
+         LIMIT 1
+         `,
+         [userId]
+-      )) as unknown as { rows: Array<{ password_hash: string }> };
++      );
+ 
+-      if (userResult.rows.length === 0) {
++      if (!user) {
+         return res.status(404).json({
+           success: false,
+           message: "User not found",
+@@ -275,7 +282,7 @@ export class UserController {
+ 
+       const passwordMatch = await bcrypt.compare(
+         currentPassword,
+-        userResult.rows[0].password_hash
++        user.password_hash
+       );
+ 
+       if (!passwordMatch) {
+@@ -342,7 +349,7 @@ export class UserController {
+         });
+       }
+ 
+-      const result = (await query(
++      const user = await queryOne<UserRecord>(
+         `
+         UPDATE user_profiles
+         SET
+@@ -362,9 +369,9 @@ export class UserController {
+           updated_at
+         `,
+         [is_active, userId]
+-      )) as unknown as { rows: Array<any> };
++      );
+ 
+-      if (result.rows.length === 0) {
++      if (!user) {
+         return res.status(404).json({
+           success: false,
+           message: "User not found",
+@@ -376,7 +383,7 @@ export class UserController {
+         message: is_active
+           ? "User activated successfully"
+           : "User deactivated successfully",
+-        data: result.rows[0],
++        data: user,
+       });
+     } catch (error) {
+       console.error("Update user status error:", error);
+@@ -412,7 +419,7 @@ export class UserController {
+ 
+       const organizationId = adminUser.organization_id;
+ 
+-      const result = await query(
++      const users = await query<UserRecord>(
+         `
+         SELECT
+           id,
+@@ -434,12 +441,12 @@ export class UserController {
+         ORDER BY created_at DESC
+         `,
+         [organizationId ?? null]
+-      ) as unknown as { rows: any[] };
++      );
+ 
+       return res.status(200).json({
+         success: true,
+-        count: result.rows.length,
+-        data: result.rows,
++        count: users.length,
++        data: users,
+       });
+     } catch (error) {
+       console.error("Get users error:", error);
+@@ -477,7 +484,7 @@ export class UserController {
+ 
+       const { id } = req.params;
+ 
+-      const result = (await query(
++      const user = await queryOne<UserRecord>(
+         `
+         SELECT
+           id,
+@@ -495,9 +502,9 @@ export class UserController {
+         LIMIT 1
+         `,
+         [id]
+-      )) as unknown as { rows: Array<Record<string, unknown>> };
++      );
+ 
+-      if (result.rows.length === 0) {
++      if (!user) {
+         return res.status(404).json({
+           success: false,
+           message: "User not found",
+@@ -506,7 +513,7 @@ export class UserController {
+ 
+       return res.status(200).json({
+         success: true,
+-        data: result.rows[0],
++        data: user,
+       });
+     } catch (error) {
+       console.error("Get user error:", error);
+@@ -533,7 +540,7 @@ export class UserController {
+         });
+       }
+ 
+-      const result = (await query(
++      const user = await queryOne<UserRecord>(
+         `
+         UPDATE user_profiles
+         SET
+@@ -543,9 +550,9 @@ export class UserController {
+         RETURNING id, email, is_active
+         `,
+         [userId]
+-      )) as unknown as { rows: Array<Record<string, unknown>> };
++      );
+ 
+-      if (result.rows.length === 0) {
++      if (!user) {
+         return res.status(404).json({
+           success: false,
+           message: "User not found",
+@@ -555,7 +562,7 @@ export class UserController {
+       return res.status(200).json({
+         success: true,
+         message: "Account deactivated successfully",
+-        data: result.rows[0],
++        data: user,
+       });
+     } catch (error) {
+       console.error("Deactivate account error:", error);

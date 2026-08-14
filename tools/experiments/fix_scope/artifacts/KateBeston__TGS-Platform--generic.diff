@@ -1,0 +1,260 @@
+diff --git a/app/api/apply/route.ts b/app/api/apply/route.ts
+index ada6bc0..7692545 100644
+--- a/app/api/apply/route.ts
++++ b/app/api/apply/route.ts
+@@ -1,4 +1,5 @@
+ import { NextRequest, NextResponse } from 'next/server';
++import { formEmail, formText, isValidEmail } from '@/lib/form-values';
+ import { createClient } from '@/lib/supabase/server';
+ 
+ /* Venue applications.
+@@ -31,15 +32,15 @@ export async function POST(req: NextRequest) {
+   catch { return NextResponse.json({ error: 'Malformed request.' }, { status: 400 }); }
+ 
+   // Filled means a script. Answered with a success so it learns nothing.
+-  if (String(body?.website ?? '').trim()) {
++  if (formText(body?.website)) {
+     return NextResponse.json({ ok: true, reference: null });
+   }
+ 
+-  const email = String(body?.email ?? '').trim().toLowerCase();
+-  const firstName = String(body?.firstName ?? '').trim();
+-  const venueName = String(body?.venueName ?? '').trim();
++  const email = formEmail(body?.email);
++  const firstName = formText(body?.firstName);
++  const venueName = formText(body?.venueName);
+ 
+-  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
++  if (!isValidEmail(email)) {
+     return NextResponse.json({ error: 'That does not look like an email address.' },
+       { status: 400 });
+   }
+@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
+     return NextResponse.json({ error: 'All five agreements have to be accepted.' },
+       { status: 400 });
+   }
+-  if (!String(body?.signedName ?? '').trim()) {
++  if (!formText(body?.signedName)) {
+     return NextResponse.json({ error: 'A signature — your full name.' }, { status: 400 });
+   }
+ 
+@@ -111,7 +112,7 @@ export async function POST(req: NextRequest) {
+       message: body.message || null,
+       heard_about: body.heardAbout || null,
+ 
+-      signed_name: String(body.signedName).trim(),
++      signed_name: formText(body.signedName),
+       signed_on: body.signedOn || new Date().toISOString().slice(0, 10),
+       confirmed_accurate: !!body.confirmedAccurate,
+       wants_journal: !!body.wantsJournal,
+@@ -129,7 +130,7 @@ export async function POST(req: NextRequest) {
+     await supabase.rpc('record_application_agreements', {
+       p_application_id: app.id,
+       p_slugs: AGREEMENTS,
+-      p_name: String(body.signedName).trim(),
++      p_name: formText(body.signedName),
+       p_email: email,
+       p_ip: ip,
+     });
+diff --git a/app/api/contact/route.ts b/app/api/contact/route.ts
+index a5471c9..8bf8da9 100644
+--- a/app/api/contact/route.ts
++++ b/app/api/contact/route.ts
+@@ -1,4 +1,5 @@
+ import { NextRequest, NextResponse } from 'next/server';
++import { formEmail, formText, isValidEmail, optionalFormText } from '@/lib/form-values';
+ import { createClient } from '@/lib/supabase/server';
+ 
+ /* Contact messages.
+@@ -26,15 +27,15 @@ export async function POST(req: NextRequest) {
+   try { body = await req.json(); }
+   catch { return NextResponse.json({ error: 'Malformed request.' }, { status: 400 }); }
+ 
+-  if (String(body?.website ?? '').trim()) {
++  if (formText(body?.website)) {
+     return NextResponse.json({ ok: true });
+   }
+ 
+-  const email = String(body?.email ?? '').trim().toLowerCase();
+-  const firstName = String(body?.firstName ?? '').trim();
+-  const message = String(body?.message ?? '').trim();
++  const email = formEmail(body?.email);
++  const firstName = formText(body?.firstName);
++  const message = formText(body?.message);
+ 
+-  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
++  if (!isValidEmail(email)) {
+     return NextResponse.json({ error: 'That does not look like an email address.' },
+       { status: 400 });
+   }
+@@ -54,9 +55,9 @@ export async function POST(req: NextRequest) {
+       source: 'Contact form',
+ 
+       first_name: firstName,
+-      surname: String(body?.surname ?? '').trim() || null,
++      surname: optionalFormText(body?.surname),
+       email,
+-      phone: String(body?.phone ?? '').trim() || null,
++      phone: optionalFormText(body?.phone),
+ 
+       notes: [body?.subject && `Subject: ${body.subject}`, message]
+         .filter(Boolean).join('\n\n'),
+diff --git a/app/api/enquiry/route.ts b/app/api/enquiry/route.ts
+index 0ba5265..64f3fa8 100644
+--- a/app/api/enquiry/route.ts
++++ b/app/api/enquiry/route.ts
+@@ -1,4 +1,11 @@
+ import { NextRequest, NextResponse } from 'next/server';
++import {
++  formEmail,
++  formText,
++  isValidEmail,
++  optionalFormText,
++  stayLength,
++} from '@/lib/form-values';
+ import { createClient } from '@/lib/supabase/server';
+ 
+ /* Venue enquiries.
+@@ -19,14 +26,14 @@ export async function POST(req: NextRequest) {
+ 
+   // Filled means a script. Answered with a success so it learns nothing
+   // from the difference.
+-  if (String(body?.website ?? '').trim()) {
++  if (formText(body?.website)) {
+     return NextResponse.json({ ok: true });
+   }
+ 
+-  const email = String(body?.email ?? '').trim().toLowerCase();
+-  const firstName = String(body?.firstName ?? '').trim();
++  const email = formEmail(body?.email);
++  const firstName = formText(body?.firstName);
+ 
+-  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
++  if (!isValidEmail(email)) {
+     return NextResponse.json({ error: 'That does not look like an email address.' },
+       { status: 400 });
+   }
+@@ -35,10 +42,7 @@ export async function POST(req: NextRequest) {
+       { status: 400 });
+   }
+ 
+-  const nights = body?.dateFrom && body?.dateTo
+-    ? Math.round((new Date(body.dateTo).getTime() - new Date(body.dateFrom).getTime())
+-                 / 86_400_000)
+-    : null;
++  const nights = stayLength(body?.dateFrom, body?.dateTo);
+ 
+   try {
+     const supabase = await createClient();
+@@ -50,21 +54,21 @@ export async function POST(req: NextRequest) {
+       venue_id: body?.venueId ?? null,
+ 
+       first_name: firstName,
+-      surname: String(body?.surname ?? '').trim() || null,
++      surname: optionalFormText(body?.surname),
+       email,
+-      phone: String(body?.phone ?? '').trim() || null,
++      phone: optionalFormText(body?.phone),
+ 
+       date_from: body?.dateFrom || null,
+       date_to: body?.dateTo || null,
+-      nights: nights && nights > 0 ? nights : null,
++      nights,
+       guest_count: body?.guests ? Number(body.guests) : null,
+ 
+-      notes: String(body?.notes ?? '').trim() || null,
++      notes: optionalFormText(body?.notes),
+       // Asked directly rather than hoped for in the notes. Somebody who
+       // needs step-free access should not have to volunteer it in a box
+       // labelled "anything else".
+-      has_access_needs: !!String(body?.accessNeeds ?? '').trim(),
+-      access_needs_note: String(body?.accessNeeds ?? '').trim() || null,
++      has_access_needs: !!formText(body?.accessNeeds),
++      access_needs_note: optionalFormText(body?.accessNeeds),
+     });
+ 
+     if (error) {
+diff --git a/lib/form-values.ts b/lib/form-values.ts
+new file mode 100644
+index 0000000..5fce039
+--- /dev/null
++++ b/lib/form-values.ts
+@@ -0,0 +1,30 @@
++const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
++
++/** Convert an untrusted form value to the trimmed text the API stores. */
++export function formText(value: unknown): string {
++  return String(value ?? '').trim();
++}
++
++/** Return null for blank optional fields, matching the database schema. */
++export function optionalFormText(value: unknown): string | null {
++  return formText(value) || null;
++}
++
++export function formEmail(value: unknown): string {
++  return formText(value).toLowerCase();
++}
++
++export function isValidEmail(value: string): boolean {
++  return EMAIL_PATTERN.test(value);
++}
++
++/** Calculate a positive whole-day stay, or null for incomplete/invalid dates. */
++export function stayLength(dateFrom: unknown, dateTo: unknown): number | null {
++  const from = Date.parse(formText(dateFrom));
++  const to = Date.parse(formText(dateTo));
++
++  if (!Number.isFinite(from) || !Number.isFinite(to)) return null;
++
++  const nights = Math.round((to - from) / 86_400_000);
++  return nights > 0 ? nights : null;
++}
+diff --git a/package.json b/package.json
+index 35ba7ba..195eec5 100644
+--- a/package.json
++++ b/package.json
+@@ -6,6 +6,7 @@
+     "dev": "next dev",
+     "build": "next build",
+     "start": "next start",
++    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/*.test.mjs",
+     "check": "node check-css.mjs && next build"
+   },
+   "dependencies": {
+diff --git a/tests/form-values.test.mjs b/tests/form-values.test.mjs
+new file mode 100644
+index 0000000..dc788fc
+--- /dev/null
++++ b/tests/form-values.test.mjs
+@@ -0,0 +1,30 @@
++import assert from 'node:assert/strict';
++import test from 'node:test';
++
++import {
++  formEmail,
++  formText,
++  isValidEmail,
++  optionalFormText,
++  stayLength,
++} from '../lib/form-values.ts';
++
++test('form text normalization handles missing and padded values', () => {
++  assert.equal(formText(undefined), '');
++  assert.equal(formText('  Ada  '), 'Ada');
++  assert.equal(optionalFormText('  '), null);
++  assert.equal(optionalFormText('  hello  '), 'hello');
++});
++
++test('email normalization and validation are separate, reusable rules', () => {
++  assert.equal(formEmail('  ADA@EXAMPLE.COM '), 'ada@example.com');
++  assert.equal(isValidEmail('ada@example.com'), true);
++  assert.equal(isValidEmail('ada@example'), false);
++});
++
++test('stay length accepts valid ranges and rejects unusable dates', () => {
++  assert.equal(stayLength('2026-08-08', '2026-08-11'), 3);
++  assert.equal(stayLength('', '2026-08-11'), null);
++  assert.equal(stayLength('not-a-date', '2026-08-11'), null);
++  assert.equal(stayLength('2026-08-11', '2026-08-08'), null);
++});

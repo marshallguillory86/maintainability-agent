@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -136,6 +137,18 @@ def idiom_groups(config: dict[str, Any]) -> dict[str, list[str]]:
     return configured if isinstance(configured, dict) and configured else DEFAULT_IDIOM_GROUPS
 
 
+@dataclass(frozen=True)
+class _PackageRow:
+    """One competing package, with how widely it is used."""
+
+    package: str
+    files: int
+    example: str
+
+    def as_dict(self) -> dict[str, Any]:
+        return {"package": self.package, "files": self.files, "example": self.example}
+
+
 def divergent_idioms(
     root: Path, files: list[Path], config: dict[str, Any], index: SourceIndex | None = None
 ) -> list[dict[str, Any]]:
@@ -163,10 +176,27 @@ def divergent_idioms(
     for concern, packages in users.items():
         if len(packages) < 2:
             continue
-        detail = sorted(
-            ({"package": name, "files": len(paths), "example": sorted(paths)[0]} for name, paths in packages.items()),
-            key=lambda item: -item["files"],
+        # Typed rows rather than bare dicts: the sort key reads `files` as
+        # a number and nothing else said it was one, so a checker had to
+        # guess and a reader had to trust. `# type: ignore` on each sort
+        # would have silenced the question instead of answering it.
+        detail: list[_PackageRow] = sorted(
+            (
+                _PackageRow(package=name, files=len(paths), example=sorted(paths)[0])
+                for name, paths in packages.items()
+            ),
+            key=lambda row: -row.files,
         )
-        findings.append({"concern": concern, "packages": detail, "count": len(detail)})
-    findings.sort(key=lambda item: -item["count"])
-    return findings
+        # Sorted here, before the rows become plain dicts, so the key
+        # reads a typed field rather than an `object` the checker and the
+        # reader both have to take on faith.
+        findings.append((
+            len(detail),
+            {
+                "concern": concern,
+                "packages": [row.as_dict() for row in detail],
+                "count": len(detail),
+            },
+        ))
+    findings.sort(key=lambda pair: -pair[0])
+    return [finding for _count, finding in findings]

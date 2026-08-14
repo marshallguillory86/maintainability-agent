@@ -27,7 +27,6 @@ Expected local bar:
 - tests pass
 - coverage is at least 92%
 - `coverage.xml` exists
-- self-audit is A+
 - no hard-gate failures
 - no file, function, duplicate, or risk findings
 

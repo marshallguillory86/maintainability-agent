@@ -1,0 +1,199 @@
+{
+  "results": [
+    {
+      "level": "error",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "big.py"
+            },
+            "region": {
+              "startLine": 1
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "enormous (172 lines, complexity 26, cognitive 25, fail)."
+      },
+      "ruleId": "maintainability.function_hotspot"
+    },
+    {
+      "level": "note",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "a.py"
+            },
+            "region": {
+              "startLine": 2
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Duplicate block appears 3 times."
+      },
+      "ruleId": "maintainability.duplicate_block"
+    },
+    {
+      "level": "note",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "a.py"
+            },
+            "region": {
+              "startLine": 3
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Duplicate block appears 3 times."
+      },
+      "ruleId": "maintainability.duplicate_block"
+    },
+    {
+      "level": "note",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "a.py"
+            },
+            "region": {
+              "startLine": 4
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Duplicate block appears 3 times."
+      },
+      "ruleId": "maintainability.duplicate_block"
+    },
+    {
+      "level": "note",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "a.py"
+            },
+            "region": {
+              "startLine": 5
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Duplicate block appears 3 times."
+      },
+      "ruleId": "maintainability.duplicate_block"
+    },
+    {
+      "level": "note",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "a.py"
+            },
+            "region": {
+              "startLine": 6
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Duplicate block appears 3 times."
+      },
+      "ruleId": "maintainability.duplicate_block"
+    },
+    {
+      "level": "note",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "a.py"
+            },
+            "region": {
+              "startLine": 7
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Duplicate block appears 3 times."
+      },
+      "ruleId": "maintainability.duplicate_block"
+    },
+    {
+      "level": "note",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "a.py"
+            },
+            "region": {
+              "startLine": 8
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Duplicate block appears 3 times."
+      },
+      "ruleId": "maintainability.duplicate_block"
+    },
+    {
+      "level": "note",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "a.py"
+            },
+            "region": {
+              "startLine": 9
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Duplicate block appears 3 times."
+      },
+      "ruleId": "maintainability.duplicate_block"
+    }
+  ],
+  "rules": [
+    {
+      "fullDescription": {
+        "text": "Duplicate policy or business logic can drift. Consolidate when it represents the same responsibility."
+      },
+      "helpUri": "https://github.com/marshallguillory86/maintainability-agent/blob/main/docs/standard.md",
+      "id": "maintainability.duplicate_block",
+      "name": "Duplicate block",
+      "shortDescription": {
+        "text": "Repeated code block was detected."
+      }
+    },
+    {
+      "fullDescription": {
+        "text": "Large or complex functions often hide multiple responsibilities and deserve refactoring or explicit justification."
+      },
+      "helpUri": "https://github.com/marshallguillory86/maintainability-agent/blob/main/docs/standard.md",
+      "id": "maintainability.function_hotspot",
+      "name": "Function hotspot",
+      "shortDescription": {
+        "text": "Function or class exceeds configured size or complexity thresholds."
+      }
+    }
+  ]
+}

@@ -10,7 +10,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from . import _evidence_view as view
 from ._hotspots import hotspot_measure, hotspot_name
+from ._work_order import prompt_items
 
 
 def render_ai_prompt(report: dict[str, Any]) -> str:
@@ -35,7 +37,16 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         "",
         "Audit summary:",
         "",
-        f"- Overall score: {score['overall']} / 5 ({score['grade']})",
+        f"- Maintainability estimate: {view.estimate(score)} (range {view.score_range(score)})",
+        f"- Verified grade: {view.verified_grade(score)}",
+        # Stated in every state, not only when something is missing.
+        # `remediation_note` below prints the detail when evidence is
+        # incomplete and nothing at all when it is complete, so a
+        # complete prompt never said so — leaving an agent unable to
+        # tell verified evidence from an unprinted status, which are
+        # worth different amounts of confidence in the line above.
+        f"- Evidence status: {score['evidence_status']['status']} "
+        f"(profile `{view.profile(score)}`)",
         f"- Files scanned: {summary['files_scanned']}",
         f"- File failures: {summary['file_failures']}",
         f"- Function failures: {summary['function_failures']}",
@@ -44,10 +55,118 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         f"- Hard gate failures: {summary['hard_gate_failures']}",
         "",
     ]
+    lines.extend(prompt_analyzer_caveat(report))
+    lines.extend(view.remediation_note(score))
+    lines.extend(prompt_escalation_note(report))
+    lines.extend(prompt_work_order(report))
     lines.extend(prompt_pressure_section(score))
     lines.extend(prompt_focus_sections(report))
     lines.extend(prompt_deliverable())
     return "\n".join(lines)
+
+
+def prompt_analyzer_caveat(report: dict[str, Any]) -> list[str]:
+    """Where the headline number came from, when other tools also spoke.
+
+    `--analyzers` can put ten tools' findings into this prompt while the
+    estimate above still derives from the six built-in detectors:
+    analyzer readings widen `maintainability_range` and never move the
+    point estimate (ADR 006 §4). The Markdown report says so beside its
+    measurement table; the prompt did not, and layout alone implies the
+    opposite — a list of analyzer findings under a headline estimate
+    reads as though the tools produced it.
+
+    Only when there is analyzer output to qualify. A caveat printed
+    unconditionally would describe disagreement to every zero-install
+    user who never ran a second tool, which is the same defect facing
+    the other way.
+    """
+    if not (report.get("analyzer_measurements") or report.get("analyzer_findings")):
+        return []
+    return [
+        "**The maintainability estimate above comes from the built-in detectors.** "
+        "Analyzer measurements and findings are reported here, not scored: where an "
+        "analyzer disagrees with a built-in reading, the range widens and the point "
+        "estimate does not move. Treat an analyzer finding as evidence about the "
+        "code, never as a change to the score.",
+        "",
+    ]
+
+
+def prompt_escalation_note(report: dict[str, Any]) -> list[str]:
+    """Tell the agent what is deliberately absent, and why.
+
+    Silence would leave it to re-derive the same finding from the
+    report's own tables and offer the patch anyway. Naming the exclusion
+    is what makes it hold.
+    """
+    escalated = report.get("design_review_candidates") or []
+    if not escalated:
+        return []
+    return [
+        f"**{len(escalated)} finding(s) are deliberately excluded from this "
+        "prompt.** Each was fixed before and came back, so the same advice is "
+        "known not to hold and repeating it would produce the same patch and "
+        "the same return. They are listed in the report as design review "
+        "candidates and need a human decision about the surrounding design, "
+        "not another edit. Do not fix them here, and do not work around them.",
+        "",
+    ]
+
+
+def prompt_work_order(report: dict[str, Any]) -> list[str]:
+    """The ordered work, leading the prompt, Major Projects withheld.
+
+    This is ADR 007 §3's structural answer to nit-loops. A prompt that
+    opens with eighty line-length violations is handing an agent Fill-Ins
+    in the position reserved for the work that matters, and the agent
+    will dutifully spend its budget there.
+
+    Major Projects are named in the report and excluded here: an agent
+    told to deduplicate a pattern across forty files produces exactly the
+    sprawling, unreviewable diff a bounded prompt exists to prevent.
+    """
+    # Withhold anything the history shows was fixed and came back
+    # twice. Naming it as a design candidate while asking an agent to
+    # patch it a third time would change nothing.
+    escalated = {
+        item["fingerprint"] for item in report.get("design_review_candidates") or []
+    }
+    items = prompt_items(report.get("work_order") or [], escalated=escalated)
+    if not items:
+        return []
+    lines = [
+        "Work in this order. The first items are the highest value for the "
+        "least change; stop when the change stops being reviewable.",
+        "",
+    ]
+    for index, item in enumerate(items, start=1):
+        location = item["path"] + (f":{item['line']}" if item.get("line") else "")
+        lines.append(f"{index}. **{item['title']}** — {item['target']}")
+        lines.append(f"   - Location: `{location}`")
+        lines.append(f"   - Why it matters: {item['rationale']}")
+        if item["class_delta"]:
+            lines.append(
+                f"   - Clearing all {item['class_count']} of these is worth "
+                f"+{item['class_delta']:.2f} to the maintainability estimate."
+            )
+    lines.extend([
+        "",
+        f"Verify with: `{items[0]['verification']}`",
+        "",
+    ])
+
+    withheld = [i for i in (report.get("work_order") or [])
+                if i["band"] == "major-project"]
+    if withheld:
+        names = ", ".join(sorted({i["title"] for i in withheld})[:3])
+        lines.extend([
+            f"**Not in scope for this change:** {len(withheld)} finding(s) need a "
+            f"design decision before code moves ({names}). They are in the report. "
+            "Do not attempt them here.",
+            "",
+        ])
+    return lines
 
 
 DIMENSION_GUIDANCE = {
@@ -95,25 +214,49 @@ def prompt_pressure_section(score: dict[str, Any]) -> list[str]:
                 "",
             ]
         )
-    for blocker in score.get("grade_blockers") or []:
+    for blocker in view.grade_blockers(score):
         lines.append(f"- Grade capped: {blocker}")
-    if score.get("grade_blockers"):
+    if view.grade_blockers(score):
         lines.append("")
     return lines
 
 
+def _escalated_fingerprints(report: dict[str, Any]) -> set[str]:
+    """Findings the history shows do not stay fixed.
+
+    Read by every section that names work, not only the work order. The
+    first version withheld them from `prompt_work_order` alone and this
+    function went on listing the same finding under "inspect first" —
+    verified end to end on a real fix/return/fix/return history. A rule
+    enforced on one path and not another is not enforced.
+    """
+    return {
+        item["fingerprint"] for item in report.get("design_review_candidates") or []
+    }
+
+
 def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
+    from ._identity import declaration_identities, file_fingerprint
+
+    escalated = _escalated_fingerprints(report)
+    # Looked up, not rebuilt. `escalated` holds identities the history
+    # recorded, so anything compared against it has to be numbered over
+    # the same population — a hotspot that only warns has no identity
+    # here, and cannot be escalated, so `None` correctly stays listed.
+    identities = declaration_identities(report)
     lines: list[str] = []
     lines.extend(bulleted_section("Start with these hard gates:", report["hard_gate_failures"]))
     hotspot_lines = [
         f"`{i['path']}:{i['start_line']}` {hotspot_name(i)} ({hotspot_measure(i)})."
         for i in report["function_hotspots"][:10]
+        if identities.get((i["path"], i["name"], i["start_line"])) not in escalated
     ]
     lines.extend(bulleted_section("Function hotspots to inspect first:", hotspot_lines))
     large_files = [
         f"`{i['path']}` has {i['lines']} lines ({i['status']})."
         for i in report["largest_files"][:10]
         if i["status"] in {"warn", "fail"}
+        and file_fingerprint(i["path"]) not in escalated
     ]
     lines.extend(bulleted_section("Large files to inspect for responsibility splits:", large_files))
     risks = [f"`{i['path']}:{i['line']}` {i['name']}: {i['text']}" for i in report["risk_findings"][:20]]
@@ -262,7 +405,12 @@ def render_agent_instructions(report: dict[str, Any]) -> str:
             "## Current Audit Context",
             "",
             f"- Mode: `{report.get('mode', 'full')}`",
-            f"- Score: `{report['score']['overall']} / 5 ({report['score']['grade']})`",
+            f"- Maintainability estimate: `{view.estimate(report['score'])}`"
+            f" (range {view.score_range(report['score'])})",
+            f"- Verified grade: `{view.verified_grade(report['score'])}`",
+            f"- Evidence: {view.status_sentence(report['score'])}",
+            *view.reason_lines(report["score"], bullet="  - "),
+            *view.instruction_note(report["score"]),
             f"- Files scanned: {report['summary']['files_scanned']}",
             f"- Hard gate failures: {report['summary']['hard_gate_failures']}",
             f"- Function failures: {report['summary']['function_failures']}",

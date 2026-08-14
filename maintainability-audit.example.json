@@ -5,6 +5,8 @@
       ".py",
       ".js",
       ".jsx",
+      ".mjs",
+      ".cjs",
       ".ts",
       ".tsx",
       ".html",
@@ -71,12 +73,12 @@
     {
       "name": "unsafe html injection",
       "pattern": "\\.innerHTML\\s*=",
-      "extensions": [".js", ".jsx", ".ts", ".tsx", ".html"]
+      "extensions": [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".html"]
     },
     {
       "name": "embedded secret wording",
       "pattern": "\\b(api[_-]?key|secret|private[_-]?key|password)\\b",
-      "extensions": [".py", ".js", ".jsx", ".ts", ".tsx", ".html", ".md"]
+      "extensions": [".py", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".html", ".md"]
     }
   ]
 }

@@ -1,0 +1,385 @@
+diff --git a/app/api/apply/route.ts b/app/api/apply/route.ts
+index ada6bc0..89d9747 100644
+--- a/app/api/apply/route.ts
++++ b/app/api/apply/route.ts
+@@ -1,5 +1,12 @@
+ import { NextRequest, NextResponse } from 'next/server';
+ import { createClient } from '@/lib/supabase/server';
++import {
++  APPLICATION_AGREEMENTS,
++  applicationIdentity,
++  applicationInsert,
++  applicationValidationError,
++  type ApplicationBody,
++} from '@/lib/venue-application';
+ 
+ /* Venue applications.
+  *
+@@ -14,19 +21,8 @@ import { createClient } from '@/lib/supabase/server';
+  * rely on later.
+  */
+ 
+-const AGREEMENTS = [
+-  'website-terms-of-use',
+-  'venue-owner-agreement',
+-  'concierge-introduction-terms',
+-  'venue-data-accuracy-declaration',
+-  'health-safety-liability-declaration',
+-];
+-
+-const num = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v));
+-const arr = (v: any) => (Array.isArray(v) && v.length ? v : null);
+-
+ export async function POST(req: NextRequest) {
+-  let body: any;
++  let body: ApplicationBody;
+   try { body = await req.json(); }
+   catch { return NextResponse.json({ error: 'Malformed request.' }, { status: 400 }); }
+ 
+@@ -35,24 +31,10 @@ export async function POST(req: NextRequest) {
+     return NextResponse.json({ ok: true, reference: null });
+   }
+ 
+-  const email = String(body?.email ?? '').trim().toLowerCase();
+-  const firstName = String(body?.firstName ?? '').trim();
+-  const venueName = String(body?.venueName ?? '').trim();
+-
+-  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+-    return NextResponse.json({ error: 'That does not look like an email address.' },
+-      { status: 400 });
+-  }
+-  if (!firstName || !venueName) {
+-    return NextResponse.json({ error: 'A name and the venue name, at minimum.' },
+-      { status: 400 });
+-  }
+-  if (!body?.agreements || AGREEMENTS.some((a) => !body.agreements[a])) {
+-    return NextResponse.json({ error: 'All five agreements have to be accepted.' },
+-      { status: 400 });
+-  }
+-  if (!String(body?.signedName ?? '').trim()) {
+-    return NextResponse.json({ error: 'A signature — your full name.' }, { status: 400 });
++  const identity = applicationIdentity(body);
++  const validationError = applicationValidationError(body, identity);
++  if (validationError) {
++    return NextResponse.json({ error: validationError }, { status: 400 });
+   }
+ 
+   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
+@@ -60,66 +42,9 @@ export async function POST(req: NextRequest) {
+   try {
+     const supabase = await createClient();
+ 
+-    const { data: app, error } = await supabase.from('venue_applications').insert({
+-      salutation: body.salutation || null,
+-      first_name: firstName,
+-      surname: body.surname || null,
+-      email,
+-      phone: body.phone || null,
+-      role: body.role || null,
+-
+-      business_name: body.businessName || null,
+-      business_address: body.businessAddress || null,
+-      abn: body.abn || null,
+-
+-      venue_name: venueName,
+-      location_text: body.location || null,
+-      website_url: body.venueWebsite || null,
+-      instagram_url: body.instagram || null,
+-      facebook_url: body.facebook || null,
+-      venue_type_other: body.venueTypeOther || null,
+-      marketplace: body.marketplace || null,
+-
+-      practice_space_capacity: num(body.practiceCapacity),
+-      daily_guest_capacity: num(body.dailyCapacity),
+-      accommodation_capacity: num(body.accommodationCapacity),
+-      total_bedrooms: num(body.bedrooms),
+-      ensuites: num(body.ensuites),
+-      shared_bathrooms: num(body.sharedBathrooms),
+-
+-      price_from: num(body.priceFrom),
+-      price_currency: body.priceCurrency || 'AUD',
+-      price_basis: body.priceBasis || null,
+-      price_includes: body.priceIncludes || null,
+-
+-      who_may_attend: arr(body.whoMayAttend),
+-      who_may_attend_other: body.whoMayAttendOther || null,
+-      orientation: body.orientation || null,
+-      cultural_protocols: arr(body.culturalProtocols),
+-      protocols_stated_where: body.protocolsWhere || null,
+-      hosting_notes: body.hostingNotes || null,
+-
+-      space_type_names: arr(body.spaceTypes),
+-      service_names: arr(body.services),
+-      bed_configuration: arr(body.bedConfiguration),
+-      accommodation_features: arr(body.accommodationFeatures),
+-      amenity_names: arr(body.amenities),
+-      other_amenities: body.otherAmenities || null,
+-      experience_format: body.experienceFormat || null,
+-      currently_offering: body.currentlyOffering ?? null,
+-
+-      message: body.message || null,
+-      heard_about: body.heardAbout || null,
+-
+-      signed_name: String(body.signedName).trim(),
+-      signed_on: body.signedOn || new Date().toISOString().slice(0, 10),
+-      confirmed_accurate: !!body.confirmedAccurate,
+-      wants_journal: !!body.wantsJournal,
+-
+-      submitted_ip: ip,
+-      submitted_from: req.headers.get('referer') ?? null,
+-      utm: body.utm ?? null,
+-    }).select('id, reference').single();
++    const insert = applicationInsert(body, identity, ip, req.headers.get('referer'));
++    const { data: app, error } = await supabase.from('venue_applications')
++      .insert(insert).select('id, reference').single();
+ 
+     if (error || !app) {
+       return NextResponse.json({ error: 'Could not record that. Try again shortly.' },
+@@ -128,15 +53,15 @@ export async function POST(req: NextRequest) {
+ 
+     await supabase.rpc('record_application_agreements', {
+       p_application_id: app.id,
+-      p_slugs: AGREEMENTS,
+-      p_name: String(body.signedName).trim(),
+-      p_email: email,
++      p_slugs: APPLICATION_AGREEMENTS,
++      p_name: identity.signedName,
++      p_email: identity.email,
+       p_ip: ip,
+     });
+ 
+     if (body.wantsJournal) {
+       await supabase.from('newsletter_subscribers').insert({
+-        email, first_name: firstName, source: 'Venue application',
++        email: identity.email, first_name: identity.firstName, source: 'Venue application',
+       });
+     }
+ 
+diff --git a/lib/venue-application.ts b/lib/venue-application.ts
+new file mode 100644
+index 0000000..00b8611
+--- /dev/null
++++ b/lib/venue-application.ts
+@@ -0,0 +1,132 @@
++export const APPLICATION_AGREEMENTS = [
++  'website-terms-of-use',
++  'venue-owner-agreement',
++  'concierge-introduction-terms',
++  'venue-data-accuracy-declaration',
++  'health-safety-liability-declaration',
++] as const;
++
++export type ApplicationBody = Record<string, any>;
++
++export interface ApplicationIdentity {
++  email: string;
++  firstName: string;
++  venueName: string;
++  signedName: string;
++}
++
++export function applicationIdentity(body: ApplicationBody): ApplicationIdentity {
++  return {
++    email: String(body.email ?? '').trim().toLowerCase(),
++    firstName: String(body.firstName ?? '').trim(),
++    venueName: String(body.venueName ?? '').trim(),
++    signedName: String(body.signedName ?? '').trim(),
++  };
++}
++
++export function applicationValidationError(
++  body: ApplicationBody,
++  identity: ApplicationIdentity,
++): string | null {
++  if (!identity.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(identity.email)) {
++    return 'That does not look like an email address.';
++  }
++  if (!identity.firstName || !identity.venueName) {
++    return 'A name and the venue name, at minimum.';
++  }
++  if (!body.agreements || APPLICATION_AGREEMENTS.some((agreement) => !body.agreements[agreement])) {
++    return 'All five agreements have to be accepted.';
++  }
++  if (!identity.signedName) {
++    return 'A signature — your full name.';
++  }
++  return null;
++}
++
++const optionalNumber = (value: any) =>
++  value === '' || value === null || value === undefined ? null : Number(value);
++const optionalArray = (value: any) => Array.isArray(value) && value.length ? value : null;
++
++function contactFields(body: ApplicationBody, identity: ApplicationIdentity) {
++  return {
++    salutation: body.salutation || null,
++    first_name: identity.firstName,
++    surname: body.surname || null,
++    email: identity.email,
++    phone: body.phone || null,
++    role: body.role || null,
++    business_name: body.businessName || null,
++    business_address: body.businessAddress || null,
++    abn: body.abn || null,
++  };
++}
++
++function venueFields(body: ApplicationBody, identity: ApplicationIdentity) {
++  return {
++    venue_name: identity.venueName,
++    location_text: body.location || null,
++    website_url: body.venueWebsite || null,
++    instagram_url: body.instagram || null,
++    facebook_url: body.facebook || null,
++    venue_type_other: body.venueTypeOther || null,
++    marketplace: body.marketplace || null,
++    practice_space_capacity: optionalNumber(body.practiceCapacity),
++    daily_guest_capacity: optionalNumber(body.dailyCapacity),
++    accommodation_capacity: optionalNumber(body.accommodationCapacity),
++    total_bedrooms: optionalNumber(body.bedrooms),
++    ensuites: optionalNumber(body.ensuites),
++    shared_bathrooms: optionalNumber(body.sharedBathrooms),
++  };
++}
++
++function commercialFields(body: ApplicationBody) {
++  return {
++    price_from: optionalNumber(body.priceFrom),
++    price_currency: body.priceCurrency || 'AUD',
++    price_basis: body.priceBasis || null,
++    price_includes: body.priceIncludes || null,
++    who_may_attend: optionalArray(body.whoMayAttend),
++    who_may_attend_other: body.whoMayAttendOther || null,
++    orientation: body.orientation || null,
++    cultural_protocols: optionalArray(body.culturalProtocols),
++    protocols_stated_where: body.protocolsWhere || null,
++    hosting_notes: body.hostingNotes || null,
++  };
++}
++
++function facilityFields(body: ApplicationBody) {
++  return {
++    space_type_names: optionalArray(body.spaceTypes),
++    service_names: optionalArray(body.services),
++    bed_configuration: optionalArray(body.bedConfiguration),
++    accommodation_features: optionalArray(body.accommodationFeatures),
++    amenity_names: optionalArray(body.amenities),
++    other_amenities: body.otherAmenities || null,
++    experience_format: body.experienceFormat || null,
++    currently_offering: body.currentlyOffering ?? null,
++  };
++}
++
++export function applicationInsert(
++  body: ApplicationBody,
++  identity: ApplicationIdentity,
++  submittedIp: string | null,
++  submittedFrom: string | null,
++  today = new Date().toISOString().slice(0, 10),
++) {
++  return {
++    ...contactFields(body, identity),
++    ...venueFields(body, identity),
++    ...commercialFields(body),
++    ...facilityFields(body),
++    message: body.message || null,
++    heard_about: body.heardAbout || null,
++    signed_name: identity.signedName,
++    signed_on: body.signedOn || today,
++    confirmed_accurate: !!body.confirmedAccurate,
++    wants_journal: !!body.wantsJournal,
++    submitted_ip: submittedIp,
++    submitted_from: submittedFrom,
++    utm: body.utm ?? null,
++  };
++}
+diff --git a/package.json b/package.json
+index 35ba7ba..d274add 100644
+--- a/package.json
++++ b/package.json
+@@ -6,6 +6,7 @@
+     "dev": "next dev",
+     "build": "next build",
+     "start": "next start",
++    "test": "node --test tests/*.test.ts",
+     "check": "node check-css.mjs && next build"
+   },
+   "dependencies": {
+diff --git a/tests/venue-application.test.ts b/tests/venue-application.test.ts
+new file mode 100644
+index 0000000..c9cdb78
+--- /dev/null
++++ b/tests/venue-application.test.ts
+@@ -0,0 +1,72 @@
++import assert from 'node:assert/strict';
++import test from 'node:test';
++import {
++  APPLICATION_AGREEMENTS,
++  applicationIdentity,
++  applicationInsert,
++  applicationValidationError,
++} from '../lib/venue-application.ts';
++
++const validBody = () => ({
++  email: ' Owner@Example.COM ',
++  firstName: ' Ada ',
++  venueName: ' Still Point ',
++  signedName: ' Ada Owner ',
++  agreements: Object.fromEntries(APPLICATION_AGREEMENTS.map((agreement) => [agreement, true])),
++});
++
++test('normalizes identity and accepts a complete application', () => {
++  const body = validBody();
++  const identity = applicationIdentity(body);
++
++  assert.deepEqual(identity, {
++    email: 'owner@example.com',
++    firstName: 'Ada',
++    venueName: 'Still Point',
++    signedName: 'Ada Owner',
++  });
++  assert.equal(applicationValidationError(body, identity), null);
++});
++
++test('returns the existing validation errors in priority order', () => {
++  const body = validBody();
++  assert.equal(
++    applicationValidationError({ ...body, email: 'bad' }, applicationIdentity({ ...body, email: 'bad' })),
++    'That does not look like an email address.',
++  );
++  const missingAgreement = { ...body, agreements: { ...body.agreements } };
++  delete missingAgreement.agreements[APPLICATION_AGREEMENTS[0]];
++  assert.equal(
++    applicationValidationError(missingAgreement, applicationIdentity(missingAgreement)),
++    'All five agreements have to be accepted.',
++  );
++});
++
++test('maps optional values to the database payload without changing defaults', () => {
++  const body = {
++    ...validBody(),
++    practiceCapacity: '12',
++    dailyCapacity: '',
++    whoMayAttend: ['Adults'],
++    culturalProtocols: [],
++    currentlyOffering: false,
++    confirmedAccurate: 1,
++  };
++  const insert = applicationInsert(
++    body,
++    applicationIdentity(body),
++    '203.0.113.1',
++    'https://example.com/apply',
++    '2026-08-08',
++  );
++
++  assert.equal(insert.practice_space_capacity, 12);
++  assert.equal(insert.daily_guest_capacity, null);
++  assert.deepEqual(insert.who_may_attend, ['Adults']);
++  assert.equal(insert.cultural_protocols, null);
++  assert.equal(insert.currently_offering, false);
++  assert.equal(insert.price_currency, 'AUD');
++  assert.equal(insert.signed_on, '2026-08-08');
++  assert.equal(insert.submitted_ip, '203.0.113.1');
++  assert.equal(insert.confirmed_accurate, true);
++});

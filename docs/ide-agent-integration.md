@@ -125,6 +125,100 @@ Suggested VS Code workflow:
 4. Run `Maintainability: Changed Only`.
 5. If it fails, give the agent `maintainability-remediation-prompt.md`.
 
+## Local MCP server: Visual Studio, VS Code and Codex
+
+The optional MCP server removes the file handoff for Codex and the Codex VS
+Code extension. It exposes two read-only tools over stdio:
+
+- `audit_repository` runs the same production scan as the CLI and returns the
+  structured report, rendered Markdown and bounded remediation prompt together.
+- `get_agent_info` reports the installed version and authorized roots.
+
+It is deliberately not another scanner. The MCP module calls the existing
+configuration, report, renderer and prompt functions directly, so CLI and MCP
+cannot acquire different scoring or finding semantics.
+
+Install the extra:
+
+```bash
+python3 -m pip install "maintainability-agent[mcp]"
+```
+
+For Visual Studio, put this in `%USERPROFILE%\\.mcp.json` or
+`<SOLUTIONDIR>\\.mcp.json` (replace both absolute paths):
+
+```json
+{
+  "servers": {
+    "maintainabilityAgent": {
+      "type": "stdio",
+      "command": "C:\\path\\to\\venv\\Scripts\\maintainability-agent-mcp.exe",
+      "args": ["--allow-root", "C:\\absolute\\path\\to\\solution"]
+    }
+  }
+}
+```
+
+For VS Code, put this in `.vscode/mcp.json` or the user-profile MCP
+configuration:
+
+```json
+{
+  "servers": {
+    "maintainabilityAgent": {
+      "type": "stdio",
+      "command": "maintainability-agent-mcp",
+      "args": ["--allow-root", "${workspaceFolder}"]
+    }
+  }
+}
+```
+
+The `command` must be on the IDE process's `PATH`; an absolute path to the
+virtual-environment executable is also valid. Visual Studio enables discovered
+tools from the Copilot Agent tool picker. In VS Code, use **MCP: List Servers**
+to start the server and inspect its output.
+
+Codex and its VS Code extension can instead use `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.maintainability_agent]
+command = "maintainability-agent-mcp"
+args = ["--allow-root", "/absolute/path/to/your/repos"]
+startup_timeout_sec = 20
+tool_timeout_sec = 300
+enabled_tools = ["audit_repository", "get_agent_info"]
+default_tools_approval_mode = "auto"
+```
+
+Repeat `--allow-root` to authorize unrelated repository directories. If no
+argument is supplied, the server permits only its launch directory. The
+`MAINTAINABILITY_MCP_ALLOWED_ROOTS` environment variable is an alternative;
+separate multiple roots with the platform path separator (`:` on macOS/Linux,
+`;` on Windows).
+
+Restart Codex, then inspect the connection with `/mcp` or `codex mcp list`.
+A typical call in any client is:
+
+```text
+Use maintainability_agent.audit_repository on this workspace with
+config_path maintainability-agent.json. Treat the returned remediation_prompt
+as the bounded work order; do not fix unreported issues.
+```
+
+Security properties are part of the contract:
+
+- repository roots are canonicalized before authorization, so a symlink cannot
+  escape an allowed directory;
+- a config file must resolve inside the repository being audited;
+- `changed_only` accepts one inert git revision expression, never command-line
+  options or whitespace;
+- the server accepts no command strings or output paths and writes no report,
+  baseline or source artifact;
+- both tools advertise MCP read-only, non-destructive and closed-world hints.
+
+This is a local integration. It needs no VPS and opens no listening socket.
+
 ## Per-Agent Quick Start
 
 Every agent uses the same shape: pick a `--target`, run `--init-agent-standards`, then prompt the agent to follow the generated instruction file and use `maintainability-remediation-prompt.md` as the bounded task.

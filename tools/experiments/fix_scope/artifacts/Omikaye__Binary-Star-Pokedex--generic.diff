@@ -1,0 +1,36 @@
+diff --git a/README.md b/README.md
+index 103f01d..5b543ce 100644
+--- a/README.md
++++ b/README.md
+@@ -63,9 +63,13 @@ npm run sync-sheets-shop-tables
+ npm run sync-item-locations -- <GID>
+ 
+ # Run tests
+-npm run test-battle-parsing
+-npm run test-shop-tables-parsing
+-npm run test-data-files
++npm test
++
++# Run only the Google Sheets parser tests
++npm run test:parsing
++
++# Run only the TypeScript compiler check
++npm run typecheck
+ 
+ # Build for production
+ npm run dist
+diff --git a/package.json b/package.json
+index 30c9d12..6fa781d 100644
+--- a/package.json
++++ b/package.json
+@@ -3,7 +3,9 @@
+   "version": "1.0.0",
+   "description": "Pokémon Showdown Dex ========================================================================",
+   "scripts": {
+-    "test": "echo \"Error: no test specified\" && exit 1",
++    "test": "npm run test:parsing && npm run test-data-files",
++    "test:parsing": "npm run test-sheets-parsing && npm run test-battle-parsing && npm run test-shop-tables-parsing && npm run test-item-locations-parsing && npm run test-encounter-parsing",
++    "typecheck": "tsc -p build/tsconfig.json --noEmit",
+     "gendata": "tsx build/build-indexes.ts",
+     "genbasegamelearnsets": "tsx build/build-basegame-learnsets.ts",
+     "dist": "tsx build/dist.ts dist",

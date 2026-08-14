@@ -17,7 +17,11 @@ from ._metrics_types import COMPLEXITY_RE, FUNC_PATTERNS, DeclRange, FunctionMet
 from ._ranges import indent_bounded_end, js_declaration_ranges
 
 # Extensions handled by the brace-bounded scanner in ``_ranges``.
-BRACE_SUFFIXES = {".js", ".jsx", ".ts", ".tsx", ".html"}
+# `.mjs` and `.cjs` are the same JavaScript as `.js` — only the module
+# system differs, and that is invisible to a brace-bounded scan. Their
+# absence was not a decision: babel carried 1,503 unread `.mjs`/`.cjs`
+# files, 8.5% of its source, while its `.js` was read normally.
+BRACE_SUFFIXES = {".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".html"}
 
 # Every extension we attempt declaration detection on at all.
 DECLARATION_SUFFIXES = {".py"} | BRACE_SUFFIXES
@@ -100,7 +104,14 @@ def _python_function_ranges(source: str) -> list[DeclRange] | None:
 
 
 def _regex_function_ranges(lines: list[str]) -> list[DeclRange]:
-    """Last-resort detector for unparseable Python and unknown extensions.
+    """Last-resort detector for Python that ``ast`` could not parse.
+
+    That is its whole live domain. ``SourceIndex`` and ``collect_metrics``
+    both gate on ``DECLARATION_SUFFIXES``, so no unknown extension reaches
+    here — and none should: ``FUNC_PATTERNS`` matches ``def``, ``function``
+    and arrows, so running it over Java or Go would report zero
+    declarations found rather than no parser available, which is the
+    difference between a wrong answer and an honest withhold.
 
     Each body is bounded by indentation rather than by the *next* pattern
     match. The old "next match minus one" rule silently assumed the

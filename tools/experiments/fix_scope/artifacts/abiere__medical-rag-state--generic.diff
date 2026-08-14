@@ -1,0 +1,236 @@
+diff --git a/SYSTEM_DOCS/TEST_REPORT.md b/SYSTEM_DOCS/TEST_REPORT.md
+index a1d97af..0b2c23c 100644
+--- a/SYSTEM_DOCS/TEST_REPORT.md
++++ b/SYSTEM_DOCS/TEST_REPORT.md
+@@ -114,4 +114,4 @@ TimeoutError: timed out
+ 
+ ---
+ 
+-*Gegenereerd door `scripts/run_tests.py`*
+\ No newline at end of file
++*Gegenereerd door `scripts/run_tests.py`*
+diff --git a/scripts/nightly_stats.py b/scripts/nightly_stats.py
+index 6efe38b..ec6411f 100644
+--- a/scripts/nightly_stats.py
++++ b/scripts/nightly_stats.py
+@@ -9,8 +9,10 @@ from __future__ import annotations
+ import json
+ import logging
+ import os
++from copy import deepcopy
+ from datetime import datetime, timezone
+ from pathlib import Path
++from typing import Any
+ 
+ STATS_PATH = Path("/root/medical-rag/data/nightly_stats.json")
+ logger = logging.getLogger(__name__)
+@@ -21,14 +23,29 @@ _DEFAULTS: dict = {
+ }
+ 
+ 
++def _default_stats() -> dict:
++    """Return independent defaults so callers cannot mutate module state."""
++    return deepcopy(_DEFAULTS)
++
++
+ def load_stats() -> dict:
+     try:
+-        return json.loads(STATS_PATH.read_text())
+-    except Exception:
+-        return {k: dict(v) for k, v in _DEFAULTS.items()}
++        stored = json.loads(STATS_PATH.read_text())
++        if not isinstance(stored, dict):
++            raise ValueError("nightly stats must be a JSON object")
++    except (OSError, ValueError, json.JSONDecodeError):
++        return _default_stats()
++
++    stats = _default_stats()
++    for phase in stats:
++        phase_data = stored.get(phase)
++        if isinstance(phase_data, dict):
++            stats[phase].update(phase_data)
++    return stats
+ 
+ 
+ def save_stats(stats: dict) -> None:
++    STATS_PATH.parent.mkdir(parents=True, exist_ok=True)
+     tmp = STATS_PATH.with_suffix(".tmp")
+     tmp.write_text(json.dumps(stats, indent=2, ensure_ascii=False))
+     os.replace(tmp, STATS_PATH)
+@@ -36,52 +53,64 @@ def save_stats(stats: dict) -> None:
+ 
+ def record_retroaudit(chunks_processed: int, elapsed_seconds: float) -> None:
+     """Call after a retroaudit phase completes."""
+-    if chunks_processed <= 0 or elapsed_seconds <= 0:
+-        return
+-    stats = load_stats()
+-    sec_per_chunk = elapsed_seconds / chunks_processed
+-    sample = {
+-        "date":          datetime.now(timezone.utc).date().isoformat(),
+-        "chunks":        chunks_processed,
+-        "seconds":       round(elapsed_seconds, 1),
+-        "sec_per_chunk": round(sec_per_chunk, 3),
+-    }
+-    ra = stats.setdefault("retroaudit", dict(_DEFAULTS["retroaudit"]))
+-    ra.setdefault("samples", []).append(sample)
+-    ra["samples"] = ra["samples"][-30:]          # keep last 30
+-    ra["avg_sec_per_chunk"] = _weighted_avg(
+-        [s["sec_per_chunk"] for s in ra["samples"]],
+-        [s["date"]          for s in ra["samples"]],
++    _record_sample(
++        phase="retroaudit",
++        count_name="chunks",
++        count=chunks_processed,
++        elapsed_seconds=elapsed_seconds,
++        rate_name="sec_per_chunk",
+     )
+-    ra["n_samples"] = len(ra["samples"])
+-    save_stats(stats)
+-    logger.info("Retroaudit stats: %.2f sec/chunk (n=%d)",
+-                ra["avg_sec_per_chunk"], ra["n_samples"])
+ 
+ 
+ def record_image_screening(images_processed: int, elapsed_seconds: float) -> None:
+     """Call after an image screening phase completes."""
+-    if images_processed <= 0 or elapsed_seconds <= 0:
++    _record_sample(
++        phase="image_screening",
++        count_name="images",
++        count=images_processed,
++        elapsed_seconds=elapsed_seconds,
++        rate_name="sec_per_image",
++    )
++
++
++def _record_sample(
++    *,
++    phase: str,
++    count_name: str,
++    count: int,
++    elapsed_seconds: float,
++    rate_name: str,
++) -> None:
++    """Persist one bounded timing sample for a nightly processing phase."""
++    if count <= 0 or elapsed_seconds <= 0:
+         return
++
+     stats = load_stats()
+-    sec_per_image = elapsed_seconds / images_processed
+-    sample = {
+-        "date":          datetime.now(timezone.utc).date().isoformat(),
+-        "images":        images_processed,
+-        "seconds":       round(elapsed_seconds, 1),
+-        "sec_per_image": round(sec_per_image, 3),
++    rate = elapsed_seconds / count
++    sample: dict[str, Any] = {
++        "date": datetime.now(timezone.utc).date().isoformat(),
++        count_name: count,
++        "seconds": round(elapsed_seconds, 1),
++        rate_name: round(rate, 3),
+     }
+-    im = stats.setdefault("image_screening", dict(_DEFAULTS["image_screening"]))
+-    im.setdefault("samples", []).append(sample)
+-    im["samples"] = im["samples"][-30:]
+-    im["avg_sec_per_image"] = _weighted_avg(
+-        [s["sec_per_image"] for s in im["samples"]],
+-        [s["date"]          for s in im["samples"]],
++    phase_stats = stats[phase]
++    samples = phase_stats.get("samples")
++    if not isinstance(samples, list):
++        samples = []
++    phase_stats["samples"] = (samples + [sample])[-30:]
++    phase_stats[f"avg_{rate_name}"] = _weighted_avg(
++        [entry[rate_name] for entry in phase_stats["samples"]],
++        [entry["date"] for entry in phase_stats["samples"]],
+     )
+-    im["n_samples"] = len(im["samples"])
++    phase_stats["n_samples"] = len(phase_stats["samples"])
+     save_stats(stats)
+-    logger.info("Image screening stats: %.2f sec/image (n=%d)",
+-                im["avg_sec_per_image"], im["n_samples"])
++    logger.info(
++        "%s stats: %.2f %s (n=%d)",
++        phase,
++        phase_stats[f"avg_{rate_name}"],
++        rate_name.replace("_", " "),
++        phase_stats["n_samples"],
++    )
+ 
+ 
+ def allocate_window(
+diff --git a/tests/test_nightly_stats.py b/tests/test_nightly_stats.py
+new file mode 100644
+index 0000000..abe5c36
+--- /dev/null
++++ b/tests/test_nightly_stats.py
+@@ -0,0 +1,70 @@
++import json
++import tempfile
++import unittest
++from pathlib import Path
++from unittest.mock import patch
++
++from scripts import nightly_stats
++
++
++class NightlyStatsTests(unittest.TestCase):
++    def setUp(self):
++        self.temp_dir = tempfile.TemporaryDirectory()
++        self.addCleanup(self.temp_dir.cleanup)
++        self.stats_path = Path(self.temp_dir.name) / "nested" / "nightly_stats.json"
++        self.path_patch = patch.object(nightly_stats, "STATS_PATH", self.stats_path)
++        self.path_patch.start()
++        self.addCleanup(self.path_patch.stop)
++
++    def test_load_stats_returns_independent_defaults_for_invalid_json(self):
++        self.stats_path.parent.mkdir(parents=True)
++        self.stats_path.write_text("not json")
++
++        first = nightly_stats.load_stats()
++        first["retroaudit"]["samples"].append({"unexpected": True})
++
++        self.assertEqual(nightly_stats.load_stats()["retroaudit"]["samples"], [])
++
++    def test_load_stats_fills_missing_phase_defaults(self):
++        self.stats_path.parent.mkdir(parents=True)
++        self.stats_path.write_text(json.dumps({"retroaudit": {"n_samples": 4}}))
++
++        stats = nightly_stats.load_stats()
++
++        self.assertEqual(stats["retroaudit"]["n_samples"], 4)
++        self.assertIn("image_screening", stats)
++        self.assertEqual(stats["image_screening"]["avg_sec_per_image"], 8.0)
++
++    def test_recorders_share_persistence_and_rate_calculation(self):
++        nightly_stats.record_retroaudit(4, 10.0)
++        nightly_stats.record_image_screening(2, 5.0)
++
++        stats = json.loads(self.stats_path.read_text())
++        self.assertEqual(stats["retroaudit"]["samples"][0]["sec_per_chunk"], 2.5)
++        self.assertEqual(stats["image_screening"]["samples"][0]["sec_per_image"], 2.5)
++        self.assertEqual(stats["retroaudit"]["n_samples"], 1)
++        self.assertEqual(stats["image_screening"]["n_samples"], 1)
++
++    def test_recording_keeps_only_the_latest_thirty_samples(self):
++        for count in range(1, 33):
++            nightly_stats.record_retroaudit(count, float(count))
++
++        samples = nightly_stats.load_stats()["retroaudit"]["samples"]
++        self.assertEqual(len(samples), 30)
++        self.assertEqual(samples[0]["chunks"], 3)
++        self.assertEqual(samples[-1]["chunks"], 32)
++
++    def test_allocate_window_reserves_fifteen_minutes(self):
++        allocation = nightly_stats.allocate_window(
++            window_seconds=1800,
++            n_chunks_skipped=0,
++            n_images_pending=5,
++            claude_api_enabled=False,
++        )
++
++        self.assertEqual(allocation["retroaudit_seconds"], 0)
++        self.assertEqual(allocation["image_seconds"], 900)
++
++
++if __name__ == "__main__":
++    unittest.main()

@@ -14,7 +14,7 @@ from pathlib import Path
 
 from ._cognitive import brace_cognitive, python_cognitive
 from ._metrics_types import COMPLEXITY_RE, FUNC_PATTERNS, DeclRange, FunctionMetric
-from ._ranges import indent_bounded_end, js_declaration_ranges
+from ._ranges import indent_bounded_end, java_declaration_ranges, js_declaration_ranges
 
 # Extensions handled by the brace-bounded scanner in ``_ranges``.
 # `.mjs` and `.cjs` are the same JavaScript as `.js` — only the module
@@ -24,7 +24,11 @@ from ._ranges import indent_bounded_end, js_declaration_ranges
 BRACE_SUFFIXES = {".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".html"}
 
 # Every extension we attempt declaration detection on at all.
-DECLARATION_SUFFIXES = {".py"} | BRACE_SUFFIXES
+# `.java` is listed separately from `BRACE_SUFFIXES`: Java is
+# brace-delimited but its declarations are not the JS scanner's — it has
+# constructors, annotations and generic parameter lists that the JS
+# patterns would misread — so it gets its own detector in `_ranges`.
+DECLARATION_SUFFIXES = {".py", ".java"} | BRACE_SUFFIXES
 
 
 def function_status(lines: int, complexity: int, thresholds: dict[str, int], cognitive: int = 0) -> str:
@@ -140,6 +144,13 @@ def declaration_ranges(path: Path, lines: list[str]) -> tuple[list[DeclRange], l
         parsed = _python_function_ranges("\n".join(lines))
         if parsed is not None:
             return parsed, lines
+    if path.suffix == ".java":
+        # Its own detector, never the last-resort patterns: those match
+        # `def`, `function` and arrows, so on Java they find nothing and
+        # report a confident zero. A zero that came from looking in the
+        # wrong language is indistinguishable in the report from a file
+        # with no methods in it.
+        return java_declaration_ranges(lines)
     if path.suffix in BRACE_SUFFIXES:
         return js_declaration_ranges(lines)
     return _regex_function_ranges(lines), lines

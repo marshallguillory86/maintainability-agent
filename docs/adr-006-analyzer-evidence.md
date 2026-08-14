@@ -132,7 +132,7 @@ Missing tools degrade evidence strength and are reported. They never fail the ru
 6. Analyzer versions are recorded in the report, and identical versions over an identical tree produce identical output.
 7. An unavailable analyzer never fails the run and never improves a score.
 8. Built-in fallback detectors are always tagged single-source.
-9. The built-in language set does not grow. Python and JS/TS/HTML keep
-   their shipped range detectors as the zero-install fallback. Java, Go,
-   C, C++, C# and Rust wait on analyzer measurements plus recalibration,
-   not on a new `_ranges` function per language.
+9. The built-in language set does not grow past what is shipped.
+   Python, JS/TS/HTML and Java have range detectors as the zero-install
+   fallback. Go, C, C++, C# and Rust wait on analyzer measurements plus
+   recalibration, not on a new `_ranges` function per language.

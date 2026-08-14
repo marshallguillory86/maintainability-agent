@@ -92,29 +92,34 @@ def _score(root: Path) -> dict:
 def test_a_repository_of_unread_source_gets_no_score(tmp_path: Path) -> None:
     """The gson case, reduced.
 
-    Forty Java files, none of them readable by the scan. Today this
-    reports "below the calibration floor", which tells the reader their
+    Forty files in a language the scan does not read. Today this reports
+    "below the calibration floor", which tells the reader their
     repository is too small when it is nothing of the kind. The status
     may be withheld for any honest reason, but the reason has to be the
     true one, or the remedy the reader reaches for is the wrong remedy.
+
+    Written against gson and Java; Go carries it now, because Java gained
+    a detector. The property belongs to any unrecognized language.
     """
-    root = _repo(tmp_path / "java", {f"src/Thing{n}.java": JAVA % {"n": n} for n in range(40)})
+    root = _repo(tmp_path / "go", {
+        f"src/thing{n}.go": SOURCE_BY_SUFFIX[".go"] % {"n": n} for n in range(40)
+    })
 
     report = build_report(root, load_config(None))
     score = report["score"]
 
     assert score["maintainability_estimate"] is None, (
-        "40 unread Java files must not produce an estimate"
+        "40 unread Go files must not produce an estimate"
     )
     # Named in the report, and named in what a human reads. Not inside
     # the reason string: a scalar restating `summary.unread_source` can
     # disagree with it, which the evidence model forbids after
     # `history_present` did exactly that.
     assert report["summary"]["unread_source"] == [
-        {"suffix": ".java", "language": "Java", "files": 40}
+        {"suffix": ".go", "language": "Go", "files": 40}
     ]
     rendered = render_markdown(report)
-    assert ".java" in rendered and "include_extensions" in rendered, (
+    assert ".go" in rendered and "include_extensions" in rendered, (
         "a reader must be told which extensions went unread and how to fix it"
     )
 
@@ -148,16 +153,21 @@ def test_the_report_names_every_unread_source_language(tmp_path: Path) -> None:
     because that is what a score is for.
     """
     root = _repo(tmp_path / "poly", {
+        # Read by default now, so it must be absent from the unread list.
         **{f"src/Thing{n}.java": JAVA % {"n": n} for n in range(5)},
         **{f"cmd/main{n}.go": f"func f{n}() int {{ return {n} }}\n" for n in range(3)},
+        **{f"lib/mod{n}.rs": f"pub fn f{n}() -> i32 {{ {n} }}\n" for n in range(4)},
         **{f"lib/mod{n}.py": PYTHON % {"n": n} for n in range(200)},
     })
 
     report = build_report(root, load_config(None))
     unread = report["summary"]["unread_source"]
 
-    assert {entry["suffix"] for entry in unread} == {".java", ".go"}
-    assert {entry["suffix"]: entry["files"] for entry in unread} == {".java": 5, ".go": 3}
+    assert {entry["suffix"] for entry in unread} == {".go", ".rs"}
+    assert {entry["suffix"]: entry["files"] for entry in unread} == {".go": 3, ".rs": 4}
+    assert report["summary"]["declarations_scanned"] > 0, (
+        "the Java and Python in this tree are read, so they must count"
+    )
 
 
 def test_a_fully_read_repository_is_not_penalised(tmp_path: Path) -> None:
@@ -176,8 +186,10 @@ def test_a_fully_read_repository_is_not_penalised(tmp_path: Path) -> None:
     assert report["score"]["maintainability_estimate"] is not None
 
 
+# `.java` is deliberately absent: it has a detector now, so adding it to
+# `include_extensions` produces a population rather than the false "too
+# small" sentence. These are the suffixes still in the gap.
 SOURCE_BY_SUFFIX: dict[str, str] = {
-    ".java": JAVA,
     ".go": "package a\n\nfunc Compute%(n)d(v int) int {\n\tif v > 0 {\n\t\treturn v\n\t}\n\treturn -v\n}\n",
     ".c": "int compute_%(n)d(int v) {\n    if (v > 0) { return v; }\n    return -v;\n}\n",
     ".rs": "pub fn compute_%(n)d(v: i32) -> i32 {\n    if v > 0 { v } else { -v }\n}\n",
@@ -190,8 +202,8 @@ def test_following_the_remedy_does_not_produce_a_smaller_lie(
 ) -> None:
     """The named remedy has to be true after it is followed.
 
-    Default Java is honest: the files are unread, `unread_source` names
-    `.java`, and the remedy says add it to `include_extensions`. Doing
+    Default Go is honest: the files are unread, `unread_source` names
+    `.go`, and the remedy says add it to `include_extensions`. Doing
     exactly that produced a *different* false statement — the files are
     now read for length, duplication and risk, but nothing extracts
     declarations from them, so `declarations_scanned` is 0, the
@@ -207,7 +219,8 @@ def test_following_the_remedy_does_not_produce_a_smaller_lie(
 
     Parametrized over suffixes that are in `include_extensions` once the
     test adds them and are absent from `DECLARATION_SUFFIXES`, because
-    this is a property of that gap and not a fact about Java.
+    this is a property of that gap and not a fact about any one language.
+    Java left the gap when it got a detector; Go, C and Rust have not.
 
     Takes `real_population_floors` because the shipped floor is what
     produces the false sentence; with the suite's lifted floors the

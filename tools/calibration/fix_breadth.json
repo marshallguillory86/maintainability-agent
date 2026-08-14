@@ -1,0 +1,376 @@
+{
+ "measured_on": "2026-08-10",
+ "fix_pattern": "\\b(fix(es|ed)?|bug(fix)?|hotfix|patch)\\b",
+ "broad_files_threshold": 5,
+ "min_fix_commits": 5,
+ "note": "Measured over the most recent 300 commits from each pinned HEAD (git log -n 300). Every cache is verified to hold at least that much history before measurement and deepened if it does not, so neither a deeper nor a shallower cache can change the window: an audit showed a depth-one cache sitting at the correct pinned commit producing zero fix commits where the deep cache produced 96, because the deepening step was gated on the commit matching rather than on the depth. A repository whose entire history is shorter than the window contributes what it has and records it in history_commits; one that cannot be deepened is refused, not measured short. Medians are per-repo so commit volume does not weight the test.",
+ "cohorts": {
+  "ai": [
+   {
+    "repo": "time-yide/yide-acompanha",
+    "pinned_commit": "b5d8fa42f2c025b877a92582d7433bcfdf5b9b4e",
+    "history_commits": 301,
+    "declarations": 4102,
+    "fix_commits": 88,
+    "median_files_per_fix": 1.0,
+    "median_lines_per_fix": 21.0,
+    "broad_fix_share": 0.10227272727272728
+   },
+   {
+    "repo": "elfuerte72/oplati_podpisku",
+    "pinned_commit": "9edfeccc657149a07c8308393a57ceddf7c1c676",
+    "history_commits": 222,
+    "declarations": 945,
+    "fix_commits": 67,
+    "median_files_per_fix": 5,
+    "median_lines_per_fix": 100,
+    "broad_fix_share": 0.44776119402985076
+   },
+   {
+    "repo": "rrzu777/agendita",
+    "pinned_commit": "a7b43785d1fa19a611c9b26754d47b76e7db697a",
+    "history_commits": 321,
+    "declarations": 2102,
+    "fix_commits": 107,
+    "median_files_per_fix": 4,
+    "median_lines_per_fix": 113,
+    "broad_fix_share": 0.3925233644859813
+   },
+   {
+    "repo": "hhisdagovy/BCS",
+    "pinned_commit": "9f9ac94c98c98e1bda896a211fee240f751b0ec8",
+    "history_commits": 542,
+    "declarations": 2647,
+    "fix_commits": 88,
+    "median_files_per_fix": 5.0,
+    "median_lines_per_fix": 73.0,
+    "broad_fix_share": 0.32954545454545453
+   },
+   {
+    "repo": "NikoKiru/f1podigami",
+    "pinned_commit": "cb68d3c2380efc9a0bf9dac2d7ac847c6521d889",
+    "history_commits": 257,
+    "declarations": 886,
+    "fix_commits": 45,
+    "median_files_per_fix": 3,
+    "median_lines_per_fix": 51,
+    "broad_fix_share": 0.2222222222222222
+   },
+   {
+    "repo": "open-mercato/cezar",
+    "pinned_commit": "6521acdd82f760263d65169905ce53991e01f3d7",
+    "history_commits": 1225,
+    "declarations": 4570,
+    "fix_commits": 96,
+    "median_files_per_fix": 4.0,
+    "median_lines_per_fix": 87.5,
+    "broad_fix_share": 0.3645833333333333
+   },
+   {
+    "repo": "labuzniq/finops-dash",
+    "pinned_commit": "318b41cfb9f93711418f61c79521a874d578c6b8",
+    "history_commits": 75,
+    "declarations": 620,
+    "fix_commits": 13,
+    "median_files_per_fix": 1,
+    "median_lines_per_fix": 22,
+    "broad_fix_share": 0.0
+   },
+   {
+    "repo": "mongle-master/mongle",
+    "pinned_commit": "bfdec5601f30222e5f8465e427b8579870dd88c8",
+    "history_commits": 241,
+    "declarations": 511,
+    "fix_commits": 78,
+    "median_files_per_fix": 2.0,
+    "median_lines_per_fix": 37.0,
+    "broad_fix_share": 0.19230769230769232
+   },
+   {
+    "repo": "alkhas72/goapsny-mvp",
+    "pinned_commit": "bbf82adfcdb1f9c2ad48a03e08fd09aa49fe4069",
+    "history_commits": 69,
+    "declarations": 210,
+    "fix_commits": 17,
+    "median_files_per_fix": 3,
+    "median_lines_per_fix": 88,
+    "broad_fix_share": 0.17647058823529413
+   },
+   {
+    "repo": "TeamVisioneer/PrayU-Api",
+    "pinned_commit": "52a434780e928b42b22cdc803d63566e8f9b65ef",
+    "history_commits": 62,
+    "declarations": 114,
+    "fix_commits": 8,
+    "median_files_per_fix": 1.0,
+    "median_lines_per_fix": 6.0,
+    "broad_fix_share": 0.125
+   },
+   {
+    "repo": "sergey-levko/macro-mind",
+    "pinned_commit": "51b6fc71da19fed072d5359297b4c40f954e306d",
+    "history_commits": 52,
+    "declarations": 109,
+    "fix_commits": 6,
+    "median_files_per_fix": 8.0,
+    "median_lines_per_fix": 148.5,
+    "broad_fix_share": 0.6666666666666666
+   },
+   {
+    "repo": "GetDial-AI/cli",
+    "pinned_commit": "cce8b21693a14500f41dc794127d932127374c8c",
+    "history_commits": 64,
+    "declarations": 229,
+    "fix_commits": 12,
+    "median_files_per_fix": 3.0,
+    "median_lines_per_fix": 23.5,
+    "broad_fix_share": 0.16666666666666666
+   },
+   {
+    "repo": "AssetsArt/brust",
+    "pinned_commit": "d04718f40fd31d0728df7a6e48dc2d89aeb19025",
+    "history_commits": 583,
+    "declarations": 1418,
+    "fix_commits": 61,
+    "median_files_per_fix": 3,
+    "median_lines_per_fix": 79,
+    "broad_fix_share": 0.19672131147540983
+   },
+   {
+    "repo": "mama-sh/deskmate",
+    "pinned_commit": "795b86a17913199a64eb7e03ad968326f8fa164c",
+    "history_commits": 141,
+    "declarations": 271,
+    "fix_commits": 26,
+    "median_files_per_fix": 3.0,
+    "median_lines_per_fix": 49.5,
+    "broad_fix_share": 0.2692307692307692
+   },
+   {
+    "repo": "zeveck/zskills-dev",
+    "pinned_commit": "30dc02a87b516d40edd5855baf59e7252046ccac",
+    "history_commits": 301,
+    "declarations": 761,
+    "fix_commits": 143,
+    "median_files_per_fix": 5,
+    "median_lines_per_fix": 200,
+    "broad_fix_share": 0.42657342657342656
+   },
+   {
+    "repo": "SWYP14th-Team3/FrontEnd",
+    "pinned_commit": "3af8ce21a376c643dab8b9d8284959ded15bb456",
+    "history_commits": 46,
+    "declarations": 247,
+    "fix_commits": 9,
+    "median_files_per_fix": 1,
+    "median_lines_per_fix": 20,
+    "broad_fix_share": 0.1111111111111111
+   },
+   {
+    "repo": "WayfinderFoundation/wayfinder-paths-sdk",
+    "pinned_commit": "fe49111b02dee728dde7ec65ed46515cdc6c48fb",
+    "history_commits": 301,
+    "declarations": 6821,
+    "fix_commits": 20,
+    "median_files_per_fix": 2.5,
+    "median_lines_per_fix": 91.5,
+    "broad_fix_share": 0.35
+   },
+   {
+    "repo": "khang859/fleet",
+    "pinned_commit": "6bdd1709df1d6dd2d6ce09a167444d0b60fd587f",
+    "history_commits": 389,
+    "declarations": 2821,
+    "fix_commits": 55,
+    "median_files_per_fix": 3,
+    "median_lines_per_fix": 80,
+    "broad_fix_share": 0.2727272727272727
+   },
+   {
+    "repo": "Section9Labs/rupu",
+    "pinned_commit": "3b3485eb5ada177f9c2271c09bb07df7f65b5244",
+    "history_commits": 891,
+    "declarations": 1671,
+    "fix_commits": 94,
+    "median_files_per_fix": 2.0,
+    "median_lines_per_fix": 123.0,
+    "broad_fix_share": 0.20212765957446807
+   }
+  ],
+  "human": [
+   {
+    "repo": "mrdata355/casino-snowflake-streaming-ai-platform",
+    "pinned_commit": "6da505a666d5cbc92f300c2c96065f755d90f2ea",
+    "history_commits": 103,
+    "declarations": 467,
+    "fix_commits": 19,
+    "median_files_per_fix": 1,
+    "median_lines_per_fix": 7,
+    "broad_fix_share": 0.05263157894736842
+   },
+   {
+    "repo": "SanjibBayen/rental-management-system-odoo-devdaas",
+    "pinned_commit": "9299f6b78a16f0743503ad537c5c1fa1eca05d16",
+    "history_commits": 87,
+    "declarations": 185,
+    "fix_commits": 11,
+    "median_files_per_fix": 2,
+    "median_lines_per_fix": 8,
+    "broad_fix_share": 0.0
+   },
+   {
+    "repo": "Omikaye/Binary-Star-Pokedex",
+    "pinned_commit": "4fea8911f991f32ee41670c6844924f9d9c1ef8c",
+    "history_commits": 442,
+    "declarations": 267,
+    "fix_commits": 58,
+    "median_files_per_fix": 2.0,
+    "median_lines_per_fix": 47.5,
+    "broad_fix_share": 0.1206896551724138
+   },
+   {
+    "repo": "tompassarelli/north",
+    "pinned_commit": "69d15c3ac02d7c65589b6607682262dcd768efbe",
+    "history_commits": 321,
+    "declarations": 3655,
+    "fix_commits": 61,
+    "median_files_per_fix": 2,
+    "median_lines_per_fix": 61,
+    "broad_fix_share": 0.18032786885245902
+   },
+   {
+    "repo": "Arth1213/gamechangrs",
+    "pinned_commit": "94e358219893cb04167b865a8dc5a99af16a5c60",
+    "history_commits": 373,
+    "declarations": 2074,
+    "fix_commits": 34,
+    "median_files_per_fix": 2.5,
+    "median_lines_per_fix": 61.0,
+    "broad_fix_share": 0.14705882352941177
+   },
+   {
+    "repo": "timiajayi123/FLEET.MGMT",
+    "pinned_commit": "ae2dc3a69f228b7b2435e7bb812a570e097ea3f9",
+    "history_commits": 79,
+    "declarations": 761,
+    "fix_commits": 8,
+    "median_files_per_fix": 1.0,
+    "median_lines_per_fix": 8.5,
+    "broad_fix_share": 0.125
+   },
+   {
+    "repo": "polmichel/poker_tool",
+    "pinned_commit": "184b670ccd1307ced8273abfd3741943ed9dec5f",
+    "history_commits": 71,
+    "declarations": 603,
+    "fix_commits": 35,
+    "median_files_per_fix": 1,
+    "median_lines_per_fix": 64,
+    "broad_fix_share": 0.11428571428571428
+   },
+   {
+    "repo": "xbanka/xbanka-web-app",
+    "pinned_commit": "fd3b11ca8889c2cbfdf66b29f6f3f417e45e7119",
+    "history_commits": 473,
+    "declarations": 654,
+    "fix_commits": 107,
+    "median_files_per_fix": 2,
+    "median_lines_per_fix": 23,
+    "broad_fix_share": 0.2336448598130841
+   },
+   {
+    "repo": "alkispap/english-restaurant-template",
+    "pinned_commit": "b633827625fcc5c8c6af903117393644c86274fb",
+    "history_commits": 169,
+    "declarations": 1850,
+    "fix_commits": 29,
+    "median_files_per_fix": 4,
+    "median_lines_per_fix": 68,
+    "broad_fix_share": 0.27586206896551724
+   },
+   {
+    "repo": "komariChikaA/gal-yiba",
+    "pinned_commit": "b25ed3ec944bf1577f82bc3753c5d2ee19d164b2",
+    "history_commits": 48,
+    "declarations": 297,
+    "fix_commits": 5,
+    "median_files_per_fix": 3,
+    "median_lines_per_fix": 90,
+    "broad_fix_share": 0.2
+   },
+   {
+    "repo": "otc9513/Project",
+    "pinned_commit": "84024531ebafa9dc8aa533b1a9f6a76fddd240b9",
+    "history_commits": 25,
+    "declarations": 546,
+    "fix_commits": 19,
+    "median_files_per_fix": 1,
+    "median_lines_per_fix": 8,
+    "broad_fix_share": 0.10526315789473684
+   }
+  ]
+ },
+ "comparisons": {
+  "median_files_per_fix": {
+   "test": {
+    "u": 58.5,
+    "z": 2.0,
+    "p": 0.0456
+   },
+   "size_correlation": 0.2
+  },
+  "median_lines_per_fix": {
+   "test": {
+    "u": 59.0,
+    "z": 1.937,
+    "p": 0.0527
+   },
+   "size_correlation": 0.36
+  },
+  "broad_fix_share": {
+   "test": {
+    "u": 53.0,
+    "z": 2.195,
+    "p": 0.0281
+   },
+   "size_correlation": 0.37
+  }
+ },
+ "banded": {
+  "declaration_range": [
+   185,
+   3655
+  ],
+  "n_ai": 14,
+  "n_human": 11,
+  "tests": {
+   "median_files_per_fix": {
+    "median_ai": 3.0,
+    "median_human": 2.0,
+    "test": {
+     "u": 37.5,
+     "z": 2.191,
+     "p": 0.0285
+    }
+   },
+   "median_lines_per_fix": {
+    "median_ai": 76.0,
+    "median_human": 47.5,
+    "test": {
+     "u": 40.0,
+     "z": 1.999,
+     "p": 0.0456
+    }
+   },
+   "broad_fix_share": {
+    "median_ai": 0.2122,
+    "median_human": 0.125,
+    "test": {
+     "u": 38.5,
+     "z": 2.081,
+     "p": 0.0375
+    }
+   }
+  }
+ }
+}

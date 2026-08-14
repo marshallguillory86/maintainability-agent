@@ -28,18 +28,26 @@ import json
 import subprocess
 import sys
 import tempfile
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
+from maintainability_audit._analysis import analyze  # noqa: E402
 from maintainability_audit._calibration import (  # noqa: E402
     CALIBRATION_C,
     DIMENSION_REFERENCES,
     DIMENSION_WEIGHTS,
 )
 from maintainability_audit._derive import derive_curve_constant, derive_references  # noqa: E402
+from maintainability_audit._pressures import (  # noqa: E402
+    analyzer_pressures,
+    analyzer_production_pressures,
+    production_pressures,
+)
 from maintainability_audit.config import load_config  # noqa: E402
+from maintainability_audit.evidence import normalize_report_evidence  # noqa: E402
 from maintainability_audit.report import build_report  # noqa: E402
 from maintainability_audit.scoring import dimension_pressures  # noqa: E402
 
@@ -67,15 +75,94 @@ def clone(repo: dict[str, str], cache_dir: Path) -> Path | None:
     return target
 
 
-def measure(path: Path, name: str) -> dict:
-    report = build_report(path, load_config(None))
+# Summary keys the rubric aspects read. Stored per repo so the anchor
+# can be derived through the same rollup users receive, not through a
+# structural-only approximation. History-based aspects are absent on
+# purpose: the corpus is pinned via shallow fetches, so history is
+# genuinely unmeasurable here and those aspects renormalize away — in
+# the derivation exactly as they would in a shallow-clone report.
+EVIDENCE_KEYS = (
+    "test_file_count",
+    "production_declarations_scanned",
+    "production_files_scanned",
+    "production_file_warnings",
+    "production_file_failures",
+    "production_function_warnings",
+    "production_function_failures",
+    "production_hard_gate_failures",
+    "dead_code_count",
+    "near_duplicate_count",
+    "idiom_concern_count",
+    "has_readme",
+    "has_changelog",
+    "has_docs_dir",
+)
+
+
+def measure(path: Path, name: str, *, with_analyzers: bool = False) -> dict:
+    """One repository, under the built-in detectors and optionally the analyzers.
+
+    Both sources are recorded side by side rather than one replacing the
+    other, because the question the corpus run has to answer is *how far
+    apart are they*, and whether the gap holds across forty repositories
+    decides whether swapping them is a recalibration or a redesign.
+
+    Four ratios were quoted from this comparison before it was
+    trustworthy — 4.0x, 0.3x, 0.19x and 0.77x — each an artifact of a
+    bridge that measured something narrower than the built-in path it was
+    being divided by. It is only worth reading now because
+    `test_both_paths_agree_on_every_failure_criterion` holds the two
+    formulas to each other and
+    `test_analyzer_production_pressure_excludes_test_declarations` holds
+    them to the same population.
+
+    A repository where the analyzers could not run is recorded with
+    ``analyzer_dimensions: null`` rather than dropped, so a partial corpus
+    is visible instead of quietly smaller.
+    """
+    config = load_config(None)
+    report = build_report(path, config)
     summary = report["summary"]
-    return {
+    # Normalized rather than passed raw. `dimension_pressures` has taken
+    # typed evidence since ADR 001 stage 4, and this script kept handing
+    # it the summary dict -- so it has raised on every repository since
+    # 2026-08-10 while measurements.json is dated 08-09. The calibration
+    # was not reproducible for two days, which is P6's whole promise, and
+    # nothing noticed because no test runs this file.
+    evidence = normalize_report_evidence(report)
+    row = {
         "repo": name,
         "files": summary["files_scanned"],
         "declarations": summary["declarations_scanned"],
-        "dimensions": dimension_pressures(summary),
+        "dimensions": dimension_pressures(evidence.summary),
+        "evidence": {key: summary[key] for key in EVIDENCE_KEYS},
     }
+    if with_analyzers:
+        analyzer, production, coverage = _analyzer_row(path, config)
+        row["analyzer_dimensions"] = analyzer
+        row["analyzer_production_dimensions"] = production
+        row["analyzer_coverage"] = coverage
+        # The built-in production reading, so the production comparison
+        # has a denominator measured the same way on both sides.
+        row["production_dimensions"] = production_pressures(evidence.summary)
+    return row
+
+
+def _analyzer_row(path: Path, config: dict) -> tuple[dict | None, dict | None, dict | None]:
+    """Analyzer pressures for one repository, both populations, or a stated absence."""
+    analysis = analyze(path, config)
+    if analysis.error or not any(item.contributed for item in analysis.coverage):
+        return None, None, {"error": analysis.error or "no tool contributed"}
+    thresholds = config["thresholds"]
+    return (
+        analyzer_pressures(analysis.measurements, thresholds),
+        analyzer_production_pressures(analysis.measurements, thresholds),
+        {
+            "tools": sorted(item.slug for item in analysis.coverage if item.contributed),
+            "unexamined": analysis.gaps(),
+            "single_source": analysis.single_source_concerns(),
+        },
+    )
 
 
 def report_drift(references: dict[str, float], curve: float) -> bool:
@@ -97,6 +184,12 @@ def report_drift(references: dict[str, float], curve: float) -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cache-dir", help="Directory to clone into. Defaults to a temp dir.")
+    parser.add_argument(
+        "--with-analyzers", action="store_true",
+        help="Also run the external analyzer pool on each repository and record its "
+             "pressures beside the built-in ones. Slower by orders of magnitude, and "
+             "the input the Phase 3.6 recalibration needs.",
+    )
     parser.add_argument("--check", action="store_true", help="Exit 1 if stored constants differ from measured.")
     args = parser.parse_args()
 
@@ -110,7 +203,7 @@ def main() -> int:
         path = clone(repo, cache_dir)
         if path is None:
             continue
-        entry = measure(path, repo["name"])
+        entry = measure(path, repo["name"], with_analyzers=args.with_analyzers)
         measurements.append(entry)
         print(f"  {entry['repo']:<12} files={entry['files']:<6} " + " ".join(
             f"{k}={v:.4f}" for k, v in entry["dimensions"].items()))
@@ -122,7 +215,18 @@ def main() -> int:
     references = derive_references(measurements)
     curve = derive_curve_constant(measurements, references, DIMENSION_WEIGHTS)
     MEASUREMENTS.write_text(
-        json.dumps({"measured_on": manifest["measured_on"], "measurements": measurements}, indent=1) + "\n",
+        json.dumps(
+            {
+                # The manifest is generated by verify_corpus.py and does
+                # not carry a date; stamp the measurement instead, since
+                # that is what the constants are derived from.
+                "measured_on": datetime.now(UTC).date().isoformat(),
+                "corpus_size": len(measurements),
+                "measurements": measurements,
+            },
+            indent=1,
+        )
+        + "\n",
         encoding="utf-8",
     )
     print(f"\nwrote {MEASUREMENTS.relative_to(ROOT)} ({len(measurements)} repos)")

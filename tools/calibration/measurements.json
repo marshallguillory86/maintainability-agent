@@ -1,124 +1,629 @@
 {
- "measured_on": "2026-08-07",
+ "measured_on": "2026-08-13",
+ "corpus_size": 40,
  "measurements": [
   {
-   "repo": "requests",
-   "files": 52,
-   "declarations": 807,
+   "repo": "Chart.js",
+   "files": 888,
+   "declarations": 1554,
    "dimensions": {
-    "file_size": 0.1326923076923077,
-    "declarations": 0.027137546468401486,
-    "duplication": 0.6346153846153846,
-    "risk": 0.21153846153846154,
-    "gates": 0.15000000000000002
+    "file_size": 0.028265765765765765,
+    "declarations": 0.029922779922779925,
+    "duplication": 5.490990990990991,
+    "risk": 0.00563063063063063,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 638,
+    "production_declarations_scanned": 1199,
+    "production_files_scanned": 250,
+    "production_file_warnings": 15,
+    "production_file_failures": 5,
+    "production_function_warnings": 55,
+    "production_function_failures": 29,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.029819694868238558
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.02149280575539568
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.038,
+    "declarations": 0.03794829024186823,
+    "gates": 0.0
    }
   },
   {
-   "repo": "flask",
+   "repo": "angular",
+   "files": 8254,
+   "declarations": 42819,
+   "dimensions": {
+    "file_size": 0.0460140537921008,
+    "declarations": 0.03218197529134263,
+    "duplication": 5.161618609159196,
+    "risk": 0.17397625393748486,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 3311,
+    "production_declarations_scanned": 20003,
+    "production_files_scanned": 4914,
+    "production_file_warnings": 209,
+    "production_file_failures": 104,
+    "production_function_warnings": 966,
+    "production_function_failures": 1019,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 4,
+    "near_duplicate_count": 127,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.05515802307043046
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.04256957579032694
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.03392348392348392,
+    "declarations": 0.06543018547217917,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "anime",
+   "files": 268,
+   "declarations": 922,
+   "dimensions": {
+    "file_size": 0.054104477611940295,
+    "declarations": 0.09978308026030369,
+    "duplication": 8.843283582089553,
+    "risk": 0.14925373134328357,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 116,
+    "production_declarations_scanned": 523,
+    "production_files_scanned": 150,
+    "production_file_warnings": 6,
+    "production_file_failures": 4,
+    "production_function_warnings": 22,
+    "production_function_failures": 54,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 3,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.049629629629629635
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.046861404599129894
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.03866666666666667,
+    "declarations": 0.1158699808795411,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "ansible",
+   "files": 1862,
+   "declarations": 12752,
+   "dimensions": {
+    "file_size": 0.04967776584317938,
+    "declarations": 0.050094102885821834,
+    "duplication": 1.8839957035445758,
+    "risk": 0.2620837808807734,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1206,
+    "production_declarations_scanned": 6031,
+    "production_files_scanned": 647,
+    "production_file_warnings": 62,
+    "production_file_failures": 40,
+    "production_function_warnings": 319,
+    "production_function_failures": 395,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 35,
+    "near_duplicate_count": 15,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.053540401322364886
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07340110667867714
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.09057187017001544,
+    "declarations": 0.08136295805007461,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "ant-design",
+   "files": 4523,
+   "declarations": 6300,
+   "dimensions": {
+    "file_size": 0.011187265089542339,
+    "declarations": 0.0677936507936508,
+    "duplication": 1.7959319036038028,
+    "risk": 0.014370992703957551,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 670,
+    "production_declarations_scanned": 4443,
+    "production_files_scanned": 3769,
+    "production_file_warnings": 63,
+    "production_file_failures": 7,
+    "production_function_warnings": 252,
+    "production_function_failures": 338,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 17,
+    "idiom_concern_count": 1,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.09044289044289044
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.08352239953855027
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.006871849296895729,
+    "declarations": 0.0930902543326581,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "axios",
+   "files": 407,
+   "declarations": 908,
+   "dimensions": {
+    "file_size": 0.036855036855036855,
+    "declarations": 0.03909691629955947,
+    "duplication": 7.27027027027027,
+    "risk": 0.014742014742014743,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 147,
+    "production_declarations_scanned": 364,
+    "production_files_scanned": 259,
+    "production_file_warnings": 14,
+    "production_file_failures": 5,
+    "production_function_warnings": 25,
+    "production_function_failures": 24,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 2,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.0755632582322357
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.04938271604938271
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.035521235521235525,
+    "declarations": 0.08653846153846154,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "code-server",
    "files": 111,
-   "declarations": 1628,
+   "declarations": 310,
    "dimensions": {
-    "file_size": 0.06126126126126126,
-    "declarations": 0.01597051597051597,
-    "duplication": 1.0990990990990992,
-    "risk": 0.0,
-    "gates": 0.15000000000000002
-   }
-  },
-  {
-   "repo": "click",
-   "files": 120,
-   "declarations": 1924,
-   "dimensions": {
-    "file_size": 0.12333333333333332,
-    "declarations": 0.02151767151767152,
-    "duplication": 0.6333333333333333,
-    "risk": 0.0,
-    "gates": 0.15000000000000002
-   }
-  },
-  {
-   "repo": "attrs",
-   "files": 87,
-   "declarations": 1833,
-   "dimensions": {
-    "file_size": 0.13793103448275862,
-    "declarations": 0.018930714675395525,
-    "duplication": 1.2873563218390804,
-    "risk": 0.022988505747126436,
-    "gates": 0.15000000000000002
-   }
-  },
-  {
-   "repo": "httpx",
-   "files": 91,
-   "declarations": 1241,
-   "dimensions": {
-    "file_size": 0.0945054945054945,
-    "declarations": 0.01506849315068493,
-    "duplication": 4.681318681318682,
-    "risk": 0.01098901098901099,
-    "gates": 0.15000000000000002
-   }
-  },
-  {
-   "repo": "pytest",
-   "files": 278,
-   "declarations": 7016,
-   "dimensions": {
-    "file_size": 0.18741007194244602,
-    "declarations": 0.027807867730900798,
-    "duplication": 1.9244604316546763,
-    "risk": 0.2158273381294964,
-    "gates": 0.2
-   }
-  },
-  {
-   "repo": "black",
-   "files": 381,
-   "declarations": 2929,
-   "dimensions": {
-    "file_size": 0.05905511811023622,
-    "declarations": 0.03127347217480369,
-    "duplication": 8.464566929133857,
-    "risk": 0.05249343832020997,
-    "gates": 0.15000000000000002
-   }
-  },
-  {
-   "repo": "tornado",
-   "files": 133,
-   "declarations": 3977,
-   "dimensions": {
-    "file_size": 0.1781954887218045,
-    "declarations": 0.020920291677143574,
-    "duplication": 0.924812030075188,
-    "risk": 0.42857142857142855,
-    "gates": 0.2
+    "file_size": 0.043243243243243246,
+    "declarations": 0.02935483870967742,
+    "duplication": 0.6396396396396397,
+    "risk": 0.13513513513513514,
+    "gates": 0.05
+   },
+   "evidence": {
+    "test_file_count": 50,
+    "production_declarations_scanned": 185,
+    "production_files_scanned": 61,
+    "production_file_warnings": 4,
+    "production_file_failures": 2,
+    "production_function_warnings": 6,
+    "production_function_failures": 4,
+    "production_hard_gate_failures": 1,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": false,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.05597014925373134
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.02709677419354839
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.05245901639344262,
+    "declarations": 0.03135135135135135,
+    "gates": 0.05
    }
   },
   {
    "repo": "django",
-   "files": 3153,
-   "declarations": 42033,
+   "files": 3082,
+   "declarations": 41717,
    "dimensions": {
-    "file_size": 0.06095781795115763,
-    "declarations": 0.021166702352913187,
-    "duplication": 1.2029812876625436,
-    "risk": 0.02093244529019981,
-    "gates": 0.2
+    "file_size": 0.061291369240752756,
+    "declarations": 0.020279502361147735,
+    "duplication": 1.2203114860480209,
+    "risk": 0.018494484101232965,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1978,
+    "production_declarations_scanned": 10774,
+    "production_files_scanned": 1078,
+    "production_file_warnings": 93,
+    "production_file_failures": 28,
+    "production_function_warnings": 365,
+    "production_function_failures": 297,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 5,
+    "near_duplicate_count": 21,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.019205526770293607
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.036028287461773695
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.05185528756957329,
+    "declarations": 0.03772971969556339,
+    "gates": 0.0
    }
   },
   {
-   "repo": "fastapi",
-   "files": 2839,
-   "declarations": 5681,
+   "repo": "echarts",
+   "files": 1451,
+   "declarations": 6214,
    "dimensions": {
-    "file_size": 0.02476224022543149,
-    "declarations": 0.046259461362436194,
-    "duplication": 1.6118351532229658,
-    "risk": 0.06903839380063402,
-    "gates": 0.15000000000000002
+    "file_size": 0.09993108201240525,
+    "declarations": 0.08793047956227873,
+    "duplication": 13.558235699517574,
+    "risk": 0.33769813921433495,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 736,
+    "production_declarations_scanned": 4466,
+    "production_files_scanned": 710,
+    "production_file_warnings": 77,
+    "production_file_failures": 27,
+    "production_function_warnings": 338,
+    "production_function_failures": 304,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 4,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.07791217895608947
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07832426127527216
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.07056338028169014,
+    "declarations": 0.09077474249888043,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "excalidraw",
+   "files": 682,
+   "declarations": 4847,
+   "dimensions": {
+    "file_size": 0.11832844574780059,
+    "declarations": 0.07738807509799876,
+    "duplication": 5.249266862170088,
+    "risk": 0.19501466275659823,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 133,
+    "production_declarations_scanned": 3924,
+    "production_files_scanned": 549,
+    "production_file_warnings": 43,
+    "production_file_failures": 39,
+    "production_function_warnings": 240,
+    "production_function_failures": 296,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 2,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.09976865240023135
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.09428473648186174
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.09453551912568306,
+    "declarations": 0.09378185524974515,
+    "gates": 0.0
    }
   },
   {
@@ -130,43 +635,1895 @@
     "declarations": 0.011510791366906475,
     "duplication": 2.267515923566879,
     "risk": 0.18471337579617833,
-    "gates": 0.15000000000000002
+    "gates": 0.05
+   },
+   "evidence": {
+    "test_file_count": 95,
+    "production_declarations_scanned": 36,
+    "production_files_scanned": 62,
+    "production_file_warnings": 2,
+    "production_file_failures": 2,
+    "production_function_warnings": 1,
+    "production_function_failures": 1,
+    "production_hard_gate_failures": 1,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": false,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.12611111111111112
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.025945945945945945
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.04193548387096774,
+    "declarations": 0.03611111111111111,
+    "gates": 0.05
    }
   },
   {
-   "repo": "axios",
-   "files": 384,
-   "declarations": 862,
+   "repo": "fastapi",
+   "files": 2839,
+   "declarations": 5681,
    "dimensions": {
-    "file_size": 0.0390625,
-    "declarations": 0.04013921113689095,
-    "duplication": 5.885416666666667,
-    "risk": 0.015625,
-    "gates": 0.15000000000000002
+    "file_size": 0.02476224022543149,
+    "declarations": 0.046259461362436194,
+    "duplication": 1.6118351532229658,
+    "risk": 0.07044734061289186,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 610,
+    "production_declarations_scanned": 1544,
+    "production_files_scanned": 2202,
+    "production_file_warnings": 129,
+    "production_file_failures": 18,
+    "production_function_warnings": 44,
+    "production_function_failures": 62,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 6,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.045850314931456096
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.03704164077066501
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.025749318801089917,
+    "declarations": 0.04870466321243523,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "flask",
+   "files": 111,
+   "declarations": 1628,
+   "dimensions": {
+    "file_size": 0.06126126126126126,
+    "declarations": 0.01597051597051597,
+    "duplication": 1.0990990990990992,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 57,
+    "production_declarations_scanned": 484,
+    "production_files_scanned": 53,
+    "production_file_warnings": 4,
+    "production_file_failures": 3,
+    "production_function_warnings": 24,
+    "production_function_failures": 15,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.010380779691749773
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.026825842696629215
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.07924528301886792,
+    "declarations": 0.045867768595041325,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "freeCodeCamp",
+   "files": 18035,
+   "declarations": 3483,
+   "dimensions": {
+    "file_size": 0.014915442195730523,
+    "declarations": 0.05946023542922768,
+    "duplication": 3.4060992514555033,
+    "risk": 0.06321042417521486,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 340,
+    "production_declarations_scanned": 2211,
+    "production_files_scanned": 17695,
+    "production_file_warnings": 624,
+    "production_file_failures": 71,
+    "production_function_warnings": 144,
+    "production_function_failures": 159,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 5,
+    "idiom_concern_count": 2,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.09213303485769107
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07838915470494418
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.01459169256852218,
+    "declarations": 0.09145183175033922,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "github-readme-stats",
+   "files": 90,
+   "declarations": 252,
+   "dimensions": {
+    "file_size": 0.06777777777777778,
+    "declarations": 0.05833333333333333,
+    "duplication": 5.188888888888889,
+    "risk": 0.011111111111111112,
+    "gates": 0.05
+   },
+   "evidence": {
+    "test_file_count": 33,
+    "production_declarations_scanned": 150,
+    "production_files_scanned": 57,
+    "production_file_warnings": 4,
+    "production_file_failures": 3,
+    "production_function_warnings": 9,
+    "production_function_failures": 12,
+    "production_hard_gate_failures": 1,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": false,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.17329842931937173
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.1083916083916084
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.07368421052631578,
+    "declarations": 0.098,
+    "gates": 0.05
+   }
+  },
+  {
+   "repo": "hackingtool",
+   "files": 91,
+   "declarations": 898,
+   "dimensions": {
+    "file_size": 0.027472527472527472,
+    "declarations": 0.020489977728285078,
+    "duplication": 0.04395604395604396,
+    "risk": 0.07692307692307693,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 18,
+    "production_declarations_scanned": 585,
+    "production_files_scanned": 73,
+    "production_file_warnings": 4,
+    "production_file_failures": 1,
+    "production_function_warnings": 18,
+    "production_function_failures": 13,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.024462809917355374
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.04736
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.03013698630136986,
+    "declarations": 0.031452991452991456,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "hoppscotch",
+   "files": 1135,
+   "declarations": 5876,
+   "dimensions": {
+    "file_size": 0.06969162995594713,
+    "declarations": 0.06676310415248468,
+    "duplication": 6.496035242290749,
+    "risk": 0.08105726872246696,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 198,
+    "production_declarations_scanned": 4547,
+    "production_files_scanned": 937,
+    "production_file_warnings": 43,
+    "production_file_failures": 27,
+    "production_function_warnings": 270,
+    "production_function_failures": 308,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 79,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.07296673716592963
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.0550256937307297
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.04258271077908218,
+    "declarations": 0.0855509126896855,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "jquery",
+   "files": 290,
+   "declarations": 812,
+   "dimensions": {
+    "file_size": 0.06344827586206897,
+    "declarations": 0.0791871921182266,
+    "duplication": 14.472413793103449,
+    "risk": 0.05172413793103448,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 139,
+    "production_declarations_scanned": 145,
+    "production_files_scanned": 149,
+    "production_file_warnings": 3,
+    "production_file_failures": 3,
+    "production_function_warnings": 9,
+    "production_function_failures": 24,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.07097581317764805
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.079957805907173
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.0261744966442953,
+    "declarations": 0.18413793103448275,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "keras",
+   "files": 858,
+   "declarations": 16982,
+   "dimensions": {
+    "file_size": 0.15034965034965037,
+    "declarations": 0.051807796490401604,
+    "duplication": 9.994172494172494,
+    "risk": 0.15384615384615385,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 302,
+    "production_declarations_scanned": 9386,
+    "production_files_scanned": 556,
+    "production_file_warnings": 84,
+    "production_file_failures": 59,
+    "production_function_warnings": 472,
+    "production_function_failures": 466,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 7,
+    "near_duplicate_count": 128,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.0448318573109556
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.05684395776300352
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.15143884892086332,
+    "declarations": 0.06473471127210739,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "localstack",
+   "files": 1995,
+   "declarations": 34352,
+   "dimensions": {
+    "file_size": 0.08160401002506265,
+    "declarations": 0.032062179785747554,
+    "duplication": 4.234085213032581,
+    "risk": 1.0721804511278195,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 770,
+    "production_declarations_scanned": 27236,
+    "production_files_scanned": 1220,
+    "production_file_warnings": 71,
+    "production_file_failures": 76,
+    "production_function_warnings": 432,
+    "production_function_failures": 343,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 19,
+    "near_duplicate_count": 102,
+    "idiom_concern_count": 1,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.03685288095934484
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.02277663465935071
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.07975409836065574,
+    "declarations": 0.017352034072551037,
+    "gates": 0.0
    }
   },
   {
    "repo": "lodash",
-   "files": 66,
-   "declarations": 1446,
+   "files": 39,
+   "declarations": 852,
    "dimensions": {
-    "file_size": 0.2636363636363636,
-    "declarations": 0.050760719225449516,
-    "duplication": 13.015151515151516,
-    "risk": 2.590909090909091,
-    "gates": 0.15000000000000002
+    "file_size": 0.14358974358974358,
+    "declarations": 0.03814553990610329,
+    "duplication": 4.871794871794871,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 10,
+    "production_declarations_scanned": 573,
+    "production_files_scanned": 29,
+    "production_file_warnings": 1,
+    "production_file_failures": 3,
+    "production_function_warnings": 13,
+    "production_function_failures": 26,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.04395688991531948
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.04598393574297189
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.11379310344827587,
+    "declarations": 0.052181500872600345,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "manim",
+   "files": 112,
+   "declarations": 2224,
+   "dimensions": {
+    "file_size": 0.07857142857142857,
+    "declarations": 0.013624100719424461,
+    "duplication": 0.0625,
+    "risk": 0.17857142857142858,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 4,
+    "production_declarations_scanned": 2164,
+    "production_files_scanned": 108,
+    "production_file_warnings": 15,
+    "production_file_failures": 4,
+    "production_function_warnings": 49,
+    "production_function_failures": 14,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.00718232044198895
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.006442080378250591
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.07870370370370369,
+    "declarations": 0.013262476894639556,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "material-ui",
+   "files": 6627,
+   "declarations": 10217,
+   "dimensions": {
+    "file_size": 0.013746793420854083,
+    "declarations": 0.0640501125575022,
+    "duplication": 9.316281877169157,
+    "risk": 0.03591368643428399,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 832,
+    "production_declarations_scanned": 6931,
+    "production_files_scanned": 5788,
+    "production_file_warnings": 87,
+    "production_file_failures": 31,
+    "production_function_warnings": 397,
+    "production_function_failures": 517,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 97,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.08288930194134655
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07399253250933435
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.00986523842432619,
+    "declarations": 0.09177607848795268,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "mermaid",
+   "files": 1309,
+   "declarations": 5273,
+   "dimensions": {
+    "file_size": 0.06852559205500382,
+    "declarations": 0.08291295277830457,
+    "duplication": 12.850267379679144,
+    "risk": 0.13521772345301758,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 304,
+    "production_declarations_scanned": 3312,
+    "production_files_scanned": 1005,
+    "production_file_warnings": 86,
+    "production_file_failures": 33,
+    "production_function_warnings": 255,
+    "production_function_failures": 351,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 6,
+    "near_duplicate_count": 36,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.12600896860986546
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.0912896691424713
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.05850746268656716,
+    "declarations": 0.12907608695652173,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "models",
+   "files": 2952,
+   "declarations": 23350,
+   "dimensions": {
+    "file_size": 0.06487127371273713,
+    "declarations": 0.07651391862955031,
+    "duplication": 7.85230352303523,
+    "risk": 0.14532520325203252,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 751,
+    "production_declarations_scanned": 14901,
+    "production_files_scanned": 2201,
+    "production_file_warnings": 251,
+    "production_file_failures": 76,
+    "production_function_warnings": 1404,
+    "production_function_failures": 1097,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 28,
+    "near_duplicate_count": 263,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.06261052430339817
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.08826678904696345
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.06874148114493411,
+    "declarations": 0.10188577947788739,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "n8n",
+   "files": 19627,
+   "declarations": 68461,
+   "dimensions": {
+    "file_size": 0.059178682427268564,
+    "declarations": 0.06453309183330655,
+    "duplication": 7.623732613236868,
+    "risk": 0.04468334437254802,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 8002,
+    "production_declarations_scanned": 44857,
+    "production_files_scanned": 11609,
+    "production_file_warnings": 792,
+    "production_file_failures": 276,
+    "production_function_warnings": 2964,
+    "production_function_failures": 3363,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 2,
+    "near_duplicate_count": 466,
+    "idiom_concern_count": 2,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.08623423196703263
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.04877610195778732
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.04424153673873718,
+    "declarations": 0.09479456940945671,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "nest",
+   "files": 1774,
+   "declarations": 5449,
+   "dimensions": {
+    "file_size": 0.014261555806087936,
+    "declarations": 0.013855753349238394,
+    "duplication": 2.603720405862458,
+    "risk": 0.0016910935738444193,
+    "gates": 0.05
+   },
+   "evidence": {
+    "test_file_count": 415,
+    "production_declarations_scanned": 3852,
+    "production_files_scanned": 1359,
+    "production_file_warnings": 16,
+    "production_file_failures": 4,
+    "production_function_warnings": 74,
+    "production_function_failures": 53,
+    "production_hard_gate_failures": 1,
+    "dead_code_count": 0,
+    "near_duplicate_count": 26,
+    "idiom_concern_count": 2,
+    "has_readme": false,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.05697865353037767
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.010023980815347722
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.006475349521707138,
+    "declarations": 0.019522326064382138,
+    "gates": 0.05
+   }
+  },
+  {
+   "repo": "playwright",
+   "files": 2210,
+   "declarations": 15627,
+   "dimensions": {
+    "file_size": 0.08013574660633484,
+    "declarations": 0.08347091572278749,
+    "duplication": 19.24841628959276,
+    "risk": 0.6941176470588235,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1010,
+    "production_declarations_scanned": 9275,
+    "production_files_scanned": 1165,
+    "production_file_warnings": 106,
+    "production_file_failures": 68,
+    "production_function_warnings": 414,
+    "production_function_failures": 481,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 51,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.05155711932924091
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.03709911574501781
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.08566523605150214,
+    "declarations": 0.06525067385444744,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "reveal.js",
+   "files": 132,
+   "declarations": 596,
+   "dimensions": {
+    "file_size": 0.07045454545454545,
+    "declarations": 0.10671140939597315,
+    "duplication": 1.4242424242424243,
+    "risk": 0.007575757575757576,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 29,
+    "production_declarations_scanned": 533,
+    "production_files_scanned": 102,
+    "production_file_warnings": 9,
+    "production_file_failures": 5,
+    "production_function_warnings": 52,
+    "production_function_failures": 48,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.08888888888888889
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.0867557715674362
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.07549019607843137,
+    "declarations": 0.11932457786116323,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "scrapy",
+   "files": 494,
+   "declarations": 7038,
+   "dimensions": {
+    "file_size": 0.05465587044534413,
+    "declarations": 0.01170787155441887,
+    "duplication": 2.2935222672064777,
+    "risk": 0.03441295546558704,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 300,
+    "production_declarations_scanned": 2096,
+    "production_files_scanned": 194,
+    "production_file_warnings": 18,
+    "production_file_failures": 1,
+    "production_function_warnings": 50,
+    "production_function_failures": 18,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 2,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.004243683692442306
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.00679611650485437
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.032989690721649485,
+    "declarations": 0.015744274809160304,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "strapi",
+   "files": 5159,
+   "declarations": 14010,
+   "dimensions": {
+    "file_size": 0.029734444659817796,
+    "declarations": 0.06810849393290506,
+    "duplication": 3.991277379337081,
+    "risk": 0.1477030432254313,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1536,
+    "production_declarations_scanned": 9404,
+    "production_files_scanned": 3613,
+    "production_file_warnings": 130,
+    "production_file_failures": 25,
+    "production_function_warnings": 582,
+    "production_function_failures": 736,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 14,
+    "near_duplicate_count": 72,
+    "idiom_concern_count": 1,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.10454246214614878
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07423288355822089
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.017713811237199003,
+    "declarations": 0.09683113568694172,
+    "gates": 0.0
    }
   },
   {
    "repo": "svelte",
-   "files": 4034,
-   "declarations": 5563,
+   "files": 4035,
+   "declarations": 5565,
    "dimensions": {
-    "file_size": 0.008924144769459593,
-    "declarations": 0.060219306129786085,
-    "duplication": 1.3200297471492315,
-    "risk": 0.05676747645017353,
-    "gates": 0.15000000000000002
+    "file_size": 0.008921933085501859,
+    "declarations": 0.06037735849056604,
+    "duplication": 1.3197026022304832,
+    "risk": 0.05675340768277571,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 3264,
+    "production_declarations_scanned": 2550,
+    "production_files_scanned": 585,
+    "production_file_warnings": 36,
+    "production_file_failures": 23,
+    "production_function_warnings": 158,
+    "production_function_failures": 210,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 5,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.03774545454545454
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.06341005166744951
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.057777777777777775,
+    "declarations": 0.10094117647058823,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "tabby",
+   "files": 343,
+   "declarations": 1956,
+   "dimensions": {
+    "file_size": 0.018658892128279883,
+    "declarations": 0.049437627811860944,
+    "duplication": 0.9504373177842566,
+    "risk": 0.03206997084548105,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 0,
+    "production_declarations_scanned": 1956,
+    "production_files_scanned": 343,
+    "production_file_warnings": 8,
+    "production_file_failures": 4,
+    "production_function_warnings": 69,
+    "production_function_failures": 76,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 6,
+    "near_duplicate_count": 4,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.027217835578262888
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.027217835578262888
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.018658892128279883,
+    "declarations": 0.049437627811860944,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "tailwindcss",
+   "files": 372,
+   "declarations": 2820,
+   "dimensions": {
+    "file_size": 0.09838709677419355,
+    "declarations": 0.07049645390070922,
+    "duplication": 15.233870967741936,
+    "risk": 0.0456989247311828,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 123,
+    "production_declarations_scanned": 1018,
+    "production_files_scanned": 248,
+    "production_file_warnings": 12,
+    "production_file_failures": 9,
+    "production_function_warnings": 92,
+    "production_function_failures": 169,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 14,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.10249687890137328
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.10178432893716059
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.05080645161290323,
+    "declarations": 0.1931237721021611,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "transformers",
+   "files": 5525,
+   "declarations": 60641,
+   "dimensions": {
+    "file_size": 0.11770135746606336,
+    "declarations": 0.061723916162332415,
+    "duplication": 13.689592760180995,
+    "risk": 0.20705882352941177,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1593,
+    "production_declarations_scanned": 35082,
+    "production_files_scanned": 3929,
+    "production_file_warnings": 434,
+    "production_file_failures": 321,
+    "production_function_warnings": 2391,
+    "production_function_failures": 2002,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 41,
+    "near_duplicate_count": 1331,
+    "idiom_concern_count": 1,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.06386748673313053
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.08931291589834042
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.1148383812674981,
+    "declarations": 0.07751268456758452,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "uBlock",
+   "files": 400,
+   "declarations": 4494,
+   "dimensions": {
+    "file_size": 0.11175,
+    "declarations": 0.11310636404094349,
+    "duplication": 3.7375,
+    "risk": 0.155,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 15,
+    "production_declarations_scanned": 4432,
+    "production_files_scanned": 385,
+    "production_file_warnings": 38,
+    "production_file_failures": 32,
+    "production_function_warnings": 310,
+    "production_function_failures": 412,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 35,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.08033838973162194
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.08014619883040935
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.11272727272727273,
+    "declarations": 0.11394404332129963,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "vite",
+   "files": 1989,
+   "declarations": 3400,
+   "dimensions": {
+    "file_size": 0.02197083961789844,
+    "declarations": 0.08573529411764706,
+    "duplication": 1.2840623428858724,
+    "risk": 0.027652086475615886,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 405,
+    "production_declarations_scanned": 2608,
+    "production_files_scanned": 1568,
+    "production_file_warnings": 36,
+    "production_file_failures": 21,
+    "production_function_warnings": 155,
+    "production_function_failures": 234,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 3,
+    "near_duplicate_count": 7,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.07363281249999999
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07381069151544875
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.02028061224489796,
+    "declarations": 0.10755368098159508,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "webpack",
+   "files": 12815,
+   "declarations": 12777,
+   "dimensions": {
+    "file_size": 0.009340616465079984,
+    "declarations": 0.07868826798152932,
+    "duplication": 0.9731564572766289,
+    "risk": 0.015294576667967226,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 10604,
+    "production_declarations_scanned": 7526,
+    "production_files_scanned": 1408,
+    "production_file_warnings": 97,
+    "production_file_failures": 60,
+    "production_function_warnings": 432,
+    "production_function_failures": 791,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 5,
+    "near_duplicate_count": 22,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.05527734018738081
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.09286851884622191
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.06328125,
+    "declarations": 0.12232261493489237,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "youtube-dl",
+   "files": 917,
+   "declarations": 5786,
+   "dimensions": {
+    "file_size": 0.04045801526717557,
+    "declarations": 0.08686484618043554,
+    "duplication": 0.5845147219193021,
+    "risk": 0.12213740458015267,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 32,
+    "production_declarations_scanned": 5185,
+    "production_files_scanned": 885,
+    "production_file_warnings": 43,
+    "production_file_failures": 20,
+    "production_function_warnings": 369,
+    "production_function_failures": 365,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 6,
+    "near_duplicate_count": 3,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.0723391812865497
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.08354823304680038
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.03717514124293785,
+    "declarations": 0.09174541947926712,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "yt-dlp",
+   "files": 1135,
+   "declarations": 9440,
+   "dimensions": {
+    "file_size": 0.0639647577092511,
+    "declarations": 0.06533898305084745,
+    "duplication": 0.43612334801762115,
+    "risk": 0.18766519823788547,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 56,
+    "production_declarations_scanned": 8006,
+    "production_files_scanned": 1078,
+    "production_file_warnings": 85,
+    "production_file_failures": 40,
+    "production_function_warnings": 475,
+    "production_function_failures": 434,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 18,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 1,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.051586919932676126
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.06450209474701901
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "unexamined": [
+     "testing"
+    ],
+    "single_source": []
+   },
+   "production_dimensions": {
+    "file_size": 0.06076066790352505,
+    "declarations": 0.07200849362977767,
+    "gates": 0.0
    }
   }
  ]

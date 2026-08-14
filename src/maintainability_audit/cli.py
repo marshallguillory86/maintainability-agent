@@ -5,8 +5,20 @@ import json
 import sys
 from pathlib import Path
 
+from ._backfill import backfill
+from ._calibration import CALIBRATION_C
+from ._recurrence import escalations
+from ._scan_history import (
+    DEFAULT_HISTORY_PATH,
+    append_scan,
+    read_history,
+    record_of,
+    segments,
+)
+from ._trends import trend_report
+from ._work_order import SELECTABLE, combined_delta, prompt_targets, select
 from .baseline import finding_fingerprints, load_baseline, write_baseline
-from .config import DEFAULT_CONFIG, VERSION, load_config
+from .config import DEFAULT_CONFIG, VERSION, discovered_config, load_config
 from .git_tools import changed_paths
 from .instructions import instruction_path_for_target, write_instruction_pack
 from .prompts import render_agent_instructions, render_ai_prompt
@@ -30,6 +42,41 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--baseline", help="Existing baseline JSON. With --fail-on-new, only new findings fail.")
     parser.add_argument("--write-baseline", help="Write current findings to a baseline JSON file.")
     parser.add_argument("--fail-on-new", action="store_true", help="Fail only when findings are not in --baseline.")
+    parser.add_argument(
+        "--analyzers", action="store_true",
+        help="Run the configured external analyzer pool and report its coverage "
+             "(see docs/analyzer-pool.md). Off by default because external "
+             "analysis is optional and may be expensive; analyzer measurements "
+             "do not yet move the point estimate.",
+    )
+    parser.add_argument(
+        "--work", action="append", metavar="AXIS=VALUE",
+        help="Narrow the work order, for example --work band=quick-win or "
+             "--work path=src/. Repeatable; every criterion must match. "
+             "Axes: band, finding_class, path, verification. Narrowing "
+             "changes what is shown and never what anything scored.",
+    )
+    parser.add_argument(
+        "--record-history", action="store_true",
+        help="Append this scan to the history at paths.history (default "
+             ".maintainability/history.jsonl). Opt-in, like every other write "
+             "this tool performs. Once the file exists, later runs read it "
+             "without being asked.",
+    )
+    parser.add_argument(
+        "--backfill", metavar="REVSPEC",
+        help="Scan each commit in a range into the history and exit, for "
+             "example --backfill HEAD~50..HEAD. Each commit is checked out in "
+             "a temporary worktree, so the working tree is never touched. "
+             "Expensive and therefore explicit: it never runs as part of a "
+             "normal scan. Records are marked as reconstructed.",
+    )
+    parser.add_argument(
+        "--backfill-interval", type=int, default=1, metavar="N",
+        help="With --backfill, scan every Nth commit instead of all of them. "
+             "The shape of a series is what a trend reads, and a thousand "
+             "commits is hours of work nobody asked for.",
+    )
     parser.add_argument("--fail-on-gate", action="store_true", help="Exit 1 when hard gates fail.")
     parser.add_argument("--init-agent-standards", action="store_true", help="Write model/tool-specific instruction files and exit.")
     parser.add_argument(
@@ -39,6 +86,26 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         help="Instruction target. Repeatable. Used with --init-agent-standards.",
     )
     parser.add_argument("--instructions-output-dir", default=".", help="Directory for generated instruction files.")
+
+
+def _selection_from(
+    parser: argparse.ArgumentParser, pairs: list[str] | None
+) -> dict[str, str]:
+    """Parse `--work axis=value` into criteria, or exit naming the mistake.
+
+    Refused rather than ignored. A filter that silently drops an axis it
+    does not recognise hands back the full list while the caller
+    believes it was narrowed, which is the more expensive failure.
+    """
+    criteria: dict[str, str] = {}
+    for pair in pairs or []:
+        axis, separator, value = pair.partition("=")
+        if not separator or not value:
+            parser.error(f"--work expects AXIS=VALUE, got {pair!r}")
+        if axis not in SELECTABLE:
+            parser.error(f"--work cannot select on {axis!r}; axes are {list(SELECTABLE)}")
+        criteria[axis] = value
+    return criteria
 
 
 def write_outputs(args: argparse.Namespace, report: dict, rendered: str) -> None:
@@ -74,15 +141,61 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     root = Path(args.root).resolve()
-    config = load_config(args.config)
+    config = load_config(args.config or discovered_config(root))
     if args.init_agent_standards:
         targets = args.target or ["generic", "claude-code", "codex", "cursor", "copilot", "windsurf"]
         write_instruction_pack(targets, Path(args.instructions_output_dir).resolve(), config)
         return 0
 
+    if args.backfill:
+        history_path = root / (config.get("paths", {}).get("history") or DEFAULT_HISTORY_PATH)
+        try:
+            count = backfill(root, args.backfill, config, VERSION, CALIBRATION_C,
+                             history_path, interval=args.backfill_interval)
+        except ValueError as error:
+            parser.error(str(error))
+        print(f"recorded {count} scan(s) to {history_path}")
+        return 0
+
+    selection = _selection_from(parser, args.work)
     only_paths = changed_paths(root, args.changed_only) if args.changed_only else None
     external_findings = read_sarif_inputs(args.sarif_input)
-    report = build_report(root, config, only_paths=only_paths, changed_revspec=args.changed_only, external_findings=external_findings)
+    report = build_report(root, config, only_paths=only_paths,
+                          changed_revspec=args.changed_only,
+                          external_findings=external_findings,
+                          run_analyzers=args.analyzers)
+    if selection:
+        # A view over the work already gathered. The score block is
+        # untouched by construction — `select` returns a subset of the
+        # items and computes nothing — so one rubric still applies to
+        # every repository however a reader narrows the list.
+        report["work_order_selection"] = {
+            "criteria": selection,
+            "items": select(report["work_order"], **selection),
+        }
+        report["work_order_selection"]["worth"] = combined_delta(
+            report, report["work_order_selection"]["items"])
+    history_path = root / (config.get("paths", {}).get("history") or DEFAULT_HISTORY_PATH)
+    if args.record_history:
+        append_scan(history_path, record_of(
+            report, config, VERSION, CALIBRATION_C,
+            tuple(sorted(finding_fingerprints(report))),
+            # What the prompt actually asked somebody to fix, when one was
+            # generated. This is what turns recurrence from "a rule fired
+            # again" into "the thing we told you to fix came back" — the
+            # loop nothing else in the design closes, and the one a model
+            # cannot hold across sessions.
+            targeted=prompt_targets(report) if args.prompt_output else ()))
+    # Read without being asked. Reading has no side effect, and a trend
+    # nobody is shown is a trend nobody benefits from. One report per
+    # segment, never one across them: the gate ran first, so nothing here
+    # can be computed over a change in the instrument.
+    series = segments(read_history(history_path))
+    report["scan_history"] = [trend_report(s) for s in series]
+    # Findings the history shows do not stay fixed. Computed over the
+    # most recent comparable series only: an escalation drawn across a
+    # change in the instrument would blame the code for a tooling fix.
+    report["design_review_candidates"] = escalations(series[-1]) if series else []
     rendered = json.dumps(report, indent=2, sort_keys=True) if args.format == "json" else render_markdown(report)
     write_outputs(args, report, rendered)
     return audit_exit_code(args, report)

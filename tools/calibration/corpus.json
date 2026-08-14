@@ -1,27 +1,451 @@
 {
-  "description": "Reference corpus for scoring calibration. Mature, heavily-maintained, widely-reviewed open-source repositories, pinned to exact commits so a recalibration is reproducible rather than a snapshot of whatever HEAD was that day.",
-  "selection_criteria": [
-    "Long maintenance history under many contributors, so the code has actually survived handoff.",
-    "Widely read and depended upon, so 'well-maintained' is a claim others have tested.",
-    "Mixed languages and sizes (52 to 4034 files) so the reference is not an artifact of one ecosystem.",
-    "Bulk authored before LLM coding assistants were in common use, making this a human-written baseline."
+ "description": "Reference corpus for scoring calibration. Selected mechanically by tools/calibration/select_corpus.py and filtered by this script; pinned to exact commits so a recalibration is reproducible.",
+ "selection": {
+  "languages": [
+   "python",
+   "typescript",
+   "javascript"
   ],
-  "measured_on": "2026-08-07",
-  "thresholds": "package defaults (DEFAULT_CONFIG); recalibrate whenever those change",
-  "repos": [
-    { "name": "requests", "url": "https://github.com/psf/requests.git", "commit": "1f6589ec3a1ee910f9a65cc3ceac60b26677bc0e" },
-    { "name": "flask", "url": "https://github.com/pallets/flask.git", "commit": "6a2f545bfd8ed31e19066a299296917e034aca58" },
-    { "name": "click", "url": "https://github.com/pallets/click.git", "commit": "00e592cea702e0b2caa0dee42489fdb1c22cd845" },
-    { "name": "attrs", "url": "https://github.com/python-attrs/attrs.git", "commit": "c1dc5dcba16ed827aa6dcad896b41a3afedb4e32" },
-    { "name": "httpx", "url": "https://github.com/encode/httpx.git", "commit": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254" },
-    { "name": "pytest", "url": "https://github.com/pytest-dev/pytest.git", "commit": "28e86a6c2ae0173831e4925a4af89b02a2936d09" },
-    { "name": "black", "url": "https://github.com/psf/black.git", "commit": "74371e2041a3120a049ced8f1cab0e7a6bc8ecd3" },
-    { "name": "tornado", "url": "https://github.com/tornadoweb/tornado.git", "commit": "0096f2897c98facdcd9716009ee934a7381af5ef" },
-    { "name": "django", "url": "https://github.com/django/django.git", "commit": "c9eb16a87e60c305fb3651459639f647cce498db" },
-    { "name": "fastapi", "url": "https://github.com/tiangolo/fastapi.git", "commit": "15410ee4bfd14e3e5048628a0a0b54b07ac9f553" },
-    { "name": "express", "url": "https://github.com/expressjs/express.git", "commit": "a3714473feb3d2908add734d340e7755fd85e0a3" },
-    { "name": "axios", "url": "https://github.com/axios/axios.git", "commit": "a339fe124a4b120ac419f9c8c11b6e9ba74b9421" },
-    { "name": "lodash", "url": "https://github.com/lodash/lodash.git", "commit": "a666ba591064c8011988275790ad7d625279f09c" },
-    { "name": "svelte", "url": "https://github.com/sveltejs/svelte.git", "commit": "26786e92985842a6d563c67049a43bc5857bf792" }
+  "created_before": "2021-01-01",
+  "pushed_after": "2026-01-01",
+  "min_stars": 3000,
+  "max_size_kb": 800000
+ },
+ "selection_note": "created:<2021-01-01 is load-bearing. The corpus is the human-written baseline against which AI-assisted code is compared, and today's most-starred repositories include projects begun well into the LLM era \u2014 using those would answer the question before measuring it.",
+ "verification": {
+  "min_source_files": 20,
+  "min_declarations": 100,
+  "rejected": [
+   {
+    "full_name": "sherlock-project/sherlock",
+    "declarations": 77
+   },
+   {
+    "full_name": "swisskyrepo/PayloadsAllTheThings",
+    "declarations": 33
+   },
+   {
+    "full_name": "Asabeneh/30-Days-Of-Python",
+    "declarations": 22
+   },
+   {
+    "full_name": "realworld-apps/realworld",
+    "declarations": 63
+   },
+   {
+    "full_name": "airbnb/javascript",
+    "declarations": 14
+   },
+   {
+    "full_name": "typicode/json-server",
+    "declarations": 54
+   },
+   {
+    "full_name": "jgraph/drawio-desktop",
+    "declarations": 83
+   }
   ]
+ },
+ "repos": [
+  {
+   "name": "Chart.js",
+   "url": "https://github.com/chartjs/Chart.js.git",
+   "commit": "cb02e1d207bd4c4c40b20c259017f85f26f1e30a",
+   "language": "javascript",
+   "stars": 67627,
+   "created": "2013-03-17",
+   "source_files": 740,
+   "declarations": 1553
+  },
+  {
+   "name": "angular",
+   "url": "https://github.com/angular/angular.git",
+   "commit": "565dbb2fe5406f2a86d43a5b3c6993434b7124a7",
+   "language": "typescript",
+   "stars": 100954,
+   "created": "2014-09-18",
+   "source_files": 7211,
+   "declarations": 42765
+  },
+  {
+   "name": "anime",
+   "url": "https://github.com/juliangarnier/anime.git",
+   "commit": "2c9cf8ea00329f6768c7d7902252ed977d75ce42",
+   "language": "javascript",
+   "stars": 71969,
+   "created": "2016-03-13",
+   "source_files": 259,
+   "declarations": 922
+  },
+  {
+   "name": "ansible",
+   "url": "https://github.com/ansible/ansible.git",
+   "commit": "c5ecb46c3f8c135a76ee86584f4b77b50184e5a6",
+   "language": "python",
+   "stars": 70266,
+   "created": "2012-03-06",
+   "source_files": 1797,
+   "declarations": 12752
+  },
+  {
+   "name": "ant-design",
+   "url": "https://github.com/ant-design/ant-design.git",
+   "commit": "ef787d0b8eed12aa5dd3f89233a36d1ce214179c",
+   "language": "typescript",
+   "stars": 99004,
+   "created": "2015-04-24",
+   "source_files": 3065,
+   "declarations": 6299
+  },
+  {
+   "name": "axios",
+   "url": "https://github.com/axios/axios.git",
+   "commit": "f5e83e49ee32b1004db82dad2b14d1e273a99e07",
+   "language": "javascript",
+   "stars": 109233,
+   "created": "2014-08-18",
+   "source_files": 224,
+   "declarations": 863
+  },
+  {
+   "name": "code-server",
+   "url": "https://github.com/coder/code-server.git",
+   "commit": "313bf0359b4d391ba18f1fa131aad8a583bc2919",
+   "language": "typescript",
+   "stars": 78663,
+   "created": "2019-02-27",
+   "source_files": 84,
+   "declarations": 310
+  },
+  {
+   "name": "django",
+   "url": "https://github.com/django/django.git",
+   "commit": "c9eb16a87e60c305fb3651459639f647cce498db",
+   "language": "python",
+   "stars": 88397,
+   "created": "2012-04-28",
+   "source_files": 3030,
+   "declarations": 41717
+  },
+  {
+   "name": "echarts",
+   "url": "https://github.com/apache/echarts.git",
+   "commit": "30076aedcd7b7f65d8dd8e8d9ece46ce778133a3",
+   "language": "typescript",
+   "stars": 67008,
+   "created": "2013-04-03",
+   "source_files": 1439,
+   "declarations": 6214
+  },
+  {
+   "name": "excalidraw",
+   "url": "https://github.com/excalidraw/excalidraw.git",
+   "commit": "4872083c044491b6d5c96ae134a75464f96d6831",
+   "language": "typescript",
+   "stars": 129175,
+   "created": "2020-01-02",
+   "source_files": 663,
+   "declarations": 4848
+  },
+  {
+   "name": "express",
+   "url": "https://github.com/expressjs/express.git",
+   "commit": "a3714473feb3d2908add734d340e7755fd85e0a3",
+   "language": "javascript",
+   "stars": 69363,
+   "created": "2009-06-26",
+   "source_files": 149,
+   "declarations": 139
+  },
+  {
+   "name": "fastapi",
+   "url": "https://github.com/fastapi/fastapi.git",
+   "commit": "4ea76759a615754a070b08eb218c66e1ee1b12c6",
+   "language": "python",
+   "stars": 101412,
+   "created": "2018-12-08",
+   "source_files": 1144,
+   "declarations": 5681
+  },
+  {
+   "name": "flask",
+   "url": "https://github.com/pallets/flask.git",
+   "commit": "6a2f545bfd8ed31e19066a299296917e034aca58",
+   "language": "python",
+   "stars": 72178,
+   "created": "2010-04-06",
+   "source_files": 103,
+   "declarations": 1628
+  },
+  {
+   "name": "freeCodeCamp",
+   "url": "https://github.com/freeCodeCamp/freeCodeCamp.git",
+   "commit": "f67426be7505cdb3072c72b3d254888e2bbaacd6",
+   "language": "typescript",
+   "stars": 453675,
+   "created": "2014-12-24",
+   "source_files": 1153,
+   "declarations": 3475
+  },
+  {
+   "name": "github-readme-stats",
+   "url": "https://github.com/anuraghazra/github-readme-stats.git",
+   "commit": "54a7985aeefda00d5eadb55b80c17c7f976c37d2",
+   "language": "javascript",
+   "stars": 79831,
+   "created": "2020-07-09",
+   "source_files": 84,
+   "declarations": 252
+  },
+  {
+   "name": "hackingtool",
+   "url": "https://github.com/Z4nzu/hackingtool.git",
+   "commit": "9b92b6156ddc5ff87bf0fa592d81c333a88d1c78",
+   "language": "python",
+   "stars": 78837,
+   "created": "2020-04-11",
+   "source_files": 80,
+   "declarations": 898
+  },
+  {
+   "name": "hoppscotch",
+   "url": "https://github.com/hoppscotch/hoppscotch.git",
+   "commit": "1acb8a3a7581e4db32ba0d529170c4669a2e1053",
+   "language": "typescript",
+   "stars": 79995,
+   "created": "2019-08-21",
+   "source_files": 1088,
+   "declarations": 5857
+  },
+  {
+   "name": "jquery",
+   "url": "https://github.com/jquery/jquery.git",
+   "commit": "1183ba16fe38ebac23db3b885080e864f494954e",
+   "language": "javascript",
+   "stars": 59787,
+   "created": "2009-04-03",
+   "source_files": 265,
+   "declarations": 797
+  },
+  {
+   "name": "keras",
+   "url": "https://github.com/keras-team/keras.git",
+   "commit": "5f5bf6f3ebfdbd3cc08c72f4ed16591263cbc9bd",
+   "language": "python",
+   "stars": 64222,
+   "created": "2015-03-28",
+   "source_files": 983,
+   "declarations": 16982
+  },
+  {
+   "name": "localstack",
+   "url": "https://github.com/localstack/localstack.git",
+   "commit": "8b9a79f05846835cf4dff63ab7eefdde9df83783",
+   "language": "python",
+   "stars": 65141,
+   "created": "2016-10-25",
+   "source_files": 1971,
+   "declarations": 34358
+  },
+  {
+   "name": "lodash",
+   "url": "https://github.com/lodash/lodash.git",
+   "commit": "a666ba591064c8011988275790ad7d625279f09c",
+   "language": "javascript",
+   "stars": 61297,
+   "created": "2012-04-07",
+   "source_files": 32,
+   "declarations": 852
+  },
+  {
+   "name": "manim",
+   "url": "https://github.com/3b1b/manim.git",
+   "commit": "01030ac5d23bc294ccb93cbfcda260f2d20dda62",
+   "language": "python",
+   "stars": 89211,
+   "created": "2015-03-22",
+   "source_files": 106,
+   "declarations": 2224
+  },
+  {
+   "name": "material-ui",
+   "url": "https://github.com/mui/material-ui.git",
+   "commit": "81e94061ca393d4eaf238e6f77c283b2edd9ef7e",
+   "language": "javascript",
+   "stars": 98715,
+   "created": "2014-08-18",
+   "source_files": 16878,
+   "declarations": 10093
+  },
+  {
+   "name": "mermaid",
+   "url": "https://github.com/mermaid-js/mermaid.git",
+   "commit": "3d521b1ee5fc9079fe0659e776a1b2cdc37174b1",
+   "language": "typescript",
+   "stars": 89648,
+   "created": "2014-11-01",
+   "source_files": 1087,
+   "declarations": 5267
+  },
+  {
+   "name": "models",
+   "url": "https://github.com/tensorflow/models.git",
+   "commit": "4d7bdd8c170ee90850f2f9ccef0f6d19b817de35",
+   "language": "python",
+   "stars": 77664,
+   "created": "2016-02-05",
+   "source_files": 2730,
+   "declarations": 23350
+  },
+  {
+   "name": "n8n",
+   "url": "https://github.com/n8n-io/n8n.git",
+   "commit": "9d9e9bf97e8ae5382a930cd662637a9cf7046ef9",
+   "language": "typescript",
+   "stars": 199843,
+   "created": "2019-06-22",
+   "source_files": 18789,
+   "declarations": 67642
+  },
+  {
+   "name": "nest",
+   "url": "https://github.com/nestjs/nest.git",
+   "commit": "c3bc75c973813969aa676793e20a7cba12a9daf5",
+   "language": "typescript",
+   "stars": 76373,
+   "created": "2017-02-04",
+   "source_files": 1691,
+   "declarations": 5463
+  },
+  {
+   "name": "playwright",
+   "url": "https://github.com/microsoft/playwright.git",
+   "commit": "c973356ee9e3906260f60da5e3e04442e069a0d4",
+   "language": "typescript",
+   "stars": 94206,
+   "created": "2019-11-15",
+   "source_files": 1819,
+   "declarations": 15615
+  },
+  {
+   "name": "reveal.js",
+   "url": "https://github.com/hakimel/reveal.js.git",
+   "commit": "a3b940695648aa1c5b0680bc9a5b905cf43020e5",
+   "language": "javascript",
+   "stars": 72091,
+   "created": "2011-06-07",
+   "source_files": 119,
+   "declarations": 596
+  },
+  {
+   "name": "scrapy",
+   "url": "https://github.com/scrapy/scrapy.git",
+   "commit": "1bd839b57ddb614664a179b6213f49579bdfd3da",
+   "language": "python",
+   "stars": 63715,
+   "created": "2010-02-22",
+   "source_files": 486,
+   "declarations": 7038
+  },
+  {
+   "name": "strapi",
+   "url": "https://github.com/strapi/strapi.git",
+   "commit": "0a8a9b40d0642b221c1841ae72295f830352e8ce",
+   "language": "typescript",
+   "stars": 72824,
+   "created": "2015-09-30",
+   "source_files": 4853,
+   "declarations": 13995
+  },
+  {
+   "name": "svelte",
+   "url": "https://github.com/sveltejs/svelte.git",
+   "commit": "26786e92985842a6d563c67049a43bc5857bf792",
+   "language": "javascript",
+   "stars": 87936,
+   "created": "2016-11-20",
+   "source_files": 3712,
+   "declarations": 5563
+  },
+  {
+   "name": "tabby",
+   "url": "https://github.com/Eugeny/tabby.git",
+   "commit": "14e2d60b9b6dee84a53c37f05eefeb803787de04",
+   "language": "typescript",
+   "stars": 73818,
+   "created": "2016-12-23",
+   "source_files": 286,
+   "declarations": 1956
+  },
+  {
+   "name": "tailwindcss",
+   "url": "https://github.com/tailwindlabs/tailwindcss.git",
+   "commit": "46df7ee2fc4ae822d414d35bbd48be024e5cb1c0",
+   "language": "typescript",
+   "stars": 97133,
+   "created": "2017-10-06",
+   "source_files": 316,
+   "declarations": 2815
+  },
+  {
+   "name": "transformers",
+   "url": "https://github.com/huggingface/transformers.git",
+   "commit": "e8ea728a3eeeb903e77c7d1bd29267c80a1be71f",
+   "language": "python",
+   "stars": 163473,
+   "created": "2018-10-29",
+   "source_files": 4696,
+   "declarations": 76578
+  },
+  {
+   "name": "uBlock",
+   "url": "https://github.com/gorhill/uBlock.git",
+   "commit": "a873fd2b290461cb6efffe6e67ac7dc1fbde21e2",
+   "language": "javascript",
+   "stars": 66810,
+   "created": "2015-04-01",
+   "source_files": 332,
+   "declarations": 4492
+  },
+  {
+   "name": "vite",
+   "url": "https://github.com/vitejs/vite.git",
+   "commit": "57fea001d154e7dd8d5d74d3082731f1dcfd31be",
+   "language": "typescript",
+   "stars": 82263,
+   "created": "2020-04-21",
+   "source_files": 1665,
+   "declarations": 3393
+  },
+  {
+   "name": "webpack",
+   "url": "https://github.com/webpack/webpack.git",
+   "commit": "788ffe08cc0bff1ee42071e00475d545a952d9e6",
+   "language": "javascript",
+   "stars": 65990,
+   "created": "2012-03-10",
+   "source_files": 11684,
+   "declarations": 13113
+  },
+  {
+   "name": "youtube-dl",
+   "url": "https://github.com/ytdl-org/youtube-dl.git",
+   "commit": "956b8c585591b401a543e409accb163eeaaa1193",
+   "language": "python",
+   "stars": 140902,
+   "created": "2010-10-31",
+   "source_files": 902,
+   "declarations": 5786
+  },
+  {
+   "name": "yt-dlp",
+   "url": "https://github.com/yt-dlp/yt-dlp.git",
+   "commit": "5d6b8c8cd19785c3086ae3a9ec618c45e25eb3bc",
+   "language": "python",
+   "stars": 183274,
+   "created": "2020-10-26",
+   "source_files": 1126,
+   "declarations": 9440
+  }
+ ]
 }

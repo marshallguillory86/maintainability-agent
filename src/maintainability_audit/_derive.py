@@ -16,10 +16,31 @@ from __future__ import annotations
 from statistics import median
 from typing import Any
 
+from ._aspects import evidence_aspect_scores, is_untested
+from ._formula import CALIBRATED_ASPECTS, curve, overall_from_aspects
+from ._pressures import production_pressures
+from .evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY, normalize_report_evidence
+
 DIMENSIONS = ("file_size", "declarations", "duplication", "risk", "gates")
 
 # Enough repos that one unusual codebase cannot move a median on its own.
 MIN_CORPUS_SIZE = 8
+
+# References that are a fixed unit rather than something the corpus
+# measures, and the values themselves.
+#
+# Hard gates are discrete policy breaches a repository opts into, not a
+# rate drawn from a population, so there is no meaningful median to
+# divide by — and once gating became opt-in the corpus median went to
+# zero, which would have made the dimension silently ignore real
+# failures. 0.05 is one gate failure, so one breach reads as 1.0x.
+#
+# **This module is the authority, deliberately.** Reading the value back
+# out of ``_calibration`` instead would make
+# ``test_dimension_references_match_the_measured_corpus`` compare the
+# constant against itself, and a hand-edited ``gates`` would pass the one
+# test written to catch hand-edited constants.
+FIXED_REFERENCES: dict[str, float] = {"gates": 0.05}
 
 
 def derive_references(measurements: list[dict[str, Any]]) -> dict[str, float]:
@@ -32,7 +53,11 @@ def derive_references(measurements: list[dict[str, Any]]) -> dict[str, float]:
     if len(measurements) < MIN_CORPUS_SIZE:
         raise ValueError(f"corpus has {len(measurements)} repos; at least {MIN_CORPUS_SIZE} required")
     return {
-        dimension: round(median(entry["dimensions"][dimension] for entry in measurements), 4)
+        dimension: (
+            FIXED_REFERENCES[dimension]
+            if dimension in FIXED_REFERENCES
+            else round(median(entry["dimensions"][dimension] for entry in measurements), 4)
+        )
         for dimension in DIMENSIONS
     }
 
@@ -49,10 +74,62 @@ def normalized_pressures(
         weighted = sum(
             weights[dimension] * entry["dimensions"][dimension] / references[dimension]
             for dimension in DIMENSIONS
+            # A dimension the corpus never exhibits has no reference to
+            # divide by and contributes nothing.
             if references[dimension] > 0
         )
         values.append(weighted / total_weight)
     return values
+
+
+def _corpus_overall(entry: dict[str, Any], references: dict[str, float], c: float) -> float:
+    """One repo's rubric rollup, from every aspect the corpus can supply.
+
+    Structural aspects come from the stored dimension pressures; the
+    summary-derived rubric aspects (test presence, dead code,
+    near-duplication, idioms, documentation) come from the stored
+    ``evidence`` block, priced by ``scoring.evidence_aspect_scores`` —
+    the *same function* a live report goes through, so the anchor cannot
+    drift from the shipped score. History aspects stay None: the corpus
+    is pinned via shallow fetches, so its history is genuinely
+    unmeasurable, and they price at the corpus anchor here exactly as
+    they do for any shallow clone. Entries measured before evidence was
+    recorded fall back to structural-only.
+
+    The rollup itself is ``_formula.overall_from_aspects`` — not a
+    re-implementation of it. Two successive audits found this path
+    differing from the live one by a single step (first the category
+    rounding, then the untested testability cap: corpus member ``tabby``
+    derived 3.9 and scored 3.8 live). "Same pipeline" is only true if
+    there is one pipeline, so the derivation now calls the shipped
+    function and ``test_derivation_matches_live_score_report`` checks
+    the two against each other repo by repo.
+    """
+    scores: dict[str, float | None] = {
+        aspect: curve(entry["dimensions"][dimension] / references[dimension], c)
+        for aspect, dimension in CALIBRATED_ASPECTS.items()
+        if references[dimension] > 0
+    }
+    untested: bool | None = False
+    recorded = entry.get("evidence")
+    if recorded is not None:
+        # Through the shipped normalizer, exactly as a live report goes:
+        # the derivation must not have a private way of reading evidence.
+        summary = normalize_report_evidence({
+            SCHEMA_VERSION_KEY: REPORT_SCHEMA_VERSION,
+            "summary": {
+                **recorded,
+                "files_scanned": entry["files"],
+                "declarations_scanned": entry["declarations"],
+            },
+        }).summary
+        scores.update(evidence_aspect_scores(summary))
+        untested = is_untested(summary)
+        production = production_pressures(summary)["declarations"]
+        if references["declarations"] > 0 and production is not None:
+            scores["declaration_size"] = curve(production / references["declarations"], c)
+    overall, _ = overall_from_aspects(scores, untested=untested)
+    return overall
 
 
 def derive_curve_constant(
@@ -61,18 +138,50 @@ def derive_curve_constant(
     weights: dict[str, float],
     target_score: float = 4.0,
 ) -> float:
-    """Fit ``c`` in ``score = 5c/(n+c)`` so the corpus median hits ``target_score``.
+    """Fit ``c`` so the corpus median *rolls up* to ``target_score``.
 
-    Solving ``5c/(n+c) = t`` for ``c`` gives ``c = n*t/(5-t)``; at the
-    default target of 4.0 that is ``4n``.
+    The overall is no longer ``curve(weighted mean pressure)`` — it is
+    the rubric rollup: each structural pressure curved into an aspect
+    score, aspects averaged into categories, categories into the
+    overall. ``c`` appears inside every per-aspect curve, so there is no
+    closed form any more; the median rollup is monotonic in ``c``, and a
+    bisection recovers it to 4 decimal places.
 
-    Note the median repo does not sit at n = 1.0 even though every
-    reference is a median: no single repo is simultaneously median on all
-    five dimensions, so the median of the means is not the mean of the
-    medians. Fitting to the observed value is what keeps the documented
-    claim — "a well-run real codebase earns a B" — literally true.
+    ``weights`` stays in the signature for the callers and tests that
+    pass it, but the rollup weights now live in ``_formula`` — the
+    dimension weights only steer the fallback score and worst-dimension
+    readout in ``scoring``.
+
+    The median repo still does not sit at 1.0x on every dimension: no
+    single repo is median at everything, so fitting to the observed
+    rollup is what keeps "a well-run real codebase earns a B" literally
+    true rather than approximately intended.
     """
+    del weights  # rollup weights come from _formula; see docstring
     if not 0 < target_score < 5:
         raise ValueError("target_score must be between 0 and 5 exclusive")
-    observed = median(normalized_pressures(measurements, references, weights))
-    return round(observed * target_score / (5 - target_score), 4)
+
+    def median_overall(c: float) -> float:
+        return median(_corpus_overall(entry, references, c) for entry in measurements)
+
+    low, high = 1e-3, 1e3
+    for _ in range(200):
+        mid = (low + high) / 2
+        if median_overall(mid) < target_score:
+            low = mid
+        else:
+            high = mid
+    fitted = (low + high) / 2
+    # The rounded pipeline is a step function, so the bisection can land
+    # on a tread adjacent to the target (median 3.99). Scan the
+    # neighborhood for the plateau where the median hits the target
+    # exactly and return its midpoint; keep the bisection value when no
+    # such plateau exists.
+    plateau = [
+        round(fitted + offset * 0.001, 4)
+        for offset in range(-80, 81)
+        if median_overall(fitted + offset * 0.001) == target_score
+    ]
+    if plateau:
+        return round((plateau[0] + plateau[-1]) / 2, 4)
+    return round(fitted, 4)

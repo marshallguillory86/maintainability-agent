@@ -13,12 +13,12 @@ from __future__ import annotations
 
 CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "testability"]
 
-# Median raw pressure per dimension across the 14-repo reference corpus
+# Median raw pressure per dimension across the 40-repo reference corpus
 # defined in ``tools/calibration/corpus.json``, measured under the
 # package default thresholds.
 #
 # These live on wildly different scales — measured, not guessed:
-# duplication's median is ~19x file_size's and ~63x declarations'.
+# duplication's median is ~65x file_size's and ~62x declarations'.
 # Summing raw pressures therefore scores duplication and almost nothing
 # else, which is the same class of bug as the count-based model it
 # replaced. Each dimension is divided by its own reference so that
@@ -34,12 +34,23 @@ CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "te
 # recalibrating silently moves the meaning of every grade.
 # ``tests/test_calibration_corpus.py`` re-derives them offline from the
 # checked-in measurements and fails if they drift.
+# risk moved 0.0726 -> 0.0733 on 2026-08-12, re-measured across the same
+# 40 repositories. The cause is this release adding three default risk
+# patterns (absence-as-zero, vacuous-assertion, silent-truncation), all
+# Python-only, which fire on the 13 Python repositories in the corpus and
+# nudge the median. Every other reference and the curve constant are
+# unchanged, which is the check that the move is the patterns rather than
+# drift in the pipeline.
 DIMENSION_REFERENCES: dict[str, float] = {
-    "file_size": 0.0779,
-    "declarations": 0.0243,
-    "duplication": 1.4659,
-    "risk": 0.0546,
-    "gates": 0.1500,
+    "file_size": 0.0576,
+    "declarations": 0.0599,
+    "duplication": 3.7350,
+    "risk": 0.0733,
+    # Fixed, not corpus-derived — see ``_derive.FIXED_REFERENCES``, which
+    # is the authority for this value and carries the reasoning. Stated
+    # again here rather than imported, so the two are independent claims
+    # that ``tests/test_calibration_corpus.py`` can compare.
+    "gates": 0.05,
 }
 
 # Risk patterns are user-configured and their density varies by two
@@ -69,7 +80,33 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 #
 # Derived by ``_derive.derive_curve_constant``; regenerate with
 # ``tools/calibration/measure.py``.
-CALIBRATION_C = 5.2754
+# Re-fitted twice as the overall became the rubric rollup: first with
+# structural aspects only, then again when the corpus measurements
+# began carrying the evidence block (test presence, dead code,
+# near-duplication, idioms, documentation) — an audit correctly noted
+# that an anchor derived through fewer aspects than a live report gets
+# does not describe the shipped score. c sits inside every per-aspect
+# curve, so it is recovered by bisection against the corpus median
+# rather than in closed form. History aspects stay out of the anchor:
+# the corpus is pinned via shallow fetches, so they renormalize away in
+# the derivation exactly as they do for any shallow clone. Same anchor
+# throughout: the median mature repo rolls up to exactly 4.0.
+# Third fit: unknown aspects now price at the corpus anchor (4.0)
+# instead of renormalizing away — an audit showed renormalization let a
+# shallow clone outscore the same code with its history visible.
+# Fourth fit: the derivation now rounds categories to one decimal
+# before the overall, exactly as score_report ships them — an audit
+# found six corpus repos differing between the rounded and unrounded
+# paths while the docs claimed "same pipeline". The rounded pipeline
+# is a step function, so c is the midpoint of the plateau where the
+# corpus median hits 4.0 exactly.
+# Fifth fit: the derivation now calls the shipped rollup itself rather
+# than restating it, so the untested testability cap lands on corpus
+# members too, and knowledge_concentration carries weight instead of
+# being scored and ignored. Both change what the median repo rolls up
+# to, so c is re-fitted. The reference medians re-measured byte-identical
+# for the third audit running.
+CALIBRATION_C = 2.6279
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3

@@ -1,0 +1,205 @@
+diff --git a/frontend/src/lib/dateTime.ts b/frontend/src/lib/dateTime.ts
+new file mode 100644
+index 0000000..09e20af
+--- /dev/null
++++ b/frontend/src/lib/dateTime.ts
+@@ -0,0 +1,44 @@
++const DATE_SUFFIX = 'T12:00:00'
++
++/** Returns the local calendar date as YYYY-MM-DD. */
++export function localDateIso(date = new Date()): string {
++  const year = date.getFullYear()
++  const month = String(date.getMonth() + 1).padStart(2, '0')
++  const day = String(date.getDate()).padStart(2, '0')
++  return `${year}-${month}-${day}`
++}
++
++/** Parses a date-only value without allowing a UTC conversion to change its day. */
++export function parseLocalDate(iso: string): Date {
++  return new Date(iso + DATE_SUFFIX)
++}
++
++export function shiftDate(iso: string, days: number): string {
++  const date = parseLocalDate(iso)
++  date.setDate(date.getDate() + days)
++  return localDateIso(date)
++}
++
++export function formatMealLogDate(iso: string, today = localDateIso()): string {
++  const date = parseLocalDate(iso)
++  const dateLabel = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
++
++  if (iso === today) return `Today, ${dateLabel}`
++  if (iso === shiftDate(today, -1)) return `Yesterday, ${dateLabel}`
++
++  return date.toLocaleDateString('en-US', {
++    weekday: 'long',
++    month: 'long',
++    day: 'numeric',
++  })
++}
++
++export function localTimeHHMM(date = new Date()): string {
++  const hours = String(date.getHours()).padStart(2, '0')
++  const minutes = String(date.getMinutes()).padStart(2, '0')
++  return `${hours}:${minutes}`
++}
++
++export function isoDateTime(date: string, time: string): string {
++  return new Date(`${date}T${time}:00`).toISOString()
++}
+diff --git a/frontend/src/pages/MealLog.tsx b/frontend/src/pages/MealLog.tsx
+index ab66e25..fa30956 100644
+--- a/frontend/src/pages/MealLog.tsx
++++ b/frontend/src/pages/MealLog.tsx
+@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
+ import { DayPicker } from 'react-day-picker'
+ import { api } from '../lib/api'
+ import type { MealLog, MealLogSummary, MealType, Food, MealItemResponse, UsdaFoodResult, MealTemplate, MealTemplateItem } from '../lib/types'
++import { formatMealLogDate, isoDateTime, localDateIso, localTimeHHMM, parseLocalDate, shiftDate } from '../lib/dateTime'
+ 
+ const MEAL_TYPES: MealType[] = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK']
+ const MEAL_LABELS: Record<MealType, string> = {
+@@ -11,26 +12,6 @@ const MEAL_LABELS: Record<MealType, string> = {
+   SNACK: 'Snack',
+ }
+ 
+-function todayIso(): string {
+-  return new Date().toISOString().split('T')[0]
+-}
+-
+-function shiftDay(iso: string, delta: number): string {
+-  const d = new Date(iso + 'T12:00:00')
+-  d.setDate(d.getDate() + delta)
+-  return d.toISOString().split('T')[0]
+-}
+-
+-function formatDateLabel(iso: string): string {
+-  const today = todayIso()
+-  const yesterday = shiftDay(today, -1)
+-  const d = new Date(iso + 'T12:00:00')
+-  const dateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+-  if (iso === today) return `Today, ${dateStr}`
+-  if (iso === yesterday) return `Yesterday, ${dateStr}`
+-  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+-}
+-
+ // ─── Food Item Form ───────────────────────────────────────────────────────────
+ 
+ interface FoodItemFormProps {
+@@ -323,18 +304,13 @@ interface MealLogCardProps {
+   onItemChanged: () => void
+ }
+ 
+-function localHHMM(isoString: string): string {
+-  const d = new Date(isoString)
+-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+-}
+-
+ function MealLogCard({ log, onDeleted, onItemChanged }: MealLogCardProps) {
+   const [expanded, setExpanded] = useState(false)
+   const [detail, setDetail] = useState<MealLog | null>(null)
+   const [loadingDetail, setLoadingDetail] = useState(false)
+   const [deleting, setDeleting] = useState(false)
+   const [editingTime, setEditingTime] = useState(false)
+-  const [timeValue, setTimeValue] = useState(() => localHHMM(log.loggedAt))
++  const [timeValue, setTimeValue] = useState(() => localTimeHHMM(new Date(log.loggedAt)))
+   const [savingTime, setSavingTime] = useState(false)
+ 
+   async function toggleExpand() {
+@@ -378,9 +354,8 @@ function MealLogCard({ log, onDeleted, onItemChanged }: MealLogCardProps) {
+     setEditingTime(false)
+     setSavingTime(true)
+     try {
+-      const d = new Date(log.loggedAt)
+-      const localDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+-      const loggedAt = new Date(`${localDate}T${newTime}:00`).toISOString()
++      const localDate = localDateIso(new Date(log.loggedAt))
++      const loggedAt = isoDateTime(localDate, newTime)
+       await api.patch(`/api/v1/meal-logs/${log.id}`, { loggedAt })
+       onItemChanged()
+     } finally {
+@@ -408,7 +383,7 @@ function MealLogCard({ log, onDeleted, onItemChanged }: MealLogCardProps) {
+               />
+             ) : (
+               <span
+-                onClick={() => { setTimeValue(localHHMM(log.loggedAt)); setEditingTime(true) }}
++                onClick={() => { setTimeValue(localTimeHHMM(new Date(log.loggedAt))); setEditingTime(true) }}
+                 className="text-sm font-medium text-white hover:text-teal-400 cursor-pointer transition-colors"
+                 title="Click to edit time"
+               >
+@@ -488,14 +463,9 @@ interface MealSectionProps {
+   onTemplateSaved?: () => void
+ }
+ 
+-function currentTimeHHMM(): string {
+-  const now = new Date()
+-  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+-}
+-
+ function MealSection({ type, logs, selectedDate, onCreated, onDeleted, onItemChanged, onTemplateSaved }: MealSectionProps) {
+   const [creating, setCreating] = useState(false)
+-  const [mealTime, setMealTime] = useState(currentTimeHHMM)
++  const [mealTime, setMealTime] = useState(localTimeHHMM)
+   const [savingTemplate, setSavingTemplate] = useState(false)
+   const [templateMessage, setTemplateMessage] = useState('')
+ 
+@@ -504,7 +474,7 @@ function MealSection({ type, logs, selectedDate, onCreated, onDeleted, onItemCha
+     try {
+       await api.post('/api/v1/meal-logs', {
+         mealType: type,
+-        loggedAt: new Date(`${selectedDate}T${mealTime}:00`).toISOString(),
++        loggedAt: isoDateTime(selectedDate, mealTime),
+       })
+       onCreated()
+     } finally {
+@@ -607,8 +577,8 @@ function DatePickerPopover({ selected, onSelect }: { selected: string; onSelect:
+           <DayPicker
+             mode="single"
+             ISOWeek
+-            selected={new Date(selected + 'T12:00:00')}
+-            defaultMonth={new Date(selected + 'T12:00:00')}
++            selected={parseLocalDate(selected)}
++            defaultMonth={parseLocalDate(selected)}
+             onSelect={date => {
+               if (date) {
+                 const y = date.getFullYear()
+@@ -814,7 +784,7 @@ function TemplatesTab({ selectedDate, onApplied }: TemplatesTabProps) {
+ // ─── Meal Log Page ────────────────────────────────────────────────────────────
+ 
+ export default function MealLog() {
+-  const [selectedDate, setSelectedDate] = useState(todayIso)
++  const [selectedDate, setSelectedDate] = useState(localDateIso)
+   const [logs, setLogs] = useState<MealLogSummary[]>([])
+   const [loading, setLoading] = useState(true)
+   const [activeTab, setActiveTab] = useState<'log' | 'templates'>('log')
+@@ -839,17 +809,17 @@ export default function MealLog() {
+   useEffect(() => { loadLogs() }, [loadLogs])
+ 
+   const byType = (type: MealType) => logs.filter(l => l.mealType === type)
+-  const isToday = selectedDate === todayIso()
++  const isToday = selectedDate === localDateIso()
+ 
+   return (
+     <div className="p-8 space-y-6 max-w-4xl">
+       <div className="flex items-center gap-4">
+         <h1 className="text-2xl font-bold text-white flex-1">
+-          Meal Log — {formatDateLabel(selectedDate)}
++          Meal Log — {formatMealLogDate(selectedDate)}
+         </h1>
+         <div className="flex items-center gap-2">
+           <button
+-            onClick={() => setSelectedDate(d => shiftDay(d, -1))}
++            onClick={() => setSelectedDate(d => shiftDate(d, -1))}
+             className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg border border-gray-700 transition-colors"
+             title="Previous day"
+           >
+@@ -857,7 +827,7 @@ export default function MealLog() {
+           </button>
+           <DatePickerPopover selected={selectedDate} onSelect={setSelectedDate} />
+           <button
+-            onClick={() => setSelectedDate(d => shiftDay(d, 1))}
++            onClick={() => setSelectedDate(d => shiftDate(d, 1))}
+             disabled={isToday}
+             className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed text-gray-300 text-sm rounded-lg border border-gray-700 transition-colors"
+             title="Next day"

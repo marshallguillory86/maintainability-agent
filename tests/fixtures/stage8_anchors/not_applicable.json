@@ -1,0 +1,102 @@
+{
+  "aspects": {
+    "change_coupling": 5.0,
+    "churn_hotspots": 5.0,
+    "dead_code": 5.0,
+    "declaration_size": 5.0,
+    "documentation": 5.0,
+    "duplication": 5.0,
+    "file_size": 5.0,
+    "idiom_consistency": 5.0,
+    "knowledge_concentration": null,
+    "near_duplication": 5.0,
+    "policy_gates": 5.0,
+    "risk_patterns": 5.0,
+    "test_presence": 5.0
+  },
+  "categories": {
+    "analyzability": 5.0,
+    "modifiability": 5.0,
+    "modularity": 5.0,
+    "reusability": 5.0,
+    "testability": 5.0
+  },
+  "dimensions": {
+    "declarations": 0.0,
+    "duplication": 0.0,
+    "file_size": 0.0,
+    "gates": 0.0,
+    "risk": 0.0
+  },
+  "evidence_status": {
+    "profile": "default-v1",
+    "reasons": [],
+    "status": "complete"
+  },
+  "grade": "A+",
+  "grade_blockers": [],
+  "overall": 5.0,
+  "overall_range": [
+    5.0,
+    5.0
+  ],
+  "reference": {
+    "note": "Calibrated so a repo at the OSS median on every dimension scores 4.0.",
+    "unit": "multiple of the median mature-OSS repo (1.0 = typical real code)"
+  },
+  "rubric": {
+    "category_aspects": {
+      "analyzability": {
+        "churn_hotspots": 0.1,
+        "dead_code": 0.15,
+        "declaration_size": 0.3,
+        "documentation": 0.2,
+        "knowledge_concentration": 0.1,
+        "risk_patterns": 0.15
+      },
+      "modifiability": {
+        "change_coupling": 0.25,
+        "churn_hotspots": 0.15,
+        "duplication": 0.2,
+        "file_size": 0.05,
+        "knowledge_concentration": 0.1,
+        "policy_gates": 0.1,
+        "risk_patterns": 0.15
+      },
+      "modularity": {
+        "change_coupling": 0.25,
+        "churn_hotspots": 0.15,
+        "duplication": 0.25,
+        "file_size": 0.35
+      },
+      "reusability": {
+        "duplication": 0.3,
+        "file_size": 0.15,
+        "idiom_consistency": 0.25,
+        "near_duplication": 0.3
+      },
+      "testability": {
+        "declaration_size": 0.3,
+        "policy_gates": 0.2,
+        "test_presence": 0.5
+      }
+    },
+    "category_weights": {
+      "analyzability": 0.2,
+      "modifiability": 0.2,
+      "modularity": 0.2,
+      "reusability": 0.2,
+      "testability": 0.2
+    },
+    "unscored": {
+      "architectural_coherence": "no measurement distinguishes a wrong boundary from an unusual one statically",
+      "comment_accuracy": "comments are deliberately unparsed; staleness needs meaning, not structure",
+      "indirection_depth": "call-graph construction is not implemented for the supported languages",
+      "naming_quality": "no static proxy survives contact; a wrong-name detector needs semantics",
+      "test_effectiveness": "requires running the suite (mutation/coverage); this audit never executes code"
+    }
+  },
+  "standard": "ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based",
+  "verified_grade": "A+",
+  "worst_dimension": null
+}

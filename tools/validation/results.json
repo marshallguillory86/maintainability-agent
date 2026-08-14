@@ -1,0 +1,1497 @@
+{
+ "frame": "tools/validation/sample-frame.md",
+ "runs": [
+  {
+   "analyzer_findings": 74,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 10,
+   "built_in_sources": 8,
+   "classifications": [],
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 1925,
+   "estimate": 4.3,
+   "evidence_reasons": [
+    {
+     "measurement": "history.code_coupling_pairs",
+     "provenance": "history.code_coupling_pairs",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.files_changed",
+     "provenance": "history.files_changed",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.multi_commit_files",
+     "provenance": "history.multi_commit_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.qualifying_hotspots",
+     "provenance": "history.qualifying_hotspots",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.single_author_files",
+     "provenance": "history.single_author_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    }
+   ],
+   "evidence_status": "incomplete",
+   "expected_size": "mid",
+   "files_scanned": 120,
+   "generated_files": 0,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "python",
+   "languages": {
+    "Python": 32,
+    "Shell": 1
+   },
+   "practice_level": 3,
+   "production_declarations": 754,
+   "range": [
+    3.4,
+    4.5
+   ],
+   "read_source_files": 78,
+   "repo": "click",
+   "seconds": 7.2,
+   "unread_source": [
+    {
+     "files": 1,
+     "language": "Shell",
+     "suffix": ".sh"
+    }
+   ],
+   "unread_source_files": 1,
+   "vendored_files": 0,
+   "verified_grade": null,
+   "work_order_items": 41
+  },
+  {
+   "analyzer_findings": 90,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 10,
+   "built_in_sources": 8,
+   "classifications": [],
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 807,
+   "estimate": 4.1,
+   "evidence_reasons": [
+    {
+     "measurement": "history.code_coupling_pairs",
+     "provenance": "history.code_coupling_pairs",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.files_changed",
+     "provenance": "history.files_changed",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.multi_commit_files",
+     "provenance": "history.multi_commit_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.qualifying_hotspots",
+     "provenance": "history.qualifying_hotspots",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.single_author_files",
+     "provenance": "history.single_author_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    }
+   ],
+   "evidence_status": "incomplete",
+   "expected_size": "mid",
+   "files_scanned": 52,
+   "generated_files": 0,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "python",
+   "languages": {
+    "Python": 22
+   },
+   "practice_level": 3,
+   "production_declarations": 321,
+   "range": [
+    3.2,
+    4.3
+   ],
+   "read_source_files": 37,
+   "repo": "requests",
+   "seconds": 3.9,
+   "unread_source": [],
+   "unread_source_files": 0,
+   "vendored_files": 0,
+   "verified_grade": null,
+   "work_order_items": 35
+  },
+  {
+   "analyzer_findings": 2314,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 3,
+   "built_in_sources": 8,
+   "classifications": [],
+   "concepts_covered": [
+    "complexity",
+    "duplication",
+    "metrics",
+    "structure"
+   ],
+   "concepts_single_source": [
+    "dead-code"
+   ],
+   "concepts_unexamined": [
+    "documentation",
+    "style",
+    "testing",
+    "types"
+   ],
+   "declarations_scanned": 1663,
+   "estimate": 4.0,
+   "evidence_reasons": [
+    {
+     "measurement": "history.code_coupling_pairs",
+     "provenance": "history.code_coupling_pairs",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.files_changed",
+     "provenance": "history.files_changed",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.multi_commit_files",
+     "provenance": "history.multi_commit_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.qualifying_hotspots",
+     "provenance": "history.qualifying_hotspots",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.single_author_files",
+     "provenance": "history.single_author_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    }
+   ],
+   "evidence_status": "incomplete",
+   "expected_size": "large",
+   "files_scanned": 1747,
+   "generated_files": 0,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "typescript",
+   "languages": {
+    "JavaScript": 36,
+    "Shell": 9,
+    "TypeScript": 1284
+   },
+   "practice_level": 3,
+   "production_declarations": 897,
+   "range": [
+    3.1,
+    4.3
+   ],
+   "read_source_files": 1619,
+   "repo": "date-fns",
+   "seconds": 7.4,
+   "unread_source": [
+    {
+     "files": 14,
+     "language": "Shell",
+     "suffix": ".sh"
+    }
+   ],
+   "unread_source_files": 14,
+   "vendored_files": 0,
+   "verified_grade": null,
+   "work_order_items": 88
+  },
+  {
+   "analyzer_findings": 112,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 3,
+   "built_in_sources": 8,
+   "classifications": [],
+   "concepts_covered": [
+    "complexity",
+    "duplication",
+    "metrics",
+    "structure"
+   ],
+   "concepts_single_source": [
+    "dead-code"
+   ],
+   "concepts_unexamined": [
+    "documentation",
+    "style",
+    "testing",
+    "types"
+   ],
+   "declarations_scanned": 351,
+   "estimate": 4.0,
+   "evidence_reasons": [
+    {
+     "measurement": "history.code_coupling_pairs",
+     "provenance": "history.code_coupling_pairs",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.files_changed",
+     "provenance": "history.files_changed",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.multi_commit_files",
+     "provenance": "history.multi_commit_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.qualifying_hotspots",
+     "provenance": "history.qualifying_hotspots",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.single_author_files",
+     "provenance": "history.single_author_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    }
+   ],
+   "evidence_status": "incomplete",
+   "expected_size": "mid",
+   "files_scanned": 197,
+   "generated_files": 0,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "typescript",
+   "languages": {
+    "JavaScript": 38,
+    "Shell": 2,
+    "TypeScript": 76
+   },
+   "practice_level": 2,
+   "production_declarations": 269,
+   "range": [
+    3.2,
+    4.3
+   ],
+   "read_source_files": 126,
+   "repo": "formik",
+   "seconds": 3.0,
+   "unread_source": [
+    {
+     "files": 2,
+     "language": "Shell",
+     "suffix": ".sh"
+    }
+   ],
+   "unread_source_files": 2,
+   "vendored_files": 0,
+   "verified_grade": null,
+   "work_order_items": 45
+  },
+  {
+   "analyzer_findings": 14909,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 3,
+   "built_in_sources": 8,
+   "classifications": [
+    {
+     "evidence": "banner 'automatically generated' in the first 20 lines",
+     "path": "lib/archived-libs.d.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'do not edit' in the first 20 lines",
+     "path": "packages/babel-helper-validator-identifier/src/identifier-regex-browser.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'do not edit' in the first 20 lines",
+     "path": "packages/babel-helper-validator-identifier/src/identifier-regex.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "packages/babel-helpers/src/helpers-generated.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "packages/babel-standalone/src/generated/plugins.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "packages/babel-traverse/src/generated/visitor-types.d.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "packages/babel-traverse/src/path/generated/asserts.d.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "packages/babel-traverse/src/path/generated/validators.d.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "packages/babel-types/src/asserts/generated/index.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'autogenerated' in the first 20 lines",
+     "path": "packages/babel-types/src/ast-types/generated/index.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "packages/babel-types/src/builders/generated/index.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "packages/babel-types/src/builders/generated/lowercase.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "packages/babel-types/src/builders/generated/uppercase.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "packages/babel-types/src/constants/generated/index.ts",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "packages/babel-types/src/validators/generated/index.ts",
+     "provenance": "generated"
+    }
+   ],
+   "concepts_covered": [
+    "complexity",
+    "duplication",
+    "metrics",
+    "structure"
+   ],
+   "concepts_single_source": [
+    "dead-code"
+   ],
+   "concepts_unexamined": [
+    "documentation",
+    "style",
+    "testing",
+    "types"
+   ],
+   "declarations_scanned": 21497,
+   "estimate": 4.4,
+   "evidence_reasons": [
+    {
+     "measurement": "history.code_coupling_pairs",
+     "provenance": "history.code_coupling_pairs",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.files_changed",
+     "provenance": "history.files_changed",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.multi_commit_files",
+     "provenance": "history.multi_commit_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.qualifying_hotspots",
+     "provenance": "history.qualifying_hotspots",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    },
+    {
+     "measurement": "history.single_author_files",
+     "provenance": "history.single_author_files",
+     "reason": "report carries no history block: shallow clone, or not a git repository"
+    }
+   ],
+   "evidence_status": "incomplete",
+   "expected_size": "large",
+   "files_scanned": 17803,
+   "generated_files": 15,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "javascript",
+   "languages": {
+    "JavaScript": 201,
+    "Shell": 20,
+    "TypeScript": 667
+   },
+   "practice_level": 3,
+   "production_declarations": 4401,
+   "range": [
+    3.5,
+    4.6
+   ],
+   "read_source_files": 17606,
+   "repo": "babel",
+   "seconds": 34.8,
+   "unread_source": [
+    {
+     "files": 22,
+     "language": "Shell",
+     "suffix": ".sh"
+    },
+    {
+     "files": 1,
+     "language": "Vue",
+     "suffix": ".vue"
+    }
+   ],
+   "unread_source_files": 23,
+   "vendored_files": 0,
+   "verified_grade": null,
+   "work_order_items": 188
+  },
+  {
+   "analyzer_findings": 704,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 3,
+   "built_in_sources": 8,
+   "classifications": [],
+   "concepts_covered": [
+    "complexity",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure"
+   ],
+   "concepts_single_source": [
+    "dead-code"
+   ],
+   "concepts_unexamined": [
+    "style",
+    "testing",
+    "types"
+   ],
+   "declarations_scanned": 0,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "264 of 264 source files (100%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "mid",
+   "files_scanned": 16,
+   "generated_files": 0,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "java",
+   "languages": {
+    "Java": 122
+   },
+   "practice_level": 2,
+   "production_declarations": 0,
+   "range": null,
+   "read_source_files": 0,
+   "repo": "gson",
+   "seconds": 4.5,
+   "unread_source": [
+    {
+     "files": 264,
+     "language": "Java",
+     "suffix": ".java"
+    }
+   ],
+   "unread_source_files": 264,
+   "vendored_files": 0,
+   "verified_grade": null,
+   "work_order_items": 0
+  },
+  {
+   "analyzer_findings": 115,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 3,
+   "built_in_sources": 8,
+   "classifications": [],
+   "concepts_covered": [
+    "complexity",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure"
+   ],
+   "concepts_single_source": [
+    "dead-code"
+   ],
+   "concepts_unexamined": [
+    "style",
+    "testing",
+    "types"
+   ],
+   "declarations_scanned": 0,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "36 of 36 source files (100%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "mid",
+   "files_scanned": 17,
+   "generated_files": 0,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "go",
+   "languages": {
+    "Go": 19
+   },
+   "practice_level": 3,
+   "production_declarations": 0,
+   "range": null,
+   "read_source_files": 0,
+   "repo": "cobra",
+   "seconds": 2.0,
+   "unread_source": [
+    {
+     "files": 36,
+     "language": "Go",
+     "suffix": ".go"
+    }
+   ],
+   "unread_source_files": 36,
+   "vendored_files": 0,
+   "verified_grade": null,
+   "work_order_items": 1
+  },
+  {
+   "analyzer_findings": 438,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 3,
+   "built_in_sources": 8,
+   "classifications": [],
+   "concepts_covered": [
+    "complexity",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure"
+   ],
+   "concepts_single_source": [
+    "dead-code"
+   ],
+   "concepts_unexamined": [
+    "style",
+    "testing",
+    "types"
+   ],
+   "declarations_scanned": 0,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "115 of 115 source files (100%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "large",
+   "files_scanned": 23,
+   "generated_files": 0,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "rust",
+   "languages": {
+    "Lua": 1,
+    "Ruby": 1,
+    "Rust": 92,
+    "Shell": 3
+   },
+   "practice_level": 2,
+   "production_declarations": 0,
+   "range": null,
+   "read_source_files": 0,
+   "repo": "ripgrep",
+   "seconds": 2.1,
+   "unread_source": [
+    {
+     "files": 110,
+     "language": "Rust",
+     "suffix": ".rs"
+    },
+    {
+     "files": 2,
+     "language": "Shell",
+     "suffix": ".sh"
+    },
+    {
+     "files": 1,
+     "language": "Lua",
+     "suffix": ".lua"
+    },
+    {
+     "files": 1,
+     "language": "Ruby",
+     "suffix": ".rb"
+    },
+    {
+     "files": 1,
+     "language": "Shell",
+     "suffix": ".zsh"
+    }
+   ],
+   "unread_source_files": 115,
+   "vendored_files": 0,
+   "verified_grade": null,
+   "work_order_items": 4
+  },
+  {
+   "analyzer_findings": 1,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 3,
+   "built_in_sources": 8,
+   "classifications": [],
+   "concepts_covered": [
+    "complexity",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure"
+   ],
+   "concepts_single_source": [
+    "dead-code"
+   ],
+   "concepts_unexamined": [
+    "style",
+    "testing",
+    "types"
+   ],
+   "declarations_scanned": 0,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "1 of 1 source files (100%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "below-floor",
+   "files_scanned": 1,
+   "generated_files": 0,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "c",
+   "languages": {
+    "C": 1
+   },
+   "practice_level": 1,
+   "production_declarations": 0,
+   "range": null,
+   "read_source_files": 0,
+   "repo": "kilo",
+   "seconds": 1.2,
+   "unread_source": [
+    {
+     "files": 1,
+     "language": "C",
+     "suffix": ".c"
+    }
+   ],
+   "unread_source_files": 1,
+   "vendored_files": 0,
+   "verified_grade": null,
+   "work_order_items": 0
+  },
+  {
+   "analyzer_findings": 3897,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 3,
+   "built_in_sources": 8,
+   "classifications": [
+    {
+     "evidence": "banner 'code generated by' in the first 20 lines",
+     "path": "tests/data/data1400.c",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'code generated by' in the first 20 lines",
+     "path": "tests/data/data1401.c",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'code generated by' in the first 20 lines",
+     "path": "tests/data/data1402.c",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'code generated by' in the first 20 lines",
+     "path": "tests/data/data1403.c",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'code generated by' in the first 20 lines",
+     "path": "tests/data/data1404.c",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'code generated by' in the first 20 lines",
+     "path": "tests/data/data1405.c",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'code generated by' in the first 20 lines",
+     "path": "tests/data/data1406.c",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'code generated by' in the first 20 lines",
+     "path": "tests/data/data1407.c",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'code generated by' in the first 20 lines",
+     "path": "tests/data/data1420.c",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'code generated by' in the first 20 lines",
+     "path": "tests/data/data1465.c",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'code generated by' in the first 20 lines",
+     "path": "tests/data/data1481.c",
+     "provenance": "generated"
+    }
+   ],
+   "concepts_covered": [
+    "complexity",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure"
+   ],
+   "concepts_single_source": [
+    "dead-code"
+   ],
+   "concepts_unexamined": [
+    "style",
+    "testing",
+    "types"
+   ],
+   "declarations_scanned": 1041,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "1120 of 1172 source files (96%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "large",
+   "files_scanned": 981,
+   "generated_files": 11,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "c",
+   "languages": {
+    "C": 628,
+    "C++": 1,
+    "Perl": 21,
+    "Shell": 27
+   },
+   "practice_level": 3,
+   "production_declarations": 0,
+   "range": null,
+   "read_source_files": 52,
+   "repo": "curl",
+   "seconds": 10.5,
+   "unread_source": [
+    {
+     "files": 758,
+     "language": "C",
+     "suffix": ".c"
+    },
+    {
+     "files": 257,
+     "language": "C",
+     "suffix": ".h"
+    },
+    {
+     "files": 59,
+     "language": "Perl",
+     "suffix": ".pl"
+    },
+    {
+     "files": 29,
+     "language": "Shell",
+     "suffix": ".sh"
+    },
+    {
+     "files": 15,
+     "language": "Perl",
+     "suffix": ".pm"
+    },
+    {
+     "files": 2,
+     "language": "C++",
+     "suffix": ".cpp"
+    }
+   ],
+   "unread_source_files": 1120,
+   "vendored_files": 0,
+   "verified_grade": null,
+   "work_order_items": 55
+  },
+  {
+   "analyzer_findings": 2056,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 10,
+   "built_in_sources": 8,
+   "classifications": [],
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 65,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "502 of 509 source files (99%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "mid",
+   "files_scanned": 281,
+   "generated_files": 0,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "cpp",
+   "languages": {
+    "C++": 296,
+    "Lua": 1,
+    "Python": 6,
+    "SQL": 1,
+    "Swift": 1
+   },
+   "practice_level": 2,
+   "production_declarations": 60,
+   "range": null,
+   "read_source_files": 7,
+   "repo": "json",
+   "seconds": 8.7,
+   "unread_source": [
+    {
+     "files": 423,
+     "language": "C++",
+     "suffix": ".cpp"
+    },
+    {
+     "files": 57,
+     "language": "C++",
+     "suffix": ".hpp"
+    },
+    {
+     "files": 17,
+     "language": "C",
+     "suffix": ".h"
+    },
+    {
+     "files": 1,
+     "language": "C",
+     "suffix": ".c"
+    },
+    {
+     "files": 1,
+     "language": "Lua",
+     "suffix": ".lua"
+    },
+    {
+     "files": 1,
+     "language": "Shell",
+     "suffix": ".sh"
+    },
+    {
+     "files": 1,
+     "language": "SQL",
+     "suffix": ".sql"
+    },
+    {
+     "files": 1,
+     "language": "Swift",
+     "suffix": ".swift"
+    }
+   ],
+   "unread_source_files": 502,
+   "vendored_files": 0,
+   "verified_grade": null,
+   "work_order_items": 8
+  },
+  {
+   "analyzer_findings": 7229,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 10,
+   "built_in_sources": 8,
+   "classifications": [
+    {
+     "evidence": "maintained from upstream by scripts/sync-ggml.sh",
+     "path": "ggml",
+     "provenance": "vendored"
+    }
+   ],
+   "concepts_covered": [
+    "complexity",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure"
+   ],
+   "concepts_single_source": [
+    "dead-code"
+   ],
+   "concepts_unexamined": [
+    "style",
+    "testing",
+    "types"
+   ],
+   "declarations_scanned": 275,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "998 of 1039 source files (96%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "large",
+   "files_scanned": 85,
+   "generated_files": 0,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "cpp",
+   "languages": {
+    "C": 79,
+    "C++": 208,
+    "Go": 14,
+    "Java": 42,
+    "JavaScript": 8,
+    "Kotlin": 11,
+    "Objective-C": 8,
+    "PowerShell": 1,
+    "Python": 14,
+    "Ruby": 9,
+    "Shell": 30,
+    "Swift": 8
+   },
+   "practice_level": 2,
+   "production_declarations": 198,
+   "range": null,
+   "read_source_files": 41,
+   "repo": "whisper.cpp",
+   "seconds": 24.5,
+   "unread_source": [
+    {
+     "files": 437,
+     "language": "C++",
+     "suffix": ".cpp"
+    },
+    {
+     "files": 217,
+     "language": "C",
+     "suffix": ".h"
+    },
+    {
+     "files": 114,
+     "language": "C",
+     "suffix": ".c"
+    },
+    {
+     "files": 70,
+     "language": "C++",
+     "suffix": ".hpp"
+    },
+    {
+     "files": 45,
+     "language": "Java",
+     "suffix": ".java"
+    },
+    {
+     "files": 33,
+     "language": "Ruby",
+     "suffix": ".rb"
+    },
+    {
+     "files": 33,
+     "language": "Shell",
+     "suffix": ".sh"
+    },
+    {
+     "files": 18,
+     "language": "Go",
+     "suffix": ".go"
+    },
+    {
+     "files": 12,
+     "language": "Kotlin",
+     "suffix": ".kt"
+    },
+    {
+     "files": 9,
+     "language": "Objective-C",
+     "suffix": ".m"
+    },
+    {
+     "files": 8,
+     "language": "Swift",
+     "suffix": ".swift"
+    },
+    {
+     "files": 1,
+     "language": "Objective-C",
+     "suffix": ".mm"
+    },
+    {
+     "files": 1,
+     "language": "PowerShell",
+     "suffix": ".ps1"
+    }
+   ],
+   "unread_source_files": 998,
+   "vendored_files": 551,
+   "verified_grade": null,
+   "work_order_items": 57
+  },
+  {
+   "analyzer_findings": 71633,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 10,
+   "built_in_sources": 8,
+   "classifications": [],
+   "concepts_covered": [
+    "complexity",
+    "dead-code",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure",
+    "style",
+    "types"
+   ],
+   "concepts_single_source": [],
+   "concepts_unexamined": [
+    "testing"
+   ],
+   "declarations_scanned": 46,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "6508 of 6509 source files (100%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "large",
+   "files_scanned": 8,
+   "generated_files": 0,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "fortran",
+   "languages": {
+    "C": 2884,
+    "Fortran": 2352,
+    "Julia": 2,
+    "Python": 1
+   },
+   "practice_level": 2,
+   "production_declarations": 46,
+   "range": null,
+   "read_source_files": 1,
+   "repo": "lapack",
+   "seconds": 31.9,
+   "unread_source": [
+    {
+     "files": 3568,
+     "language": "Fortran",
+     "suffix": ".f"
+    },
+    {
+     "files": 2895,
+     "language": "C",
+     "suffix": ".c"
+    },
+    {
+     "files": 31,
+     "language": "Fortran",
+     "suffix": ".f90"
+    },
+    {
+     "files": 12,
+     "language": "C",
+     "suffix": ".h"
+    },
+    {
+     "files": 2,
+     "language": "Julia",
+     "suffix": ".jl"
+    }
+   ],
+   "unread_source_files": 6508,
+   "vendored_files": 0,
+   "verified_grade": null,
+   "work_order_items": 10
+  },
+  {
+   "analyzer_findings": 1965,
+   "analyzers_attempted": 11,
+   "analyzers_contributed": 3,
+   "built_in_sources": 8,
+   "classifications": [
+    {
+     "evidence": "filename matches \\.designer\\.cs$",
+     "path": "samples/csharp/end-to-end-apps/AnomalyDetection-Sales/SpikeDetectionE2EApp/SpikeDetection.WinForms/Form1.Designer.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "filename matches \\.designer\\.cs$",
+     "path": "samples/csharp/end-to-end-apps/AnomalyDetection-Sales/SpikeDetectionE2EApp/SpikeDetection.WinForms/Properties/Resources.Designer.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "filename matches \\.designer\\.cs$",
+     "path": "samples/csharp/end-to-end-apps/AnomalyDetection-Sales/SpikeDetectionE2EApp/SpikeDetection.WinForms/Properties/Settings.Designer.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "filename matches \\.designer\\.cs$",
+     "path": "samples/csharp/end-to-end-apps/Forecasting-Sales/src/eShopDashboard/Infrastructure/Migrations/Catalog/20180427211830_InitialMigration_CatalogContext.Designer.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/csharp/end-to-end-apps/Forecasting-Sales/src/eShopDashboard/Infrastructure/Migrations/Catalog/CatalogContextModelSnapshot.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "filename matches \\.designer\\.cs$",
+     "path": "samples/csharp/end-to-end-apps/Forecasting-Sales/src/eShopDashboard/Infrastructure/Migrations/Ordering/20180429181848_InitialMigration_OrderingContext.Designer.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "filename matches \\.designer\\.cs$",
+     "path": "samples/csharp/end-to-end-apps/Forecasting-Sales/src/eShopDashboard/Infrastructure/Migrations/Ordering/20180430095022_AddDescriptionsMigration_OrderingContext.Designer.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/csharp/end-to-end-apps/Forecasting-Sales/src/eShopDashboard/Infrastructure/Migrations/Ordering/OrderingContextModelSnapshot.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "filename matches \\.designer\\.cs$",
+     "path": "samples/csharp/end-to-end-apps/Model-Explainability/TaxiFarePrediction.Explainability/Form1.Designer.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "filename matches \\.designer\\.cs$",
+     "path": "samples/csharp/end-to-end-apps/Model-Explainability/TaxiFarePrediction.Explainability/Properties/Resources.Designer.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "filename matches \\.designer\\.cs$",
+     "path": "samples/csharp/end-to-end-apps/Model-Explainability/TaxiFarePrediction.Explainability/Properties/Settings.Designer.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/csharp/getting-started/MLNET2/TextClassification/ReviewSentiment.consumption.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/csharp/getting-started/MLNET2/TextClassification/ReviewSentiment.training.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/BinaryClassification_Sentiment_Razor/SentimentRazorML.ConsoleApp/ModelBuilder.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/BinaryClassification_Sentiment_Razor/SentimentRazorML.ConsoleApp/Program.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/BinaryClassification_Sentiment_Razor/SentimentRazorML.Model/ConsumeModel.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/BinaryClassification_Sentiment_Razor/SentimentRazorML.Model/ModelInput.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/BinaryClassification_Sentiment_Razor/SentimentRazorML.Model/ModelOutput.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/ImageClassification_Azure_LandUse/LandUse/LandUse.consumption.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/ImageClassification_Azure_LandUse/LandUse/LandUse.training.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/ImageClassification_Azure_LandUse/LandUse_Console/LandUse.consumption.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/ImageClassification_Azure_LandUse/LandUse_Console/LandUse.training.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/ImageClassification_Azure_LandUse/LandUse_Console/Program.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/ImageClassification_Azure_LandUse/LandUse_WebApi/LandUse.consumption.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/ImageClassification_Azure_LandUse/LandUse_WebApi/LandUse.training.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/ImageClassification_Azure_LandUse/LandUse_WebApi/Program.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/MatrixFactorization_MovieRecommendation/MovieRecommendation_ModelBuilder/MovieRecommender.consumption.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/MatrixFactorization_MovieRecommendation/MovieRecommendation_ModelBuilder/MovieRecommender.training.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/MatrixFactorization_MovieRecommendation/MovieRecommender_Console/MovieRecommender.consumption.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/MatrixFactorization_MovieRecommendation/MovieRecommender_Console/MovieRecommender.training.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/MatrixFactorization_MovieRecommendation/MovieRecommender_Console/Program.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/MatrixFactorization_MovieRecommendation/MovieRecommender_WebApi/MovieRecommender.consumption.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/MatrixFactorization_MovieRecommendation/MovieRecommender_WebApi/MovieRecommender.training.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/MatrixFactorization_MovieRecommendation/MovieRecommender_WebApi/Program.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/MulticlassClassification_RestaurantViolations/RestaurantViolationsML.ConsoleApp/ModelBuilder.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/MulticlassClassification_RestaurantViolations/RestaurantViolationsML.ConsoleApp/Program.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/MulticlassClassification_RestaurantViolations/RestaurantViolationsML.Model/ConsumeModel.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/MulticlassClassification_RestaurantViolations/RestaurantViolationsML.Model/ModelInput.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/MulticlassClassification_RestaurantViolations/RestaurantViolationsML.Model/ModelOutput.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/ObjectDetection_StopSigns/StopSignDetectionML.Model/ConsumeModel.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/ObjectDetection_StopSigns/StopSignDetectionML.Model/ModelInput.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/ObjectDetection_StopSigns/StopSignDetectionML.Model/ModelOutput.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/TextClassification_Sentiment_Razor/SentimentRazor/SentimentAnalysis.consumption.cs",
+     "provenance": "generated"
+    },
+    {
+     "evidence": "banner 'auto-generated' in the first 20 lines",
+     "path": "samples/modelbuilder/TextClassification_Sentiment_Razor/SentimentRazor/SentimentAnalysis.training.cs",
+     "provenance": "generated"
+    }
+   ],
+   "concepts_covered": [
+    "complexity",
+    "documentation",
+    "duplication",
+    "metrics",
+    "structure"
+   ],
+   "concepts_single_source": [
+    "dead-code"
+   ],
+   "concepts_unexamined": [
+    "style",
+    "testing",
+    "types"
+   ],
+   "declarations_scanned": 1871,
+   "estimate": null,
+   "evidence_reasons": [
+    {
+     "measurement": "summary.unread_source_files",
+     "provenance": "summary.unread_source",
+     "reason": "605 of 625 source files (97%) were not read: their extensions are absent from paths.include_extensions, so no score drawn from this tree describes the repository"
+    }
+   ],
+   "evidence_status": "insufficient",
+   "expected_size": "large",
+   "files_scanned": 162,
+   "generated_files": 44,
+   "hard_gate_failures": [],
+   "has_history": false,
+   "language": "csharp",
+   "languages": {
+    "C": 8,
+    "C#": 468,
+    "F#": 34,
+    "JavaScript": 20,
+    "PowerShell": 1
+   },
+   "practice_level": 1,
+   "production_declarations": 1871,
+   "range": null,
+   "read_source_files": 20,
+   "repo": "machinelearning-samples",
+   "seconds": 12.9,
+   "unread_source": [
+    {
+     "files": 562,
+     "language": "C#",
+     "suffix": ".cs"
+    },
+    {
+     "files": 34,
+     "language": "F#",
+     "suffix": ".fs"
+    },
+    {
+     "files": 8,
+     "language": "C",
+     "suffix": ".h"
+    },
+    {
+     "files": 1,
+     "language": "PowerShell",
+     "suffix": ".ps1"
+    }
+   ],
+   "unread_source_files": 605,
+   "vendored_files": 0,
+   "verified_grade": null,
+   "work_order_items": 177
+  }
+ ],
+ "sample": "sample.json"
+}

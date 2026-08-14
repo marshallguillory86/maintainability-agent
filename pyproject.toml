@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "maintainability-agent"
-version = "0.6.1"
+version = "0.7.0"
 description = "Maintainability gate and AI remediation prompt generator for CI."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -26,10 +26,12 @@ classifiers = [
 [project.scripts]
 maintainability-audit = "maintainability_audit.cli:main"
 maintainability-agent = "maintainability_audit.cli:main"
+maintainability-agent-mcp = "maintainability_audit.mcp_server:main"
 
 [project.optional-dependencies]
 test = ["pytest>=8", "pytest-cov>=5", "jsonschema>=4"]
-dev = ["pytest>=8", "pytest-cov>=5", "jsonschema>=4", "ruff>=0.5", "pip-audit>=2.7"]
+mcp = ["mcp>=2,<3"]
+dev = ["pytest>=8", "pytest-cov>=5", "jsonschema>=4", "ruff>=0.5", "pip-audit>=2.7", "mcp>=2,<3"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

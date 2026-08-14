@@ -1,0 +1,69 @@
+{
+  "duplicates": [
+    {
+      "firstFile": {
+        "end": 122,
+        "endLoc": {
+          "column": 34,
+          "line": 122,
+          "position": 4125
+        },
+        "name": "maintainability_audit/_adapters.py",
+        "start": 117,
+        "startLoc": {
+          "column": 50,
+          "line": 117,
+          "position": 3915
+        }
+      },
+      "format": "python",
+      "fragment": "",
+      "lines": 6,
+      "secondFile": {
+        "end": 217,
+        "endLoc": {
+          "column": 48,
+          "line": 217,
+          "position": 8065
+        },
+        "name": "maintainability_audit/_adapters.py",
+        "start": 213,
+        "startLoc": {
+          "column": 8,
+          "line": 213,
+          "position": 7868
+        }
+      },
+      "tokens": 51
+    }
+  ],
+  "statistics": {
+    "detectionDate": "2026-08-12T14:07:06.180Z",
+    "formats": {
+      "python": {
+        "clones": 1,
+        "duplicatedLines": 5,
+        "duplicatedTokens": 51,
+        "lines": 6949,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 0.0719527989638797,
+        "percentageTokens": 0.1177230968099349,
+        "sources": 37,
+        "tokens": 43322
+      }
+    },
+    "total": {
+      "clones": 1,
+      "duplicatedLines": 5,
+      "duplicatedTokens": 51,
+      "lines": 6949,
+      "newClones": 0,
+      "newDuplicatedLines": 0,
+      "percentage": 0.0719527989638797,
+      "percentageTokens": 0.1177230968099349,
+      "sources": 37,
+      "tokens": 43322
+    }
+  }
+}

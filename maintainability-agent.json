@@ -1,5 +1,21 @@
 {
   "version": 1,
+  "analyzers": {
+    "_doc": "Which external analyzers may run. See docs/analyzer-pool.md. Resolve with: python tools/resolve_pool.py",
+    "concerns": [
+      "all"
+    ],
+    "depth": "moderate",
+    "license_policy": "permissive",
+    "prompt_when_interactive": true,
+    "allow_tools": [],
+    "deny_tools": [],
+    "deny_license_classes": [],
+    "deny_concerns": [
+      "security"
+    ],
+    "timeout_seconds": 120
+  },
   "paths": {
     "include_extensions": [
       ".py",
@@ -19,13 +35,20 @@
       "build/",
       ".pytest_cache/",
       "examples/reports/",
+      "tools/validation/reports/",
       "maintainability-report.md",
       "maintainability-remediation-prompt.md",
       "maintainability-pr-comment.md",
       "maintainability-baseline.json",
       "maintainability.sarif",
       "coverage.xml",
-      "AGENTS-maintainability.md"
+      "AGENTS-maintainability.md",
+      "tools/calibration/*.json",
+      "tools/validation/*.json",
+      "tools/experiments/*/results.json",
+      "tests/fixtures/*.json",
+      "tests/fixtures/*/*.json",
+      "data/analyzer-catalog.json"
     ]
   },
   "thresholds": {
@@ -41,7 +64,10 @@
   "hard_gates": {
     "require_test_command": true,
     "require_readme": true,
-    "require_clean_worktree": false
+    "require_clean_worktree": false,
+    "fail_on_file_failures": true,
+    "fail_on_function_failures": true,
+    "fail_on_duplicate_blocks": true
   },
   "expected_files": [
     "README.md",
@@ -67,6 +93,8 @@
         ".py",
         ".js",
         ".jsx",
+        ".mjs",
+        ".cjs",
         ".ts",
         ".tsx"
       ]

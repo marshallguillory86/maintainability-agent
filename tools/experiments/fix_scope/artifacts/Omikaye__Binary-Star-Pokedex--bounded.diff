@@ -1,0 +1,657 @@
+diff --git a/package.json b/package.json
+index 30c9d12..887d270 100644
+--- a/package.json
++++ b/package.json
+@@ -31,6 +31,7 @@
+     "test-data-files": "node scripts/test-data-files.js",
+     "test-item-locations-parsing": "node scripts/test-item-locations-parsing.js",
+     "test-encounter-parsing": "node scripts/test-encounter-parsing.js",
++    "test-google-sheets-csv": "node scripts/google-sheets-csv.test.js",
+     "parse-static": "tsx build/parse-static-encounters.ts",
+     "render-articles": "node scripts/render-articles.js",
+     "fix-trainer-sprites": "node scripts/fix-trainer-sprites.js",
+diff --git a/scripts/google-sheets-csv.js b/scripts/google-sheets-csv.js
+new file mode 100644
+index 0000000..eef52ce
+--- /dev/null
++++ b/scripts/google-sheets-csv.js
+@@ -0,0 +1,82 @@
++const https = require('https');
++
++const GOOGLE_REDIRECT_HOST_SUFFIXES = [
++  '.google.com',
++  '.googleapis.com',
++  '.googleusercontent.com',
++];
++
++function fetchCSV(url) {
++  return new Promise((resolve, reject) => {
++    const parsedUrl = new URL(url);
++    const options = {
++      hostname: parsedUrl.hostname,
++      path: parsedUrl.pathname + parsedUrl.search,
++      headers: {
++        'User-Agent': 'Mozilla/5.0 (compatible; node.js)',
++      },
++    };
++
++    https.get(options, res => {
++      if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
++        const location = res.headers.location;
++        const redirectUrl = /^https?:\/\//.test(location) ? location : new URL(location, url).href;
++        const redirectHost = new URL(redirectUrl).hostname;
++        if (!GOOGLE_REDIRECT_HOST_SUFFIXES.some(suffix => redirectHost.endsWith(suffix))) {
++          reject(new Error(`Unexpected redirect to ${redirectHost}`));
++          return;
++        }
++        fetchCSV(redirectUrl).then(resolve, reject);
++        return;
++      }
++      if (res.statusCode !== 200) {
++        reject(new Error(`Failed to fetch: ${res.statusCode}`));
++        return;
++      }
++
++      let data = '';
++      res.on('data', chunk => data += chunk);
++      res.on('end', () => resolve(data));
++    }).on('error', reject);
++  });
++}
++
++function parseCSV(csvText, {preserveEmptyRows = false} = {}) {
++  const rows = [];
++
++  for (const line of csvText.split(/\r?\n/)) {
++    if (!line.trim()) {
++      if (preserveEmptyRows) rows.push([]);
++      continue;
++    }
++
++    const fields = [];
++    let currentField = '';
++    let inQuotes = false;
++
++    for (let i = 0; i < line.length; i++) {
++      const char = line[i];
++      const nextChar = line[i + 1];
++
++      if (char === '"') {
++        if (inQuotes && nextChar === '"') {
++          currentField += '"';
++          i++;
++        } else {
++          inQuotes = !inQuotes;
++        }
++      } else if (char === ',' && !inQuotes) {
++        fields.push(currentField);
++        currentField = '';
++      } else {
++        currentField += char;
++      }
++    }
++    fields.push(currentField);
++    rows.push(fields);
++  }
++
++  return rows;
++}
++
++module.exports = {fetchCSV, parseCSV};
+diff --git a/scripts/google-sheets-csv.test.js b/scripts/google-sheets-csv.test.js
+new file mode 100644
+index 0000000..15eb8b4
+--- /dev/null
++++ b/scripts/google-sheets-csv.test.js
+@@ -0,0 +1,21 @@
++const assert = require('assert');
++const {parseCSV} = require('./google-sheets-csv');
++
++const csv = 'Name,Description\r\n"Poké Ball","Useful, basic item"\r\n"Quote","Say ""hello"""\r\n\r\nLast,Row';
++
++assert.deepStrictEqual(parseCSV(csv), [
++  ['Name', 'Description'],
++  ['Poké Ball', 'Useful, basic item'],
++  ['Quote', 'Say "hello"'],
++  ['Last', 'Row'],
++]);
++
++assert.deepStrictEqual(parseCSV(csv, {preserveEmptyRows: true}), [
++  ['Name', 'Description'],
++  ['Poké Ball', 'Useful, basic item'],
++  ['Quote', 'Say "hello"'],
++  [],
++  ['Last', 'Row'],
++]);
++
++console.log('Google Sheets CSV utility tests passed.');
+diff --git a/scripts/sync-google-sheets-encounter-locations.js b/scripts/sync-google-sheets-encounter-locations.js
+index ae15fe5..ea79a9a 100644
+--- a/scripts/sync-google-sheets-encounter-locations.js
++++ b/scripts/sync-google-sheets-encounter-locations.js
+@@ -6,7 +6,7 @@
+ 
+ const fs = require('fs');
+ const path = require('path');
+-const https = require('https');
++const {fetchCSV, parseCSV} = require('./google-sheets-csv');
+ 
+ function toID(text) {
+   return String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+@@ -19,74 +19,6 @@ const LOCATIONS_JSON = path.join(__dirname, '..', 'data', 'locations.json');
+ 
+ const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${ENCOUNTER_LOCATIONS_GID}`;
+ 
+-function fetchCSV(url) {
+-  return new Promise((resolve, reject) => {
+-    const parsedUrl = new URL(url);
+-    const options = {
+-      hostname: parsedUrl.hostname,
+-      path: parsedUrl.pathname + parsedUrl.search,
+-      headers: {
+-        'User-Agent': 'Mozilla/5.0 (compatible; node.js)'
+-      }
+-    };
+-    https.get(options, (res) => {
+-      if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
+-        const location = res.headers.location;
+-        const redirectUrl = /^https?:\/\//.test(location) ? location : new URL(location, url).href;
+-        const redirectHost = new URL(redirectUrl).hostname;
+-        if (!redirectHost.endsWith('.google.com') && !redirectHost.endsWith('.googleapis.com') && !redirectHost.endsWith('.googleusercontent.com')) {
+-          reject(new Error(`Unexpected redirect to ${redirectHost}`));
+-          return;
+-        }
+-        return fetchCSV(redirectUrl).then(resolve).catch(reject);
+-      }
+-      if (res.statusCode !== 200) {
+-        reject(new Error(`Failed to fetch: ${res.statusCode}`));
+-        return;
+-      }
+-      let data = '';
+-      res.on('data', chunk => data += chunk);
+-      res.on('end', () => resolve(data));
+-    }).on('error', reject);
+-  });
+-}
+-
+-function parseCSV(csvText) {
+-  const rows = [];
+-  const lines = csvText.split(/\r?\n/);
+-
+-  for (const line of lines) {
+-    if (!line.trim()) continue;
+-
+-    const fields = [];
+-    let currentField = '';
+-    let inQuotes = false;
+-
+-    for (let i = 0; i < line.length; i++) {
+-      const char = line[i];
+-      const nextChar = line[i + 1];
+-
+-      if (char === '"') {
+-        if (inQuotes && nextChar === '"') {
+-          currentField += '"';
+-          i++;
+-        } else {
+-          inQuotes = !inQuotes;
+-        }
+-      } else if (char === ',' && !inQuotes) {
+-        fields.push(currentField);
+-        currentField = '';
+-      } else {
+-        currentField += char;
+-      }
+-    }
+-    fields.push(currentField);
+-    rows.push(fields);
+-  }
+-
+-  return rows;
+-}
+-
+ /**
+  * Parse gifts/trades string: "Rowlet (Starter, Held: Oran Berry) | Litten (Starter, Held: Oran Berry)"
+  * Returns array of {name, description} objects.
+diff --git a/scripts/sync-google-sheets-item-locations.js b/scripts/sync-google-sheets-item-locations.js
+index 29024a5..fcae69f 100644
+--- a/scripts/sync-google-sheets-item-locations.js
++++ b/scripts/sync-google-sheets-item-locations.js
+@@ -6,7 +6,7 @@
+ 
+ const fs = require('fs');
+ const path = require('path');
+-const https = require('https');
++const {fetchCSV, parseCSV: parseCSVRows} = require('./google-sheets-csv');
+ 
+ function toID(text) {
+   return String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+@@ -23,76 +23,8 @@ function getCSVUrl(gid) {
+   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
+ }
+ 
+-function fetchCSV(url) {
+-  return new Promise((resolve, reject) => {
+-    const parsedUrl = new URL(url);
+-    const options = {
+-      hostname: parsedUrl.hostname,
+-      path: parsedUrl.pathname + parsedUrl.search,
+-      headers: {
+-        'User-Agent': 'Mozilla/5.0 (compatible; node.js)'
+-      }
+-    };
+-    https.get(options, (res) => {
+-      if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
+-        const location = res.headers.location;
+-        const redirectUrl = /^https?:\/\//.test(location) ? location : new URL(location, url).href;
+-        const redirectHost = new URL(redirectUrl).hostname;
+-        if (!redirectHost.endsWith('.google.com') && !redirectHost.endsWith('.googleapis.com') && !redirectHost.endsWith('.googleusercontent.com')) {
+-          reject(new Error(`Unexpected redirect to ${redirectHost}`));
+-          return;
+-        }
+-        return fetchCSV(redirectUrl).then(resolve).catch(reject);
+-      }
+-      if (res.statusCode !== 200) {
+-        reject(new Error(`Failed to fetch: ${res.statusCode}`));
+-        return;
+-      }
+-      let data = '';
+-      res.on('data', chunk => data += chunk);
+-      res.on('end', () => resolve(data));
+-    }).on('error', reject);
+-  });
+-}
+-
+ function parseCSV(csvText) {
+-  const rows = [];
+-  const lines = csvText.split(/\r?\n/);
+-  
+-  for (const line of lines) {
+-    // Keep empty lines as they signal table boundaries in table-based parsing
+-    if (!line.trim()) {
+-      rows.push([]); // Empty row preserved for table separation
+-      continue;
+-    }
+-    
+-    const fields = [];
+-    let currentField = '';
+-    let inQuotes = false;
+-    
+-    for (let i = 0; i < line.length; i++) {
+-      const char = line[i];
+-      const nextChar = line[i + 1];
+-      
+-      if (char === '"') {
+-        if (inQuotes && nextChar === '"') {
+-          currentField += '"';
+-          i++;
+-        } else {
+-          inQuotes = !inQuotes;
+-        }
+-      } else if (char === ',' && !inQuotes) {
+-        fields.push(currentField);
+-        currentField = '';
+-      } else {
+-        currentField += char;
+-      }
+-    }
+-    fields.push(currentField);
+-    rows.push(fields);
+-  }
+-  
+-  return rows;
++  return parseCSVRows(csvText, {preserveEmptyRows: true});
+ }
+ 
+ function parseHorizontalItemLocations(rows) {
+diff --git a/scripts/sync-google-sheets-locations.js b/scripts/sync-google-sheets-locations.js
+index ac8a128..1dec099 100644
+--- a/scripts/sync-google-sheets-locations.js
++++ b/scripts/sync-google-sheets-locations.js
+@@ -5,7 +5,7 @@
+ 
+ const fs = require('fs');
+ const path = require('path');
+-const https = require('https');
++const {fetchCSV, parseCSV} = require('./google-sheets-csv');
+ 
+ function toID(text) {
+   return String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+@@ -19,80 +19,6 @@ const OUT = path.join(__dirname, '..', 'data', 'locations.json');
+ // Export URL for CSV format
+ const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+ 
+-function fetchCSV(url) {
+-  return new Promise((resolve, reject) => {
+-    const parsedUrl = new URL(url);
+-    const options = {
+-      hostname: parsedUrl.hostname,
+-      path: parsedUrl.pathname + parsedUrl.search,
+-      headers: {
+-        'User-Agent': 'Mozilla/5.0 (compatible; node.js)'
+-      }
+-    };
+-    https.get(options, (res) => {
+-      if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
+-        // Follow redirect
+-        const location = res.headers.location;
+-        const redirectUrl = /^https?:\/\//.test(location) ? location : new URL(location, url).href;
+-        const redirectHost = new URL(redirectUrl).hostname;
+-        if (!redirectHost.endsWith('.google.com') && !redirectHost.endsWith('.googleapis.com') && !redirectHost.endsWith('.googleusercontent.com')) {
+-          reject(new Error(`Unexpected redirect to ${redirectHost}`));
+-          return;
+-        }
+-        return fetchCSV(redirectUrl).then(resolve).catch(reject);
+-      }
+-      if (res.statusCode !== 200) {
+-        reject(new Error(`Failed to fetch: ${res.statusCode}`));
+-        return;
+-      }
+-      let data = '';
+-      res.on('data', chunk => data += chunk);
+-      res.on('end', () => resolve(data));
+-    }).on('error', reject);
+-  });
+-}
+-
+-function parseCSV(csvText) {
+-  const rows = [];
+-  const lines = csvText.split(/\r?\n/);
+-  
+-  for (const line of lines) {
+-    if (!line.trim()) continue;
+-    
+-    // Simple CSV parser - handles quoted fields
+-    const fields = [];
+-    let currentField = '';
+-    let inQuotes = false;
+-    
+-    for (let i = 0; i < line.length; i++) {
+-      const char = line[i];
+-      const nextChar = line[i + 1];
+-      
+-      if (char === '"') {
+-        if (inQuotes && nextChar === '"') {
+-          // Escaped quote
+-          currentField += '"';
+-          i++; // Skip next quote
+-        } else {
+-          // Toggle quotes
+-          inQuotes = !inQuotes;
+-        }
+-      } else if (char === ',' && !inQuotes) {
+-        // Field separator
+-        fields.push(currentField);
+-        currentField = '';
+-      } else {
+-        currentField += char;
+-      }
+-    }
+-    // Add last field
+-    fields.push(currentField);
+-    rows.push(fields);
+-  }
+-  
+-  return rows;
+-}
+-
+ function parseRange(str) {
+   // Parse level ranges like "13-15" or "13"
+   if (!str) return null;
+diff --git a/scripts/sync-google-sheets-shop-tables.js b/scripts/sync-google-sheets-shop-tables.js
+index ccb3cd9..9dff16e 100644
+--- a/scripts/sync-google-sheets-shop-tables.js
++++ b/scripts/sync-google-sheets-shop-tables.js
+@@ -15,7 +15,7 @@
+ 
+ const fs = require('fs');
+ const path = require('path');
+-const https = require('https');
++const {fetchCSV, parseCSV: parseCSVRows} = require('./google-sheets-csv');
+ 
+ // Configuration
+ const SHEET_ID = '1x21QTXNVGAvrQsiDCGzF-m09ASGW8ofgxjoqcLmQYkE';
+@@ -25,76 +25,8 @@ const OUT = path.join(__dirname, '..', 'data', 'shop-tables.json');
+ // Export URL for CSV format
+ const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+ 
+-function fetchCSV(url) {
+-  return new Promise((resolve, reject) => {
+-    const parsedUrl = new URL(url);
+-    const options = {
+-      hostname: parsedUrl.hostname,
+-      path: parsedUrl.pathname + parsedUrl.search,
+-      headers: {
+-        'User-Agent': 'Mozilla/5.0 (compatible; node.js)'
+-      }
+-    };
+-    https.get(options, (res) => {
+-      if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
+-        const location = res.headers.location;
+-        const redirectUrl = /^https?:\/\//.test(location) ? location : new URL(location, url).href;
+-        const redirectHost = new URL(redirectUrl).hostname;
+-        if (!redirectHost.endsWith('.google.com') && !redirectHost.endsWith('.googleapis.com') && !redirectHost.endsWith('.googleusercontent.com')) {
+-          reject(new Error(`Unexpected redirect to ${redirectHost}`));
+-          return;
+-        }
+-        return fetchCSV(redirectUrl).then(resolve).catch(reject);
+-      }
+-      if (res.statusCode !== 200) {
+-        reject(new Error(`Failed to fetch: ${res.statusCode}`));
+-        return;
+-      }
+-      let data = '';
+-      res.on('data', chunk => data += chunk);
+-      res.on('end', () => resolve(data));
+-    }).on('error', reject);
+-  });
+-}
+-
+ function parseCSV(csvText) {
+-  const rows = [];
+-  const lines = csvText.split(/\r?\n/);
+-  
+-  for (const line of lines) {
+-    // Keep empty lines for table-based format separation
+-    if (!line.trim()) {
+-      rows.push([]);
+-      continue;
+-    }
+-    
+-    const fields = [];
+-    let currentField = '';
+-    let inQuotes = false;
+-    
+-    for (let i = 0; i < line.length; i++) {
+-      const char = line[i];
+-      const nextChar = line[i + 1];
+-      
+-      if (char === '"') {
+-        if (inQuotes && nextChar === '"') {
+-          currentField += '"';
+-          i++;
+-        } else {
+-          inQuotes = !inQuotes;
+-        }
+-      } else if (char === ',' && !inQuotes) {
+-        fields.push(currentField);
+-        currentField = '';
+-      } else {
+-        currentField += char;
+-      }
+-    }
+-    fields.push(currentField);
+-    rows.push(fields);
+-  }
+-  
+-  return rows;
++  return parseCSVRows(csvText, {preserveEmptyRows: true});
+ }
+ 
+ function parseShopItem(str) {
+diff --git a/scripts/test-battle-parsing.js b/scripts/test-battle-parsing.js
+index f3fbfe1..ef00fd7 100644
+--- a/scripts/test-battle-parsing.js
++++ b/scripts/test-battle-parsing.js
+@@ -3,6 +3,7 @@
+ 
+ const fs = require('fs');
+ const path = require('path');
++const {parseCSV} = require('./google-sheets-csv');
+ 
+ function toID(text) {
+   return String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+@@ -20,42 +21,6 @@ const SAMPLE_CSV = `"Field Description","Route 1","Hau'oli City","Melemele Meado
+ "Trainers","","","010"
+ "Items","Potion x5 - From Kukui","Town Map - From Mom","Antidote - Hidden in grass"`;
+ 
+-function parseCSV(csvText) {
+-  const rows = [];
+-  const lines = csvText.split(/\r?\n/);
+-  
+-  for (const line of lines) {
+-    if (!line.trim()) continue;
+-    
+-    const fields = [];
+-    let currentField = '';
+-    let inQuotes = false;
+-    
+-    for (let i = 0; i < line.length; i++) {
+-      const char = line[i];
+-      const nextChar = line[i + 1];
+-      
+-      if (char === '"') {
+-        if (inQuotes && nextChar === '"') {
+-          currentField += '"';
+-          i++;
+-        } else {
+-          inQuotes = !inQuotes;
+-        }
+-      } else if (char === ',' && !inQuotes) {
+-        fields.push(currentField);
+-        currentField = '';
+-      } else {
+-        currentField += char;
+-      }
+-    }
+-    fields.push(currentField);
+-    rows.push(fields);
+-  }
+-  
+-  return rows;
+-}
+-
+ function parseRange(str) {
+   if (!str) return null;
+   const cleaned = str.toString().trim();
+diff --git a/scripts/test-encounter-parsing.js b/scripts/test-encounter-parsing.js
+index 600f021..03b6cf7 100644
+--- a/scripts/test-encounter-parsing.js
++++ b/scripts/test-encounter-parsing.js
+@@ -1,6 +1,8 @@
+ // Test script for EncounterLocations Google Sheets parsing
+ // Tests the column-based format with gifts/trades and encounter blocks
+ 
++const {parseCSV} = require('./google-sheets-csv');
++
+ function toID(text) {
+   return String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+ }
+@@ -37,42 +39,6 @@ const SAMPLE_CSV = `"Row Labels","Route 1","Iki Town","Route 2"
+ "Encounter 2 Row 8","","",""
+ "Encounter 2 Row 9","Additional SOS encounters: (None)","",""`;
+ 
+-function parseCSV(csvText) {
+-  const rows = [];
+-  const lines = csvText.split(/\r?\n/);
+-
+-  for (const line of lines) {
+-    if (!line.trim()) continue;
+-
+-    const fields = [];
+-    let currentField = '';
+-    let inQuotes = false;
+-
+-    for (let i = 0; i < line.length; i++) {
+-      const char = line[i];
+-      const nextChar = line[i + 1];
+-
+-      if (char === '"') {
+-        if (inQuotes && nextChar === '"') {
+-          currentField += '"';
+-          i++;
+-        } else {
+-          inQuotes = !inQuotes;
+-        }
+-      } else if (char === ',' && !inQuotes) {
+-        fields.push(currentField);
+-        currentField = '';
+-      } else {
+-        currentField += char;
+-      }
+-    }
+-    fields.push(currentField);
+-    rows.push(fields);
+-  }
+-
+-  return rows;
+-}
+-
+ function parseGiftsTrades(str) {
+   if (!str || !str.trim() || str.trim().toLowerCase() === 'none') return [];
+   const entries = str.split('|').map(s => s.trim()).filter(s => s);
+diff --git a/scripts/test-sheets-parsing.js b/scripts/test-sheets-parsing.js
+index 7f92206..d1b5720 100644
+--- a/scripts/test-sheets-parsing.js
++++ b/scripts/test-sheets-parsing.js
+@@ -3,6 +3,7 @@
+ 
+ const fs = require('fs');
+ const path = require('path');
++const {parseCSV} = require('./google-sheets-csv');
+ 
+ function toID(text) {
+   return String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+@@ -22,42 +23,6 @@ const SAMPLE_CSV = `"Field Description","Route 1","Iki Town","Route 2"
+ "Shops","Potion - $200, Poké Ball - $200","","Super Potion - $700, Revive - $1500"
+ "Items","Potion x5 - From Mom, Poké Ball - Hidden in grass","Town Map - From Hau","Revive - On ground, Rare Candy x2 - Behind rock"`;
+ 
+-function parseCSV(csvText) {
+-  const rows = [];
+-  const lines = csvText.split(/\r?\n/);
+-  
+-  for (const line of lines) {
+-    if (!line.trim()) continue;
+-    
+-    const fields = [];
+-    let currentField = '';
+-    let inQuotes = false;
+-    
+-    for (let i = 0; i < line.length; i++) {
+-      const char = line[i];
+-      const nextChar = line[i + 1];
+-      
+-      if (char === '"') {
+-        if (inQuotes && nextChar === '"') {
+-          currentField += '"';
+-          i++;
+-        } else {
+-          inQuotes = !inQuotes;
+-        }
+-      } else if (char === ',' && !inQuotes) {
+-        fields.push(currentField);
+-        currentField = '';
+-      } else {
+-        currentField += char;
+-      }
+-    }
+-    fields.push(currentField);
+-    rows.push(fields);
+-  }
+-  
+-  return rows;
+-}
+-
+ function parseRange(str) {
+   if (!str) return null;
+   const cleaned = str.toString().trim();

@@ -2,6 +2,251 @@
 
 All notable changes to Maintainability Agent will be documented here.
 
+## Unreleased
+
+## 0.7.0 - 2026-08-13
+
+Scores the evidence cannot support are withheld. `--fail-on-new` no longer
+fires on code that only moved. Two incompatibilities: **report schema
+version 3** (`maintainability_estimate` is nullable) and **baseline format
+version 2**. See [docs/migration-0.7.md](docs/migration-0.7.md).
+
+### Added
+
+- **The MCP server can run the analyzer pool.** `audit_repository` takes `run_analyzers`
+  and returns the coverage, findings and measurements alongside the report, with
+  `analyzers_run` stated at the top level so a caller cannot mistake a six-detector audit
+  for a ten-tool one.
+
+- **Three new default risk patterns, each earned by a defect this project actually shipped.**
+  `absence-as-zero` catches a measurement default that conflates "measured none" with
+  "never measured" — the bug behind a one-function repository scoring 5.0/A+, and behind
+  a clean scan reading as unexamined. `vacuous-assertion` catches assertions that cannot
+  fail, after one let a gap survive the test written to catch it. `silent-truncation`
+  catches a returned collection cut without saying so. They are review prompts, not defect
+  assertions: narrowed until they stay quiet on accumulators and named limits.
+
+- **`--analyzers` runs external quality tools and reports coverage.** Nine adapters ship
+  working: lizard, radon, ruff, vulture, interrogate, jscpd, complexipy, multimetric
+  and pydocstyle. Every report states which
+  tools were attempted, which ran, which were unavailable and why, their versions, and
+  **which concerns nothing examined** — a concern nobody looked at is reported unexamined,
+  never clean. Off by default because analyzer measurements do not move the point
+  estimate, not because the pool is unfinished.
+- **A copy-paste GitHub Actions recipe** at `.github/workflows/maintainability.yml`,
+  the file the README already named.
+
+### Fixed
+
+- **Every entry point uses the repository's own `maintainability-agent.json`.** Discovery
+  lived in the CLI at first, which was not enough — the MCP server returned 405 findings
+  where the CLI returned 162 on the same repository. It now lives in `config`.
+- **The repository's own `maintainability-agent.json` is used without `--config`.** The CLI
+  previously fell back to built-in defaults when no config was named, so a repository with
+  a config file beside it was audited against different exclusions than it asked for. On
+  this project the difference was 422 findings versus 162, most of the excess from a
+  generated data file its config had excluded all along. An explicit `--config` still wins.
+- **File patterns in `exclude_patterns` now reach the external analyzers.** Directory and
+  file patterns were both wrapped as directory globs, so `data/generated.json` became
+  `**/data/generated.json/**` and never matched.
+
+- **`--changed-only` no longer reports a whole-repository grade for a diff.** It previously
+  returned an estimate and `evidence_status: complete` over as few as zero declarations, and
+  every PR-scoped CI run inherited it. A scope-limited scan now withholds the estimate, the
+  range and the verified grade, with a reason naming the scope and the remedy. Findings and
+  aspects are unaffected, and `--fail-on-gate` exit codes are unchanged.
+- **Finding identity survives edits elsewhere in the file.** Fingerprints embedded the start
+  line, so inserting one import above an untouched function made it read as simultaneously
+  fixed and new — a false failure for `--fail-on-new` after any refactor that shifts lines.
+  Identity now uses the path, declaration name and same-name ordinal instead of the start line.
+- **Two same-named declarations in one file are two findings everywhere, not just in the
+  baseline.** `finding_fingerprints` numbered overloads `#0` and `#1` correctly, but the work
+  order, `prompt_targets` and the prompt's escalation check each rebuilt the identity with a
+  hardcoded ordinal of `0`. So two `huge` methods in one file were one finding: the work
+  order named the same declaration twice, recurrence recorded advice about the first one
+  twice and never about the second, and escalating either overload suppressed whichever the
+  prompt compared first. The population, the order rule and the numbering now live in
+  `declaration_identities` / `risk_identities`, and consumers look identity up rather than
+  derive it.
+- **Risk findings can be tracked across scans at all.** `prompt_targets` rebuilt a risk
+  identity from the work-order item's rendered *title*, so the name it hashed was the label
+  "configured risk pattern" rather than the pattern's own name. No such identity is ever in a
+  report, so every risk target failed the corroboration check and was silently dropped — on
+  this repository, all 21 of them.
+
+- **A repository too small to measure gets no score.** A tree holding one production
+  function and one test reported 5.0/A+ with every finding count genuinely zero — the
+  arithmetic was right and the number was empty. Rates now require a population the scale
+  was calibrated on: the whole score is gated on the tree's size, and inside a scorable
+  repository each aspect is gated on its own denominator. Findings are never suppressed,
+  only rates.
+- **The unread-source remedy no longer says the repository is too small.** Adding
+  the missing extension was the right next step; calling the tree undersized after
+  that was a second, false diagnosis.
+- **Work-order items use the hotspot's `start_line`.** Oversized declarations
+  carried `line: None` because the work order read a key the hotspot never had.
+- **Competing-libraries items read `divergent_idioms`.** The work order looked up
+  `idiom_concerns`, a key the report never carries, and dropped every idiom finding.
+- **The AI prompt names complete evidence and the estimate's source.** A complete
+  report used to be silent about evidence status. Analyzer findings sat under a
+  built-in estimate with no caveat. The status is now printed in every state, and
+  the built-in-only caveat appears only when analyzers spoke.
+
+### Changed
+
+- **Promise P1 amended: analysis performs no network access; tool *acquisition* may.**
+  The audit now invokes external analyzers, and some live in ecosystems whose normal
+  install path is a fetch — `npx` for the Node tools. The property the promise protected
+  is intact: the analysis itself touches no network and your code is never transmitted
+  anywhere. Acquiring a tool may fetch it on first run, and the version acquired is
+  recorded. Install ahead of time (`npm install -g jscpd`) to pin a version or build
+  air-gapped. Prerequisites are listed in `docs/analyzer-pool.md`.
+- **Report schema version 3.** `maintainability_estimate` and `maintainability_range` are
+  nullable and `evidence_status.status` may be `insufficient`. Consumers assuming a number
+  must handle null.
+- **Baseline format version 2.** Old fingerprints cannot be converted, so a version-1 baseline
+  is rejected with an instruction to regenerate rather than silently suppressing nothing.
+  Regenerate with `--write-baseline`.
+
+
+Recalibration, and a retraction. The reference corpus is now chosen by a query instead of by the author's taste, which moved every constant in the scale — read the table before comparing a score to one from 0.6.x.
+
+### Added — local MCP server
+
+- **A read-only stdio MCP boundary for Codex and its VS Code extension.** `maintainability-agent-mcp` exposes the production audit and its bounded remediation prompt together; it does not restate scanning, scoring or rendering. Canonical repository allow-lists block path and symlink escapes, config files must remain inside the audited repository, changed-only input cannot inject git options, and the server accepts no command strings or output paths. MCP remains an optional install extra, so the base CLI keeps its dependency footprint.
+
+### Changed — ADR 001 stage 8 (**breaking report contract**)
+
+**Stage 8 moved the report schema from 1 to 2.** The four ambiguous
+compatibility score fields left with no aliases. **0.7 then moved the
+schema to 3** when the estimate became nullable; that is the version this
+release writes. Version 1 is still rejected. There is no migration.
+
+| Removed | Replacement |
+|---|---|
+| `score.overall` | `score.maintainability_estimate` |
+| `score.overall_range` | `score.maintainability_range` |
+| `score.grade` | *nothing* — `score.verified_grade` is the only letter a report carries |
+| `score.grade_blockers` | `score.verified_grade_blockers` |
+
+- **Why `grade` has no replacement.** It was banded from the evidence floor, so on an incomplete report it meant "the worst the evidence allows" while reading as the repository's grade. Stage 7 labelled it; stage 8 removes it. A report now either issues a verified grade or issues none, and there is no second letter to fall back to.
+- **`verified_grade_blockers` explains an issued grade only.** When no grade was issued the list is empty, because there is nothing to cap — what is missing is named in `evidence_status.reasons` with its measurement path and provenance. Conflating the two is what let an evidence gap read as a quality demotion.
+- **No value moved.** Parity was proven against four reports captured from `a6b3c0f` before any edit — complete, complete-with-NotApplicable, incomplete from unavailable history, and incomplete from a missing summary measurement — checked in under `tests/fixtures/stage8_anchors/`. Estimate, range, verified grade, categories, aspects, rubric, dimensions, reference, worst dimension and evidence status are identical in all four. The calibration constant re-derives to the same value and all 40 corpus repositories still produce a median of exactly 4.0.
+- **No version-1 migration exists, deliberately.** The consumer inventory established that nothing rescores a persisted report, so a migration would have served no caller. Version 1, unversioned and unknown versions all fail with `UnsupportedReportSchema`.
+- **Baselines stop carrying a score snapshot.** Nothing ever read it back — `load_baseline` takes the fingerprint list alone — and writing one would freeze an obsolete contract into every new baseline. At stage 8 the file version stayed 1 and older files still loaded. **0.7 later rejected version-1 baselines** because finding identity changed and those fingerprints cannot be converted; this release writes baseline format version 2.
+- **The presentation boundary lost its fallbacks.** `_evidence_view` reads canonical fields directly; `compatibility_grade` and `NOT_REPORTED` are gone, along with the legacy-field defaults. A malformed score object now fails rather than receiving compatibility semantics.
+- **Guarded against reintroduction.** A structural test fails the build if `src/` or `tools/` reads or emits any of the four removed keys, while leaving internal variable names, test descriptions and historical prose alone.
+
+### Added — ADR 001 stage 7 (consumer migration)
+
+- **Every consumer now distinguishes the estimate from the verified grade.** Through stage 6 the Markdown report, PR comment, remediation prompt and agent instructions all headlined `score.grade` — which is banded from the *evidence floor*, so on an incomplete report it means "the worst the evidence allows" while reading as though it were the repository's grade. All four now show the maintainability estimate, its range, the evidence status with its named profile, and either the verified grade or the words **Not verified**. The compatibility grade stays visible for the deprecation window and is labelled as compatibility/evidence-floor wherever it appears; removing it is stage 8.
+- **A null verified grade is never rendered as a letter, a dash, or a blank.** Each of those reads as a result, and the point of the field is that no result was issued.
+- **Unavailable measurements are named with their typed path and provenance**, so a reader knows which measurement to restore rather than that "history" is vaguely absent.
+- **The remediation prompt states that incomplete evidence is not a code defect** and must not widen the work order, and names the usual cause (`actions/checkout` defaults to `fetch-depth: 1`). Without that, an agent told "evidence is incomplete" does what agents do and starts changing code — the measured cost of an unbounded instruction is in `docs/studies.md`.
+- **SARIF carries evidence at run level only.** Profile, status, verified grade and reasons ride in the run's property bag; missing evidence never becomes a result, because "this clone was shallow" is not a source-code finding and does not belong in the Security tab beside real defects. Result count, rule ids, levels and locations are unchanged. A report with no score object omits the bag entirely rather than emitting `verifiedGrade: null`, which would assert a withholding that never happened.
+- **One presentation helper owns the wording** (`_evidence_view`), so four consumers cannot arrive at four interpretations of what null means. It reads the public report dictionary, computes no score and imports nothing from the scoring layer.
+- **Nothing about scoring changed**, verified by comparing a complete and an incomplete production report before and after: no field of `score` differs. `--fail-on-gate` still reads hard findings only and still exits 0 for a withheld grade, per the rejected ADR 002.
+- **Five audit findings closed before this shipped.** A collapsed range no longer claims "no unmeasured evidence" — rounding can make the bounds coincide on a report whose grade was withheld, so the phrasing now consults the typed status and a property test sweeps every required measurement rather than the one example. The agent instructions were only half migrated, showing the grade value while omitting the range, status, profile, reasons and the don't-widen rule; the changelog and standard claimed otherwise and were wrong. Remediation advice now follows the missing measurement paths instead of telling every incomplete report to check its clone depth — including one whose only gap was `summary.test_file_count`. The SARIF preservation test compared nothing: it now diffs results and rules against output captured from commit 91430f3. And the roadmap still listed finished stages as pending.
+- **Deliberate no-ops, confirmed in source rather than assumed:** no badge consumer and no API grade consumer exist, and `load_baseline` still reads fingerprint strings only.
+
+### Fixed — ADR 001 Stage 6 closure
+
+- **fix(scoring): typed ownership evidence is now the only source of applicability.** `NormalizedEvidence` carried both `history.single_author_files` and a companion `history_present` Boolean. Grading used the Boolean to exempt `knowledge_concentration` whenever any history block existed, so deleting only `single_author_files` produced an explicit `Unknown` yet retained an A+ compatibility grade with no unmeasured-ownership blocker. The companion flag is removed. Only a genuine `NotApplicable` state receives the no-population exemption; `Unknown` now demotes top grades to B and names the missing aspect, as the standard has always claimed.
+- **correction: Stage 6 changed only externally supplied incomplete compatibility input.** The `404d82c` handoff said compatibility JSON and Markdown were unchanged. Comparing `build_report` output before and after Stage 6 shows no compatibility-field difference because the producer always emits all three documentation flags. A versioned report supplied externally with `has_readme`, `has_changelog`, or `has_docs_dir` omitted does change intentionally: its documentation aspect becomes unmeasured and its range, grade and blockers may move. No rubric weights, grade bands or calibration constants changed.
+- **fix(scoring): NotApplicable no longer widens the uncertainty interval.** A young repository with readable history but no settled files reported complete evidence and a verified A+ beside a range of `[4.8, 5.0]`. The aspect layer represented both `Unknown` and `NotApplicable` as `None`, and the rollup priced both across 0..5. The typed state now supplies a NotApplicable exclusion to the one shared rollup: the aspect is removed from its category denominator for the point and both bounds. It earns no clean score, pays no unknown price, and complete evidence collapses the range.
+
+### Retracted
+
+- **retract: the claim that near-duplication distinguishes AI-written code.** 0.6.0 reported production cross-file near-duplication at **1.49%** for AI-written applications against **0.20%** for human-written OSS, and the README called it "the first signal that separates AI-written applications from mature human-written OSS". The AI cohort was six young applications; the control was twelve libraries with a decade of maintenance behind them. Authorship, age, domain and size all differed at once, and the release attributed the gap to the one variable it found interesting — while a paragraph further down admitted the confound. Re-run against a control matched on age, popularity (both cohorts median **zero** stars) and language, the difference is **not significant: p = 0.546**, and **p = 0.871** inside a common size band. What moved since 0.6.0 is not the AI figure (1.49% → 1.73%) but the *control*, 0.20% → 0.83%. The signal was maturity, not authorship.
+- **no other metric earns the claim either, though one is left genuinely open.** File-failure rate (p = 0.043) and duplicate-block rate (p = 0.042) fall under 0.05 — more than chance alone would typically yield across five tests, but both are the metrics most correlated with codebase size (r = 0.58, 0.49), and the AI cohort carries 1.8x the declarations because **size was not matched at selection**, only handled afterwards by re-testing inside a shared size band. Banded, file failures converge on near-identical medians (1.82% vs 1.77%, p = 0.123) — that one really does look like size. Duplicate blocks keep a **3.3x banded median gap at p = 0.117**: underpowered, not resolved. And the design's stated hole is that the control is "no AI trailer found", which Copilot and pasted LLM output would pass — so the honest conclusion is **"this design could not measure a difference"**, not "there is no difference".
+- **checkable rather than asserted:** the cohort definitions are pinned in `tools/calibration/ai.json` and `human.json` (URL, commit, stars, trailer fraction per repo), `cohorts.json` carries all 78 measurements, and `analyze_cohorts.py` reproduces the tables offline with no network. The rank-sum test carries tie and continuity corrections and is pinned numerically against scipy — the first version lacked the tie correction, inflating p by up to 2.4x on tie-heavy metrics, in the null's favor.
+- **the near-duplicate detector itself is unaffected and still shipped.** A helper written twice under two names is worth finding regardless of who wrote it. What is withdrawn is the claim that finding it tells you anything about authorship.
+
+### Fixed — second hostile-audit response
+
+A second adversarial audit probed the rubric within hours of it landing. Its stale claims are answered in the tracker; its live findings are all fixed here:
+
+- **fix(scoring): the reported overall is always the mean of the reported categories.** The zero-test testability cap used to mutate the displayed category *after* the overall was computed, so exactly the repos being penalized got an overall that contradicted the published rollup formula. The cap now applies before the rollup.
+- **fix(scoring): an empty test-shaped artifact no longer buys an A.** `test_file_count` counted any path-matching file (a Markdown note under `tests/`, an empty `test_x.py`), and a 1.5-point floor priced "tests exist" without asking whether they contained anything. Test files must now be source files, and test files holding zero declarations score the same as no tests: probes for zero tests, one empty test file, and md-in-tests/ all read B / testability 2.0 / named blocker.
+- **fix(scoring): history aspects score from full counts, not truncated display lists.** Hotspot and coupling rates were computed as `len(capped-at-25 list) / files_changed`, so a repository with 100 real hotspots in 1,000 changed files scored as 25/1000 and the pressure *fell* as repositories grew — the size-bias class this scale exists to forbid, reintroduced by its newest metric. `history_section` now records `qualifying_hotspots` and `code_coupling_pairs` before truncation and the scorer reads only those.
+- **feat(scoring): unknown evidence blocks the top grades.** A shallow clone could omit coupling, hotspots and ownership and outscore the same repository with its history visible. Unmeasured aspects now demote A-grades to B with a blocker naming them; "looked and found nothing to measure" (a young repo with no settled files) is distinguished from "couldn't look" and does not block.
+- **fix(calibration): the anchor is derived through the full rubric, not a structural-only approximation.** The corpus measurements now carry an `evidence` block per repo (test presence, dead code, near-duplication, idioms, documentation — captured by re-measuring all 40 pinned clones), and the derivation prices it via the *same* `evidence_aspect_scores` function live reports use. `CALIBRATION_C` 2.966 → **3.1994**. History aspects stay out of the anchor (shallow pins) and renormalize away exactly as they do for any shallow clone. The re-measure also reconfirmed every dimension reference byte-for-byte, disproving the audit's repeated staleness claim.
+- **docs: the "override it in config" sentence was false and is corrected.** Rubric weights and bands are source, not config; per-repo override is roadmap, and any future mechanism will label its output a house variant.
+
+### Fixed — third hostile-audit response
+
+- **fix(scoring): unknown aspects price at the corpus anchor instead of renormalizing away.** Renormalization let a shallow clone of clean code score 5.0 while the same code with worst-band history scored 4.2 — hiding the log was worth +0.8. Anchor pricing puts the shallow point estimate *between* worst and clean (worst 4.2 < shallow < clean 5.0). **An earlier revision of this entry claimed "hiding evidence can no longer raise the score"; a fourth audit correctly showed that false** — hiding worse-than-anchor history still gains up to the anchor-to-worst gap, which no single imputed value can prevent. The honest closure is `score.overall_range`: unknowns priced at 0 and 5 bound the overall, so concealment visibly widens the interval instead of silently improving a point. **A fifth audit called "closure" spin here, correctly** — the interval disclosed the exploit to a human reader while `grade` still improved under concealment for every machine consumer. The actual closure is grading from the interval's floor, in the fifth-round entry. Pinned by tests (ordering, bound, and interval collapse under full evidence). `CALIBRATION_C` re-fitted: 3.1994 → 2.8545.
+- **fix(scoring): `overall == weighted mean of the printed categories`, exactly.** An audit produced categories displaying 3.5/4.2/5.0/4.5/2.0 with overall 3.9 against a displayed mean of 3.8 — the overall came from hidden unrounded values. It is now computed from the categories exactly as displayed, so the published identity is arithmetic a reader can check on the report itself.
+- **fix(experiment): the fix-scope runner and analyzer now implement their protocol.** Subjects are validated against pinned manifest commits before every copy; diffs are taken against a recorded base SHA rather than a movable HEAD (verified no agent had moved HEAD, so no recorded run was affected); the rerun-once rule exists; non-completed runs are excluded and listed; a nothing-touched run no longer scores perfect scope. The analyzer computes both statistic phrasings the protocol contains — marginal medians (the registered inequalities) and paired per-repo differences — and returns INCONCLUSIVE if they disagree: ambiguity in a pre-registration resolves against the experimenter.
+- **docs: synced to the implementation.** "Signals reported but not yet scored" said unscored about three aspects the rubric scores; the scoring-inputs list omitted eight of thirteen aspects; both fixed with the drift named.
+
+### Fixed — sixth hostile-audit response
+
+The fifth round's response claimed all five findings were closed. Two were not, and the sixth audit proved it. Both were cases of fixing the demonstrated instance instead of the class — the exact failure the previous entry congratulated itself for avoiding.
+
+- **fix(scoring): withholding evidence could still raise the floor.** The untested testability cap only applied when `test_file_count` was present, so *deleting* the field escaped the penalty that reporting zero tests incurred, and the evidence floor rose. Grading the floor is worthless if absent evidence can raise the floor. Unknown test evidence is now three-valued and priced by the same dial as every other unknown — typical for the point estimate, worst case for the floor. Sweeping every summary key then found **three more fields with the identical shape** (`file_failures`, `files_scanned`, `risk_findings`), where `.get(key, 0)` silently turned "this report does not say" into "there were none": a perfect score for saying nothing. Absent inputs now make their dimension unmeasured. The replacement test sweeps `summary` itself rather than a hand-maintained list, and the audit was right that the old test's name — "hiding evidence can never raise the grade" — claimed far more than hiding one history object proved.
+- **fix(fix-breadth): the shallow boundary commit fabricated its own diff, and it changed published numbers.** The oldest commit a shallow clone holds has no parent, so git diffs it against the empty tree and `--numstat` reports the whole tree as added: a synthetic fix measured 1 file / 75 lines deep and 2 files / 39 lines at the boundary. **Two AI-cohort repositories had a fix commit on that boundary, and the fabricated whole-tree diff counted as a "broad" fix** — the defect inflated the AI cohort's broad-fix share in the direction that flattered the hypothesis. Clones now fetch one commit deeper than the window and grafted commits are excluded. Corrected: `broad_fix_share` **p = 0.025 → 0.028** unbanded, two per-repo shares down (0.114 → 0.102, 0.434 → 0.427); banded tests and quoted medians unchanged. **The previous entry's claim that re-measurement "reproduced the published results identically" was true only of the cache-depth repair and is corrected in place below.** New `tests/test_fix_breadth_window.py` pins the property across four cache depths with synthetic repositories instead of pinning the one repo whose failure had been demonstrated.
+
+### Fixed — fifth hostile-audit response
+
+The fifth audit accepted the fourth round's corrections and then found that two of them had introduced new defects, plus three older claims still weaker than stated. Every finding was reproduced against the pushed snapshot before being fixed; all five were true.
+
+- **fix(scoring): the uncertainty interval no longer excludes the score it bounds.** The untested-repository testability cap was applied to the point estimate but not to the interval endpoints, so a perfect-structure, zero-test repository reported **4.4 with a range of [4.5, 4.5]** — and because the endpoints were equal the markdown renderer hid the range, leaving only JSON consumers able to see the contradiction. Both endpoints now run the identical pipeline with only the unknown price swapped, so `low <= overall <= high` holds by construction. The collapse test that existed used a *tested* repository and walked straight past the boundary; the new test checks five configurations including both untested cases.
+- **fix(scoring): `knowledge_concentration` was a decorative aspect and now carries weight.** It was measured, printed under "Aspect Scores", documented as one of thirteen scored aspects, and weighted in no category at all: moving a repository from every settled file having many authors to every settled file having one changed the overall by **exactly zero**. Thirteen were advertised; twelve did the work. Bus factor now takes .10 of analyzability and .10 of modifiability, and `test_every_scored_aspect_carries_weight_in_some_category` fails the build if any advertised aspect is ever unweighted again — the structural block, not just the instance fix.
+- **feat(scoring): the grade is banded from the evidence floor, closing concealment at every boundary.** The fourth round shipped `overall_range` and called it the closure; the fifth correctly named that spin. The interval warned a careful human while `score.overall` and `score.grade` — the fields CI gates, badges, rankings and API consumers actually read — still improved when evidence was withheld (3.9/C visible, 4.5/B hidden). `grade` now comes from `overall_range[0]`. Hiding an aspect can only widen the interval downward, so concealment is now monotonically unprofitable rather than merely disclosed, and a blocker names both numbers whenever the floor and the point estimate differ. Blockers also render in the report itself for the first time — they previously reached only the remediation prompt, so a demotion arrived unexplained in the artifact people open.
+- **fix(calibration): "the same pipeline" is now one pipeline rather than two that agree at the median.** Three consecutive audits found the derivation differing from the live scorer by exactly one step — category rounding, then the untested cap (corpus member `tabby`: derived 3.9, live 3.8), then per-aspect rounding inside the curve. Each time the median survived and the per-repository claim did not. `_derive` now calls `_formula.overall_from_aspects` directly, the curve is a single shared function, and a new test compares derivation against `score_report` **for all forty corpus repositories** instead of at the median. `CALIBRATION_C` 2.8712 → **2.6279**; the reference medians re-measured byte-identical for the third audit running.
+- **fix(fix-breadth): the deterministic window is now actually deterministic.** The deepening step was gated on the cached HEAD differing from the pinned commit, so a *shallow cache already at the pin* was used untouched: a depth-one clone of `open-mercato/cezar` at its recorded pin produced **0 fix commits against the deep cache's 96**, silently dropping the repository from the population rather than measuring it. Depth is now verified and repaired independently of HEAD, and a subject that cannot be deepened is refused rather than measured short. Re-measuring under that repair reproduced the published cohorts, comparisons and banded tests identically. **That was not the whole defect**: a sixth audit found the shallow *boundary* commit fabricating its own diff, which had inflated two AI-cohort repositories' broad-fix share and moved an unbanded p-value. Corrected in the sixth-round entry.
+- **chore: CI now runs on every branch.** The audit noted that pushing `e4a7fbf` triggered no workflow at all, because the push trigger was limited to `main`/`master` and no PR was open — so the tool's own gate went unenforced on exactly the commits under review.
+- **refactor: `scoring.py` split into `_pressures`, `_aspects`, and `scoring`.** Not housekeeping: the tool's own gate failed the build on this repo twice during this round — an 85-line `score_report` over the function ceiling, then a 517-line `scoring.py` over the 500-line file ceiling. The split follows the real layering (counts → aspect scores → grading), and it also removed the import cycle that had forced `_derive` to import the scorer from inside a function body. Self-audit: **4.6 / B**, 94 files, zero hard-gate failures, coverage 95.34%.
+
+### Fixed — fourth hostile-audit response
+
+The fourth audit examined the pushed snapshot itself and caught this changelog telling two direct falsehoods, both corrected in place above with the correction named rather than silently rewritten:
+
+- **"Hiding evidence can no longer raise the score" was false.** No single imputed value can make concealment neutral for repos whose true evidence is worse than the imputation. Closed honestly instead: `score.overall_range` prices every unknown at 0 and at 5 and ships in the report and the markdown summary, so hidden evidence visibly widens an interval rather than silently flattering a point. New tests pin the concealment ordering, its bound, and the interval's collapse under full evidence — the audit correctly noted the prior fix shipped with zero test changes.
+- **"Three generic runs got worse" was false — it was two** (plus one bounded run at net −1, miscounted into the generic column). Corrected in the standard and here.
+- **The preregistration narrative overstated itself.** The protocol and decision rule predate the first run; the analyzer does not — its first version landed about a minute into the runs and it was rewritten mid-run. The standard now states the chronology instead of the flattering summary of it.
+- **The anchor now goes through the literally-same pipeline.** The derivation rounds categories to one decimal exactly as `score_report` ships them (an audit found 6/40 corpus repos differing between paths while the docs said "same pipeline"). The rounded pipeline is a step function, so `CALIBRATION_C` is the midpoint of the plateau where the corpus median hits 4.0 *exactly* — asserted by a new test as `== 4.0`, not a 3.9–4.1 band. 2.8545 → **2.8712**. **A fifth audit showed "literally-same" was still false at this revision**: the derivation skipped the untested testability cap, and `tabby` derived 3.9 against a live 3.8. The median reproduced anyway, which is exactly why a median is not the test. See the fifth-round entry for the fix.
+- **Experiment evidence is now durable in-repo.** `tools/experiments/fix_scope/artifacts/` carries every arm's full diff against its pinned base and every bounded prompt; regenerated prompts match recorded lengths byte-for-byte. The agents' full transcripts were never captured (2,000-char tails only) — that loss is permanent and stated.
+- **Fix-breadth measures a fixed window.** `git log -n 300` from each pinned HEAD, so cache deepening cannot shift results (the audit demonstrated it could); the false "capped at 300" note now truthfully describes window vs. clone depth. **Incomplete as shipped**: a fifth audit showed a *shallower* same-HEAD cache could still erase the window entirely, because the deepening step was gated on the commit matching rather than on the depth. Fixed in the fifth-round entry.
+- **CI lint now covers `tools/`**, and for the record: the coverage percentage gates the `maintainability_audit` package only — the calibration and experiment programs under `tools/` are exercised by their own runs and spot-verified by audits, not by the coverage gate, and no one should read 95% as claiming otherwise.
+
+### Measured — the bounded prompt, tested: INCONCLUSIVE on the registered rule
+
+- **feat(experiment): the product's central promise met its first controlled test.** Pre-registered protocol (committed before any run, analyzer committed mid-run), six pinned repositories, paired `codex exec` runs on `gpt-5.6-sol`: generic "improve maintainability" vs this tool's bounded prompt. Registered verdict **INCONCLUSIVE** — bounded was *not* narrower on files touched (median 3.0 vs 2.5), which the rule required, but was better-targeted (out-of-scope 0.484 vs 0.500) and closed far more findings (**median 7.5 vs 0.0**, positive in 5/6 pairs, best +78). Two generic runs made their codebase measurably worse (an earlier revision of this entry said three, miscounting a bounded −1 as generic). The registered rule braced for generic thrashing; what showed up was generic *timidity* — so the bounded prompt's measured value in this test is effectiveness, not narrowness. Limits stated with the result, including that findings-closed is this tool's own ruler and the bounded prompt names what the ruler measures. Every arm re-derived against pinned bases after an audit; zero mismatches. See `docs/studies.md` "Does the bounded prompt work?" and `tools/experiments/fix_scope/`.
+
+### Measured — fix breadth: a direction that did not survive pinning
+
+- **feat(study): fix-commit breadth, per cohort — reported as an exploratory trend, after its first significance failed to replicate.** "Broad rewrites for narrow bugs" is a diff property, so `tools/calibration/measure_fix_breadth.py` measures it from history: files and lines touched per fix-labeled non-merge commit. A first run over unpinned caches showed nominally significant gaps and was briefly described as "the first signal to survive the controls"; an audit correctly noted the histories were not reproducible from pinned inputs, and the pinned re-run — per-repo commit and actual history depth now recorded in `fix_breadth.json`, size-banding computed by the script rather than by hand — keeps the direction (AI-assisted median 3 vs 2 files per fix, 21% vs 13% broad); a later deterministic-window respecification (`git log -n 300` from each pinned HEAD) lands nominally under 0.05 again (banded 0.029/0.046/0.037) — three specifications straddling the threshold is fragility by demonstration, and none survives Holm (0.0167). Three correlated outcomes, no registered primary, repo-level rather than commit-level authorship, and subject-line fix detection that agents satisfy far more often than humans (19/20 vs 11/18 repos): the claim is downgraded to *a consistent direction worth a better-designed study*, and nothing more.
+- **docs(philosophy): "Why AI-Specific?" rewritten — volume, not pathology.** The page asserted five recognizably-AI failure modes; the one tested did not survive its control, and decades of hand-written unmaintainable code say slop needed no AI to exist. What AI changes is the *rate*: code arrives faster than it can be read. The same volume makes the fix loop viable — deterministic findings, one uniform standard, bounded prompts — which needs no claim that AI writes worse code, only that it writes more.
+
+### Added
+
+- **feat(scoring): the score is now a full rubric — 13 aspects, explicit weights, honest unknowns.** A hostile audit demonstrated the previous score's worst property with one input: a 100-file repository with **zero test files** scored **5.0/A+ with testability 5.0**, because every category was a re-weighting of five structural pressures and nothing ever asked whether a test existed — and the test suite blessed it. The overall is now a three-layer rollup defined in one place (`_formula.py`): thirteen **aspect scores** (five corpus-calibrated structural pressures; eight rubric-banded evidence scores — test presence, dead code, near-duplication, idiom consistency, churn hotspots, code-to-code change coupling, knowledge concentration, documentation) → ISO categories as weighted means → overall as their equal-weighted mean. Every weight and band is data, printed in the report (`score.aspects`, `score.rubric`) and documented in `docs/standard.md`. An unmeasurable aspect scores `null` and its weight renormalizes — a shallow clone must not grade as either clean or dirty — and the five aspects the tool cannot measure at all (test effectiveness, naming, comment accuracy, indirection, architectural coherence) are named in every report as unscored, with reasons. **A repository with production code and zero test files can no longer receive an A-grade**; its testability caps at 2.0 and the blocker says why. `CALIBRATION_C` re-fitted through the new pipeline by bisection (3.5466 → 2.966); the corpus median still rolls up to exactly 4.0. The rubric is a **standard**: judgments made explicit, deterministic, and applied identically to every repository — which is what every standard is, ISO/IEC 25010 included, and needs no apology. Empirical claims about the world are the thing held to an evidence bar (see *Retracted*, below). An outcome study specified in `docs/standard.md` would *tune* the weights against measured change effort; it has not been run.
+- **fix(self): this repo now opts into its own gates, and its README stops lying.** The same audit caught that making threshold gates opt-in had silently neutered `--fail-on-gate` for this repository's CI, and that the README advertised a stale 5.0/A+ while a fresh run said 4.8/B with warnings. All three threshold gates are now `true` in `maintainability-agent.json` (the two live failures they exposed were fixed: a measurement-data JSON excluded from line audits, one function refactored under the ceiling), and the README table now states the current 4.8/B and names the audit that caught the stale claim.
+- **feat(history): churn, hotspots and change coupling from the repo's own log.** Every other metric here is a photograph of the code as it stands; maintainability is defined (ISO/IEC 25010) as the effort to *modify*, and effort is paid per change — so a 600-line file untouched for three years and a 600-line file edited weekly scored identically, when only one is costing anything. The report now carries: per-file **churn** (commits, lines, authors) over a 12-month window; **hotspots**, churn multiplied by the file's summed cognitive complexity, so a file ranks only by being both hard to read and constantly read; and **change coupling**, pairs of files that co-change in most of their commits — the shape of a boundary drawn in the wrong place, invisible to every static metric in the package. Merges are excluded (their numstat double-counts the branch), sweep commits (>30 files) are excluded from coupling by raw commit size, rename notation is resolved including multi-segment and empty-side forms, and a shallow clone reports `history: null` rather than zeros, because "no history" and "no changes" are opposite findings. **Reported, not scored** — these have not been validated against an outcome, and unvalidated signals no longer move grades here.
+
+### Changed
+
+- **feat(calibration): the corpus is selected mechanically — 14 repositories to 40.** The old corpus was fourteen projects picked because the author knew them, which is selection bias sitting directly underneath a scale used to grade other people's code. `tools/calibration/select_corpus.py` now issues a GitHub search anyone can re-run — `stars:>3000 created:<2021-01-01 pushed:>2026-01-01` across Python, TypeScript and JavaScript — and `tools/calibration/verify_corpus.py` clones each candidate and keeps only those holding 20+ source files and 100+ declarations, pinning each to the commit measured. The result spans **32 to 18,789 source files and 463,581 declarations**. Seven candidates were rejected on contents rather than on name (`PayloadsAllTheThings`, 33 declarations; `airbnb/javascript`, 14), and the rejections are recorded in `corpus.json` rather than silently dropped.
+- **`created:<2021-01-01` is load-bearing.** This corpus is the human-written baseline against which AI-assisted code is compared, and today's most-starred repositories include projects begun well into the LLM era. Admitting those would answer the question before measuring it.
+- **the constants moved, and the direction is not uniform:**
+
+  |dimension|0.6.x (14 hand-picked)|now (40 queried)|
+  |---|---|---|
+  |file_size|0.0779|0.0576|
+  |declarations|0.0243|0.0599|
+  |duplication|1.4659|3.7350|
+  |risk|0.0546|0.0726|
+  |`CALIBRATION_C`|5.2754|3.5466|
+
+  **Duplication is 2.5x more lenient**: identical code that scored `5.0x` now scores `2.0x`. The hand-picked corpus was almost entirely libraries, which are built for reuse and have had years of review pressure to remove repetition; sorting by stars also returns applications and tools (n8n, excalidraw, playwright, transformers), which carry far more. The queried corpus describes *widely-used code* rather than *well-factored libraries* — the more honest reference for a tool that grades arbitrary repositories, but the bar is now set by a population that includes application code.
+- **excluded one repository on what it is, not on how it scored.** `33-js-concepts` cleared verification — an `index.js` plus thirty concept-demo test files is enough declarations to look like a codebase — and landed as the corpus outlier on duplication (38.8x the median) and file size (3x the next repo), because parallel teaching examples are supposed to repeat. It is excluded as a teaching repo, alongside the tutorials and courses the name filter already removed. The distinction matters: filtering a corpus by its own measurements manufactures whatever reference the filter was aimed at. Removing it moved `c` 3.5724 → 3.5466, which is what a median is for.
+- **fix(gates): the file, function and duplicate-block gates are opt-in.** Measured across the corpus these fired on **every single repository** — duplicate counts of 33 to 5,325 against a default `max_duplicate_blocks` of 20 — so `--fail-on-gate` failed everywhere out of the box. A gate that always fails is not a gate; it trains people to pass the flag and ignore the result, and it gave the gates dimension zero variance. `fail_on_file_failures`, `fail_on_function_failures` and `fail_on_duplicate_blocks` now default to `false`. **The findings are still reported** — only whether they block CI changed, and a repo opts in to that.
+- **the gates reference is now fixed at 0.05 rather than corpus-derived.** Hard gates are discrete policy breaches a repository opts into, not a rate drawn from a population. Once gating became opt-in the corpus median went to zero, and dividing by zero would have made the dimension silently ignore real failures. One gate failure now reads as `1.0x`. `scoring._relative` reports `0.0` for any zero reference instead of dividing.
+- **fix(config): vendored third-party code is excluded by default.** `vendor/`, `third_party/`, `*.min.js` and friends. Auditing vendored code measures someone else's decisions, and — worse for a reference corpus — constants drawn from a population containing it describe bundles rather than maintained source. **lodash's corpus entry was 41% vendored.**
+- **fix(metrics): the README gate accepts any README.** It required `README.md` exactly, so Django — which ships `README.rst` — was reported as having none. That is the class of finding that teaches people the tool does not know what it is looking at.
+
 ## 0.6.1 - 2026-08-08
 
 Release plumbing and a performance consolidation. No behaviour changes.

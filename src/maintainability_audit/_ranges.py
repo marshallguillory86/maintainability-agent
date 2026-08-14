@@ -112,21 +112,38 @@ def _named(match: re.Match[str] | None) -> bool:
     return match is not None and match.group(1) not in _NOT_A_DECLARATION
 
 
+def _strip_modifiers(line: str) -> str:
+    """Everything after any leading `export`, `async`, `public` and friends.
+
+    The prefix pattern is `^\\s*(?:...)*`, so it always matches — possibly
+    zero-width — and `.end()` is safe. That safety is a property of the
+    pattern rather than of this call, and a later edit removing the
+    trailing `*` would turn it into an AttributeError on every line. The
+    fallback states the invariant instead of relying on it.
+    """
+    prefix = _MODIFIER_PREFIX_RE.match(line)
+    return line[prefix.end():] if prefix else line
+
+
 def _declaration(line: str) -> tuple[str, str] | None:
     """Return ``(name, kind)`` when a masked line opens a declaration."""
-    tail = line[_MODIFIER_PREFIX_RE.match(line).end() :]
+    tail = _strip_modifiers(line)
     match = _CLASS_RE.match(tail)
     if match:
         return match.group(1), "class"
     match = _FUNCTION_RE.match(tail)
     if match:
         return match.group(1), "function"
-    match = _ASSIGNED_RE.match(tail)
-    if _named(match) and _is_assignment(tail):
-        return match.group(1), "function"
-    match = _METHOD_RE.match(tail)
-    if _named(match) and _is_method(tail, match):
-        return match.group(1), "function"
+
+    # Bound and checked in one place: `_named` already tests for None, but
+    # the type checker cannot see through it, and neither can a reader
+    # skimming for what guards the `.group` two lines later.
+    assigned = _ASSIGNED_RE.match(tail)
+    if assigned is not None and _named(assigned) and _is_assignment(tail):
+        return assigned.group(1), "function"
+    method = _METHOD_RE.match(tail)
+    if method is not None and _named(method) and _is_method(tail, method):
+        return method.group(1), "function"
     return None
 
 

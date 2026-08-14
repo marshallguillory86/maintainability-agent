@@ -1,0 +1,289 @@
+{
+ "protocol": "tools/experiments/fix_scope/PROTOCOL.md",
+ "started": "2026-08-09T04:14:51.343470+00:00",
+ "model": "gpt-5.6-sol",
+ "generic_prompt": "Improve the maintainability of this codebase. Make the code easier to understand, modify, and test.",
+ "runs": {
+  "Omikaye__Binary-Star-Pokedex": {
+   "findings_before": 3227,
+   "score_before": 2.5,
+   "in_scope_files": 32,
+   "bounded_prompt_chars": 8062,
+   "generic": {
+    "agent": {
+     "status": "completed",
+     "seconds": 93.5,
+     "output_tail": "Improved the project\u2019s test workflow:\n\n- Replaced the failing placeholder `npm test` with a canonical suite covering all parser and data-validation tests.\n- Added `npm run test:parsing` for focused parser testing.\n- Added `npm run typecheck` for TypeScript validation.\n- Updated the README with the new commands.\n- Kept application behavior unchanged.\n\nVerification:\n\n- `npm test` passes.\n- TypeScript passed via `npx tsc -p build/tsconfig.json --noEmit`.\n- `git diff --check` passes.\n\nThe maintainability CLI was unavailable and the repository had no maintainability-agent configuration, so the improvement was based on the repository\u2019s existing checks.\n"
+    },
+    "files_touched": 2,
+    "lines_changed": 14,
+    "out_of_scope_files": 1,
+    "out_of_scope_share": 0.5,
+    "findings_after": 3227,
+    "findings_closed": 0,
+    "score_after": 2.5,
+    "touched": [
+     "README.md",
+     "package.json"
+    ],
+    "remeasured_against": "4fea8911f991f32ee41670c6844924f9d9c1ef8c"
+   },
+   "bounded": {
+    "agent": {
+     "status": "completed",
+     "seconds": 216.1,
+     "output_tail": "ogle Sheets CSV handling.\n\nChanges:\n\n- Added shared [google-sheets-csv.js](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/Omikaye__Binary-Star-Pokedex--bounded/scripts/google-sheets-csv.js).\n- Reused it across four synchronization scripts and three parsing tests.\n- Preserved the item/shop parsers\u2019 special blank-row behavior.\n- Added regression coverage in [google-sheets-csv.test.js](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/Omikaye__Binary-Star-Pokedex--bounded/scripts/google-sheets-csv.test.js) for quoted commas, escaped quotes, CRLF, and blank rows.\n- Added the focused test command to [package.json](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/Omikaye__Binary-Star-Pokedex--bounded/package.json).\n\nValidation passed:\n\n- `npm run test-google-sheets-csv`\n- `npm run test-sheets-parsing`\n- `npm run test-battle-parsing`\n- `npm run test-encounter-parsing`\n- `npm run test-shop-tables-parsing`\n- `npm run test-item-locations-parsing`\n- `npm run test-data-files`\n- `node --check` on the shared utility and four sync scripts\n- `git diff --check`\n\nAudit rerun:\n\n- Score: `2.5 \u2192 2.6`\n- Duplicate blocks: `3126 \u2192 3063`\n- Function failures: `61 \u2192 55`\n- Hard gate failures: `0`\n- Audit exit: `0`\n\nThe audit still reports \u201ctest presence: 0.0\u201d despite the new `.test.js` file and passing repository test scripts, so that appears to be a detection/configuration limitation.\n\nFollow-up candidates, intentionally left out of this patch: extracting shared domain parsing from encounter production/tests, decomposing the large location converters, and addressing `battle-dex-search.ts` complexity. The README and homepage \u201cROM hack\u201d risk findings are false positives because \u201chack\u201d is product terminology, not technical debt.\n"
+    },
+    "files_touched": 10,
+    "lines_changed": 506,
+    "out_of_scope_files": 3,
+    "out_of_scope_share": 0.3,
+    "findings_after": 3149,
+    "findings_closed": 78,
+    "score_after": 2.6,
+    "touched": [
+     "package.json",
+     "scripts/google-sheets-csv.js",
+     "scripts/google-sheets-csv.test.js",
+     "scripts/sync-google-sheets-encounter-locations.js",
+     "scripts/sync-google-sheets-item-locations.js",
+     "scripts/sync-google-sheets-locations.js",
+     "scripts/sync-google-sheets-shop-tables.js",
+     "scripts/test-battle-parsing.js",
+     "scripts/test-encounter-parsing.js",
+     "scripts/test-sheets-parsing.js"
+    ],
+    "remeasured_against": "4fea8911f991f32ee41670c6844924f9d9c1ef8c"
+   }
+  },
+  "KateBeston__TGS-Platform": {
+   "findings_before": 125,
+   "score_before": 3.8,
+   "in_scope_files": 39,
+   "bounded_prompt_chars": 3328,
+   "generic": {
+    "agent": {
+     "status": "completed",
+     "seconds": 124.7,
+     "output_tail": "Improved form API maintainability by:\n\n- Extracting shared text, email, optional-field, and stay-length normalization into [form-values.ts](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/KateBeston__TGS-Platform--generic/lib/form-values.ts).\n- Reusing those rules across contact, enquiry, and venue-application routes.\n- Safely handling invalid or reversed date ranges instead of producing `NaN`.\n- Adding focused tests and an `npm test` command.\n\nValidation passed:\n\n- `npm test` \u2014 3 tests passed\n- `node check-css.mjs` \u2014 all 412 classes valid\n- `git diff --check` \u2014 clean\n\nThe full Next.js build wasn\u2019t run because dependencies are not installed in this workspace.\n"
+    },
+    "files_touched": 6,
+    "lines_changed": 125,
+    "out_of_scope_files": 3,
+    "out_of_scope_share": 0.5,
+    "findings_after": 125,
+    "findings_closed": 0,
+    "score_after": 3.8,
+    "touched": [
+     "app/api/apply/route.ts",
+     "app/api/contact/route.ts",
+     "app/api/enquiry/route.ts",
+     "lib/form-values.ts",
+     "package.json",
+     "tests/form-values.test.mjs"
+    ],
+    "remeasured_against": "d4ef800ef24acba30f3b77d78bdda427f07fd27f"
+   },
+   "bounded": {
+    "agent": {
+     "status": "completed",
+     "seconds": 149.3,
+     "output_tail": "Fixed the `app/api/apply/route.ts` declaration hotspot with a small behavior-preserving extraction.\n\nChanges:\n\n- Reduced `POST` from 124 to 53 lines and complexity from 65 to 15.\n- Extracted validation, normalization, and database-field mapping into [venue-application.ts](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/KateBeston__TGS-Platform--bounded/lib/venue-application.ts).\n- Added three focused tests in [venue-application.test.ts](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/KateBeston__TGS-Platform--bounded/tests/venue-application.test.ts).\n- Added the native `npm test` script.\n\nResults:\n\n- `npm test`: 3 passed.\n- `node check-css.mjs`: passed, 412 classes verified.\n- Maintainability audit: passed, no hard-gate failures.\n- Score improved from 3.8/C to 4.0/B.\n- Function failures reduced from 32 to 31.\n- `npm run check`: CSS passed, but Next.js build could not run because dependencies are not installed (`next: command not found`).\n- `git diff --check`: passed.\n\nFollow-up work should address the large venue components and `globals.css` separately; they are too substantial for this bounded patch.\n"
+    },
+    "files_touched": 4,
+    "lines_changed": 318,
+    "out_of_scope_files": 3,
+    "out_of_scope_share": 0.75,
+    "findings_after": 124,
+    "findings_closed": 1,
+    "score_after": 4.0,
+    "touched": [
+     "app/api/apply/route.ts",
+     "lib/venue-application.ts",
+     "package.json",
+     "tests/venue-application.test.ts"
+    ],
+    "remeasured_against": "d4ef800ef24acba30f3b77d78bdda427f07fd27f"
+   }
+  },
+  "abiere__medical-rag-state": {
+   "findings_before": 517,
+   "score_before": 3.0,
+   "in_scope_files": 24,
+   "bounded_prompt_chars": 6225,
+   "generic": {
+    "agent": {
+     "status": "completed",
+     "seconds": 167.9,
+     "output_tail": "Improved nightly statistics maintainability:\n\n- Consolidated duplicated timing-record logic into one helper.\n- Added safe deep-copy defaults and partial-config recovery.\n- Ensured the stats directory exists before saving.\n- Preserved the 30-sample retention behavior.\n- Added five isolated unit tests covering defaults, persistence, rate calculation, retention, and allocation.\n\nValidation:\n\n- New unit tests: **5/5 passed**\n- Python compilation: passed\n- `git diff --check`: passed\n- Native suite was attempted but requires the production environment, services, dependencies, and `/root/medical-rag` paths; it reported 6 passes, 12 skips, and 21 environment-related failures.\n\nThe native runner also normalized the missing final newline in `SYSTEM_DOCS/TEST_REPORT.md`; its report contents are otherwise unchanged.\n"
+    },
+    "files_touched": 3,
+    "lines_changed": 179,
+    "out_of_scope_files": 2,
+    "out_of_scope_share": 0.667,
+    "findings_after": 516,
+    "findings_closed": 1,
+    "score_after": 3.1,
+    "touched": [
+     "SYSTEM_DOCS/TEST_REPORT.md",
+     "scripts/nightly_stats.py",
+     "tests/test_nightly_stats.py"
+    ],
+    "remeasured_against": "ce3f9ebf18444aff008d2ad27b77f9b8cabbdb3b"
+   },
+   "bounded": {
+    "agent": {
+     "status": "completed",
+     "seconds": 326.6,
+     "output_tail": "Implemented a small, declarations-focused remediation:\n\n- Split `_fetch_isbnsearch` into direct-fetch, markdown-parser, and orchestration functions in [book_metadata_vision.py](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/abiere__medical-rag-state--bounded/scripts/book_metadata_vision.py:560).\n- Added `MEDICAL_RAG_BASE` configuration while preserving `/root/medical-rag` as the default.\n- Added parser coverage in [test_book_metadata_vision.py](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/abiere__medical-rag-state--bounded/tests/test_book_metadata_vision.py:15).\n- Added the required root [README.md](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/abiere__medical-rag-state--bounded/README.md:1).\n\nValidation:\n\n- `py_compile`: passed.\n- Focused unit tests: 2/2 passed.\n- Existing metadata import/ISBN test: passed.\n- `git diff --check`: passed.\n- Native suite: 39 tests executed; 12 skipped, 3 failed, 17 errored because server-only services, systemd, network access, `psutil`, API credentials, and production directories are unavailable.\n- Audit rerun unavailable: neither the `maintainability-agent` executable nor Python module is installed.\n\nLarger web-module splits and unreferenced optional-integration declarations remain follow-up work.\n"
+    },
+    "files_touched": 3,
+    "lines_changed": 174,
+    "out_of_scope_files": 2,
+    "out_of_scope_share": 0.667,
+    "findings_after": 518,
+    "findings_closed": -1,
+    "score_after": 3.3,
+    "touched": [
+     "README.md",
+     "scripts/book_metadata_vision.py",
+     "tests/test_book_metadata_vision.py"
+    ],
+    "remeasured_against": "ce3f9ebf18444aff008d2ad27b77f9b8cabbdb3b"
+   }
+  },
+  "sergey-levko__macro-mind": {
+   "findings_before": 623,
+   "score_before": 3.8,
+   "in_scope_files": 13,
+   "bounded_prompt_chars": 4034,
+   "generic": {
+    "agent": {
+     "status": "completed",
+     "seconds": 230.5,
+     "output_tail": "Improved date/time maintainability in the meal-log frontend.\n\n- Added shared local-date utilities in [dateTime.ts](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/sergey-levko__macro-mind--generic/frontend/src/lib/dateTime.ts).\n- Replaced duplicated parsing, formatting, shifting, and timestamp logic in [MealLog.tsx](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/sergey-levko__macro-mind--generic/frontend/src/pages/MealLog.tsx).\n- Corrected \u201ctoday\u201d calculations to consistently use the user\u2019s local calendar date instead of UTC.\n- Removed 30 net lines from the already-large page component.\n- `git diff --check` passes.\n\nFull lint/build verification was unavailable because frontend dependencies are not installed, and the attempted lockfile-based installation did not produce `node_modules`. The maintainability-agent CLI was also unavailable in this environment.\n"
+    },
+    "files_touched": 2,
+    "lines_changed": 102,
+    "out_of_scope_files": 1,
+    "out_of_scope_share": 0.5,
+    "findings_after": 621,
+    "findings_closed": 2,
+    "score_after": 3.8,
+    "touched": [
+     "frontend/src/lib/dateTime.ts",
+     "frontend/src/pages/MealLog.tsx"
+    ],
+    "remeasured_against": "51b6fc71da19fed072d5359297b4c40f954e306d"
+   },
+   "bounded": {
+    "agent": {
+     "status": "completed",
+     "seconds": 133.2,
+     "output_tail": "Implemented a small, behavior-preserving maintainability patch.\n\nChanges:\n\n- Consolidated `DayNavDatePicker` and `WeekNavDatePicker` into one configurable `NavDatePicker`.\n- Simplified the API `request` hotspot by extracting:\n  - Header construction\n  - Request sending\n  - Response parsing\n  - Token refresh coordination\n  - Login redirection\n- No public behavior or API changed.\n- Net change: 56 additions, 110 deletions across two files.\n\nAudit improvement:\n\n- Score: 3.8 \u2192 3.9\n- Function failures: 15 \u2192 14\n- Duplicate blocks: 606 \u2192 583\n- `request` is no longer a hotspot.\n- Coach near-duplicate finding is eliminated.\n- Coach file: 646 \u2192 600 lines\n- Hard gates: 0; audit exited successfully.\n\nCommands run:\n\n- `git diff --check` \u2014 passed.\n- `python3 -m maintainability_audit --root . --fail-on-gate ...` \u2014 passed.\n- `npm run build` \u2014 blocked because frontend dependencies are not installed.\n- `npm ci --offline` \u2014 blocked because a required package was absent from the npm cache.\n- `npm run lint` \u2014 could not run without installed dependencies.\n- `bash ./mvnw test` \u2014 blocked because the sandbox prevents Maven\u2019s required home-directory setup/download.\n\nNo tests were added because the frontend currently has no test runner, and adding an entire testing stack would exceed this bounded remediation.\n\nFollow-up work should address the remaining large component hotspots incrementally, starting with `Dashboard`, `Coach`, and `FoodItemForm`, rather than splitting all large files in one change.\n"
+    },
+    "files_touched": 2,
+    "lines_changed": 166,
+    "out_of_scope_files": 0,
+    "out_of_scope_share": 0.0,
+    "findings_after": 598,
+    "findings_closed": 25,
+    "score_after": 3.9,
+    "touched": [
+     "frontend/src/lib/api.ts",
+     "frontend/src/pages/Coach.tsx"
+    ],
+    "remeasured_against": "51b6fc71da19fed072d5359297b4c40f954e306d"
+   }
+  },
+  "alkhas72__goapsny-mvp": {
+   "findings_before": 99,
+   "score_before": 4.4,
+   "in_scope_files": 30,
+   "bounded_prompt_chars": 3862,
+   "generic": {
+    "agent": {
+     "status": "completed",
+     "seconds": 275.7,
+     "output_tail": "Implemented a bounded `superpowers-lite` maintainability refactor:\n\n- Extracted wizard validation and payload conversion into [addWizardLogic.ts](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/alkhas72__goapsny-mvp--generic/src/components/addWizardLogic.ts).\n- Added focused unit tests in [addWizardLogic.test.ts](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/alkhas72__goapsny-mvp--generic/src/components/addWizardLogic.test.ts).\n- Simplified [AddWizard.tsx](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/alkhas72__goapsny-mvp--generic/src/components/AddWizard.tsx), removing duplicated conversion logic and the unsafe ramp-type `any` cast.\n- Preserved UI behavior and backend payload semantics.\n- `git diff --check` passes.\n\nAutomated tests, lint, and build could not run because dependencies were absent. Two `npm ci` attempts failed/hung under the sandbox\u2019s restricted package access. The maintainability CLI was also unavailable, so no formal maintainability gate result was produced.\n"
+    },
+    "files_touched": 3,
+    "lines_changed": 149,
+    "out_of_scope_files": 2,
+    "out_of_scope_share": 0.667,
+    "findings_after": 106,
+    "findings_closed": -7,
+    "score_after": 4.4,
+    "touched": [
+     "src/components/AddWizard.tsx",
+     "src/components/addWizardLogic.test.ts",
+     "src/components/addWizardLogic.ts"
+    ],
+    "remeasured_against": "bbf82adfcdb1f9c2ad48a03e08fd09aa49fe4069"
+   },
+   "bounded": {
+    "agent": {
+     "status": "completed",
+     "seconds": 169.8,
+     "output_tail": "\u0420\u0435\u0436\u0438\u043c: `superpowers-lite` \u2014 \u043d\u0435\u0431\u043e\u043b\u044c\u0448\u043e\u0439 \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 maintainability-\u0444\u0438\u043a\u0441 \u0431\u0435\u0437 \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u043f\u043e\u0432\u0435\u0434\u0435\u043d\u0438\u044f.\n\n\u0418\u0441\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u043e:\n\n- `classifySubmitError` \u043f\u0435\u0440\u0435\u0432\u0435\u0434\u0451\u043d \u0441 \u0434\u043b\u0438\u043d\u043d\u043e\u0433\u043e \u043a\u0430\u0441\u043a\u0430\u0434\u0430 `if/switch` \u043d\u0430 \u0434\u0435\u043a\u043b\u0430\u0440\u0430\u0442\u0438\u0432\u043d\u044b\u0435 \u0442\u0430\u0431\u043b\u0438\u0446\u044b \u043f\u0440\u0430\u0432\u0438\u043b \u0432 [submit-place.ts](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/alkhas72__goapsny-mvp--bounded/src/services/submit-place.ts:137).\n- \u0414\u043e\u043f\u043e\u043b\u043d\u0435\u043d\u044b \u0442\u0435\u0441\u0442\u044b \u0432\u0441\u0435\u0445 SQLSTATE fallback-\u0432\u0430\u0440\u0438\u0430\u043d\u0442\u043e\u0432 \u0438 \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u0438\u044f `message`, `code`, `cause` \u0432 [submit-place.test.ts](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/alkhas72__goapsny-mvp--bounded/src/services/submit-place.test.ts:141).\n- \u041f\u0443\u0431\u043b\u0438\u0447\u043d\u043e\u0435 \u043f\u043e\u0432\u0435\u0434\u0435\u043d\u0438\u0435 \u0438 backend-\u043a\u043e\u043d\u0442\u0440\u0430\u043a\u0442 \u043d\u0435 \u043c\u0435\u043d\u044f\u043b\u0438\u0441\u044c.\n\n\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u0430\u0443\u0434\u0438\u0442\u0430:\n\n- `classifySubmitError`: **fail \u2192 warn**\n- \u0421\u0442\u0440\u043e\u043a: **56 \u2192 13**\n- Complexity: **41 \u2192 14**\n- Cognitive complexity: **58 \u2192 3**\n- Function failures: **19 \u2192 18**\n- Hard gate failures: **0**\n- \u0418\u0442\u043e\u0433\u043e\u0432\u0430\u044f \u043e\u0446\u0435\u043d\u043a\u0430 \u043e\u0441\u0442\u0430\u043b\u0430\u0441\u044c **4.4 / 5 (B)**\n\n\u041a\u043e\u043c\u0430\u043d\u0434\u044b:\n\n- `git diff --check` \u2014 \u0443\u0441\u043f\u0435\u0448\u043d\u043e.\n- `maintainability-agent --root . --fail-on-gate` \u2014 \u0443\u0441\u043f\u0435\u0448\u043d\u043e, exit 0.\n- `npm test -- src/services/submit-place.test.ts` \u2014 \u043d\u0435 \u0437\u0430\u043f\u0443\u0449\u0435\u043d: \u0432 worktree \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442 `node_modules`, `vitest: command not found`.\n- Offline-\u043f\u043e\u043f\u044b\u0442\u043a\u0430 TypeScript-\u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438 \u0442\u0430\u043a\u0436\u0435 \u0437\u0430\u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0430\u043d\u0430 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044e\u0449\u0438\u043c\u0438 \u0437\u0430\u0432\u0438\u0441\u0438\u043c\u043e\u0441\u0442\u044f\u043c\u0438.\n\nFollow-up: \u043e\u0442\u0434\u0435\u043b\u044c\u043d\u043e \u0438 \u043d\u0435\u0431\u043e\u043b\u044c\u0448\u0438\u043c\u0438 PR \u0434\u0440\u043e\u0431\u0438\u0442\u044c \u043a\u0440\u0443\u043f\u043d\u044b\u0435 UI-\u043a\u043e\u043c\u043f\u043e\u043d\u0435\u043d\u0442\u044b (`AddWizard`, `LeafletMap`, `PublicAddSheet`) \u0438 `styles.css`; \u043e\u043d\u0438 \u0442\u0440\u0435\u0431\u0443\u044e\u0442 \u0431\u043e\u043b\u0435\u0435 \u0448\u0438\u0440\u043e\u043a\u043e\u0433\u043e UI/\u0440\u0435\u0433\u0440\u0435\u0441\u0441\u0438\u043e\u043d\u043d\u043e\u0433\u043e \u0446\u0438\u043a\u043b\u0430.\n"
+    },
+    "files_touched": 2,
+    "lines_changed": 104,
+    "out_of_scope_files": 0,
+    "out_of_scope_share": 0.0,
+    "findings_after": 98,
+    "findings_closed": 1,
+    "score_after": 4.4,
+    "touched": [
+     "src/services/submit-place.test.ts",
+     "src/services/submit-place.ts"
+    ],
+    "remeasured_against": "bbf82adfcdb1f9c2ad48a03e08fd09aa49fe4069"
+   }
+  },
+  "SanjibBayen__rental-management-system-odoo-devdaas": {
+   "findings_before": 79,
+   "score_before": 3.9,
+   "in_scope_files": 30,
+   "bounded_prompt_chars": 6164,
+   "generic": {
+    "agent": {
+     "status": "completed",
+     "seconds": 229.5,
+     "output_tail": "Improved [user.controller.ts](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/SanjibBayen__rental-management-system-odoo-devdaas--generic/services/server/src/controllers/user.controller.ts).\n\nKey changes:\n\n- Aligned controller logic with the database helper\u2019s actual return types.\n- Used `queryOne` for single-record operations and `query` for collections.\n- Removed unsafe `any` casts and `.rows` assumptions.\n- Added safe PostgreSQL error narrowing for duplicate-email handling.\n- Simplified null checks and response construction.\n\nValidation passed:\n\n- Node TypeScript syntax check\n- `git diff --check`\n\nThe full build and maintainability CLI audit could not run because dependencies are not installed and registry access is unavailable (`ENOTFOUND registry.npmjs.org`).\n"
+    },
+    "files_touched": 1,
+    "lines_changed": 79,
+    "out_of_scope_files": 0,
+    "out_of_scope_share": 0.0,
+    "findings_after": 85,
+    "findings_closed": -6,
+    "score_after": 3.9,
+    "touched": [
+     "services/server/src/controllers/user.controller.ts"
+    ],
+    "remeasured_against": "9299f6b78a16f0743503ad537c5c1fa1eca05d16"
+   },
+   "bounded": {
+    "agent": {
+     "status": "completed",
+     "seconds": 114.5,
+     "output_tail": "Implemented a bounded middleware cleanup:\n\n- Removed the 88-line duplicate `authMiddleware` from [rbac.middleware.ts](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/SanjibBayen__rental-management-system-odoo-devdaas--bounded/services/server/src/middleware/rbac.middleware.ts), re-exporting the canonical implementation instead.\n- Added three focused RBAC and compatibility tests in [rbac.middleware.test.ts](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/SanjibBayen__rental-management-system-odoo-devdaas--bounded/services/server/test/rbac.middleware.test.ts).\n- Added the server test command to [package.json](/private/tmp/claude-501/-Users-marshallguillory-repos-maintainability-agent/781b6ebe-b342-493f-a71c-b0b51f2610c9/scratchpad/fix-scope-work/SanjibBayen__rental-management-system-odoo-devdaas--bounded/services/server/package.json).\n\nVerification:\n\n- `git diff --check` \u2014 passed.\n- Maintainability audit with `--fail-on-gate` \u2014 passed, zero hard-gate failures.\n- Duplicate blocks decreased from 50 to 37.\n- The duplicate authentication declaration is no longer reported.\n- Overall score remains 3.9/5 because the larger controller and UI hotspots remain.\n- `npm test`, `npm run build`, and `npm run lint` could not execute because dependencies are not installed in this checkout (`tsx`, `tsc`, and `eslint` were unavailable).\n\nRecommended follow-up: separately decompose `UserController`, `AuthController`, or the high-complexity `App` component, each as its own reviewable change.\n"
+    },
+    "files_touched": 3,
+    "lines_changed": 147,
+    "out_of_scope_files": 2,
+    "out_of_scope_share": 0.667,
+    "findings_after": 65,
+    "findings_closed": 14,
+    "score_after": 4.1,
+    "touched": [
+     "services/server/package.json",
+     "services/server/src/middleware/rbac.middleware.ts",
+     "services/server/test/rbac.middleware.test.ts"
+    ],
+    "remeasured_against": "9299f6b78a16f0743503ad537c5c1fa1eca05d16"
+   }
+  }
+ }
+}

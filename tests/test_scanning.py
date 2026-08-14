@@ -33,7 +33,27 @@ def test_build_report_flags_large_file(tmp_path: Path) -> None:
     report = build_report(tmp_path, config)
 
     assert report["summary"]["file_failures"] == 1
-    assert any("files exceed max_file_lines" in gate for gate in report["hard_gate_failures"])
+    # The finding is always reported; whether it *blocks CI* is opt-in.
+    assert report["hard_gate_failures"] == []
+
+
+def test_threshold_gates_are_opt_in(tmp_path: Path) -> None:
+    """Measured across the reference corpus, the file, function and
+    duplicate gates fired on every single repository — duplicate counts
+    of 33 to 5,325 against a default max of 20. Always-on made
+    `--fail-on-gate` useless out of the box, so a repo now opts in to
+    what should block its CI."""
+    write(tmp_path / "README.md", "# Test\n")
+    write(tmp_path / "large.py", "\n".join(f"line_{i} = {i}" for i in range(20)))
+    config = load_config(None)
+    config["thresholds"]["max_file_lines"] = 10
+
+    assert build_report(tmp_path, config)["hard_gate_failures"] == []
+
+    config["hard_gates"]["fail_on_file_failures"] = True
+    gates = build_report(tmp_path, config)["hard_gate_failures"]
+
+    assert any("files exceed max_file_lines" in gate for gate in gates)
 
 
 def test_exclude_patterns_use_glob_and_normalized_separators() -> None:

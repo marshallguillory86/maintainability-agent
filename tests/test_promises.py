@@ -33,6 +33,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ENFORCEMENT: dict[str, tuple[str, ...]] = {
     "P1": (
         "test_two_runs_on_one_tree_agree",
+        "test_two_analyzer_runs_on_one_tree_agree",
         "test_a_history_is_an_input_and_the_report_says_so",
     ),
     "P2": (

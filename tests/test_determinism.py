@@ -21,11 +21,15 @@ not, or a run is a function of somebody else's uptime.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from pathlib import Path
 
 from maintainability_audit.config import load_config
 from maintainability_audit.report import build_report
+
+
+ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 
 
 def _repo(root: Path) -> Path:
@@ -48,11 +52,28 @@ def _repo(root: Path) -> Path:
 def _comparable(report: dict) -> str:
     """The report minus the fields that are *meant* to vary.
 
-    Timings and absolute paths differ between runs by design; everything
-    else must not.
+    The absolute root, worktree status, every analyzer ``seconds`` field,
+    and terminal paint around version strings may vary. The uncolored
+    version text and every other analyzer result must not.
     """
+
+    def stable(value: object, field: str = "") -> object:
+        if isinstance(value, dict):
+            return {
+                key: stable(item, key)
+                for key, item in value.items()
+                if key != "seconds"
+            }
+        if isinstance(value, list):
+            return [stable(item) for item in value]
+        if isinstance(value, tuple):
+            return tuple(stable(item) for item in value)
+        if field == "version" and isinstance(value, str):
+            return ANSI_ESCAPE.sub("", value)
+        return value
+
     stripped = {k: v for k, v in report.items() if k not in {"root", "git_status_short"}}
-    return json.dumps(stripped, sort_keys=True, default=str)
+    return json.dumps(stable(stripped), sort_keys=True, default=str)
 
 
 def test_two_runs_on_one_tree_agree(tmp_path: Path) -> None:
@@ -66,6 +87,17 @@ def test_two_runs_on_one_tree_agree(tmp_path: Path) -> None:
 
     first = build_report(root, config)
     second = build_report(root, config)
+
+    assert _comparable(first) == _comparable(second)
+
+
+def test_two_analyzer_runs_on_one_tree_agree(tmp_path: Path) -> None:
+    """Pinned tool versions make analyzer output part of P1's input."""
+    root = _repo(tmp_path / "twice-with-analyzers")
+    config = load_config(None)
+
+    first = build_report(root, config, run_analyzers=True)
+    second = build_report(root, config, run_analyzers=True)
 
     assert _comparable(first) == _comparable(second)
 

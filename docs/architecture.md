@@ -244,7 +244,7 @@ Every design point above traces to a record. Nothing here is a preference someon
 | Binary warn/fail rates drive the score; gates stay binary. The band matrix ADR 008 specifies is **not** what ships — see [Known debt](#known-debt) | [ADR 008](adr-008-translation-and-decision.md) |
 | The agent never calls an LLM; it produces that model's input | [ADR 008](adr-008-translation-and-decision.md), P1 |
 | CLI for CI, MCP for chat, one core, no combined server | [ADR 008](adr-008-translation-and-decision.md) |
-| The report is first-class; Markdown retrievable from every entry point | [ADR 008](adr-008-translation-and-decision.md) |
+| The report is first-class; the CLI writes Markdown; MCP returns it on the tool result. Resources are 6.3 and are not shipped | [ADR 008](adr-008-translation-and-decision.md) |
 | Work order with location, target, computed delta and verification | [ADR 008](adr-008-translation-and-decision.md) |
 | No rate without a denominator that supports it, per aspect | [ADR 005](adr-005-insufficient-population.md), P7 |
 | Scan scope is part of the result; scope escalation over silent scoring | [ADR 005](adr-005-insufficient-population.md) |
@@ -264,7 +264,7 @@ Every design point above traces to a record. Nothing here is a preference someon
 | Finding identity uses path + declaration name + same-name ordinal, never a line number; see [Known debt](#known-debt) for the unshipped body hash | [ADR 009](adr-009-scan-history.md) |
 | Trends describe past scans; forecasting stays forbidden | [ADR 009](adr-009-scan-history.md), [product intent](product-intent.md#what-it-must-never-claim) |
 
-MCP's three primitives cover the chat requirement without inventing anything. CI does not go through MCP — a protocol hop between a runner and an exit code costs determinism and buys nothing. Each agent ships its own server as a subcommand; there is no combined server, because independent releasability is worth more than cross-tool synthesis today.
+MCP today is two read-only tools on the `maintainability-agent-mcp` console script. Resources and the prompts primitive are release-plan 6.3 / 6.2 and are not shipped. CI does not go through MCP — a protocol hop between a runner and an exit code costs determinism and buys nothing. There is no combined server with `secure-code-agent`, because independent releasability is worth more than cross-tool synthesis today.
 
 The first two ADR 006 rows describe the landed *shape*. The point estimate uses analyzer measurements where the full concept set was measured; the constant was re-derived against that mix (3.6). Identity is `function:{path}:{name}#{ordinal}` in `_identity`. Scans append through `_scan_history`. Practice and condition stay separate numbers.
 

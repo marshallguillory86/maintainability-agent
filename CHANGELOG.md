@@ -6,6 +6,11 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Changed
 
+- **Docs no longer describe the first-run prompt or MCP resources as present.**
+  `prompt_when_interactive` is stored and never read (6.1). MCP is two tools on
+  `maintainability-agent-mcp`; resources and the prompts primitive are 6.3 / 6.2.
+  A structural lint fails the build if those sentences return while the gaps hold.
+
 - **The point estimate uses analyzer measurements where the full concept set
   was measured.** `--analyzers` is no longer a coverage-only side channel:
   `scoring._primary_pressures` takes the analyzer reading per dimension and

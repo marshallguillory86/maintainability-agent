@@ -205,7 +205,8 @@
           "description": "Cumulative license classes admitted."
         },
         "prompt_when_interactive": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Reserved. Stored and not read. First-run prompt is release-plan 6.1."
         },
         "allow_tools": {
           "type": "array",

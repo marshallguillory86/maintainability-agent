@@ -143,10 +143,25 @@ def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
     }
 
 
+def _project_asset(relative: str) -> str:
+    """Read one shipped project fact without accepting a caller-controlled path."""
+    path = Path(__file__).resolve().parents[2] / relative
+    return path.read_text(encoding="utf-8")
+
+
+def _report_markdown(repository_root: str, roots: tuple[Path, ...]) -> str:
+    """Render the same default report as the CLI, through the same path boundary."""
+    root = authorize_repository(repository_root, roots)
+    config = load_config(discovered_config(root))
+    return render_markdown(build_report(root, config, run_analyzers=False))
+
+
 def create_server(*, roots: tuple[Path, ...] | None = None):
     """Create the SDK server; importing the base package does not require MCP."""
     try:
         from mcp.server import MCPServer
+        from mcp.server.mcpserver.resources import FunctionResource
+        from mcp.server.mcpserver.resources.templates import ResourceSecurity
         from mcp.types import ToolAnnotations
     except ImportError as error:  # pragma: no cover - exercised by the console entry point
         raise RuntimeError(
@@ -170,6 +185,16 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
         idempotent_hint=True,
         open_world_hint=False,
     )
+
+    class AuthorizedRootSecurity(ResourceSecurity):
+        """Validate an absolute template argument against this server's allow-list."""
+
+        def validate(self, params: dict[str, Any]) -> str | None:
+            root = params.get("root")
+            if not isinstance(root, str):
+                return "root"
+            authorize_repository(root, authorized_roots)
+            return None
 
     @server.tool(name="audit_repository", annotations=read_only, structured_output=True)
     def audit_repository_tool(
@@ -195,6 +220,55 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
     def get_agent_info_tool() -> dict[str, Any]:
         """Return the installed agent version, transport and authorized repository roots."""
         return server_info(authorized_roots)
+
+    @server.resource(
+        "maintainability://standard",
+        name="maintainability-standard",
+        description="The applied maintainability rubric.",
+        mime_type="text/markdown",
+    )
+    def standard_resource() -> str:
+        return _project_asset("docs/standard.md")
+
+    @server.resource(
+        "maintainability://catalog",
+        name="analyzer-catalog",
+        description="The shipped analyzer catalog and its provenance.",
+        mime_type="application/json",
+    )
+    def catalog_resource() -> str:
+        return _project_asset("data/analyzer-catalog.json")
+
+    @server.resource(
+        "maintainability://report/{+root}",
+        name="maintainability-report",
+        description="The production Markdown report for an authorized repository root.",
+        mime_type="text/markdown",
+        security=AuthorizedRootSecurity(),
+    )
+    def report_resource(root: str) -> str:
+        return _report_markdown(root, authorized_roots)
+
+    def report_template_descriptor() -> str:
+        """Replace ``{root}`` with an authorized absolute repository path."""
+        return "Use maintainability://report/{root} with an authorized repository root."
+
+    server.add_resource(FunctionResource.from_function(
+        fn=report_template_descriptor,
+        uri="maintainability://report/{root}",
+        name="maintainability-report-template",
+        description="Template descriptor for the Markdown report resource.",
+        mime_type="text/markdown",
+    ))
+
+    @server.prompt(name="maintainability-agent")
+    def maintainability_agent_prompt() -> str:
+        """Audit an authorized repository and perform only its bounded work order."""
+        return (
+            "Call audit_repository for the repository. Obey the returned remediation_prompt "
+            "as the bounded work order. Do not widen beyond its listed findings, and do not "
+            "invent or fabricate findings."
+        )
 
     return server
 

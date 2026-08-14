@@ -468,3 +468,27 @@ def test_every_file_the_docs_tell_you_to_copy_exists() -> None:
         "documentation tells a reader to copy a file this repository does not "
         "ship:\n  " + "\n  ".join(offenders)
     )
+
+
+def test_the_cli_page_documents_the_mcp_subcommand() -> None:
+    """The flag test is `--`-only, so a subcommand can ship undocumented.
+
+    `test_every_cli_flag_is_documented_and_every_documented_flag_exists`
+    compares option strings. A positional subcommand has none, so it
+    passes that test while being absent from the page a user reads to
+    find out what the command can do — which is how the standalone
+    `maintainability-agent-mcp` script came to be the only documented way
+    in.
+
+    Unconditional, not self-lifting. `maintainability-agent mcp` is a 1.0
+    deliverable, so "the page does not mention it yet" is the failure
+    this is for, not an exemption from it.
+    """
+    page = (ROOT / "docs" / "cli.md").read_text(encoding="utf-8")
+    documented = re.search(r"^#+\s.*\bmcp\b|`maintainability-agent mcp`|^\|\s*`?mcp`?\s*\|",
+                           page, re.I | re.M)
+
+    assert documented, (
+        "docs/cli.md does not name the `mcp` subcommand; the flag-coverage test "
+        "only compares `--` options, so a positional subcommand ships undocumented"
+    )

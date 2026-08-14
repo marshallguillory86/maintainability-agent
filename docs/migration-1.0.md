@@ -58,13 +58,18 @@ A zero-install run (no `--analyzers`) still uses this constant. The same tree ca
 
 `normalize_report_evidence` accepts version 3 only, same as 0.7.
 
+The optional MCP add-on now exposes tools, resources and a bounded prompt. Start
+it with `maintainability-agent mcp`; the existing `maintainability-agent-mcp`
+console script remains available for IDE configurations. This is additive, not
+a report-schema or baseline break.
+
 ---
 
 ## What you can ignore
 
 - **Re-reading 0.6 fields.** They still mean what 0.7 said they mean.
 - **Regenerating a 0.7 baseline.** That break already happened. This one does not touch fingerprints.
-- **MCP resources, a first-run TTY prompt, an environment work order.** Not shipped. Coverage already names missing tools.
+- **A first-run TTY prompt and an environment work order.** Not shipped. Coverage already names missing tools.
 
 ---
 

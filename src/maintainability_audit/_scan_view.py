@@ -177,12 +177,19 @@ def analyzer_findings_markdown(findings: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
-def analyzer_measurements_markdown(measurements: dict[str, Any] | None) -> list[str]:
+def analyzer_measurements_markdown(
+    measurements: dict[str, Any] | None,
+    scored_dimensions: list[str] | None = None,
+) -> list[str]:
     """Combined readings, their distribution, and how far the tools differ.
 
     The distribution is the part a reader can reason with. "Seven
     functions failed" supports a sentence; "worst 45, median 6, and two
     tools disagree by 37%" supports a plan.
+
+    ``scored_dimensions`` is ``score.analyzer_scored_dimensions``: the
+    caveat has to follow the mix, or the table under an analyzer-primary
+    estimate reads as decoration.
     """
     if not measurements:
         return []
@@ -219,15 +226,32 @@ def analyzer_measurements_markdown(measurements: dict[str, Any] | None) -> list[
             "than averaged away — it is the uncertainty a single-tool number hides.",
             "",
         ])
-    # Stated plainly: these do not move the score yet, and a reader who
-    # assumed otherwise would misread both numbers.
-    lines.extend([
-        "*These measurements are reported, not yet scored. The maintainability score "
-        "still derives from the built-in detectors; wiring the analyzer measurements "
-        "into it requires re-deriving the calibration constant.*",
-        "",
-    ])
+    lines.extend(_estimate_source_caveat(scored_dimensions or []))
     return lines
+
+
+def _estimate_source_caveat(scored: list[str]) -> list[str]:
+    """Where the number above came from. Inverse of the sentence this replaced.
+
+    The prompt already distinguished a complete concept set from fallback.
+    The Markdown report kept saying the opposite. Same fact, both artifacts.
+    """
+    if scored:
+        return [
+            f"*The maintainability estimate uses the analyzer readings for "
+            f"{', '.join(scored)} — external tools are the primary evidence "
+            "there. Dimensions no analyzer measured kept the fallback tier. "
+            "Where the two sources disagree the range widens to contain both; "
+            "they are never averaged.*",
+            "",
+        ]
+    return [
+        "*The analyzers ran but measured none of the dimensions the rubric "
+        "scores, so the estimate comes from the built-in detectors. Treat an "
+        "analyzer finding as evidence about the code, never as a change to "
+        "the score.*",
+        "",
+    ]
 
 
 def undetected_declarations_markdown(summary: dict[str, Any]) -> list[str]:

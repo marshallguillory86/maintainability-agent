@@ -25,10 +25,6 @@ permissions:
 
 jobs:
   maintainability:
-    # This repository's own gate is quality-gates.yml. Skip the consumer
-    # recipe here so a release is not blocked on the tag this file pins.
-    # Leave the line when you copy: it is false in any other repository.
-    if: github.repository != 'marshallguillory86/maintainability-agent'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +34,18 @@ jobs:
           # no base to diff against, so the revspec cannot resolve.
           fetch-depth: 0
 
-      - uses: marshallguillory86/maintainability-agent@v0.7.0
+      # This repository runs the action from the same tree so a release
+      # is not blocked on the tag this file pins. Copy-paste consumers
+      # hit the second step and pin v0.7.0.
+      - if: github.repository == 'marshallguillory86/maintainability-agent'
+        uses: ./
+        with:
+          config: ""
+          changed-only: origin/${{ github.base_ref }}...HEAD
+          fail-on-gate: "true"
+
+      - if: github.repository != 'marshallguillory86/maintainability-agent'
+        uses: marshallguillory86/maintainability-agent@v0.7.0
         with:
           # Empty means "discover it". A `maintainability-agent.json` at
           # the repository root is picked up; without one the audit runs

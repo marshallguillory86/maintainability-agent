@@ -1,5 +1,5 @@
 <!--
-Generated from the tree at commit f8c4a85c2f1d6e92528ca528b0c1cdbc326fb098. This is a **provenance record, not a promise of currency**: it
+Generated from the tree at commit baf1b74bd6add786ffaf83bad5fc7843f5d829b4. This is a **provenance record, not a promise of currency**: it
 states the exact source commit it was generated against, and says
 nothing about how far that is from the current HEAD.
 
@@ -19,18 +19,18 @@ care about instead. Regenerate for the current tree with:
 # Maintainability CI Report
 
 Root: `.`
-Branch: `docs/estimate-source-honesty`
+Branch: `test/mcp-primitives`
 
 ## Summary
 
 | Metric | Value |
 |---|---:|
-| Maintainability estimate | 4.7 / 5 |
-| Range (unmeasured evidence priced 0..5) | 4.7 (no unmeasured evidence) |
+| Maintainability estimate | 4.6 / 5 |
+| Range (unmeasured evidence priced 0..5) | 4.6 (no unmeasured evidence) |
 | Evidence | Evidence complete under profile `default-v1`. |
 | Verified grade | B |
-| Files scanned | 207 |
-| File warnings | 62 |
+| Files scanned | 211 |
+| File warnings | 65 |
 | File failures | 0 |
 | Function warnings | 28 |
 | Function failures | 0 |
@@ -47,7 +47,7 @@ Scoring standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based.
 | Pillar | Scope | Practice | Condition | Reading |
 |---|---|---:|---:|---|
 | readability | partial | 4 | 4.9 | healthy: enforced, and the code reflects it |
-| maintainability | owned | 4 | 4.6 | healthy: enforced, and the code reflects it |
+| maintainability | owned | 4 | 4.5 | healthy: enforced, and the code reflects it |
 | efficiency | out-of-scope | 4 | — | not measured — see below |
 | security | delegated | 4 | — | not measured — see below |
 | testability | partial | 4 | 5.0 | healthy: enforced, and the code reflects it |
@@ -61,7 +61,7 @@ Enforcement found: `linter-config`, `recorded-decisions`, `lint-in-ci`, `duplica
 
 ## Source Not Read
 
-1 of 148 source files were not opened by this scan. Their extensions are absent from `paths.include_extensions`, so nothing below describes them.
+1 of 151 source files were not opened by this scan. Their extensions are absent from `paths.include_extensions`, so nothing below describes them.
 
 | Extension | Language | Files |
 |---|---|---|
@@ -71,23 +71,23 @@ Add these to `paths.include_extensions` and re-run to audit them.
 
 ## Why the verified grade is not higher
 
-- file_warn_rate 0.300 exceeds the A ceiling of 0.05
+- file_warn_rate 0.308 exceeds the A ceiling of 0.05
 
 ## ISO/IEC 25010 Maintainability Score
 
 | Category | Score |
 |---|---|
-| modularity | 4.1 |
+| modularity | 3.9 |
 | reusability | 4.7 |
 | analyzability | 4.9 |
-| modifiability | 4.7 |
+| modifiability | 4.6 |
 | testability | 4.9 |
 
 ## Aspect Scores
 
 | Aspect | Score |
 |---|---|
-| file size | 3.0 |
+| file size | 2.9 |
 | declaration size | 4.7 |
 | duplication | 5.0 |
 | risk patterns | 5.0 |
@@ -98,7 +98,7 @@ Add these to `paths.include_extensions` and re-run to audit them.
 | idiom consistency | 5.0 |
 | documentation | 5.0 |
 | churn hotspots | 4.5 |
-| change coupling | 4.5 |
+| change coupling | 4.0 |
 | knowledge concentration | 5.0 |
 
 ## Not Scored — no measurement exists
@@ -116,9 +116,9 @@ Add these to `paths.include_extensions` and re-run to audit them.
 | File | Lines | Status |
 |---|---|---|
 | `tests/test_unread_code.py` | 500 | warn |
+| `tests/test_docs_links.py` | 494 | warn |
 | `src/maintainability_audit/scoring.py` | 483 | warn |
 | `tests/test_adapters.py` | 473 | warn |
-| `tests/test_docs_links.py` | 470 | warn |
 | `tests/test_calibration_corpus.py` | 468 | warn |
 | `tests/test_consumer_migration.py` | 466 | warn |
 | `src/maintainability_audit/_scan_view.py` | 463 | warn |
@@ -126,8 +126,8 @@ Add these to `paths.include_extensions` and re-run to audit them.
 | `src/maintainability_audit/_analysis.py` | 462 | warn |
 | `tests/test_analyzer_bridge.py` | 462 | warn |
 | `tests/test_evidence_properties.py` | 456 | warn |
+| `tools/build_catalog.py` | 454 | warn |
 | `tests/test_scoring_calibration.py` | 447 | warn |
-| `tools/build_catalog.py` | 444 | warn |
 | `src/maintainability_audit/evidence.py` | 443 | warn |
 | `tests/test_discovery.py` | 435 | warn |
 | `src/maintainability_audit/_work_order.py` | 433 | warn |
@@ -135,18 +135,19 @@ Add these to `paths.include_extensions` and re-run to audit them.
 | `src/maintainability_audit/_discovery.py` | 418 | warn |
 | `tests/test_evidence_normalization.py` | 416 | warn |
 | `tests/test_analysis_coverage.py` | 405 | warn |
+| `tests/test_mcp_server.py` | 404 | warn |
 | `src/maintainability_audit/_metric_adapters.py` | 403 | warn |
 | `tests/test_trends.py` | 402 | warn |
 | `tests/test_pillars_and_practice.py` | 394 | warn |
 | `tests/test_exclusion_dialects.py` | 390 | warn |
-| `src/maintainability_audit/_ranges.py` | 389 | warn |
 
 ## Function Hotspots
 
 | File | Declaration | Line | Lines | Complexity | Cognitive | Status |
 |---|---|---|---|---|---|---|
 | `tools/calibration/measure_cohorts.py` | `main` | 251 | 67 | 15 | 8 | warn |
-| `tools/build_catalog.py` | `build` | 373 | 31 | 15 | 0 | warn |
+| `tools/build_catalog.py` | `build` | 383 | 31 | 15 | 0 | warn |
+| `src/maintainability_audit/cli.py` | `main` | 139 | 71 | 14 | 22 | warn |
 | `tools/calibration/sampling_error.py` | `main` | 88 | 54 | 14 | 10 | warn |
 | `src/maintainability_audit/prompts.py` | `prompt_work_order` | 124 | 53 | 14 | 11 | warn |
 | `src/maintainability_audit/history.py` | `history_section` | 235 | 48 | 14 | 3 | warn |
@@ -155,7 +156,6 @@ Add these to `paths.include_extensions` and re-run to audit them.
 | `src/maintainability_audit/_scan_view.py` | `pillars_markdown` | 339 | 49 | 13 | 12 | warn |
 | `tools/resolve_pool.py` | `main` | 65 | 46 | 13 | 12 | warn |
 | `src/maintainability_audit/_documents.py` | `coverage_document` | 169 | 37 | 13 | 4 | warn |
-| `src/maintainability_audit/cli.py` | `main` | 139 | 64 | 12 | 19 | warn |
 | `tests/test_docs_links.py` | `test_no_markdown_table_is_split_by_prose` | 168 | 35 | 12 | 20 | warn |
 | `src/maintainability_audit/_analysis.py` | `analyze` | 234 | 77 | 11 | 11 | warn |
 | `tools/calibration/measure_fix_breadth.py` | `main` | 243 | 61 | 11 | 5 | warn |
@@ -179,14 +179,15 @@ Add these to `paths.include_extensions` and re-run to audit them.
 | File | Commits | Lines +/- | Cognitive | Authors | Score |
 |---|---|---|---|---|---|
 | `src/maintainability_audit/metrics.py` | 7 | 1067 | 57 | 2 | 399 |
+| `src/maintainability_audit/cli.py` | 8 | 1811 | 41 | 2 | 328 |
 | `src/maintainability_audit/renderers.py` | 10 | 761 | 31 | 2 | 310 |
 | `src/maintainability_audit/scoring.py` | 6 | 893 | 48 | 2 | 288 |
-| `src/maintainability_audit/cli.py` | 7 | 1804 | 38 | 2 | 266 |
 | `src/maintainability_audit/_ranges.py` | 3 | 403 | 84 | 2 | 252 |
 | `src/maintainability_audit/declarations.py` | 6 | 227 | 39 | 2 | 234 |
 | `src/maintainability_audit/prompts.py` | 6 | 460 | 35 | 2 | 210 |
 | `src/maintainability_audit/_discovery.py` | 2 | 418 | 75 | 1 | 150 |
-| `src/maintainability_audit/_scan_view.py` | 2 | 481 | 69 | 2 | 138 |
+| `tests/test_docs_links.py` | 2 | 494 | 70 | 2 | 140 |
+| `src/maintainability_audit/_scan_view.py` | 2 | 481 | 69 | 1 | 138 |
 | `src/maintainability_audit/idioms.py` | 3 | 220 | 34 | 2 | 102 |
 | `src/maintainability_audit/config.py` | 12 | 220 | 8 | 2 | 96 |
 | `src/maintainability_audit/sarif.py` | 4 | 191 | 24 | 2 | 96 |
@@ -194,43 +195,42 @@ Add these to `paths.include_extensions` and re-run to audit them.
 | `src/maintainability_audit/_metric_adapters.py` | 2 | 405 | 46 | 1 | 92 |
 | `src/maintainability_audit/similarity.py` | 2 | 264 | 46 | 1 | 92 |
 | `src/maintainability_audit/_analysis.py` | 2 | 476 | 42 | 1 | 84 |
+| `src/maintainability_audit/mcp_server.py` | 3 | 392 | 28 | 2 | 84 |
+| `tools/build_catalog.py` | 2 | 458 | 42 | 1 | 84 |
 | `src/maintainability_audit/_derive.py` | 3 | 312 | 27 | 2 | 81 |
 | `tools/calibration/measure.py` | 3 | 260 | 26 | 2 | 78 |
 | `src/maintainability_audit/_pressures.py` | 2 | 303 | 35 | 1 | 70 |
 | `src/maintainability_audit/_verdict_adapters.py` | 2 | 251 | 31 | 1 | 62 |
 | `src/maintainability_audit/duplication.py` | 2 | 107 | 30 | 1 | 60 |
 | `tests/test_doc_claims.py` | 2 | 250 | 29 | 1 | 58 |
-| `tests/test_calibration_corpus.py` | 3 | 528 | 19 | 2 | 57 |
-| `src/maintainability_audit/_adapters.py` | 2 | 384 | 26 | 1 | 52 |
-| `src/maintainability_audit/report.py` | 9 | 480 | 5 | 2 | 45 |
 
 ## Change Coupling — files that keep changing together
 
 | File | Changes with | Co-changes | Confidence |
 |---|---|---|---|
-| `CHANGELOG.md` | `README.md` | 14 | 88% |
-| `README.md` | `docs/self-audit.md` | 11 | 100% |
+| `CHANGELOG.md` | `README.md` | 15 | 79% |
+| `README.md` | `docs/self-audit.md` | 12 | 100% |
 | `README.md` | `src/maintainability_audit/config.py` | 10 | 91% |
 | `README.md` | `src/maintainability_audit/renderers.py` | 9 | 100% |
 | `CHANGELOG.md` | `src/maintainability_audit/config.py` | 9 | 82% |
-| `README.md` | `docs/standard.md` | 8 | 100% |
+| `CHANGELOG.md` | `docs/self-audit.md` | 9 | 75% |
+| `CHANGELOG.md` | `docs/standard.md` | 8 | 89% |
 | `CHANGELOG.md` | `src/maintainability_audit/renderers.py` | 8 | 89% |
-| `CHANGELOG.md` | `docs/self-audit.md` | 8 | 73% |
+| `README.md` | `docs/standard.md` | 8 | 89% |
 | `README.md` | `src/maintainability_audit/__init__.py` | 7 | 100% |
-| `CHANGELOG.md` | `docs/standard.md` | 7 | 88% |
+| `docs/self-audit.md` | `src/maintainability_audit/renderers.py` | 7 | 78% |
 | `src/maintainability_audit/config.py` | `src/maintainability_audit/renderers.py` | 7 | 78% |
-| `README.md` | `src/maintainability_audit/cli.py` | 6 | 100% |
+| `docs/architecture.md` | `docs/decisions.md` | 6 | 100% |
+| `docs/config-schema.md` | `maintainability-agent.schema.json` | 6 | 100% |
 | `CHANGELOG.md` | `src/maintainability_audit/__init__.py` | 6 | 86% |
+| `README.md` | `src/maintainability_audit/cli.py` | 6 | 86% |
 | `src/maintainability_audit/__init__.py` | `src/maintainability_audit/config.py` | 6 | 86% |
 | `CHANGELOG.md` | `src/maintainability_audit/report.py` | 6 | 75% |
 | `README.md` | `src/maintainability_audit/report.py` | 6 | 75% |
-| `docs/self-audit.md` | `docs/standard.md` | 6 | 75% |
-| `docs/standard.md` | `src/maintainability_audit/renderers.py` | 6 | 75% |
-| `docs/self-audit.md` | `src/maintainability_audit/renderers.py` | 6 | 67% |
+| `docs/self-audit.md` | `src/maintainability_audit/report.py` | 6 | 75% |
+| `docs/self-audit.md` | `docs/standard.md` | 6 | 67% |
+| `docs/standard.md` | `src/maintainability_audit/renderers.py` | 6 | 67% |
 | `docs/self-audit.md` | `src/maintainability_audit/config.py` | 6 | 55% |
-| `README.md` | `docs/config-schema.md` | 5 | 100% |
-| `README.md` | `maintainability-agent.schema.json` | 5 | 100% |
-| `README.md` | `tests/test_cli.py` | 5 | 100% |
-| `docs/config-schema.md` | `maintainability-agent.schema.json` | 5 | 100% |
 | `src/maintainability_audit/prompts.py` | `src/maintainability_audit/report.py` | 5 | 100% |
+| `CHANGELOG.md` | `docs/config-schema.md` | 5 | 83% |
 

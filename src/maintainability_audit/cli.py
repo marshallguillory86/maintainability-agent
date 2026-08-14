@@ -137,6 +137,13 @@ def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
+    if argv and argv[0] == "mcp":
+        from . import mcp_server
+
+        return mcp_server.main(argv[1:])
+
     parser = argparse.ArgumentParser()
     add_arguments(parser)
     args = parser.parse_args(argv)

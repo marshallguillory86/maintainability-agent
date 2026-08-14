@@ -11,6 +11,17 @@ Aliases:
 - `maintainability-agent`
 - `maintainability-audit`
 
+## MCP server
+
+Install the optional extra, then start the same read-only MCP server through the package CLI:
+
+```bash
+python3 -m pip install "maintainability-agent[mcp]"
+maintainability-agent mcp --allow-root /absolute/path/to/repository
+```
+
+Repeat `--allow-root` to authorize unrelated repository directories. With no explicit root, the server permits only its launch directory. The standalone `maintainability-agent-mcp` console script remains available for existing IDE configurations.
+
 ## Options
 
 | Option | Purpose |

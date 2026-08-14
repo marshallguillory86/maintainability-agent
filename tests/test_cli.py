@@ -277,3 +277,78 @@ def test_the_mcp_server_discovers_the_same_config_as_the_cli(tmp_path: Path) -> 
 
     assert discovered is not None
     assert load_config(discovered)["paths"]["exclude_patterns"] == ["shared/"]
+
+
+# --------------------------------------------------------------------
+# ADR 008: the server is a subcommand of this package
+# --------------------------------------------------------------------
+#
+# "**MCP server** | Chat, agentic loops" is reached today only through a
+# separate console script, `maintainability-agent-mcp`. That script is
+# what every IDE config in `ide-agent-integration.md` points at, so it
+# stays. What is missing is the form ADR 008 actually names: one package,
+# one entry point, `maintainability-agent mcp`.
+#
+# A second console script is not the same thing as a subcommand. It is a
+# separate binary a user has to know exists, and `--help` on the main
+# command never mentions it.
+
+
+def test_the_mcp_server_is_reachable_as_a_subcommand() -> None:
+    """`maintainability-agent mcp --help` describes the server.
+
+    Asserted through `main([...])` like every other CLI behaviour here,
+    so it exercises the real dispatch rather than a console-script shim.
+    """
+    import contextlib
+    import io
+
+    captured = io.StringIO()
+    with pytest.raises(SystemExit) as exit_info, contextlib.redirect_stdout(captured):
+        main(["mcp", "--help"])
+
+    assert exit_info.value.code == 0, (
+        f"`mcp --help` exited {exit_info.value.code}; there is no mcp subcommand"
+    )
+    help_text = captured.getvalue().lower()
+    assert "mcp" in help_text, "the mcp subcommand help does not describe the MCP server"
+    assert "--allow-root" in help_text, (
+        "the mcp subcommand help does not mention --allow-root, so a user cannot "
+        "tell the server what it is allowed to read"
+    )
+
+
+def test_the_ordinary_audit_invocation_still_parses() -> None:
+    """A subcommand must not capture the flag-only form IDEs and CI use.
+
+    `maintainability-agent --root . --help` predates the subcommand and
+    is what every documented recipe runs. Adding a positional dispatch in
+    front of it is the obvious way to break it.
+    """
+    import contextlib
+    import io
+
+    captured = io.StringIO()
+    with pytest.raises(SystemExit) as exit_info, contextlib.redirect_stdout(captured):
+        main(["--root", ".", "--help"])
+
+    assert exit_info.value.code == 0
+    assert "--root" in captured.getvalue()
+
+
+def test_the_standalone_console_script_survives_the_subcommand() -> None:
+    """IDEs already point at `maintainability-agent-mcp`; it stays.
+
+    Adding the subcommand is additive. Removing the script would break
+    every editor configuration this project has published.
+    """
+    import tomllib
+
+    pyproject = tomllib.loads(
+        (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(encoding="utf-8")
+    )
+    scripts = pyproject["project"]["scripts"]
+
+    assert scripts.get("maintainability-agent-mcp") == "maintainability_audit.mcp_server:main", (
+        f"the standalone MCP console script changed or was removed: {scripts}"
+    )

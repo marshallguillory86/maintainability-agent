@@ -13,7 +13,7 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 | Tests | 893 across 60 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
 | Known open exit conditions in Phases 0–5 | Phase 2 still has 2.7 (moderate adapters) open. Phase 3 also retains open exit conditions described below, including the unused band matrix. |
-| Later phases outstanding | Phase 6 still has 6.1 (interactive prompt) and 6.3 (MCP resources) open. For 6.4, the consumer workflow recipe shipped, but history caching remains open. Phase 7 remains 1.0 release work. |
+| Later phases outstanding | Phase 6 still has 6.1 (interactive prompt) open. The 6.2 MCP subcommand and three primitives, and the 6.3 byte-identical Markdown resource, shipped. For 6.4, the consumer workflow recipe shipped, but history caching remains open. Phase 7 remains 1.0 release work. |
 
 This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; open work remains in the earlier phases as well as Phases 6 and 7.
 
@@ -177,8 +177,8 @@ Until that exists, a small repository gets path 2: a complete audit, every findi
 | # | Task | Exit condition |
 |---|---|---|
 | 6.1 | Interactive first-run prompt for concerns, depth, policy | Prompts only on a TTY with no config; never in CI; the answer persists |
-| 6.2 | MCP server as a subcommand | `tools` run the audit, `resources` expose rubric/report/catalog, `prompts` is the slash command |
-| 6.3 | Markdown retrievable from chat | The MCP resource is byte-identical to the CLI's file |
+| 6.2 | **Done.** MCP server as a subcommand | `maintainability-agent mcp` exposes all three primitives: `tools` run the audit, `resources` expose rubric/report/catalog, `prompts` is the slash command |
+| 6.3 | **Done.** Markdown retrievable from chat | The MCP report resource is byte-identical to `render_markdown(build_report(...))` |
 | 6.4 | CI recipes | GitHub Actions and a generic runner, with history caching |
 
 ## Phase 7 — Release 1.0

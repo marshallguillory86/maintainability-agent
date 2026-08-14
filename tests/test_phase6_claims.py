@@ -26,6 +26,22 @@ _INTERACTIVE_CLAIMS = (
      "6.1 is open; selection comes from config"),
 )
 
+# The mirror image, live once the primitives ship: prose that still
+# calls them unshipped. `_MCP_CLAIMS` catches a doc claiming too much;
+# these catch one claiming too little, which after pair 01 is the lie.
+_STALE_ABSENCE_CLAIMS = (
+    (re.compile(r"not shipped \(6\.3\)", re.I),
+     "resources and prompts shipped; 6.3 is no longer open"),
+    (re.compile(r"only two tools", re.I),
+     "tools are no longer the only primitive"),
+    (re.compile(r"only the tool primitive shipped", re.I),
+     "resources and prompts are registered"),
+    (re.compile(r"(has|have) no resources", re.I),
+     "resources are registered on the server"),
+    (re.compile(r"no prompts primitive", re.I),
+     "a prompts primitive is registered"),
+)
+
 _MCP_CLAIMS = (
     (re.compile(r"exposed as an MCP resource", re.I),
      "6.3 is open; Markdown is a field on the tool result"),
@@ -71,8 +87,19 @@ def _mcp_resources_exist() -> bool:
 
 
 def _mcp_is_cli_subcommand() -> bool:
+    """Either shape counts: an argparse subparser or a first-argument handoff.
+
+    Forcing subparsers would be this lint dictating an implementation.
+    What ADR 008 asks for is that `maintainability-agent mcp` works, and
+    a dispatch on ``argv[0] == "mcp"`` satisfies that as well as
+    ``add_parser("mcp")`` does.
+    """
     cli = (PACKAGE / "cli.py").read_text(encoding="utf-8")
-    return bool(re.search(r"add_parser\(\s*[\"']mcp[\"']", cli))
+    return bool(
+        re.search(r"add_parser\(\s*[\"']mcp[\"']", cli)
+        or re.search(r"argv\[0\]\s*==\s*[\"']mcp[\"']", cli)
+        or re.search(r"[\"']mcp[\"']\s*==\s*argv\[0\]", cli)
+    )
 
 
 def test_prompt_when_interactive_is_not_read() -> None:
@@ -83,10 +110,27 @@ def test_prompt_when_interactive_is_not_read() -> None:
     )
 
 
-def test_mcp_server_has_no_resources() -> None:
-    """The fixture for the 6.3 half. Flip it by registering a resource."""
-    assert not _mcp_resources_exist()
-    assert not _mcp_is_cli_subcommand()
+def test_mcp_resources_and_the_subcommand_both_ship() -> None:
+    """The 6.3 half, inverted now that resources landed.
+
+    This assertion used to read `assert not _mcp_resources_exist()`. That
+    was correct while only the tool primitive shipped, and it is the
+    wrong claim the moment a resource is registered — an honesty lint
+    that keeps insisting a shipped feature is absent is the same defect
+    as prose insisting an absent one is present, facing the other way.
+
+    Both halves are required together because ADR 008 names them
+    together: the primitives are what chat reads, and the subcommand is
+    how a user reaches the server without knowing a second binary exists.
+    """
+    assert _mcp_resources_exist(), (
+        "no MCP resources are registered; pair 01 has not landed on this branch"
+    )
+    assert _mcp_is_cli_subcommand(), (
+        "no mcp subcommand: `maintainability-agent mcp` does not dispatch, so the "
+        "server is reachable only through the separate maintainability-agent-mcp "
+        "console script (ADR 008 says it ships as a subcommand of this package)"
+    )
 
 
 def test_live_docs_do_not_claim_the_interactive_prompt_ships() -> None:
@@ -113,15 +157,48 @@ def test_live_docs_do_not_claim_mcp_resources_or_a_subcommand() -> None:
     )
 
 
-def test_the_register_names_the_mcp_gap_on_adr_008() -> None:
-    """'Implemented except the band matrix' hid 6.3 the same way it once hid bands."""
-    if _mcp_resources_exist():
-        return
-    row = next(
+def _adr_008_row() -> str:
+    return next(
         line
         for line in (ROOT / "docs" / "decisions.md").read_text(encoding="utf-8").splitlines()
         if line.startswith("| [008]")
     )
+
+
+def test_live_docs_do_not_still_call_the_primitives_unshipped() -> None:
+    """Once they ship, "not shipped (6.3)" is the false sentence.
+
+    The original lint existed because four documents described resources
+    as present while only tools shipped. The same discipline has to run
+    the other way, or the register and the ADR will carry "only the tool
+    primitive shipped" indefinitely and a reader will not go looking for
+    a resource that is right there.
+    """
+    if not _mcp_resources_exist():
+        return
+    offenders = _matches(_STALE_ABSENCE_CLAIMS)
+    assert not offenders, (
+        "docs still describe the MCP resources/prompts primitives as unshipped:\n"
+        + "\n".join(offenders)
+    )
+
+
+def test_the_register_no_longer_names_the_mcp_gap_on_adr_008() -> None:
+    """Once resources ship, 6.3 is not the remaining gap on ADR 008.
+
+    The row was written to stop "implemented except the band matrix"
+    hiding 6.3 the way it once hid bands. That worked; now the row has to
+    stop naming a gap that closed, for exactly the same reason.
+    """
+    if _mcp_resources_exist():
+        row = _adr_008_row()
+        lowered = row.lower()
+        assert not ("6.3" in lowered or "resources/prompts" in lowered), (
+            f"the ADR 008 register row still lists the MCP resources/prompts gap "
+            f"as open: {row}"
+        )
+        return
+    row = _adr_008_row()
     lowered = row.lower()
     assert "implemented" not in lowered or any(
         token in lowered for token in ("resource", "6.3", "prompt")

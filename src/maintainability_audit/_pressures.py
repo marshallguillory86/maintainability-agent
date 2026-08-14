@@ -236,6 +236,18 @@ def _declaration_pressure(
             continue
         per_unit[measurement.unit][measurement.concept] = measurement.value
 
+    # The *set* must carry all three criteria, though an individual unit
+    # need not. The built-in path fails a declaration on lines or
+    # complexity or cognitive complexity; a reading that only ever saw
+    # complexity cannot produce a rate comparable to it, because every
+    # long-but-simple function passes by not having been measured. That
+    # is a dimension composed from a partial concept set, and it now
+    # drives the estimate, so it is `None` — unmeasured, falling back to
+    # the built-in tier — rather than a confident number about nothing.
+    covered = {concept for values in per_unit.values() for concept in values}
+    if not all(concept in covered for concept, _w, _f in DECLARATION_CRITERIA):
+        return dict.fromkeys(ANALYZER_DIMENSIONS)
+
     relevant = {
         unit: values
         for unit, values in per_unit.items()

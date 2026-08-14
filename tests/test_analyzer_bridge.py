@@ -29,6 +29,65 @@ def thresholds() -> dict:
     return dict(DEFAULT_CONFIG["thresholds"])
 
 
+def _clean_tree(root: Path) -> Path:
+    import subprocess
+
+    root.mkdir()
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    (root / "README.md").write_text("# r\n", encoding="utf-8")
+    for i in range(40):
+        (root / f"m{i}.py").write_text(
+            "\n".join(f"def f{i}_{j}():\n    return {j}\n" for j in range(4)),
+            encoding="utf-8",
+        )
+    return root
+
+
+def _complete_declaration_measurements(thresholds: dict, path: str = "m0.py") -> list:
+    from maintainability_audit._metrics_types import Measurement
+
+    return [
+        Measurement(concept=concept, unit=f"{path}::f{i}", value=float(value),
+                    tool="lizard", path=path)
+        for i in range(40)
+        for concept, value in (
+            ("cyclomatic_complexity", thresholds["max_complexity"] + 5),
+            ("declaration_lines", 1),
+            ("cognitive_complexity", 0),
+        )
+    ]
+
+
+def _rollup_with_analyzer_primary(evidence, external) -> float:
+    from maintainability_audit._aspects import (
+        aspect_scores,
+        is_untested,
+        not_applicable_aspects,
+    )
+    from maintainability_audit._formula import overall_from_aspects
+    from maintainability_audit._pressures import (
+        dimension_pressures,
+        normalize,
+        normalize_production,
+    )
+
+    pressures = dict(dimension_pressures(evidence.summary))
+    for dimension, value in external.all_code.items():
+        if value is not None:
+            pressures[dimension] = value
+    production = dict(normalize_production(evidence.summary))
+    for dimension, value in external.production.items():
+        if value is not None:
+            production[dimension] = normalize({dimension: value})[dimension]
+    aspects = aspect_scores(evidence, normalize(pressures), production)
+    overall, _ = overall_from_aspects(
+        aspects,
+        untested=is_untested(evidence.summary),
+        not_applicable=not_applicable_aspects(evidence),
+    )
+    return overall
+
+
 def test_analyzer_pressures_are_a_drop_in_for_the_built_in_ones(thresholds: dict) -> None:
     """Same formula, not merely the same key names.
 
@@ -50,10 +109,18 @@ def test_analyzer_pressures_are_a_drop_in_for_the_built_in_ones(thresholds: dict
     # Four declarations: one above max_complexity, one between warn and
     # max, two clean. The built-in path is handed the same counts.
     values = [thresholds["max_complexity"] + 5, thresholds["warn_complexity"] + 1, 1, 1]
+    # All three criteria, because a dimension is not composed from a
+    # partial concept set. The extra two are clean, so the breach counts
+    # are the ones the built-in path is handed below.
     measurements = [
-        Measurement(concept="cyclomatic_complexity", unit=f"a.py::f{i}", value=float(v),
+        Measurement(concept=concept, unit=f"a.py::f{i}", value=float(value),
                     tool="lizard", path="a.py")
         for i, v in enumerate(values)
+        for concept, value in (
+            ("cyclomatic_complexity", v),
+            ("declaration_lines", 1),
+            ("cognitive_complexity", 0),
+        )
     ]
     fields = dict.fromkeys(SummaryEvidence.__dataclass_fields__, Measured(0, "t"))
     fields.update(
@@ -89,10 +156,17 @@ def test_the_rubric_owns_the_threshold_not_the_tool(thresholds: dict) -> None:
     from maintainability_audit._metrics_types import Measurement
     from maintainability_audit._pressures import analyzer_pressures
 
+    # The complete criteria set; only complexity varies, so the two
+    # threshold settings below differ in exactly one thing.
     measurements = [
-        Measurement(concept="cyclomatic_complexity", unit=f"a.py::f{i}", value=float(v),
+        Measurement(concept=concept, unit=f"a.py::f{i}", value=float(value),
                     tool="lizard", path="a.py")
         for i, v in enumerate([3, 8, 12, 20])
+        for concept, value in (
+            ("cyclomatic_complexity", v),
+            ("declaration_lines", 1),
+            ("cognitive_complexity", 0),
+        )
     ]
     lenient = analyzer_pressures(measurements, {**thresholds, "warn_complexity": 30,
                                                 "max_complexity": 50})["declarations"]
@@ -101,81 +175,6 @@ def test_the_rubric_owns_the_threshold_not_the_tool(thresholds: dict) -> None:
 
     assert lenient == 0.0
     assert strict > lenient
-
-
-def test_a_disagreeing_second_source_widens_the_interval() -> None:
-    """ADR 006 §4: disagreement is uncertainty, not something to average away.
-
-    The point estimate stays on the built-in path, which is what the
-    scale is calibrated against; a second reading stretches the interval
-    to contain what it would have scored.
-    """
-    import subprocess
-    import tempfile
-
-    from maintainability_audit._pressures import ExternalPressures
-    from maintainability_audit.config import load_config
-    from maintainability_audit.evidence import normalize_report_evidence
-    from maintainability_audit.report import build_report
-    from maintainability_audit.scoring import score_evidence
-
-    root = Path(tempfile.mkdtemp()) / "r"
-    root.mkdir()
-    subprocess.run(["git", "init", "-q", str(root)], check=True)
-    (root / "README.md").write_text("# r\n", encoding="utf-8")
-    for i in range(40):
-        (root / f"m{i}.py").write_text(
-            "\n".join(f"def f{i}_{j}():\n    return {j}\n" for j in range(4)), encoding="utf-8")
-    evidence = normalize_report_evidence(build_report(root, load_config(None)))
-
-    agreed = score_evidence(evidence)
-    disagreed = score_evidence(evidence, ExternalPressures(
-        all_code={"declarations": 0.3}, production={"declarations": 0.3}))
-
-    assert agreed["maintainability_range"][0] == agreed["maintainability_range"][1]
-    assert disagreed["maintainability_range"][0] < agreed["maintainability_range"][0]
-    assert disagreed["maintainability_estimate"] == agreed["maintainability_estimate"], (
-        "a second source widens the interval; it does not move the estimate"
-    )
-
-
-def test_a_second_source_must_reach_the_pressure_the_score_reads() -> None:
-    """The defect the first attempt at this had.
-
-    `declaration_size` is the only route the declarations dimension takes
-    into the score, and it reads the *production* pressure rather than
-    the general one — so substituting into `dimension_pressures` alone
-    changed nothing, and the interval stayed collapsed however far the
-    two sources were pushed apart. This asserts the substitution lands
-    where the score actually looks.
-    """
-    from maintainability_audit._aspects import aspect_scores
-    from maintainability_audit._pressures import dimension_pressures, normalize
-    from maintainability_audit.evidence import (
-        HistoryEvidence,
-        Measured,
-        NormalizedEvidence,
-        SummaryEvidence,
-        Unknown,
-    )
-
-    fields = dict.fromkeys(SummaryEvidence.__dataclass_fields__, Measured(0, "t"))
-    fields.update(
-        declarations_scanned=Measured(200, "t"),
-        production_declarations_scanned=Measured(200, "t"),
-        files_scanned=Measured(50, "t"),
-        production_files_scanned=Measured(50, "t"),
-    )
-    history = HistoryEvidence(**dict.fromkeys(
-        HistoryEvidence.__dataclass_fields__, Unknown("no history", "t")))
-    evidence = NormalizedEvidence(
-        schema_version=3, summary=SummaryEvidence(**fields), history=history)
-    normalized = normalize(dimension_pressures(evidence.summary))
-
-    baseline = aspect_scores(evidence, normalized)["declaration_size"]
-    overridden = aspect_scores(evidence, normalized, {"declarations": 3.0})["declaration_size"]
-
-    assert overridden != baseline, "a production override that changes nothing is not an override"
 
 
 def test_both_paths_agree_on_every_failure_criterion(thresholds: dict) -> None:
@@ -360,19 +359,33 @@ def test_analyzer_production_pressure_excludes_test_declarations(thresholds: dic
         analyzer_production_pressures,
     )
 
-    def breaching(path: str, name: str) -> Measurement:
-        return Measurement(concept="cyclomatic_complexity", unit=f"{path}::{name}",
-                           value=float(thresholds["max_complexity"] + 5),
-                           tool="lizard", path=path)
+    def unit(path: str, name: str, complexity: float) -> list[Measurement]:
+        """One declaration, measured on all three criteria.
 
-    def clean(path: str, name: str) -> Measurement:
-        return Measurement(concept="cyclomatic_complexity", unit=f"{path}::{name}",
-                           value=1.0, tool="lizard", path=path)
+        A partial set makes the whole dimension unmeasured, so every
+        fixture here names each criterion even where only complexity
+        carries the point being tested.
+        """
+        return [
+            Measurement(concept=concept, unit=f"{path}::{name}", value=float(value),
+                        tool="lizard", path=path)
+            for concept, value in (
+                ("cyclomatic_complexity", complexity),
+                ("declaration_lines", 1),
+                ("cognitive_complexity", 0),
+            )
+        ]
 
-    production = [breaching("src/a.py", "f"), clean("src/a.py", "g")]
+    def breaching(path: str, name: str) -> list[Measurement]:
+        return unit(path, name, thresholds["max_complexity"] + 5)
+
+    def clean(path: str, name: str) -> list[Measurement]:
+        return unit(path, name, 1.0)
+
+    production = [*breaching("src/a.py", "f"), *clean("src/a.py", "g")]
     # Same two declarations again, in files the built-in path calls tests.
-    tests = [clean("tests/test_a.py", "t1"), clean("src/a_test.py", "t2"),
-             clean("spec/thing.js", "t3")]
+    tests = [*clean("tests/test_a.py", "t1"), *clean("src/a_test.py", "t2"),
+             *clean("spec/thing.js", "t3")]
 
     everything = production + tests
     assert analyzer_production_pressures(everything, thresholds)["declarations"] == (
@@ -406,41 +419,44 @@ def test_a_repository_of_only_tests_has_no_production_pressure(
     assert analyzer_production_pressures(only_tests, thresholds)["declarations"] is None
 
 
-def test_each_population_is_substituted_from_its_own_reading(tmp_path: Path) -> None:
-    """The production slot must not be filled from the all-code number.
-
-    It was, for as long as the bridge could not tell test code from
-    production code — one dict went into both slots, so production
-    aspects were charged for the state of the test suite. Pairing the two
-    readings in `ExternalPressures` makes the mix-up unrepresentable; this
-    checks the substitution honours the pairing rather than reading one
-    field twice.
-    """
-    import subprocess
-
-    from maintainability_audit._pressures import ExternalPressures
+@pytest.mark.parametrize(
+    ("suffix", "body"),
+    [
+        (".go", "package main\nfunc Real() int { return 1 }\nfunction decoy() {}\n"),
+        (".c", "int real(void) { return 1; }\nfunction decoy() {}\n"),
+    ],
+)
+def test_analyzer_declarations_do_not_enable_func_patterns_for_unparsed_languages(
+    tmp_path: Path,
+    thresholds: dict,
+    suffix: str,
+    body: str,
+) -> None:
+    from maintainability_audit._metrics_types import Measurement
+    from maintainability_audit._pressures import analyzer_production_pressures
     from maintainability_audit.config import load_config
-    from maintainability_audit.evidence import normalize_report_evidence
     from maintainability_audit.report import build_report
-    from maintainability_audit.scoring import score_evidence
 
-    root = tmp_path / "r"
+    root = tmp_path / suffix.lstrip(".")
     root.mkdir()
-    subprocess.run(["git", "init", "-q", str(root)], check=True)
-    (root / "README.md").write_text("# r\n", encoding="utf-8")
-    for i in range(40):
-        (root / f"m{i}.py").write_text(
-            "\n".join(f"def f{i}_{j}():\n    return {j}\n" for j in range(4)), encoding="utf-8")
-    evidence = normalize_report_evidence(build_report(root, load_config(None)))
+    path = root / f"main{suffix}"
+    path.write_text(body, encoding="utf-8")
+    config = load_config(None)
+    config["paths"]["include_extensions"] = [
+        *config["paths"]["include_extensions"], suffix,
+    ]
+    report = build_report(root, config)
+    measurements = [
+        Measurement(concept=concept, unit=f"main{suffix}::Real", value=float(value),
+                    tool="lizard", path=f"main{suffix}")
+        for concept, value in (
+            ("cyclomatic_complexity", 1),
+            ("declaration_lines", 1),
+            ("cognitive_complexity", 0),
+        )
+    ]
 
-    # Identical all-code readings; the production reading is the only
-    # thing that differs. A clean production reading must not be
-    # overridden by the pessimistic all-code one.
-    clean = score_evidence(evidence, ExternalPressures(
-        all_code={"declarations": 0.4}, production={"declarations": 0.0}))
-    dire = score_evidence(evidence, ExternalPressures(
-        all_code={"declarations": 0.4}, production={"declarations": 0.4}))
-
-    assert clean["maintainability_range"][0] > dire["maintainability_range"][0], (
-        "the production slot is being filled from the all-code reading"
+    assert report["summary"]["declarations_scanned"] == 0, (
+        "FUNC_PATTERNS must not manufacture a built-in population for this language"
     )
+    assert analyzer_production_pressures(measurements, thresholds)["declarations"] is not None

@@ -83,6 +83,7 @@ New reports carry a top-level integer:
 | `verified_grade_blockers` | string[] — empty whenever no grade was issued |
 | `categories`, `aspects`, `rubric`, `dimensions`, `reference` | unchanged structures |
 | `worst_dimension` | string or `null` |
+| `analyzer_scored_dimensions` | string[] — dimensions whose analyzer reading set the estimate; empty when none did |
 
 `overall`, `overall_range`, `grade` and `grade_blockers` are gone, with no aliases. **Version 1 is rejected, not migrated** — the inventory below established that nothing rescores a persisted report, so a migration would serve no caller.
 

@@ -274,9 +274,16 @@ def score_evidence(
     begins.
     """
     summary = evidence.summary
-    pressures = dimension_pressures(summary)
+    # The analyzers are the primary evidence (ADR 006 §1). Where they
+    # measured a dimension, their reading is the one the estimate uses;
+    # where they said nothing, the built-in detector's reading stands,
+    # because a dimension nobody measured is unmeasured and not clean.
+    pressures = _primary_pressures(dimension_pressures(summary), external, "all_code")
+    production = _primary_pressures(
+        normalize_production(summary), external, "production", already_normalized=True
+    )
     normalized = normalize(pressures)
-    aspects = aspect_scores(evidence, normalized)
+    aspects = aspect_scores(evidence, normalized, production)
     not_applicable = not_applicable_aspects(evidence)
     untested = is_untested(summary)
     overall, rounded_categories = overall_from_aspects(
@@ -289,16 +296,11 @@ def score_evidence(
         untested=untested,
         not_applicable=not_applicable,
     )
-    # A second, independent measurement of the same dimensions widens the
-    # interval rather than being averaged into the point estimate (ADR
-    # 006 §4). Where the built-in detectors and the external analyzers
-    # disagree, that disagreement is real uncertainty about the code, and
-    # hiding it behind a mean would lend the estimate a precision neither
-    # source earned.
-    #
-    # The point estimate stays on the built-in path, which is the one the
-    # scale is calibrated against. Swapping the sources is a
-    # recalibration, not an interval change.
+    # Disagreement between the two sources is real uncertainty about the
+    # code and is never averaged away (ADR 006 §4) — a mean would lend
+    # the estimate a precision neither source earned. Now that the
+    # analyzers supply the point, the *built-in* rollup is the
+    # alternative the interval has to reach.
     low, high = _widen_for_disagreement(
         evidence, external, aspects, untested, not_applicable, (low, high)
     )
@@ -319,10 +321,27 @@ def score_evidence(
     )
     measurable = {name: value for name, value in normalized.items() if value is not None}
     worst = sorted(measurable.items(), key=lambda item: -item[1])
-    return _score_document(
+    document = _score_document(
         aspects, rounded_categories, overall, (low, high), grade, blockers, normalized, worst,
         verification(evidence, grade),
     )
+    document["analyzer_scored_dimensions"] = _analyzer_scored(external)
+    return document
+
+
+def _analyzer_scored(external: ExternalPressures | None) -> list[str]:
+    """Dimensions an analyzer measured, and so contributed to the estimate.
+
+    Empty when `--analyzers` did not run, and empty when it ran and
+    measured nothing the rubric scores. Those are different facts, but
+    both mean the number came from the built-in tier.
+    """
+    if external is None:
+        return []
+    return sorted({
+        name for population in (external.all_code, external.production)
+        for name, value in population.items() if value is not None
+    })
 
 
 def _widen_for_disagreement(
@@ -333,11 +352,13 @@ def _widen_for_disagreement(
     not_applicable: frozenset[str] | None,
     bounds: tuple[float, float],
 ) -> tuple[float, float]:
-    """Stretch the interval to contain what a second source would have scored.
+    """Stretch the interval to contain what the *other* source would score.
 
-    Only dimensions the analyzers actually measured are substituted; the
-    rest keep their built-in value, so the alternative rollup differs in
-    exactly the places the two sources both spoke to.
+    The estimate now comes from the analyzers wherever they measured, so
+    the alternative rollup is the built-in one: the interval reaches from
+    the primary reading to what the fallback tier would have said, and a
+    reader can see how far apart the two sources are without either being
+    folded into the other.
 
     A no-op when nothing external was measured, which keeps every
     existing report byte-identical unless `--analyzers` ran.
@@ -346,27 +367,48 @@ def _widen_for_disagreement(
     if not external or not external.measured_anything():
         return low, high
 
-    # Each population substituted from the reading taken over that same
-    # population. Until the bridge could tell test code from production
-    # code, one all-code number went into both slots, which charged
-    # production for the state of the test suite; on flask two thirds of
-    # the declarations the analyzers see are tests.
-    substituted = dict(dimension_pressures(evidence.summary))
-    for dimension, value in external.all_code.items():
-        if value is not None and dimension in substituted:
-            substituted[dimension] = value
-
-    production = dict(normalize_production(evidence.summary))
-    for dimension, value in external.production.items():
-        if value is not None and dimension in production:
-            production[dimension] = normalize({dimension: value})[dimension]
-
     alternative, _ = overall_from_aspects(
-        aspect_scores(evidence, normalize(substituted), production),
+        aspect_scores(
+            evidence,
+            normalize(dimension_pressures(evidence.summary)),
+            normalize_production(evidence.summary),
+        ),
         untested=untested,
         not_applicable=not_applicable,
     )
     return min(low, alternative), max(high, alternative)
+
+
+def _primary_pressures(
+    built_in: dict[str, float | None],
+    external: ExternalPressures | None,
+    population: str,
+    already_normalized: bool = False,
+) -> dict[str, float | None]:
+    """One population's pressures, analyzer-first and built-in where silent.
+
+    Per dimension rather than wholesale: coverage is partial by nature —
+    lizard reads complexity everywhere and documentation nowhere — so a
+    repository legitimately gets an analyzer number for some dimensions
+    and a built-in number for the rest. A `None` from the analyzers means
+    *nobody measured this*, which keeps the built-in reading; substituting
+    the `None` itself would score a silent dimension as clean, which is
+    the defect that produced a 5.0/A+ over one function.
+
+    `already_normalized` because the two populations arrive in different
+    units: `dimension_pressures` returns raw pressures that the caller
+    normalizes afterwards, while `normalize_production` has normalized
+    already, so a raw analyzer reading has to be converted before it can
+    sit beside its neighbours.
+    """
+    merged = dict(built_in)
+    if external is None:
+        return merged
+    for dimension, value in getattr(external, population).items():
+        if value is None or dimension not in merged:
+            continue
+        merged[dimension] = normalize({dimension: value})[dimension] if already_normalized else value
+    return merged
 
 
 def _score_document(

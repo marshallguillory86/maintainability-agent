@@ -128,7 +128,7 @@ What the report must gain, because the new architecture produces information the
 - **Recurrence** — findings that returned after remediation, escalated as design-review candidates.
 - **Ranked work** — Risk × Effort ordering.
 
-**Markdown delivery.** From the CLI this exists: `--format markdown --output report.md`. From chat, the identical document is exposed as an MCP resource with a Markdown media type, so a client can render it inline and the user can save it. One rendering reached two ways — the chat summary may never contain a claim the downloadable file does not, and if they disagree the file is authoritative.
+**Markdown delivery.** From the CLI this exists: `--format markdown --output report.md`. The decision is that chat retrieves the identical document as an MCP resource with a Markdown media type. **Not shipped (6.3):** the server returns Markdown as a field on the `audit_repository` tool result. One rendering is still the rule — the chat summary may never contain a claim the file does not, and if they disagree the file is authoritative.
 
 ### The work order is the actionable artifact
 
@@ -172,11 +172,11 @@ The **user's** model consumes that and writes the improvement prompt. This keeps
 | Entry point | For | Contract |
 |---|---|---|
 | **CLI** | CI runners, Makefiles, pre-merge gates | Exit codes, files on disk, no prompting, fully deterministic |
-| **MCP server** | Chat, slash commands, agentic loops | Model Context Protocol: `tools` to run the audit, `resources` for the rubric and report, `prompts` for the slash command |
+| **MCP server** | Chat, agentic loops | Two tools today (`audit_repository`, `get_agent_info`) on `maintainability-agent-mcp`. The decision also names `resources` and `prompts`; those are 6.3 / 6.2 and are not shipped |
 
-MCP's three primitives map onto the requirement without inventing anything: a slash command *is* an MCP prompt, "let the model read the rubric and scores" *is* MCP resources, and "run the audit" *is* an MCP tool.
+The decision maps MCP's three primitives onto the requirement without inventing anything: a slash command *is* an MCP prompt, "let the model read the rubric and scores" *is* MCP resources, and "run the audit" *is* an MCP tool. Only the tool primitive shipped.
 
-The MCP server ships as a subcommand of this package rather than a separate distribution, and `secure-code-agent` does the same for itself. **No combined server.** Two independent servers keep the two tools independently releasable, which is the property that just survived a release cycle. An aggregator that synthesizes both is a reasonable later idea and a bad first one.
+The server lives in this package as the `maintainability-agent-mcp` console script, not as `maintainability-agent mcp`, and `secure-code-agent` does the same for itself. **No combined server.** Two independent servers keep the two tools independently releasable, which is the property that just survived a release cycle. An aggregator that synthesizes both is a reasonable later idea and a bad first one.
 
 CI does not go through MCP. A protocol hop between a runner and an exit code buys nothing and costs determinism.
 

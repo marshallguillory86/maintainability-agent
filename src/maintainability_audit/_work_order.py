@@ -207,7 +207,13 @@ def _items_from_hotspots(report: dict[str, Any]) -> list[dict[str, Any]]:
             "finding_class": "oversized-declaration",
             "title": f"{hotspot['name']} in {hotspot['path']}",
             "path": hotspot["path"],
-            "line": hotspot.get("line"),
+            # `start_line` is the only position a hotspot carries; there
+            # is no `line` key, so this read None every time and both
+            # renderers, which omit a falsy location, printed the
+            # declaration with none. The item field stays `line` — that
+            # is the shape every finding class publishes, and a file
+            # item's None is a real answer rather than a missing one.
+            "line": hotspot["start_line"],
             "target": (
                 f"reduce below the configured limits "
                 f"(currently {hotspot['lines']} lines, complexity {hotspot['complexity']})"

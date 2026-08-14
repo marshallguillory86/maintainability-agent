@@ -42,6 +42,7 @@ not appear at all.
 
 from __future__ import annotations
 
+import re
 import subprocess
 from pathlib import Path
 
@@ -356,3 +357,125 @@ def test_within_a_class_the_worst_offender_leads(tmp_path: Path) -> None:
 
 
 # --------------------------------------------------------------------
+
+
+# --------------------------------------------------------------------
+# An item without a location is advice, not a work order
+# --------------------------------------------------------------------
+#
+# Hotspots carry `start_line`, and the Markdown table and the prompt's
+# "inspect first" list both use it. The work order read `hotspot["line"]`
+# — a key no hotspot has — so `item["line"]` was always None, and both
+# consumers omit a falsy location. One declaration, a line in the report
+# and none in the instruction to go fix it.
+
+METHOD_BODY = "\n".join(f"        x{i} = {i}" for i in range(120))
+TWO_OVERLOADS = (
+    f"class A:\n    def huge(self):\n{METHOD_BODY}\n        return 0\n"
+    f"class B:\n    def huge(self):\n{METHOD_BODY}\n        return 1\n"
+)
+
+
+def _populated(tmp_path: Path, name: str, files: dict[str, str]) -> dict:
+    """A report over enough modules to have an ordinary population."""
+    from maintainability_audit.config import load_config
+    from maintainability_audit.report import build_report
+
+    root = _repo(tmp_path / name, {
+        **{f"pkg/mod{n}.py": "def f():\n    return 1\n" for n in range(60)},
+        **files,
+    })
+    return build_report(root, load_config(None))
+
+
+def test_a_declaration_item_carries_the_line_it_starts_on(tmp_path: Path) -> None:
+    """The item's location must be the declaration's own position.
+
+    Asserted on the item, not on rendered text: both renderers drop a
+    falsy location silently, so a test reading their output would have
+    to prove a substring absent and would pass just as happily if the
+    location were removed from the template.
+    """
+    report = _populated(tmp_path, "located", {
+        "pkg/hot.py": "".join(f"import os as _o{n}\n" for n in range(39))
+        + _long_function("tangled"),
+    })
+    hotspot = next(h for h in report["function_hotspots"] if h["name"] == "tangled")
+    assert hotspot["start_line"] == 40, (
+        "fixture must put the declaration where the test says it is"
+    )
+
+    item = next(
+        i for i in work_order(report)
+        if i["finding_class"] == "oversized-declaration"
+    )
+    assert item["line"] == 40, f"item located at {item['line']!r}, declaration starts at 40"
+
+
+def test_two_overloads_are_sent_to_two_different_lines(tmp_path: Path) -> None:
+    """Distinct identities are no use pointing at the same place.
+
+    The two `huge` methods already had distinct fingerprints. An agent
+    still could not act on them: both items read "huge in pkg/two.py"
+    with no line, so the second was indistinguishable from the first at
+    the point of doing the work.
+    """
+    report = _populated(tmp_path, "overloads", {"pkg/two.py": TWO_OVERLOADS})
+
+    starts = sorted(
+        h["start_line"] for h in report["function_hotspots"] if h["name"] == "huge"
+    )
+    assert starts == [2, 125], f"fixture drifted: {starts}"
+
+    items = [i for i in work_order(report) if i["title"].startswith("huge in ")]
+    assert len(items) == 2, f"expected two items, got {[i['title'] for i in items]}"
+    assert sorted(i["line"] for i in items) == starts
+
+
+def _hotspot_builder_source() -> str:
+    """The code that builds oversized-declaration items, comments stripped.
+
+    Located by what it does rather than by its name, so renaming or
+    splitting the builder does not silently retire the rule below.
+    """
+    source = (
+        Path(__file__).resolve().parents[1]
+        / "src" / "maintainability_audit" / "_work_order.py"
+    ).read_text(encoding="utf-8")
+    blocks = [
+        block for block in re.split(r"\n(?=def )", source)
+        if "oversized-declaration" in block and "function_hotspots" in block
+    ]
+    assert blocks, (
+        "nothing in _work_order.py builds oversized-declaration items from "
+        "function_hotspots; if that moved, move this lint with it"
+    )
+    return "\n".join(
+        line for line in "\n".join(blocks).splitlines()
+        if not line.lstrip().startswith("#")
+    )
+
+
+def test_the_hotspot_item_takes_its_location_from_start_line() -> None:
+    """The class: a builder may not invent a position key.
+
+    `hotspot.get("line")` is not a bug that announces itself. The key is
+    absent, `.get` answers None, both renderers read None as "nothing to
+    show", and every layer behaves as designed while the location
+    disappears. Nothing raises, and no test over rendered text can tell a
+    dropped location from one the template never had. So the guard is on
+    the source.
+    """
+    block = _hotspot_builder_source()
+
+    read = re.search(r"""\.get\(\s*(["'])line\1\s*\)|\[\s*(["'])line\2\s*\]""", block)
+    assert not read, (
+        f"the builder reads a \"line\" key ({read.group(0)}); a hotspot's only "
+        "position is `start_line`, so this silently yields None"
+    )
+
+    emitted = re.search(r"""(["'])line\1\s*:\s*(?P<value>.+)""", block)
+    assert emitted and "start_line" in emitted.group("value"), (
+        "the item's location must come from the hotspot's `start_line`; found "
+        f"{emitted.group('value') if emitted else 'no line field at all'}"
+    )

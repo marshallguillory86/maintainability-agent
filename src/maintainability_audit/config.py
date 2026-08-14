@@ -15,7 +15,7 @@ DEFAULT_IDIOM_GROUPS: dict[str, list[str]] = {}
 
 DEFAULT_CONFIG: dict[str, Any] = {
     "paths": {
-        "include_extensions": [".py", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx",
+        "include_extensions": [".py", ".java", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx",
                                ".html", ".css", ".md"],
         "exclude_patterns": [
             ".git/",

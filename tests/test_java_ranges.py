@@ -18,9 +18,8 @@ missed finding, never a cascade of false ones.** Ranges end at their own
 brace, never at the next match. A 4-line method must not be reported as
 262 lines because the pattern list missed the declaration after it.
 
-This tests the detector directly. Nothing is wired into scoring yet:
-`.java` is not in `DECLARATION_SUFFIXES` and not in
-`include_extensions`, so no report changes because this exists.
+This tests the detector directly. Wiring (suffix, include, dispatch)
+is held by `test_java_wiring.py` and `test_java_scored.py`.
 """
 from __future__ import annotations
 

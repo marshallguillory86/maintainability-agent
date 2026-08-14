@@ -188,7 +188,7 @@ Until that exists, a small repository gets path 2: a complete audit, every findi
 | 7.1 | Regenerate the self-audit under the new pipeline | Published, and the README matches it |
 | 7.2 | Reconcile every document with shipped behavior | No document describes an unimplemented component as present |
 | 7.3 | Update the promise set | P1 restated for pinned versions and history-as-input; P7 and P8 provably enforced |
-| 7.4 | Migration guide | Report schema, baseline format and config changes, with the break from 0.x named |
+| 7.4 | Migration guide | **Done.** [migration-1.0.md](migration-1.0.md) names the post-0.7 breaks: `--analyzers` moves the estimate; `CALIBRATION_C` 2.6279 → 2.2658. Schema 3 and baseline v2 do not break again. 1.0 is not tagged. |
 | 7.5 | Hostile audit against the shipped artifact | Findings closed as a class, not instance by instance |
 
 ## Sequencing constraints

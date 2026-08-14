@@ -6,6 +6,11 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Changed
 
+- **A 1.0 migration note.** [docs/migration-1.0.md](docs/migration-1.0.md)
+  names the post-0.7 breaks: `--analyzers` moves the point estimate, and
+  `CALIBRATION_C` 2.6279 → 2.2658. Schema 3 and baseline v2 do not break
+  again. 1.0 is not tagged.
+
 - **The report contract, 0.7 migration note, and tool inventory match the
   shipped tree.** Schema version 3 (nullable estimate), Java has a declaration
   population, `CALIBRATION_C` is 2.2658 after 3.6, and coverage is reported.

@@ -187,6 +187,16 @@ CONCERNS = (
     "metrics",        # maintainability index, Halstead, raw counts
 )
 
+# Tools that actually have an adapter in this package. VERIFIED_TIERS
+# is "we ran it and assigned a depth"; an adapter is whether we can
+# invoke and parse it. Those sets used to be the same, which marked
+# flake8, cohesion, cloc and wily implemented with no class in src/.
+IMPLEMENTED_ADAPTERS = frozenset({
+    "complexipy", "eslint", "interrogate", "jscpd", "lizard",
+    "multimetric", "mypy", "pydocstyle", "pylint", "radon", "ruff",
+    "vulture",
+})
+
 # Deliberately unadapted, with the reason, so nobody writes one later
 # believing it was an oversight.
 #
@@ -344,7 +354,7 @@ def _entry(record: dict[str, Any]) -> dict[str, Any]:
         "security_only": bool(concerns) and set(concerns) <= SECURITY_TAGS and not languages,
         "source": record.get("source") or record.get("homepage") or "",
         "tier": VERIFIED_TIERS.get(slug, "all"),
-        "adapter": "implemented" if slug in VERIFIED_TIERS else "none",
+        "adapter": "implemented" if slug in IMPLEMENTED_ADAPTERS else "none",
     }
 
 
@@ -366,7 +376,7 @@ def _local_entry(extra: dict[str, Any]) -> dict[str, Any]:
         "security_only": False,
         "source": extra["source"],
         "tier": VERIFIED_TIERS.get(extra["slug"], "all"),
-        "adapter": "implemented" if extra["slug"] in VERIFIED_TIERS else "none",
+        "adapter": "implemented" if extra["slug"] in IMPLEMENTED_ADAPTERS else "none",
     }
 
 

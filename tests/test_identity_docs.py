@@ -89,3 +89,15 @@ def test_unreleased_changelog_does_not_claim_content_addressed_identity() -> Non
         .read_text(encoding="utf-8")
         .lower()
     )
+
+
+def test_the_0_7_notes_do_not_claim_a_stale_schema_version() -> None:
+    """0.7 writes schema 3. Present tense 'is now version 2' is a lie."""
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    notes = changelog.split("## 0.7.0", maxsplit=1)[1].split("\n## 0.6.", maxsplit=1)[0]
+    assert re.search(
+        r"schema is now version (?!3\b)\d+",
+        notes,
+        flags=re.IGNORECASE,
+    ) is None
+    assert "schema to 3" in notes or "schema version 3" in notes.lower()

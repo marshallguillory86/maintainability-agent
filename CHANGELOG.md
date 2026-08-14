@@ -7,9 +7,9 @@ All notable changes to Maintainability Agent will be documented here.
 ## 0.7.0 - 2026-08-13
 
 Scores the evidence cannot support are withheld. `--fail-on-new` no longer
-fires on code that only moved. Two incompatibilities: baseline format
-version 2, and a nullable `maintainability_estimate`. See
-[docs/migration-0.7.md](docs/migration-0.7.md).
+fires on code that only moved. Two incompatibilities: **report schema
+version 3** (`maintainability_estimate` is nullable) and **baseline format
+version 2**. See [docs/migration-0.7.md](docs/migration-0.7.md).
 
 ### Added
 
@@ -117,7 +117,10 @@ Recalibration, and a retraction. The reference corpus is now chosen by a query i
 
 ### Changed — ADR 001 stage 8 (**breaking report contract**)
 
-**The report schema is now version 2, and version 1 is rejected rather than migrated.** The four ambiguous compatibility score fields are gone with no aliases:
+**Stage 8 moved the report schema from 1 to 2.** The four ambiguous
+compatibility score fields left with no aliases. **0.7 then moved the
+schema to 3** when the estimate became nullable; that is the version this
+release writes. Version 1 is still rejected. There is no migration.
 
 | Removed | Replacement |
 |---|---|
@@ -130,7 +133,7 @@ Recalibration, and a retraction. The reference corpus is now chosen by a query i
 - **`verified_grade_blockers` explains an issued grade only.** When no grade was issued the list is empty, because there is nothing to cap — what is missing is named in `evidence_status.reasons` with its measurement path and provenance. Conflating the two is what let an evidence gap read as a quality demotion.
 - **No value moved.** Parity was proven against four reports captured from `a6b3c0f` before any edit — complete, complete-with-NotApplicable, incomplete from unavailable history, and incomplete from a missing summary measurement — checked in under `tests/fixtures/stage8_anchors/`. Estimate, range, verified grade, categories, aspects, rubric, dimensions, reference, worst dimension and evidence status are identical in all four. The calibration constant re-derives to the same value and all 40 corpus repositories still produce a median of exactly 4.0.
 - **No version-1 migration exists, deliberately.** The consumer inventory established that nothing rescores a persisted report, so a migration would have served no caller. Version 1, unversioned and unknown versions all fail with `UnsupportedReportSchema`.
-- **Baselines stop carrying a score snapshot.** Nothing ever read it back — `load_baseline` takes the fingerprint list alone — and writing one would freeze an obsolete contract into every new baseline. The file version stays 1 and older baselines containing the field still load, because the loader ignores it.
+- **Baselines stop carrying a score snapshot.** Nothing ever read it back — `load_baseline` takes the fingerprint list alone — and writing one would freeze an obsolete contract into every new baseline. At stage 8 the file version stayed 1 and older files still loaded. **0.7 later rejected version-1 baselines** because finding identity changed and those fingerprints cannot be converted; this release writes baseline format version 2.
 - **The presentation boundary lost its fallbacks.** `_evidence_view` reads canonical fields directly; `compatibility_grade` and `NOT_REPORTED` are gone, along with the legacy-field defaults. A malformed score object now fails rather than receiving compatibility semantics.
 - **Guarded against reintroduction.** A structural test fails the build if `src/` or `tools/` reads or emits any of the four removed keys, while leaving internal variable names, test descriptions and historical prose alone.
 

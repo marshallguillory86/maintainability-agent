@@ -49,7 +49,7 @@ Controls which external analysis tools may run. Full background, including the t
 
 - `depth`: `baseline` | `moderate` | `heavy` | `all`. Cumulative — `heavy` includes everything in `baseline` and `moderate`. Larger pools take longer and produce better-supported scores.
 - `license_policy`: `permissive` | `copyleft-weak` | `copyleft-any` | `commercial-free-tier` | `unverified`. Also cumulative. Defaults to `permissive`, the setting fewest organizations have to argue about.
-- `prompt_when_interactive`: ask for depth and policy on first run when attached to a terminal. Ignored in CI and whenever `--tool-depth` or `--license-policy` is passed, because an audit that blocks on a question in a pipeline is a broken audit.
+- `prompt_when_interactive`: reserved. The key is stored and never read. A first-run TTY prompt is release-plan 6.1 and is not shipped. Depth and policy come from this file, or from `--depth` / `--license-policy` on `tools/resolve_pool.py` (not the audit CLI).
 - `allow_tools`: tool slugs admitted even when the policy tiers would exclude them — for a commercial analyzer you hold a license for, say.
 - `deny_tools`: tool slugs never run, whatever else permits them.
 - `deny_license_classes`: whole classes never run, e.g. `["strong-copyleft"]`.

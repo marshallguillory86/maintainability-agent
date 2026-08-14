@@ -91,7 +91,7 @@ python tools/resolve_pool.py --concerns documentation
 
 ### How the selection is made
 
-Prompted interactively on first run when attached to a terminal, then written to configuration so the answer is stable. In CI, or with `--tool-depth` / `--license-policy` supplied, nothing is prompted — an audit that stops to ask a question in a pipeline is a broken audit, and a prompt that changes the tool pool between runs breaks determinism (promise **P1**).
+Read from configuration (`analyzers.depth`, `analyzers.license_policy`, `analyzers.concerns`). A first-run TTY prompt is release-plan 6.1 and is not shipped — an audit that stopped to ask a question in a pipeline would be a broken audit, and a prompt that changed the tool pool between runs would break determinism (promise **P1**). Preview a pool without editing the file with `tools/resolve_pool.py --depth` / `--license-policy`.
 
 The chosen depth and policy are recorded in the report, because a score computed from four tools and a score computed from forty are not the same measurement and must not be silently comparable.
 

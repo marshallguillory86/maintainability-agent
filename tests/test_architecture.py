@@ -225,6 +225,37 @@ def test_the_documented_layering_matches_the_document() -> None:
     assert not missing, f"modules absent from docs/architecture.md: {missing}"
 
 
+def _layers_mermaid(text: str) -> str:
+    """The first mermaid fence under the Layers heading — the as-is picture."""
+    start = text.find("## Layers")
+    assert start >= 0, "docs/architecture.md is missing a Layers heading"
+    fence = text.find("```mermaid", start)
+    end = text.find("```", fence + len("```mermaid"))
+    assert 0 <= fence < end, "docs/architecture.md Layers section has no mermaid fence"
+    return text[fence:end]
+
+
+def test_the_layers_mermaid_names_every_module() -> None:
+    """The picture is the architecture. A module only in the table is a caption.
+
+    The ASCII diagram was replaced so GitHub would render it. Mermaid is
+    not the import graph: this only checks that every file the layer
+    sets constrain still appears in that one fence. A new module added
+    to LAYERS and forgotten in the diagram fails here the day it lands.
+    The proposed mermaid at the bottom of the file is a different fence.
+    """
+    text = (ROOT / "docs" / "architecture.md").read_text(encoding="utf-8")
+    diagram = _layers_mermaid(text)
+    missing = sorted(
+        module for module in set().union(*LAYERS.values()) if module not in diagram
+    )
+
+    assert not missing, (
+        "modules in LAYERS but absent from the Layers mermaid: "
+        f"{missing}"
+    )
+
+
 def _named_tests(text: str) -> set[str]:
     return set(re.findall(r"`(test_[a-z0-9_]+(?:\.py)?)`", text))
 

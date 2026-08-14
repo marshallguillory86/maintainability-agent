@@ -8,49 +8,102 @@ The layering is enforced by `tests/test_architecture.py`, which reads the real i
 
 ## Layers
 
-Dependencies point downward only. No cycles.
+Dependencies point downward only. No cycles. Every module in a box is a file under `src/maintainability_audit/`. `tests/test_architecture.py` fails the build if a layer set names a module this diagram omits.
 
-```text
-  entry          cli, __main__, mcp_server
-                     |
-  presentation   renderers, prompts, sarif, baseline,       reads the report dict
-                 _evidence_view (shared phrasing)
-                 _scan_view (what was examined, what was not)
-                 _history_view (what several scans show)
-                 _identity (path + name + ordinal fingerprints)
-                     |
-  assembly       report, _analysis, _documents,             builds the report, calls the scorer
-                 _built_ins, _work_order,
-                 _backfill (scanning the past)
-                                                             _analysis runs the analyzer pool
-                                                             _built_ins places the fallback tier
-                     |
-        +------------+------------+
-        |                         |
-  scanners                   scoring
-  _discovery (what is here,  scoring -> _aspects -> _pressures
-   and whose code it is)     _pillars (five-pillar taxonomy)
-                             _trends (arithmetic over checked segments)
-                             _recurrence (what keeps coming back)
-  _practice (what is
-   enforced, from config)
-  metrics, duplication
-  deadcode, idioms           _formula, _calibration, _bands (rubric data)
-  _adapters (protocol)       _corroborate (several tools -> one reading)
-  _metric_adapters,
-  _verdict_adapters,
-  _tool_adapters, _generic
-  similarity, history        _verification (evidence sufficiency)
-                             _derive (calibration fit), evidence (boundary)
-        |                         |
-        +------------+------------+
-                     |
-  parsing        source, declarations, _cognitive, _ranges, _tokens
-                     |
-  foundations    _metrics_types, _masking, _hotspots, config, git_tools,
-                 _scan_history (append-only record + comparability),
-                 instructions, _runner (process execution), _catalog (tool selection)
+```mermaid
+flowchart TB
+  subgraph entry["entry"]
+    cli["cli"]
+    dunder_main["__main__"]
+    mcp_server["mcp_server"]
+  end
+
+  subgraph presentation["presentation — reads the report dict"]
+    renderers["renderers"]
+    prompts["prompts"]
+    sarif["sarif"]
+    baseline["baseline"]
+    _evidence_view["_evidence_view"]
+    _scan_view["_scan_view"]
+    _history_view["_history_view"]
+    _identity["_identity"]
+  end
+
+  subgraph assembly["assembly — builds the report, calls the scorer once"]
+    report["report"]
+    _analysis["_analysis"]
+    _documents["_documents"]
+    _built_ins["_built_ins"]
+    _work_order["_work_order"]
+    _backfill["_backfill"]
+  end
+
+  subgraph scanners["scanners"]
+    metrics["metrics"]
+    _discovery["_discovery"]
+    _practice["_practice"]
+    duplication["duplication"]
+    deadcode["deadcode"]
+    idioms["idioms"]
+    similarity["similarity"]
+    history["history"]
+    _adapters["_adapters"]
+    _generic["_generic"]
+    _metric_adapters["_metric_adapters"]
+    _verdict_adapters["_verdict_adapters"]
+    _tool_adapters["_tool_adapters"]
+  end
+
+  subgraph scoring["scoring"]
+    scoring_mod["scoring"]
+    _aspects["_aspects"]
+    _pressures["_pressures"]
+    _pillars["_pillars"]
+    _trends["_trends"]
+    _recurrence["_recurrence"]
+    _formula["_formula"]
+    _calibration["_calibration"]
+    _bands["_bands"]
+    _corroborate["_corroborate"]
+    _verification["_verification"]
+    _derive["_derive"]
+  end
+
+  subgraph boundary["boundary"]
+    evidence["evidence"]
+  end
+
+  subgraph parsing["parsing"]
+    source["source"]
+    declarations["declarations"]
+    _cognitive["_cognitive"]
+    _ranges["_ranges"]
+    _tokens["_tokens"]
+  end
+
+  subgraph foundations["foundations"]
+    _metrics_types["_metrics_types"]
+    _masking["_masking"]
+    _hotspots["_hotspots"]
+    config["config"]
+    git_tools["git_tools"]
+    _scan_history["_scan_history"]
+    instructions["instructions"]
+    _runner["_runner"]
+    _catalog["_catalog"]
+  end
+
+  entry --> presentation
+  presentation --> assembly
+  assembly --> scanners
+  assembly --> scoring
+  scoring --> evidence
+  scanners --> parsing
+  scoring --> parsing
+  parsing --> foundations
 ```
+
+`_bands` sits in scoring because it is rubric data. It is not imported by the live scorer — see [Known debt](#known-debt). `_identity` is path + name + ordinal, not a content hash.
 
 | Layer | Owns | May import |
 | --- | --- | --- |
@@ -101,20 +154,18 @@ No function returns their average. [ADR 007](adr-007-pillars-and-practice.md) in
 
 ## Data flow
 
-```text
-files on disk
-  -> SourceIndex          each file read once, parsed once
-  -> scanners             findings + counts
-  -> report_summary       populations and finding counts
-  -> dimension_pressures  counts as rates over their populations
-  -> aspect_scores        13 aspects, 0-5 or None for unmeasured
-  -> categories           five ISO categories, weighted means, rounded as displayed
-  -> estimate + range     point estimate; interval with unknowns priced 0 and 5
-  -> verified grade       banded from the interval floor when evidence allows,
-                          null when it does not, with blockers only for a grade
-                          that was actually issued
-  -> report dict          + schema_version
-  -> renderers / prompts / sarif / baseline
+```mermaid
+flowchart LR
+  disk["files on disk"] --> src["SourceIndex — each file read once, parsed once"]
+  src --> scan["scanners — findings and counts"]
+  scan --> summary["report_summary — populations and finding counts"]
+  summary --> pressures["dimension_pressures — rates over their populations"]
+  pressures --> aspects["aspect_scores — 13 aspects, 0-5 or None"]
+  aspects --> categories["categories — five ISO means, rounded as displayed"]
+  categories --> estimate["estimate + range — unknowns priced 0 and 5"]
+  estimate --> grade["verified grade — banded from the interval floor, or null"]
+  grade --> report["report dict + schema_version"]
+  report --> out["renderers / prompts / sarif / baseline"]
 ```
 
 Two properties of this flow are load-bearing and each has a test:
@@ -165,6 +216,7 @@ Stated rather than hidden, because an architecture document that only describes 
 - **The band matrix does not drive the score.** `_bands.py` exists, holds the table, and is imported by nothing under `src/` — `_pressures._weighted_rate` still computes a binary warn/fail rate over the population, so CCN 16 and CCN 45 are one failure each and the severity ADR 008 §"All three data kinds survive" was written to keep is discarded at the point the score is formed. Closing it is a recalibration, not an import: banding changes every pressure the corpus was fitted to, so the constant and the dimension references move with it ([ADR 008](adr-008-translation-and-decision.md) invariant 13; `tests/test_bands.py` exercises the table in isolation).
 - **The proposed `_analyzers` package and `_concepts` registry were never created as named modules.** Their roles landed in `_tool_adapters`, `_metric_adapters`, `_verdict_adapters`, `_generic`, and `_corroborate`. This document names the files that exist.
 - **Declaration extraction is gated on `DECLARATION_SUFFIXES`** (Python plus JS/TS/HTML). Including another suffix makes the file readable for length, duplication and risk; it does not produce a declaration population. That is a scanner limit, not a layering defect. `--changed-only` and `--fail-on-new` no longer have the defects previously listed here: a thin diff withholds ([ADR 005](adr-005-insufficient-population.md); `test_scan_scope.py`), and identity is `function:{path}:{name}#{ordinal}`. The declaration-body hash proposed by [ADR 009](adr-009-scan-history.md) did not ship; the [decision register](decisions.md) records that gap.
+- **Java is recognized, not scored.** `.java` is a known source suffix. It is not in the default include list and not in `DECLARATION_SUFFIXES`. Adding it to `include_extensions` opens files for length, duplication and risk and then withholds: no declaration parser, not "too small." The last-resort regex matches `def` / `function` / arrows and must not be aimed at Java — that would report zero methods and look measured. Lizard can count Java methods under `--analyzers`; those readings only widen `maintainability_range`. Closing this is a bounded language slice, in this order: a range detector that does not run past a method or type body (methods, constructors, types; generics and annotations masked), then `.java` in `DECLARATION_SUFFIXES`, then the default include list, then [language support](language-support.md), then a 40-file fixture that produces a declaration population. It is not putting `.java` on the include list alone, and it is not feeding lizard into `declarations_scanned`. Wiring analyzer measurements into the point estimate remains the separate recalibration above. The same shape applies to Go, C, C++, C# and Rust until each has its own detector.
 
 ## Extension points
 
@@ -235,16 +287,14 @@ standard score means:
 
 The intended dependency direction is:
 
-```text
-language-native analyzers / SARIF     checked-in semantic policy
-                 \                         /
-                  -> normalized semantic findings
-                              |
-repository measurements     configured economic context
-                 \                         /
-                  -> economic impact scenarios
-                              |
-                  bounded prioritized work order
+```mermaid
+flowchart TB
+  analyzers["language-native analyzers / SARIF"] --> semantic["normalized semantic findings"]
+  policy["checked-in semantic policy"] --> semantic
+  measures["repository measurements"] --> economic["economic impact scenarios"]
+  context["configured economic context"] --> economic
+  semantic --> work["bounded prioritized work order"]
+  economic --> work
 ```
 
 Both paths terminate in report data consumed by presentation. Neither may

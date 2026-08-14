@@ -39,6 +39,14 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         "",
         f"- Maintainability estimate: {view.estimate(score)} (range {view.score_range(score)})",
         f"- Verified grade: {view.verified_grade(score)}",
+        # Stated in every state, not only when something is missing.
+        # `remediation_note` below prints the detail when evidence is
+        # incomplete and nothing at all when it is complete, so a
+        # complete prompt never said so — leaving an agent unable to
+        # tell verified evidence from an unprinted status, which are
+        # worth different amounts of confidence in the line above.
+        f"- Evidence status: {score['evidence_status']['status']} "
+        f"(profile `{view.profile(score)}`)",
         f"- Files scanned: {summary['files_scanned']}",
         f"- File failures: {summary['file_failures']}",
         f"- Function failures: {summary['function_failures']}",
@@ -47,6 +55,7 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         f"- Hard gate failures: {summary['hard_gate_failures']}",
         "",
     ]
+    lines.extend(prompt_analyzer_caveat(report))
     lines.extend(view.remediation_note(score))
     lines.extend(prompt_escalation_note(report))
     lines.extend(prompt_work_order(report))
@@ -54,6 +63,34 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
     lines.extend(prompt_focus_sections(report))
     lines.extend(prompt_deliverable())
     return "\n".join(lines)
+
+
+def prompt_analyzer_caveat(report: dict[str, Any]) -> list[str]:
+    """Where the headline number came from, when other tools also spoke.
+
+    `--analyzers` can put ten tools' findings into this prompt while the
+    estimate above still derives from the six built-in detectors:
+    analyzer readings widen `maintainability_range` and never move the
+    point estimate (ADR 006 §4). The Markdown report says so beside its
+    measurement table; the prompt did not, and layout alone implies the
+    opposite — a list of analyzer findings under a headline estimate
+    reads as though the tools produced it.
+
+    Only when there is analyzer output to qualify. A caveat printed
+    unconditionally would describe disagreement to every zero-install
+    user who never ran a second tool, which is the same defect facing
+    the other way.
+    """
+    if not (report.get("analyzer_measurements") or report.get("analyzer_findings")):
+        return []
+    return [
+        "**The maintainability estimate above comes from the built-in detectors.** "
+        "Analyzer measurements and findings are reported here, not scored: where an "
+        "analyzer disagrees with a built-in reading, the range widens and the point "
+        "estimate does not move. Treat an analyzer finding as evidence about the "
+        "code, never as a change to the score.",
+        "",
+    ]
 
 
 def prompt_escalation_note(report: dict[str, Any]) -> list[str]:

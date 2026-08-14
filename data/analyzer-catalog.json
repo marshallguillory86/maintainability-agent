@@ -45,7 +45,7 @@
       "weak-copyleft": 34,
       "strong-copyleft": 45
     },
-    "adapters_implemented": 16
+    "adapters_implemented": 12
   },
   "tools": [
     {
@@ -2591,7 +2591,7 @@
       "security_only": false,
       "source": "https://github.com/AlDanial/cloc",
       "tier": "baseline",
-      "adapter": "implemented"
+      "adapter": "none"
     },
     {
       "slug": "closure-compiler",
@@ -3613,7 +3613,7 @@
       "security_only": false,
       "source": "https://github.com/mschwager/cohesion",
       "tier": "moderate",
-      "adapter": "implemented"
+      "adapter": "none"
     },
     {
       "slug": "collector",
@@ -6193,7 +6193,7 @@
       "security_only": false,
       "source": "https://github.com/PyCQA/flake8",
       "tier": "moderate",
-      "adapter": "implemented"
+      "adapter": "none"
     },
     {
       "slug": "flakeheaven",
@@ -18164,7 +18164,7 @@
       "security_only": false,
       "source": "https://github.com/tonybaloney/wily",
       "tier": "heavy",
-      "adapter": "implemented"
+      "adapter": "none"
     },
     {
       "slug": "wintellectanalyzers",

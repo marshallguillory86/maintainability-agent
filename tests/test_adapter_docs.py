@@ -68,6 +68,20 @@ def test_adapter_status_table_names_only_shipped_adapters() -> None:
         assert slug not in claimed
 
 
+def test_catalog_adapter_count_matches_shipped_adapters() -> None:
+    """The catalog's adapters_implemented used to count tools with no class."""
+    import json
+
+    counts = json.loads((ROOT / "data" / "analyzer-catalog.json").read_text(encoding="utf-8"))["counts"]
+    shipped = {
+        tool["slug"]
+        for tool in load_catalog()
+        if adapter_for(tool["slug"]) is not None
+        or declared_adapter(tool["slug"]) is not None
+    }
+    assert counts["adapters_implemented"] == len(shipped)
+
+
 def test_adapter_status_prose_count_matches_the_table() -> None:
     """'16 tools have adapters' survived next to a 12-row table."""
     page = _text("docs/analyzer-pool.md")

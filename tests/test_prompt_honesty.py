@@ -12,12 +12,10 @@ Two omissions, both silent:
   complete never said so. A reader could not tell "verified against the
   full profile" from "nobody printed the status", and those two warrant
   different confidence in the number directly above.
-- **The estimate was never qualified.** `--analyzers` can run ten tools
-  whose findings appear further down the same prompt, while the headline
-  estimate still comes only from the built-in detectors; analyzer
-  disagreement widens the range and never moves the point. An agent
-  reading "Maintainability estimate: 4.1 / 5" beneath a list of analyzer
-  findings would reasonably assume the tools produced the number.
+- **The estimate source must follow the evidence.** Complete analyzer
+  measurements set a scored dimension; findings-only or incomplete
+  analyzer output leaves that dimension on the built-in fallback. The
+  prompt must say which happened without implying a tool ran when it did not.
 
 The rule these tests hold: the prompt states where its number came from,
 and never implies a tool ran that did not.
@@ -47,6 +45,11 @@ FINDINGS = [
     {"concept": "complexity", "path": "app.py", "line": 1,
      "message": "function is too complex", "tool": "lizard", "emits": "metric"},
 ]
+COMPLETE_MEASUREMENTS = {
+    "cyclomatic_complexity": {"units": 40, "tools": ["lizard"]},
+    "declaration_lines": {"units": 40, "tools": ["lizard"]},
+    "cognitive_complexity": {"units": 40, "tools": ["complexipy"]},
+}
 
 
 @pytest.fixture
@@ -94,25 +97,36 @@ def test_an_incomplete_prompt_names_its_status_exactly_once(tmp_path: Path) -> N
     assert prompt.count("### Evidence") == 1, "the detailed evidence section was duplicated"
 
 
-def test_analyzer_results_do_not_imply_the_estimate_came_from_them(complete: dict) -> None:
-    """The caveat the Markdown has and the prompt did not.
+def test_complete_analyzer_results_say_the_estimate_used_them(complete: dict) -> None:
+    """Primary analyzer evidence must be named as primary, not merely displayed."""
+    from maintainability_audit._pressures import ExternalPressures
+    from maintainability_audit.scoring import score_report
 
-    Ten analyzers can appear in this prompt while the headline estimate
-    still comes from six built-in detectors. Disagreement widens the
-    range; it never moves the point. Unstated, the layout says otherwise.
-    """
-    complete["analyzer_measurements"] = MEASUREMENTS
+    complete["analyzer_measurements"] = COMPLETE_MEASUREMENTS
     complete["analyzer_findings"] = FINDINGS
+    complete["score"] = score_report(
+        complete,
+        ExternalPressures(
+            all_code={"declarations": 0.8},
+            production={"declarations": 0.8},
+        ),
+    )
 
     prompt = render_ai_prompt(complete)
     lowered = prompt.lower()
 
-    assert "built-in detectors" in lowered, (
-        f"the prompt reports analyzer results without saying the estimate is "
-        f"not derived from them:\n{prompt[:800]}"
+    source_lines = [
+        line.lower() for line in prompt.splitlines()
+        if "estimate" in line.lower() and "analyzer" in line.lower()
+    ]
+    assert source_lines, (
+        f"the prompt never says complete analyzer evidence set the estimate:\n{prompt[:800]}"
     )
-    assert "range" in lowered and "widen" in lowered, (
-        "the caveat must say what analyzer disagreement actually does"
+    assert "built-in detectors" not in lowered and "not scored" not in lowered, (
+        "the prompt still describes scored analyzer measurements as report-only evidence"
+    )
+    assert any(
+        word in line for line in source_lines for word in ("used", "uses", "from", "primary", "scored")
     )
 
 

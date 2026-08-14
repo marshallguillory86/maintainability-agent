@@ -32,8 +32,14 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from maintainability_audit._analysis import analyze
 from maintainability_audit.config import load_config
+
+
+def _contributed(analysis, slug: str) -> bool:
+    return any(item.slug == slug and item.contributed for item in analysis.coverage)
 
 
 def _repo(root: Path, files: dict[str, str]) -> Path:
@@ -62,7 +68,10 @@ def test_a_python_only_tool_covers_nothing_for_cpp(tmp_path: Path) -> None:
         **{f"scripts/build{n}.py": PY % {"n": n} for n in range(6)},
     })
 
-    coverage = analyze(root, load_config(None)).coverage_by_language()
+    analysis = analyze(root, load_config(None))
+    if not _contributed(analysis, "mypy"):
+        pytest.skip("mypy did not run")
+    coverage = analysis.coverage_by_language()
 
     assert "types" in coverage["Python"], "mypy read the build scripts"
     assert "types" not in coverage["C++"], (
@@ -82,7 +91,10 @@ def test_a_multi_language_tool_covers_every_language_it_reads(tmp_path: Path) ->
         **{f"pkg/mod{n}.py": PY % {"n": n} for n in range(40)},
     })
 
-    coverage = analyze(root, load_config(None)).coverage_by_language()
+    analysis = analyze(root, load_config(None))
+    if not _contributed(analysis, "lizard"):
+        pytest.skip("lizard did not run")
+    coverage = analysis.coverage_by_language()
 
     assert "complexity" in coverage["C++"], "lizard reads C++"
     assert "complexity" in coverage["Python"], "and Python"
@@ -137,6 +149,8 @@ def test_a_concern_no_tool_reads_for_a_language_is_named_as_a_gap(tmp_path: Path
     })
 
     analysis = analyze(root, load_config(None))
+    if not _contributed(analysis, "mypy"):
+        pytest.skip("mypy did not run")
     gaps = analysis.gaps_by_language()
 
     assert "types" in gaps["C++"]
@@ -162,6 +176,8 @@ def test_a_coverage_claim_names_the_languages_it_is_about(tmp_path: Path) -> Non
     })
 
     analysis = analyze(root, load_config(None))
+    if not _contributed(analysis, "mypy"):
+        pytest.skip("mypy did not run")
 
     assert analysis.scored_languages == ("Python",)
     assert "types" in analysis.measured_concepts(), (
@@ -211,6 +227,8 @@ def test_one_stray_shell_script_does_not_erase_a_python_library(tmp_path: Path) 
     })
 
     analysis = analyze(root, load_config(None))
+    if not _contributed(analysis, "mypy"):
+        pytest.skip("mypy did not run")
 
     assert analysis.measured_concepts(), (
         "one unscanned shell script erased the coverage of 60 scanned "
@@ -238,6 +256,8 @@ def test_two_scored_languages_narrow_the_claim_honestly(tmp_path: Path) -> None:
     })
 
     analysis = analyze(root, load_config(None))
+    if not _contributed(analysis, "mypy"):
+        pytest.skip("mypy did not run")
     covered = analysis.coverage_by_language()
 
     assert "types" in covered["Python"]

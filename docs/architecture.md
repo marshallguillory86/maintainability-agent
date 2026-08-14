@@ -35,6 +35,7 @@ flowchart TB
     _documents["_documents"]
     _built_ins["_built_ins"]
     _work_order["_work_order"]
+    _work_order_weights["_work_order_weights"]
     _backfill["_backfill"]
   end
 
@@ -111,7 +112,7 @@ flowchart TB
 | **parsing** | Reading files once, extracting declarations, complexity, ranges, tokens | foundations |
 | **scanners** | Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history, and — via `_adapters` — whatever the external analyzers report | foundations, parsing, `_runner` |
 | **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
-| **assembly** | Running the scan, running the analyzer pool (`_analysis`) and stating what it found (`_documents`), recording the built-in detectors as their own source tier (`_built_ins`), ordering the work by risk against effort and recomputing each item's worth (`_work_order`), assembling the report dict, invoking the scorer once | anything below |
+| **assembly** | Running the scan, running the analyzer pool (`_analysis`) and stating what it found (`_documents`), recording the built-in detectors as their own source tier (`_built_ins`), ordering the work by risk against effort and recomputing each item's worth (`_work_order`, weights in `_work_order_weights`), assembling the report dict, invoking the scorer once | anything below |
 | **presentation** | Markdown, PR comment, SARIF, baseline, remediation prompt, `_evidence_view` (estimate/range/evidence/verified-grade wording), and `_identity` (fingerprints derived from the report, never from source) | foundations, the report dict |
 | **entry** | Argument parsing, transport, output routing, exit codes | anything below |
 

@@ -364,11 +364,14 @@ def test_a_python_only_tool_on_a_c_repository_is_not_applicable(tmp_path: Path) 
     assert "types" not in covered, "mypy reads only Python; nothing examined types"
     assert "style" not in covered, "ruff and pydocstyle read only Python"
     assert "dead-code" not in covered, "vulture reads only Python"
-    # `documentation` stays, and that is correct rather than a leak:
-    # multimetric computes a comment ratio on C and produced four
-    # measurements here. The filter removes tools with no input, not
-    # every tool whose concern looks Python-flavoured.
-    assert "documentation" in covered
+    # `documentation` stays when multimetric ran, and that is correct
+    # rather than a leak: it computes a comment ratio on C. The filter
+    # removes tools with no input, not every tool whose concern looks
+    # Python-flavoured. Skip the positive assertion when the tool is
+    # absent rather than treat absence as a failed claim.
+    multimetric = next((item for item in analysis.coverage if item.slug == "multimetric"), None)
+    if multimetric is not None and multimetric.contributed:
+        assert "documentation" in covered
 
 
 def test_a_tool_is_applicable_when_any_of_its_languages_is_present(tmp_path: Path) -> None:

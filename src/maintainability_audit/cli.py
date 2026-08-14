@@ -45,8 +45,9 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--analyzers", action="store_true",
         help="Run the configured external analyzer pool and report its coverage "
-             "(see docs/analyzer-pool.md). Off by default while adapters are "
-             "still being written.",
+             "(see docs/analyzer-pool.md). Off by default because external "
+             "analysis is optional and may be expensive; analyzer measurements "
+             "do not yet move the point estimate.",
     )
     parser.add_argument(
         "--work", action="append", metavar="AXIS=VALUE",

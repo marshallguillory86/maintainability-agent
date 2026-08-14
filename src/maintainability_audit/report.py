@@ -327,11 +327,10 @@ def build_report(
 ) -> dict[str, Any]:
     """Assemble one report.
 
-    ``run_analyzers`` invokes the external analyzer pool (ADR 006). Off by
-    default while adapters are still being written: turning it on changes
-    what every existing caller measures, and a coverage section listing
-    five unimplemented adapters is worse than none. The CLI exposes it as
-    ``--analyzers``.
+    ``run_analyzers`` invokes the external analyzer pool (ADR 006). It is off
+    by default because running external tools is optional and may be expensive;
+    their measurements are reported but do not yet move the point estimate.
+    The CLI exposes it as ``--analyzers``.
     """
     analyzer = _analyzer_sections(root, config, run_analyzers)
     # Before anything is measured: what languages are here, and whose

@@ -101,7 +101,7 @@ Analyzers live in ecosystems, and the agent runs the ones it can reach. Nothing 
 
 | Runtime | Needed for | Install |
 |---|---|---|
-| Python 3.11+ | The agent itself, and lizard, radon, ruff, vulture, complexipy, interrogate, pydocstyle, multimetric, xenon | ships with the package |
+| Python 3.11+ | The agent itself, and lizard, radon, ruff, vulture, complexipy, interrogate, pydocstyle, multimetric, pylint, mypy | ships with the package |
 | **Node.js 18+** | **jscpd** (multi-language clone detection), eslint, and the JS/TS toolchain | `brew install node` / your platform's package manager |
 | JDK 17+ | PMD, Checkstyle, SpotBugs (no adapters yet) | `brew install openjdk` |
 | Go toolchain | golangci-lint (no adapter yet) | `brew install go` |
@@ -117,7 +117,7 @@ npm install -g jscpd@5
 
 ## Adapter status, stated plainly
 
-**16 tools have adapters** — meaning this project has run them and parsed their machine-readable output. Every one of the other 430 eligible tools is an inventory entry, not a capability.
+**12 tools have adapters** — ten native adapters plus the generic diagnostic adapters for pylint and mypy. An inventory entry without one of those adapters is not a shipped capability.
 
 | Verified | Depth | Concern | Evidence |
 |---|---|---|---|
@@ -126,18 +126,15 @@ npm install -g jscpd@5
 | ruff | baseline | ~800 lint rules | The repo's own linter |
 | jscpd | baseline | Copy-paste clones | 30-line Java clone across two files |
 | pylint | moderate | Design smells | 107 messages on `src/` |
-| flake8 | moderate | Style, mccabe complexity | Ran clean at threshold 10 |
+| mypy | moderate | Type diagnostics | Generic diagnostic output |
 | vulture | moderate | Dead code | 0 at ≥80% confidence |
 | eslint | moderate | JS/TS complexity, depth, params | complexity 11, max-depth 5 |
 | complexipy | moderate | Cognitive complexity | `history_section` = 14 |
 | interrogate | moderate | Docstring coverage | installed, run |
 | pydocstyle | moderate | Docstring conventions | installed, run |
-| cohesion | heavy | Class cohesion | installed |
 | multimetric | heavy | Multi-language metrics | installed |
-| wily | heavy | Metric trend over history | installed |
-| xenon | heavy | Radon thresholds as a gate | installed |
 
-The full inventory, including everything without an adapter, is in the [JSON](../data/analyzer-catalog.json). Writing adapters is the next body of work and is deliberately not started here.
+The full inventory, including everything without an adapter, is in the [JSON](../data/analyzer-catalog.json). Additional adapters remain incremental work; the inventory alone does not make a tool runnable.
 
 ## Regenerating
 

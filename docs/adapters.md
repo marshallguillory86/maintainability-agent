@@ -23,12 +23,15 @@ maintainability-agent \
 
 The SARIF file can be uploaded to GitHub code scanning.
 
+### Native analyzer pool
+
+Twelve adapters ship in the optional analyzer pool: complexipy, eslint,
+interrogate, jscpd, lizard, multimetric, mypy, pydocstyle, pylint, radon, ruff,
+and vulture. See [analyzer pool](analyzer-pool.md) for selection and coverage.
+
 ## Planned Native Adapters
 
 - Semgrep JSON
-- ESLint JSON
-- Ruff JSON
-- Radon JSON
 - pytest / coverage summaries
 - SonarQube API export
 

@@ -24,7 +24,7 @@ He also names the trade-off available once generation outruns verification: scal
 
 ## Then
 
-**Analyzer adapters** — Semgrep, ESLint, Ruff, Radon, pytest/coverage, SonarQube export. Ingest output, preserve provenance, do not pretend every analyzer has the same semantics.
+**Additional analyzer adapters** — Semgrep, pytest/coverage, and SonarQube export. Ingest output, preserve provenance, and do not pretend every analyzer has the same semantics. The twelve shipped adapters are listed in [analyzer pool](analyzer-pool.md#adapter-status-stated-plainly).
 
 **Deterministic semantic policy** — prototype [ADR 003](adr-003-deterministic-semantic-policy.md) in TypeScript first: compiler-backed facts, explicit repository policies, and non-gating design-review candidates. Measure precision before adding any hard gate, and do not add a score weight during discovery.
 

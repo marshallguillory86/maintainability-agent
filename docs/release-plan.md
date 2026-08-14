@@ -4,18 +4,16 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 ## Where this actually stands
 
-*Measured 2026-08-13. Regenerate the counts before quoting them; the previous version of this table survived fifty-five commits past the point it stopped being true, which is the drift this project exists to catch.*
+*Measured 2026-08-14. Regenerate the counts before quoting them; the previous version of this table survived fifty-five commits past the point it stopped being true, which is the drift this project exists to catch.*
 
 | Fact | Value |
 |---|---|
-| Last tagged version | 0.6.1 |
-| This branch | 0.7.0, unreleased — 0.1 (merge) and 0.5 (tag) remain |
-| This branch, ahead of `main` | 129 commits |
-| Production code | 12,921 lines across 58 modules |
-| Tests | 892 across 59 files |
+| Last tagged version | 0.7.0 |
+| Production code | 12,931 lines across 59 modules |
+| Tests | 893 across 60 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
-| Known open exit conditions in Phases 0–5 | Phase 0 still has 0.1 (merge) and 0.5 (tag). Phase 2 still has 2.7 (moderate adapters) open. Phase 3 also retains open exit conditions described below, including the unused band matrix. |
-| Later phases outstanding | Phase 6 still has 6.1 (interactive prompt) and 6.3 (MCP resources) open. For 6.4, the consumer workflow recipe shipped, but history caching remains open. Phase 7 remains release work. |
+| Known open exit conditions in Phases 0–5 | Phase 2 still has 2.7 (moderate adapters) open. Phase 3 also retains open exit conditions described below, including the unused band matrix. |
+| Later phases outstanding | Phase 6 still has 6.1 (interactive prompt) and 6.3 (MCP resources) open. For 6.4, the consumer workflow recipe shipped, but history caching remains open. Phase 7 remains 1.0 release work. |
 
 This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; open work remains in the earlier phases as well as Phases 6 and 7.
 
@@ -36,10 +34,9 @@ Small, independent, and blocking later phases. Nothing here needs the analyzer w
 | 0.4 | Regenerate baselines, document the break | `--fail-on-new` no longer fires on moved code; CHANGELOG names the incompatibility |
 | 0.5 | Release 0.7.0 | Tagged, published, two real bug fixes in the notes |
 
-The exit-condition work for 0.2, 0.3 and 0.4 has landed. Identity shipped as
-`function:{path}:{name}#{ordinal}`, not a content hash. 0.4 is the migration
-note and the version-2 baseline rejection; this repository does not check in
-a baseline of its own. 0.1 and 0.5 remain.
+Phase 0 has landed. Identity shipped as `function:{path}:{name}#{ordinal}`,
+not a content hash. 0.4 is the migration note and the version-2 baseline
+rejection. 0.7.0 is tagged on `main`.
 
 **0.2 and 0.3 are prerequisites** for ADR 005 and ADR 009 respectively. They are also the only user-visible bug fixes available without the larger build, so they justify a release on their own.
 

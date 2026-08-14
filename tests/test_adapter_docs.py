@@ -66,3 +66,36 @@ def test_adapter_status_table_names_only_shipped_adapters() -> None:
         assert adapter_for(slug) is None
         assert declared_adapter(slug) is None
         assert slug not in claimed
+
+
+def test_catalog_adapter_count_matches_shipped_adapters() -> None:
+    """The catalog's adapters_implemented used to count tools with no class."""
+    import json
+
+    counts = json.loads((ROOT / "data" / "analyzer-catalog.json").read_text(encoding="utf-8"))["counts"]
+    shipped = {
+        tool["slug"]
+        for tool in load_catalog()
+        if adapter_for(tool["slug"]) is not None
+        or declared_adapter(tool["slug"]) is not None
+    }
+    assert counts["adapters_implemented"] == len(shipped)
+
+
+def test_adapter_status_prose_count_matches_the_table() -> None:
+    """'16 tools have adapters' survived next to a 12-row table."""
+    page = _text("docs/analyzer-pool.md")
+    section = page.split("## Adapter status, stated plainly", maxsplit=1)[1]
+    shipped = {
+        tool["slug"]
+        for tool in load_catalog()
+        if adapter_for(tool["slug"]) is not None
+        or declared_adapter(tool["slug"]) is not None
+    }
+    match = re.search(r"\*\*(\d+) tools have adapters\*\*", section)
+    assert match, "docs/analyzer-pool.md must say how many adapters ship"
+    assert int(match.group(1)) == len(shipped) == len({
+        match.group(1)
+        for match in re.finditer(r"^\| ([a-z][a-z0-9.-]*) \|", section, flags=re.MULTILINE)
+        if match.group(1) != "adapter"
+    })

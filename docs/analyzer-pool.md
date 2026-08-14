@@ -117,7 +117,7 @@ npm install -g jscpd@5
 
 ## Adapter status, stated plainly
 
-**16 tools have adapters** — ten native adapters plus the generic diagnostic adapters for pylint and mypy. An inventory entry without one of those adapters is not a shipped capability.
+**12 tools have adapters** — ten native adapters plus the generic diagnostic adapters for pylint and mypy. An inventory entry without one of those adapters is not a shipped capability.
 
 | Verified | Depth | Concern | Evidence |
 |---|---|---|---|

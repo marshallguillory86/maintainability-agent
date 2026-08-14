@@ -60,7 +60,7 @@ Language detection, the catalog and the availability probe compose into an answe
 
 Each gap names the tools that would close it and the prerequisite runtime — a JDK for PMD and Checkstyle, Node, the Go or Rust toolchain, the .NET SDK.
 
-**The agent never installs anything.** Installation is a network and privilege action belonging to the user. The agent emits an *environment work order* in the same shape as the code work order — what is missing, why it matters, the exact command — so a person can run it or hand it to their own AI agent. One artifact, either consumer.
+**The agent never installs anything.** Installation is a network and privilege action belonging to the user. **Not shipped (2.5c):** the *environment work order* — missing prerequisite, why it matters, the exact command — is deferred. Coverage (2.5) already names missing tools and the runtime they need. The agent still never installs.
 
 ### 3. Several tools measure each concept, and their readings are combined with weights
 

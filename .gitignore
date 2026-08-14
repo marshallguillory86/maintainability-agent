@@ -38,3 +38,7 @@ CLAUDE.md
 # megabyte of generated JSON; the summary the regression tests assert on
 # (tools/validation/results.json) is committed.
 tools/validation/reports/
+
+# Analyzer scratch. jscpd writes this next to the scanned tree.
+.jscpd-out/
+**/.jscpd-out/

@@ -31,7 +31,7 @@ REMOVED = ("overall", "overall_range", "grade", "grade_blockers")
 CANONICAL = (
     "standard", "maintainability_estimate", "maintainability_range", "evidence_status",
     "verified_grade", "verified_grade_blockers", "categories", "aspects", "rubric",
-    "dimensions", "worst_dimension", "reference",
+    "dimensions", "worst_dimension", "reference", "analyzer_scored_dimensions",
 )
 # Pure renames: same value, new key.
 RENAMED = {

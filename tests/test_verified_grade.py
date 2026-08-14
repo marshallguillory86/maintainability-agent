@@ -47,6 +47,7 @@ from maintainability_audit.scoring import score_report
 SCORE_V2_FIELDS = (
     "maintainability_estimate", "maintainability_range", "verified_grade_blockers",
     "categories", "aspects", "dimensions", "rubric", "reference", "worst_dimension", "standard",
+    "analyzer_scored_dimensions",
 )
 
 
@@ -275,7 +276,7 @@ def test_not_applicable_rollup_is_the_only_change_to_the_pre_stage_five_anchor(
     expected = {renamed.get(key, key): value for key, value in expected.items()}
 
     shipped = {key: value for key, value in report["score"].items()
-               if key not in {"evidence_status", "verified_grade"}}
+               if key not in {"evidence_status", "verified_grade", "analyzer_scored_dimensions"}}
 
     changed = {"categories", "maintainability_range", "grade", "verified_grade_blockers"}
     assert {key: value for key, value in shipped.items() if key not in changed} == {

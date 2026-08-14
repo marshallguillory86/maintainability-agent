@@ -147,9 +147,10 @@ def _analyzer_sections(
         "coverage": coverage_document(analysis),
         "findings": findings_document(analysis, root),
         "measurements": measurement_document(analysis, root),
-        # A second, independent reading of the scorer's own dimensions.
-        # Widens the interval rather than moving the estimate: the point
-        # estimate stays on the path the scale is calibrated against.
+        # The analyzers' reading of the scorer's own dimensions, and the
+        # primary source for every dimension it covers (ADR 006 §1).
+        # Where it is None the built-in detector's reading stands, so a
+        # dimension nobody measured is unmeasured rather than clean.
         # Both populations, because the scorer keeps both and the
         # production aspects are the ones that actually read this.
         "pressures": ExternalPressures(

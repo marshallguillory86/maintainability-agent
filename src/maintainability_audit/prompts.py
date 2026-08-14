@@ -68,13 +68,11 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
 def prompt_analyzer_caveat(report: dict[str, Any]) -> list[str]:
     """Where the headline number came from, when other tools also spoke.
 
-    `--analyzers` can put ten tools' findings into this prompt while the
-    estimate above still derives from the six built-in detectors:
-    analyzer readings widen `maintainability_range` and never move the
-    point estimate (ADR 006 §4). The Markdown report says so beside its
-    measurement table; the prompt did not, and layout alone implies the
-    opposite — a list of analyzer findings under a headline estimate
-    reads as though the tools produced it.
+    `--analyzers` can put ten tools' findings into this prompt. The
+    estimate uses those readings only for dimensions they fully measured;
+    everything else stays on the fallback tier. The prompt has to say
+    which happened, or a list of analyzer findings under the headline
+    number reads as though every tool produced it.
 
     Only when there is analyzer output to qualify. A caveat printed
     unconditionally would describe disagreement to every zero-install
@@ -83,12 +81,21 @@ def prompt_analyzer_caveat(report: dict[str, Any]) -> list[str]:
     """
     if not (report.get("analyzer_measurements") or report.get("analyzer_findings")):
         return []
+    scored = (report.get("score") or {}).get("analyzer_scored_dimensions") or []
+    if scored:
+        return [
+            "**The maintainability estimate above uses the analyzer readings** for "
+            f"{', '.join(scored)} — external tools are the primary evidence here. "
+            "Dimensions no analyzer measured kept the fallback tier's reading rather "
+            "than being counted clean. Where the two sources disagree the range "
+            "widens to contain both; they are never averaged.",
+            "",
+        ]
     return [
         "**The maintainability estimate above comes from the built-in detectors.** "
-        "Analyzer measurements and findings are reported here, not scored: where an "
-        "analyzer disagrees with a built-in reading, the range widens and the point "
-        "estimate does not move. Treat an analyzer finding as evidence about the "
-        "code, never as a change to the score.",
+        "The analyzers ran but measured none of the dimensions the rubric scores, so "
+        "their output is reported here and not scored. Treat an analyzer finding as "
+        "evidence about the code, never as a change to the score.",
         "",
     ]
 

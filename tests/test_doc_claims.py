@@ -225,3 +225,26 @@ def test_the_register_does_not_call_adr_008_done_while_bands_is_unused() -> None
         "the register calls ADR 008 implemented without naming the band "
         f"matrix gap. Row: {row}"
     )
+
+
+def test_known_debt_does_not_prescribe_a_homegrown_java_range_detector() -> None:
+    """ADR 006 is the close, not another language slice.
+
+    An earlier Known-debt paragraph ordered a Java range detector, then
+    suffix, then include list, then a 40-file proof, and the same shape
+    "until each language has its own detector." That reimplements lizard.
+    The register now refuses that path.
+    """
+    architecture = (ROOT / "docs" / "architecture.md").read_text(encoding="utf-8")
+    debt = _KNOWN_DEBT_SECTION.search(architecture)
+    assert debt, "architecture.md has no Known debt section"
+    java = debt.group(1)
+
+    assert "bounded language slice" not in java
+    assert "until each has its own detector" not in java
+    assert "homegrown range detector" in java or "ADR 006" in java
+
+    register = (ROOT / "docs" / "decisions.md").read_text(encoding="utf-8")
+    row = next((line for line in register.splitlines() if line.startswith("| [006]")), "")
+    assert row, "ADR 006 has no row in the register"
+    assert "range detector" in row.lower() or "not close" in row.lower()

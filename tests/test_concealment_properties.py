@@ -10,6 +10,31 @@ from __future__ import annotations
 
 from test_scoring_calibration import _evidence_summary, _history, score_report
 
+from maintainability_audit.scoring import _BANDS
+
+# Best grade to worst, read from the scale's own bands rather than
+# restated here. A list of letters copied into a test is one more thing
+# that can quietly stop matching the rubric it claims to rank, which is
+# the class of defect this file exists to catch.
+_GRADE_RANK = {grade: rank for rank, (_floor, grade) in enumerate(reversed(_BANDS), start=1)}
+
+
+def _rank(grade: str | None) -> int:
+    """Where a `verified_grade` sits, with withheld below every letter.
+
+    `None` is not a good grade and not a bad one — it is the absence of
+    a verified judgment. Ranking it lowest encodes both halves of the
+    property: losing a letter by hiding evidence is not an improvement,
+    and gaining one where there was none is.
+    """
+    return 0 if grade is None else _GRADE_RANK[grade]
+
+
+def _improved(before: str | None, after: str | None) -> bool:
+    """Whether `after` is a better verified grade than `before`."""
+    return _rank(after) > _rank(before)
+
+
 # ---------------------------------------------------------------------------
 # The interval and the grade have to hold under concealment
 # ---------------------------------------------------------------------------
@@ -83,6 +108,13 @@ def test_withholding_any_single_input_cannot_raise_the_floor_or_the_grade() -> N
     The sweep is over ``summary`` itself, so a field added later is
     covered the day it is added rather than the day someone remembers
     to extend a list.
+
+    The grade half of the name went unchecked for as long as the name
+    existed. Only the floor was compared; the grade appeared solely in
+    the failure string, reading a ``grade`` key ADR 001 stage 8 removed
+    — so the one run that would have printed it would have raised
+    ``KeyError`` instead. A message that only executes on failure is a
+    message nothing ever ran.
     """
     summary = _evidence_summary(
         test_file_count=0, dead_code_count=40, near_duplicate_count=40, idiom_concern_count=5,
@@ -92,6 +124,15 @@ def test_withholding_any_single_input_cannot_raise_the_floor_or_the_grade() -> N
     history = _history(qualifying_hotspots=20, code_coupling_pairs=20, single_author_files=10)
     baseline = score_report({"summary": dict(summary), "history": history})
 
+    # The premise, pinned. If the fixture ever stopped earning a
+    # verified grade, every comparison below would be None against None
+    # and the grade half of this test would prove nothing while still
+    # passing.
+    assert baseline["verified_grade"] is not None, (
+        "the baseline must earn a verified grade or concealing evidence "
+        "cannot be shown to leave it alone"
+    )
+
     concealments = {key: {"summary": {k: v for k, v in summary.items() if k != key}, "history": history}
                     for key in summary}
     concealments["<the whole history object>"] = {"summary": dict(summary)}
@@ -100,10 +141,11 @@ def test_withholding_any_single_input_cannot_raise_the_floor_or_the_grade() -> N
     for label, report in concealments.items():
         hidden = score_report(report)
         if (hidden["maintainability_range"][0] > baseline["maintainability_range"][0]
-                ):
+                or _improved(baseline["verified_grade"], hidden["verified_grade"])):
             gains.append(
-                f"hiding {label}: floor {baseline['maintainability_range'][0]} -> {hidden['maintainability_range'][0]}, "
-                f"grade {baseline['grade']} -> {hidden['grade']}"
+                f"hiding {label}: "
+                f"floor {baseline['maintainability_range'][0]} -> {hidden['maintainability_range'][0]}, "
+                f"verified_grade {baseline['verified_grade']} -> {hidden['verified_grade']}"
             )
 
     assert not gains, "withholding evidence improved the graded fields:\n" + "\n".join(gains)

@@ -4,6 +4,13 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+## 0.7.0 - 2026-08-13
+
+Scores the evidence cannot support are withheld. `--fail-on-new` no longer
+fires on code that only moved. Two incompatibilities: baseline format
+version 2, and a nullable `maintainability_estimate`. See
+[docs/migration-0.7.md](docs/migration-0.7.md).
+
 ### Added
 
 - **The MCP server can run the analyzer pool.** `audit_repository` takes `run_analyzers`
@@ -24,7 +31,10 @@ All notable changes to Maintainability Agent will be documented here.
   and pydocstyle. Every report states which
   tools were attempted, which ran, which were unavailable and why, their versions, and
   **which concerns nothing examined** — a concern nobody looked at is reported unexamined,
-  never clean. Off by default while the remaining adapters are written.
+  never clean. Off by default because analyzer measurements do not move the point
+  estimate, not because the pool is unfinished.
+- **A copy-paste GitHub Actions recipe** at `.github/workflows/maintainability.yml`,
+  the file the README already named.
 
 ### Fixed
 
@@ -70,6 +80,17 @@ All notable changes to Maintainability Agent will be documented here.
   was calibrated on: the whole score is gated on the tree's size, and inside a scorable
   repository each aspect is gated on its own denominator. Findings are never suppressed,
   only rates.
+- **The unread-source remedy no longer says the repository is too small.** Adding
+  the missing extension was the right next step; calling the tree undersized after
+  that was a second, false diagnosis.
+- **Work-order items use the hotspot's `start_line`.** Oversized declarations
+  carried `line: None` because the work order read a key the hotspot never had.
+- **Competing-libraries items read `divergent_idioms`.** The work order looked up
+  `idiom_concerns`, a key the report never carries, and dropped every idiom finding.
+- **The AI prompt names complete evidence and the estimate's source.** A complete
+  report used to be silent about evidence status. Analyzer findings sat under a
+  built-in estimate with no caveat. The status is now printed in every state, and
+  the built-in-only caveat appears only when analyzers spoke.
 
 ### Changed
 
@@ -87,8 +108,6 @@ All notable changes to Maintainability Agent will be documented here.
   is rejected with an instruction to regenerate rather than silently suppressing nothing.
   Regenerate with `--write-baseline`.
 
-
-## Unreleased
 
 Recalibration, and a retraction. The reference corpus is now chosen by a query instead of by the author's taste, which moved every constant in the scale — read the table before comparing a score to one from 0.6.x.
 

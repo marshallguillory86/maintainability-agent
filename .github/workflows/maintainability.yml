@@ -34,7 +34,7 @@ jobs:
           # no base to diff against, so the revspec cannot resolve.
           fetch-depth: 0
 
-      - uses: marshallguillory86/maintainability-agent@v0.6.1
+      - uses: marshallguillory86/maintainability-agent@v0.7.0
         with:
           # Empty means "discover it". A `maintainability-agent.json` at
           # the repository root is picked up; without one the audit runs

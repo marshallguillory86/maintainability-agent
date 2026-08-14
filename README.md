@@ -224,7 +224,7 @@ Start with [the documentation index](docs/README.md), which states each document
 This repo includes `action.yml`, so it can be used as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v0.6.1
+- uses: marshallguillory86/maintainability-agent@v0.7.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

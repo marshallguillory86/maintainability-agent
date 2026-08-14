@@ -44,13 +44,20 @@ def expand_files(
     means they walk `.venv` and `node_modules` and report vendored code as
     the user's, so the exclusion is applied here by choosing what to name.
     """
+    # Two inputs, two matchers. Config patterns are names, matched
+    # against any component; inventory paths are locations, matched as
+    # bounded prefixes by `Exclusions.covers`. Running both through one
+    # `part in skip` loop is what made `lib` mean every directory called
+    # lib and quietly dropped first-party `src/lib/owned.py`.
     skip = tuple(e.rstrip("/") for e in excludes)
+    covers = getattr(excludes, "covers", lambda _relative: False)
     return tuple(
         str(path)
         for path in sorted(root.rglob("*"))
         if path.suffix in suffixes
         and path.is_file()
         and not any(part in skip for part in path.parts)
+        and not covers(path.relative_to(root).as_posix())
     )[:MAX_EXPANDED_FILES]
 
 
@@ -70,7 +77,11 @@ class LizardAdapter(BaseAdapter):
         super().__init__(
             slug="lizard", emits="metric", executable="lizard",
             concepts=("cyclomatic_complexity", "declaration_lines", "parameters"),
+            # `--exclude` is fnmatch over the full pathname, not a regex: a
+            # `^lib(/|$)` pattern matches no filename at all, so the tree
+            # was never excluded and only `ours_only` hid it.
             extra_args=("--csv",), exclude_flag="--exclude",
+            exclude_dialect="fnmatch",
         )
 
     def _read(self, result: ToolResult) -> Extraction:
@@ -141,7 +152,13 @@ class RadonAdapter(BaseAdapter):
         targets = tuple(paths) if paths else (str(root),)
         # radon takes comma-separated glob *patterns*, so a bare directory
         # name has to become one or it matches nothing.
-        ignore = ("-i", ",".join(f"{e.rstrip('/')}*" for e in excludes)) if excludes else ()
+        # A classified tree is a location, so it becomes `lib/*` and the
+        # exact path — never the bare token, which as a radon pattern
+        # would be `lib*` and also ignore `library.py` and `src/lib`.
+        trees = getattr(excludes, "trees", ())
+        patterns = tuple(f"{e.rstrip('/')}*" for e in excludes)
+        patterns += tuple(f"{tree}/*" for tree in trees) + tuple(trees)
+        ignore = ("-i", ",".join(patterns)) if patterns else ()
         return Invocation(argv=(self.executable, "mi", "-j", *ignore, *targets))
 
     def _read(self, result: ToolResult) -> Extraction:
@@ -211,6 +228,10 @@ class JscpdAdapter(BaseAdapter):
                 patterns.append(f"**/{exclude.rstrip('/')}/**")
             else:
                 patterns.extend((exclude, f"**/{exclude}"))
+        # Root-anchored, with no `**/` prefix: a classified tree is one
+        # place, not a name to hunt for.
+        for tree in getattr(excludes, "trees", ()):
+            patterns.extend((tree, f"{tree}/**"))
         ignore = ("--ignore", ",".join(patterns)) if patterns else ()
         return Invocation(
             argv=(*_npx("jscpd"), str(root), "--reporters", "json", "--silent",
@@ -248,6 +269,7 @@ class InterrogateAdapter(BaseAdapter):
             slug="interrogate", emits="metric", executable="interrogate",
             concepts=("documentation",), findings_exit_codes=(0, 1),
             exclude_flag="--exclude", exclude_separator=" ",
+            exclude_dialect="abspath",
         )
 
     def _read(self, result: ToolResult) -> Extraction:

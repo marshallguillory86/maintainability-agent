@@ -19,11 +19,12 @@ clean result.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-from ._adapters import Extraction, measurements_only
+from ._adapters import Extraction, exclusions_for, measurements_only
 from ._built_ins import BUILT_IN_SOURCES
 from ._catalog import CONCERNS, PolicyError, concepts_for, resolve_pool, settings_from
 from ._discovery import CATALOG_LANGUAGE, discover
@@ -254,12 +255,17 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
     # analyzer walks .venv and node_modules and reports vendored code as
     # the user's: vulture returned 517 dead-code findings here, all 517
     # inside .venv.
-    excludes = tuple(config.get("paths", {}).get("exclude_patterns", ()))
+    # `exclude_patterns` is what the operator configured, which is a
+    # different question from whose code this is. A vendored tree nobody
+    # listed is dropped by the score and was walked by every analyzer,
+    # with the findings attributed to the user. `inventory.exclusions()`
+    # below closes that.
     # What languages are actually here. Without this, six Python-only
     # tools ran over a single C file, produced nothing between them, and
     # the coverage section reported documentation, style, types and
     # dead-code as *examined* — a tool with no input examining a concern.
     inventory = discover(root, config)
+    excludes = exclusions_for(config, inventory)  # two inputs, see `Exclusions`
     analysis.languages = {
         name: CATALOG_LANGUAGE[name] for name in inventory.languages
         if name in CATALOG_LANGUAGE
@@ -295,7 +301,7 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
                 concepts=tuple(tool["measures"]),
             ))
             continue
-        recorded = _run_one(root, adapter, probe, timeout, analysis, excludes)
+        recorded = _run_one(root, adapter, probe, timeout, analysis, excludes, inventory)
         analysis.coverage.append(replace(
             recorded, languages=tuple(str(n).lower() for n in tool.get("languages") or ())))
 
@@ -305,7 +311,8 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
 
 
 def _run_one(root: Path, adapter: Any, probe: Probe, timeout: int,
-             analysis: Analysis, excludes: tuple[str, ...] = ()) -> ToolCoverage:
+             analysis: Analysis, excludes: Sequence[str] = (),
+             inventory: Any = None) -> ToolCoverage:
     """One tool, start to finish. Cannot raise.
 
     The broad catch is deliberate and sits here rather than in the
@@ -317,7 +324,7 @@ def _run_one(root: Path, adapter: Any, probe: Probe, timeout: int,
     unguarded path is not one.
     """
     try:
-        return _attempt(root, adapter, probe, timeout, analysis, excludes)
+        return _attempt(root, adapter, probe, timeout, analysis, excludes, inventory)
     except Exception as error:  # noqa: BLE001 - the backstop is the point
         return ToolCoverage(
             slug=adapter.slug, outcome="failed", concepts=tuple(adapter.concepts),
@@ -330,7 +337,8 @@ def _run_one(root: Path, adapter: Any, probe: Probe, timeout: int,
 
 
 def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
-             analysis: Analysis, excludes: tuple[str, ...] = ()) -> ToolCoverage:
+             analysis: Analysis, excludes: Sequence[str] = (),
+             inventory: Any = None) -> ToolCoverage:
     available = probe.check(adapter.slug, adapter.version_argv())
     # A tool whose CLI has no version flag is still a tool. Falling back to
     # package metadata keeps the version record complete, which P1 now
@@ -362,7 +370,10 @@ def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
 
     result = run(adapter.slug, adapter.invocation(root, excludes=excludes),
                  timeout_seconds=timeout)
-    extraction = adapter.parse(result)
+    # Filtered before the counts are taken, not after. Recording 48
+    # measurements and reporting 6 describes an activity rather than a
+    # result, which is the defect this project keeps finding.
+    extraction = _ours_only_extraction(adapter.parse(result), root, adapter, excludes, inventory)
     _collect(extraction, adapter, analysis)
 
     return ToolCoverage(
@@ -378,6 +389,69 @@ def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
         raw=extraction.raw,
         truncated=extraction.truncated,
     )
+
+
+def _ours_only_extraction(
+    extraction: Extraction, root: Path, adapter: Any,
+    excludes: Sequence[str], inventory: Any,
+) -> Extraction:
+    """The backstop, applied per tool before its contribution is counted.
+
+    A tool is not obliged to honour the exclusions it was handed —
+    `test_adapters` already records that some ignore them. Naming the
+    classified trees keeps a well-behaved tool from reading the files;
+    this keeps a badly-behaved one from reporting them, and keeps the
+    coverage record describing what survived rather than what was seen.
+    """
+    if inventory is None:
+        return extraction
+    told = (
+        adapter.received_trees(excludes)
+        if hasattr(adapter, "received_trees")
+        else bool(getattr(excludes, "trees", ()))
+    )
+    return replace(
+        extraction,
+        measurements=tuple(ours_only(list(extraction.measurements), root, inventory, told)),
+        findings=tuple(ours_only(list(extraction.findings), root, inventory, told)),
+    )
+
+
+def ours_only(
+    items: list[Any], root: Path, inventory: Any, told_about_trees: bool = True
+) -> list[Any]:
+    """Drop measurements or findings about code the team did not write.
+
+    Tools report paths however they like — absolute, relative, or
+    relative to their own working directory — so each is reduced to a
+    repository-relative posix path before it is looked up. A path that
+    cannot be placed inside the tree is kept: an unrecognised location
+    is not evidence of foreign code, and silently dropping it would be
+    the same absence-as-value mistake in a new place.
+
+    `told_about_trees` decides the fate of a tree-wide rate — jscpd's
+    duplication percentage, interrogate's coverage — which carries an
+    empty path and survives any path-exact filter. Told, the rate
+    describes our code and stands. Untold, it counted somebody else's
+    files and nothing after the fact can correct it, so it is dropped
+    rather than adjusted: a corrected-looking number nobody computed is
+    worse than no number.
+    """
+    not_ours = inventory.not_ours()
+    if not not_ours:
+        return list(items)
+    return [
+        item for item in items
+        if _relative_path(item.path, root) not in not_ours
+        and (told_about_trees or item.path != "")
+    ]
+
+
+def _relative_path(path: str, root: Path) -> str:
+    try:
+        return Path(path).resolve().relative_to(root.resolve()).as_posix()
+    except (OSError, ValueError):
+        return path.replace("\\", "/")
 
 
 def _collect(extraction: Extraction, adapter: Any, analysis: Analysis) -> None:

@@ -26,6 +26,7 @@ timeout, isolation and version capture in one auditable place.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field, replace
@@ -35,6 +36,52 @@ from typing import Protocol
 
 from ._metrics_types import Finding, Measurement
 from ._runner import Invocation, ToolResult
+
+
+class Exclusions(tuple):  # noqa: SLOT001 - attribute is set once in __new__
+    """What an analyzer must not read, in two kinds that mean two things.
+
+    A **config pattern** is a name. The operator wrote `node_modules`, and
+    it is dropped wherever it appears — at the root, or under
+    `packages/ui/`.
+
+    An **inventory path** is a location. `discover()` proved that the
+    `lib` directory at the repository root is rebuilt by a build script,
+    which says nothing at all about `src/lib`. Matching it by name would
+    turn one piece of evidence into a directory-name list, which is the
+    option ADR 010 rejected, and would silently drop first-party code
+    that happens to share the name.
+
+    Kept in one object because they travel together and are consumed
+    together; kept apart inside it because collapsing them is the bug.
+    Subclasses `tuple` over the config patterns, so every `for e in
+    excludes` already written keeps meaning exactly what it meant, and
+    only the places that need location semantics read `.trees`.
+    """
+
+    trees: tuple[str, ...]
+
+    def __new__(cls, patterns: Sequence[str] = (), trees: Sequence[str] = ()) -> Exclusions:
+        self = super().__new__(cls, tuple(patterns))
+        self.trees = tuple(trees)
+        return self
+
+    def covers(self, relative: str) -> bool:
+        """Whether an inventory path covers this repository-relative path.
+
+        Prefix, bounded at a directory separator: `lib` covers `lib` and
+        `lib/bundle.js` and not `library.py`.
+        """
+        return any(
+            relative == tree or relative.startswith(f"{tree}/")
+            for tree in self.trees
+        )
+
+
+def exclusions_for(config: dict, inventory: object) -> Exclusions:
+    """The operator's patterns and the inventory's classified paths."""
+    patterns = tuple((config.get("paths") or {}).get("exclude_patterns", ()))
+    return Exclusions(patterns, inventory.exclusions())
 
 # How much raw output to keep inline per tool. Enough for a language model
 # to reason over the shape of a result, bounded so a report stays a
@@ -124,6 +171,22 @@ class BaseAdapter:
     # flag and must be filtered another way.
     exclude_flag: str = ""
     exclude_separator: str = ","
+    # mypy takes `--exclude` once per pattern. A comma-joined regex is
+    # one pattern that never matches any of them.
+    exclude_repeat: bool = False
+    # How this tool matches a *location*. Guessing one syntax for every
+    # flag is what sent `^lib(/|$)` to lizard (fnmatch on the full
+    # pathname) and a bare `lib` to vulture (which wraps that as
+    # `*lib*`). Each dialect is the tool's documented matcher.
+    #   files     — no flag; honour trees by naming files
+    #   none      — flag cannot exclude; ours_only is the only backstop
+    #   gitignore — `/tree` is rooted (ruff)
+    #   abspath   — filesystem path (interrogate)
+    #   vulture   — glob against absolute paths; glob-less becomes *pat*
+    #   fnmatch   — lizard `--exclude` on the full pathname
+    #   regex     — pylint `--ignore-paths`, `re.match` on the full path
+    #   rel_regex — mypy `--exclude`, `re.search` on cwd-relative path
+    exclude_dialect: str = "path"
     # Installed distribution name, for tools whose CLI has no version flag.
     # multimetric is one: `--version` is not an option, so it exits 2 with
     # usage text and a CLI-only probe reports a working tool as broken.
@@ -131,7 +194,7 @@ class BaseAdapter:
     # say must be asked another way rather than left blank.
     distribution: str = ""
 
-    def exclusions(self, excludes: Sequence[str]) -> tuple[str, ...]:
+    def exclusions(self, excludes: Sequence[str], root: Path | None = None) -> tuple[str, ...]:
         """Translate the audit's exclude patterns into this tool's dialect.
 
         Without this, every analyzer walks `.venv`, `node_modules` and
@@ -139,10 +202,84 @@ class BaseAdapter:
         before it was added: vulture returned 517 dead-code findings on
         this repository and **all 517 were inside `.venv`**. A report that
         blames a user for a vendored library is worse than no report.
+
+        Two inputs. The operator's patterns are names, passed through as
+        written. The inventory's trees are locations and are translated
+        into `exclude_dialect` first — `lib` in a regex flag matches
+        `src/lib`, and that is the directory-name list ADR 010 rejected
+        arriving through a command line.
+
+        `if not excludes` was the second half of the same bug:
+        `Exclusions` is a tuple over the *patterns*, so a repository with
+        no operator excludes and a discovered `lib/` read as "nothing to
+        exclude" — the exact case discovery exists for.
         """
-        if not excludes or not self.exclude_flag:
+        if not self.exclude_flag:
             return ()
-        return (self.exclude_flag, self.exclude_separator.join(excludes))
+        entries = tuple(excludes) + self.tree_patterns(
+            getattr(excludes, "trees", ()), root
+        )
+        if not entries:
+            return ()
+        if self.exclude_repeat:
+            repeated: list[str] = []
+            for entry in entries:
+                repeated.extend((self.exclude_flag, entry))
+            return tuple(repeated)
+        return (self.exclude_flag, self.exclude_separator.join(entries))
+
+    def tree_patterns(
+        self, trees: Sequence[str], root: Path | None = None
+    ) -> tuple[str, ...]:
+        """One classified tree, spelled for this tool's actual matcher."""
+        if self.exclude_dialect in {"none", "files"} or not trees:
+            return ()
+        # As handed to the tool, not Path.resolve()'d: on macOS `/var`
+        # becomes `/private/var` and a resolved pattern matches nothing
+        # the tool is walking.
+        base = Path(root) if root is not None else Path(".")
+        if self.exclude_dialect == "fnmatch":
+            return tuple(
+                pattern
+                for tree in trees
+                for pattern in (
+                    (base / tree).as_posix(),
+                    f"{(base / tree).as_posix()}/*",
+                )
+            )
+        if self.exclude_dialect == "regex":
+            return tuple(
+                f"^{re.escape((base / tree).as_posix())}(?:/|$)" for tree in trees
+            )
+        if self.exclude_dialect == "rel_regex":
+            return tuple(f"^{re.escape(tree)}(?:/|$)" for tree in trees)
+        if self.exclude_dialect == "vulture":
+            return tuple(
+                (base / tree).as_posix()
+                if "." in Path(tree).name
+                else f"{(base / tree).as_posix()}/*"
+                for tree in trees
+            )
+        if self.exclude_dialect == "abspath":
+            return tuple((base / tree).as_posix() for tree in trees)
+        if self.exclude_dialect == "gitignore":
+            return tuple(
+                pattern
+                for tree in trees
+                for pattern in (f"/{tree}", f"/{tree}/**")
+            )
+        return tuple(
+            pattern for tree in trees for pattern in (tree, f"{tree}/**")
+        )
+
+    def received_trees(self, excludes: Sequence[str]) -> bool:
+        """Whether this adapter can keep foreign files out of its own run.
+
+        `bool(excludes.trees)` is the inventory, not the adapter.
+        """
+        if self.exclude_dialect == "none":
+            return False
+        return bool(getattr(excludes, "trees", ()))
 
     def invocation(
         self, root: Path, paths: Iterable[str] | None = None,
@@ -150,8 +287,12 @@ class BaseAdapter:
     ) -> Invocation:
         targets = tuple(paths) if paths else (str(root),)
         return Invocation(
-            argv=(self.executable, *self.extra_args, *self.exclusions(excludes), *targets),
+            argv=(
+                self.executable, *self.extra_args,
+                *self.exclusions(excludes, root), *targets,
+            ),
             findings_exit_codes=self.findings_exit_codes,
+            cwd=root if self.exclude_dialect == "rel_regex" else None,
         )
 
     def parse(self, result: ToolResult) -> Extraction:

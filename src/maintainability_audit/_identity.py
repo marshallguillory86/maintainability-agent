@@ -90,6 +90,53 @@ def duplicate_fingerprint(locations: list[str], sample: str | list[str]) -> str:
     return f"duplicate:{','.join(paths)}:{_digest(sample)}"
 
 
+def declaration_identities(report: dict[str, Any]) -> dict[tuple[str, str, int], str]:
+    """Canonical identity for every failing declaration in `report`.
+
+    Keyed by `(path, name, start_line)` — enough to pick one declaration
+    out of a report, and never part of the identity it returns.
+
+    An ordinal is a property of a *population*, not of a declaration, so
+    it cannot be computed from one item in isolation. Every consumer that
+    tried got the same wrong answer: `declaration_fingerprint(path, name,
+    0)`, which merges two overloads in one file into a single finding.
+    The work order named the same declaration twice, `prompt_targets`
+    recorded advice about the first one twice, and escalating either
+    overload suppressed whichever the prompt compared first.
+
+    So the population, the order rule and the numbering live here, once,
+    and consumers look up rather than derive. The failing-only population
+    is part of the contract: a warn-status hotspot has no identity here
+    because it produces no finding, and numbering it would shift the
+    ordinal of every failing declaration below it.
+    """
+    hotspots = [i for i in report.get("function_hotspots", []) if i["status"] == "fail"]
+    ordinals = _ordinals(hotspots, lambda i: (i["path"], i["name"]), lambda i: i["start_line"])
+    return {
+        (item["path"], item["name"], item["start_line"]):
+            declaration_fingerprint(item["path"], item["name"], ordinals[index])
+        for index, item in enumerate(hotspots)
+    }
+
+
+def risk_identities(report: dict[str, Any]) -> dict[tuple[str, str, int], str]:
+    """Canonical identity for every risk finding, keyed by `(path, name, line)`.
+
+    Same rule as `declaration_identities`, and it was wrong in the same
+    place — `prompt_targets` rebuilt these from the work-order item's
+    *title*, so the name it hashed was the label "configured risk
+    pattern" rather than the pattern's own name. No such identity is ever
+    in the report, so every risk target was silently discarded.
+    """
+    risks = list(report.get("risk_findings", []))
+    ordinals = _ordinals(risks, lambda i: (i["path"], i["name"]), lambda i: i["line"])
+    return {
+        (item["path"], item["name"], item["line"]):
+            risk_fingerprint(item["path"], item["name"], ordinals[index])
+        for index, item in enumerate(risks)
+    }
+
+
 def finding_fingerprints(report: dict[str, Any]) -> set[str]:
     """Every failing finding in `report`, as stable identities."""
     fingerprints: set[str] = set()
@@ -98,15 +145,8 @@ def finding_fingerprints(report: dict[str, Any]) -> set[str]:
         if item["status"] == "fail":
             fingerprints.add(file_fingerprint(item["path"]))
 
-    hotspots = [i for i in report.get("function_hotspots", []) if i["status"] == "fail"]
-    ordinals = _ordinals(hotspots, lambda i: (i["path"], i["name"]), lambda i: i["start_line"])
-    for index, item in enumerate(hotspots):
-        fingerprints.add(declaration_fingerprint(item["path"], item["name"], ordinals[index]))
-
-    risks = list(report.get("risk_findings", []))
-    ordinals = _ordinals(risks, lambda i: (i["path"], i["name"]), lambda i: i["line"])
-    for index, item in enumerate(risks):
-        fingerprints.add(risk_fingerprint(item["path"], item["name"], ordinals[index]))
+    fingerprints.update(declaration_identities(report).values())
+    fingerprints.update(risk_identities(report).values())
 
     for item in report.get("duplicate_blocks", []):
         fingerprints.add(duplicate_fingerprint(item["locations"], item.get("sample", "")))

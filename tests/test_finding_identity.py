@@ -168,3 +168,180 @@ def test_a_written_baseline_round_trips(tmp_path: Path) -> None:
     write_baseline(str(out), report)
     assert json.loads(out.read_text(encoding="utf-8"))["version"] == BASELINE_VERSION
     assert load_baseline(str(out)) == finding_fingerprints(report)
+
+
+# ---------------------------------------------------------------------
+# The ordinal has to reach the consumers, not just the baseline
+# ---------------------------------------------------------------------
+#
+# `finding_fingerprints` numbered overloads correctly from the first
+# commit of this scheme, and the test above pinned it there. Every
+# consumer then rebuilt the identity itself with a literal 0, so two
+# `huge` methods in one file were one finding to the work order, to
+# `prompt_targets`, and to the escalation check in the prompt. The
+# identity was right in the one place nobody reads and wrong in the
+# three that drive behaviour.
+
+TWO_OVERLOADS = (
+    f"class A:\n    def huge(self):\n{METHOD_BODY}\n        return 0\n"
+    f"class B:\n    def huge(self):\n{METHOD_BODY}\n        return 1\n"
+)
+
+
+def _overloads(tmp_path: Path, name: str = "overloads") -> tuple[Path, dict]:
+    """A repository with two failing `huge` declarations in one file."""
+    from maintainability_audit._work_order import work_order
+
+    root = _repo(tmp_path, name)
+    (root / "two.py").write_text(TWO_OVERLOADS, encoding="utf-8")
+    _commit(root)
+    report = build_report(root, load_config(None))
+    report["work_order"] = work_order(report)
+    return root, report
+
+
+def _huge_items(report: dict) -> list[dict]:
+    return [
+        item for item in report["work_order"]
+        if item["finding_class"] == "oversized-declaration"
+        and item["title"].startswith("huge in ")
+    ]
+
+
+def test_the_work_order_gives_each_overload_its_own_identity(tmp_path: Path) -> None:
+    """Two `huge` methods are two items, so they are two identities.
+
+    They were both `function:two.py:huge#0`. A work order that names the
+    same finding twice cannot be acted on twice, and the recurrence
+    record it feeds learns that one declaration was advised about
+    repeatedly while the other was never mentioned.
+    """
+    _, report = _overloads(tmp_path)
+    items = _huge_items(report)
+    assert len(items) == 2, f"expected two items, got {[i['title'] for i in items]}"
+
+    fingerprints = {item["fingerprint"] for item in items}
+    assert fingerprints == {"function:two.py:huge#0", "function:two.py:huge#1"}, (
+        f"the work order collapsed the overloads onto {sorted(fingerprints)}"
+    )
+    assert fingerprints <= finding_fingerprints(report), (
+        "a work-order fingerprint the report itself does not produce is an "
+        "identity scheme of its own"
+    )
+
+
+def test_prompt_targets_records_both_overloads(tmp_path: Path) -> None:
+    """What we advised is what recurrence scores later.
+
+    `prompt_targets` kept only identities `finding_fingerprints` also
+    produced — a good rule that silently discarded half the advice,
+    because both rebuilt identities were `#0` and only `#0` could match.
+    """
+    _, report = _overloads(tmp_path)
+    from maintainability_audit._work_order import prompt_targets
+
+    targets = {t for t in prompt_targets(report) if ":huge#" in t}
+    assert targets == {"function:two.py:huge#0", "function:two.py:huge#1"}, (
+        f"prompt_targets recorded {sorted(targets)}"
+    )
+
+
+def test_escalating_one_overload_does_not_hide_the_other(tmp_path: Path) -> None:
+    """The consequence a reader actually meets.
+
+    Escalation moves a finding out of "inspect first" and into design
+    review, because telling someone to look again at what they have
+    already fixed twice is how a tool teaches people to ignore it. With
+    both overloads answering to `#0`, escalating either one suppressed
+    whichever the prompt happened to compare first.
+    """
+    _, report = _overloads(tmp_path)
+    report["design_review_candidates"] = [{"fingerprint": "function:two.py:huge#1"}]
+
+    from maintainability_audit.prompts import prompt_focus_sections
+
+    lines = prompt_focus_sections(report)
+    start = lines.index("Function hotspots to inspect first:")
+    body: list[str] = []
+    for line in lines[start + 1:]:
+        if line.endswith(":"):  # the next section's heading
+            break
+        body.append(line)
+    hotspots = "\n".join(body)
+
+    assert "two.py:2`" in hotspots, (
+        "the un-escalated overload at line 2 was suppressed by an escalation "
+        f"naming the other one:\n{hotspots}"
+    )
+    assert "two.py:125`" not in hotspots, (
+        f"the escalated overload at line 125 is still listed to inspect:\n{hotspots}"
+    )
+
+
+def test_inserting_above_both_overloads_leaves_the_work_order_alone(tmp_path: Path) -> None:
+    """The insertion property, held where the ordinal is now consumed.
+
+    `test_two_same_named_declarations_keep_distinct_identities` asserts
+    this of `finding_fingerprints`. It passed throughout, on a report
+    whose work order was wrong, which is the reason to assert it on both.
+    """
+    from maintainability_audit._work_order import work_order
+
+    root, report = _overloads(tmp_path)
+    before = {item["fingerprint"] for item in _huge_items(report)}
+
+    two = root / "two.py"
+    two.write_text("import os\n" + two.read_text(encoding="utf-8"), encoding="utf-8")
+    after_report = build_report(root, load_config(None))
+    after_report["work_order"] = work_order(after_report)
+
+    assert {item["fingerprint"] for item in _huge_items(after_report)} == before
+
+
+def test_no_module_hardcodes_an_ordinal() -> None:
+    """The class, not the four call sites.
+
+    An ordinal cannot be known from one finding — it is that finding's
+    rank among its same-named siblings, so computing it needs the
+    population. Every consumer that reached for `declaration_fingerprint`
+    directly had only one item in hand and passed the only ordinal it
+    could invent, which was `0`. Three files, one wrong answer, and the
+    tests that pinned the identity never saw any of them because they
+    checked `finding_fingerprints`.
+
+    `_identity` itself is exempt: the population logic lives there, and
+    the tests above hold its behaviour directly. Everywhere else, a
+    literal ordinal means the population was not consulted. The remedy is
+    `declaration_identities` / `risk_identities` — look the identity up,
+    do not derive it.
+    """
+    import ast
+
+    package = Path(__file__).resolve().parents[1] / "src" / "maintainability_audit"
+    builders = {"declaration_fingerprint", "risk_fingerprint"}
+    offenders: list[str] = []
+
+    for module in sorted(package.glob("*.py")):
+        if module.name == "_identity.py":
+            continue
+        tree = ast.parse(module.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            func = node.func
+            name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
+            if name not in builders:
+                continue
+            literals = [
+                arg.value for arg in node.args
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, int)
+            ]
+            if literals:
+                offenders.append(f"{module.name}:{node.lineno} {name}(..., {literals[0]})")
+
+    assert not offenders, (
+        "an ordinal was hardcoded instead of computed over the population, "
+        "which merges same-named declarations in one file into a single "
+        "finding:\n  " + "\n  ".join(offenders)
+        + "\nUse declaration_identities(report) / risk_identities(report)."
+    )

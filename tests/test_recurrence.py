@@ -356,7 +356,12 @@ def test_no_part_of_the_prompt_re_issues_an_escalated_finding() -> None:
                   "verified_grade": "B", "verified_grade_blockers": [],
                   "dimensions": {}, "worst_dimension": None, "categories": {},
                   "aspects": {}, "rubric": {}, "reference": {}, "standard": "s"},
-        "function_hotspots": [{"path": "pkg/hot.py", "name": "tangled", "line": 1,
+        # `start_line`, as `asdict(FunctionMetric)` produces. This said
+        # `line`, a key no real hotspot carries, and passed only because
+        # the escalation filter dropped the entry before anything read
+        # its position. A fixture that models the wrong schema tests the
+        # wrong thing, and this one was one filter away from proving it.
+        "function_hotspots": [{"path": "pkg/hot.py", "name": "tangled", "start_line": 1,
                                "lines": 82, "complexity": 41, "cognitive": 40,
                                "status": "fail", "kind": "function"}],
         "largest_files": [], "risk_findings": [], "duplicate_blocks": [],

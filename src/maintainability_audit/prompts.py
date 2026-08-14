@@ -199,15 +199,20 @@ def _escalated_fingerprints(report: dict[str, Any]) -> set[str]:
 
 
 def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
-    from ._identity import declaration_fingerprint, file_fingerprint
+    from ._identity import declaration_identities, file_fingerprint
 
     escalated = _escalated_fingerprints(report)
+    # Looked up, not rebuilt. `escalated` holds identities the history
+    # recorded, so anything compared against it has to be numbered over
+    # the same population — a hotspot that only warns has no identity
+    # here, and cannot be escalated, so `None` correctly stays listed.
+    identities = declaration_identities(report)
     lines: list[str] = []
     lines.extend(bulleted_section("Start with these hard gates:", report["hard_gate_failures"]))
     hotspot_lines = [
         f"`{i['path']}:{i['start_line']}` {hotspot_name(i)} ({hotspot_measure(i)})."
         for i in report["function_hotspots"][:10]
-        if declaration_fingerprint(i["path"], i["name"], 0) not in escalated
+        if identities.get((i["path"], i["name"], i["start_line"])) not in escalated
     ]
     lines.extend(bulleted_section("Function hotspots to inspect first:", hotspot_lines))
     large_files = [

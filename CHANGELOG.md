@@ -49,6 +49,20 @@ All notable changes to Maintainability Agent will be documented here.
   line, so inserting one import above an untouched function made it read as simultaneously
   fixed and new — a false failure for `--fail-on-new` after any refactor that shifts lines.
   Identity is now content-addressed.
+- **Two same-named declarations in one file are two findings everywhere, not just in the
+  baseline.** `finding_fingerprints` numbered overloads `#0` and `#1` correctly, but the work
+  order, `prompt_targets` and the prompt's escalation check each rebuilt the identity with a
+  hardcoded ordinal of `0`. So two `huge` methods in one file were one finding: the work
+  order named the same declaration twice, recurrence recorded advice about the first one
+  twice and never about the second, and escalating either overload suppressed whichever the
+  prompt compared first. The population, the order rule and the numbering now live in
+  `declaration_identities` / `risk_identities`, and consumers look identity up rather than
+  derive it.
+- **Risk findings can be tracked across scans at all.** `prompt_targets` rebuilt a risk
+  identity from the work-order item's rendered *title*, so the name it hashed was the label
+  "configured risk pattern" rather than the pattern's own name. No such identity is ever in a
+  report, so every risk target failed the corroboration check and was silently dropped — on
+  this repository, all 21 of them.
 
 - **A repository too small to measure gets no score.** A tree holding one production
   function and one test reported 5.0/A+ with every finding count genuinely zero — the

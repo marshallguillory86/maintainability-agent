@@ -34,7 +34,12 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from ._identity import declaration_fingerprint, file_fingerprint, finding_fingerprints
+from ._identity import (
+    declaration_identities,
+    file_fingerprint,
+    finding_fingerprints,
+    risk_identities,
+)
 from .scoring import score_report
 
 
@@ -190,6 +195,10 @@ def _delta_for(report: dict[str, Any], counter: str, amount: int) -> float:
 def _items_from_hotspots(report: dict[str, Any]) -> list[dict[str, Any]]:
     """Declarations past a threshold, worst first."""
     weight = CLASS_RISK_EFFORT["oversized-declaration"]
+    # Computed once over the whole population, because an ordinal is a
+    # property of the population. Rebuilding it per item is what made
+    # two `huge` methods in one file into one finding.
+    identities = declaration_identities(report)
     items = []
     for hotspot in report.get("function_hotspots") or []:
         if hotspot.get("status") != "fail":
@@ -208,7 +217,9 @@ def _items_from_hotspots(report: dict[str, Any]) -> list[dict[str, Any]]:
             # — telling a reader to start with whichever file sorted
             # first rather than with the 803-line one.
             "severity": float(hotspot["lines"]) + 4.0 * float(hotspot["complexity"]),
-            "fingerprint": declaration_fingerprint(hotspot["path"], hotspot["name"], 0),
+            "fingerprint": identities[
+                (hotspot["path"], hotspot["name"], hotspot["start_line"])
+            ],
             "weight": weight,
         })
     return items
@@ -241,6 +252,10 @@ def _items_from_counted(report: dict[str, Any]) -> list[dict[str, Any]]:
         ("risk-pattern", "risk_findings", "configured risk pattern"),
         ("competing-libraries", "idiom_concerns", "competing libraries"),
     )
+    # Risk findings are the one class here the report gives a stable
+    # identity to, so they are the one class that can carry a
+    # fingerprint. The rest are located but not yet identified.
+    risks = risk_identities(report)
     items: list[dict[str, Any]] = []
     for name, key, label in sources:
         weight = CLASS_RISK_EFFORT[name]
@@ -250,7 +265,7 @@ def _items_from_counted(report: dict[str, Any]) -> list[dict[str, Any]]:
                 # No location means nothing to act on. Dropped rather
                 # than emitted without one (ADR 007 §3, task 4.6).
                 continue
-            items.append({
+            item = {
                 "finding_class": name,
                 "title": f"{label} in {path}",
                 "path": path,
@@ -258,7 +273,10 @@ def _items_from_counted(report: dict[str, Any]) -> list[dict[str, Any]]:
                 "target": f"remove the {label}",
                 "severity": float(finding.get("lines") or finding.get("similarity") or 1),
                 "weight": weight,
-            })
+            }
+            if name == "risk-pattern":
+                item["fingerprint"] = risks[(path, finding["name"], finding["line"])]
+            items.append(item)
     return items
 
 
@@ -435,22 +453,22 @@ def prompt_targets(report: dict[str, Any]) -> tuple[str, ...]:
     says only that a file changed twice. "The thing we told you to fix
     came back" says the advice did not hold, and only something that
     remembers what it advised can say it.
-    """
-    from ._identity import risk_fingerprint
 
-    builders = {
-        "oversized-file": lambda item: file_fingerprint(item["path"]),
-        "oversized-declaration": lambda item: declaration_fingerprint(
-            item["path"], item["title"].split(" in ", 1)[0], 0),
-        "risk-pattern": lambda item: risk_fingerprint(item["path"], item["title"], 0),
-    }
+    The item already carries its identity, so this reads it. It used to
+    rebuild one from the item's rendered title — `title.split(" in ",
+    1)[0]` to recover a declaration's name, and the whole title for a
+    risk finding, which is the label "configured risk pattern" and never
+    a real name. Parsing prose back into an identifier is a second
+    identity scheme wearing the first one's clothes, and it disagreed
+    with the original in two ways at once: every declaration came out
+    `#0`, and no risk target survived the corroboration check below.
+    """
     known = set(finding_fingerprints(report))
     targets = set()
     for item in prompt_items(report.get("work_order") or []):
-        build = builders.get(item["finding_class"])
-        if build is None:
+        fingerprint = item.get("fingerprint")
+        if fingerprint is None:
             continue
-        fingerprint = build(item)
         # Only identities this scan actually produced. A target the
         # report cannot corroborate would record advice about a finding
         # that does not exist, and a later run would score it as never

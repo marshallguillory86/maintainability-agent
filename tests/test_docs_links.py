@@ -225,7 +225,7 @@ def test_the_self_audit_claims_provenance_not_distance() -> None:
     from HEAD is unmaintainable, so none may be made.
     """
     offenders = []
-    for name in ("README.md", "docs/self-audit.md"):
+    for name in ("README.md", "docs/README.md", "docs/self-audit.md"):
         text = (ROOT / name).read_text(encoding="utf-8").lower()
         offenders += [f"{name}: {claim!r}" for claim in SELF_AUDIT_DISTANCE_CLAIMS if claim in text]
 

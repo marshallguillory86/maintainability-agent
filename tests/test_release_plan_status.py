@@ -34,6 +34,7 @@ def test_standing_table_does_not_list_shipped_phase_two_tests_as_open() -> None:
 
     assert "2.6" not in open_row
     assert "2.8" not in open_row
+    assert "2.5c" not in open_row
 
 
 def test_release_plan_does_not_claim_all_accepted_adrs_are_implemented() -> None:

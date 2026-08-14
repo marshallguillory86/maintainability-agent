@@ -8,12 +8,13 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 | Fact | Value |
 |---|---|
-| Shipped version | 0.6.1 |
-| This branch, ahead of `main` | 108 commits |
-| Production code | 12,612 lines across 58 modules |
-| Tests | 825 across 53 files, 93% coverage, self-gate 0 |
+| Last tagged version | 0.6.1 |
+| This branch | 0.7.0, unreleased — 0.1 (merge) and 0.5 (tag) remain |
+| This branch, ahead of `main` | 129 commits |
+| Production code | 12,921 lines across 58 modules |
+| Tests | 892 across 59 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
-| Known open exit conditions in Phases 0–5 | Phase 2 still has 2.5c (environment work order) and 2.7 (moderate adapters) open. Phase 3 also retains open exit conditions described below, including the unused band matrix. |
+| Known open exit conditions in Phases 0–5 | Phase 0 still has 0.1 (merge) and 0.5 (tag). Phase 2 still has 2.7 (moderate adapters) open. Phase 3 also retains open exit conditions described below, including the unused band matrix. |
 | Later phases outstanding | Phase 6 still has 6.1 (interactive prompt) and 6.3 (MCP resources) open. For 6.4, the consumer workflow recipe shipped, but history caching remains open. Phase 7 remains release work. |
 
 This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; open work remains in the earlier phases as well as Phases 6 and 7.
@@ -31,9 +32,14 @@ Small, independent, and blocking later phases. Nothing here needs the analyzer w
 |---|---|---|
 | 0.1 | Merge this branch to `main` | `main` carries the design; the stale A+ README is gone |
 | 0.2 | Fix `--changed-only` reporting a whole-repository grade for a diff | A diff scan reports scope and withholds the grade; test asserts a 2-file scan cannot produce a repository estimate |
-| 0.3 | Content-address finding identity | Inserting a line above a finding does not change its fingerprint; property test over insertion positions |
+| 0.3 | Finding identity is path, name and ordinal | Inserting a line above a finding does not change its fingerprint; property test over insertion positions |
 | 0.4 | Regenerate baselines, document the break | `--fail-on-new` no longer fires on moved code; CHANGELOG names the incompatibility |
 | 0.5 | Release 0.7.0 | Tagged, published, two real bug fixes in the notes |
+
+The exit-condition work for 0.2, 0.3 and 0.4 has landed. Identity shipped as
+`function:{path}:{name}#{ordinal}`, not a content hash. 0.4 is the migration
+note and the version-2 baseline rejection; this repository does not check in
+a baseline of its own. 0.1 and 0.5 remain.
 
 **0.2 and 0.3 are prerequisites** for ADR 005 and ADR 009 respectively. They are also the only user-visible bug fixes available without the larger build, so they justify a release on their own.
 
@@ -65,7 +71,7 @@ Implements the executable half of [ADR 006](adr-006-analyzer-evidence.md). The l
 | 2.4 | Ten baseline adapters: lizard, cloc, multimetric, jscpd, radon, ruff, vulture, complexipy, interrogate, pydocstyle | Each parses real output on the corpus; per-adapter fixture tests |
 | 2.5 | Coverage reporting in the report | Every run states tools attempted, run, unavailable and why, with versions |
 | 2.5b | Coverage gaps per language and concern | A concern with no tool running against it is `Unknown`, never clean |
-| 2.5c | Environment work order | Names missing prerequisites and the install command; the agent never installs |
+| 2.5c | Environment work order | Names missing prerequisites and the install command; the agent never installs. **Deferred to 1.0** — coverage (2.5) already names missing tools; this is the install-command artifact on top, not a honesty hole in 0.7 |
 | 2.6 | Rubric-driven tool configuration | Changing a project's `eslint.config.mjs` provably does not move the score |
 | 2.7 | Five moderate adapters | pylint, flake8, eslint, xenon, cohesion parse real output |
 | 2.8 | Determinism under pinned versions | Two runs on one tree with identical tool versions are byte-identical |
@@ -199,5 +205,6 @@ If the finish line has to move nearer, these can be deferred without making the 
 - **Phase 5 backfill (5.5)** — history still accumulates going forward.
 - **Phase 6 MCP (6.2, 6.3)** — the CLI covers CI, which is the load-bearing entry point.
 - **Adapters beyond the ten baseline ones (2.7)** — the pool grows over time by design; `all` already reports honestly what it could not run.
+- **2.5c environment work order** — coverage (2.5) already names missing tools; the install-command artifact is a convenience. The agent still never installs.
 
 What cannot be cut without the tool lying: population floors (Phase 1), coverage reporting (2.5), and rubric-driven tool configuration (2.6). Those three are what stop the score from being fiction.

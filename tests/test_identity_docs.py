@@ -76,5 +76,16 @@ def test_unreleased_changelog_does_not_claim_content_addressed_identity() -> Non
     unreleased = changelog.split("## Unreleased", maxsplit=1)[1].split(
         "\n## ", maxsplit=1
     )[0]
+    released = ""
+    if "## 0.7.0" in changelog:
+        released = changelog.split("## 0.7.0", maxsplit=1)[1].split(
+            "\n## 0.6.", maxsplit=1
+        )[0]
 
     assert "Identity is now content-addressed." not in unreleased
+    assert "Identity is now content-addressed." not in released
+    assert "content-addressed" not in (
+        (ROOT / "src" / "maintainability_audit" / "baseline.py")
+        .read_text(encoding="utf-8")
+        .lower()
+    )

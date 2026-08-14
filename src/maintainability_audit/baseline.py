@@ -8,11 +8,11 @@ from ._identity import finding_fingerprints
 
 __all__ = ["finding_fingerprints", "load_baseline", "write_baseline"]
 
-# Baselines written before identity was content-addressed embedded line
-# numbers, so every fingerprint in them can be invalidated by an unrelated
-# insertion. They are not migratable: the old strings do not carry what a new
-# one needs. `load_baseline` detects them and says so rather than silently
-# treating every finding as new.
+# Baselines written before identity used path, name and same-name ordinal
+# embedded line numbers, so every fingerprint in them can be invalidated by
+# an unrelated insertion. They are not migratable: the old strings do not
+# carry what a new one needs. `load_baseline` detects them and says so
+# rather than silently treating every finding as new.
 BASELINE_VERSION = 2
 
 
@@ -35,8 +35,9 @@ def load_baseline(path: str | None) -> set[str]:
         # explanation the reader could act on.
         raise StaleBaseline(
             f"{path} is baseline version {version}; this release writes version "
-            f"{BASELINE_VERSION}. Finding identity is now content-addressed and "
-            "old fingerprints cannot be converted. Regenerate with --write-baseline."
+            f"{BASELINE_VERSION}. Finding identity is now path, name and "
+            "same-name ordinal; old fingerprints cannot be converted. "
+            "Regenerate with --write-baseline."
         )
     return set(data.get("findings", []))
 
@@ -45,8 +46,8 @@ def write_baseline(path: str, report: dict[str, Any]) -> None:
     # No score snapshot. Nothing ever read it back — `load_baseline`
     # takes the fingerprint list alone — and writing one would freeze an
     # obsolete report contract into every new baseline for no consumer.
-    # Version 2: identity is content-addressed, so a v1 file's fingerprints
-    # mean something different and the loader rejects them.
+    # Version 2: identity is path, name and ordinal, so a v1 file's
+    # fingerprints mean something different and the loader rejects them.
     data = {
         "version": BASELINE_VERSION,
         "root": report["root"],

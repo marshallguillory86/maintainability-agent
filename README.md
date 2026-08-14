@@ -12,6 +12,8 @@ cp skills/maintainability-agent/copilot/maintainability-agent.prompt.md .github/
 
 Jump to [Invokable Skill / Slash Command](#invokable-skill--slash-command) for the full install table.
 
+**0.7.0** withholds a score when the evidence cannot support one — a `--changed-only` diff is not a repository grade, and a tree smaller than the calibration population is not a 5.0. External analyzers (`--analyzers`) report coverage and findings; they widen the range and do not move the point estimate. Two incompatibilities from 0.6: report schema version 3 (nullable estimate) and baseline format version 2. See [docs/migration-0.7.md](docs/migration-0.7.md).
+
 > **Retracted: the claim that near-duplication distinguishes AI-written code.** It was called "the first signal that separates AI-written applications from mature human-written OSS". 0.6.0 reported near-duplication at 1.49% for AI-written applications against 0.20% for human-written OSS, comparing six young applications against twelve decade-old libraries. Authorship, age, domain and size all differed at once. Re-run against a control matched on age, popularity and language, the near-duplication gap is not significant (p = 0.546), and no other metric earns the claim either. The AI figure barely moved (1.49% to 1.73%); the control moved, from 0.20% to 0.83%, because it stopped being decade-old libraries. The replacement study has its own stated limits (small n, size handled post-hoc, and a control that cannot be verified as human), so the honest summary is "this design could not measure a difference", not "there is no difference". See [docs/studies.md](docs/studies.md#does-this-detect-ai-written-code).
 >
 > **v0.6.0 detects a helper written twice under two names** — clone-instead-of-reuse, the most-cited complaint about AI-written code. Renamed copies defeat text matching, so bodies are compared structurally with identifiers anonymized. Each finding names the declaration to reuse, so the prompt says *`toAtomicAmount` at `TradeTicket.tsx:862` already does this* rather than "there is duplication". It is a useful finding on its own terms; it is not evidence about who wrote the code.
@@ -24,7 +26,7 @@ Agents produce code faster than humans can review it. Not measurably *worse* cod
 
 That's the point of this tool:
 
-1. Run a deterministic local audit — file size, function size, approximate cyclomatic complexity, duplication, configurable risk patterns, ISO/IEC 25010-inspired 0–5 score.
+1. Run a deterministic local audit — file size, function size, approximate cyclomatic complexity, duplication, configurable risk patterns, and an ISO/IEC 25010-inspired 0–5 estimate that is withheld when the evidence cannot support one.
 2. Emit Markdown, JSON, SARIF, a PR comment, and a baseline for incremental adoption.
 3. Generate an **AI remediation prompt scoped to the actual findings** — bounded, with explicit "don't rewrite the codebase" rules.
 4. Hand that prompt to your agent. One pre-registered experiment has tested this: Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, under this tool's own finding count. The registered hypothesis was *narrower* diffs and it did not hold, so the registered verdict stands at **INCONCLUSIVE**. Method, limits and raw data: [docs/studies.md](docs/studies.md#does-the-bounded-prompt-work-controlled-experiment-pre-registered).
@@ -53,12 +55,12 @@ This repo eats its own dogfood — the tool runs against this codebase in CI, an
 
 | Metric | Value |
 |---|---:|
-| Maintainability estimate | **4.3 / 5** |
+| Maintainability estimate | **4.7 / 5** |
 | Verified grade | **B** |
-| Files scanned | 184 |
-| File warnings | 52 |
+| Files scanned | 196 |
+| File warnings | 56 |
 | File failures | 0 |
-| Function warnings | 25 |
+| Function warnings | 28 |
 | Function failures | 0 |
 | Duplicate blocks | 0 |
 | Risk findings | 0 |
@@ -66,7 +68,7 @@ This repo eats its own dogfood — the tool runs against this codebase in CI, an
 
 Yes, a **B** — demoted from the A band because warning rates exceed the A-grade ceilings, against thresholds this repo deliberately sets stricter than the shipped defaults (a 250-line file warning versus the default 400). An earlier revision of this table advertised 5.0/A+ after the codebase had drifted to a B; a hostile audit caught the stale claim, which is precisely the failure mode this tool exists to catch. The table matches the stamped report, and every threshold gate — file, function, duplication — is opted **on** for this repo's own CI, so drifting below the bar fails the build instead of the README.
 
-The grade is **gated, not averaged**: A+ requires every dimension clean, and since the rubric rework a repository with production code and zero test files cannot receive an A-grade at all. It is also **banded from the evidence floor, not the score** — the grade reads `overall_range[0]`, with every unmeasured aspect priced at 0, so withholding evidence can never buy a better letter. This repository measures fully, so its floor and its score are the same number; a shallow clone's would not be, and the report says so in a blocker. (Practical note for CI: `actions/checkout` defaults to `fetch-depth: 1`, which hides history and costs roughly a grade. Use `fetch-depth: 0`.)
+The grade is **gated, not averaged**: A+ requires every dimension clean, and since the rubric rework a repository with production code and zero test files cannot receive an A-grade at all. It is also **banded from the evidence floor, not the score** — the grade reads `overall_range[0]`, with every unmeasured aspect priced at 0, so withholding evidence can never buy a better letter. This repository's required evidence is complete under the default profile, so its floor and its score are the same number; a shallow clone's would not be, and the report says so in a blocker. (Practical note for CI: `actions/checkout` defaults to `fetch-depth: 1`, which hides history and costs roughly a grade. Use `fetch-depth: 0`.)
 
 Regenerate with `maintainability-agent --config maintainability-agent.json --output docs/self-audit.md` (see the file's preamble for the path-sanitization step).
 
@@ -129,7 +131,7 @@ The deterministic scanner reads code from your repo (no LLM calls) and produces 
 - expected files present (README, LICENSE, etc. — opt-in hard gate)
 - expected test/lint commands declared in the config (opt-in hard gate)
 - worktree-clean state at audit time (opt-in hard gate)
-- ISO/IEC 25010-inspired 0–5 score per category + overall letter grade
+- ISO/IEC 25010-inspired 0–5 estimate per category, and a verified grade only when the required evidence is complete. Otherwise the estimate and grade are withheld, not invented.
 
 The analyzer is intentionally conservative and dependency-free. It is built to **under-report rather than over-report**: a declaration it can't recognize costs one missed finding, never a cascade of false ones. Per-language accuracy, the known limitations, and why classes are graded separately are documented in [docs/language-support.md](docs/language-support.md).
 

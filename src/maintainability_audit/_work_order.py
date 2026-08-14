@@ -249,6 +249,45 @@ def _items_from_files(report: dict[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
+def _items_from_idioms(report: dict[str, Any]) -> list[dict[str, Any]]:
+    """Concerns served by more than one library.
+
+    Its own builder because the finding is shaped unlike every other
+    counted class: no `path`, `first_path` or `line` — a concern and a
+    list of packages, each with a file count and one example. That is
+    the second reason this class never fired; the located loop dropped
+    it for having no path. The first was the loop reading
+    `idiom_concerns`, a key the report has never carried.
+
+    Located at the least-used package's example, where the prompt and
+    the Markdown table already send the reader: it is the library that
+    has to move.
+    """
+    weight = CLASS_RISK_EFFORT["competing-libraries"]
+    items: list[dict[str, Any]] = []
+    for finding in report.get("divergent_idioms") or []:
+        packages = finding.get("packages") or []
+        if len(packages) < 2:
+            continue
+        # Sorted by descending file count upstream: the last row is the
+        # minority usage, the first is what to converge on.
+        majority, minority = packages[0], packages[-1]
+        items.append({
+            "finding_class": "competing-libraries",
+            "title": (f"{finding['concern']} is served by "
+                      f"{', '.join(row['package'] for row in packages)}"),
+            "path": minority["example"],
+            # About a package's presence across files, not about one
+            # line, and the example carries no line number.
+            "line": None,
+            "target": (f"converge on {majority['package']}; {minority['package']} "
+                       f"is used in {minority['files']} file(s)"),
+            "severity": float(finding.get("count") or len(packages)),
+            "weight": weight,
+        })
+    return items
+
+
 def _items_from_counted(report: dict[str, Any]) -> list[dict[str, Any]]:
     """Classes the report carries as located lists."""
     sources = (
@@ -256,7 +295,6 @@ def _items_from_counted(report: dict[str, Any]) -> list[dict[str, Any]]:
         ("near-duplicate", "near_duplicates", "near-duplicate declaration"),
         ("dead-code", "dead_code", "unreferenced declaration"),
         ("risk-pattern", "risk_findings", "configured risk pattern"),
-        ("competing-libraries", "idiom_concerns", "competing libraries"),
     )
     # Risk findings are the one class here the report gives a stable
     # identity to, so they are the one class that can carry a
@@ -294,7 +332,12 @@ def work_order(report: dict[str, Any], include_reconsider: bool = False) -> list
     leads — the delta is a recomputation, so this orders by measured
     value rather than by how many of something there are.
     """
-    raw = _items_from_hotspots(report) + _items_from_files(report) + _items_from_counted(report)
+    raw = (
+        _items_from_hotspots(report)
+        + _items_from_files(report)
+        + _items_from_counted(report)
+        + _items_from_idioms(report)
+    )
 
     # Two recomputations per class, and the second is the one worth
     # printing. The published estimate is the mean of the *rounded*

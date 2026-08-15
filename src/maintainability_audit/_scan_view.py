@@ -461,3 +461,27 @@ def work_order_selection_markdown(selection: dict[str, Any] | None) -> list[str]
     return lines
 
 
+def environment_work_order_markdown(items: list[dict[str, str]]) -> list[str]:
+    """The section a reader acts on, placed directly after coverage.
+
+    Coverage states the gap; this states the remedy. The closing line is
+    part of the contract, not a nicety — a reader must never come away
+    thinking the audit will fetch tools for them.
+    """
+    if not items:
+        return []
+    lines = [
+        "## Environment Work Order",
+        "",
+        "Selected analyzers that could not run, and what it would take. "
+        "These commands are for **you** to run — the agent never installs anything.",
+        "",
+        "| Tool | Why it did not run | Install | Verify |",
+        "|---|---|---|---|",
+    ]
+    lines.extend(
+        f"| `{item['tool']}` | {item['reason']} | `{item['install']}` | `{item['verify']}` |"
+        for item in items
+    )
+    lines.append("")
+    return lines

@@ -13,6 +13,11 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Changed
 
+- **ADR 011 and history schema 2 recorded.** Three report skins
+  (chat default, Markdown file, one HTML file) and the missing
+  per-scan score breakdown are decided, not shipped. 1.0 waits on
+  Phase 8, acceptance, then 7.5.
+
 - **Self-audit restamped (7.1).** Provenance commit `9c2257a`, 235 files
   scanned. README table matches the stamp. Still a B.
 

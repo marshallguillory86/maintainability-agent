@@ -13,7 +13,7 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 | Tests | 1,097 collected across 80 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
 | Known open exit conditions in Phases 0–5 | Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) is **Known debt**, not open task work: `_bands` exists, is imported by nothing, and wiring it is a recalibration (see the [architecture Known debt](architecture.md#known-debt)). |
-| Later phases outstanding | The 6.1 first-run prompt, the 6.2 MCP subcommand and three primitives, and the 6.3 byte-identical Markdown resource shipped, as did the 2.5c environment work order. 6.4 shipped in full: the consumer workflow now restores and saves `.maintainability/history.jsonl` around a recorded scan, and `examples/local-ci.sh` records. Phase 7 remains 1.0 release work. |
+| Later phases outstanding | 6.1–6.4 shipped. 7.1–7.4 shipped. **1.0 waits on Phase 8** (three report skins + history schema 2 + Marshall's acceptance) then 7.5 then the tag. |
 
 This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; open work remains in the earlier phases as well as Phases 6 and 7.
 
@@ -189,7 +189,24 @@ Until that exists, a small repository gets path 2: a complete audit, every findi
 | 7.2 | Reconcile every document with shipped behavior | **Shipped.** No document describes an unimplemented component as present, and none calls shipped work open or deferred — both directions held by lints (`tests/test_phase6_claims.py`, `tests/test_doc_claims.py`, `tests/test_release_plan_status.py`), which is what closes the class rather than the instances |
 | 7.3 | **Done.** Update the promise set | `tests/test_promises.py` indexes the enforcement for every promise; P7's score-withholding tests and P8's coverage and estimate-source tests name their falsifiers |
 | 7.4 | Migration guide | **Done.** [migration-1.0.md](migration-1.0.md) names the post-0.7 breaks: `--analyzers` moves the estimate; `CALIBRATION_C` 2.6279 → 2.2658. Schema 3 and baseline v2 do not break again. 1.0 is not tagged. |
-| 7.5 | Hostile audit against the shipped artifact | Findings closed as a class, not instance by instance |
+| 7.5 | Hostile audit against the shipped artifact | Findings closed as a class, not instance by instance. **After Phase 8.** |
+
+## Phase 8 — 1.0 presentations and scoring continuity
+
+Decided in [ADR 011](adr-011-three-report-presentations.md) and the schema-2 close of [ADR 009](adr-009-scan-history.md). 7.5 and the tag wait on this. Marshall's acceptance test is the last human gate; if it fails, this phase is reopened, not papered over.
+
+| # | Task | Exit condition |
+|---|---|---|
+| 8.1 | History schema 2 | Each new JSONL line stores categories, aspects, pillars, practice_level, evidence_status. Schema 1 lines still load. `HISTORY_SCHEMA_VERSION` is 2 for new writes |
+| 8.2 | Append when the file exists | A successful scan appends if `.maintainability/history.jsonl` is present, even without `--record-history`. First interactive run creates the file |
+| 8.3 | One view model, three renderers | Chat/CLI text, Markdown file, and one self-contained HTML file never disagree on estimate, range, grade, or finding identity. Presentation does not score |
+| 8.4 | Format ask | Every TTY invoke with no format flag asks; Enter = chat. Non-TTY never `input()`. Flags win |
+| 8.5 | MCP format parameter | Prompt tells the host to ask. Tool takes a format argument. No tree write. Chat returns Markdown |
+| 8.6 | HTML | One file, inlined CSS, deterministic SVG from stored records. Executive summary first. Empty history is an empty state. No CDN |
+| 8.7 | Honesty | README, cli.md, MCP docs, register: 011 and schema 2 described as shipped only when the tests say so |
+| 8.8 | Acceptance (Marshall) | He runs the agent on a real repo, all three skins, with at least two recorded scans. If that fails, Phase 8 is not done |
+| 8.9 | 7.5 | Hostile audit of the artifact that passed 8.8 |
+| 8.10 | Tag 1.0 | Only after 8.9 |
 
 ## Sequencing constraints
 

@@ -88,6 +88,37 @@ def _rollup_with_analyzer_primary(evidence, external) -> float:
     return overall
 
 
+def _summary_from_metrics(functions, thresholds):
+    """The built-in side of a drop-in comparison, built by production code.
+
+    The counts-only construction these tests used became the wrong half
+    of the comparison when 3.2 wired the band matrix: the live summary
+    now stores banded per-unit pressures, and comparing the analyzer's
+    banded value against a hand-built count rate is two formulas again —
+    the exact regression this file documents.
+    """
+    from maintainability_audit.evidence import Measured, SummaryEvidence, Unknown
+    from maintainability_audit.report import report_summary
+
+    summary = report_summary(
+        files=[], file_metrics=[], function_metrics=functions,
+        duplicate_count=0, risk_count=0, gate_count=0, thresholds=thresholds,
+    )
+    fields = {
+        name: (Measured(summary[name], "t") if summary.get(name) is not None
+               else Unknown("not in fixture", f"summary.{name}"))
+        for name in SummaryEvidence.__dataclass_fields__
+    }
+    return SummaryEvidence(**fields)
+
+
+def _metric(complexity, lines=1, cognitive=0, name="f", status="ok"):
+    from maintainability_audit._metrics_types import FunctionMetric
+
+    return FunctionMetric(path="a.py", name=name, start_line=1, lines=lines,
+                          complexity=complexity, status=status, cognitive=cognitive)
+
+
 def test_analyzer_pressures_are_a_drop_in_for_the_built_in_ones(thresholds: dict) -> None:
     """Same formula, not merely the same key names.
 
@@ -104,7 +135,6 @@ def test_analyzer_pressures_are_a_drop_in_for_the_built_in_ones(thresholds: dict
         analyzer_pressures,
         dimension_pressures,
     )
-    from maintainability_audit.evidence import Measured, SummaryEvidence
 
     # Four declarations: one above max_complexity, one between warn and
     # max, two clean. The built-in path is handed the same counts.
@@ -122,21 +152,18 @@ def test_analyzer_pressures_are_a_drop_in_for_the_built_in_ones(thresholds: dict
             ("cognitive_complexity", 0),
         )
     ]
-    fields = dict.fromkeys(SummaryEvidence.__dataclass_fields__, Measured(0, "t"))
-    fields.update(
-        declarations_scanned=Measured(4, "t"),
-        function_failures=Measured(1, "t"),
-        function_warnings=Measured(1, "t"),
-    )
+    functions = [
+        _metric(v, name=f"f{i}") for i, v in enumerate(values)
+    ]
 
     from_analyzers = analyzer_pressures(measurements, thresholds)["declarations"]
-    from_builtin = dimension_pressures(SummaryEvidence(**fields))["declarations"]
+    from_builtin = dimension_pressures(_summary_from_metrics(functions, thresholds))["declarations"]
 
     assert from_analyzers == pytest.approx(from_builtin), (
         "identical breach counts over an identical population must give an "
         "identical pressure, or the two sources are not comparable"
     )
-    assert set(ANALYZER_DIMENSIONS) <= set(dimension_pressures(SummaryEvidence(**fields)))
+    assert set(ANALYZER_DIMENSIONS) <= set(dimension_pressures(_summary_from_metrics(functions, thresholds)))
 
 
 def test_a_dimension_no_analyzer_measured_is_unmeasured_not_zero(thresholds: dict) -> None:
@@ -161,7 +188,7 @@ def test_the_rubric_owns_the_threshold_not_the_tool(thresholds: dict) -> None:
     measurements = [
         Measurement(concept=concept, unit=f"a.py::f{i}", value=float(value),
                     tool="lizard", path="a.py")
-        for i, v in enumerate([3, 8, 12, 20])
+        for i, v in enumerate([3, 8, 12, 17])
         for concept, value in (
             ("cyclomatic_complexity", v),
             ("declaration_lines", 1),
@@ -194,7 +221,6 @@ def test_both_paths_agree_on_every_failure_criterion(thresholds: dict) -> None:
     from maintainability_audit._metrics_types import Measurement
     from maintainability_audit._pressures import analyzer_pressures, dimension_pressures
     from maintainability_audit.declarations import function_status
-    from maintainability_audit.evidence import Measured, SummaryEvidence
 
     clean = {"lines": 1, "complexity": 1, "cognitive": 0}
     breaches = {
@@ -208,10 +234,17 @@ def test_both_paths_agree_on_every_failure_criterion(thresholds: dict) -> None:
             breaching["lines"], breaching["complexity"], thresholds, breaching["cognitive"]
         ) == "fail", f"fixture for {criterion} does not actually breach"
 
-        # The built-in path, told there is one failure among four.
-        fields = dict.fromkeys(SummaryEvidence.__dataclass_fields__, Measured(0, "t"))
-        fields.update(declarations_scanned=Measured(4, "t"), function_failures=Measured(1, "t"))
-        expected = dimension_pressures(SummaryEvidence(**fields))["declarations"]
+        # The built-in path, handed the same four declarations. Under
+        # the band matrix the comparable construction is the summary the
+        # production code builds from these values, not a hand-made
+        # count — that is the two-formulas regression in miniature.
+        functions = [
+            _metric(decl["complexity"], lines=decl["lines"],
+                    cognitive=decl["cognitive"], name=f"f{i}")
+            for i, decl in enumerate([breaching, clean, clean, clean])
+        ]
+        expected = dimension_pressures(
+            _summary_from_metrics(functions, thresholds))["declarations"]
 
         # The analyzer path, given the same four declarations as measurements.
         measurements = [
@@ -313,7 +346,6 @@ def test_a_warning_is_weighted_below_a_failure(thresholds: dict) -> None:
     """
     from maintainability_audit._metrics_types import Measurement
     from maintainability_audit._pressures import analyzer_pressures, dimension_pressures
-    from maintainability_audit.evidence import Measured, SummaryEvidence
 
     warning = {
         "cyclomatic_complexity": (thresholds["warn_complexity"] + thresholds["max_complexity"]) / 2,
@@ -328,11 +360,14 @@ def test_a_warning_is_weighted_below_a_failure(thresholds: dict) -> None:
         for concept, value in unit.items()
     ]
 
-    fields = dict.fromkeys(SummaryEvidence.__dataclass_fields__, Measured(0, "t"))
-    fields.update(declarations_scanned=Measured(4, "t"), function_warnings=Measured(1, "t"))
+    functions = [
+        _metric(int(unit["cyclomatic_complexity"]), lines=int(unit["declaration_lines"]),
+                cognitive=int(unit["cognitive_complexity"]), name=f"f{i}")
+        for i, unit in enumerate([warning, clean, clean, clean])
+    ]
 
     from_analyzers = analyzer_pressures(measurements, thresholds)["declarations"]
-    from_builtin = dimension_pressures(SummaryEvidence(**fields))["declarations"]
+    from_builtin = dimension_pressures(_summary_from_metrics(functions, thresholds))["declarations"]
 
     assert from_analyzers == pytest.approx(from_builtin)
     assert 0 < from_analyzers < 1 / 4, "a warning weighs less than a failure would"

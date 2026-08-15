@@ -61,6 +61,25 @@ def _ratio(count: float | None, population: float | None) -> float | None:
     return _rate(count, population)
 
 
+def _banded(banded_state: object, population: float | None,
+            failures: float | None, warnings: float | None) -> float | None:
+    """The band-matrix pressure where the scan recorded one (ADR 008, 3.2).
+
+    Population gates first: zero or unmeasured units is None whatever a
+    banded field says — a mean over nothing is not clean. The count rate
+    remains only as the fallback for evidence written before the bands
+    were stored (schema-1 reports, hand-built fixtures); every live scan
+    records the banded value, which is what lets complexity 16 and 45
+    stop being the same fact.
+    """
+    if population is None or population <= 0:
+        return None
+    value = measured(banded_state)
+    if value is not None:
+        return float(value)
+    return _weighted_rate(failures, warnings, population)
+
+
 def dimension_pressures(summary: SummaryEvidence) -> dict[str, float | None]:
     """The five independently-sourced pressures, as rates.
 
@@ -74,11 +93,13 @@ def dimension_pressures(summary: SummaryEvidence) -> dict[str, float | None]:
     decls = measured(summary.declarations_scanned)
     gates = measured(summary.hard_gate_failures)
     return {
-        "file_size": _weighted_rate(
-            measured(summary.file_failures), measured(summary.file_warnings), files
+        "file_size": _banded(
+            summary.file_band_pressure, files,
+            measured(summary.file_failures), measured(summary.file_warnings),
         ),
-        "declarations": _weighted_rate(
-            measured(summary.function_failures), measured(summary.function_warnings), decls
+        "declarations": _banded(
+            summary.declaration_band_pressure, decls,
+            measured(summary.function_failures), measured(summary.function_warnings),
         ),
         "duplication": _ratio(measured(summary.duplicate_blocks), files),
         "risk": _ratio(measured(summary.risk_findings), files),
@@ -116,15 +137,15 @@ def production_pressures(summary: SummaryEvidence) -> dict[str, float | None]:
     decls = _production(summary.production_declarations_scanned)
     gates = _production(summary.production_hard_gate_failures)
     return {
-        "file_size": _weighted_rate(
+        "file_size": _banded(
+            summary.production_file_band_pressure, files,
             _production(summary.production_file_failures),
             _production(summary.production_file_warnings),
-            files,
         ),
-        "declarations": _weighted_rate(
+        "declarations": _banded(
+            summary.production_declaration_band_pressure, decls,
             _production(summary.production_function_failures),
             _production(summary.production_function_warnings),
-            decls,
         ),
         "gates": None if gates is None else 0.05 * gates,
     }
@@ -253,16 +274,21 @@ def _declaration_pressure(
     if not all(concept in covered for concept, _w, _f in DECLARATION_CRITERIA):
         return dict.fromkeys(ANALYZER_DIMENSIONS)
 
-    relevant = {
-        unit: values
-        for unit, values in per_unit.items()
-        if any(concept in values for concept, _w, _f in DECLARATION_CRITERIA)
-    }
-    if not relevant:
-        return dict.fromkeys(ANALYZER_DIMENSIONS)
+    # Banded, not counted (ADR 008, 3.2): each unit takes the worst band
+    # among its measured concepts — the same `unit_pressure` the built-in
+    # path stores — so complexity 16 and 45 stop being one failure each,
+    # and the two sources cannot drift onto two formulas again.
+    from ._bands import unit_pressure
 
-    failures, warnings = _breach_counts(relevant, thresholds)
-    return {"declarations": _weighted_rate(failures, warnings, len(relevant))}
+    pressures = [
+        value for value in (
+            unit_pressure(values, thresholds) for values in per_unit.values()
+        )
+        if value is not None
+    ]
+    if not pressures:
+        return dict.fromkeys(ANALYZER_DIMENSIONS)
+    return {"declarations": sum(pressures) / len(pressures)}
 
 
 def analyzer_pressures(

@@ -177,3 +177,21 @@ def population_pressure(
     if not values:
         return None
     return sum(pressure_of(concept, value, thresholds) for value in values) / len(values)
+
+
+def unit_pressure(readings: dict[str, float], thresholds: dict[str, Any]) -> float | None:
+    """One unit's pressure: the worst band among its measured concepts.
+
+    Mirrors ``function_status``, which fails a declaration on lines OR
+    complexity OR cognitive complexity — the worst concept governs.
+    Averaging a unit against itself would let two mild readings dilute
+    one severe one, which is the 16-versus-45 collapse moved down a
+    level. ``None`` when nothing recognisable was measured: no readings
+    is unmeasured, never clean.
+    """
+    known = [
+        pressure_of(CONCEPTS[name], value, thresholds)
+        for name, value in readings.items()
+        if name in CONCEPTS
+    ]
+    return max(known) if known else None

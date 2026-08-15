@@ -120,27 +120,26 @@ def test_no_shipped_task_is_still_called_open_or_deferred() -> None:
     )
 
 
-def test_the_band_matrix_is_debt_not_an_open_exit_condition() -> None:
-    """`_bands` unused is Known debt with its own register row.
-
-    Filing it under "open exit conditions" beside genuinely unshipped
-    work invites someone to wire it as routine task-burndown — which is
-    a recalibration, and recalibrations are deliberate acts.
-    """
+def test_the_band_matrix_is_not_listed_as_open_exit_work() -> None:
+    """3.2 shipped. Calling it open work after the wire is 7.2 inverted."""
     table = _standing_table()
     for line in table.splitlines():
-        if "band matrix" not in line.lower():
+        if "band matrix" not in line.lower() and "3.2" not in line:
             continue
-        assert "known debt" in line.lower() or "debt" in line.lower(), (
-            f"the standing table lists the band matrix as open work: {line!r}"
+        lowered = line.lower()
+        assert "shipped" in lowered or "done" in lowered, (
+            f"the standing table still treats 3.2 as unfinished: {line!r}"
         )
+        assert "open and queued" not in lowered
 
 
-def test_phase_three_does_not_claim_the_band_matrix_task_is_done() -> None:
-    """The other direction on the same rows: 3.2 is not done while
-    `_bands` drives nothing, and prose bundling it into "3.1–3.3 are
-    done" is the original 7.2 defect verbatim."""
+def test_phase_three_records_the_band_matrix_as_shipped() -> None:
+    """The 3.2 row must name the tests that prove CCN 16 ≠ 45."""
     text = RELEASE_PLAN.read_text(encoding="utf-8")
-    assert not re.search(r"3\.1\s*[–-]\s*3\.3[^.\n]{0,40}\b(?:are\s+)?done", text, re.I), (
-        "the plan claims 3.1–3.3 are done; 3.2's band matrix exists and is unused"
+    match = re.search(r"^\| 3\.2 \| (.+) \|", text, re.M)
+    assert match, "release-plan is missing the 3.2 row"
+    cell = match.group(1)
+    assert "Shipped" in cell, f"3.2 is not marked shipped: {cell!r}"
+    assert "test_band_pressures" in cell, (
+        "3.2 shipped without naming the invariant-13 test"
     )

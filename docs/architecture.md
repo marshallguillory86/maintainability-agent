@@ -110,7 +110,7 @@ flowchart TB
   parsing --> foundations
 ```
 
-`_bands` sits in scoring because it is rubric data. It is not imported by the live scorer — see [Known debt](#known-debt). `_identity` is path + name + ordinal, not a content hash.
+`_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_identity` is path + name + ordinal, not a content hash.
 
 | Layer | Owns | May import |
 | --- | --- | --- |
@@ -220,7 +220,7 @@ Stated rather than hidden, because an architecture document that only describes 
 - ~~`docs/standard.md` mixes genres~~ — **resolved.** The empirical studies moved to [studies.md](studies.md); the standard now holds only the rubric, its calibration method, and the reference corpus. Mixing them was the documentation shape that let a Tier 3 claim read as settled.
 - **History window materialization is not separated from analysis.** [ADR 001](adr-001-evidence-and-verification.md) stage 9.
 - ~~The scale was still calibrated against the built-in path~~ — **resolved (3.6, 2026-08-14).** The point estimate uses the analyzers' reading for every dimension they measured on all three declaration criteria; a partial concept set is unmeasured, so the built-in detectors remain the fallback. `CALIBRATION_C` was re-derived against that mix (2.6279 → 2.2658). The interval still widens to contain whichever source did not supply the point.
-- **The band matrix does not drive the score.** `_bands.py` exists, holds the table, and is imported by nothing under `src/` — `_pressures._weighted_rate` still computes a binary warn/fail rate over the population, so CCN 16 and CCN 45 are one failure each and the severity ADR 008 §"All three data kinds survive" was written to keep is discarded at the point the score is formed. Closing it is a recalibration, not an import: banding changes every pressure the corpus was fitted to, so the constant and the dimension references move with it ([ADR 008](adr-008-translation-and-decision.md) invariant 13; `tests/test_bands.py` exercises the table in isolation).
+- ~~The band matrix does not drive the score~~ — **resolved (3.2).** Live scans store per-unit band pressures; `_pressures` uses them for declarations and file size so CCN 16 and 45 are not the same fact. Hard gates stay binary. Count-rate fallback remains only for summaries written before the wiring (`tests/test_band_pressures.py`). `CALIBRATION_C` was not re-derived: the existing calibration tests still hold.
 - **The proposed `_analyzers` package and `_concepts` registry were never created as named modules.** Their roles landed in `_tool_adapters`, `_metric_adapters`, `_verdict_adapters`, `_generic`, and `_corroborate`. This document names the files that exist.
 - **Declaration extraction is gated on `DECLARATION_SUFFIXES`** (Python, JS/TS/HTML, and Java). A suffix outside that set can be included for length, duplication and risk; it does not produce a declaration population. `--changed-only` and `--fail-on-new` no longer have the defects previously listed here: a thin diff withholds ([ADR 005](adr-005-insufficient-population.md); `test_scan_scope.py`), and identity is `function:{path}:{name}#{ordinal}`. The declaration-body hash proposed by [ADR 009](adr-009-scan-history.md) did not ship; the [decision register](decisions.md) records that gap.
 - ~~The presentation layer lacked the three [ADR 011](adr-011-three-report-presentations.md) skins~~ — **resolved (8.3–8.6).** Chat/CLI Markdown, a Markdown file and one self-contained HTML file render the same report dictionary. TTY asks every invoke; flags win; CI never asks. The MCP host asks, and MCP does not write files.
@@ -249,7 +249,7 @@ Every design point above traces to a record. Nothing here is a preference someon
 | Metric emitters vs verdict emitters; only metric emitters supply denominators | [ADR 008](adr-008-translation-and-decision.md) |
 | The rubric sets tool thresholds; project lint config never moves the score | [ADR 008](adr-008-translation-and-decision.md) |
 | Measurements, counts and populations all survive to the report | [ADR 008](adr-008-translation-and-decision.md) |
-| Binary warn/fail rates drive the score; gates stay binary. The band matrix ADR 008 specifies is **not** what ships — see [Known debt](#known-debt) | [ADR 008](adr-008-translation-and-decision.md) |
+| Band-matrix pressures drive declaration and file-size scores; gates stay binary | [ADR 008](adr-008-translation-and-decision.md) |
 | The agent never calls an LLM; it produces that model's input | [ADR 008](adr-008-translation-and-decision.md), P1 |
 | CLI for CI, MCP for chat, one core, no combined server | [ADR 008](adr-008-translation-and-decision.md) |
 | The report is first-class; the CLI writes Markdown; the MCP report resource returns the byte-identical document | [ADR 008](adr-008-translation-and-decision.md) |

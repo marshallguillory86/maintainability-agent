@@ -93,7 +93,18 @@ DEFAULT_V1_REQUIRED: frozenset[str] = frozenset({
 # Inputs v1 deliberately does not require. Empty today; a scoring input
 # that should not withhold a grade is recorded here so the omission is a
 # decision on the record rather than a gap.
-DEFAULT_V1_NOT_REQUIRED: frozenset[str] = frozenset()
+# The band pressures are refinements of counts v1 already requires: a
+# report missing them predates the band wiring (3.2), and the scorer
+# falls back to the count rate it required all along — a coarser number,
+# not an unverifiable one. Requiring them would retroactively unverify
+# every schema-1 report over a formula change, which is a v2 decision
+# nobody has made.
+DEFAULT_V1_NOT_REQUIRED: frozenset[str] = frozenset({
+    "summary.declaration_band_pressure",
+    "summary.production_declaration_band_pressure",
+    "summary.file_band_pressure",
+    "summary.production_file_band_pressure",
+})
 
 COMPLETE = "complete"
 INCOMPLETE = "incomplete"

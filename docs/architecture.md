@@ -68,6 +68,7 @@ flowchart TB
     _calibration["_calibration"]
     _bands["_bands"]
     _corroborate["_corroborate"]
+    _second_source["_second_source"]
     _verification["_verification"]
     _derive["_derive"]
   end

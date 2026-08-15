@@ -60,8 +60,17 @@ LIVE_SURFACES = (
 
 
 def _analyzer_primary_is_the_mix() -> bool:
+    # The mix moved to `_second_source` when `scoring` crossed the
+    # 500-line gate; either home satisfies the probe, because the claim
+    # is that the function exists and the scorer calls it, not where the
+    # `def` line happens to sit.
     scoring = (PACKAGE / "scoring.py").read_text(encoding="utf-8")
-    return "def _primary_pressures(" in scoring
+    second = (PACKAGE / "_second_source.py")
+    return "def _primary_pressures(" in scoring or (
+        second.exists()
+        and "def primary_pressures(" in second.read_text(encoding="utf-8")
+        and "primary_pressures(" in scoring
+    )
 
 
 def test_the_production_mix_is_analyzer_primary() -> None:

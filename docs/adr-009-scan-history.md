@@ -59,6 +59,12 @@ An append-only record per scan, default `.maintainability/history.jsonl`, path c
 
 The score alone would be useless for diagnosis. Retaining populations and band distributions is what lets a later run answer *why* something moved.
 
+**What schema 1 actually stored** (progress in the [register](decisions.md)): timestamp, commit, branch, scope, rubric/calibration/threshold digest, contributing analyzers, estimate, range, four population counts, fingerprints, targeted findings. That is enough for rollup trajectory, velocity, growth-versus-quality, and recurrence. It is **not** enough for patterns *in the scoring* (category, aspect, pillar over time). Schema 1 is thinner than this section required.
+
+**Schema 2** writes the missing breakdown on each new line: `categories`, `aspects`, `pillars`, `practice_level`, `evidence_status`. Those last two are first-class **tracked patterns**, not dump fields: a later run must be able to chart pillar condition and practice maturity across scans. They stay two series. Averaging them is still forbidden ([ADR 007](adr-007-pillars-and-practice.md)). Readers accept schema 1 and 2. Old lines stay valid; they simply have no breakdown to chart. No second file. No silent splice across a rubric/coverage/scope change.
+
+**Append policy (1.0):** if `.maintainability/history.jsonl` exists, a run appends even without `--record-history`. The first interactive run creates the file. CI already records (6.4). A forgotten flag must not drop the current scan from the series.
+
 **Committing it is the user's choice**, and both are legitimate: checked in, history is shared and reviewable in PRs but adds churn; ignored, it is per-machine and CI needs a cache. The default is checked in, because a history only one laptop can see is a history nobody uses.
 
 ### 3. Trends are measurements of the past, never forecasts
@@ -130,3 +136,5 @@ A first run need not be blind. Past commits can be scanned by materializing them
 8. Compaction never occurs as a side effect of a normal scan.
 9. Every remediation prompt records the finding identities it targeted, and a later run reports whether each cleared, never cleared, or cleared and returned.
 10. A finding that returns after a recorded remediation attempt escalates out of the nit class; a finding that returns after unrelated churn does not.
+11. A schema-2 record includes the category, aspect, pillar and practice-level values that the report published for that scan. A schema-1 record remains readable and simply lacks those fields. Pillar and practice series are never combined into one number.
+12. When the history file exists, a successful scan appends exactly one new line whether or not `--record-history` was passed.

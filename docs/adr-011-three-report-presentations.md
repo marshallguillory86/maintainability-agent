@@ -33,7 +33,13 @@ MCP is read-only and does not run `input()`. A TTY `input()` inside the MCP serv
 
 4. **MCP:** the `maintainability-agent` prompt tells the host to ask, then call `audit_repository` with a format argument. The tool does not prompt. Chat returns Markdown. HTML and Markdown **files** are written only by the CLI.
 
-5. **HTML** is one file: inlined CSS, charts as deterministic SVG generated from stored fields (no CDN, no fetch at view time — P1). It leads with an **executive summary** (estimate, grade, range, series direction or “no history yet”). Same sections as Markdown after that: coverage, trend, work order / prompt, findings.
+5. **HTML** is one file: inlined CSS, charts as deterministic SVG generated from stored fields (no CDN, no fetch at view time — P1). It leads with an **executive summary** (estimate, grade, range, series direction or “no history yet”). Required charts, from schema-2 records only:
+   - estimate + range over recorded scans
+   - **five pillars over time** (condition)
+   - **practice / maturity level over time** (separate series — never averaged with condition, [ADR 007](adr-007-pillars-and-practice.md))
+   - current-run category bars
+   Schema-1 scans appear on the rollup series and are gaps on pillar/practice charts. Empty history is an empty state, not a fabricated sparkline.
+   Same remaining sections as Markdown: coverage, trend text, work order / prompt, findings.
 
 6. **SARIF and the PR comment stay.** They are CI artifacts, not this trio.
 

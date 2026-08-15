@@ -197,12 +197,12 @@ Decided in [ADR 011](adr-011-three-report-presentations.md) and the schema-2 clo
 
 | # | Task | Exit condition |
 |---|---|---|
-| 8.1 | History schema 2 | Each new JSONL line stores categories, aspects, pillars, practice_level, evidence_status. Schema 1 lines still load. `HISTORY_SCHEMA_VERSION` is 2 for new writes |
+| 8.1 | History schema 2 | Each new JSONL line stores categories, aspects, pillars, practice_level, evidence_status. Pillars and practice are tracked series, never averaged. Schema 1 lines still load. `HISTORY_SCHEMA_VERSION` is 2 for new writes |
 | 8.2 | Append when the file exists | A successful scan appends if `.maintainability/history.jsonl` is present, even without `--record-history`. First interactive run creates the file |
 | 8.3 | One view model, three renderers | Chat/CLI text, Markdown file, and one self-contained HTML file never disagree on estimate, range, grade, or finding identity. Presentation does not score |
 | 8.4 | Format ask | Every TTY invoke with no format flag asks; Enter = chat. Non-TTY never `input()`. Flags win |
 | 8.5 | MCP format parameter | Prompt tells the host to ask. Tool takes a format argument. No tree write. Chat returns Markdown |
-| 8.6 | HTML | One file, inlined CSS, deterministic SVG from stored records. Executive summary first. Empty history is an empty state. No CDN |
+| 8.6 | HTML | One file, inlined CSS, deterministic SVG from stored records. Executive summary first. Required charts: estimate+range, **pillars over time**, **practice/maturity over time**, current-run categories. Empty history is an empty state. No CDN |
 | 8.7 | Honesty | README, cli.md, MCP docs, register: 011 and schema 2 described as shipped only when the tests say so |
 | 8.8 | Acceptance (Marshall) | He runs the agent on a real repo, all three skins, with at least two recorded scans. If that fails, Phase 8 is not done |
 | 8.9 | 7.5 | Hostile audit of the artifact that passed 8.8 |

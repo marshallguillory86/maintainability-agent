@@ -89,11 +89,11 @@ Implements [ADR 008](adr-008-translation-and-decision.md)'s normalization half. 
 | 3.1 | `_concepts` registry: tools, weights, denominators, floors | Data only; imports nothing internal, enforced by the layering test |
 | 3.2 | `_bands`: band matrix with corpus-percentile boundaries | Two measurements in different bands never yield the same pressure |
 | 3.3 | `_corroborate`: weighted mean and spread across tools | lizard 14 + radon 14 + mccabe 8 yields 12.0 with spread 8–14 and three sources |
-| 3.4 | Spread drives `maintainability_range` | The interval narrows when tools agree and widens when they do not. **Depends on 3.5 and 3.6**: until the score consumes analyzer measurements, widening its interval with tool disagreement would claim uncertainty about a number those tools never touched |
+| 3.4 | Spread drives `maintainability_range` | **Shipped.** The interval narrows when independent tools agree and widens when they do not (`tests/test_analyzer_spread_range.py`). Built-in vs analyzer rollup still both sit in the range. |
 | 3.5 | Measurements, counts and populations all reach the report | Report carries distributions, not only counts |
 | 3.6 | Recalibrate against the 40-repo corpus | **Done 2026-08-14.** `CALIBRATION_C` 2.6279 → 2.2658; declarations reference 0.0599 → 0.0860. 13/40 repos used analyzer declarations; 27 fell back. Median rollup is 4.0. |
 
-**Order within this phase is forced.** 3.1–3.3 stand alone and are done. 3.5 and 3.6 have landed, so the interval now widens around the analyzer estimate to contain the built-in rollup. 3.4 as specified — per-concept spread becoming the interval — is still open.
+**Order within this phase is forced.** 3.1–3.3 stand alone and are done. 3.4–3.6 have landed: the interval contains the other source's rollup and widens with per-concept analyzer spread.
 
 **Measured across the corpus, and it corrected an earlier claim.** This document previously reported the swap as "roughly 4x on declaration pressure", from a single measurement on this repository. Running all 40 corpus repositories gives a median ratio of **0.3x** — the analyzers see *less* pressure than the built-in detectors on most of them, not more.
 

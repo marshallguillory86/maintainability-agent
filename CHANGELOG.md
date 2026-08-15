@@ -13,6 +13,11 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Changed
 
+- **Per-concept analyzer spread moves `maintainability_range` (3.4).**
+  Independent tools disagreeing on one concept widens the interval;
+  a lone tool is not priced as perfect agreement. The estimate stays
+  the analyzer-primary point. The band matrix is still unused.
+
 - **MCP ships all three primitives.** Resources expose the rubric, the
   analyzer catalog, and a Markdown report that is byte-identical to the
   CLI rendering. The `maintainability-agent` prompt is the slash command.

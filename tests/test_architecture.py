@@ -52,6 +52,10 @@ SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "id
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive",
            "_pillars", "_trends", "_recurrence",
            "_verification", "_bands",
+           # `_second_source` decides how analyzer readings reach the point
+           # and the interval; it reads pressures and corroboration and,
+           # like the rest of this layer, may not see a scanner.
+           "_second_source",
            # `_corroborate` reduces several tools' readings of one concept to
            # a single value plus its spread. That is scoring input
            # preparation, and like the rest of this layer it reads

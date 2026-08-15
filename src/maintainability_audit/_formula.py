@@ -365,3 +365,13 @@ def overall_bounds(
         not_applicable=not_applicable,
     )
     return low, high
+
+
+# How tool disagreement prices into the interval, per side of the bound.
+# Rubric data, beside the other judgments (rule 2), not tuned to any
+# repository: a full-width disagreement (tools 100% of the mean apart)
+# costs half a point per side, and a concept only one tool measured
+# costs a tenth — a lone convention has *unknown* spread, which must
+# never price as the zero spread two agreeing tools actually earned.
+SPREAD_HALF_WIDTH = 0.5
+SINGLE_SOURCE_HALF_WIDTH = 0.1

@@ -359,18 +359,39 @@ def measurements_only(extraction: Extraction, adapter: BaseAdapter) -> tuple[Mea
         return ()
     return extraction.measurements
 
+# Whether a missing Node tool may be fetched. Off unless the operator
+# set `analyzers.acquire_tools`; thrown by `_analysis.analyze` from the
+# configuration, so an adapter never decides it. A module switch rather
+# than a parameter because the adapters build argv in a dozen places and
+# threading a flag through every one of them is how one gets missed.
+_ACQUIRE_TOOLS = False
+
+
+def set_tool_acquisition(enabled: bool) -> None:
+    global _ACQUIRE_TOOLS
+    _ACQUIRE_TOOLS = bool(enabled)
+
+
 def _npx(tool: str, *args: str) -> tuple[str, ...]:
     """Invoke a Node tool, using a local install when there is one.
 
-    Prefers a globally installed binary and falls back to ``npx --yes``,
-    which fetches the package if absent. That fetch is a network action, so
-    P1 separates analysis from acquisition: the analysis never touches the
-    network and never transmits the code being audited, while acquiring a
-    tool may. The version that ran is recorded either way.
+    A globally installed binary is used directly. When the binary is
+    missing, what happens is the operator's choice, not this function's:
+    with `analyzers.acquire_tools` set, ``npx --yes`` fetches the package
+    — a network action P1 discloses, with the fetched version recorded.
+    Without it (the default), the bare tool name is returned and the
+    runner's probe fails exactly as for any absent binary, so the tool
+    lands in coverage as not-installed and in the environment work order
+    with its install command. A fetch nobody chose is the defect; even
+    bare ``npx`` without ``--yes`` resolves an uncached package from the
+    registry, so the fallback emits no npx at all.
 
-    Install ahead of time (``npm install -g jscpd``) to pin a version or to
-    build air-gapped; the local binary is then used directly.
+    This does not sandbox children. What a tool the user installed does
+    is that tool's affair; the promise is about what this agent
+    initiates.
     """
     if shutil.which(tool):
         return (tool, *args)
-    return ("npx", "--yes", tool, *args)
+    if _ACQUIRE_TOOLS:
+        return ("npx", "--yes", tool, *args)
+    return (tool, *args)

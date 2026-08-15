@@ -21,7 +21,7 @@ The loop this product closes:
 
 Step 3 is the product. Steps 1 and 2 are in service of it.
 
-### Unshipped direction: semantic judgment and economic priority
+### Semantic judgment and economic priority
 
 The next useful boundary is not a larger generic smell catalog. It is a way to
 make repository knowledge explicit enough that a deterministic tool can act on
@@ -31,12 +31,14 @@ those strings should be constants, an enum, a value object, or reified
 operations with behavior and generic result types. That choice contains domain
 intent.
 
-[ADR 003](adr-003-deterministic-semantic-policy.md) proposes three honestly
+[ADR 003](adr-003-deterministic-semantic-policy.md) accepts three honestly
 different outputs: facts established by a language type system, violations of
 checked-in repository policy, and design-review candidates inferred from
 structural or historical friction. Determinism means that the same tree,
 analyzer versions and policy produce the same result; it does not require the
 tool to pretend that one universal rule contains every repository's semantics.
+The current increment is TypeScript only. These results aim the bounded prompt;
+they do not change the standard score, range, grade, or evidence status.
 
 [ADR 004](adr-004-economic-context.md) v1 is **shipped**. Change history
 supplies recurrence and hotspot churn; the user may supply loaded labor
@@ -49,8 +51,9 @@ The product direction is:
 > deterministic finding + explicit repository semantics + configured economic
 > context -> a bounded work order ordered by estimated exposure
 
-ADR 003 is not shipped. Both paths must preserve the offline, no-LLM audit
-path and the evidence standard below.
+ADR 003 option C is accepted and its TypeScript precision increment is current
+work. Both paths preserve the offline, no-LLM audit path and the evidence
+standard below.
 
 ## Who it is for
 

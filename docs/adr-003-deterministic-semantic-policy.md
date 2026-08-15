@@ -1,6 +1,6 @@
 # ADR 003: Add deterministic semantic policy without changing the rubric
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-08-11
 - Scope: Type-aware analyzers, repository policy, finding classification and
   remediation prompts
@@ -59,9 +59,10 @@ to nominate design-review candidates.
 This preserves determinism while admitting that not every design judgment is
 derivable from source.
 
-## Proposed decision
+## Decision
 
-Choose option C, subject to a TypeScript precision prototype.
+Choose option C. The first increment is the TypeScript-only precision
+prototype pre-registered in [semantic-prototype.md](semantic-prototype.md).
 
 Every semantic result has exactly one class:
 
@@ -74,11 +75,12 @@ Every semantic result has exactly one class:
    requires `OrderStatus`.
 3. **Design-review candidate.** Structural or historical evidence suggests a
    missing abstraction but cannot prove the intended design. An example is one
-   closed set of operation names repeated across dispatch, permission and
-   validation sites, or repeatedly changed together over time.
+   closed set of operation names repeated across dispatch, capability and
+   description sites, or repeatedly changed together over time.
 
-Universal findings and configured violations may become gateable after their
-precision is measured. Candidates are prompt-only and never hard-gating.
+Universal findings and configured violations may become gateable only after
+their precision is measured and a later decision says so. Candidates are
+prompt-only and never hard-gating.
 Nothing in this path changes rubric weights, aspect scores, grade bands or the
 meaning of the standard score. A future decision may consider scoring only
 after an evidence-backed rule has a repository-independent meaning.
@@ -113,23 +115,20 @@ rule is accurate.
 
 ### Initial TypeScript signals
 
-The discovery prototype should test a small number of high-precision signals:
+The TypeScript prototype has exactly three signals:
 
-- a `string` parameter or field constrained by comparisons to one finite
-  literal set across multiple sites;
-- the same primitive repeatedly validated or converted at module or API
-  boundaries;
-- an existing domain type bypassed by a primitive at a typed boundary;
-- one operation-name set repeated across dispatch, capability and description
-  logic;
-- history showing the same operation set or validation convention changed in
-  lockstep repeatedly.
+- an existing domain type bypassed by `string` at a typed boundary — universal;
+- the same primitive repeatedly validated or converted at a public boundary
+  named by checked-in policy — policy; and
+- one operation-name set repeated across dispatch, capability, and description,
+  or changed in lockstep through history — candidate only.
 
-The last two are candidates, not proof that an enum or operation hierarchy is
+The candidate signal is not proof that an enum or operation hierarchy is
 correct. The prompt must name the evidence and ask the implementer to preserve
 operation-specific input and result types. It must not mechanically prescribe
 an enum when behavior-bearing objects or a generic operation contract may be
-the actual design.
+the actual design. Bare strings with no declared domain type are candidates or
+nothing, never universal findings; `_id` is not a value-object rule.
 
 ### Policy shape
 
@@ -140,12 +139,14 @@ prefer exact concepts and boundaries over broad naming conventions:
 semantic_policy:
   version: 1
   domain_types:
-    - paths: ["src/orders/**"]
+    - name: order-status-public-boundary
+      paths: ["src/orders/api.ts"]
       boundary: public
       symbol: status
       required_type: OrderStatus
   operations:
-    - paths: ["src/session/**"]
+    - name: session-operation-review
+      paths: ["src/session/operations.ts"]
       capability_type: SessionCapability
       operation_contract: "Op[TResult]"
 ```
@@ -168,8 +169,18 @@ made gateable. The prototype should:
 6. test that the generated work order names exact evidence and does not widen
    the requested refactor.
 
-The precision threshold and corpus must be pre-registered before results are
-known. A useful candidate stream does not by itself earn a universal finding.
+The precision threshold and corpus are frozen before results in
+[semantic-prototype.md](semantic-prototype.md). Precision and recall are
+reported separately. A useful candidate stream does not by itself earn a
+universal finding.
+
+### Implementation progress
+
+Option C is accepted. The TypeScript-only corpus, recorded type-analysis input,
+and executable contract live under `tests/fixtures/semantic_ts/` and
+`tests/test_semantic_policy.py`. Production implementation is the current
+increment. Nothing in this progress changes the score or makes candidates a
+gate.
 
 ## Consequences
 

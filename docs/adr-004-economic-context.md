@@ -1,6 +1,7 @@
 # ADR 004: Keep economic context separate from score and grade
 
-- Status: Proposed
+- Status: Accepted. Implementation progress is recorded in the
+  [decision register](decisions.md).
 - Date: 2026-08-11
 - Scope: Repository configuration, impact scenarios, work-order priority and
   outcome validation
@@ -79,6 +80,52 @@ The output vocabulary is **scenario**, **estimate**, **exposure** and
 **assumption**. The words **prediction**, **saving**, **avoided cost** and
 **return on investment** require observed or held-out outcome evidence and must
 not describe the initial feature.
+
+## v1 slice (decided 2026-08-15, not shipped)
+
+The first increment is option C, narrowed so it can ship without a survey
+and without changing the uniform score.
+
+**Presentation is split.** The 0–5 score and `verified_grade` never mention
+money. A separate `economic_impact` block prints a low/base/high **scenario**
+range and the assumptions that produced it. The work order **reorders** by
+exposure; standard risk×effort severity remains on the report so both sorts
+are visible. Per-finding dollar lines are not in v1 — the $ range is a
+rollup over the current work-order set.
+
+**Ask once, then persist.** On a TTY, if no labor range is configured, the
+CLI may ask. Non-TTY / CI never calls `input()`. Answers are written into
+`maintainability-agent.json` under `economic_context`. Later runs read the
+file. For one run, flags and environment variables override the file.
+`prompt_when_interactive: false` keeps even a terminal run silent (same
+switch as the 6.1 depth/license ask).
+
+**Required for any $ block:** loaded engineering cost per hour as
+low / base / high, plus a currency **label** (default `USD`; no exchange
+fetch). Planning horizon defaults to **12 months** if omitted.
+
+**Optional asks (Enter skips; missing widens or drops that term):**
+reliability tier (`internal` / `customer` / `regulated`); typical review
+minutes per change; representative incident or downtime cost.
+
+**Do not ask in v1.** Derive exposure from what the scan already has:
+recurrence (a finding that cleared and returned) and hotspot churn.
+Do not ask for PR lead time, deploy duration, incident linkage, or team
+tenure. Those stay later adapters.
+
+**Environment overrides** (one run; do not persist unless the TTY ask
+writes the file): `MAINTAINABILITY_LABOR_LOW`, `MAINTAINABILITY_LABOR_BASE`,
+`MAINTAINABILITY_LABOR_HIGH`, and optionally `MAINTAINABILITY_CURRENCY`,
+`MAINTAINABILITY_HORIZON_MONTHS`.
+
+**Arithmetic** stays the inspectable product of
+`expected affected changes per year × incremental hours per change ×
+loaded rate`, over the horizon. Incremental hours are a visible
+configured or defaulted range, not a COCOMO coefficient. Operational
+incident $ is a separate optional term, never folded into the rate.
+
+This slice does not license predictive language. Validation ladder stages
+2–4 remain studies.
 
 ## Design
 

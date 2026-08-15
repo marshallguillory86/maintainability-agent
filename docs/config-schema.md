@@ -69,6 +69,44 @@ python tools/resolve_pool.py --depth all        # what-if, without editing the f
 
 A slug that is not in the catalog is a config error, not a silent no-op.
 
+## Economic context
+
+ADR 004 v1 contract. **Not shipped** — the code does not read these keys
+yet.
+
+Optional. Absent, the report is a normal maintainability report: no $
+block, work order stays in risk×effort order. Present, it never changes
+the 0–5 score or `verified_grade`.
+
+```json
+"economic_context": {
+  "version": 1,
+  "currency": "USD",
+  "planning_horizon_months": 12,
+  "loaded_engineering_cost_per_hour": { "low": 90, "base": 140, "high": 210 }
+}
+```
+
+- `loaded_engineering_cost_per_hour`: **required for any $ scenario**.
+  Low / base / high loaded blended rate. One number is not enough; the
+  range is the honesty.
+- `currency`: display label only (default `USD`). No network conversion.
+- `planning_horizon_months`: default `12` when omitted.
+- Optional later keys (not required for the $ block): `reliability_tier`
+  (`internal` | `customer` | `regulated`), `typical_review_minutes_per_change`,
+  `representative_incident_cost`.
+
+When the labor range is missing and stdin is a TTY, a first interactive
+run may ask and write this block into `maintainability-agent.json`.
+Non-TTY never asks. `analyzers.prompt_when_interactive: false` suppresses
+the ask. Environment overrides for one run, not persisted unless the ask
+writes the file: `MAINTAINABILITY_LABOR_LOW`, `MAINTAINABILITY_LABOR_BASE`,
+`MAINTAINABILITY_LABOR_HIGH`, `MAINTAINABILITY_CURRENCY`,
+`MAINTAINABILITY_HORIZON_MONTHS`.
+
+This section describes the decided v1 contract. The code does not read
+these keys yet.
+
 ## Validation
 
 Any JSON Schema validator that supports draft 2020-12 can validate the config.

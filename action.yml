@@ -13,6 +13,16 @@ inputs:
     description: Fail on hard gates.
     required: false
     default: "true"
+  record-history:
+    description: >-
+      Append this scan to .maintainability/history.jsonl so trends and
+      recurrence can read it on later runs. Off by default — recording is a
+      write into your workspace, and every write this tool performs is
+      opt-in. Pair it with a cache restore/save of that file (see
+      .github/workflows/maintainability.yml) or the history evaporates with
+      the runner.
+    required: false
+    default: "false"
 runs:
   using: composite
   steps:
@@ -29,5 +39,8 @@ runs:
         fi
         if [ "${{ inputs.fail-on-gate }}" = "true" ]; then
           args+=(--fail-on-gate)
+        fi
+        if [ "${{ inputs.record-history }}" = "true" ]; then
+          args+=(--record-history)
         fi
         "${args[@]}"

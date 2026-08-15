@@ -75,6 +75,12 @@ DEFAULTS: dict[str, Any] = {
     "depth": "moderate",
     "license_policy": "permissive",
     "prompt_when_interactive": True,
+    # Whether a missing Node tool may be fetched (npx --yes) during a
+    # run. Off: acquisition is a network action, and P1's separation of
+    # analysis from acquisition only means something if acquisition is
+    # chosen, not defaulted. A missing tool is reported not-installed
+    # with its install command instead.
+    "acquire_tools": False,
     "allow_tools": [],
     "deny_tools": [],
     "deny_license_classes": [],

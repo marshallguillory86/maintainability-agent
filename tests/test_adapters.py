@@ -206,8 +206,16 @@ def test_a_node_tool_prefers_a_local_install_over_fetching(monkeypatch) -> None:
     monkeypatch.setattr(_adapters.shutil, "which", lambda _tool: "/usr/local/bin/jscpd")
     assert _adapters._npx("jscpd", "--version") == ("jscpd", "--version")
 
+    # Missing binary: what happens is the operator's choice. Fetching by
+    # default was the P1 hole test_network_disclosure closed — the argv
+    # must not download unless `analyzers.acquire_tools` was set.
     monkeypatch.setattr(_adapters.shutil, "which", lambda _tool: None)
-    assert _adapters._npx("jscpd", "--version") == ("npx", "--yes", "jscpd", "--version")
+    assert _adapters._npx("jscpd", "--version") == ("jscpd", "--version")
+    _adapters.set_tool_acquisition(True)
+    try:
+        assert _adapters._npx("jscpd", "--version") == ("npx", "--yes", "jscpd", "--version")
+    finally:
+        _adapters.set_tool_acquisition(False)
 
 
 def test_jscpd_writes_its_report_outside_the_audited_tree(tmp_path: Path) -> None:

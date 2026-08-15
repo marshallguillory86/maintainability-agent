@@ -15,20 +15,28 @@ Nobody forms an opinion about maintainability from a single reading. The judgmen
 
 **Git history is analyzed, but only for the current scan.** `history.py` measures churn hotspots, change coupling, multi-commit files and single-author files over a configured window. That is history *of the code*, computed fresh each run and never retained.
 
-**The baseline is not a history.** `maintainability-baseline.json` holds a flat list of finding fingerprint strings plus a root and a version — 34 entries on this repository. No timestamp, no commit, no scores, no populations, no tool coverage. It exists to suppress known findings for `--fail-on-new`, and it is overwritten rather than appended.
+**The baseline is not a history.** The original baseline held a flat list of
+fingerprint strings. Baseline v3 now also stores one source commit and
+structured identities, but still no timestamp series, scores, populations, or
+tool coverage. It exists to suppress known findings for `--fail-on-new`, and it
+is overwritten rather than appended.
 
 So nothing anywhere records *what this repository scored last month*.
 
-### A prerequisite defect: finding identity is line-coupled
+### A prerequisite defect: labels alone cannot resolve identity
 
-Fingerprints embed the start line — `function:{path}:{name}:{start_line}`. Adding a single import at the top of a file makes an untouched function look simultaneously fixed and new:
+The first implementation embedded the start line. The ordinal label that
+replaced it — `function:{path}:{name}#{ordinal}` — fixed unrelated line shifts,
+but a label alone still changes after `git mv` or after same-named declarations
+are reordered. Either operation made an untouched finding look simultaneously
+fixed and new.
 
 ```text
-before: function:big.py:huge:1
-after : function:big.py:huge:2
+before: function:old.py:huge#0
+after : function:new.py:huge#0
 
-looks NEW to --fail-on-new: function:big.py:huge:2
-looks FIXED:                function:big.py:huge:1
+looks NEW to --fail-on-new: function:new.py:huge#0
+looks FIXED:                function:old.py:huge#0
 ```
 
 The function was not edited. One line was inserted above it.
@@ -39,21 +47,26 @@ Stable identity is therefore not a nice-to-have for this record; it is the preco
 
 ## Decision
 
-### 1. Finding identity becomes line-independent
+### 1. Labels stay line-independent; matching becomes structural
 
-A shipped declaration fingerprint is `function:{path}:{name}#{ordinal}`:
-finding kind, containing path, declaration name, and same-name ordinal. Line
-numbers are reported but never part of identity, so inserting unrelated lines
-above a declaration does not make it new. The proposed declaration-body hash
-did not ship; the decision register records that gap.
+A declaration's human label remains `function:{path}:{name}#{ordinal}`. Line
+numbers stay in the report but never enter that label. The matching contract is
+a structured identity record: `kind`, `path`, `name`, `ordinal`, `body_digest`,
+and `fingerprint`. Declaration digests are computed during scanning from a
+dedented body; `_identity` consumes the report and never reopens the audited
+tree.
 
-A declaration finding survives reindentation, body edits, and unrelated lines
-inserted above it because none of those changes its path, name, or ordinal.
-Inserting or reordering a same-named declaration can change the ordinal.
+A later finding first matches the recorded path, name and ordinal. That keeps a
+still-failing body edit attached to the finding already known. If same-named
+siblings move, path + name + `body_digest` supplies the second match. The digest
+is stable under indentation-only movement. It never overrides a declaration
+name change.
 
-A file rename changes the path and therefore the shipped fingerprint. Rename
-following and declaration-body identity remain unshipped parts of this decision;
-the implementation does not consult git rename detection for fingerprints.
+For a path change, `_finding_match.rename_map` accepts only rename evidence from
+git between the recorded and current commits. A real `git mv` follows the old
+finding; a copied file does not. File, declaration, risk and duplicate findings
+use this same matching relation. Fingerprint strings remain readable labels,
+not the gate's comparison algorithm.
 
 ### 2. Scans are appended to a durable history
 
@@ -69,7 +82,15 @@ The score alone would be useless for diagnosis. Retaining populations and band d
 
 **What schema 1 actually stored** (progress in the [register](decisions.md)): timestamp, commit, branch, scope, rubric/calibration/threshold digest, contributing analyzers, estimate, range, four population counts, fingerprints, targeted findings. That is enough for rollup trajectory, velocity, growth-versus-quality, and recurrence. It is **not** enough for patterns *in the scoring* (category, aspect, pillar over time). Schema 1 is thinner than this section required.
 
-**Schema 2** writes the missing breakdown on each new line: `categories`, `aspects`, `pillars`, `practice_level`, `evidence_status`. Those last two are first-class **tracked patterns**, not dump fields: a later run must be able to chart pillar condition and practice maturity across scans. They stay two series. Averaging them is still forbidden ([ADR 007](adr-007-pillars-and-practice.md)). Readers accept schema 1 and 2. Old lines stay valid; they simply have no breakdown to chart. No second file. No silent splice across a rubric/coverage/scope change.
+**Schema 2** added the missing breakdown: `categories`, `aspects`, `pillars`,
+`practice_level`, `evidence_status`. Those series remain separate, as ADR 007
+requires.
+
+**Schema 3** adds `identities`, the structured records used by recurrence, next
+to `fingerprints`, the human labels used by charts and targeted work. Readers
+still accept schema 1 and 2. Because old lines have no digest or rename inputs,
+matching between two old records honestly remains string equality. No old data
+is silently upgraded.
 
 **Append policy (1.0):** if `.maintainability/history.jsonl` exists, a run appends even without `--record-history`. The first interactive run creates the file. CI already records (6.4). A forgotten flag must not drop the current scan from the series.
 
@@ -128,14 +149,17 @@ A first run need not be blind. Past commits can be scanned by materializing them
 - Determinism (**P1**) needs restating: identical tree, config *and history file* produce identical output. History is an input, and the report must name the history file and record count it used.
 - New persistent state means a schema and a migration path. The history format gets its own version, independent of the report schema.
 - The file grows without bound. It needs a documented compaction policy — retain full recent records, thin older ones to scores and populations — and compaction must be explicit, because silently discarding records changes computed trends.
-- Content-addressed fingerprints are a breaking change to the baseline format. Existing baselines cannot be migrated, since the old fingerprints do not carry the content needed to recompute; they must be regenerated, and the release has to say so.
+- Baseline version 3 stores its source commit and structured identity records
+  beside the labels. Version 1 and 2 baselines cannot be reconstructed from
+  their strings and are rejected with an instruction to regenerate.
 - CI needs the history to persist across runs — a cached path or a committed file. Without it, every CI run is the first run.
 - The work order gains recurrence data, which is what turns a repeated nit into a design-review candidate.
 
 ## Invariants
 
 1. A declaration finding's identity is unchanged by non-declaration edits above it.
-2. `--fail-on-new` reports as new only findings whose `function:{path}:{name}#{ordinal}` identity is absent from the baseline.
+2. `--fail-on-new` reports as new only findings the structured matcher cannot
+   resolve against baseline version 3, including git rename evidence.
 3. Every scan appends exactly one record; no run rewrites or reorders earlier records.
 4. Each record states the rubric version, analyzer coverage and scope that produced it.
 5. No trend is computed across records whose rubric version, coverage or scope differ; such a series is segmented or withheld with a stated reason.
@@ -144,5 +168,8 @@ A first run need not be blind. Past commits can be scanned by materializing them
 8. Compaction never occurs as a side effect of a normal scan.
 9. Every remediation prompt records the finding identities it targeted, and a later run reports whether each cleared, never cleared, or cleared and returned.
 10. A finding that returns after a recorded remediation attempt escalates out of the nit class; a finding that returns after unrelated churn does not.
-11. A schema-2 record includes the category, aspect, pillar and practice-level values that the report published for that scan. A schema-1 record remains readable and simply lacks those fields. Pillar and practice series are never combined into one number.
+11. A schema-3 record includes the category, aspect, pillar and practice-level
+    values plus structured finding identities. Schema-1 and schema-2 records
+    remain readable; missing fields stay missing. Pillar and practice series
+    are never combined into one number.
 12. When the history file exists, a successful scan appends exactly one new line whether or not `--record-history` was passed.

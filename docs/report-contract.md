@@ -26,8 +26,8 @@ Classified as the task requires: *current* reports only, *persisted* historical 
 | [`prompts.render_ai_prompt`](../src/maintainability_audit/prompts.py) | `summary`, `score`, all finding lists | current only | minor | **migrated (stage 7)** — plus an evidence section stating that incomplete evidence is not a code defect and must not widen the work order |
 | [`prompts.render_agent_instructions`](../src/maintainability_audit/prompts.py) | canonical score fields, four `summary` counts | current only | none | **migrated** — reads `maintainability_estimate` and `verified_grade`; there is no other letter to substitute |
 | [`sarif.report_to_sarif`](../src/maintainability_audit/sarif.py) | finding lists, and `score` for run properties | current only | `.get(key, [])` on finding lists | **migrated (stage 7)** — evidence at run level only; results, rule ids and levels unchanged, and missing evidence never becomes a result |
-| [`baseline.write_baseline`](../src/maintainability_audit/baseline.py) | `root`, `score`, finding lists | current only (write side) | `report.get("score", {})` | none |
-| [`baseline.load_baseline`](../src/maintainability_audit/baseline.py) | **persisted file**, `data["findings"]` only | **persisted** | reads a string list, never evidence | **none — see below** |
+| [`baseline.write_baseline`](../src/maintainability_audit/baseline.py) | root, git commit, and finding lists | current only (write side) | none | baseline v3 |
+| [`baseline.load_baseline_identities`](../src/maintainability_audit/baseline.py) | **persisted file**, `identities` plus labels | **persisted** | a hand-added bare label matches that exact label only | versions 1/2 rejected; regenerate |
 | [`cli`](../src/maintainability_audit/cli.py) | orchestrates; passes the report through | current only | none | **no change (stage 7)** — `--fail-on-gate` still reads hard findings only, per ADR 002 |
 | [`tools/calibration/measure.py`](../tools/calibration/measure.py) | `summary` of a live `build_report` | current only | none | stage 4 |
 | [`tools/calibration/measure_cohorts.py`](../tools/calibration/measure_cohorts.py) | `summary`, `score.maintainability_estimate` of a live `build_report` | current only | none | **migrated (stage 8)** |
@@ -35,18 +35,37 @@ Classified as the task requires: *current* reports only, *persisted* historical 
 
 Tests and fixtures that construct or consume report shapes: `test_audit_components.py`, `test_scanning.py`, `test_cli.py`, `test_sarif.py`, `test_near_duplicates.py`, `test_declaration_grading.py` (all via `build_report`), plus `test_scoring_calibration.py` and `test_calibration_corpus.py` (hand-built summary dictionaries passed directly to `score_report`). The hand-built ones are the reason ADR 001 §6 requires production-model tests: they carry whichever keys the scorer needs and cannot demonstrate a property of real reports. `test_evidence_normalization.py` starts from `build_report` for exactly that reason.
 
-### The only persisted-report consumer, and why nothing needs migrating
+### The persisted baseline contract
 
-`load_baseline` is the sole reader of a file this tool previously wrote. It reads one key:
+Baseline version 3 stores two views of the same finding population:
 
-```python
-data = json.loads(baseline_path.read_text(encoding="utf-8"))
-return set(data.get("findings", []))
+```json
+{
+  "version": 3,
+  "commit": "<git commit>",
+  "findings": ["function:{path}:{name}#{ordinal}"],
+  "identities": [{
+    "kind": "declaration",
+    "path": "path/to/file.py",
+    "name": "name",
+    "ordinal": 0,
+    "body_digest": "<scan-time digest>",
+    "fingerprint": "function:path/to/file.py:name#0"
+  }]
+}
 ```
 
-`findings` is a sorted list of fingerprint **strings** (`file-lines:<path>`, `function:{path}:{name}#{ordinal}`, …). The baseline file also stores a `score` snapshot, but **no code reads it back** — it is informational. No evidence, no summary, and no history is ever re-read, so no historical report is ever rescored under a newer rubric.
+`findings` remains the sorted human-label list. `identities` carries the
+structured matching inputs: kind, path, name, ordinal, `body_digest`, and
+fingerprint. `findings_not_in_baseline` compares current identities against
+those records and applies git's old-path-to-new-path rename map between the
+stored commit and the audited commit. A copy is not a rename; a declaration
+name change is not rescued by a matching digest.
 
-Consequence, and it is the main decision this inventory drives: **there are no legacy reports to migrate.** The normalizer therefore supports exactly one version and refuses everything else, including unversioned reports, rather than shipping a migration path for a consumer that does not exist. If a genuine rescoring consumer appears later, it arrives with a named, versioned, separately tested migration — which is what ADR 001 §3 asks for.
+Baseline versions 1 and 2 cannot be migrated because labels do not contain a
+body digest or the commit needed for rename evidence. They are rejected with a
+specific `--write-baseline` regeneration instruction. This remains separate
+from report-schema normalization: no persisted report is rescored.
 
 ## The stage 5 fields
 
@@ -88,7 +107,9 @@ New reports carry a top-level integer:
 `overall`, `overall_range`, `grade` and `grade_blockers` are gone, with no aliases. **Version 1 is rejected, not migrated** — the inventory below established that nothing rescores a persisted report, so a migration would serve no caller.
 
 - **Owner.** `build_report` stamps it. The constant lives in [`evidence.py`](../src/maintainability_audit/evidence.py) as `REPORT_SCHEMA_VERSION`, next to the code that validates it.
-- **Not the baseline version.** `baseline.write_baseline` writes its own `"version": 1`. That numbers a different artifact with a different lifecycle and is deliberately left alone; overloading it would tie the report structure to the baseline format.
+- **Not the baseline version.** `baseline.write_baseline` writes its own
+  `"version": 3`. That numbers a different artifact with a different lifecycle;
+  it does not change report schema 3.
 - **What forces a bump.** Removing or renaming a scoring input, or changing the meaning of an existing field. Adding a new optional field does not, because absent inputs already normalize to `Unknown` rather than to a value.
 - **Compatibility policy.** `normalize_report_evidence` accepts version 3 only. An unsupported or absent version raises `UnsupportedReportSchema`. Nothing is silently interpreted under the latest rubric.
 - **Non-normalizing consumers are unaffected.** Renderers, SARIF, prompts and baselines read named keys; an added top-level key is inert to them. Verified by comparing a full report before and after this slice: `score`, `summary` and `history` are byte-identical.
@@ -117,7 +138,9 @@ Confirmed in source during stage 7 rather than assumed:
 
 - **No badge consumer exists.** Nothing in this repository renders or publishes a grade badge, so there was nothing to migrate. One was not created to satisfy the ADR's wording.
 - **No API consumer exists.** The JSON report is the API; it already carries both fields.
-- **`baseline.load_baseline` still reads fingerprints only.** `write_baseline` stores an informational `score` snapshot that nothing reads back, and stage 7 did not promote it into a gating contract. Pinned by `test_the_baseline_still_records_fingerprints_only`.
+- **The gate does not compare label sets.** `load_baseline` remains available to
+  string consumers, but `--fail-on-new` calls `findings_not_in_baseline`, which
+  loads structured identities and applies the shared matcher.
 
 ## Remaining work
 

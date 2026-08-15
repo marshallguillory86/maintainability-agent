@@ -215,46 +215,92 @@ def _mapped(path: str, renames: dict[str, str]) -> str:
     return renames.get(path, path)
 
 
-def _duplicate_match(current: Identity, known: Identity, renames: dict[str, str]) -> bool:
-    if current.body_digest != known.body_digest or not known.body_digest:
+def _named_alike(current: Identity, known: Identity, renames: dict[str, str]) -> bool:
+    """Kind, name and rename-mapped path agree, for the named kinds."""
+    return (
+        current.kind == known.kind
+        and known.kind in (KIND_DECLARATION, KIND_RISK)
+        and current.name == known.name
+        and current.path == _mapped(known.path, renames)
+    )
+
+
+def _label_match(current: Identity, known: Identity, renames: dict[str, str]) -> bool:
+    return current.fingerprint == known.fingerprint
+
+
+def _digest_match(current: Identity, known: Identity, renames: dict[str, str]) -> bool:
+    """The body itself, at the same (rename-mapped) home: survives reorder.
+
+    A duplicate block is all body, so its sample digest plus its mapped
+    member paths is this rule for that kind. A digest alone — new path,
+    no rename; or a different name — never matches: a copy and a
+    renamed declaration are new findings.
+    """
+    if not known.body_digest or current.body_digest != known.body_digest:
         return False
-    mapped = sorted(_mapped(path, renames) for path in known.path.split(","))
-    return current.path.split(",") == mapped
+    if current.kind == known.kind == KIND_DUPLICATE:
+        mapped = sorted(_mapped(path, renames) for path in known.path.split(","))
+        return current.path.split(",") == mapped
+    return _named_alike(current, known, renames)
+
+
+def _position_match(current: Identity, known: Identity, renames: dict[str, str]) -> bool:
+    """Same (path, name, ordinal): survives body edits and line inserts."""
+    return _named_alike(current, known, renames) and current.ordinal == known.ordinal
+
+
+def _file_rename_match(current: Identity, known: Identity, renames: dict[str, str]) -> bool:
+    """A file finding follows git's rename evidence and nothing weaker."""
+    return (
+        current.kind == known.kind == KIND_FILE
+        and known.path in renames
+        and current.path == renames[known.path]
+    )
+
+
+# Strongest evidence claims its counterpart first when whole sets are
+# matched. The digest — the body itself — outranks the label, because a
+# same-named sibling inserted above shifts every ordinal below it: the
+# old #0 label then *names the newcomer*, and label-first pairing would
+# call the newcomer old and an old body new.
+_MATCH_PASSES = (_digest_match, _label_match, _position_match, _file_rename_match)
 
 
 def same_finding(current: Identity, known: Identity, renames: dict[str, str]) -> bool:
-    """Whether `current` is the finding `known` recorded, `renames` applied.
+    """Whether `current` could be the finding `known` recorded.
 
-    Ordered from the strongest claim to the weakest, and every rule
-    below the label requires the kind and (for named findings) the name
-    to agree: a body digest alone never glues two findings, so a copy at
-    a new path and a renamed declaration both stay new.
+    The disjunction of every matching rule. Kinds with no structural
+    rule — including the degenerate label-only identities that older
+    records and hand-written baselines reduce to — can match nothing
+    but their exact label.
     """
-    if current.fingerprint == known.fingerprint:
-        return True
-    if current.kind != known.kind:
-        return False
-    if known.kind == KIND_DUPLICATE:
-        return _duplicate_match(current, known, renames)
-    if known.kind not in (KIND_DECLARATION, KIND_FILE, KIND_RISK):
-        # A kind with no structural rule — including the degenerate
-        # label-only identities older history records reduce to — can
-        # match nothing but its exact label above.
-        return False
-    known_path = _mapped(known.path, renames)
-    if current.path != known_path:
-        return False
-    if known.kind == KIND_FILE:
-        # The label already matched same-path files above, so reaching
-        # here means the path changed: only git's rename map may say so.
-        return known.path in renames
-    if current.name != known.name:
-        return False
-    # Same (path, name, ordinal): survives body edits and line inserts.
-    if current.ordinal == known.ordinal:
-        return True
-    # Same (path, name, body digest): survives same-name reorder.
-    return bool(known.body_digest) and current.body_digest == known.body_digest
+    return any(rule(current, known, renames) for rule in _MATCH_PASSES)
+
+
+def assignment(
+    current: frozenset[Identity] | list[Identity],
+    known: frozenset[Identity] | list[Identity],
+    renames: dict[str, str],
+) -> dict[Identity, Identity]:
+    """One-to-one pairing of known findings to current ones, best rule first.
+
+    Each pass sweeps the still-unpaired knowns in label order and lets
+    each claim at most one still-unpaired current. One-to-one is the
+    point: `same_finding` says two findings *could* be the same, and a
+    body that matches one known cannot also be the survival of another.
+    """
+    paired: dict[Identity, Identity] = {}
+    unclaimed = set(current)
+    for rule in _MATCH_PASSES:
+        for item in sorted(set(known) - paired.keys(), key=lambda i: i.fingerprint):
+            match = next(
+                (candidate for candidate in sorted(unclaimed, key=lambda i: i.fingerprint)
+                 if rule(candidate, item, renames)), None)
+            if match is not None:
+                paired[item] = match
+                unclaimed.remove(match)
+    return paired
 
 
 def unmatched(
@@ -263,7 +309,5 @@ def unmatched(
     renames: dict[str, str],
 ) -> frozenset[Identity]:
     """The current findings no known finding accounts for — the new ones."""
-    return frozenset(
-        finding for finding in current
-        if not any(same_finding(finding, item, renames) for item in known)
-    )
+    claimed = set(assignment(current, known, renames).values())
+    return frozenset(finding for finding in current if finding not in claimed)

@@ -32,7 +32,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from ._finding_match import Identity, rename_map, same_finding
+from ._finding_match import Identity, assignment, rename_map
 from ._scan_history import ScanRecord, Segment
 
 # How many returns before a finding stops being a fix and starts being a
@@ -115,20 +115,23 @@ def _step_renames(root: Path | None, earlier: ScanRecord,
 
 
 def _walk(records: list[ScanRecord], root: Path | None) -> list[_Track]:
-    """Follow every finding through the segment, matching structurally."""
+    """Follow every finding through the segment, matching structurally.
+
+    One assignment per record pair, so the strongest evidence pairs
+    first across the whole population — per-track greediness would let
+    an old label claim a same-named newcomer.
+    """
     tracks = [
         _Track(identity=identity, label=identity.fingerprint, present=True)
         for identity in _identities_of(records[0])
     ]
     for earlier, record in zip(records, records[1:], strict=False):
         renames = _step_renames(root, earlier, record)
-        remaining = _identities_of(record)
+        current = _identities_of(record)
+        paired = assignment(current, [track.identity for track in tracks], renames)
         for track in tracks:
-            match = next(
-                (item for item in remaining
-                 if same_finding(item, track.identity, renames)), None)
+            match = paired.get(track.identity)
             if match is not None:
-                remaining.remove(match)
                 track.identity = match
                 if not track.present:
                     track.present = True
@@ -136,9 +139,10 @@ def _walk(records: list[ScanRecord], root: Path | None) -> list[_Track]:
             elif track.present:
                 track.present = False
                 track.cleared_in.append(record.commit)
+        claimed = set(paired.values())
         tracks.extend(
             _Track(identity=identity, label=identity.fingerprint, present=True)
-            for identity in remaining
+            for identity in current if identity not in claimed
         )
     return tracks
 
@@ -191,13 +195,17 @@ def outcomes(segment: Segment, root: Path | None = None) -> dict[str, Outcome]:
     if not targeted or len(records) < 2:
         return {}
 
-    returned = recurrence(segment, root)
-    final = set(records[-1].fingerprints)
+    # Presence at the end comes from the walk, never from label
+    # membership in the last record: after a `git mv` the old label
+    # names nothing, but the finding is still there — calling that
+    # CLEARED would let a rename count as a fix (ADR 009).
+    tracks = {track.label: track for track in _walk(records, root)}
     result: dict[str, Outcome] = {}
     for finding in sorted(targeted):
-        if finding in returned:
+        track = tracks.get(finding)
+        if track is not None and track.returned_in:
             result[finding] = Outcome.CLEARED_THEN_RETURNED
-        elif finding in final:
+        elif track is not None and track.present:
             result[finding] = Outcome.NEVER_CLEARED
         else:
             result[finding] = Outcome.CLEARED

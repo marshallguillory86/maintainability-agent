@@ -29,8 +29,9 @@ Repeat `--allow-root` to authorize unrelated repository directories. With no exp
 | `--root` | Repository root to scan. Defaults to current directory. |
 | `--version` | Print the CLI version and exit. |
 | `--config` | JSON config path. |
-| `--format` | `markdown` or `json`. |
+| `--format` | `markdown`, `json` or `html`. Omitted at a terminal, the CLI asks which presentation you want (Enter = chat); in CI it defaults to `markdown` and never asks (ADR 011). |
 | `--output` | Report output path. |
+| `--html-output` | Write the single-file HTML report (inlined CSS, deterministic SVG charts from the recorded history; opens offline). |
 | `--prompt-output` | AI remediation prompt output path. |
 | `--comment-output` | PR comment body output path. |
 | `--agent-instructions-output` | Audit-specific agent instructions output path. |

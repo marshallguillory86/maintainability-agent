@@ -38,12 +38,13 @@ structural or historical friction. Determinism means that the same tree,
 analyzer versions and policy produce the same result; it does not require the
 tool to pretend that one universal rule contains every repository's semantics.
 
-[ADR 004](adr-004-economic-context.md) proposes a second, separate layer for
-prioritization. Change history and engineering telemetry can supply observable
-exposure; a user can supply irreducible context such as loaded labor cost,
-planning horizon, reliability tier and verification burden. The result is a
-transparent scenario range attached to a work item, not a modification of the
-uniform score and not a prediction. The product direction is:
+[ADR 004](adr-004-economic-context.md) is **accepted for a v1 slice and
+not implemented**. Change history supplies recurrence and hotspot churn;
+the user may supply loaded labor cost (low/base/high) and optional
+horizon, reliability tier, review burden and incident cost. The result is
+a labeled scenario range in a separate report block and a reordered work
+order, not a modification of the uniform score and not a prediction.
+The product direction is:
 
 > deterministic finding + explicit repository semantics + configured economic
 > context -> a bounded work order ordered by estimated exposure

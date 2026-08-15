@@ -35,7 +35,7 @@ from maintainability_audit._generic import DECLARED, declared_adapter
 from maintainability_audit._tool_adapters import ADAPTERS, adapter_for
 
 TREES = ("lib", "src/pb2.py")
-FILE_LIST = {"pydocstyle", "complexipy", "multimetric"}
+FILE_LIST = {"pydocstyle", "complexipy", "multimetric", "cohesion"}
 # These spell trees in their own invocation() and do not use tree_patterns().
 CUSTOM_INVOCATION = {"jscpd", "radon", "eslint"}
 
@@ -166,7 +166,7 @@ def test_tree_patterns_match_only_the_classified_location(
     )
 
 
-@pytest.mark.parametrize("slug", ["complexipy", "multimetric"])
+@pytest.mark.parametrize("slug", ["complexipy", "multimetric", "cohesion"])
 def test_expanded_targets_keep_first_party_code_under_a_shared_name(
     slug: str, tmp_path: Path
 ) -> None:

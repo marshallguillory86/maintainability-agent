@@ -190,11 +190,13 @@ CONCERNS = (
 # Tools that actually have an adapter in this package. VERIFIED_TIERS
 # is "we ran it and assigned a depth"; an adapter is whether we can
 # invoke and parse it. Those sets used to be the same, which marked
-# flake8, cohesion, cloc and wily implemented with no class in src/.
+# flake8, cohesion, cloc and wily implemented with no class in src/ —
+# flake8 and cohesion have since earned real ones (2.7); cloc and wily
+# have not.
 IMPLEMENTED_ADAPTERS = frozenset({
-    "complexipy", "eslint", "interrogate", "jscpd", "lizard",
-    "multimetric", "mypy", "pydocstyle", "pylint", "radon", "ruff",
-    "vulture",
+    "cohesion", "complexipy", "eslint", "flake8", "interrogate", "jscpd",
+    "lizard", "multimetric", "mypy", "pydocstyle", "pylint", "radon",
+    "ruff", "vulture",
 })
 
 # Deliberately unadapted, with the reason, so nobody writes one later

@@ -12,10 +12,10 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 | Production code | 14,122 lines across 62 modules |
 | Tests | 1,097 collected across 80 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
-| Known open exit conditions in Phases 0–5 | Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) is **Known debt**, not open task work: `_bands` exists, is imported by nothing, and wiring it is a recalibration (see the [architecture Known debt](architecture.md#known-debt)). |
+| Known open exit conditions in Phases 0–5 | Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) **shipped**. |
 | Later phases outstanding | 6.1–6.4, 7.1–7.4 and 8.1–8.7 shipped. **1.0 still waits on Marshall's acceptance (8.8), the 7.5 hostile audit (8.9), and the human tag (8.10).** |
 
-This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; the Phase 3 band-matrix debt and the explicit 8.8–8.10 release gates remain.
+This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; the explicit 8.8–8.10 release gates remain.
 
 Two things are deliberately open rather than done:
 
@@ -87,13 +87,13 @@ Implements [ADR 008](adr-008-translation-and-decision.md)'s normalization half. 
 | # | Task | Exit condition |
 |---|---|---|
 | 3.1 | `_concepts` registry: tools, weights, denominators, floors | Data only; imports nothing internal, enforced by the layering test |
-| 3.2 | `_bands`: band matrix with corpus-percentile boundaries | Two measurements in different bands never yield the same pressure |
+| 3.2 | **Shipped.** Live scans store per-unit band pressures; CCN 16 and 45 no longer yield the same declarations pressure (`tests/test_band_pressures.py`). Gates stay binary | Two measurements in different bands never yield the same pressure |
 | 3.3 | `_corroborate`: weighted mean and spread across tools | lizard 14 + radon 14 + mccabe 8 yields 12.0 with spread 8–14 and three sources |
 | 3.4 | Spread drives `maintainability_range` | **Shipped.** The interval narrows when independent tools agree and widens when they do not (`tests/test_analyzer_spread_range.py`). Built-in vs analyzer rollup still both sit in the range. |
 | 3.5 | Measurements, counts and populations all reach the report | Report carries distributions, not only counts |
 | 3.6 | Recalibrate against the 40-repo corpus | **Done 2026-08-14.** `CALIBRATION_C` 2.6279 → 2.2658; declarations reference 0.0599 → 0.0860. 13/40 repos used analyzer declarations; 27 fell back. Median rollup is 4.0. |
 
-**Order within this phase is forced.** 3.1 and 3.3 stand alone and are done; 3.2's band matrix exists and drives nothing, which is Known debt rather than an open row. 3.4–3.6 have landed: the interval contains the other source's rollup and widens with per-concept analyzer spread.
+**Order within this phase is forced.** 3.1–3.6 have landed: the band matrix drives declaration and file-size pressure; the interval contains the other source's rollup and widens with per-concept analyzer spread.
 
 **Measured across the corpus, and it corrected an earlier claim.** This document previously reported the swap as "roughly 4x on declaration pressure", from a single measurement on this repository. Running all 40 corpus repositories gives a median ratio of **0.3x** — the analyzers see *less* pressure than the built-in detectors on most of them, not more.
 

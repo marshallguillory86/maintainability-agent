@@ -197,7 +197,12 @@ def prompt_pressure_section(score: dict[str, Any]) -> list[str]:
     """
     dimensions = score.get("dimensions") or {}
     elevated = sorted(
-        ((name, value) for name, value in dimensions.items() if value > 1.0),
+        # `is not None` first: an unmeasured dimension is legitimate --
+        # a class-only tree has no banded declaration pressure -- and a
+        # comparison against None crashed the prompt for exactly that
+        # repository.
+        ((name, value) for name, value in dimensions.items()
+         if value is not None and value > 1.0),
         key=lambda item: -item[1],
     )
     lines: list[str] = []

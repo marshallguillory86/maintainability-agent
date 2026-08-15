@@ -33,7 +33,7 @@ Verbatim, not "contains the same numbers": an earlier guard checked whether each
 | [ADR 001 — Evidence and verification](adr-001-evidence-and-verification.md) | Accepted — status in the [register](decisions.md) |
 | [ADR 002 — Null verified grade in CI](adr-002-null-verified-grade-in-ci.md) | **Rejected** — assumed a CI grade gate that does not exist |
 | [ADR 003 — Deterministic semantic policy](adr-003-deterministic-semantic-policy.md) | **Proposed** — repository semantics without rubric drift |
-| [ADR 004 — Economic context](adr-004-economic-context.md) | **Proposed** — impact scenarios separate from score and grade |
+| [ADR 004 — Economic context](adr-004-economic-context.md) | Accepted — status in the [register](decisions.md). v1 scenario layer; score and grade stay money-free |
 | [ADR 005 — Insufficient population](adr-005-insufficient-population.md) | Accepted — status in the [register](decisions.md). No rate without a denominator that supports one |
 | [ADR 006 — Analyzer evidence](adr-006-analyzer-evidence.md) | Accepted — status and remaining gaps in the [register](decisions.md). Optional analyzers report measurements, findings, provenance, and coverage; a complete concept set is the primary evidence for the point estimate, and the built-in detectors remain the fallback |
 | [ADR 007 — Pillars and practice](adr-007-pillars-and-practice.md) | Accepted — status in the [register](decisions.md). Five-pillar taxonomy; practice maturity separate from code condition. The §4 rename was refused, not deferred |

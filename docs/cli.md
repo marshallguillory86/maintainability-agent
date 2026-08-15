@@ -28,7 +28,7 @@ Repeat `--allow-root` to authorize unrelated repository directories. With no exp
 |---|---|
 | `--root` | Repository root to scan. Defaults to current directory. |
 | `--version` | Print the CLI version and exit. |
-| `--config` | JSON config path. Optional `economic_context` (ADR 004 v1, not shipped) is described in [config schema](config-schema.md#economic-context). |
+| `--config` | JSON config path. Optional `economic_context` (ADR 004 v1) is described in [config schema](config-schema.md#economic-context). |
 | `--format` | `markdown`, `json` or `html`. Omitted at a terminal, the CLI asks which presentation you want (Enter = chat); in CI it defaults to `markdown` and never asks (ADR 011). |
 | `--output` | Report output path. |
 | `--html-output` | Write the single-file HTML report (inlined CSS, deterministic SVG charts from the recorded history; opens offline). |

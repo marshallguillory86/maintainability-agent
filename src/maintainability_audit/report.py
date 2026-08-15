@@ -56,6 +56,49 @@ def _split_by_test_path(metrics: list) -> tuple[list, list]:
     return prod, test
 
 
+def _band_pressures(
+    file_metrics: list[FileMetric],
+    function_metrics: list[FunctionMetric],
+    thresholds: dict[str, Any],
+) -> dict[str, float | None]:
+    """Per-unit measurements through the band matrix (ADR 008, 3.2).
+
+    Computed here because this is the last point that still holds every
+    declaration's actual numbers; the summary otherwise reduces them to
+    counts, and counts cannot tell complexity 16 from 45. Classes are
+    excluded from the declaration population: their complexity is the sum
+    of branches already charged to their methods, and their line budget
+    uses different threshold keys than `CONCEPTS` anchors on.
+    """
+    from ._bands import CONCEPTS, population_pressure, unit_pressure
+
+    def declarations(metrics: list[FunctionMetric]) -> float | None:
+        pressures = [
+            unit_pressure({
+                "cyclomatic_complexity": float(m.complexity),
+                "declaration_lines": float(m.lines),
+                "cognitive_complexity": float(m.cognitive),
+            }, thresholds)
+            for m in metrics if m.kind != "class"
+        ]
+        known = [value for value in pressures if value is not None]
+        return sum(known) / len(known) if known else None
+
+    def file_size(metrics: list[FileMetric]) -> float | None:
+        return population_pressure(
+            CONCEPTS["file_lines"], [float(m.lines) for m in metrics], thresholds
+        )
+
+    prod_files = [m for m in file_metrics if not is_test_path(m.path)]
+    prod_funcs = [m for m in function_metrics if not is_test_path(m.path)]
+    return {
+        "declaration_band_pressure": declarations(function_metrics),
+        "production_declaration_band_pressure": declarations(prod_funcs),
+        "file_band_pressure": file_size(file_metrics),
+        "production_file_band_pressure": file_size(prod_files),
+    }
+
+
 def report_summary(
     files: list[Path],
     file_metrics: list[FileMetric],
@@ -63,6 +106,7 @@ def report_summary(
     duplicate_count: int,
     risk_count: int,
     gate_count: int,
+    thresholds: dict[str, Any] | None = None,
 ) -> dict[str, int]:
     prod_files, test_files = _split_by_test_path(file_metrics)
     prod_funcs, test_funcs = _split_by_test_path(function_metrics)
@@ -96,6 +140,11 @@ def report_summary(
         "duplicate_blocks": duplicate_count,
         "risk_findings": risk_count,
         "hard_gate_failures": gate_count,
+        # Banded pressures, beside the counts they refine rather than
+        # replacing them: the counts still drive the binary gates, and a
+        # consumer of an old report simply finds these absent.
+        **(_band_pressures(file_metrics, function_metrics, thresholds)
+           if thresholds is not None else {}),
     }
 
 
@@ -120,7 +169,8 @@ def _compute_gates_and_summary(
     production_gates = hard_gate_failures(
         root, config, git_status, prod_failed_files, prod_failed_functions, duplicate_count
     )
-    summary = report_summary(files, file_metrics, function_metrics, duplicate_count, risk_count, len(gates))
+    summary = report_summary(files, file_metrics, function_metrics, duplicate_count,
+                             risk_count, len(gates), thresholds=config["thresholds"])
     summary["production_hard_gate_failures"] = len(production_gates)
     return gates, summary
 

@@ -131,6 +131,14 @@ class SummaryEvidence:
     # parser understands. Typed like the rest so "we do not know" cannot
     # read as "there were none".
     undetected_declaration_files: EvidenceState
+    # Band-matrix pressures (ADR 008, 3.2): per-unit measurements mapped
+    # through `_bands` at scan time, because the counts above cannot tell
+    # complexity 16 from 45. Unknown on reports written before the wiring;
+    # `_pressures` falls back to the count rate there, stated at the site.
+    declaration_band_pressure: EvidenceState
+    production_declaration_band_pressure: EvidenceState
+    file_band_pressure: EvidenceState
+    production_file_band_pressure: EvidenceState
     has_readme: EvidenceState
     has_changelog: EvidenceState
     has_docs_dir: EvidenceState
@@ -189,6 +197,13 @@ def walk_evidence(node: Any, prefix: str = "") -> Iterator[tuple[str, EvidenceSt
 # Fields that are true/false, not quantities. Everything else in the
 # model is a count of things the scanner saw.
 FLAG_FIELDS = frozenset({"has_readme", "has_changelog", "has_docs_dir"})
+
+# Band-matrix pressures: fractional by nature (mean band pressure over a
+# population), unlike every count around them.
+PRESSURE_FIELDS = frozenset({
+    "declaration_band_pressure", "production_declaration_band_pressure",
+    "file_band_pressure", "production_file_band_pressure",
+})
 
 # Relationships the *producer* guarantees, enumerated from where it
 # guarantees them rather than from whichever violation an audit
@@ -273,6 +288,15 @@ def _validated_value(name: str, value: Any, provenance: str) -> float | int | bo
         raise EvidenceValidationError(f"{provenance}: expected a number, got {value!r}")
     if value < 0:
         raise EvidenceValidationError(f"{provenance}: counts cannot be negative, got {value!r}")
+    if name in PRESSURE_FIELDS:
+        # Band pressures are means over [0, 1] per unit, not counts. They
+        # get their own bound instead of an exemption from all bounds: a
+        # pressure of 7 is as impossible as a count of 3.5.
+        if value > 1:
+            raise EvidenceValidationError(
+                f"{provenance}: band pressures lie in [0, 1], got {value!r}"
+            )
+        return float(value)
     if float(value) != int(value):
         raise EvidenceValidationError(f"{provenance}: counts are whole, got {value!r}")
     return value

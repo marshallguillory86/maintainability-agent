@@ -31,7 +31,7 @@ maintainability-agent-mcp = "maintainability_audit.mcp_server:main"
 [project.optional-dependencies]
 test = ["pytest>=8", "pytest-cov>=5", "jsonschema>=4"]
 mcp = ["mcp>=2,<3"]
-dev = ["pytest>=8", "pytest-cov>=5", "jsonschema>=4", "ruff>=0.5", "pip-audit>=2.7", "mcp>=2,<3"]
+dev = ["pytest>=8", "pytest-cov>=5", "jsonschema>=4", "ruff>=0.5", "pip-audit>=2.7", "mcp>=2,<3", "PyYAML>=6"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -141,6 +141,7 @@ The full inventory, including everything without an adapter, is in the [JSON](..
 ## Regenerating
 
 ```bash
+pip install -e ".[dev]"   # PyYAML: the upstream catalog is YAML; not a runtime dep
 git clone https://github.com/analysis-tools-dev/static-analysis /tmp/sa
 python tools/build_catalog.py /tmp/sa
 ```

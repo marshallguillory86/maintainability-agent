@@ -23,7 +23,7 @@ PACKAGE = ROOT / "src" / "maintainability_audit"
 # Keeping the foundation spawners in one layer is what makes the
 # analyzer half of that rule checkable.
 FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "config",
-               "git_tools", "instructions",
+               "git_tools", "instructions", "_semantic_policy",
                # ADR 009's structured identity and matching relation is a
                # foundation shared by the gate, recurrence and presentation.
                "_finding_match",
@@ -33,12 +33,17 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
                # else.
                "_runner", "_catalog"}
 PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens"}
+# ADR 003: `_semantic` normalizes and classifies; `_semantic_ts` reads
+# TypeScript facts (recordings, an already-installed tsc through
+# `_runner`, and source text). Both observe and neither scores —
+# scanners, per docs/architecture.md. `_semantic_policy` loads the
+# checked-in policy block: configuration foundations.
 # `_adapters` is a scanner: it produces findings and measurements from a
 # tree, exactly as the built-in detectors do, and like them it may not
 # import scoring. The difference is only that an external process does
 # the looking (ADR 006).
 SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "idioms",
-            "similarity",
+            "similarity", "_semantic", "_semantic_ts",
             "history", "_adapters",
             # `_generic` is the same layer: it turns tool output into
             # findings, differing only in that its parsers are shared

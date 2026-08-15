@@ -27,6 +27,9 @@ from ._pressures import (
     analyzer_pressures,
     analyzer_production_pressures,
 )
+from ._semantic import semantic_findings
+from ._semantic_policy import load_semantic_policy
+from ._semantic_ts import discover_type_analysis
 from ._work_order import work_order
 from .deadcode import dead_declarations
 from .declarations import DECLARATION_SUFFIXES
@@ -379,6 +382,20 @@ def _assemble(
     }
 
 
+def _attach_semantics(report: dict[str, Any], root: Path, config: dict[str, Any]) -> None:
+    """ADR 003 option C, after the score is sealed and before the work
+    order reads it: semantic results are findings and prompt material,
+    never rubric input — nothing from here reaches `score_report`.
+    """
+    semantic = semantic_findings(
+        root,
+        policy=load_semantic_policy(config),
+        type_analysis=discover_type_analysis(root),
+    )
+    report["semantic_findings"] = semantic["findings"]
+    report["semantic_coverage"] = semantic["coverage"]
+
+
 def build_report(
     root: Path,
     config: dict[str, Any],
@@ -441,6 +458,7 @@ def build_report(
     # found, and no field anywhere offers their mean.
     report["practice"] = practice_level(root).as_dict()
     report["pillars"] = pillar_report(report["score"], report["practice"])
+    _attach_semantics(report, root, config)
     # Last, because every item's delta is a rubric recomputation and the
     # rubric needs the scored report to recompute against.
     report["work_order"] = work_order(report)

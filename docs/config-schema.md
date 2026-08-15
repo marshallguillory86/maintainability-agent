@@ -106,6 +106,47 @@ writes the file: `MAINTAINABILITY_LABOR_LOW`, `MAINTAINABILITY_LABOR_BASE`,
 
 This section is the shipped v1 contract.
 
+## Semantic policy
+
+ADR 003 option C. Optional and absent by default. The first increment is
+TypeScript only and contributes report findings and prompt-only candidates,
+never score weights.
+
+```json
+"semantic_policy": {
+  "version": 1,
+  "domain_types": [
+    {
+      "name": "order-status-public-boundary",
+      "paths": ["src/orders/api.ts"],
+      "boundary": "public",
+      "symbol": "updateStatus",
+      "required_type": "OrderStatus"
+    }
+  ],
+  "operations": [
+    {
+      "name": "session-operation-review",
+      "paths": ["src/session/operations.ts"],
+      "capability_type": "SessionCapability",
+      "operation_contract": "Op<TResult>"
+    }
+  ]
+}
+```
+
+- `version`: currently `1`.
+- `domain_types`: exact TypeScript paths and public symbols for which the
+  repository declares a required domain type. Each entry names itself so a
+  finding can cite the policy that produced it.
+- `operations`: exact TypeScript paths and operation concepts eligible for the
+  repeated dispatch/capability/description candidate. Configuration does not
+  promote that candidate to a fact.
+
+Broad naming rules are outside v1. In particular, policy cannot say every
+`*_id` must be a value object. Missing type analysis is reported as unknown
+coverage rather than zero semantic violations.
+
 ## Validation
 
 Any JSON Schema validator that supports draft 2020-12 can validate the config.

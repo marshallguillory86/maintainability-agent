@@ -1,0 +1,39 @@
+{
+  "true_positives": [
+    {
+      "class": "universal",
+      "path": "src/universal.ts",
+      "signal": "domain type used as string at a typed boundary"
+    },
+    {
+      "class": "policy",
+      "path": "src/revalidated-boundary.ts",
+      "policy_entry": "customer-id-public-boundary",
+      "signal": "same primitive re-validated at a public boundary"
+    },
+    {
+      "class": "candidate",
+      "path": "src/operations.ts",
+      "policy_entry": "session-operation-review",
+      "signal": "operation names repeated across dispatch, capability and description"
+    }
+  ],
+  "benign_lookalikes": [
+    {
+      "path": "benign/plain-label.ts",
+      "reason": "an unconstrained display string has no declared domain type"
+    },
+    {
+      "path": "benign/typed-boundary.ts",
+      "reason": "the typed boundary already accepts OrderStatus"
+    },
+    {
+      "path": "benign/repeated-descriptions.ts",
+      "reason": "repeated labels in one descriptive role are not an operation set"
+    },
+    {
+      "path": "benign/order-id.ts",
+      "reason": "a name ending in id is not itself a value-object requirement"
+    }
+  ]
+}

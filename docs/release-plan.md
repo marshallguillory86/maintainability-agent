@@ -9,10 +9,10 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 | Fact | Value |
 |---|---|
 | Last tagged version | 0.7.0 |
-| Production code | 12,931 lines across 59 modules |
-| Tests | 893 across 60 files |
+| Production code | 14,122 lines across 62 modules |
+| Tests | 1,097 collected across 80 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
-| Known open exit conditions in Phases 0–5 | Phase 2 still has 2.7 (moderate adapters) open. Phase 3 also retains open exit conditions described below, including the unused band matrix. |
+| Known open exit conditions in Phases 0–5 | Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) is **Known debt**, not open task work: `_bands` exists, is imported by nothing, and wiring it is a recalibration (see the [architecture Known debt](architecture.md#known-debt)). |
 | Later phases outstanding | The 6.1 first-run prompt, the 6.2 MCP subcommand and three primitives, and the 6.3 byte-identical Markdown resource shipped, as did the 2.5c environment work order. 6.4 shipped in full: the consumer workflow now restores and saves `.maintainability/history.jsonl` around a recorded scan, and `examples/local-ci.sh` records. Phase 7 remains 1.0 release work. |
 
 This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; open work remains in the earlier phases as well as Phases 6 and 7.
@@ -70,7 +70,7 @@ Implements the executable half of [ADR 006](adr-006-analyzer-evidence.md). The l
 | 2.5b | Coverage gaps per language and concern | A concern with no tool running against it is `Unknown`, never clean |
 | 2.5c | Environment work order | **Shipped.** `report["environment_work_order"]` names each selected tool that could not run, why, the install command and the verification; rendered after coverage in the Markdown report; the agent never installs (`tests/test_environment_work_order.py`) |
 | 2.6 | Rubric-driven tool configuration | Changing a project's `eslint.config.mjs` provably does not move the score |
-| 2.7 | Five moderate adapters | pylint, flake8, eslint, xenon, cohesion parse real output |
+| 2.7 | Five moderate adapters | **Shipped**, deliberately as four: pylint, flake8, eslint and cohesion parse real recorded output (`tests/test_adapter_recordings.py`); xenon is deliberately unadapted — a threshold gate over radon contributes no independent measurement, and two tools agreeing because one *is* the other would inflate corroboration |
 | 2.8 | Determinism under pinned versions | Two runs on one tree with identical tool versions are byte-identical |
 
 The exit-condition tests for 2.6 and 2.8 have landed. The latter compares
@@ -93,7 +93,7 @@ Implements [ADR 008](adr-008-translation-and-decision.md)'s normalization half. 
 | 3.5 | Measurements, counts and populations all reach the report | Report carries distributions, not only counts |
 | 3.6 | Recalibrate against the 40-repo corpus | **Done 2026-08-14.** `CALIBRATION_C` 2.6279 → 2.2658; declarations reference 0.0599 → 0.0860. 13/40 repos used analyzer declarations; 27 fell back. Median rollup is 4.0. |
 
-**Order within this phase is forced.** 3.1–3.3 stand alone and are done. 3.4–3.6 have landed: the interval contains the other source's rollup and widens with per-concept analyzer spread.
+**Order within this phase is forced.** 3.1 and 3.3 stand alone and are done; 3.2's band matrix exists and drives nothing, which is Known debt rather than an open row. 3.4–3.6 have landed: the interval contains the other source's rollup and widens with per-concept analyzer spread.
 
 **Measured across the corpus, and it corrected an earlier claim.** This document previously reported the swap as "roughly 4x on declaration pressure", from a single measurement on this repository. Running all 40 corpus repositories gives a median ratio of **0.3x** — the analyzers see *less* pressure than the built-in detectors on most of them, not more.
 
@@ -185,8 +185,8 @@ Until that exists, a small repository gets path 2: a complete audit, every findi
 
 | # | Task | Exit condition |
 |---|---|---|
-| 7.1 | Regenerate the self-audit under the new pipeline | Published, and the README matches it |
-| 7.2 | Reconcile every document with shipped behavior | No document describes an unimplemented component as present |
+| 7.1 | Regenerate the self-audit under the new pipeline | **Shipped.** `docs/self-audit.md` stamped at `9c2257a`; README table matches (`tests/test_docs_links.py`) |
+| 7.2 | Reconcile every document with shipped behavior | **Shipped.** No document describes an unimplemented component as present, and none calls shipped work open or deferred — both directions held by lints (`tests/test_phase6_claims.py`, `tests/test_doc_claims.py`, `tests/test_release_plan_status.py`), which is what closes the class rather than the instances |
 | 7.3 | **Done.** Update the promise set | `tests/test_promises.py` indexes the enforcement for every promise; P7's score-withholding tests and P8's coverage and estimate-source tests name their falsifiers |
 | 7.4 | Migration guide | **Done.** [migration-1.0.md](migration-1.0.md) names the post-0.7 breaks: `--analyzers` moves the estimate; `CALIBRATION_C` 2.6279 → 2.2658. Schema 3 and baseline v2 do not break again. 1.0 is not tagged. |
 | 7.5 | Hostile audit against the shipped artifact | Findings closed as a class, not instance by instance |

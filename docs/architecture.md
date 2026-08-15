@@ -289,11 +289,12 @@ standard score means:
   policy may produce universal findings, configured policy violations, or
   explicitly non-gating design-review candidates. They do not get to modify
   rubric weights or grade bands.
-- [ADR 004](adr-004-economic-context.md) specifies a separate economic-context
-  path. Repository measurements and user-supplied business context may produce
-  transparent low/base/high impact scenarios. Those scenarios rank the work
-  order; they do not feed scoring or grading and are not predictions until an
-  outcome study earns that word.
+- [ADR 004](adr-004-economic-context.md) is **accepted for a v1 slice and
+  not implemented**. Recurrence and hotspot churn plus an optional
+  configured labor range produce a labeled low/base/high **scenario**
+  block and may reorder the work order. They do not feed scoring or
+  grading and are not predictions. See the ADR's v1 slice for the ask
+  set, persist path, and env overrides.
 
 The intended dependency direction is:
 
@@ -309,6 +310,7 @@ flowchart TB
 
 Both paths terminate in report data consumed by presentation. Neither may
 reach backward into `_formula`, `_calibration`, `_aspects`, or grade policy.
-Until the ADRs are accepted and implemented, this diagram is a constraint on
-future work, not a description of shipped behavior; its invariants therefore
-do not appear in the enforced table above.
+Until ADR 003 is accepted and both paths are implemented, this diagram
+is a constraint on future work, not a description of shipped behavior;
+its invariants therefore do not appear in the enforced table above.
+ADR 004 v1 is accepted as that constraint, not as code.

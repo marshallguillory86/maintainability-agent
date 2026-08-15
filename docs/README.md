@@ -40,6 +40,7 @@ Verbatim, not "contains the same numbers": an earlier guard checked whether each
 | [ADR 008 — Translation and decision](adr-008-translation-and-decision.md) | Accepted — status in the [register](decisions.md). Tool output to scoring input, the LLM boundary, CLI and MCP |
 | [ADR 009 — Scan history](adr-009-scan-history.md) | Accepted — status in the [register](decisions.md). Maintainability is a trend; comparability is checked before any of it is computed |
 | [ADR 010 — Repository discovery](adr-010-repository-discovery.md) | Accepted — status in the [register](decisions.md). What is in this tree and whose code it is, from evidence the repository provides |
+| [ADR 011 — Three report presentations](adr-011-three-report-presentations.md) | Accepted — status in the [register](decisions.md). Chat, Markdown file, and one HTML file from one report; the host asks, flags win, CI never asks |
 | [Report contract](report-contract.md) | Current — the report's producers, consumers, and schema-version policy |
 
 New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register, and never edited after acceptance except to record implementation progress or mark them superseded.

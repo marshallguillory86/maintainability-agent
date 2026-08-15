@@ -194,6 +194,54 @@ def test_analyze_honours_the_opt_in(monkeypatch: pytest.MonkeyPatch, tmp_path: P
     )
 
 
+def test_analyze_does_not_build_fetching_argv_when_acquisition_is_off(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    """P1 at the production seam: selected missing tools never reach a fetch argv.
+
+    Calling ``_npx`` alone does not prove that ``analyze`` set the switch
+    before the runner's availability probes. This records those real probe
+    arguments for both Node adapters while acquisition is off.
+    """
+    from maintainability_audit._analysis import analyze
+    from maintainability_audit._catalog import resolve_pool
+    from maintainability_audit._runner import Outcome, ToolResult
+    from maintainability_audit.config import load_config
+
+    (tmp_path / "app.js").write_text("const value = 1;\n", encoding="utf-8")
+    config = load_config(None)
+    selected, _ = resolve_pool(config)
+    config["analyzers"] = {
+        **(config.get("analyzers") or {}),
+        "acquire_tools": False,
+        "allow_tools": ["eslint", "jscpd"],
+        "deny_tools": [
+            tool["slug"] for tool in selected
+            if tool["slug"] not in {"eslint", "jscpd"}
+        ],
+    }
+    monkeypatch.setattr(_adapters.shutil, "which", lambda _name: None)
+
+    observed: dict[str, tuple[str, ...]] = {}
+
+    class RecordingProbe:
+        def check(self, slug: str, argv: tuple[str, ...]) -> ToolResult:
+            observed[slug] = argv
+            return ToolResult(
+                slug=slug,
+                outcome=Outcome.NOT_INSTALLED,
+                detail="recorded missing tool",
+            )
+
+    analyze(tmp_path, config, probe=RecordingProbe())
+
+    assert set(observed) == {"eslint", "jscpd"}
+    for slug, argv in observed.items():
+        assert "npx" not in argv and "--yes" not in argv, (
+            f"analyze() built a fetching runner argv for missing {slug}: {argv}"
+        )
+
+
 def test_buyer_docs_disclose_no_transmit_and_unpoliced_children() -> None:
     missing = []
     for path in _SURFACES:

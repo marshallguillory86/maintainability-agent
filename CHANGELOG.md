@@ -18,10 +18,11 @@ All notable changes to Maintainability Agent will be documented here.
   audited tree, and that third-party tools it spawns are not
   network-sandboxed. Claiming an air-gapped child process fails a lint.
 
-- **ADR 011 and history schema 2 recorded.** Three report skins
-  (chat default, Markdown file, one HTML file) and the missing
-  per-scan score breakdown are decided, not shipped. 1.0 waits on
-  Phase 8, acceptance, then 7.5.
+- **ADR 011 presentations and history schema 2 shipped.** Three report
+  skins (chat default, Markdown file, one self-contained HTML file) render
+  one report dictionary. New history records carry the per-scan score
+  breakdown, while schema-1 records remain readable as gaps. 1.0 still
+  waits on Marshall's acceptance, the 7.5 hostile audit, and a human tag.
 
 - **Self-audit restamped (7.1).** Provenance commit `9c2257a`, 235 files
   scanned. README table matches the stamp. Still a B.

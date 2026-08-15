@@ -1,9 +1,8 @@
-"""6.1 and 6.3 are open. Live prose may not describe them as present.
+"""6.1 and 6.3 ship. Live prose may not keep describing them as absent.
 
-``prompt_when_interactive`` is stored in defaults and never read. The MCP
-server exposes two tools on a separate console script; it has no
-resources and no prompts primitive. A hostile 1.0 audit found config,
-architecture, ADR 008 and the analyzer-pool page stating the opposite.
+The first-run reader and all three MCP primitives now exist. A hostile
+1.0 audit found live migration and release prose still describing the
+earlier tree, after the implementation had landed.
 
 This file is the class lint. The gates lift when the key is actually
 read, or when ``mcp_server`` grows a resource, because those sentences
@@ -26,6 +25,13 @@ _STALE_INTERACTIVE_ABSENCE = (
      "the key is read by production"),
     (re.compile(r"6\.1 and is not shipped|6\.1 is not shipped|6\.1 \(interactive prompt\) open", re.I),
      "6.1 shipped; the sentence is stale"),
+    (re.compile(r"6\.1 is open", re.I),
+     "6.1 shipped; the migration sentence is stale"),
+    (re.compile(
+        r"(?:first-run(?: TTY)? prompt|environment work order)[^.\n]*not shipped"
+        r"|not shipped[^.\n]*(?:first-run(?: TTY)? prompt|environment work order)",
+        re.I,
+    ), "the first-run prompt and environment work order both ship"),
 )
 
 _INTERACTIVE_CLAIMS = (
@@ -78,6 +84,8 @@ _LIVE = (
     ROOT / "docs" / "decisions.md",
     ROOT / "docs" / "adr-008-translation-and-decision.md",
     ROOT / "docs" / "ide-agent-integration.md",
+    ROOT / "docs" / "migration-1.0.md",
+    ROOT / "CHANGELOG.md",
 )
 
 

@@ -54,7 +54,7 @@ A zero-install run (no `--analyzers`) still uses this constant. The same tree ca
 | Report `schema_version` | Still **3**. The estimate and range were already nullable in 0.7. `analyzer_scored_dimensions` is an additive optional field and did not bump the version. |
 | Baseline format | Still **version 2**. Identity is still `function:{path}:{name}#{ordinal}`. Do not regenerate a 0.7 baseline for this migration. |
 | `--fail-on-gate` | Still reads hard findings only. A moved estimate does not change the exit code. |
-| Config file | No new required keys. `analyzers.prompt_when_interactive` is reserved and unread (6.1 is open). |
+| Config file | No new required keys. `analyzers.prompt_when_interactive` controls the shipped first-run TTY prompt and remains optional. |
 
 `normalize_report_evidence` accepts version 3 only, same as 0.7.
 
@@ -63,13 +63,18 @@ it with `maintainability-agent mcp`; the existing `maintainability-agent-mcp`
 console script remains available for IDE configurations. This is additive, not
 a report-schema or baseline break.
 
+The first run at a TTY can now ask for analyzer depth and license policy when
+no config exists, then write the answer to `maintainability-agent.json`.
+Non-TTY and already-configured runs do not ask. Analyzer runs also publish an
+environment work order for selected tools that were unavailable; the agent
+does not install them.
+
 ---
 
 ## What you can ignore
 
 - **Re-reading 0.6 fields.** They still mean what 0.7 said they mean.
 - **Regenerating a 0.7 baseline.** That break already happened. This one does not touch fingerprints.
-- **A first-run TTY prompt and an environment work order.** Not shipped. Coverage already names missing tools.
 
 ---
 

@@ -39,13 +39,21 @@ Stable identity is therefore not a nice-to-have for this record; it is the preco
 
 ## Decision
 
-### 1. Finding identity becomes content-addressed
+### 1. Finding identity becomes line-independent
 
-A fingerprint is derived from what the finding *is*, not where it currently sits: the finding kind, the containing path, the unit's name, and a hash of the unit's normalized content. Line numbers are reported but never part of identity.
+A shipped declaration fingerprint is `function:{path}:{name}#{ordinal}`:
+finding kind, containing path, declaration name, and same-name ordinal. Line
+numbers are reported but never part of identity, so inserting unrelated lines
+above a declaration does not make it new. The proposed declaration-body hash
+did not ship; the decision register records that gap.
 
-A finding survives being moved, reindented or having neighbors edited. It changes identity when the unit itself materially changes — which is correct, because at that point it is a different finding about different code.
+A declaration finding survives reindentation, body edits, and unrelated lines
+inserted above it because none of those changes its path, name, or ordinal.
+Inserting or reordering a same-named declaration can change the ordinal.
 
-Renames are handled by consulting git's rename detection, so a moved file carries its findings' history rather than orphaning it.
+A file rename changes the path and therefore the shipped fingerprint. Rename
+following and declaration-body identity remain unshipped parts of this decision;
+the implementation does not consult git rename detection for fingerprints.
 
 ### 2. Scans are appended to a durable history
 
@@ -113,7 +121,7 @@ A first run need not be blind. Past commits can be scanned by materializing them
 
 **C. Store only scores per scan.** Rejected as too thin. A score that moved with no populations or distributions retained cannot be diagnosed, and diagnosis is the point.
 
-**D. Append-only scan records with content-addressed findings.** Accepted.
+**D. Append-only scan records with line-independent finding identities.** Accepted.
 
 ## Consequences
 
@@ -126,8 +134,8 @@ A first run need not be blind. Past commits can be scanned by materializing them
 
 ## Invariants
 
-1. A finding's identity is unchanged by edits that do not alter the unit it describes, including insertions above it.
-2. `--fail-on-new` reports as new only findings whose content-addressed identity is absent from the baseline.
+1. A declaration finding's identity is unchanged by non-declaration edits above it.
+2. `--fail-on-new` reports as new only findings whose `function:{path}:{name}#{ordinal}` identity is absent from the baseline.
 3. Every scan appends exactly one record; no run rewrites or reorders earlier records.
 4. Each record states the rubric version, analyzer coverage and scope that produced it.
 5. No trend is computed across records whose rubric version, coverage or scope differ; such a series is segmented or withheld with a stated reason.

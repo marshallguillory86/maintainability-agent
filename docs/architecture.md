@@ -97,6 +97,7 @@ flowchart TB
     config["config"]
     git_tools["git_tools"]
     _scan_history["_scan_history"]
+    _finding_match["_finding_match"]
     instructions["instructions"]
     _runner["_runner"]
     _catalog["_catalog"]
@@ -112,16 +113,16 @@ flowchart TB
   parsing --> foundations
 ```
 
-`_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_identity` is path + name + ordinal, not a content hash.
+`_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_finding_match` owns structured identity and matching; `_identity` presents the ordinal labels derived from the report.
 
 | Layer | Owns | May import |
 | --- | --- | --- |
-| **foundations** | Data types, config defaults, git invocation, masking primitives | nothing internal |
+| **foundations** | Data types, config defaults, git invocation, masking primitives, and `_finding_match` (structured identities plus the one matching relation used by gates and recurrence) | nothing internal except `_finding_match` using `git_tools` for rename evidence |
 | **parsing** | Reading files once, extracting declarations, complexity, ranges, tokens | foundations |
 | **scanners** | Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history, and — via `_adapters` — whatever the external analyzers report | foundations, parsing, `_runner` |
 | **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
 | **assembly** | Running the scan, running the analyzer pool (`_analysis`) and stating what it found (`_documents`), the environment work order composed from coverage (`_environment`), recording the built-in detectors as their own source tier (`_built_ins`), ordering the work by risk against effort and recomputing each item's worth (`_work_order`, weights in `_work_order_weights`), assembling the report dict, invoking the scorer once | anything below |
-| **presentation** | Markdown/chat, a self-contained HTML report, PR comment, SARIF, baseline, remediation prompt, `_evidence_view` (shared estimate/range/evidence/verified-grade wording), and `_identity` (fingerprints derived from the report, never from source). The renderers consume one report dictionary and do not score | foundations, the report dict |
+| **presentation** | Markdown/chat, a self-contained HTML report, PR comment, SARIF, baseline, remediation prompt, `_evidence_view` (shared estimate/range/evidence/verified-grade wording), and `_identity` (labels and digests consumed from the report, never source). The renderers consume one report dictionary and do not score | foundations, the report dict |
 | **entry** | Argument parsing, transport, output routing, exit codes, and the first-run TTY prompt (`_first_run`) — the one place the tool may ask a question | anything below |
 
 ## The rules, and why each exists
@@ -224,9 +225,9 @@ Stated rather than hidden, because an architecture document that only describes 
 - ~~The scale was still calibrated against the built-in path~~ — **resolved (3.6, 2026-08-14).** The point estimate uses the analyzers' reading for every dimension they measured on all three declaration criteria; a partial concept set is unmeasured, so the built-in detectors remain the fallback. `CALIBRATION_C` was re-derived against that mix (2.6279 → 2.2658). The interval still widens to contain whichever source did not supply the point.
 - ~~The band matrix does not drive the score~~ — **resolved (3.2).** Live scans store per-unit band pressures; `_pressures` uses them for declarations and file size so CCN 16 and 45 are not the same fact. Hard gates stay binary. Count-rate fallback remains only for summaries written before the wiring (`tests/test_band_pressures.py`). `CALIBRATION_C` was not re-derived: the existing calibration tests still hold.
 - **The proposed `_analyzers` package and `_concepts` registry were never created as named modules.** Their roles landed in `_tool_adapters`, `_metric_adapters`, `_verdict_adapters`, `_generic`, and `_corroborate`. This document names the files that exist.
-- **Declaration extraction is gated on `DECLARATION_SUFFIXES`** (Python, JS/TS/HTML, and Java). A suffix outside that set can be included for length, duplication and risk; it does not produce a declaration population. `--changed-only` and `--fail-on-new` no longer have the defects previously listed here: a thin diff withholds ([ADR 005](adr-005-insufficient-population.md); `test_scan_scope.py`), and identity is `function:{path}:{name}#{ordinal}`. The declaration-body hash proposed by [ADR 009](adr-009-scan-history.md) did not ship; the [decision register](decisions.md) records that gap.
+- **Declaration extraction is gated on `DECLARATION_SUFFIXES`** (Python, JS/TS/HTML, and Java). A suffix outside that set can be included for length, duplication and risk; it does not produce a declaration population. `--changed-only` and `--fail-on-new` no longer have the defects previously listed here: a thin diff withholds ([ADR 005](adr-005-insufficient-population.md); `test_scan_scope.py`), while baseline v3 and recurrence resolve structured identities through `_finding_match`. The visible label stays `function:{path}:{name}#{ordinal}`; scan-time `body_digest` resolves same-name reorders and git-attested renames resolve path moves.
 - ~~The presentation layer lacked the three [ADR 011](adr-011-three-report-presentations.md) skins~~ — **resolved (8.3–8.6).** Chat/CLI Markdown, a Markdown file and one self-contained HTML file render the same report dictionary. TTY asks every invoke; flags win; CI never asks. The MCP host asks, and MCP does not write files.
-- ~~History records lacked the series required by the HTML charts~~ — **resolved (8.1–8.2).** New JSONL records use schema 2 and store categories, aspects, pillars, practice level and evidence status. Schema-1 records still load as explicit gaps; an existing history file gains each later successful scan.
+- ~~History records lacked the series required by the HTML charts~~ — **resolved (8.1–8.2).** New JSONL records use schema 3: the schema-2 chart fields remain, and structured identities sit beside labels. Schema-1/2 records still load as explicit gaps; an existing history file gains each later successful scan.
 - **Java has a zero-install fallback; we will not clone it.** `java_declaration_ranges` finds methods, constructors and types and bounds each at its own body. `.java` is in `DECLARATION_SUFFIXES` and the default include list. That is enough for `pip install` with no lizard. It is not the 1.0 close and there will be no `_go_declaration`. Go, C, C++, C# and Rust stay recognized and withheld until analyzers supply a declaration population ([ADR 006](adr-006-analyzer-evidence.md)). The last-resort regex still must not be aimed at those languages. Feeding lizard into `declarations_scanned` without the full concept set would move mixed-language scores in silence.
 
 ## Extension points
@@ -272,12 +273,12 @@ Every design point above traces to a record. Nothing here is a preference someon
 | Coverage gaps reported per language and concern, with the prerequisite named | [ADR 006](adr-006-analyzer-evidence.md) |
 | Availability proven by invocation; the agent never installs anything | [ADR 006](adr-006-analyzer-evidence.md) |
 | Scans append to a durable history; trends over comparable records only | [ADR 009](adr-009-scan-history.md) |
-| Finding identity uses path + declaration name + same-name ordinal, never a line number; see [Known debt](#known-debt) for the unshipped body hash | [ADR 009](adr-009-scan-history.md) |
+| Finding labels use path + declaration name + same-name ordinal, never a line number; matching also uses scan-time body digests and git-attested renames | [ADR 009](adr-009-scan-history.md) |
 | Trends describe past scans; forecasting stays forbidden | [ADR 009](adr-009-scan-history.md), [product intent](product-intent.md#what-it-must-never-claim) |
 
 MCP ships all three primitives: two read-only tools run the audit and describe its boundary, resources expose the rubric, analyzer catalog and byte-identical Markdown report, and the `maintainability-agent` prompt supplies the bounded slash command. Users can start it with `maintainability-agent mcp`; the `maintainability-agent-mcp` console script remains for existing IDE configurations. CI does not go through MCP — a protocol hop between a runner and an exit code costs determinism and buys nothing. There is no combined server with `secure-code-agent`, because independent releasability is worth more than cross-tool synthesis today.
 
-The first two ADR 006 rows describe the landed *shape*. The point estimate uses analyzer measurements where the full concept set was measured; the constant was re-derived against that mix (3.6). Identity is `function:{path}:{name}#{ordinal}` in `_identity`. Scans append through `_scan_history`. Practice and condition stay separate numbers.
+The first two ADR 006 rows describe the landed *shape*. The point estimate uses analyzer measurements where the full concept set was measured; the constant was re-derived against that mix (3.6). `_identity` keeps the `function:{path}:{name}#{ordinal}` label while `_finding_match` owns structured comparison. Scans append through `_scan_history`. Practice and condition stay separate numbers.
 
 `--analyzers` makes P1 conditional on pinned versions on a given platform; the report records the versions that produced it. Runtime rises from milliseconds to seconds or minutes. A tool can be absent, wrong-versioned, slow, crash, or emit unparseable output — each is a distinct `Unknown` reason, and none may fail the run or improve a score. Built-ins stay labelled as the fallback tier via `_built_ins`.
 

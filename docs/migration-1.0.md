@@ -4,7 +4,9 @@
 
 1.0 is not tagged yet. These breaks are already on `main` after **0.7.0**. Coming from 0.6? Do [0.7 first](migration-0.7.md). This page does not repeat that migration.
 
-Two things change a score that 0.7 already produced. Schema version and baseline format do **not** break again.
+Two things change a score that 0.7 already produced. The report schema does not
+break again; the finding baseline does, because rename-aware identity needs data
+the old string list did not store.
 
 The short version:
 
@@ -52,7 +54,7 @@ A zero-install run (no `--analyzers`) still uses this constant. The same tree ca
 | Artifact | Status |
 |---|---|
 | Report `schema_version` | Still **3**. The estimate and range were already nullable in 0.7. `analyzer_scored_dimensions` is an additive optional field and did not bump the version. |
-| Baseline format | Still **version 2**. Identity is still `function:{path}:{name}#{ordinal}`. Do not regenerate a 0.7 baseline for this migration. |
+| Baseline format | **Version 3.** The visible label stays `function:{path}:{name}#{ordinal}`, while each entry also stores kind, path, name, ordinal, `body_digest`, and fingerprint plus the source commit. Regenerate older baselines with `--write-baseline`; their strings cannot recover those fields. |
 | `--fail-on-gate` | Still reads hard findings only. A moved estimate does not change the exit code. |
 | Config file | No new required keys. `analyzers.prompt_when_interactive` controls the shipped first-run TTY prompt and remains optional. |
 
@@ -74,7 +76,9 @@ does not install them.
 ## What you can ignore
 
 - **Re-reading 0.6 fields.** They still mean what 0.7 said they mean.
-- **Regenerating a 0.7 baseline.** That break already happened. This one does not touch fingerprints.
+- **Keeping a 0.7 baseline.** Baseline v3 is required for rename-aware matching.
+  Regenerate it with `--write-baseline`; versions 1 and 2 fail closed with that
+  instruction instead of treating every old finding as new.
 
 ---
 

@@ -140,17 +140,14 @@ def test_live_surfaces_do_not_call_shipped_presentations_unshipped() -> None:
 
 
 def test_adr_009_states_the_shipped_ordinal_identity() -> None:
-    """The accepted ADR must distinguish its intended hash from shipped identity."""
+    """The accepted ADR names both the stable label and shipped matcher."""
     text = (ROOT / "docs" / "adr-009-scan-history.md").read_text(encoding="utf-8")
-    body_hash = r"(?:body hash|declaration-body hash)"
 
     assert "function:{path}:{name}#{ordinal}" in text
-    assert re.search(
-        rf"{body_hash}.{{0,80}}did\s+not\s+ship"
-        rf"|did\s+not\s+ship.{{0,80}}{body_hash}",
-        text,
-        re.I | re.S,
-    )
+    assert "body_digest" in text
+    assert "git" in text.lower() and "rename" in text.lower()
+    assert "structured identit" in text.lower()
+    assert re.search(r"body (?:hash|digest).{0,80}did not ship", text, re.I | re.S) is None
 
 
 ALLOWED_SPAWN = {"_runner", "git_tools", "_backfill"}

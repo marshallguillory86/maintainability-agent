@@ -24,6 +24,9 @@ PACKAGE = ROOT / "src" / "maintainability_audit"
 # analyzer half of that rule checkable.
 FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "config",
                "git_tools", "instructions",
+               # ADR 009's structured identity and matching relation is a
+               # foundation shared by the gate, recurrence and presentation.
+               "_finding_match",
                # `_runner` sits beside `git_tools`: both spawn processes and
                # import nothing internal. `_catalog` is analyzer selection
                # data -- a leaf that reads the shipped catalog and nothing

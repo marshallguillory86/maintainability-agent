@@ -1,102 +1,70 @@
-"""Keep shipped fingerprint documentation aligned with the implementation."""
+"""Keep ADR 009's shipped matching contract aligned across live docs."""
 
 import re
 from pathlib import Path
 
-import pytest
-
-ROOT = Path(__file__).parents[1]
-IDENTITY_SOURCE = ROOT / "src" / "maintainability_audit" / "_identity.py"
+ROOT = Path(__file__).resolve().parents[1]
 
 
-def _ordinal_fingerprints_ship_without_a_body_hash() -> bool:
-    source = IDENTITY_SOURCE.read_text(encoding="utf-8")
-    ordinal_format_ships = "function:{path}:{name}#{ordinal}" in source
-    body_hash_ships = re.search(
-        r"(?:declaration|unit|normalized)[_ ](?:body|content).{0,80}(?:hash|digest)"
-        r"|(?:hash|digest).{0,80}(?:declaration|unit|normalized)[_ ](?:body|content)",
-        source,
-        flags=re.IGNORECASE | re.DOTALL,
+def _read(path: str) -> str:
+    return (ROOT / path).read_text(encoding="utf-8")
+
+
+def test_live_identity_docs_name_structured_matching_and_git_rename_following() -> None:
+    surfaces = {
+        path: _read(path)
+        for path in (
+            "docs/adr-009-scan-history.md",
+            "docs/decisions.md",
+            "docs/architecture.md",
+            "docs/migration-1.0.md",
+            "docs/report-contract.md",
+        )
+    }
+    joined = "\n".join(surfaces.values()).lower()
+
+    assert "_finding_match" in surfaces["docs/architecture.md"]
+    assert "body_digest" in surfaces["docs/report-contract.md"]
+    assert "structured identit" in joined
+    assert "git" in joined and "rename" in joined
+    assert "baseline" in joined and "version 3" in joined
+
+
+def test_live_identity_docs_do_not_call_the_body_digest_unshipped() -> None:
+    surfaces = "\n".join(
+        _read(path)
+        for path in (
+            "docs/adr-009-scan-history.md",
+            "docs/decisions.md",
+            "docs/architecture.md",
+            "docs/migration-1.0.md",
+            "docs/report-contract.md",
+        )
     )
-    return ordinal_format_ships and body_hash_ships is None
-
-
-@pytest.fixture(scope="module", autouse=True)
-def ordinal_identity_is_the_shipped_contract() -> None:
-    if not _ordinal_fingerprints_ship_without_a_body_hash():
-        pytest.skip("identity implementation no longer matches the ordinal-only contract")
-
-
-def test_architecture_current_state_does_not_claim_content_addressing() -> None:
-    architecture = (ROOT / "docs" / "architecture.md").read_text(encoding="utf-8")
-    current_state = architecture.split(
-        "## Proposed extension boundaries", maxsplit=1
-    )[0]
-    current_state_without_known_debt = re.sub(
-        r"^## Known debt\n.*?(?=^## )",
-        "",
-        current_state,
-        flags=re.MULTILINE | re.DOTALL,
+    stale = (
+        r"(?:body|declaration-body) (?:hash|digest).{0,100}(?:did not ship|unshipped)",
+        r"(?:did not ship|unshipped).{0,100}(?:body|declaration-body) (?:hash|digest)",
+        r"rename following.{0,100}(?:did not ship|unshipped)",
     )
-
-    stale_claims = (
-        r"(?:identity|fingerprints?).{0,100}content[- ]addressed",
-        r"content[- ]addressed.{0,100}(?:identity|fingerprints?)",
-        r"hash of (?:the )?(?:unit|normalized) content",
-    )
-    for pattern in stale_claims:
-        assert re.search(
-            pattern,
-            current_state_without_known_debt,
-            flags=re.IGNORECASE | re.DOTALL,
-        ) is None
+    for pattern in stale:
+        assert re.search(pattern, surfaces, re.I | re.S) is None
 
 
-def test_report_contract_does_not_document_line_coupled_fingerprints() -> None:
-    contract = (ROOT / "docs" / "report-contract.md").read_text(encoding="utf-8")
+def test_human_label_stays_ordinal_and_line_independent() -> None:
+    contract = _read("docs/report-contract.md")
+    adr = _read("docs/adr-009-scan-history.md")
 
+    assert "function:{path}:{name}#{ordinal}" in contract
+    assert "function:{path}:{name}#{ordinal}" in adr
     assert "function:<path>:<name>:<line>" not in contract
     assert "function:{path}:{name}:{start_line}" not in contract
 
 
-def test_migration_guide_does_not_promise_a_normalized_content_hash() -> None:
-    migration = (ROOT / "docs" / "migration-0.7.md").read_text(encoding="utf-8")
+def test_history_schema_three_is_current_and_older_history_is_readable() -> None:
+    adr = _read("docs/adr-009-scan-history.md").lower()
+    migration = _read("docs/migration-1.0.md").lower()
 
-    assert "Finding identity is **content-addressed** in 0.7" not in migration
-    assert re.search(
-        r"hash of (?:the )?normalized content",
-        migration,
-        flags=re.IGNORECASE,
-    ) is None
-
-
-def test_unreleased_changelog_does_not_claim_content_addressed_identity() -> None:
-    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    unreleased = changelog.split("## Unreleased", maxsplit=1)[1].split(
-        "\n## ", maxsplit=1
-    )[0]
-    released = ""
-    if "## 0.7.0" in changelog:
-        released = changelog.split("## 0.7.0", maxsplit=1)[1].split(
-            "\n## 0.6.", maxsplit=1
-        )[0]
-
-    assert "Identity is now content-addressed." not in unreleased
-    assert "Identity is now content-addressed." not in released
-    assert "content-addressed" not in (
-        (ROOT / "src" / "maintainability_audit" / "baseline.py")
-        .read_text(encoding="utf-8")
-        .lower()
-    )
-
-
-def test_the_0_7_notes_do_not_claim_a_stale_schema_version() -> None:
-    """0.7 writes schema 3. Present tense 'is now version 2' is a lie."""
-    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    notes = changelog.split("## 0.7.0", maxsplit=1)[1].split("\n## 0.6.", maxsplit=1)[0]
-    assert re.search(
-        r"schema is now version (?!3\b)\d+",
-        notes,
-        flags=re.IGNORECASE,
-    ) is None
-    assert "schema to 3" in notes or "schema version 3" in notes.lower()
+    assert "schema 3" in adr
+    assert "schema 1" in adr and "schema 2" in adr
+    assert "baseline" in migration and "version 3" in migration
+    assert "regenerate" in migration

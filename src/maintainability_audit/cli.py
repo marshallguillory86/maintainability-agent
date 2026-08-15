@@ -23,7 +23,12 @@ from ._scan_history import (
 )
 from ._trends import trend_report
 from ._work_order import SELECTABLE, combined_delta, prompt_targets, select
-from .baseline import finding_fingerprints, load_baseline, write_baseline
+from .baseline import (
+    finding_fingerprints,
+    findings_not_in_baseline,
+    load_baseline,
+    write_baseline,
+)
 from .config import DEFAULT_CONFIG, VERSION, discovered_config, load_config
 from .git_tools import changed_paths
 from .instructions import instruction_path_for_target, write_instruction_pack
@@ -138,8 +143,11 @@ def write_outputs(args: argparse.Namespace, report: dict, rendered: str) -> None
 
 def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
     if args.fail_on_new:
-        baseline = load_baseline(args.baseline)
-        if finding_fingerprints(report) - baseline:
+        # Structured matching, never a label-set difference: a label
+        # changes under `git mv` and same-name reorder, and failing a
+        # build over either is a false report about the change.
+        root = Path(report["root"])
+        if findings_not_in_baseline(report, args.baseline, root):
             return 1
     if args.fail_on_gate and report["hard_gate_failures"]:
         return 1
@@ -231,7 +239,11 @@ def main(argv: list[str] | None = None) -> int:
     # Findings the history shows do not stay fixed. Computed over the
     # most recent comparable series only: an escalation drawn across a
     # change in the instrument would blame the code for a tooling fix.
-    report["design_review_candidates"] = escalations(series[-1]) if series else []
+    # `root` so returns are matched structurally with git's rename
+    # evidence, not by label equality (ADR 009 identity).
+    report["design_review_candidates"] = (
+        escalations(series[-1], Path(report["root"])) if series else []
+    )
     rendered = _render_presentation(args, report, history_path)
     write_outputs(args, report, rendered)
     return audit_exit_code(args, report)

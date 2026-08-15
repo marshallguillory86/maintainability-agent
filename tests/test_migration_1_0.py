@@ -35,10 +35,17 @@ def test_the_guide_names_the_post_0_7_breaks() -> None:
     assert "baseline" in lowered
 
 
-def test_the_guide_does_not_reopen_the_0_7_baseline_break() -> None:
-    """Identity and schema 3 already shipped in 0.7. Do not send people there twice."""
+def test_the_guide_requires_regenerating_the_version_three_baseline() -> None:
+    """The v3 identity records cannot be reconstructed from a v2 string list."""
     text = GUIDE.read_text(encoding="utf-8")
-    assert "Do not regenerate a 0.7 baseline" in text
+    baseline_row = next(
+        line for line in text.splitlines() if line.startswith("| Baseline format |")
+    )
+
+    assert "version 3" in baseline_row.lower()
+    assert "--write-baseline" in text
+    assert "still **version 2**" not in text.lower()
+    assert "do not regenerate a 0.7 baseline" not in text.lower()
     assert "schema_version" in text.lower() or "schema version" in text.lower()
 
 

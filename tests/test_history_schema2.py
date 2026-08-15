@@ -1,6 +1,7 @@
 """8.1 + 8.2: what a scan stores, and when a scan is stored at all.
 
-Schema 2 exists because the charts ADR 011 requires cannot be drawn
+Schema 2 added chart fields; schema 3 adds ADR 009 structured identities.
+The chart fields still exist because the charts ADR 011 requires cannot be drawn
 from schema 1: a record holding only the rollup estimate can plot one
 line, and the pillar and practice series — the two ADR 007 refuses to
 average — were never written down. A trend you did not store is a trend
@@ -14,6 +15,7 @@ a successful scan appends.
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -24,10 +26,12 @@ import pytest
 # already.
 from test_first_run_prompt import _repo
 
+from maintainability_audit._recurrence import recurrence
 from maintainability_audit._scan_history import (
     DEFAULT_HISTORY_PATH,
     HISTORY_SCHEMA_VERSION,
     ScanRecord,
+    Segment,
     read_history,
     record_of,
 )
@@ -50,14 +54,23 @@ SCHEMA_1_LINE = json.dumps({
 
 def _record(tmp_path: Path) -> ScanRecord:
     config = load_config(None)
-    report = build_report(_repo(tmp_path), config)
+    root = _repo(tmp_path)
+    body = "\n".join(f"    value_{line} = {line}" for line in range(90))
+    (root / "hot.py").write_text(f"def huge():\n{body}\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(root), "add", "hot.py"], check=True)
+    subprocess.run(
+        ["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t",
+         "commit", "-qm", "finding"],
+        check=True,
+    )
+    report = build_report(root, config)
     return record_of(report, config, VERSION, 2.2658, ())
 
 
-def test_new_writes_are_schema_two() -> None:
-    assert HISTORY_SCHEMA_VERSION == 2, (
-        "new lines still stamp schema 1, so nothing distinguishes a record "
-        "that lacks pillar data from one written before pillars were stored"
+def test_new_writes_are_schema_three() -> None:
+    assert HISTORY_SCHEMA_VERSION == 3, (
+        "new lines must distinguish structured finding identities from the "
+        "label-only schema 1 and 2 records"
     )
 
 
@@ -70,7 +83,11 @@ def test_a_new_record_stores_what_the_charts_need(tmp_path: Path) -> None:
     record = _record(tmp_path)
     payload = json.loads(record.as_line())
 
-    assert payload["history_schema_version"] == 2
+    assert payload["history_schema_version"] == 3
+    assert payload["identities"], "schema 3 must retain matcher inputs beside labels"
+    assert set(payload["identities"][0]) == {
+        "kind", "path", "name", "ordinal", "body_digest", "fingerprint",
+    }
     assert payload["categories"], "no categories stored; the category bars have no data"
     assert payload["aspects"], "no aspects stored"
     assert payload["pillars"], "no pillar series stored; the pillar chart has no data"
@@ -91,8 +108,14 @@ def test_pillars_and_practice_are_two_series_never_one(tmp_path: Path) -> None:
 
     assert "pillars" in payload and "practice_level" in payload
     pillar_values = [v for v in payload["pillars"].values() if v is not None]
+    non_series_numbers = {
+        "history_schema_version", "calibration", "estimate", "range_low", "range_high",
+    }
     for name, value in payload.items():
-        if name in ("pillars", "practice_level") or not isinstance(value, (int, float)):
+        if (
+            name in {"pillars", "practice_level", *non_series_numbers}
+            or not isinstance(value, (int, float))
+        ):
             continue
         for pillar_value in pillar_values:
             blended = (pillar_value + payload["practice_level"]) / 2
@@ -115,6 +138,33 @@ def test_a_schema_one_line_still_loads(tmp_path: Path) -> None:
     assert record.pillars == {}
     assert record.practice_level is None
     assert record.evidence_status == ""
+
+
+def test_schema_two_records_still_load_and_match_by_label_equality(tmp_path: Path) -> None:
+    """Old records have no digest or rename evidence; strings are all they know."""
+    base = json.loads(SCHEMA_1_LINE)
+    lines = []
+    for index, fingerprints in enumerate((["finding:a"], [], ["finding:a"])):
+        payload = {
+            **base,
+            "history_schema_version": 2,
+            "commit": str(index) * 40,
+            "fingerprints": fingerprints,
+            "targeted": ["finding:a"] if index == 0 else [],
+            "categories": {},
+            "aspects": {},
+            "pillars": {},
+            "practice_level": None,
+            "evidence_status": "",
+        }
+        lines.append(json.dumps(payload, sort_keys=True))
+    path = tmp_path / "schema-2.jsonl"
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    records = read_history(path)
+
+    assert all(not record.identities for record in records)
+    assert recurrence(Segment(records=records))["finding:a"].returns == 1
 
 
 def test_mixed_schema_files_load_in_order(tmp_path: Path) -> None:

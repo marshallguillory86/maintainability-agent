@@ -68,6 +68,7 @@ def _executive_summary(score: dict[str, Any], records: list[Any]) -> list[str]:
         f"<div class='estimate'>{escape(view.estimate(score))}"
         f" &middot; grade {escape(view.verified_grade(score))}</div>",
         f"<div>Range: {escape(view.score_range(score))}</div>",
+        f"<div>Source: {escape(view.estimate_source(score))}</div>",
         f"<div>{escape(view.status_sentence(score))}</div>",
         f"<div>{escape(_direction_sentence(records))}</div>",
         "</div>",
@@ -148,6 +149,35 @@ def _svg_open(chart_id: str) -> str:
             f'<rect x="0" y="0" width="{_WIDTH}" height="{_HEIGHT}" fill="#fafafa"/>')
 
 
+def _consecutive_runs(points: list[tuple]) -> list[list[tuple]]:
+    """Split a series wherever a scan is missing.
+
+    A polyline drawn across a missing index is interpolation — a segment
+    claiming a value for the scan nobody stored, which ADR 011
+    invariant 6 forbids. Points on either side of a gap stay plotted;
+    the line between them does not exist.
+    """
+    runs: list[list[tuple]] = []
+    for point in points:
+        if runs and point[0] == runs[-1][-1][0] + 1:
+            runs[-1].append(point)
+        else:
+            runs.append([point])
+    return runs
+
+
+def _polylines(points: list[tuple], count: int, low: float, high: float,
+               color: str, width: str) -> list[str]:
+    """One polyline per consecutive run of two or more scans."""
+    return [
+        '<polyline points="'
+        + " ".join(f"{_x(i, count):.1f},{_y(v, low, high):.1f}" for i, v, *_ in run)
+        + f'" fill="none" stroke="{color}" stroke-width="{width}"/>'
+        for run in _consecutive_runs(points)
+        if len(run) >= 2
+    ]
+
+
 def _line_chart(chart_id: str, points: list[tuple], low: float, high: float) -> str:
     """One series; each point may carry a stored range to shade."""
     if not points:
@@ -155,19 +185,19 @@ def _line_chart(chart_id: str, points: list[tuple], low: float, high: float) -> 
                 f'text-anchor="middle" fill="#666">No history yet</text></svg>')
     count = max(index for index, *_ in points) + 1
     parts = [_svg_open(chart_id)]
-    band = [
-        p for p in points if p[2] is not None and p[3] is not None
-    ]
-    if len(band) >= 2:
-        upper = " ".join(f"{_x(i, count):.1f},{_y(hi, low, high):.1f}" for i, _v, _lo, hi in band)
+    # The uncertainty band is subject to the same gap rule as the line:
+    # shading across a missing scan claims a range nobody stored.
+    band = [p for p in points if p[2] is not None and p[3] is not None]
+    for run in _consecutive_runs(band):
+        if len(run) < 2:
+            continue
+        upper = " ".join(f"{_x(i, count):.1f},{_y(hi, low, high):.1f}" for i, _v, _lo, hi in run)
         lower = " ".join(
             f"{_x(i, count):.1f},{_y(lo_v, low, high):.1f}"
-            for i, _v, lo_v, _hi in reversed(band)
+            for i, _v, lo_v, _hi in reversed(run)
         )
         parts.append(f'<polygon points="{upper} {lower}" fill="#dbe9f6"/>')
-    if len(points) >= 2:
-        line = " ".join(f"{_x(i, count):.1f},{_y(v, low, high):.1f}" for i, v, *_ in points)
-        parts.append(f'<polyline points="{line}" fill="none" stroke="#2b6cb0" stroke-width="2"/>')
+    parts.extend(_polylines(points, count, low, high, "#2b6cb0", "2"))
     for i, v, *_ in points:
         parts.append(f'<circle cx="{_x(i, count):.1f}" cy="{_y(v, low, high):.1f}" r="3" '
                      f'fill="#2b6cb0"><title>scan {i + 1}: {v}</title></circle>')
@@ -187,10 +217,7 @@ def _multi_line_chart(chart_id: str, series: dict[str, list[tuple]],
     parts = [_svg_open(chart_id)]
     for offset, (name, points) in enumerate(sorted(series.items())):
         color = _PILLAR_COLORS[offset % len(_PILLAR_COLORS)]
-        if len(points) >= 2:
-            line = " ".join(f"{_x(i, count):.1f},{_y(v, low, high):.1f}" for i, v, *_ in points)
-            parts.append(f'<polyline points="{line}" fill="none" stroke="{color}" '
-                         f'stroke-width="1.5"/>')
+        parts.extend(_polylines(points, count, low, high, color, "1.5"))
         for i, v, *_ in points:
             parts.append(f'<circle cx="{_x(i, count):.1f}" cy="{_y(v, low, high):.1f}" '
                          f'r="2.5" fill="{color}"><title>{escape(name)} scan {i + 1}: {v}'

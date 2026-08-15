@@ -10,6 +10,7 @@ python3 -m pytest \
 maintainability-agent \
   --config maintainability-agent.json \
   --fail-on-gate \
+  --record-history \
   --output maintainability-report.md \
   --prompt-output maintainability-remediation-prompt.md \
   --comment-output maintainability-pr-comment.md \
@@ -20,3 +21,4 @@ echo "AI remediation prompt written to maintainability-remediation-prompt.md"
 echo "PR comment body written to maintainability-pr-comment.md"
 echo "Coverage XML written to coverage.xml"
 echo "SARIF report written to maintainability.sarif"
+echo "Scan appended to .maintainability/history.jsonl (trends and recurrence read it next run)"

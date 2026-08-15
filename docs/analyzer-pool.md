@@ -91,7 +91,7 @@ python tools/resolve_pool.py --concerns documentation
 
 ### How the selection is made
 
-Read from configuration (`analyzers.depth`, `analyzers.license_policy`, `analyzers.concerns`). A first-run TTY prompt is release-plan 6.1 and is not shipped — an audit that stopped to ask a question in a pipeline would be a broken audit, and a prompt that changed the tool pool between runs would break determinism (promise **P1**). Preview a pool without editing the file with `tools/resolve_pool.py --depth` / `--license-policy`.
+Read from configuration (`analyzers.depth`, `analyzers.license_policy`, `analyzers.concerns`). A first run at a terminal with no config asks for depth and policy and writes the answers to `maintainability-agent.json` (release-plan 6.1); every later run reads that file, so the pool never changes between runs of the same tree (promise **P1**), and a non-TTY run — CI — never asks and never writes, because an audit that stopped to ask a question in a pipeline would be a broken audit. Preview a pool without editing the file with `tools/resolve_pool.py --depth` / `--license-policy`.
 
 The chosen depth and policy are recorded in the report, because a score computed from four tools and a score computed from forty are not the same measurement and must not be silently comparable.
 

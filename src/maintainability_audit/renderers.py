@@ -9,6 +9,7 @@ from ._scan_view import (
     analyzer_coverage_markdown,
     analyzer_findings_markdown,
     analyzer_measurements_markdown,
+    environment_work_order_markdown,
     pillars_markdown,
     undetected_declarations_markdown,
     unread_source_markdown,
@@ -141,6 +142,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.extend(unread_source_markdown(summary))
     lines.extend(undetected_declarations_markdown(summary))
     lines.extend(analyzer_coverage_markdown(report.get("analyzer_coverage")))
+    lines.extend(environment_work_order_markdown(report.get("environment_work_order") or []))
     lines.extend(analyzer_measurements_markdown(
         report.get("analyzer_measurements"),
         (score.get("analyzer_scored_dimensions") or []),

@@ -107,7 +107,7 @@ Analyzers live in ecosystems, and the agent runs the ones it can reach. Nothing 
 | Go toolchain | golangci-lint (no adapter yet) | `brew install go` |
 | Rust toolchain | clippy (no adapter yet) | `brew install rust` |
 
-**Node tools may be fetched on first use.** `jscpd` is invoked through `npx`, which downloads the package if it is not already present. That is a network action, so [P1](product-intent.md#what-it-promises) separates analysis from acquisition: the analysis itself never touches the network and never transmits your code, while acquiring a tool may. The fetched version is recorded in the report.
+**Node tools are fetched only if you opt in.** With `analyzers.acquire_tools` set, a missing `jscpd` or `eslint` is invoked through `npx --yes`, which downloads the package — a network action [P1](product-intent.md#what-it-promises) discloses, with the fetched version recorded in the report. By default it is **off**: a missing Node tool is reported `not-installed` in coverage and appears in the environment work order with its install command, and nothing is fetched. The analysis itself never touches the network and never transmits your code in either mode; child processes are not sandboxed, so what an installed tool does is that tool's affair.
 
 To avoid the fetch entirely — in an air-gapped build, or to pin a version — install the tool ahead of time and it will be used directly:
 

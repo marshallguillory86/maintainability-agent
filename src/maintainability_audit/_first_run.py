@@ -103,3 +103,26 @@ def _persist(root: Path, depth: str, policy: str) -> None:
         encoding="utf-8",
     )
     print(f"Wrote {target}")
+
+
+# The three presentations, and what each means (ADR 011). Order matters:
+# the first is what Enter selects.
+PRESENTATIONS = ("chat", "markdown", "html")
+
+
+def ask_presentation() -> str:
+    """Which of the three skins, asked at every interactive invoke.
+
+    Never persisted, deliberately (ADR 011 §3): a remembered answer is a
+    flag the user cannot see, and the whole point of asking is that
+    today's audience may not be yesterday's. Enter is chat, because chat
+    is where the question was asked.
+    """
+    answer = input(
+        "Report format — chat (Enter), markdown, or html: "
+    ).strip().lower()
+    if answer in PRESENTATIONS:
+        return answer
+    if answer:
+        print(f"  {answer!r} is not one of {PRESENTATIONS}; using chat")
+    return "chat"

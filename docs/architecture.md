@@ -26,6 +26,7 @@ flowchart TB
     baseline["baseline"]
     _evidence_view["_evidence_view"]
     _scan_view["_scan_view"]
+    _html_view["_html_view"]
     _history_view["_history_view"]
     _identity["_identity"]
   end

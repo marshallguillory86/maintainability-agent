@@ -7,7 +7,7 @@ from pathlib import Path
 
 from ._backfill import backfill
 from ._calibration import CALIBRATION_C
-from ._first_run import maybe_prompt_first_run
+from ._first_run import _stdin_is_a_tty, ask_presentation, maybe_prompt_first_run
 from ._recurrence import escalations
 from ._scan_history import (
     DEFAULT_HISTORY_PATH,
@@ -23,7 +23,7 @@ from .config import DEFAULT_CONFIG, VERSION, discovered_config, load_config
 from .git_tools import changed_paths
 from .instructions import instruction_path_for_target, write_instruction_pack
 from .prompts import render_agent_instructions, render_ai_prompt
-from .renderers import render_markdown, render_pr_comment
+from .renderers import render_html, render_markdown, render_pr_comment
 from .report import build_report
 from .sarif import read_sarif_inputs, report_to_sarif
 
@@ -32,7 +32,11 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--version", action="version", version=f"maintainability-agent {VERSION}")
     parser.add_argument("--root", default=".", help="Repository root to scan.")
     parser.add_argument("--config", help="Path to JSON config.")
-    parser.add_argument("--format", choices=["json", "markdown"], default="markdown")
+    # Default None, not "markdown": the TTY question (8.4) only fires
+    # when the user stated nothing, and argparse cannot distinguish a
+    # stated default from an omitted flag.
+    parser.add_argument("--format", choices=["json", "markdown", "html"], default=None)
+    parser.add_argument("--html-output", help="Write the single-file HTML report here (ADR 011).")
     parser.add_argument("--output", help="Output file. Defaults to stdout.")
     parser.add_argument("--prompt-output", help="Optional Markdown prompt for AI-assisted remediation.")
     parser.add_argument("--comment-output", help="Optional Markdown body suitable for a PR comment.")
@@ -190,7 +194,11 @@ def main(argv: list[str] | None = None) -> int:
         report["work_order_selection"]["worth"] = combined_delta(
             report, report["work_order_selection"]["items"])
     history_path = root / (config.get("paths", {}).get("history") or DEFAULT_HISTORY_PATH)
-    if args.record_history:
+    # 8.2: the file's existence is the user's standing answer. Once a
+    # history exists, a successful scan appends whether or not the flag
+    # was remembered. A first *interactive* run starts the series; a
+    # first CI run without the flag still writes nothing nobody asked for.
+    if args.record_history or history_path.exists() or _stdin_is_a_tty():
         append_scan(history_path, record_of(
             report, config, VERSION, CALIBRATION_C,
             tuple(sorted(finding_fingerprints(report))),
@@ -210,9 +218,37 @@ def main(argv: list[str] | None = None) -> int:
     # most recent comparable series only: an escalation drawn across a
     # change in the instrument would blame the code for a tooling fix.
     report["design_review_candidates"] = escalations(series[-1]) if series else []
-    rendered = json.dumps(report, indent=2, sort_keys=True) if args.format == "json" else render_markdown(report)
+    rendered = _render_presentation(args, report, history_path)
     write_outputs(args, report, rendered)
     return audit_exit_code(args, report)
+
+
+def _render_presentation(args: argparse.Namespace, report: dict, history_path: Path) -> str:
+    """8.4: resolve the presentation, then render it.
+
+    Asks at a TTY only when nothing was stated; flags win; CI never asks
+    and defaults to Markdown. The answer is never persisted — ADR 011
+    asks on every interactive invoke. Extracted so `main` stays inside
+    this project's own function budget.
+    """
+    from ._scan_history import read_history
+
+    stated = args.format is not None or args.output or args.html_output
+    if not stated and _stdin_is_a_tty():
+        choice = ask_presentation()
+        if choice == "html":
+            args.html_output = "maintainability-report.html"
+        elif choice == "markdown":
+            args.output = "maintainability-report.md"
+    args.format = args.format or "markdown"
+    if args.html_output:
+        Path(args.html_output).write_text(
+            render_html(report, read_history(history_path)) + "\n", encoding="utf-8")
+    if args.format == "json":
+        return json.dumps(report, indent=2, sort_keys=True)
+    if args.format == "html":
+        return render_html(report, read_history(history_path))
+    return render_markdown(report)
 
 
 __all__ = [

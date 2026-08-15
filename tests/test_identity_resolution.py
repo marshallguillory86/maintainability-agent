@@ -10,6 +10,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 
 import pytest
+
 from maintainability_audit._finding_match import (
     Identity,
     identities_from_report,
@@ -17,7 +18,6 @@ from maintainability_audit._finding_match import (
     same_finding,
     unmatched,
 )
-
 from maintainability_audit._recurrence import Outcome, outcomes, recurrence
 from maintainability_audit._scan_history import Segment, record_of
 from maintainability_audit.baseline import (

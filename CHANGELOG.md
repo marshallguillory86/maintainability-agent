@@ -13,6 +13,11 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Changed
 
+- **Network-boundary disclosure.** README, product intent, architecture
+  and the analyzer pool state that this agent does not transmit the
+  audited tree, and that third-party tools it spawns are not
+  network-sandboxed. Claiming an air-gapped child process fails a lint.
+
 - **ADR 011 and history schema 2 recorded.** Three report skins
   (chat default, Markdown file, one HTML file) and the missing
   per-scan score breakdown are decided, not shipped. 1.0 waits on

@@ -76,7 +76,9 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 
 P1 read "no network, no LLM" when the tool was pure computation over a file tree. Under [ADR 006](adr-006-analyzer-evidence.md) it invokes external analyzers, and some of those live in ecosystems whose normal installation path is a fetch — `npx` for the Node tools most obviously.
 
-Two honest options existed: refuse to acquire tools, which makes the multi-language story depend on every user hand-installing a dozen ecosystems; or acquire them and say so. The second was chosen, so the promise now separates **analysis** from **acquisition**. Analysis still touches no network and no model: the code being audited is never transmitted anywhere, which is the property the promise existed to protect. Acquisition may fetch a tool, on first run, and the version it fetched is recorded in the report so the run remains reproducible.
+Two honest options existed: refuse to acquire tools, which makes the multi-language story depend on every user hand-installing a dozen ecosystems; or acquire them and say so. The second was chosen, so the promise now separates **analysis** from **acquisition**. Analysis still touches no network and no model: **this agent does not transmit the audited source.** Acquisition may fetch a tool, on first run, and the version it fetched is recorded in the report so the run remains reproducible.
+
+**What P1 does not police.** External analyzers run as local child processes (`_runner`). This package does not wrap them in a network sandbox, and it does not inspect whether *they* open sockets. A future SaaS CLI adapter would be a different product. The host that prints a report into an IDE chat (Grok, Claude, …) is also outside this process. P1 is enforced as determinism plus no HTTP client in `src/` that uploads the tree — not as “no packet can leave the box.”
 
 The prerequisites this creates are listed in [the analyzer pool](analyzer-pool.md#runtime-prerequisites) rather than left for a user to discover from a failure.
 
@@ -99,6 +101,7 @@ This list exists because the project has already broken it once and retracted. A
 - **That a passing grade means the code is maintainable.** It means nothing this tool measures is out of band.
 - **That the architecture, or any ADR, is "fully implemented"** while its consumers and invariants have not migrated.
 - **That a bug class is closed** because the reported instance stopped reproducing. See the closure rules below.
+- **That third-party tools cannot use the network**, or that a run is kernel-air-gapped. This agent does not transmit the audited source; it does not sandbox children.
 
 ## The evidence standard
 

@@ -107,7 +107,9 @@ Analyzers live in ecosystems, and the agent runs the ones it can reach. Nothing 
 | Go toolchain | golangci-lint (no adapter yet) | `brew install go` |
 | Rust toolchain | clippy (no adapter yet) | `brew install rust` |
 
-**Node tools are fetched only if you opt in.** With `analyzers.acquire_tools` set, a missing `jscpd` or `eslint` is invoked through `npx --yes`, which downloads the package — a network action [P1](product-intent.md#what-it-promises) discloses, with the fetched version recorded in the report. By default it is **off**: a missing Node tool is reported `not-installed` in coverage and appears in the environment work order with its install command, and nothing is fetched. The analysis itself never touches the network and never transmits your code in either mode; child processes are not sandboxed, so what an installed tool does is that tool's affair.
+**Node tools are fetched only if you opt in.** With `analyzers.acquire_tools` set, a missing `jscpd` or `eslint` is invoked through `npx --yes`, which downloads the package — a network action [P1](product-intent.md#what-it-promises) discloses, with the fetched version recorded in the report. By default it is **off**: a missing Node tool is reported `not-installed` in coverage and appears in the environment work order with its install command, and nothing is fetched. **This agent does not transmit your code** in either mode.
+
+**Child tools are not network-sandboxed.** Once `lizard`, `eslint`, or any other adapter runs, this process does not police outbound connections. Install tools yourself and keep them off `npx` if you need an air-gapped analysis.
 
 To avoid the fetch entirely — in an air-gapped build, or to pin a version — install the tool ahead of time and it will be used directly:
 

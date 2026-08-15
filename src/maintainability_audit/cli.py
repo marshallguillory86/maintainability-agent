@@ -7,7 +7,12 @@ from pathlib import Path
 
 from ._backfill import backfill
 from ._calibration import CALIBRATION_C
-from ._first_run import _stdin_is_a_tty, ask_presentation, maybe_prompt_first_run
+from ._first_run import (
+    _stdin_is_a_tty,
+    ask_presentation,
+    maybe_prompt_economics,
+    maybe_prompt_first_run,
+)
 from ._recurrence import escalations
 from ._scan_history import (
     DEFAULT_HISTORY_PATH,
@@ -141,6 +146,20 @@ def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
     return 0
 
 
+def _interactive_config(root: Path, config_arg: str | None) -> dict:
+    """Both first-run asks, then the one config every later run loads.
+
+    6.1 writes the file `discovered_config` finds, so it has no private
+    path into the audit; the ADR 004 labor ask runs after load so a
+    configured range or a suppression flag is respected, and mutates the
+    dict in memory so this very run prices its own report.
+    """
+    maybe_prompt_first_run(root, config_arg)
+    config = load_config(config_arg or discovered_config(root))
+    maybe_prompt_economics(root, config)
+    return config
+
+
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
@@ -154,12 +173,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     root = Path(args.root).resolve()
-    # First run at a terminal with nothing configured: ask, persist, and
-    # then load through the same discovery every later run uses. The
-    # prompt writes the file `discovered_config` finds, so it has no
-    # private path into the audit (release-plan 6.1).
-    maybe_prompt_first_run(root, args.config)
-    config = load_config(args.config or discovered_config(root))
+    config = _interactive_config(root, args.config)
     if args.init_agent_standards:
         targets = args.target or ["generic", "claude-code", "codex", "cursor", "copilot", "windsurf"]
         write_instruction_pack(targets, Path(args.instructions_output_dir).resolve(), config)

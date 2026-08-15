@@ -65,6 +65,10 @@ SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_de
 # adapters and hands `report` a coverage document. That makes it assembly,
 # not a scanner — it composes rather than measures.
 ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
+            # `_economics` composes the ADR 004 scenario from the finished
+            # report and configured context; it measures nothing, asks
+            # nothing, and may never be imported by scoring.
+            "_economics",
             # `_environment` composes the install-command artifact from the
             # coverage record (ADR 006 §2c); it measures nothing and spawns
             # nothing, and `test_the_agent_never_runs_the_install_command`
@@ -75,6 +79,9 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # `_html_view` is the ADR 011 HTML skin: it reads the report
                 # dict and stored records and computes no score.
                 "_html_view",
+                # `_economics_view` prints the ADR 004 scenario block and
+                # computes none of it.
+                "_economics_view",
                 "_scan_view", "_history_view", "_identity"}
 # `_first_run` is terminal interaction — it prompts, which no layer
 # below entry may ever do, and writes the config file the entry then

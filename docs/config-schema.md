@@ -71,8 +71,8 @@ A slug that is not in the catalog is a config error, not a silent no-op.
 
 ## Economic context
 
-ADR 004 v1 contract. **Not shipped** — the code does not read these keys
-yet.
+ADR 004 v1. Optional. The audit CLI reads these keys
+(`tests/test_economic_context.py`).
 
 Optional. Absent, the report is a normal maintainability report: no $
 block, work order stays in risk×effort order. Present, it never changes
@@ -104,8 +104,7 @@ writes the file: `MAINTAINABILITY_LABOR_LOW`, `MAINTAINABILITY_LABOR_BASE`,
 `MAINTAINABILITY_LABOR_HIGH`, `MAINTAINABILITY_CURRENCY`,
 `MAINTAINABILITY_HORIZON_MONTHS`.
 
-This section describes the decided v1 contract. The code does not read
-these keys yet.
+This section is the shipped v1 contract.
 
 ## Validation
 

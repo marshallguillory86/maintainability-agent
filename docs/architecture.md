@@ -29,6 +29,7 @@ flowchart TB
     _evidence_view["_evidence_view"]
     _scan_view["_scan_view"]
     _html_view["_html_view"]
+    _economics_view["_economics_view"]
     _history_view["_history_view"]
     _identity["_identity"]
   end
@@ -37,6 +38,7 @@ flowchart TB
     report["report"]
     _analysis["_analysis"]
     _documents["_documents"]
+    _economics["_economics"]
     _environment["_environment"]
     _built_ins["_built_ins"]
     _work_order["_work_order"]
@@ -279,9 +281,9 @@ The first two ADR 006 rows describe the landed *shape*. The point estimate uses 
 
 `--analyzers` makes P1 conditional on pinned versions on a given platform; the report records the versions that produced it. Runtime rises from milliseconds to seconds or minutes. A tool can be absent, wrong-versioned, slow, crash, or emit unparseable output — each is a distinct `Unknown` reason, and none may fail the run or improve a score. Built-ins stay labelled as the fallback tier via `_built_ins`.
 
-## Proposed extension boundaries — not implemented
+## Extension boundaries
 
-Two proposed decisions extend the bounded work order without changing what the
+ADR 004 v1 ships. ADR 003 does not. Neither may change what the
 standard score means:
 
 - [ADR 003](adr-003-deterministic-semantic-policy.md) specifies a type-aware
@@ -289,12 +291,12 @@ standard score means:
   policy may produce universal findings, configured policy violations, or
   explicitly non-gating design-review candidates. They do not get to modify
   rubric weights or grade bands.
-- [ADR 004](adr-004-economic-context.md) is **accepted for a v1 slice and
-  not implemented**. Recurrence and hotspot churn plus an optional
-  configured labor range produce a labeled low/base/high **scenario**
-  block and may reorder the work order. They do not feed scoring or
-  grading and are not predictions. See the ADR's v1 slice for the ask
-  set, persist path, and env overrides.
+- [ADR 004](adr-004-economic-context.md) v1 is **shipped**
+  (`tests/test_economic_context.py`). Recurrence and hotspot churn plus
+  an optional configured labor range produce a labeled low/base/high
+  **scenario** block and may reorder the work order. They do not feed
+  scoring or grading. See the ADR's v1 slice for the ask set, persist
+  path, and env overrides.
 
 The intended dependency direction is:
 
@@ -310,7 +312,7 @@ flowchart TB
 
 Both paths terminate in report data consumed by presentation. Neither may
 reach backward into `_formula`, `_calibration`, `_aspects`, or grade policy.
-Until ADR 003 is accepted and both paths are implemented, this diagram
-is a constraint on future work, not a description of shipped behavior;
-its invariants therefore do not appear in the enforced table above.
-ADR 004 v1 is accepted as that constraint, not as code.
+ADR 004 v1 is in the tree (`_economics`, `_economics_view`). ADR 003 is
+not. The mermaid's semantic half is still a constraint on future work.
+Neither path may reach `_formula`, `_calibration`, `_aspects`, or grade
+policy.

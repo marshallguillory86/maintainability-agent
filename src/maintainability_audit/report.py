@@ -17,6 +17,7 @@ from ._analysis import analyze
 from ._built_ins import record_built_in_counts
 from ._discovery import Provenance, discover
 from ._documents import coverage_document, findings_document, measurement_document
+from ._economics import economic_context_from, economic_impact, reorder_by_exposure
 from ._environment import environment_work_order
 from ._metrics_types import FileMetric, FunctionMetric
 from ._pillars import pillar_report
@@ -443,4 +444,11 @@ def build_report(
     # Last, because every item's delta is a rubric recomputation and the
     # rubric needs the scored report to recompute against.
     report["work_order"] = work_order(report)
+    # ADR 004 v1, after scoring on purpose: nothing money-shaped exists
+    # until the score document is final, so no path from these numbers
+    # into the estimate or the grade can exist to be misused.
+    context = economic_context_from(config)
+    if context is not None:
+        report["economic_impact"] = economic_impact(report, context)
+        reorder_by_exposure(report)
     return report

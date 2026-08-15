@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from . import _evidence_view as view
+from ._economics_view import economic_impact_markdown
 from ._history_view import escalations_markdown, scan_history_markdown
 from ._hotspots import hotspot_cognitive, hotspot_complexity, hotspot_measure, hotspot_name
 from ._scan_view import (
@@ -132,6 +133,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.extend(work_order_selection_markdown(selection))
     else:
         lines.extend(work_order_markdown(report.get("work_order")))
+    lines.extend(economic_impact_markdown(report.get("economic_impact")))
     lines.extend(pillars_markdown(report.get("pillars"), report.get("practice")))
     lines.extend(unread_source_markdown(summary))
     lines.extend(undetected_declarations_markdown(summary))

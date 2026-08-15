@@ -59,10 +59,49 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
     lines.extend(view.remediation_note(score))
     lines.extend(prompt_escalation_note(report))
     lines.extend(prompt_work_order(report))
+    lines.extend(prompt_semantic_section(report))
     lines.extend(prompt_pressure_section(score))
     lines.extend(prompt_focus_sections(report))
     lines.extend(prompt_deliverable())
     return "\n".join(lines)
+
+
+def prompt_semantic_section(report: dict[str, Any]) -> list[str]:
+    """Semantic findings by class, each labeled as strongly as it deserves.
+
+    A typed fact, a configured policy violation and a design-review
+    candidate are three different claims (ADR 003), and flattening them
+    into one list would launder configuration and heuristics into
+    universal rules. Candidates state their evidence and ask for review;
+    they never prescribe the replacement design, because the evidence
+    does not prove one.
+    """
+    findings = report.get("semantic_findings") or []
+    if not findings:
+        return []
+    lines = ["## Semantic findings (ADR 003)", ""]
+    for finding in findings:
+        evidence = finding.get("source_evidence") or {}
+        location = evidence.get("path") or ""
+        if finding["class"] == "universal":
+            lines.append(
+                f"- Typed fact: `{location}` — {finding['message']} "
+                f"(compiler evidence {evidence.get('diagnostic_code')})."
+            )
+        elif finding["class"] == "policy":
+            lines.append(
+                f"- Configured policy `{finding.get('policy_entry')}`: "
+                f"`{location}` — {finding['message']}."
+            )
+        else:
+            names = ", ".join(evidence.get("operation_names") or [])
+            lines.append(
+                f"- Design-review candidate: `{location}` — operation names "
+                f"[{names}] recur across {', '.join(evidence.get('roles') or [])} "
+                f"roles. {finding['message']}"
+            )
+    lines.append("")
+    return lines
 
 
 def prompt_analyzer_caveat(report: dict[str, Any]) -> list[str]:

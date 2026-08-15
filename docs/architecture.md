@@ -284,8 +284,8 @@ The first two ADR 006 rows describe the landed *shape*. The point estimate uses 
 
 ## Extension boundaries
 
-ADR 004 v1 ships. ADR 003 does not. Neither may change what the
-standard score means:
+ADR 004 v1 ships. ADR 003 option C is accepted and its TypeScript-only
+increment is current work. Neither may change what the standard score means:
 
 - [ADR 003](adr-003-deterministic-semantic-policy.md) specifies a type-aware
   semantic-analysis path. Language-native analyzers and checked-in repository
@@ -303,8 +303,8 @@ The intended dependency direction is:
 
 ```mermaid
 flowchart TB
-  analyzers["language-native analyzers / SARIF"] --> semantic["normalized semantic findings"]
-  policy["checked-in semantic policy"] --> semantic
+  analyzers["language-native analyzers / SARIF"] --> semantic["_semantic — normalized semantic findings"]
+  policy["_semantic_policy — checked-in semantic policy"] --> semantic
   measures["repository measurements"] --> economic["economic impact scenarios"]
   context["configured economic context"] --> economic
   semantic --> work["bounded prioritized work order"]
@@ -313,7 +313,10 @@ flowchart TB
 
 Both paths terminate in report data consumed by presentation. Neither may
 reach backward into `_formula`, `_calibration`, `_aspects`, or grade policy.
-ADR 004 v1 is in the tree (`_economics`, `_economics_view`). ADR 003 is
-not. The mermaid's semantic half is still a constraint on future work.
-Neither path may reach `_formula`, `_calibration`, `_aspects`, or grade
-policy.
+ADR 004 v1 is in the tree (`_economics`, `_economics_view`). ADR 003's
+TypeScript increment uses `_semantic` for type-backed classification and
+`_semantic_policy` for the optional checked-in policy. `_semantic` belongs with
+scanners; `_semantic_policy` belongs with configuration foundations. Their
+production change also places them in the layer list enforced by
+`tests/test_architecture.py`. Neither path may reach `_formula`, `_calibration`,
+`_aspects`, or grade policy.

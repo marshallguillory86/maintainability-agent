@@ -180,3 +180,129 @@ def _point_count(chart: str) -> int:
 
 def _pillar_count(records: list) -> int:
     return max((len(r.pillars) for r in records), default=0) or 1
+
+
+def test_a_mid_series_gap_breaks_the_line(audited) -> None:
+    """A polyline across a missing scan is interpolation, and ADR 011
+    invariant 6 forbids it: a missing series is omitted or named empty,
+    never invented. Two points with a gap between them are two isolated
+    points — no segment may join them, because the segment *is* a claim
+    about the scan nobody stored."""
+    from maintainability_audit._html_view import _line_chart, _multi_line_chart
+
+    gapped = [(0, 1.0, None, None), (2, 2.0, None, None)]
+    assert _line_chart("chart-practice", gapped, 0.0, 5.0).count("<polyline") == 0, (
+        "a single polyline joined two points across a missing scan"
+    )
+
+    joined = [(0, 1.0, None, None), (1, 1.5, None, None), (2, 2.0, None, None)]
+    assert _line_chart("chart-practice", joined, 0.0, 5.0).count("<polyline") == 1
+
+    runs = [(0, 1.0, None, None), (1, 1.5, None, None), (3, 2.0, None, None), (4, 2.5, None, None)]
+    assert _line_chart("chart-practice", runs, 0.0, 5.0).count("<polyline") == 2, (
+        "two consecutive runs around a gap must be two separate segments"
+    )
+
+    multi = {"readability": gapped}
+    assert _multi_line_chart("chart-pillars", multi, 0.0, 5.0).count("<polyline") == 0, (
+        "the pillar chart interpolates across a missing scan"
+    )
+
+    banded_gap = [(0, 1.0, 0.9, 1.1), (2, 2.0, 1.9, 2.1)]
+    assert _line_chart("chart-estimate", banded_gap, 0.0, 5.0).count("<polygon") == 0, (
+        "the uncertainty band was shaded across a missing scan, which claims "
+        "a range nobody stored"
+    )
+
+
+def test_both_skins_state_the_estimate_source(audited) -> None:
+    """P8 on the headline: what examined this code, in both presentations.
+
+    Markdown grew the 'Estimate source' row for the default path; an HTML
+    executive summary that shows the number without its source is the
+    same report disagreeing with itself about P8's answer.
+    """
+    _root, report, records = audited
+    from maintainability_audit import _evidence_view as view
+
+    source = view.estimate_source(report["score"])
+    assert source, "the shared wording helper returned nothing"
+
+    assert source in render_markdown(report), "markdown dropped the estimate source"
+    assert source in render_html(report, records), (
+        "the HTML executive summary states the estimate without its source"
+    )
+
+
+def test_a_withheld_estimate_reads_identically_in_both_skins(audited) -> None:
+    """Item 6 pinned: one vocabulary for 'no number', via `_evidence_view`.
+
+    'None' in one skin and 'Not scored' in the other is two reports; a
+    reader comparing them concludes the tools disagree, when only the
+    string formatting does.
+    """
+    import copy
+
+    _root, report, records = audited
+    withheld = copy.deepcopy(report)
+    withheld["score"]["maintainability_estimate"] = None
+    withheld["score"]["maintainability_range"] = None
+    withheld["score"]["verified_grade"] = None
+    withheld["score"]["evidence_status"]["status"] = "insufficient"
+
+    markdown = render_markdown(withheld)
+    html = render_html(withheld, records)
+
+    for skin, text in (("markdown", markdown), ("html", html)):
+        assert "Not scored" in text, f"{skin} does not use the shared withheld wording"
+        assert ">None<" not in text and "| None |" not in text, (
+            f"{skin} leaks a raw None where the withheld wording belongs"
+        )
+
+
+def test_json_names_which_selected_analyzers_ran_and_did_not(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """P8 coverage survives JSON: selected sources are attributable by outcome.
+
+    A tools-attempted count is not recoverable coverage. The JSON must name
+    both the selected tool that ran and the selected tool that did not.
+    """
+    import json
+
+    import maintainability_audit.report as report_module
+    from maintainability_audit._analysis import Analysis, ToolCoverage
+    from maintainability_audit._runner import Outcome
+
+    root = _repo(tmp_path)
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: False, raising=False)
+    monkeypatch.setattr(
+        report_module,
+        "analyze",
+        lambda _root, _config: Analysis(
+            coverage=[
+                ToolCoverage(
+                    slug="lizard", outcome=Outcome.RAN.value,
+                    version="1.17.10", concepts=("cyclomatic_complexity",),
+                ),
+                ToolCoverage(
+                    slug="eslint", outcome=Outcome.NOT_INSTALLED.value,
+                    detail="eslint is not installed", concepts=("style",),
+                ),
+            ],
+            concerns=("complexity", "style"),
+            depth="baseline",
+            license_policy="permissive-only",
+        ),
+    )
+    output = tmp_path / "report.json"
+
+    assert main([
+        "--root", str(root), "--analyzers", "--format", "json",
+        "--output", str(output),
+    ]) == 0
+
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    by_outcome = payload["analyzer_coverage"]["by_outcome"]
+    assert [row["tool"] for row in by_outcome["ran"]] == ["lizard"]
+    assert [row["tool"] for row in by_outcome["not-installed"]] == ["eslint"]

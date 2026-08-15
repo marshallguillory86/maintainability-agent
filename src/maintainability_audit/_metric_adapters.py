@@ -13,6 +13,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
 import tempfile
 from collections.abc import Iterable, Sequence
 from pathlib import Path
@@ -400,4 +401,60 @@ class MultimetricAdapter(BaseAdapter):
                 "multimetric returned no per-file metrics; it takes file paths "
                 "rather than a directory"
             )
+        return Extraction(measurements=tuple(measurements))
+
+
+class CohesionAdapter(BaseAdapter):
+    """Per-class cohesion percentages — a measurement, never a gate.
+
+    The one output shape in the pool that is genuinely its own: an
+    indented text tree of files, classes and per-method scores. The
+    per-class `Total:` is the reading kept; per-method lines are the
+    working shown, and keeping them would treble the rows while saying
+    nothing a class total does not.
+
+    A metric emitter: it reports a value for every class it sees,
+    threshold-free, which is what lets it sit in the corroboration
+    machinery rather than the findings list.
+    """
+
+    _FILE = re.compile(r"^File:\s+(?P<path>.+)$")
+    _CLASS = re.compile(r"^\s+Class:\s+(?P<name>\S+)\s+\((?P<line>\d+):\d+\)")
+    _TOTAL = re.compile(r"^\s+Total:\s+(?P<value>[\d.]+)%")
+
+    def __init__(self) -> None:
+        super().__init__(
+            slug="cohesion", emits="metric", executable="cohesion",
+            concepts=("cohesion",), exclude_dialect="files",
+            # Its CLI takes files or a directory and has no version flag,
+            # so availability is answered from package metadata, the same
+            # arrangement multimetric already uses.
+            distribution="cohesion",
+        )
+
+    def invocation(
+        self, root: Path, paths: Iterable[str] | None = None,
+        excludes: Sequence[str] = (),
+    ) -> Invocation:
+        # Explicit files: cohesion has no exclude flag, so what it must
+        # not read is excluded by never being named — the same rule as
+        # complexipy and multimetric.
+        targets = tuple(paths) if paths else expand_files(root, excludes, suffixes=(".py",))
+        return Invocation(argv=(self.executable, "--files", *targets))
+
+    def _read(self, result: ToolResult) -> Extraction:
+        measurements: list[Measurement] = []
+        path, name, line = "", "", 0
+        for text in result.stdout.splitlines():
+            if found := self._FILE.match(text):
+                path = found.group("path")
+            elif found := self._CLASS.match(text):
+                name, line = found.group("name"), int(found.group("line"))
+            elif (found := self._TOTAL.match(text)) and name:
+                measurements.append(Measurement(
+                    concept="cohesion", unit=f"{path}::{name}",
+                    value=float(found.group("value")), tool=self.slug,
+                    path=path, line=line,
+                ))
+                name = ""  # a Total without a Class above it is the file's; skip
         return Extraction(measurements=tuple(measurements))

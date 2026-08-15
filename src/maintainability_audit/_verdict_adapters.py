@@ -13,6 +13,7 @@ identical code.
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
@@ -247,3 +248,50 @@ class EslintAdapter(BaseAdapter):
             if rule.startswith(prefix):
                 return concept
         return "style"
+
+
+class Flake8Adapter(BaseAdapter):
+    """flake8's default line format, kept as located findings.
+
+    Not a DeclaredAdapter, deliberately: flake8's stock output is
+    `path:row:col: CODE message`, which is none of the four standard
+    formats, and JSON output requires a plugin this project will not ask
+    users to install. One small parser beats a prerequisite.
+
+    A verdict emitter like ruff, and for the same reason: its output is
+    shaped by the project's own selected rules, so it contributes
+    findings and can never supply a rate (P2).
+    """
+
+    _LINE = re.compile(r"^(?P<path>.+?):(?P<row>\d+):\d+:\s+(?P<code>\S+)\s+(?P<text>.*)$")
+    # flake8's rule families, on ruff's precedent: C9xx is mccabe
+    # complexity, F401/F841 are unused code. Everything unmapped is
+    # style, the honest default for a lint rule nobody classified.
+    _CONCEPTS = (("C9", "complexity"), ("F401", "dead-code"), ("F841", "dead-code"))
+
+    def __init__(self) -> None:
+        super().__init__(
+            slug="flake8", emits="verdict", executable="flake8",
+            concepts=("style", "complexity", "dead-code"),
+            findings_exit_codes=(0, 1), exclude_flag="--exclude",
+            # flake8 matches each --exclude entry by fnmatch against the
+            # normalised path, the same engine lizard uses.
+            exclude_dialect="fnmatch",
+        )
+
+    def _read(self, result: ToolResult) -> Extraction:
+        findings = []
+        for line in result.stdout.splitlines():
+            match = self._LINE.match(line)
+            if not match:
+                continue
+            code = match.group("code")
+            concept = next(
+                (concern for prefix, concern in self._CONCEPTS if code.startswith(prefix)),
+                "style",
+            )
+            findings.append(Finding(
+                concept=concept, path=match.group("path"), line=int(match.group("row")),
+                message=match.group("text"), tool=self.slug, rule=code,
+            ))
+        return Extraction(findings=tuple(findings))

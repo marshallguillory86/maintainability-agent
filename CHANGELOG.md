@@ -4,6 +4,13 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+### Added
+
+- **flake8 and cohesion adapters (2.7).** flake8's default
+  `path:row:col: CODE` lines become located findings (verdict emitter).
+  cohesion's per-class `Total:` percentages become measurements.
+  xenon stays unadapted: it re-ranks radon and would fake corroboration.
+
 ### Changed
 
 - **MCP ships all three primitives.** Resources expose the rubric, the

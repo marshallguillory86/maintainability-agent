@@ -81,7 +81,7 @@ The output vocabulary is **scenario**, **estimate**, **exposure** and
 **return on investment** require observed or held-out outcome evidence and must
 not describe the initial feature.
 
-## v1 slice (decided 2026-08-15, not shipped)
+## v1 slice (shipped 2026-08-15)
 
 The first increment is option C, narrowed so it can ship without a survey
 and without changing the uniform score.

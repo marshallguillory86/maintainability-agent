@@ -126,3 +126,48 @@ def ask_presentation() -> str:
     if answer:
         print(f"  {answer!r} is not one of {PRESENTATIONS}; using chat")
     return "chat"
+
+
+def maybe_prompt_economics(root: Path, config: dict) -> None:
+    """Ask for the labor range once, under exactly the 6.1 silence rules.
+
+    Fires only at a TTY, only when no labor range is configured or
+    supplied by environment for this run, and never when the operator
+    set ``analyzers.prompt_when_interactive`` to false. Answers merge
+    into ``maintainability-agent.json`` — merge, not overwrite, because
+    the 6.1 ask may have written the analyzers block moments earlier.
+    Enter declines: nothing is written and no block is produced, which
+    is the honest reading of a question the user waved away.
+    """
+    from ._economics import economic_context_from
+
+    if not _stdin_is_a_tty():
+        return
+    if (config.get("analyzers") or {}).get(
+        "prompt_when_interactive", DEFAULTS["prompt_when_interactive"]
+    ) is False:
+        return
+    if economic_context_from(config) is not None:
+        return
+
+    print("Optional: a labor-cost range adds a cost scenario beside the score.")
+    labor: dict[str, float] = {}
+    for bound in ("low", "base", "high"):
+        answer = input(f"Loaded labor cost per hour, {bound} (Enter to skip): ").strip()
+        if not answer:
+            return  # declined; a partial range is not a range
+        labor[bound] = float(answer)
+
+    if not 0 < labor["low"] <= labor["base"] <= labor["high"]:
+        print(f"  ignored: expected low <= base <= high, got {labor}")
+        return
+
+    target = root / CONFIG_FILENAME
+    existing = json.loads(target.read_text(encoding="utf-8")) if target.exists() else {}
+    existing["economic_context"] = {
+        "version": 1,
+        "loaded_engineering_cost_per_hour": labor,
+    }
+    target.write_text(json.dumps(existing, indent=2) + "\n", encoding="utf-8")
+    config["economic_context"] = existing["economic_context"]
+    print(f"Wrote {target}")

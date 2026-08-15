@@ -154,7 +154,12 @@ def test_an_unknown_scope_is_rejected_rather_than_defaulted(tmp_path: Path) -> N
 
 
 def test_changed_only_through_the_cli_withholds_the_score(tmp_path: Path) -> None:
-    """End to end, because the defect was reported against the flag."""
+    """End to end, because the defect was reported against the flag.
+
+    P7: a diff is not the repository. `--changed-only` withholds the
+    estimate rather than presenting a score for four files as the score
+    for the tree, which is the absurd number a reader would catch.
+    """
     root = _repo(tmp_path)
     (root / "m0.py").write_text("def f0():\n    return 99\n", encoding="utf-8")
     subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)

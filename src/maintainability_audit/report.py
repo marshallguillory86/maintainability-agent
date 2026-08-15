@@ -163,6 +163,9 @@ def _analyzer_sections(
             all_code=analyzer_pressures(analysis.measurements, config["thresholds"]),
             production=analyzer_production_pressures(
                 analysis.measurements, config["thresholds"]),
+            # The raw readings ride along so the scorer can price
+            # per-concept tool disagreement into the range (3.4).
+            measurements=tuple(analysis.measurements),
         ),
     }
 

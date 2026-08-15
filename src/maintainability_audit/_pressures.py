@@ -219,6 +219,11 @@ class ExternalPressures:
 
     all_code: dict[str, float | None]
     production: dict[str, float | None]
+    # The raw per-unit readings the pressures were reduced from, kept so
+    # the scorer can price *disagreement between tools* into the range
+    # (ADR 006 §4). The pressures alone cannot carry it: by the time two
+    # readings have become one rate, their spread is gone.
+    measurements: tuple[Measurement, ...] = ()
 
     def measured_anything(self) -> bool:
         return any(value is not None for value in self.all_code.values()) or any(

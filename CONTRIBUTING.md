@@ -15,7 +15,8 @@ Thanks for helping improve Maintainability Agent.
 ## Local Verification
 
 ```bash
-# Install dev extras (ruff + pip-audit + jsonschema + pytest-cov).
+# Install dev extras (ruff + pip-audit + jsonschema + pytest-cov + PyYAML
+# for tools/build_catalog.py). The shipped package does not depend on PyYAML.
 python3 -m pip install -e ".[dev]"
 
 # Lint, deps scan, tests with coverage gate, self-audit.

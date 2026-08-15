@@ -39,7 +39,9 @@ ENFORCEMENT: dict[str, tuple[str, ...]] = {
         # unless the operator opted in (test_network_disclosure).
         "test_no_module_imports_an_http_client",
         "test_no_module_opens_a_network_connection",
+        "test_the_analysis_opens_no_sockets",
         "test_a_missing_node_tool_is_not_fetched_by_default",
+        "test_analyze_does_not_build_fetching_argv_when_acquisition_is_off",
     ),
     "P2": (
         "test_the_same_rubric_applies_at_every_repository_size",
@@ -49,16 +51,20 @@ ENFORCEMENT: dict[str, tuple[str, ...]] = {
     "P3": (
         "test_concealment_ordering_and_its_stated_limit",
         "test_unknown_evidence_blocks_the_top_grades",
+        "test_hiding_evidence_can_never_raise_the_grade",
+        "test_withholding_any_single_input_cannot_raise_the_floor_or_the_grade",
     ),
     "P4": ("test_the_overall_is_the_weighted_mean_of_the_printed_categories",),
     "P5": (
         "test_the_prompt_forbids_widening_the_work_order",
         "test_no_part_of_the_prompt_re_issues_an_escalated_finding",
+        "test_every_prompt_target_is_a_finding_the_audit_produced",
     ),
     "P6": (
         "test_the_pool_document_states_the_catalogs_own_counts",
         "test_the_readme_table_matches_the_stamped_self_audit",
         "test_the_curve_constant_still_does_its_job",
+        "test_a_quoted_study_result_matches_an_approved_summary_verbatim",
     ),
     # Every entry asserts `maintainability_estimate is None` for a
     # repository the scan could not support a number for. The three
@@ -86,8 +92,51 @@ ENFORCEMENT: dict[str, tuple[str, ...]] = {
         "test_the_default_report_names_the_built_in_tier_as_the_estimate_source",
         "test_live_surfaces_do_not_claim_analyzers_leave_the_estimate_alone",
         "test_scored_measurements_name_the_estimate_source",
+        "test_both_skins_state_the_estimate_source",
+        "test_json_names_which_selected_analyzers_ran_and_did_not",
     ),
 }
+
+
+def test_every_prompt_target_is_a_finding_the_audit_produced(tmp_path: Path) -> None:
+    """P5's falsifier: no path/name instruction without a report finding.
+
+    The generic "do not widen" sentence constrains an agent but proves
+    nothing about the concrete targets the prompt emitted. This parses those
+    targets from the rendered prompt and checks each against the audit's own
+    work-order findings.
+    """
+    from test_determinism import _repo
+
+    from maintainability_audit.config import load_config
+    from maintainability_audit.prompts import render_ai_prompt
+    from maintainability_audit.report import build_report
+
+    report = build_report(_repo(tmp_path / "bounded"), load_config(None))
+    prompt = render_ai_prompt(report)
+    expected = {
+        (item["title"], item["path"])
+        for item in report["work_order"]
+        if item["band"] != "major-project"
+    }
+    rendered: set[tuple[str, str]] = set()
+    title = ""
+    for line in prompt.splitlines():
+        match = re.match(r"\d+\. \*\*(.+?)\*\*", line)
+        if match:
+            title = match.group(1)
+            continue
+        location = re.search(r"Location: `([^`:]+)(?::\d+)?`", line)
+        if title and location:
+            rendered.add((title, location.group(1)))
+            title = ""
+
+    assert rendered, "the fixture produced no concrete remediation targets"
+    invented = sorted(rendered - expected)
+    assert not invented, (
+        "the prompt told the agent to fix paths/names the audit did not produce: "
+        f"{invented}"
+    )
 
 
 def _published_promises() -> set[str]:

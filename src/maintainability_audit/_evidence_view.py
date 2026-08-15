@@ -83,6 +83,21 @@ def profile(score: dict[str, Any]) -> str:
     return score["evidence_status"]["profile"]
 
 
+def estimate_source(score: dict[str, Any]) -> str:
+    """What produced the number above — P8, stated in every skin.
+
+    One helper so Markdown and HTML cannot drift into two answers about
+    the same score. Reads `analyzer_scored_dimensions`, which the scorer
+    records; "analyzer output exists" is a different claim from
+    "analyzer output set this number".
+    """
+    scored = score.get("analyzer_scored_dimensions") or []
+    if scored:
+        return (f"Analyzer readings for {', '.join(scored)}; "
+                "built-in detectors for remaining dimensions")
+    return "Built-in detectors (fallback tier)"
+
+
 def verified_grade(score: dict[str, Any]) -> str:
     """The verified grade, or the words that mean there isn't one."""
     return score["verified_grade"] or NOT_VERIFIED

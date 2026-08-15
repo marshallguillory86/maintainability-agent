@@ -54,6 +54,15 @@ _RESOLVED_AS_CURRENT = (
      "005-009 landed in code; remaining gaps are listed as specific debt"),
 )
 
+_SHIPPED_PRESENTATION_ABSENCE = (
+    (re.compile(r"not in this tree yet", re.I),
+     "the three presentation renderers are in the tree"),
+    (re.compile(r"decided, not shipped", re.I),
+     "ADR 011 and history schema 2 ship"),
+    (re.compile(r"schema 2 is the 1\.0 close", re.I),
+     "new history records already use schema 2"),
+)
+
 
 def _asis_architecture(text: str) -> str:
     idx = text.find(_PROPOSAL_HEADING)
@@ -109,6 +118,32 @@ def test_architecture_known_debt_does_not_reassert_resolved_defects() -> None:
         "docs/architecture.md Known debt reasserts resolved defects:\n"
         + "\n".join(offenders)
     )
+
+
+def test_live_surfaces_do_not_call_shipped_presentations_unshipped() -> None:
+    """8.7: architecture and Unreleased describe the tree that ships."""
+    surfaces = {
+        "docs/architecture.md": _asis_architecture(
+            (ROOT / "docs" / "architecture.md").read_text(encoding="utf-8")
+        ),
+        "CHANGELOG.md Unreleased": (ROOT / "CHANGELOG.md").read_text(
+            encoding="utf-8"
+        ).split("## Unreleased", 1)[1].split("\n## ", 1)[0],
+    }
+    offenders = [
+        f"{surface}: {reason} ({match.group(0)!r})"
+        for surface, text in surfaces.items()
+        for pattern, reason in _SHIPPED_PRESENTATION_ABSENCE
+        if (match := pattern.search(text))
+    ]
+    assert not offenders, "shipped Phase 8 work is called absent:\n" + "\n".join(offenders)
+
+
+def test_adr_009_states_the_shipped_ordinal_identity() -> None:
+    """The accepted ADR must distinguish its intended hash from shipped identity."""
+    text = (ROOT / "docs" / "adr-009-scan-history.md").read_text(encoding="utf-8")
+    assert "function:{path}:{name}#{ordinal}" in text
+    assert re.search(r"body hash.{0,80}did not ship|did not ship.{0,80}body hash", text, re.I | re.S)
 
 
 ALLOWED_SPAWN = {"_runner", "git_tools", "_backfill"}

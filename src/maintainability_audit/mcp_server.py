@@ -136,8 +136,13 @@ def audit_repository(
     # HTML comes back as *text* for the host to save or show; files are
     # the CLI's job (ADR 011 §4). Markdown is always present, because
     # chat shows Markdown whatever else was requested.
-    if format not in ("markdown", "html", "json"):
-        raise ValueError(f"format must be markdown, html or json, not {format!r}")
+    # "chat" is accepted because the prompt itself offers it: the host
+    # asks "chat, markdown, or html" and relays the user's word. On the
+    # wire chat *is* Markdown (ADR 011 §2), so it renders nothing extra;
+    # rejecting the vocabulary our own prompt teaches would make the
+    # prompt a trap.
+    if format not in ("chat", "markdown", "html", "json"):
+        raise ValueError(f"format must be chat, markdown, html or json, not {format!r}")
     if format == "html":
         from ._scan_history import DEFAULT_HISTORY_PATH, read_history
         from .renderers import render_html
@@ -185,7 +190,8 @@ def _bind_tools(server: Any, authorized_roots: tuple[Path, ...], read_only: Any)
 
         Set ``run_analyzers`` to also run the external quality tools and
         receive their coverage, findings and measurements. ``format`` is
-        the presentation the user chose — markdown (chat, the default),
+        the presentation the user chose — chat or markdown (the same
+        Markdown on the wire; chat is the default),
         html (returned as text; never written to the tree) or json.
         """
         return audit_repository(

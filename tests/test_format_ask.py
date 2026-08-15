@@ -92,6 +92,14 @@ def test_a_format_flag_suppresses_the_question(
     assert main(["--root", str(root), "--format", "markdown", "--output", str(out)]) == 0
     assert not [p for p in asked if "format" in p.lower() or "chat" in p.lower()]
 
+    asked.clear()
+    html = tmp_path / "report.html"
+    assert main(["--root", str(root), "--html-output", str(html)]) == 0
+    assert html.exists(), "--html-output did not produce the requested presentation"
+    assert not [p for p in asked if "format" in p.lower() or "chat" in p.lower()], (
+        f"--html-output was given and the CLI still asked: {asked}"
+    )
+
 
 def test_non_tty_never_asks_for_a_format(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
@@ -181,3 +189,23 @@ def test_the_mcp_prompt_tells_the_host_to_ask(tmp_path: Path) -> None:
         "the prompt never tells the host to ask the user which presentation"
     )
     assert "chat" in text and "html" in text and "markdown" in text
+
+
+def test_format_chat_is_markdown_on_the_wire(tmp_path: Path) -> None:
+    """The host relays the user's own word for the default.
+
+    The prompt tells the host to ask "chat, markdown, or html" and pass
+    the answer as the format argument — so `format="chat"` is a legal
+    input by the server's own instructions, and rejecting it makes the
+    prompt a trap. Chat *is* Markdown on the wire (ADR 011 §2): same
+    payload as the default, no HTML text, and never a tree write.
+    """
+    root = _repo(tmp_path)
+    before = {p for p in root.rglob("*")}
+
+    result = audit_repository(str(root), format="chat", roots=(tmp_path.resolve(),))
+
+    assert result["report_markdown"].startswith("# Maintainability CI Report")
+    assert result["format"] == "chat"
+    assert "report_html" not in result, "chat renders no HTML"
+    assert {p for p in root.rglob("*")} == before, "the MCP tool wrote the tree"

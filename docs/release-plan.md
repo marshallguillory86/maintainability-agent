@@ -185,7 +185,7 @@ Until that exists, a small repository gets path 2: a complete audit, every findi
 
 | # | Task | Exit condition |
 |---|---|---|
-| 7.1 | Regenerate the self-audit under the new pipeline | Published, and the README matches it |
+| 7.1 | Regenerate the self-audit under the new pipeline | **Shipped.** `docs/self-audit.md` stamped at `9c2257a`; README table matches (`tests/test_docs_links.py`) |
 | 7.2 | Reconcile every document with shipped behavior | No document describes an unimplemented component as present |
 | 7.3 | **Done.** Update the promise set | `tests/test_promises.py` indexes the enforcement for every promise; P7's score-withholding tests and P8's coverage and estimate-source tests name their falsifiers |
 | 7.4 | Migration guide | **Done.** [migration-1.0.md](migration-1.0.md) names the post-0.7 breaks: `--analyzers` moves the estimate; `CALIBRATION_C` 2.6279 → 2.2658. Schema 3 and baseline v2 do not break again. 1.0 is not tagged. |

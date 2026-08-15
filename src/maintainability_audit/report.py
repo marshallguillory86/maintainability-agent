@@ -17,6 +17,7 @@ from ._analysis import analyze
 from ._built_ins import record_built_in_counts
 from ._discovery import Provenance, discover
 from ._documents import coverage_document, findings_document, measurement_document
+from ._environment import environment_work_order
 from ._metrics_types import FileMetric, FunctionMetric
 from ._pillars import pillar_report
 from ._practice import practice_level
@@ -141,10 +142,15 @@ def _analyzer_sections(
     repeated at each call site.
     """
     if not run_analyzers:
-        return {"coverage": None, "findings": [], "measurements": {}, "pressures": None}
+        return {"coverage": None, "findings": [], "measurements": {},
+                "pressures": None, "environment": []}
     analysis = analyze(root, config)
     return {
         "coverage": coverage_document(analysis),
+        # ADR 006 §2c: what did not run and what it would take, for the
+        # user to act on. Emitted here because only the analysis knows
+        # which tools were *selected*; the agent never runs the commands.
+        "environment": environment_work_order(analysis.coverage),
         "findings": findings_document(analysis, root),
         "measurements": measurement_document(analysis, root),
         # The analyzers' reading of the scorer's own dimensions, and the
@@ -278,6 +284,7 @@ def _assemble(
         # Beside the score, never behind it: two reports with different
         # analyzer coverage are not comparable (P8).
         "analyzer_coverage": analyzer["coverage"],
+        "environment_work_order": analyzer["environment"],
         # What the analyzers actually found. Coverage without findings
         # would report that nine tools examined the repository and then
         # tell the reader nothing they saw.

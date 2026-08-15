@@ -61,10 +61,18 @@ SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_de
 # adapters and hands `report` a coverage document. That makes it assembly,
 # not a scanner — it composes rather than measures.
 ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
+            # `_environment` composes the install-command artifact from the
+            # coverage record (ADR 006 §2c); it measures nothing and spawns
+            # nothing, and `test_the_agent_never_runs_the_install_command`
+            # holds the second half of that.
+            "_environment",
             "_work_order_weights", "_backfill"}
 PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 "_scan_view", "_history_view", "_identity"}
-ENTRY = {"cli", "__main__", "mcp_server"}
+# `_first_run` is terminal interaction — it prompts, which no layer
+# below entry may ever do, and writes the config file the entry then
+# loads through ordinary discovery.
+ENTRY = {"cli", "__main__", "mcp_server", "_first_run"}
 BOUNDARY = {"evidence"}
 
 LAYERS = {

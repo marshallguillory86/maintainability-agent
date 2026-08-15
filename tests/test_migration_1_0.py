@@ -42,11 +42,17 @@ def test_the_guide_does_not_reopen_the_0_7_baseline_break() -> None:
     assert "schema_version" in text.lower() or "schema version" in text.lower()
 
 
-def test_adr_006_does_not_claim_the_environment_work_order_ships() -> None:
-    """2.5c is deferred. The ADR body used to state it as current behaviour."""
+def test_adr_006_states_the_environment_work_order_ships() -> None:
+    """2.5c shipped. Flipped from asserting deferral, for the usual reason:
+    an honesty lint that keeps insisting a shipped feature is absent is
+    the same defect as prose claiming an absent one is present."""
     text = (ROOT / "docs" / "adr-006-analyzer-evidence.md").read_text(encoding="utf-8")
     assert "environment work order" in text.lower()
-    assert "not shipped" in text.lower() and "2.5c" in text
+    assert "2.5c" in text
+    assert "Not shipped (2.5c)" not in text, (
+        "the ADR still defers the environment work order; report[\"environment_work_order\"] ships it"
+    )
+    assert "never installs" in text.lower(), "the line that may not blur has to stay stated"
 
 
 def test_the_index_and_readme_point_at_the_1_0_guide() -> None:

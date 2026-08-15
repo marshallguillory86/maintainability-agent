@@ -13,7 +13,7 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 | Tests | 893 across 60 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
 | Known open exit conditions in Phases 0–5 | Phase 2 still has 2.7 (moderate adapters) open. Phase 3 also retains open exit conditions described below, including the unused band matrix. |
-| Later phases outstanding | Phase 6 still has 6.1 (interactive prompt) open. The 6.2 MCP subcommand and three primitives, and the 6.3 byte-identical Markdown resource, shipped. For 6.4, the consumer workflow recipe shipped, but history caching remains open. Phase 7 remains 1.0 release work. |
+| Later phases outstanding | The 6.1 first-run prompt, the 6.2 MCP subcommand and three primitives, and the 6.3 byte-identical Markdown resource shipped, as did the 2.5c environment work order. For 6.4, the consumer workflow recipe shipped, but history caching remains open. Phase 7 remains 1.0 release work. |
 
 This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; open work remains in the earlier phases as well as Phases 6 and 7.
 
@@ -68,7 +68,7 @@ Implements the executable half of [ADR 006](adr-006-analyzer-evidence.md). The l
 | 2.4 | Ten baseline adapters: lizard, cloc, multimetric, jscpd, radon, ruff, vulture, complexipy, interrogate, pydocstyle | Each parses real output on the corpus; per-adapter fixture tests |
 | 2.5 | Coverage reporting in the report | Every run states tools attempted, run, unavailable and why, with versions |
 | 2.5b | Coverage gaps per language and concern | A concern with no tool running against it is `Unknown`, never clean |
-| 2.5c | Environment work order | Names missing prerequisites and the install command; the agent never installs. **Deferred to 1.0** — coverage (2.5) already names missing tools; this is the install-command artifact on top, not a honesty hole in 0.7 |
+| 2.5c | Environment work order | **Shipped.** `report["environment_work_order"]` names each selected tool that could not run, why, the install command and the verification; rendered after coverage in the Markdown report; the agent never installs (`tests/test_environment_work_order.py`) |
 | 2.6 | Rubric-driven tool configuration | Changing a project's `eslint.config.mjs` provably does not move the score |
 | 2.7 | Five moderate adapters | pylint, flake8, eslint, xenon, cohesion parse real output |
 | 2.8 | Determinism under pinned versions | Two runs on one tree with identical tool versions are byte-identical |
@@ -176,7 +176,7 @@ Until that exists, a small repository gets path 2: a complete audit, every findi
 
 | # | Task | Exit condition |
 |---|---|---|
-| 6.1 | Interactive first-run prompt for concerns, depth, policy | Prompts only on a TTY with no config; never in CI; the answer persists |
+| 6.1 | Interactive first-run prompt for concerns, depth, policy | **Shipped.** Prompts only on a TTY with no config; never in CI; the answer persists to `maintainability-agent.json` (`tests/test_first_run_prompt.py`) |
 | 6.2 | **Done.** MCP server as a subcommand | `maintainability-agent mcp` exposes all three primitives: `tools` run the audit, `resources` expose rubric/report/catalog, `prompts` is the slash command |
 | 6.3 | **Done.** Markdown retrievable from chat | The MCP report resource is byte-identical to `render_markdown(build_report(...))` |
 | 6.4 | CI recipes | GitHub Actions and a generic runner, with history caching |
@@ -210,6 +210,6 @@ If the finish line has to move nearer, these can be deferred without making the 
 - **Phase 5 backfill (5.5)** — history still accumulates going forward.
 - **Phase 6 MCP (6.2, 6.3)** — the CLI covers CI, which is the load-bearing entry point.
 - **Adapters beyond the ten baseline ones (2.7)** — the pool grows over time by design; `all` already reports honestly what it could not run.
-- **2.5c environment work order** — coverage (2.5) already names missing tools; the install-command artifact is a convenience. The agent still never installs.
+- **2.5c environment work order** — shipped: the install-command artifact now rides beside coverage. The agent still never installs.
 
 What cannot be cut without the tool lying: population floors (Phase 1), coverage reporting (2.5), and rubric-driven tool configuration (2.6). Those three are what stop the score from being fiction.

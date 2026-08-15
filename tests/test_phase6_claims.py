@@ -17,6 +17,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "src" / "maintainability_audit"
 
+# The mirror image, live once the key is read: prose that still calls
+# the prompt unshipped. Same two-sided discipline as the MCP half below.
+_STALE_INTERACTIVE_ABSENCE = (
+    (re.compile(r"reserved\.\s*The key is stored and never read", re.I),
+     "the key is read now; the schema page still calls it reserved"),
+    (re.compile(r"is stored and never read", re.I),
+     "the key is read by production"),
+    (re.compile(r"6\.1 and is not shipped|6\.1 is not shipped|6\.1 \(interactive prompt\) open", re.I),
+     "6.1 shipped; the sentence is stale"),
+)
+
 _INTERACTIVE_CLAIMS = (
     (re.compile(r"ask for depth and policy on first run", re.I),
      "6.1 is open; the key is stored and never read"),
@@ -102,11 +113,19 @@ def _mcp_is_cli_subcommand() -> bool:
     )
 
 
-def test_prompt_when_interactive_is_not_read() -> None:
-    """The fixture for the 6.1 half of this file. Flip it by reading the key."""
-    assert not _interactive_prompt_is_read(), (
-        "prompt_when_interactive is now read; drop the 6.1 phrases from "
-        "the stale-claim list or this assertion"
+def test_prompt_when_interactive_is_read_by_production() -> None:
+    """The 6.1 half, inverted: 1.0 ships the first-run prompt.
+
+    This assertion used to read `assert not _interactive_prompt_is_read()`
+    — correct while 6.1 was deferred, and the wrong claim now that
+    `_first_run.maybe_prompt_first_run` reads the key and the CLI calls
+    it. `tests/test_first_run_prompt.py` holds what the reader must do;
+    this holds that a reader exists at all.
+    """
+    assert _interactive_prompt_is_read(), (
+        "prompt_when_interactive is stored in DEFAULTS and in "
+        "maintainability-agent.json, and no production module reads it — "
+        "the key is unread, so the first-run prompt (6.1) cannot fire"
     )
 
 
@@ -133,8 +152,14 @@ def test_mcp_resources_and_the_subcommand_both_ship() -> None:
     )
 
 
-def test_live_docs_do_not_claim_the_interactive_prompt_ships() -> None:
+def test_live_docs_match_the_interactive_prompt_state() -> None:
+    """Both directions of the same honesty rule, keyed to the code."""
     if _interactive_prompt_is_read():
+        offenders = _matches(_STALE_INTERACTIVE_ABSENCE)
+        assert not offenders, (
+            "docs still describe the first-run prompt as unshipped:\n"
+            + "\n".join(offenders)
+        )
         return
     offenders = _matches(_INTERACTIVE_CLAIMS)
     assert not offenders, (

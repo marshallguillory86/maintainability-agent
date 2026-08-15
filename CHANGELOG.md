@@ -22,9 +22,13 @@ All notable changes to Maintainability Agent will be documented here.
   population, `CALIBRATION_C` is 2.2658 after 3.6, and coverage is reported.
   A structural lint fails the build if those pages revert to the 0.7-era story.
 
-- **Docs no longer describe the first-run prompt as present.**
-  `prompt_when_interactive` is stored and never read (6.1). A structural
-  lint fails the build if that sentence returns while the key is unread.
+- **First-run prompt (6.1).** On a TTY with no config the CLI asks
+  depth and license policy and writes `maintainability-agent.json`.
+  Non-TTY and existing-config runs never prompt and never rewrite.
+
+- **Environment work order (2.5c).** The report names each selected
+  analyzer that could not run, why, the install command, and how to
+  verify it. The agent never installs.
 
 - **The point estimate uses analyzer measurements where the full concept set
   was measured.** `--analyzers` is no longer a coverage-only side channel:

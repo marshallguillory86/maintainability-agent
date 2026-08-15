@@ -7,6 +7,7 @@ from pathlib import Path
 
 from ._backfill import backfill
 from ._calibration import CALIBRATION_C
+from ._first_run import maybe_prompt_first_run
 from ._recurrence import escalations
 from ._scan_history import (
     DEFAULT_HISTORY_PATH,
@@ -149,6 +150,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     root = Path(args.root).resolve()
+    # First run at a terminal with nothing configured: ask, persist, and
+    # then load through the same discovery every later run uses. The
+    # prompt writes the file `discovered_config` finds, so it has no
+    # private path into the audit (release-plan 6.1).
+    maybe_prompt_first_run(root, args.config)
     config = load_config(args.config or discovered_config(root))
     if args.init_agent_standards:
         targets = args.target or ["generic", "claude-code", "codex", "cursor", "copilot", "windsurf"]

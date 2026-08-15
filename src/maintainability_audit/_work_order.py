@@ -286,11 +286,57 @@ def work_order(report: dict[str, Any], include_reconsider: bool = False) -> list
             "verification": weight.verification,
         })
 
+    items.extend(_items_from_semantic(report))
     items.sort(key=lambda item: (
         ordering[Band(item["band"])], -item["class_delta"],
         # Within a class every delta is identical, so severity is what
         # actually orders the work a reader will do first.
         -item["severity"], item["path"]))
+    return items
+
+
+def _items_from_semantic(report: dict[str, Any]) -> list[dict[str, Any]]:
+    """Universal and policy semantic findings as work items (ADR 003).
+
+    Candidates are deliberately absent: they are design-review material
+    for the prompt, not work anyone was proven to owe. Deltas are an
+    exact 0.0 rather than a recomputation, because the score never
+    counted semantic findings and a nonzero delta would claim it had.
+    """
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for finding in report.get("semantic_findings") or []:
+        if finding.get("class") in ("universal", "policy"):
+            grouped.setdefault(finding["class"], []).append(finding)
+    items: list[dict[str, Any]] = []
+    for classification, findings in grouped.items():
+        # Typed facts are precise and local; policy work touches a
+        # declared boundary, which is more coordination than code.
+        risk, effort = (4, 2) if classification == "universal" else (4, 3)
+        band = band_of(risk, effort)
+        for finding in findings:
+            evidence = finding.get("source_evidence") or {}
+            if not evidence.get("path"):
+                continue
+            items.append({
+                "finding_class": f"semantic-{classification}",
+                "title": f"{finding['rule_id']} in {evidence['path']}",
+                "path": evidence["path"],
+                "line": evidence.get("line"),
+                "target": finding.get("message") or "",
+                "severity": 1.0,
+                "band": band.value,
+                "risk": risk,
+                "effort": effort,
+                "rationale": (
+                    "a type checker proved this fact about the code"
+                    if classification == "universal"
+                    else "the repository's checked-in policy declares this boundary"
+                ),
+                "delta": 0.0,
+                "class_delta": 0.0,
+                "class_count": len(findings),
+                "verification": "python -m maintainability_audit --root . --format json",
+            })
     return items
 
 
@@ -329,7 +375,11 @@ def combined_delta(report: dict[str, Any], items: list[dict[str, Any]]) -> float
     summary = amended["summary"]
     counts: dict[str, int] = {}
     for item in items:
-        weight = CLASS_RISK_EFFORT[item["finding_class"]]
+        weight = CLASS_RISK_EFFORT.get(item["finding_class"])
+        if weight is None:
+            # Semantic classes have no summary counter: the score never
+            # counted them, so clearing them moves it by exactly nothing.
+            continue
         counts[weight.counter] = counts.get(weight.counter, 0) + 1
     for counter, amount in counts.items():
         summary[counter] = max(0, int(summary.get(counter, 0)) - amount)

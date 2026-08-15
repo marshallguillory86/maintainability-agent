@@ -1,0 +1,47 @@
+{
+  "tool": "typescript",
+  "version": "5.9.2",
+  "status": "available",
+  "raw_output": "src/universal.ts(8,16): error TS2345: Argument of type 'string' is not assignable to parameter of type 'OrderStatus'.",
+  "diagnostics": [
+    {
+      "code": "TS2345",
+      "path": "src/universal.ts",
+      "line": 8,
+      "column": 16,
+      "symbol": "acceptStatus",
+      "actual_type": "string",
+      "required_type": "OrderStatus",
+      "message": "Argument of type 'string' is not assignable to parameter of type 'OrderStatus'."
+    }
+  ],
+  "typed_boundaries": [
+    {
+      "path": "src/revalidated-boundary.ts",
+      "line": 8,
+      "symbol": "loadCustomer",
+      "boundary": "public",
+      "parameter": "customerId",
+      "actual_type": "string",
+      "validations": ["looksLikeCustomerId", "normalizeCustomerId"]
+    },
+    {
+      "path": "benign/typed-boundary.ts",
+      "line": 3,
+      "symbol": "publishStatus",
+      "boundary": "public",
+      "parameter": "status",
+      "actual_type": "OrderStatus",
+      "validations": []
+    },
+    {
+      "path": "benign/plain-label.ts",
+      "line": 1,
+      "symbol": "displayLabel",
+      "boundary": "public",
+      "parameter": "label",
+      "actual_type": "string",
+      "validations": []
+    }
+  ]
+}

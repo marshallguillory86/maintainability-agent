@@ -60,6 +60,8 @@ flowchart TB
     _metric_adapters["_metric_adapters"]
     _verdict_adapters["_verdict_adapters"]
     _tool_adapters["_tool_adapters"]
+    _semantic["_semantic"]
+    _semantic_ts["_semantic_ts"]
   end
 
   subgraph scoring["scoring"]
@@ -101,6 +103,7 @@ flowchart TB
     instructions["instructions"]
     _runner["_runner"]
     _catalog["_catalog"]
+    _semantic_policy["_semantic_policy"]
   end
 
   entry --> presentation
@@ -113,13 +116,13 @@ flowchart TB
   parsing --> foundations
 ```
 
-`_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_finding_match` owns structured identity and matching; `_identity` presents the ordinal labels derived from the report.
+`_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_finding_match` owns structured identity and matching; `_identity` presents the ordinal labels derived from the report. `_semantic` classifies type-backed findings; `_semantic_ts` supplies TypeScript type facts from recordings or an already-installed `tsc`; `_semantic_policy` loads the optional checked-in policy.
 
 | Layer | Owns | May import |
 | --- | --- | --- |
-| **foundations** | Data types, config defaults, git invocation, masking primitives, and `_finding_match` (structured identities plus the one matching relation used by gates and recurrence) | nothing internal except `_finding_match` using `git_tools` for rename evidence |
+| **foundations** | Data types, config defaults, git invocation, masking primitives, `_finding_match` (structured identities plus the one matching relation used by gates and recurrence), and `_semantic_policy` | nothing internal except `_finding_match` using `git_tools` for rename evidence |
 | **parsing** | Reading files once, extracting declarations, complexity, ranges, tokens | foundations |
-| **scanners** | Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history, and — via `_adapters` — whatever the external analyzers report | foundations, parsing, `_runner` |
+| **scanners** | Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history, ADR 003 semantic classification (`_semantic`, `_semantic_ts`), and — via `_adapters` — whatever the external analyzers report | foundations, parsing, `_runner` |
 | **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
 | **assembly** | Running the scan, running the analyzer pool (`_analysis`) and stating what it found (`_documents`), the environment work order composed from coverage (`_environment`), recording the built-in detectors as their own source tier (`_built_ins`), ordering the work by risk against effort and recomputing each item's worth (`_work_order`, weights in `_work_order_weights`), assembling the report dict, invoking the scorer once | anything below |
 | **presentation** | Markdown/chat, a self-contained HTML report, PR comment, SARIF, baseline, remediation prompt, `_evidence_view` (shared estimate/range/evidence/verified-grade wording), and `_identity` (labels and digests consumed from the report, never source). The renderers consume one report dictionary and do not score | foundations, the report dict |
@@ -284,8 +287,8 @@ The first two ADR 006 rows describe the landed *shape*. The point estimate uses 
 
 ## Extension boundaries
 
-ADR 004 v1 ships. ADR 003 does not. Neither may change what the
-standard score means:
+ADR 004 v1 ships. ADR 003 option C is accepted and its TypeScript-only
+increment is current work. Neither may change what the standard score means:
 
 - [ADR 003](adr-003-deterministic-semantic-policy.md) specifies a type-aware
   semantic-analysis path. Language-native analyzers and checked-in repository
@@ -303,8 +306,8 @@ The intended dependency direction is:
 
 ```mermaid
 flowchart TB
-  analyzers["language-native analyzers / SARIF"] --> semantic["normalized semantic findings"]
-  policy["checked-in semantic policy"] --> semantic
+  analyzers["language-native analyzers / SARIF"] --> semantic["_semantic — normalized semantic findings"]
+  policy["_semantic_policy — checked-in semantic policy"] --> semantic
   measures["repository measurements"] --> economic["economic impact scenarios"]
   context["configured economic context"] --> economic
   semantic --> work["bounded prioritized work order"]
@@ -313,7 +316,11 @@ flowchart TB
 
 Both paths terminate in report data consumed by presentation. Neither may
 reach backward into `_formula`, `_calibration`, `_aspects`, or grade policy.
-ADR 004 v1 is in the tree (`_economics`, `_economics_view`). ADR 003 is
-not. The mermaid's semantic half is still a constraint on future work.
-Neither path may reach `_formula`, `_calibration`, `_aspects`, or grade
-policy.
+ADR 004 v1 is in the tree (`_economics`, `_economics_view`). ADR 003's
+TypeScript increment uses `_semantic` for type-backed classification,
+`_semantic_ts` for type facts, and `_semantic_policy` for the optional
+checked-in policy. `_semantic` and `_semantic_ts` belong with scanners;
+`_semantic_policy` belongs with configuration foundations. Their
+production change also places them in the layer list enforced by
+`tests/test_architecture.py`. Neither path may reach `_formula`, `_calibration`,
+`_aspects`, or grade policy.

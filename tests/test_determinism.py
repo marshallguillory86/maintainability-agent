@@ -101,7 +101,9 @@ def test_two_analyzer_runs_on_one_tree_agree(tmp_path: Path) -> None:
     assert _comparable(first) == _comparable(second)
 
 
-def test_a_history_is_an_input_and_the_report_says_so(tmp_path: Path) -> None:
+def test_a_history_is_an_input_and_the_report_says_so(
+    tmp_path: Path, monkeypatch
+) -> None:
     """Determinism is over (tree, config, history) — not the tree alone.
 
     A finding that cleared and came back twice is genuinely different
@@ -109,16 +111,20 @@ def test_a_history_is_an_input_and_the_report_says_so(tmp_path: Path) -> None:
     *should* report differently against different histories. The promise
     must name history as an input, or it is false as written.
     """
+    import sys
+
     from maintainability_audit._scan_history import (
+        DEFAULT_HISTORY_PATH,
         ScanRecord,
         append_scan,
-        read_history,
-        segments,
     )
-    from maintainability_audit._trends import trend_report
+    from maintainability_audit.cli import main
 
     root = _repo(tmp_path / "withhistory")
-    history = root / ".maintainability" / "history.jsonl"
+    history = root / DEFAULT_HISTORY_PATH
+    first_path = tmp_path / "without-history.json"
+    second_path = tmp_path / "with-history.json"
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: False, raising=False)
 
     def record(commit: str, findings: tuple[str, ...]) -> ScanRecord:
         return ScanRecord(
@@ -127,16 +133,28 @@ def test_a_history_is_an_input_and_the_report_says_so(tmp_path: Path) -> None:
             thresholds_digest="t", analyzers=(), scored_languages=("Python",),
             estimate=4.0, fingerprints=findings)
 
-    without = [trend_report(s) for s in segments(read_history(history))]
-    assert without == [], "no history, no trend"
+    assert main([
+        "--root", str(root), "--format", "json", "--output", str(first_path),
+    ]) == 0
+    without = json.loads(first_path.read_text(encoding="utf-8"))
+    assert without["scan_history"] == [], (
+        "the full report does not make a missing history file visible"
+    )
 
     append_scan(history, record("a", ("x",)))
     append_scan(history, record("bb", ()))
     append_scan(history, record("ccc", ("x",)))
-    with_history = [trend_report(s) for s in segments(read_history(history))]
+    assert main([
+        "--root", str(root), "--format", "json", "--output", str(second_path),
+    ]) == 0
+    with_history = json.loads(second_path.read_text(encoding="utf-8"))
 
-    assert with_history, "the same tree now carries a trend it did not before"
-    assert with_history[0]["velocity"]["introduced"] == 1
+    assert with_history["scan_history"], (
+        "the same tree with recorded history carries no history in its full report"
+    )
+    assert _comparable(without) != _comparable(with_history), (
+        "two full reports over one tree ignored their different history inputs"
+    )
 
 
 def test_the_analysis_opens_no_sockets(tmp_path: Path) -> None:

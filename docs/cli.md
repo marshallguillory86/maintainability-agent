@@ -41,9 +41,9 @@ Repeat `--allow-root` to authorize unrelated repository directories. With no exp
 | `--write-baseline` | Write current findings as a baseline JSON file. |
 | `--fail-on-new` | Exit nonzero only for findings not in baseline. |
 | `--fail-on-gate` | Exit nonzero when hard gates fail. |
-| `--analyzers` | Run the external analyzer pool and report its coverage. A complete concept set moves the point estimate; otherwise the built-in fallback stands and the range widens. See [the analyzer pool](analyzer-pool.md). |
+| `--analyzers` | Run the external analyzer pool and report its coverage. A complete concept set moves the point estimate; otherwise the built-in fallback stands and the range widens. Missing-tool acquisition is separately controlled by `analyzers.acquire_tools` in config and defaults off. See [the analyzer pool](analyzer-pool.md). |
 | `--work AXIS=VALUE` | Narrow the work order. Repeatable; every criterion must match. Axes: `band`, `finding_class`, `path`, `verification`. Narrowing changes what is shown and never what anything scored. |
-| `--record-history` | Append this scan to `.maintainability/history.jsonl`. Opt-in, like every other write. Once the file exists, later runs read it without being asked. |
+| `--record-history` | Create or append this scan to `.maintainability/history.jsonl`. Once the file exists, every later successful scan appends to it and reads the resulting history without another flag. |
 | `--backfill REVSPEC` | Scan each commit in a range into the history and exit, e.g. `HEAD~50..HEAD`. Each commit is checked out in a temporary worktree; the working tree is never touched. Expensive, so it never runs as part of a normal scan. |
 | `--backfill-interval N` | With `--backfill`, scan every Nth commit instead of all of them. |
 | `--sarif-output` | Write SARIF report for GitHub code scanning. |

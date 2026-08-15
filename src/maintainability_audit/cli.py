@@ -66,8 +66,8 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         "--record-history", action="store_true",
         help="Append this scan to the history at paths.history (default "
              ".maintainability/history.jsonl). Opt-in, like every other write "
-             "this tool performs. Once the file exists, later runs read it "
-             "without being asked.",
+             "this tool performs. Once the file exists, every later successful "
+             "scan appends to it and reads the resulting history.",
     )
     parser.add_argument(
         "--backfill", metavar="REVSPEC",

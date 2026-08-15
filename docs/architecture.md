@@ -14,6 +14,7 @@ Dependencies point downward only. No cycles. Every module in a box is a file und
 flowchart TB
   subgraph entry["entry"]
     cli["cli"]
+    _first_run["_first_run"]
     dunder_main["__main__"]
     mcp_server["mcp_server"]
   end
@@ -33,6 +34,7 @@ flowchart TB
     report["report"]
     _analysis["_analysis"]
     _documents["_documents"]
+    _environment["_environment"]
     _built_ins["_built_ins"]
     _work_order["_work_order"]
     _work_order_weights["_work_order_weights"]
@@ -112,9 +114,9 @@ flowchart TB
 | **parsing** | Reading files once, extracting declarations, complexity, ranges, tokens | foundations |
 | **scanners** | Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history, and — via `_adapters` — whatever the external analyzers report | foundations, parsing, `_runner` |
 | **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
-| **assembly** | Running the scan, running the analyzer pool (`_analysis`) and stating what it found (`_documents`), recording the built-in detectors as their own source tier (`_built_ins`), ordering the work by risk against effort and recomputing each item's worth (`_work_order`, weights in `_work_order_weights`), assembling the report dict, invoking the scorer once | anything below |
+| **assembly** | Running the scan, running the analyzer pool (`_analysis`) and stating what it found (`_documents`), the environment work order composed from coverage (`_environment`), recording the built-in detectors as their own source tier (`_built_ins`), ordering the work by risk against effort and recomputing each item's worth (`_work_order`, weights in `_work_order_weights`), assembling the report dict, invoking the scorer once | anything below |
 | **presentation** | Markdown, PR comment, SARIF, baseline, remediation prompt, `_evidence_view` (estimate/range/evidence/verified-grade wording), and `_identity` (fingerprints derived from the report, never from source) | foundations, the report dict |
-| **entry** | Argument parsing, transport, output routing, exit codes | anything below |
+| **entry** | Argument parsing, transport, output routing, exit codes, and the first-run TTY prompt (`_first_run`) — the one place the tool may ask a question | anything below |
 
 ## The rules, and why each exists
 

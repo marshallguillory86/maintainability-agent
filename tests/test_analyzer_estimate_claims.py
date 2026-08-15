@@ -73,7 +73,12 @@ def test_the_production_mix_is_analyzer_primary() -> None:
 
 
 def test_live_surfaces_do_not_claim_analyzers_leave_the_estimate_alone() -> None:
-    """The class: one stale sentence, every place a user can still read it."""
+    """The class: one stale sentence, every place a user can still read it.
+
+    P8: the estimate's source has to be attributable, and a document
+    still saying the analyzers leave the number alone attributes it to
+    the wrong tier.
+    """
     if not _analyzer_primary_is_the_mix():
         return
 
@@ -103,7 +108,12 @@ def test_live_surfaces_do_not_claim_analyzers_leave_the_estimate_alone() -> None
 
 
 def test_scored_measurements_name_the_estimate_source() -> None:
-    """The Markdown report is what a human reads. It must not invert the mix."""
+    """The Markdown report is what a human reads. It must not invert the mix.
+
+    P8: a reported value needs an attributable source, so where the
+    analyzers supplied the number the report says so rather than leaving
+    the reader to assume the built-in tier produced it.
+    """
     text = "\n".join(analyzer_measurements_markdown(_one_measurement(), ["declarations"]))
     lowered = text.lower()
 
@@ -148,3 +158,60 @@ def _one_measurement() -> dict:
             "distribution": {},
         }
     }
+
+
+def test_the_default_report_names_the_built_in_tier_as_the_estimate_source(
+    tmp_path: Path,
+) -> None:
+    """P8 on the path almost every reader takes: no `--analyzers`.
+
+    A reported value with no attributable source is the published
+    falsifier, and the default Markdown report is exactly that today.
+    `summary_table` prints the estimate, the range and the grade; the
+    coverage section that would name the built-in tier is omitted
+    entirely because `analyzer_coverage` is None when the pool did not
+    run, and the estimate-source caveat in `_scan_view` only renders
+    beside analyzer measurements.
+
+    So the one report a zero-install user actually reads states a number
+    and never says what produced it. Where analyzers *do* run the source
+    is named — which makes the default path the gap, not the design.
+    """
+    import subprocess
+
+    from maintainability_audit.config import load_config
+    from maintainability_audit.renderers import render_markdown
+    from maintainability_audit.report import build_report
+
+    root = tmp_path / "default"
+    root.mkdir()
+    (root / "README.md").write_text("# r\n", encoding="utf-8")
+    for index in range(40):
+        (root / f"m{index}.py").write_text(
+            "\n".join(f"def f{index}_{j}(v):\n    return v + {j}\n" for j in range(4)),
+            encoding="utf-8",
+        )
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+    subprocess.run(
+        ["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t",
+         "commit", "-qm", "start"],
+        check=True,
+    )
+
+    report = build_report(root, load_config(None))
+    assert report["analyzer_coverage"] is None, "this fixture must be the no-analyzers path"
+    assert report["score"]["maintainability_estimate"] is not None, (
+        "the fixture must produce a number, or there is no source to attribute"
+    )
+
+    markdown = render_markdown(report)
+    lowered = markdown.lower()
+
+    assert any(
+        phrase in lowered
+        for phrase in ("built-in detector", "built-in tier", "built-in detectors")
+    ), (
+        "the default report states an estimate and never says what produced it; "
+        "P8's falsifier is a reported value with no attributable source"
+    )

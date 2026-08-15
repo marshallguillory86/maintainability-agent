@@ -85,6 +85,12 @@ def test_no_calibration_member_is_unscoreable_by_the_scale_it_calibrates() -> No
 
 
 def test_a_repository_below_the_root_floor_gets_no_score(tmp_path: Path) -> None:
+    """P7: a population this small supports no rate, so the score is withheld.
+
+    Three files is below the calibration floor. Publishing a number from
+    it would be the absurd figure P7 forbids — a reader with the
+    repository in front of them can see there is nothing to judge.
+    """
     score = score_report(build_report(_repo(tmp_path, files=3), load_config(None)))
 
     assert score["maintainability_estimate"] is None

@@ -55,15 +55,30 @@ ENFORCEMENT: dict[str, tuple[str, ...]] = {
         "test_the_readme_table_matches_the_stamped_self_audit",
         "test_the_curve_constant_still_does_its_job",
     ),
+    # Every entry asserts `maintainability_estimate is None` for a
+    # repository the scan could not support a number for. The three
+    # causes are the three the report can actually hit: source it never
+    # read, a population below the calibration floor, and a scope-limited
+    # run. `test_one_scan_carries_no_trajectory` was listed here and is
+    # gone: a single scan having no trend is ADR 009's history contract,
+    # not a refusal to publish an absurd number.
     "P7": (
         "test_a_repository_of_unread_source_gets_no_score",
         "test_a_score_is_never_computed_from_a_minority_of_the_source",
-        "test_one_scan_carries_no_trajectory",
+        "test_a_repository_below_the_root_floor_gets_no_score",
+        "test_no_limited_scope_produces_a_score",
+        "test_changed_only_through_the_cli_withholds_the_score",
     ),
+    # `test_a_python_only_tool_covers_nothing_for_cpp` and
+    # `test_a_concern_no_tool_reads_for_a_language_is_named_as_a_gap` are
+    # deliberately absent. Both `pytest.skip("mypy did not run")` when the
+    # tool is missing, so on a machine without it they prove nothing while
+    # still reading as enforcement — a green index over a skipped body is
+    # the same false assurance as a name that resolves to a test checking
+    # something else.
     "P8": (
         "test_the_built_in_detectors_appear_in_the_coverage_record",
-        "test_a_python_only_tool_covers_nothing_for_cpp",
-        "test_a_concern_no_tool_reads_for_a_language_is_named_as_a_gap",
+        "test_the_default_report_names_the_built_in_tier_as_the_estimate_source",
         "test_live_surfaces_do_not_claim_analyzers_leave_the_estimate_alone",
         "test_scored_measurements_name_the_estimate_source",
     ),
@@ -109,3 +124,94 @@ def test_the_named_enforcement_actually_exists(promise: str) -> None:
     missing = sorted(set(ENFORCEMENT[promise]) - names)
 
     assert not missing, f"{promise} names tests that do not exist: {missing}"
+
+
+# ---------------------------------------------------------------------------
+# A resolving name is not enforcement
+# ---------------------------------------------------------------------------
+#
+# `test_the_named_enforcement_actually_exists` checks that each entry is a
+# `def test_...` somewhere under tests/. That is necessary and nowhere
+# near sufficient: a renamed-but-unrelated test satisfies it, and the
+# index goes on asserting a promise is kept by something that never
+# mentions it. `test_one_scan_carries_no_trajectory` sat on P7 that way —
+# a real test, correctly passing, about ADR 009's history contract rather
+# than about refusing to publish an absurd number.
+#
+# So for the two promises 7.3 has to prove, each named test must argue the
+# promise in its own words. Scoped to P7 and P8 deliberately: P1-P6 are
+# not this phase's exit criterion, and a token rule applied to all eight
+# would be a large edit justified by nothing measured.
+
+FALSIFIER_TOKENS: dict[str, tuple[str, ...]] = {
+    # "A number a reader with the repository in front of them would call
+    # absurd" — the refusals that prevent one.
+    "P7": ("withhold", "withheld", "unread", "floor", "absurd", "no score",
+           "scope", "not scored"),
+    # "A reported value with no attributable source, or a run whose
+    # coverage cannot be recovered from its output."
+    "P8": ("source", "coverage", "attributable", "built-in", "provenance"),
+}
+
+
+def _test_bodies() -> dict[str, str]:
+    """Each test's docstring plus its leading comment block, by name."""
+    import ast
+
+    bodies: dict[str, str] = {}
+    for path in sorted(ROOT.glob("tests/test_*.py")):
+        text = path.read_text(encoding="utf-8")
+        lines = text.splitlines()
+        for node in ast.walk(ast.parse(text)):
+            if not isinstance(node, ast.FunctionDef) or not node.name.startswith("test_"):
+                continue
+            # The comment block immediately above the def, which is where
+            # several tests here put their reasoning instead of a docstring.
+            preamble = []
+            cursor = min([d.lineno for d in node.decorator_list] + [node.lineno]) - 2
+            while cursor >= 0 and lines[cursor].lstrip().startswith("#"):
+                preamble.append(lines[cursor])
+                cursor -= 1
+            bodies[node.name] = " ".join(
+                [ast.get_docstring(node) or "", *preamble]
+            ).lower()
+    return bodies
+
+
+@pytest.mark.parametrize("promise", sorted(FALSIFIER_TOKENS))
+def test_the_named_enforcement_argues_the_promise(promise: str) -> None:
+    """The index must resolve to tests that are *about* the promise.
+
+    Checked against the published falsifier's own vocabulary, so the
+    rule is anchored to `product-intent.md` rather than to a list of
+    words this file invented. A test that keeps the promise while never
+    naming what it refuses is not evidence a reader can follow from the
+    promise to the proof.
+    """
+    bodies = _test_bodies()
+    tokens = FALSIFIER_TOKENS[promise]
+    silent = [
+        name for name in ENFORCEMENT[promise]
+        if name in bodies and not any(token in bodies[name] for token in tokens)
+    ]
+
+    assert not silent, (
+        f"{promise} names tests that never mention what the promise forbids "
+        f"{tokens}: {silent}. A name in an index is not enforcement — say in the "
+        "test why it keeps the promise, or take it off the list."
+    )
+
+
+def test_the_two_promises_this_phase_proves_are_still_published() -> None:
+    """P7 and P8 are 7.3's exit criterion; the token rule follows them.
+
+    If either is renamed or dropped from `product-intent.md`, the
+    falsifier vocabulary above is describing something that no longer
+    exists and has to move with it.
+    """
+    published = _published_promises()
+
+    assert set(FALSIFIER_TOKENS) <= published, (
+        f"falsifier tokens are defined for promises that are not published: "
+        f"{sorted(set(FALSIFIER_TOKENS) - published)}"
+    )

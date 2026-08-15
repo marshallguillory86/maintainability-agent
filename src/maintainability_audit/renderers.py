@@ -18,10 +18,17 @@ from ._scan_view import (
 
 
 def summary_table(summary: dict[str, int], score: dict[str, Any]) -> list[str]:
+    scored = score.get("analyzer_scored_dimensions") or []
+    estimate_source = (
+        f"Analyzer readings for {', '.join(scored)}; built-in detectors for remaining dimensions"
+        if scored
+        else "Built-in detectors (fallback tier)"
+    )
     return [
         "| Metric | Value |",
         "|---|---:|",
         f"| Maintainability estimate | {view.estimate(score)} |",
+        f"| Estimate source | {estimate_source} |",
         f"| Range (unmeasured evidence priced 0..5) | {view.score_range(score)} |",
         f"| Evidence | {view.status_sentence(score)} |",
         f"| Verified grade | {view.verified_grade(score)} |",

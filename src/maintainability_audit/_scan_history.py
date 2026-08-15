@@ -38,7 +38,12 @@ from typing import Any
 # different reasons — a report field is a consumer-facing break, a
 # history field is a migration of stored data — and one number for both
 # would force either break to break the other.
-HISTORY_SCHEMA_VERSION = 1
+# 2 since ADR 011: a record now stores what the charts draw —
+# categories, aspects, the pillar conditions and the practice level as
+# two separate series (ADR 007 forbids averaging them), and the
+# evidence status. Schema-1 lines still load; the new fields default
+# to empty, and a chart treats empty as a gap, never as a zero.
+HISTORY_SCHEMA_VERSION = 2
 
 DEFAULT_HISTORY_PATH = ".maintainability/history.jsonl"
 
@@ -98,6 +103,16 @@ class ScanRecord:
     # comparability gate already segments on those; this is the reader's
     # distinction between "we watched this" and "we went back and looked".
     backfilled: bool = False
+    # Schema 2 (ADR 011): what the report *published* for this scan,
+    # copied and never recomputed — a record that recomputes is a second
+    # scorer. `pillars` maps pillar name to its condition score;
+    # `practice_level` is the separate maturity series. Empty/None on
+    # records written by schema 1.
+    categories: dict[str, float] = field(default_factory=dict)
+    aspects: dict[str, float | None] = field(default_factory=dict)
+    pillars: dict[str, float | None] = field(default_factory=dict)
+    practice_level: int | None = None
+    evidence_status: str = ""
     # Which of those a remediation prompt actually asked somebody to fix.
     # This is what makes recurrence a strong signal rather than a weak
     # one: "a rule fired again" says only that the file changed twice,
@@ -292,6 +307,18 @@ def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
             if isinstance(summary.get(key), int)
         },
         fingerprints=fingerprints,
+        # Published values, straight off the score document. `or {}`
+        # rather than KeyError: a withheld score has no categories, and
+        # a record of that scan is still a record.
+        categories=dict(score.get("categories") or {}),
+        aspects=dict(score.get("aspects") or {}),
+        pillars={
+            entry["pillar"]: entry.get("condition")
+            for entry in (report.get("pillars") or [])
+            if isinstance(entry, dict) and entry.get("pillar")
+        },
+        practice_level=(report.get("practice") or {}).get("level"),
+        evidence_status=str((score.get("evidence_status") or {}).get("status") or ""),
         targeted=targeted,
         backfilled=backfilled,
     )

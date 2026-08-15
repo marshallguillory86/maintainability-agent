@@ -89,6 +89,7 @@ def audit_repository(
     config_path: str | None = None,
     changed_only: str | None = None,
     run_analyzers: bool = False,
+    format: str = "markdown",
     *,
     roots: tuple[Path, ...] | None = None,
 ) -> dict[str, Any]:
@@ -116,7 +117,7 @@ def audit_repository(
         run_analyzers=run_analyzers,
     )
     status = report.get("git_status_short", "")
-    return {
+    result = {
         "agent": "maintainability-agent",
         "agent_version": VERSION,
         "source_commit": run_git(["rev-parse", "HEAD"], root) or None,
@@ -130,6 +131,21 @@ def audit_repository(
         "report_markdown": render_markdown(report),
         "remediation_prompt": render_ai_prompt(report),
     }
+    # 8.5: the host asked the user which presentation and passes the
+    # answer here. The tool never prompts and never writes the tree —
+    # HTML comes back as *text* for the host to save or show; files are
+    # the CLI's job (ADR 011 §4). Markdown is always present, because
+    # chat shows Markdown whatever else was requested.
+    if format not in ("markdown", "html", "json"):
+        raise ValueError(f"format must be markdown, html or json, not {format!r}")
+    if format == "html":
+        from ._scan_history import DEFAULT_HISTORY_PATH, read_history
+        from .renderers import render_html
+
+        history = root / (config.get("paths", {}).get("history") or DEFAULT_HISTORY_PATH)
+        result["report_html"] = render_html(report, read_history(history))
+    result["format"] = format
+    return result
 
 
 def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
@@ -163,17 +179,21 @@ def _bind_tools(server: Any, authorized_roots: tuple[Path, ...], read_only: Any)
         config_path: str | None = None,
         changed_only: str | None = None,
         run_analyzers: bool = False,
+        format: str = "markdown",
     ) -> dict[str, Any]:
         """Audit one authorized repository and return findings plus a bounded remediation prompt.
 
         Set ``run_analyzers`` to also run the external quality tools and
-        receive their coverage, findings and measurements.
+        receive their coverage, findings and measurements. ``format`` is
+        the presentation the user chose — markdown (chat, the default),
+        html (returned as text; never written to the tree) or json.
         """
         return audit_repository(
             repository_root,
             config_path,
             changed_only,
             run_analyzers,
+            format,
             roots=authorized_roots,
         )
 
@@ -245,9 +265,12 @@ def _bind_prompts(server: Any) -> None:
     def maintainability_agent_prompt() -> str:
         """Audit an authorized repository and perform only its bounded work order."""
         return (
-            "Call audit_repository for the repository. Obey the returned remediation_prompt "
-            "as the bounded work order. Do not widen beyond its listed findings, and do not "
-            "invent or fabricate findings."
+            "First ask the user which presentation they want: chat (the default — just show "
+            "the returned Markdown), a markdown file, or a single-file html report. Then call "
+            "audit_repository with that choice as the format argument; if they chose a file, "
+            "save the returned text for them — the tool itself never writes into the "
+            "repository. Obey the returned remediation_prompt as the bounded work order. Do "
+            "not widen beyond its listed findings, and do not invent or fabricate findings."
         )
 
 

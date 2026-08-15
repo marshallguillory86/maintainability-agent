@@ -72,6 +72,9 @@ ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
             "_environment",
             "_work_order_weights", "_backfill"}
 PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
+                # `_html_view` is the ADR 011 HTML skin: it reads the report
+                # dict and stored records and computes no score.
+                "_html_view",
                 "_scan_view", "_history_view", "_identity"}
 # `_first_run` is terminal interaction — it prompts, which no layer
 # below entry may ever do, and writes the config file the entry then

@@ -360,3 +360,14 @@ def render_pr_comment(report: dict[str, Any]) -> str:
         lines.append("")
     lines.append("See `maintainability-report.md` and `maintainability-remediation-prompt.md` artifacts for details.")
     return "\n".join(lines)
+
+
+def render_html(report: dict[str, Any], records: list[Any]) -> str:
+    """The HTML skin (ADR 011). One file, no score computed here.
+
+    Re-exported from `_html_view` so every consumer keeps importing its
+    renderers from one module, the same as Markdown and the PR comment.
+    """
+    from ._html_view import render_html as _render
+
+    return _render(report, records, markdown=render_markdown(report))

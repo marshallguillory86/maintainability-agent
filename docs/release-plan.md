@@ -197,13 +197,13 @@ Decided in [ADR 011](adr-011-three-report-presentations.md) and the schema-2 clo
 
 | # | Task | Exit condition |
 |---|---|---|
-| 8.1 | History schema 2 | Each new JSONL line stores categories, aspects, pillars, practice_level, evidence_status. Pillars and practice are tracked series, never averaged. Schema 1 lines still load. `HISTORY_SCHEMA_VERSION` is 2 for new writes |
-| 8.2 | Append when the file exists | A successful scan appends if `.maintainability/history.jsonl` is present, even without `--record-history`. First interactive run creates the file |
-| 8.3 | One view model, three renderers | Chat/CLI text, Markdown file, and one self-contained HTML file never disagree on estimate, range, grade, or finding identity. Presentation does not score |
-| 8.4 | Format ask | Every TTY invoke with no format flag asks; Enter = chat. Non-TTY never `input()`. Flags win |
-| 8.5 | MCP format parameter | Prompt tells the host to ask. Tool takes a format argument. No tree write. Chat returns Markdown |
-| 8.6 | HTML | One file, inlined CSS, deterministic SVG from stored records. Executive summary first. Required charts: estimate+range, **pillars over time**, **practice/maturity over time**, current-run categories. Empty history is an empty state. No CDN |
-| 8.7 | Honesty | README, cli.md, MCP docs, register: 011 and schema 2 described as shipped only when the tests say so |
+| 8.1 | History schema 2 | **Shipped.** New lines are schema 2 with categories, aspects, pillars, practice_level and evidence_status; pillars and practice are two series, never averaged; schema-1 lines still load (`tests/test_history_schema2.py`) |
+| 8.2 | Append when the file exists | **Shipped.** An existing `.maintainability/history.jsonl` gains every successful scan without the flag; a first interactive run creates the file; CI without either still writes nothing (`tests/test_history_schema2.py`) |
+| 8.3 | One view model, three renderers | **Shipped.** The skins agree on estimate, range, grade and finding identity, and the HTML renderer imports no scorer (`tests/test_three_presentations.py`) |
+| 8.4 | Format ask | **Shipped.** Every TTY invoke with no format/output flag asks; Enter = chat; flags win; non-TTY never calls `input()`; the choice is never persisted (`tests/test_format_ask.py`) |
+| 8.5 | MCP format parameter | **Shipped.** The prompt tells the host to ask; `audit_repository` takes `format`; HTML comes back as text and the tree is never written; chat returns Markdown (`tests/test_format_ask.py`) |
+| 8.6 | HTML | **Shipped.** One file, inlined CSS, deterministic SVG from stored records, executive summary first, all four required charts, schema-1 scans as gaps, empty history as an empty state, and no http(s) resource load (`tests/test_three_presentations.py`) |
+| 8.7 | Honesty | **Shipped** for 8.1–8.6: the register rows for ADR 009 and ADR 011 and this table state exactly what the named tests prove. 8.8–8.10 remain open below |
 | 8.8 | Acceptance (Marshall) | He runs the agent on a real repo, all three skins, with at least two recorded scans. If that fails, Phase 8 is not done |
 | 8.9 | 7.5 | Hostile audit of the artifact that passed 8.8 |
 | 8.10 | Tag 1.0 | Only after 8.9 |

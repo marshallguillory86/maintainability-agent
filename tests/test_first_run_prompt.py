@@ -117,10 +117,15 @@ def test_first_run_on_a_tty_asks_and_the_answer_persists(
     assert analyzers.get("depth") == ANSWERS["depth"]
     assert analyzers.get("license_policy") == ANSWERS["license_policy"]
 
-    # The second run has a config, so even on a TTY it must not ask.
+    # The second run has a config, so even on a TTY it must not re-ask
+    # for depth or policy. Filtered rather than empty: ADR 011's format
+    # question (8.4) deliberately fires on *every* interactive invoke,
+    # and it is a different question from 6.1's.
     asked.clear()
     assert main(["--root", str(root)]) == 0
-    assert not asked, f"a second run re-asked despite the written config: {asked}"
+    config_prompts = [p for p in asked
+                      if "depth" in p.lower() or "polic" in p.lower() or "licen" in p.lower()]
+    assert not config_prompts, f"a second run re-asked despite the written config: {config_prompts}"
 
 
 def test_ci_never_blocks_and_never_writes_a_config(
@@ -162,7 +167,16 @@ def test_an_existing_config_is_respected_even_on_a_tty(
     )
     before = config.read_text(encoding="utf-8")
     _tty(monkeypatch, True)
-    _forbidden_input(monkeypatch)
+    # Only the config questions are forbidden. The format question (8.4)
+    # is allowed to fire on any interactive invoke and answers itself
+    # with Enter here.
+    def guarded(prompt: str = "") -> str:
+        lowered = prompt.lower()
+        if "depth" in lowered or "polic" in lowered or "licen" in lowered:
+            raise AssertionError(f"the CLI re-asked a configured question: {prompt!r}")
+        return ""
+
+    monkeypatch.setattr("builtins.input", guarded)
 
     assert main(["--root", str(root)]) == 0
     assert config.read_text(encoding="utf-8") == before, (

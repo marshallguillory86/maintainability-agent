@@ -31,6 +31,8 @@ def _ran(stdout: str = "", stderr: str = "") -> ToolResult:
     return ToolResult(slug="t", outcome=Outcome.RAN, stdout=stdout, stderr=stderr, exit_code=0)
 
 
+
+
 @pytest.mark.parametrize("slug", sorted(ADAPTERS))
 def test_every_adapter_declares_its_shape_and_concepts(slug: str) -> None:
     """Swept over the registry, so a new adapter is covered when added."""
@@ -340,17 +342,10 @@ def test_eslint_knows_when_it_cannot_run(tmp_path: Path) -> None:
     assert adapter.has_config(tmp_path)
 
 
-def test_xenon_is_deliberately_unadapted() -> None:
-    """A gate over radon adds no independent reading.
 
-    xenon re-ranks radon's own cyclomatic numbers against thresholds. An
-    adapter would put a fourth "independent" complexity source into the
-    pool that is strictly derived from one already counted, inflating
-    apparent corroboration without adding evidence. Two tools agreeing
-    because one *is* the other is worse than one tool alone, because it
-    looks like confirmation.
-    """
-    assert adapter_for("xenon") is None
+
+
+
 
 
 def test_a_tool_emitting_a_standard_format_needs_no_parser() -> None:

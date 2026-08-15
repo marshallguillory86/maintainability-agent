@@ -14,6 +14,7 @@ from collections.abc import Callable
 
 from ._adapters import BaseAdapter
 from ._metric_adapters import (
+    CohesionAdapter,
     ComplexipyAdapter,
     InterrogateAdapter,
     JscpdAdapter,
@@ -23,13 +24,16 @@ from ._metric_adapters import (
 )
 from ._verdict_adapters import (
     EslintAdapter,
+    Flake8Adapter,
     PydocstyleAdapter,
     RuffAdapter,
     VultureAdapter,
 )
 
 ADAPTERS: dict[str, Callable[[], BaseAdapter]] = {
+    "cohesion": CohesionAdapter,
     "complexipy": ComplexipyAdapter,
+    "flake8": Flake8Adapter,
     "eslint": EslintAdapter,
     "interrogate": InterrogateAdapter,
     "jscpd": JscpdAdapter,

@@ -62,7 +62,11 @@ def test_adapter_status_table_names_only_shipped_adapters() -> None:
     }
 
     assert claimed == shipped
-    for slug in ("flake8", "cohesion", "wily", "xenon"):
+    for slug in ("flake8", "cohesion"):
+        assert adapter_for(slug) is not None or declared_adapter(slug) is not None
+        assert slug in claimed
+
+    for slug in ("wily", "xenon"):
         assert adapter_for(slug) is None
         assert declared_adapter(slug) is None
         assert slug not in claimed

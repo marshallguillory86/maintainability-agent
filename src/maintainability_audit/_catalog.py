@@ -60,7 +60,9 @@ CONCERN_CONCEPTS: dict[str, tuple[str, ...]] = {
         "cyclomatic_complexity", "cognitive_complexity", "file_cyclomatic_complexity",
     ),
     "metrics": ("maintainability_index", "halstead_difficulty", "declaration_lines"),
-    "structure": ("parameters",),
+    # `cohesion` is per-class method/attribute cohesion — a fact about
+    # how a type is organised, which is the structure concern.
+    "structure": ("parameters", "cohesion"),
 }
 
 

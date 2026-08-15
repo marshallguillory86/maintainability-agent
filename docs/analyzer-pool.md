@@ -117,7 +117,7 @@ npm install -g jscpd@5
 
 ## Adapter status, stated plainly
 
-**12 tools have adapters** — ten native adapters plus the generic diagnostic adapters for pylint and mypy. An inventory entry without one of those adapters is not a shipped capability.
+**14 tools have adapters** — twelve native adapters plus the generic diagnostic adapters for pylint and mypy. An inventory entry without one of those adapters is not a shipped capability.
 
 | Verified | Depth | Concern | Evidence |
 |---|---|---|---|
@@ -132,6 +132,8 @@ npm install -g jscpd@5
 | complexipy | moderate | Cognitive complexity | `history_section` = 14 |
 | interrogate | moderate | Docstring coverage | installed, run |
 | pydocstyle | moderate | Docstring conventions | installed, run |
+| flake8 | moderate | Style, mccabe complexity, unused code | parses its default `path:row:col: CODE message` lines |
+| cohesion | moderate | Per-class cohesion percentage | parses its verbose class report; measurements, not gates |
 | multimetric | heavy | Multi-language metrics | installed |
 
 The full inventory, including everything without an adapter, is in the [JSON](../data/analyzer-catalog.json). Additional adapters remain incremental work; the inventory alone does not make a tool runnable.

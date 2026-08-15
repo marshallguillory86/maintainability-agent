@@ -103,3 +103,15 @@ def test_adapter_status_prose_count_matches_the_table() -> None:
         for match in re.finditer(r"^\| ([a-z][a-z0-9.-]*) \|", section, flags=re.MULTILINE)
         if match.group(1) != "adapter"
     })
+
+
+def test_live_adapter_counts_name_fourteen_runnable_adapters() -> None:
+    """Twelve native plus pylint/mypy is fourteen; cloc is not an adapter."""
+    roadmap = _text("docs/roadmap.md")
+    generic = _text("src/maintainability_audit/_generic.py")
+    release = _text("docs/release-plan.md")
+
+    assert re.search(r"\bfourteen shipped adapters\b|\b14 shipped adapters\b", roadmap, re.I)
+    assert "Sixteen hand-written adapters" not in generic
+    phase_24 = next(line for line in release.splitlines() if line.startswith("| 2.4 |"))
+    assert not re.search(r"\bcloc\b", phase_24, re.I), phase_24

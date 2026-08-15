@@ -13,9 +13,9 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 | Tests | 1,097 collected across 80 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
 | Known open exit conditions in Phases 0–5 | Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) is **Known debt**, not open task work: `_bands` exists, is imported by nothing, and wiring it is a recalibration (see the [architecture Known debt](architecture.md#known-debt)). |
-| Later phases outstanding | 6.1–6.4 shipped. 7.1–7.4 shipped. **1.0 waits on Phase 8** (three report skins + history schema 2 + Marshall's acceptance) then 7.5 then the tag. |
+| Later phases outstanding | 6.1–6.4, 7.1–7.4 and 8.1–8.7 shipped. **1.0 still waits on Marshall's acceptance (8.8), the 7.5 hostile audit (8.9), and the human tag (8.10).** |
 
-This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; open work remains in the earlier phases as well as Phases 6 and 7.
+This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; the Phase 3 band-matrix debt and the explicit 8.8–8.10 release gates remain.
 
 Two things are deliberately open rather than done:
 
@@ -65,7 +65,7 @@ Implements the executable half of [ADR 006](adr-006-analyzer-evidence.md). The l
 | 2.1b | Availability proven by invocation, not `PATH` | A stub on `PATH` that fails when run (macOS `java`) is recorded unavailable, not clean; a tool that exits 0 saying nothing is too |
 | 2.2 | `_catalog`: resolve the pool from concerns, depth, policy | Matches `tools/resolve_pool.py` output exactly; the script becomes a thin wrapper |
 | 2.3 | Adapter protocol, metric and verdict shapes | Adding an adapter requires no change outside its own module |
-| 2.4 | Ten baseline adapters: lizard, cloc, multimetric, jscpd, radon, ruff, vulture, complexipy, interrogate, pydocstyle | Each parses real output on the corpus; per-adapter fixture tests |
+| 2.4 | Baseline adapter tranche: lizard, multimetric, jscpd, radon, ruff, vulture, complexipy, interrogate, pydocstyle | Each parses real output on the corpus; per-adapter fixture tests. The later moderate tranche brings the runnable total to fourteen (twelve native plus pylint and mypy). |
 | 2.5 | Coverage reporting in the report | Every run states tools attempted, run, unavailable and why, with versions |
 | 2.5b | Coverage gaps per language and concern | A concern with no tool running against it is `Unknown`, never clean |
 | 2.5c | Environment work order | **Shipped.** `report["environment_work_order"]` names each selected tool that could not run, why, the install command and the verification; rendered after coverage in the Markdown report; the agent never installs (`tests/test_environment_work_order.py`) |

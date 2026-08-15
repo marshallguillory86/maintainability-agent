@@ -22,49 +22,34 @@ recurring defect class.
 """
 from __future__ import annotations
 
+import re
 import subprocess
 from pathlib import Path
-
-import yaml
 
 from maintainability_audit._scan_history import DEFAULT_HISTORY_PATH, read_history
 from maintainability_audit.cli import main
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def _action() -> dict:
-    return yaml.safe_load((ROOT / "action.yml").read_text(encoding="utf-8"))
-
-
-def _workflow() -> dict:
-    return yaml.safe_load(
-        (ROOT / ".github" / "workflows" / "maintainability.yml").read_text(encoding="utf-8")
-    )
-
-
-def _run_script(action: dict) -> str:
-    return "\n".join(step.get("run", "") for step in action["runs"]["steps"])
+ACTION = (ROOT / "action.yml").read_text(encoding="utf-8")
+WORKFLOW = (ROOT / ".github" / "workflows" / "maintainability.yml").read_text(
+    encoding="utf-8"
+)
 
 
 def test_the_action_can_be_told_to_record_history() -> None:
     """An input, off by default — recording is a write, and every write
     this tool performs is opt-in."""
-    action = _action()
-
-    assert "record-history" in action["inputs"], (
+    assert re.search(r"^  record-history:", ACTION, re.M), (
         "action.yml has no record-history input, so no CI run can accumulate "
         "the history ADR 009's trends and recurrence read"
     )
-    assert str(action["inputs"]["record-history"].get("default", "")).lower() != "true", (
-        "recording must be opt-in: it writes into the consumer's workspace"
-    )
-
-    script = _run_script(_action())
-    assert "--record-history" in script, (
+    assert not re.search(
+        r"record-history:.*?default:\s*[\"']?true", ACTION, re.S | re.I
+    ), "recording must be opt-in: it writes into the consumer's workspace"
+    assert "--record-history" in ACTION, (
         "the input never reaches the CLI, so setting it changes nothing"
     )
-    assert "record-history" in script.split("--record-history")[0], (
+    assert "inputs.record-history" in ACTION, (
         "the flag must be conditional on the input, not always on"
     )
 
@@ -72,7 +57,7 @@ def test_the_action_can_be_told_to_record_history() -> None:
 def test_the_action_does_not_invent_a_second_history_file() -> None:
     """One path: the CLI default. A recipe naming its own file forks the
     history the moment someone runs the CLI by hand."""
-    combined = yaml.safe_dump(_action()) + yaml.safe_dump(_workflow())
+    combined = ACTION + WORKFLOW
     assert "history.jsonl" not in combined.replace(DEFAULT_HISTORY_PATH, ""), (
         f"a history path other than {DEFAULT_HISTORY_PATH} appears in the recipes"
     )
@@ -86,39 +71,31 @@ def test_the_workflow_restores_history_before_the_audit_and_saves_after() -> Non
     that is the run recurrence needs to see again. So the recipe must
     use the split restore/save with `if: always()` on the save.
     """
-    steps = _workflow()["jobs"]["maintainability"]["steps"]
-    uses = [str(step.get("uses", "")) for step in steps]
+    restore = WORKFLOW.find("actions/cache/restore")
+    audit = WORKFLOW.find("maintainability-agent@")
+    save = WORKFLOW.find("actions/cache/save")
 
-    restore = next((i for i, u in enumerate(uses) if u.startswith("actions/cache/restore")), None)
-    audit = next((i for i, u in enumerate(uses) if "maintainability-agent@" in u), None)
-    save = next((i for i, u in enumerate(uses) if u.startswith("actions/cache/save")), None)
-
-    assert restore is not None, "the workflow never restores the history cache"
-    assert save is not None, "the workflow never saves the history cache"
-    assert audit is not None
+    assert restore != -1, "the workflow never restores the history cache"
+    assert save != -1, "the workflow never saves the history cache"
+    assert audit != -1
     assert restore < audit < save, "restore must precede the audit; save must follow it"
 
-    assert steps[save].get("if") == "always()", (
+    save_block = WORKFLOW[save:]
+    assert re.search(r"if:\s*always\(\)", WORKFLOW[WORKFLOW.rfind("- if:", 0, save):save + 80]), (
         "the save step skips on failure, so the runs that fail gates — the ones "
         "recurrence exists for — are exactly the ones forgotten"
     )
-    for index in (restore, save):
-        assert DEFAULT_HISTORY_PATH in str(steps[index].get("with", {}).get("path", "")), (
-            f"the cache step does not carry {DEFAULT_HISTORY_PATH}"
-        )
-
-    # A fixed key can never be re-saved, so the second run would restore
-    # and then fail to save forever. Rolling key + prefix restore is the
-    # documented pattern for an append-only file.
-    save_key = str(steps[save]["with"]["key"])
-    restore_with = steps[restore]["with"]
-    assert "${{" in save_key, f"the save key {save_key!r} is fixed and can be saved once"
-    assert "restore-keys" in restore_with, (
+    assert DEFAULT_HISTORY_PATH in WORKFLOW[restore:audit]
+    assert DEFAULT_HISTORY_PATH in save_block.split("upload-artifact", 1)[0]
+    assert "${{" in save_block.split("\n", 12)[0] + WORKFLOW[WORKFLOW.find("key:", save):save + 200], (
+        "the save key is fixed and can be saved once"
+    )
+    # Rolling key lives on the save step; prefix restore-keys on restore.
+    assert "restore-keys" in WORKFLOW[restore:audit], (
         "without restore-keys the rolling save key never matches on the next run"
     )
-
-    audit_with = steps[audit].get("with", {})
-    assert str(audit_with.get("record-history", "")).lower() == "true", (
+    assert "${{" in WORKFLOW[WORKFLOW.find("key:", save):save + 160]
+    assert re.search(r"record-history:\s*[\"']true[\"']", WORKFLOW), (
         "the workflow caches the history but never tells the action to record it"
     )
 

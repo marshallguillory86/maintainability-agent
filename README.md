@@ -43,6 +43,7 @@ The remediation prompt is the differentiator. Every other tool in this space sto
 ## Design principles
 
 - **Deterministic first, AI optional.** The audit never calls an LLM by default. The remediation prompt is a generated artifact that you choose to hand to an agent.
+- **This agent does not transmit your tree.** Analysis is local: no upload of the audited source, no LLM in the scanner. **Third-party tools it may spawn (eslint, jscpd, lizard, …) are not network-sandboxed** — this process does not police whether *they* phone home. Acquisition (`npx --yes` when `analyzers.acquire_tools` is set and a Node tool is missing) is a documented, opt-in network action. Install those tools yourself for an air-gapped run. An IDE chat session that pastes the report to a model is your channel, not this binary.
 - **Bounded scope.** The remediation prompt explicitly tells the agent to fix the listed findings only — not to embark on architecture cleanup.
 - **No vendor lock-in.** All outputs (Markdown, JSON, SARIF, PR comment) are plain files. Pair this tool with mature analyzers (ESLint, Ruff, Radon, Semgrep, SonarQube, Qlty/Code Climate) — don't replace them.
 - **Pass-the-cost-of-disclosure.** A finding that's "just a warning" never blocks CI alone. Hard gates are configurable + opt-in.

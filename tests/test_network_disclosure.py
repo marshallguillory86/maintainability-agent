@@ -1,19 +1,11 @@
-"""P1's small close: no HTTP client, and no fetch nobody opted into.
+"""P1's network half: no HTTP client, no silent fetch, no buyer-doc lie.
 
-The promise separates analysis from acquisition, and the separation was
-half-shipped: analysis performs no network access, but `_npx` fell back
-to `npx --yes` the moment a Node binary was missing — a package download
-in the middle of what the user was told was an offline scan. The version
-was recorded, which made it *disclosed*, not *opted into*.
+The promise separates analysis from acquisition. Two classes, one file:
 
-Two rules, both classes:
-
-- **This package must not grow an HTTP client.** Held over the AST of
-  every module under `src/`, so the first `import requests` fails the
-  build rather than shipping quietly inside a feature.
-- **Acquisition is opt-in.** With `analyzers.acquire_tools` off — the
-  default — a missing binary is a *not-installed* outcome for coverage
-  and the environment work order, never a fetch.
+- **This package must not grow an HTTP client**, and a missing Node
+  binary must not be fetched unless `analyzers.acquire_tools` is set.
+- **Buyer docs must state both halves:** this agent does not transmit
+  the tree, and the children it spawns are not network-sandboxed.
 
 What this does not claim: child processes are not sandboxed. A tool the
 user installed can do whatever that tool does; the promise is about what
@@ -22,6 +14,7 @@ user installed can do whatever that tool does; the promise is about what
 from __future__ import annotations
 
 import ast
+import re
 from pathlib import Path
 
 import pytest
@@ -37,6 +30,28 @@ _FORBIDDEN_IMPORTS = {
     "http.client",
 }
 _FORBIDDEN_CALLS = {"urlopen", "create_connection"}
+
+_SURFACES = (
+    ROOT / "README.md",
+    ROOT / "docs" / "product-intent.md",
+    ROOT / "docs" / "analyzer-pool.md",
+    ROOT / "docs" / "architecture.md",
+)
+
+_TRANSMIT = re.compile(
+    r"does not transmit|never transmits|not transmit",
+    re.I,
+)
+_UNPOLICED = re.compile(
+    r"not network-sandbox|not sandbox|does not police|are not policed|not policed",
+    re.I,
+)
+_OVERCLAIM = re.compile(
+    r"third-party tools cannot (?:use|touch|access) the network"
+    r"|kernel-air-gapped"
+    r"|nothing (?:can )?leave(?:s)? the (?:machine|box)",
+    re.I,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -177,3 +192,26 @@ def test_analyze_honours_the_opt_in(monkeypatch: pytest.MonkeyPatch, tmp_path: P
     assert observed and observed[0] is False and observed[-1] is True, (
         f"analyze() never threw the acquisition switch from config: {observed}"
     )
+
+
+def test_buyer_docs_disclose_no_transmit_and_unpoliced_children() -> None:
+    missing = []
+    for path in _SURFACES:
+        text = path.read_text(encoding="utf-8")
+        if not _TRANSMIT.search(text):
+            missing.append(f"{path.relative_to(ROOT)}: no 'does not transmit' clause")
+        if not _UNPOLICED.search(text):
+            missing.append(f"{path.relative_to(ROOT)}: no unpoliced-children clause")
+    assert not missing, "network disclosure incomplete:\n" + "\n".join(missing)
+
+
+def test_docs_do_not_claim_children_are_air_gapped() -> None:
+    """product-intent's 'must never claim' list *names* the overclaim.
+    The other buyer surfaces must not assert it as fact."""
+    offenders = []
+    for path in _SURFACES:
+        if path.name == "product-intent.md":
+            continue
+        for match in _OVERCLAIM.finditer(path.read_text(encoding="utf-8")):
+            offenders.append(f"{path.relative_to(ROOT)}: {match.group(0)!r}")
+    assert not offenders, "overclaim:\n" + "\n".join(offenders)

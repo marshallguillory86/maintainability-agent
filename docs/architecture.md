@@ -4,6 +4,8 @@ How the package is layered, which layer may depend on which, and the invariant e
 
 This describes the code **as it is**, not as intended. Where reality falls short of a decision, it is listed under [Known debt](#known-debt) rather than described aspirationally. Direction of travel is kept in the [decision register](decisions.md); the explicitly labeled proposal section at the end maps those decisions onto the current layers without claiming they ship.
 
+**Network boundary (as-is).** This agent does not transmit the audited tree and does not call an LLM. `_runner` is the only spawn point for analyzers besides `git_tools`. Those children are not network-sandboxed; this process does not police their sockets. `_npx` may run `npx --yes` when `analyzers.acquire_tools` is set and a Node binary is missing — acquisition, not analysis, still the internet. There is no seccomp / `unshare -n` wrap. See [P1](product-intent.md#what-it-promises).
+
 The layering is enforced by `tests/test_architecture.py`, which reads the real import graph. A rule stated here and not enforced there is decoration, and this document tries not to contain any.
 
 ## Layers

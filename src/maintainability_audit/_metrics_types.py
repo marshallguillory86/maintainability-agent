@@ -64,6 +64,11 @@ class FunctionMetric:
     # rather than replacing it: they answer different questions, and a
     # function can be high in one and low in the other.
     cognitive: int = 0
+    # 12-char sha256 of the normalized body (ADR 009): dedented, trailing
+    # whitespace stripped, comments and identifiers untouched. Computed at
+    # scan time because presentation may never open the audited tree; ""
+    # where a producer predates the field.
+    body_digest: str = ""
 
 
 @dataclass

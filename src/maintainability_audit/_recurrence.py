@@ -29,9 +29,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
+from pathlib import Path
 from typing import Any
 
-from ._scan_history import Segment
+from ._finding_match import Identity, assignment, rename_map
+from ._scan_history import ScanRecord, Segment
 
 # How many returns before a finding stops being a fix and starts being a
 # design question. One is ordinary churn — a refactor that reintroduced
@@ -73,14 +75,79 @@ class Recurrence:
 
 @dataclass
 class _Track:
-    """Working state while walking a segment."""
+    """Working state while walking a segment.
 
+    `identity` is the finding as last matched, so a rename or reorder
+    updates what the next record is compared against; `label` is the
+    fingerprint at first sight — the key `targeted` tuples and readers
+    joined on when the track began, so it never silently changes.
+    """
+
+    identity: Identity
+    label: str
     present: bool
     cleared_in: list[str] = field(default_factory=list)
     returned_in: list[str] = field(default_factory=list)
 
 
-def recurrence(segment: Segment) -> dict[str, Recurrence]:
+def _identities_of(record: ScanRecord) -> list[Identity]:
+    """A record's findings as identities, structured when it stored them.
+
+    Older records (schema 1/2) carry labels only, so each becomes a
+    degenerate identity that can match nothing but its exact label —
+    which keeps recurrence between two such records string equality,
+    exactly what those records can support.
+    """
+    if record.identities:
+        return [Identity(**dict(entry)) for entry in record.identities]
+    return [
+        Identity(kind="label", path="", name="", ordinal=0, body_digest="",
+                 fingerprint=label)
+        for label in record.fingerprints
+    ]
+
+
+def _step_renames(root: Path | None, earlier: ScanRecord,
+                  later: ScanRecord) -> dict[str, str]:
+    if root is None:
+        return {}
+    return rename_map(root, earlier.commit, later.commit)
+
+
+def _walk(records: list[ScanRecord], root: Path | None) -> list[_Track]:
+    """Follow every finding through the segment, matching structurally.
+
+    One assignment per record pair, so the strongest evidence pairs
+    first across the whole population — per-track greediness would let
+    an old label claim a same-named newcomer.
+    """
+    tracks = [
+        _Track(identity=identity, label=identity.fingerprint, present=True)
+        for identity in _identities_of(records[0])
+    ]
+    for earlier, record in zip(records, records[1:], strict=False):
+        renames = _step_renames(root, earlier, record)
+        current = _identities_of(record)
+        paired = assignment(current, [track.identity for track in tracks], renames)
+        for track in tracks:
+            match = paired.get(track.identity)
+            if match is not None:
+                track.identity = match
+                if not track.present:
+                    track.present = True
+                    track.returned_in.append(record.commit)
+            elif track.present:
+                track.present = False
+                track.cleared_in.append(record.commit)
+        claimed = set(paired.values())
+        tracks.extend(
+            _Track(identity=identity, label=identity.fingerprint, present=True)
+            for identity in current if identity not in claimed
+        )
+    return tracks
+
+
+def recurrence(segment: Segment, root: Path | None = None) -> dict[str, Recurrence]:
     """Findings that left and came back, with the commits involved.
 
     "It came back" is a claim; the commits are the evidence for it. A
@@ -90,42 +157,32 @@ def recurrence(segment: Segment) -> dict[str, Recurrence]:
     Only findings that actually returned appear. One that was present
     throughout has not recurred, and listing it would bury the signal in
     everything that is merely still true.
+
+    Matching is structural where both records stored identities: a
+    return is only a return if it is the *same finding*, and a label
+    comparison calls a `git mv` a clear-plus-new. `root` is where the
+    rename evidence lives; without it, matching still survives reorders
+    and body edits but takes no rename glue.
     """
     records = segment.records
     if len(records) < 2:
         return {}
 
-    tracks: dict[str, _Track] = {
-        finding: _Track(present=True) for finding in records[0].fingerprints
-    }
-    targeted: set[str] = set(records[0].targeted)
-    for record in records[1:]:
-        current = set(record.fingerprints)
-        for finding, track in tracks.items():
-            if track.present and finding not in current:
-                track.present = False
-                track.cleared_in.append(record.commit)
-            elif not track.present and finding in current:
-                track.present = True
-                track.returned_in.append(record.commit)
-        for finding in current - set(tracks):
-            tracks[finding] = _Track(present=True)
-        targeted |= set(record.targeted)
-
+    targeted = {label for record in records for label in record.targeted}
     return {
-        finding: Recurrence(
-            fingerprint=finding,
+        track.label: Recurrence(
+            fingerprint=track.label,
             returns=len(track.returned_in),
             cleared_in=tuple(track.cleared_in),
             returned_in=tuple(track.returned_in),
-            targeted=finding in targeted,
+            targeted=track.label in targeted,
         )
-        for finding, track in tracks.items()
+        for track in _walk(records, root)
         if track.returned_in
     }
 
 
-def outcomes(segment: Segment) -> dict[str, Outcome]:
+def outcomes(segment: Segment, root: Path | None = None) -> dict[str, Outcome]:
     """What became of each finding a prompt actually targeted.
 
     Only targeted findings appear. Absence of advice is not failure of
@@ -138,20 +195,24 @@ def outcomes(segment: Segment) -> dict[str, Outcome]:
     if not targeted or len(records) < 2:
         return {}
 
-    returned = recurrence(segment)
-    final = set(records[-1].fingerprints)
+    # Presence at the end comes from the walk, never from label
+    # membership in the last record: after a `git mv` the old label
+    # names nothing, but the finding is still there — calling that
+    # CLEARED would let a rename count as a fix (ADR 009).
+    tracks = {track.label: track for track in _walk(records, root)}
     result: dict[str, Outcome] = {}
     for finding in sorted(targeted):
-        if finding in returned:
+        track = tracks.get(finding)
+        if track is not None and track.returned_in:
             result[finding] = Outcome.CLEARED_THEN_RETURNED
-        elif finding in final:
+        elif track is not None and track.present:
             result[finding] = Outcome.NEVER_CLEARED
         else:
             result[finding] = Outcome.CLEARED
     return result
 
 
-def escalations(segment: Segment) -> list[dict[str, Any]]:
+def escalations(segment: Segment, root: Path | None = None) -> list[dict[str, Any]]:
     """Findings that have earned a design review rather than another patch.
 
     Ordered by how many times the fix failed to hold, because that is
@@ -159,7 +220,8 @@ def escalations(segment: Segment) -> list[dict[str, Any]]:
     commits: an escalation without them is a louder nit.
     """
     candidates = [
-        item for item in recurrence(segment).values() if item.design_review_candidate
+        item for item in recurrence(segment, root).values()
+        if item.design_review_candidate
     ]
     candidates.sort(key=lambda item: (-item.returns, item.fingerprint))
     return [

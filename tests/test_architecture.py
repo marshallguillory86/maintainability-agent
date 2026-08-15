@@ -24,6 +24,12 @@ PACKAGE = ROOT / "src" / "maintainability_audit"
 # analyzer half of that rule checkable.
 FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "config",
                "git_tools", "instructions",
+               # `_finding_match` is structural finding identity and the
+               # matching relation (ADR 009). The gate, recurrence and
+               # presentation all need one matching rule and they sit on
+               # different sides of the graph; its only internal import
+               # is `git_tools`, which owns the process rule.
+               "_finding_match",
                # `_runner` sits beside `git_tools`: both spawn processes and
                # import nothing internal. `_catalog` is analyzer selection
                # data -- a leaf that reads the shipped catalog and nothing

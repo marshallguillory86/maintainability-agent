@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 
 from ._cognitive import brace_cognitive, python_cognitive
+from ._finding_match import normalized_body_digest
 from ._metrics_types import COMPLEXITY_RE, FUNC_PATTERNS, DeclRange, FunctionMetric
 from ._ranges import indent_bounded_end, java_declaration_ranges, js_declaration_ranges
 
@@ -190,6 +191,7 @@ def detect_functions(
                 status=declaration_status(decl.kind, count, complexity, thresholds, cognitive),
                 kind=decl.kind,
                 cognitive=cognitive,
+                body_digest=normalized_body_digest(block),
             )
         )
     return funcs

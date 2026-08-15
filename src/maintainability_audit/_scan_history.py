@@ -43,7 +43,13 @@ from typing import Any
 # two separate series (ADR 007 forbids averaging them), and the
 # evidence status. Schema-1 lines still load; the new fields default
 # to empty, and a chart treats empty as a gap, never as a zero.
-HISTORY_SCHEMA_VERSION = 2
+# 3 since ADR 009 identity: a record also stores structured identity
+# records (kind, path, name, ordinal, body digest, label) beside the
+# label tuple, so recurrence can match findings across renames and
+# reorders while charts keep their strings. Schema-1/2 lines still
+# load with empty identities, and recurrence between two such records
+# stays label equality.
+HISTORY_SCHEMA_VERSION = 3
 
 DEFAULT_HISTORY_PATH = ".maintainability/history.jsonl"
 
@@ -95,8 +101,13 @@ class ScanRecord:
     range_low: float | None = None
     range_high: float | None = None
     populations: dict[str, int] = field(default_factory=dict)
-    # Stable finding identities, for the recurrence work that follows.
+    # Stable finding identity labels, for charts and the targeted join.
     fingerprints: tuple[str, ...] = ()
+    # Schema 3 (ADR 009): the same findings as structured records —
+    # dicts shaped like `_finding_match.Identity` — so recurrence can
+    # match through renames and same-name reorders. Empty on older
+    # lines, which keeps their comparisons label-only.
+    identities: tuple[dict[str, Any], ...] = ()
     # Whether this scan was reconstructed rather than observed. A commit
     # audited today carries today's tooling, config and analyzer
     # versions, which is not the scan that would have happened then. The
@@ -216,7 +227,7 @@ def append_scan(path: Path, record: ScanRecord) -> None:
 # Fields stored as sequences, derived from the dataclass rather than
 # listed by hand so a new one is handled the day it is added.
 _SEQUENCE_FIELDS: tuple[str, ...] = (
-    "analyzers", "scored_languages", "fingerprints", "targeted",
+    "analyzers", "scored_languages", "fingerprints", "targeted", "identities",
 )
 
 
@@ -278,6 +289,8 @@ def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
     """
     from datetime import UTC, datetime
 
+    from ._finding_match import identities_from_report
+
     coverage = report.get("analyzer_coverage") or {}
     contributed = tuple(sorted(
         entry["tool"]
@@ -307,6 +320,11 @@ def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
             if isinstance(summary.get(key), int)
         },
         fingerprints=fingerprints,
+        identities=tuple(
+            asdict(identity)
+            for identity in sorted(identities_from_report(report),
+                                   key=lambda i: i.fingerprint)
+        ),
         # Published values, straight off the score document. `or {}`
         # rather than KeyError: a withheld score has no categories, and
         # a record of that scan is still a record.

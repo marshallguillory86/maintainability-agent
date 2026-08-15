@@ -35,6 +35,11 @@ ENFORCEMENT: dict[str, tuple[str, ...]] = {
         "test_two_runs_on_one_tree_agree",
         "test_two_analyzer_runs_on_one_tree_agree",
         "test_a_history_is_an_input_and_the_report_says_so",
+        # The network half: no HTTP client in src/, and no tool fetched
+        # unless the operator opted in (test_network_disclosure).
+        "test_no_module_imports_an_http_client",
+        "test_no_module_opens_a_network_connection",
+        "test_a_missing_node_tool_is_not_fetched_by_default",
     ),
     "P2": (
         "test_the_same_rubric_applies_at_every_repository_size",

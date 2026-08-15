@@ -24,7 +24,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-from ._adapters import Extraction, exclusions_for, measurements_only
+from ._adapters import Extraction, exclusions_for, measurements_only, set_tool_acquisition
 from ._built_ins import BUILT_IN_SOURCES
 from ._catalog import CONCERNS, PolicyError, concepts_for, resolve_pool, settings_from
 from ._discovery import CATALOG_LANGUAGE, discover
@@ -264,6 +264,9 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
     # tools ran over a single C file, produced nothing between them, and
     # the coverage section reported documentation, style, types and
     # dead-code as *examined* — a tool with no input examining a concern.
+    # Before any probe: a fetch during the availability check is the
+    # same unconfigured fetch as one during analysis.
+    set_tool_acquisition(bool(settings.get("acquire_tools")))
     inventory = discover(root, config)
     excludes = exclusions_for(config, inventory)  # two inputs, see `Exclusions`
     analysis.languages = {

@@ -13,6 +13,11 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Changed
 
+- **PyYAML is a declared `dev` extra, not a silent test import.**
+  `tools/build_catalog.py` is the only user. Tests cannot import `yaml`.
+  A structural lint fails undeclared third-party imports in `tests/` and
+  `tools/`.
+
 - **CI history cache (6.4).** The consumer workflow restores and saves
   `.maintainability/history.jsonl` around a recorded scan (`if: always()`
   on save). `action.yml` takes opt-in `record-history`. `examples/local-ci.sh`

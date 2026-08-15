@@ -98,13 +98,68 @@ ENFORCEMENT: dict[str, tuple[str, ...]] = {
 }
 
 
-def test_every_prompt_target_is_a_finding_the_audit_produced(tmp_path: Path) -> None:
-    """P5's falsifier: no path/name instruction without a report finding.
+# File-like ticks in the prompt. Dimension names (`duplication`),
+# verification commands (`ruff check`), and prose examples (`getattr`)
+# are not locations. A path is a location.
+_PROMPT_TICK = re.compile(r"`([^`]+)`")
+_SOURCE_SUFFIXES = (
+    ".py", ".js", ".ts", ".tsx", ".jsx", ".mjs", ".cjs", ".java", ".go",
+    ".rs", ".c", ".cc", ".cpp", ".h", ".hpp", ".cs",
+)
 
-    The generic "do not widen" sentence constrains an agent but proves
-    nothing about the concrete targets the prompt emitted. This parses those
-    targets from the rendered prompt and checks each against the audit's own
-    work-order findings.
+
+def _fileish_path(token: str) -> str | None:
+    core = token.split(":")[0].strip()
+    if not core or " " in core or "://" in core:
+        return None
+    if any(core.endswith(suffix) for suffix in _SOURCE_SUFFIXES) or "/" in core:
+        return core
+    return None
+
+
+def _paths_named_in_prompt(prompt: str) -> set[str]:
+    """Every file path the prompt shows the agent, in any section."""
+    return {
+        path
+        for tick in _PROMPT_TICK.findall(prompt)
+        if (path := _fileish_path(tick))
+    }
+
+
+def _paths_the_audit_produced(report: dict) -> set[str]:
+    """Every file path the audit actually located as a finding or target."""
+    paths: set[str] = set()
+    for key in (
+        "work_order",
+        "hard_gate_failures",
+        "function_hotspots",
+        "largest_files",
+        "risk_findings",
+        "dead_code",
+        "near_duplicates",
+        "design_review_candidates",
+    ):
+        for item in report.get(key) or []:
+            if not isinstance(item, dict):
+                continue
+            if item.get("path"):
+                paths.add(item["path"])
+            duplicate = item.get("duplicate_of") or {}
+            if isinstance(duplicate, dict) and duplicate.get("path"):
+                paths.add(duplicate["path"])
+    for block in report.get("duplicate_blocks") or []:
+        for location in block.get("locations") or []:
+            paths.add(str(location).split(":")[0])
+    return paths
+
+
+def test_every_prompt_target_is_a_finding_the_audit_produced(tmp_path: Path) -> None:
+    """P5's falsifier: no path instruction without a corresponding finding.
+
+    Numbered work-order `Location:` lines are not the whole prompt.
+    Focus sections (hotspots, large files, risks, dupes, dead code) also
+    name paths. A test that only parses the numbered list stays green
+    while those sections invent work.
     """
     from test_determinism import _repo
 
@@ -114,29 +169,55 @@ def test_every_prompt_target_is_a_finding_the_audit_produced(tmp_path: Path) -> 
 
     report = build_report(_repo(tmp_path / "bounded"), load_config(None))
     prompt = render_ai_prompt(report)
-    expected = {
-        (item["title"], item["path"])
-        for item in report["work_order"]
-        if item["band"] != "major-project"
-    }
-    rendered: set[tuple[str, str]] = set()
-    title = ""
-    for line in prompt.splitlines():
-        match = re.match(r"\d+\. \*\*(.+?)\*\*", line)
-        if match:
-            title = match.group(1)
-            continue
-        location = re.search(r"Location: `([^`:]+)(?::\d+)?`", line)
-        if title and location:
-            rendered.add((title, location.group(1)))
-            title = ""
+    named = _paths_named_in_prompt(prompt)
+    produced = _paths_the_audit_produced(report)
 
-    assert rendered, "the fixture produced no concrete remediation targets"
-    invented = sorted(rendered - expected)
+    assert named, "the fixture produced no concrete path targets in the prompt"
+    invented = sorted(named - produced)
     assert not invented, (
-        "the prompt told the agent to fix paths/names the audit did not produce: "
-        f"{invented}"
+        "the prompt named file paths the audit did not produce: " + ", ".join(invented)
     )
+
+
+def test_a_focus_section_path_outside_the_audit_fails_p5(tmp_path: Path) -> None:
+    """The class: inventing a path in a focus section is enough to fail.
+
+    The previous test can stay green if the fixture's hotspots happen to
+    be a subset of the work order. This injects a path that exists only
+    in the focus list.
+    """
+    from test_determinism import _repo
+
+    from maintainability_audit.config import load_config
+    from maintainability_audit.prompts import render_ai_prompt
+    from maintainability_audit.report import build_report
+
+    report = build_report(_repo(tmp_path / "ghost"), load_config(None))
+    report = {
+        **report,
+        "function_hotspots": [
+            {
+                "path": "ghost/never_audited.py",
+                "name": "invented",
+                "start_line": 1,
+                "status": "fail",
+                "lines": 40,
+                "complexity": 12,
+            },
+            *list(report.get("function_hotspots") or []),
+        ],
+    }
+    prompt = render_ai_prompt(report)
+    # Strip the injected hotspot from the audit's produced set so the
+    # focus section is the only place the path appears.
+    produced = _paths_the_audit_produced(report) - {"ghost/never_audited.py"}
+    named = _paths_named_in_prompt(prompt)
+    assert "ghost/never_audited.py" in named, (
+        "the focus section never emitted the injected path; the probe is dead"
+    )
+    assert "ghost/never_audited.py" not in produced
+    invented = named - produced
+    assert "ghost/never_audited.py" in invented
 
 
 def _published_promises() -> set[str]:

@@ -57,7 +57,7 @@ This repo eats its own dogfood — the tool runs against this codebase in CI, an
 |---|---:|
 | Maintainability estimate | **4.6 / 5** |
 | Verified grade | **B** |
-| Files scanned | 211 |
+| Files scanned | 235 |
 | File warnings | 65 |
 | File failures | 0 |
 | Function warnings | 28 |

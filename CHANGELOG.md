@@ -13,6 +13,9 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Changed
 
+- **Self-audit restamped (7.1).** Provenance commit `9c2257a`, 235 files
+  scanned. README table matches the stamp. Still a B.
+
 - **PyYAML is a declared `dev` extra, not a silent test import.**
   `tools/build_catalog.py` is the only user. Tests cannot import `yaml`.
   A structural lint fails undeclared third-party imports in `tests/` and

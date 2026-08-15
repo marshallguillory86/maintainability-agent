@@ -55,6 +55,8 @@ flowchart TB
     idioms["idioms"]
     similarity["similarity"]
     history["history"]
+    _semantic["_semantic"]
+    _semantic_ts["_semantic_ts"]
     _adapters["_adapters"]
     _generic["_generic"]
     _metric_adapters["_metric_adapters"]
@@ -95,6 +97,7 @@ flowchart TB
     _masking["_masking"]
     _hotspots["_hotspots"]
     config["config"]
+    _semantic_policy["_semantic_policy"]
     git_tools["git_tools"]
     _scan_history["_scan_history"]
     _finding_match["_finding_match"]
@@ -315,8 +318,9 @@ Both paths terminate in report data consumed by presentation. Neither may
 reach backward into `_formula`, `_calibration`, `_aspects`, or grade policy.
 ADR 004 v1 is in the tree (`_economics`, `_economics_view`). ADR 003's
 TypeScript increment uses `_semantic` for type-backed classification and
-`_semantic_policy` for the optional checked-in policy. `_semantic` belongs with
-scanners; `_semantic_policy` belongs with configuration foundations. Their
+`_semantic_policy` for the optional checked-in policy. TypeScript type facts
+live in `_semantic_ts`. `_semantic` and `_semantic_ts` belong with scanners;
+`_semantic_policy` belongs with configuration foundations. Their
 production change also places them in the layer list enforced by
 `tests/test_architecture.py`. Neither path may reach `_formula`, `_calibration`,
 `_aspects`, or grade policy.

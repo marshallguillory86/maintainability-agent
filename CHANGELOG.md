@@ -13,6 +13,11 @@ All notable changes to Maintainability Agent will be documented here.
 
 ### Changed
 
+- **CI history cache (6.4).** The consumer workflow restores and saves
+  `.maintainability/history.jsonl` around a recorded scan (`if: always()`
+  on save). `action.yml` takes opt-in `record-history`. `examples/local-ci.sh`
+  records. No new release tag.
+
 - **Per-concept analyzer spread moves `maintainability_range` (3.4).**
   Independent tools disagreeing on one concept widens the interval;
   a lone tool is not priced as perfect agreement. The estimate stays

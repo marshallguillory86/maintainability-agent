@@ -34,7 +34,22 @@ jobs:
           # no base to diff against, so the revspec cannot resolve.
           fetch-depth: 0
 
-      - uses: marshallguillory86/maintainability-agent@v0.7.0
+      # Without this, every CI run is the first run (ADR 009): the
+      # runner is disposable, so a history recorded into it evaporates,
+      # and trends and recurrence never see a second scan. The key rolls
+      # per run — a cache key is immutable once saved, so re-saving an
+      # append-only file needs a fresh key each time — and the prefix in
+      # restore-keys picks up the newest previous one.
+      - uses: actions/cache/restore@v4
+        with:
+          path: .maintainability/history.jsonl
+          key: maintainability-history-${{ github.run_id }}
+          restore-keys: |
+            maintainability-history-
+
+      # `@main` until the next release tag. `v0.7.0` does not have the
+      # `record-history` input; do not invent a tag that has not been cut.
+      - uses: marshallguillory86/maintainability-agent@main
         with:
           # Empty means "discover it". A `maintainability-agent.json` at
           # the repository root is picked up; without one the audit runs
@@ -58,6 +73,20 @@ jobs:
           # estimate: withheld means the evidence was too thin to judge,
           # which is a fact about the diff's size, not a defect in it.
           fail-on-gate: "true"
+
+          # Append this scan to the restored history, so the next run can
+          # tell a returning finding from a fresh one.
+          record-history: "true"
+
+      # `always()` on the save, separately from the combined cache
+      # action: its post-step save skips when the job fails, and the run
+      # that fails a gate is exactly the one the next run needs to
+      # remember — recurrence exists for those.
+      - if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .maintainability/history.jsonl
+          key: maintainability-history-${{ github.run_id }}
 
       # `always()` so a gate failure still hands back the report that
       # explains it. Without this the run that most needs reading is the

@@ -11,7 +11,7 @@ The product already has one report dictionary and several writers: Markdown (`--
 
 1.0 needs three **user-facing** skins of the **same** data: what the human sees in IDE chat, a Markdown file, and a single packaged HTML file that an executive will actually open. The bounded work order remains the product ([product intent](product-intent.md)); these are presentations of it, not a dashboard product.
 
-MCP is read-only and does not run `input()`. A TTY `input()` inside the MCP server would hang or no-op. The host agent (Grok, Claude, …) is what can ask the user in chat.
+MCP is a local stdio process and does not run `input()`. First-run setup may write only the repository config, user config and user state; it never writes a report. The host agent (Grok, Claude, …) is what can ask the user where to save returned report text.
 
 ## Options
 
@@ -21,7 +21,7 @@ MCP is read-only and does not run `input()`. A TTY `input()` inside the MCP serv
 
 **C. One report dict, three renderers; ask on every interactive invoke; flags win; CI never asks.** Chosen.
 
-**D. MCP server writes `.html` / `.md` into the repo.** Rejected: contradicts the read-only MCP boundary. Chat shows text. Files are written by the CLI.
+**D. MCP server writes `.html` / `.md` into the repo.** Rejected: the MCP write boundary permits setup configuration and state, never reports. Chat shows text. Files are written by the CLI or saved by the host after it asks the user for a location.
 
 ## Decision
 
@@ -29,9 +29,11 @@ MCP is read-only and does not run `input()`. A TTY `input()` inside the MCP serv
 
 2. **Default is chat/CLI text** — the Markdown the host already prints in an IDE conversation. Enter / go with no choice selects this.
 
-3. **Ask every interactive invoke** which of the three to produce. Do not persist the choice. `--format` / `--output` / `--html-output` skip the question and win. Non-TTY and CI never call `input()` (same class as 6.1).
+3. **TTY:** ask every interactive invoke which of the three to produce. Do not persist the choice. `--format` / `--output` / `--html-output` skip the question and win. Non-TTY and CI never call `input()` (same class as 6.1).
 
-4. **MCP:** the `maintainability-agent` prompt tells the host to ask, then call `audit_repository` with a format argument. The tool does not prompt. Chat returns Markdown. HTML and Markdown **files** are written only by the CLI.
+4. **MCP:** first-run setup uses structured elicitation. The `maintainability-agent` prompt still tells the host in prose to ask, then call `audit_repository` with a format argument; that free-text ask remains open under D3. Chat returns Markdown. HTML and Markdown **files** are written by the CLI or saved by the host after a location ask, never by the MCP process.
+
+**Chat-path amendment (2026-08-16).** First-run setup persists a default presentation for later chat calls. An explicit per-call format and the host's own presentation ask always win over that stored default. The TTY rule is unchanged: it asks on every interactive invocation unless an explicit format or output option already decides.
 
 5. **HTML** is one file: inlined CSS, charts as deterministic SVG generated from stored fields (no CDN, no fetch at view time — P1). It leads with an **executive summary** (estimate, grade, range, series direction or “no history yet”). Required charts, from schema-2 records only:
    - estimate + range over recorded scans
@@ -58,5 +60,5 @@ A pretty HTML page that invents a second score, or that cannot be reproduced fro
 2. HTML contains no `http://` or `https://` resource load (no CDN, no live chart library).
 3. Non-TTY runs never call `input()` for format.
 4. A set `--format` / output path suppresses the TTY question.
-5. MCP tools do not write the working tree.
+5. MCP never writes source or report files. First-run setup may write only repository configuration, user configuration and user state.
 6. Charts and trend sentences are computed only from fields present on stored `ScanRecord`s (schema 2). A missing series is omitted or named empty, never interpolated.

@@ -24,7 +24,6 @@ from typing import Any
 from ._catalog import LICENSE_POLICIES
 from ._user_config import (
     load_user_config,
-    repo_first_run,
     write_user_config,
 )
 from .config import CONFIG_FILENAME, discovered_config, load_config
@@ -167,10 +166,15 @@ def apply_answers(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
 
 
 def setup_pending(root: Path) -> bool:
-    """Whether first-run setup still has questions to ask for `root`."""
+    """Whether first-run setup still has questions to ask for `root`.
+
+    Configuration absence only, never seen-state (M1): D2's stop
+    condition is *written answers*. A declined ask is re-asked on the
+    next call — the memo that an audit completed (D13) answers a
+    different question and must not silence this one.
+    """
     return (
-        repo_first_run(Path(root))
-        and discovered_config(Path(root)) is None
+        discovered_config(Path(root)) is None
         and load_user_config() is None
     )
 

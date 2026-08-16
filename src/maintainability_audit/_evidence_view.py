@@ -217,7 +217,7 @@ def reason_lines(score: dict[str, Any], bullet: str = "- ") -> list[str]:
     ]
 
 
-def remediation_note(score: dict[str, Any]) -> list[str]:
+def remediation_note(score: dict[str, Any], pool_ran: bool = False) -> list[str]:
     """What an agent should do about incomplete evidence: not refactor.
 
     Missing evidence is not a maintainability defect in the source, and
@@ -232,7 +232,7 @@ def remediation_note(score: dict[str, Any]) -> list[str]:
         "",
         "### Evidence",
         "",
-        status_sentence(score),
+        status_sentence(score, pool_ran),
         "",
         *reason_lines(score),
         "",

@@ -31,6 +31,7 @@ from ._semantic import semantic_findings
 from ._semantic_policy import load_semantic_policy
 from ._semantic_ts import discover_type_analysis
 from ._work_order import work_order
+from .config import analyzers_run_default
 from .deadcode import dead_declarations
 from .declarations import DECLARATION_SUFFIXES
 from .duplication import duplicate_blocks, risk_findings
@@ -402,16 +403,20 @@ def build_report(
     only_paths: set[str] | None = None,
     changed_revspec: str | None = None,
     external_findings: list[dict[str, Any]] | None = None,
-    run_analyzers: bool = False,
+    run_analyzers: bool | None = None,
 ) -> dict[str, Any]:
     """Assemble one report.
 
-    ``run_analyzers`` invokes the external analyzer pool (ADR 006). It is off
-    by default because running external tools is optional and may be expensive.
-    A complete concept set moves the point estimate; a partial one stays on
-    the built-in fallback and the range widens to contain both. The CLI
-    exposes it as ``--analyzers``.
+    ``run_analyzers`` invokes the external analyzer pool (ADR 006) and is
+    tri-state at this seam, the same as MCP's (D1): ``None`` — the
+    default — obeys the config's ``analyzers.run``, so a direct caller
+    holding a configured repository's config gets the configured pool,
+    not a silent fallback. Explicit ``True``/``False`` wins for one call.
+    A complete concept set moves the point estimate; a partial one stays
+    on the built-in fallback and the range widens to contain both.
     """
+    if run_analyzers is None:
+        run_analyzers = analyzers_run_default(config)
     analyzer = _analyzer_sections(root, config, run_analyzers)
     # Before anything is measured: what languages are here, and whose
     # code is it. Everything downstream reads this rather than guessing

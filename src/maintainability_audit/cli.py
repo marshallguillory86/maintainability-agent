@@ -30,7 +30,13 @@ from .baseline import (
     load_baseline,
     write_baseline,
 )
-from .config import DEFAULT_CONFIG, VERSION, discovered_config, load_config
+from .config import (
+    DEFAULT_CONFIG,
+    VERSION,
+    analyzers_run_default,
+    discovered_config,
+    load_config,
+)
 from .git_tools import changed_paths
 from .instructions import instruction_path_for_target, write_instruction_pack
 from .prompts import render_agent_instructions, render_ai_prompt
@@ -173,7 +179,7 @@ def _analyzers_resolved(args: argparse.Namespace, config: dict) -> bool:
         return True
     if args.no_analyzers:
         return False
-    return bool((config.get("analyzers") or {}).get("run", False))
+    return analyzers_run_default(config)
 
 
 def _interactive_config(root: Path, config_arg: str | None) -> dict:

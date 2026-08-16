@@ -235,9 +235,12 @@ Stated rather than hidden, because an architecture document that only describes 
 - ~~History records lacked the series required by the HTML charts~~ — **resolved (8.1–8.2).** New JSONL records use schema 3: the schema-2 chart fields remain, and structured identities sit beside labels. Schema-1/2 records still load as explicit gaps; an existing history file gains each later successful scan.
 - **The chat surface lags the terminal surface across the board.** The
   primary user surface is an AI chat host driving the MCP server
-  (product intent). D1 remains open until
-  `test_a_configured_repository_runs_its_pool_without_a_flag` passes: the
-  analyzer pool is flag-gated and cannot be enabled by configuration.
+  (product intent). D1 is closed at every seam:
+  `test_build_report_resolves_the_pool_tristate_at_its_own_seam`,
+  `test_cli_runs_or_suppresses_the_pool_at_the_production_seam`,
+  `test_mcp_audit_runs_or_suppresses_the_pool_at_the_production_seam`
+  and `test_mcp_report_resource_uses_the_repository_pool_decision`
+  prove a configured repository runs its pool with no flag.
   First-run setup / format / economics asks
   are TTY-only, history and targeted-advice recording never happen over
   MCP, there is no baseline path or user-level configuration tier, and

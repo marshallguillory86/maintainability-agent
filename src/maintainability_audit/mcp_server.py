@@ -203,6 +203,7 @@ def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
         # these three local artifacts, never source and never a report.
         "read_only": False,
         "writes": [CONFIG_FILENAME, "user config", "user state"],
+        "never_writes": ["source", "reports"],
         "allowed_roots": [str(root) for root in authorized_roots],
     }
 

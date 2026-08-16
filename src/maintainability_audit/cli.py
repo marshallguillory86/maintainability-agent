@@ -59,11 +59,19 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--fail-on-new", action="store_true", help="Fail only when findings are not in --baseline.")
     parser.add_argument(
         "--analyzers", action="store_true",
-        help="Run the configured external analyzer pool and report its coverage "
-             "(see docs/analyzer-pool.md). Off by default because external "
-             "analysis is optional and may be expensive. Measurements move the "
-             "point estimate where the full concept set was measured; otherwise "
-             "the built-in fallback stands and the range widens around the two.",
+        help="Force the external analyzer pool on for this run. The pool is "
+             "the primary evidence source (ADR 006, docs/analyzer-pool.md); a "
+             "repository with a config file runs it by default, so this flag "
+             "matters only for unconfigured trees or to override "
+             "analyzers.run=false. Measurements move the point estimate where "
+             "the full concept set was measured; otherwise the built-in "
+             "fallback stands and the range widens around the two.",
+    )
+    parser.add_argument(
+        "--no-analyzers", action="store_true",
+        help="Force the analyzer pool off for this run, overriding the "
+             "config. The report will say the built-in fallback supplied the "
+             "evidence (P8); it is a faster scan, not the full audit.",
     )
     parser.add_argument(
         "--work", action="append", metavar="AXIS=VALUE",
@@ -154,6 +162,19 @@ def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
     return 0
 
 
+def _analyzers_resolved(args: argparse.Namespace, config: dict) -> bool:
+    """Whether the pool runs: flags beat config, config beats nothing.
+
+    A configured repository runs its pool without a flag (D1, ADR 006);
+    the flags exist for one-run overrides in either direction.
+    """
+    if args.analyzers:
+        return True
+    if args.no_analyzers:
+        return False
+    return bool((config.get("analyzers") or {}).get("run", False))
+
+
 def _interactive_config(root: Path, config_arg: str | None) -> dict:
     """Both first-run asks, then the one config every later run loads.
 
@@ -203,7 +224,7 @@ def main(argv: list[str] | None = None) -> int:
     report = build_report(root, config, only_paths=only_paths,
                           changed_revspec=args.changed_only,
                           external_findings=external_findings,
-                          run_analyzers=args.analyzers)
+                          run_analyzers=_analyzers_resolved(args, config))
     if selection:
         # A view over the work already gathered. The score block is
         # untouched by construction — `select` returns a subset of the

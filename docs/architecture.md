@@ -234,8 +234,10 @@ Stated rather than hidden, because an architecture document that only describes 
 - ~~History records lacked the series required by the HTML charts~~ — **resolved (8.1–8.2).** New JSONL records use schema 3: the schema-2 chart fields remain, and structured identities sit beside labels. Schema-1/2 records still load as explicit gaps; an existing history file gains each later successful scan.
 - **The chat surface lags the terminal surface across the board.** The
   primary user surface is an AI chat host driving the MCP server
-  (product intent), yet the analyzer pool is flag-gated and cannot be
-  enabled by configuration, first-run setup / format / economics asks
+  (product intent). D1 remains open until
+  `test_a_configured_repository_runs_its_pool_without_a_flag` passes: the
+  analyzer pool is flag-gated and cannot be enabled by configuration.
+  First-run setup / format / economics asks
   are TTY-only, history and targeted-advice recording never happen over
   MCP, there is no baseline path or user-level configuration tier, and
   asks that do exist are free-text rather than structured elicitation.

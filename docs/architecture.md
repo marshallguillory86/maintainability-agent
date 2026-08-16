@@ -232,6 +232,16 @@ Stated rather than hidden, because an architecture document that only describes 
 - **Declaration extraction is gated on `DECLARATION_SUFFIXES`** (Python, JS/TS/HTML, and Java). A suffix outside that set can be included for length, duplication and risk; it does not produce a declaration population. `--changed-only` and `--fail-on-new` no longer have the defects previously listed here: a thin diff withholds ([ADR 005](adr-005-insufficient-population.md); `test_scan_scope.py`), while baseline v3 and recurrence resolve structured identities through `_finding_match`. The visible label stays `function:{path}:{name}#{ordinal}`; scan-time `body_digest` resolves same-name reorders and git-attested renames resolve path moves.
 - ~~The presentation layer lacked the three [ADR 011](adr-011-three-report-presentations.md) skins~~ — **resolved (8.3–8.6).** Chat/CLI Markdown, a Markdown file and one self-contained HTML file render the same report dictionary. TTY asks every invoke; flags win; CI never asks. The MCP host asks, and MCP does not write files.
 - ~~History records lacked the series required by the HTML charts~~ — **resolved (8.1–8.2).** New JSONL records use schema 3: the schema-2 chart fields remain, and structured identities sit beside labels. Schema-1/2 records still load as explicit gaps; an existing history file gains each later successful scan.
+- **The chat surface lags the terminal surface across the board.** The
+  primary user surface is an AI chat host driving the MCP server
+  (product intent), yet the analyzer pool is flag-gated and cannot be
+  enabled by configuration, first-run setup / format / economics asks
+  are TTY-only, history and targeted-advice recording never happen over
+  MCP, there is no baseline path or user-level configuration tier, and
+  asks that do exist are free-text rather than structured elicitation.
+  The itemized, evidence-cited list is the
+  [chat-surface defect register](defect-register-chat-surface.md)
+  (D1–D15); entries close individually behind tests.
 - **Java has a zero-install fallback; we will not clone it.** `java_declaration_ranges` finds methods, constructors and types and bounds each at its own body. `.java` is in `DECLARATION_SUFFIXES` and the default include list. That is enough for `pip install` with no lizard. It is not the 1.0 close and there will be no `_go_declaration`. Go, C, C++, C# and Rust stay recognized and withheld until analyzers supply a declaration population ([ADR 006](adr-006-analyzer-evidence.md)). The last-resort regex still must not be aimed at those languages. Feeding lizard into `declarations_scanned` without the full concept set would move mixed-language scores in silence.
 
 ## Extension points

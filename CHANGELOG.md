@@ -4,7 +4,13 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
-Nothing yet.
+### Changed
+
+- **Chat-surface foundations D1 and D13.** Analyzer-pool execution is
+  config-driven through `build_report`, both CLI overrides, the MCP tool,
+  and the MCP report resource. XDG user configuration, repository-over-user
+  precedence, and persistent first-run state also ship. These changes landed
+  after v0.8.0, are not in the v0.8.0 tag, and will ship in v0.8.1.
 
 ## 0.8.0 - 2026-08-16
 

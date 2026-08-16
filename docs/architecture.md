@@ -98,6 +98,7 @@ flowchart TB
     _masking["_masking"]
     _hotspots["_hotspots"]
     config["config"]
+    _user_config["_user_config"]
     git_tools["git_tools"]
     _scan_history["_scan_history"]
     _finding_match["_finding_match"]
@@ -117,7 +118,7 @@ flowchart TB
   parsing --> foundations
 ```
 
-`_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_finding_match` owns structured identity and matching; `_identity` presents the ordinal labels derived from the report. `_semantic` classifies type-backed findings; `_semantic_ts` supplies TypeScript type facts from recordings or an already-installed `tsc`; `_semantic_policy` loads the optional checked-in policy.
+`_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_finding_match` owns structured identity and matching; `_identity` presents the ordinal labels derived from the report. `_user_config` owns the XDG user configuration and per-repository seen state; it belongs beside `config` in foundations. `_semantic` classifies type-backed findings; `_semantic_ts` supplies TypeScript type facts from recordings or an already-installed `tsc`; `_semantic_policy` loads the optional checked-in policy.
 
 | Layer | Owns | May import |
 | --- | --- | --- |
@@ -243,7 +244,7 @@ Stated rather than hidden, because an architecture document that only describes 
   asks that do exist are free-text rather than structured elicitation.
   The itemized, evidence-cited list is the
   [chat-surface defect register](defect-register-chat-surface.md)
-  (D1–D17); entries close individually behind tests.
+  (D1–D15); entries close individually behind tests.
 - **Java has a zero-install fallback; we will not clone it.** `java_declaration_ranges` finds methods, constructors and types and bounds each at its own body. `.java` is in `DECLARATION_SUFFIXES` and the default include list. That is enough for `pip install` with no lizard. It is not the 1.0 close and there will be no `_go_declaration`. Go, C, C++, C# and Rust stay recognized and withheld until analyzers supply a declaration population ([ADR 006](adr-006-analyzer-evidence.md)). The last-resort regex still must not be aimed at those languages. Feeding lizard into `declarations_scanned` without the full concept set would move mixed-language scores in silence.
 
 ## Extension points

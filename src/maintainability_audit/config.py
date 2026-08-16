@@ -205,12 +205,23 @@ def analyzers_run_default(config: dict[str, Any]) -> bool:
 
 
 def load_config(path: str | None) -> dict[str, Any]:
+    """Defaults, then the user tier, then the repository file (D13).
+
+    Later tiers win through `deep_update`: a repository always beats a
+    person, a person always beats the shipped defaults. Any loaded tier
+    defaults the pool on (D1 — whoever wrote a config chose the
+    product), set before the merges so an explicit ``"run": false`` at
+    the winning tier still wins.
+    """
+    from ._user_config import load_user_config
+
     config = json.loads(json.dumps(DEFAULT_CONFIG))
-    if not path:
+    user_tier = load_user_config()
+    if user_tier is None and not path:
         return config
-    # A loaded file defaults the pool on (D1). Set before the merge so
-    # an explicit "run": false in the file still wins.
     config["analyzers"]["run"] = True
-    user_config = json.loads(Path(path).read_text(encoding="utf-8"))
-    deep_update(config, user_config)
+    if user_tier is not None:
+        deep_update(config, user_tier)
+    if path:
+        deep_update(config, json.loads(Path(path).read_text(encoding="utf-8")))
     return config

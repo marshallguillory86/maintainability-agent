@@ -24,6 +24,9 @@ PACKAGE = ROOT / "src" / "maintainability_audit"
 # analyzer half of that rule checkable.
 FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "config",
                "git_tools", "instructions", "_semantic_policy",
+               # `_user_config` is the XDG user tier and its state (D13):
+               # file reads and atomic writes, no internal imports.
+               "_user_config",
                # ADR 009's structured identity and matching relation is a
                # foundation shared by the gate, recurrence and presentation.
                "_finding_match",

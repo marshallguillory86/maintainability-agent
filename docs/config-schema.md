@@ -30,6 +30,26 @@ maintainability-agent.schema.json
 - `risk_patterns`: regex checks for project-specific risk language or unsafe patterns.
 - `instruction_pack`: context used when generating AI agent standards.
 
+## Configuration locations and precedence
+
+Configuration merges from least to most specific: built-in defaults, then the
+user file at `$XDG_CONFIG_HOME/maintainability-agent/config.json` (default
+`~/.config/maintainability-agent/config.json`), then the repository's
+`maintainability-agent.json` or explicit `--config` file. Later tiers win via
+the same recursive merge used for repository configuration. Documented
+environment overrides, where a setting has one, remain the highest-precedence
+one-run value; there is no generic environment-to-JSON replacement.
+
+Loading either the user or repository tier defaults `analyzers.run` to `true`.
+An explicit `run: false` survives until a later tier explicitly overrides it.
+With neither file, `load_config(None)` retains the built-in `run: false` path.
+
+Per-user first-run state lives at
+`$XDG_STATE_HOME/maintainability-agent/state.json` (default
+`~/.local/state/maintainability-agent/state.json`). Its `seen` object maps an
+absolute repository root to an ISO date. Missing, corrupt, or unreadable user
+configuration and state are treated as absent rather than aborting an audit.
+
 ## Analyzer policy (`analyzers`)
 
 Controls whether the external pool runs and which analysis tools may run in it. Full background, including the tool inventory and what each class means, is in [the analyzer pool](analyzer-pool.md).

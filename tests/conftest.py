@@ -35,6 +35,13 @@ SHIPPED_FLOORS = dict(_formula.POPULATION_FLOORS)
 
 
 @pytest.fixture(autouse=True)
+def _isolate_user_config(tmp_path, monkeypatch):
+    """No test may read or write the developer's real XDG config or state."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg-config"))
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "xdg-state"))
+
+
+@pytest.fixture(autouse=True)
 def _lift_population_floors(request, monkeypatch):
     """Let rubric tests use small trees, unless they asked for the real floors."""
     if "real_population_floors" in request.fixturenames:

@@ -22,6 +22,7 @@ from ._scan_history import (
     segments,
 )
 from ._trends import trend_report
+from ._user_config import mark_repo_seen
 from ._work_order import SELECTABLE, combined_delta, prompt_targets, select
 from .baseline import (
     finding_fingerprints,
@@ -267,6 +268,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     rendered = _render_presentation(args, report, history_path)
     write_outputs(args, report, rendered)
+    mark_repo_seen(root)  # completed audit: not a first run now, whatever the gate says (D13)
     return audit_exit_code(args, report)
 
 

@@ -1,39 +1,38 @@
 # Defect register: the chat surface
 
 **Genre: defect register.** Recorded 2026-08-16 after the first external
-field test of the MCP server through an AI chat host. Every entry is an
-open defect against requirements that already exist — in
+field test of the MCP server through an AI chat host. Every entry records
+a defect against requirements that already exist — in
 [ADR 006](adr-006-analyzer-evidence.md), [ADR 004](adr-004-economic-context.md),
 [ADR 009](adr-009-scan-history.md), [product-intent.md](product-intent.md),
 or the operator's stated requirements — none is a feature proposal. The
-required behavior column cites the document that already requires it.
-Entries leave this register only when a test proves the behavior.
+required behavior column cites the document that already requires it. D1
+and D13 are retained as closed, tested history; the remaining entries stay
+open until a test proves the required behavior.
 
 ## Context
 
 The primary user surface is an AI chat host (an IDE assistant or chat
-window driving the MCP server), not the terminal. The field test showed
-that nearly every capability the terminal path has — configuration,
-analyzer execution, history, economics, format choice — is absent or
-silently degraded on the chat path. The theme across all fifteen
-entries is one defect class: **capability wired to the TTY, viewer
-shipped to the primary surface.**
+window driving the MCP server), not the terminal. At the field test,
+nearly every capability the terminal path had — configuration, analyzer
+execution, history, economics, format choice — was absent or silently
+degraded on the chat path. The theme across all seventeen entries is one
+defect class: **capability wired to the TTY, viewer shipped to the primary
+surface.**
 
 ## Entries
 
-### D1 — The analyzer pool does not run unless a flag is passed
+### D1 — Closed: analyzer pool execution is config-driven at every seam
 
-The architecture states the FOSS analyzer pool is the primary evidence
-source and the built-in detectors are the fallback where the pool cannot
-measure (ADR 006). The code inverts this: `--analyzers` is an opt-in
-CLI flag, the MCP tool defaults `run_analyzers=False`, and **no
-configuration key can enable execution** — the `analyzers` config block
-selects which tools *may* run, not whether they run. A default
-invocation therefore audits with the fallback and presents it as the
-product.
-
-*Required:* a configured repository runs its configured pool without a
-per-invocation flag. Built-ins run where the pool cannot measure.
+The FOSS analyzer pool now follows `analyzers.run` through
+`build_report`, the CLI, the MCP `audit_repository` tool, and the MCP
+report resource. `build_report` and the MCP tool accept a tri-state
+decision: an omitted value follows the loaded configuration, while an
+explicit true or false wins for that call. The CLI's `--analyzers` and
+`--no-analyzers` flags likewise override configuration in either
+direction. A configured repository therefore runs its pool without a
+per-invocation flag; built-in detectors remain the fallback where the
+pool cannot supply a complete scored dimension (ADR 006).
 
 *Closing tests:* `test_build_report_resolves_the_pool_tristate_at_its_own_seam`,
 `test_cli_runs_or_suppresses_the_pool_at_the_production_seam`,
@@ -124,8 +123,8 @@ remediation prompt when requested.
 
 The environment work order (install commands for analyzers that were
 selected but not installed, ADR 006 §2c) populates only when the pool
-runs — which the default prevents (D1) — and nothing in the MCP result
-directs the host to surface it.
+runs. D1 no longer prevents that for configured repositories, but
+nothing in the MCP result directs the host to surface the work order.
 
 *Required:* when selected tools are missing, the chat user is shown the
 tool names and the install commands the environment work order already
@@ -161,22 +160,17 @@ that asks go through the question UI.
 *Required:* the skill reflects the chat-primary flow: configuration
 check, elicited choices, no file written without a chosen location.
 
-### D13 — No user-level configuration or precedence chain
+### D13 — Closed: the XDG user configuration and state tier ships
 
-The only configuration location is the per-repository JSON file, and
-the only writer is the CLI TTY ask. There is no user-level
-configuration, no state directory, and therefore no way to detect
-"this tool has never run here" or to carry a user's answers across
-repositories.
+Configuration now merges built-in defaults, the XDG user configuration,
+and repository `maintainability-agent.json` in that order, so the later
+repository tier wins. Any loaded configuration tier enables the D1 pool
+default unless the winning tier explicitly sets `analyzers.run` false.
+The XDG state file records repositories by absolute root, making first-run
+detection persistent; corrupt or unreadable user files are treated as
+absent rather than crashing an audit.
 
-*Required:* a documented precedence chain — environment overrides →
-repository `maintainability-agent.json` → user configuration
-(XDG config home) → built-in defaults — with user-level state
-(XDG state home) recording enough to make first-run detection cheap.
-Repository configuration always wins over user configuration.
-
-*Closing test:* `test_user_and_repository_config_merge_in_precedence_order`
-in `tests/test_user_config_tier.py`.
+*Closing suite:* `tests/test_user_config_tier.py`.
 
 ### D14 — The configuration capability is not integrated with the chat UI
 
@@ -206,10 +200,35 @@ covers the repository's languages with the verified tools available,
 and names — before or with the results — what to install to close the
 remaining gaps. Deterministic; no scoring change.
 
+### D16 — No help system exists for the intended surface
+
+Help today is one `argparse --help` screen written for a terminal
+reader. There are no help files that walk a chat-context user through
+what the agent does, what it will ask, what the pool runs, or what the
+report means — and the deepest capabilities (history, recurrence,
+baselines, economics) are exactly the ones a first-time user cannot
+discover.
+
+*Required:* help files built out for the chat-skill-first flow, kept
+beside the docs the lints already sweep, and reachable from the README
+and the MCP server description. Scope is fixed in the fix-cycle prompt,
+not invented here.
+
+### D17 — The instructions doc teaches the wrong surface
+
+[ide-agent-integration.md](ide-agent-integration.md) and the generated
+agent-instruction packs (`--init-agent-standards`) instruct agents in
+CLI-first terms: run the binary, write report files. They predate the
+chat-primary statement and now teach integrators the inverted flow.
+
+*Required:* the instructions doc and the generated packs are updated or
+rebuilt to teach chat-first operation — configuration check, elicited
+choices, no file written without a chosen location — with the CLI
+documented as the automation path.
+
 ## Disposition
 
-All fifteen entries are open and queued for the fix cycle beginning
-2026-08-17. None is release-blocking documentation for the pre-1.0 test
-release, which ships with this register as the statement of known
-defects. Entries close individually, each behind a test that would fail
-if the defect returned.
+D1 and D13 are closed. D2–D12 and D14–D17 remain open in this
+seventeen-entry register and are queued for the fix cycle beginning
+2026-08-17. Entries close individually, each behind a test that would
+fail if the defect returned.

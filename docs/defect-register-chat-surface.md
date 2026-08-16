@@ -172,6 +172,9 @@ repository `maintainability-agent.json` → user configuration
 (XDG state home) recording enough to make first-run detection cheap.
 Repository configuration always wins over user configuration.
 
+*Closing test:* `test_user_and_repository_config_merge_in_precedence_order`
+in `tests/test_user_config_tier.py`.
+
 ### D14 — The configuration capability is not integrated with the chat UI
 
 The configuration machinery exists — schema, depth tiers, license

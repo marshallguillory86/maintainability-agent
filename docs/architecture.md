@@ -98,6 +98,7 @@ flowchart TB
     _masking["_masking"]
     _hotspots["_hotspots"]
     config["config"]
+    _user_config["_user_config"]
     git_tools["git_tools"]
     _scan_history["_scan_history"]
     _finding_match["_finding_match"]
@@ -117,7 +118,7 @@ flowchart TB
   parsing --> foundations
 ```
 
-`_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_finding_match` owns structured identity and matching; `_identity` presents the ordinal labels derived from the report. `_semantic` classifies type-backed findings; `_semantic_ts` supplies TypeScript type facts from recordings or an already-installed `tsc`; `_semantic_policy` loads the optional checked-in policy.
+`_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_finding_match` owns structured identity and matching; `_identity` presents the ordinal labels derived from the report. `_user_config` owns the XDG user configuration and per-repository seen state; it belongs beside `config` in foundations. `_semantic` classifies type-backed findings; `_semantic_ts` supplies TypeScript type facts from recordings or an already-installed `tsc`; `_semantic_policy` loads the optional checked-in policy.
 
 | Layer | Owns | May import |
 | --- | --- | --- |

@@ -254,7 +254,8 @@ def _estimate_source_caveat(scored: list[str]) -> list[str]:
     ]
 
 
-def undetected_declarations_markdown(summary: dict[str, Any]) -> list[str]:
+def undetected_declarations_markdown(summary: dict[str, Any],
+                                     pool_ran: bool = False) -> list[str]:
     """Files that were read and could not be parsed for declarations.
 
     Distinct from unread source, and the distinction is the whole point:
@@ -281,13 +282,24 @@ def undetected_declarations_markdown(summary: dict[str, Any]) -> list[str]:
         f"| `{entry['suffix']}` | {entry['language']} | {entry['files']} |"
         for entry in blind
     )
-    lines.extend([
-        "",
-        "Adding these to `paths.include_extensions` does not help — they are "
-        "already there. Run with `--analyzers` for located findings from tools "
-        "that do read these languages.",
-        "",
-    ])
+    if pool_ran:
+        lines.extend([
+            "",
+            "Adding these to `paths.include_extensions` does not help — they "
+            "are already there, and the analyzer pool already ran. What is "
+            "missing is a declaration parser or an installed tool for these "
+            "languages; the environment work order lists the install commands.",
+            "",
+        ])
+    else:
+        lines.extend([
+            "",
+            "Adding these to `paths.include_extensions` does not help — they "
+            "are already there. Enable the analyzer pool (`analyzers.run` in "
+            "the config, or `--analyzers` for one run) for located findings "
+            "from tools that do read these languages.",
+            "",
+        ])
     return lines
 
 

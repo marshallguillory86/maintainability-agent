@@ -20,14 +20,25 @@ from ._scan_view import (
 from ._semantic_view import semantic_markdown, without_semantic_suffixes
 
 
-def summary_table(summary: dict[str, int], score: dict[str, Any]) -> list[str]:
+def _pool_ran(report: dict[str, Any]) -> bool:
+    """Whether the analyzer pool executed for this report — D1's fact.
+
+    Read off the report (coverage present), never a second config read
+    at render time: the remedy wording must describe the run that
+    happened, and only the report knows that.
+    """
+    return report.get("analyzer_coverage") is not None
+
+
+def summary_table(summary: dict[str, int], score: dict[str, Any],
+                  pool_ran: bool = False) -> list[str]:
     return [
         "| Metric | Value |",
         "|---|---:|",
         f"| Maintainability estimate | {view.estimate(score)} |",
         f"| Estimate source | {view.estimate_source(score)} |",
         f"| Range (unmeasured evidence priced 0..5) | {view.score_range(score)} |",
-        f"| Evidence | {view.status_sentence(score)} |",
+        f"| Evidence | {view.status_sentence(score, pool_ran)} |",
         f"| Verified grade | {view.verified_grade(score)} |",
         f"| Files scanned | {summary['files_scanned']} |",
         f"| File warnings | {summary['file_warnings']} |",
@@ -134,7 +145,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         "## Summary",
         "",
-        *summary_table(summary, score),
+        *summary_table(summary, score, _pool_ran(report)),
         "",
         f"Scoring standard: {score['standard']}.",
         "",
@@ -152,7 +163,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.extend(work_order_markdown(report.get("work_order")))
     lines.extend(economic_impact_markdown(report.get("economic_impact")))
     lines.extend(_semantic_sections(report))
-    lines.extend(undetected_declarations_markdown(summary))
+    lines.extend(undetected_declarations_markdown(summary, _pool_ran(report)))
     lines.extend(analyzer_coverage_markdown(report.get("analyzer_coverage")))
     lines.extend(environment_work_order_markdown(report.get("environment_work_order") or []))
     lines.extend(analyzer_measurements_markdown(
@@ -344,7 +355,7 @@ def render_pr_comment(report: dict[str, Any]) -> str:
         f"Mode: `{report.get('mode', 'full')}`",
         f"Estimate: **{view.estimate(score)}**  ·  range {view.score_range(score)}",
         f"Verified grade: **{view.verified_grade(score)}**",
-        view.status_sentence(score),
+        view.status_sentence(score, _pool_ran(report)),
         *(view.reason_lines(score) if not view.is_complete(score) else []),
         "",
         "| Metric | Count |",

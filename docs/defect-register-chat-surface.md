@@ -15,7 +15,7 @@ The primary user surface is an AI chat host (an IDE assistant or chat
 window driving the MCP server), not the terminal. The field test showed
 that nearly every capability the terminal path has — configuration,
 analyzer execution, history, economics, format choice — is absent or
-silently degraded on the chat path. The theme across all fifteen
+silently degraded on the chat path. The theme across these
 entries is one defect class: **capability wired to the TTY, viewer
 shipped to the primary surface.**
 
@@ -70,9 +70,14 @@ the product and the MCP server as a boundary added to it. The operating
 reality is inverted: most users reach this tool through a chat host,
 typically inside an IDE.
 
-*Required:* the documentation states that chat is the primary surface
-and the CLI is the automation/CI surface, and orders its instructions
-accordingly.
+*Required:* the documentation states — by name, in `README.md`, the CLI
+`--help` output, [ide-agent-integration.md](ide-agent-integration.md),
+and the generated agent-instruction packs — that this agent is designed
+to be run **as a skill inside a chat context** (an IDE assistant or chat
+window driving the MCP server), with the CLI as the automation/CI
+surface, and orders its instructions accordingly. A reader who finds
+the repository must learn the intended surface from the first screen of
+the README, not infer it from an MCP section near the end.
 
 ### D5 — Scan history never accrues over MCP
 
@@ -200,9 +205,35 @@ covers the repository's languages with the verified tools available,
 and names — before or with the results — what to install to close the
 remaining gaps. Deterministic; no scoring change.
 
+### D16 — No help system exists for the intended surface
+
+Help today is one `argparse --help` screen written for a terminal
+reader. There are no help files that walk a chat-context user through
+what the agent does, what it will ask, what the pool runs, or what the
+report means — and the deepest capabilities (history, recurrence,
+baselines, economics) are exactly the ones a first-time user cannot
+discover.
+
+*Required:* help files built out for the chat-skill-first flow, kept
+beside the docs the lints already sweep, and reachable from the README
+and the MCP server description. Scope is fixed in the fix-cycle prompt,
+not invented here.
+
+### D17 — The instructions doc teaches the wrong surface
+
+[ide-agent-integration.md](ide-agent-integration.md) and the generated
+agent-instruction packs (`--init-agent-standards`) instruct agents in
+CLI-first terms: run the binary, write report files. They predate the
+chat-primary statement and now teach integrators the inverted flow.
+
+*Required:* the instructions doc and the generated packs are updated or
+rebuilt to teach chat-first operation — configuration check, elicited
+choices, no file written without a chosen location — with the CLI
+documented as the automation path.
+
 ## Disposition
 
-All fifteen entries are open and queued for the fix cycle beginning
+All entries are open and queued for the fix cycle beginning
 2026-08-17. None is release-blocking documentation for the pre-1.0 test
 release, which ships with this register as the statement of known
 defects. Entries close individually, each behind a test that would fail

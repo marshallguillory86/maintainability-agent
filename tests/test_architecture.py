@@ -100,7 +100,10 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
 # `_first_run` is terminal interaction — it prompts, which no layer
 # below entry may ever do, and writes the config file the entry then
 # loads through ordinary discovery.
-ENTRY = {"cli", "__main__", "mcp_server", "_first_run"}
+# `_mcp_setup` is the chat-path twin of `_first_run`: it asks (via MCP
+# elicitation), which no layer below entry may do, and writes the
+# config the entry then loads through ordinary discovery.
+ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup"}
 BOUNDARY = {"evidence"}
 
 LAYERS = {

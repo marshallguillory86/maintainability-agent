@@ -152,6 +152,23 @@ The package subcommand is `maintainability-agent mcp --allow-root <path>`.
 IDE examples retain `maintainability-agent-mcp` because it is a direct stdio
 console script and remains part of the public interface.
 
+This is a local stdio process, not a hosted service. On the first audit of a
+repository with no repository or user configuration, it sends one structured
+setup form through MCP elicitation. The choices have visible defaults: run the
+validated analyzer pool (yes), moderate depth, permissive licensing, optional
+low/base/high loaded labor cost or skip, and chat presentation. The pool
+question explains that external analyzers are the primary evidence and the
+built-in detectors always run as the fallback; choosing no means built-ins
+only and a fallback-tier evidence label. A decline or a client without
+elicitation support receives the built-in-default audit plus `setup_needed`,
+which carries the same choices for the host's own question UI.
+
+Accepted setup writes only three artifacts: repository
+`maintainability-agent.json`, the XDG user `config.json`, and the XDG user
+`state.json` that records the completed audit. It never writes source, a
+report, or a baseline. The stored presentation is the default for later calls;
+an explicit per-call `format` still wins.
+
 For Visual Studio, put this in `%USERPROFILE%\\.mcp.json` or
 `<SOLUTIONDIR>\\.mcp.json` (replace both absolute paths):
 
@@ -221,9 +238,11 @@ Security properties are part of the contract:
 - a config file must resolve inside the repository being audited;
 - `changed_only` accepts one inert git revision expression, never command-line
   options or whitespace;
-- the server accepts no command strings or output paths and writes no report,
-  baseline or source artifact;
-- both tools advertise MCP read-only, non-destructive and closed-world hints.
+- the server accepts no command strings or output paths and writes only the
+  repository config, XDG user config and XDG user state described above —
+  never a report, baseline or source artifact;
+- `get_agent_info` advertises MCP read-only; `audit_repository` advertises its
+  bounded setup/state writes. Both remain non-destructive and closed-world.
 
 This is a local integration. It needs no VPS and opens no listening socket.
 

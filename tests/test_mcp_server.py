@@ -1,8 +1,9 @@
-"""The local MCP boundary is read-only, path-scoped and uses production output."""
+"""The local MCP boundary is path-scoped and limits writes to setup state."""
 
 from __future__ import annotations
 
 import asyncio
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -34,7 +35,7 @@ def _repo(tmp_path: Path) -> Path:
     return root
 
 
-def test_audit_returns_the_report_and_bounded_prompt_without_writing(tmp_path: Path) -> None:
+def test_audit_returns_the_report_without_writing_source_or_reports(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     before = {path.relative_to(root) for path in root.rglob("*")}
 
@@ -100,7 +101,7 @@ def test_a_client_sees_the_two_tools_and_can_call_one(tmp_path: Path) -> None:
     asserted the old contract: "only two tools" stops being the claim
     once resources and prompts land, because those are *additional
     primitives*, not additional tools. What survives is that the tool
-    surface is exactly these two and stays read-only —
+    surface is exactly these two and advertises each tool's real boundary —
     `test_the_two_tools_survive_the_new_primitives` holds that without a
     client, so this one may skip where `mcp.Client` cannot be imported
     and CI (which installs the `dev` extra) remains the source of truth.
@@ -115,9 +116,11 @@ def test_a_client_sees_the_two_tools_and_can_call_one(tmp_path: Path) -> None:
             tools = await client.list_tools()
             by_name = {tool.name: tool for tool in tools.tools}
             assert set(by_name) == {"audit_repository", "get_agent_info"}
+            assert by_name["audit_repository"].annotations is not None
+            assert by_name["audit_repository"].annotations.read_only_hint is False
+            assert by_name["get_agent_info"].annotations is not None
+            assert by_name["get_agent_info"].annotations.read_only_hint is True
             for tool in by_name.values():
-                assert tool.annotations is not None
-                assert tool.annotations.read_only_hint is True
                 assert tool.annotations.destructive_hint is False
                 assert tool.annotations.open_world_hint is False
 
@@ -141,13 +144,16 @@ def test_real_stdio_process_initializes_and_reports_its_boundary(tmp_path: Path)
         async with Client(stdio_client(parameters)) as client:
             result = await client.call_tool("get_agent_info")
             assert not result.is_error
-            assert result.structured_content == {
-                "agent": "maintainability-agent",
-                "agent_version": VERSION,
-                "transport": "stdio",
-                "read_only": True,
-                "allowed_roots": [str(tmp_path.resolve())],
-            }
+            info = result.structured_content
+            assert info["agent"] == "maintainability-agent"
+            assert info["agent_version"] == VERSION
+            assert info["transport"] == "stdio"
+            assert info["allowed_roots"] == [str(tmp_path.resolve())]
+            assert info.get("read_only") is not True
+            boundary = json.dumps(info).lower()
+            assert "maintainability-agent.json" in boundary
+            assert "user" in boundary and "config" in boundary and "state" in boundary
+            assert "source" in boundary and "report" in boundary
 
     asyncio.run(exercise())
 
@@ -376,9 +382,8 @@ def test_the_two_tools_survive_the_new_primitives(tmp_path: Path) -> None:
 
     "Only two tools" was the old contract and is the wrong assertion now:
     resources and prompts are *additional primitives*, not additional
-    tools. What must hold is that the tool surface did not grow and did
-    not lose its read-only annotations while the other two primitives
-    landed beside it.
+    tools. What must hold is that the tool surface did not grow and that
+    only the audit tool advertises the bounded setup/state writes.
     """
     root = _repo(tmp_path)
     server = _server(tmp_path)
@@ -389,9 +394,11 @@ def test_the_two_tools_survive_the_new_primitives(tmp_path: Path) -> None:
         assert set(by_name) == {"audit_repository", "get_agent_info"}, (
             f"the tool surface changed: {sorted(by_name)}"
         )
+        assert by_name["audit_repository"].annotations is not None
+        assert by_name["audit_repository"].annotations.read_only_hint is False
+        assert by_name["get_agent_info"].annotations is not None
+        assert by_name["get_agent_info"].annotations.read_only_hint is True
         for tool in by_name.values():
-            assert tool.annotations is not None
-            assert tool.annotations.read_only_hint is True
             assert tool.annotations.destructive_hint is False
             assert tool.annotations.open_world_hint is False
 
@@ -400,5 +407,5 @@ def test_the_two_tools_survive_the_new_primitives(tmp_path: Path) -> None:
     before = {path.relative_to(root) for path in root.rglob("*")}
     audit_repository(str(root), roots=(tmp_path.resolve(),))
     assert {path.relative_to(root) for path in root.rglob("*")} == before, (
-        "an audit through the server wrote to the tree"
+        "an audit through the server wrote source or a report into the tree"
     )

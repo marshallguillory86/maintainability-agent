@@ -17,6 +17,7 @@ flowchart TB
   subgraph entry["entry"]
     cli["cli"]
     _first_run["_first_run"]
+    _mcp_setup["_mcp_setup"]
     dunder_main["__main__"]
     mcp_server["mcp_server"]
   end
@@ -128,7 +129,7 @@ flowchart TB
 | **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
 | **assembly** | Running the scan, running the analyzer pool (`_analysis`) and stating what it found (`_documents`), the environment work order composed from coverage (`_environment`), recording the built-in detectors as their own source tier (`_built_ins`), ordering the work by risk against effort and recomputing each item's worth (`_work_order`, weights in `_work_order_weights`), assembling the report dict, invoking the scorer once | anything below |
 | **presentation** | Markdown/chat, a self-contained HTML report, PR comment, SARIF, baseline, remediation prompt, `_evidence_view` (shared estimate/range/evidence/verified-grade wording), and `_identity` (labels and digests consumed from the report, never source). The renderers consume one report dictionary and do not score | foundations, the report dict |
-| **entry** | Argument parsing, transport, output routing, exit codes, and the first-run TTY prompt (`_first_run`) — the one place the tool may ask a question | anything below |
+| **entry** | Argument parsing, transport, output routing, exit codes, and the first-run TTY prompt (`_first_run`) and its chat-path twin (`_mcp_setup`, MCP elicitation) — the one layer where the tool may ask a question | anything below |
 
 ## The rules, and why each exists
 

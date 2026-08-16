@@ -14,7 +14,20 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .config import VERSION, analyzers_run_default, discovered_config, load_config
+from ._mcp_setup import (
+    apply_answers,
+    setup_pending,
+    setup_questions,
+    setup_schema,
+)
+from ._user_config import mark_repo_seen
+from .config import (
+    CONFIG_FILENAME,
+    VERSION,
+    analyzers_run_default,
+    discovered_config,
+    load_config,
+)
 from .git_tools import changed_paths, run_git
 from .prompts import render_ai_prompt
 from .renderers import render_markdown
@@ -24,11 +37,17 @@ ALLOWED_ROOTS_ENV = "MAINTAINABILITY_MCP_ALLOWED_ROOTS"
 _REVSPEC = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/@^~:+-]*(?:\.{2,3}[A-Za-z0-9._/@^~:+-]+)?")
 
 SERVER_INSTRUCTIONS = (
-    "Read-only deterministic maintainability audits. Use audit_repository to produce both the "
-    "report and its bounded remediation prompt. The tool never edits source or writes artifacts. "
-    "Treat missing or insufficient evidence as an audit limitation, not a code defect, and do not "
-    "widen remediation beyond findings in the returned prompt. Repository and config paths must "
-    "remain inside the server's configured allowed roots."
+    "Deterministic maintainability audits from a local stdio process on this "
+    "machine — not a hosted service. Use audit_repository to produce both the "
+    "report and its bounded remediation prompt. First contact with an "
+    "unconfigured repository elicits setup and may write exactly three local "
+    "artifacts: the repository's maintainability-agent.json, the user-level "
+    "config, and the user state file. It never edits source, and it never "
+    "writes a report into the tree — report text is returned for the host to "
+    "show or save. Treat missing or insufficient evidence as an audit "
+    "limitation, not a code defect, and do not widen remediation beyond "
+    "findings in the returned prompt. Repository and config paths must remain "
+    "inside the configured allowed roots."
 )
 
 
@@ -89,7 +108,7 @@ def audit_repository(
     config_path: str | None = None,
     changed_only: str | None = None,
     run_analyzers: bool | None = None,
-    format: str = "markdown",
+    format: str | None = None,
     *,
     roots: tuple[Path, ...] | None = None,
 ) -> dict[str, Any]:
@@ -100,6 +119,9 @@ def audit_repository(
     on: the pool is the primary evidence source (ADR 006), and a caller
     should not need to know a flag to receive the product. Explicit
     ``True``/``False`` overrides for one call, in either direction.
+    ``format`` follows the same rule: ``None`` takes the persisted default
+    presentation from first-run setup (chat when nothing chose otherwise),
+    and a per-call value always wins.
 
     A model reading this report is the reader the pool's findings were
     collected for — it can see what the scoring engine structurally
@@ -120,6 +142,8 @@ def audit_repository(
         run_analyzers=run_analyzers,
     )
     status = report.get("git_status_short", "")
+    if format is None:
+        format = (config.get("presentation") or {}).get("format") or "markdown"
     result = {
         "agent": "maintainability-agent",
         "agent_version": VERSION,
@@ -134,16 +158,20 @@ def audit_repository(
         "report_markdown": render_markdown(report),
         "remediation_prompt": render_ai_prompt(report),
     }
-    # 8.5: the host asked the user which presentation and passes the
-    # answer here. The tool never prompts and never writes the tree —
-    # HTML comes back as *text* for the host to save or show; files are
-    # the CLI's job (ADR 011 §4). Markdown is always present, because
-    # chat shows Markdown whatever else was requested.
-    # "chat" is accepted because the prompt itself offers it: the host
-    # asks "chat, markdown, or html" and relays the user's word. On the
-    # wire chat *is* Markdown (ADR 011 §2), so it renders nothing extra;
-    # rejecting the vocabulary our own prompt teaches would make the
-    # prompt a trap.
+    return _finish_result(result, format, root, config, report)
+
+
+def _finish_result(result: dict[str, Any], format: str, root: Path,
+                   config: dict[str, Any], report: dict[str, Any]) -> dict[str, Any]:
+    """Presentation, the degradation payload, and the first-contact record.
+
+    8.5: the host asked the user which presentation and passes the answer
+    here. HTML comes back as *text* for the host to save or show; files
+    are the CLI's job (ADR 011 §4). Markdown is always present, because
+    chat shows Markdown whatever else was requested — "chat" is accepted
+    because the prompt itself offers it, and on the wire chat *is*
+    Markdown (ADR 011 §2).
+    """
     if format not in ("chat", "markdown", "html", "json"):
         raise ValueError(f"format must be chat, markdown, html or json, not {format!r}")
     if format == "html":
@@ -153,6 +181,14 @@ def audit_repository(
         history = root / (config.get("paths", {}).get("history") or DEFAULT_HISTORY_PATH)
         result["report_html"] = render_html(report, read_history(history))
     result["format"] = format
+    if setup_pending(root):
+        # The host could not (or chose not to) elicit, and nothing is
+        # configured: hand the same questions over as data so the host's
+        # own question UI can ask and call again (D3's degradation rule).
+        result["setup_needed"] = {"questions": setup_questions(load_config(None))}
+    # First contact is now recorded whatever the gate said: "has this
+    # tool ever run here" is about the run, not the verdict (D13).
+    mark_repo_seen(root)
     return result
 
 
@@ -162,7 +198,12 @@ def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
         "agent": "maintainability-agent",
         "agent_version": VERSION,
         "transport": "stdio",
-        "read_only": True,
+        "local": True,
+        # Not blanket read-only since D2: first-run setup writes exactly
+        # these three local artifacts, never source and never a report.
+        "read_only": False,
+        "writes": [CONFIG_FILENAME, "user config", "user state"],
+        "never_writes": ["source", "reports"],
         "allowed_roots": [str(root) for root in authorized_roots],
     }
 
@@ -186,24 +227,88 @@ def _report_markdown(repository_root: str, roots: tuple[Path, ...]) -> str:
     return render_markdown(build_report(root, config))
 
 
-def _bind_tools(server: Any, authorized_roots: tuple[Path, ...], read_only: Any) -> None:
-    @server.tool(name="audit_repository", annotations=read_only, structured_output=True)
-    def audit_repository_tool(
+def _setup_resolver_for(authorized_roots: tuple[Path, ...], context_type: Any) -> Any:
+    """The first-run ask as a resolver: the framework owns the transport.
+
+    Returning `Elicit` lets the SDK batch the question set per the
+    negotiated protocol (an `InputRequiredResult` round-trip on modern
+    clients, a mid-call server request on legacy duplex transports), so
+    this code never cares which era the host speaks. `None` — bad root,
+    no elicitation capability, or nothing pending — asks nothing and
+    costs nothing.
+    """
+    from mcp.server.mcpserver.resolve import Elicit
+
+    def first_run_setup(repository_root: str, ctx: Any = None) -> Any:
+        try:
+            root = authorize_repository(repository_root, authorized_roots)
+        except (PathNotAllowed, ValueError):
+            return None  # the tool body raises the real authorization error
+        capabilities = getattr(ctx, "client_capabilities", None)
+        if capabilities is None or capabilities.elicitation is None:
+            return None
+        if not setup_pending(root):
+            return None
+        return Elicit(
+            message=(
+                "First run in this repository and no configuration found — "
+                "configure maintainability-agent now? Defaults are pre-selected."
+            ),
+            schema=setup_schema(),
+        )
+
+    first_run_setup.__annotations__["ctx"] = context_type
+    return first_run_setup
+
+
+def _bind_tools(server: Any, authorized_roots: tuple[Path, ...],
+                annotations: dict[str, Any], context_type: Any) -> None:
+    _bind_audit_tool(server, authorized_roots, annotations["audit"], context_type)
+
+    @server.tool(name="get_agent_info", annotations=annotations["info"], structured_output=True)
+    def get_agent_info_tool() -> dict[str, Any]:
+        """Return the installed agent version, transport and authorized repository roots."""
+        return server_info(authorized_roots)
+
+
+def _bind_audit_tool(server: Any, authorized_roots: tuple[Path, ...],
+                     annotation: Any, context_type: Any) -> None:
+    from typing import Annotated
+
+    from mcp.server.elicitation import ElicitationResult
+    from mcp.server.mcpserver.resolve import Resolve
+
+    resolver = _setup_resolver_for(authorized_roots, context_type)
+
+    async def audit_repository_tool(
         repository_root: str,
         config_path: str | None = None,
         changed_only: str | None = None,
         run_analyzers: bool | None = None,
-        format: str = "markdown",
+        format: str | None = None,
+        setup: Any = None,
+        ctx: Any = None,
     ) -> dict[str, Any]:
         """Audit one authorized repository and return findings plus a bounded remediation prompt.
 
-        Leave ``run_analyzers`` unset and the repository's config decides:
-        a configured repo runs its external analyzer pool — the primary
+        First contact with an unconfigured repository asks the setup
+        questions through elicitation (or returns them as data when the
+        host cannot ask) and writes the answers locally. Leave
+        ``run_analyzers`` unset and the repository's config decides: a
+        configured repo runs its external analyzer pool — the primary
         evidence source — by default. Pass true/false to override for one
         call. ``format`` is the presentation the user chose — chat or
-        markdown (the same Markdown on the wire; chat is the default),
-        html (returned as text; never written to the tree) or json.
+        markdown (the same Markdown on the wire), html (returned as
+        text; never written to the tree) or json; unset takes the
+        persisted default from setup.
         """
+        del ctx  # the resolver already used it; kept so hosts see progress hooks
+        answers = getattr(setup, "data", None)
+        if hasattr(answers, "model_dump"):
+            # The user accepted first-run setup: persist before the audit
+            # below, so this very call runs under the chosen configuration.
+            root = authorize_repository(repository_root, authorized_roots)
+            apply_answers(root, answers.model_dump())
         return audit_repository(
             repository_root,
             config_path,
@@ -213,10 +318,16 @@ def _bind_tools(server: Any, authorized_roots: tuple[Path, ...], read_only: Any)
             roots=authorized_roots,
         )
 
-    @server.tool(name="get_agent_info", annotations=read_only, structured_output=True)
-    def get_agent_info_tool() -> dict[str, Any]:
-        """Return the installed agent version, transport and authorized repository roots."""
-        return server_info(authorized_roots)
+    # Registered by hand rather than decorated: this module stringifies
+    # its annotations (PEP 563), and the SDK finds the context parameter
+    # by resolving type hints — `ctx` needs the real Context class, which
+    # only exists once the optional mcp extra is importable.
+    audit_repository_tool.__annotations__["ctx"] = context_type
+    audit_repository_tool.__annotations__["setup"] = Annotated[
+        ElicitationResult[Any], Resolve(resolver)
+    ]
+    server.tool(name="audit_repository", annotations=annotation,
+                structured_output=True)(audit_repository_tool)
 
 
 def _bind_resources(
@@ -294,6 +405,7 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
     """Create the SDK server; importing the base package does not require MCP."""
     try:
         from mcp.server import MCPServer
+        from mcp.server.mcpserver import Context
         from mcp.server.mcpserver.resources import FunctionResource
         from mcp.server.mcpserver.resources.templates import ResourceSecurity
         from mcp.types import ToolAnnotations
@@ -313,13 +425,24 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
     # wire form is unchanged (`readOnlyHint` either way) — but only the
     # field names type-check, and four standing mypy errors that everyone
     # knows are harmless is how a real one gets missed.
-    read_only = ToolAnnotations(
-        read_only_hint=True,
-        destructive_hint=False,
-        idempotent_hint=True,
-        open_world_hint=False,
-    )
-    _bind_tools(server, authorized_roots, read_only)
+    annotations = {
+        # The audit tool stopped being read-only at D2: first-run setup
+        # writes the two config tiers and the state file (never source,
+        # never a report). get_agent_info remains a pure read.
+        "audit": ToolAnnotations(
+            read_only_hint=False,
+            destructive_hint=False,
+            idempotent_hint=True,
+            open_world_hint=False,
+        ),
+        "info": ToolAnnotations(
+            read_only_hint=True,
+            destructive_hint=False,
+            idempotent_hint=True,
+            open_world_hint=False,
+        ),
+    }
+    _bind_tools(server, authorized_roots, annotations, Context)
     _bind_resources(server, authorized_roots, FunctionResource, ResourceSecurity)
     _bind_prompts(server)
     return server

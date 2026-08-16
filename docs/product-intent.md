@@ -8,6 +8,14 @@ A deterministic maintainability audit that produces a **bounded work order** for
 
 Not a linter (those exist and are better at it), not an AI reviewer, not a quality dashboard. The scanner and the score exist to aim the remediation prompt. If the prompt were removed, the rest would be a worse version of tools that already ship.
 
+**The primary surface is an AI chat host** — an IDE assistant or chat
+window driving the MCP server. The CLI is the automation surface for CI
+and scripts. Almost no user runs the audit at a bare terminal, so a
+capability that exists only behind a terminal prompt does not exist for
+most users; the open gap between this statement and the current code is
+recorded in the
+[chat-surface defect register](defect-register-chat-surface.md).
+
 ## The job it does
 
 Agents write code faster than humans can read it. The ratio of code-written to code-reviewed has collapsed, and unmaintainable code that used to accumulate over years can now accumulate in an afternoon. The same speed is the way out: an agent pointed at specific, deterministic findings can fix them at the same rate they appear.

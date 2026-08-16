@@ -80,6 +80,16 @@ def _seen(state: dict[str, Any] | None) -> dict[str, str]:
     return dict(seen) if isinstance(seen, dict) else {}
 
 
+def write_user_config(payload: dict[str, Any]) -> None:
+    """Persist the user tier — the answers a person carries across repos.
+
+    Atomic like the state write, and for the same reason: a killed
+    process must not leave a half-written file that every later run
+    reads as corrupt-therefore-absent.
+    """
+    _write_atomic(user_config_path(), payload)
+
+
 def mark_repo_seen(root: Path) -> None:
     """Record that this tool audited `root`, keyed by its absolute path."""
     seen = _seen(_read_json_object(user_state_path()))

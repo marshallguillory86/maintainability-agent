@@ -52,6 +52,11 @@ setup choices — analyzer depth and license policy, pool execution,
 economic context, report format, report location where a file format is
 chosen — then write the answers so the questions are not repeated.
 
+*Closing tests:* `test_setup_triggers_only_when_both_configuration_tiers_are_absent`,
+`test_one_native_elicitation_applies_answers_to_that_same_audit`, and
+`test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails` in
+`tests/test_first_run_elicitation.py`.
+
 ### D3 — Asks are free-text prompts, not structured choices
 
 The format ask is a bare `input()` line on the CLI, and the MCP prompt
@@ -64,6 +69,10 @@ the default.
 elicitation (MCP `elicitation/create`, falling back to instructing the
 host's question UI) with the default option named. A host that supports
 neither receives the documented defaults, never a hang.
+
+*Closing tests:* `test_setup_questions_are_structured_choices_with_disclosed_defaults`
+and `test_declined_or_unsupported_elicitation_uses_defaults_and_returns_setup_needed`
+in `tests/test_first_run_elicitation.py`.
 
 ### D4 — Documentation presents the CLI as the primary surface
 
@@ -149,6 +158,10 @@ absent from their reports unless they hand-edit configuration.
 
 *Required:* the economics ask is part of first-run setup on the chat
 path (D2), declinable, with the same persistence rules as the TTY ask.
+
+*Closing tests:* `test_apply_answers_persists_economics_and_format_to_both_tiers`
+and `test_declining_economics_omits_the_block_from_both_tiers` in
+`tests/test_first_run_elicitation.py`.
 
 ### D12 — The operator skill instructions are CLI-first
 

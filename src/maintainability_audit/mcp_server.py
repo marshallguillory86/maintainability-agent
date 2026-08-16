@@ -1,9 +1,9 @@
-"""Local, read-only MCP boundary for the deterministic audit.
+"""Local, path-scoped MCP boundary for the deterministic audit.
 
-The command-line application remains the product implementation. This module
-adds transport and path authorization only: it calls the same configuration,
-scan, report, renderer and remediation-prompt functions as the CLI. It never
-accepts a command string, writes an artifact, edits source, or invokes a shell.
+This module reuses the CLI's configuration, scan, report, renderer and
+remediation-prompt functions. First-run setup may write only repository and
+user configuration plus user state. It never writes source or a report,
+accepts a command string, or invokes a shell.
 """
 
 from __future__ import annotations

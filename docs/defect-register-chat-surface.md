@@ -6,9 +6,10 @@ a defect against requirements that already exist — in
 [ADR 006](adr-006-analyzer-evidence.md), [ADR 004](adr-004-economic-context.md),
 [ADR 009](adr-009-scan-history.md), [product-intent.md](product-intent.md),
 or the operator's stated requirements — none is a feature proposal. The
-required behavior column cites the document that already requires it. D1
-and D13 are retained as closed, tested history; the remaining entries stay
-open until a test proves the required behavior.
+required behavior column cites the document that already requires it. D1,
+D2, D11 and D13 are retained as closed, tested history. D3 and D14 remain
+open with narrowed scope; the other entries stay open until a test proves
+the required behavior.
 
 ## Context
 
@@ -40,37 +41,40 @@ pool cannot supply a complete scored dimension (ADR 006).
 `test_mcp_report_resource_uses_the_repository_pool_decision` in
 `tests/test_pool_runs_by_config.py`.
 
-### D2 — No first-run setup on the chat path
+### D2 — Closed: first-run setup ships on the chat path
 
-An unconfigured repository audited over MCP is silently scanned with
-hardcoded defaults. The first-run configuration ask exists only behind
-a TTY check (`_first_run`), which is never true for an MCP server.
+An unconfigured repository audited over MCP now receives one structured
+setup set covering analyzer depth and license policy, pool execution,
+economic context and report format. Accepted answers are written to the
+repository and user configuration tiers and apply to that same audit.
+Declined or unsupported elicitation returns the same questions in
+`setup_needed`; while both configuration tiers remain absent, later calls
+ask again. Only written answers end setup elicitation.
 
-*Required:* on invocation, check configuration first (see D13 for the
-locations). If none exists, this is a detectable first run: elicit the
-setup choices — analyzer depth and license policy, pool execution,
-economic context, report format, report location where a file format is
-chosen — then write the answers so the questions are not repeated.
+Report save location is a separate host question at save time. The local
+MCP process returns report text and never writes a report file; the host
+asks where to save it when the user chooses a file presentation.
 
 *Closing tests:* `test_setup_triggers_only_when_both_configuration_tiers_are_absent`,
-`test_one_native_elicitation_applies_answers_to_that_same_audit`, and
-`test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails` in
+`test_one_native_elicitation_applies_answers_to_that_same_audit`,
+`test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails`,
+`test_unanswered_setup_is_reelicited_until_answers_are_written`, and
+`test_repeated_declines_keep_returning_the_same_setup_needed_block` in
 `tests/test_first_run_elicitation.py`.
 
-### D3 — Asks are free-text prompts, not structured choices
+### D3 — Partially closed: setup is structured; the slash prompt is not
 
-The format ask is a bare `input()` line on the CLI, and the MCP prompt
-instructs the host in prose to "ask the user which presentation they
-want." Hosts render that as a typed chat question. The stated
-requirement is a multiple-choice question with **chat** pre-selected as
-the default.
+First-run chat setup now uses one structured MCP elicitation with disclosed
+options and defaults, including **chat** as the presentation default. A
+decline or host without elicitation support receives those same structured
+questions in `setup_needed` and the audit proceeds on documented defaults.
 
-*Required:* every ask on the chat path is a structured multiple-choice
-elicitation (MCP `elicitation/create`, falling back to instructing the
-host's question UI) with the default option named. A host that supports
-neither receives the documented defaults, never a hang.
+*Remaining:* the `maintainability-agent` MCP slash prompt registered by
+`mcp_server._bind_prompts` still tells the host in free text to ask which
+presentation the user wants. Replacing that free-text ask is the only open
+D3 scope.
 
-*Closing tests:* `test_setup_questions_are_structured_choices_with_disclosed_defaults`
+*Shipped setup tests:* `test_setup_questions_are_structured_choices_with_disclosed_defaults`
 and `test_declined_or_unsupported_elicitation_uses_defaults_and_returns_setup_needed`
 in `tests/test_first_run_elicitation.py`.
 
@@ -150,14 +154,12 @@ to anticipate or grant interactively.
 grant the root; where elicitation is available, it offers the grant as
 a structured question rather than failing with an error string.
 
-### D11 — The economic context ask never fires in chat
+### D11 — Closed: economic context is part of chat setup
 
-The ADR 004 labor ask rides the same TTY gate as first-run setup, so
-chat users never see it and the economic scenario block is silently
-absent from their reports unless they hand-edit configuration.
-
-*Required:* the economics ask is part of first-run setup on the chat
-path (D2), declinable, with the same persistence rules as the TTY ask.
+The ADR 004 labor question now rides the structured first-run chat setup.
+It is declinable; accepting persists the same low/base/high
+`loaded_engineering_cost_per_hour` shape to both configuration tiers, while
+declining omits economic context from both.
 
 *Closing tests:* `test_apply_answers_persists_economics_and_format_to_both_tiers`
 and `test_declining_economics_omits_the_block_from_both_tiers` in
@@ -185,18 +187,16 @@ absent rather than crashing an audit.
 
 *Closing suite:* `tests/test_user_config_tier.py`.
 
-### D14 — The configuration capability is not integrated with the chat UI
+### D14 — Open, narrowed: first-run integration ships
 
-The configuration machinery exists — schema, depth tiers, license
-policies, pool resolution, first-run asks, format ask — but every
-entry point is a terminal prompt. The integration that connects this
-machinery to the surface users actually occupy (elicitation / the
-host's question UI) was never built, although the capability was
-reported as complete.
+The chat integration is built: one native MCP elicitation applies analyzer,
+depth, license, economics and presentation answers to that same audit and
+persists them for later calls. This is driven end to end by
+`test_one_native_elicitation_applies_answers_to_that_same_audit` in
+`tests/test_first_run_elicitation.py`.
 
-*Required:* the asks named in D2, D3, D10 and D11 reach the chat user
-through structured elicitation. This entry closes only when a test
-drives the full first-run flow over the MCP boundary.
+*Remaining:* D10's authorized-root grant ask and D3's free-text slash-prompt
+presentation ask. D2 and D11 no longer contribute open D14 scope.
 
 ### D15 — Analyzer selection has no goal-directed composition
 
@@ -241,7 +241,7 @@ documented as the automation path.
 
 ## Disposition
 
-D1 and D13 are closed. D2–D12 and D14–D17 remain open in this
-seventeen-entry register and are queued for the fix cycle beginning
-2026-08-17. Entries close individually, each behind a test that would
-fail if the defect returned.
+D1, D2, D11 and D13 are closed. D3 and D14 remain open with the narrowed
+scope stated above. D4–D10, D12 and D15–D17 remain open in this
+seventeen-entry register. Entries close individually, each behind a test
+that would fail if the defect returned.

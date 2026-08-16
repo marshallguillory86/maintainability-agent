@@ -240,9 +240,11 @@ Or copy `.github/workflows/maintainability.yml` into the target repo and adapt i
 See [docs/ide-agent-integration.md](docs/ide-agent-integration.md) for VS Code tasks and integration notes for Copilot, Cursor, Codex, Claude Code, Windsurf, generic agents, local CI, and GitHub Actions.
 
 The optional local MCP server exposes the same deterministic audit and bounded
-remediation prompt directly to Visual Studio, VS Code and Codex. It is read-only,
-uses stdio rather than a network port, and rejects repository or config paths
-outside its explicit allow-list. See [Local MCP server](docs/ide-agent-integration.md#local-mcp-server-visual-studio-vs-code-and-codex).
+remediation prompt directly to Visual Studio, VS Code and Codex. It is a local
+stdio process, not a hosted service. First-run setup may write exactly the
+repository config, user config and user state; it never writes source or a
+report, and it rejects repository or config paths outside its explicit
+allow-list. See [Local MCP server](docs/ide-agent-integration.md#local-mcp-server-visual-studio-vs-code-and-codex).
 
 ## Invokable Skill / Slash Command
 

@@ -4,7 +4,15 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
-Nothing yet.
+### Changed
+
+- **Chat-first setup and audit repairs after v0.8.1.** Local MCP first-run
+  elicitation now closes D2 and D11 and ships D3's structured-setup portion,
+  persists accepted analyzer, depth, license, economic-context and presentation
+  choices, and returns unanswered setup for the host to ask again. The H1/M1/M2
+  follow-up makes prompt remedies honor analyzer coverage, re-elicits until
+  answers are written, and uses chat as the unconfigured presentation default.
+  These changes are not in any tag yet.
 
 ## 0.8.1 - 2026-08-16
 

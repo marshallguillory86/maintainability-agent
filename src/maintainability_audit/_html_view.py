@@ -397,32 +397,39 @@ def _hard_gate_section(report: dict[str, Any]) -> list[str]:
     return rows
 
 
+def _semantic_coverage_line(coverage: dict[str, Any]) -> str:
+    """Unknown states its reason; typed names its tool. Never a clean zero."""
+    language = coverage.get("language") or "TypeScript"
+    status = coverage.get("status") or "unknown"
+    if status == "unknown":
+        return (f"{language} semantic coverage: <strong>unknown</strong> — "
+                f"{escape(coverage.get('reason') or 'no type analysis was available.')}")
+    tool = f"{coverage.get('tool') or 'typescript'} {coverage.get('version') or ''}".strip()
+    return (f"{language} semantic coverage: <strong>{escape(status)}</strong> "
+            f"via {escape(tool)}. Other languages have unknown semantic coverage.")
+
+
+def _semantic_row(finding: dict[str, Any]) -> str:
+    evidence = finding.get("source_evidence") or {}
+    line_number = evidence.get("line")
+    where = f"{evidence.get('path') or ''}" + (f":{line_number}" if line_number else "")
+    return (
+        f"<tr><td>{escape(semantic_class_label(finding.get('class')))}</td>"
+        f"<td>{escape(where)}</td>"
+        f"<td>{escape(str(finding.get('message') or ''))}</td></tr>"
+    )
+
+
 def _semantic_section(report: dict[str, Any]) -> list[str]:
     """The ADR 003 block: coverage stated, classes labeled, nothing scored."""
     findings = report.get("semantic_findings") or []
     coverage = report.get("semantic_coverage") or {}
     if not findings and not coverage:
         return []
-    language = coverage.get("language") or "TypeScript"
-    status = coverage.get("status") or "unknown"
-    if status == "unknown":
-        line = (f"{language} semantic coverage: <strong>unknown</strong> — "
-                f"{escape(coverage.get('reason') or 'no type analysis was available.')}")
-    else:
-        tool = f"{coverage.get('tool') or 'typescript'} {coverage.get('version') or ''}".strip()
-        line = (f"{language} semantic coverage: <strong>{escape(status)}</strong> "
-                f"via {escape(tool)}. Other languages have unknown semantic coverage.")
-    parts = ["<h2>Semantic findings</h2>", f"<p>{line}</p>"]
+    parts = ["<h2>Semantic findings</h2>",
+             f"<p>{_semantic_coverage_line(coverage)}</p>"]
     if findings:
         parts.append("<table><tr><th>Class</th><th>Location</th><th>Evidence</th></tr>")
-        for finding in findings:
-            evidence = finding.get("source_evidence") or {}
-            line_number = evidence.get("line")
-            where = f"{evidence.get('path') or ''}" + (f":{line_number}" if line_number else "")
-            parts.append(
-                f"<tr><td>{escape(semantic_class_label(finding.get('class')))}</td>"
-                f"<td>{escape(where)}</td>"
-                f"<td>{escape(str(finding.get('message') or ''))}</td></tr>"
-            )
+        parts.extend(_semantic_row(finding) for finding in findings)
         parts.append("</table>")
     return parts

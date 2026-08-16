@@ -134,13 +134,25 @@ READ_THE_SOURCE = (
     "for a score that describes this codebase. Until then the findings below "
     "come only from the files that were read."
 )
-NO_DECLARATION_PARSER = (
+# Two variants, chosen by whether the analyzer pool ran (D1): telling a
+# configured repository to enable the pool it already ran is a lie, and
+# the honest remedy there is the missing parser or tool.
+NO_DECLARATION_PARSER_POOL_OFF = (
     "These files were read — their length, duplication and risk are measured — "
     "but this tool has no declaration parser for their language, so it found no "
     "functions or classes to draw a rate from. Adding the extension to "
     "`paths.include_extensions` will not change that, and the repository is not "
-    "too small. Run with `--analyzers` for located findings from tools that do "
-    "read these languages; the rates stay withheld until a parser exists."
+    "too small. Enable the analyzer pool (`analyzers.run` in the config, or "
+    "`--analyzers` for one run) for located findings from tools that do read "
+    "these languages; the rates stay withheld until a parser exists."
+)
+NO_DECLARATION_PARSER_POOL_RAN = (
+    "These files were read — their length, duplication and risk are measured — "
+    "but this tool has no declaration parser for their language, so it found no "
+    "functions or classes to draw a rate from. The analyzer pool already ran; "
+    "what is missing is a declaration parser or an installed tool for these "
+    "languages — the environment work order lists the install commands. The "
+    "rates stay withheld until one exists."
 )
 TAKE_THE_FINDINGS = (
     "This repository is smaller than anything the scale was calibrated on, and "
@@ -149,11 +161,14 @@ TAKE_THE_FINDINGS = (
 )
 
 
-def remedy(score: dict[str, Any]) -> str:
+def remedy(score: dict[str, Any], pool_ran: bool = False) -> str:
     """Which of ADR 005's three paths applies to this report.
 
     Chosen from the reason's measurement rather than from prose, so the
     advice cannot drift from what actually withheld the score.
+    ``pool_ran`` is whether the analyzer pool executed for this report
+    (coverage present), threaded in by the renderer: the no-parser
+    remedy must not prescribe enabling a pool that already ran (D1).
     """
     measurements = {item["measurement"] for item in reasons(score)}
     # Checked first: unread source explains a thin population, so
@@ -165,20 +180,20 @@ def remedy(score: dict[str, Any]) -> str:
     # is wrong because it is already added, and "too small" is wrong
     # because the files are there and unparseable.
     if "summary.undetected_declaration_files" in measurements:
-        return NO_DECLARATION_PARSER
+        return NO_DECLARATION_PARSER_POOL_RAN if pool_ran else NO_DECLARATION_PARSER_POOL_OFF
     if "scan.scope" in measurements:
         return WIDEN_THE_SCAN
     return TAKE_THE_FINDINGS
 
 
-def status_sentence(score: dict[str, Any]) -> str:
+def status_sentence(score: dict[str, Any], pool_ran: bool = False) -> str:
     """One line a human can act on, for any state."""
     if is_insufficient(score):
         # The remedy is the message here: the reader's next action is to
         # widen the scan or to read the findings, not to restore evidence.
         detail = reasons(score)
         why = detail[0]["reason"] if detail else "the scan cannot support a score"
-        return f"No score issued — {why}. {remedy(score)}"
+        return f"No score issued — {why}. {remedy(score, pool_ran)}"
     if is_complete(score):
         return f"Evidence complete under profile `{profile(score)}`."
     missing = len(reasons(score))

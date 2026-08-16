@@ -105,7 +105,7 @@ def _executive_strip(report: dict[str, Any], score: dict[str, Any],
         f" &middot; grade {escape(view.verified_grade(score))}</div>",
         f"<div>Range: {escape(view.score_range(score))} &middot; "
         f"Source: {escape(view.estimate_source(score))}</div>",
-        f"<div>{escape(view.status_sentence(score))}</div>",
+        f"<div>{escape(view.status_sentence(score, report.get('analyzer_coverage') is not None))}</div>",
         f"<div>{gate}</div>",
         f"<div>{escape(_direction_sentence(records))}</div>",
         "<table><tr><th>Severity</th><th>Findings</th></tr>",

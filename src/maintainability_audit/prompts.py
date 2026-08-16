@@ -459,7 +459,7 @@ def render_agent_instructions(report: dict[str, Any]) -> str:
             f"- Maintainability estimate: `{view.estimate(report['score'])}`"
             f" (range {view.score_range(report['score'])})",
             f"- Verified grade: `{view.verified_grade(report['score'])}`",
-            f"- Evidence: {view.status_sentence(report['score'])}",
+            f"- Evidence: {view.status_sentence(report['score'], report.get('analyzer_coverage') is not None)}",
             *view.reason_lines(report["score"], bullet="  - "),
             *view.instruction_note(report["score"]),
             f"- Files scanned: {report['summary']['files_scanned']}",

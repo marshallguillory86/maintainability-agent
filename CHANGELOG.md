@@ -4,7 +4,41 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+Nothing yet.
+
+## 0.8.0 - 2026-08-16
+
+Pre-1.0 test release: everything merged since 0.7.0, packaged for field
+testing. The known defects of the primary (chat/MCP) surface are
+recorded in
+[docs/defect-register-chat-surface.md](docs/defect-register-chat-surface.md)
+(D1-D15) and are the next fix cycle; this release ships them disclosed,
+not resolved.
+
 ### Added
+
+- **ADR 009 identity resolution.** Finding identity is structured
+  (kind, path, name, ordinal, body digest) and matching follows git's
+  rename evidence: `git mv` and same-name reorders no longer read as
+  fixed-plus-new in `--fail-on-new` or recurrence. Baseline v3 stores
+  identity records and the commit; history records are schema 3.
+
+- **ADR 003 option C (TypeScript prototype).** Type-backed universal
+  facts, checked-in `semantic_policy` violations, and prompt-only
+  design-review candidates, from recorded type analysis or a local
+  tsc. Semantic results render on all three skins and never change
+  the score, the gates, or the grade.
+
+- **ADR 004 v1 economic context.** An optional, clearly-labeled
+  low/base/high scenario computed from configured labor rates beside
+  the score; exposure-ordered work order; scenario vocabulary only.
+  The score is byte-identical with and without it.
+
+- **Executive HTML report.** The HTML skin leads with estimate, grade,
+  gate state, Severe/High/Medium/Low counts from published class risk,
+  and direction; findings are HTML tables sharing `render_markdown`'s
+  identities; charts gained axes, ticks, titles and a pillar legend.
+  Severity labels are presentation only.
 
 - **flake8 and cohesion adapters (2.7).** flake8's default
   `path:row:col: CODE` lines become located findings (verdict emitter).

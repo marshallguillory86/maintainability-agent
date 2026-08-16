@@ -144,9 +144,15 @@ def test_unscored_measurements_name_the_fallback_without_the_stale_sentence() ->
 
 
 def test_changelog_unreleased_records_the_estimate_swap() -> None:
-    """A scoring-behavior change with an empty Unreleased section is the same lie."""
-    text = _changelog_unreleased()
-    assert text.strip(), "CHANGELOG Unreleased is empty after the estimate swap"
+    """A scoring-behavior change the changelog never records is a lie.
+
+    Before 0.8.0 the claim had to sit in Unreleased; releasing moves it
+    into that release's section, which satisfies the same requirement —
+    the changelog records the swap — so the sweep covers the whole file
+    rather than demanding the note stay unreleased forever.
+    """
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert text.strip(), "CHANGELOG is empty after the estimate swap"
     lowered = text.lower()
     assert "2.2658" in text or "analyzer-primary" in lowered or "point estimate" in lowered
 

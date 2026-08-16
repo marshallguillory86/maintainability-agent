@@ -263,6 +263,16 @@ def _setup_resolver_for(authorized_roots: tuple[Path, ...], context_type: Any) -
 
 def _bind_tools(server: Any, authorized_roots: tuple[Path, ...],
                 annotations: dict[str, Any], context_type: Any) -> None:
+    _bind_audit_tool(server, authorized_roots, annotations["audit"], context_type)
+
+    @server.tool(name="get_agent_info", annotations=annotations["info"], structured_output=True)
+    def get_agent_info_tool() -> dict[str, Any]:
+        """Return the installed agent version, transport and authorized repository roots."""
+        return server_info(authorized_roots)
+
+
+def _bind_audit_tool(server: Any, authorized_roots: tuple[Path, ...],
+                     annotation: Any, context_type: Any) -> None:
     from typing import Annotated
 
     from mcp.server.elicitation import ElicitationResult
@@ -316,13 +326,8 @@ def _bind_tools(server: Any, authorized_roots: tuple[Path, ...],
     audit_repository_tool.__annotations__["setup"] = Annotated[
         ElicitationResult[Any], Resolve(resolver)
     ]
-    server.tool(name="audit_repository", annotations=annotations["audit"],
+    server.tool(name="audit_repository", annotations=annotation,
                 structured_output=True)(audit_repository_tool)
-
-    @server.tool(name="get_agent_info", annotations=annotations["info"], structured_output=True)
-    def get_agent_info_tool() -> dict[str, Any]:
-        """Return the installed agent version, transport and authorized repository roots."""
-        return server_info(authorized_roots)
 
 
 def _bind_resources(

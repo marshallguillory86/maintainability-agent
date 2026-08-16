@@ -68,6 +68,22 @@ def setup_questions(config: dict[str, Any]) -> list[dict[str, Any]]:
             "options": sorted(LICENSE_POLICIES),
             "default": "permissive",
         },
+        *_economics_questions(),
+        {
+            "name": "default_format",
+            "prompt": "Default report presentation for this user.",
+            "options": ["chat", "markdown", "html"],
+            "default": "chat",
+        },
+    ]
+
+
+def _economics_questions() -> list[dict[str, Any]]:
+    """The declinable ADR 004 ask: one gate choice, three bounds."""
+    bounds = (("labor_low", "lower bound", 90),
+              ("labor_base", "central estimate", 140),
+              ("labor_high", "upper bound", 210))
+    return [
         {
             "name": "economics",
             "prompt": (
@@ -77,30 +93,15 @@ def setup_questions(config: dict[str, Any]) -> list[dict[str, Any]]:
             "options": ["include", "skip"],
             "default": "skip",
         },
-        {
-            "name": "labor_low",
-            "prompt": "Labor rate, lower bound (per hour).",
-            "options": [90],
-            "default": 90,
-        },
-        {
-            "name": "labor_base",
-            "prompt": "Labor rate, central estimate (per hour).",
-            "options": [140],
-            "default": 140,
-        },
-        {
-            "name": "labor_high",
-            "prompt": "Labor rate, upper bound (per hour).",
-            "options": [210],
-            "default": 210,
-        },
-        {
-            "name": "default_format",
-            "prompt": "Default report presentation for this user.",
-            "options": ["chat", "markdown", "html"],
-            "default": "chat",
-        },
+        *(
+            {
+                "name": name,
+                "prompt": f"Labor rate, {label} (per hour).",
+                "options": [suggestion],
+                "default": suggestion,
+            }
+            for name, label, suggestion in bounds
+        ),
     ]
 
 

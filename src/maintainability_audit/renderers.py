@@ -17,6 +17,7 @@ from ._scan_view import (
     work_order_markdown,
     work_order_selection_markdown,
 )
+from ._semantic_view import semantic_markdown, without_semantic_suffixes
 
 
 def summary_table(summary: dict[str, int], score: dict[str, Any]) -> list[str]:
@@ -106,6 +107,22 @@ def markdown_table(title: str, headers: list[str], rows: list[list[str]]) -> lis
     return lines
 
 
+def _semantic_sections(report: dict[str, Any]) -> list[str]:
+    """The ADR 003 block, the pillars, and the unread table it corrects.
+
+    The unread rows render through a *view* that drops any language the
+    semantic pass cited as evidence: a path used as a semantic finding
+    was opened and analyzed, so its language cannot simultaneously be
+    listed as source the scan never read.
+    """
+    findings = report.get("semantic_findings")
+    return [
+        *semantic_markdown(findings, report.get("semantic_coverage")),
+        *pillars_markdown(report.get("pillars"), report.get("practice")),
+        *unread_source_markdown(without_semantic_suffixes(report["summary"], findings)),
+    ]
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     summary = report["summary"]
     score = report["score"]
@@ -134,8 +151,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     else:
         lines.extend(work_order_markdown(report.get("work_order")))
     lines.extend(economic_impact_markdown(report.get("economic_impact")))
-    lines.extend(pillars_markdown(report.get("pillars"), report.get("practice")))
-    lines.extend(unread_source_markdown(summary))
+    lines.extend(_semantic_sections(report))
     lines.extend(undetected_declarations_markdown(summary))
     lines.extend(analyzer_coverage_markdown(report.get("analyzer_coverage")))
     lines.extend(environment_work_order_markdown(report.get("environment_work_order") or []))
@@ -354,6 +370,10 @@ def render_pr_comment(report: dict[str, Any]) -> str:
         for item in report["function_hotspots"][:5]:
             lines.append(f"- `{item['path']}:{item['start_line']}` {hotspot_name(item)} ({hotspot_measure(item)})")
         lines.append("")
+    # The same semantic block the report carries: a finding the agent
+    # prompt names may not vanish from the human's PR view.
+    lines.extend(semantic_markdown(
+        report.get("semantic_findings"), report.get("semantic_coverage")))
     lines.append("See `maintainability-report.md` and `maintainability-remediation-prompt.md` artifacts for details.")
     return "\n".join(lines)
 

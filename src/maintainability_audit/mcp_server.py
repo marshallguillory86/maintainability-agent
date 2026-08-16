@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .config import VERSION, discovered_config, load_config
+from .config import VERSION, analyzers_run_default, discovered_config, load_config
 from .git_tools import changed_paths, run_git
 from .prompts import render_ai_prompt
 from .renderers import render_markdown
@@ -112,7 +112,7 @@ def audit_repository(
     revspec = validate_revspec(changed_only)
     only_paths = changed_paths(root, revspec) if revspec else None
     if run_analyzers is None:
-        run_analyzers = bool((config.get("analyzers") or {}).get("run", False))
+        run_analyzers = analyzers_run_default(config)
     report = build_report(
         root, config,
         only_paths=only_paths,
@@ -174,10 +174,16 @@ def _project_asset(relative: str) -> str:
 
 
 def _report_markdown(repository_root: str, roots: tuple[Path, ...]) -> str:
-    """Render the same default report as the CLI, through the same path boundary."""
+    """Render the same report as the CLI would, through the same path boundary.
+
+    No ``run_analyzers`` argument on purpose: ``build_report`` resolves
+    the tri-state from the config, so a configured repository's resource
+    render runs its pool — the last consumer that could receive a
+    configured repo's fallback without asking for it (D1).
+    """
     root = authorize_repository(repository_root, roots)
     config = load_config(discovered_config(root))
-    return render_markdown(build_report(root, config, run_analyzers=False))
+    return render_markdown(build_report(root, config))
 
 
 def _bind_tools(server: Any, authorized_roots: tuple[Path, ...], read_only: Any) -> None:

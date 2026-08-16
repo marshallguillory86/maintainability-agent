@@ -20,6 +20,11 @@ _CLASS_LABEL = {
 }
 
 
+def semantic_class_label(classification: str | None) -> str:
+    """One display name per class, shared by every skin that labels one."""
+    return _CLASS_LABEL.get(classification or "", classification or "")
+
+
 def _finding_line(finding: dict[str, Any]) -> str:
     evidence = finding.get("source_evidence") or {}
     label = _CLASS_LABEL.get(finding.get("class") or "", finding.get("class") or "")

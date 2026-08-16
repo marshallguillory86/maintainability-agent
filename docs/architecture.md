@@ -30,6 +30,7 @@ flowchart TB
     _scan_view["_scan_view"]
     _html_view["_html_view"]
     _economics_view["_economics_view"]
+    _semantic_view["_semantic_view"]
     _history_view["_history_view"]
     _identity["_identity"]
   end

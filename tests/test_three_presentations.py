@@ -25,7 +25,11 @@ from maintainability_audit._scan_history import (
 )
 from maintainability_audit.cli import main
 from maintainability_audit.config import load_config
-from maintainability_audit.renderers import render_html, render_markdown
+from maintainability_audit.renderers import (
+    render_html,
+    render_markdown,
+    render_pr_comment,
+)
 from maintainability_audit.report import build_report
 
 
@@ -40,6 +44,19 @@ def audited(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, dict
     records = read_history(root / DEFAULT_HISTORY_PATH)
     report = build_report(root, load_config(None))
     return root, report, records
+
+
+@pytest.fixture
+def semantic_report(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict:
+    """The ADR 003 fixture attached to the same report every skin receives."""
+    from test_semantic_policy import _reports_with_and_without_semantics
+
+    _plain, report, semantic = _reports_with_and_without_semantics(
+        tmp_path, monkeypatch,
+    )
+    assert report["semantic_findings"] == semantic["findings"]
+    assert report["semantic_coverage"] == semantic["coverage"]
+    return report
 
 
 def test_markdown_and_html_never_disagree_on_the_headline(audited) -> None:
@@ -306,3 +323,107 @@ def test_json_names_which_selected_analyzers_ran_and_did_not(
     by_outcome = payload["analyzer_coverage"]["by_outcome"]
     assert [row["tool"] for row in by_outcome["ran"]] == ["lizard"]
     assert [row["tool"] for row in by_outcome["not-installed"]] == ["eslint"]
+
+
+def test_every_skin_carries_the_same_semantic_findings_and_coverage(
+    semantic_report: dict,
+) -> None:
+    """A semantic result in the agent prompt may not disappear for humans."""
+    from maintainability_audit.prompts import render_ai_prompt
+
+    report = semantic_report
+    prompt = render_ai_prompt(report)
+    presentations = {
+        "markdown": render_markdown(report),
+        "pr comment": render_pr_comment(report),
+        "html": render_html(report, []),
+    }
+
+    coverage = report["semantic_coverage"]
+    for finding in report["semantic_findings"]:
+        path = finding["source_evidence"]["path"]
+        assert path in prompt, f"the remediation prompt dropped semantic path {path}"
+        for skin, rendered in presentations.items():
+            assert path in rendered, (
+                f"{skin} dropped semantic path {path} even though the prompt names it"
+            )
+
+    for skin, rendered in presentations.items():
+        assert coverage["language"] in rendered, f"{skin} dropped semantic language"
+        assert coverage["status"] in rendered.lower(), (
+            f"{skin} dropped semantic coverage status {coverage['status']}"
+        )
+
+
+def test_unknown_semantic_coverage_is_the_same_in_every_skin(
+    semantic_report: dict,
+) -> None:
+    """Unknown type coverage is a published state, not a clean empty list."""
+    import copy
+
+    report = copy.deepcopy(semantic_report)
+    report["semantic_findings"] = []
+    report["semantic_coverage"] = {
+        "language": "TypeScript",
+        "status": "unknown",
+        "reason": "No recorded type analysis; semantic coverage is unknown.",
+    }
+    presentations = {
+        "markdown": render_markdown(report),
+        "pr comment": render_pr_comment(report),
+        "html": render_html(report, []),
+    }
+
+    coverage = report["semantic_coverage"]
+    for skin, rendered in presentations.items():
+        assert coverage["language"] in rendered, f"{skin} dropped semantic language"
+        assert coverage["status"] in rendered.lower(), (
+            f"{skin} turned unknown semantic coverage into silence"
+        )
+        assert coverage["reason"] in rendered, (
+            f"{skin} gives a different reason for unknown semantic coverage"
+        )
+
+
+def test_a_semantic_typescript_finding_is_not_described_as_unread(
+    semantic_report: dict,
+) -> None:
+    """A path used as semantic evidence cannot also be called unopened."""
+    import copy
+
+    report = copy.deepcopy(semantic_report)
+    assert any(
+        finding["source_evidence"]["path"].endswith(".ts")
+        for finding in report["semantic_findings"]
+    )
+    report["summary"]["unread_source"] = [
+        {"suffix": ".ts", "language": "TypeScript", "files": 1},
+    ]
+    report["summary"]["unread_source_files"] = 1
+
+    markdown = render_markdown(report)
+
+    assert "| `.ts` | TypeScript |" not in markdown, (
+        "markdown says TypeScript was not opened while citing a .ts semantic finding"
+    )
+    assert "nothing below describes them" not in markdown
+
+
+def test_rendering_semantics_does_not_mutate_the_sealed_score(
+    semantic_report: dict,
+) -> None:
+    """All skins consume the score; none gets to recompute or amend it."""
+    import copy
+
+    report = semantic_report
+    before = copy.deepcopy(report["score"])
+
+    render_markdown(report)
+    render_pr_comment(report)
+    render_html(report, [])
+
+    assert report["score"] == before
+    assert report["score"]["maintainability_estimate"] == before[
+        "maintainability_estimate"
+    ]
+    assert report["score"]["verified_grade"] == before["verified_grade"]

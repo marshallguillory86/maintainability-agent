@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from maintainability_audit.config import discovered_config, load_config
+from maintainability_audit.prompts import render_ai_prompt
 from maintainability_audit.renderers import render_markdown
 from maintainability_audit.report import build_report
 
@@ -93,7 +94,8 @@ def _section(markdown: str, heading: str) -> str:
     return remainder if next_heading < 0 else remainder[:next_heading]
 
 
-def _remedy_sites(report: dict) -> tuple[str, str]:
+def _remedy_sites(report: dict) -> tuple[str, str, str]:
+    """Every user-facing remedy must resolve pool state from one report fact."""
     markdown = render_markdown(report)
     evidence = next(
         line for line in markdown.splitlines()
@@ -101,7 +103,8 @@ def _remedy_sites(report: dict) -> tuple[str, str]:
     )
     unparsed = _section(markdown, "Read, But Not Parsed for Declarations")
     action = [paragraph for paragraph in unparsed.split("\n\n") if paragraph.strip()][-1]
-    return evidence, action
+    prompt = render_ai_prompt(report)
+    return evidence, action, prompt
 
 
 def _activation_terms(text: str) -> frozenset[str]:
@@ -144,15 +147,14 @@ def test_analyzer_activation_is_a_remedy_only_while_the_pool_is_off(
     report = remedy_reports[case]
     assert report["analyzer_coverage"] is None
 
-    evidence, unparsed = _remedy_sites(report)
-    assert _activation_terms(evidence)
-    assert _activation_terms(unparsed)
+    for site in _remedy_sites(report):
+        assert _activation_terms(site)
 
 
 def test_withheld_evidence_and_unparsed_source_use_one_remedy_dialect(
     remedy_reports: dict[str, dict],
 ) -> None:
     for case, report in remedy_reports.items():
-        evidence, unparsed = _remedy_sites(report)
-        assert _activation_terms(evidence) == _activation_terms(unparsed), case
-        assert _remedy_kind(evidence) == _remedy_kind(unparsed), case
+        sites = _remedy_sites(report)
+        assert len({_activation_terms(site) for site in sites}) == 1, case
+        assert len({_remedy_kind(site) for site in sites}) == 1, case

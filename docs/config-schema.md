@@ -32,10 +32,11 @@ maintainability-agent.schema.json
 
 ## Analyzer policy (`analyzers`)
 
-Controls which external analysis tools may run. Full background, including the tool inventory and what each class means, is in [the analyzer pool](analyzer-pool.md).
+Controls whether the external pool runs and which analysis tools may run in it. Full background, including the tool inventory and what each class means, is in [the analyzer pool](analyzer-pool.md).
 
 ```json
 "analyzers": {
+  "run": true,
   "depth": "moderate",
   "license_policy": "permissive",
   "prompt_when_interactive": true,
@@ -47,6 +48,7 @@ Controls which external analysis tools may run. Full background, including the t
 }
 ```
 
+- `run`: whether ordinary audits run the configured external analyzer pool. A loaded configuration file defaults this to `true`; set it to `false` to use only the built-in fallback. `load_config(None)` keeps `run: false`, so unconfigured programmatic callers retain the zero-install behavior. CLI flags override this value. This switch does not enable tool acquisition: `acquire_tools` remains separately opt-in and defaults to `false`.
 - `depth`: `baseline` | `moderate` | `heavy` | `all`. Cumulative — `heavy` includes everything in `baseline` and `moderate`. Larger pools take longer and produce better-supported scores.
 - `license_policy`: `permissive` | `copyleft-weak` | `copyleft-any` | `commercial-free-tier` | `unverified`. Also cumulative. Defaults to `permissive`, the setting fewest organizations have to argue about.
 - `acquire_tools`: whether a missing Node tool may be fetched (`npx --yes`) during a run. **Default `false`** — acquisition is a network action, and the P1 separation of analysis from acquisition only means something when acquisition is chosen rather than defaulted. Off, a missing tool is reported `not-installed` with its install command in the environment work order.

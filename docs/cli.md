@@ -41,7 +41,8 @@ Repeat `--allow-root` to authorize unrelated repository directories. With no exp
 | `--write-baseline` | Write current findings as a baseline JSON file. |
 | `--fail-on-new` | Exit nonzero only for findings not in baseline. |
 | `--fail-on-gate` | Exit nonzero when hard gates fail. |
-| `--analyzers` | Run the external analyzer pool and report its coverage. A complete concept set moves the point estimate; otherwise the built-in fallback stands and the range widens. Missing-tool acquisition is separately controlled by `analyzers.acquire_tools` in config and defaults off. See [the analyzer pool](analyzer-pool.md). |
+| `--analyzers` | Force the external analyzer pool on, overriding `analyzers.run`. A configured repository runs its pool by default. A complete concept set moves the point estimate; otherwise the built-in fallback stands and the range widens. Missing-tool acquisition is separately controlled by `analyzers.acquire_tools` and defaults off. See [the analyzer pool](analyzer-pool.md). |
+| `--no-analyzers` | Force the external analyzer pool off for this invocation, overriding `analyzers.run`. |
 | `--work AXIS=VALUE` | Narrow the work order. Repeatable; every criterion must match. Axes: `band`, `finding_class`, `path`, `verification`. Narrowing changes what is shown and never what anything scored. |
 | `--record-history` | Create or append this scan to `.maintainability/history.jsonl`. Once the file exists, every later successful scan appends to it and reads the resulting history without another flag. |
 | `--backfill REVSPEC` | Scan each commit in a range into the history and exit, e.g. `HEAD~50..HEAD`. Each commit is checked out in a temporary worktree; the working tree is never touched. Expensive, so it never runs as part of a normal scan. |

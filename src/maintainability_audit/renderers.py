@@ -386,4 +386,4 @@ def render_html(report: dict[str, Any], records: list[Any]) -> str:
     """
     from ._html_view import render_html as _render
 
-    return _render(report, records, markdown=render_markdown(report))
+    return _render(report, records)

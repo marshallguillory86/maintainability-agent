@@ -56,7 +56,10 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         "",
     ]
     lines.extend(prompt_analyzer_caveat(report))
-    lines.extend(view.remediation_note(score))
+    # The prompt is the product artifact (H1): its remedy follows the
+    # same report fact as every other skin, never a stale default.
+    lines.extend(view.remediation_note(
+        score, report.get("analyzer_coverage") is not None))
     lines.extend(prompt_escalation_note(report))
     lines.extend(prompt_work_order(report))
     lines.extend(prompt_semantic_section(report))

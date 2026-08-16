@@ -12,6 +12,7 @@ The tool itself never prompts and never writes the tree.
 from __future__ import annotations
 
 import asyncio
+import json
 import sys
 from pathlib import Path
 
@@ -19,6 +20,7 @@ import pytest
 from test_history_schema2 import _repo
 
 from maintainability_audit.cli import main
+from maintainability_audit.config import CONFIG_FILENAME
 from maintainability_audit.mcp_server import audit_repository, create_server
 
 
@@ -209,3 +211,28 @@ def test_format_chat_is_markdown_on_the_wire(tmp_path: Path) -> None:
     assert result["format"] == "chat"
     assert "report_html" not in result, "chat renders no HTML"
     assert {p for p in root.rglob("*")} == before, "the MCP tool wrote the tree"
+
+
+def test_mcp_format_resolution_is_chat_then_persisted_then_per_call(
+    tmp_path: Path,
+) -> None:
+    root = _repo(tmp_path)
+    default = audit_repository(str(root), roots=(tmp_path.resolve(),))
+    (root / CONFIG_FILENAME).write_text(
+        json.dumps({
+            "version": 1,
+            "analyzers": {"run": False},
+            "presentation": {"format": "html"},
+        }),
+        encoding="utf-8",
+    )
+
+    persisted = audit_repository(str(root), roots=(tmp_path.resolve(),))
+    explicit = audit_repository(
+        str(root), format="json", roots=(tmp_path.resolve(),),
+    )
+
+    assert default["format"] == "chat"
+    assert "report_markdown" in default and "report_html" not in default
+    assert persisted["format"] == "html" and "report_html" in persisted
+    assert explicit["format"] == "json" and "report_html" not in explicit

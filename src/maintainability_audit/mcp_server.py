@@ -143,7 +143,9 @@ def audit_repository(
     )
     status = report.get("git_status_short", "")
     if format is None:
-        format = (config.get("presentation") or {}).get("format") or "markdown"
+        # Per-call beats persisted beats the documented default: chat —
+        # which is Markdown on the wire — not markdown-the-file (M2).
+        format = (config.get("presentation") or {}).get("format") or "chat"
     result = {
         "agent": "maintainability-agent",
         "agent_version": VERSION,

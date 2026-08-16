@@ -4,6 +4,10 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+Nothing yet.
+
+## 0.8.1 - 2026-08-16
+
 ### Changed
 
 - **Chat-surface foundations D1 and D13.** Analyzer-pool execution is

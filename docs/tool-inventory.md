@@ -16,6 +16,7 @@ Every row below was installed and run against real code, and produced machine-re
 | **jscpd** | ~150 formats incl. all of the above | Copy-paste clones, duplication % | JSON, SARIF | Detected a 30-line Java clone across two files (27.9% duplication); correctly identified c, csharp, fortran, go, java, rust in one pass |
 | **radon** | Python | **Maintainability Index** (the academic MI formula), cyclomatic complexity, Halstead, raw LOC | JSON | 34 files ranked; lowest MI 42.23 (`cli.py`); 220 functions measured |
 | **ruff** | Python | ~800 lint rules incl. complexity (C901), comprehensions, unused code, naming | JSON, SARIF | Already the repo's linter |
+| **multimetric** | Python, C, C++, Java, JavaScript, Go, Ruby, PHP | Per-file maintainability index, cyclomatic complexity, comment ratio, Halstead difficulty | JSON | Locally verified at 2.4.4; contributed measurements in all 40 checked-in analyzer-corpus rows |
 | **pylint** | Python | Design smells — too many arguments, locals, instance attributes, branches; duplicate-code checker | JSON | 107 messages: too-many-arguments ×5, too-many-instance-attributes ×2, too-many-locals ×2 |
 | **vulture** | Python | Dead code with a confidence score | text | 0 at ≥80% confidence on `src/` |
 | **eslint** | JavaScript, TypeScript (via typescript-eslint) | `complexity`, `max-depth`, `max-params`, `max-lines-per-function`, plus the rule ecosystem | JSON, SARIF | complexity 11, max-depth 4 and 5, max-params 5 on a synthetic file |

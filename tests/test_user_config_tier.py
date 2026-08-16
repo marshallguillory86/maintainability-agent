@@ -9,6 +9,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+
 from maintainability_audit._user_config import (
     load_user_config,
     mark_repo_seen,
@@ -16,7 +17,6 @@ from maintainability_audit._user_config import (
     user_config_path,
     user_state_path,
 )
-
 from maintainability_audit.cli import main
 from maintainability_audit.config import load_config
 

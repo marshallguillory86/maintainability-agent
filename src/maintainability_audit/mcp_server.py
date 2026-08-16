@@ -88,28 +88,31 @@ def audit_repository(
     repository_root: str,
     config_path: str | None = None,
     changed_only: str | None = None,
-    run_analyzers: bool = False,
+    run_analyzers: bool | None = None,
     format: str = "markdown",
     *,
     roots: tuple[Path, ...] | None = None,
 ) -> dict[str, Any]:
     """Run the production audit and return its report plus bounded work order.
 
-    ``run_analyzers`` invokes the external analyzer pool (ADR 006), adding
-    coverage, findings and measurements from the configured tools. Off by
-    default to match the CLI: it costs seconds rather than milliseconds,
-    and a caller polling for a gate result should not pay for it.
+    ``run_analyzers`` is tri-state (D1). ``None`` — the default — lets the
+    repository's config decide, and a loaded config file defaults the pool
+    on: the pool is the primary evidence source (ADR 006), and a caller
+    should not need to know a flag to receive the product. Explicit
+    ``True``/``False`` overrides for one call, in either direction.
 
-    Worth exposing here more than anywhere else, though. A model reading
-    this report is the reader those findings were collected for -- it can
-    see what the scoring engine structurally cannot, and without this flag
-    it receives the six built-in detectors while ten tools sit unused.
+    A model reading this report is the reader the pool's findings were
+    collected for — it can see what the scoring engine structurally
+    cannot, which is why the default here follows the config rather than
+    silently serving the six built-in detectors while the tools sit unused.
     """
     authorized_roots = roots if roots is not None else allowed_roots()
     root = authorize_repository(repository_root, authorized_roots)
     config = load_config(authorize_config(config_path, root) or discovered_config(root))
     revspec = validate_revspec(changed_only)
     only_paths = changed_paths(root, revspec) if revspec else None
+    if run_analyzers is None:
+        run_analyzers = bool((config.get("analyzers") or {}).get("run", False))
     report = build_report(
         root, config,
         only_paths=only_paths,
@@ -183,15 +186,16 @@ def _bind_tools(server: Any, authorized_roots: tuple[Path, ...], read_only: Any)
         repository_root: str,
         config_path: str | None = None,
         changed_only: str | None = None,
-        run_analyzers: bool = False,
+        run_analyzers: bool | None = None,
         format: str = "markdown",
     ) -> dict[str, Any]:
         """Audit one authorized repository and return findings plus a bounded remediation prompt.
 
-        Set ``run_analyzers`` to also run the external quality tools and
-        receive their coverage, findings and measurements. ``format`` is
-        the presentation the user chose — chat or markdown (the same
-        Markdown on the wire; chat is the default),
+        Leave ``run_analyzers`` unset and the repository's config decides:
+        a configured repo runs its external analyzer pool — the primary
+        evidence source — by default. Pass true/false to override for one
+        call. ``format`` is the presentation the user chose — chat or
+        markdown (the same Markdown on the wire; chat is the default),
         html (returned as text; never written to the tree) or json.
         """
         return audit_repository(

@@ -14,6 +14,13 @@ PROJECT_URL = "https://github.com/marshallguillory86/maintainability-agent"
 DEFAULT_IDIOM_GROUPS: dict[str, list[str]] = {}
 
 DEFAULT_CONFIG: dict[str, Any] = {
+    # Whether the external analyzer pool executes. False here covers
+    # only the no-config-file path: unconfigured programmatic callers
+    # keep the built-in fallback until D2's first-run setup writes a
+    # config. `load_config` flips the default to True the moment a real
+    # file loads — a repository that wrote a config chose the product,
+    # and ADR 006 says the pool is the product's evidence source.
+    "analyzers": {"run": False},
     "paths": {
         "include_extensions": [".py", ".java", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx",
                                ".html", ".css", ".md"],
@@ -191,6 +198,9 @@ def load_config(path: str | None) -> dict[str, Any]:
     config = json.loads(json.dumps(DEFAULT_CONFIG))
     if not path:
         return config
+    # A loaded file defaults the pool on (D1). Set before the merge so
+    # an explicit "run": false in the file still wins.
+    config["analyzers"]["run"] = True
     user_config = json.loads(Path(path).read_text(encoding="utf-8"))
     deep_update(config, user_config)
     return config

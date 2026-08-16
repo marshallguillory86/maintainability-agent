@@ -2,6 +2,7 @@
   "version": 1,
   "analyzers": {
     "_doc": "Which external analyzers may run. See docs/analyzer-pool.md. Resolve with: python tools/resolve_pool.py",
+    "run": true,
     "concerns": [
       "all"
     ],

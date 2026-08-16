@@ -35,8 +35,11 @@ product.
 *Required:* a configured repository runs its configured pool without a
 per-invocation flag. Built-ins run where the pool cannot measure.
 
-*Closing test:* `test_a_configured_repository_runs_its_pool_without_a_flag`
-in `tests/test_pool_runs_by_config.py`.
+*Closing tests:* `test_build_report_resolves_the_pool_tristate_at_its_own_seam`,
+`test_cli_runs_or_suppresses_the_pool_at_the_production_seam`,
+`test_mcp_audit_runs_or_suppresses_the_pool_at_the_production_seam`, and
+`test_mcp_report_resource_uses_the_repository_pool_decision` in
+`tests/test_pool_runs_by_config.py`.
 
 ### D2 — No first-run setup on the chat path
 

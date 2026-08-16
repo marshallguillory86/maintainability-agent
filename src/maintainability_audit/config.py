@@ -194,6 +194,16 @@ def discovered_config(root: Path) -> str | None:
     return str(candidate) if candidate.is_file() else None
 
 
+def analyzers_run_default(config: dict[str, Any]) -> bool:
+    """The repository's standing pool decision — one reading, every seam.
+
+    `build_report`, the CLI and the MCP server all resolve their
+    tri-state through this, so "the config decides" cannot quietly mean
+    three different things (D1).
+    """
+    return bool((config.get("analyzers") or {}).get("run", False))
+
+
 def load_config(path: str | None) -> dict[str, Any]:
     config = json.loads(json.dumps(DEFAULT_CONFIG))
     if not path:

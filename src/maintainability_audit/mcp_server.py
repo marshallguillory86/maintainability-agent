@@ -175,9 +175,14 @@ def _grant_resolver_for(ledger: _RootLedger, context_type: Any) -> Any:
         capabilities = getattr(ctx, "client_capabilities", None)
         if capabilities is None or capabilities.elicitation is None:
             return None
+        # The question names the RESOLVED path — the one the grant will
+        # actually authorize. A symlink or `..` in the request must not
+        # let the modal show one directory while the ledger records
+        # another (audit H2): the user consents to the real target.
+        resolved = Path(repository_root).expanduser().resolve()
         return Elicit(
             message=(
-                f"{repository_root} is outside this server's allowed "
+                f"{resolved} is outside this server's allowed "
                 "roots. Grant the audit read access to it?"
             ),
             schema=_grant_schema(),
@@ -194,6 +199,26 @@ def _granted_scope(grant: Any) -> str | None:
         return None
     values = list(answer.model_dump().values())
     return str(values[0]) if values else None
+
+
+def _apply_call_consents(ledger: _RootLedger, repository_root: str,
+                         setup: Any, grant: Any) -> None:
+    """Apply what this call's elicitations granted, before the audit runs.
+
+    Grant first: an accepted D10 answer extends (and for "always"
+    persists) the allow-list this very call is authorized against. The
+    resolved path is the one the question named (audit H2). Then setup:
+    accepted first-run answers persist so this call runs under the
+    chosen configuration.
+    """
+    scope = _granted_scope(grant)
+    if scope in (_GRANT_SESSION, _GRANT_ALWAYS):
+        ledger.grant(Path(repository_root).expanduser().resolve(),
+                     persist=scope == _GRANT_ALWAYS)
+    answers = getattr(setup, "data", None)
+    if hasattr(answers, "model_dump"):
+        root = authorize_repository(repository_root, ledger.current())
+        apply_answers(root, answers.model_dump())
 
 
 def _setup_resolver_for(ledger: _RootLedger, context_type: Any) -> Any:
@@ -286,16 +311,7 @@ def _bind_audit_tool(server: Any, ledger: _RootLedger,
         records, only an answer does.
         """
         del ctx  # the resolvers already used it; kept so hosts see progress hooks
-        scope = _granted_scope(grant)
-        if scope in (_GRANT_SESSION, _GRANT_ALWAYS):
-            ledger.grant(Path(repository_root).expanduser().resolve(),
-                         persist=scope == _GRANT_ALWAYS)
-        answers = getattr(setup, "data", None)
-        if hasattr(answers, "model_dump"):
-            # The user accepted first-run setup: persist before the audit
-            # below, so this very call runs under the chosen configuration.
-            root = authorize_repository(repository_root, ledger.current())
-            apply_answers(root, answers.model_dump())
+        _apply_call_consents(ledger, repository_root, setup, grant)
         return audit_repository(
             repository_root,
             config_path,

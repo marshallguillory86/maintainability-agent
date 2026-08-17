@@ -72,7 +72,7 @@ def _allowed(extras: frozenset[str]) -> set[str]:
 def _first_party(name: str) -> bool:
     if name == "maintainability_audit" or name.startswith("test_"):
         return True
-    if name in {"_ast_reading", "_scoring_fixtures", "conftest"}:
+    if name in {"_ast_reading", "_mcp_fixtures", "_scoring_fixtures", "conftest"}:
         return True
     return any(path.stem == name for path in TOOLS.rglob("*.py"))
 

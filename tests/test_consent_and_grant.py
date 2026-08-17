@@ -1,4 +1,8 @@
-"""D9/D10 and the recorded history-consent decisions at the MCP boundary."""
+"""D9/D10 and the recorded history-consent decisions at the MCP boundary.
+
+The four D10 grant tests moved verbatim to ``test_root_grants.py``
+when this contract file crossed the repository's own size warn line.
+"""
 
 from __future__ import annotations
 
@@ -6,114 +10,37 @@ import ast
 import asyncio
 import inspect
 import json
-import subprocess
 from pathlib import Path
 from typing import Any
 
 import pytest
+from _mcp_fixtures import (
+    _commit,
+    _config,
+    _large_function,
+    _repo,
+    _resource_text,
+    _tool_text,
+)
 
 from maintainability_audit import _mcp_audit, _runner, cli, mcp_server
 from maintainability_audit._mcp_setup import apply_answers, setup_questions
 from maintainability_audit._scan_history import DEFAULT_HISTORY_PATH, read_history
-from maintainability_audit._user_config import load_user_config, user_config_path
+from maintainability_audit._user_config import load_user_config
 from maintainability_audit.baseline import findings_not_in_baseline
 from maintainability_audit.cli import main
 from maintainability_audit.config import CONFIG_FILENAME, load_config
 from maintainability_audit.mcp_server import (
-    ALLOWED_ROOTS_ENV,
     SERVER_INSTRUCTIONS,
-    PathNotAllowed,
     audit_repository,
     create_server,
-    server_info,
 )
 from maintainability_audit.renderers import render_markdown
-
-
-def _large_function(name: str) -> str:
-    body = "".join(f"    value_{line} = value + {line}\n" for line in range(90))
-    return f"def {name}(value):\n{body}    return value\n"
-
-
-def _repo(base: Path, *, config: dict[str, Any] | None = None) -> Path:
-    root = base / "repo"
-    root.mkdir(parents=True)
-    (root / "README.md").write_text("# fixture\n", encoding="utf-8")
-    (root / "hot.py").write_text(_large_function("huge"), encoding="utf-8")
-    if config is not None:
-        (root / CONFIG_FILENAME).write_text(
-            json.dumps(config, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
-    subprocess.run(["git", "init", "-q", str(root)], check=True)
-    _commit(root, "fixture")
-    return root
-
-
-def _commit(root: Path, message: str) -> None:
-    subprocess.run(["git", "-C", str(root), "add", "."], check=True)
-    subprocess.run(
-        [
-            "git", "-C", str(root), "-c", "user.email=t@t",
-            "-c", "user.name=t", "commit", "-qm", message,
-        ],
-        check=True,
-    )
-
-
-def _config(*, run: bool = False, record: bool | None = None) -> dict[str, Any]:
-    payload: dict[str, Any] = {
-        "version": 1,
-        "analyzers": {
-            "run": run,
-            "allow_tools": ["lizard"],
-            "acquire_tools": False,
-        },
-    }
-    if record is not None:
-        payload["history"] = {"record": record}
-    return payload
 
 
 def _audit(root: Path, **kwargs: Any) -> dict[str, Any]:
     kwargs.setdefault("format", "json")
     return audit_repository(str(root), roots=(root.parent.resolve(),), **kwargs)
-
-
-def _resource_text(server: Any, root: Path) -> str:
-    resources = asyncio.run(server.list_resources())
-    template = next(
-        item for item in resources
-        if item.name == "maintainability-report-template"
-    )
-    uri = str(template.uri).replace("{repository_root}", str(root)).replace(
-        "{root}", str(root),
-    )
-    contents = asyncio.run(server.read_resource(uri))
-    return "".join(item.content for item in contents)
-
-
-def _tool_text(result: Any) -> str:
-    return " ".join(
-        getattr(item, "text", str(item)) for item in (result.content or [])
-    )
-
-
-def _grant_answer(params: Any, choice: str) -> Any:
-    from mcp import types
-
-    properties = params.requested_schema["properties"]
-    assert len(properties) == 1, "a roots grant must be one structured question"
-    name, field = next(iter(properties.items()))
-    assert set(field["enum"]) == {"this session", "always", "no"}
-    assert field["default"] == "this session"
-    return types.ElicitResult(action="accept", content={name: choice})
-
-
-def _contains_key(payload: Any, key: str) -> bool:
-    if not isinstance(payload, dict):
-        return False
-    return key in payload or any(_contains_key(value, key) for value in payload.values())
 
 
 def test_missing_analyzers_surface_a_top_level_environment_work_order(
@@ -140,129 +67,6 @@ def test_missing_analyzers_surface_a_top_level_environment_work_order(
     instruction = SERVER_INSTRUCTIONS.lower()
     assert "environment_work_order" in instruction
     assert "surface" in instruction or "show" in instruction
-
-
-def test_session_root_grant_is_default_and_lives_only_for_that_server(
-    tmp_path: Path,
-) -> None:
-    """D10: the least-privilege grant extends one live allow-list, not config."""
-    from mcp import Client
-
-    allowed = tmp_path / "allowed"
-    allowed.mkdir()
-    root = _repo(tmp_path / "outside", config=_config())
-    calls: list[Any] = []
-
-    async def answer(_context: Any, params: Any) -> Any:
-        calls.append(params)
-        return _grant_answer(params, "this session")
-
-    async def exercise() -> list[Any]:
-        server = create_server(roots=(allowed.resolve(),))
-        results = []
-        async with Client(server, elicitation_callback=answer) as client:
-            for _ in range(2):
-                results.append(await client.call_tool(
-                    "audit_repository", {"repository_root": str(root), "format": "json"},
-                ))
-        return results
-
-    results = asyncio.run(exercise())
-
-    assert all(not result.is_error for result in results), _tool_text(results[0])
-    assert len(calls) == 1, "the running process forgot its session grant"
-    assert not user_config_path().exists()
-    repository = json.loads((root / CONFIG_FILENAME).read_text(encoding="utf-8"))
-    assert not _contains_key(repository, "allowed_roots")
-
-
-def test_always_root_grant_persists_only_to_the_user_tier_and_loads_at_startup(
-    tmp_path: Path,
-) -> None:
-    """D10: an always grant survives a new server without entering repo policy."""
-    from mcp import Client
-
-    allowed = tmp_path / "allowed"
-    allowed.mkdir()
-    root = _repo(tmp_path / "outside", config=_config())
-
-    async def answer(_context: Any, params: Any) -> Any:
-        return _grant_answer(params, "always")
-
-    async def grant() -> Any:
-        server = create_server(roots=(allowed.resolve(),))
-        async with Client(server, elicitation_callback=answer) as client:
-            return await client.call_tool(
-                "audit_repository",
-                {"repository_root": str(root), "format": "json"},
-            )
-
-    granted = asyncio.run(grant())
-
-    assert not granted.is_error, _tool_text(granted)
-    user = load_user_config()
-    assert user is not None and _contains_key(user, "allowed_roots")
-    assert str(root.resolve()) in json.dumps(user)
-    repository = json.loads((root / CONFIG_FILENAME).read_text(encoding="utf-8"))
-    assert not _contains_key(repository, "allowed_roots")
-    assert str(root.resolve()) in server_info()["allowed_roots"]
-
-    async def use_persisted_grant() -> Any:
-        async with Client(create_server()) as client:
-            return await client.call_tool(
-                "audit_repository",
-                {"repository_root": str(root), "format": "json"},
-            )
-
-    reused = asyncio.run(use_persisted_grant())
-    assert not reused.is_error, _tool_text(reused)
-
-
-def test_denied_or_unsupported_root_grant_explains_both_static_remedies(
-    tmp_path: Path,
-) -> None:
-    """D10: refusal remains bounded and teaches both noninteractive grant doors."""
-    from mcp import Client
-
-    allowed = tmp_path / "allowed"
-    allowed.mkdir()
-    declined = _repo(tmp_path / "declined", config=_config())
-    unsupported = _repo(tmp_path / "unsupported", config=_config())
-
-    async def answer_no(_context: Any, params: Any) -> Any:
-        return _grant_answer(params, "no")
-
-    async def exercise() -> tuple[Any, Any]:
-        server = create_server(roots=(allowed.resolve(),))
-        async with Client(server, elicitation_callback=answer_no) as client:
-            denied = await client.call_tool(
-                "audit_repository", {"repository_root": str(declined)},
-            )
-        async with Client(server) as client:
-            absent = await client.call_tool(
-                "audit_repository", {"repository_root": str(unsupported)},
-            )
-        return denied, absent
-
-    for result in asyncio.run(exercise()):
-        assert result.is_error
-        message = _tool_text(result)
-        assert "outside" in message.lower() or "boundary" in message.lower()
-        assert "--allow-root" in message
-        assert ALLOWED_ROOTS_ENV in message
-
-
-def test_report_resource_never_elicits_or_persists_a_root_grant(tmp_path: Path) -> None:
-    """D10 grants belong to the tool; the report resource remains ask-free."""
-    allowed = tmp_path / "allowed"
-    allowed.mkdir()
-    root = _repo(tmp_path / "outside", config=_config())
-    server = create_server(roots=(allowed.resolve(),))
-
-    with pytest.raises(PathNotAllowed):
-        _resource_text(server, root)
-
-    assert not user_config_path().exists()
 
 
 def _history_answers(choice: str) -> dict[str, Any]:

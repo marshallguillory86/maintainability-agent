@@ -106,6 +106,20 @@ def write_user_config(payload: dict[str, Any]) -> None:
     _write_atomic(user_config_path(), payload)
 
 
+def write_user_answers(payload: dict[str, Any]) -> None:
+    """Persist setup answers without erasing standing grants (audit H1).
+
+    The user tier has two owners: setup answers and D10 root grants.
+    Writing one must not clobber the other — an "always" grant that a
+    later first-run setup silently deleted was never "always".
+    """
+    existing = load_user_config() or {}
+    merged = dict(payload)
+    for key in _GRANT_KEYS & existing.keys():
+        merged[key] = existing[key]
+    write_user_config(merged)
+
+
 def persist_root_grant(root: Path) -> None:
     """Record an "always" root grant in the user tier (decision 5, D10).
 

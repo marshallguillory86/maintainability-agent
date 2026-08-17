@@ -24,7 +24,7 @@ from typing import Any
 from ._catalog import LICENSE_POLICIES
 from ._user_config import (
     user_config_answers,
-    write_user_config,
+    write_user_answers,
 )
 from .config import CONFIG_FILENAME, discovered_config, load_config
 
@@ -178,7 +178,7 @@ def apply_answers(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
     config_path = Path(root) / CONFIG_FILENAME
     config_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n",
                            encoding="utf-8")
-    write_user_config(payload)
+    write_user_answers(payload)
     return load_config(str(config_path))
 
 

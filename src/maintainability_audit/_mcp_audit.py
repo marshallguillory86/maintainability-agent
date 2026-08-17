@@ -144,14 +144,7 @@ def audit_repository(
         run_analyzers=run_analyzers,
     )
     status = report.get("git_status_short", "")
-    history_path = root / ((config.get("paths") or {}).get("history") or DEFAULT_HISTORY_PATH)
-    if record_history is None:
-        record_history = history_path.exists()
-    if record_history:
-        append_scan(history_path, record_of(
-            report, config, VERSION, CALIBRATION_C,
-            tuple(sorted(finding_fingerprints(report))),
-            targeted=prompt_targets(report)))
+    history_path = _record_scan(report, config, root, record_history)
     attach_history_views(report, history_path, root)
     if format is None:
         # Per-call beats persisted beats the documented default: chat —
@@ -172,6 +165,25 @@ def audit_repository(
         "remediation_prompt": render_ai_prompt(report),
     }
     return _finish_result(result, format, root, config, report)
+
+
+def _record_scan(report: dict[str, Any], config: dict[str, Any], root: Path,
+                 record_history: bool | None) -> Path:
+    """Append this scan when the loop asked for it; return the series path.
+
+    ``None`` means the file's existence decides — the CLI's standing
+    rule (D5). A recorded scan always carries the delivered prompt's
+    targets (D6): every MCP result hands the prompt over.
+    """
+    history_path = root / ((config.get("paths") or {}).get("history") or DEFAULT_HISTORY_PATH)
+    if record_history is None:
+        record_history = history_path.exists()
+    if record_history:
+        append_scan(history_path, record_of(
+            report, config, VERSION, CALIBRATION_C,
+            tuple(sorted(finding_fingerprints(report))),
+            targeted=prompt_targets(report)))
+    return history_path
 
 
 def attach_history_views(report: dict[str, Any], history_path: Path,

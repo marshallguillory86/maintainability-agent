@@ -234,6 +234,23 @@ def test_mcp_history_records_the_delivered_prompt_targets(tmp_path: Path) -> Non
     assert all(item["title"] in delivered for item in targeted_items)
 
 
+# Split mechanically (2026-08-16, standing precedent for contract
+# helpers that breach the repo's own warn line): the seeding function
+# measured 64 lines. Each clear/return step moved verbatim into
+# `_clear_step` / `_return_step`; values and order unchanged.
+def _clear_step(root: Path, base, message: str, stamp: str):
+    readme = root / "README.md"
+    readme.write_text(readme.read_text(encoding="utf-8") + f"\n{message}\n", encoding="utf-8")
+    commit = _commit_tracked(root, f"{message} synthetic clear")
+    return replace(base, recorded_at=stamp, commit=commit,
+                   fingerprints=(), identities=(), targeted=())
+
+
+def _return_step(root: Path, source: str, target: str, message: str) -> None:
+    subprocess.run(["git", "-C", str(root), "mv", source, target], check=True)
+    _commit_staged(root, message)
+
+
 def _seed_cleared_then_returned_series(root: Path) -> str:
     config = load_config(str(root / CONFIG_FILENAME))
 
@@ -257,41 +274,12 @@ def _seed_cleared_then_returned_series(root: Path) -> str:
 
     first, original_target, _ = snapshot(targeted=True)
 
-    readme = root / "README.md"
-    readme.write_text(readme.read_text(encoding="utf-8") + "\nclear one\n", encoding="utf-8")
-    first_clear_commit = _commit_tracked(root, "first synthetic clear")
-    first_clear = replace(
-        first,
-        recorded_at="2026-08-16T12:00:01Z",
-        commit=first_clear_commit,
-        fingerprints=(),
-        identities=(),
-        targeted=(),
-    )
-
-    subprocess.run(
-        ["git", "-C", str(root), "mv", "hot.py", "moved.py"],
-        check=True,
-    )
-    _commit_staged(root, "first return through rename")
+    first_clear = _clear_step(root, first, "clear one", "2026-08-16T12:00:01Z")
+    _return_step(root, "hot.py", "moved.py", "first return through rename")
     first_return, _, _ = snapshot()
 
-    readme.write_text(readme.read_text(encoding="utf-8") + "\nclear two\n", encoding="utf-8")
-    second_clear_commit = _commit_tracked(root, "second synthetic clear")
-    second_clear = replace(
-        first_return,
-        recorded_at="2026-08-16T12:00:03Z",
-        commit=second_clear_commit,
-        fingerprints=(),
-        identities=(),
-        targeted=(),
-    )
-
-    subprocess.run(
-        ["git", "-C", str(root), "mv", "moved.py", "returned.py"],
-        check=True,
-    )
-    _commit_staged(root, "second return through rename")
+    second_clear = _clear_step(root, first_return, "clear two", "2026-08-16T12:00:03Z")
+    _return_step(root, "moved.py", "returned.py", "second return through rename")
     second_return, _, _ = snapshot()
 
     history = _history_path(root)

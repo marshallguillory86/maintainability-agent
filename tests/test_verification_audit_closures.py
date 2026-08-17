@@ -108,6 +108,54 @@ def test_a_symlink_retargeted_mid_elicitation_invalidates_the_consent(
     assert audit.is_error, "the unconsented directory was silently served"
 
 
+class _AcceptedGrant:
+    """The shape the resolver machinery injects for an accepted answer."""
+
+    class _Answer:
+        @staticmethod
+        def model_dump() -> dict[str, str]:
+            return {"root_access": "this session"}
+
+    data = _Answer()
+
+
+def test_a_crosswired_ask_note_refuses_rather_than_grants(tmp_path: Path) -> None:
+    """Cross-wire L: a note that no longer matches the request grants nothing.
+
+    The ledger's ask notes are keyed by the raw request string; an
+    overlapping elicitation (or a retarget on a transport without
+    digest matching) can leave a note pointing at a directory this
+    call's user was never shown. The grant only lands while the note
+    still equals the request's current resolution — fail closed.
+    """
+    from maintainability_audit._mcp_grants import _apply_call_consents, _RootLedger
+
+    allowed = tmp_path / "allowed"
+    allowed.mkdir()
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    first.mkdir()
+    second.mkdir()
+    link = tmp_path / "link"
+    link.symlink_to(first)
+
+    ledger = _RootLedger((allowed.resolve(),))
+    ledger.note_ask(str(link), first.resolve())
+    link.unlink()
+    link.symlink_to(second)
+
+    _apply_call_consents(ledger, str(link), setup=None, grant=_AcceptedGrant())
+    assert ledger.current() == (allowed.resolve(),), (
+        "a stale ask note granted a directory the user was never shown"
+    )
+
+    ledger.note_ask(str(link), second.resolve())
+    _apply_call_consents(ledger, str(link), setup=None, grant=_AcceptedGrant())
+    assert second.resolve() in ledger.current(), (
+        "a matching note must still grant"
+    )
+
+
 def _functions_calling(callee_name: str) -> set[str]:
     """Every `file:function` in src whose body calls `callee_name`."""
     callers: set[str] = set()

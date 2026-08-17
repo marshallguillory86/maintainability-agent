@@ -304,11 +304,14 @@ def test_one_native_elicitation_applies_answers_to_that_same_audit(
     async def exercise() -> tuple[dict, dict]:
         server = create_server(roots=(tmp_path.resolve(),))
         async with Client(server, elicitation_callback=answer) as client:
-            first = await client.call_tool("audit_repository", {"repository_root": str(root)})
+            first = await client.call_tool(
+                "audit_repository",
+                {"repository_root": str(root), "format": "json"},
+            )
             assert not first.is_error
             second = await client.call_tool(
                 "audit_repository",
-                {"repository_root": str(root), "format": "json"},
+                {"repository_root": str(root)},
             )
             assert not second.is_error
             return first.structured_content, second.structured_content
@@ -318,8 +321,9 @@ def test_one_native_elicitation_applies_answers_to_that_same_audit(
     assert len(calls) == 1, "first-run setup must be one structured question set"
     assert first["analyzers_run"] is True
     assert first["report"]["analyzer_coverage"] is not None
-    assert first["format"] == "chat"
-    assert second["format"] == "json", "the per-call format must beat the persisted default"
+    assert first["format"] == "json", "the per-call format must beat the persisted default"
+    assert second["format"] == "chat"
+    assert "report_markdown" in second
     assert "setup_needed" not in second
     assert repo_first_run(root) is False
     assert user_config_path().is_file()
@@ -361,12 +365,14 @@ def test_declined_or_unsupported_elicitation_uses_defaults_and_returns_setup_nee
         server = create_server(roots=(tmp_path.resolve(),))
         async with Client(server, elicitation_callback=decline) as client:
             declined = await client.call_tool(
-                "audit_repository", {"repository_root": str(declined_root)},
+                "audit_repository",
+                {"repository_root": str(declined_root), "format": "json"},
             )
             assert not declined.is_error
         async with Client(server) as client:
             unsupported = await client.call_tool(
-                "audit_repository", {"repository_root": str(unsupported_root)},
+                "audit_repository",
+                {"repository_root": str(unsupported_root), "format": "json"},
             )
             assert not unsupported.is_error
         return declined.structured_content, unsupported.structured_content
@@ -398,7 +404,7 @@ def _forbids(text: str, noun: str) -> bool:
     return bool(re.search(rf"(?:never|does not|cannot)[^.\n]{{0,100}}\b{noun}\b", text, re.I))
 
 
-def test_server_discloses_the_local_four_artifact_write_boundary(
+def test_server_discloses_the_local_five_artifact_write_boundary(
     tmp_path: Path,
 ) -> None:
     info = server_info((tmp_path.resolve(),))
@@ -407,9 +413,10 @@ def test_server_discloses_the_local_four_artifact_write_boundary(
 
     assert "local" in lowered and "stdio" in lowered
     assert info.get("read_only") is not True
-    assert len(info["writes"]) == 4
+    assert len(info["writes"]) == 5
     assert CONFIG_FILENAME in disclosure
     assert "user" in lowered and "config" in lowered and "state" in lowered
     assert DEFAULT_HISTORY_PATH in disclosure
+    assert ".maintainability/baseline.json" in disclosure
     assert _forbids(disclosure, "source")
     assert _forbids(disclosure, "report")

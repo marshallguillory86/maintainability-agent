@@ -44,6 +44,7 @@ from .renderers import render_markdown
 from .report import build_report
 
 ALLOWED_ROOTS_ENV = "MAINTAINABILITY_MCP_ALLOWED_ROOTS"
+DEFAULT_BASELINE_PATH = ".maintainability/baseline.json"
 _REVSPEC = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/@^~:+-]*(?:\.{2,3}[A-Za-z0-9._/@^~:+-]+)?")
 
 class PathNotAllowed(ValueError):
@@ -105,6 +106,9 @@ def audit_repository(
     run_analyzers: bool | None = None,
     format: str | None = None,
     record_history: bool | None = None,
+    baseline_path: str | None = None,
+    write_baseline: bool = False,
+    include_prompt: bool = True,
     *,
     roots: tuple[Path, ...] | None = None,
 ) -> dict[str, Any]:
@@ -147,8 +151,12 @@ def audit_repository(
     history_path = root / ((config.get("paths") or {}).get("history") or DEFAULT_HISTORY_PATH)
     if record_history is None:
         record_history = history_path.exists()
+    # Advice omitted from the payload is never remembered as delivered
+    # (D6 coherence with D8's include_prompt).
     record_scan_and_attach(report, config, history_path, root,
-                           record=bool(record_history), want_targets=True)
+                           record=bool(record_history),
+                           want_targets=bool(include_prompt))
+    baseline = _baseline_workflow(report, root, baseline_path, write_baseline)
     if format is None:
         # Per-call beats persisted beats the documented default: chat —
         # which is Markdown on the wire — not markdown-the-file (M2).
@@ -163,11 +171,40 @@ def audit_repository(
         # ran six built-in detectors for one that ran ten tools. Two
         # reports with different coverage are not comparable (P8).
         "analyzers_run": run_analyzers,
-        "report": report,
-        "report_markdown": render_markdown(report),
-        "remediation_prompt": render_ai_prompt(report),
     }
+    if baseline is not None:
+        result["new_findings"] = baseline
+    if include_prompt:
+        result["remediation_prompt"] = render_ai_prompt(report)
     return _finish_result(result, format, root, config, report)
+
+
+def _baseline_workflow(report: dict[str, Any], root: Path,
+                       baseline_path: str | None,
+                       write: bool) -> list[str] | None:
+    """D7: write and/or consult a baseline inside the repository boundary.
+
+    The default location is a standing answer like the history file:
+    once a baseline exists there, every later call reports what is new
+    against it. ``None`` return means no baseline is in play, and the
+    result omits ``new_findings`` rather than publishing an empty claim.
+    Suppression never touches ``gate_passed`` — hard gates stay hard.
+    """
+    from .baseline import findings_not_in_baseline
+    from .baseline import write_baseline as write_baseline_file
+
+    target = _resolved(baseline_path or str(DEFAULT_BASELINE_PATH), relative_to=root)
+    if not (target == root or target.is_relative_to(root)):
+        raise PathNotAllowed(f"baseline_path {target} is outside repository_root {root}")
+    if write:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        write_baseline_file(str(target), report)
+    if not target.is_file():
+        return None
+    return sorted(
+        identity.fingerprint
+        for identity in findings_not_in_baseline(report, str(target), root)
+    )
 
 
 def record_scan_and_attach(report: dict[str, Any], config: dict[str, Any],
@@ -228,8 +265,15 @@ def _finish_result(result: dict[str, Any], format: str, root: Path,
     """
     if format not in ("chat", "markdown", "html", "json"):
         raise ValueError(f"format must be chat, markdown, html or json, not {format!r}")
+    # D8: the requested format governs the payload — one findings body
+    # per call (html also carries Markdown: chat shows Markdown
+    # whatever else was requested, ADR 011). The report dict travels
+    # only for json, where the caller does its own presentation.
+    if format == "json":
+        result["report"] = report
+    else:
+        result["report_markdown"] = render_markdown(report)
     if format == "html":
-        from ._scan_history import DEFAULT_HISTORY_PATH, read_history
         from .renderers import render_html
 
         history = root / (config.get("paths", {}).get("history") or DEFAULT_HISTORY_PATH)

@@ -63,14 +63,23 @@ def test_unanswered_setup_is_reelicited_until_answers_are_written(
         server = create_server(roots=(tmp_path.resolve(),))
         if first_attempt == "decline":
             async with Client(server, elicitation_callback=decline) as client:
-                first = await client.call_tool("audit_repository", {"repository_root": str(root)})
+                first = await client.call_tool(
+                    "audit_repository",
+                    {"repository_root": str(root), "format": "json"},
+                )
         else:
             async with Client(server) as client:
-                first = await client.call_tool("audit_repository", {"repository_root": str(root)})
+                first = await client.call_tool(
+                    "audit_repository",
+                    {"repository_root": str(root), "format": "json"},
+                )
         assert not first.is_error
 
         async with Client(server, elicitation_callback=accept) as client:
-            second = await client.call_tool("audit_repository", {"repository_root": str(root)})
+            second = await client.call_tool(
+                "audit_repository",
+                {"repository_root": str(root), "format": "json"},
+            )
         assert not second.is_error
         return first.structured_content, second.structured_content
 
@@ -102,8 +111,14 @@ def test_repeated_declines_keep_returning_the_same_setup_needed_block(
     async def exercise() -> tuple[dict, dict]:
         server = create_server(roots=(tmp_path.resolve(),))
         async with Client(server, elicitation_callback=decline) as client:
-            first = await client.call_tool("audit_repository", {"repository_root": str(root)})
-            second = await client.call_tool("audit_repository", {"repository_root": str(root)})
+            first = await client.call_tool(
+                "audit_repository",
+                {"repository_root": str(root), "format": "json"},
+            )
+            second = await client.call_tool(
+                "audit_repository",
+                {"repository_root": str(root), "format": "json"},
+            )
         assert not first.is_error and not second.is_error
         return first.structured_content, second.structured_content
 
@@ -114,5 +129,4 @@ def test_repeated_declines_keep_returning_the_same_setup_needed_block(
     _assert_setup_needed(second)
     assert first["setup_needed"] == second["setup_needed"]
     assert repo_first_run(root) is False, "every completed audit still marks seen"
-
 

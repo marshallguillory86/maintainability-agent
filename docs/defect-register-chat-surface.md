@@ -7,9 +7,9 @@ a defect against requirements that already exist — in
 [ADR 009](adr-009-scan-history.md), [product-intent.md](product-intent.md),
 or the operator's stated requirements — none is a feature proposal. The
 required behavior column cites the document that already requires it. D1,
-D2, D5, D6, D11 and D13 are retained as closed, tested history. D3 and
-D14 remain open with narrowed scope; the other entries stay open until a
-test proves the required behavior.
+D2, D5–D8, D11 and D13 are retained as closed, tested history. D3 and D14
+remain open with narrowed scope; the other entries stay open until a test
+proves the required behavior.
 
 ## Context
 
@@ -109,34 +109,46 @@ rename-aware `design_review_candidates` from its latest comparable segment.
 
 ### D6 — Closed: chat remediation targets are recorded
 
-The MCP path returns a remediation prompt on every audit. Whenever that
-audit writes a scan record, its `targeted` tuple now stores exactly the
-delivered prompt's `prompt_targets`, in the same identity space as the
-scan's findings. Chat history can therefore distinguish recurrence from
-the stronger "told, fixed, returned" signal in ADR 009.
+The MCP path returns a remediation prompt by default. Whenever that audit
+writes a scan record, its `targeted` tuple stores exactly the delivered
+prompt's `prompt_targets`, in the same identity space as the scan's findings;
+if the caller suppresses the prompt, it stores no targets. Chat history can
+therefore distinguish recurrence from the stronger "told, fixed, returned"
+signal in ADR 009.
 
-*Closing test:* `test_mcp_history_records_the_delivered_prompt_targets` in
+*Closing tests:* `test_mcp_history_records_the_delivered_prompt_targets`,
+`test_mcp_records_only_advice_delivered_after_current_scan_escalates` and
+`test_cli_records_only_advice_delivered_after_current_scan_escalates` in
 `tests/test_mcp_history.py`.
 
-### D7 — No baseline workflow over MCP
+### D7 — Closed: baseline adoption ships over MCP
 
-There is no MCP path to write or consult a baseline, so `--fail-on-new`
-adoption — the documented on-ramp for existing repositories — is
-unavailable on the primary surface.
+`audit_repository` now accepts a repository-scoped baseline path and can write
+the CLI's version-3 baseline format. The default standing location is
+`.maintainability/baseline.json`. When that file or an explicit baseline is
+present, `new_findings` carries the sorted fingerprints not matched by its
+structured identities; git-attested renames do not become new findings.
+`gate_passed` remains the hard-gate result and is not changed by baseline
+membership.
 
-*Required:* the chat path can create and use a baseline under the same
-identity rules (baseline v3, ADR 009) as the CLI.
+*Closing tests:* `test_mcp_baseline_round_trip_survives_git_mv_and_names_only_new_findings`
+and `test_mcp_baseline_defaults_inside_root_and_rejects_escape` in
+`tests/test_mcp_baseline_payload.py`.
 
-### D8 — Every MCP call returns three copies of the findings
+### D8 — Closed: requested format governs the MCP payload
 
-`audit_repository` always returns the full report JSON, the full
-Markdown rendering, and the remediation prompt together, regardless of
-the requested format. A chat host pays context for all three on every
-call.
+Every result keeps the run metadata, while `format` selects one report
+presentation: JSON returns the report dictionary; chat and Markdown return
+Markdown; HTML returns HTML plus the Markdown chat fallback required by ADR
+011. The bounded remediation prompt is included by default and can be omitted
+with `include_prompt=false`; omitted advice is recorded as no targets. The
+report resource reads stored history without appending and renders the same
+document as the CLI over that series.
 
-*Required:* the requested format governs the payload; the report is
-returned once, in the presentation the caller asked for, with the
-remediation prompt when requested.
+*Closing tests:* `test_requested_format_governs_the_mcp_payload`,
+`test_suppressing_prompt_records_no_targeted_advice` and
+`test_report_resource_matches_cli_over_stored_history_without_appending` in
+`tests/test_mcp_baseline_payload.py`.
 
 ### D9 — Missing-tool remedies never reach the chat user
 
@@ -247,7 +259,7 @@ documented as the automation path.
 
 ## Disposition
 
-D1, D2, D5, D6, D11 and D13 are closed. D3 and D14 remain open with the
-narrowed scope stated above. D4, D7–D10, D12 and D15–D17 remain open in
-this seventeen-entry register. Entries close individually, each behind a
-test that would fail if the defect returned.
+D1, D2, D5–D8, D11 and D13 are closed. D3 and D14 remain open with the
+narrowed scope stated above. D4, D9, D10, D12 and D15–D17 remain open in this
+seventeen-entry register. Entries close individually, each behind a test that
+would fail if the defect returned.

@@ -37,10 +37,15 @@ SERVER_INSTRUCTIONS = (
     "machine — not a hosted service. Use audit_repository to produce both the "
     "report and its bounded remediation prompt. First contact with an "
     "unconfigured repository elicits setup, and the audit records its scan "
-    "history, so it may write exactly four local artifacts: the repository's "
-    "maintainability-agent.json, the user-level config, the user state file, "
-    "and the repository's scan history (.maintainability/history.jsonl by "
-    "default). It never edits source, and it never writes a report into the "
+    "history and can adopt a baseline, so it may write exactly five local "
+    "artifacts: the repository's maintainability-agent.json, the user-level "
+    "config, the user state file, the repository's scan history "
+    "(.maintainability/history.jsonl by default), and a requested baseline "
+    "(.maintainability/baseline.json by default). Scan history rides the "
+    "record_history tri-state, where unset means an existing history file "
+    "appends and an interactive elicitation-capable client starts a series, "
+    "true forces the write, and false suppresses it. It never edits source, "
+    "and it never writes a report into the "
     "tree — report text is returned for the host to show or save. Treat "
     "missing or insufficient evidence as an audit limitation, not a code "
     "defect, and do not widen remediation beyond findings in the returned "
@@ -61,7 +66,8 @@ def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
         # never a report.
         "read_only": False,
         "writes": [CONFIG_FILENAME, "user config", "user state",
-                   f"scan history ({DEFAULT_HISTORY_PATH})"],
+                   f"scan history ({DEFAULT_HISTORY_PATH})",
+                   "baseline (.maintainability/baseline.json)"],
         "never_writes": ["source", "reports"],
         "allowed_roots": [str(root) for root in authorized_roots],
     }
@@ -77,13 +83,17 @@ def _report_markdown(repository_root: str, roots: tuple[Path, ...]) -> str:
     """Render the same report as the CLI would, through the same path boundary.
 
     No ``run_analyzers`` argument on purpose: ``build_report`` resolves
-    the tri-state from the config, so a configured repository's resource
-    render runs its pool — the last consumer that could receive a
-    configured repo's fallback without asking for it (D1).
+    the tri-state from the config (D1). History views attach read-only
+    — the resource reads the CLI's series and never appends a scan —
+    so both doors render one stored series byte-identically (audit
+    flag on dde539b).
     """
     root = authorize_repository(repository_root, roots)
     config = load_config(discovered_config(root))
-    return render_markdown(build_report(root, config))
+    report = build_report(root, config)
+    history_path = root / ((config.get("paths") or {}).get("history") or DEFAULT_HISTORY_PATH)
+    attach_history_views(report, history_path, root)
+    return render_markdown(report)
 
 
 def _setup_resolver_for(authorized_roots: tuple[Path, ...], context_type: Any) -> Any:
@@ -146,6 +156,9 @@ def _bind_audit_tool(server: Any, authorized_roots: tuple[Path, ...],
         run_analyzers: bool | None = None,
         format: str | None = None,
         record_history: bool | None = None,
+        baseline_path: str | None = None,
+        write_baseline: bool = False,
+        include_prompt: bool = True,
         setup: Any = None,
         ctx: Any = None,
     ) -> dict[str, Any]:
@@ -182,6 +195,9 @@ def _bind_audit_tool(server: Any, authorized_roots: tuple[Path, ...],
             run_analyzers,
             format,
             record_history,
+            baseline_path,
+            write_baseline,
+            include_prompt,
             roots=authorized_roots,
         )
 

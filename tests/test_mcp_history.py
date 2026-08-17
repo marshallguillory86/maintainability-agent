@@ -73,6 +73,7 @@ def _history_path(root: Path) -> Path:
 
 
 def _audit(root: Path, **kwargs: Any) -> dict[str, Any]:
+    kwargs.setdefault("format", "json")
     return audit_repository(
         str(root),
         roots=(root.parent.resolve(),),
@@ -466,14 +467,16 @@ def test_cli_and_mcp_reports_agree_over_the_same_history(tmp_path: Path) -> None
     )
 
 
-def test_server_discloses_the_four_artifact_write_boundary(tmp_path: Path) -> None:
-    """History joins setup state; source and report writes remain forbidden."""
+def test_server_discloses_the_five_artifact_write_boundary(tmp_path: Path) -> None:
+    """History and baseline join setup state; source/report writes stay forbidden."""
     info = server_info((tmp_path.resolve(),))
     writes = info["writes"]
     disclosure = f"{SERVER_INSTRUCTIONS}\n{json.dumps(info, sort_keys=True)}".lower()
 
-    assert len(writes) == 4
+    assert len(writes) == 5
     assert any("history" in str(item).lower() for item in writes)
+    assert any("baseline" in str(item).lower() for item in writes)
     assert DEFAULT_HISTORY_PATH in disclosure
+    assert ".maintainability/baseline.json" in disclosure
     assert "source" in " ".join(info["never_writes"]).lower()
     assert "report" in " ".join(info["never_writes"]).lower()

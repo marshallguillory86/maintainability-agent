@@ -1,4 +1,4 @@
-"""The local MCP boundary is path-scoped and limits writes to state and history."""
+"""The local MCP boundary limits writes to setup, history and baseline state."""
 
 from __future__ import annotations
 
@@ -39,12 +39,13 @@ def test_audit_returns_the_report_without_writing_source_or_reports(tmp_path: Pa
     root = _repo(tmp_path)
     before = {path.relative_to(root) for path in root.rglob("*")}
 
-    result = audit_repository(str(root), roots=(tmp_path.resolve(),))
+    result = audit_repository(
+        str(root), format="json", roots=(tmp_path.resolve(),),
+    )
 
     assert result["agent"] == "maintainability-agent"
     assert result["source_commit"]
     assert result["report"]["root"] == str(root.resolve())
-    assert result["report_markdown"].startswith("# Maintainability CI Report")
     assert "Keep unrelated refactors out of scope." in result["remediation_prompt"]
     assert {path.relative_to(root) for path in root.rglob("*")} == before
 
@@ -124,7 +125,10 @@ def test_a_client_sees_the_two_tools_and_can_call_one(tmp_path: Path) -> None:
                 assert tool.annotations.destructive_hint is False
                 assert tool.annotations.open_world_hint is False
 
-            result = await client.call_tool("audit_repository", {"repository_root": str(root)})
+            result = await client.call_tool(
+                "audit_repository",
+                {"repository_root": str(root), "format": "json"},
+            )
             assert not result.is_error
             assert result.structured_content["report"]["root"] == str(root.resolve())
 
@@ -151,10 +155,11 @@ def test_real_stdio_process_initializes_and_reports_its_boundary(tmp_path: Path)
             assert info["allowed_roots"] == [str(tmp_path.resolve())]
             assert info.get("read_only") is not True
             boundary = json.dumps(info).lower()
-            assert len(info["writes"]) == 4
+            assert len(info["writes"]) == 5
             assert "maintainability-agent.json" in boundary
             assert "user" in boundary and "config" in boundary and "state" in boundary
             assert ".maintainability/history.jsonl" in boundary
+            assert ".maintainability/baseline.json" in boundary
             assert "source" in boundary and "report" in boundary
 
     asyncio.run(exercise())
@@ -289,9 +294,7 @@ def test_the_report_resource_is_byte_identical_to_the_cli_rendering(tmp_path: Pa
     and the resource is the bug — so this compares them byte for byte
     rather than checking that both "look like" a report.
     """
-    from maintainability_audit.config import discovered_config, load_config
-    from maintainability_audit.renderers import render_markdown
-    from maintainability_audit.report import build_report
+    from maintainability_audit.cli import main
 
     root = _repo(tmp_path)
     server = _server(tmp_path)
@@ -300,14 +303,15 @@ def test_the_report_resource_is_byte_identical_to_the_cli_rendering(tmp_path: Pa
 
     uri = str(resources[0].uri).replace("{repository_root}", str(root)).replace(
         "{root}", str(root))
+    output = tmp_path / "cli-report.md"
+    assert main([
+        "--root", str(root),
+        "--no-analyzers",
+        "--format", "markdown",
+        "--output", str(output),
+    ]) == 0
     served = _read(server, uri)
-
-    # Same root, same config discovery, same run_analyzers default as the
-    # CLI takes when nobody asks for the pool.
-    expected = render_markdown(
-        build_report(root.resolve(), load_config(discovered_config(root.resolve())),
-                     run_analyzers=False)
-    )
+    expected = output.read_text(encoding="utf-8").removesuffix("\n")
 
     assert served == expected, (
         "the report resource is not the CLI rendering; ADR 008 requires the "

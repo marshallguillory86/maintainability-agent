@@ -186,20 +186,23 @@ def test_mcp_audit_runs_or_suppresses_the_pool_at_the_production_seam(
     disabled_root = _repo(tmp_path / "disabled", _pool_config(False))
     roots = (tmp_path.resolve(),)
 
-    enabled = audit_repository(str(enabled_root), roots=roots)
+    enabled = audit_repository(str(enabled_root), format="json", roots=roots)
     assert enabled["analyzers_run"] is True
     _assert_pool_ran(enabled["report"])
-    assert enabled["report_markdown"] == render_markdown(enabled["report"])
 
-    forced_off = audit_repository(str(enabled_root), run_analyzers=False, roots=roots)
+    forced_off = audit_repository(
+        str(enabled_root), run_analyzers=False, format="json", roots=roots,
+    )
     assert forced_off["analyzers_run"] is False
     _assert_pool_did_not_run(forced_off["report"])
 
-    disabled = audit_repository(str(disabled_root), roots=roots)
+    disabled = audit_repository(str(disabled_root), format="json", roots=roots)
     assert disabled["analyzers_run"] is False
     _assert_pool_did_not_run(disabled["report"])
 
-    forced_on = audit_repository(str(disabled_root), run_analyzers=True, roots=roots)
+    forced_on = audit_repository(
+        str(disabled_root), run_analyzers=True, format="json", roots=roots,
+    )
     assert forced_on["analyzers_run"] is True
     _assert_pool_ran(forced_on["report"])
 

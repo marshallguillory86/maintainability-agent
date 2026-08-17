@@ -11,7 +11,7 @@ The product already has one report dictionary and several writers: Markdown (`--
 
 1.0 needs three **user-facing** skins of the **same** data: what the human sees in IDE chat, a Markdown file, and a single packaged HTML file that an executive will actually open. The bounded work order remains the product ([product intent](product-intent.md)); these are presentations of it, not a dashboard product.
 
-MCP is a local stdio process and does not run `input()`. It may write exactly four local artifacts: the repository config, user config, user state and repository scan history at `.maintainability/history.jsonl`; it never writes source or a report. First-run setup writes the first three, while the audit's history rule may append the fourth. The host agent (Grok, Claude, …) is what can ask the user where to save returned report text.
+MCP is a local stdio process and does not run `input()`. It may write exactly five local artifacts: the repository config, user config, user state, repository scan history at `.maintainability/history.jsonl` and repository baseline at `.maintainability/baseline.json`; it never writes source or a report. First-run setup writes the first three, the audit's history rule may append the fourth, and an explicit baseline write controls the fifth. The host agent (Grok, Claude, …) is what can ask the user where to save returned report text.
 
 ## Options
 
@@ -60,5 +60,5 @@ A pretty HTML page that invents a second score, or that cannot be reproduced fro
 2. HTML contains no `http://` or `https://` resource load (no CDN, no live chart library).
 3. Non-TTY runs never call `input()` for format.
 4. A set `--format` / output path suppresses the TTY question.
-5. MCP never writes source or report files. Its write boundary is exactly repository configuration, user configuration, user state and repository scan history at `.maintainability/history.jsonl`.
+5. MCP never writes source or report files. Its write boundary is exactly repository configuration, user configuration, user state, repository scan history at `.maintainability/history.jsonl` and repository baseline at `.maintainability/baseline.json`.
 6. Charts and trend sentences are computed only from fields present on stored `ScanRecord`s (schema 2). A missing series is omitted or named empty, never interpolated.

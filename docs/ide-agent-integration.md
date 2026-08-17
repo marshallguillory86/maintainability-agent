@@ -1,17 +1,32 @@
 # IDE and Agent Integration
 
-This guide shows how to use Maintainability Audit CI with editors and AI coding agents.
+This guide shows how to use maintainability-agent with editors and AI coding
+agents. **Chat is the primary surface; the CLI is the automation and CI
+surface.**
 
-The core loop is:
+## Primary chat workflow
+
+The host checks repository and user configuration first. When both are absent,
+it uses MCP elicitation or its structured question UI for setup, root grants,
+history consent, economic context, and presentation. The report and bounded
+work order return to the conversation.
+
+If the user chooses a file presentation, the host asks for the location at save
+time. It must not write or save a report file without that chosen location.
+See [chat workflow help](help/README.md) for the first-run questions, analyzer
+pool, and report loop.
+
+The primary loop is:
 
 ```text
-1. Generate standards for the agent before code is written.
-2. Let the human/agent make a small patch.
-3. Run the audit locally or in CI.
-4. Use the generated remediation prompt if the patch drifts.
+1. Check the repository and user configuration.
+2. Ask any required structured choices with disclosed defaults.
+3. Run the audit and show its report in chat.
+4. Give the bounded work order to the coding agent.
+5. Re-audit after the bounded patch.
 ```
 
-## First-Class Commands
+## Automation / CI: CLI commands
 
 ### Run Audit
 

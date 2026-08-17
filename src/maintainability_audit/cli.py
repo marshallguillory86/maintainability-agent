@@ -13,15 +13,13 @@ from ._first_run import (
     maybe_prompt_economics,
     maybe_prompt_first_run,
 )
-from ._mcp_audit import attach_history_views
+from ._mcp_audit import record_scan_and_attach
 from ._scan_history import (
     DEFAULT_HISTORY_PATH,
-    append_scan,
     read_history,
-    record_of,
 )
 from ._user_config import mark_repo_seen
-from ._work_order import SELECTABLE, combined_delta, prompt_targets, select
+from ._work_order import SELECTABLE, combined_delta, select
 from .baseline import (
     finding_fingerprints,
     findings_not_in_baseline,
@@ -246,21 +244,12 @@ def main(argv: list[str] | None = None) -> int:
     # history exists, a successful scan appends whether or not the flag
     # was remembered. A first *interactive* run starts the series; a
     # first CI run without the flag still writes nothing nobody asked for.
-    if args.record_history or history_path.exists() or _stdin_is_a_tty():
-        append_scan(history_path, record_of(
-            report, config, VERSION, CALIBRATION_C,
-            tuple(sorted(finding_fingerprints(report))),
-            # What the prompt actually asked somebody to fix, when one was
-            # generated. This is what turns recurrence from "a rule fired
-            # again" into "the thing we told you to fix came back" — the
-            # loop nothing else in the design closes, and the one a model
-            # cannot hold across sessions.
-            targeted=prompt_targets(report) if args.prompt_output else ()))
-    # Read without being asked. Reading has no side effect, and a trend
-    # nobody is shown is a trend nobody benefits from. Shared with the
-    # MCP tool (D5) so two entry points can never disagree about what
-    # one history file says.
-    attach_history_views(report, history_path, Path(report["root"]))
+    record = args.record_history or history_path.exists() or _stdin_is_a_tty()
+    # One shared, honestly-ordered helper (audit H1): views close
+    # recurrence with this scan included, the prompt withholds what
+    # escalated, and only delivered advice is recorded as targeted.
+    record_scan_and_attach(report, config, history_path, Path(report["root"]),
+                           record=bool(record), want_targets=bool(args.prompt_output))
     rendered = _render_presentation(args, report, history_path)
     write_outputs(args, report, rendered)
     mark_repo_seen(root)  # completed audit: not a first run now, whatever the gate says (D13)

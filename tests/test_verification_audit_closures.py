@@ -35,6 +35,18 @@ def _repo_at(root: Path, *, config: dict[str, Any] | None = None) -> Path:
     return root
 
 
+def _two_repos_behind_a_link(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
+    """An allow-listed root plus two repos reachable through one symlink."""
+    allowed = tmp_path / "allowed"
+    allowed.mkdir()
+    config = {"version": 1, "analyzers": {"run": False}}
+    first = _repo_at(tmp_path / "first" / "repo", config=config)
+    second = _repo_at(tmp_path / "second" / "repo", config=config)
+    link = tmp_path / "moving-link"
+    link.symlink_to(first.parent)
+    return allowed, first, second, link
+
+
 def test_a_symlink_retargeted_mid_elicitation_invalidates_the_consent(
     tmp_path: Path,
 ) -> None:
@@ -52,13 +64,7 @@ def test_a_symlink_retargeted_mid_elicitation_invalidates_the_consent(
 
     from maintainability_audit.mcp_server import create_server
 
-    allowed = tmp_path / "allowed"
-    allowed.mkdir()
-    config = {"version": 1, "analyzers": {"run": False}}
-    first = _repo_at(tmp_path / "first" / "repo", config=config)
-    second = _repo_at(tmp_path / "second" / "repo", config=config)
-    link = tmp_path / "moving-link"
-    link.symlink_to(first.parent)
+    allowed, first, second, link = _two_repos_behind_a_link(tmp_path)
     requested = link / "repo"
 
     messages: list[str] = []
@@ -102,21 +108,22 @@ def test_a_symlink_retargeted_mid_elicitation_invalidates_the_consent(
     assert audit.is_error, "the unconsented directory was silently served"
 
 
-def test_the_full_replace_writer_keeps_exactly_two_merging_callers() -> None:
-    """Lint the class (audit H1 residual): a third caller reopens the wipe."""
+def _functions_calling(callee_name: str) -> set[str]:
+    """Every `file:function` in src whose body calls `callee_name`."""
     callers: set[str] = set()
     for path in sorted(SRC.rglob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-        for scope in ast.walk(tree):
-            if not isinstance(scope, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                continue
-            for node in ast.walk(scope):
-                if not isinstance(node, ast.Call):
-                    continue
-                callee = node.func
-                name = getattr(callee, "id", getattr(callee, "attr", None))
-                if name == "write_user_config":
+        for scope in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if isinstance(scope, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                names = (getattr(node.func, "id", getattr(node.func, "attr", None))
+                         for node in ast.walk(scope) if isinstance(node, ast.Call))
+                if callee_name in names:
                     callers.add(f"{path.name}:{scope.name}")
+    return callers
+
+
+def test_the_full_replace_writer_keeps_exactly_two_merging_callers() -> None:
+    """Lint the class (audit H1 residual): a third caller reopens the wipe."""
+    callers = _functions_calling("write_user_config")
     assert callers == {
         "_user_config.py:write_user_answers",
         "_user_config.py:persist_root_grant",

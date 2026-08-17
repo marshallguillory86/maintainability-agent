@@ -1,197 +1,52 @@
 """Local, path-scoped MCP boundary for the deterministic audit.
 
-This module reuses the CLI's configuration, scan, report, renderer and
-remediation-prompt functions. First-run setup may write only repository and
-user configuration plus user state. It never writes source or a report,
-accepts a command string, or invokes a shell.
+This module is transport assembly: tool bindings, resources, prompts and
+the stdio entry point. The audit tool's own logic — authorization,
+tri-state resolution, history recording — lives in ``_mcp_audit`` and is
+re-exported here so every consumer keeps one import path. First-run
+setup and the loop record may write only repository and user
+configuration, user state, and the repository's scan history. It never
+writes source or a report, accepts a command string, or invokes a shell.
 """
 
 from __future__ import annotations
 
 import argparse
-import os
-import re
 from pathlib import Path
 from typing import Any
 
-from ._mcp_setup import (
-    apply_answers,
-    setup_pending,
-    setup_questions,
-    setup_schema,
-)
-from ._user_config import mark_repo_seen
-from .config import (
-    CONFIG_FILENAME,
-    VERSION,
-    analyzers_run_default,
-    discovered_config,
-    load_config,
-)
-from .git_tools import changed_paths, run_git
-from .prompts import render_ai_prompt
+# Redundant aliases on purpose: every name the split moved to
+# `_mcp_audit` stays importable from here, so no consumer or test needs
+# to know the file boundary exists.
+from ._mcp_audit import ALLOWED_ROOTS_ENV as ALLOWED_ROOTS_ENV
+from ._mcp_audit import PathNotAllowed as PathNotAllowed
+from ._mcp_audit import allowed_roots as allowed_roots
+from ._mcp_audit import attach_history_views as attach_history_views
+from ._mcp_audit import audit_repository as audit_repository
+from ._mcp_audit import authorize_config as authorize_config
+from ._mcp_audit import authorize_repository as authorize_repository
+from ._mcp_audit import validate_revspec as validate_revspec
+from ._mcp_setup import apply_answers, setup_pending, setup_schema
+from ._scan_history import DEFAULT_HISTORY_PATH
+from .config import CONFIG_FILENAME, VERSION, discovered_config, load_config
 from .renderers import render_markdown
 from .report import build_report
-
-ALLOWED_ROOTS_ENV = "MAINTAINABILITY_MCP_ALLOWED_ROOTS"
-_REVSPEC = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/@^~:+-]*(?:\.{2,3}[A-Za-z0-9._/@^~:+-]+)?")
 
 SERVER_INSTRUCTIONS = (
     "Deterministic maintainability audits from a local stdio process on this "
     "machine — not a hosted service. Use audit_repository to produce both the "
     "report and its bounded remediation prompt. First contact with an "
-    "unconfigured repository elicits setup and may write exactly three local "
-    "artifacts: the repository's maintainability-agent.json, the user-level "
-    "config, and the user state file. It never edits source, and it never "
-    "writes a report into the tree — report text is returned for the host to "
-    "show or save. Treat missing or insufficient evidence as an audit "
-    "limitation, not a code defect, and do not widen remediation beyond "
-    "findings in the returned prompt. Repository and config paths must remain "
-    "inside the configured allowed roots."
+    "unconfigured repository elicits setup, and the audit records its scan "
+    "history, so it may write exactly four local artifacts: the repository's "
+    "maintainability-agent.json, the user-level config, the user state file, "
+    "and the repository's scan history (.maintainability/history.jsonl by "
+    "default). It never edits source, and it never writes a report into the "
+    "tree — report text is returned for the host to show or save. Treat "
+    "missing or insufficient evidence as an audit limitation, not a code "
+    "defect, and do not widen remediation beyond findings in the returned "
+    "prompt. Repository and config paths must remain inside the configured "
+    "allowed roots."
 )
-
-
-class PathNotAllowed(ValueError):
-    """A requested repository or config escaped the configured read boundary."""
-
-
-def _resolved(path: str | Path, *, relative_to: Path | None = None) -> Path:
-    candidate = Path(path).expanduser()
-    if not candidate.is_absolute() and relative_to is not None:
-        candidate = relative_to / candidate
-    return candidate.resolve()
-
-
-def allowed_roots(explicit: tuple[str, ...] = ()) -> tuple[Path, ...]:
-    """Resolve the server allow-list once, defaulting to its launch directory."""
-    configured = explicit or tuple(filter(None, os.environ.get(ALLOWED_ROOTS_ENV, "").split(os.pathsep)))
-    roots = configured or (str(Path.cwd()),)
-    return tuple(_resolved(root) for root in roots)
-
-
-def _inside(path: Path, roots: tuple[Path, ...]) -> bool:
-    return any(path == root or path.is_relative_to(root) for root in roots)
-
-
-def authorize_repository(repository_root: str, roots: tuple[Path, ...]) -> Path:
-    root = _resolved(repository_root)
-    if not root.is_dir():
-        raise ValueError(f"repository_root is not a directory: {root}")
-    if not _inside(root, roots):
-        allowed = ", ".join(str(item) for item in roots)
-        raise PathNotAllowed(f"repository_root {root} is outside allowed roots: {allowed}")
-    return root
-
-
-def authorize_config(config_path: str | None, root: Path) -> str | None:
-    if config_path is None:
-        return None
-    config = _resolved(config_path, relative_to=root)
-    if not config.is_file():
-        raise ValueError(f"config_path is not a file: {config}")
-    if not (config == root or config.is_relative_to(root)):
-        raise PathNotAllowed(f"config_path {config} is outside repository_root {root}")
-    return str(config)
-
-
-def validate_revspec(changed_only: str | None) -> str | None:
-    """Admit one inert git revision expression, never command-line options."""
-    if changed_only is None:
-        return None
-    if len(changed_only) > 200 or not _REVSPEC.fullmatch(changed_only):
-        raise ValueError("changed_only must be one git revision or range without whitespace or options")
-    return changed_only
-
-
-def audit_repository(
-    repository_root: str,
-    config_path: str | None = None,
-    changed_only: str | None = None,
-    run_analyzers: bool | None = None,
-    format: str | None = None,
-    *,
-    roots: tuple[Path, ...] | None = None,
-) -> dict[str, Any]:
-    """Run the production audit and return its report plus bounded work order.
-
-    ``run_analyzers`` is tri-state (D1). ``None`` — the default — lets the
-    repository's config decide, and a loaded config file defaults the pool
-    on: the pool is the primary evidence source (ADR 006), and a caller
-    should not need to know a flag to receive the product. Explicit
-    ``True``/``False`` overrides for one call, in either direction.
-    ``format`` follows the same rule: ``None`` takes the persisted default
-    presentation from first-run setup (chat when nothing chose otherwise),
-    and a per-call value always wins.
-
-    A model reading this report is the reader the pool's findings were
-    collected for — it can see what the scoring engine structurally
-    cannot, which is why the default here follows the config rather than
-    silently serving the six built-in detectors while the tools sit unused.
-    """
-    authorized_roots = roots if roots is not None else allowed_roots()
-    root = authorize_repository(repository_root, authorized_roots)
-    config = load_config(authorize_config(config_path, root) or discovered_config(root))
-    revspec = validate_revspec(changed_only)
-    only_paths = changed_paths(root, revspec) if revspec else None
-    if run_analyzers is None:
-        run_analyzers = analyzers_run_default(config)
-    report = build_report(
-        root, config,
-        only_paths=only_paths,
-        changed_revspec=revspec,
-        run_analyzers=run_analyzers,
-    )
-    status = report.get("git_status_short", "")
-    if format is None:
-        # Per-call beats persisted beats the documented default: chat —
-        # which is Markdown on the wire — not markdown-the-file (M2).
-        format = (config.get("presentation") or {}).get("format") or "chat"
-    result = {
-        "agent": "maintainability-agent",
-        "agent_version": VERSION,
-        "source_commit": run_git(["rev-parse", "HEAD"], root) or None,
-        "worktree_dirty": bool(status),
-        "gate_passed": not report["hard_gate_failures"],
-        # Stated at the top level so a caller cannot mistake an audit that
-        # ran six built-in detectors for one that ran ten tools. Two
-        # reports with different coverage are not comparable (P8).
-        "analyzers_run": run_analyzers,
-        "report": report,
-        "report_markdown": render_markdown(report),
-        "remediation_prompt": render_ai_prompt(report),
-    }
-    return _finish_result(result, format, root, config, report)
-
-
-def _finish_result(result: dict[str, Any], format: str, root: Path,
-                   config: dict[str, Any], report: dict[str, Any]) -> dict[str, Any]:
-    """Presentation, the degradation payload, and the first-contact record.
-
-    8.5: the host asked the user which presentation and passes the answer
-    here. HTML comes back as *text* for the host to save or show; files
-    are the CLI's job (ADR 011 §4). Markdown is always present, because
-    chat shows Markdown whatever else was requested — "chat" is accepted
-    because the prompt itself offers it, and on the wire chat *is*
-    Markdown (ADR 011 §2).
-    """
-    if format not in ("chat", "markdown", "html", "json"):
-        raise ValueError(f"format must be chat, markdown, html or json, not {format!r}")
-    if format == "html":
-        from ._scan_history import DEFAULT_HISTORY_PATH, read_history
-        from .renderers import render_html
-
-        history = root / (config.get("paths", {}).get("history") or DEFAULT_HISTORY_PATH)
-        result["report_html"] = render_html(report, read_history(history))
-    result["format"] = format
-    if setup_pending(root):
-        # The host could not (or chose not to) elicit, and nothing is
-        # configured: hand the same questions over as data so the host's
-        # own question UI can ask and call again (D3's degradation rule).
-        result["setup_needed"] = {"questions": setup_questions(load_config(None))}
-    # First contact is now recorded whatever the gate said: "has this
-    # tool ever run here" is about the run, not the verdict (D13).
-    mark_repo_seen(root)
-    return result
 
 
 def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
@@ -201,10 +56,12 @@ def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
         "agent_version": VERSION,
         "transport": "stdio",
         "local": True,
-        # Not blanket read-only since D2: first-run setup writes exactly
-        # these three local artifacts, never source and never a report.
+        # Not blanket read-only since D2/D5: setup and the loop record
+        # write exactly these four local artifacts, never source and
+        # never a report.
         "read_only": False,
-        "writes": [CONFIG_FILENAME, "user config", "user state"],
+        "writes": [CONFIG_FILENAME, "user config", "user state",
+                   f"scan history ({DEFAULT_HISTORY_PATH})"],
         "never_writes": ["source", "reports"],
         "allowed_roots": [str(root) for root in authorized_roots],
     }
@@ -288,6 +145,7 @@ def _bind_audit_tool(server: Any, authorized_roots: tuple[Path, ...],
         changed_only: str | None = None,
         run_analyzers: bool | None = None,
         format: str | None = None,
+        record_history: bool | None = None,
         setup: Any = None,
         ctx: Any = None,
     ) -> dict[str, Any]:
@@ -302,8 +160,14 @@ def _bind_audit_tool(server: Any, authorized_roots: tuple[Path, ...],
         call. ``format`` is the presentation the user chose — chat or
         markdown (the same Markdown on the wire), html (returned as
         text; never written to the tree) or json; unset takes the
-        persisted default from setup.
+        persisted default from setup. Leave ``record_history`` unset and
+        an existing series appends; an interactive (elicitation-capable)
+        client also starts one — the chat analog of the CLI's TTY rule.
         """
+        if record_history is None:
+            capabilities = getattr(ctx, "client_capabilities", None)
+            if capabilities is not None and capabilities.elicitation is not None:
+                record_history = True
         del ctx  # the resolver already used it; kept so hosts see progress hooks
         answers = getattr(setup, "data", None)
         if hasattr(answers, "model_dump"):
@@ -317,6 +181,7 @@ def _bind_audit_tool(server: Any, authorized_roots: tuple[Path, ...],
             changed_only,
             run_analyzers,
             format,
+            record_history,
             roots=authorized_roots,
         )
 

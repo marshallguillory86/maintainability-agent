@@ -13,15 +13,13 @@ from ._first_run import (
     maybe_prompt_economics,
     maybe_prompt_first_run,
 )
-from ._recurrence import escalations
+from ._mcp_audit import attach_history_views
 from ._scan_history import (
     DEFAULT_HISTORY_PATH,
     append_scan,
     read_history,
     record_of,
-    segments,
 )
-from ._trends import trend_report
 from ._user_config import mark_repo_seen
 from ._work_order import SELECTABLE, combined_delta, prompt_targets, select
 from .baseline import (
@@ -259,19 +257,10 @@ def main(argv: list[str] | None = None) -> int:
             # cannot hold across sessions.
             targeted=prompt_targets(report) if args.prompt_output else ()))
     # Read without being asked. Reading has no side effect, and a trend
-    # nobody is shown is a trend nobody benefits from. One report per
-    # segment, never one across them: the gate ran first, so nothing here
-    # can be computed over a change in the instrument.
-    series = segments(read_history(history_path))
-    report["scan_history"] = [trend_report(s) for s in series]
-    # Findings the history shows do not stay fixed. Computed over the
-    # most recent comparable series only: an escalation drawn across a
-    # change in the instrument would blame the code for a tooling fix.
-    # `root` so returns are matched structurally with git's rename
-    # evidence, not by label equality (ADR 009 identity).
-    report["design_review_candidates"] = (
-        escalations(series[-1], Path(report["root"])) if series else []
-    )
+    # nobody is shown is a trend nobody benefits from. Shared with the
+    # MCP tool (D5) so two entry points can never disagree about what
+    # one history file says.
+    attach_history_views(report, history_path, Path(report["root"]))
     rendered = _render_presentation(args, report, history_path)
     write_outputs(args, report, rendered)
     mark_repo_seen(root)  # completed audit: not a first run now, whatever the gate says (D13)
@@ -286,7 +275,6 @@ def _render_presentation(args: argparse.Namespace, report: dict, history_path: P
     asks on every interactive invoke. Extracted so `main` stays inside
     this project's own function budget.
     """
-    from ._scan_history import read_history
 
     stated = args.format is not None or args.output or args.html_output
     if not stated and _stdin_is_a_tty():

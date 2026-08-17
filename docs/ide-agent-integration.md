@@ -132,9 +132,11 @@ Code extension. It exposes all three MCP primitives over stdio:
 
 - `audit_repository` runs the same production scan as the CLI and returns only
   the requested report presentation plus the bounded remediation prompt when
-  requested. Its tri-state `record_history` decision appends an existing
-  series, starts one for an interactive client, or follows an explicit true or
-  false; it can also write or consult a repository-scoped version-3 baseline.
+  requested. Its tri-state `record_history` decision follows the persisted
+  first-run consent, appends an existing series, or follows an explicit true
+  or false; it can also write or consult a repository-scoped version-3
+  baseline. A top-level `environment_work_order` tells the host which selected
+  tools could not run, how to install them and what concepts they restore.
 - `get_agent_info` reports the installed version and authorized roots.
 - Resources expose the applied standard, analyzer catalog and byte-identical
   Markdown report without introducing a second rendering path.
@@ -159,12 +161,13 @@ This is a local stdio process, not a hosted service. On the first audit of a
 repository with no repository or user configuration, it sends one structured
 setup form through MCP elicitation. The choices have visible defaults: run the
 validated analyzer pool (yes), moderate depth, permissive licensing, optional
-low/base/high loaded labor cost or skip, and chat presentation. The pool
-question explains that external analyzers are the primary evidence and the
-built-in detectors always run as the fallback; choosing no means built-ins
-only and a fallback-tier evidence label. A decline or a client without
-elicitation support receives the built-in-default audit plus `setup_needed`,
-which carries the same choices for the host's own question UI.
+scan-history recording (yes), low/base/high loaded labor cost or skip, and chat
+presentation. The pool question explains that external analyzers are the
+primary evidence and the built-in detectors always run as the fallback;
+choosing no means built-ins only and a fallback-tier evidence label. A decline
+or a client without elicitation support receives the built-in-default audit
+plus `setup_needed`, which carries the same choices for the host's own question
+UI.
 
 The local process may write exactly five artifacts: repository
 `maintainability-agent.json`, the XDG user `config.json`, the XDG user
@@ -226,7 +229,10 @@ Repeat `--allow-root` to authorize unrelated repository directories. If no
 argument is supplied, the server permits only its launch directory. The
 `MAINTAINABILITY_MCP_ALLOWED_ROOTS` environment variable is an alternative;
 separate multiple roots with the platform path separator (`:` on macOS/Linux,
-`;` on Windows).
+`;` on Windows). For audit-tool calls, an elicitation-capable host can instead
+offer a structured **this session** (default), **always**, or **no** grant.
+Session grants live only in the process; always grants persist only in the XDG
+user configuration. Report resources never ask for or persist a grant.
 
 Restart Codex, then inspect the connection with `/mcp` or `codex mcp list`.
 A typical call in any client is:
@@ -244,9 +250,10 @@ Security properties are part of the contract:
 - a config file must resolve inside the repository being audited;
 - `changed_only` accepts one inert git revision expression, never command-line
   options or whitespace;
-- the server accepts no command strings or output paths and writes only the
-  repository config, XDG user config, XDG user state and repository scan
-  history and baseline described above — never a report or source artifact;
+- the server accepts no command strings or report output paths. It writes only
+  the five disclosed artifacts: repository config, XDG user config, XDG user
+  state, repository scan history and repository baseline — never a report or
+  source artifact;
 - `get_agent_info` advertises MCP read-only; `audit_repository` advertises its
   bounded setup/state writes. Both remain non-destructive and closed-world.
 

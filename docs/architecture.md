@@ -233,7 +233,7 @@ Stated rather than hidden, because an architecture document that only describes 
 - ~~The band matrix does not drive the score~~ — **resolved (3.2).** Live scans store per-unit band pressures; `_pressures` uses them for declarations and file size so CCN 16 and 45 are not the same fact. Hard gates stay binary. Count-rate fallback remains only for summaries written before the wiring (`tests/test_band_pressures.py`). `CALIBRATION_C` was not re-derived: the existing calibration tests still hold.
 - **The proposed `_analyzers` package and `_concepts` registry were never created as named modules.** Their roles landed in `_tool_adapters`, `_metric_adapters`, `_verdict_adapters`, `_generic`, and `_corroborate`. This document names the files that exist.
 - **Declaration extraction is gated on `DECLARATION_SUFFIXES`** (Python, JS/TS/HTML, and Java). A suffix outside that set can be included for length, duplication and risk; it does not produce a declaration population. `--changed-only` and `--fail-on-new` no longer have the defects previously listed here: a thin diff withholds ([ADR 005](adr-005-insufficient-population.md); `test_scan_scope.py`), while baseline v3 and recurrence resolve structured identities through `_finding_match`. The visible label stays `function:{path}:{name}#{ordinal}`; scan-time `body_digest` resolves same-name reorders and git-attested renames resolve path moves.
-- ~~The presentation layer lacked the three [ADR 011](adr-011-three-report-presentations.md) skins~~ — **resolved (8.3–8.6).** Chat/CLI Markdown, a Markdown file and one self-contained HTML file render the same report dictionary. TTY asks every invoke; flags win; CI never asks. Chat first-run setup persists a presentation default; a per-call choice or the host's own ask wins. MCP returns report text and never writes a report file, while setup may write the repository config, user config and user state.
+- ~~The presentation layer lacked the three [ADR 011](adr-011-three-report-presentations.md) skins~~ — **resolved (8.3–8.6).** Chat/CLI Markdown, a Markdown file and one self-contained HTML file render the same report dictionary. TTY asks every invoke; flags win; CI never asks. Chat first-run setup persists a presentation default; a per-call choice or the host's own ask wins. MCP returns report text and never writes a report file. Its four-artifact write boundary is the repository config, user config, user state and repository scan history at `.maintainability/history.jsonl`.
 - ~~History records lacked the series required by the HTML charts~~ — **resolved (8.1–8.2).** New JSONL records use schema 3: the schema-2 chart fields remain, and structured identities sit beside labels. Schema-1/2 records still load as explicit gaps; an existing history file gains each later successful scan.
 - **The chat surface still lags the terminal surface.** The
   primary user surface is an AI chat host driving the MCP server
@@ -252,12 +252,18 @@ Stated rather than hidden, because an architecture document that only describes 
   asking until answers exist. D13 remains closed by
   `tests/test_user_config_tier.py`. D3 is narrowed to the slash prompt's
   free-text presentation ask, and D14 remains open only for that ask and
-  D10's roots grant. History and targeted-advice recording still do not
-  happen over MCP, and there is still no baseline path over MCP.
+  D10's roots grant. D5 and D6 are closed:
+  `test_existing_history_appends_on_a_plain_mcp_call` and
+  `test_mcp_report_exposes_history_and_design_review_candidates` prove the
+  MCP history loop, while
+  `test_mcp_records_only_advice_delivered_after_current_scan_escalates` and
+  `test_cli_records_only_advice_delivered_after_current_scan_escalates`
+  prove recorded targets equal the advice actually delivered. There is still
+  no baseline path over MCP.
   The itemized, evidence-cited list is the
   [chat-surface defect register](defect-register-chat-surface.md)
-  (D1–D17); D1, D2, D11 and D13 are closed, while D3 and D14 retain the
-  narrowed scope stated above.
+  (D1–D17); D1, D2, D5, D6, D11 and D13 are closed, while D3 and D14 retain
+  the narrowed scope stated above.
 - **Java has a zero-install fallback; we will not clone it.** `java_declaration_ranges` finds methods, constructors and types and bounds each at its own body. `.java` is in `DECLARATION_SUFFIXES` and the default include list. That is enough for `pip install` with no lizard. It is not the 1.0 close and there will be no `_go_declaration`. Go, C, C++, C# and Rust stay recognized and withheld until analyzers supply a declaration population ([ADR 006](adr-006-analyzer-evidence.md)). The last-resort regex still must not be aimed at those languages. Feeding lizard into `declarations_scanned` without the full concept set would move mixed-language scores in silence.
 
 ## Extension points
@@ -306,7 +312,7 @@ Every design point above traces to a record. Nothing here is a preference someon
 | Finding labels use path + declaration name + same-name ordinal, never a line number; matching also uses scan-time body digests and git-attested renames | [ADR 009](adr-009-scan-history.md) |
 | Trends describe past scans; forecasting stays forbidden | [ADR 009](adr-009-scan-history.md), [product intent](product-intent.md#what-it-must-never-claim) |
 
-MCP ships all three primitives: two tools expose the audit and describe its boundary, resources expose the rubric, analyzer catalog and byte-identical Markdown report, and the `maintainability-agent` prompt supplies the bounded slash command. `get_agent_info` is read-only; `audit_repository` may write exactly the repository config, user config and user state during first-run setup, never source or a report. Users can start it with `maintainability-agent mcp`; the `maintainability-agent-mcp` console script remains for existing IDE configurations. CI does not go through MCP — a protocol hop between a runner and an exit code costs determinism and buys nothing. There is no combined server with `secure-code-agent`, because independent releasability is worth more than cross-tool synthesis today.
+MCP ships all three primitives: two tools expose the audit and describe its boundary, resources expose the rubric, analyzer catalog and byte-identical Markdown report, and the `maintainability-agent` prompt supplies the bounded slash command. `get_agent_info` is read-only; `audit_repository` may write exactly four local artifacts: the repository config, user config, user state and repository scan history at `.maintainability/history.jsonl`, never source or a report. Users can start it with `maintainability-agent mcp`; the `maintainability-agent-mcp` console script remains for existing IDE configurations. CI does not go through MCP — a protocol hop between a runner and an exit code costs determinism and buys nothing. There is no combined server with `secure-code-agent`, because independent releasability is worth more than cross-tool synthesis today.
 
 The first two ADR 006 rows describe the landed *shape*. The point estimate uses analyzer measurements where the full concept set was measured; the constant was re-derived against that mix (3.6). `_identity` keeps the `function:{path}:{name}#{ordinal}` label while `_finding_match` owns structured comparison. Scans append through `_scan_history`. Practice and condition stay separate numbers.
 

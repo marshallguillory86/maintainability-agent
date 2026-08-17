@@ -57,10 +57,11 @@ asks where to save it when the user chooses a file presentation.
 
 *Closing tests:* `test_setup_triggers_only_when_both_configuration_tiers_are_absent`,
 `test_one_native_elicitation_applies_answers_to_that_same_audit`,
-`test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails`,
-`test_unanswered_setup_is_reelicited_until_answers_are_written`, and
+and `test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails` in
+`tests/test_first_run_elicitation.py`; plus
+`test_unanswered_setup_is_reelicited_until_answers_are_written` and
 `test_repeated_declines_keep_returning_the_same_setup_needed_block` in
-`tests/test_first_run_elicitation.py`.
+`tests/test_first_run_reelicitation.py`.
 
 ### D3 — Partially closed: setup is structured; the slash prompt is not
 

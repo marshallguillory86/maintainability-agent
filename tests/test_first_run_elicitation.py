@@ -18,6 +18,7 @@ from maintainability_audit._mcp_setup import (
     setup_pending,
     setup_questions,
 )
+from maintainability_audit._scan_history import DEFAULT_HISTORY_PATH, read_history
 from maintainability_audit._user_config import (
     load_user_config,
     mark_repo_seen,
@@ -330,7 +331,12 @@ def test_one_native_elicitation_applies_answers_to_that_same_audit(
         path.relative_to(root) for path in root.rglob("*")
         if ".git" not in path.relative_to(root).parts
     }
-    assert tree_after - tree_before == {Path(CONFIG_FILENAME)}
+    assert tree_after - tree_before == {
+        Path(CONFIG_FILENAME),
+        Path(DEFAULT_HISTORY_PATH).parent,
+        Path(DEFAULT_HISTORY_PATH),
+    }
+    assert len(read_history(root / DEFAULT_HISTORY_PATH)) == 2
 
 
 def _assert_setup_needed(result: dict) -> None:
@@ -481,7 +487,7 @@ def _forbids(text: str, noun: str) -> bool:
     return bool(re.search(rf"(?:never|does not|cannot)[^.\n]{{0,100}}\b{noun}\b", text, re.I))
 
 
-def test_server_discloses_the_local_three_artifact_write_boundary(
+def test_server_discloses_the_local_four_artifact_write_boundary(
     tmp_path: Path,
 ) -> None:
     info = server_info((tmp_path.resolve(),))
@@ -490,7 +496,9 @@ def test_server_discloses_the_local_three_artifact_write_boundary(
 
     assert "local" in lowered and "stdio" in lowered
     assert info.get("read_only") is not True
+    assert len(info["writes"]) == 4
     assert CONFIG_FILENAME in disclosure
     assert "user" in lowered and "config" in lowered and "state" in lowered
+    assert DEFAULT_HISTORY_PATH in disclosure
     assert _forbids(disclosure, "source")
     assert _forbids(disclosure, "report")

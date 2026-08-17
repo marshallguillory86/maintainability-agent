@@ -60,6 +60,22 @@ def load_user_config() -> dict[str, Any] | None:
     return _read_json_object(user_config_path())
 
 
+# Keys that record standing D10 grants rather than setup answers. A
+# user config holding only these must read as "never answered setup":
+# granting the audit access to one repository is not choosing the
+# product's configuration (presence must not be read as an answer).
+_GRANT_KEYS = frozenset({"allowed_roots"})
+
+
+def user_config_answers() -> dict[str, Any] | None:
+    """The user tier minus standing grants — the part that answers setup."""
+    config = load_user_config()
+    if config is None:
+        return None
+    answers = {key: value for key, value in config.items() if key not in _GRANT_KEYS}
+    return answers or None
+
+
 def _write_atomic(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     handle, staged = tempfile.mkstemp(dir=str(path.parent), prefix=".staged-")
@@ -88,6 +104,23 @@ def write_user_config(payload: dict[str, Any]) -> None:
     reads as corrupt-therefore-absent.
     """
     _write_atomic(user_config_path(), payload)
+
+
+def persist_root_grant(root: Path) -> None:
+    """Record an "always" root grant in the user tier (decision 5, D10).
+
+    The user-tier config is the one durable home the disclosure already
+    covers; the repository file never carries an allow-list, because a
+    repo must not be able to grant itself access. Idempotent: granting
+    the same root twice stores it once.
+    """
+    config = load_user_config() or {}
+    grants = config.get("allowed_roots")
+    entries = [str(entry) for entry in grants] if isinstance(grants, list) else []
+    if str(root) not in entries:
+        entries.append(str(root))
+    config["allowed_roots"] = entries
+    write_user_config(config)
 
 
 def mark_repo_seen(root: Path) -> None:

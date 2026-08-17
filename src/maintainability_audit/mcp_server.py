@@ -3,10 +3,11 @@
 This module is transport assembly: tool bindings, resources, prompts and
 the stdio entry point. The audit tool's own logic — authorization,
 tri-state resolution, history recording — lives in ``_mcp_audit`` and is
-re-exported here so every consumer keeps one import path. First-run
-setup and the loop record may write only repository and user
-configuration, user state, and the repository's scan history. It never
-writes source or a report, accepts a command string, or invokes a shell.
+re-exported here so every consumer keeps one import path. Setup, the
+loop record and baseline adoption may write only five local artifacts:
+repository and user configuration, user state, the repository's scan
+history, and the repository's baseline. It never writes source or a
+report, accepts a command string, or invokes a shell.
 """
 
 from __future__ import annotations
@@ -43,8 +44,11 @@ SERVER_INSTRUCTIONS = (
     "(.maintainability/history.jsonl by default), and a requested baseline "
     "(.maintainability/baseline.json by default). Scan history rides the "
     "record_history tri-state, where unset means an existing history file "
-    "appends and an interactive elicitation-capable client starts a series, "
-    "true forces the write, and false suppresses it. It never edits source, "
+    "appends and otherwise the persisted first-run consent decides, "
+    "true forces the write, and false suppresses it. When a result carries "
+    "environment_work_order, surface it to the user: each entry names a "
+    "selected analyzer that could not run, its install command, and the "
+    "concepts installing it restores. It never edits source, "
     "and it never writes a report into the "
     "tree — report text is returned for the host to show or save. Treat "
     "missing or insufficient evidence as an audit limitation, not a code "
@@ -61,9 +65,9 @@ def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
         "agent_version": VERSION,
         "transport": "stdio",
         "local": True,
-        # Not blanket read-only since D2/D5: setup and the loop record
-        # write exactly these four local artifacts, never source and
-        # never a report.
+        # Not blanket read-only since D2/D5: setup, the loop record and
+        # baseline adoption write exactly the five local artifacts
+        # listed below, never source and never a report.
         "read_only": False,
         "writes": [CONFIG_FILENAME, "user config", "user state",
                    f"scan history ({DEFAULT_HISTORY_PATH})",
@@ -96,7 +100,103 @@ def _report_markdown(repository_root: str, roots: tuple[Path, ...]) -> str:
     return render_markdown(report)
 
 
-def _setup_resolver_for(authorized_roots: tuple[Path, ...], context_type: Any) -> Any:
+# The two affirmative D10 grant scopes (decision 5). "no" needs no
+# constant: a refusal is the absence of a grant, not a kind of one.
+_GRANT_SESSION = "this session"
+_GRANT_ALWAYS = "always"
+
+
+class _RootLedger:
+    """The live allow-list: launch roots plus grants made through D10.
+
+    A session grant extends this process's list and nothing else; an
+    "always" grant additionally persists to the user-tier config, which
+    ``allowed_roots`` folds back in at the next server start. The repo
+    config never carries a grant — a repository must not be able to
+    authorize itself.
+    """
+
+    def __init__(self, roots: tuple[Path, ...]) -> None:
+        self._roots = list(roots)
+
+    def current(self) -> tuple[Path, ...]:
+        return tuple(self._roots)
+
+    def grant(self, root: Path, *, persist: bool) -> None:
+        from ._user_config import persist_root_grant
+
+        if root not in self._roots:
+            self._roots.append(root)
+        if persist:
+            persist_root_grant(root)
+
+
+def _grant_schema() -> Any:
+    """One structured question: the scope of the root grant (decision 5)."""
+    from typing import Literal
+
+    from pydantic import Field, create_model
+
+    return create_model(
+        "RootGrant",
+        root_access=(
+            Literal["this session", "always", "no"],
+            Field(
+                default=_GRANT_SESSION,
+                description=(
+                    "Grant the audit read access to this repository? "
+                    "'this session' lasts until the server restarts; "
+                    "'always' is remembered in your user configuration; "
+                    "'no' refuses."
+                ),
+            ),
+        ),
+    )
+
+
+def _grant_resolver_for(ledger: _RootLedger, context_type: Any) -> Any:
+    """The D10 ask as a resolver: one question instead of an error string.
+
+    Asks only when the requested root is real, outside the live
+    allow-list, and the client can elicit. Every other case returns
+    ``None`` and the tool body raises (or proceeds) exactly as before —
+    a missing capability costs the ask, never the boundary.
+    """
+    from mcp.server.mcpserver.resolve import Elicit
+
+    def roots_grant(repository_root: str, ctx: Any = None) -> Any:
+        try:
+            authorize_repository(repository_root, ledger.current())
+            return None  # inside the boundary: nothing to ask
+        except PathNotAllowed:
+            pass
+        except ValueError:
+            return None  # not a directory: the tool body raises the real error
+        capabilities = getattr(ctx, "client_capabilities", None)
+        if capabilities is None or capabilities.elicitation is None:
+            return None
+        return Elicit(
+            message=(
+                f"{repository_root} is outside this server's allowed "
+                "roots. Grant the audit read access to it?"
+            ),
+            schema=_grant_schema(),
+        )
+
+    roots_grant.__annotations__["ctx"] = context_type
+    return roots_grant
+
+
+def _granted_scope(grant: Any) -> str | None:
+    """The accepted grant answer, or None when nothing was asked or given."""
+    answer = getattr(grant, "data", None)
+    if not hasattr(answer, "model_dump"):
+        return None
+    values = list(answer.model_dump().values())
+    return str(values[0]) if values else None
+
+
+def _setup_resolver_for(ledger: _RootLedger, context_type: Any) -> Any:
     """The first-run ask as a resolver: the framework owns the transport.
 
     Returning `Elicit` lets the SDK batch the question set per the
@@ -110,7 +210,10 @@ def _setup_resolver_for(authorized_roots: tuple[Path, ...], context_type: Any) -
 
     def first_run_setup(repository_root: str, ctx: Any = None) -> Any:
         try:
-            root = authorize_repository(repository_root, authorized_roots)
+            # Resolved against the ledger before any grant this call may
+            # make: a repository entering through a D10 grant meets the
+            # setup questions on its next call, not in the same breath.
+            root = authorize_repository(repository_root, ledger.current())
         except (PathNotAllowed, ValueError):
             return None  # the tool body raises the real authorization error
         capabilities = getattr(ctx, "client_capabilities", None)
@@ -130,24 +233,25 @@ def _setup_resolver_for(authorized_roots: tuple[Path, ...], context_type: Any) -
     return first_run_setup
 
 
-def _bind_tools(server: Any, authorized_roots: tuple[Path, ...],
+def _bind_tools(server: Any, ledger: _RootLedger,
                 annotations: dict[str, Any], context_type: Any) -> None:
-    _bind_audit_tool(server, authorized_roots, annotations["audit"], context_type)
+    _bind_audit_tool(server, ledger, annotations["audit"], context_type)
 
     @server.tool(name="get_agent_info", annotations=annotations["info"], structured_output=True)
     def get_agent_info_tool() -> dict[str, Any]:
         """Return the installed agent version, transport and authorized repository roots."""
-        return server_info(authorized_roots)
+        return server_info(ledger.current())
 
 
-def _bind_audit_tool(server: Any, authorized_roots: tuple[Path, ...],
+def _bind_audit_tool(server: Any, ledger: _RootLedger,
                      annotation: Any, context_type: Any) -> None:
     from typing import Annotated
 
     from mcp.server.elicitation import ElicitationResult
     from mcp.server.mcpserver.resolve import Resolve
 
-    resolver = _setup_resolver_for(authorized_roots, context_type)
+    resolver = _setup_resolver_for(ledger, context_type)
+    grant_resolver = _grant_resolver_for(ledger, context_type)
 
     async def audit_repository_tool(
         repository_root: str,
@@ -160,33 +264,37 @@ def _bind_audit_tool(server: Any, authorized_roots: tuple[Path, ...],
         write_baseline: bool = False,
         include_prompt: bool = True,
         setup: Any = None,
+        grant: Any = None,
         ctx: Any = None,
     ) -> dict[str, Any]:
         """Audit one authorized repository and return findings plus a bounded remediation prompt.
 
         First contact with an unconfigured repository asks the setup
         questions through elicitation (or returns them as data when the
-        host cannot ask) and writes the answers locally. Leave
-        ``run_analyzers`` unset and the repository's config decides: a
-        configured repo runs its external analyzer pool — the primary
-        evidence source — by default. Pass true/false to override for one
-        call. ``format`` is the presentation the user chose — chat or
-        markdown (the same Markdown on the wire), html (returned as
-        text; never written to the tree) or json; unset takes the
-        persisted default from setup. Leave ``record_history`` unset and
-        an existing series appends; an interactive (elicitation-capable)
-        client also starts one — the chat analog of the CLI's TTY rule.
+        host cannot ask) and writes the answers locally. A repository
+        outside the allowed roots asks for a grant the same way —
+        session-only by default, "always" persisting to the user config
+        (D10). Leave ``run_analyzers`` unset and the repository's config
+        decides: a configured repo runs its external analyzer pool — the
+        primary evidence source — by default. Pass true/false to
+        override for one call. ``format`` is the presentation the user
+        chose — chat or markdown (the same Markdown on the wire), html
+        (returned as text; never written to the tree) or json; unset
+        takes the persisted default from setup. Leave ``record_history``
+        unset and an existing series appends; otherwise the persisted
+        first-run consent decides (decision 4) — capability never
+        records, only an answer does.
         """
-        if record_history is None:
-            capabilities = getattr(ctx, "client_capabilities", None)
-            if capabilities is not None and capabilities.elicitation is not None:
-                record_history = True
-        del ctx  # the resolver already used it; kept so hosts see progress hooks
+        del ctx  # the resolvers already used it; kept so hosts see progress hooks
+        scope = _granted_scope(grant)
+        if scope in (_GRANT_SESSION, _GRANT_ALWAYS):
+            ledger.grant(Path(repository_root).expanduser().resolve(),
+                         persist=scope == _GRANT_ALWAYS)
         answers = getattr(setup, "data", None)
         if hasattr(answers, "model_dump"):
             # The user accepted first-run setup: persist before the audit
             # below, so this very call runs under the chosen configuration.
-            root = authorize_repository(repository_root, authorized_roots)
+            root = authorize_repository(repository_root, ledger.current())
             apply_answers(root, answers.model_dump())
         return audit_repository(
             repository_root,
@@ -198,7 +306,7 @@ def _bind_audit_tool(server: Any, authorized_roots: tuple[Path, ...],
             baseline_path,
             write_baseline,
             include_prompt,
-            roots=authorized_roots,
+            roots=ledger.current(),
         )
 
     # Registered by hand rather than decorated: this module stringifies
@@ -209,24 +317,32 @@ def _bind_audit_tool(server: Any, authorized_roots: tuple[Path, ...],
     audit_repository_tool.__annotations__["setup"] = Annotated[
         ElicitationResult[Any], Resolve(resolver)
     ]
+    audit_repository_tool.__annotations__["grant"] = Annotated[
+        ElicitationResult[Any], Resolve(grant_resolver)
+    ]
     server.tool(name="audit_repository", annotations=annotation,
                 structured_output=True)(audit_repository_tool)
 
 
 def _bind_resources(
     server: Any,
-    authorized_roots: tuple[Path, ...],
+    ledger: _RootLedger,
     function_resource: Any,
     resource_security: Any,
 ) -> None:
     class AuthorizedRootSecurity(resource_security):
-        """Validate an absolute template argument against this server's allow-list."""
+        """Validate an absolute template argument against this server's allow-list.
+
+        Reads never ask: a resource outside the boundary raises, and only
+        the audit tool can offer the D10 grant question (a read has no
+        elicitation seam and must not gain one).
+        """
 
         def validate(self, params: dict[str, Any]) -> str | None:
             root = params.get("root")
             if not isinstance(root, str):
                 return "root"
-            authorize_repository(root, authorized_roots)
+            authorize_repository(root, ledger.current())
             return None
 
     @server.resource(
@@ -255,7 +371,7 @@ def _bind_resources(
         security=AuthorizedRootSecurity(),
     )
     def report_resource(root: str) -> str:
-        return _report_markdown(root, authorized_roots)
+        return _report_markdown(root, ledger.current())
 
     def report_template_descriptor() -> str:
         """Replace ``{root}`` with an authorized absolute repository path."""
@@ -275,12 +391,14 @@ def _bind_prompts(server: Any) -> None:
     def maintainability_agent_prompt() -> str:
         """Audit an authorized repository and perform only its bounded work order."""
         return (
-            "First ask the user which presentation they want: chat (the default — just show "
-            "the returned Markdown), a markdown file, or a single-file html report. Then call "
-            "audit_repository with that choice as the format argument; if they chose a file, "
-            "save the returned text for them — the tool itself never writes into the "
-            "repository. Obey the returned remediation_prompt as the bounded work order. Do "
-            "not widen beyond its listed findings, and do not invent or fabricate findings."
+            "First offer the presentation choice as a structured question through your "
+            "host's question UI or MCP elicitation — chat, a markdown file, or a "
+            "single-file html report — with chat pre-selected as the default; never a "
+            "free-text ask. Then call audit_repository with that choice as the format "
+            "argument; if they chose a file, save the returned text for them — the tool "
+            "itself never writes into the repository. Obey the returned "
+            "remediation_prompt as the bounded work order. Do not widen beyond its "
+            "listed findings, and do not invent or fabricate findings."
         )
 
 
@@ -297,7 +415,7 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
             'MCP support is not installed. Install with: pip install "maintainability-agent[mcp]"'
         ) from error
 
-    authorized_roots = roots if roots is not None else allowed_roots()
+    ledger = _RootLedger(roots if roots is not None else allowed_roots())
     server = MCPServer(
         "maintainability-agent",
         version=VERSION,
@@ -327,8 +445,8 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
             open_world_hint=False,
         ),
     }
-    _bind_tools(server, authorized_roots, annotations, Context)
-    _bind_resources(server, authorized_roots, FunctionResource, ResourceSecurity)
+    _bind_tools(server, ledger, annotations, Context)
+    _bind_resources(server, ledger, FunctionResource, ResourceSecurity)
     _bind_prompts(server)
     return server
 

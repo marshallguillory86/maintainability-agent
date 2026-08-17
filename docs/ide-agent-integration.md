@@ -130,8 +130,11 @@ Suggested VS Code workflow:
 The optional MCP server removes the file handoff for Codex and the Codex VS
 Code extension. It exposes all three MCP primitives over stdio:
 
-- `audit_repository` runs the same production scan as the CLI and returns the
-  structured report, rendered Markdown and bounded remediation prompt together.
+- `audit_repository` runs the same production scan as the CLI and returns only
+  the requested report presentation plus the bounded remediation prompt when
+  requested. Its tri-state `record_history` decision appends an existing
+  series, starts one for an interactive client, or follows an explicit true or
+  false; it can also write or consult a repository-scoped version-3 baseline.
 - `get_agent_info` reports the installed version and authorized roots.
 - Resources expose the applied standard, analyzer catalog and byte-identical
   Markdown report without introducing a second rendering path.
@@ -163,13 +166,14 @@ only and a fallback-tier evidence label. A decline or a client without
 elicitation support receives the built-in-default audit plus `setup_needed`,
 which carries the same choices for the host's own question UI.
 
-The local process may write exactly four artifacts: repository
+The local process may write exactly five artifacts: repository
 `maintainability-agent.json`, the XDG user `config.json`, the XDG user
 `state.json` that records the completed audit, and repository scan history at
-`.maintainability/history.jsonl`. Setup writes the first three; the audit's
-history rule may append the fourth. It never writes source, a report, or a
-baseline. The stored presentation is the default for later calls; an explicit
-per-call `format` still wins.
+`.maintainability/history.jsonl`, plus the repository baseline at
+`.maintainability/baseline.json`. Setup writes the first three; the audit's
+history rule may append the fourth, and `write_baseline` controls the fifth. It
+never writes source or a report. The stored presentation is the default for
+later calls; an explicit per-call `format` still wins.
 
 For Visual Studio, put this in `%USERPROFILE%\\.mcp.json` or
 `<SOLUTIONDIR>\\.mcp.json` (replace both absolute paths):
@@ -242,7 +246,7 @@ Security properties are part of the contract:
   options or whitespace;
 - the server accepts no command strings or output paths and writes only the
   repository config, XDG user config, XDG user state and repository scan
-  history described above — never a report, baseline or source artifact;
+  history and baseline described above — never a report or source artifact;
 - `get_agent_info` advertises MCP read-only; `audit_repository` advertises its
   bounded setup/state writes. Both remain non-destructive and closed-world.
 

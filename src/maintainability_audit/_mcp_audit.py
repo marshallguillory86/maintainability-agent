@@ -29,7 +29,7 @@ from ._scan_history import (
     segments,
 )
 from ._trends import trend_report
-from ._user_config import mark_repo_seen
+from ._user_config import load_user_config, mark_repo_seen
 from ._work_order import prompt_targets
 from .baseline import finding_fingerprints
 from .config import (
@@ -59,10 +59,21 @@ def _resolved(path: str | Path, *, relative_to: Path | None = None) -> Path:
 
 
 def allowed_roots(explicit: tuple[str, ...] = ()) -> tuple[Path, ...]:
-    """Resolve the server allow-list once, defaulting to its launch directory."""
+    """Resolve the server allow-list once, defaulting to its launch directory.
+
+    "Always" grants the user made through the D10 elicitation live in
+    the user-tier config and join whatever the launch configured — a
+    standing grant must survive a restart, which launch flags alone
+    cannot promise.
+    """
     configured = explicit or tuple(filter(None, os.environ.get(ALLOWED_ROOTS_ENV, "").split(os.pathsep)))
     roots = configured or (str(Path.cwd()),)
-    return tuple(_resolved(root) for root in roots)
+    return tuple(_resolved(root) for root in (*roots, *_persisted_root_grants()))
+
+
+def _persisted_root_grants() -> tuple[str, ...]:
+    grants = (load_user_config() or {}).get("allowed_roots")
+    return tuple(str(entry) for entry in grants) if isinstance(grants, list) else ()
 
 
 def _inside(path: Path, roots: tuple[Path, ...]) -> bool:
@@ -75,7 +86,12 @@ def authorize_repository(repository_root: str, roots: tuple[Path, ...]) -> Path:
         raise ValueError(f"repository_root is not a directory: {root}")
     if not _inside(root, roots):
         allowed = ", ".join(str(item) for item in roots)
-        raise PathNotAllowed(f"repository_root {root} is outside allowed roots: {allowed}")
+        raise PathNotAllowed(
+            f"repository_root {root} is outside allowed roots: {allowed}. "
+            f"Grant standing access by relaunching the server with "
+            f"--allow-root {root} or by listing the path in "
+            f"${ALLOWED_ROOTS_ENV}."
+        )
     return root
 
 
@@ -123,9 +139,10 @@ def audit_repository(
     presentation from first-run setup (chat when nothing chose otherwise),
     and a per-call value always wins. ``record_history`` is the loop's
     tri-state (D5): ``None`` appends when a history already exists — the
-    file's existence is the standing answer, same as the CLI — and the
-    tool binding upgrades ``None`` to ``True`` for elicitation-capable
-    clients, the chat analog of the CLI's TTY rule. A recorded scan
+    file's existence is the standing answer, same as the CLI — and
+    otherwise follows the persisted first-run consent
+    (``history.record``, decision 4); capability never records, only an
+    answer does. A recorded scan
     always carries the delivered prompt's targets (D6): every MCP result
     hands over the remediation prompt, so the advice is remembered.
 
@@ -149,18 +166,25 @@ def audit_repository(
     )
     status = report.get("git_status_short", "")
     history_path = root / ((config.get("paths") or {}).get("history") or DEFAULT_HISTORY_PATH)
-    if record_history is None:
-        record_history = history_path.exists()
     # Advice omitted from the payload is never remembered as delivered
     # (D6 coherence with D8's include_prompt).
     record_scan_and_attach(report, config, history_path, root,
-                           record=bool(record_history),
+                           record=_record_resolved(record_history, history_path, config),
                            want_targets=bool(include_prompt))
     baseline = _baseline_workflow(report, root, baseline_path, write_baseline)
     if format is None:
         # Per-call beats persisted beats the documented default: chat —
         # which is Markdown on the wire — not markdown-the-file (M2).
         format = (config.get("presentation") or {}).get("format") or "chat"
+    result = _top_level_result(report, root, status, run_analyzers,
+                               baseline, include_prompt)
+    return _finish_result(result, format, root, config, report)
+
+
+def _top_level_result(report: dict[str, Any], root: Path, status: str,
+                      run_analyzers: bool, baseline: list[str] | None,
+                      include_prompt: bool) -> dict[str, Any]:
+    """The keys every format carries, before presentation shaping."""
     result = {
         "agent": "maintainability-agent",
         "agent_version": VERSION,
@@ -174,9 +198,29 @@ def audit_repository(
     }
     if baseline is not None:
         result["new_findings"] = baseline
+    # D9: a selected tool that could not run is actionable evidence the
+    # host must be able to surface on every format — the report dict
+    # travels only for json, so the remedy cannot live only inside it.
+    if report.get("environment_work_order"):
+        result["environment_work_order"] = report["environment_work_order"]
     if include_prompt:
         result["remediation_prompt"] = render_ai_prompt(report)
-    return _finish_result(result, format, root, config, report)
+    return result
+
+
+def _record_resolved(record_history: bool | None, history_path: Path,
+                     config: dict[str, Any]) -> bool:
+    """The D5 tri-state, resolved: explicit wins, then the standing answers.
+
+    ``None`` records when a series already exists — an existing file
+    appends regardless of any later change of heart in config — or when
+    the persisted first-run consent (``history.record``, decision 4)
+    said yes. Capability never records; only an answer does.
+    """
+    if record_history is not None:
+        return bool(record_history)
+    consent = (config.get("history") or {}).get("record")
+    return history_path.exists() or consent is True
 
 
 def _baseline_workflow(report: dict[str, Any], root: Path,
@@ -257,11 +301,11 @@ def _finish_result(result: dict[str, Any], format: str, root: Path,
     """Presentation, the degradation payload, and the first-contact record.
 
     8.5: the host asked the user which presentation and passes the answer
-    here. HTML comes back as *text* for the host to save or show; files
-    are the CLI's job (ADR 011 §4). Markdown is always present, because
-    chat shows Markdown whatever else was requested — "chat" is accepted
-    because the prompt itself offers it, and on the wire chat *is*
-    Markdown (ADR 011 §2).
+    here. One findings body per call (D8): json carries the report dict
+    and no rendering; chat and markdown carry the rendered Markdown (on
+    the wire the two are the same text, ADR 011 §2); html adds the HTML
+    text beside that Markdown, returned for the host to save or show —
+    files are the CLI's job (ADR 011 §4).
     """
     if format not in ("chat", "markdown", "html", "json"):
         raise ValueError(f"format must be chat, markdown, html or json, not {format!r}")

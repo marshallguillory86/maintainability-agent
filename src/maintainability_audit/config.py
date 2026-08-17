@@ -213,10 +213,12 @@ def load_config(path: str | None) -> dict[str, Any]:
     product), set before the merges so an explicit ``"run": false`` at
     the winning tier still wins.
     """
-    from ._user_config import load_user_config
+    from ._user_config import user_config_answers
 
     config = json.loads(json.dumps(DEFAULT_CONFIG))
-    user_tier = load_user_config()
+    # Grant-only user configs read as absent: a standing D10 root grant
+    # is not a setup answer and must not flip the pool default on.
+    user_tier = user_config_answers()
     if user_tier is None and not path:
         return config
     config["analyzers"]["run"] = True

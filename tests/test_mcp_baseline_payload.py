@@ -272,5 +272,5 @@ def test_server_discloses_five_artifacts_and_the_history_tristate(tmp_path: Path
     for surface in (SERVER_INSTRUCTIONS, readme):
         sentence = _sentence_with(surface, "record_history").lower()
         assert "existing" in sentence and "history" in sentence
-        assert "interactive" in sentence or "elicitation" in sentence
+        assert "consent" in sentence or "persisted" in sentence
         assert "true" in sentence and "false" in sentence

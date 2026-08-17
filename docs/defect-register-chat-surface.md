@@ -6,10 +6,9 @@ a defect against requirements that already exist — in
 [ADR 006](adr-006-analyzer-evidence.md), [ADR 004](adr-004-economic-context.md),
 [ADR 009](adr-009-scan-history.md), [product-intent.md](product-intent.md),
 or the operator's stated requirements — none is a feature proposal. The
-required behavior column cites the document that already requires it. D1,
-D2, D5–D8, D11 and D13 are retained as closed, tested history. D3 and D14
-remain open with narrowed scope; the other entries stay open until a test
-proves the required behavior.
+required behavior column cites the document that already requires it. D1–D3,
+D5–D11, D13 and D14 are retained as closed, tested history. The other entries
+stay open until a test proves the required behavior.
 
 ## Context
 
@@ -44,9 +43,9 @@ pool cannot supply a complete scored dimension (ADR 006).
 ### D2 — Closed: first-run setup ships on the chat path
 
 An unconfigured repository audited over MCP now receives one structured
-setup set covering analyzer depth and license policy, pool execution,
-economic context and report format. Accepted answers are written to the
-repository and user configuration tiers and apply to that same audit.
+setup set covering analyzer depth and license policy, pool execution, scan
+history consent, economic context and report format. Accepted answers are
+written to the repository and user configuration tiers and apply to that same audit.
 Declined or unsupported elicitation returns the same questions in
 `setup_needed`; while both configuration tiers remain absent, later calls
 ask again. Only written answers end setup elicitation.
@@ -63,21 +62,21 @@ and `test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails` in
 `test_repeated_declines_keep_returning_the_same_setup_needed_block` in
 `tests/test_first_run_reelicitation.py`.
 
-### D3 — Partially closed: setup is structured; the slash prompt is not
+### D3 — Closed: setup and the slash prompt use structured choices
 
-First-run chat setup now uses one structured MCP elicitation with disclosed
+First-run chat setup uses one structured MCP elicitation with disclosed
 options and defaults, including **chat** as the presentation default. A
 decline or host without elicitation support receives those same structured
 questions in `setup_needed` and the audit proceeds on documented defaults.
+The `maintainability-agent` slash prompt now tells the host to use its
+structured elicitation or question UI for presentation, with chat
+pre-selected, instead of prescribing a free-text ask.
 
-*Remaining:* the `maintainability-agent` MCP slash prompt registered by
-`mcp_server._bind_prompts` still tells the host in free text to ask which
-presentation the user wants. Replacing that free-text ask is the only open
-D3 scope.
-
-*Shipped setup tests:* `test_setup_questions_are_structured_choices_with_disclosed_defaults`
+*Closing tests:* `test_setup_questions_are_structured_choices_with_disclosed_defaults`
 and `test_declined_or_unsupported_elicitation_uses_defaults_and_returns_setup_needed`
-in `tests/test_first_run_elicitation.py`.
+in `tests/test_first_run_elicitation.py`, plus
+`test_slash_prompt_uses_structured_presentation_choice_with_chat_default` in
+`tests/test_consent_and_grant.py`.
 
 ### D4 — Documentation presents the CLI as the primary surface
 
@@ -92,20 +91,27 @@ accordingly.
 
 ### D5 — Closed: scan history accrues over MCP
 
-`audit_repository` now follows the CLI's history rule through a tri-state
-`record_history` decision. An existing history appends on every successful
-audit; an elicitation-capable client starts a first series; a headless first
-call writes nothing. Explicit true or false wins in either direction. The
-returned report reads the resulting series into `scan_history` and computes
-rename-aware `design_review_candidates` from its latest comparable segment.
+`audit_repository` follows the CLI's history rule through a tri-state
+`record_history` decision. First-run setup asks whether to record scan history
+and persists the yes-default answer to both configuration tiers. With the
+parameter unset, that answer can start a series; an existing history remains a
+standing answer and appends on every successful audit. Capability alone starts
+nothing, an unconfigured headless first call writes nothing, and explicit true
+or false wins in either direction. The returned report reads the resulting
+series into `scan_history` and computes rename-aware
+`design_review_candidates` from its latest comparable segment.
 
 *Closing tests:* `test_existing_history_appends_on_a_plain_mcp_call`,
-`test_elicitation_capable_first_call_starts_the_mcp_history`,
+`test_elicitation_capability_alone_does_not_start_mcp_history`,
 `test_headless_first_call_does_not_create_mcp_history`,
 `test_record_history_tristate_overrides_both_directions`,
 `test_mcp_report_exposes_history_and_design_review_candidates`, and
 `test_cli_and_mcp_reports_agree_over_the_same_history` in
-`tests/test_mcp_history.py`.
+`tests/test_mcp_history.py`; consent is closed by
+`test_setup_asks_for_history_consent_and_persists_it_to_both_tiers`,
+`test_history_consent_drives_the_accepting_call`, and
+`test_persisted_history_consent_precedes_the_standing_file_rule` in
+`tests/test_consent_and_grant.py`.
 
 ### D6 — Closed: chat remediation targets are recorded
 
@@ -150,27 +156,34 @@ document as the CLI over that series.
 `test_report_resource_matches_cli_over_stored_history_without_appending` in
 `tests/test_mcp_baseline_payload.py`.
 
-### D9 — Missing-tool remedies never reach the chat user
+### D9 — Closed: missing-tool remedies reach the chat user
 
-The environment work order (install commands for analyzers that were
-selected but not installed, ADR 006 §2c) populates only when the pool
-runs. D1 no longer prevents that for configured repositories, but
-nothing in the MCP result directs the host to surface the work order.
+When selected analyzers cannot run, every MCP format now carries a top-level
+`environment_work_order` beside its one D8 findings body. Each item names the
+tool, its install command and the concepts installation would restore, and the
+server instructions tell the host to surface that order. A chat or HTML caller
+does not need the JSON-only report dictionary to discover missing evidence.
 
-*Required:* when selected tools are missing, the chat user is shown the
-tool names and the install commands the environment work order already
-generates, and is told what coverage they restore.
+*Closing test:* `test_missing_analyzers_surface_a_top_level_environment_work_order`
+in `tests/test_consent_and_grant.py`.
 
-### D10 — Unconfigured access control errors instead of asking
+### D10 — Closed: out-of-roots access has a structured grant
 
-The MCP allow-list defaults to the server's launch directory. In an IDE
-the server may be launched anywhere, so the first audit of a real
-repository can fail with a path-authorization error the user has no way
-to anticipate or grant interactively.
+The MCP allow-list still defaults to the server's launch directory. When an
+audit tool request falls outside it and the client can elicit, one structured
+choice offers **this session** (pre-selected), **always**, or **no**. A session
+grant extends only the running process. An always grant writes an
+`allowed_roots` entry to the user configuration tier and is merged at server
+startup; repository configuration never carries that authority. Refusal or a
+client without elicitation receives `PathNotAllowed` with both `--allow-root`
+and `MAINTAINABILITY_MCP_ALLOWED_ROOTS` remedies. Report resources remain
+ask-free and read-only.
 
-*Required:* an out-of-roots request explains the boundary and how to
-grant the root; where elicitation is available, it offers the grant as
-a structured question rather than failing with an error string.
+*Closing tests:* `test_session_root_grant_is_default_and_lives_only_for_that_server`,
+`test_always_root_grant_persists_only_to_the_user_tier_and_loads_at_startup`,
+`test_denied_or_unsupported_root_grant_explains_both_static_remedies`, and
+`test_report_resource_never_elicits_or_persists_a_root_grant` in
+`tests/test_consent_and_grant.py`.
 
 ### D11 — Closed: economic context is part of chat setup
 
@@ -205,16 +218,16 @@ absent rather than crashing an audit.
 
 *Closing suite:* `tests/test_user_config_tier.py`.
 
-### D14 — Open, narrowed: first-run integration ships
+### D14 — Closed: the chat integration applies setup and root grants
 
 The chat integration is built: one native MCP elicitation applies analyzer,
-depth, license, economics and presentation answers to that same audit and
-persists them for later calls. This is driven end to end by
+depth, license, history-consent, economics and presentation answers to that
+same audit and persists them for later calls. Out-of-roots tool requests now
+ride the structured grant path, and the slash prompt delegates presentation
+to the host's structured question mechanism. This is driven end to end by
 `test_one_native_elicitation_applies_answers_to_that_same_audit` in
-`tests/test_first_run_elicitation.py`.
-
-*Remaining:* D10's authorized-root grant ask and D3's free-text slash-prompt
-presentation ask. D2 and D11 no longer contribute open D14 scope.
+`tests/test_first_run_elicitation.py` and the grant, consent and slash-prompt
+tests in `tests/test_consent_and_grant.py`.
 
 ### D15 — Analyzer selection has no goal-directed composition
 
@@ -259,7 +272,6 @@ documented as the automation path.
 
 ## Disposition
 
-D1, D2, D5–D8, D11 and D13 are closed. D3 and D14 remain open with the
-narrowed scope stated above. D4, D9, D10, D12 and D15–D17 remain open in this
-seventeen-entry register. Entries close individually, each behind a test that
-would fail if the defect returned.
+D1–D3, D5–D11, D13 and D14 are closed. D4, D12 and D15–D17 remain open in
+this seventeen-entry register. Entries close individually, each behind a test
+that would fail if the defect returned.

@@ -23,8 +23,8 @@ from typing import Any
 
 from ._catalog import LICENSE_POLICIES
 from ._user_config import (
-    load_user_config,
-    write_user_config,
+    user_config_answers,
+    write_user_answers,
 )
 from .config import CONFIG_FILENAME, discovered_config, load_config
 
@@ -73,6 +73,18 @@ def setup_questions(config: dict[str, Any]) -> list[dict[str, Any]]:
             "prompt": "Default report presentation for this user.",
             "options": ["chat", "markdown", "html"],
             "default": "chat",
+        },
+        {
+            # Decision 4: recording is a disclosed choice the person
+            # makes, never something inferred from client capability.
+            "name": "record_scan_history",
+            "prompt": (
+                "Record scan history (.maintainability/history.jsonl) so "
+                "later audits can track recurrence and escalate repeat "
+                "findings?"
+            ),
+            "options": ["yes", "no"],
+            "default": "yes",
         },
     ]
 
@@ -153,6 +165,11 @@ def apply_answers(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
         "presentation": {
             "format": str(answers.get("default_format") or "chat"),
         },
+        # The persisted consent that resolves record_history=None ahead
+        # of the file-existence rule (decision 4).
+        "history": {
+            "record": _accepted(answers.get("record_scan_history", "yes")),
+        },
     }
     economics = _economics_block(answers)
     if economics is not None:
@@ -161,7 +178,7 @@ def apply_answers(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
     config_path = Path(root) / CONFIG_FILENAME
     config_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n",
                            encoding="utf-8")
-    write_user_config(payload)
+    write_user_answers(payload)
     return load_config(str(config_path))
 
 
@@ -175,7 +192,7 @@ def setup_pending(root: Path) -> bool:
     """
     return (
         discovered_config(Path(root)) is None
-        and load_user_config() is None
+        and user_config_answers() is None
     )
 
 

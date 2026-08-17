@@ -58,5 +58,8 @@ def environment_work_order(coverage: list[Any]) -> list[dict[str, str]]:
             "reason": entry.detail or f"outcome: {entry.outcome}",
             "install": _INSTALL.get(entry.slug, f"pip install {entry.slug}"),
             "verify": _VERIFY.get(entry.slug, f"{entry.slug} --version"),
+            # What installing the tool restores, so a host can explain
+            # the trade instead of relaying a bare command (D9).
+            "concepts": ", ".join(entry.concepts),
         })
     return items

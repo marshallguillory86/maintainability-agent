@@ -101,7 +101,6 @@ VERIFIED_TIERS = {
     # are present. Not "multi-language only" -- a zero-config Python tool is
     # baseline for a Python repository.
     "lizard": "baseline",       # multi-language CCN/NLOC/params/tokens
-    "cloc": "baseline",         # ~200-language populations and comment ratio
     "multimetric": "baseline",  # multi-language MI, Halstead, 25 metrics
     "jscpd": "baseline",        # multi-language clone detection
     "radon": "baseline",        # Python MI, CC, Halstead
@@ -116,8 +115,6 @@ VERIFIED_TIERS = {
     "flake8": "moderate",
     "eslint": "moderate",
     "cohesion": "moderate",
-    # heavy: builds history, or needs an ecosystem runtime
-    "wily": "heavy",
 }
 
 

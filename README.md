@@ -1,6 +1,11 @@
 # Maintainability Agent
 
-A deterministic CI gate + bounded remediation prompt generator for repos that use AI coding agents (Claude, Codex, Cursor, Copilot, Windsurf, …) — **ships an invokable skill for Codex, Claude Code, and GitHub Copilot Chat** so `/maintainability-agent` is one keystroke away in any of them.
+A chat-primary deterministic maintainability audit and bounded work-order
+generator for repositories that use AI coding agents (Claude, Codex, Cursor,
+Copilot, Windsurf, …). **Chat is the primary surface; the CLI is the
+automation and CI surface.** The shipped invokable skill makes
+`/maintainability-agent` one keystroke away in Codex, Claude Code, and GitHub
+Copilot Chat.
 
 ```bash
 pip install maintainability-agent          # CLI + library
@@ -50,6 +55,25 @@ The remediation prompt is the differentiator. Every other tool in this space sto
 
 See [docs/philosophy.md](docs/philosophy.md) for the longer version, and [docs/product-intent.md](docs/product-intent.md) for what this product promises and what it must never claim — that document is authoritative, and this README defers to it wherever the two differ.
 
+## Primary Surface: Chat / MCP
+
+Use the local MCP process from an IDE assistant or chat host. On first contact,
+the host checks configuration and, when both tiers are absent, presents the
+structured setup choices for analyzer policy, history consent, economics, and
+presentation. The audit returns the report and its bounded remediation prompt
+to the conversation.
+
+```bash
+python3 -m pip install "maintainability-agent[mcp]"
+maintainability-agent mcp --allow-root /absolute/path/to/repository
+```
+
+Ask the host to call `audit_repository` for the workspace and follow only the
+returned remediation prompt. If a file presentation is chosen, the host asks
+for a save location; no report file is written without that choice. See
+[chat workflow help](docs/help/README.md) and
+[IDE and agent integration](docs/ide-agent-integration.md).
+
 ## Self-Audit
 
 This repo eats its own dogfood — the tool runs against this codebase in CI, and a report is checked in at [docs/self-audit.md](docs/self-audit.md). The checked-in copy is **stamped with the exact source commit it was generated against** — a provenance record, not a promise that it reflects the current HEAD. It deliberately makes no claim about distance: a self-report cannot contain its own commit, and no merge strategy preserves a fixed gap. Check the stamp against the commit you care about:
@@ -88,7 +112,9 @@ python3 -m maintainability_audit --root . --config maintainability-agent.json
 
 For an editable dev install, see [CONTRIBUTING.md](CONTRIBUTING.md#local-verification).
 
-## Quick Start
+## Automation / CI: CLI
+
+Use the CLI for scripts, repeatable local automation, and CI gates.
 
 Copy the example config to your repo root as `maintainability-agent.json`:
 
@@ -218,6 +244,7 @@ Start with [the documentation index](docs/README.md), which states each document
 - [Analyzer adapters](docs/adapters.md)
 - [External quality tools](docs/external-quality-tools.md)
 - [IDE and agent integration](docs/ide-agent-integration.md)
+- [Chat workflow help](docs/help/README.md)
 - [PR and baseline workflows](docs/pr-and-baseline-workflows.md)
 - [Roadmap](docs/roadmap.md)
 - [Changelog](CHANGELOG.md)
@@ -234,26 +261,6 @@ This repo includes `action.yml`, so it can be used as a composite action:
 ```
 
 Or copy `.github/workflows/maintainability.yml` into the target repo and adapt it.
-
-## IDE and Agent Integration
-
-See [docs/ide-agent-integration.md](docs/ide-agent-integration.md) for VS Code tasks and integration notes for Copilot, Cursor, Codex, Claude Code, Windsurf, generic agents, local CI, and GitHub Actions.
-
-The optional local MCP server exposes the same deterministic audit and bounded
-remediation prompt directly to Visual Studio, VS Code and Codex. It is a local
-stdio process, not a hosted service. It may write exactly five local artifacts:
-the repository config, XDG user config, XDG user state and repository scan
-history at `.maintainability/history.jsonl`, plus the repository baseline at
-`.maintainability/baseline.json`. It never writes source or a report, and it
-rejects repository or config paths outside its explicit allow-list. See
-[Local MCP server](docs/ide-agent-integration.md#local-mcp-server-visual-studio-vs-code-and-codex).
-
-`record_history=None` follows the persisted first-run history consent and
-always appends an existing history, while explicit `true` or `false` wins. An
-out-of-roots tool call can use the host's structured question UI for a
-session-only or user-tier grant; the report resource never asks or persists a
-grant. Missing selected analyzers are returned in the top-level
-`environment_work_order` for the host to surface.
 
 ## Invokable Skill / Slash Command
 

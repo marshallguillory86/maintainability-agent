@@ -468,9 +468,17 @@ def prompt_targets(report: dict[str, Any]) -> tuple[str, ...]:
     with the original in two ways at once: every declaration came out
     `#0`, and no risk target survived the corroboration check below.
     """
+    # The same escalation filter the rendered prompt applies (audit
+    # H1): a target the prompt deliberately withheld as a design-review
+    # candidate was never advice, and recording it would falsify the
+    # told-fixed-returned signal this exists to feed.
+    escalated = {
+        item["fingerprint"]
+        for item in report.get("design_review_candidates") or []
+    }
     known = set(finding_fingerprints(report))
     targets = set()
-    for item in prompt_items(report.get("work_order") or []):
+    for item in prompt_items(report.get("work_order") or [], escalated=escalated):
         fingerprint = item.get("fingerprint")
         if fingerprint is None:
             continue

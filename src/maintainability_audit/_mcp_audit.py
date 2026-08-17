@@ -144,8 +144,11 @@ def audit_repository(
         run_analyzers=run_analyzers,
     )
     status = report.get("git_status_short", "")
-    history_path = _record_scan(report, config, root, record_history)
-    attach_history_views(report, history_path, root)
+    history_path = root / ((config.get("paths") or {}).get("history") or DEFAULT_HISTORY_PATH)
+    if record_history is None:
+        record_history = history_path.exists()
+    record_scan_and_attach(report, config, history_path, root,
+                           record=bool(record_history), want_targets=True)
     if format is None:
         # Per-call beats persisted beats the documented default: chat —
         # which is Markdown on the wire — not markdown-the-file (M2).
@@ -167,27 +170,33 @@ def audit_repository(
     return _finish_result(result, format, root, config, report)
 
 
-def _record_scan(report: dict[str, Any], config: dict[str, Any], root: Path,
-                 record_history: bool | None) -> Path:
-    """Append this scan when the loop asked for it; return the series path.
+def record_scan_and_attach(report: dict[str, Any], config: dict[str, Any],
+                           history_path: Path, root: Path, *,
+                           record: bool, want_targets: bool) -> None:
+    """The loop's honest ordering, shared by both entry points (audit H1).
 
-    ``None`` means the file's existence decides — the CLI's standing
-    rule (D5). A recorded scan always carries the delivered prompt's
-    targets (D6): every MCP result hands the prompt over.
+    The current scan closes recurrence *before* advice is derived: the
+    in-memory record joins the stored series for the views, so a second
+    return escalates on this very report; the prompt then withholds the
+    candidate; and only what the prompt actually asks is recorded as
+    targeted. Append-only holds — the record is appended once, complete.
+    ``want_targets`` is False on the CLI path when no prompt artifact
+    was requested: advice never delivered is never remembered as given.
     """
-    history_path = root / ((config.get("paths") or {}).get("history") or DEFAULT_HISTORY_PATH)
-    if record_history is None:
-        record_history = history_path.exists()
-    if record_history:
-        append_scan(history_path, record_of(
-            report, config, VERSION, CALIBRATION_C,
-            tuple(sorted(finding_fingerprints(report))),
-            targeted=prompt_targets(report)))
-    return history_path
+    from dataclasses import replace
+
+    pending = record_of(
+        report, config, VERSION, CALIBRATION_C,
+        tuple(sorted(finding_fingerprints(report))))
+    attach_history_views(report, history_path, root,
+                         pending=pending if record else None)
+    targeted = prompt_targets(report) if want_targets else ()
+    if record:
+        append_scan(history_path, replace(pending, targeted=targeted))
 
 
 def attach_history_views(report: dict[str, Any], history_path: Path,
-                         root: Path) -> None:
+                         root: Path, pending: Any = None) -> None:
     """The durable series, read back into the report — one reader, two doors.
 
     The CLI and the MCP tool both call this, so the two entry points can
@@ -196,7 +205,10 @@ def attach_history_views(report: dict[str, Any], history_path: Path,
     nothing here is computed over a change in the instrument. `root`
     carries git's rename evidence into the escalation matching (ADR 009).
     """
-    series = segments(read_history(history_path))
+    records = read_history(history_path)
+    if pending is not None:
+        records = [*records, pending]
+    series = segments(records)
     report["scan_history"] = [trend_report(segment) for segment in series]
     report["design_review_candidates"] = (
         escalations(series[-1], Path(root)) if series else []

@@ -241,10 +241,11 @@ See [docs/ide-agent-integration.md](docs/ide-agent-integration.md) for VS Code t
 
 The optional local MCP server exposes the same deterministic audit and bounded
 remediation prompt directly to Visual Studio, VS Code and Codex. It is a local
-stdio process, not a hosted service. First-run setup may write exactly the
-repository config, user config and user state; it never writes source or a
-report, and it rejects repository or config paths outside its explicit
-allow-list. See [Local MCP server](docs/ide-agent-integration.md#local-mcp-server-visual-studio-vs-code-and-codex).
+stdio process, not a hosted service. It may write exactly four local artifacts:
+the repository config, XDG user config, XDG user state and repository scan
+history at `.maintainability/history.jsonl`. It never writes source or a report,
+and it rejects repository or config paths outside its explicit allow-list. See
+[Local MCP server](docs/ide-agent-integration.md#local-mcp-server-visual-studio-vs-code-and-codex).
 
 ## Invokable Skill / Slash Command
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 from pathlib import Path
@@ -12,6 +13,7 @@ from maintainability_audit._tool_adapters import adapter_for
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "data" / "analyzer-catalog.json"
 POOL_DOC = ROOT / "docs" / "analyzer-pool.md"
+CATALOG_PRODUCER = ROOT / "tools" / "build_catalog.py"
 DEPTHS = ("baseline", "moderate", "heavy")
 
 
@@ -21,6 +23,19 @@ def _catalog() -> dict:
 
 def _has_adapter(slug: str) -> bool:
     return adapter_for(slug) is not None or declared_adapter(slug) is not None
+
+
+def _literal_assignment(path: Path, name: str) -> dict[str, str]:
+    """Read a producer data map without importing its dev-only YAML dependency."""
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        if any(isinstance(target, ast.Name) and target.id == name for target in node.targets):
+            value = ast.literal_eval(node.value)
+            assert isinstance(value, dict)
+            return value
+    raise AssertionError(f"{name} is missing from {path.relative_to(ROOT)}")
 
 
 def test_every_verified_tier_is_backed_by_a_shipped_adapter() -> None:
@@ -38,6 +53,22 @@ def test_every_verified_tier_is_backed_by_a_shipped_adapter() -> None:
     # The set itself is derived from the catalog so a fifteenth adapter must
     # update this explicit product count rather than silently changing it.
     assert len(verified) == len(adapted) == 14
+
+
+def test_catalog_producer_tiers_are_exactly_the_shipped_adapter_set() -> None:
+    """Regeneration must preserve the same tier-to-adapter promise as the artifact."""
+    producer_tiers = set(_literal_assignment(CATALOG_PRODUCER, "VERIFIED_TIERS"))
+    adapted = {
+        tool["slug"]
+        for tool in _catalog()["tools"]
+        if _has_adapter(tool["slug"])
+    }
+
+    assert producer_tiers == adapted, (
+        "the catalog producer would regenerate a tier that contradicts shipped adapters; "
+        f"tier-only={sorted(producer_tiers - adapted)}, "
+        f"adapter-only={sorted(adapted - producer_tiers)}"
+    )
 
 
 def test_catalog_tier_counts_are_internally_consistent() -> None:

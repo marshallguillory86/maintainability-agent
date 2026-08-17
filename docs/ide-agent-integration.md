@@ -163,11 +163,13 @@ only and a fallback-tier evidence label. A decline or a client without
 elicitation support receives the built-in-default audit plus `setup_needed`,
 which carries the same choices for the host's own question UI.
 
-Accepted setup writes only three artifacts: repository
-`maintainability-agent.json`, the XDG user `config.json`, and the XDG user
-`state.json` that records the completed audit. It never writes source, a
-report, or a baseline. The stored presentation is the default for later calls;
-an explicit per-call `format` still wins.
+The local process may write exactly four artifacts: repository
+`maintainability-agent.json`, the XDG user `config.json`, the XDG user
+`state.json` that records the completed audit, and repository scan history at
+`.maintainability/history.jsonl`. Setup writes the first three; the audit's
+history rule may append the fourth. It never writes source, a report, or a
+baseline. The stored presentation is the default for later calls; an explicit
+per-call `format` still wins.
 
 For Visual Studio, put this in `%USERPROFILE%\\.mcp.json` or
 `<SOLUTIONDIR>\\.mcp.json` (replace both absolute paths):
@@ -239,8 +241,8 @@ Security properties are part of the contract:
 - `changed_only` accepts one inert git revision expression, never command-line
   options or whitespace;
 - the server accepts no command strings or output paths and writes only the
-  repository config, XDG user config and XDG user state described above —
-  never a report, baseline or source artifact;
+  repository config, XDG user config, XDG user state and repository scan
+  history described above — never a report, baseline or source artifact;
 - `get_agent_info` advertises MCP read-only; `audit_repository` advertises its
   bounded setup/state writes. Both remain non-destructive and closed-world.
 

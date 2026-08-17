@@ -248,8 +248,12 @@ history at `.maintainability/history.jsonl`, plus the repository baseline at
 rejects repository or config paths outside its explicit allow-list. See
 [Local MCP server](docs/ide-agent-integration.md#local-mcp-server-visual-studio-vs-code-and-codex).
 
-`record_history=None` appends an existing history or starts one for an
-interactive elicitation-capable client, while explicit `true` or `false` wins.
+`record_history=None` follows the persisted first-run history consent and
+always appends an existing history, while explicit `true` or `false` wins. An
+out-of-roots tool call can use the host's structured question UI for a
+session-only or user-tier grant; the report resource never asks or persists a
+grant. Missing selected analyzers are returned in the top-level
+`environment_work_order` for the host to surface.
 
 ## Invokable Skill / Slash Command
 

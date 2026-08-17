@@ -144,8 +144,8 @@ def test_existing_history_appends_on_a_plain_mcp_call(tmp_path: Path) -> None:
     assert result["report"]["scan_history"][-1]["scans"] == 2
 
 
-def test_elicitation_capable_first_call_starts_the_mcp_history(tmp_path: Path) -> None:
-    """Client elicitation capability is the chat equivalent of the CLI's TTY."""
+def test_elicitation_capability_alone_does_not_start_mcp_history(tmp_path: Path) -> None:
+    """Decision 4: a configured repo records only by consent, not capability."""
     from mcp import Client, types
 
     root = _repo(tmp_path)
@@ -167,7 +167,7 @@ def test_elicitation_capable_first_call_starts_the_mcp_history(tmp_path: Path) -
     asyncio.run(exercise())
 
     assert not elicitation_calls, "a configured repository must not reopen setup"
-    assert len(read_history(_history_path(root))) == 1
+    assert not _history_path(root).exists()
 
 
 def test_headless_first_call_does_not_create_mcp_history(tmp_path: Path) -> None:

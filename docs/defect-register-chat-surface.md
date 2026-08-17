@@ -183,7 +183,7 @@ ask-free and read-only.
 `test_always_root_grant_persists_only_to_the_user_tier_and_loads_at_startup`,
 `test_denied_or_unsupported_root_grant_explains_both_static_remedies`, and
 `test_report_resource_never_elicits_or_persists_a_root_grant` in
-`tests/test_consent_and_grant.py`.
+`tests/test_root_grants.py`.
 
 ### D11 — Closed: economic context is part of chat setup
 
@@ -226,8 +226,9 @@ same audit and persists them for later calls. Out-of-roots tool requests now
 ride the structured grant path, and the slash prompt delegates presentation
 to the host's structured question mechanism. This is driven end to end by
 `test_one_native_elicitation_applies_answers_to_that_same_audit` in
-`tests/test_first_run_elicitation.py` and the grant, consent and slash-prompt
-tests in `tests/test_consent_and_grant.py`.
+`tests/test_first_run_elicitation.py`, the grant tests in
+`tests/test_root_grants.py`, and the consent and slash-prompt tests in
+`tests/test_consent_and_grant.py`.
 
 ### D15 — Analyzer selection has no goal-directed composition
 

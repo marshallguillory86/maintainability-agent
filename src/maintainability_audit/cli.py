@@ -242,9 +242,14 @@ def main(argv: list[str] | None = None) -> int:
     history_path = root / (config.get("paths", {}).get("history") or DEFAULT_HISTORY_PATH)
     # 8.2: the file's existence is the user's standing answer. Once a
     # history exists, a successful scan appends whether or not the flag
-    # was remembered. A first *interactive* run starts the series; a
-    # first CI run without the flag still writes nothing nobody asked for.
-    record = args.record_history or history_path.exists() or _stdin_is_a_tty()
+    # was remembered. Written consent outranks the terminal (decision 7,
+    # M3): `history.record: false` suppresses even an interactive run,
+    # `true` records even headless, and only when nothing is written
+    # does a first *interactive* run start the series — a first CI run
+    # without the flag still writes nothing nobody asked for.
+    consent = (config.get("history") or {}).get("record")
+    record = (args.record_history or history_path.exists() or consent is True
+              or (consent is None and _stdin_is_a_tty()))
     # One shared, honestly-ordered helper (audit H1): views close
     # recurrence with this scan included, the prompt withholds what
     # escalated, and only delivered advice is recorded as targeted.

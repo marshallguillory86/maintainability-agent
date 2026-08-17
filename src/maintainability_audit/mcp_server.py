@@ -27,7 +27,12 @@ from ._mcp_audit import audit_repository as audit_repository
 from ._mcp_audit import authorize_config as authorize_config
 from ._mcp_audit import authorize_repository as authorize_repository
 from ._mcp_audit import validate_revspec as validate_revspec
-from ._mcp_setup import apply_answers, setup_pending, setup_schema
+from ._mcp_grants import (
+    _apply_call_consents,
+    _grant_resolver_for,
+    _RootLedger,
+)
+from ._mcp_setup import setup_pending, setup_schema
 from ._scan_history import DEFAULT_HISTORY_PATH
 from .config import CONFIG_FILENAME, VERSION, discovered_config, load_config
 from .renderers import render_markdown
@@ -98,127 +103,6 @@ def _report_markdown(repository_root: str, roots: tuple[Path, ...]) -> str:
     history_path = root / ((config.get("paths") or {}).get("history") or DEFAULT_HISTORY_PATH)
     attach_history_views(report, history_path, root)
     return render_markdown(report)
-
-
-# The two affirmative D10 grant scopes (decision 5). "no" needs no
-# constant: a refusal is the absence of a grant, not a kind of one.
-_GRANT_SESSION = "this session"
-_GRANT_ALWAYS = "always"
-
-
-class _RootLedger:
-    """The live allow-list: launch roots plus grants made through D10.
-
-    A session grant extends this process's list and nothing else; an
-    "always" grant additionally persists to the user-tier config, which
-    ``allowed_roots`` folds back in at the next server start. The repo
-    config never carries a grant — a repository must not be able to
-    authorize itself.
-    """
-
-    def __init__(self, roots: tuple[Path, ...]) -> None:
-        self._roots = list(roots)
-
-    def current(self) -> tuple[Path, ...]:
-        return tuple(self._roots)
-
-    def grant(self, root: Path, *, persist: bool) -> None:
-        from ._user_config import persist_root_grant
-
-        if root not in self._roots:
-            self._roots.append(root)
-        if persist:
-            persist_root_grant(root)
-
-
-def _grant_schema() -> Any:
-    """One structured question: the scope of the root grant (decision 5)."""
-    from typing import Literal
-
-    from pydantic import Field, create_model
-
-    return create_model(
-        "RootGrant",
-        root_access=(
-            Literal["this session", "always", "no"],
-            Field(
-                default=_GRANT_SESSION,
-                description=(
-                    "Grant the audit read access to this repository? "
-                    "'this session' lasts until the server restarts; "
-                    "'always' is remembered in your user configuration; "
-                    "'no' refuses."
-                ),
-            ),
-        ),
-    )
-
-
-def _grant_resolver_for(ledger: _RootLedger, context_type: Any) -> Any:
-    """The D10 ask as a resolver: one question instead of an error string.
-
-    Asks only when the requested root is real, outside the live
-    allow-list, and the client can elicit. Every other case returns
-    ``None`` and the tool body raises (or proceeds) exactly as before —
-    a missing capability costs the ask, never the boundary.
-    """
-    from mcp.server.mcpserver.resolve import Elicit
-
-    def roots_grant(repository_root: str, ctx: Any = None) -> Any:
-        try:
-            authorize_repository(repository_root, ledger.current())
-            return None  # inside the boundary: nothing to ask
-        except PathNotAllowed:
-            pass
-        except ValueError:
-            return None  # not a directory: the tool body raises the real error
-        capabilities = getattr(ctx, "client_capabilities", None)
-        if capabilities is None or capabilities.elicitation is None:
-            return None
-        # The question names the RESOLVED path — the one the grant will
-        # actually authorize. A symlink or `..` in the request must not
-        # let the modal show one directory while the ledger records
-        # another (audit H2): the user consents to the real target.
-        resolved = Path(repository_root).expanduser().resolve()
-        return Elicit(
-            message=(
-                f"{resolved} is outside this server's allowed "
-                "roots. Grant the audit read access to it?"
-            ),
-            schema=_grant_schema(),
-        )
-
-    roots_grant.__annotations__["ctx"] = context_type
-    return roots_grant
-
-
-def _granted_scope(grant: Any) -> str | None:
-    """The accepted grant answer, or None when nothing was asked or given."""
-    answer = getattr(grant, "data", None)
-    if not hasattr(answer, "model_dump"):
-        return None
-    values = list(answer.model_dump().values())
-    return str(values[0]) if values else None
-
-
-def _apply_call_consents(ledger: _RootLedger, repository_root: str,
-                         setup: Any, grant: Any) -> None:
-    """Apply what this call's elicitations granted, before the audit runs.
-
-    Grant first: an accepted D10 answer extends (and for "always"
-    persists) the allow-list this very call is authorized against. The
-    resolved path is the one the question named (audit H2). Then setup:
-    accepted first-run answers persist so this call runs under the
-    chosen configuration.
-    """
-    scope = _granted_scope(grant)
-    if scope in (_GRANT_SESSION, _GRANT_ALWAYS):
-        ledger.grant(Path(repository_root).expanduser().resolve(),
-                     persist=scope == _GRANT_ALWAYS)
-    answers = getattr(setup, "data", None)
-    if hasattr(answers, "model_dump"):
-        root = authorize_repository(repository_root, ledger.current())
-        apply_answers(root, answers.model_dump())
 
 
 def _setup_resolver_for(ledger: _RootLedger, context_type: Any) -> Any:

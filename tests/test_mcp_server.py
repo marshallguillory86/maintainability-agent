@@ -1,4 +1,4 @@
-"""The local MCP boundary is path-scoped and limits writes to setup state."""
+"""The local MCP boundary is path-scoped and limits writes to state and history."""
 
 from __future__ import annotations
 
@@ -151,8 +151,10 @@ def test_real_stdio_process_initializes_and_reports_its_boundary(tmp_path: Path)
             assert info["allowed_roots"] == [str(tmp_path.resolve())]
             assert info.get("read_only") is not True
             boundary = json.dumps(info).lower()
+            assert len(info["writes"]) == 4
             assert "maintainability-agent.json" in boundary
             assert "user" in boundary and "config" in boundary and "state" in boundary
+            assert ".maintainability/history.jsonl" in boundary
             assert "source" in boundary and "report" in boundary
 
     asyncio.run(exercise())
@@ -383,7 +385,7 @@ def test_the_two_tools_survive_the_new_primitives(tmp_path: Path) -> None:
     "Only two tools" was the old contract and is the wrong assertion now:
     resources and prompts are *additional primitives*, not additional
     tools. What must hold is that the tool surface did not grow and that
-    only the audit tool advertises the bounded setup/state writes.
+    only the audit tool advertises the bounded config/state/history writes.
     """
     root = _repo(tmp_path)
     server = _server(tmp_path)

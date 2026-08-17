@@ -7,9 +7,9 @@ a defect against requirements that already exist — in
 [ADR 009](adr-009-scan-history.md), [product-intent.md](product-intent.md),
 or the operator's stated requirements — none is a feature proposal. The
 required behavior column cites the document that already requires it. D1,
-D2, D11 and D13 are retained as closed, tested history. D3 and D14 remain
-open with narrowed scope; the other entries stay open until a test proves
-the required behavior.
+D2, D5, D6, D11 and D13 are retained as closed, tested history. D3 and
+D14 remain open with narrowed scope; the other entries stay open until a
+test proves the required behavior.
 
 ## Context
 
@@ -89,28 +89,33 @@ typically inside an IDE.
 and the CLI is the automation/CI surface, and orders its instructions
 accordingly.
 
-### D5 — Scan history never accrues over MCP
+### D5 — Closed: scan history accrues over MCP
 
-`audit_repository` builds a report and returns it; it never appends a
-scan record. Recurrence, escalation, and cleared-then-returned tracking
-(ADR 009) therefore cannot exist for chat users — the durable-record
-feature that distinguishes this tool from a linter is structurally
-inert on the primary surface.
+`audit_repository` now follows the CLI's history rule through a tri-state
+`record_history` decision. An existing history appends on every successful
+audit; an elicitation-capable client starts a first series; a headless first
+call writes nothing. Explicit true or false wins in either direction. The
+returned report reads the resulting series into `scan_history` and computes
+rename-aware `design_review_candidates` from its latest comparable segment.
 
-*Required:* a successful chat-path audit records its scan under the
-same rules the CLI applies (an existing history always appends; a first
-interactive run starts the series with consent).
+*Closing tests:* `test_existing_history_appends_on_a_plain_mcp_call`,
+`test_elicitation_capable_first_call_starts_the_mcp_history`,
+`test_headless_first_call_does_not_create_mcp_history`,
+`test_record_history_tristate_overrides_both_directions`,
+`test_mcp_report_exposes_history_and_design_review_candidates`, and
+`test_cli_and_mcp_reports_agree_over_the_same_history` in
+`tests/test_mcp_history.py`.
 
-### D6 — Targeted-advice outcomes cannot be recorded from chat
+### D6 — Closed: chat remediation targets are recorded
 
-The `targeted` tuple — which findings a remediation prompt actually
-asked somebody to fix — is recorded only when the CLI is invoked with
-`--prompt-output`. The MCP path returns a remediation prompt on every
-call and records nothing, so "told, fixed, returned" (the strongest
-signal in the recurrence design) can never fire for chat users.
+The MCP path returns a remediation prompt on every audit. Whenever that
+audit writes a scan record, its `targeted` tuple now stores exactly the
+delivered prompt's `prompt_targets`, in the same identity space as the
+scan's findings. Chat history can therefore distinguish recurrence from
+the stronger "told, fixed, returned" signal in ADR 009.
 
-*Required:* handing a remediation prompt to a chat host records the
-prompt's targets exactly as the CLI path does.
+*Closing test:* `test_mcp_history_records_the_delivered_prompt_targets` in
+`tests/test_mcp_history.py`.
 
 ### D7 — No baseline workflow over MCP
 
@@ -241,7 +246,7 @@ documented as the automation path.
 
 ## Disposition
 
-D1, D2, D11 and D13 are closed. D3 and D14 remain open with the narrowed
-scope stated above. D4–D10, D12 and D15–D17 remain open in this
-seventeen-entry register. Entries close individually, each behind a test
-that would fail if the defect returned.
+D1, D2, D5, D6, D11 and D13 are closed. D3 and D14 remain open with the
+narrowed scope stated above. D4, D7–D10, D12 and D15–D17 remain open in
+this seventeen-entry register. Entries close individually, each behind a
+test that would fail if the defect returned.

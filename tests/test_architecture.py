@@ -103,7 +103,9 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
 # `_mcp_setup` is the chat-path twin of `_first_run`: it asks (via MCP
 # elicitation), which no layer below entry may do, and writes the
 # config the entry then loads through ordinary discovery.
-ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup"}
+# `_mcp_audit` is the MCP audit tool split from `mcp_server` at the
+# size line: authorization, tri-states, and the D5/D6 loop record.
+ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup", "_mcp_audit"}
 BOUNDARY = {"evidence"}
 
 LAYERS = {

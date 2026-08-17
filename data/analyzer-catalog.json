@@ -10,10 +10,9 @@
     "in_source": 760,
     "eligible": 446,
     "by_tier": {
-      "all": 431,
-      "baseline": 10,
-      "moderate": 4,
-      "heavy": 1
+      "all": 433,
+      "baseline": 9,
+      "moderate": 4
     },
     "by_license_status": {
       "foss": 579,
@@ -2590,7 +2589,7 @@
       ],
       "security_only": false,
       "source": "https://github.com/AlDanial/cloc",
-      "tier": "baseline",
+      "tier": "all",
       "adapter": "none"
     },
     {
@@ -18163,7 +18162,7 @@
       ],
       "security_only": false,
       "source": "https://github.com/tonybaloney/wily",
-      "tier": "heavy",
+      "tier": "all",
       "adapter": "none"
     },
     {

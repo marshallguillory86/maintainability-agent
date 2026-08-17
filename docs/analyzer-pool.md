@@ -34,7 +34,7 @@ A dual license takes the most permissive class on offer, because the licensee ch
 
 **446 tools** are eligible: open-source license class, not deprecated, targets at least one language, and not security-only. Security scanning is [`secure-code-agent`'s](https://github.com/marshallguillory86/secure-code-agent) job — those tools are cataloged and marked, never run from here.
 
-Eligible by class: 366 permissive, 44 strong-copyleft, 34 weak-copyleft.
+Eligible by class: 367 permissive, 45 strong-copyleft, 34 weak-copyleft.
 
 ## The three run-time selectors
 
@@ -68,9 +68,9 @@ python tools/resolve_pool.py --concerns documentation
 
 | Depth | Tools | What it means |
 |---|---|---|
-| `baseline` | 4 | Multi-language, one install, no project config, seconds to run |
-| `moderate` | 10 | Baseline plus the mainstream per-language linters |
-| `heavy` | 14 | Moderate plus slower or configuration-hungry tools |
+| `baseline` | 9 | Multi-language or zero-config tools, one install, seconds to run |
+| `moderate` | 14 | Baseline plus the mainstream per-language linters |
+| `heavy` | 14 | Moderate plus slower or configuration-hungry tools; none are added today |
 | `all` | up to 446 | Every eligible tool that speaks a detected language |
 
 **A tier below `all` is a promise that the tool works.** Nothing is placed in `baseline`, `moderate` or `heavy` until this project has installed it, run it, and parsed its output. That is why those numbers are small and why they will grow one verified tool at a time.
@@ -81,13 +81,15 @@ python tools/resolve_pool.py --concerns documentation
 
 | Policy | Adds | Eligible tools |
 |---|---|---|
-| `permissive` | MIT, BSD, Apache, ISC, Zlib… | 366 |
-| `copyleft-weak` | + LGPL, MPL, EPL | 400 |
+| `permissive` | MIT, BSD, Apache, ISC, Zlib… | 367 |
+| `copyleft-weak` | + LGPL, MPL, EPL | 401 |
 | `copyleft-any` | + GPL, AGPL | 446 |
-| `commercial-free-tier` | + proprietary tools with a free or OSS plan | 476 |
+| `commercial-free-tier` | + proprietary tools with a free or OSS plan | 472 |
 | `unverified` | + tools whose license could not be confirmed | opt-in, never a default |
 
 `source-available` and paid proprietary tools are cataloged but never selected. Adding them needs a deliberate configuration entry naming the tool, not a policy tier.
+
+Sonar-family tools are cataloged and unadapted, not blanket-classified as commercial. The catalog classifies SonarAnalyzer.CSharp, SonarQube for IDE and SonarQube Server as `weak-copyleft`, while SonarQube Cloud is `proprietary-free-tier`; none is runnable until an adapter ships.
 
 ### How the selection is made
 
@@ -127,16 +129,16 @@ npm install -g jscpd@5
 | radon | baseline | Maintainability Index, CC, Halstead | 34 files; lowest MI 42.23 |
 | ruff | baseline | ~800 lint rules | The repo's own linter |
 | jscpd | baseline | Copy-paste clones | 30-line Java clone across two files |
+| vulture | baseline | Dead code | 0 at ≥80% confidence |
+| complexipy | baseline | Cognitive complexity | `history_section` = 14 |
+| interrogate | baseline | Docstring coverage | installed, run |
+| pydocstyle | baseline | Docstring conventions | installed, run |
+| multimetric | baseline | Multi-language metrics | version 2.4.4; contributed in the checked-in analyzer corpus |
 | pylint | moderate | Design smells | 107 messages on `src/` |
 | mypy | moderate | Type diagnostics | Generic diagnostic output |
-| vulture | moderate | Dead code | 0 at ≥80% confidence |
 | eslint | moderate | JS/TS complexity, depth, params | complexity 11, max-depth 5 |
-| complexipy | moderate | Cognitive complexity | `history_section` = 14 |
-| interrogate | moderate | Docstring coverage | installed, run |
-| pydocstyle | moderate | Docstring conventions | installed, run |
 | flake8 | moderate | Style, mccabe complexity, unused code | parses its default `path:row:col: CODE message` lines |
 | cohesion | moderate | Per-class cohesion percentage | parses its verbose class report; measurements, not gates |
-| multimetric | heavy | Multi-language metrics | installed |
 
 The full inventory, including everything without an adapter, is in the [JSON](../data/analyzer-catalog.json). Additional adapters remain incremental work; the inventory alone does not make a tool runnable.
 

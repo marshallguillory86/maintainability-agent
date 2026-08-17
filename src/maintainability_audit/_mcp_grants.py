@@ -138,15 +138,20 @@ def _apply_call_consents(ledger: _RootLedger, repository_root: str,
 
     Grant first: an accepted D10 answer extends (and for "always"
     persists) the allow-list this very call is authorized against. The
-    granted path is consumed from the ledger's record of the ask, never
-    re-resolved — the user consented to the directory the question
-    named, and only that directory (audit H2 and its TOCTOU residual).
-    Then setup: accepted first-run answers persist so this call runs
-    under the chosen configuration.
+    granted path comes from the ledger's record of the ask (audit H2
+    and its TOCTOU residual), and lands only while it still matches the
+    request's current resolution — the equality is a fail-closed check,
+    never an authority source, so an overlapping elicitation that
+    overwrote the note for this request string (audit cross-wire L)
+    or a retarget on a transport without digest matching refuses
+    rather than granting a directory nobody was shown. Then setup:
+    accepted first-run answers persist so this call runs under the
+    chosen configuration.
     """
     asked = ledger.consume_ask(repository_root)
     scope = _granted_scope(grant)
-    if scope in (_GRANT_SESSION, _GRANT_ALWAYS) and asked is not None:
+    if (scope in (_GRANT_SESSION, _GRANT_ALWAYS) and asked is not None
+            and Path(repository_root).expanduser().resolve() == asked):
         ledger.grant(asked, persist=scope == _GRANT_ALWAYS)
     answers = getattr(setup, "data", None)
     if hasattr(answers, "model_dump"):

@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from maintainability_audit.config import discovered_config, load_config
-from maintainability_audit.prompts import render_ai_prompt
-from maintainability_audit.renderers import render_markdown
+from maintainability_audit.prompts import render_agent_instructions, render_ai_prompt
+from maintainability_audit.renderers import render_html, render_markdown, render_pr_comment
 from maintainability_audit.report import build_report
 
 
@@ -94,7 +94,7 @@ def _section(markdown: str, heading: str) -> str:
     return remainder if next_heading < 0 else remainder[:next_heading]
 
 
-def _remedy_sites(report: dict) -> tuple[str, str, str]:
+def _remedy_sites(report: dict) -> tuple[str, ...]:
     """Every user-facing remedy must resolve pool state from one report fact."""
     markdown = render_markdown(report)
     evidence = next(
@@ -103,8 +103,14 @@ def _remedy_sites(report: dict) -> tuple[str, str, str]:
     )
     unparsed = _section(markdown, "Read, But Not Parsed for Declarations")
     action = [paragraph for paragraph in unparsed.split("\n\n") if paragraph.strip()][-1]
-    prompt = render_ai_prompt(report)
-    return evidence, action, prompt
+    return (
+        evidence,
+        action,
+        render_ai_prompt(report),
+        render_pr_comment(report),
+        render_html(report, []),
+        render_agent_instructions(report),
+    )
 
 
 def _activation_terms(text: str) -> frozenset[str]:

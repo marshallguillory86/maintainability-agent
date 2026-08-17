@@ -14,11 +14,12 @@ from maintainability_audit._calibration import CALIBRATION_C
 from maintainability_audit._identity import finding_fingerprints
 from maintainability_audit._scan_history import (
     DEFAULT_HISTORY_PATH,
+    ScanRecord,
     append_scan,
     read_history,
     record_of,
 )
-from maintainability_audit._work_order import prompt_targets
+from maintainability_audit._work_order import prompt_items, prompt_targets
 from maintainability_audit.cli import main
 from maintainability_audit.config import CONFIG_FILENAME, VERSION, load_config
 from maintainability_audit.mcp_server import (
@@ -232,6 +233,137 @@ def test_mcp_history_records_the_delivered_prompt_targets(tmp_path: Path) -> Non
     ]
     assert targeted_items
     assert all(item["title"] in delivered for item in targeted_items)
+
+
+def _seed_before_second_return(root: Path) -> str:
+    """Leave four records so the live audit is the target's second return."""
+    config = load_config(str(root / CONFIG_FILENAME))
+    report = _audit(root, record_history=False)["report"]
+    targets = prompt_targets(report)
+    assert targets, "the fixture produced no bounded remediation target"
+    target = targets[0]
+    present = record_of(
+        report,
+        config,
+        VERSION,
+        CALIBRATION_C,
+        tuple(sorted(finding_fingerprints(report))),
+        targeted=(target,),
+    )
+    absent = replace(present, fingerprints=(), identities=(), targeted=())
+    records = (
+        replace(present, recorded_at="2026-08-16T11:00:00Z"),
+        replace(absent, recorded_at="2026-08-16T11:00:01Z"),
+        replace(present, recorded_at="2026-08-16T11:00:02Z", targeted=()),
+        replace(absent, recorded_at="2026-08-16T11:00:03Z"),
+    )
+    for record in records:
+        append_scan(_history_path(root), record)
+    return target
+
+
+def _delivered_targets(report: dict[str, Any]) -> tuple[str, ...]:
+    """Derive identities from the exact work-order selection the prompt renders."""
+    escalated = {
+        item["fingerprint"]
+        for item in report.get("design_review_candidates") or []
+    }
+    known = set(finding_fingerprints(report))
+    return tuple(sorted(
+        item["fingerprint"]
+        for item in prompt_items(report["work_order"], escalated=escalated)
+        if item.get("fingerprint") in known
+    ))
+
+
+def _assert_targeted_advice_is_honest(
+    report: dict[str, Any],
+    delivered: str,
+    stored: ScanRecord,
+    target: str,
+) -> None:
+    """The work stays visible while the repeated patch is withheld everywhere else."""
+    item = next(entry for entry in report["work_order"] if entry["fingerprint"] == target)
+    candidate = next(
+        entry
+        for entry in report["design_review_candidates"]
+        if entry["fingerprint"] == target
+    )
+    expected = _delivered_targets(report)
+
+    assert candidate["returns"] == 2
+    assert candidate["targeted"] is True
+    assert item["title"] not in delivered
+    assert target not in expected
+    assert all(
+        entry["title"] in delivered
+        for entry in prompt_items(
+            report["work_order"],
+            escalated={candidate["fingerprint"]},
+        )
+    )
+    assert (prompt_targets(report), stored.targeted) == (expected, expected)
+
+
+def test_mcp_records_only_advice_delivered_after_current_scan_escalates(
+    tmp_path: Path,
+) -> None:
+    """The current in-memory scan closes recurrence before advice is recorded."""
+    root = _repo(tmp_path)
+    target = _seed_before_second_return(root)
+
+    result = _audit(root)
+
+    records = read_history(_history_path(root))
+    assert len(records) == 5, "the live audit did not append the third presence"
+    _assert_targeted_advice_is_honest(
+        result["report"],
+        result["remediation_prompt"],
+        records[-1],
+        target,
+    )
+
+
+def test_cli_records_only_advice_delivered_after_current_scan_escalates(
+    tmp_path: Path,
+) -> None:
+    """CLI prompt output records the same post-escalation selection as MCP."""
+    root = _repo(tmp_path)
+    target = _seed_before_second_return(root)
+    output = tmp_path / "cli.json"
+    prompt_output = tmp_path / "prompt.md"
+
+    assert main([
+        "--root", str(root),
+        "--no-analyzers",
+        "--format", "json",
+        "--output", str(output),
+        "--prompt-output", str(prompt_output),
+    ]) == 0
+
+    report = json.loads(output.read_text(encoding="utf-8"))
+    delivered = prompt_output.read_text(encoding="utf-8")
+    records = read_history(_history_path(root))
+    assert len(records) == 5, "the CLI audit did not append the third presence"
+    _assert_targeted_advice_is_honest(
+        report,
+        delivered,
+        records[-1],
+        target,
+    )
+
+
+def test_stateful_audit_tool_does_not_claim_idempotence(tmp_path: Path) -> None:
+    """First contact can write setup state and history, so retry is not idempotent."""
+
+    async def annotations() -> dict[str, Any]:
+        tools = await create_server(roots=(tmp_path.resolve(),)).list_tools()
+        return {tool.name: tool.annotations for tool in tools}
+
+    by_name = asyncio.run(annotations())
+    assert by_name["audit_repository"] is not None
+    assert by_name["audit_repository"].idempotent_hint is False
+    assert by_name["get_agent_info"].idempotent_hint is True
 
 
 # Split mechanically (2026-08-16, standing precedent for contract

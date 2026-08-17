@@ -299,7 +299,9 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
         "audit": ToolAnnotations(
             read_only_hint=False,
             destructive_hint=False,
-            idempotent_hint=True,
+            # First contact can write setup state and start a history
+            # series (L2): a retry is not a no-op.
+            idempotent_hint=False,
             open_world_hint=False,
         ),
         "info": ToolAnnotations(

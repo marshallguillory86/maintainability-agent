@@ -280,33 +280,8 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
     )
 
     for tool in pool:
-        if not inventory.applicable(tool.get("languages")):
-            present = ", ".join(sorted(inventory.languages)) or "no recognised source"
-            analysis.coverage.append(ToolCoverage(
-                slug=tool["slug"], outcome="not-applicable",
-                detail=(
-                    f"reads {', '.join(tool['languages'][:4])}; this tree is "
-                    f"{present}, so it had nothing to examine"
-                ),
-                concepts=tuple(tool["measures"]),
-            ))
-            continue
-        # A hand-written adapter where the output is genuinely bespoke, a
-        # declared one where the tool emits a standard format. Composing
-        # the two here keeps `_adapters` and `_generic` independent.
-        adapter = adapter_for(tool["slug"]) or declared_adapter(tool["slug"])
-        if adapter is None:
-            # Selected but unwritten: the catalog and the adapter set are
-            # allowed to disagree, and saying so beats pretending.
-            analysis.coverage.append(ToolCoverage(
-                slug=tool["slug"], outcome="no-adapter",
-                detail="selected by policy but no adapter is implemented",
-                concepts=tuple(tool["measures"]),
-            ))
-            continue
-        recorded = _run_one(root, adapter, probe, timeout, analysis, excludes, inventory)
-        analysis.coverage.append(replace(
-            recorded, languages=tuple(str(n).lower() for n in tool.get("languages") or ())))
+        analysis.coverage.append(_cover_one(
+            tool, root, probe, timeout, analysis, excludes, inventory))
 
     analysis.coverage.extend(built_in_coverage())
     analysis.coverage.sort(key=lambda item: (item.tier != "built-in", item.slug))
@@ -339,6 +314,49 @@ def _run_one(root: Path, adapter: Any, probe: Probe, timeout: int,
         )
 
 
+def _cover_one(tool: dict[str, Any], root: Path, probe: Probe, timeout: int,
+               analysis: Analysis, excludes: Sequence[str] = (),
+               inventory: Any = None) -> ToolCoverage:
+    """One selected tool's coverage row: applicability, adapter, or run.
+
+    A hand-written adapter where the output is genuinely bespoke, a
+    declared one where the tool emits a standard format — composing the
+    two here keeps `_adapters` and `_generic` independent. What THIS
+    integration reads governs applicability and the coverage claim; the
+    catalog's languages are what the tool upstream could read. PMD
+    upstream reads five languages while its adapter names only .java
+    files — inviting it into a JavaScript tree spawned a CLI with
+    nothing to scan (audit M on 549fcad).
+    """
+    adapter = adapter_for(tool["slug"]) or declared_adapter(tool["slug"])
+    reads = tuple(
+        str(name).lower()
+        for name in (getattr(adapter, "languages", ()) or tool.get("languages") or ())
+    )
+    if not inventory.applicable(reads):
+        present = ", ".join(sorted(inventory.languages)) or "no recognised source"
+        return ToolCoverage(
+            slug=tool["slug"], outcome="not-applicable",
+            detail=(
+                f"reads {', '.join(reads[:4])}; this tree is "
+                f"{present}, so it had nothing to examine"
+            ),
+            concepts=tuple(tool["measures"]),
+            languages=reads,
+        )
+    if adapter is None:
+        # Selected but unwritten: the catalog and the adapter set are
+        # allowed to disagree, and saying so beats pretending.
+        return ToolCoverage(
+            slug=tool["slug"], outcome="no-adapter",
+            detail="selected by policy but no adapter is implemented",
+            concepts=tuple(tool["measures"]),
+            languages=reads,
+        )
+    recorded = _run_one(root, adapter, probe, timeout, analysis, excludes, inventory)
+    return replace(recorded, languages=reads)
+
+
 def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
              analysis: Analysis, excludes: Sequence[str] = (),
              inventory: Any = None) -> ToolCoverage:
@@ -355,6 +373,18 @@ def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
         return ToolCoverage(
             slug=adapter.slug, outcome=available.outcome.value,
             detail=available.detail, concepts=tuple(adapter.concepts),
+        )
+
+    finds_targets = getattr(adapter, "has_targets", None)
+    if finds_targets is not None and not finds_targets(root, excludes):
+        # Present and working, but nothing it reads survives the
+        # exclusions. Spawning anyway turns "nothing to examine" into a
+        # CLI usage error (PMD exits 2 with no --dir; audit M on
+        # 549fcad) — this is a coverage fact, not a failure.
+        return ToolCoverage(
+            slug=adapter.slug, outcome="not-applicable", version=recorded,
+            concepts=tuple(adapter.concepts),
+            detail="no files this adapter reads survive the exclusions",
         )
 
     needs_config = getattr(adapter, "has_config", None)

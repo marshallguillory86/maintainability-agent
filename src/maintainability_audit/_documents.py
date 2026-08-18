@@ -120,6 +120,11 @@ def _coverage_entry(item: ToolCoverage) -> dict[str, Any]:
     entry: dict[str, Any] = {
         "tool": item.slug, "tier": item.tier, "concepts": list(item.concepts),
     }
+    if item.languages:
+        # Coverage is claimed per language (P8): a row that ran must say
+        # which languages the claim is about, not leave the reader to
+        # look the tool up.
+        entry["languages"] = list(item.languages)
     if item.version:
         entry["version"] = item.version
     if item.contributed:

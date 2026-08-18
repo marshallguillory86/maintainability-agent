@@ -31,3 +31,33 @@ What AI changes is the *rate*. Agents produce code faster than humans can read i
 3. The remediation prompt hands an agent a bounded work order — *these* findings, *this* scope — so cleanup happens at machine speed without becoming a machine-speed rewrite.
 
 The failure modes commonly attributed to AI — misplaced abstractions, broad rewrites for narrow bugs, duplicated helpers, stale comments, implementation-detail tests — are worth detecting **regardless of who wrote them**, and detectors for them are built or planned on exactly that basis. Whether AI produces them at a different rate than humans is an empirical question; each claim about it gets tested against a matched control before it is made, because this project has retracted one such claim already and intends never to need a second retraction.
+
+## The Development Loop
+
+This repository is built iteratively and incrementally. The loop is the process,
+not an interruption of it:
+
+1. A test contract is written first, stating the behavior at a seam the product
+   actually uses.
+2. The implementor makes that contract pass at the production seam.
+3. A hostile audit checks the work against the prompt, the tests, and the
+   decision or defect register — never against the implementor's wrap-up.
+4. A hypothesis step turns what the audit found into the next bounded slice.
+
+The hypothesis step **is the improvement prompts** (Marshall, 2026-08-16).
+Each finding becomes a falsifiable claim for the next slice, closed behind a
+test that would fail if the defect returned. That is how conjecture becomes a
+smaller implementation task instead of a broader rewrite.
+
+**Zero known defects means no parking lot for known bugs.** Once an audit finds
+a defect, it enters the current queue. A later phase is not a place to store a
+bug that already reproduces; sequencing may bound the fix, but it does not turn
+the finding back into a future possibility.
+
+This belongs in philosophy rather than [product intent](product-intent.md)
+because it describes how the tool is built, not how it behaves. Treating the
+workflow itself as a product feature was considered and declined on 2026-08-16.
+The register-driven cycle in the
+[chat-surface defect register](defect-register-chat-surface.md) is the worked
+example: findings became contracts, contracts became implementation slices,
+and hostile verification determined what entered the next queue.

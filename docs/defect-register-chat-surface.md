@@ -6,9 +6,9 @@ a defect against requirements that already exist — in
 [ADR 006](adr-006-analyzer-evidence.md), [ADR 004](adr-004-economic-context.md),
 [ADR 009](adr-009-scan-history.md), [product-intent.md](product-intent.md),
 or the operator's stated requirements — none is a feature proposal. The
-required behavior column cites the document that already requires it. D1–D3,
-D5–D11, D13 and D14 are retained as closed, tested history. The other entries
-stay open until a test proves the required behavior.
+required behavior column cites the document that already requires it. D1–D14,
+D16 and D17 are retained as closed, tested history. D15 remains open until its
+analyzer-adapter track supplies the required composition test.
 
 ## Context
 
@@ -78,16 +78,15 @@ in `tests/test_first_run_elicitation.py`, plus
 `test_slash_prompt_uses_structured_presentation_choice_with_chat_default` in
 `tests/test_consent_and_grant.py`.
 
-### D4 — Documentation presents the CLI as the primary surface
+### D4 — Closed: documentation teaches the primary chat surface first
 
-README, product intent, and the MCP server description treat the CLI as
-the product and the MCP server as a boundary added to it. The operating
-reality is inverted: most users reach this tool through a chat host,
-typically inside an IDE.
+README, product intent, and the MCP server instructions now state the same
+surface contract: an AI chat host driving local MCP is primary, while the CLI
+is the automation and CI surface. README presents the chat workflow before CLI
+usage instead of making the primary path an appendix.
 
-*Required:* the documentation states that chat is the primary surface
-and the CLI is the automation/CI surface, and orders its instructions
-accordingly.
+*Closing test:* `test_readme_product_intent_and_mcp_description_name_the_surface_contract`
+in `tests/test_chat_primary_docs.py`.
 
 ### D5 — Closed: scan history accrues over MCP
 
@@ -196,15 +195,15 @@ declining omits economic context from both.
 and `test_declining_economics_omits_the_block_from_both_tiers` in
 `tests/test_first_run_elicitation.py`.
 
-### D12 — The operator skill instructions are CLI-first
+### D12 — Closed: the operator skill teaches the chat-primary flow
 
-The installed skill for this tool instructs an agent to run the CLI and
-write report files into the repository by default, contradicting the
-standing rules that file outputs require an explicit save location and
-that asks go through the question UI.
+The shipped skill checks configuration, uses the host's structured question UI
+for elicited choices, keeps the bounded work order in chat, and writes no report
+file without a chosen location. CLI commands are retained under the automation
+and CI path rather than presented as the default user flow.
 
-*Required:* the skill reflects the chat-primary flow: configuration
-check, elicited choices, no file written without a chosen location.
+*Closing test:* `test_shipped_skill_teaches_chat_setup_before_cli_automation`
+in `tests/test_chat_primary_docs.py`.
 
 ### D13 — Closed: the XDG user configuration and state tier ships
 
@@ -245,34 +244,31 @@ covers the repository's languages with the verified tools available,
 and names — before or with the results — what to install to close the
 remaining gaps. Deterministic; no scoring change.
 
-### D16 — No help system exists for the intended surface
+### D16 — Closed: chat workflow help is linked from both entry surfaces
 
-Help today is one `argparse --help` screen written for a terminal
-reader. There are no help files that walk a chat-context user through
-what the agent does, what it will ask, what the pool runs, or what the
-report means — and the deepest capabilities (history, recurrence,
-baselines, economics) are exactly the ones a first-time user cannot
-discover.
+The [chat workflow help](help/README.md) now explains what the agent does,
+first-run setup and roots grants, history consent, analyzer-primary evidence
+and built-in fallback, and how to read the report's estimate, range, grade,
+history, recurrence, baselines and economic scenario. It lives beside the docs
+the existing lints sweep and is reachable from README, the documentation index,
+the integration guide, and the MCP server instructions.
 
-*Required:* help files built out for the chat-skill-first flow, kept
-beside the docs the lints already sweep, and reachable from the README
-and the MCP server description. Scope is fixed in the fix-cycle prompt,
-not invented here.
+*Closing test:* `test_chat_help_is_complete_linked_and_reachable_from_mcp` in
+`tests/test_chat_primary_docs.py`.
 
-### D17 — The instructions doc teaches the wrong surface
+### D17 — Closed: integration guidance and generated packs are chat-first
 
 [ide-agent-integration.md](ide-agent-integration.md) and the generated
-agent-instruction packs (`--init-agent-standards`) instruct agents in
-CLI-first terms: run the binary, write report files. They predate the
-chat-primary statement and now teach integrators the inverted flow.
+agent-instruction packs (`--init-agent-standards`) now teach the same sequence:
+check configuration, use structured elicitation, keep the report in chat unless
+the user chooses a file location, and treat the CLI as the automation and CI
+door.
 
-*Required:* the instructions doc and the generated packs are updated or
-rebuilt to teach chat-first operation — configuration check, elicited
-choices, no file written without a chosen location — with the CLI
-documented as the automation path.
+*Closing test:* `test_integration_guide_and_generated_packs_teach_chat_before_automation`
+in `tests/test_chat_primary_docs.py`.
 
 ## Disposition
 
-D1–D3, D5–D11, D13 and D14 are closed. D4, D12 and D15–D17 remain open in
-this seventeen-entry register. Entries close individually, each behind a test
-that would fail if the defect returned.
+D1–D14, D16 and D17 are closed. Only D15 remains open, riding the
+analyzer-adapter track. Entries close individually, each behind a test that
+would fail if the defect returned.

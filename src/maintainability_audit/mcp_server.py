@@ -40,7 +40,9 @@ from .report import build_report
 
 SERVER_INSTRUCTIONS = (
     "Deterministic maintainability audits from a local stdio process on this "
-    "machine — not a hosted service. Use audit_repository to produce both the "
+    "machine — not a hosted service. This chat/MCP door is the primary "
+    "surface; the CLI serves automation and CI. Use audit_repository to "
+    "produce both the "
     "report and its bounded remediation prompt. First contact with an "
     "unconfigured repository elicits setup, and the audit records its scan "
     "history and can adopt a baseline, so it may write exactly five local "
@@ -59,7 +61,8 @@ SERVER_INSTRUCTIONS = (
     "missing or insufficient evidence as an audit limitation, not a code "
     "defect, and do not widen remediation beyond findings in the returned "
     "prompt. Repository and config paths must remain inside the configured "
-    "allowed roots."
+    "allowed roots. The docs/help files in the project explain first-run "
+    "setup, the analyzer pool, and how to read the report and its history."
 )
 
 

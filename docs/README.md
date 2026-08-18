@@ -59,6 +59,7 @@ New ADRs are `adr-NNN-short-title.md`, numbered in order, added to the register,
 
 | Document | Covers |
 |---|---|
+| [Chat workflow help](help/README.md) | What the agent does, first-run questions and grants, analyzer evidence, and reading the report loop |
 | [CLI](cli.md) | Commands and flags |
 | [Config schema](config-schema.md) | Configuration file |
 | [Language support](language-support.md) | What is parsed, and how well |

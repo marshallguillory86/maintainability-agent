@@ -25,6 +25,7 @@ from ._metric_adapters import (
 from ._verdict_adapters import (
     EslintAdapter,
     Flake8Adapter,
+    PmdAdapter,
     PydocstyleAdapter,
     RuffAdapter,
     VultureAdapter,
@@ -39,6 +40,7 @@ ADAPTERS: dict[str, Callable[[], BaseAdapter]] = {
     "jscpd": JscpdAdapter,
     "lizard": LizardAdapter,
     "multimetric": MultimetricAdapter,
+    "pmd": PmdAdapter,
     "pydocstyle": PydocstyleAdapter,
     "radon": RadonAdapter,
     "ruff": RuffAdapter,

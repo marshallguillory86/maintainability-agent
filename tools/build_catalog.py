@@ -115,6 +115,7 @@ VERIFIED_TIERS = {
     "flake8": "moderate",
     "eslint": "moderate",
     "cohesion": "moderate",
+    "pmd": "moderate",
 }
 
 
@@ -166,7 +167,7 @@ def classify_license(name: str, status: str) -> str:
 
 # What a tool actually measures, in this project's own vocabulary. The upstream
 # database cannot supply this: its tags are languages, ecosystems and frameworks
-# (rails, nodejs, spring), and 367 of the 444 eligible tools carry no concern tag
+# (rails, nodejs, spring), and 442 of the 447 eligible tools carry no concern tag
 # at all. A concern can only be assigned by running the tool and seeing what it
 # emits, so this map grows exactly as fast as the adapters do.
 #
@@ -193,7 +194,7 @@ CONCERNS = (
 IMPLEMENTED_ADAPTERS = frozenset({
     "cohesion", "complexipy", "eslint", "flake8", "interrogate", "jscpd",
     "lizard", "multimetric", "mypy", "pydocstyle", "pylint", "radon",
-    "ruff", "vulture",
+    "pmd", "ruff", "vulture",
 })
 
 # Deliberately unadapted, with the reason, so nobody writes one later
@@ -225,6 +226,7 @@ VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {
     "pydocstyle":  ("documentation", "style"),
     "cohesion":    ("structure",),
     "multimetric": ("metrics", "complexity", "documentation"),
+    "pmd":         ("cognitive_complexity", "cyclomatic_complexity"),
     "cloc": ("metrics", "documentation"),
     "wily":        ("metrics",),
 }
@@ -243,6 +245,8 @@ VERIFIED_LICENSES: dict[str, tuple[str, str]] = {
     # license". Upstream records "Other" because GitHub's detector could
     # not map the file.
     "mypy": ("MIT", "License-Expression in the installed distribution"),
+    # https://github.com/pmd/pmd/blob/main/LICENSE
+    "pmd": ("BSD-style", "PMD upstream LICENSE file"),
 }
 
 # Tools this project installed and ran that the source snapshot does not list.
@@ -395,7 +399,8 @@ def build(records: list[dict[str, Any]]) -> dict[str, Any]:
             "note": (
                 "Facts in this file (name, license, languages, source URL) come from "
                 "the snapshot above. Tier and adapter fields are this project's own "
-                "and are not claims made by the source."
+                "and are not claims made by the source. PMD's BSD-style license is "
+                "verified from the upstream PMD LICENSE file."
             ),
         },
         "counts": {

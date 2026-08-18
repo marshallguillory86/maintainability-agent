@@ -35,7 +35,7 @@ from maintainability_audit._generic import DECLARED, declared_adapter
 from maintainability_audit._tool_adapters import ADAPTERS, adapter_for
 
 TREES = ("lib", "src/pb2.py")
-FILE_LIST = {"pydocstyle", "complexipy", "multimetric", "cohesion"}
+FILE_LIST = {"pydocstyle", "complexipy", "multimetric", "cohesion", "pmd"}
 # These spell trees in their own invocation() and do not use tree_patterns().
 CUSTOM_INVOCATION = {"jscpd", "radon", "eslint"}
 

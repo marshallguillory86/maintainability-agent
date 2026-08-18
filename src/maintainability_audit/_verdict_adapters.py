@@ -295,3 +295,91 @@ class Flake8Adapter(BaseAdapter):
                 message=match.group("text"), tool=self.slug, rule=code,
             ))
         return Extraction(findings=tuple(findings))
+
+
+class PmdAdapter(BaseAdapter):
+    """PMD over Java source, pinned to two rules, read from SARIF.
+
+    Decision 9's first JVM adapter. The invocation names exactly two
+    rule references — cognitive and cyclomatic complexity from PMD's
+    design category — so every finding maps onto a concept this project
+    already scores and two runs over the same tree emit the same output
+    (no cache, no network, no repository config required). A verdict
+    emitter: PMD reports breaches of its own thresholds and can never
+    supply a rate (P2). PMD's CLI has no exclude flag this project
+    trusts, so exclusion is applied by never naming the file: explicit
+    `.java` targets from ``expand_files``, the same rule as cohesion,
+    complexipy and multimetric.
+    """
+
+    _RULESET = (
+        "category/java/design.xml/CognitiveComplexity,"
+        "category/java/design.xml/CyclomaticComplexity"
+    )
+    _CONCEPTS = {
+        "CognitiveComplexity": "cognitive_complexity",
+        "CyclomaticComplexity": "cyclomatic_complexity",
+    }
+
+    def __init__(self) -> None:
+        super().__init__(
+            slug="pmd", emits="verdict", executable="pmd",
+            concepts=("cognitive_complexity", "cyclomatic_complexity"),
+            # PMD exits 4 when rule violations were found; that is a
+            # result, not a failure.
+            findings_exit_codes=(0, 4),
+        )
+
+    def invocation(
+        self, root: Path, paths: Iterable[str] | None = None,
+        excludes: Sequence[str] = (),
+    ) -> Invocation:
+        targets = (
+            tuple(paths) if paths
+            else expand_files(root, excludes, suffixes=(".java",))
+        )
+        dirs: tuple[str, ...] = ()
+        for target in targets:
+            dirs += ("--dir", target)
+        return Invocation(
+            argv=(
+                "pmd", "check", *dirs,
+                "--rulesets", self._RULESET,
+                "--format", "sarif",
+                "--no-cache", "--no-progress",
+            ),
+            findings_exit_codes=self.findings_exit_codes,
+        )
+
+    def _read(self, result: ToolResult) -> Extraction:
+        payload = json.loads(result.stdout or "{}")
+        if not isinstance(payload, dict) or "runs" not in payload:
+            raise ValueError("expected a SARIF object with runs")
+        findings = tuple(
+            Finding(
+                concept=self._CONCEPTS.get(rule, "complexity"),
+                path=self._path_of(entry),
+                line=self._line_of(entry),
+                message=(entry.get("message") or {}).get("text", ""),
+                tool=self.slug,
+                rule=rule,
+            )
+            for run in payload["runs"]
+            for entry in run.get("results", [])
+            for rule in [entry.get("ruleId") or ""]
+        )
+        return Extraction(findings=findings)
+
+    @staticmethod
+    def _path_of(entry: dict) -> str:
+        locations = entry.get("locations") or [{}]
+        uri = (((locations[0].get("physicalLocation") or {})
+                .get("artifactLocation") or {}).get("uri") or "")
+        return uri.removeprefix("file://")
+
+    @staticmethod
+    def _line_of(entry: dict) -> int | None:
+        locations = entry.get("locations") or [{}]
+        region = (locations[0].get("physicalLocation") or {}).get("region") or {}
+        line = region.get("startLine")
+        return int(line) if isinstance(line, int) else None

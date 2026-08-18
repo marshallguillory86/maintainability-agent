@@ -297,12 +297,20 @@ def test_every_adapter_honours_the_audits_exclusions(slug: str, tmp_path: Path) 
     (repo / ".venv" / "lib").mkdir(parents=True)
     (repo / "src" / "real.py").write_text("x = 1\n", encoding="utf-8")
     (repo / ".venv" / "lib" / "vendored.py").write_text("y = 2\n", encoding="utf-8")
+    # A Java pair as well: a JVM adapter filters to .java targets, and a
+    # Python-only fixture would make its two invocations identical and
+    # this sweep vacuous for it.
+    (repo / "src" / "Real.java").write_text("class Real {}\n", encoding="utf-8")
+    (repo / ".venv" / "lib" / "Vendored.java").write_text(
+        "class Vendored {}\n", encoding="utf-8",
+    )
 
     excluded = " ".join(adapter.invocation(repo, excludes=(".venv/", "node_modules/")).argv)
     plain = " ".join(adapter.invocation(repo).argv)
 
     assert excluded != plain, f"{slug} ignores exclusions and will scan vendored code"
     assert "vendored.py" not in excluded, f"{slug} still names a vendored file"
+    assert "Vendored.java" not in excluded, f"{slug} still names a vendored Java file"
 
 
 def test_an_adapter_without_an_exclusion_flag_is_visible_as_such() -> None:

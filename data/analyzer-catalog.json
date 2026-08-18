@@ -4,30 +4,30 @@
     "commit": "66668c6cc5b2db72d0233033efe7ccf2c489aaf8",
     "captured": "2026-06-10",
     "source_license": "CC0-1.0",
-    "note": "Facts in this file (name, license, languages, source URL) come from the snapshot above. Tier and adapter fields are this project's own and are not claims made by the source."
+    "note": "Facts in this file (name, license, languages, source URL) come from the snapshot above. Tier and adapter fields are this project's own and are not claims made by the source. PMD's BSD-style license is verified from the upstream PMD LICENSE file."
   },
   "counts": {
     "in_source": 760,
-    "eligible": 446,
+    "eligible": 447,
     "by_tier": {
       "all": 433,
       "baseline": 9,
-      "moderate": 4
+      "moderate": 5
     },
     "by_license_status": {
-      "foss": 579,
+      "foss": 580,
       "source-available": 5,
       "proprietary": 102,
-      "unverified": 74
+      "unverified": 73
     },
     "by_license_class": {
-      "permissive": 465,
+      "permissive": 466,
       "weak-copyleft": 42,
       "strong-copyleft": 72,
       "source-available": 5,
       "proprietary": 70,
       "proprietary-free-tier": 32,
-      "unverified": 74
+      "unverified": 73
     },
     "by_measure": {
       "documentation": 4,
@@ -37,14 +37,16 @@
       "style": 5,
       "duplication": 2,
       "types": 1,
-      "dead-code": 2
+      "dead-code": 2,
+      "cognitive_complexity": 1,
+      "cyclomatic_complexity": 1
     },
     "eligible_by_license_class": {
-      "permissive": 367,
+      "permissive": 368,
       "weak-copyleft": 34,
       "strong-copyleft": 45
     },
-    "adapters_implemented": 14
+    "adapters_implemented": 15
   },
   "tools": [
     {
@@ -12233,10 +12235,10 @@
     {
       "slug": "pmd",
       "name": "PMD",
-      "license": "Other",
-      "license_status": "unverified",
-      "license_class": "unverified",
-      "license_evidence": "upstream catalog",
+      "license": "BSD-style",
+      "license_status": "foss",
+      "license_class": "permissive",
+      "license_evidence": "PMD upstream LICENSE file",
       "free_tier": false,
       "deprecated": false,
       "categories": [
@@ -12253,11 +12255,14 @@
         "plsql",
         "visualforce"
       ],
-      "measures": [],
+      "measures": [
+        "cognitive_complexity",
+        "cyclomatic_complexity"
+      ],
       "security_only": false,
       "source": "https://github.com/pmd/pmd",
-      "tier": "all",
-      "adapter": "none"
+      "tier": "moderate",
+      "adapter": "implemented"
     },
     {
       "slug": "polymer-analyzer",

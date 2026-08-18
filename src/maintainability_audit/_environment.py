@@ -29,6 +29,9 @@ _ACTIONABLE = ("not-installed", "not-working", "no-config")
 _INSTALL: dict[str, str] = {
     "jscpd": "npm install -g jscpd",
     "eslint": "npm install -g eslint",
+    # A JVM tool, not a Python package: the pip fallback would name a
+    # different project entirely.
+    "pmd": "brew install pmd",
 }
 
 # `--version` is the availability probe the runner itself uses, so the
@@ -37,6 +40,7 @@ _VERIFY: dict[str, str] = {
     "multimetric": "pip show multimetric",  # its CLI has no --version
     "eslint": "npx eslint --version",
     "jscpd": "npx jscpd --version",
+    "pmd": "pmd --version",
 }
 
 

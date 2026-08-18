@@ -163,8 +163,10 @@ tool, its install command and the concepts installation would restore, and the
 server instructions tell the host to surface that order. A chat or HTML caller
 does not need the JSON-only report dictionary to discover missing evidence.
 
-*Closing test:* `test_missing_analyzers_surface_a_top_level_environment_work_order`
-in `tests/test_consent_and_grant.py`.
+*Closing tests:* `test_missing_analyzers_surface_a_top_level_environment_work_order`
+in `tests/test_consent_and_grant.py` (chat), plus
+`test_environment_work_order_reaches_every_format` in
+`tests/test_grant_only_user_tier.py` (json, markdown, html).
 
 ### D10 — Closed: out-of-roots access has a structured grant
 

@@ -101,6 +101,10 @@ def test_chat_help_is_complete_linked_and_reachable_from_mcp() -> None:
 
     assert "(docs/help/readme.md)" in _read(README).lower()
     assert "docs/help" in SERVER_INSTRUCTIONS.lower()
+    # D16 requires the docs index and the integration guide to reach
+    # the help files too, not only the README and the MCP description.
+    assert "help/readme.md" in _read(ROOT / "docs/README.md").lower()
+    assert "help/readme.md" in _read(INTEGRATION).lower()
 
 
 def _generated_packs(tmp_path: Path) -> list[str]:

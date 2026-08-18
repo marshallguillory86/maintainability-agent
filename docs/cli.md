@@ -13,7 +13,7 @@ Aliases:
 
 ## MCP server
 
-Install the optional extra, then start the same read-only MCP server through the package CLI:
+Install the optional extra, then start the same local MCP server through the package CLI (it writes only the five disclosed config/state artifacts — never source, never a report):
 
 ```bash
 python3 -m pip install "maintainability-agent[mcp]"

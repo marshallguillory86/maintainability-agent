@@ -324,11 +324,28 @@ class PmdAdapter(BaseAdapter):
     def __init__(self) -> None:
         super().__init__(
             slug="pmd", emits="verdict", executable="pmd",
-            concepts=("cognitive_complexity", "cyclomatic_complexity"),
+            # "complexity" is the concern the two concepts serve, and
+            # the honest landing place for a rule the map does not name
+            # (audit L on 549fcad: never default onto a concept the
+            # adapter does not declare).
+            concepts=("complexity", "cognitive_complexity",
+                      "cyclomatic_complexity"),
             # PMD exits 4 when rule violations were found; that is a
             # result, not a failure.
             findings_exit_codes=(0, 4),
+            # This integration names only .java files, whatever the
+            # catalog says PMD upstream can read.
+            languages=("java",),
         )
+
+    def has_targets(self, root: Path, excludes: Sequence[str] = ()) -> bool:
+        """Whether any .java file survives the exclusions.
+
+        Spawning ``pmd check`` with no ``--dir`` exits 2 — an error,
+        not a clean zero (audit M on 549fcad). Nothing to examine must
+        stay a coverage fact, never a spawned failure.
+        """
+        return bool(expand_files(root, excludes, suffixes=(".java",)))
 
     def invocation(
         self, root: Path, paths: Iterable[str] | None = None,

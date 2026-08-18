@@ -131,6 +131,10 @@ def _coverage_entry(item: ToolCoverage) -> dict[str, Any]:
         entry["measurements"] = item.measurements
         entry["findings"] = item.findings
         entry["seconds"] = item.duration_seconds
+    if item.truncated:
+        # The raw output was cut at the inline limit (ADR 008-19): a
+        # reader weighing this row's evidence is owed that fact.
+        entry["truncated"] = True
     if item.parse_error:
         entry["parse_error"] = item.parse_error
     elif item.detail:

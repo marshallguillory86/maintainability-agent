@@ -198,6 +198,13 @@ class BaseAdapter:
     version_flag: str = "--version"
     findings_exit_codes: tuple[int, ...] = (0,)
     extra_args: tuple[str, ...] = field(default_factory=tuple)
+    # The languages THIS integration actually reads, when narrower than
+    # the catalog's claim for the tool. PMD upstream reads five
+    # languages; this project's adapter names only .java files, and
+    # applicability plus the coverage row must state what the
+    # integration does, not what the tool could (audit M on 549fcad).
+    # Empty means "trust the catalog entry".
+    languages: tuple[str, ...] = ()
 
     def version_argv(self) -> tuple[str, ...]:
         return (self.executable, self.version_flag)

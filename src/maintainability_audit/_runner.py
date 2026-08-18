@@ -26,6 +26,7 @@ did not run is not a clean result.
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 import sys
@@ -169,10 +170,27 @@ def _probe(slug: str, argv: tuple[str, ...]) -> ToolResult:
     return ToolResult(
         slug=slug,
         outcome=Outcome.RAN,
-        version=banner.splitlines()[0][:120],
+        version=version_line(banner),
         exit_code=result.exit_code,
         duration_seconds=result.duration_seconds,
     )
+
+
+def version_line(banner: str) -> str:
+    """The line of a version banner that actually names a version.
+
+    P1 pins analyzer versions, and some tools (PMD) print ASCII art
+    before theirs — recording the art as the version made the pin a
+    decoration. The first line containing a dotted number wins; a
+    banner with none falls back to its first line, which is all the
+    tool offered.
+    """
+    lines = banner.splitlines()
+    named = next(
+        (line.strip() for line in lines if re.search(r"\d\.\d", line)),
+        lines[0],
+    )
+    return named[:120]
 
 
 # Phrases a launcher prints when the real runtime is absent. Matching text is

@@ -33,7 +33,7 @@
       "documentation": 4,
       "metrics": 5,
       "structure": 4,
-      "complexity": 7,
+      "complexity": 8,
       "style": 5,
       "duplication": 2,
       "types": 1,
@@ -12256,6 +12256,7 @@
         "visualforce"
       ],
       "measures": [
+        "complexity",
         "cognitive_complexity",
         "cyclomatic_complexity"
       ],

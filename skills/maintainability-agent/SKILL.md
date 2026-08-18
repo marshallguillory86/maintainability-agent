@@ -7,15 +7,45 @@ description: Use when the agent needs to run or respond to maintainability-agent
 
 ## Purpose
 
-Use the `maintainability-agent` CLI as the source of truth for deterministic maintainability gates and bounded AI remediation prompts. Treat the tool as a guardrail for small, reviewable engineering changes, not as permission to refactor unrelated code.
+Chat is the primary surface for this tool: most users drive it through an
+AI chat host speaking to the local MCP server, and the CLI is the
+automation/CI door. Treat the audit as a guardrail for small, reviewable
+engineering changes, not as permission to refactor unrelated code.
 
-## Core Workflow
+## Core Workflow (chat / MCP)
 
-1. Inspect the repo's existing instructions and config before running anything:
-   - `AGENTS.md`, `CLAUDE.md`, or other local agent instruction files.
-   - `maintainability-agent.json` when present.
-   - The repo's native CI/test commands.
-2. Prefer the repo's configured command when it exists. Otherwise use:
+1. Configuration check first: look for `maintainability-agent.json`, the
+   user-tier config, and any local agent instruction files (`AGENTS.md`,
+   `CLAUDE.md`). An unconfigured repository will be asked one structured
+   setup set on first contact.
+2. Call the `audit_repository` MCP tool. Choices arrive as structured
+   questions — MCP elicitation or the host's question UI — never free
+   text: first-run setup (analyzer pool, depth, license policy,
+   economics, presentation), history consent (whether scan history is
+   recorded), and out-of-roots grants (this session / always / no).
+3. Present the returned report in chat (chat is the default format).
+   Never write a report or any file until the user has chosen a
+   location; the tool itself returns text and does not write reports
+   into the tree.
+4. Treat the returned `remediation_prompt` as the bounded task. Fix only
+   the reported hard gates or highest-value findings; keep unrelated
+   cleanup as follow-up notes.
+5. If the result carries `environment_work_order`, surface it: each
+   entry names a selected analyzer that could not run, its install
+   command, and the concepts installing it restores. The agent never
+   installs tools itself.
+6. Re-run the audit and any native tests/lints required by the repo,
+   then report what ran, whether the gate passed, and any remaining
+   false positives or follow-ups.
+
+For what the setup questions mean and how to read the report, see
+`docs/help/` in the repository (first-run, analyzer pool, report and
+history).
+
+## Automation / CI (CLI)
+
+The CLI serves pipelines and scripted use. Prefer the repo's configured
+command when it exists. Otherwise:
 
 ```bash
 maintainability-agent \
@@ -26,7 +56,8 @@ maintainability-agent \
   --comment-output maintainability-pr-comment.md
 ```
 
-3. For branch or PR work, use a changed-file audit when the base branch is known:
+For branch or PR work, use a changed-file audit when the base branch is
+known:
 
 ```bash
 maintainability-agent \
@@ -37,14 +68,8 @@ maintainability-agent \
   --prompt-output maintainability-remediation-prompt.md
 ```
 
-4. If the audit emits `maintainability-remediation-prompt.md`, read it before editing and treat it as the bounded task.
-5. Fix only the reported hard gates or highest-value findings. Keep unrelated cleanup as follow-up notes.
-6. Re-run the audit and any native tests/lints required by the repo.
-7. Report the commands run, whether the maintainability gate passed, and any remaining false positives or follow-ups.
-
-## Installing Or Running
-
-If `maintainability-agent` is missing from `PATH`, do not assume the repo is unwired. Check project docs first. Common options are:
+If `maintainability-agent` is missing from `PATH`, do not assume the
+repo is unwired. Check project docs first. Common options are:
 
 ```bash
 python3 -m pip install maintainability-agent
@@ -52,11 +77,14 @@ python3 -m pip install -e .
 python3 -m maintainability_audit --config maintainability-agent.json
 ```
 
-Use the local repo or virtualenv command preferred by the project. If install or execution needs network or elevated permissions, ask for approval through the normal tool flow.
+Use the local repo or virtualenv command preferred by the project. If
+install or execution needs network or elevated permissions, ask for
+approval through the normal tool flow.
 
 ## Generating Agent Standards
 
-When asked to add maintainability standards for AI coding tools, use the CLI rather than hand-writing each target file:
+When asked to add maintainability standards for AI coding tools, use the
+generator rather than hand-writing each target file:
 
 ```bash
 maintainability-agent \
@@ -70,7 +98,8 @@ maintainability-agent \
   --instructions-output-dir .
 ```
 
-Generated standards are additive to repository-specific rules. When they conflict, the repo-specific rules win.
+Generated standards are additive to repository-specific rules. When they
+conflict, the repo-specific rules win.
 
 ## Remediation Rules
 

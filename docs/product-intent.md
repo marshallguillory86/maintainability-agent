@@ -12,8 +12,8 @@ Not a linter (those exist and are better at it), not an AI reviewer, not a quali
 window driving the MCP server. The CLI is the automation surface for CI
 and scripts. Almost no user runs the audit at a bare terminal, so a
 capability that exists only behind a terminal prompt does not exist for
-most users; the open gap between this statement and the current code is
-recorded in the
+most users. The individual wiring defects found when this contract first met a
+real host—and their closing tests—are recorded in the
 [chat-surface defect register](defect-register-chat-surface.md).
 
 ## The job it does

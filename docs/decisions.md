@@ -20,6 +20,54 @@ A decision recorded only as a sentence inside a design document is a decision th
 | [010](adr-010-repository-discovery.md) | Classify every file by language and provenance from evidence the repository provides | **Accepted** — implemented | Scanned population, scored population, analyzer applicability, coverage |
 | [011](adr-011-three-report-presentations.md) | Three user-facing skins of one report dict: chat/CLI text (default), Markdown file, one self-contained HTML file; ask every interactive invoke | **Accepted** — implemented except acceptance: the three skins render from one report dict and never disagree on the headline (`tests/test_three_presentations.py`), the TTY ask and MCP format argument shipped (`tests/test_format_ask.py`), and the HTML file is one self-contained deterministic page. 8.8 acceptance, then 7.5 and the tag, remain | Presentation, CLI, MCP prompt, HTML |
 
+## Recorded operating decisions
+
+These choices settle cross-cutting behavior discovered while closing the chat
+surface. They do not create new ADRs or silently amend the numbered decisions
+above; they record Marshall's answers so a pull request is never the only place
+the choice exists.
+
+### Decision 4 — History consent
+
+- Recorded: 2026-08-17
+
+First-run setup asks whether to record scan history in the repository, with
+**yes** as the disclosed default and **no** as the alternative. The answer is
+persisted like the other setup choices. Client capability alone does not start
+a series.
+
+### Decision 5 — Three-way root grant, session default
+
+- Recorded: 2026-08-17
+
+An out-of-roots audit elicitation offers **this session**, **always**, and
+**no**, with **this session** pre-selected. Always persists a user-tier
+`allowed_roots` entry; a session grant changes only the running process; no
+returns the static `--allow-root` and environment-variable remedies.
+
+### Decision 6 — Verification-audit L scope stays in one slice
+
+- Recorded: 2026-08-17
+
+The TOCTOU repair (resolve once and grant exactly what was asked), the
+`write_user_config` caller-class lint, and the stale D10 register citation land
+together before the documentation sweep.
+
+### Decision 7 — Config wins over terminal interactivity
+
+- Recorded: 2026-08-17
+
+Written consent outranks the terminal: `history.record: false` suppresses
+recording even on a TTY. The terminal may start a series only when no consent is
+written, and the CLI and MCP doors apply the same rule.
+
+### Decision 8 — Flat allowed_roots stands
+
+- Recorded: 2026-08-17
+
+`get_agent_info` keeps the honest flat `allowed_roots` list. Provenance labels
+are not added to that response.
+
 Decisions 005–007 were written together after a repository containing one production function was reported as 5.0 / A+, evidence complete, verified. They address three distinct causes of that single result: no rate has a minimum population (005), the evidence comes from six homegrown detectors rather than the mature analyzers the README says to pair with (006), and nothing distinguishes *a clean scan* from *an enforced standard* (007).
 
 ## Statuses

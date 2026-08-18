@@ -226,7 +226,11 @@ VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {
     "pydocstyle":  ("documentation", "style"),
     "cohesion":    ("structure",),
     "multimetric": ("metrics", "complexity", "documentation"),
-    "pmd":         ("cognitive_complexity", "cyclomatic_complexity"),
+    # The concern first ("complexity" is what `decide()` intersects with
+    # a configured concern pool), then the concepts it is served by — a
+    # concepts-only tuple dropped PMD from a complexity-only pool
+    # (audit M on 549fcad).
+    "pmd":         ("complexity", "cognitive_complexity", "cyclomatic_complexity"),
     "cloc": ("metrics", "documentation"),
     "wily":        ("metrics",),
 }

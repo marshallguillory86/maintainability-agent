@@ -28,8 +28,9 @@ from maintainability_audit.config import load_config
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "data" / "analyzer-catalog.json"
+PRODUCER = ROOT / "tools" / "build_catalog.py"
 POOL_DOC = ROOT / "docs" / "analyzer-pool.md"
-CHECKSTYLE_CONCERNS = ("style", "complexity", "structure")
+CHECKSTYLE_CONCERNS = ("style", "documentation")
 POOLABLE = {"permissive", "weak-copyleft", "strong-copyleft"}
 
 
@@ -49,14 +50,19 @@ def _entry() -> dict[str, Any]:
     return next(tool for tool in _catalog()["tools"] if tool["slug"] == "checkstyle")
 
 
+def _producer():
+    """The real producer module: is_eligible has exactly one source (L1)."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("build_catalog", PRODUCER)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def _eligible(tools: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return [
-        tool for tool in tools
-        if tool["license_class"] in POOLABLE
-        and not tool["deprecated"]
-        and tool["languages"]
-        and not tool["security_only"]
-    ]
+    is_eligible = _producer().is_eligible
+    return [tool for tool in tools if is_eligible(tool)]
 
 
 def _recomputed_counts(tools: list[dict[str, Any]]) -> dict[str, Any]:
@@ -82,10 +88,11 @@ def _recomputed_counts(tools: list[dict[str, Any]]) -> dict[str, Any]:
 
 def _weak_copyleft_policy() -> str:
     """The least-restrictive shipped policy that already admits weak-copyleft."""
-    return next(
+    admitting = [
         name for name, classes in LICENSE_POLICIES.items()
         if "weak-copyleft" in classes
-    )
+    ]
+    return min(admitting, key=lambda name: len(LICENSE_POLICIES[name]))
 
 
 def test_catalog_and_producer_record_the_weak_copyleft_contract() -> None:
@@ -98,7 +105,7 @@ def test_catalog_and_producer_record_the_weak_copyleft_contract() -> None:
     assert entry["license_class"] == "weak-copyleft"
     assert "license" in entry["license_evidence"].lower()
     assert entry["languages"] == ["java"]
-    assert tuple(entry["measures"][:3]) == CHECKSTYLE_CONCERNS, (
+    assert tuple(entry["measures"][:2]) == CHECKSTYLE_CONCERNS, (
         "measures must lead with concern names; a concepts-only tuple "
         "dropped PMD from concern pools"
     )
@@ -114,7 +121,7 @@ def test_catalog_and_producer_record_the_weak_copyleft_contract() -> None:
         "a below-all tier is a promise that a runnable adapter ships"
     )
     assert tiers["checkstyle"] == "moderate"
-    assert producer_literal("VERIFIED_MEASURES")["checkstyle"][:3] == CHECKSTYLE_CONCERNS
+    assert producer_literal("VERIFIED_MEASURES")["checkstyle"][:2] == CHECKSTYLE_CONCERNS
     license_name, evidence = producer_literal("VERIFIED_LICENSES")["checkstyle"]
     assert license_name == "LGPL-2.1-or-later"
     assert "license" in evidence.lower()

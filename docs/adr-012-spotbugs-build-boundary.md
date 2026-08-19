@@ -38,7 +38,7 @@ claim for one tool's evidence.
    the agent reports" contract as a missing binary (agents never
    install; agents never build).
 
-## Proposed resolution
+## Resolution
 
 Option 3. The boundary sentence stays absolute — *the agent never
 builds* — and the work order carries the remedy, exactly as it does
@@ -54,7 +54,8 @@ silently (P8).
 
 - The JVM track completes with three adapters of two shapes:
   source-read (PMD, Checkstyle) and artifact-read (SpotBugs). D15's
-  composition test covers both shapes.
+  composition test, still to be written, will have to cover both
+  shapes.
 - The environment work order gains its first non-install remedy
   (build instruction), which generalizes to future artifact-read
   tools (JaCoCo report reading was already declined — decision 10 —

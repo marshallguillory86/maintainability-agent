@@ -15,6 +15,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import re
+import tempfile
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from xml.etree import ElementTree
@@ -408,42 +409,38 @@ class PmdAdapter(BaseAdapter):
 class CheckstyleAdapter(BaseAdapter):
     """Checkstyle over Java source with its bundled Google ruleset.
 
-    Decision 9's second JVM adapter, written under the 549fcad audit's
-    do-not-copy list. The bundled ``/google_checks.xml`` loads from the
-    tool's own classpath — deterministic for a pinned Checkstyle
-    version, no repository config, no network. Findings are read
-    through the shared JVM interchange parser in ``_generic`` and then
-    routed onto this project's concerns per rule: metrics rules are
-    complexity, size rules are structure, and everything else is the
-    convention layer (style) this integration exists to add beside
-    PMD's two complexity rules. A verdict emitter: it reports breaches
-    of its ruleset and can never supply a rate (P2). Explicit ``.java``
-    targets from ``expand_files`` carry the exclusions, and
-    ``has_targets`` keeps an empty list from ever spawning the CLI.
+    Decision 9's second JVM adapter, remeasured by the 742a49f audit:
+    google_checks is a convention and Javadoc guide, so this
+    integration claims exactly that — style and documentation — and
+    leaves the complexity and structure pools to the tools that emit
+    those concerns (H1: measures must name what the pinned invocation
+    can actually produce). The bundled ``/google_checks.xml`` loads
+    from the tool's own classpath; the working directory is a neutral
+    scratch dir so the ruleset's optional ``checkstyle-suppressions.xml``
+    lookup can never read the audited tree (M2 — project suppressions
+    must not silently move findings, the eslint P2 rule). Findings are
+    read through the shared JVM interchange parser in ``_generic``;
+    Javadoc rules land on documentation and everything else is style.
+    A verdict emitter: it reports breaches of its ruleset and can
+    never supply a rate (P2). Explicit ``.java`` targets from
+    ``expand_files`` carry the exclusions, and ``has_targets`` keeps
+    an empty list from ever spawning the CLI.
     """
-
-    # Rule-source markers onto concerns. Checkstyle rule sources are
-    # dotted class paths (…checks.metrics.CyclomaticComplexityCheck,
-    # …checks.sizes.MethodLengthCheck); the package name is the
-    # taxonomy the tool itself uses.
-    _CONCERN_MARKERS = (
-        (".metrics.", "complexity"),
-        ("Complexity", "complexity"),
-        (".sizes.", "structure"),
-        ("Length", "structure"),
-        (".coupling.", "structure"),
-    )
 
     def __init__(self) -> None:
         super().__init__(
             slug="checkstyle", emits="verdict", executable="checkstyle",
-            concepts=("style", "complexity", "structure"),
-            # google_checks emits warnings (exit 0); a stricter ruleset
-            # exits non-zero on error-severity findings, which is a
-            # result, not a failure.
-            findings_exit_codes=(0, 1, 2),
+            concepts=("style", "documentation"),
+            # Checkstyle's real exit contract: the exit code is the
+            # number of error-severity violations; -1 (invalid args)
+            # and -2 (CheckstyleException) wrap to 255 and 254. Any
+            # non-negative count is a run with findings; only the two
+            # wrapped negatives are failures (audit M1 — (0, 1, 2) was
+            # a different tool's folklore).
+            findings_exit_codes=tuple(range(254)),
             languages=("java",),
         )
+        self._work = Path(tempfile.mkdtemp(prefix="checkstyle-"))
 
     def has_targets(self, root: Path, excludes: Sequence[str] = ()) -> bool:
         """Whether any .java file survives the exclusions (never spawn empty)."""
@@ -461,6 +458,11 @@ class CheckstyleAdapter(BaseAdapter):
             argv=("checkstyle", "-c", "/google_checks.xml",
                   "-f", "xml", *targets),
             findings_exit_codes=self.findings_exit_codes,
+            # Neutral scratch dir: google_checks' SuppressionFilter
+            # resolves its optional checkstyle-suppressions.xml against
+            # the working directory, and the audited tree must not be
+            # able to suppress its own findings (audit M2).
+            cwd=self._work,
         )
 
     def _read(self, result: ToolResult) -> Extraction:
@@ -476,8 +478,12 @@ class CheckstyleAdapter(BaseAdapter):
         )
         return Extraction(findings=findings)
 
-    def _concern(self, rule: str) -> str:
-        for marker, concern in self._CONCERN_MARKERS:
-            if marker in rule:
-                return concern
-        return "style"
+    @staticmethod
+    def _concern(rule: str) -> str:
+        # Javadoc rules are the documentation layer; every other
+        # google_checks rule — naming, imports, whitespace, LineLength's
+        # 100-column convention — is style. The 742a49f audit killed the
+        # old substring markers: ".coupling." matched nothing, "Length"
+        # filed a column convention under structure, and none of it was
+        # tested against real rule sources (H2).
+        return "documentation" if "Javadoc" in rule else "style"

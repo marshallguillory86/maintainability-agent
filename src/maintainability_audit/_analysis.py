@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from ._adapters import Extraction, exclusions_for, measurements_only, set_tool_acquisition
+from ._adapters import ours_only as ours_only  # noqa: PLC0414 - re-export
 from ._built_ins import BUILT_IN_SOURCES
 from ._catalog import CONCERNS, PolicyError, concepts_for, resolve_pool, settings_from
 from ._discovery import CATALOG_LANGUAGE, discover
@@ -54,6 +55,11 @@ class ToolCoverage:
     # analyzer is installed. Omitting them made the coverage section
     # describe a fraction of what actually examined the code.
     tier: str = "analyzer"
+    # A non-install remedy for the environment work order: (what the
+    # user runs, how to verify), set when a tool's inputs are missing
+    # but installable software is not the fix — SpotBugs' absent
+    # bytecode carries build-then-rerun here (ADR 012).
+    remedy: tuple[str, str] | None = None
     # The catalog languages this tool reads, in the catalog's vocabulary.
     # Carried on the record because coverage is claimed per language: a
     # Python-only linter covers nothing for C++ at any language mix, and
@@ -281,7 +287,8 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
 
     for tool in pool:
         analysis.coverage.append(_cover_one(
-            tool, root, probe, timeout, analysis, excludes, inventory))
+            tool, root, probe, timeout, analysis, excludes, inventory,
+            class_dirs=tuple(settings.get("class_dirs") or ())))
 
     analysis.coverage.extend(built_in_coverage())
     analysis.coverage.sort(key=lambda item: (item.tier != "built-in", item.slug))
@@ -316,7 +323,8 @@ def _run_one(root: Path, adapter: Any, probe: Probe, timeout: int,
 
 def _cover_one(tool: dict[str, Any], root: Path, probe: Probe, timeout: int,
                analysis: Analysis, excludes: Sequence[str] = (),
-               inventory: Any = None) -> ToolCoverage:
+               inventory: Any = None,
+               class_dirs: tuple[str, ...] = ()) -> ToolCoverage:
     """One selected tool's coverage row: applicability, adapter, or run.
 
     A hand-written adapter where the output is genuinely bespoke, a
@@ -353,6 +361,10 @@ def _cover_one(tool: dict[str, Any], root: Path, probe: Probe, timeout: int,
             concepts=tuple(tool["measures"]),
             languages=reads,
         )
+    if class_dirs and hasattr(adapter, "class_dirs"):
+        # analyzers.class_dirs reaches the one adapter that reads
+        # compiled output (ADR 012); explicit call arguments still win.
+        adapter.class_dirs = class_dirs
     recorded = _run_one(root, adapter, probe, timeout, analysis, excludes, inventory)
     return replace(recorded, languages=reads)
 
@@ -360,6 +372,25 @@ def _cover_one(tool: dict[str, Any], root: Path, probe: Probe, timeout: int,
 def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
              analysis: Analysis, excludes: Sequence[str] = (),
              inventory: Any = None) -> ToolCoverage:
+    finds_targets = getattr(adapter, "has_targets", None)
+    if finds_targets is not None and not finds_targets(root, excludes):
+        # Nothing this adapter reads exists, so nothing else matters —
+        # checked before the availability probe on purpose: a Java tree
+        # with no bytecode is "build first" whether or not SpotBugs is
+        # installed (ADR 012), and spawning would turn "nothing to
+        # examine" into a CLI usage error (PMD exits 2 with no --dir;
+        # audit M on 549fcad). An adapter may state its own reason and
+        # a non-install remedy.
+        return ToolCoverage(
+            slug=adapter.slug, outcome="not-applicable",
+            concepts=tuple(adapter.concepts),
+            detail=getattr(
+                adapter, "missing_targets_detail",
+                "no files this adapter reads survive the exclusions",
+            ),
+            remedy=getattr(adapter, "missing_targets_remedy", None),
+        )
+
     available = probe.check(adapter.slug, adapter.version_argv())
     # A tool whose CLI has no version flag is still a tool. Falling back to
     # package metadata keeps the version record complete, which P1 now
@@ -373,18 +404,6 @@ def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
         return ToolCoverage(
             slug=adapter.slug, outcome=available.outcome.value,
             detail=available.detail, concepts=tuple(adapter.concepts),
-        )
-
-    finds_targets = getattr(adapter, "has_targets", None)
-    if finds_targets is not None and not finds_targets(root, excludes):
-        # Present and working, but nothing it reads survives the
-        # exclusions. Spawning anyway turns "nothing to examine" into a
-        # CLI usage error (PMD exits 2 with no --dir; audit M on
-        # 549fcad) — this is a coverage fact, not a failure.
-        return ToolCoverage(
-            slug=adapter.slug, outcome="not-applicable", version=recorded,
-            concepts=tuple(adapter.concepts),
-            detail="no files this adapter reads survive the exclusions",
         )
 
     needs_config = getattr(adapter, "has_config", None)
@@ -448,43 +467,6 @@ def _ours_only_extraction(
         measurements=tuple(ours_only(list(extraction.measurements), root, inventory, told)),
         findings=tuple(ours_only(list(extraction.findings), root, inventory, told)),
     )
-
-
-def ours_only(
-    items: list[Any], root: Path, inventory: Any, told_about_trees: bool = True
-) -> list[Any]:
-    """Drop measurements or findings about code the team did not write.
-
-    Tools report paths however they like — absolute, relative, or
-    relative to their own working directory — so each is reduced to a
-    repository-relative posix path before it is looked up. A path that
-    cannot be placed inside the tree is kept: an unrecognised location
-    is not evidence of foreign code, and silently dropping it would be
-    the same absence-as-value mistake in a new place.
-
-    `told_about_trees` decides the fate of a tree-wide rate — jscpd's
-    duplication percentage, interrogate's coverage — which carries an
-    empty path and survives any path-exact filter. Told, the rate
-    describes our code and stands. Untold, it counted somebody else's
-    files and nothing after the fact can correct it, so it is dropped
-    rather than adjusted: a corrected-looking number nobody computed is
-    worse than no number.
-    """
-    not_ours = inventory.not_ours()
-    if not not_ours:
-        return list(items)
-    return [
-        item for item in items
-        if _relative_path(item.path, root) not in not_ours
-        and (told_about_trees or item.path != "")
-    ]
-
-
-def _relative_path(path: str, root: Path) -> str:
-    try:
-        return Path(path).resolve().relative_to(root.resolve()).as_posix()
-    except (OSError, ValueError):
-        return path.replace("\\", "/")
 
 
 def _collect(extraction: Extraction, adapter: Any, analysis: Analysis) -> None:

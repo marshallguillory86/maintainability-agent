@@ -133,3 +133,41 @@ def producer_literal(name: str):
     ):
         return frozenset(ast.literal_eval(value.args[0]))
     return ast.literal_eval(value)
+
+
+def producer_module():
+    """The real tools/build_catalog.py, imported: is_eligible has one source."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("build_catalog", PRODUCER)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def recomputed_counts(tools):
+    """The catalog summary as a function of its rows, never hand arithmetic.
+
+    The third verbatim copy of this reader tripped the duplicate-block
+    gate, which is the finding it should produce.
+    """
+    from collections import Counter
+
+    is_eligible = producer_module().is_eligible
+    eligible = [tool for tool in tools if is_eligible(tool)]
+    return {
+        "in_source": len(tools),
+        "eligible": len(eligible),
+        "by_tier": dict(Counter(tool["tier"] for tool in eligible)),
+        "by_license_status": dict(Counter(tool["license_status"] for tool in tools)),
+        "by_license_class": dict(Counter(tool["license_class"] for tool in tools)),
+        "by_measure": dict(Counter(
+            measure for tool in tools for measure in tool["measures"]
+        )),
+        "eligible_by_license_class": dict(Counter(
+            tool["license_class"] for tool in eligible
+        )),
+        "adapters_implemented": sum(
+            1 for tool in tools if tool["adapter"] == "implemented"
+        ),
+    }

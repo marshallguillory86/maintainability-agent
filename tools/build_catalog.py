@@ -116,6 +116,7 @@ VERIFIED_TIERS = {
     "cohesion": "moderate",
     "pmd": "moderate",
     "checkstyle": "moderate",
+    "spotbugs": "moderate",
 }
 
 
@@ -194,7 +195,7 @@ CONCERNS = (
 IMPLEMENTED_ADAPTERS = frozenset({
     "checkstyle", "cohesion", "complexipy", "eslint", "flake8", "interrogate",
     "jscpd", "lizard", "multimetric", "mypy", "pydocstyle", "pylint", "radon",
-    "pmd", "ruff", "vulture",
+    "pmd", "ruff", "spotbugs", "vulture",
 })
 
 # Deliberately unadapted, with the reason, so nobody writes one later
@@ -232,6 +233,7 @@ VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {
     # (audit M on 549fcad).
     "pmd":         ("complexity", "cognitive_complexity", "cyclomatic_complexity"),
     "checkstyle":  ("style", "documentation"),
+    "spotbugs":    ("style",),
     "cloc": ("metrics", "documentation"),
     "wily":        ("metrics",),
 }
@@ -411,7 +413,9 @@ def build(records: list[dict[str, Any]]) -> dict[str, Any]:
                 "and are not claims made by the source. PMD's BSD-style license is "
                 "verified from the upstream PMD LICENSE file. Checkstyle's "
                 "LGPL-2.1-or-later license is verified from the upstream "
-                "Checkstyle LICENSE file."
+                "Checkstyle LICENSE file. SpotBugs is classified weak-copyleft "
+                "from the upstream catalog's GNU Lesser General Public License "
+                "v2.1."
             ),
         },
         "counts": {

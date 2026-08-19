@@ -288,6 +288,13 @@ def test_every_adapter_honours_the_audits_exclusions(slug: str, tmp_path: Path) 
     Swept over the registry: an adapter added without exclusion support
     fails here rather than in someone's report.
     """
+    from test_exclusion_dialects import BYTECODE_DIRS
+
+    if slug in BYTECODE_DIRS:
+        pytest.skip(
+            f"{slug} names compiled class directories outright; it never "
+            "walks sources, so there is nothing for an exclusion to drop"
+        )
     adapter = adapter_for(slug)
     # A real tree: adapters whose tool has no exclusion flag apply the
     # filter by choosing which files to name, so an empty directory would

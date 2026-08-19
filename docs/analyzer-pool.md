@@ -28,7 +28,7 @@ License strings in the wild are messy: 89 distinct spellings, from `MIT License`
 
 A dual license takes the most permissive class on offer, because the licensee chooses: `GPL v3 or Perl Artistic License 2.0` classifies as permissive.
 
-PMD is an explicit catalog override in this tranche: its BSD-style license is verified against the [upstream PMD LICENSE file](https://github.com/pmd/pmd/blob/main/LICENSE), rather than inferred from the source catalog's `Other` value. Checkstyle is the matching weak-copyleft override: its LGPL-2.1-or-later license is verified against the [upstream Checkstyle LICENSE file](https://github.com/checkstyle/checkstyle/blob/master/LICENSE).
+PMD is an explicit catalog override in this tranche: its BSD-style license is verified against the [upstream PMD LICENSE file](https://github.com/pmd/pmd/blob/main/LICENSE), rather than inferred from the source catalog's `Other` value. Checkstyle is the matching weak-copyleft override: its LGPL-2.1-or-later license is verified against the [upstream Checkstyle LICENSE file](https://github.com/checkstyle/checkstyle/blob/master/LICENSE). SpotBugs is already classified weak-copyleft from the upstream catalog's GNU Lesser General Public License v2.1.
 
 **None of this is legal advice.** Whether invoking a GPL analyzer as a separate process has any effect on the code it scans is a question for your own counsel. The classification exists so that whatever answer your organization reaches can be *enforced*, rather than left to whichever engineer installed what.
 
@@ -71,8 +71,8 @@ python tools/resolve_pool.py --concerns documentation
 | Depth | Tools | What it means |
 |---|---|---|
 | `baseline` | 9 | Multi-language or zero-config tools, one install, seconds to run |
-| `moderate` | 16 | Baseline plus the mainstream per-language linters |
-| `heavy` | 16 | Moderate plus slower or configuration-hungry tools; none are added today |
+| `moderate` | 17 | Baseline plus the mainstream per-language linters |
+| `heavy` | 17 | Moderate plus slower or configuration-hungry tools; none are added today |
 | `all` | up to 448 | Every eligible tool that speaks a detected language |
 
 **A tier below `all` is a promise that the tool works.** Nothing is placed in `baseline`, `moderate` or `heavy` until this project has installed it, run it, and parsed its output. That is why those numbers are small and why they will grow one verified tool at a time.
@@ -107,7 +107,7 @@ Analyzers live in ecosystems, and the agent runs the ones it can reach. Nothing 
 |---|---|---|
 | Python 3.11+ | The agent itself, and lizard, radon, ruff, vulture, complexipy, interrogate, pydocstyle, multimetric, pylint, mypy | ships with the package |
 | **Node.js 18+** | **jscpd** (multi-language clone detection), eslint, and the JS/TS toolchain | `brew install node` / your platform's package manager |
-| JDK 17+ | PMD and Checkstyle; SpotBugs has no adapter yet | `brew install openjdk`; install PMD with `brew install pmd` or its upstream distribution; install Checkstyle with `brew install checkstyle` |
+| JDK 17+ | PMD, Checkstyle, and SpotBugs | `brew install openjdk`; install PMD with `brew install pmd` or its upstream distribution; install Checkstyle with `brew install checkstyle`; install SpotBugs with `brew install spotbugs`. SpotBugs reads bytecode that already exists (`target/classes`, `build/classes`); the agent never runs the build. |
 | Go toolchain | golangci-lint (no adapter yet) | `brew install go` |
 | Rust toolchain | clippy (no adapter yet) | `brew install rust` |
 
@@ -123,7 +123,7 @@ npm install -g jscpd@5
 
 ## Adapter status, stated plainly
 
-**16 tools have adapters**. An inventory entry without an adapter is not a shipped capability.
+**17 tools have adapters**. An inventory entry without an adapter is not a shipped capability.
 
 | Verified | Depth | Concern | Evidence |
 |---|---|---|---|
@@ -143,6 +143,7 @@ npm install -g jscpd@5
 | cohesion | moderate | Per-class cohesion percentage | parses its verbose class report; measurements, not gates |
 | pmd | moderate | Java cognitive and cyclomatic complexity verdicts | `pmd check` with a pinned local ruleset; SARIF output; install with `brew install pmd`, verify with `pmd --version` |
 | checkstyle | moderate | Java style and documentation verdicts — the bundled Google ruleset is a convention and Javadoc guide, not a complexity or structure source | `checkstyle` over explicit `.java` targets with the bundled `google_checks.xml` from a neutral working directory (the audited tree's optional suppressions file is never read); XML via the shared checkstyle parser; install with `brew install checkstyle`, verify with `checkstyle --version` |
+| spotbugs | moderate | Java bytecode STYLE findings only — a bug-pattern tool, not a complexity or structure source; SECURITY detectors are omitted (secure-code-agent) | `spotbugs -textui -exitcode` over existing `target/classes` / `build/classes` (or `analyzers.class_dirs`); BugCollection XML, never the Checkstyle parser; missing bytecode is `not-applicable` with a build-then-rerun work-order item, never `not-installed`; coverage records source vs class mtimes (ADR 012). Install with `brew install spotbugs`, verify with `spotbugs -version`. D15's composition test is still to be written. |
 
 The full inventory, including everything without an adapter, is in the [JSON](../data/analyzer-catalog.json). Additional adapters remain incremental work; the inventory alone does not make a tool runnable.
 

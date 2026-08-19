@@ -267,6 +267,13 @@
         "run": {
           "type": "boolean",
           "description": "Whether the external analyzer pool executes. A loaded config file defaults this to true (the pool is the primary evidence source, ADR 006); set false to keep the built-in fallback. CLI flags override per run."
+        },
+        "class_dirs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Extra directories of compiled Java classes for SpotBugs, in addition to target/classes and build/classes. The agent never builds these (ADR 012)."
         }
       },
       "additionalProperties": false

@@ -11,12 +11,11 @@ from __future__ import annotations
 
 import json
 import re
-from collections import Counter
 from pathlib import Path
 from typing import Any
 
 import pytest
-from _ast_reading import producer_literal
+from _ast_reading import producer_literal, recomputed_counts
 
 from maintainability_audit._catalog import (
     DEFAULTS,
@@ -48,42 +47,6 @@ def _catalog() -> dict[str, Any]:
 
 def _entry() -> dict[str, Any]:
     return next(tool for tool in _catalog()["tools"] if tool["slug"] == "checkstyle")
-
-
-def _producer():
-    """The real producer module: is_eligible has exactly one source (L1)."""
-    import importlib.util
-
-    spec = importlib.util.spec_from_file_location("build_catalog", PRODUCER)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-def _eligible(tools: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    is_eligible = _producer().is_eligible
-    return [tool for tool in tools if is_eligible(tool)]
-
-
-def _recomputed_counts(tools: list[dict[str, Any]]) -> dict[str, Any]:
-    """The catalog summary is a function of the rows, not hand arithmetic."""
-    eligible = _eligible(tools)
-    return {
-        "in_source": len(tools),
-        "eligible": len(eligible),
-        "by_tier": dict(Counter(tool["tier"] for tool in eligible)),
-        "by_license_status": dict(Counter(tool["license_status"] for tool in tools)),
-        "by_license_class": dict(Counter(tool["license_class"] for tool in tools)),
-        "by_measure": dict(Counter(
-            measure for tool in tools for measure in tool["measures"]
-        )),
-        "eligible_by_license_class": dict(Counter(
-            tool["license_class"] for tool in eligible
-        )),
-        "adapters_implemented": sum(
-            1 for tool in tools if tool["adapter"] == "implemented"
-        ),
-    }
 
 
 def _weak_copyleft_policy() -> str:
@@ -130,7 +93,7 @@ def test_catalog_and_producer_record_the_weak_copyleft_contract() -> None:
 def test_catalog_counts_are_recomputed_from_the_tool_records() -> None:
     """The PMD slice's count error came from hand-decrementing the summary."""
     catalog = _catalog()
-    expected = _recomputed_counts(catalog["tools"])
+    expected = recomputed_counts(catalog["tools"])
     assert catalog["counts"] == expected
 
 

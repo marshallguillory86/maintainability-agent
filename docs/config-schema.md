@@ -78,6 +78,7 @@ Controls whether the external pool runs and which analysis tools may run in it. 
 - `deny_license_classes`: whole classes never run, e.g. `["strong-copyleft"]`.
 - `deny_concerns`: concern tags never run. `security` is denied by default; that work belongs to `secure-code-agent` and duplicating it here would produce two tools disagreeing about the same repository.
 - `timeout_seconds`: per-tool wall clock. A tool that exceeds it is recorded as unavailable-timeout, never as a clean result.
+- `class_dirs`: extra directories of already-compiled Java classes for SpotBugs, on top of the defaults `target/classes` and `build/classes`. The agent never creates these directories and never runs the build (ADR 012).
 
 **Precedence is fixed and not configurable:** every deny wins, including over `allow_tools`. An organization's prohibition must not be overridable by a per-repository opt-in. Within what remains, `allow_tools` admits, then the depth and license tiers decide.
 

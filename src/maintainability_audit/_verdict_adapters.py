@@ -12,12 +12,15 @@ identical code.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import re
 from collections.abc import Iterable, Sequence
 from pathlib import Path
+from xml.etree import ElementTree
 
 from ._adapters import BaseAdapter, Extraction, _npx
+from ._generic import parse_checkstyle
 from ._metric_adapters import expand_files
 from ._metrics_types import Finding
 from ._runner import Invocation, ToolResult
@@ -400,3 +403,81 @@ class PmdAdapter(BaseAdapter):
         region = (locations[0].get("physicalLocation") or {}).get("region") or {}
         line = region.get("startLine")
         return int(line) if isinstance(line, int) else None
+
+
+class CheckstyleAdapter(BaseAdapter):
+    """Checkstyle over Java source with its bundled Google ruleset.
+
+    Decision 9's second JVM adapter, written under the 549fcad audit's
+    do-not-copy list. The bundled ``/google_checks.xml`` loads from the
+    tool's own classpath — deterministic for a pinned Checkstyle
+    version, no repository config, no network. Findings are read
+    through the shared JVM interchange parser in ``_generic`` and then
+    routed onto this project's concerns per rule: metrics rules are
+    complexity, size rules are structure, and everything else is the
+    convention layer (style) this integration exists to add beside
+    PMD's two complexity rules. A verdict emitter: it reports breaches
+    of its ruleset and can never supply a rate (P2). Explicit ``.java``
+    targets from ``expand_files`` carry the exclusions, and
+    ``has_targets`` keeps an empty list from ever spawning the CLI.
+    """
+
+    # Rule-source markers onto concerns. Checkstyle rule sources are
+    # dotted class paths (…checks.metrics.CyclomaticComplexityCheck,
+    # …checks.sizes.MethodLengthCheck); the package name is the
+    # taxonomy the tool itself uses.
+    _CONCERN_MARKERS = (
+        (".metrics.", "complexity"),
+        ("Complexity", "complexity"),
+        (".sizes.", "structure"),
+        ("Length", "structure"),
+        (".coupling.", "structure"),
+    )
+
+    def __init__(self) -> None:
+        super().__init__(
+            slug="checkstyle", emits="verdict", executable="checkstyle",
+            concepts=("style", "complexity", "structure"),
+            # google_checks emits warnings (exit 0); a stricter ruleset
+            # exits non-zero on error-severity findings, which is a
+            # result, not a failure.
+            findings_exit_codes=(0, 1, 2),
+            languages=("java",),
+        )
+
+    def has_targets(self, root: Path, excludes: Sequence[str] = ()) -> bool:
+        """Whether any .java file survives the exclusions (never spawn empty)."""
+        return bool(expand_files(root, excludes, suffixes=(".java",)))
+
+    def invocation(
+        self, root: Path, paths: Iterable[str] | None = None,
+        excludes: Sequence[str] = (),
+    ) -> Invocation:
+        targets = (
+            tuple(paths) if paths
+            else expand_files(root, excludes, suffixes=(".java",))
+        )
+        return Invocation(
+            argv=("checkstyle", "-c", "/google_checks.xml",
+                  "-f", "xml", *targets),
+            findings_exit_codes=self.findings_exit_codes,
+        )
+
+    def _read(self, result: ToolResult) -> Extraction:
+        try:
+            base = parse_checkstyle(result.stdout, self.slug, "style")
+        except ElementTree.ParseError as error:
+            # Unreadable output is a stated gap, never a crash: the
+            # shared plumbing converts ValueError to parse_error.
+            raise ValueError(f"unreadable checkstyle XML: {error}") from error
+        findings = tuple(
+            dataclasses.replace(finding, concept=self._concern(finding.rule or ""))
+            for finding in base.findings
+        )
+        return Extraction(findings=findings)
+
+    def _concern(self, rule: str) -> str:
+        for marker, concern in self._CONCERN_MARKERS:
+            if marker in rule:
+                return concern
+        return "style"

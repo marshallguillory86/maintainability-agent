@@ -123,7 +123,7 @@ The scorer consumes 28 typed inputs — 23 on `SummaryEvidence`, 5 on `HistoryEv
 
 ### The product, in one paragraph
 
-A user should not have to know which of 447 analyzers exist, write scripts to invoke them, or reconcile their output formats. They answer two questions — **what do you want examined** and **how deep** — inside a license policy their organization sets once. The agent resolves the toolset, runs it, and returns two things: the compiler-style errors (located, specific, fixable) and the scores (compact, comparable, trendable). Both go in the report; neither replaces the other.
+A user should not have to know which of 448 analyzers exist, write scripts to invoke them, or reconcile their output formats. They answer two questions — **what do you want examined** and **how deep** — inside a license policy their organization sets once. The agent resolves the toolset, runs it, and returns two things: the compiler-style errors (located, specific, fixable) and the scores (compact, comparable, trendable). Both go in the report; neither replaces the other.
 
 That is the whole value proposition, and every mechanism below exists to serve it.
 
@@ -153,16 +153,16 @@ $ resolve_pool --concerns documentation
 
 **The concern vocabulary is the scoring model's, not an invented one**, so an answer to "what do you care about?" maps onto aspects that actually exist and can actually move a score.
 
-It also cannot be sourced from the catalog's upstream data, and that is worth stating plainly: the upstream tags are languages, ecosystems and frameworks — `rails`, `nodejs`, `spring` — and **only 5 of the 447 eligible tools carry an upstream tag naming one of this project's concerns**. What a tool measures can only be known by running it, so the `measures` field is populated exactly as fast as adapters are written, and the upstream tags are kept separately as `upstream_tags` rather than dressed up as concerns.
+It also cannot be sourced from the catalog's upstream data, and that is worth stating plainly: the upstream tags are languages, ecosystems and frameworks — `rails`, `nodejs`, `spring` — and **only 5 of the 448 eligible tools carry an upstream tag naming one of this project's concerns**. What a tool measures can only be known by running it, so the `measures` field is populated exactly as fast as adapters are written, and the upstream tags are kept separately as `upstream_tags` rather than dressed up as concerns.
 
 ### Which tools run: the catalog, depth and license policy
 
-The pool is not hardcoded. [`data/analyzer-catalog.json`](../data/analyzer-catalog.json) holds **760 tools** — 755 from the analysis-tools.dev database pinned at a recorded commit, plus 5 verified locally — each with its license, license class, languages and source. **447 are eligible**: open-source class, current, language-targeting, not security-only.
+The pool is not hardcoded. [`data/analyzer-catalog.json`](../data/analyzer-catalog.json) holds **760 tools** — 755 from the analysis-tools.dev database pinned at a recorded commit, plus 5 verified locally — each with its license, license class, languages and source. **448 are eligible**: open-source class, current, language-targeting, not security-only.
 
 Two independent selectors narrow it, because *how much work* and *what may we legally run* are different questions:
 
-- **depth** — `baseline`(9) / `moderate`(15) / `heavy`(15) / `all`(447). A tier below `all` is a promise the tool works; nothing enters one until it has been installed, run and parsed.
-- **license policy** — `permissive`(368) / `copyleft-weak`(402) / `copyleft-any`(447) / `commercial-free-tier`(473) / `unverified`. Some organizations forbid copyleft outright, so the policy is enforceable rather than advisory.
+- **depth** — `baseline`(9) / `moderate`(16) / `heavy`(16) / `all`(448). A tier below `all` is a promise the tool works; nothing enters one until it has been installed, run and parsed.
+- **license policy** — `permissive`(368) / `copyleft-weak`(403) / `copyleft-any`(448) / `commercial-free-tier`(474) / `unverified`. Some organizations forbid copyleft outright, so the policy is enforceable rather than advisory.
 
 Both are set in the `analyzers` block of the config file, or answered interactively on first run at a terminal, and both are **recorded in the report** — a score from four tools and a score from forty are not the same measurement and must not be silently comparable. Individual tools and whole license classes can be denied; **every deny wins, including over an explicit allow**, because an organization's prohibition must not be overridable per repository.
 

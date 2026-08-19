@@ -11,8 +11,8 @@
     "eligible": 448,
     "by_tier": {
       "all": 433,
-      "baseline": 9,
-      "moderate": 6
+      "moderate": 6,
+      "baseline": 9
     },
     "by_license_status": {
       "foss": 581,
@@ -30,16 +30,16 @@
       "unverified": 72
     },
     "by_measure": {
-      "documentation": 4,
-      "metrics": 5,
-      "structure": 5,
-      "complexity": 9,
       "style": 6,
+      "documentation": 5,
+      "metrics": 5,
+      "structure": 4,
+      "complexity": 8,
       "duplication": 2,
       "types": 1,
-      "dead-code": 2,
       "cognitive_complexity": 1,
-      "cyclomatic_complexity": 1
+      "cyclomatic_complexity": 1,
+      "dead-code": 2
     },
     "eligible_by_license_class": {
       "permissive": 368,
@@ -732,7 +732,7 @@
     },
     {
       "slug": "astre",
-      "name": "Astrée",
+      "name": "Astr\u00e9e",
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
@@ -2186,8 +2186,7 @@
       "upstream_tags": [],
       "measures": [
         "style",
-        "complexity",
-        "structure"
+        "documentation"
       ],
       "security_only": false,
       "source": "https://github.com/checkstyle/checkstyle",

@@ -26,8 +26,6 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 SOURCE_REPO = "https://github.com/analysis-tools-dev/static-analysis"
 SOURCE_SHA = "66668c6cc5b2db72d0233033efe7ccf2c489aaf8"
 SOURCE_DATE = "2026-06-10"
@@ -233,7 +231,7 @@ VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {
     # concepts-only tuple dropped PMD from a complexity-only pool
     # (audit M on 549fcad).
     "pmd":         ("complexity", "cognitive_complexity", "cyclomatic_complexity"),
-    "checkstyle":  ("style", "complexity", "structure"),
+    "checkstyle":  ("style", "documentation"),
     "cloc": ("metrics", "documentation"),
     "wily":        ("metrics",),
 }
@@ -318,6 +316,8 @@ def normalize_license(raw: str) -> tuple[str, str]:
 def load(source: Path) -> list[dict[str, Any]]:
     out = []
     for path in sorted((source / "data" / "tools").glob("*.yml")):
+        import yaml  # lazy: tests import is_eligible without PyYAML
+
         loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
         if not loaded:
             continue

@@ -35,7 +35,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "data" / "analyzer-catalog.json"
 PRODUCER = ROOT / "tools" / "build_catalog.py"
 POOL_DOC = ROOT / "docs" / "analyzer-pool.md"
-CHECKSTYLE_CONCERNS = ("style", "complexity", "structure")
+CHECKSTYLE_CONCERNS = ("style", "documentation")
 POOLABLE = {"permissive", "weak-copyleft", "strong-copyleft"}
 
 
@@ -243,13 +243,14 @@ def test_missing_checkstyle_is_actionable_and_built_ins_still_run(
     assert "checkstyle" in item["verify"].lower()
     assert "version" in item["verify"].lower()
 
-    java_hits = [
-        finding
-        for group in (report.get("function_hotspots") or [], report.get("file_hotspots") or [])
-        for finding in group
+    java_fails = [
+        finding for finding in report.get("function_hotspots") or []
         if finding.get("path") == "src/oversized_name.java"
+        and finding.get("status") == "fail"
     ]
-    assert java_hits, "a missing Checkstyle removed the built-in Java population"
+    assert java_fails, (
+        "a missing Checkstyle removed the built-in Java population"
+    )
 
 
 def test_a_real_checkstyle_run_is_versioned_located_and_deterministic(
@@ -289,3 +290,64 @@ def test_a_real_checkstyle_run_is_versioned_located_and_deterministic(
     ] == findings
 
 
+_RULE_TABLE = (
+    # Real google_checks sources route per THIS project's concern table
+    # (742a49f audit H2): Javadoc is the documentation layer; naming and
+    # LineLength's 100-column convention are style — LineLength is not
+    # file-size structure. Rules the pinned ruleset cannot emit must
+    # still land on a declared concept, and style is that default.
+    ("com.puppycrawl.tools.checkstyle.checks.javadoc.MissingJavadocMethodCheck",
+     "documentation"),
+    ("com.puppycrawl.tools.checkstyle.checks.javadoc.SummaryJavadocCheck",
+     "documentation"),
+    ("com.puppycrawl.tools.checkstyle.checks.naming.TypeNameCheck", "style"),
+    ("com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck", "style"),
+    ("com.puppycrawl.tools.checkstyle.checks.sizes.MethodLengthCheck", "style"),
+    ("com.puppycrawl.tools.checkstyle.checks.metrics.CyclomaticComplexityCheck",
+     "style"),
+)
+
+
+@pytest.mark.parametrize(("source", "concern"), _RULE_TABLE)
+def test_rule_sources_route_per_the_concern_table(source: str, concern: str) -> None:
+    """Audit H2: routing is tested against real rule sources, not defaults."""
+    payload = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        "<checkstyle>\n"
+        '<file name="src/X.java">\n'
+        f'<error line="4" message="m" source="{source}"/>\n'
+        "</file>\n"
+        "</checkstyle>\n"
+    )
+    extraction = _adapter().parse(ToolResult(
+        slug="checkstyle", outcome=Outcome.RAN, stdout=payload, exit_code=0,
+    ))
+    assert [finding.concept for finding in extraction.findings] == [concern]
+    assert concern in set(_adapter().concepts)
+
+
+def test_the_audited_tree_cannot_suppress_its_own_findings(tmp_path: Path) -> None:
+    """Audit M2: the ruleset's optional suppressions lookup never reads the tree."""
+    adapter = _adapter()
+    root = _java_repo(tmp_path / "suppress")
+    (root / "checkstyle-suppressions.xml").write_text(
+        '<?xml version="1.0"?><!DOCTYPE suppressions PUBLIC "" ""><suppressions/>',
+        encoding="utf-8",
+    )
+
+    invocation = adapter.invocation(root)
+
+    assert invocation.cwd is not None, "no working directory pins the lookup"
+    assert Path(invocation.cwd).resolve() != root.resolve()
+    assert not (Path(invocation.cwd) / "checkstyle-suppressions.xml").exists()
+
+
+def test_exit_codes_follow_checkstyles_error_count_contract() -> None:
+    """Audit M1: exit = error count; only the wrapped -1/-2 mean failure."""
+    codes = _adapter().findings_exit_codes
+    assert 0 in codes and 3 in codes and 253 in codes, (
+        "a third error-severity finding must not read as a failed run"
+    )
+    assert 254 not in codes and 255 not in codes, (
+        "CheckstyleException and invalid-args must stay failures"
+    )

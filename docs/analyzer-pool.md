@@ -142,7 +142,7 @@ npm install -g jscpd@5
 | flake8 | moderate | Style, mccabe complexity, unused code | parses its default `path:row:col: CODE message` lines |
 | cohesion | moderate | Per-class cohesion percentage | parses its verbose class report; measurements, not gates |
 | pmd | moderate | Java cognitive and cyclomatic complexity verdicts | `pmd check` with a pinned local ruleset; SARIF output; install with `brew install pmd`, verify with `pmd --version` |
-| checkstyle | moderate | Java style, complexity, and structure verdicts | `checkstyle` over explicit `.java` targets with a bundled `google_checks.xml` or `sun_checks.xml`; XML via the shared checkstyle parser; install with `brew install checkstyle`, verify with `checkstyle --version` |
+| checkstyle | moderate | Java style and documentation verdicts — the bundled Google ruleset is a convention and Javadoc guide, not a complexity or structure source | `checkstyle` over explicit `.java` targets with the bundled `google_checks.xml` from a neutral working directory (the audited tree's optional suppressions file is never read); XML via the shared checkstyle parser; install with `brew install checkstyle`, verify with `checkstyle --version` |
 
 The full inventory, including everything without an adapter, is in the [JSON](../data/analyzer-catalog.json). Additional adapters remain incremental work; the inventory alone does not make a tool runnable.
 

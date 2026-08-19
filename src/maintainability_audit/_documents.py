@@ -20,7 +20,13 @@ from pathlib import Path
 from typing import Any
 
 from ._analysis import Analysis, ToolCoverage
-from ._corroborate import agreement, combine, single_source_concepts
+from ._corroborate import (
+    agreement,
+    combine,
+    finding_identity,
+    normalize_source_path,
+    single_source_concepts,
+)
 
 
 def _relative(path: str, root: Path) -> str:
@@ -28,12 +34,23 @@ def _relative(path: str, root: Path) -> str:
 
     Tools are handed absolute paths and hand them back. Left as-is the
     report is unreadable, and two runs from different checkout
-    directories produce diffs that are entirely path noise.
+    directories produce diffs that are entirely path noise. A path
+    that is neither absolute nor a real file under the root may be a
+    tool's own spelling — SpotBugs reports package-relative
+    ``com/foo/Bar.java`` — and is identified against the tree when
+    exactly one file matches (D15), so the same defect never carries
+    two identities across adapters.
     """
     try:
-        return str(Path(path).resolve().relative_to(root.resolve()))
+        relative = str(Path(path).resolve().relative_to(root.resolve()))
     except (ValueError, OSError):
-        return path
+        relative = path
+    return normalize_source_path(root, relative)
+
+
+def _identity_key(item: dict[str, Any]) -> tuple[str, int, str]:
+    path, line, rule = finding_identity(item)
+    return (str(path), int(line or 0), str(rule))
 
 
 def findings_document(analysis: Analysis, root: Path) -> list[dict[str, Any]]:
@@ -60,7 +77,10 @@ def findings_document(analysis: Analysis, root: Path) -> list[dict[str, Any]]:
             }
             for finding in analysis.findings
         ),
-        key=lambda item: (item["path"], item["line"] or 0, item["tool"], item["message"]),
+        # Ordered by the finding's identity — the located rule, never the
+        # concept (D15) — then the producing tool, so two adapters'
+        # spellings of one defect sit adjacent instead of interleaving.
+        key=lambda item: (*_identity_key(item), item["tool"], item["message"]),
     )
 
 
@@ -181,6 +201,19 @@ def _language_document(analysis: Analysis) -> dict[str, Any]:
     }
 
 
+def _stale_artifact(coverage: list[ToolCoverage]) -> dict[str, Any]:
+    """Composed evidence states its staleness (D15, P8).
+
+    When any artifact-read row measured bytecode older than the source,
+    the summary says so — never only the private row. Absent entirely
+    when no tool measures staleness: the question does not apply.
+    """
+    measured = [item.stale for item in coverage if item.stale is not None]
+    if not measured:
+        return {}
+    return {"stale_artifact_evidence": any(measured)}
+
+
 def coverage_document(analysis: Analysis) -> dict[str, Any]:
     """The coverage section, as it appears in a report.
 
@@ -210,6 +243,7 @@ def coverage_document(analysis: Analysis) -> dict[str, Any]:
         # is stated beside the score rather than filed behind it.
         "tools_attempted": sum(1 for i in analysis.coverage if i.tier == "analyzer"),
         "tools_contributed": sum(1 for i in ran if i.tier == "analyzer"),
+        **_stale_artifact(analysis.coverage),
         "by_outcome": dict(grouped),
         **_language_document(analysis),
         "concepts_single_source": analysis.single_source_concerns(),

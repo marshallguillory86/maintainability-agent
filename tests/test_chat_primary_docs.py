@@ -154,11 +154,12 @@ def test_decisions_four_through_eight_are_repository_records() -> None:
 
 
 def test_register_is_empty_except_for_analyzer_composition() -> None:
-    """The docs sweep closes the surface register; D15 rides the adapter track."""
+    """The docs sweep closes the surface register; D15 closed behind composition tests."""
     register = _read(REGISTER)
-    for defect in (4, 12, 16, 17):
+    for defect in (4, 12, 15, 16, 17):
         heading = re.search(rf"^### D{defect} — (.+)$", register, re.MULTILINE)
         assert heading and "Closed" in heading.group(1)
 
     disposition = register.split("## Disposition", maxsplit=1)[1].lower()
-    assert "only d15 remains open" in disposition
+    assert "only d15 remains open" not in disposition
+    assert "seventeen" in disposition and "closed" in disposition

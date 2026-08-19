@@ -32,6 +32,7 @@ from ._adapters import (
     set_tool_acquisition,
 )
 from ._adapters import ours_only as ours_only  # noqa: PLC0414 - re-export
+from ._adapters import ours_only_extraction as _ours_only_extraction
 from ._built_ins import BUILT_IN_SOURCES
 from ._catalog import CONCERNS, PolicyError, concepts_for, resolve_pool, settings_from
 from ._discovery import CATALOG_LANGUAGE, discover
@@ -354,7 +355,20 @@ def _cover_one(tool: dict[str, Any], root: Path, probe: Probe, timeout: int,
         str(name).lower()
         for name in (getattr(adapter, "languages", ()) or tool.get("languages") or ())
     )
-    if not inventory.applicable(reads):
+    if adapter is not None and hasattr(adapter, "class_dirs"):
+        # analyzers.class_dirs for the adapter that reads compiled
+        # output (ADR 012). Assigned on EVERY run — including back to
+        # empty — because the registry holds one instance per process
+        # and configured dirs must not leak between audits (M2).
+        # Before the applicability gate: the gate consults has_targets.
+        adapter.class_dirs = class_dirs
+    # Artifact-read tools are gated by their artifacts, not the source
+    # inventory (D15 pin 5): a tree holding .class files reaches
+    # SpotBugs whatever languages the sources speak. No artifacts
+    # either → plain not-applicable, which carries no build order.
+    finds_targets = getattr(adapter, "has_targets", None) if adapter else None
+    has_artifacts = finds_targets is not None and finds_targets(root, excludes)
+    if not inventory.applicable(reads) and not has_artifacts:
         present = ", ".join(sorted(inventory.languages)) or "no recognised source"
         return ToolCoverage(
             slug=tool["slug"], outcome="not-applicable",
@@ -374,12 +388,6 @@ def _cover_one(tool: dict[str, Any], root: Path, probe: Probe, timeout: int,
             concepts=tuple(tool["measures"]),
             languages=reads,
         )
-    if hasattr(adapter, "class_dirs"):
-        # analyzers.class_dirs for the adapter that reads compiled
-        # output (ADR 012). Assigned on EVERY run — including back to
-        # empty — because the registry holds one instance per process
-        # and configured dirs must not leak between audits (M2).
-        adapter.class_dirs = class_dirs
     recorded = _run_one(root, adapter, probe, timeout, analysis, excludes, inventory)
     return replace(recorded, languages=reads)
 
@@ -463,32 +471,6 @@ def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
         stale=None if evidence is None else bool(evidence["stale"]),
         source_mtime=None if evidence is None else evidence["source_mtime"],
         class_mtime=None if evidence is None else evidence["class_mtime"],
-    )
-
-
-def _ours_only_extraction(
-    extraction: Extraction, root: Path, adapter: Any,
-    excludes: Sequence[str], inventory: Any,
-) -> Extraction:
-    """The backstop, applied per tool before its contribution is counted.
-
-    A tool is not obliged to honour the exclusions it was handed —
-    `test_adapters` already records that some ignore them. Naming the
-    classified trees keeps a well-behaved tool from reading the files;
-    this keeps a badly-behaved one from reporting them, and keeps the
-    coverage record describing what survived rather than what was seen.
-    """
-    if inventory is None:
-        return extraction
-    told = (
-        adapter.received_trees(excludes)
-        if hasattr(adapter, "received_trees")
-        else bool(getattr(excludes, "trees", ()))
-    )
-    return replace(
-        extraction,
-        measurements=tuple(ours_only(list(extraction.measurements), root, inventory, told)),
-        findings=tuple(ours_only(list(extraction.findings), root, inventory, told)),
     )
 
 

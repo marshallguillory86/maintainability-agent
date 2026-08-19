@@ -2,7 +2,8 @@
 
 Split from the runtime contract the way every oversized suite here has
 been split. Measures are only what the pinned invocation emits (style);
-complexity and structure pools must drop this tool. D15 stays unclaimed.
+complexity and structure pools must drop this tool. D15's composition
+test lives in test_d15_composition.py.
 """
 
 from __future__ import annotations
@@ -129,10 +130,10 @@ def test_pool_document_names_spotbugs_bytecode_and_build_remedy() -> None:
 
 
 def test_adr_012_does_not_claim_d15_or_a_shipped_adapter() -> None:
-    """Do-not-copy 12: no D15 present-tense; register stays honest until the class exists."""
+    """D15's composition test now exists; the adapter must still be the shipped one."""
     adr = ADR_012.read_text(encoding="utf-8")
-    assert "still to be written" in adr or "will have to cover" in adr
-    assert not re.search(r"D15's composition test covers both shapes", adr)
+    assert "still to be written" not in adr
+    assert "test_d15_composition" in adr or "covers both shapes" in adr
 
     row = next(
         line for line in REGISTER.read_text(encoding="utf-8").splitlines()

@@ -271,33 +271,62 @@ def test_missing_binary_with_bytecode_is_install_not_build(
     assert "version" in item["verify"].lower()
 
 
-def test_staleness_is_on_the_coverage_row_and_the_findings(tmp_path: Path) -> None:
-    """P8: newest source mtime vs newest class mtime; stale runs say so."""
-    adapter = _adapter()
+def _force_spotbugs_ran(monkeypatch: pytest.MonkeyPatch, payload: str) -> None:
+    """A ran SpotBugs row without a binary: probe and spawn are faked,
+    everything after them — staleness, labeling, serialization — is real."""
+    from maintainability_audit import _analysis
+
+    monkeypatch.setattr(
+        _runner, "_probe",
+        lambda slug, argv: ToolResult(
+            slug=slug, outcome=Outcome.RAN, version="SpotBugs 4.8.6", exit_code=0,
+        ),
+    )
+    monkeypatch.setattr(
+        _analysis, "run",
+        lambda slug, invocation, timeout_seconds=120: ToolResult(
+            slug=slug, outcome=Outcome.RAN, stdout=payload, exit_code=BUGS_FOUND,
+        ),
+    )
+
+
+def test_staleness_is_on_the_coverage_row_and_the_findings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """P8/ADR 012: the ROW carries the evidence and stale findings say so.
+
+    Re-keyed by the 48293d3 audit (H1): the original hasattr branch let
+    a private method satisfy a promise the report never carried.
+    """
     root = _repo(tmp_path / "stale", {
         "src/Widget.java": _java_source(),
         "target/classes/fixture/Widget.class": b"\xca\xfe\xba\xbe dummy",
     })
-    source = root / "src" / "Widget.java"
-    klass = root / "target" / "classes" / "fixture" / "Widget.class"
     now = time.time()
-    os.utime(klass, (now - 120, now - 120))
-    os.utime(source, (now, now))
+    os.utime(root / "target" / "classes" / "fixture" / "Widget.class",
+             (now - 120, now - 120))
+    os.utime(root / "src" / "Widget.java", (now, now))
+    _force_spotbugs_ran(monkeypatch, _bugcollection(
+        _instance("STYLE", "NM_CLASS_NAMING_CONVENTION", "src/Widget.java", 2),
+    ))
 
-    if hasattr(adapter, "staleness"):
-        evidence = adapter.staleness(root)
-        assert evidence["stale"] is True
-        assert evidence["source_mtime"] > evidence["class_mtime"]
-    else:
-        report = build_report(root, _only_spotbugs(), run_analyzers=True)
-        _outcome, row = _row(report, "spotbugs")
-        assert row.get("stale") is True or "stale" in (row.get("detail") or "").lower()
-        assert "source_mtime" in row and "class_mtime" in row
-        assert row["source_mtime"] > row["class_mtime"]
+    report = build_report(root, _only_spotbugs(), run_analyzers=True)
+    outcome, row = _row(report, "spotbugs")
+
+    assert outcome == "ran"
+    assert row["stale"] is True
+    assert row["source_mtime"] > row["class_mtime"]
+    labeled = [
+        item for item in report["analyzer_findings"] if item["tool"] == "spotbugs"
+    ]
+    assert labeled and all(
+        "stale compilation" in item["message"] for item in labeled
+    ), "findings measured against stale bytecode did not say so"
 
 
-def test_fresh_bytecode_is_not_labeled_stale(tmp_path: Path) -> None:
-    adapter = _adapter()
+def test_fresh_bytecode_is_not_labeled_stale(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
     root = _repo(tmp_path / "fresh", {
         "src/Widget.java": _java_source(),
         "target/classes/fixture/Widget.class": b"\xca\xfe\xba\xbe dummy",
@@ -305,15 +334,18 @@ def test_fresh_bytecode_is_not_labeled_stale(tmp_path: Path) -> None:
     now = time.time()
     os.utime(root / "src" / "Widget.java", (now - 120, now - 120))
     os.utime(root / "target" / "classes" / "fixture" / "Widget.class", (now, now))
-    if hasattr(adapter, "staleness"):
-        assert adapter.staleness(root)["stale"] is False
-        return
+    _force_spotbugs_ran(monkeypatch, _bugcollection(
+        _instance("STYLE", "NM_CLASS_NAMING_CONVENTION", "src/Widget.java", 2),
+    ))
+
     report = build_report(root, _only_spotbugs(), run_analyzers=True)
     _outcome, row = _row(report, "spotbugs")
-    assert row.get("stale") is False or (
-        "stale" not in (row.get("detail") or "").lower()
-        and row.get("stale") is not True
-    )
+
+    assert row["stale"] is False
+    assert row["class_mtime"] > row["source_mtime"]
+    for item in report["analyzer_findings"]:
+        if item["tool"] == "spotbugs":
+            assert "stale compilation" not in item["message"]
 
 
 def test_a_real_spotbugs_run_is_versioned_located_and_deterministic(tmp_path: Path) -> None:

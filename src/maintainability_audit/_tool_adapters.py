@@ -23,6 +23,7 @@ from ._metric_adapters import (
     RadonAdapter,
 )
 from ._verdict_adapters import (
+    CheckstyleAdapter,
     EslintAdapter,
     Flake8Adapter,
     PmdAdapter,
@@ -32,6 +33,7 @@ from ._verdict_adapters import (
 )
 
 ADAPTERS: dict[str, Callable[[], BaseAdapter]] = {
+    "checkstyle": CheckstyleAdapter,
     "cohesion": CohesionAdapter,
     "complexipy": ComplexipyAdapter,
     "flake8": Flake8Adapter,

@@ -32,6 +32,7 @@ _INSTALL: dict[str, str] = {
     # A JVM tool, not a Python package: the pip fallback would name a
     # different project entirely.
     "pmd": "brew install pmd",
+    "checkstyle": "brew install checkstyle",
 }
 
 # `--version` is the availability probe the runner itself uses, so the
@@ -41,6 +42,7 @@ _VERIFY: dict[str, str] = {
     "eslint": "npx eslint --version",
     "jscpd": "npx jscpd --version",
     "pmd": "pmd --version",
+    "checkstyle": "checkstyle --version",
 }
 
 

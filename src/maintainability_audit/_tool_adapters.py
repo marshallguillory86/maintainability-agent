@@ -13,6 +13,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from ._adapters import BaseAdapter
+from ._jvm_adapters import CheckstyleAdapter, PmdAdapter, SpotBugsAdapter
 from ._metric_adapters import (
     CohesionAdapter,
     ComplexipyAdapter,
@@ -23,10 +24,8 @@ from ._metric_adapters import (
     RadonAdapter,
 )
 from ._verdict_adapters import (
-    CheckstyleAdapter,
     EslintAdapter,
     Flake8Adapter,
-    PmdAdapter,
     PydocstyleAdapter,
     RuffAdapter,
     VultureAdapter,
@@ -46,6 +45,7 @@ ADAPTERS: dict[str, Callable[[], BaseAdapter]] = {
     "pydocstyle": PydocstyleAdapter,
     "radon": RadonAdapter,
     "ruff": RuffAdapter,
+    "spotbugs": SpotBugsAdapter,
     "vulture": VultureAdapter,
 }
 

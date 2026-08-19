@@ -161,7 +161,7 @@ The pool is not hardcoded. [`data/analyzer-catalog.json`](../data/analyzer-catal
 
 Two independent selectors narrow it, because *how much work* and *what may we legally run* are different questions:
 
-- **depth** — `baseline`(9) / `moderate`(16) / `heavy`(16) / `all`(448). A tier below `all` is a promise the tool works; nothing enters one until it has been installed, run and parsed.
+- **depth** — `baseline`(9) / `moderate`(17) / `heavy`(17) / `all`(448). A tier below `all` is a promise the tool works; nothing enters one until it has been installed, run and parsed.
 - **license policy** — `permissive`(368) / `copyleft-weak`(403) / `copyleft-any`(448) / `commercial-free-tier`(474) / `unverified`. Some organizations forbid copyleft outright, so the policy is enforceable rather than advisory.
 
 Both are set in the `analyzers` block of the config file, or answered interactively on first run at a terminal, and both are **recorded in the report** — a score from four tools and a score from forty are not the same measurement and must not be silently comparable. Individual tools and whole license classes can be denied; **every deny wins, including over an explicit allow**, because an organization's prohibition must not be overridable per repository.

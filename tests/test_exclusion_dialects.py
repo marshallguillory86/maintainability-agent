@@ -36,6 +36,9 @@ from maintainability_audit._tool_adapters import ADAPTERS, adapter_for
 
 TREES = ("lib", "src/pb2.py")
 FILE_LIST = {"pydocstyle", "complexipy", "multimetric", "cohesion", "pmd", "checkstyle"}
+# SpotBugs names class-output directories, not source files and not exclude flags.
+BYTECODE_DIRS = {"spotbugs"}
+NO_EXCLUDE_FLAGS = FILE_LIST | BYTECODE_DIRS
 # These spell trees in their own invocation() and do not use tree_patterns().
 CUSTOM_INVOCATION = {"jscpd", "radon", "eslint"}
 
@@ -77,8 +80,8 @@ def test_an_empty_operator_list_still_emits_the_inventory_trees(
     A repository whose operator wrote no `exclude_patterns` is exactly
     the one relying on discovery, and `if not excludes` skipped it.
     """
-    if slug in FILE_LIST:
-        pytest.skip(f"{slug} names files rather than exclude flags")
+    if slug in NO_EXCLUDE_FLAGS:
+        pytest.skip(f"{slug} names files or class dirs rather than exclude flags")
 
     argv = _argv(slug, _tree(tmp_path / slug), Exclusions((), TREES))
 
@@ -95,8 +98,8 @@ def test_no_adapter_receives_a_bare_tree_token(slug: str, tmp_path: Path) -> Non
     pattern is acceptable only if it cannot also select `src/lib` or
     `library.py`.
     """
-    if slug in FILE_LIST:
-        pytest.skip(f"{slug} names files rather than exclude flags")
+    if slug in NO_EXCLUDE_FLAGS:
+        pytest.skip(f"{slug} names files or class dirs rather than exclude flags")
 
     argv = _argv(slug, _tree(tmp_path / slug), Exclusions((), TREES))
     offenders = [
@@ -142,7 +145,7 @@ def _engine_hits(slug: str, patterns: tuple[str, ...], root: Path, relative: str
 
 
 @pytest.mark.parametrize(
-    "slug", [s for s in ALL_SLUGS if s not in FILE_LIST | CUSTOM_INVOCATION]
+    "slug", [s for s in ALL_SLUGS if s not in NO_EXCLUDE_FLAGS | CUSTOM_INVOCATION]
 )
 def test_tree_patterns_match_only_the_classified_location(
     slug: str, tmp_path: Path

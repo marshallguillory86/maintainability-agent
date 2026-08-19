@@ -323,21 +323,22 @@ class SpotBugsAdapter(BaseAdapter):
             root = ElementTree.fromstring(result.stdout or "<BugCollection/>")
         except ElementTree.ParseError as error:
             raise ValueError(f"unreadable BugCollection XML: {error}") from error
-        findings = []
-        for instance in root.iter("BugInstance"):
-            line_node = instance.find("SourceLine")
-            source_path = (line_node.get("sourcepath") or "") if line_node is not None else ""
-            start = line_node.get("start") if line_node is not None else None
-            category = instance.get("category") or ""
-            findings.append(Finding(
-                # Every SpotBugs category — STYLE included — lands on the
-                # one declared concern; claiming more would repeat the
-                # Checkstyle H1 overclaim.
-                concept="style",
-                path=source_path,
-                line=int(start) if start and start.isdigit() else None,
-                message=instance.get("type") or category,
-                tool=self.slug,
-                rule=instance.get("type"),
-            ))
-        return Extraction(findings=tuple(findings))
+        return Extraction(findings=tuple(
+            self._finding_of(instance) for instance in root.iter("BugInstance")
+        ))
+
+    def _finding_of(self, instance: Any) -> Finding:
+        line_node = instance.find("SourceLine")
+        source_path = (line_node.get("sourcepath") or "") if line_node is not None else ""
+        start = line_node.get("start") if line_node is not None else None
+        return Finding(
+            # Every SpotBugs category — STYLE included — lands on the
+            # one declared concern; claiming more would repeat the
+            # Checkstyle H1 overclaim.
+            concept="style",
+            path=source_path,
+            line=int(start) if start and start.isdigit() else None,
+            message=instance.get("type") or instance.get("category") or "",
+            tool=self.slug,
+            rule=instance.get("type"),
+        )

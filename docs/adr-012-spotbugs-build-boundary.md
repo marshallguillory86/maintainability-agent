@@ -54,8 +54,8 @@ silently (P8).
 
 - The JVM track completes with three adapters of two shapes:
   source-read (PMD, Checkstyle) and artifact-read (SpotBugs). D15's
-  composition test, still to be written, will have to cover both
-  shapes.
+  composition test covers both shapes
+  (`tests/test_d15_composition.py`).
 - The environment work order gains its first non-install remedy
   (build instruction), which generalizes to future artifact-read
   tools (JaCoCo report reading was already declined — decision 10 —

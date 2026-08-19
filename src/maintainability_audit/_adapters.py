@@ -464,3 +464,29 @@ def apply_staleness(adapter: Any, root: Path, excludes: Any,
             for finding in extraction.findings
         ))
     return evidence, extraction
+
+
+def ours_only_extraction(
+    extraction: Extraction, root: Path, adapter: Any,
+    excludes: Sequence[str], inventory: Any,
+) -> Extraction:
+    """The backstop, applied per tool before its contribution is counted.
+
+    A tool is not obliged to honour the exclusions it was handed —
+    `test_adapters` already records that some ignore them. Naming the
+    classified trees keeps a well-behaved tool from reading the files;
+    this keeps a badly-behaved one from reporting them, and keeps the
+    coverage record describing what survived rather than what was seen.
+    """
+    if inventory is None:
+        return extraction
+    told = (
+        adapter.received_trees(excludes)
+        if hasattr(adapter, "received_trees")
+        else bool(getattr(excludes, "trees", ()))
+    )
+    return replace(
+        extraction,
+        measurements=tuple(ours_only(list(extraction.measurements), root, inventory, told)),
+        findings=tuple(ours_only(list(extraction.findings), root, inventory, told)),
+    )

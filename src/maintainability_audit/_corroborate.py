@@ -189,3 +189,52 @@ def single_source_concepts(combined: list[Combined]) -> set[str]:
     """
     corroborated = {item.concept for item in combined if item.corroborated}
     return {item.concept for item in combined} - corroborated
+
+
+def finding_identity(finding: object) -> tuple[str, int | None, str]:
+    """What makes two findings the same finding — never concept alone.
+
+    A CORRECTNESS bug filed under style and a naming convention filed
+    under style share a concept and nothing else (D15). Identity is
+    the located rule: path, line, and the rule that fired. Any seam
+    that collapses or corroborates findings must use this, so two
+    verdict emitters can only ever agree about the same defect at the
+    same place — agreement manufactured from a shared concept label is
+    the false corroboration ADR 006 exists to prevent.
+    """
+    return (
+        _finding_field(finding, "path") or "",
+        _finding_field(finding, "line"),
+        _finding_field(finding, "rule") or _finding_field(finding, "message") or "",
+    )
+
+
+def _finding_field(finding: object, name: str) -> object:
+    if isinstance(finding, dict):
+        return finding.get(name)
+    return getattr(finding, name, None)
+
+
+def normalize_source_path(root: Path, path: str) -> str:
+    """One file, two spellings, identified against the tree (D15).
+
+    SpotBugs reports package-relative paths (``com/foo/Bar.java``)
+    where source adapters report repo-relative ones
+    (``src/main/java/com/foo/Bar.java``). When the spelling does not
+    exist under ``root`` but exactly one file ends with it, they are
+    the same file and the repo-relative spelling wins. Zero or several
+    candidates refuses the identification and returns the original —
+    an ambiguous guess would relocate a finding, which is worse than
+    two spellings.
+    """
+    if not path or (root / path).exists():
+        return path
+    suffix = f"/{path}"
+    matches = [
+        candidate for candidate in root.rglob(Path(path).name)
+        if candidate.as_posix().endswith(suffix)
+    ]
+    if len(matches) == 1:
+        with suppress(ValueError):
+            return matches[0].resolve().relative_to(root.resolve()).as_posix()
+    return path

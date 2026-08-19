@@ -9,13 +9,13 @@ green substitute for that proof.
 
 from __future__ import annotations
 
-import ast
 import json
 import subprocess
 from pathlib import Path
 from typing import Any
 
 import pytest
+from _ast_reading import producer_literal
 
 from maintainability_audit import _runner
 from maintainability_audit._catalog import load_catalog, resolve_pool
@@ -38,36 +38,6 @@ def _catalog() -> dict[str, Any]:
 
 def _pmd_entry() -> dict[str, Any]:
     return next(tool for tool in _catalog()["tools"] if tool["slug"] == "pmd")
-
-
-def _assignment(name: str) -> ast.AST:
-    tree = ast.parse(PRODUCER.read_text(encoding="utf-8"), filename=str(PRODUCER))
-    for node in tree.body:
-        if isinstance(node, ast.Assign) and any(
-            isinstance(target, ast.Name) and target.id == name
-            for target in node.targets
-        ):
-            return node.value
-        if (
-            isinstance(node, ast.AnnAssign)
-            and isinstance(node.target, ast.Name)
-            and node.target.id == name
-            and node.value is not None
-        ):
-            return node.value
-    raise AssertionError(f"{name} is missing from tools/build_catalog.py")
-
-
-def _literal(name: str) -> Any:
-    value = _assignment(name)
-    if (
-        isinstance(value, ast.Call)
-        and isinstance(value.func, ast.Name)
-        and value.func.id == "frozenset"
-        and len(value.args) == 1
-    ):
-        return frozenset(ast.literal_eval(value.args[0]))
-    return ast.literal_eval(value)
 
 
 def _pmd_adapter():
@@ -154,10 +124,10 @@ def test_pmd_catalog_and_producer_record_the_verified_contract() -> None:
     assert pmd["tier"] == "moderate"
     assert pmd["adapter"] == "implemented"
 
-    tiers = _literal("VERIFIED_TIERS")
-    adapters = _literal("IMPLEMENTED_ADAPTERS")
-    measures = _literal("VERIFIED_MEASURES")
-    licenses = _literal("VERIFIED_LICENSES")
+    tiers = producer_literal("VERIFIED_TIERS")
+    adapters = producer_literal("IMPLEMENTED_ADAPTERS")
+    measures = producer_literal("VERIFIED_MEASURES")
+    licenses = producer_literal("VERIFIED_LICENSES")
     assert set(tiers) == set(adapters), (
         "a below-all tier is a promise that a runnable adapter ships"
     )

@@ -49,10 +49,10 @@ def test_every_verified_tier_is_backed_by_a_shipped_adapter() -> None:
         f"tier-only={sorted(verified - adapted)}, adapter-only={sorted(adapted - verified)}"
     )
 
-    # Decisions 3 and 9 keep this hard promise at the current fifteen adapters.
-    # The set itself is derived from the catalog so a sixteenth adapter must
+    # Decisions 3 and 9 keep this hard promise at the current sixteen adapters.
+    # The set itself is derived from the catalog so a seventeenth adapter must
     # update this explicit product count rather than silently changing it.
-    assert len(verified) == len(adapted) == 15
+    assert len(verified) == len(adapted) == 16
 
 
 def test_catalog_producer_tiers_are_exactly_the_shipped_adapter_set() -> None:

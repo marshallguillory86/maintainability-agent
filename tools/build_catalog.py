@@ -7,8 +7,9 @@ Two fields are deliberately distinct:
   license_status   what the source database says, normalized. Tools whose
                    license GitHub could not map to an SPDX id are marked
                    ``unverified`` rather than guessed in either direction.
-                   flake8 and checkstyle both land there and both are FOSS,
-                   so "Other" is not evidence of anything.
+                   flake8 lands there and is FOSS, so "Other" is not
+                   evidence of anything. Checkstyle's LGPL is verified
+                   from its upstream LICENSE rather than left here.
 
   adapter          whether *this* project can invoke the tool and parse it.
                    Almost all are ``none``. A catalog entry is a fact about
@@ -116,6 +117,7 @@ VERIFIED_TIERS = {
     "eslint": "moderate",
     "cohesion": "moderate",
     "pmd": "moderate",
+    "checkstyle": "moderate",
 }
 
 
@@ -167,7 +169,7 @@ def classify_license(name: str, status: str) -> str:
 
 # What a tool actually measures, in this project's own vocabulary. The upstream
 # database cannot supply this: its tags are languages, ecosystems and frameworks
-# (rails, nodejs, spring), and 442 of the 447 eligible tools carry no concern tag
+# (rails, nodejs, spring), and 443 of the 448 eligible tools carry no concern tag
 # at all. A concern can only be assigned by running the tool and seeing what it
 # emits, so this map grows exactly as fast as the adapters do.
 #
@@ -192,8 +194,8 @@ CONCERNS = (
 # flake8 and cohesion have since earned real ones (2.7); cloc and wily
 # have not.
 IMPLEMENTED_ADAPTERS = frozenset({
-    "cohesion", "complexipy", "eslint", "flake8", "interrogate", "jscpd",
-    "lizard", "multimetric", "mypy", "pydocstyle", "pylint", "radon",
+    "checkstyle", "cohesion", "complexipy", "eslint", "flake8", "interrogate",
+    "jscpd", "lizard", "multimetric", "mypy", "pydocstyle", "pylint", "radon",
     "pmd", "ruff", "vulture",
 })
 
@@ -231,6 +233,7 @@ VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {
     # concepts-only tuple dropped PMD from a complexity-only pool
     # (audit M on 549fcad).
     "pmd":         ("complexity", "cognitive_complexity", "cyclomatic_complexity"),
+    "checkstyle":  ("style", "complexity", "structure"),
     "cloc": ("metrics", "documentation"),
     "wily":        ("metrics",),
 }
@@ -251,6 +254,8 @@ VERIFIED_LICENSES: dict[str, tuple[str, str]] = {
     "mypy": ("MIT", "License-Expression in the installed distribution"),
     # https://github.com/pmd/pmd/blob/main/LICENSE
     "pmd": ("BSD-style", "PMD upstream LICENSE file"),
+    # https://github.com/checkstyle/checkstyle/blob/master/LICENSE
+    "checkstyle": ("LGPL-2.1-or-later", "Checkstyle upstream LICENSE file"),
 }
 
 # Tools this project installed and ran that the source snapshot does not list.
@@ -404,7 +409,9 @@ def build(records: list[dict[str, Any]]) -> dict[str, Any]:
                 "Facts in this file (name, license, languages, source URL) come from "
                 "the snapshot above. Tier and adapter fields are this project's own "
                 "and are not claims made by the source. PMD's BSD-style license is "
-                "verified from the upstream PMD LICENSE file."
+                "verified from the upstream PMD LICENSE file. Checkstyle's "
+                "LGPL-2.1-or-later license is verified from the upstream "
+                "Checkstyle LICENSE file."
             ),
         },
         "counts": {

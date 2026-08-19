@@ -110,3 +110,26 @@ def java_range_functions() -> set[str]:
         and "java" in node.name.lower()
         and "range" in node.name.lower()
     }
+
+
+PRODUCER = ROOT / "tools" / "build_catalog.py"
+
+
+def producer_literal(name: str):
+    """A top-level literal from tools/build_catalog.py, frozenset-aware.
+
+    Both JVM adapter suites read the producer's promise maps this way;
+    the second verbatim copy of this reader tripped the duplicate-block
+    gate, which is the finding it should produce.
+    """
+    value = assignments(tree(PRODUCER)).get(name)
+    if value is None:
+        raise AssertionError(f"{name} is missing from tools/build_catalog.py")
+    if (
+        isinstance(value, ast.Call)
+        and isinstance(value.func, ast.Name)
+        and value.func.id == "frozenset"
+        and len(value.args) == 1
+    ):
+        return frozenset(ast.literal_eval(value.args[0]))
+    return ast.literal_eval(value)

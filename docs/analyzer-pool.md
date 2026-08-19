@@ -19,24 +19,24 @@ License strings in the wild are messy: 89 distinct spellings, from `MIT License`
 | Class | Count | Meaning |
 |---|---|---|
 | `permissive` | 466 | MIT, BSD, Apache, ISC, Zlib, Boost, Artistic, UPL and similar |
-| `unverified` | 73 | License could not be confirmed from the source data. **Not a claim that the tool is unfree** — flake8 (MIT) and checkstyle (LGPL) both land here because GitHub could not map their text to an SPDX id |
+| `unverified` | 72 | License could not be confirmed from the source data. **Not a claim that the tool is unfree** — flake8 (MIT) lands here because GitHub could not map its text to an SPDX id |
 | `strong-copyleft` | 72 | GPL, AGPL, CC-BY-SA, EUPL |
 | `proprietary` | 70 | Paid, no free tier recorded |
-| `weak-copyleft` | 42 | LGPL, MPL, EPL, CDDL |
+| `weak-copyleft` | 43 | LGPL, MPL, EPL, CDDL |
 | `proprietary-free-tier` | 32 | Commercial, with a free or open-source plan recorded in the source's `plans` block |
 | `source-available` | 5 | Elastic License, Business Source License, Sustainable Use License. **Not open source** — visible source with restricted commercial use |
 
 A dual license takes the most permissive class on offer, because the licensee chooses: `GPL v3 or Perl Artistic License 2.0` classifies as permissive.
 
-PMD is the explicit catalog override in this tranche: its BSD-style license is verified against the [upstream PMD LICENSE file](https://github.com/pmd/pmd/blob/main/LICENSE), rather than inferred from the source catalog's `Other` value.
+PMD is an explicit catalog override in this tranche: its BSD-style license is verified against the [upstream PMD LICENSE file](https://github.com/pmd/pmd/blob/main/LICENSE), rather than inferred from the source catalog's `Other` value. Checkstyle is the matching weak-copyleft override: its LGPL-2.1-or-later license is verified against the [upstream Checkstyle LICENSE file](https://github.com/checkstyle/checkstyle/blob/master/LICENSE).
 
 **None of this is legal advice.** Whether invoking a GPL analyzer as a separate process has any effect on the code it scans is a question for your own counsel. The classification exists so that whatever answer your organization reaches can be *enforced*, rather than left to whichever engineer installed what.
 
 ### Eligible pool
 
-**447 tools** are eligible: open-source license class, not deprecated, targets at least one language, and not security-only. Security scanning is [`secure-code-agent`'s](https://github.com/marshallguillory86/secure-code-agent) job — those tools are cataloged and marked, never run from here.
+**448 tools** are eligible: open-source license class, not deprecated, targets at least one language, and not security-only. Security scanning is [`secure-code-agent`'s](https://github.com/marshallguillory86/secure-code-agent) job — those tools are cataloged and marked, never run from here.
 
-Eligible by class: 368 permissive, 45 strong-copyleft, 34 weak-copyleft.
+Eligible by class: 368 permissive, 45 strong-copyleft, 35 weak-copyleft.
 
 ## The three run-time selectors
 
@@ -59,7 +59,7 @@ Independent questions, and the pool is their intersection. **Concerns** asks wha
 
 The vocabulary is the scoring model's, so an answer maps onto aspects that exist and can move a score.
 
-**It cannot come from the upstream data.** Those tags are languages, ecosystems and frameworks — `rails`, `nodejs`, `spring` — and only 5 of the 447 eligible tools carry an upstream tag that names one of this project's concerns. What a tool measures is knowable only by running it, so `measures` is populated exactly as fast as adapters are written; the upstream tags are kept separately as `upstream_tags`.
+**It cannot come from the upstream data.** Those tags are languages, ecosystems and frameworks — `rails`, `nodejs`, `spring` — and only 5 of the 448 eligible tools carry an upstream tag that names one of this project's concerns. What a tool measures is knowable only by running it, so `measures` is populated exactly as fast as adapters are written; the upstream tags are kept separately as `upstream_tags`.
 
 ```bash
 python tools/resolve_pool.py --concerns duplication,dead-code
@@ -71,9 +71,9 @@ python tools/resolve_pool.py --concerns documentation
 | Depth | Tools | What it means |
 |---|---|---|
 | `baseline` | 9 | Multi-language or zero-config tools, one install, seconds to run |
-| `moderate` | 15 | Baseline plus the mainstream per-language linters |
-| `heavy` | 15 | Moderate plus slower or configuration-hungry tools; none are added today |
-| `all` | up to 447 | Every eligible tool that speaks a detected language |
+| `moderate` | 16 | Baseline plus the mainstream per-language linters |
+| `heavy` | 16 | Moderate plus slower or configuration-hungry tools; none are added today |
+| `all` | up to 448 | Every eligible tool that speaks a detected language |
 
 **A tier below `all` is a promise that the tool works.** Nothing is placed in `baseline`, `moderate` or `heavy` until this project has installed it, run it, and parsed its output. That is why those numbers are small and why they will grow one verified tool at a time.
 
@@ -84,9 +84,9 @@ python tools/resolve_pool.py --concerns documentation
 | Policy | Adds | Eligible tools |
 |---|---|---|
 | `permissive` | MIT, BSD, Apache, ISC, Zlib… | 368 |
-| `copyleft-weak` | + LGPL, MPL, EPL | 402 |
-| `copyleft-any` | + GPL, AGPL | 447 |
-| `commercial-free-tier` | + proprietary tools with a free or OSS plan | 473 |
+| `copyleft-weak` | + LGPL, MPL, EPL | 403 |
+| `copyleft-any` | + GPL, AGPL | 448 |
+| `commercial-free-tier` | + proprietary tools with a free or OSS plan | 474 |
 | `unverified` | + tools whose license could not be confirmed | opt-in, never a default |
 
 `source-available` and paid proprietary tools are cataloged but never selected. Adding them needs a deliberate configuration entry naming the tool, not a policy tier.
@@ -107,7 +107,7 @@ Analyzers live in ecosystems, and the agent runs the ones it can reach. Nothing 
 |---|---|---|
 | Python 3.11+ | The agent itself, and lizard, radon, ruff, vulture, complexipy, interrogate, pydocstyle, multimetric, pylint, mypy | ships with the package |
 | **Node.js 18+** | **jscpd** (multi-language clone detection), eslint, and the JS/TS toolchain | `brew install node` / your platform's package manager |
-| JDK 17+ | PMD; Checkstyle and SpotBugs have no adapters yet | `brew install openjdk`; install PMD with `brew install pmd` or its upstream distribution |
+| JDK 17+ | PMD and Checkstyle; SpotBugs has no adapter yet | `brew install openjdk`; install PMD with `brew install pmd` or its upstream distribution; install Checkstyle with `brew install checkstyle` |
 | Go toolchain | golangci-lint (no adapter yet) | `brew install go` |
 | Rust toolchain | clippy (no adapter yet) | `brew install rust` |
 
@@ -123,7 +123,7 @@ npm install -g jscpd@5
 
 ## Adapter status, stated plainly
 
-**15 tools have adapters**. An inventory entry without an adapter is not a shipped capability.
+**16 tools have adapters**. An inventory entry without an adapter is not a shipped capability.
 
 | Verified | Depth | Concern | Evidence |
 |---|---|---|---|
@@ -142,6 +142,7 @@ npm install -g jscpd@5
 | flake8 | moderate | Style, mccabe complexity, unused code | parses its default `path:row:col: CODE message` lines |
 | cohesion | moderate | Per-class cohesion percentage | parses its verbose class report; measurements, not gates |
 | pmd | moderate | Java cognitive and cyclomatic complexity verdicts | `pmd check` with a pinned local ruleset; SARIF output; install with `brew install pmd`, verify with `pmd --version` |
+| checkstyle | moderate | Java style, complexity, and structure verdicts | `checkstyle` over explicit `.java` targets with a bundled `google_checks.xml` or `sun_checks.xml`; XML via the shared checkstyle parser; install with `brew install checkstyle`, verify with `checkstyle --version` |
 
 The full inventory, including everything without an adapter, is in the [JSON](../data/analyzer-catalog.json). Additional adapters remain incremental work; the inventory alone does not make a tool runnable.
 

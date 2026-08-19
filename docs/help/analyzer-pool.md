@@ -16,7 +16,8 @@ names the tool, an install command, and the concepts installation would
 restore. The chat host surfaces that order rather than hiding it inside a JSON
 report body.
 
-Selection is not yet goal-directed composition. It filters the catalog by the
-configured policy but does not calculate the smallest tool set that fills every
-language-and-concept gap. That remaining limitation is D15 in the
-[chat-surface defect register](../defect-register-chat-surface.md).
+Selection filters the catalog by the configured policy. Source-read and
+artifact-read adapters compose in one report without manufacturing
+agreement across unlike findings
+(`tests/test_d15_composition.py`; D15 in the
+[chat-surface defect register](../defect-register-chat-surface.md)).

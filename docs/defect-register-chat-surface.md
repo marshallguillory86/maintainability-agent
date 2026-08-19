@@ -6,9 +6,8 @@ a defect against requirements that already exist — in
 [ADR 006](adr-006-analyzer-evidence.md), [ADR 004](adr-004-economic-context.md),
 [ADR 009](adr-009-scan-history.md), [product-intent.md](product-intent.md),
 or the operator's stated requirements — none is a feature proposal. The
-required behavior column cites the document that already requires it. D1–D14,
-D16 and D17 are retained as closed, tested history. D15 remains open until its
-analyzer-adapter track supplies the required composition test.
+required behavior column cites the document that already requires it. D1–D17
+are retained as closed, tested history.
 
 ## Context
 
@@ -231,20 +230,20 @@ to the host's structured question mechanism. This is driven end to end by
 `tests/test_root_grants.py`, and the consent and slash-prompt tests in
 `tests/test_consent_and_grant.py`.
 
-### D15 — Analyzer selection has no goal-directed composition
+### D15 — Closed: source-read and artifact-read adapters compose in one report
 
-Selection is policy filtering (allow/deny, license, depth tier) plus
-language applicability. The gap analysis that knows which concerns are
-unmeasured for which languages runs only after the fact, for the
-coverage report; it never drives selection, and nothing composes the
-minimal tool set that covers this repository's languages for the
-product's goal.
+One audit of a Java tree now carries source-read (PMD, Checkstyle) and
+artifact-read (SpotBugs) evidence together. Coverage rows keep their
+own languages, versions, and (for SpotBugs) staleness. A CORRECTNESS
+bug and a convention finding that share the `style` concept are not
+one corroborated finding. Package-relative `sourcepath` and
+repo-relative source paths identify the same file or the match is
+refused, never missed both ways. Stale bytecode is stated on the
+composed coverage. Artifact-read `has_targets` is not gated away by a
+source-language inventory. Sequential `analyze()` calls in one process
+do not leak `class_dirs`.
 
-*Required:* selection consults the same language inventory and
-concern→concept mapping the coverage section already uses, so a run
-covers the repository's languages with the verified tools available,
-and names — before or with the results — what to install to close the
-remaining gaps. Deterministic; no scoring change.
+*Closing test:* `tests/test_d15_composition.py`.
 
 ### D16 — Closed: chat workflow help is linked from both entry surfaces
 
@@ -271,6 +270,5 @@ in `tests/test_chat_primary_docs.py`.
 
 ## Disposition
 
-D1–D14, D16 and D17 are closed. Only D15 remains open, riding the
-analyzer-adapter track. Entries close individually, each behind a test that
-would fail if the defect returned.
+All seventeen entries are closed. Entries close individually, each behind a
+test that would fail if the defect returned.

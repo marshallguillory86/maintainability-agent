@@ -237,17 +237,17 @@ Stated rather than hidden, because an architecture document that only describes 
 - **Declaration extraction is gated on `DECLARATION_SUFFIXES`** (Python, JS/TS/HTML, and Java). A suffix outside that set can be included for length, duplication and risk; it does not produce a declaration population. `--changed-only` and `--fail-on-new` no longer have the defects previously listed here: a thin diff withholds ([ADR 005](adr-005-insufficient-population.md); `test_scan_scope.py`), while baseline v3 and recurrence resolve structured identities through `_finding_match`. The visible label stays `function:{path}:{name}#{ordinal}`; scan-time `body_digest` resolves same-name reorders and git-attested renames resolve path moves.
 - ~~The presentation layer lacked the three [ADR 011](adr-011-three-report-presentations.md) skins~~ — **resolved (8.3–8.6).** Chat/CLI Markdown, a Markdown file and one self-contained HTML file render the same report dictionary. TTY asks every invoke; flags win; CI never asks. Chat first-run setup persists a presentation default; a per-call choice or the host's own ask wins. MCP returns report text and never writes a report file. Its five-artifact write boundary is the repository config, user config, user state, repository scan history at `.maintainability/history.jsonl` and repository baseline at `.maintainability/baseline.json`.
 - ~~History records lacked the series required by the HTML charts~~ — **resolved (8.1–8.2).** New JSONL records use schema 3: the schema-2 chart fields remain, and structured identities sit beside labels. Schema-1/2 records still load as explicit gaps; an existing history file gains each later successful scan.
-- ~~The chat surface lagged the terminal surface~~ — **resolved except for
-  analyzer composition (D15).** The primary chat/MCP path now covers the pool,
-  structured setup and grants, history consent and recurrence, baselines,
-  format-specific payloads, environment remedies, and the same bounded advice
-  as the CLI. `tests/test_chat_primary_docs.py` keeps README, product intent,
-  MCP instructions, the portable skill, chat help, IDE guidance, and generated
-  instruction packs ordered around that primary flow. The
-  [chat-surface defect register](defect-register-chat-surface.md) retains D1–D14,
-  D16 and D17 as closed history. Only D15 remains open: selection filters the
-  catalog but does not yet compose the minimal analyzer set needed to close the
-  repository's language-and-concept gaps.
+- ~~The chat surface lagged the terminal surface~~ — **resolved (D1–D17).**
+  The primary chat/MCP path now covers the pool, structured setup and grants,
+  history consent and recurrence, baselines, format-specific payloads,
+  environment remedies, and the same bounded advice as the CLI.
+  `tests/test_chat_primary_docs.py` keeps README, product intent, MCP
+  instructions, the portable skill, chat help, IDE guidance, and generated
+  instruction packs ordered around that primary flow. Source-read and
+  artifact-read analyzers compose in one report
+  (`tests/test_d15_composition.py`). The
+  [chat-surface defect register](defect-register-chat-surface.md) retains
+  D1–D17 as closed history.
 - **Java has a zero-install fallback; we will not clone it.** `java_declaration_ranges` finds methods, constructors and types and bounds each at its own body. `.java` is in `DECLARATION_SUFFIXES` and the default include list. That is enough for `pip install` with no lizard. It is not the 1.0 close and there will be no `_go_declaration`. Go, C, C++, C# and Rust stay recognized and withheld until analyzers supply a declaration population ([ADR 006](adr-006-analyzer-evidence.md)). The last-resort regex still must not be aimed at those languages. Feeding lizard into `declarations_scanned` without the full concept set would move mixed-language scores in silence.
 
 ## Extension points

@@ -75,7 +75,7 @@ python tools/resolve_pool.py --concerns documentation
 | `heavy` | 17 | Moderate plus slower or configuration-hungry tools; none are added today |
 | `all` | up to 448 | Every eligible tool that speaks a detected language |
 
-**A tier below `all` is a promise that the tool works.** Nothing is placed in `baseline`, `moderate` or `heavy` until this project has installed it, run it, and parsed its output. That is why those numbers are small and why they will grow one verified tool at a time.
+**A tier below `all` is a promise that the tool works.** Nothing is placed in `baseline`, `moderate` or `heavy` until this project has installed it, run it, and parsed its output — with two disclosed exceptions: **Checkstyle and SpotBugs** are verified against recorded real output (their conditional live tests skip wherever no binary exists, including this project's CI), so their live spawn is unproven until someone supplies the binaries. PMD has run live. That is why these numbers are small and why they grow one verified tool at a time.
 
 `all` is the honest name for the rest: known to exist, license recorded, **invocation not yet implemented**. Selecting `all` today runs the same tools as `heavy` and reports the remainder as unavailable-no-adapter. It is not a lie by omission — the report says exactly which of them ran.
 

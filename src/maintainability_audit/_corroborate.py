@@ -200,7 +200,12 @@ def finding_identity(finding: object) -> tuple[str, int | None, str]:
     that collapses or corroborates findings must use this, so two
     verdict emitters can only ever agree about the same defect at the
     same place — agreement manufactured from a shared concept label is
-    the false corroboration ADR 006 exists to prevent.
+    the false corroboration ADR 006 exists to prevent. Disclosed
+    limitation (close-out audit): a finding with no rule falls back to
+    its message, and concept is deliberately excluded — two rule-less
+    findings with equal message and location share an identity even
+    across concepts. Today identity only orders the document; any
+    future collapse must revisit this.
     """
     return (
         _finding_field(finding, "path") or "",
@@ -225,7 +230,9 @@ def normalize_source_path(root: Path, path: str) -> str:
     the same file and the repo-relative spelling wins. Zero or several
     candidates refuses the identification and returns the original —
     an ambiguous guess would relocate a finding, which is worse than
-    two spellings.
+    two spellings. Disclosed limitation (close-out audit): a refusal
+    is not marked — the kept spelling looks the same as an identified
+    one, so a reader cannot tell "one match" from "gave up".
     """
     if not path or (root / path).exists():
         return path

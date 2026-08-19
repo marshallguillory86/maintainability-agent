@@ -439,3 +439,28 @@ def _relative_path(path: str, root: Path) -> str:
         return Path(path).resolve().relative_to(root.resolve()).as_posix()
     except (OSError, ValueError):
         return path.replace("\\", "/")
+
+
+def apply_staleness(adapter: Any, root: Path, excludes: Any,
+                    extraction: Extraction) -> tuple[dict[str, Any] | None, Extraction]:
+    """ADR 012's evidence, applied: the row gets the mtimes, stale findings say so.
+
+    ``None`` evidence means the adapter does not measure staleness —
+    the question does not apply to source-read tools. When bytecode is
+    older than the newest surviving source, every finding is labeled,
+    because advice derived from stale compilation must not read like
+    advice about the tree as it stands (P8).
+    """
+    from dataclasses import replace
+
+    measures = getattr(adapter, "staleness", None)
+    if measures is None:
+        return None, extraction
+    evidence = measures(root, excludes=excludes)
+    if evidence["stale"]:
+        extraction = replace(extraction, findings=tuple(
+            replace(finding,
+                    message=f"{finding.message} [measured against stale compilation]")
+            for finding in extraction.findings
+        ))
+    return evidence, extraction

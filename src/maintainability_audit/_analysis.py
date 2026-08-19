@@ -24,7 +24,13 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-from ._adapters import Extraction, exclusions_for, measurements_only, set_tool_acquisition
+from ._adapters import (
+    Extraction,
+    apply_staleness,
+    exclusions_for,
+    measurements_only,
+    set_tool_acquisition,
+)
 from ._adapters import ours_only as ours_only  # noqa: PLC0414 - re-export
 from ._built_ins import BUILT_IN_SOURCES
 from ._catalog import CONCERNS, PolicyError, concepts_for, resolve_pool, settings_from
@@ -60,6 +66,13 @@ class ToolCoverage:
     # but installable software is not the fix — SpotBugs' absent
     # bytecode carries build-then-rerun here (ADR 012).
     remedy: tuple[str, str] | None = None
+    # ADR 012's staleness evidence for artifact-read tools: whether the
+    # newest source outdates the newest compiled class, and both
+    # mtimes. None means the question does not apply to this tool. Two
+    # runs with different staleness are not silently comparable (P8).
+    stale: bool | None = None
+    source_mtime: float | None = None
+    class_mtime: float | None = None
     # The catalog languages this tool reads, in the catalog's vocabulary.
     # Carried on the record because coverage is claimed per language: a
     # Python-only linter covers nothing for C++ at any language mix, and
@@ -361,9 +374,11 @@ def _cover_one(tool: dict[str, Any], root: Path, probe: Probe, timeout: int,
             concepts=tuple(tool["measures"]),
             languages=reads,
         )
-    if class_dirs and hasattr(adapter, "class_dirs"):
-        # analyzers.class_dirs reaches the one adapter that reads
-        # compiled output (ADR 012); explicit call arguments still win.
+    if hasattr(adapter, "class_dirs"):
+        # analyzers.class_dirs for the adapter that reads compiled
+        # output (ADR 012). Assigned on EVERY run — including back to
+        # empty — because the registry holds one instance per process
+        # and configured dirs must not leak between audits (M2).
         adapter.class_dirs = class_dirs
     recorded = _run_one(root, adapter, probe, timeout, analysis, excludes, inventory)
     return replace(recorded, languages=reads)
@@ -426,6 +441,11 @@ def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
     # measurements and reporting 6 describes an activity rather than a
     # result, which is the defect this project keeps finding.
     extraction = _ours_only_extraction(adapter.parse(result), root, adapter, excludes, inventory)
+    # ADR 012: an artifact-read tool states its staleness on the row it
+    # ran on, and its findings are labeled when the bytecode is older
+    # than the source — the method existing was not the promise
+    # (48293d3 audit H1).
+    evidence, extraction = apply_staleness(adapter, root, excludes, extraction)
     _collect(extraction, adapter, analysis)
 
     return ToolCoverage(
@@ -440,6 +460,9 @@ def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
         parse_error=extraction.parse_error,
         raw=extraction.raw,
         truncated=extraction.truncated,
+        stale=None if evidence is None else bool(evidence["stale"]),
+        source_mtime=None if evidence is None else evidence["source_mtime"],
+        class_mtime=None if evidence is None else evidence["class_mtime"],
     )
 
 

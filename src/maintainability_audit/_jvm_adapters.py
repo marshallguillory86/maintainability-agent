@@ -256,8 +256,23 @@ class SpotBugsAdapter(BaseAdapter):
             languages=("java",),
         )
         # Extra class directories from analyzers.class_dirs, threaded
-        # in by the analysis loop; explicit call arguments still win.
+        # in by the analysis loop on EVERY run — including back to empty,
+        # so one repository's configured dirs never leak into the next
+        # audit in the same process (48293d3 audit M2).
         self.class_dirs: tuple[str, ...] = ()
+        # Security findings belong to secure-code-agent, and SpotBugs'
+        # default detectors include the SECURITY category. A bundled
+        # exclude filter — written to this adapter's own scratch dir,
+        # never read from the audited tree — keeps that boundary real
+        # instead of documentation (48293d3 audit M1).
+        self._work = Path(tempfile.mkdtemp(prefix="spotbugs-"))
+        self._exclude = self._work / "exclude-security.xml"
+        self._exclude.write_text(
+            "<FindBugsFilter>\n"
+            '  <Match><Bug category="SECURITY"/></Match>\n'
+            "</FindBugsFilter>\n",
+            encoding="utf-8",
+        )
 
     def version_argv(self) -> tuple[str, ...]:
         return ("spotbugs", "-version")
@@ -283,10 +298,20 @@ class SpotBugsAdapter(BaseAdapter):
 
     def staleness(
         self, root: Path, class_dirs: Sequence[str] | None = None,
+        excludes: Sequence[str] = (),
     ) -> dict[str, Any]:
-        """ADR 012's evidence: newest source mtime vs newest class mtime."""
+        """ADR 012's evidence: newest source mtime vs newest class mtime.
+
+        The source side honours the audit's exclusions (48293d3 audit
+        M4): a newer vendored .java must not mark first-party bytecode
+        stale.
+        """
         source_mtime = max(
-            (path.stat().st_mtime for path in root.rglob("*.java")), default=0.0,
+            (
+                Path(path).stat().st_mtime
+                for path in expand_files(root, excludes, suffixes=(".java",))
+            ),
+            default=0.0,
         )
         class_mtime = max(
             (
@@ -311,6 +336,7 @@ class SpotBugsAdapter(BaseAdapter):
         dirs = self._target_dirs(root, class_dirs)
         return Invocation(
             argv=("spotbugs", "-textui", "-exitcode", "-xml:withMessages",
+                  "-exclude", str(self._exclude),
                   *(str(directory) for directory in dirs)),
             findings_exit_codes=self.findings_exit_codes,
         )
@@ -328,9 +354,21 @@ class SpotBugsAdapter(BaseAdapter):
         ))
 
     def _finding_of(self, instance: Any) -> Finding:
-        line_node = instance.find("SourceLine")
-        source_path = (line_node.get("sourcepath") or "") if line_node is not None else ""
-        start = line_node.get("start") if line_node is not None else None
+        # Real BugCollection nests SourceLine under Class and Method
+        # beside a primary sibling (48293d3 audit M3): search all
+        # descendants and prefer the first that actually names a
+        # sourcepath, so a bug with only nested lines is still located.
+        located = next(
+            (
+                node for node in instance.iter("SourceLine")
+                if node.get("sourcepath")
+            ),
+            None,
+        )
+        source_path = located.get("sourcepath") or "" if located is not None else ""
+        start = located.get("start") if located is not None else None
+        short = instance.find("ShortMessage")
+        message = (short.text or "").strip() if short is not None else ""
         return Finding(
             # Every SpotBugs category — STYLE included — lands on the
             # one declared concern; claiming more would repeat the
@@ -338,7 +376,7 @@ class SpotBugsAdapter(BaseAdapter):
             concept="style",
             path=source_path,
             line=int(start) if start and start.isdigit() else None,
-            message=instance.get("type") or instance.get("category") or "",
+            message=message or instance.get("type") or instance.get("category") or "",
             tool=self.slug,
             rule=instance.get("type"),
         )

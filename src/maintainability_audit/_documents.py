@@ -135,6 +135,12 @@ def _coverage_entry(item: ToolCoverage) -> dict[str, Any]:
         # The raw output was cut at the inline limit (ADR 008-19): a
         # reader weighing this row's evidence is owed that fact.
         entry["truncated"] = True
+    if item.stale is not None:
+        # ADR 012: staleness evidence rides the row, so two runs with
+        # different staleness are never silently comparable (P8).
+        entry["stale"] = item.stale
+        entry["source_mtime"] = item.source_mtime
+        entry["class_mtime"] = item.class_mtime
     if item.parse_error:
         entry["parse_error"] = item.parse_error
     elif item.detail:

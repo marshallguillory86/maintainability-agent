@@ -1,8 +1,9 @@
 # ADR 012 — SpotBugs and the build boundary
 
-**Status: Proposed.** Drafted 2026-08-19 for decision 9's third JVM
-slice (item 8 on the improvement list). Nothing here ships until the
-operator accepts a resolution.
+- Status: Proposed. Drafted 2026-08-19 for decision 9's third JVM
+  slice (item 8 on the improvement list); nothing here ships until the
+  operator accepts a resolution, and implementation progress belongs in
+  the [decision register](decisions.md), not here.
 
 ## The problem
 

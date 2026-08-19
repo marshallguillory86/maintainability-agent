@@ -63,6 +63,7 @@ flowchart TB
     _generic["_generic"]
     _metric_adapters["_metric_adapters"]
     _verdict_adapters["_verdict_adapters"]
+    _jvm_adapters["_jvm_adapters"]
     _tool_adapters["_tool_adapters"]
     _semantic["_semantic"]
     _semantic_ts["_semantic_ts"]

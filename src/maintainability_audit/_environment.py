@@ -33,6 +33,7 @@ _INSTALL: dict[str, str] = {
     # different project entirely.
     "pmd": "brew install pmd",
     "checkstyle": "brew install checkstyle",
+    "spotbugs": "brew install spotbugs",
 }
 
 # `--version` is the availability probe the runner itself uses, so the
@@ -43,6 +44,7 @@ _VERIFY: dict[str, str] = {
     "jscpd": "npx jscpd --version",
     "pmd": "pmd --version",
     "checkstyle": "checkstyle --version",
+    "spotbugs": "spotbugs -version",
 }
 
 
@@ -56,6 +58,19 @@ def environment_work_order(coverage: list[Any]) -> list[dict[str, str]]:
     items: list[dict[str, str]] = []
     for entry in coverage:
         if getattr(entry, "tier", "analyzer") != "analyzer":
+            continue
+        remedy = getattr(entry, "remedy", None)
+        if remedy is not None:
+            # A non-install remedy the adapter stated itself: the user
+            # acts (a build, per ADR 012), the agent only reports.
+            install, verify = remedy
+            items.append({
+                "tool": entry.slug,
+                "reason": entry.detail or f"outcome: {entry.outcome}",
+                "install": install,
+                "verify": verify,
+                "concepts": ", ".join(entry.concepts),
+            })
             continue
         if entry.outcome not in _ACTIONABLE:
             continue

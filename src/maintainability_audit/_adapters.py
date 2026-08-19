@@ -32,7 +32,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field, replace
 from importlib import metadata
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 from ._metrics_types import Finding, Measurement
 from ._runner import Invocation, ToolResult
@@ -402,3 +402,40 @@ def _npx(tool: str, *args: str) -> tuple[str, ...]:
     if _ACQUIRE_TOOLS:
         return ("npx", "--yes", tool, *args)
     return (tool, *args)
+
+
+def ours_only(
+    items: list[Any], root: Path, inventory: Any, told_about_trees: bool = True
+) -> list[Any]:
+    """Drop measurements or findings about code the team did not write.
+
+    Tools report paths however they like — absolute, relative, or
+    relative to their own working directory — so each is reduced to a
+    repository-relative posix path before it is looked up. A path that
+    cannot be placed inside the tree is kept: an unrecognised location
+    is not evidence of foreign code, and silently dropping it would be
+    the same absence-as-value mistake in a new place.
+
+    `told_about_trees` decides the fate of a tree-wide rate — jscpd's
+    duplication percentage, interrogate's coverage — which carries an
+    empty path and survives any path-exact filter. Told, the rate
+    describes our code and stands. Untold, it counted somebody else's
+    files and nothing after the fact can correct it, so it is dropped
+    rather than adjusted: a corrected-looking number nobody computed is
+    worse than no number.
+    """
+    not_ours = inventory.not_ours()
+    if not not_ours:
+        return list(items)
+    return [
+        item for item in items
+        if _relative_path(item.path, root) not in not_ours
+        and (told_about_trees or item.path != "")
+    ]
+
+
+def _relative_path(path: str, root: Path) -> str:
+    try:
+        return Path(path).resolve().relative_to(root.resolve()).as_posix()
+    except (OSError, ValueError):
+        return path.replace("\\", "/")

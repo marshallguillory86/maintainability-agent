@@ -105,7 +105,22 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
              "commits is hours of work nobody asked for.",
     )
     parser.add_argument("--fail-on-gate", action="store_true", help="Exit 1 when hard gates fail.")
+    _add_setup_actions(parser)
+
+
+def _add_setup_actions(parser: argparse.ArgumentParser) -> None:
+    """Flags that perform a setup action and exit instead of auditing."""
     parser.add_argument("--init-agent-standards", action="store_true", help="Write model/tool-specific instruction files and exit.")
+    parser.add_argument(
+        "--install-skill", action="store_true",
+        help="Copy the packaged agent skill into the skills directory and "
+             "exit. Re-run after every upgrade: an installed skill that "
+             "drifts from the shipped one teaches agents a dead workflow.",
+    )
+    parser.add_argument(
+        "--skills-dir", default=None, metavar="DIR",
+        help="Where --install-skill writes (default: ~/.claude/skills).",
+    )
     parser.add_argument(
         "--target",
         action="append",
@@ -203,6 +218,16 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     add_arguments(parser)
     args = parser.parse_args(argv)
+
+    if args.install_skill:
+        from ._skill_install import install_skill
+
+        for written in install_skill(
+            Path(args.skills_dir).expanduser()
+            if args.skills_dir else Path.home() / ".claude" / "skills",
+        ):
+            print(written)
+        return 0
 
     root = Path(args.root).resolve()
     config = _interactive_config(root, args.config)

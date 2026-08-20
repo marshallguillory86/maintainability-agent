@@ -49,6 +49,8 @@ Repeat `--allow-root` to authorize unrelated repository directories. With no exp
 | `--backfill-interval N` | With `--backfill`, scan every Nth commit instead of all of them. |
 | `--sarif-output` | Write SARIF report for GitHub code scanning. |
 | `--init-agent-standards` | Generate model/tool-specific instruction files and exit without running an audit. |
+| `--install-skill` | Copy the packaged agent skill into the skills directory and exit. Re-run after every upgrade: an installed skill that drifts from the shipped one teaches agents a dead workflow. |
+| `--skills-dir` | Where `--install-skill` writes (default `~/.claude/skills`). |
 | `--target` | Instruction target. Repeatable. |
 | `--instructions-output-dir` | Output directory for generated instruction files. |
 

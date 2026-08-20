@@ -4,15 +4,52 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+## 0.9.0 - 2026-08-19
+
+### Added
+
+- **The JVM analyzer track (decision 9): PMD, Checkstyle, SpotBugs.** Three
+  adapters in two shapes. PMD pins two design rules (cognitive and cyclomatic
+  complexity) over source, live-proven on Apache commons-cli. Checkstyle runs
+  the bundled Google ruleset from a neutral working directory (the audited
+  tree's suppressions are never read) and claims exactly what it emits: style
+  and documentation. SpotBugs reads bytecode that already exists — the agent
+  never builds (ADR 012); missing bytecode becomes a build-then-rerun entry in
+  the environment work order, runs record staleness evidence (source vs class
+  mtimes) on the coverage row, stale findings say so, and the SECURITY
+  category is excluded by a bundled filter (that boundary belongs to
+  secure-code-agent).
+- **D15 composition honesty.** One report composes both adapter shapes:
+  finding identity is the located rule (never a shared concept), a
+  package-relative sourcepath is identified with its repo-relative file when
+  exactly one match exists (refused on ambiguity), composed coverage states
+  stale_artifact_evidence, and artifact-read applicability follows artifacts
+  rather than the source-language inventory. Closes the seventeenth and final
+  chat-surface register entry.
+- **Root grants over MCP (decisions 4–5).** An out-of-roots audit asks one
+  structured question — this session (default) / always / no. Session grants
+  live in the process; always grants persist to the user tier and survive
+  first-run setup; consent binds to the resolved path the question named, and
+  a retargeted symlink voids it. History recording follows persisted consent
+  on both doors — written `history.record: false` outranks a TTY (decision 7).
+- **Baseline adoption and per-format payloads over MCP (D7, D8),** install
+  remedies with the concepts they restore (D9), and chat-first documentation,
+  help files, and instruction packs across every operator surface
+  (D4, D12, D16, D17).
+
 ### Changed
 
+- Coverage rows state the languages the integration actually reads, tool
+  versions skip ASCII-art banners, concern pools select by what a pinned
+  invocation can emit, and the analyzer-pool tier promise names its two
+  disclosed exceptions (Checkstyle and SpotBugs live spawns remain unproven
+  until binaries exist).
 - **Chat-first setup and audit repairs after v0.8.1.** Local MCP first-run
   elicitation now closes D2 and D11 and ships D3's structured-setup portion,
   persists accepted analyzer, depth, license, economic-context and presentation
   choices, and returns unanswered setup for the host to ask again. The H1/M1/M2
   follow-up makes prompt remedies honor analyzer coverage, re-elicits until
   answers are written, and uses chat as the unconfigured presentation default.
-  These changes are not in any tag yet.
 
 ## 0.8.1 - 2026-08-16
 

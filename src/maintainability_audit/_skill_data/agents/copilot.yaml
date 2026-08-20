@@ -1,0 +1,13 @@
+interface:
+  display_name: "Maintainability Agent"
+  short_description: "Run maintainability audits and apply bounded remediation."
+  default_prompt: "Use maintainability-agent to audit this repo, read the generated report and remediation prompt, then make only bounded maintainability fixes."
+install:
+  # GitHub Copilot Chat (VS Code) reads prompt files from this path.
+  # Drop the shipped prompt file at the matching location in the target repo.
+  prompt_file_source:      "skills/maintainability-agent/copilot/maintainability-agent.prompt.md"
+  prompt_file_destination: ".github/prompts/maintainability-agent.prompt.md"
+  invocation:              "/maintainability-agent in Copilot Chat (VS Code)"
+  notes:
+    - "Prompt files are a VS Code Copilot Chat feature; not yet available in JetBrains Copilot."
+    - "For always-on guidance (non-invokable), use --init-agent-standards --target copilot to write .github/copilot-instructions.md."

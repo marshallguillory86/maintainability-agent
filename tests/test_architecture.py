@@ -109,6 +109,7 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
 # `_mcp_grants` is the D10 grant machinery split from `mcp_server` at
 # the same size gate: the ledger, the question, and the consent it binds.
 ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup", "_mcp_audit",
+         "_skill_install",
          "_mcp_grants"}
 BOUNDARY = {"evidence"}
 

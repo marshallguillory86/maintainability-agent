@@ -266,6 +266,17 @@ Or copy `.github/workflows/maintainability.yml` into the target repo and adapt i
 
 ## Invokable Skill / Slash Command
 
+Keep the installed copy in sync — an installed skill that drifts from the
+shipped one teaches agents a dead workflow (found in the field the day the
+skill went chat-first):
+
+```bash
+maintainability-agent --install-skill        # writes ~/.claude/skills
+maintainability-agent --install-skill --skills-dir /path/to/skills
+```
+
+Re-run after every upgrade; it overwrites local drift on purpose.
+
 For agents that support invokable skills, this repo ships a portable skill under [`skills/maintainability-agent/`](skills/maintainability-agent/). The `SKILL.md` body is the source of truth; per-host adapters live under `agents/` and `copilot/`.
 
 | Host | Install destination | Invocation |

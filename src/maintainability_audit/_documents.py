@@ -29,6 +29,23 @@ from ._corroborate import (
 )
 
 
+def unidentified_source_paths(analysis: Analysis, root: Path) -> list[str]:
+    """Tool path spellings that could not be identified with a tree file.
+
+    The refusal made visible (audit M4 on d5b1c50): when a tool's
+    spelling matches zero or several files, normalization keeps the
+    original — and this list says so, because a reader following a
+    finding to a path that does not exist deserves to know the
+    identification was refused, not silently believed.
+    """
+    refused = set()
+    for finding in analysis.findings:
+        relative = _relative(finding.path, root)
+        if relative and not (root / relative).exists():
+            refused.add(relative)
+    return sorted(refused)
+
+
 def _relative(path: str, root: Path) -> str:
     """Repo-relative, so findings read and diff like the rest of the report.
 

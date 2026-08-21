@@ -16,7 +16,12 @@ from typing import Any
 from ._analysis import analyze
 from ._built_ins import record_built_in_counts
 from ._discovery import Provenance, discover
-from ._documents import coverage_document, findings_document, measurement_document
+from ._documents import (
+    coverage_document,
+    findings_document,
+    measurement_document,
+    unidentified_source_paths,
+)
 from ._economics import economic_context_from, economic_impact, reorder_by_exposure
 from ._environment import environment_work_order
 from ._metrics_types import FileMetric, FunctionMetric
@@ -207,6 +212,9 @@ def _analyzer_sections(
         # which tools were *selected*; the agent never runs the commands.
         "environment": environment_work_order(analysis.coverage),
         "findings": findings_document(analysis, root),
+        # Path spellings normalization refused (zero or several matches)
+        # — visible, so a refusal is never mistaken for an identification.
+        "unidentified_source_paths": unidentified_source_paths(analysis, root),
         "measurements": measurement_document(analysis, root),
         # The analyzers' reading of the scorer's own dimensions, and the
         # primary source for every dimension it covers (ADR 006 §1).
@@ -347,6 +355,7 @@ def _assemble(
         # would report that nine tools examined the repository and then
         # tell the reader nothing they saw.
         "analyzer_findings": analyzer["findings"],
+        "unidentified_source_paths": analyzer.get("unidentified_source_paths", []),
         # Measurements and their distributions, kept alongside the counts
         # the score consumes. Collapsing everything into counts would
         # discard the shape a reader needs.

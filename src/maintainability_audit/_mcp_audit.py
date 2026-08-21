@@ -37,7 +37,9 @@ from .config import (
     analyzers_run_default,
     discovered_config,
     load_config,
+    repository_path,
 )
+from .config import PathNotAllowed as PathNotAllowed  # noqa: PLC0414 - re-export
 from .git_tools import changed_paths, run_git
 from .prompts import render_ai_prompt
 from .renderers import render_markdown
@@ -46,10 +48,6 @@ from .report import build_report
 ALLOWED_ROOTS_ENV = "MAINTAINABILITY_MCP_ALLOWED_ROOTS"
 DEFAULT_BASELINE_PATH = ".maintainability/baseline.json"
 _REVSPEC = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/@^~:+-]*(?:\.{2,3}[A-Za-z0-9._/@^~:+-]+)?")
-
-class PathNotAllowed(ValueError):
-    """A requested repository or config escaped the configured read boundary."""
-
 
 def _resolved(path: str | Path, *, relative_to: Path | None = None) -> Path:
     candidate = Path(path).expanduser()
@@ -165,7 +163,10 @@ def audit_repository(
         run_analyzers=run_analyzers,
     )
     status = report.get("git_status_short", "")
-    history_path = root / ((config.get("paths") or {}).get("history") or DEFAULT_HISTORY_PATH)
+    # D20: a repository-controlled paths.history must not escape the
+    # repository it came from.
+    history_path = repository_path(
+        root, (config.get("paths") or {}).get("history"), DEFAULT_HISTORY_PATH)
     # Advice omitted from the payload is never remembered as delivered
     # (D6 coherence with D8's include_prompt).
     record_scan_and_attach(report, config, history_path, root,
@@ -320,7 +321,8 @@ def _finish_result(result: dict[str, Any], format: str, root: Path,
     if format == "html":
         from .renderers import render_html
 
-        history = root / (config.get("paths", {}).get("history") or DEFAULT_HISTORY_PATH)
+        history = repository_path(
+            root, config.get("paths", {}).get("history"), DEFAULT_HISTORY_PATH)
         result["report_html"] = render_html(report, read_history(history))
     result["format"] = format
     if setup_pending(root):

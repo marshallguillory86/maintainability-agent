@@ -165,6 +165,37 @@ DEFAULT_CONFIG: dict[str, Any] = {
 }
 
 
+class PathNotAllowed(ValueError):
+    """A configured path escaped the repository it belongs to.
+
+    The boundary is not advisory: `paths.history` and its siblings come
+    from a file inside the repository under audit, so a traversal, an
+    absolute path, or a symlink pointing outward is a repository asking
+    this tool to write somewhere it was never authorized to touch. An
+    audit reproduced exactly that through the MCP seam (D20).
+    """
+
+
+def repository_path(root: Path, configured: str | None, default: str) -> Path:
+    """A configured repository-scoped path, resolved and bounded.
+
+    Every read, existence check, mkdir and append of a configured
+    output path goes through here. `resolve()` collapses `..` and
+    follows symlinks before the check, so traversal, absolute escapes
+    and symlink escapes are all one comparison rather than three
+    special cases.
+    """
+    root = Path(root).resolve()
+    candidate = Path(configured or default).expanduser()
+    target = (candidate if candidate.is_absolute() else root / candidate).resolve()
+    if target != root and not target.is_relative_to(root):
+        raise PathNotAllowed(
+            f"configured path {configured or default!r} resolves to {target}, "
+            f"outside the repository {root}"
+        )
+    return target
+
+
 def deep_update(base: dict[str, Any], override: dict[str, Any]) -> None:
     for key, value in override.items():
         if isinstance(value, dict) and isinstance(base.get(key), dict):

@@ -32,6 +32,7 @@ from .config import (
     analyzers_run_default,
     discovered_config,
     load_config,
+    repository_path,
 )
 from .git_tools import changed_paths
 from .instructions import instruction_path_for_target, write_instruction_pack
@@ -213,6 +214,21 @@ def _interactive_config(root: Path, config_arg: str | None) -> dict:
     return config
 
 
+def _install_skill_action(args: argparse.Namespace) -> int:
+    """Sync the packaged skill, or report the refusal that stopped it."""
+    from ._skill_install import SkillDrift, install_skill
+
+    target = (Path(args.skills_dir).expanduser()
+              if args.skills_dir else Path.home() / ".claude" / "skills")
+    try:
+        for written in install_skill(target, force=args.force_skill):
+            print(written)
+    except SkillDrift as refusal:
+        print(refusal)
+        return 1
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
@@ -226,17 +242,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.install_skill:
-        from ._skill_install import SkillDrift, install_skill
-
-        target = (Path(args.skills_dir).expanduser()
-                  if args.skills_dir else Path.home() / ".claude" / "skills")
-        try:
-            for written in install_skill(target, force=args.force_skill):
-                print(written)
-        except SkillDrift as refusal:
-            print(refusal)
-            return 1
-        return 0
+        return _install_skill_action(args)
 
     root = Path(args.root).resolve()
     config = _interactive_config(root, args.config)
@@ -246,7 +252,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.backfill:
-        history_path = root / (config.get("paths", {}).get("history") or DEFAULT_HISTORY_PATH)
+        history_path = repository_path(
+            root, config.get("paths", {}).get("history"), DEFAULT_HISTORY_PATH)
         try:
             count = backfill(root, args.backfill, config, VERSION, CALIBRATION_C,
                              history_path, interval=args.backfill_interval)
@@ -273,7 +280,9 @@ def main(argv: list[str] | None = None) -> int:
         }
         report["work_order_selection"]["worth"] = combined_delta(
             report, report["work_order_selection"]["items"])
-    history_path = root / (config.get("paths", {}).get("history") or DEFAULT_HISTORY_PATH)
+    # D20: the same repository boundary the MCP door applies.
+    history_path = repository_path(
+        root, config.get("paths", {}).get("history"), DEFAULT_HISTORY_PATH)
     # 8.2: the file's existence is the user's standing answer. Once a
     # history exists, a successful scan appends whether or not the flag
     # was remembered. Written consent outranks the terminal (decision 7,

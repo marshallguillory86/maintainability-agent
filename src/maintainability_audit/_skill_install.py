@@ -22,6 +22,7 @@ checked, whatever the name is made to mean afterwards.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import stat
 from importlib import resources
@@ -85,6 +86,16 @@ def install_skill(skills_dir: Path, *, force: bool = False) -> list[str]:
                 written.append(f"replaced symlinked skill root {target_root}")
             target_root.mkdir(parents=True, exist_ok=True)
             root_fd = _bind_root(target_root)
+            if root_fd is None:
+                # Something raced us to the name between mkdir and the
+                # bind. Writing on with `dir_fd=None` would resolve
+                # every path against the PROCESS WORKING DIRECTORY —
+                # an audit reproduced a stray SKILL.md there (D18).
+                raise SkillDrift(
+                    f"{target_root} could not be bound after creation; "
+                    "something changed it underneath. Nothing was "
+                    "written. Re-run --install-skill."
+                )
         try:
             _write_tree(root_fd, packaged, existing, links, written, target_root)
         except OSError as error:
@@ -123,31 +134,48 @@ def _drift(packaged: dict[str, bytes], existing: dict[str, bytes],
         set(packaged) ^ set(existing)
         | {name for name in packaged.keys() & existing.keys()
            if packaged[name] != existing[name]}
-        | {f"{name} (symlink)" for name in links}
+        | {f"{name} (not a packaged file)" for name in links}
         | ({f"{_SKILL_NAME} (symlinked directory)"} if root_is_link else set())
     )
 
 
 def _read_tree(fd: int, prefix: str = "") -> tuple[dict[str, bytes], list[str]]:
-    """Regular files and symlinks under a bound directory, by descriptor."""
+    """Every entry under a bound directory, by descriptor.
+
+    `links` is really "everything present that is not a regular file
+    this tool wrote": symlinks, empty directories, FIFOs, sockets,
+    devices. All of them are occupancy (D19) — an audit found an empty
+    subdirectory and a FIFO each reading as a fresh install, and a FIFO
+    named SKILL.md hanging the installer forever because opening it
+    blocks. Nothing here opens a special file; `stat` with
+    `follow_symlinks=False` answers from metadata alone.
+    """
     files: dict[str, bytes] = {}
-    links: list[str] = []
+    others: list[str] = []
     for name in sorted(os.listdir(fd)):
         relative = f"{prefix}{name}"
         info = os.stat(name, dir_fd=fd, follow_symlinks=False)
         if stat.S_ISLNK(info.st_mode):
-            links.append(relative)
+            others.append(relative)
         elif stat.S_ISDIR(info.st_mode):
             child = os.open(name, _DIR_FLAGS, dir_fd=fd)
             try:
-                sub_files, sub_links = _read_tree(child, f"{relative}/")
+                sub_files, sub_others = _read_tree(child, f"{relative}/")
             finally:
                 os.close(child)
+            if not sub_files and not sub_others:
+                # An empty directory is still something present. The
+                # register's own words are "anything already present".
+                others.append(f"{relative}/")
             files.update(sub_files)
-            links.extend(sub_links)
+            others.extend(sub_others)
         elif stat.S_ISREG(info.st_mode):
             files[relative] = _read_file(fd, name)
-    return files, links
+        else:
+            # FIFO, socket, device, or anything else: recorded as
+            # present, never opened.
+            others.append(relative)
+    return files, others
 
 
 def _read_file(fd: int, name: str) -> bytes:
@@ -164,10 +192,13 @@ def _read_file(fd: int, name: str) -> bytes:
 def _write_tree(root_fd: int, packaged: dict[str, bytes],
                 existing: dict[str, bytes], links: list[str],
                 written: list[str], target_root: Path) -> None:
-    """Replace symlinks, write every packaged file, remove what is stale."""
+    """Clear what does not belong, write every packaged file, drop the stale."""
     for relative in sorted(links, reverse=True):
-        _in_parent(root_fd, relative, _unlink_at)
-        written.append(f"replaced symlink {target_root / relative}")
+        # Deepest first, so an empty directory is removed after
+        # whatever it contained. Directories need rmdir, and anything
+        # this tool cannot safely remove is refused rather than forced.
+        _in_parent(root_fd, relative.rstrip("/"), _remove_at)
+        written.append(f"replaced {target_root / relative}")
     for relative, body in sorted(packaged.items()):
         _in_parent(root_fd, relative, _writer_for(body), create=True)
         written.append(str(target_root / relative))
@@ -180,18 +211,76 @@ def _unlink_at(fd: int, name: str) -> None:
     os.unlink(name, dir_fd=fd)
 
 
+def _remove_at(fd: int, name: str) -> None:
+    """Remove one entry of any supported kind, or refuse it by name.
+
+    Symlinks, regular files, FIFOs, sockets and empty directories all
+    go. A device node or anything else unrecognised is refused: forcing
+    a sync must not quietly delete something this tool does not
+    understand (D19).
+    """
+    info = os.stat(name, dir_fd=fd, follow_symlinks=False)
+    mode = info.st_mode
+    if stat.S_ISDIR(mode):
+        os.rmdir(name, dir_fd=fd)
+    elif (stat.S_ISLNK(mode) or stat.S_ISREG(mode)
+          or stat.S_ISFIFO(mode) or stat.S_ISSOCK(mode)):
+        os.unlink(name, dir_fd=fd)
+    else:
+        raise SkillDrift(
+            f"{name} is a special file this tool will not remove; "
+            "clear it yourself, then re-run --install-skill."
+        )
+
+
 def _writer_for(body: bytes):
+    """Write via a fresh temporary file, then rename it into place.
+
+    Opening the destination and truncating it modifies whatever inode
+    the name points at — and ``O_NOFOLLOW`` does not help with a HARD
+    link, so an audit replaced SKILL.md with a link to an external file
+    and watched that file get overwritten (D18). A new file plus an
+    atomic rename cannot touch the old inode: the link keeps its
+    contents and simply stops being this name.
+    """
     def write(fd: int, name: str) -> None:
+        staging = f".{name}.incoming"
         handle = os.open(
-            name, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW,
+            staging, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
             0o644, dir_fd=fd,
         )
         try:
-            os.write(handle, body)
-        finally:
+            written = 0
+            while written < len(body):
+                # os.write may write fewer bytes than asked. Reporting
+                # success on a truncated file installs a skill that is
+                # silently incomplete (D18).
+                sent = os.write(handle, body[written:])
+                if sent <= 0:
+                    raise SkillDrift(
+                        f"writing {name} stopped after {written} of "
+                        f"{len(body)} bytes; nothing was installed."
+                    )
+                written += sent
+            os.fsync(handle)
+        except BaseException:
             os.close(handle)
+            _discard(fd, staging)
+            raise
+        os.close(handle)
+        try:
+            os.replace(staging, name, src_dir_fd=fd, dst_dir_fd=fd)
+        except BaseException:
+            _discard(fd, staging)
+            raise
 
     return write
+
+
+def _discard(fd: int, name: str) -> None:
+    """Remove a staging file, never masking the error that caused it."""
+    with contextlib.suppress(OSError):
+        os.unlink(name, dir_fd=fd)
 
 
 def _in_parent(root_fd: int, relative: str, action, *, create: bool = False) -> None:

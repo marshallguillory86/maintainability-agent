@@ -16,6 +16,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from maintainability_audit.config import load_config
 from maintainability_audit.report import build_report
 
@@ -50,27 +52,51 @@ def _rows(report: dict[str, Any]) -> dict[str, tuple[str, dict[str, Any]]]:
     }
 
 
-def test_a_run_engages_tools_by_the_trees_languages(tmp_path: Path) -> None:
-    """Selection consults the inventory: language-mismatched tools do not run."""
+def test_inventory_deselects_before_any_probe_or_spawn(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Selection consults the inventory: a language-mismatched tool is
+    never probed and never spawned — decided against, not attempted and
+    rejected (Codex audit H1: the earlier version of this test pinned
+    the attempted-then-rejected shape, which was the original defect)."""
+    from maintainability_audit import _runner
+
+    probed: list[str] = []
+    real_probe = _runner._probe
+
+    def recording_probe(slug: str, argv: tuple[str, ...]):
+        probed.append(slug)
+        return real_probe(slug, argv)
+
+    monkeypatch.setattr(_runner, "_probe", recording_probe)
+
     report = build_report(_mixed_repo(tmp_path / "mixed"), _config(), run_analyzers=True)
     rows = _rows(report)
 
+    python_only = [s for s in ("radon", "vulture", "pydocstyle") if s in rows]
+    assert python_only, "no python-only tool was even in the pool to decide about"
+    for slug in python_only:
+        assert slug not in probed, (
+            f"{slug} was probed despite the inventory: selection did not "
+            "consult the language inventory, the attempt did"
+        )
+        outcome, row = rows[slug]
+        assert outcome == "not-applicable"
+        assert "this tree is" in (row.get("detail") or "")
+
+    # The deselection is stated as a SELECTION fact, not only a
+    # coverage outcome.
+    filtered = report["analyzer_coverage"]["selection"]["inventory_filtered"]
+    assert set(python_only) <= set(filtered)
+
     # Java tools are engaged for the Java half (ran or an install gap,
-    # never language-inapplicable)...
+    # never language-inapplicable).
     for slug in ("pmd", "checkstyle"):
         outcome, row = rows[slug]
         assert outcome != "not-applicable" or "build" in (row.get("detail") or ""), (
             f"{slug} was language-gated off a tree that contains Java: {row}"
         )
-    # ...while Python-only tools are stated as inapplicable to this
-    # tree, with the reason naming the mismatch — the inventory drove
-    # the decision, not a hidden filter.
-    python_only = [s for s in ("radon", "vulture", "pydocstyle") if s in rows]
-    assert python_only, "no python-only tool was even selected to decide about"
-    for slug in python_only:
-        outcome, row = rows[slug]
-        assert outcome == "not-applicable"
-        assert "this tree is" in (row.get("detail") or "")
+        assert slug not in filtered
 
 
 def test_the_run_names_installs_that_close_language_gaps(tmp_path: Path) -> None:

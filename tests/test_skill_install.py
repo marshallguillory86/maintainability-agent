@@ -88,3 +88,30 @@ def test_an_identical_copy_reinstalls_without_force(tmp_path: Path) -> None:
     """Identical is not drift: the plain command stays usable for upgrades."""
     assert main(["--install-skill", "--skills-dir", str(tmp_path)]) == 0
     assert main(["--install-skill", "--skills-dir", str(tmp_path)]) == 0
+
+
+def test_a_symlinked_target_is_drift_and_is_never_written_through(
+    tmp_path: Path,
+) -> None:
+    """Audit M3: writing through a symlink is an out-of-directory write."""
+    assert main(["--install-skill", "--skills-dir", str(tmp_path)]) == 0
+    target = tmp_path / "maintainability-agent"
+    outside = tmp_path / "someone-elses-file.md"
+    outside.write_text("do not touch\n", encoding="utf-8")
+    skill = target / "SKILL.md"
+    skill.unlink()
+    skill.symlink_to(outside)
+
+    assert main(["--install-skill", "--skills-dir", str(tmp_path)]) == 1, (
+        "a symlinked target was not treated as drift"
+    )
+    assert outside.read_text(encoding="utf-8") == "do not touch\n"
+
+    assert main(["--install-skill", "--skills-dir", str(tmp_path),
+                 "--force-skill"]) == 0
+    assert outside.read_text(encoding="utf-8") == "do not touch\n", (
+        "forced sync wrote through the symlink to a file outside the "
+        "skills directory"
+    )
+    assert not skill.is_symlink()
+    assert skill.read_bytes() == (PACKAGED / "SKILL.md").read_bytes()

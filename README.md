@@ -275,7 +275,10 @@ maintainability-agent --install-skill        # writes ~/.claude/skills
 maintainability-agent --install-skill --skills-dir /path/to/skills
 ```
 
-Re-run after every upgrade; it overwrites local drift on purpose.
+Re-run after every upgrade. A differing installed copy is refused with the
+list of differences; add `--force-skill` to sync fully — overwriting edits,
+replacing symlinks with real files, and removing files the package no longer
+ships.
 
 For agents that support invokable skills, this repo ships a portable skill under [`skills/maintainability-agent/`](skills/maintainability-agent/). The `SKILL.md` body is the source of truth; per-host adapters live under `agents/` and `copilot/`.
 

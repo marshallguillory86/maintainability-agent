@@ -171,6 +171,8 @@ def render_markdown(report: dict[str, Any]) -> str:
         (score.get("analyzer_scored_dimensions") or []),
     ))
     lines.extend(analyzer_findings_markdown(report.get("analyzer_findings") or []))
+    lines.extend(view.unidentified_paths_markdown(
+        report.get("unidentified_source_paths") or []))
     if report["hard_gate_failures"]:
         lines.extend(["## Hard Gate Failures", ""])
         lines.extend(f"- {gate}" for gate in report["hard_gate_failures"])

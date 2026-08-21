@@ -74,6 +74,11 @@ class ToolCoverage:
     stale: bool | None = None
     source_mtime: float | None = None
     class_mtime: float | None = None
+    # True when the language inventory (not a probe, not a spawn)
+    # decided this tool had nothing to read — the selection-stage fact
+    # D15 requires to be visible as selection, not only as a coverage
+    # outcome (Codex audit on 43c0d13, H1).
+    inventory_filtered: bool = False
     # The catalog languages this tool reads, in the catalog's vocabulary.
     # Carried on the record because coverage is claimed per language: a
     # Python-only linter covers nothing for C++ at any language mix, and
@@ -378,6 +383,7 @@ def _cover_one(tool: dict[str, Any], root: Path, probe: Probe, timeout: int,
             ),
             concepts=tuple(tool["measures"]),
             languages=reads,
+            inventory_filtered=True,
         )
     if adapter is None:
         # Selected but unwritten: the catalog and the adapter set are

@@ -301,3 +301,30 @@ def test_d15_is_closed_past_tense_behind_this_file() -> None:
     row = next(line for line in DECISIONS.read_text(encoding="utf-8").splitlines()
                if line.startswith("| [012]"))
     assert "d15" not in row.lower() or "open" not in row.lower()
+
+
+def test_a_refused_path_identification_is_stated_on_the_chat_surface(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Audit M2: the refusal reaches the surface people read, not only JSON.
+
+    Two files ending com/foo/Bar.java make the identification ambiguous,
+    so the tool's own spelling is kept — and the rendered report must
+    say the identification was refused rather than leave a reader
+    chasing a path that does not exist.
+    """
+    from maintainability_audit.renderers import render_markdown
+
+    root = _java_tree(tmp_path / "ambiguous", extra={
+        "src/test/java/com/foo/Bar.java": JAVA_SOURCE,
+    })
+    _force_jvm_ran(monkeypatch)
+    report = build_report(root, _jvm_config(), run_analyzers=True)
+
+    assert PACKAGE_PATH in report["unidentified_source_paths"], (
+        "an ambiguous spelling was not recorded as unidentified"
+    )
+    rendered = render_markdown(report)
+    assert "Unidentified source paths" in rendered
+    assert PACKAGE_PATH in rendered
+    assert "refused" in rendered.lower()

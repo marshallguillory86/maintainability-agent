@@ -91,6 +91,9 @@ def test_coverage_states_the_selection_that_produced_it() -> None:
 
     assert document["selection"] == {
         "concerns": ["complexity"], "depth": "baseline", "license_policy": "permissive",
+        # Inventory-driven deselection is stated as a selection fact
+        # (D15): empty here because this analysis has no coverage rows.
+        "inventory_filtered": [],
     }
 
 

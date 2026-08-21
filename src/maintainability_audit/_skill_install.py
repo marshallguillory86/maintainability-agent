@@ -47,10 +47,18 @@ def install_skill(skills_dir: Path, *, force: bool = False) -> list[str]:
     target_root = skills_dir / _SKILL_NAME
     existing = _existing_files(target_root)
 
+    linked = (
+        sorted(
+            path.relative_to(target_root).as_posix()
+            for path in target_root.rglob("*") if path.is_symlink()
+        )
+        if target_root.is_dir() else []
+    )
     drifted = sorted(
         set(packaged) ^ set(existing)
         | {name for name in packaged.keys() & existing.keys()
            if packaged[name] != existing[name]}
+        | {f"{name} (symlink)" for name in linked}
     )
     if existing and drifted and not force:
         raise SkillDrift(
@@ -61,14 +69,17 @@ def install_skill(skills_dir: Path, *, force: bool = False) -> list[str]:
         )
 
     written: list[str] = []
+    _drop_symlinks(target_root, written)
     for name, body in sorted(packaged.items()):
         target = target_root / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(body)
         written.append(str(target))
     for name in sorted(set(existing) - set(packaged)):
-        (target_root / name).unlink()
-        written.append(f"removed {target_root / name}")
+        stale = target_root / name
+        if stale.exists() or stale.is_symlink():
+            stale.unlink()
+            written.append(f"removed {stale}")
     written.append(f"skill {_SKILL_NAME} synced to version {VERSION}")
     return written
 
@@ -101,3 +112,19 @@ def _files_under(node, prefix: str = ""):
             yield from _files_under(child, f"{relative}/")
         else:
             yield relative, child
+
+
+def _drop_symlinks(target_root: Path, written: list[str]) -> None:
+    """Remove any symlink inside the target before writing (audit M3).
+
+    A symlinked SKILL.md points somewhere else, and writing "through"
+    it would modify a file outside the skills directory — an
+    out-of-directory write no sync was ever asked to make. Symlinks
+    are replaced with real files, never followed.
+    """
+    if not target_root.is_dir():
+        return
+    for path in sorted(target_root.rglob("*"), reverse=True):
+        if path.is_symlink():
+            path.unlink()
+            written.append(f"replaced symlink {path}")

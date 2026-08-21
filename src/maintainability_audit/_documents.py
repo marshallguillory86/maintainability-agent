@@ -255,6 +255,14 @@ def coverage_document(analysis: Analysis) -> dict[str, Any]:
             "concerns": list(analysis.concerns),
             "depth": analysis.depth,
             "license_policy": analysis.license_policy,
+            # Inventory-driven deselection is a SELECTION fact (D15):
+            # these tools were decided against by the language
+            # inventory before any probe or spawn, and the coverage
+            # rows carry the per-tool reason.
+            "inventory_filtered": sorted(
+                item.slug for item in analysis.coverage
+                if item.inventory_filtered
+            ),
         },
         # Two reports with different coverage are not comparable, so this
         # is stated beside the score rather than filed behind it.

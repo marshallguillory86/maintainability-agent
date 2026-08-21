@@ -285,3 +285,24 @@ def _restore_hint(score: dict[str, Any]) -> str:
         "The missing measurements come from more than one producer; see the paths above. "
         "Restore the inputs they name and rerun the audit rather than changing code."
     )
+
+
+def unidentified_paths_markdown(paths: list[str]) -> list[str]:
+    """Refused path identifications, on the surface people read (audit M2).
+
+    A finding whose path matched zero or several tree files keeps the
+    tool's own spelling; a reader following it to a file that does not
+    exist deserves the refusal stated where they are looking, not only
+    in the JSON.
+    """
+    if not paths:
+        return []
+    lines = [
+        "### Unidentified source paths", "",
+        "These tool-reported paths matched zero or several files in the "
+        "tree, so their identification was refused and the tool's own "
+        "spelling was kept:", "",
+    ]
+    lines.extend(f"- `{path}`" for path in paths)
+    lines.append("")
+    return lines

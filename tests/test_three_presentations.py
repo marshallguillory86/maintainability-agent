@@ -427,3 +427,73 @@ def test_rendering_semantics_does_not_mutate_the_sealed_score(
         "maintainability_estimate"
     ]
     assert report["score"]["verified_grade"] == before["verified_grade"]
+
+
+def test_a_refused_path_identification_appears_in_all_three_presentations(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """ADR 011 / D15: one report dict, three skins, one refusal.
+
+    The refusal was visible in JSON and Markdown while HTML omitted it
+    (Codex round three): a reader of the page would chase a path that
+    does not exist with nothing saying the identification was refused.
+    """
+    import subprocess
+
+    from maintainability_audit import _runner
+    from maintainability_audit._catalog import load_catalog
+    from maintainability_audit._runner import Outcome, ToolResult
+    from maintainability_audit.config import load_config
+    from maintainability_audit.renderers import render_html, render_markdown
+    from maintainability_audit.report import build_report
+
+    package_path = "com/foo/Bar.java"
+    source = "package com.foo;\npublic class Bar { int x; }\n"
+    root = tmp_path / "ambiguous"
+    for relative in ("src/main/java/com/foo/Bar.java", "src/test/java/com/foo/Bar.java"):
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(source, encoding="utf-8")
+    (root / "target" / "classes" / "com" / "foo").mkdir(parents=True)
+    (root / "target" / "classes" / "com" / "foo" / "Bar.class").write_bytes(
+        b"\xca\xfe\xba\xbe dummy",
+    )
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+
+    payload = (
+        '<?xml version="1.0"?>\n<BugCollection version="4.8.6">\n'
+        '<BugInstance type="NP_NULL_ON_SOME_PATH" category="CORRECTNESS">\n'
+        "  <ShortMessage>Possible null pointer dereference</ShortMessage>\n"
+        f'  <SourceLine sourcepath="{package_path}" start="2" end="2"/>\n'
+        "</BugInstance>\n</BugCollection>\n"
+    )
+    monkeypatch.setattr(
+        _runner, "_probe",
+        lambda slug, argv: ToolResult(
+            slug=slug, outcome=Outcome.RAN, version="spotbugs 4.8.6", exit_code=0,
+        ),
+    )
+    monkeypatch.setattr(
+        "maintainability_audit._analysis.run",
+        lambda slug, invocation, timeout_seconds=120: ToolResult(
+            slug=slug, outcome=Outcome.RAN, stdout=payload, exit_code=0,
+        ),
+    )
+    config = load_config(None)
+    config["analyzers"].update({
+        "run": True, "depth": "moderate", "license_policy": "copyleft-weak",
+        "allow_tools": ["spotbugs"],
+        "deny_tools": sorted(
+            tool["slug"] for tool in load_catalog() if tool["slug"] != "spotbugs"
+        ),
+    })
+
+    report = build_report(root, config, run_analyzers=True)
+
+    assert package_path in report["unidentified_source_paths"], "JSON"
+    markdown = render_markdown(report)
+    assert "Unidentified source paths" in markdown and package_path in markdown
+    html = render_html(report, [])
+    assert "Unidentified source paths" in html and package_path in html, (
+        "the HTML skin omits a refusal the other two state"
+    )

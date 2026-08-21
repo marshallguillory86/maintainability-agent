@@ -36,10 +36,9 @@ from ._adapters import ours_only_extraction as _ours_only_extraction
 from ._built_ins import BUILT_IN_SOURCES
 from ._catalog import CONCERNS, PolicyError, concepts_for, resolve_pool, settings_from
 from ._discovery import CATALOG_LANGUAGE, discover
-from ._generic import declared_adapter
 from ._metrics_types import KNOWN_SOURCE_SUFFIXES, Finding, Measurement
 from ._runner import Outcome, Probe, run
-from ._tool_adapters import adapter_for
+from ._selection import Selected, select_runnable
 
 
 @dataclass(frozen=True)
@@ -304,10 +303,25 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
         if any(KNOWN_SOURCE_SUFFIXES.get(suffix) == name for suffix in included)
     )
 
-    for tool in pool:
+    # D15: the runnable set is composed here, from the language
+    # inventory and the concern-filtered pool — not resolved whole and
+    # marked inapplicable afterwards. A tool the inventory rules out is
+    # never in the set that gets probed or spawned; it survives as
+    # stated evidence instead.
+    runnable, deselected = select_runnable(
+        pool, root, inventory, excludes,
+        class_dirs=tuple(settings.get("class_dirs") or ()))
+    analysis.coverage.extend(
+        ToolCoverage(
+            slug=fact.slug, outcome="not-applicable", detail=fact.detail,
+            concepts=fact.concepts, languages=fact.languages,
+            inventory_filtered=True,
+        )
+        for fact in deselected
+    )
+    for selected in runnable:
         analysis.coverage.append(_cover_one(
-            tool, root, probe, timeout, analysis, excludes, inventory,
-            class_dirs=tuple(settings.get("class_dirs") or ())))
+            selected, root, probe, timeout, analysis, excludes, inventory))
 
     analysis.coverage.extend(built_in_coverage())
     analysis.coverage.sort(key=lambda item: (item.tier != "built-in", item.slug))
@@ -340,51 +354,17 @@ def _run_one(root: Path, adapter: Any, probe: Probe, timeout: int,
         )
 
 
-def _cover_one(tool: dict[str, Any], root: Path, probe: Probe, timeout: int,
+def _cover_one(selected: Selected, root: Path, probe: Probe, timeout: int,
                analysis: Analysis, excludes: Sequence[str] = (),
-               inventory: Any = None,
-               class_dirs: tuple[str, ...] = ()) -> ToolCoverage:
-    """One selected tool's coverage row: applicability, adapter, or run.
+               inventory: Any = None) -> ToolCoverage:
+    """One runnable tool's coverage row: adapter, or the run itself.
 
-    A hand-written adapter where the output is genuinely bespoke, a
-    declared one where the tool emits a standard format — composing the
-    two here keeps `_adapters` and `_generic` independent. What THIS
-    integration reads governs applicability and the coverage claim; the
-    catalog's languages are what the tool upstream could read. PMD
-    upstream reads five languages while its adapter names only .java
-    files — inviting it into a JavaScript tree spawned a CLI with
-    nothing to scan (audit M on 549fcad).
+    Applicability is settled upstream in `select_runnable` (D15), so
+    everything reaching here is a tool the inventory and concerns
+    actually chose. What remains is whether an adapter exists and what
+    the run produced.
     """
-    adapter = adapter_for(tool["slug"]) or declared_adapter(tool["slug"])
-    reads = tuple(
-        str(name).lower()
-        for name in (getattr(adapter, "languages", ()) or tool.get("languages") or ())
-    )
-    if adapter is not None and hasattr(adapter, "class_dirs"):
-        # analyzers.class_dirs for the adapter that reads compiled
-        # output (ADR 012). Assigned on EVERY run — including back to
-        # empty — because the registry holds one instance per process
-        # and configured dirs must not leak between audits (M2).
-        # Before the applicability gate: the gate consults has_targets.
-        adapter.class_dirs = class_dirs
-    # Artifact-read tools are gated by their artifacts, not the source
-    # inventory (D15 pin 5): a tree holding .class files reaches
-    # SpotBugs whatever languages the sources speak. No artifacts
-    # either → plain not-applicable, which carries no build order.
-    finds_targets = getattr(adapter, "has_targets", None) if adapter else None
-    has_artifacts = finds_targets is not None and finds_targets(root, excludes)
-    if not inventory.applicable(reads) and not has_artifacts:
-        present = ", ".join(sorted(inventory.languages)) or "no recognised source"
-        return ToolCoverage(
-            slug=tool["slug"], outcome="not-applicable",
-            detail=(
-                f"reads {', '.join(reads[:4])}; this tree is "
-                f"{present}, so it had nothing to examine"
-            ),
-            concepts=tuple(tool["measures"]),
-            languages=reads,
-            inventory_filtered=True,
-        )
+    tool, adapter, reads = selected.tool, selected.adapter, selected.reads
     if adapter is None:
         # Selected but unwritten: the catalog and the adapter set are
         # allowed to disagree, and saying so beats pretending.

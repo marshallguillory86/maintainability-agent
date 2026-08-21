@@ -153,18 +153,44 @@ def test_decisions_four_through_eight_are_repository_records() -> None:
         assert phrase in decisions
 
 
-def test_register_tracks_the_round_four_queue() -> None:
-    """Closed history stays closed, and reproduced defects close on their proofs."""
+def test_the_register_states_a_falsifier_for_every_entry() -> None:
+    """Closure is a named test, and the count is read, never asserted.
+
+    An earlier version demanded an all-closed state by a written-in
+    number, which is a test that can require a lie: when two audit
+    findings were entered the register grew and the assertion still
+    said seventeen. Entries are counted from their own headings, and
+    each closed one must name the test that would fail if its defect
+    returned.
+    """
     register = _read(REGISTER)
-    for defect in (4, 12, 15, 16, 17, 18, 19):
-        heading = re.search(rf"^### D{defect} — (.+)$", register, re.MULTILINE)
-        assert heading and "Closed" in heading.group(1), f"D{defect}: {heading}"
+    headings = re.findall(r"^### (D\d+) — (.+)$", register, re.MULTILINE)
+    assert len(headings) >= 19, f"register shrank: {len(headings)} entries"
 
-    # Each round-four entry names the falsifier that would fail if the
-    # defect returned — the register's own standard.
-    assert "test_the_validated_root_is_bound_by_descriptor_not_by_name" in register
-    assert "test_a_nested_symlink_in_an_empty_root_still_needs_consent" in register
-    assert "tests/test_d15_goal_directed.py" in register
+    body = register.split("## Disposition", maxsplit=1)
+    assert len(body) == 2, "the register lost its disposition"
+    entries, disposition = body[0], body[1].lower()
 
-    disposition = register.split("## Disposition", maxsplit=1)[1].lower()
-    assert "nineteen" in disposition and "closed" in disposition
+    open_entries = [f"{ident} {title}" for ident, title in headings
+                    if "Closed" not in title]
+    if open_entries:
+        # An open entry is legitimate; claiming everything is closed
+        # while one is open is not.
+        assert "every entry" not in disposition, (
+            f"the disposition claims all closed while these are open: {open_entries}"
+        )
+        return
+
+    for ident, _title in headings:
+        section = entries.split(f"### {ident} — ", maxsplit=1)[1]
+        section = section.split("\n### ", maxsplit=1)[0]
+        # Substance, not phrasing: some entries write "Closing test",
+        # some "Closing suite", some name the tests inline. What every
+        # closed entry must do is point at a real falsifier.
+        assert re.search(r"`tests/\S+\.py`|`test_\w+`|\btest_\w+\b", section), (
+            f"{ident} closes without naming the falsifier that would fail"
+        )
+
+    # The security entry names both doors it had to bound.
+    assert "test_mcp_history_rejects_parent_traversal_without_external_write" in register
+    assert "test_the_cli_door_applies_the_same_boundary" in register

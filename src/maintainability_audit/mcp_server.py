@@ -34,7 +34,13 @@ from ._mcp_grants import (
 )
 from ._mcp_setup import setup_pending, setup_schema
 from ._scan_history import DEFAULT_HISTORY_PATH
-from .config import CONFIG_FILENAME, VERSION, discovered_config, load_config
+from .config import (
+    CONFIG_FILENAME,
+    VERSION,
+    discovered_config,
+    load_config,
+    repository_path,
+)
 from .renderers import render_markdown
 from .report import build_report
 
@@ -103,7 +109,8 @@ def _report_markdown(repository_root: str, roots: tuple[Path, ...]) -> str:
     root = authorize_repository(repository_root, roots)
     config = load_config(discovered_config(root))
     report = build_report(root, config)
-    history_path = root / ((config.get("paths") or {}).get("history") or DEFAULT_HISTORY_PATH)
+    history_path = repository_path(
+        root, (config.get("paths") or {}).get("history"), DEFAULT_HISTORY_PATH)
     attach_history_views(report, history_path, root)
     return render_markdown(report)
 

@@ -313,9 +313,11 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
         class_dirs=tuple(settings.get("class_dirs") or ()))
     analysis.coverage.extend(
         ToolCoverage(
-            slug=fact.slug, outcome="not-applicable", detail=fact.detail,
+            slug=fact.slug,
+            outcome="not-applicable" if fact.reason == "inventory" else "no-adapter",
+            detail=fact.detail,
             concepts=fact.concepts, languages=fact.languages,
-            inventory_filtered=True,
+            inventory_filtered=fact.reason == "inventory",
         )
         for fact in deselected
     )
@@ -364,16 +366,9 @@ def _cover_one(selected: Selected, root: Path, probe: Probe, timeout: int,
     actually chose. What remains is whether an adapter exists and what
     the run produced.
     """
-    tool, adapter, reads = selected.tool, selected.adapter, selected.reads
-    if adapter is None:
-        # Selected but unwritten: the catalog and the adapter set are
-        # allowed to disagree, and saying so beats pretending.
-        return ToolCoverage(
-            slug=tool["slug"], outcome="no-adapter",
-            detail="selected by policy but no adapter is implemented",
-            concepts=tuple(tool["measures"]),
-            languages=reads,
-        )
+    adapter, reads = selected.adapter, selected.reads
+    # No `adapter is None` branch: selection already routed those to
+    # a no-adapter row, so everything reaching here is invokable.
     recorded = _run_one(root, adapter, probe, timeout, analysis, excludes, inventory)
     return replace(recorded, languages=reads)
 

@@ -153,13 +153,18 @@ def test_decisions_four_through_eight_are_repository_records() -> None:
         assert phrase in decisions
 
 
-def test_register_is_empty_except_for_analyzer_composition() -> None:
-    """The docs sweep closes the surface register; D15 closed behind composition tests."""
+def test_register_tracks_the_round_four_queue() -> None:
+    """Closed history stays closed, and reproduced defects close on their proofs."""
     register = _read(REGISTER)
-    for defect in (4, 12, 15, 16, 17):
+    for defect in (4, 12, 15, 16, 17, 18, 19):
         heading = re.search(rf"^### D{defect} — (.+)$", register, re.MULTILINE)
-        assert heading and "Closed" in heading.group(1)
+        assert heading and "Closed" in heading.group(1), f"D{defect}: {heading}"
+
+    # Each round-four entry names the falsifier that would fail if the
+    # defect returned — the register's own standard.
+    assert "test_the_validated_root_is_bound_by_descriptor_not_by_name" in register
+    assert "test_a_nested_symlink_in_an_empty_root_still_needs_consent" in register
+    assert "tests/test_d15_goal_directed.py" in register
 
     disposition = register.split("## Disposition", maxsplit=1)[1].lower()
-    assert "only d15 remains open" not in disposition
-    assert "seventeen" in disposition and "closed" in disposition
+    assert "nineteen" in disposition and "closed" in disposition

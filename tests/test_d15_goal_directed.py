@@ -183,16 +183,61 @@ def test_the_runnable_set_is_minimal_for_the_trees_languages(
     )
 
     rows = {
-        row["tool"]: row
+        row["tool"]: (outcome, row)
         for outcome, entries in coverage["by_outcome"].items()
         for row in entries
         if row.get("tier") != "built-in"
     }
-    present = {name.lower() for name in (coverage.get("languages") or [])}
+    # The real key, and it must not be empty: an earlier version of
+    # this test read a `languages` key the coverage document never
+    # emitted, then passed itself when the resulting set came back
+    # empty — a falsifier that could not fail (Codex round four, M2).
+    present = {name.lower() for name in coverage["by_language"]}
+    assert present, "the fixture produced no languages, so this proves nothing"
+    assert "java" in present and "javascript" in present
+
     for slug in runnable:
-        reads = {name.lower() for name in (rows[slug].get("languages") or [])}
+        outcome, row = rows[slug]
+        assert outcome != "no-adapter", (
+            f"{slug} is called runnable but has no adapter to invoke"
+        )
+        reads = {name.lower() for name in (row.get("languages") or [])}
         artifact_read = slug == "spotbugs"
-        assert not reads or artifact_read or not present or (reads & present), (
+        assert not reads or artifact_read or (reads & present), (
             f"{slug} is in the runnable set but reads none of the "
             f"languages this tree contains ({sorted(present)})"
         )
+
+
+def test_a_catalogued_tool_without_an_adapter_is_not_called_runnable(
+    tmp_path: Path,
+) -> None:
+    """M2: `runnable` is a claim the run must be able to keep.
+
+    A tool the inventory wants but this project cannot invoke was
+    listed under `selection.runnable` while producing a no-adapter row
+    and never being probed. Selection now routes it out of the set.
+    """
+    from maintainability_audit._catalog import load_catalog
+
+    unadapted = next(
+        tool["slug"] for tool in load_catalog()
+        if tool["adapter"] != "implemented" and "java" in tool["languages"]
+    )
+    report = build_report(
+        _mixed_repo(tmp_path / "unadapted"),
+        _config(allow_tools=[unadapted]),
+        run_analyzers=True,
+    )
+    coverage = report["analyzer_coverage"]
+    rows = {
+        row["tool"]: (outcome, row)
+        for outcome, entries in coverage["by_outcome"].items()
+        for row in entries
+    }
+
+    assert unadapted in rows, "the unadapted tool vanished instead of being stated"
+    assert rows[unadapted][0] == "no-adapter"
+    assert unadapted not in coverage["selection"]["runnable"], (
+        f"{unadapted} has no adapter but was reported as runnable"
+    )

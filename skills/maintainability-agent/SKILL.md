@@ -14,15 +14,20 @@ engineering changes, not as permission to refactor unrelated code.
 
 ## Core Workflow (chat / MCP)
 
-1. Configuration check first: look for `maintainability-agent.json`, the
-   user-tier config, and any local agent instruction files (`AGENTS.md`,
-   `CLAUDE.md`). An unconfigured repository will be asked one structured
-   setup set on first contact.
-2. Call the `audit_repository` MCP tool. Choices arrive as structured
-   questions — MCP elicitation or the host's question UI — never free
-   text: first-run setup (analyzer pool, depth, license policy,
-   economics, presentation), history consent (whether scan history is
-   recorded), and out-of-roots grants (this session / always / no).
+1. Call the `audit_repository` MCP tool. Do not inspect configuration
+   first and do not ask the user which config to use: the tool resolves
+   that itself, and an unconfigured repository is not an obstacle — it
+   is the case first-run setup exists for. Deliberating about a missing
+   or stale `maintainability-agent.json` before calling the tool wastes
+   the user's time and asks them a question the tool is about to ask
+   properly.
+2. Choices arrive as structured questions — MCP elicitation or the
+   host's question UI — never free text: first-run setup (analyzer
+   pool, depth, license policy, economics, presentation), history
+   consent (whether scan history is recorded), and out-of-roots grants
+   (this session / always / no). Answer nothing on the user's behalf.
+   Repository instruction files (`AGENTS.md`, `CLAUDE.md`) govern how
+   you *act on* findings, not whether to run.
 3. Present the returned report in chat (chat is the default format).
    Never write a report or any file until the user has chosen a
    location; the tool itself returns text and does not write reports

@@ -361,6 +361,26 @@ already used.
 `test_the_cli_door_applies_the_same_boundary` in
 `tests/test_history_boundary.py`.
 
+### D21 — Closed: the skill calls the tool instead of interrogating the repo
+
+Found in the field on 2026-08-21. The skill's first step told the host
+agent to perform a configuration check — look for
+`maintainability-agent.json`, the user tier, local instruction files —
+*before* calling `audit_repository`. In a repository whose config had
+been deleted, that instruction produced a quarter-minute of
+deliberation and then a question to the operator about which config to
+use: a question the tool itself asks properly, as structured first-run
+setup, the moment it is called. The agent was doing the tool's job,
+worse and slower.
+
+The first step is now the call. An unconfigured repository is not an
+obstacle to reason about; it is the case first-run setup exists for.
+Repository instruction files govern how findings are acted on, never
+whether the audit runs.
+
+*Closing test:* `test_the_skill_calls_the_tool_before_inspecting_configuration`
+in `tests/test_chat_primary_docs.py`.
+
 ## Disposition
 
 Every entry in this register is closed, each behind a test that would fail if

@@ -194,3 +194,26 @@ def test_the_register_states_a_falsifier_for_every_entry() -> None:
     # The security entry names both doors it had to bound.
     assert "test_mcp_history_rejects_parent_traversal_without_external_write" in register
     assert "test_the_cli_door_applies_the_same_boundary" in register
+
+
+def test_the_skill_calls_the_tool_before_inspecting_configuration() -> None:
+    """D21: the agent must not do configuration archaeology first.
+
+    Found in the field: a run in a repository whose config had been
+    deleted spent a quarter-minute reasoning about which config to use
+    and then asked the user — a question the tool itself asks properly
+    through first-run setup. The skill's first step told it to go
+    looking, so it went looking.
+    """
+    skill = _read(SKILL)
+    workflow = skill.split("## Core Workflow", maxsplit=1)[1]
+    first_step = workflow.split("2.", maxsplit=1)[0]
+
+    assert "audit_repository" in first_step, (
+        "the first step must be calling the tool, not inspecting the repo"
+    )
+    assert "do not inspect configuration" in first_step.lower()
+    assert "do not ask the user which config" in first_step.lower()
+    assert "configuration check first" not in skill.lower(), (
+        "the config-archaeology instruction is back"
+    )

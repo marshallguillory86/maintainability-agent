@@ -21,25 +21,71 @@ from .config import VERSION
 _SKILL_NAME = "maintainability-agent"
 
 
-def install_skill(skills_dir: Path) -> list[str]:
-    """Copy the packaged skill into ``skills_dir``; return what was written.
+class SkillDrift(Exception):
+    """The installed skill differs from the packaged one and force is off.
 
-    Overwrites on purpose: the installed copy has exactly one honest
-    state — identical to the packaged one. A locally edited skill is
-    drift, not customization; repository-specific rules belong in the
-    repository's own instruction files, which generated standards
-    already defer to.
+    A refusal, not a failure: overwriting a copy someone edited — or
+    silently deleting files a previous version left behind — destroys
+    work without consent (audit M5 on d5b1c50). The message lists every
+    differing path so the choice is informed; ``--force`` performs the
+    full sync, deletions included.
     """
-    package_root = resources.files("maintainability_audit") / "_skill_data"
+
+
+def install_skill(skills_dir: Path, *, force: bool = False) -> list[str]:
+    """Sync the packaged skill into ``skills_dir``; return what was done.
+
+    A fresh directory installs outright. An existing identical copy is
+    a no-op. An existing copy that differs — edited files, leftovers
+    from an older version, missing files — is refused with the list
+    unless ``force`` is set, in which case the target is made
+    byte-identical to the package: files written AND stale files
+    removed (audit M3: writing without deleting left obsolete files
+    posing as current).
+    """
+    packaged = _packaged_files()
     target_root = skills_dir / _SKILL_NAME
+    existing = _existing_files(target_root)
+
+    drifted = sorted(
+        set(packaged) ^ set(existing)
+        | {name for name in packaged.keys() & existing.keys()
+           if packaged[name] != existing[name]}
+    )
+    if existing and drifted and not force:
+        raise SkillDrift(
+            "installed skill differs from the packaged one: "
+            + ", ".join(drifted)
+            + ". Re-run with --force to sync (overwrites edits, removes "
+            "files the package no longer ships)."
+        )
+
     written: list[str] = []
-    for relative, entry in sorted(_files_under(package_root)):
-        target = target_root / relative
+    for name, body in sorted(packaged.items()):
+        target = target_root / name
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(entry.read_bytes())
+        target.write_bytes(body)
         written.append(str(target))
+    for name in sorted(set(existing) - set(packaged)):
+        (target_root / name).unlink()
+        written.append(f"removed {target_root / name}")
     written.append(f"skill {_SKILL_NAME} synced to version {VERSION}")
     return written
+
+
+def _packaged_files() -> dict[str, bytes]:
+    root = resources.files("maintainability_audit") / "_skill_data"
+    return {name: entry.read_bytes() for name, entry in _files_under(root)}
+
+
+def _existing_files(target_root: Path) -> dict[str, bytes]:
+    if not target_root.is_dir():
+        return {}
+    return {
+        path.relative_to(target_root).as_posix(): path.read_bytes()
+        for path in sorted(target_root.rglob("*"))
+        if path.is_file()
+    }
 
 
 def _files_under(node, prefix: str = ""):

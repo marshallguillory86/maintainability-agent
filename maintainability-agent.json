@@ -52,7 +52,8 @@
       "tests/fixtures/*.java",
       "tests/fixtures/*/*.java",
       "data/analyzer-catalog.json",
-      "_skill_data/"
+      "_skill_data/",
+      "CHANGELOG.md"
     ]
   },
   "thresholds": {

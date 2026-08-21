@@ -4,6 +4,25 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+### Added
+
+- **`--install-skill` / `--force-skill`.** The agent skill ships inside the
+  package, byte-pinned to the repository's `skills/` tree by test, and one
+  command syncs it into an agent's skills directory. A differing installed
+  copy is refused with the list of differences; `--force-skill` performs the
+  full sync — overwriting edits and removing files the package no longer
+  ships. Closes the field-found drift that left a dead CLI-first recipe
+  installed for three days after D12 fixed it. The repository's own self-scan
+  excludes the packaged mirror (`_skill_data/`): its byte-identity to
+  `skills/` is the pin, not duplication.
+- **Refused path identifications are visible.** `unidentified_source_paths`
+  lists tool path spellings that matched zero or several files, so a refusal
+  is never mistaken for an identification.
+- **D15's original requirement, proven as written.** An audit caught the D15
+  close rewriting the entry; the original goal-directed-selection requirement
+  is restored to the register and holds behind `tests/test_d15_goal_directed.py`.
+
+
 ## 0.9.0 - 2026-08-19
 
 ### Added
@@ -20,7 +39,7 @@ All notable changes to Maintainability Agent will be documented here.
   category is excluded by a bundled filter (that boundary belongs to
   secure-code-agent).
 - **D15 composition honesty.** One report composes both adapter shapes:
-  finding identity is the located rule (never a shared concept), a
+  finding identity is the located rule for rule-backed findings — never a shared concept; rule-less findings fall back to message identity, a
   package-relative sourcepath is identified with its repo-relative file when
   exactly one match exists (refused on ambiguity), composed coverage states
   stale_artifact_evidence, and artifact-read applicability follows artifacts

@@ -58,7 +58,7 @@ SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "id
             # only threshold breaches, `_tool_adapters` for the registry
             # naming them. The base module keeps only shared plumbing.
             "_metric_adapters", "_verdict_adapters", "_jvm_adapters",
-            "_tool_adapters"}
+            "_tool_adapters", "_selection"}
 # `_bands` joins the rubric-data leaves: it is the band matrix, a table
 # of judgments like `_formula`, and imports nothing internal.
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive",

@@ -115,3 +115,40 @@ def test_a_symlinked_target_is_drift_and_is_never_written_through(
     )
     assert not skill.is_symlink()
     assert skill.read_bytes() == (PACKAGED / "SKILL.md").read_bytes()
+
+
+def test_a_symlinked_skill_root_is_drift_and_its_destination_is_untouched(
+    tmp_path: Path,
+) -> None:
+    """Audit round three: the root link itself, not just files under it.
+
+    Following it would populate — or delete inside — a directory
+    outside the skills tree. Plain install refuses without touching the
+    destination; forced sync unlinks the link, makes a real directory,
+    and leaves the former destination exactly as it was.
+    """
+    skills = tmp_path / "skills"
+    skills.mkdir()
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    sentinel = elsewhere / "someone-elses-notes.md"
+    sentinel.write_text("do not touch\n", encoding="utf-8")
+    (skills / "maintainability-agent").symlink_to(elsewhere)
+
+    assert main(["--install-skill", "--skills-dir", str(skills)]) == 1, (
+        "a symlinked skill root was not treated as drift"
+    )
+    assert sentinel.read_text(encoding="utf-8") == "do not touch\n"
+    assert not (elsewhere / "SKILL.md").exists(), (
+        "the refusal wrote into the symlink destination"
+    )
+
+    assert main(["--install-skill", "--skills-dir", str(skills),
+                 "--force-skill"]) == 0
+    target = skills / "maintainability-agent"
+    assert target.is_dir() and not target.is_symlink()
+    assert _files(target) == _files(PACKAGED)
+    assert sentinel.read_text(encoding="utf-8") == "do not touch\n", (
+        "forced sync modified the former symlink destination"
+    )
+    assert not (elsewhere / "SKILL.md").exists()

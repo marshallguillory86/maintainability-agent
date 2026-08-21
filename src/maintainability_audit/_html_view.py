@@ -80,6 +80,7 @@ def render_html(report: dict[str, Any], records: list[Any]) -> str:
         *_chart_sections(records, score),
         *_work_order_section(report),
         *_hard_gate_section(report),
+        *_unidentified_paths_section(report),
         *_semantic_section(report),
         "</body></html>",
     ]
@@ -392,6 +393,31 @@ def _hard_gate_section(report: dict[str, Any]) -> list[str]:
     rows.extend(
         f"<tr><td class='sev-Severe'>Severe</td><td>{escape(str(gate))}</td></tr>"
         for gate in failures
+    )
+    rows.append("</table>")
+    return rows
+
+
+def _unidentified_paths_section(report: dict[str, Any]) -> list[str]:
+    """Refused path identifications, on the HTML skin too (D15 / ADR 011).
+
+    Three skins of one report dict means the refusal cannot be visible
+    in JSON and Markdown while HTML quietly omits it: a reader of the
+    page would follow a finding to a path that does not exist and have
+    no way to know the identification was refused.
+    """
+    paths = report.get("unidentified_source_paths") or []
+    if not paths:
+        return []
+    rows = [
+        "<h2>Unidentified source paths</h2>",
+        "<p class='muted'>These tool-reported paths matched zero or "
+        "several files in the tree, so their identification was refused "
+        "and the tool's own spelling was kept.</p>",
+        "<table><tr><th>Path</th></tr>",
+    ]
+    rows.extend(
+        f"<tr><td><code>{escape(str(path))}</code></td></tr>" for path in paths
     )
     rows.append("</table>")
     return rows

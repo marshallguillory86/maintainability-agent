@@ -128,3 +128,71 @@ def test_concern_selection_uses_the_same_mapping_as_coverage(tmp_path: Path) -> 
     assert "checkstyle" not in rows, (
         "a style/documentation tool entered a complexity-only pool"
     )
+
+
+def test_selection_composes_the_runnable_set_before_the_run_loop() -> None:
+    """The old shape cannot return: analyze iterates a composed set.
+
+    The defect D15 named was resolving the whole policy pool and then
+    marking mismatches inapplicable per tool. This is the structural
+    falsifier: `analyze` must hand `_cover_one` a `Selected` composed
+    by `select_runnable`, so a tool the inventory ruled out cannot
+    reach the run path at all. Reverting to a raw-pool loop fails here.
+    """
+    import ast
+    import inspect
+
+    from maintainability_audit import _analysis
+
+    source = inspect.getsource(_analysis)
+    tree = ast.parse(source)
+    functions = {
+        node.name: node for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef)
+    }
+
+    analyze_calls = {
+        node.func.id
+        for node in ast.walk(functions["analyze"])
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+    assert "select_runnable" in analyze_calls, (
+        "analyze no longer composes the runnable set; it resolves the "
+        "pool and decides applicability per tool — the D15 defect"
+    )
+
+    first_parameter = functions["_cover_one"].args.args[0]
+    assert getattr(first_parameter.annotation, "id", None) == "Selected", (
+        "_cover_one takes a raw catalog tool again, so applicability "
+        "decisions moved back inside the run path"
+    )
+
+
+def test_the_runnable_set_is_minimal_for_the_trees_languages(
+    tmp_path: Path,
+) -> None:
+    """Every selected tool can produce evidence about a language present."""
+    root = _mixed_repo(tmp_path / "minimal")
+    report = build_report(root, _config(), run_analyzers=True)
+
+    coverage = report["analyzer_coverage"]
+    runnable = set(coverage["selection"]["runnable"])
+    filtered = set(coverage["selection"]["inventory_filtered"])
+    assert runnable and not (runnable & filtered), (
+        "the composed set and the deselected set overlap"
+    )
+
+    rows = {
+        row["tool"]: row
+        for outcome, entries in coverage["by_outcome"].items()
+        for row in entries
+        if row.get("tier") != "built-in"
+    }
+    present = {name.lower() for name in (coverage.get("languages") or [])}
+    for slug in runnable:
+        reads = {name.lower() for name in (rows[slug].get("languages") or [])}
+        artifact_read = slug == "spotbugs"
+        assert not reads or artifact_read or not present or (reads & present), (
+            f"{slug} is in the runnable set but reads none of the "
+            f"languages this tree contains ({sorted(present)})"
+        )

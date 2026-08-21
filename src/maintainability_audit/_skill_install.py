@@ -45,22 +45,28 @@ def install_skill(skills_dir: Path, *, force: bool = False) -> list[str]:
     """
     packaged = _packaged_files()
     target_root = skills_dir / _SKILL_NAME
-    existing = _existing_files(target_root)
+    # The skill root itself may be a symlink, and following it would
+    # populate — or delete inside — a directory outside the skills
+    # tree. It is drift like any other: refused without force, and
+    # replaced (never followed) with force.
+    root_is_link = target_root.is_symlink()
+    existing = {} if root_is_link else _existing_files(target_root)
 
     linked = (
         sorted(
             path.relative_to(target_root).as_posix()
             for path in target_root.rglob("*") if path.is_symlink()
         )
-        if target_root.is_dir() else []
+        if target_root.is_dir() and not root_is_link else []
     )
     drifted = sorted(
         set(packaged) ^ set(existing)
         | {name for name in packaged.keys() & existing.keys()
            if packaged[name] != existing[name]}
         | {f"{name} (symlink)" for name in linked}
+        | ({f"{_SKILL_NAME} (symlinked directory)"} if root_is_link else set())
     )
-    if existing and drifted and not force:
+    if (existing or root_is_link) and drifted and not force:
         raise SkillDrift(
             "installed skill differs from the packaged one: "
             + ", ".join(drifted)
@@ -69,6 +75,12 @@ def install_skill(skills_dir: Path, *, force: bool = False) -> list[str]:
         )
 
     written: list[str] = []
+    if root_is_link:
+        # Unlink the link, never its destination: the former target
+        # keeps whatever it held.
+        target_root.unlink()
+        written.append(f"replaced symlinked skill root {target_root}")
+    target_root.mkdir(parents=True, exist_ok=True)
     _drop_symlinks(target_root, written)
     for name, body in sorted(packaged.items()):
         target = target_root / name

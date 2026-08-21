@@ -231,6 +231,29 @@ def _stale_artifact(coverage: list[ToolCoverage]) -> dict[str, Any]:
     return {"stale_artifact_evidence": any(measured)}
 
 
+def _selection_document(analysis: Analysis) -> dict[str, Any]:
+    """What selection asked for, and what it composed (D15).
+
+    `runnable` is the set the inventory and concerns chose — every one
+    of them was probed or spawned; `inventory_filtered` is what the
+    inventory decided against before any probe, kept as stated
+    evidence. The two are disjoint by construction.
+    """
+    return {
+        "concerns": list(analysis.concerns),
+        "depth": analysis.depth,
+        "license_policy": analysis.license_policy,
+        "runnable": sorted(
+            item.slug for item in analysis.coverage
+            if item.tier == "analyzer" and not item.inventory_filtered
+        ),
+        "inventory_filtered": sorted(
+            item.slug for item in analysis.coverage
+            if item.inventory_filtered
+        ),
+    }
+
+
 def coverage_document(analysis: Analysis) -> dict[str, Any]:
     """The coverage section, as it appears in a report.
 
@@ -251,19 +274,7 @@ def coverage_document(analysis: Analysis) -> dict[str, Any]:
             "built_in": sum(1 for i in analysis.coverage if i.tier == "built-in"),
             "analyzers": sum(1 for i in ran if i.tier == "analyzer"),
         },
-        "selection": {
-            "concerns": list(analysis.concerns),
-            "depth": analysis.depth,
-            "license_policy": analysis.license_policy,
-            # Inventory-driven deselection is a SELECTION fact (D15):
-            # these tools were decided against by the language
-            # inventory before any probe or spawn, and the coverage
-            # rows carry the per-tool reason.
-            "inventory_filtered": sorted(
-                item.slug for item in analysis.coverage
-                if item.inventory_filtered
-            ),
-        },
+        "selection": _selection_document(analysis),
         # Two reports with different coverage are not comparable, so this
         # is stated beside the score rather than filed behind it.
         "tools_attempted": sum(1 for i in analysis.coverage if i.tier == "analyzer"),

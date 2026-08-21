@@ -54,14 +54,14 @@ def stub_path(tmp_path, monkeypatch):
 
 
 def _pool(monkeypatch, slugs: list[str], adapter_by_slug: dict[str, BaseAdapter]) -> None:
-    from maintainability_audit import _analysis
+    from maintainability_audit import _analysis, _selection
 
     monkeypatch.setattr(
         _analysis, "resolve_pool",
         lambda _c: ([{"slug": s, "measures": ["complexity"]} for s in slugs], []),
     )
-    monkeypatch.setattr(_analysis, "adapter_for", lambda slug: adapter_by_slug.get(slug))
-    monkeypatch.setattr(_analysis, "declared_adapter", lambda _slug: None)
+    monkeypatch.setattr(_selection, "adapter_for", lambda slug: adapter_by_slug.get(slug))
+    monkeypatch.setattr(_selection, "declared_adapter", lambda _slug: None)
 
 
 class _Echoing(BaseAdapter):

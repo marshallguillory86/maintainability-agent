@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from maintainability_audit import _analysis
+from maintainability_audit import _analysis, _selection
 from maintainability_audit._adapters import BaseAdapter, Exclusions, Extraction, exclusions_for
 from maintainability_audit._analysis import analyze, ours_only
 from maintainability_audit._discovery import discover
@@ -129,8 +129,8 @@ def _install_adapter(
             "languages": ["python"],
         }], []),
     )
-    monkeypatch.setattr(_analysis, "adapter_for", lambda slug: adapter if slug == adapter.slug else None)
-    monkeypatch.setattr(_analysis, "declared_adapter", lambda _slug: None)
+    monkeypatch.setattr(_selection, "adapter_for", lambda slug: adapter if slug == adapter.slug else None)
+    monkeypatch.setattr(_selection, "declared_adapter", lambda _slug: None)
     monkeypatch.setattr(
         _analysis.Probe,
         "check",

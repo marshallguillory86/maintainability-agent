@@ -91,8 +91,9 @@ def test_coverage_states_the_selection_that_produced_it() -> None:
 
     assert document["selection"] == {
         "concerns": ["complexity"], "depth": "baseline", "license_policy": "permissive",
-        # Inventory-driven deselection is stated as a selection fact
-        # (D15): empty here because this analysis has no coverage rows.
+        # What selection composed (D15): both empty here because this
+        # analysis carries no coverage rows at all.
+        "runnable": [],
         "inventory_filtered": [],
     }
 
@@ -158,7 +159,7 @@ def test_a_broken_adapter_cannot_fail_the_audit(tmp_path: Path, monkeypatch) -> 
     yielding a *clean* result. The concern it covers is reported
     unexamined.
     """
-    from maintainability_audit import _analysis
+    from maintainability_audit import _analysis, _selection
 
     class Exploding(BaseAdapter):
         def __init__(self) -> None:
@@ -168,7 +169,7 @@ def test_a_broken_adapter_cannot_fail_the_audit(tmp_path: Path, monkeypatch) -> 
         def version_argv(self) -> tuple[str, ...]:
             raise RuntimeError("adapter is broken")
 
-    monkeypatch.setattr(_analysis, "adapter_for", lambda _slug: Exploding())
+    monkeypatch.setattr(_selection, "adapter_for", lambda _slug: Exploding())
     monkeypatch.setattr(
         _analysis, "resolve_pool",
         lambda _c: ([{"slug": "boom", "measures": ["complexity"]}], []),

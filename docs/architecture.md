@@ -66,6 +66,7 @@ flowchart TB
     _verdict_adapters["_verdict_adapters"]
     _jvm_adapters["_jvm_adapters"]
     _tool_adapters["_tool_adapters"]
+    _selection["_selection"]
     _semantic["_semantic"]
     _semantic_ts["_semantic_ts"]
   end
@@ -129,7 +130,7 @@ flowchart TB
 | --- | --- | --- |
 | **foundations** | Data types, config defaults, git invocation, masking primitives, `_finding_match` (structured identities plus the one matching relation used by gates and recurrence), and `_semantic_policy` | nothing internal except `_finding_match` using `git_tools` for rename evidence |
 | **parsing** | Reading files once, extracting declarations, complexity, ranges, tokens | foundations |
-| **scanners** | Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history, ADR 003 semantic classification (`_semantic`, `_semantic_ts`), and — via `_adapters` — whatever the external analyzers report | foundations, parsing, `_runner` |
+| **scanners** | Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history, ADR 003 semantic classification (`_semantic`, `_semantic_ts`), and — via `_adapters` — whatever the external analyzers report; `_selection` composes the runnable set from the language inventory (D15) | foundations, parsing, `_runner` |
 | **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
 | **assembly** | Running the scan, running the analyzer pool (`_analysis`) and stating what it found (`_documents`), the environment work order composed from coverage (`_environment`), recording the built-in detectors as their own source tier (`_built_ins`), ordering the work by risk against effort and recomputing each item's worth (`_work_order`, weights in `_work_order_weights`), assembling the report dict, invoking the scorer once | anything below |
 | **presentation** | Markdown/chat, a self-contained HTML report, PR comment, SARIF, baseline, remediation prompt, `_evidence_view` (shared estimate/range/evidence/verified-grade wording), and `_identity` (labels and digests consumed from the report, never source). The renderers consume one report dictionary and do not score | foundations, the report dict |

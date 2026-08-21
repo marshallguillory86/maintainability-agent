@@ -298,35 +298,78 @@ door.
 *Closing test:* `test_integration_guide_and_generated_packs_teach_chat_before_automation`
 in `tests/test_chat_primary_docs.py`.
 
-### D18 — Closed: skill installation binds validation to the write target
+### D18 — Closed: skill installation is bound, atomic, and complete
 
 `--install-skill` opens the skill root once with
 `O_NOFOLLOW|O_DIRECTORY` and performs every read, write and unlink
-relative to that descriptor. Swapping the pathname for a symlink after
-validation can no longer redirect a write: the descriptor keeps
-pointing at the inode that was checked. A target that disappears under
-the write is reported as a refusal, not a traceback, and nothing is
-written outside the bound root.
+relative to that descriptor, so swapping the pathname afterwards
+cannot redirect a write. Three further holes closed after a second
+audit: a failed rebind of a freshly created root used to leave
+`dir_fd=None`, which resolves against the process working directory —
+it is now a refusal; a leaf replaced by a HARD link was written
+through, because `O_NOFOLLOW` says nothing about hard links — files
+are now staged and renamed into place, so the old inode is never
+modified; and `os.write` was called once, installing a truncated file
+while reporting success — every byte is written or the install
+refuses. Staging files are cleaned up on every failure path.
 
-*Closing test:* `test_the_validated_root_is_bound_by_descriptor_not_by_name`
-in `tests/test_skill_install.py`, which performs the swap in the
-check-to-use window and proves the external destination is untouched.
+*Closing tests:* `test_the_validated_root_is_bound_by_descriptor_not_by_name`,
+`test_missing_root_swap_never_falls_back_to_process_cwd`,
+`test_leaf_hardlink_swap_cannot_modify_external_file` and
+`test_short_write_is_completed_or_refused_without_success` in
+`tests/test_skill_install.py`.
 
-### D19 — Closed: nested skill symlinks are drift in any root
+### D19 — Closed: occupancy is every entry, not every regular file
 
-The refusal counted regular files only, so a real but otherwise empty
-root containing a symlinked directory was silently unlinked without
-consent. Occupancy now counts files, symlinks and a symlinked root
-alike: anything already present makes the operation a sync, and a sync
-needs `--force-skill`. An empty directory is still a fresh install.
+Occupancy counted regular files and symlinks, so a root holding only
+an empty directory, a FIFO or a socket read as a fresh install and was
+modified without consent — and a FIFO named `SKILL.md` hung the
+installer forever, because reading it meant opening it. Occupancy is
+now any directory entry at all, decided from `stat` metadata with
+`follow_symlinks=False` so no special file is ever opened. Forced sync
+removes what it understands (files, symlinks, FIFOs, sockets, empty
+directories) and refuses by name anything it does not, rather than
+deleting on a guess. An empty root directory is still a fresh install.
 
-*Closing test:* `test_a_nested_symlink_in_an_empty_root_still_needs_consent`
-in `tests/test_skill_install.py`.
+*Closing tests:* `test_a_nested_symlink_in_an_empty_root_still_needs_consent`,
+`test_empty_subdirectory_counts_as_occupied`,
+`test_fifo_counts_as_occupied_without_blocking`,
+`test_socket_counts_as_occupied` and
+`test_force_refuses_or_safely_removes_special_entries` in
+`tests/test_skill_install.py`.
+
+### D20 — Closed: a configured history path cannot escape its repository
+
+`paths.history` is read from a file inside the repository under audit,
+and every consumer built `root / configured` without validating the
+result. A repository could therefore name `../outside.jsonl`, an
+absolute path, or a path through a symlinked directory, and an audit
+with history enabled would create and append that file outside the
+authorized root — reproduced through the public MCP seam. One helper,
+`config.repository_path`, now resolves and bounds every configured
+repository-scoped path before any existence check, mkdir or append,
+and all five construction sites across the MCP tool, the MCP report
+resource and both CLI paths use it. Traversal, absolute escapes and
+symlink escapes are one comparison, not three special cases, and the
+refusal is the same structured `PathNotAllowed` the roots boundary
+already used.
+
+*Closing tests:* `test_mcp_history_rejects_parent_traversal_without_external_write`,
+`test_mcp_history_rejects_absolute_escape_without_external_write`,
+`test_mcp_history_rejects_symlink_escape_without_external_write`,
+`test_a_history_path_inside_the_repository_still_records` and
+`test_the_cli_door_applies_the_same_boundary` in
+`tests/test_history_boundary.py`.
 
 ## Disposition
 
-All nineteen entries are closed, each behind a test that would fail if the
-defect returned. D15 was reopened once when an audit found its close had
-rewritten the requirement, and again when the proof turned out to be vacuous;
-it closes here on the requirement as originally recorded. D18 and D19 were
-reproduced by audit against the skill installer and close with it.
+Every entry in this register is closed, each behind a test that would fail if
+the defect returned — and the count is read from the entries themselves, never
+asserted as a number that stops describing the register when it grows. D15 was
+reopened twice: once when an audit found its close had rewritten the
+requirement, once when the proof turned out to be vacuous. D18 and D19 were
+each reopened after their first close, when audits reproduced a descriptor
+race, a hard-link write-through, a short write, and three kinds of occupancy
+the installer ignored. D20 was found by audit in the MCP write boundary and is
+the one security defect in this register: a repository could name a history
+path outside itself and be believed.

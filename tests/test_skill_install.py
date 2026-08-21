@@ -10,7 +10,9 @@ without consent is not a sync.
 
 from __future__ import annotations
 
+import os
 import shutil
+import stat
 from pathlib import Path
 
 import pytest
@@ -225,3 +227,186 @@ def test_a_nested_symlink_in_an_empty_root_still_needs_consent(
     assert not (target / "references").is_symlink()
     assert _files(target) == _files(PACKAGED)
     assert (elsewhere / "notes.md").read_text(encoding="utf-8") == "keep\n"
+
+
+def test_missing_root_swap_never_falls_back_to_process_cwd(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D18: a failed rebind must refuse, not resolve against the CWD.
+
+    With no target, the installer creates the directory and binds it
+    again. If that second bind fails, `dir_fd=None` sends every write
+    to the PROCESS WORKING DIRECTORY — an audit found a stray SKILL.md
+    there.
+    """
+    from maintainability_audit import _skill_install
+
+    skills = tmp_path / "skills"
+    skills.mkdir()
+    workdir = tmp_path / "cwd"
+    workdir.mkdir()
+    monkeypatch.chdir(workdir)
+
+    real_bind = _skill_install._bind_root
+    calls: list[int] = []
+
+    def failing_rebind(target_root):
+        calls.append(1)
+        return None if len(calls) > 1 else real_bind(target_root)
+
+    monkeypatch.setattr(_skill_install, "_bind_root", failing_rebind)
+    exit_code = main(["--install-skill", "--skills-dir", str(skills)])
+
+    assert exit_code == 1, "a failed rebind reported success"
+    assert not (workdir / "SKILL.md").exists(), (
+        "the installer wrote into the process working directory"
+    )
+    assert not list(workdir.iterdir()), f"stray files: {list(workdir.iterdir())}"
+
+
+def test_leaf_hardlink_swap_cannot_modify_external_file(tmp_path: Path) -> None:
+    """D18: O_NOFOLLOW does not stop a HARD link; a rename does."""
+    skills = tmp_path / "skills"
+    skills.mkdir()
+    assert main(["--install-skill", "--skills-dir", str(skills)]) == 0
+    target = skills / "maintainability-agent"
+
+    external = tmp_path / "external.md"
+    external.write_text("someone else's file\n", encoding="utf-8")
+    (target / "SKILL.md").unlink()
+    os.link(external, target / "SKILL.md")
+
+    assert main(["--install-skill", "--skills-dir", str(skills),
+                 "--force-skill"]) == 0
+
+    assert external.read_text(encoding="utf-8") == "someone else's file\n", (
+        "the installer wrote through a hard link into an external file"
+    )
+    assert (target / "SKILL.md").read_bytes() == (PACKAGED / "SKILL.md").read_bytes()
+
+
+def test_short_write_is_completed_or_refused_without_success(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D18: os.write may write less than asked; success must mean complete."""
+    from maintainability_audit import _skill_install
+
+    skills = tmp_path / "skills"
+    skills.mkdir()
+    real_write = os.write
+    budget = {"first": True}
+
+    def short_write(fd: int, data: bytes) -> int:
+        if budget["first"] and len(data) > 16:
+            budget["first"] = False
+            return real_write(fd, data[:16])
+        return real_write(fd, data)
+
+    monkeypatch.setattr(_skill_install.os, "write", short_write)
+    exit_code = main(["--install-skill", "--skills-dir", str(skills)])
+
+    installed = skills / "maintainability-agent" / "SKILL.md"
+    if exit_code == 0:
+        assert installed.read_bytes() == (PACKAGED / "SKILL.md").read_bytes(), (
+            "a truncated file was installed while reporting success"
+        )
+    else:
+        assert not installed.exists() or installed.read_bytes() == b""
+
+
+def test_empty_subdirectory_counts_as_occupied(tmp_path: Path) -> None:
+    """D19: 'anything already present' includes an empty directory."""
+    skills = tmp_path / "skills"
+    target = skills / "maintainability-agent"
+    (target / "leftover").mkdir(parents=True)
+
+    assert main(["--install-skill", "--skills-dir", str(skills)]) == 1, (
+        "an empty subdirectory was treated as a fresh install"
+    )
+    assert (target / "leftover").is_dir()
+
+    assert main(["--install-skill", "--skills-dir", str(skills),
+                 "--force-skill"]) == 0
+    assert not (target / "leftover").exists()
+    assert _files(target) == _files(PACKAGED)
+
+
+def test_fifo_counts_as_occupied_without_blocking(tmp_path: Path) -> None:
+    """D19: a FIFO is occupancy, and opening one would hang forever."""
+    skills = tmp_path / "skills"
+    target = skills / "maintainability-agent"
+    target.mkdir(parents=True)
+    os.mkfifo(target / "SKILL.md")
+
+    assert main(["--install-skill", "--skills-dir", str(skills)]) == 1, (
+        "a FIFO was treated as a fresh install"
+    )
+    assert stat.S_ISFIFO(os.stat(target / "SKILL.md", follow_symlinks=False).st_mode)
+
+    assert main(["--install-skill", "--skills-dir", str(skills),
+                 "--force-skill"]) == 0
+    assert _files(target) == _files(PACKAGED)
+
+
+def test_socket_counts_as_occupied(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D19: sockets were ignored identically to FIFOs."""
+    import socket
+
+    skills = tmp_path / "skills"
+    target = skills / "maintainability-agent"
+    target.mkdir(parents=True)
+    endpoint = socket.socket(socket.AF_UNIX)
+    try:
+        # AF_UNIX paths are capped near 104 bytes and pytest's tmp_path
+        # is longer than that; bind by a relative name from inside.
+        monkeypatch.chdir(target)
+        endpoint.bind("listener.sock")
+
+        assert main(["--install-skill", "--skills-dir", str(skills)]) == 1, (
+            "a socket was treated as a fresh install"
+        )
+        assert main(["--install-skill", "--skills-dir", str(skills),
+                     "--force-skill"]) == 0
+        assert _files(target) == _files(PACKAGED)
+    finally:
+        endpoint.close()
+
+
+def test_force_refuses_or_safely_removes_special_entries(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D19: forced sync clears what it understands and refuses what it does not."""
+    from maintainability_audit._skill_install import SkillDrift, _remove_at
+
+    skills = tmp_path / "skills"
+    target = skills / "maintainability-agent"
+    target.mkdir(parents=True)
+    os.mkfifo(target / "pipe")
+    (target / "empty").mkdir()
+
+    assert main(["--install-skill", "--skills-dir", str(skills),
+                 "--force-skill"]) == 0
+    assert _files(target) == _files(PACKAGED)
+    assert not (target / "pipe").exists() and not (target / "empty").exists()
+
+    # A kind this tool does not understand — a device node, say — is
+    # refused by name rather than deleted on a guess.
+    handle = os.open(target, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        real_stat = os.stat
+
+        def as_device(name, *args, **kwargs):
+            info = real_stat(name, *args, **kwargs)
+            return os.stat_result((
+                stat.S_IFBLK | 0o600, *tuple(info)[1:],
+            ))
+
+        monkeypatch.setattr(os, "stat", as_device)
+        with pytest.raises(SkillDrift):
+            _remove_at(handle, "SKILL.md")
+    finally:
+        monkeypatch.undo()
+        os.close(handle)
+    assert (target / "SKILL.md").exists(), "the refused entry was removed anyway"

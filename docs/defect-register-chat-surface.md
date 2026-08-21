@@ -252,9 +252,28 @@ source-read and artifact-read shapes (identity, path normalization,
 staleness, artifact-gated applicability, `class_dirs` isolation) was
 pinned in the same track.
 
+Selection composes the runnable set in `_selection.select_runnable`
+before any probe or spawn: a language-mismatched tool is never
+attempted, a catalogued tool this project cannot invoke is stated as
+`no-adapter` rather than counted runnable, and `coverage.selection`
+carries the disjoint `runnable` and `inventory_filtered` sets.
+
 *Closing tests:* `tests/test_d15_goal_directed.py` (the requirement as
-originally written) and `tests/test_d15_composition.py` (the two-shape
-composition pins).
+originally written, including a minimality proof that reads the
+coverage document's real `by_language` key — an earlier version read a
+key that never existed and passed itself on the empty result) and
+`tests/test_d15_composition.py` (the two-shape composition pins).
+
+*Round-four verification on `5a7857c`: reopened.* A catalog tool with no
+adapter is still returned as `Selected` when its catalog languages overlap the
+tree, and the report consequently lists it under `coverage.selection.runnable`
+with a `no-adapter` outcome even though it can neither be probed nor spawned.
+The report's own description says every member of `runnable` was probed or
+spawned. The minimality regression does not detect this class: it reads the
+absent `coverage["languages"]` key instead of `scored_languages` /
+`by_language`, then explicitly passes whenever that empty set is observed.
+The queue item is to make the reported sets state their actual semantics and
+replace the vacuous assertion with a production-report falsifier.
 
 ### D16 — Closed: chat workflow help is linked from both entry surfaces
 
@@ -279,7 +298,35 @@ door.
 *Closing test:* `test_integration_guide_and_generated_packs_teach_chat_before_automation`
 in `tests/test_chat_primary_docs.py`.
 
+### D18 — Closed: skill installation binds validation to the write target
+
+`--install-skill` opens the skill root once with
+`O_NOFOLLOW|O_DIRECTORY` and performs every read, write and unlink
+relative to that descriptor. Swapping the pathname for a symlink after
+validation can no longer redirect a write: the descriptor keeps
+pointing at the inode that was checked. A target that disappears under
+the write is reported as a refusal, not a traceback, and nothing is
+written outside the bound root.
+
+*Closing test:* `test_the_validated_root_is_bound_by_descriptor_not_by_name`
+in `tests/test_skill_install.py`, which performs the swap in the
+check-to-use window and proves the external destination is untouched.
+
+### D19 — Closed: nested skill symlinks are drift in any root
+
+The refusal counted regular files only, so a real but otherwise empty
+root containing a symlinked directory was silently unlinked without
+consent. Occupancy now counts files, symlinks and a symlinked root
+alike: anything already present makes the operation a sync, and a sync
+needs `--force-skill`. An empty directory is still a fresh install.
+
+*Closing test:* `test_a_nested_symlink_in_an_empty_root_still_needs_consent`
+in `tests/test_skill_install.py`.
+
 ## Disposition
 
-All seventeen entries are closed. Entries close individually, each behind a
-test that would fail if the defect returned.
+All nineteen entries are closed, each behind a test that would fail if the
+defect returned. D15 was reopened once when an audit found its close had
+rewritten the requirement, and again when the proof turned out to be vacuous;
+it closes here on the requirement as originally recorded. D18 and D19 were
+reproduced by audit against the skill installer and close with it.

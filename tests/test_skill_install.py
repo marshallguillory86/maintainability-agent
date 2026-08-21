@@ -10,7 +10,10 @@ without consent is not a sync.
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
+
+import pytest
 
 from maintainability_audit.cli import main
 
@@ -152,3 +155,73 @@ def test_a_symlinked_skill_root_is_drift_and_its_destination_is_untouched(
         "forced sync modified the former symlink destination"
     )
     assert not (elsewhere / "SKILL.md").exists()
+
+
+def test_the_validated_root_is_bound_by_descriptor_not_by_name(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D18: swapping the root between check and write cannot redirect it.
+
+    The installer validated a pathname and then wrote to it. An audit
+    swapped an identical installed directory for a symlink in that
+    window and a plain reinstall wrote through to an external file.
+    The root is now opened once with O_NOFOLLOW and every write goes
+    through that descriptor, so the swap can no longer be followed.
+    """
+    from maintainability_audit import _skill_install
+
+    skills = tmp_path / "skills"
+    skills.mkdir()
+    assert main(["--install-skill", "--skills-dir", str(skills)]) == 0
+    target = skills / "maintainability-agent"
+
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    sentinel = elsewhere / "SKILL.md"
+    sentinel.write_text("do not touch\n", encoding="utf-8")
+
+    real_drift = _skill_install._drift
+
+    def swap_then_check(*args, **kwargs):
+        # The exact window the audit exploited: the tree has been read
+        # and judged, the write has not happened yet.
+        result = real_drift(*args, **kwargs)
+        if target.is_dir() and not target.is_symlink():
+            shutil.rmtree(target)
+            target.symlink_to(elsewhere)
+        return result
+
+    monkeypatch.setattr(_skill_install, "_drift", swap_then_check)
+    exit_code = main(["--install-skill", "--skills-dir", str(skills)])
+
+    assert exit_code == 1, "a target that changed under the write reported success"
+    assert sentinel.read_text(encoding="utf-8") == "do not touch\n", (
+        "the installer followed a root swapped after validation and "
+        "overwrote a file outside the skills directory"
+    )
+
+
+def test_a_nested_symlink_in_an_empty_root_still_needs_consent(
+    tmp_path: Path,
+) -> None:
+    """D19: the refusal counted regular files only, so this slipped past."""
+    skills = tmp_path / "skills"
+    target = skills / "maintainability-agent"
+    target.mkdir(parents=True)
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    (elsewhere / "notes.md").write_text("keep\n", encoding="utf-8")
+    (target / "references").symlink_to(elsewhere)
+
+    assert main(["--install-skill", "--skills-dir", str(skills)]) == 1, (
+        "a nested symlink in an otherwise empty root was removed "
+        "without consent"
+    )
+    assert (target / "references").is_symlink()
+    assert (elsewhere / "notes.md").read_text(encoding="utf-8") == "keep\n"
+
+    assert main(["--install-skill", "--skills-dir", str(skills),
+                 "--force-skill"]) == 0
+    assert not (target / "references").is_symlink()
+    assert _files(target) == _files(PACKAGED)
+    assert (elsewhere / "notes.md").read_text(encoding="utf-8") == "keep\n"

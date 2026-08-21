@@ -47,6 +47,12 @@ class Deselected:
     detail: str
     concepts: tuple[str, ...]
     languages: tuple[str, ...]
+    # Why this tool is not runnable here: "inventory" when the tree
+    # speaks none of its languages, "no-adapter" when the catalog
+    # promises a tool this project cannot invoke. Only the first is a
+    # statement about the repository; both keep it out of the runnable
+    # set, because a set called runnable must be runnable (D15/M2).
+    reason: str = "inventory"
 
 
 def select_runnable(
@@ -86,6 +92,18 @@ def select_runnable(
         finds_targets = getattr(adapter, "has_targets", None) if adapter else None
         has_artifacts = finds_targets is not None and finds_targets(root, excludes)
         if inventory.applicable(reads) or has_artifacts:
+            if adapter is None:
+                # Catalogued but not invokable. Reported rather than
+                # hidden — the inventory wanted it, this project just
+                # cannot run it — but never counted as runnable.
+                deselected.append(Deselected(
+                    slug=tool["slug"],
+                    detail="selected by policy but no adapter is implemented",
+                    concepts=tuple(tool["measures"]),
+                    languages=reads,
+                    reason="no-adapter",
+                ))
+                continue
             runnable.append(Selected(tool=tool, adapter=adapter, reads=reads))
             continue
         present = ", ".join(sorted(inventory.languages)) or "no recognised source"

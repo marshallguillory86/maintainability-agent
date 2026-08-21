@@ -4,6 +4,53 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+## 0.9.1 - 2026-08-21
+
+### Security
+
+- **A configured history path can no longer escape its repository.**
+  `paths.history` is read from a file inside the repository under audit, and
+  every consumer built `root / configured` without validating the result — so
+  a repository could name `../outside.jsonl`, an absolute path, or a path
+  through a symlinked directory, and an audit with history enabled would
+  create and append that file outside the authorized root. Found by audit
+  through the public MCP seam. `config.repository_path` now resolves and
+  bounds every configured repository-scoped path before any existence check,
+  directory creation or append, and all five construction sites use it: the
+  MCP audit tool, the MCP report resource, and both CLI paths. Traversal,
+  absolute escapes and symlink escapes are one comparison, refused with the
+  same structured `PathNotAllowed` the roots boundary already used.
+
+### Added
+
+- **`--install-skill` / `--force-skill`.** The agent skill ships inside the
+  package, byte-pinned to the repository's `skills/` tree by test, and one
+  command syncs it into an agent's skills directory — closing the drift that
+  left a dead CLI-first recipe installed for three days after the docs sweep
+  fixed it. A differing installed copy is refused with the list of
+  differences; `--force-skill` performs the full sync.
+
+### Fixed
+
+- **Skill installation is bound, atomic and complete.** The skill root is
+  opened once with `O_NOFOLLOW|O_DIRECTORY` and every read, write and unlink
+  is relative to that descriptor, so swapping the pathname afterwards cannot
+  redirect a write; a failed rebind refuses rather than resolving against the
+  process working directory; files are staged and renamed into place, so a
+  destination replaced by a hard link is never written through; and every byte
+  is written or the install refuses instead of reporting success on a
+  truncated file.
+- **Occupancy is every directory entry.** An empty directory, a FIFO or a
+  socket in the skill root used to read as a fresh install and be modified
+  without consent, and a FIFO named `SKILL.md` hung the installer because
+  reading it meant opening it. Occupancy is decided from `stat` metadata
+  without opening anything.
+- **Analyzer selection composes the runnable set from the repository.** The
+  language inventory and concern mapping decide what runs before any probe or
+  spawn; a catalogued tool with no adapter is stated rather than counted as
+  runnable; and refused path identifications are visible in JSON, Markdown and
+  HTML alike.
+
 ### Added
 
 - **`--install-skill` / `--force-skill`.** The agent skill ships inside the

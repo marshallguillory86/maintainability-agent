@@ -2,10 +2,10 @@
 
 Found in the field (2026-08-19): the repository's skill went
 chat-primary while the installed copy kept teaching the dead CLI-first
-recipe for three days. Three commitments: the packaged copy is pinned
-byte-for-byte to the repository's skills tree, --install-skill writes
-the chat-primary skill where agents read it, and re-running overwrites
-local drift.
+recipe for three days. Re-keyed by the Codex audit on d5b1c50: sync
+means byte-identical including deletions (M3), and a differing copy is
+refused with the list unless forced (M5) — overwriting someone's edits
+without consent is not a sync.
 """
 
 from __future__ import annotations
@@ -53,14 +53,38 @@ def test_install_skill_writes_the_chat_primary_skill(tmp_path: Path) -> None:
     assert _files(tmp_path / "maintainability-agent").keys() == _files(PACKAGED).keys()
 
 
-def test_reinstall_overwrites_local_drift(tmp_path: Path) -> None:
-    """An installed skill has one honest state: identical to the packaged one."""
+def test_a_differing_copy_is_refused_without_force(tmp_path: Path) -> None:
+    """Audit M5: edits are someone's work; destroying them needs consent."""
     assert main(["--install-skill", "--skills-dir", str(tmp_path)]) == 0
     installed = tmp_path / "maintainability-agent" / "SKILL.md"
-    installed.write_text("# locally drifted\n", encoding="utf-8")
+    installed.write_text("# locally edited\n", encoding="utf-8")
 
-    assert main(["--install-skill", "--skills-dir", str(tmp_path)]) == 0
-
-    assert installed.read_bytes() == (PACKAGED / "SKILL.md").read_bytes(), (
-        "re-running --install-skill did not sync a drifted copy"
+    assert main(["--install-skill", "--skills-dir", str(tmp_path)]) == 1, (
+        "a drifted copy was overwritten without --force-skill"
     )
+    assert installed.read_text(encoding="utf-8") == "# locally edited\n"
+
+
+def test_force_syncs_edits_and_deletions_to_the_packaged_state(tmp_path: Path) -> None:
+    """Audit M3+M5: forced sync means byte-identical — leftovers removed."""
+    assert main(["--install-skill", "--skills-dir", str(tmp_path)]) == 0
+    target = tmp_path / "maintainability-agent"
+    (target / "SKILL.md").write_text("# drifted\n", encoding="utf-8")
+    obsolete = target / "obsolete-from-old-version.md"
+    obsolete.write_text("stale\n", encoding="utf-8")
+
+    assert main(["--install-skill", "--skills-dir", str(tmp_path),
+                 "--force-skill"]) == 0
+
+    assert _files(target) == _files(PACKAGED), (
+        "forced sync did not restore the packaged state exactly"
+    )
+    assert not obsolete.exists(), (
+        "a file the package no longer ships survived the sync (M3)"
+    )
+
+
+def test_an_identical_copy_reinstalls_without_force(tmp_path: Path) -> None:
+    """Identical is not drift: the plain command stays usable for upgrades."""
+    assert main(["--install-skill", "--skills-dir", str(tmp_path)]) == 0
+    assert main(["--install-skill", "--skills-dir", str(tmp_path)]) == 0

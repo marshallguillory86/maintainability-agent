@@ -122,6 +122,12 @@ def _add_setup_actions(parser: argparse.ArgumentParser) -> None:
         help="Where --install-skill writes (default: ~/.claude/skills).",
     )
     parser.add_argument(
+        "--force-skill", action="store_true",
+        help="With --install-skill: overwrite a differing installed copy "
+             "and remove files the package no longer ships. Without it, a "
+             "differing copy is refused with the list of differences.",
+    )
+    parser.add_argument(
         "--target",
         action="append",
         choices=["generic", "claude-code", "codex", "cursor", "copilot", "windsurf"],
@@ -220,13 +226,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.install_skill:
-        from ._skill_install import install_skill
+        from ._skill_install import SkillDrift, install_skill
 
-        for written in install_skill(
-            Path(args.skills_dir).expanduser()
-            if args.skills_dir else Path.home() / ".claude" / "skills",
-        ):
-            print(written)
+        target = (Path(args.skills_dir).expanduser()
+                  if args.skills_dir else Path.home() / ".claude" / "skills")
+        try:
+            for written in install_skill(target, force=args.force_skill):
+                print(written)
+        except SkillDrift as refusal:
+            print(refusal)
+            return 1
         return 0
 
     root = Path(args.root).resolve()

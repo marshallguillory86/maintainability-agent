@@ -230,20 +230,31 @@ to the host's structured question mechanism. This is driven end to end by
 `tests/test_root_grants.py`, and the consent and slash-prompt tests in
 `tests/test_consent_and_grant.py`.
 
-### D15 — Closed: source-read and artifact-read adapters compose in one report
+### D15 — Closed: analyzer selection is goal-directed
 
-One audit of a Java tree now carries source-read (PMD, Checkstyle) and
-artifact-read (SpotBugs) evidence together. Coverage rows keep their
-own languages, versions, and (for SpotBugs) staleness. A CORRECTNESS
-bug and a convention finding that share the `style` concept are not
-one corroborated finding. Package-relative `sourcepath` and
-repo-relative source paths identify the same file or the match is
-refused, never missed both ways. Stale bytecode is stated on the
-composed coverage. Artifact-read `has_targets` is not gated away by a
-source-language inventory. Sequential `analyze()` calls in one process
-do not leak `class_dirs`.
+The entry as recorded: selection was policy filtering plus language
+applicability, and the gap analysis that knows which concerns are
+unmeasured for which languages never drove a run. The requirement —
+restored here verbatim after an audit caught the close rewriting it —
+was that selection consults the same language inventory and
+concern→concept mapping the coverage section uses, so a run covers
+the repository's languages with the verified tools available and
+names, before or with the results, what to install to close the
+remaining gaps.
 
-*Closing test:* `tests/test_d15_composition.py`.
+That requirement now holds at the production seam: language-mismatched
+tools are stated inapplicable with the inventory's reason, engaged
+tools follow the tree's languages, a concern-narrowed pool engages
+exactly the tools that serve it, and the environment work order names
+the installs — with the concepts they restore — that close the
+per-language gaps the coverage section states. The composition of
+source-read and artifact-read shapes (identity, path normalization,
+staleness, artifact-gated applicability, `class_dirs` isolation) was
+pinned in the same track.
+
+*Closing tests:* `tests/test_d15_goal_directed.py` (the requirement as
+originally written) and `tests/test_d15_composition.py` (the two-shape
+composition pins).
 
 ### D16 — Closed: chat workflow help is linked from both entry surfaces
 

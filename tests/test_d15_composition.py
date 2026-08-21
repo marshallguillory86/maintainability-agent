@@ -10,6 +10,7 @@ language inventory.
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -283,7 +284,14 @@ def test_d15_is_closed_past_tense_behind_this_file() -> None:
     assert "test_d15_composition" in register
     disposition = register.split("## Disposition", maxsplit=1)[1].lower()
     assert "only d15 remains open" not in disposition
-    assert "seventeen" in disposition and "closed" in disposition
+    assert "closed" in disposition
+    # Counted from the headings rather than a written-in number: the
+    # register grew to nineteen when two audit-reproduced defects were
+    # entered, and a hardcoded count silently stops describing it.
+    headings = re.findall(r"^### D\d+ — (.+)$", register, re.MULTILINE)
+    assert headings
+    unclosed = [line for line in headings if "Closed" not in line]
+    assert not unclosed, f"entries still open: {unclosed}"
 
     adr = ADR_012.read_text(encoding="utf-8")
     assert "still to be written" not in adr

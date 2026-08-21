@@ -243,9 +243,14 @@ def _selection_document(analysis: Analysis) -> dict[str, Any]:
         "concerns": list(analysis.concerns),
         "depth": analysis.depth,
         "license_policy": analysis.license_policy,
+        # Runnable means it was actually attempted: the inventory chose
+        # it AND this project can invoke it. A catalogued tool with no
+        # adapter is neither, and listing it here made the set a claim
+        # the run could not keep (D15/M2).
         "runnable": sorted(
             item.slug for item in analysis.coverage
             if item.tier == "analyzer" and not item.inventory_filtered
+            and item.outcome != "no-adapter"
         ),
         "inventory_filtered": sorted(
             item.slug for item in analysis.coverage

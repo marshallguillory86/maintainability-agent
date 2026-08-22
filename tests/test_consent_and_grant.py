@@ -128,7 +128,7 @@ def test_history_consent_drives_the_accepting_call(
         ) as client:
             result = await client.call_tool(
                 "audit_repository",
-                {"repository_root": str(root), "format": "json"},
+                {"repository_root": str(root), "format": "json", "action": "run"},
             )
             assert not result.is_error, _tool_text(result)
 

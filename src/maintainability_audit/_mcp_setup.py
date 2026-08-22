@@ -11,9 +11,17 @@ context.
 The questions are one elicitation, not five: the MCP elicitation
 contract is a single flat object of primitive fields, and one modal
 beats a five-step wizard in every host. A host that declines — or
-cannot elicit at all — costs the user nothing: the audit proceeds on
-built-in defaults and the result carries the same questions as data,
-so the host's own question UI can ask and call again.
+cannot elicit at all — gets the same questions back as data, so its own
+question UI can ask and call again.
+
+What no longer happens is the audit. This module used to describe the
+degradation path as costing the user nothing, because "the audit
+proceeds on built-in defaults" — which meant a first-time user was
+handed a letter grade computed with the analyzer pool off while the
+question that turns the pool on rode along unasked (D26). Setup is a
+precondition now: no answers, no audit. And answering does not start
+one either — configuring the agent and running it are separate
+decisions, and the user makes both (D27).
 """
 from __future__ import annotations
 
@@ -200,9 +208,13 @@ async def maybe_elicit_setup(context: Any, root: Path) -> dict[str, Any] | None:
     """One structured elicitation on first contact; the merged config on accept.
 
     ``None`` for every other outcome — already configured, declined,
-    or a host that cannot elicit. The caller proceeds on defaults and
-    publishes the questions as data instead (D3's degradation rule):
-    a missing capability must cost an ask, never hang an audit.
+    or a host that cannot elicit. The caller then publishes the same
+    questions as data and returns them unanswered; it does not audit.
+    D3's degradation rule used to end "never hang an audit", and the
+    audit it protected was one nobody had asked for (D26).
+
+    Accepting writes the answers and still returns no report: the next
+    call offers run-or-reconfigure, and the user says when (D27).
     """
     if context is None or not setup_pending(root):
         return None

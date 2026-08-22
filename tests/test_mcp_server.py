@@ -133,7 +133,7 @@ def test_a_client_sees_the_two_tools_and_can_call_one(tmp_path: Path) -> None:
 
             result = await client.call_tool(
                 "audit_repository",
-                {"repository_root": str(root), "format": "json"},
+                {"repository_root": str(root), "format": "json", "action": "run"},
             )
             assert not result.is_error
             assert result.structured_content["report"]["root"] == str(root.resolve())

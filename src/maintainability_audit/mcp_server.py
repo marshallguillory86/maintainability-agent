@@ -58,15 +58,21 @@ SERVER_INSTRUCTIONS = (
     "(.maintainability/baseline.json by default). Scan history rides the "
     "record_history tri-state, where unset means an existing history file "
     "appends and otherwise the persisted first-run consent decides, "
-    "true forces the write, and false suppresses it. Setup is a "
-    "precondition, not a footnote: an unconfigured repository runs no "
-    "audit and returns no score. Such a result carries audit_ran false "
-    "and setup_needed, and nothing else to report — ask the user every "
-    "question it lists, offering exactly the options each one names and "
-    "no others (default_format offers chat, markdown and html), then call "
-    "audit_repository again with the answers. Do not substitute questions "
-    "of your own, do not answer on the user's behalf, and do not report a "
-    "grade, because none was computed. When a result carries "
+    "true forces the write, and false suppresses it. Nothing is audited "
+    "until the user has been asked twice, and the action argument is how "
+    "they answer: unset never audits. An unconfigured repository returns "
+    "setup_needed — ask every question it lists, offering exactly the "
+    "options each one names and no others (default_format offers chat, "
+    "markdown and html), then call again. A configured repository returns "
+    "choice_needed, run or reconfigure — ask it, then call again with "
+    "action set to their answer. action='run' audits; "
+    "action='reconfigure' reopens the setup questions on a repository "
+    "that already has answers, which is how a user changes their "
+    "configuration on any run and not only the first. Answering setup "
+    "does not start an audit. Every reply that is not an audit carries "
+    "audit_ran false and no score: do not substitute questions of your "
+    "own, do not answer on the user's behalf, and never report a grade "
+    "from one, because none was computed. When a result carries "
     "environment_work_order, surface it to the user: each entry names a "
     "selected analyzer that could not run, its install command, and the "
     "concepts installing it restores. It never edits source, "
@@ -205,15 +211,25 @@ def _bind_audit_tool(server: Any, ledger: _RootLedger,
         baseline_path: str | None = None,
         write_baseline: bool = False,
         include_prompt: bool = True,
+        action: str | None = None,
         setup: Any = None,
         grant: Any = None,
         ctx: Any = None,
     ) -> dict[str, Any]:
         """Audit one authorized repository and return findings plus a bounded remediation prompt.
 
+        Nothing is audited until the user has been asked twice: once to
+        configure the repository, once to say go. Unset ``action`` — the
+        default here — never audits; an unconfigured repository returns
+        its setup questions and a configured one returns the
+        run-or-reconfigure choice, each with ``audit_ran: false`` and no
+        score. ``action="run"`` audits. ``action="reconfigure"`` reopens
+        setup on a repository that already has answers.
+
         First contact with an unconfigured repository asks the setup
         questions through elicitation (or returns them as data when the
-        host cannot ask) and writes the answers locally. A repository
+        host cannot ask) and writes the answers locally. Answering does
+        not start an audit. A repository
         outside the allowed roots asks for a grant the same way —
         session-only by default, "always" persisting to the user config
         (D10). Leave ``run_analyzers`` unset and the repository's config
@@ -239,25 +255,43 @@ def _bind_audit_tool(server: Any, ledger: _RootLedger,
             baseline_path,
             write_baseline,
             include_prompt,
+            # The interactive door never assumes go. The plain function
+            # defaults to "run" for the CLI and scripted callers, which
+            # have already decided; a person has not (D27).
+            action=action,
             roots=ledger.current(),
         )
 
-    # Registered by hand rather than decorated: this module stringifies
-    # its annotations (PEP 563), and the SDK finds the context parameter
-    # by resolving type hints — `ctx` needs the real Context class, which
-    # only exists once the optional mcp extra is importable.
-    audit_repository_tool.__annotations__["ctx"] = context_type
-    audit_repository_tool.__annotations__["setup"] = Annotated[
-        ElicitationResult[Any], Resolve(resolver)
+    _register_audit_tool(server, audit_repository_tool, annotation, context_type,
+                         (Annotated, ElicitationResult, Resolve),
+                         (resolver, grant_resolver))
+
+
+def _register_audit_tool(server: Any, tool: Any, annotation: Any, context_type: Any,
+                         typing_parts: tuple[Any, Any, Any],
+                         resolvers: tuple[Any, Any]) -> None:
+    """Registered by hand rather than decorated.
+
+    This module stringifies its annotations (PEP 563) and the SDK finds
+    the context parameter by resolving type hints, so `ctx` needs the
+    real Context class — which only exists once the optional mcp extra
+    is importable. Split from `_bind_audit_tool` when that function
+    crossed this repository's own length gate.
+    """
+    annotated, elicitation_result, resolve = typing_parts
+    setup_resolver, grant_resolver = resolvers
+    tool.__annotations__["ctx"] = context_type
+    tool.__annotations__["setup"] = annotated[
+        elicitation_result[Any], resolve(setup_resolver)
     ]
-    audit_repository_tool.__annotations__["grant"] = Annotated[
-        ElicitationResult[Any], Resolve(grant_resolver)
+    tool.__annotations__["grant"] = annotated[
+        elicitation_result[Any], resolve(grant_resolver)
     ]
     server.tool(
         name="audit_repository",
         title="Audit this repository's maintainability",
         annotations=annotation, structured_output=True,
-    )(audit_repository_tool)
+    )(tool)
 
 
 def _bind_resources(

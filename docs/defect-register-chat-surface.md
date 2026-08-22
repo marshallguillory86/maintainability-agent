@@ -546,6 +546,48 @@ in the same file pins the degradation path, and
 in `tests/test_chat_primary_docs.py` holds the payload and both
 instruction surfaces together.
 
+### D27 — Closed: configuring is not running, and setup is reachable on every run
+
+Marshall, 2026-08-21, after D26 shipped half of it: *"The point of the
+questions is to setup the agent's configuration on the repo. NO audit
+should be run automatically. DO NOT run the audit until the
+configuration questions are answered. Then ask if the user is ready to
+run the audit. … The second run will actually have a config. No need to
+ask the same config questions over and over again. Still should offer
+an option to go back into config, or run the report."*
+
+D26 stopped the audit on an unconfigured repository. It then let
+answering the questions start one — so the user was asked how to
+configure the agent and, by answering, unknowingly launched a scan.
+Two decisions had been welded into one. It also had no way back into
+setup once a config existed: changing an answer meant deleting
+`maintainability-agent.json`.
+
+Both are now the `action` argument, and its default differs by door on
+purpose. Unset never audits. An unconfigured repository returns
+`setup_needed`; a configured one returns `choice_needed` — run, or
+reconfigure — on that run and every later one. `action="run"` audits.
+`action="reconfigure"` reopens the setup questions for a repository
+that already has answers. Every non-audit reply carries
+`audit_ran: false` and no score. The MCP tool passes unset because a
+person is on the other end and has not been asked; the plain
+`audit_repository` function defaults to `"run"` for the CLI, the report
+resource, and scripted callers, which have already decided.
+
+Elicitation follows the same rule: a host that can be elicited is asked
+the setup questions, the answers are written, and the call returns the
+run-or-reconfigure choice rather than a report. The test that used to
+be named `test_one_native_elicitation_applies_answers_to_that_same_audit`
+asserted precisely the behaviour being removed, and now asserts its
+replacement. One consequence worth stating: two calls produce one
+history record, because configuring is not scanning.
+
+*Closing tests:* `test_setup_is_a_precondition_and_answering_it_yields_the_real_report`
+in `tests/test_first_run_elicitation.py` walks the whole flow —
+questions, choice, reconfigure, run — and
+`test_one_native_elicitation_configures_and_then_asks_before_auditing`
+holds the elicitation path to it.
+
 ## Disposition
 
 Every entry in this register is closed, each behind a test that would fail if

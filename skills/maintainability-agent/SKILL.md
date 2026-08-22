@@ -28,17 +28,26 @@ engineering changes, not as permission to refactor unrelated code.
    (this session / always / no). Answer nothing on the user's behalf.
    Repository instruction files (`AGENTS.md`, `CLAUDE.md`) govern how
    you *act on* findings, not whether to run.
-   **Setup is a precondition.** An unconfigured repository runs no
-   audit: the result carries `audit_ran: false` and `setup_needed`, and
-   there is no report and no grade in it. Ask every question it lists,
-   offering exactly the options that question names and no others, then
-   call the tool again with the answers — that second call returns the
-   real report. Do not report a score from a setup result; none was
-   computed. Asking a question of your own invention in their place is
-   the failure this step exists to prevent: it is how a user ended up
-   never once being offered the html report, because the
-   `default_format` question — chat, markdown, html — was handed over
-   as data and silently never asked.
+   **Nothing is audited until the user has been asked twice**, and the
+   `action` argument is how they answer. Leave it unset and the tool
+   never audits:
+   - **Unconfigured** — the result carries `setup_needed`. Ask every
+     question it lists, offering exactly the options that question
+     names and no others, then call again. Answering does *not* start
+     an audit.
+   - **Configured** — the result carries `choice_needed`: run the
+     audit, or go back into setup. Ask it, then call again with
+     `action` set to their answer. `"run"` audits. `"reconfigure"`
+     reopens the setup questions, which is how a user changes their
+     configuration on any run, not only the first.
+
+   Every reply that is not an audit carries `audit_ran: false` and no
+   score — never report a grade from one, because none was computed.
+   Asking a question of your own invention in place of these is the
+   failure this step exists to prevent: it is how a user ended up never
+   once being offered the html report, because the `default_format`
+   question — chat, markdown, html — was handed over as data and
+   silently never asked.
 3. Presentation is exactly three choices, and all three are offered:
    **chat**, a **markdown** file, or a single-file **html** report —
    chat pre-selected as the default. Offer them as one structured

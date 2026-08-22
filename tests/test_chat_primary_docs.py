@@ -259,6 +259,67 @@ def test_every_delivery_surface_offers_all_three_presentations() -> None:
     assert mirror == skill, "the shipped skill mirror drifted from the source skill"
 
 
+def test_the_handed_back_questions_are_instructed_and_carry_every_format(
+    tmp_path: Path,
+) -> None:
+    """D25: questions returned as data that nobody is told to ask.
+
+    The operator's report was flat: "I never saw an option for HTML,
+    ever across the prompts." He was right, and the cause was not the
+    presentation step. When a host cannot be elicited, the audit hands
+    its whole first-run set back as `setup_needed` — including
+    `default_format` with chat, markdown and html — and D3 calls that
+    graceful degradation. But `setup_needed` appeared in no instruction
+    surface at all: not the server description, not the skill. Its
+    sibling `environment_work_order` was instructed on both. So the
+    question generating the format choice was produced correctly,
+    returned correctly, and then never asked by anyone, on any run.
+
+    Checked at the seam, not in the vocabulary: an unconfigured
+    repository's actual payload must carry the question and all three
+    options, and both instruction surfaces must tell a host to ask it.
+    """
+    import subprocess
+
+    from maintainability_audit._first_run import PRESENTATIONS
+    from maintainability_audit.mcp_server import audit_repository
+
+    root = tmp_path / "unconfigured"
+    root.mkdir()
+    (root / "README.md").write_text("# fixture\n", encoding="utf-8")
+    (root / "app.py").write_text("def ok():\n    return 1\n", encoding="utf-8")
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+
+    result = audit_repository(
+        str(root), format="json", record_history=False, roots=(tmp_path.resolve(),),
+    )
+
+    handed_back = result.get("setup_needed")
+    assert handed_back, (
+        "an unconfigured repository handed back no questions, so a host "
+        "that cannot elicit has nothing to ask"
+    )
+    by_name = {question["name"]: question for question in handed_back["questions"]}
+    presentation = by_name.get("default_format")
+    assert presentation, "the handed-back set never asks which presentation"
+    assert tuple(presentation["options"]) == tuple(PRESENTATIONS), (
+        f"the presentation question offers {presentation['options']}, "
+        f"not {list(PRESENTATIONS)}"
+    )
+
+    # Instructed wherever its sibling is. One of the two degradation
+    # keys being explained and the other not is exactly the asymmetry
+    # that let this run for the product's whole life.
+    for name, surface in (
+        ("MCP server description", SERVER_INSTRUCTIONS),
+        ("shipped skill", _read(SKILL)),
+    ):
+        assert "environment_work_order" in surface, f"{name} changed shape"
+        assert "setup_needed" in surface, (
+            f"{name} never tells a host to ask the questions it is handed"
+        )
+
+
 def test_every_tool_offers_a_human_readable_title(tmp_path: Path) -> None:
     """A permission prompt should name the action, not the wire identifier.
 

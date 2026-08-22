@@ -468,6 +468,42 @@ in `tests/test_pool_runs_by_config.py`, which reproduces the cause —
 an unreadable catalog with the pool explicitly requested — rather than
 imitating the symptom.
 
+### D25 — Closed: the questions handed back are questions someone is told to ask
+
+Reported by the operator on 2026-08-21, correcting a wrong diagnosis of
+D22: *"I never saw an option for HTML, ever across the prompts."* Not
+in that run — in any run, for the life of the product.
+
+D22 blamed the skill's presentation step, and fixing it was necessary
+but did not touch the cause. When a host cannot be elicited, the audit
+hands its entire first-run set back as `setup_needed` — including
+`default_format` with chat, markdown and html — and D3 records that as
+graceful degradation. But `setup_needed` was named in no instruction
+surface anywhere: not the MCP server description, not the skill, not
+the generated packs. Its sibling on the same degradation path,
+`environment_work_order`, was explicitly instructed on both ("surface
+it to the user"). One of the two keys was explained and the other was
+not.
+
+So the question that offers the three presentations was generated
+correctly, returned correctly, and asked by nobody. An agent receiving
+a payload it had no instruction about did what agents do with a gap: it
+invented its own questions, which is what D21 and D22 each caught one
+symptom of. The user's report was the only detector that ever fired,
+because no test looked at the handed-back payload and no surface
+mentioned the key.
+
+Both surfaces now instruct it: ask every question, offer exactly the
+options it lists and no others, then call again with the answers.
+
+*Closing test:* `test_the_handed_back_questions_are_instructed_and_carry_every_format`
+in `tests/test_chat_primary_docs.py`, which audits a genuinely
+unconfigured repository through the production seam and asserts the
+payload carries the presentation question with all three options, then
+holds both instruction surfaces to naming the key — checked at the
+seam rather than against the vocabulary, since the vocabulary was
+right the whole time.
+
 ## Disposition
 
 Every entry in this register is closed, each behind a test that would fail if
@@ -486,4 +522,9 @@ the most consequential entry here — nine releases shipped with no analyzer
 catalog inside them, so every installed copy lost the analyzer pool while a
 green suite, running from a checkout, reported everything working. D24 is
 how that outage stayed quiet: the envelope reported the request rather than
-the result.
+the result. D25 corrected D22's diagnosis rather than extending it — the
+presentation step was a real gap, but the reason a user was never once
+offered the html report is that the question offering it was handed back as
+data no instruction surface mentioned. Three entries in this register are the
+same sentence: the product produced the right thing and nothing told the
+agent to use it.

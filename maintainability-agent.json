@@ -54,7 +54,8 @@
       "data/analyzer-catalog.json",
       "_skill_data/",
       "_assets/",
-      "CHANGELOG.md"
+      "CHANGELOG.md",
+      "docs/defect-register-chat-surface.md"
     ]
   },
   "thresholds": {

@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from test_first_run_elicitation import _accepted_content, _repo
+from test_first_run_elicitation import _repo
 
 from maintainability_audit._mcp_setup import setup_questions
 from maintainability_audit._user_config import repo_first_run

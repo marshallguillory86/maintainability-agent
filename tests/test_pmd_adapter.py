@@ -18,15 +18,13 @@ import pytest
 from _ast_reading import producer_literal
 
 from maintainability_audit import _runner
-from maintainability_audit._catalog import load_catalog, resolve_pool
+from maintainability_audit._catalog import CATALOG_PATH, load_catalog, resolve_pool
 from maintainability_audit._generic import declared_adapter
 from maintainability_audit._mcp_setup import apply_answers, setup_questions
 from maintainability_audit._runner import Outcome, Probe, ToolResult
 from maintainability_audit._tool_adapters import adapter_for
 from maintainability_audit.config import load_config
 from maintainability_audit.report import build_report
-
-from maintainability_audit._catalog import CATALOG_PATH
 
 ROOT = Path(__file__).resolve().parents[1]
 # The shipped location, read from the product rather than repeated

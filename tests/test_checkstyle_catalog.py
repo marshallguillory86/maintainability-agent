@@ -18,14 +18,13 @@ import pytest
 from _ast_reading import producer_literal, recomputed_counts
 
 from maintainability_audit._catalog import (
+    CATALOG_PATH,
     DEFAULTS,
     LICENSE_POLICIES,
     resolve_pool,
 )
 from maintainability_audit._mcp_setup import setup_questions
 from maintainability_audit.config import load_config
-
-from maintainability_audit._catalog import CATALOG_PATH
 
 ROOT = Path(__file__).resolve().parents[1]
 # The shipped location, read from the product rather than repeated

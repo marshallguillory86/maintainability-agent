@@ -27,7 +27,6 @@ from maintainability_audit._user_config import (
 from maintainability_audit.config import CONFIG_FILENAME, load_config
 from maintainability_audit.mcp_server import (
     SERVER_INSTRUCTIONS,
-    audit_repository,
     create_server,
     server_info,
 )

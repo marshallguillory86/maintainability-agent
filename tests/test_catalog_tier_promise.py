@@ -7,10 +7,9 @@ import json
 import re
 from pathlib import Path
 
+from maintainability_audit._catalog import CATALOG_PATH
 from maintainability_audit._generic import declared_adapter
 from maintainability_audit._tool_adapters import adapter_for
-
-from maintainability_audit._catalog import CATALOG_PATH
 
 ROOT = Path(__file__).resolve().parents[1]
 # The shipped location, read from the product rather than repeated

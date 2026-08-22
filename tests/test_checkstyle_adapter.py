@@ -23,6 +23,7 @@ from test_exclusion_dialects import FILE_LIST
 from maintainability_audit import _runner
 from maintainability_audit._adapters import Exclusions
 from maintainability_audit._catalog import (
+    CATALOG_PATH,
     load_catalog,
 )
 from maintainability_audit._generic import parse_checkstyle
@@ -30,8 +31,6 @@ from maintainability_audit._runner import Outcome, Probe, ToolResult
 from maintainability_audit._tool_adapters import adapter_for
 from maintainability_audit.config import load_config
 from maintainability_audit.report import build_report
-
-from maintainability_audit._catalog import CATALOG_PATH
 
 ROOT = Path(__file__).resolve().parents[1]
 # The shipped location, read from the product rather than repeated

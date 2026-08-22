@@ -24,6 +24,12 @@ from maintainability_audit.mcp_server import (
 def _repo(tmp_path: Path) -> Path:
     root = tmp_path / "repo"
     root.mkdir()
+    # Configured on purpose. These tests are about what a completed audit
+    # returns; an unconfigured repository returns setup questions and no
+    # report at all, which is D26's precondition and a different subject.
+    (root / "maintainability-agent.json").write_text(
+        '{"version": 1, "analyzers": {"run": false}}', encoding="utf-8",
+    )
     (root / "README.md").write_text("# fixture\n", encoding="utf-8")
     (root / "app.py").write_text("def ok():\n    return 1\n", encoding="utf-8")
     subprocess.run(["git", "init", "-q", str(root)], check=True)

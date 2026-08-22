@@ -151,6 +151,8 @@ def audit_repository(
     """
     authorized_roots = roots if roots is not None else allowed_roots()
     root = authorize_repository(repository_root, authorized_roots)
+    if config_path is None and setup_pending(root):
+        return _setup_first(root)
     config = load_config(authorize_config(config_path, root) or discovered_config(root))
     revspec = validate_revspec(changed_only)
     only_paths = changed_paths(root, revspec) if revspec else None
@@ -180,6 +182,47 @@ def audit_repository(
     result = _top_level_result(report, root, status, run_analyzers,
                                baseline, include_prompt)
     return _finish_result(result, format, root, config, report)
+
+
+def _setup_first(root: Path) -> dict[str, Any]:
+    """Questions, and no report, until this repository has been set up.
+
+    Setup is a precondition, not a footnote. The audit used to run on
+    built-in defaults whenever a host could not be elicited and hand its
+    questions back beside a finished report — which meant a first-time
+    user received a complete letter grade computed with the analyzer
+    pool off, while the question that turns the pool on rode along
+    unasked. One table cell reading "fallback tier" was the whole
+    disclosure, and a field run produced exactly the predicted outcome:
+    a 3.9/C that was not the product's answer to anything.
+
+    A grade nobody can act on is worse than no grade, so none is
+    produced. The caller gets the questions, asks them, and calls again
+    with the answers — one extra round trip, and the report it then
+    returns is the product's actual reading.
+
+    Elicitation is unaffected: a host that can be elicited is asked
+    before the audit and never reaches here. This is only the path where
+    nobody could be asked, which used to audit anyway.
+    """
+    from ._first_run import PRESENTATIONS
+
+    mark_repo_seen(root)
+    return {
+        "agent": "maintainability-agent",
+        "agent_version": VERSION,
+        "audit_ran": False,
+        "setup_needed": {"questions": setup_questions(load_config(None))},
+        "setup_instruction": (
+            "This repository has not been set up, so no audit ran and no "
+            "score was produced. Ask the user every question in "
+            "setup_needed, offering exactly the options each one lists — "
+            f"default_format offers {', '.join(PRESENTATIONS)} — then call "
+            "audit_repository again. Do not substitute questions of your "
+            "own, do not answer on the user's behalf, and do not report a "
+            "grade: there is none to report yet."
+        ),
+    }
 
 
 def _analyzers_contributed(report: dict[str, Any]) -> bool:

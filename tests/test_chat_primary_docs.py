@@ -299,6 +299,12 @@ def test_the_handed_back_questions_are_instructed_and_carry_every_format(
         "an unconfigured repository handed back no questions, so a host "
         "that cannot elicit has nothing to ask"
     )
+    # D26: and nothing that could be mistaken for the answer.
+    assert result["audit_ran"] is False
+    assert "report" not in result, (
+        "a repository awaiting setup returned a report; the grade a "
+        "first-time user then reads was computed with the pool off"
+    )
     by_name = {question["name"]: question for question in handed_back["questions"]}
     presentation = by_name.get("default_format")
     assert presentation, "the handed-back set never asks which presentation"

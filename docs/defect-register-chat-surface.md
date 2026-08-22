@@ -504,6 +504,48 @@ holds both instruction surfaces to naming the key — checked at the
 seam rather than against the vocabulary, since the vocabulary was
 right the whole time.
 
+### D26 — Closed: an unconfigured repository is asked, not audited
+
+Marshall's ruling on 2026-08-21, in response to my proposing three ways
+to *disclose* a provisional grade: *"An unconfigured run is supposed to
+ask the questions first."*
+
+The behaviour I was proposing to decorate: when a host could not be
+elicited, the audit ran anyway on built-in defaults and filed its
+questions beside a finished report. Demonstrated on an unconfigured
+scratch repository — `analyzers_requested: False`, the pool off, a
+complete graded report, and the entire disclosure a single table row
+reading `| Estimate source | Built-in detectors (fallback tier) |`. The
+rendered report contained zero occurrences of "setup", "unconfigured",
+"first run", or "not configured". Meanwhile the `run_pool` question's
+own recommended answer is **yes** — so the number a first-time user saw
+was computed the opposite way from the one the product recommends, and
+nothing said so. bighound produced exactly that: a 3.9/C that the
+operator's own agent correctly called "not the product's answer".
+
+D25 made the questions askable. It did not stop the report being
+produced before anyone asked them, which is the part that matters: a
+grade nobody can act on is worse than no grade, and an agent handed a
+finished report has no reason to go looking for the questions.
+
+Setup is now a precondition. A repository with neither a repository
+config nor a user tier returns `audit_ran: false`, the question set,
+and a `setup_instruction` — no report, no score, nothing to mistake for
+an answer. Answering yields the real audit on the next call. Elicitation
+is unaffected: a host that can be elicited is asked *before* the audit
+and never reaches this path. An explicit `config_path` also passes
+through, so automation is not gated on an interactive answer.
+
+*Closing tests:* `test_setup_is_a_precondition_and_answering_it_yields_the_real_report`
+in `tests/test_first_run_elicitation.py` asserts the loop whole —
+questions, then answers, then a report honouring the chosen html
+presentation — because refusing to audit is only correct if answering
+unblocks it. `test_declined_or_unsupported_elicitation_returns_questions_not_an_audit`
+in the same file pins the degradation path, and
+`test_the_handed_back_questions_are_instructed_and_carry_every_format`
+in `tests/test_chat_primary_docs.py` holds the payload and both
+instruction surfaces together.
+
 ## Disposition
 
 Every entry in this register is closed, each behind a test that would fail if
@@ -527,4 +569,7 @@ presentation step was a real gap, but the reason a user was never once
 offered the html report is that the question offering it was handed back as
 data no instruction surface mentioned. Three entries in this register are the
 same sentence: the product produced the right thing and nothing told the
-agent to use it.
+agent to use it. D26 is the one that stopped treating that as a documentation
+problem — the audit no longer runs at all until the repository has been set
+up, so there is no premature grade for an agent to report in place of the
+questions.

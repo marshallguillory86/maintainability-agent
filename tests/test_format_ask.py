@@ -17,11 +17,27 @@ import sys
 from pathlib import Path
 
 import pytest
-from test_history_schema2 import _repo
+from test_history_schema2 import _repo as _bare_repo
 
 from maintainability_audit.cli import main
 from maintainability_audit.config import CONFIG_FILENAME
 from maintainability_audit.mcp_server import audit_repository, create_server
+
+
+def _repo(tmp_path: Path) -> Path:
+    """The shared fixture, configured.
+
+    Format resolution is about a report that exists. An unconfigured
+    repository returns setup questions and no report (D26), which these
+    tests would read as a missing presentation rather than the
+    precondition it is. No presentation block, so "chat when nothing
+    chose otherwise" is still the default under test.
+    """
+    root = _bare_repo(tmp_path)
+    (root / CONFIG_FILENAME).write_text(
+        json.dumps({"version": 1, "analyzers": {"run": False}}), encoding="utf-8",
+    )
+    return root
 
 
 def _tty(monkeypatch: pytest.MonkeyPatch, answer: bool) -> None:

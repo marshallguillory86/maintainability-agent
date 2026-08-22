@@ -33,6 +33,10 @@ MCP is a local stdio process and does not run `input()`. It may write exactly fi
 
 4. **MCP:** first-run setup uses structured elicitation. The `maintainability-agent` prompt still tells the host in prose to ask, then call `audit_repository` with a format argument; that free-text ask remains open under D3. Chat returns Markdown. HTML and Markdown **files** are written by the CLI or saved by the host after a location ask, never by the MCP process.
 
+> **Amended 2026-08-22 (D3 closed).** The free-text ask closed under D3.
+> Presentation now arrives through the `format` argument;
+> `action`/`choice_needed` separately governs whether an audit runs at all.
+
 **Chat-path amendment (2026-08-16).** First-run setup persists a default presentation for later chat calls. An explicit per-call format and the host's own presentation ask always win over that stored default. The TTY rule is unchanged: it asks on every interactive invocation unless an explicit format or output option already decides.
 
 5. **HTML** is one file: inlined CSS, charts as deterministic SVG generated from stored fields (no CDN, no fetch at view time — P1). It leads with an **executive summary** (estimate, grade, range, series direction or “no history yet”). Required charts, from schema-2 records only:

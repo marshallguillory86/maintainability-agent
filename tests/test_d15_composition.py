@@ -252,7 +252,14 @@ def test_bytecode_with_mixed_languages_still_reaches_spotbugs_has_targets(
     assert "this tree is" not in (row.get("detail") or ""), (
         "source-language inventory dropped an artifact-read tool that had .class files"
     )
-    assert outcome in {"ran", "not-installed", "not-working", "failed"}
+    # `parse-error` belongs here too: with a real SpotBugs installed,
+    # this fixture's synthetic .class byte string is not readable
+    # bytecode, and an unparseable result is the honest outcome (ADR
+    # 006) rather than a fake clean one. What this test pins is that
+    # the tool was not gated away by the source-language inventory.
+    assert outcome in {
+        "ran", "not-installed", "not-working", "failed", "parse-error",
+    }
 
 
 def test_sequential_analyze_calls_do_not_leak_class_dirs(tmp_path: Path) -> None:

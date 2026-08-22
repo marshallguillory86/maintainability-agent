@@ -153,44 +153,155 @@ def test_decisions_four_through_eight_are_repository_records() -> None:
         assert phrase in decisions
 
 
-def test_the_register_states_a_falsifier_for_every_entry() -> None:
-    """Closure is a named test, and the count is read, never asserted.
+def test_the_skill_calls_the_tool_before_inspecting_configuration() -> None:
+    """D21: the agent must not do configuration archaeology first.
 
-    An earlier version demanded an all-closed state by a written-in
-    number, which is a test that can require a lie: when two audit
-    findings were entered the register grew and the assertion still
-    said seventeen. Entries are counted from their own headings, and
-    each closed one must name the test that would fail if its defect
-    returned.
+    Found in the field: a run in a repository whose config had been
+    deleted spent a quarter-minute reasoning about which config to use
+    and then asked the user — a question the tool itself asks properly
+    through first-run setup. The skill's first step told it to go
+    looking, so it went looking.
     """
-    register = _read(REGISTER)
-    headings = re.findall(r"^### (D\d+) — (.+)$", register, re.MULTILINE)
-    assert len(headings) >= 19, f"register shrank: {len(headings)} entries"
+    skill = _read(SKILL)
+    workflow = skill.split("## Core Workflow", maxsplit=1)[1]
+    first_step = workflow.split("2.", maxsplit=1)[0]
 
-    body = register.split("## Disposition", maxsplit=1)
-    assert len(body) == 2, "the register lost its disposition"
-    entries, disposition = body[0], body[1].lower()
+    assert "audit_repository" in first_step, (
+        "the first step must be calling the tool, not inspecting the repo"
+    )
+    assert "do not inspect configuration" in first_step.lower()
+    assert "do not ask the user which config" in first_step.lower()
+    assert "configuration check first" not in skill.lower(), (
+        "the config-archaeology instruction is back"
+    )
 
-    open_entries = [f"{ident} {title}" for ident, title in headings
-                    if "Closed" not in title]
-    if open_entries:
-        # An open entry is legitimate; claiming everything is closed
-        # while one is open is not.
-        assert "every entry" not in disposition, (
-            f"the disposition claims all closed while these are open: {open_entries}"
+
+def test_every_delivery_surface_offers_all_three_presentations() -> None:
+    """D22: an agent that invents the delivery question deletes html.
+
+    Found in the field: asked to audit a repository, the host offered
+    "chat only" or "chat plus a saved file", then asked where to write
+    the markdown. The html report — a presentation the product ships
+    and setup can already have chosen — was never mentioned, because
+    the skill named only chat and a file location. The MCP prompt got
+    this right and the skill did not, so the surfaces are checked
+    together: whichever one a host reads, it sees the same three.
+    """
+    from maintainability_audit._first_run import PRESENTATIONS
+
+    # Bound to the setup vocabulary rather than a copy of it: a fourth
+    # presentation would have to reach the instructions too.
+    assert "html" in PRESENTATIONS
+
+    skill = _read(SKILL)
+    step = skill.split("3.", maxsplit=1)[1].split("\n4.", maxsplit=1)[0].lower()
+    for presentation in PRESENTATIONS:
+        assert presentation in step, (
+            f"the skill's presentation step never offers {presentation}"
         )
-        return
+    assert "format" in step, "the skill does not route the answer to `format`"
+    # The two-option shape that caused this is named so the instruction
+    # cannot quietly regress into it.
+    assert "substitute" in step or "own option set" in step
 
-    for ident, _title in headings:
-        section = entries.split(f"### {ident} — ", maxsplit=1)[1]
-        section = section.split("\n### ", maxsplit=1)[0]
-        # Substance, not phrasing: some entries write "Closing test",
-        # some "Closing suite", some name the tests inline. What every
-        # closed entry must do is point at a real falsifier.
-        assert re.search(r"`tests/\S+\.py`|`test_\w+`|\btest_\w+\b", section), (
-            f"{ident} closes without naming the falsifier that would fail"
+    prompt = _read(ROOT / "src/maintainability_audit/mcp_server.py")
+    body = prompt.split("def maintainability_agent_prompt", maxsplit=1)[1]
+    body = body.split("def ", maxsplit=1)[0].lower()
+    for presentation in PRESENTATIONS:
+        assert presentation in body, (
+            f"the MCP prompt never offers {presentation}"
         )
 
-    # The security entry names both doors it had to bound.
-    assert "test_mcp_history_rejects_parent_traversal_without_external_write" in register
-    assert "test_the_cli_door_applies_the_same_boundary" in register
+    mirror = _read(ROOT / "src/maintainability_audit/_skill_data/SKILL.md")
+    assert mirror == skill, "the shipped skill mirror drifted from the source skill"
+
+
+def test_the_handed_back_questions_are_instructed_and_carry_every_format(
+    tmp_path: Path,
+) -> None:
+    """D25: questions returned as data that nobody is told to ask.
+
+    The operator's report was flat: "I never saw an option for HTML,
+    ever across the prompts." He was right, and the cause was not the
+    presentation step. When a host cannot be elicited, the audit hands
+    its whole first-run set back as `setup_needed` — including
+    `default_format` with chat, markdown and html — and D3 calls that
+    graceful degradation. But `setup_needed` appeared in no instruction
+    surface at all: not the server description, not the skill. Its
+    sibling `environment_work_order` was instructed on both. So the
+    question generating the format choice was produced correctly,
+    returned correctly, and then never asked by anyone, on any run.
+
+    Checked at the seam, not in the vocabulary: an unconfigured
+    repository's actual payload must carry the question and all three
+    options, and both instruction surfaces must tell a host to ask it.
+    """
+    import subprocess
+
+    from maintainability_audit._first_run import PRESENTATIONS
+    from maintainability_audit.mcp_server import audit_repository
+
+    root = tmp_path / "unconfigured"
+    root.mkdir()
+    (root / "README.md").write_text("# fixture\n", encoding="utf-8")
+    (root / "app.py").write_text("def ok():\n    return 1\n", encoding="utf-8")
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+
+    result = audit_repository(
+        str(root), format="json", record_history=False, roots=(tmp_path.resolve(),),
+    )
+
+    handed_back = result.get("setup_needed")
+    assert handed_back, (
+        "an unconfigured repository handed back no questions, so a host "
+        "that cannot elicit has nothing to ask"
+    )
+    # D26: and nothing that could be mistaken for the answer.
+    assert result["audit_ran"] is False
+    assert "report" not in result, (
+        "a repository awaiting setup returned a report; the grade a "
+        "first-time user then reads was computed with the pool off"
+    )
+    by_name = {question["name"]: question for question in handed_back["questions"]}
+    presentation = by_name.get("default_format")
+    assert presentation, "the handed-back set never asks which presentation"
+    assert tuple(presentation["options"]) == tuple(PRESENTATIONS), (
+        f"the presentation question offers {presentation['options']}, "
+        f"not {list(PRESENTATIONS)}"
+    )
+
+    # Instructed wherever its sibling is. One of the two degradation
+    # keys being explained and the other not is exactly the asymmetry
+    # that let this run for the product's whole life.
+    for name, surface in (
+        ("MCP server description", SERVER_INSTRUCTIONS),
+        ("shipped skill", _read(SKILL)),
+    ):
+        assert "environment_work_order" in surface, f"{name} changed shape"
+        assert "setup_needed" in surface, (
+            f"{name} never tells a host to ask the questions it is handed"
+        )
+
+
+def test_every_tool_offers_a_human_readable_title(tmp_path: Path) -> None:
+    """A permission prompt should name the action, not the wire identifier.
+
+    Found in the field: the host asked "Do you want to proceed with
+    mcp__maintainability-agent__get_agent_info?" — it had nothing but
+    the transport name to show. The spec reads `title` before falling
+    back to `name`, so every tool states what a person is approving.
+    """
+    import asyncio
+
+    from maintainability_audit.mcp_server import create_server
+
+    tools = asyncio.run(create_server(roots=(tmp_path.resolve(),)).list_tools())
+    assert tools, "the server exposed no tools"
+    for tool in tools:
+        assert tool.title, f"{tool.name} has no display title"
+        assert "mcp__" not in tool.title and "_" not in tool.title, (
+            f"{tool.name}'s title reads like an identifier: {tool.title!r}"
+        )
+        assert tool.title[0].isupper(), (
+            f"{tool.name}'s title is not a sentence: {tool.title!r}"
+        )

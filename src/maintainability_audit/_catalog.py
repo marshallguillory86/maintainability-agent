@@ -23,7 +23,15 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-CATALOG_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "analyzer-catalog.json"
+# Inside the package, not beside it. This path used to climb three
+# parents to a repository-root `data/` directory, which resolves only in
+# a source checkout: from an installed wheel the same expression pointed
+# at `<site-packages>/../data/analyzer-catalog.json`, a path that has
+# never existed. Nine releases shipped with no catalog at all, so every
+# pip-installed user silently lost the analyzer pool — the product's
+# primary evidence source — and got built-in fallback numbers instead.
+# Package data resolves identically from a checkout and from a wheel.
+CATALOG_PATH = Path(__file__).resolve().parent / "_assets" / "analyzer-catalog.json"
 
 # Cumulative: choosing "heavy" includes baseline and moderate. A tier below
 # "all" is a promise the tool works, so nothing enters one until this project

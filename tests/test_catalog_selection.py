@@ -184,8 +184,9 @@ def test_the_pool_document_states_the_catalogs_own_counts() -> None:
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[1]
-    counts = json.loads(
-        (root / "data" / "analyzer-catalog.json").read_text(encoding="utf-8"))["counts"]
+    from maintainability_audit._catalog import CATALOG_PATH
+
+    counts = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))["counts"]
     text = (root / "docs" / "analyzer-pool.md").read_text(encoding="utf-8")
 
     expected = {
@@ -201,7 +202,7 @@ def test_the_pool_document_states_the_catalogs_own_counts() -> None:
 
     assert not missing, (
         f"docs/analyzer-pool.md no longer states the catalog's counts for: {missing}. "
-        "Regenerate the page from data/analyzer-catalog.json."
+        "Regenerate the page from src/maintainability_audit/_assets/analyzer-catalog.json."
     )
 
     # The same figures are quoted elsewhere and drifted there too. Each
@@ -216,5 +217,5 @@ def test_the_pool_document_states_the_catalogs_own_counts() -> None:
         stale = [str(value) for value in values if str(value) not in page]
         assert not stale, (
             f"docs/{name} quotes catalog counts but not the current {stale}; "
-            "update it from data/analyzer-catalog.json"
+            "update it from src/maintainability_audit/_assets/analyzer-catalog.json"
         )

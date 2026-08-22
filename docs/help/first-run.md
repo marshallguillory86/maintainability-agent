@@ -1,21 +1,40 @@
 # First run and questions
 
-The chat host checks configuration before it audits. If either the user tier or
-the repository's `maintainability-agent.json` exists, the run is deterministic
-from that configuration and no first-run setup is reopened. If both are absent,
-the host presents one structured setup form with visible defaults:
+Call `audit_repository`. The tool checks configuration; the host does not
+inspect the repository first. Unset `action` never audits.
+
+If both the repository's `maintainability-agent.json` and the XDG user
+configuration are absent, the call returns `setup_needed` with the setup
+questions and `audit_ran: false` — no report, no score, no grade. A host that
+can elicit asks those nine fields as one structured form with visible defaults:
 
 - run the validated analyzer pool: yes;
 - analyzer depth: moderate;
 - license policy: permissive;
-- record scan history in this repository: yes;
-- economic context: skip, or low/base/high loaded labor rates;
-- presentation: chat.
+- economic context: skip;
+- loaded labor rate, lower bound: 90 per hour;
+- loaded labor rate, central estimate: 140 per hour;
+- loaded labor rate, upper bound: 210 per hour;
+- presentation: chat, markdown or html — default chat;
+- record scan history in this repository: yes.
 
-Accepted setup answers are written to both configuration tiers and apply to the
-same audit. A decline or a host without elicitation support receives
-`setup_needed` with the same choices, and a later call asks again until answers
-are written.
+All three labor-rate fields are shown even when economic context is set to
+`skip`; that choice leaves the economic scenario out of reports.
+
+Accepted answers are written to both configuration tiers. Answering does not
+start an audit, including when the host elicited the questions on that call.
+The next unset call on the now-configured repository returns `choice_needed`
+with options `run` and `reconfigure`, also `audit_ran: false`.
+`action="run"` audits. `action="reconfigure"` reopens the setup questions on a
+repository that already has answers.
+
+A decline or a host without elicitation support receives `setup_needed` with
+the same choices and does not receive a report; a later call asks again until
+answers are written. An explicit `config_path` bypasses both gates so
+automation is not blocked. The MCP tool passes unset `action` because a person
+is on the other end. The plain `audit_repository` Python function defaults
+`action="run"` for the CLI, the report resource, and scripted callers that
+have already decided.
 
 ## Repository grants
 

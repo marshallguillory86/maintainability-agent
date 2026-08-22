@@ -157,7 +157,7 @@ It also cannot be sourced from the catalog's upstream data, and that is worth st
 
 ### Which tools run: the catalog, depth and license policy
 
-The pool is not hardcoded. [`data/analyzer-catalog.json`](../data/analyzer-catalog.json) holds **760 tools** — 755 from the analysis-tools.dev database pinned at a recorded commit, plus 5 verified locally — each with its license, license class, languages and source. **448 are eligible**: open-source class, current, language-targeting, not security-only.
+The pool is not hardcoded. [`src/maintainability_audit/_assets/analyzer-catalog.json`](../src/maintainability_audit/_assets/analyzer-catalog.json) holds **760 tools** — 755 from the analysis-tools.dev database pinned at a recorded commit, plus 5 verified locally — each with its license, license class, languages and source. **448 are eligible**: open-source class, current, language-targeting, not security-only.
 
 Two independent selectors narrow it, because *how much work* and *what may we legally run* are different questions:
 

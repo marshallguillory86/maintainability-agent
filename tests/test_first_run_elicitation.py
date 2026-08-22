@@ -27,7 +27,6 @@ from maintainability_audit._user_config import (
 from maintainability_audit.config import CONFIG_FILENAME, load_config
 from maintainability_audit.mcp_server import (
     SERVER_INSTRUCTIONS,
-    audit_repository,
     create_server,
     server_info,
 )
@@ -281,9 +280,19 @@ def _accepted_content(requested_schema: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def test_one_native_elicitation_applies_answers_to_that_same_audit(
+def test_one_native_elicitation_configures_and_then_asks_before_auditing(
     tmp_path: Path,
 ) -> None:
+    """D27: setup answers configure the agent; they do not start an audit.
+
+    This test used to be named for the opposite contract — answers
+    applied "to that same audit" — and that was the behaviour: a host
+    that could be elicited was asked the setup questions and handed a
+    finished report in the same call. Running is a separate decision
+    from configuring, and the user makes both. The elicitation still
+    happens exactly once; what it produces is a configured repository
+    and the run-or-reconfigure choice.
+    """
     from mcp import Client, types
 
     root = _repo(tmp_path)
@@ -311,7 +320,7 @@ def test_one_native_elicitation_applies_answers_to_that_same_audit(
             assert not first.is_error
             second = await client.call_tool(
                 "audit_repository",
-                {"repository_root": str(root)},
+                {"repository_root": str(root), "action": "run"},
             )
             assert not second.is_error
             return first.structured_content, second.structured_content
@@ -319,9 +328,16 @@ def test_one_native_elicitation_applies_answers_to_that_same_audit(
     first, second = asyncio.run(exercise())
 
     assert len(calls) == 1, "first-run setup must be one structured question set"
-    assert first["analyzers_run"] is True
-    assert first["report"]["analyzer_coverage"] is not None
-    assert first["format"] == "json", "the per-call format must beat the persisted default"
+    # Configured by the elicitation, and then asked rather than audited.
+    assert first["audit_ran"] is False
+    assert "report" not in first, "answering setup started an audit nobody asked for"
+    assert first["choice_needed"]["options"] == ["run", "reconfigure"]
+    assert "setup_needed" not in first, "answers were taken and the questions repeated"
+
+    # Only the explicit go produces a report, and the persisted default
+    # presentation governs it.
+    assert second["audit_ran"] is True
+    assert second["analyzers_run"] is not None
     assert second["format"] == "chat"
     assert "report_markdown" in second
     assert "setup_needed" not in second
@@ -338,66 +354,10 @@ def test_one_native_elicitation_applies_answers_to_that_same_audit(
         Path(DEFAULT_HISTORY_PATH).parent,
         Path(DEFAULT_HISTORY_PATH),
     }
-    assert len(read_history(root / DEFAULT_HISTORY_PATH)) == 2
-
-
-def _assert_setup_needed(result: dict) -> None:
-    expected = setup_questions(load_config(None))
-    assert result["analyzers_run"] is False
-    assert result["report"]["analyzer_coverage"] is None
-    assert result["setup_needed"]["questions"] == expected
-
-
-def test_declined_or_unsupported_elicitation_uses_defaults_and_returns_setup_needed(
-    tmp_path: Path,
-) -> None:
-    from mcp import Client, types
-
-    declined_root = _repo(tmp_path / "declined")
-    unsupported_root = _repo(tmp_path / "unsupported")
-    calls: list[Any] = []
-
-    async def decline(_context: Any, params: Any) -> Any:
-        calls.append(params)
-        return types.ElicitResult(action="decline")
-
-    async def exercise() -> tuple[dict, dict]:
-        server = create_server(roots=(tmp_path.resolve(),))
-        async with Client(server, elicitation_callback=decline) as client:
-            declined = await client.call_tool(
-                "audit_repository",
-                {"repository_root": str(declined_root), "format": "json"},
-            )
-            assert not declined.is_error
-        async with Client(server) as client:
-            unsupported = await client.call_tool(
-                "audit_repository",
-                {"repository_root": str(unsupported_root), "format": "json"},
-            )
-            assert not unsupported.is_error
-        return declined.structured_content, unsupported.structured_content
-
-    declined, unsupported = asyncio.run(exercise())
-
-    assert len(calls) == 1
-    _assert_setup_needed(declined)
-    _assert_setup_needed(unsupported)
-    assert not (declined_root / CONFIG_FILENAME).exists()
-    assert not (unsupported_root / CONFIG_FILENAME).exists()
-
-
-@pytest.mark.parametrize("readme", [True, False])
-def test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails(
-    tmp_path: Path,
-    readme: bool,
-) -> None:
-    root = _repo(tmp_path, readme=readme)
-    assert repo_first_run(root) is True
-
-    result = audit_repository(str(root), roots=(tmp_path.resolve(),))
-
-    assert result["gate_passed"] is readme
-    assert repo_first_run(root) is False
+    # One record from two calls: configuring is not scanning, so the
+    # setup call recorded no history. Two would mean an audit ran that
+    # the user never asked for (D27).
+    assert len(read_history(root / DEFAULT_HISTORY_PATH)) == 1
 
 
 def _forbids(text: str, noun: str) -> bool:

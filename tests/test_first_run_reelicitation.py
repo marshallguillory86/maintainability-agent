@@ -13,11 +13,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from test_first_run_elicitation import (
-    _accepted_content,
-    _assert_setup_needed,
-    _repo,
-)
+from test_first_run_elicitation import _accepted_content, _repo
+from test_setup_precondition import _assert_setup_needed
 
 from maintainability_audit._mcp_setup import setup_pending
 from maintainability_audit._user_config import (
@@ -88,8 +85,12 @@ def test_unanswered_setup_is_reelicited_until_answers_are_written(
     _assert_setup_needed(first)
     assert len(declined_calls) == (1 if first_attempt == "decline" else 0)
     assert len(accepted_calls) == 1, "an unanswered first run must ask again"
-    assert second["analyzers_run"] is True
-    assert second["report"]["analyzer_coverage"] is not None
+    # The re-ask succeeded and the answers were written. It does not
+    # audit: configuring and running are separate decisions (D27), so
+    # what comes back is the choice, not a report.
+    assert second["audit_ran"] is False
+    assert "report" not in second
+    assert second["choice_needed"]["options"] == ["run", "reconfigure"]
     assert "setup_needed" not in second
     assert (root / CONFIG_FILENAME).is_file()
     assert load_user_config() is not None

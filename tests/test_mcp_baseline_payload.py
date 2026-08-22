@@ -107,6 +107,7 @@ def test_registered_audit_tool_exposes_baseline_and_prompt_controls(
                 "audit_repository",
                 {
                     "repository_root": str(root),
+                    "action": "run",
                     "baseline_path": "state/from-mcp.json",
                     "write_baseline": True,
                     "include_prompt": False,
@@ -198,7 +199,14 @@ def test_requested_format_governs_the_mcp_payload(
 
     always = {
         "agent", "agent_version", "source_commit", "worktree_dirty",
-        "gate_passed", "analyzers_run", "format", "remediation_prompt",
+        # Two keys, deliberately: `analyzers_run` is the outcome and
+        # `analyzers_requested` the decision behind it. One key carrying
+        # both meanings reported a pool as run when none had (D24).
+        "gate_passed", "analyzers_run", "analyzers_requested",
+        # Stated on every reply so "did this produce a result?" is a key
+        # to read, not the absence of one (D26/D27).
+        "audit_ran",
+        "format", "remediation_prompt",
     }
     assert set(result) == always | presentation_keys
     if "report" in result:

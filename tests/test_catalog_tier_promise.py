@@ -7,11 +7,15 @@ import json
 import re
 from pathlib import Path
 
+from maintainability_audit._catalog import CATALOG_PATH
 from maintainability_audit._generic import declared_adapter
 from maintainability_audit._tool_adapters import adapter_for
 
 ROOT = Path(__file__).resolve().parents[1]
-CATALOG = ROOT / "data" / "analyzer-catalog.json"
+# The shipped location, read from the product rather than repeated
+# here: the catalog moved into the package when it turned out that
+# a repository-root path never reached an installed copy (D23).
+CATALOG = CATALOG_PATH
 POOL_DOC = ROOT / "docs" / "analyzer-pool.md"
 CATALOG_PRODUCER = ROOT / "tools" / "build_catalog.py"
 DEPTHS = ("baseline", "moderate", "heavy")

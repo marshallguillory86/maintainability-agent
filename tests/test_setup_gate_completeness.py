@@ -108,6 +108,32 @@ def test_a_config_file_with_no_answers_in_it_is_not_configured(
     assert setup_pending(root) is False, "real answers did not end setup"
 
 
+def test_the_cli_refuses_an_unreadable_config_in_its_own_idiom(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """One repository state must not produce two experiences (D32).
+
+    The MCP tool and resource refused a truncated config by name while
+    the CLI let a raw `JSONDecodeError` traceback out — and the CLI is
+    the door people run unattended, where a traceback is the least
+    useful thing that can happen. An audit found the split.
+    """
+    from maintainability_audit.cli import main
+
+    root = _repo(tmp_path)
+    (root / "maintainability-agent.json").write_text('{"version": 1', encoding="utf-8")
+
+    with pytest.raises(SystemExit) as exit_status:
+        main(["--root", str(root), "--format", "json"])
+
+    message = str(exit_status.value)
+    assert "maintainability-agent.json" in message, (
+        f"the CLI refusal does not name the file to repair: {message!r}"
+    )
+    assert "JSONDecodeError" not in message or "cannot be read as JSON" in message
+
+
 def test_an_unreadable_config_refuses_instead_of_leaking_a_parse_error(
     tmp_path: Path,
 ) -> None:
@@ -125,6 +151,52 @@ def test_an_unreadable_config_refuses_instead_of_leaking_a_parse_error(
         setup_pending(root)
 
     assert "maintainability-agent.json" in str(refusal.value)
+
+
+def test_the_resource_refusal_survives_the_protocol(tmp_path: Path) -> None:
+    """A refusal the client cannot read is not a refusal (D32).
+
+    D30 closed the report resource and the entry said it "refuses and
+    names the door that can ask". On the wire it did not: the SDK
+    turned `SetupRequired` into a bare -32603 with the message "Error
+    creating resource from template ...", and the sentence naming
+    `audit_repository` survived only as `__cause__` on the server side,
+    where no user looks. The register was making a claim about
+    user-visible behaviour that an audit disproved by reading the wire.
+
+    Asserted through a real client rather than by catching the
+    exception in-process, because in-process is exactly where the old
+    behaviour looked correct.
+    """
+    import asyncio
+    import logging
+
+    from mcp import Client
+
+    from maintainability_audit.mcp_server import create_server
+
+    root = _repo(tmp_path)
+
+    async def exercise() -> list[str]:
+        async with Client(create_server(roots=(tmp_path.resolve(),))) as client:
+            try:
+                await client.read_resource(f"maintainability://report/{root}")
+            except Exception as raised:  # noqa: BLE001 - the wire shape is the subject
+                return [str(item) for item in getattr(raised, "exceptions", [raised])]
+        return []
+
+    logging.disable(logging.CRITICAL)
+    try:
+        messages = asyncio.run(exercise())
+    finally:
+        logging.disable(logging.NOTSET)
+
+    assert messages, "the resource served something for an unconfigured repository"
+    joined = " ".join(messages)
+    assert "audit_repository" in joined, (
+        f"the refusal reached the client without naming the door that can "
+        f"ask: {joined[:200]}"
+    )
 
 
 def test_run_never_overrides_the_setup_precondition(tmp_path: Path) -> None:

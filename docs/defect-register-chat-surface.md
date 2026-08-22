@@ -409,6 +409,65 @@ presentation would have to reach the instructions to ship.
 *Closing test:* `test_every_delivery_surface_offers_all_three_presentations`
 in `tests/test_chat_primary_docs.py`.
 
+### D23 — Closed: the analyzer catalog reaches an installed copy
+
+Found in the field on 2026-08-21, in a bighound audit that reported
+`analyzer catalog missing at
+/Users/…/Library/Python/3.11/lib/python/data/analyzer-catalog.json`.
+
+`CATALOG_PATH` climbed three parents from `_catalog.py` to a
+repository-root `data/` directory. In a source checkout that resolves
+correctly, which is why 1,383 tests and every local run agreed it
+worked. From an installed wheel the identical expression points at
+`<site-packages>/../data/analyzer-catalog.json` — a path that has never
+existed anywhere. `docs/standard.md`, served over MCP as
+`maintainability://standard`, was resolved the same way and had the
+same fault.
+
+Neither file was declared in any package, so neither was ever copied
+into a distribution. Every release from 0.1.0 through 0.9.1 shipped
+without them. The consequence is not cosmetic: with no catalog nothing
+can be selected, so the external analyzer pool — ADR 006's primary
+evidence source, and the entire JVM adapter track — was unreachable
+for every pip-installed user, who silently received built-in fallback
+numbers instead. The operator's field tests had been measuring the
+fallback, not the product.
+
+Both assets now live in `maintainability_audit/_assets/` and resolve
+package-relative. `tools/build_catalog.py` writes there.
+
+*Closing tests:* `test_the_built_distribution_carries_the_catalog_and_the_standard`
+stages a real build and reads what came out — a green suite proved
+nothing here for nine releases because nothing ever looked at an
+artifact. `test_no_runtime_asset_is_read_from_outside_the_package`
+refuses the path shape itself, in any runtime module, whatever it is
+reaching for. Both in `tests/test_wheel_contents.py`.
+
+### D24 — Closed: `analyzers_run` reports the outcome, not the request
+
+Found in the same field run. With the catalog missing (D23) no
+analyzer could be selected, let alone execute — and the result envelope
+still carried `"analyzers_run": true`, because the key echoed the
+resolved tri-state rather than what came of it. The report prose said
+fallback tier; a caller trusting the machine-readable envelope got a
+false green.
+
+This is the repository's own `absence-as-zero` risk pattern one level
+up: capability recorded as result. The key's own comment claimed it
+existed so "a caller cannot mistake an audit that ran six built-in
+detectors for one that ran ten tools" — the promise was always the
+outcome reading; only the value was wrong.
+
+`analyzers_run` is now true exactly when an analyzer contributed, read
+from the coverage document. The request is preserved beside it as
+`analyzers_requested`, and `environment_work_order` explains any gap
+between the two.
+
+*Closing test:* `test_a_requested_pool_that_contributes_nothing_is_not_reported_as_run`
+in `tests/test_pool_runs_by_config.py`, which reproduces the cause —
+an unreadable catalog with the pool explicitly requested — rather than
+imitating the symptom.
+
 ## Disposition
 
 Every entry in this register is closed, each behind a test that would fail if
@@ -422,4 +481,9 @@ the installer ignored. D20 was found by audit in the MCP write boundary and is
 the one security defect in this register: a repository could name a history
 path outside itself and be believed. D21 and D22 came from the same field
 run and are the same shape: an instruction surface that left a gap, and an
-agent that filled it by improvising a question the tool already asks.
+agent that filled it by improvising a question the tool already asks. D23 is
+the most consequential entry here — nine releases shipped with no analyzer
+catalog inside them, so every installed copy lost the analyzer pool while a
+green suite, running from a checkout, reported everything working. D24 is
+how that outage stayed quiet: the envelope reported the request rather than
+the result.

@@ -91,9 +91,15 @@ def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
     }
 
 
-def _project_asset(relative: str) -> str:
-    """Read one shipped project fact without accepting a caller-controlled path."""
-    path = Path(__file__).resolve().parents[2] / relative
+def _project_asset(name: str) -> str:
+    """Read one shipped project fact without accepting a caller-controlled path.
+
+    Resolved inside the package. The previous form climbed to the
+    repository root, so both resource reads worked in a checkout and
+    raised `FileNotFoundError` from every installed copy — the same
+    defect that hid the analyzer catalog from nine releases.
+    """
+    path = Path(__file__).resolve().parent / "_assets" / name
     return path.read_text(encoding="utf-8")
 
 
@@ -274,7 +280,7 @@ def _bind_resources(
         mime_type="text/markdown",
     )
     def standard_resource() -> str:
-        return _project_asset("docs/standard.md")
+        return _project_asset("standard.md")
 
     @server.resource(
         "maintainability://catalog",
@@ -283,7 +289,7 @@ def _bind_resources(
         mime_type="application/json",
     )
     def catalog_resource() -> str:
-        return _project_asset("data/analyzer-catalog.json")
+        return _project_asset("analyzer-catalog.json")
 
     @server.resource(
         "maintainability://report/{+root}",

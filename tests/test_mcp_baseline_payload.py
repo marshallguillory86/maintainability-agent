@@ -198,7 +198,11 @@ def test_requested_format_governs_the_mcp_payload(
 
     always = {
         "agent", "agent_version", "source_commit", "worktree_dirty",
-        "gate_passed", "analyzers_run", "format", "remediation_prompt",
+        # Two keys, deliberately: `analyzers_run` is the outcome and
+        # `analyzers_requested` the decision behind it. One key carrying
+        # both meanings reported a pool as run when none had (D24).
+        "gate_passed", "analyzers_run", "analyzers_requested",
+        "format", "remediation_prompt",
     }
     assert set(result) == always | presentation_keys
     if "report" in result:

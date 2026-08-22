@@ -56,7 +56,13 @@ def test_missing_analyzers_surface_a_top_level_environment_work_order(
         roots=(tmp_path.resolve(),),
     )
 
-    assert result["analyzers_run"] is True
+    # Requested and yet nothing ran — which is this test's whole subject.
+    # These read as one fact only if the envelope confuses the request
+    # with the result, which is what D24 fixed: every analyzer here is
+    # deliberately unlocatable, so a true `analyzers_run` would be the
+    # false green the work order exists to prevent.
+    assert result["analyzers_requested"] is True
+    assert result["analyzers_run"] is False
     assert "report" not in result, "D8 keeps the report dictionary JSON-only"
     order = result["environment_work_order"]
     assert order, "a selected, unavailable analyzer produced no host-visible remedy"
@@ -191,7 +197,11 @@ def test_analyzer_enabled_resource_matches_cli_and_chat_matches_json_render(
 
     json_result = _audit(root, format="json", record_history=False)
     chat_result = _audit(root, format="chat", record_history=False)
-    assert json_result["analyzers_run"] is chat_result["analyzers_run"] is True
+    # Parity is the subject, so both doors are compared on both keys.
+    # Every analyzer is unlocatable here, so the honest pair is
+    # requested-yes, run-no — identically through each door.
+    assert json_result["analyzers_requested"] is chat_result["analyzers_requested"] is True
+    assert json_result["analyzers_run"] is chat_result["analyzers_run"] is False
     assert chat_result["report_markdown"] == render_markdown(json_result["report"])
 
 

@@ -186,25 +186,86 @@ def test_mcp_audit_runs_or_suppresses_the_pool_at_the_production_seam(
     disabled_root = _repo(tmp_path / "disabled", _pool_config(False))
     roots = (tmp_path.resolve(),)
 
+    # `analyzers_requested` is the decision; `analyzers_run` is what came
+    # of it. They are asserted apart because a field run once reported
+    # the pool as run with nothing in it (D24), and one key carrying both
+    # meanings is what made that possible.
     enabled = audit_repository(str(enabled_root), format="json", roots=roots)
-    assert enabled["analyzers_run"] is True
+    assert enabled["analyzers_requested"] is True
     _assert_pool_ran(enabled["report"])
+    _assert_run_flag_matches_coverage(enabled)
 
     forced_off = audit_repository(
         str(enabled_root), run_analyzers=False, format="json", roots=roots,
     )
+    assert forced_off["analyzers_requested"] is False
     assert forced_off["analyzers_run"] is False
     _assert_pool_did_not_run(forced_off["report"])
 
     disabled = audit_repository(str(disabled_root), format="json", roots=roots)
+    assert disabled["analyzers_requested"] is False
     assert disabled["analyzers_run"] is False
     _assert_pool_did_not_run(disabled["report"])
 
     forced_on = audit_repository(
         str(disabled_root), run_analyzers=True, format="json", roots=roots,
     )
-    assert forced_on["analyzers_run"] is True
+    assert forced_on["analyzers_requested"] is True
     _assert_pool_ran(forced_on["report"])
+    _assert_run_flag_matches_coverage(forced_on)
+
+
+def _assert_run_flag_matches_coverage(result: dict) -> None:
+    """The envelope's claim and the coverage document agree.
+
+    Deliberately not "is True": whether lizard is installed on this
+    machine is not this test's subject. What must hold is that the flag
+    reports the outcome — true exactly when an analyzer contributed —
+    rather than repeating the request, which is what let an audit with
+    a missing catalog announce a pool that never ran.
+    """
+    contributed = result["report"]["analyzer_coverage"]["tools_contributed"]
+    assert result["analyzers_run"] is bool(contributed), (
+        f"analyzers_run={result['analyzers_run']} but "
+        f"tools_contributed={contributed}"
+    )
+
+
+def test_a_requested_pool_that_contributes_nothing_is_not_reported_as_run(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D24: capability is not outcome, and the envelope must not say it is.
+
+    Found in the field. The analyzer catalog was missing from the
+    installed copy (D23), so no analyzer could be selected, let alone
+    run — and the result still carried `"analyzers_run": true`, because
+    the key echoed the resolved request rather than the result. The
+    prose said fallback tier; a caller reading the machine-readable
+    envelope got a false green. This is the repository's own
+    `absence-as-zero` class one level up.
+
+    The failure is reproduced at its cause rather than imitated: the
+    catalog is made unreadable, which is exactly what an installed copy
+    faced, and the pool is still explicitly requested.
+    """
+    from maintainability_audit import _catalog
+
+    root = _repo(tmp_path / "wanted", _pool_config(True))
+    _catalog.load_catalog.cache_clear()
+    monkeypatch.setattr(
+        _catalog, "CATALOG_PATH", tmp_path / "absent" / "analyzer-catalog.json",
+    )
+
+    result = audit_repository(
+        str(root), run_analyzers=True, format="json", roots=(tmp_path.resolve(),),
+    )
+    _catalog.load_catalog.cache_clear()
+
+    assert result["analyzers_requested"] is True, "the request is still recorded"
+    assert result["analyzers_run"] is False, (
+        "an audit where no analyzer contributed reported the pool as run"
+    )
 
 
 def test_mcp_report_resource_uses_the_repository_pool_decision(

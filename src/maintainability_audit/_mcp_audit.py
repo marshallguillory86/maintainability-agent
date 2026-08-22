@@ -182,6 +182,20 @@ def audit_repository(
     return _finish_result(result, format, root, config, report)
 
 
+def _analyzers_contributed(report: dict[str, Any]) -> bool:
+    """Did any external analyzer actually contribute evidence?
+
+    Read from the coverage document the analysis produced, never from
+    the request that preceded it. A missing coverage section means the
+    pool did not run — an unrequested pool, or one that failed before
+    it could report — and in both cases the honest answer is no.
+    """
+    coverage = report.get("analyzer_coverage")
+    if not isinstance(coverage, dict):
+        return False
+    return bool(coverage.get("tools_contributed"))
+
+
 def _top_level_result(report: dict[str, Any], root: Path, status: str,
                       run_analyzers: bool, baseline: list[str] | None,
                       include_prompt: bool) -> dict[str, Any]:
@@ -195,7 +209,17 @@ def _top_level_result(report: dict[str, Any], root: Path, status: str,
         # Stated at the top level so a caller cannot mistake an audit that
         # ran six built-in detectors for one that ran ten tools. Two
         # reports with different coverage are not comparable (P8).
-        "analyzers_run": run_analyzers,
+        #
+        # Outcome, not intent. This used to carry the resolved tri-state,
+        # so it read true whenever the pool was *wanted* — and a field run
+        # whose catalog was missing reported `"analyzers_run": true` with
+        # zero analyzers executed. A caller trusting the envelope over the
+        # prose got a false green: the repository's own `absence-as-zero`
+        # pattern, one level up, capability recorded as result. The
+        # request is kept beside it rather than lost, and the gap between
+        # the two is explained by `environment_work_order`.
+        "analyzers_run": _analyzers_contributed(report),
+        "analyzers_requested": run_analyzers,
     }
     if baseline is not None:
         result["new_findings"] = baseline

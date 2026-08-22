@@ -53,6 +53,7 @@
       "tests/fixtures/*/*.java",
       "data/analyzer-catalog.json",
       "_skill_data/",
+      "_assets/",
       "CHANGELOG.md"
     ]
   },

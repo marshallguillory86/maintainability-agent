@@ -82,7 +82,7 @@ Controls whether the external pool runs and which analysis tools may run in it. 
 
 **Precedence is fixed and not configurable:** every deny wins, including over `allow_tools`. An organization's prohibition must not be overridable by a per-repository opt-in. Within what remains, `allow_tools` admits, then the depth and license tiers decide.
 
-Slugs come from [`data/analyzer-catalog.json`](../data/analyzer-catalog.json). To see exactly what a configuration selects, and why everything else was left out:
+Slugs come from [`src/maintainability_audit/_assets/analyzer-catalog.json`](../src/maintainability_audit/_assets/analyzer-catalog.json). To see exactly what a configuration selects, and why everything else was left out:
 
 ```bash
 python tools/resolve_pool.py                    # resolve the current config

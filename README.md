@@ -57,20 +57,25 @@ See [docs/philosophy.md](docs/philosophy.md) for the longer version, and [docs/p
 
 ## Primary Surface: Chat / MCP
 
-Use the local MCP process from an IDE assistant or chat host. On first contact,
-the host checks configuration and, when both tiers are absent, presents the
-structured setup choices for analyzer policy, history consent, economics, and
-presentation. The audit returns the report and its bounded remediation prompt
-to the conversation.
+Use the local MCP process from an IDE assistant or chat host. Call
+`audit_repository`; unset `action` never audits. An unconfigured repository
+(no repository `maintainability-agent.json` and no XDG user config) returns
+`setup_needed` and `audit_ran: false` — structured setup choices for analyzer
+policy, history consent, economics, and presentation, and no report. A
+configured repository returns `choice_needed` (`run` or `reconfigure`), also
+without a report. Answering setup does not start an audit.
+`action="run"` returns the report and its bounded remediation prompt to the
+conversation.
 
 ```bash
 python3 -m pip install "maintainability-agent[mcp]"
 maintainability-agent mcp --allow-root /absolute/path/to/repository
 ```
 
-Ask the host to call `audit_repository` for the workspace and follow only the
-returned remediation prompt. If a file presentation is chosen, the host asks
-for a save location; no report file is written without that choice.
+Ask the host to call `audit_repository` for the workspace. When that call
+returns an audit, follow only the returned remediation prompt. If a file
+presentation is chosen, the host asks for a save location; no report file is
+written without that choice.
 `record_history=None` follows the persisted first-run history consent and
 always appends an existing history, while explicit `true` or `false` wins. See
 [chat workflow help](docs/help/README.md) and

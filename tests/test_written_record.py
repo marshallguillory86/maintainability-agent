@@ -102,10 +102,13 @@ def test_every_closing_citation_names_a_test_that_exists() -> None:
     falsifier, which is the only thing a citation is for (D30).
     """
     entries = _read(REGISTER).split("## Disposition", maxsplit=1)[0]
-    # `async def` counts: the collector missing it was a live hole even
-    # with no async test in the tree today.
+    # `async def` and class-nested (indented) definitions both count.
+    # Neither exists in this tree today, which is exactly why an audit
+    # had to point them out twice: a collector that only sees the shape
+    # currently written will silently stop seeing the day someone
+    # writes another one.
     by_module = {
-        path.stem: set(re.findall(r"^(?:async )?def (test_\w+)",
+        path.stem: set(re.findall(r"^\s*(?:async\s+)?def (test_\w+)",
                                   _read(path), re.MULTILINE))
         for path in (ROOT / "tests").glob("test_*.py")
     }

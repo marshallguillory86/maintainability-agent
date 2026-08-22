@@ -573,16 +573,22 @@ is unaffected: a host that can be elicited is asked *before* the audit
 and never reaches this path. An explicit `config_path` also passes
 through, so automation is not gated on an interactive answer.
 
+An audit twice flagged a third test cited here,
+`test_the_handed_back_questions_are_instructed_and_carry_every_format`,
+which proves D25's claim about instruction surfaces rather than this
+entry's. Dropped rather than defended: a closing citation is the list
+of tests that fail if *this* defect returns, and padding it with
+adjacent ones is how a citation stops meaning anything. D31 records
+that no check can catch this — deciding what a test proves is a
+reviewer's job — which makes it the reviewer's job to keep the list
+honest.
+
 *Closing tests:* `test_setup_is_a_precondition_and_answering_it_yields_the_real_report`
 in `tests/test_setup_precondition.py` asserts the loop whole —
 questions, then the choice, then a report honouring the chosen html
 presentation — because refusing to audit is only correct if answering
 unblocks it. `test_declined_or_unsupported_elicitation_returns_questions_not_an_audit`
-in the same file pins the degradation path, and
-`test_the_handed_back_questions_are_instructed_and_carry_every_format`
-in `tests/test_chat_primary_docs.py` holds the payload and both
-instruction surfaces together.
-
+in the same file pins the degradation path.
 ### D27 — Closed: configuring is not running, and setup is reachable on every run
 
 Marshall, 2026-08-21, after D26 shipped half of it: *"The point of the

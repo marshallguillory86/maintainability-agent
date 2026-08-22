@@ -160,7 +160,7 @@ def test_elicitation_capability_alone_does_not_start_mcp_history(tmp_path: Path)
         async with Client(server, elicitation_callback=answer) as client:
             result = await client.call_tool(
                 "audit_repository",
-                {"repository_root": str(root)},
+                {"repository_root": str(root), "action": "run"},
             )
             assert not result.is_error
 
@@ -194,17 +194,17 @@ def test_record_history_tristate_overrides_both_directions(tmp_path: Path) -> No
         async with Client(server) as client:
             started = await client.call_tool(
                 "audit_repository",
-                {"repository_root": str(root), "record_history": True},
+                {"repository_root": str(root), "record_history": True, "action": "run"},
             )
             assert not started.is_error
             suppressed = await client.call_tool(
                 "audit_repository",
-                {"repository_root": str(root), "record_history": False},
+                {"repository_root": str(root), "record_history": False, "action": "run"},
             )
             assert not suppressed.is_error
             never_started = await client.call_tool(
                 "audit_repository",
-                {"repository_root": str(untouched), "record_history": False},
+                {"repository_root": str(untouched), "record_history": False, "action": "run"},
             )
             assert not never_started.is_error
 

@@ -44,19 +44,29 @@ pool cannot supply a complete scored dimension (ADR 006).
 An unconfigured repository audited over MCP now receives one structured
 setup set covering analyzer depth and license policy, pool execution, scan
 history consent, economic context and report format. Accepted answers are
-written to the repository and user configuration tiers and apply to that same audit.
+written to the repository and user configuration tiers.
 Declined or unsupported elicitation returns the same questions in
 `setup_needed`; while both configuration tiers remain absent, later calls
 ask again. Only written answers end setup elicitation.
+
+> **Amended 2026-08-22 (superseded in part by D26 and D27).** This entry
+> closed on answers that "apply to that same audit", and that clause is
+> struck: answering setup configures the repository and returns the
+> run-or-reconfigure choice, never a report. What D2 actually settled —
+> that first contact asks, in structured form, and persists to both
+> tiers — still holds. The closing citation below is restamped to the
+> test that carries it now; the original name is kept in D27, which
+> records the rename and why.
 
 Report save location is a separate host question at save time. The local
 MCP process returns report text and never writes a report file; the host
 asks where to save it when the user chooses a file presentation.
 
 *Closing tests:* `test_setup_triggers_only_when_both_configuration_tiers_are_absent`,
-`test_one_native_elicitation_applies_answers_to_that_same_audit`,
-and `test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails` in
-`tests/test_first_run_elicitation.py`; plus
+and `test_one_native_elicitation_configures_and_then_asks_before_auditing`
+in `tests/test_first_run_elicitation.py`;
+`test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails` in
+`tests/test_setup_precondition.py`; plus
 `test_unanswered_setup_is_reelicited_until_answers_are_written` and
 `test_repeated_declines_keep_returning_the_same_setup_needed_block` in
 `tests/test_first_run_reelicitation.py`.
@@ -66,14 +76,23 @@ and `test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails` in
 First-run chat setup uses one structured MCP elicitation with disclosed
 options and defaults, including **chat** as the presentation default. A
 decline or host without elicitation support receives those same structured
-questions in `setup_needed` and the audit proceeds on documented defaults.
+questions in `setup_needed`.
 The `maintainability-agent` slash prompt now tells the host to use its
 structured elicitation or question UI for presentation, with chat
 pre-selected, instead of prescribing a free-text ask.
 
+> **Amended 2026-08-22 (superseded in part by D26).** This entry closed
+> on "and the audit proceeds on documented defaults", which is struck:
+> that audit was the defect D26 removed, and an unanswered call now
+> returns the questions and nothing else. D3's actual subject — that
+> the questions are structured choices with disclosed defaults, on both
+> the elicited and the handed-back path — is unaffected. The second
+> closing citation is restamped to the test's current name.
+
 *Closing tests:* `test_setup_questions_are_structured_choices_with_disclosed_defaults`
-and `test_declined_or_unsupported_elicitation_uses_defaults_and_returns_setup_needed`
-in `tests/test_first_run_elicitation.py`, plus
+in `tests/test_first_run_elicitation.py`,
+`test_declined_or_unsupported_elicitation_returns_questions_not_an_audit`
+in `tests/test_setup_precondition.py`, plus
 `test_slash_prompt_uses_structured_presentation_choice_with_chat_default` in
 `tests/test_consent_and_grant.py`.
 
@@ -221,12 +240,20 @@ absent rather than crashing an audit.
 ### D14 — Closed: the chat integration applies setup and root grants
 
 The chat integration is built: one native MCP elicitation applies analyzer,
-depth, license, history-consent, economics and presentation answers to that
-same audit and persists them for later calls. Out-of-roots tool requests now
+depth, license, history-consent, economics and presentation answers and
+persists them for later calls. Out-of-roots tool requests now
 ride the structured grant path, and the slash prompt delegates presentation
-to the host's structured question mechanism. This is driven end to end by
-`test_one_native_elicitation_applies_answers_to_that_same_audit` in
-`tests/test_first_run_elicitation.py`, the grant tests in
+to the host's structured question mechanism.
+
+> **Amended 2026-08-22 (superseded in part by D27).** "to that same
+> audit" is struck here for the reason given in D2: the elicitation
+> configures the repository and the call returns the run-or-reconfigure
+> choice. This entry also cited its falsifier in prose rather than
+> under a *Closing test* marker, which is how its citation survived a
+> rename unnoticed — the marker is now mandatory and machine-checked.
+
+*Closing tests:* `test_one_native_elicitation_configures_and_then_asks_before_auditing`
+in `tests/test_first_run_elicitation.py`, the grant tests in
 `tests/test_root_grants.py`, and the consent and slash-prompt tests in
 `tests/test_consent_and_grant.py`.
 
@@ -361,15 +388,399 @@ already used.
 `test_the_cli_door_applies_the_same_boundary` in
 `tests/test_history_boundary.py`.
 
+### D21 — Closed: the skill calls the tool instead of interrogating the repo
+
+Found in the field on 2026-08-21. The skill's first step told the host
+agent to perform a configuration check — look for
+`maintainability-agent.json`, the user tier, local instruction files —
+*before* calling `audit_repository`. In a repository whose config had
+been deleted, that instruction produced a quarter-minute of
+deliberation and then a question to the operator about which config to
+use: a question the tool itself asks properly, as structured first-run
+setup, the moment it is called. The agent was doing the tool's job,
+worse and slower.
+
+The first step is now the call. An unconfigured repository is not an
+obstacle to reason about; it is the case first-run setup exists for.
+Repository instruction files govern how findings are acted on, never
+whether the audit runs.
+
+*Closing test:* `test_the_skill_calls_the_tool_before_inspecting_configuration`
+in `tests/test_chat_primary_docs.py`.
+
+### D22 — Closed: the delivery question offers every presentation the product ships
+
+Found in the field on 2026-08-21, in the same run that produced D21.
+Asked to audit a repository, the host agent offered two choices —
+"chat only" or "chat plus save to a path you name" — and then asked
+where to write the markdown. The HTML report was never mentioned. The
+product ships three presentations (`chat`, `markdown`, `html`), the
+`format` argument accepts all three, and first-run setup already asks
+which one the user prefers; the operator's reaction was simply "what
+happened to my HTML report option?"
+
+Nothing in the product had lost the option. The skill's presentation
+step named only chat and "a location", so the agent filled the gap with
+an option set of its own invention — the D21 failure mode one layer
+down: improvising a question the product already asks properly. The MCP
+prompt had the correct three-way wording all along, which is why the
+defect was invisible to whichever surface a reviewer happened to read.
+
+The skill now states the three presentations, routes the answer to
+`format`, names the two-option shape as the thing not to substitute,
+and makes the save location a second question asked only after a file
+format was chosen. Both instruction surfaces are checked together, and
+against the setup vocabulary rather than a copy of it, so a fourth
+presentation would have to reach the instructions to ship.
+
+*Closing test:* `test_every_delivery_surface_offers_all_three_presentations`
+in `tests/test_chat_primary_docs.py`.
+
+### D23 — Closed: the analyzer catalog reaches an installed copy
+
+Found in the field on 2026-08-21, in a bighound audit that reported
+`analyzer catalog missing at
+/Users/…/Library/Python/3.11/lib/python/data/analyzer-catalog.json`.
+
+`CATALOG_PATH` climbed three parents from `_catalog.py` to a
+repository-root `data/` directory. In a source checkout that resolves
+correctly, which is why 1,383 tests and every local run agreed it
+worked. From an installed wheel the identical expression points at
+`<site-packages>/../data/analyzer-catalog.json` — a path that has never
+existed anywhere. `docs/standard.md`, served over MCP as
+`maintainability://standard`, was resolved the same way and had the
+same fault.
+
+Neither file was declared in any package, so neither was ever copied
+into a distribution. Every release from 0.1.0 through 0.9.1 shipped
+without them. The consequence is not cosmetic: with no catalog nothing
+can be selected, so the external analyzer pool — ADR 006's primary
+evidence source, and the entire JVM adapter track — was unreachable
+for every pip-installed user, who silently received built-in fallback
+numbers instead. The operator's field tests had been measuring the
+fallback, not the product.
+
+Both assets now live in `maintainability_audit/_assets/` and resolve
+package-relative. `tools/build_catalog.py` writes there.
+
+*Closing tests:* `test_the_built_distribution_carries_the_catalog_and_the_standard`
+stages a real build and reads what came out — a green suite proved
+nothing here for nine releases because nothing ever looked at an
+artifact. `test_no_runtime_asset_is_read_from_outside_the_package`
+refuses the path shape itself, in any runtime module, whatever it is
+reaching for. Both in `tests/test_wheel_contents.py`.
+
+### D24 — Closed: `analyzers_run` reports the outcome, not the request
+
+Found in the same field run. With the catalog missing (D23) no
+analyzer could be selected, let alone execute — and the result envelope
+still carried `"analyzers_run": true`, because the key echoed the
+resolved tri-state rather than what came of it. The report prose said
+fallback tier; a caller trusting the machine-readable envelope got a
+false green.
+
+This is the repository's own `absence-as-zero` risk pattern one level
+up: capability recorded as result. The key's own comment claimed it
+existed so "a caller cannot mistake an audit that ran six built-in
+detectors for one that ran ten tools" — the promise was always the
+outcome reading; only the value was wrong.
+
+`analyzers_run` is now true exactly when an analyzer contributed, read
+from the coverage document. The request is preserved beside it as
+`analyzers_requested`, and `environment_work_order` explains any gap
+between the two.
+
+*Closing test:* `test_a_requested_pool_that_contributes_nothing_is_not_reported_as_run`
+in `tests/test_pool_runs_by_config.py`, which reproduces the cause —
+an unreadable catalog with the pool explicitly requested — rather than
+imitating the symptom.
+
+### D25 — Closed: the questions handed back are questions someone is told to ask
+
+Reported by the operator on 2026-08-21, correcting a wrong diagnosis of
+D22: *"I never saw an option for HTML, ever across the prompts."* Not
+in that run — in any run, for the life of the product.
+
+D22 blamed the skill's presentation step, and fixing it was necessary
+but did not touch the cause. When a host cannot be elicited, the audit
+hands its entire first-run set back as `setup_needed` — including
+`default_format` with chat, markdown and html — and D3 records that as
+graceful degradation. But `setup_needed` was named in no instruction
+surface anywhere: not the MCP server description, not the skill, not
+the generated packs. Its sibling on the same degradation path,
+`environment_work_order`, was explicitly instructed on both ("surface
+it to the user"). One of the two keys was explained and the other was
+not.
+
+So the question that offers the three presentations was generated
+correctly, returned correctly, and asked by nobody. An agent receiving
+a payload it had no instruction about did what agents do with a gap: it
+invented its own questions, which is what D21 and D22 each caught one
+symptom of. The user's report was the only detector that ever fired,
+because no test looked at the handed-back payload and no surface
+mentioned the key.
+
+Both surfaces now instruct it: ask every question, offer exactly the
+options it lists and no others, then call again with the answers.
+
+*Closing test:* `test_the_handed_back_questions_are_instructed_and_carry_every_format`
+in `tests/test_chat_primary_docs.py`, which audits a genuinely
+unconfigured repository through the production seam and asserts the
+payload carries the presentation question with all three options, then
+holds both instruction surfaces to naming the key — checked at the
+seam rather than against the vocabulary, since the vocabulary was
+right the whole time.
+
+### D26 — Closed: an unconfigured repository is asked, not audited
+
+Marshall's ruling on 2026-08-21, in response to my proposing three ways
+to *disclose* a provisional grade: *"An unconfigured run is supposed to
+ask the questions first."*
+
+The behaviour I was proposing to decorate: when a host could not be
+elicited, the audit ran anyway on built-in defaults and filed its
+questions beside a finished report. Demonstrated on an unconfigured
+scratch repository — `analyzers_requested: False`, the pool off, a
+complete graded report, and the entire disclosure a single table row
+reading `| Estimate source | Built-in detectors (fallback tier) |`. The
+rendered report contained zero occurrences of "setup", "unconfigured",
+"first run", or "not configured". Meanwhile the `run_pool` question's
+own recommended answer is **yes** — so the number a first-time user saw
+was computed the opposite way from the one the product recommends, and
+nothing said so. bighound produced exactly that: a 3.9/C that the
+operator's own agent correctly called "not the product's answer".
+
+D25 made the questions askable. It did not stop the report being
+produced before anyone asked them, which is the part that matters: a
+grade nobody can act on is worse than no grade, and an agent handed a
+finished report has no reason to go looking for the questions.
+
+Setup is now a precondition. A repository with neither a repository
+config nor a user tier returns `audit_ran: false`, the question set,
+and a `setup_instruction` — no report, no score, nothing to mistake for
+an answer.
+
+> **Amended 2026-08-22 (extended by D27).** As shipped, this entry
+> closed on "answering yields the real audit on the next call", and
+> that clause is struck: it was the half of the ruling this entry got
+> wrong. Answering configures the repository; the next call returns the
+> run-or-reconfigure choice and the user says when to run. D26's own
+> subject — that an unconfigured repository is never audited — stands
+> unchanged.
+
+Elicitation
+is unaffected: a host that can be elicited is asked *before* the audit
+and never reaches this path. An explicit `config_path` also passes
+through, so automation is not gated on an interactive answer.
+
+An audit twice flagged a third test cited here,
+`test_the_handed_back_questions_are_instructed_and_carry_every_format`,
+which proves D25's claim about instruction surfaces rather than this
+entry's. Dropped rather than defended: a closing citation is the list
+of tests that fail if *this* defect returns, and padding it with
+adjacent ones is how a citation stops meaning anything. D31 records
+that no check can catch this — deciding what a test proves is a
+reviewer's job — which makes it the reviewer's job to keep the list
+honest.
+
+*Closing tests:* `test_setup_is_a_precondition_and_answering_it_yields_the_real_report`
+in `tests/test_setup_precondition.py` asserts the loop whole —
+questions, then the choice, then a report honouring the chosen html
+presentation — because refusing to audit is only correct if answering
+unblocks it. `test_declined_or_unsupported_elicitation_returns_questions_not_an_audit`
+in the same file pins the degradation path.
+### D27 — Closed: configuring is not running, and setup is reachable on every run
+
+Marshall, 2026-08-21, after D26 shipped half of it: *"The point of the
+questions is to setup the agent's configuration on the repo. NO audit
+should be run automatically. DO NOT run the audit until the
+configuration questions are answered. Then ask if the user is ready to
+run the audit. … The second run will actually have a config. No need to
+ask the same config questions over and over again. Still should offer
+an option to go back into config, or run the report."*
+
+D26 stopped the audit on an unconfigured repository. It then let
+answering the questions start one — so the user was asked how to
+configure the agent and, by answering, unknowingly launched a scan.
+Two decisions had been welded into one. It also had no way back into
+setup once a config existed: changing an answer meant deleting
+`maintainability-agent.json`.
+
+Both are now the `action` argument, and its default differs by door on
+purpose. Unset never audits. An unconfigured repository returns
+`setup_needed`; a configured one returns `choice_needed` — run, or
+reconfigure — on that run and every later one. `action="run"` audits.
+`action="reconfigure"` reopens the setup questions for a repository
+that already has answers. Every non-audit reply carries
+`audit_ran: false` and no score. The MCP tool passes unset because a
+person is on the other end and has not been asked; the plain
+`audit_repository` function defaults to `"run"` for the CLI, the report
+resource, and scripted callers, which have already decided.
+
+Elicitation follows the same rule: a host that can be elicited is asked
+the setup questions, the answers are written, and the call returns the
+run-or-reconfigure choice rather than a report. The test that used to
+be named `test_one_native_elicitation_applies_answers_to_that_same_audit`
+asserted precisely the behaviour being removed, and now asserts its
+replacement. One consequence worth stating: two calls produce one
+history record, because configuring is not scanning.
+
+*Closing tests:* `test_setup_is_a_precondition_and_answering_it_yields_the_real_report`
+in `tests/test_setup_precondition.py` walks the whole flow —
+questions, choice, reconfigure, run — and
+`test_one_native_elicitation_configures_and_then_asks_before_auditing`
+in `tests/test_first_run_elicitation.py` holds the elicitation path to it.
+
+### D28 — Closed: the first-run help misdescribes the economics questions
+
+Found by Grok on 2026-08-22, auditing the docs against the code.
+`docs/help/first-run.md` presents economics as a single bullet —
+"economic context: skip, or low/base/high loaded labor rates". The form
+has four economics fields: the `economics` include/skip choice and
+three labor bounds, and the bounds are in the elicitation schema
+**unconditionally**, so a person answering "skip" is still shown all
+three. A reader of the help page cannot predict what they will see.
+
+Assigned to Codex as a documentation fix. Release-blocking under the
+standing rule that a release ships only from an empty known-defect
+ledger.
+
+Fixed by Codex. The page now lists all nine fields with their
+defaults and says the labor bounds appear whatever the economics answer
+is. Writing the falsifier turned up a second omission on the same page:
+it named `chat` as the presentation default without naming `markdown`
+or `html` — the invisibility that D22 and D25 are about, on the page a
+first-time reader is sent to. Corrected in the same pass.
+
+*Closing test:* `test_the_first_run_help_describes_the_form_a_person_actually_sees`
+in `tests/test_written_record.py`, which reads the fields and their
+defaults from `setup_questions` rather than restating them, so a
+question added to the form has to reach the page before it ships.
+
+### D29 — Closed: ADR 011 states a status that stopped being true
+
+Found by Grok on 2026-08-22. `docs/adr-011-three-report-presentations.md`,
+Decision item 4, ends "that free-text ask remains open under D3". D3 is
+closed. The decision text itself is history and must not be rewritten —
+an ADR records what was decided when it was decided — but a *status*
+claim inside one goes stale and misleads a reader who takes the ADR as
+current.
+
+The remedy is a dated amendment stamp under that item, in the form the
+register now uses for its own superseded clauses, not an edit to the
+decision. Assigned to Codex.
+
+Fixed by Codex with a dated amendment stamp beneath the decision
+item, leaving the decision text as the history it is.
+
+*Closing test:* `test_no_document_says_a_register_entry_is_open_that_the_register_closed`
+in `tests/test_written_record.py`. It blocks the class rather than
+the instance: any document under `docs/` claiming a register entry is
+open, while the register records it closed, fails until the claim is
+corrected or stamped — and a stamp directly beneath the claim counts,
+which is the form an ADR has to take.
+
+### D30 — Closed: the setup gate is every door, not one call site
+
+Found by Grok on 2026-08-22, auditing D21–D27. D26 made setup a
+precondition at `audit_repository`, and an audit of the *other* doors
+found the gate was one door wide.
+
+The High: `maintainability://report/{root}` reaches `build_report`
+directly and never passes through the gate, so it still served the
+fallback-tier report for an unconfigured repository — the exact
+artefact D26 exists to prevent, on the same chat surface. A resource
+has no elicitation seam and cannot ask, so it refuses and names the
+door that can.
+
+Three more from the same pass. A completed audit still carried
+`setup_needed`, because `_finish_result` re-attached the questions
+whenever the repository was pending: `audit_ran: true` beside a demand
+to configure, D26's shape surviving on the one path that bypasses its
+gate. An empty `{}` counted as configured, because the check was
+`is_file()` and a file is not an answer; a file that parses to nothing
+is now the same state as no file, and one that does not parse refuses
+by name instead of surfacing a `JSONDecodeError` from deeper in.
+
+And the audit corrected this register. D27 claimed the `action="run"`
+default was how the CLI and the report resource skip the gate. Neither
+calls that function at all, and the precondition outranks the action
+regardless — an unconfigured repository returns questions however
+emphatically it is told to run. The docstring said otherwise for a day.
+
+The shape of the fix matters more than any one hole: the falsifiers
+enumerate the doors rather than asserting the rule at a call site,
+because a precondition proven at one seam is a precondition on that
+seam.
+
+*Closing tests:* `test_the_report_resource_refuses_an_unconfigured_repository`,
+`test_an_explicit_config_path_audits_without_carrying_setup_questions`,
+`test_a_config_file_with_no_answers_in_it_is_not_configured`,
+`test_an_unreadable_config_refuses_instead_of_leaking_a_parse_error`, and
+`test_run_never_overrides_the_setup_precondition` in
+`tests/test_setup_gate_completeness.py`.
+
+### D31 — Closed: a closing citation names a findable test, not merely a real one
+
+Found by Grok on 2026-08-22, attacking the citation check added the
+same day. That check resolved every name under a *Closing test* marker
+against the suite, which stopped entries closing on deleted tests. It
+did not check the entry named the right *file*: the module stem in the
+cited path counted as its own hit, so an entry could send a reader to
+`tests/test_first_run_elicitation.py` for a function living in
+`tests/test_setup_precondition.py` and pass. Three entries were doing
+exactly that — D2, D26 and D27 — because the split that created
+`test_setup_precondition.py` moved the tests and left the citations
+behind. A falsifier a reader cannot find is not a falsifier.
+
+The collector also missed `async def test_...`. No async test exists in
+this tree, so nothing was slipping through; the hole was real and is
+closed.
+
+Grok's third defeat stands and is recorded rather than fixed: the check
+cannot read assertions, so an entry may cite a live test that proves
+something other than its defect. Blocking that mechanically would mean
+deciding what a test asserts, which is the reviewer's job. It is named
+here so the limit is known rather than assumed away.
+
+*Closing test:* `test_every_closing_citation_names_a_test_that_exists`
+in `tests/test_written_record.py`.
+
 ## Disposition
 
-Every entry in this register is closed, each behind a test that would fail if
-the defect returned — and the count is read from the entries themselves, never
-asserted as a number that stops describing the register when it grows. D15 was
+**Every entry is closed.** D28 and D29 were opened and closed on 2026-08-22
+under the standing rule that a release ships only from an empty known-defect
+ledger; filing them here rather than leaving them in a chat message is what
+made them countable. D30 and D31 came from the audit of D21–D27 and are the
+most instructive pair in the register: both are defects *in the fixes*, found
+because the fixes were audited rather than trusted. D30 is a precondition that
+guarded one door of four. D31 is a check that verified a falsifier existed
+without verifying a reader could find it.
+
+Every closed entry sits behind a test that would fail if its defect returned,
+and since 2026-08-22 that citation is machine-checked — three entries had been
+closing on tests a rename had deleted. The count is read from the entries
+themselves, never asserted as a number that stops describing the register when
+it grows. D15 was
 reopened twice: once when an audit found its close had rewritten the
 requirement, once when the proof turned out to be vacuous. D18 and D19 were
 each reopened after their first close, when audits reproduced a descriptor
 race, a hard-link write-through, a short write, and three kinds of occupancy
 the installer ignored. D20 was found by audit in the MCP write boundary and is
 the one security defect in this register: a repository could name a history
-path outside itself and be believed.
+path outside itself and be believed. D21 and D22 came from the same field
+run and are the same shape: an instruction surface that left a gap, and an
+agent that filled it by improvising a question the tool already asks. D23 is
+the most consequential entry here — nine releases shipped with no analyzer
+catalog inside them, so every installed copy lost the analyzer pool while a
+green suite, running from a checkout, reported everything working. D24 is
+how that outage stayed quiet: the envelope reported the request rather than
+the result. D25 corrected D22's diagnosis rather than extending it — the
+presentation step was a real gap, but the reason a user was never once
+offered the html report is that the question offering it was handed back as
+data no instruction surface mentioned. Three entries in this register are the
+same sentence: the product produced the right thing and nothing told the
+agent to use it. D26 is the one that stopped treating that as a documentation
+problem — the audit no longer runs at all until the repository has been set
+up, so there is no premature grade for an agent to report in place of the
+questions.

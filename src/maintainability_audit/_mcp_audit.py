@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from ._calibration import CALIBRATION_C
-from ._mcp_setup import setup_pending, setup_questions
+from ._mcp_gate import _gate
 from ._recurrence import escalations
 from ._scan_history import (
     DEFAULT_HISTORY_PATH,
@@ -124,9 +124,13 @@ def audit_repository(
     write_baseline: bool = False,
     include_prompt: bool = True,
     *,
+    action: str | None = "run",
     roots: tuple[Path, ...] | None = None,
 ) -> dict[str, Any]:
     """Run the production audit and return its report plus bounded work order.
+
+    ``action`` is the interactive gate — see ``_gate`` for what each
+    value means and why the default differs by door (D27).
 
     ``run_analyzers`` is tri-state (D1). ``None`` — the default — lets the
     repository's config decide, and a loaded config file defaults the pool
@@ -151,6 +155,9 @@ def audit_repository(
     """
     authorized_roots = roots if roots is not None else allowed_roots()
     root = authorize_repository(repository_root, authorized_roots)
+    gated = _gate(root, config_path, action)
+    if gated is not None:
+        return gated
     config = load_config(authorize_config(config_path, root) or discovered_config(root))
     revspec = validate_revspec(changed_only)
     only_paths = changed_paths(root, revspec) if revspec else None
@@ -182,6 +189,20 @@ def audit_repository(
     return _finish_result(result, format, root, config, report)
 
 
+def _analyzers_contributed(report: dict[str, Any]) -> bool:
+    """Did any external analyzer actually contribute evidence?
+
+    Read from the coverage document the analysis produced, never from
+    the request that preceded it. A missing coverage section means the
+    pool did not run — an unrequested pool, or one that failed before
+    it could report — and in both cases the honest answer is no.
+    """
+    coverage = report.get("analyzer_coverage")
+    if not isinstance(coverage, dict):
+        return False
+    return bool(coverage.get("tools_contributed"))
+
+
 def _top_level_result(report: dict[str, Any], root: Path, status: str,
                       run_analyzers: bool, baseline: list[str] | None,
                       include_prompt: bool) -> dict[str, Any]:
@@ -189,13 +210,27 @@ def _top_level_result(report: dict[str, Any], root: Path, status: str,
     result = {
         "agent": "maintainability-agent",
         "agent_version": VERSION,
+        # Stated on both kinds of reply, so "did this produce a result?"
+        # is one key a consumer can read rather than the absence of
+        # another (D26/D27).
+        "audit_ran": True,
         "source_commit": run_git(["rev-parse", "HEAD"], root) or None,
         "worktree_dirty": bool(status),
         "gate_passed": not report["hard_gate_failures"],
         # Stated at the top level so a caller cannot mistake an audit that
         # ran six built-in detectors for one that ran ten tools. Two
         # reports with different coverage are not comparable (P8).
-        "analyzers_run": run_analyzers,
+        #
+        # Outcome, not intent. This used to carry the resolved tri-state,
+        # so it read true whenever the pool was *wanted* — and a field run
+        # whose catalog was missing reported `"analyzers_run": true` with
+        # zero analyzers executed. A caller trusting the envelope over the
+        # prose got a false green: the repository's own `absence-as-zero`
+        # pattern, one level up, capability recorded as result. The
+        # request is kept beside it rather than lost, and the gap between
+        # the two is explained by `environment_work_order`.
+        "analyzers_run": _analyzers_contributed(report),
+        "analyzers_requested": run_analyzers,
     }
     if baseline is not None:
         result["new_findings"] = baseline
@@ -325,12 +360,16 @@ def _finish_result(result: dict[str, Any], format: str, root: Path,
             root, config.get("paths", {}).get("history"), DEFAULT_HISTORY_PATH)
         result["report_html"] = render_html(report, read_history(history))
     result["format"] = format
-    if setup_pending(root):
-        # The host could not (or chose not to) elicit, and nothing is
-        # configured: hand the same questions over as data so the host's
-        # own question UI can ask and call again (D3's degradation rule).
-        result["setup_needed"] = {"questions": setup_questions(load_config(None))}
-    # First contact is now recorded whatever the gate said: "has this
+    # No setup questions ride a finished audit. This used to attach them
+    # whenever the repository was still pending, which was D3's
+    # degradation rule and became wrong the moment setup turned into a
+    # precondition: reaching here means an explicit `config_path` was
+    # supplied, so the caller had a configuration and there is nothing
+    # to ask. An audit found the leftover — `audit_ran: true` and
+    # `setup_needed` in one payload, D26's exact shape surviving on the
+    # one path that bypasses the gate (D30).
+    #
+    # First contact is recorded whatever the gate said: "has this
     # tool ever run here" is about the run, not the verdict (D13).
     mark_repo_seen(root)
     return result

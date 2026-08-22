@@ -76,7 +76,9 @@ def test_catalog_adapter_count_matches_shipped_adapters() -> None:
     """The catalog's adapters_implemented used to count tools with no class."""
     import json
 
-    counts = json.loads((ROOT / "data" / "analyzer-catalog.json").read_text(encoding="utf-8"))["counts"]
+    from maintainability_audit._catalog import CATALOG_PATH
+
+    counts = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))["counts"]
     shipped = {
         tool["slug"]
         for tool in load_catalog()

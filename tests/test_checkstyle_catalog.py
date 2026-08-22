@@ -18,6 +18,7 @@ import pytest
 from _ast_reading import producer_literal, recomputed_counts
 
 from maintainability_audit._catalog import (
+    CATALOG_PATH,
     DEFAULTS,
     LICENSE_POLICIES,
     resolve_pool,
@@ -26,7 +27,10 @@ from maintainability_audit._mcp_setup import setup_questions
 from maintainability_audit.config import load_config
 
 ROOT = Path(__file__).resolve().parents[1]
-CATALOG = ROOT / "data" / "analyzer-catalog.json"
+# The shipped location, read from the product rather than repeated
+# here: the catalog moved into the package when it turned out that
+# a repository-root path never reached an installed copy (D23).
+CATALOG = CATALOG_PATH
 PRODUCER = ROOT / "tools" / "build_catalog.py"
 POOL_DOC = ROOT / "docs" / "analyzer-pool.md"
 CHECKSTYLE_CONCERNS = ("style", "documentation")

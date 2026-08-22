@@ -34,7 +34,12 @@ mcp = ["mcp>=2,<3"]
 dev = ["pytest>=8", "pytest-cov>=5", "jsonschema>=4", "ruff>=0.5", "pip-audit>=2.7", "mcp>=2,<3", "PyYAML>=6"]
 
 [tool.setuptools.package-data]
-maintainability_audit = ["_skill_data/**/*"]
+# `_assets` carries the runtime data the code cannot work without: the
+# analyzer catalog and the rubric served over MCP. Both used to live at
+# the repository root, outside every package, so neither reached a
+# wheel — see test_wheel_contents.py, which builds the artifact and
+# looks inside rather than trusting this line.
+maintainability_audit = ["_skill_data/**/*", "_assets/*"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

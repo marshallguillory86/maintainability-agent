@@ -53,7 +53,9 @@
       "tests/fixtures/*/*.java",
       "data/analyzer-catalog.json",
       "_skill_data/",
-      "CHANGELOG.md"
+      "_assets/",
+      "CHANGELOG.md",
+      "docs/defect-register-chat-surface.md"
     ]
   },
   "thresholds": {

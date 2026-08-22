@@ -13,7 +13,7 @@ Aliases:
 
 ## MCP server
 
-Install the optional extra, then start the same local MCP server through the package CLI (it writes only the five disclosed config/state artifacts — never source, never a report):
+Install the optional extra, then start the same local MCP server through the package CLI (it writes only the five disclosed config/state artifacts — never source, never a report). The MCP `audit_repository` tool does not audit until configuration is answered and `action` is `run`; see [first run and questions](help/first-run.md):
 
 ```bash
 python3 -m pip install "maintainability-agent[mcp]"

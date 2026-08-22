@@ -455,8 +455,14 @@ def main() -> int:
         return 2
     records = load(Path(sys.argv[1]))
     catalog = build(records)
-    out = Path(__file__).resolve().parent.parent / "data" / "analyzer-catalog.json"
-    out.parent.mkdir(exist_ok=True)
+    # Writes into the package, which is where the catalog has to live to
+    # reach an installed copy at all (D23). A build tool may climb to the
+    # repository root; the runtime never can.
+    out = (
+        Path(__file__).resolve().parent.parent
+        / "src" / "maintainability_audit" / "_assets" / "analyzer-catalog.json"
+    )
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(catalog, indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
     counts = catalog["counts"]

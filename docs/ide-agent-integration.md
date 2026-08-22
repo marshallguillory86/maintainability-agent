@@ -6,10 +6,15 @@ surface.**
 
 ## Primary chat workflow
 
-The host checks repository and user configuration first. When both are absent,
-it uses MCP elicitation or its structured question UI for setup, root grants,
-history consent, economic context, and presentation. The report and bounded
-work order return to the conversation.
+Call `audit_repository`. The tool checks repository and user configuration;
+the host does not inspect the tree first. Unset `action` never audits. When
+both configuration tiers are absent, the result is `setup_needed` and
+`audit_ran: false` — no report. Ask those questions through MCP elicitation
+or the host's structured question UI (setup, root grants, history consent,
+economic context, and presentation). Answering writes the answers and does
+not start an audit. A configured repository returns `choice_needed` (`run` or
+`reconfigure`), also without a report. `action="run"` returns the report and
+bounded work order to the conversation.
 
 If the user chooses a file presentation, the host asks for the location at save
 time. It must not write or save a report file without that chosen location.
@@ -19,11 +24,13 @@ pool, and report loop.
 The primary loop is:
 
 ```text
-1. Check the repository and user configuration.
-2. Ask any required structured choices with disclosed defaults.
-3. Run the audit and show its report in chat.
-4. Give the bounded work order to the coding agent.
-5. Re-audit after the bounded patch.
+1. Call audit_repository. The tool checks configuration.
+2. If the result carries setup_needed, ask those structured choices
+   with disclosed defaults, then call again. Answering is not an audit.
+3. If the result carries choice_needed, ask run or reconfigure.
+4. action=run produces the report; show it in chat.
+5. Give the bounded work order to the coding agent.
+6. Re-audit after the bounded patch (action=run again).
 ```
 
 ## Automation / CI: CLI commands
@@ -145,13 +152,17 @@ Suggested VS Code workflow:
 The optional MCP server removes the file handoff for Codex and the Codex VS
 Code extension. It exposes all three MCP primitives over stdio:
 
-- `audit_repository` runs the same production scan as the CLI and returns only
+- `audit_repository` takes an `action` argument. Unset never audits. An
+  unconfigured repository returns `setup_needed` and `audit_ran: false`; a
+  configured one returns `choice_needed` (`run` or `reconfigure`).
+  `action="run"` runs the same production scan as the CLI and returns only
   the requested report presentation plus the bounded remediation prompt when
-  requested. Its tri-state `record_history` decision follows the persisted
-  first-run consent, appends an existing series, or follows an explicit true
-  or false; it can also write or consult a repository-scoped version-3
-  baseline. A top-level `environment_work_order` tells the host which selected
-  tools could not run, how to install them and what concepts they restore.
+  requested. An explicit `config_path` bypasses both gates. Its tri-state
+  `record_history` decision follows the persisted first-run consent, appends
+  an existing series, or follows an explicit true or false; it can also write
+  or consult a repository-scoped version-3 baseline. A top-level
+  `environment_work_order` tells the host which selected tools could not run,
+  how to install them and what concepts they restore.
 - `get_agent_info` reports the installed version and authorized roots.
 - Resources expose the applied standard, analyzer catalog and byte-identical
   Markdown report without introducing a second rendering path.
@@ -172,17 +183,18 @@ The package subcommand is `maintainability-agent mcp --allow-root <path>`.
 IDE examples retain `maintainability-agent-mcp` because it is a direct stdio
 console script and remains part of the public interface.
 
-This is a local stdio process, not a hosted service. On the first audit of a
+This is a local stdio process, not a hosted service. On the first call to a
 repository with no repository or user configuration, it sends one structured
 setup form through MCP elicitation. The choices have visible defaults: run the
 validated analyzer pool (yes), moderate depth, permissive licensing, optional
 scan-history recording (yes), low/base/high loaded labor cost or skip, and chat
 presentation. The pool question explains that external analyzers are the
 primary evidence and the built-in detectors always run as the fallback;
-choosing no means built-ins only and a fallback-tier evidence label. A decline
-or a client without elicitation support receives the built-in-default audit
-plus `setup_needed`, which carries the same choices for the host's own question
-UI.
+choosing no means built-ins only and a fallback-tier evidence label. Answering
+does not start an audit; the call returns `choice_needed`. A decline or a
+client without elicitation support receives `setup_needed` with the same
+choices for the host's own question UI, and `audit_ran: false` — no report,
+no score, no grade.
 
 The local process may write exactly five artifacts: repository
 `maintainability-agent.json`, the XDG user `config.json`, the XDG user

@@ -353,9 +353,9 @@ def test_a_real_spotbugs_run_is_versioned_located_and_deterministic(tmp_path: Pa
     available = Probe().check("spotbugs", adapter.version_argv())
     if not available.usable:
         pytest.skip(f"spotbugs unavailable: {available.detail or available.outcome.value}")
-    javac = shutil.which("javac")
+    javac = _working_javac()
     if javac is None:
-        pytest.skip("javac unavailable; live SpotBugs needs real bytecode")
+        pytest.skip("no working javac; live SpotBugs needs real bytecode")
 
     root = _repo(tmp_path / "live", {"src/Widget.java": _java_source()})
     classes = root / "target" / "classes"
@@ -381,3 +381,24 @@ def test_a_real_spotbugs_run_is_versioned_located_and_deterministic(tmp_path: Pa
     assert [
         item for item in second["analyzer_findings"] if item["tool"] == "spotbugs"
     ] == findings
+
+
+def _working_javac() -> str | None:
+    """A javac that actually compiles, not one that merely exists.
+
+    macOS ships a stub at /usr/bin/javac that resolves through `which`
+    and then reports "Unable to locate a Java Runtime" — the same
+    present-but-not-functional class the product's own probe handles
+    with _STUB_MARKERS. Trusting `which` turned a should-skip into a
+    CalledProcessError the first time a machine had the JVM tools but
+    no JDK behind them.
+    """
+    candidates = [shutil.which("javac"), "/opt/homebrew/opt/openjdk/bin/javac"]
+    for candidate in [c for c in candidates if c and Path(c).exists()]:
+        probe = subprocess.run(
+            [candidate, "-version"], capture_output=True, text=True, check=False,
+        )
+        output = f"{probe.stdout}{probe.stderr}".lower()
+        if probe.returncode == 0 and "unable to locate" not in output:
+            return candidate
+    return None

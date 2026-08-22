@@ -11,9 +11,17 @@ context.
 The questions are one elicitation, not five: the MCP elicitation
 contract is a single flat object of primitive fields, and one modal
 beats a five-step wizard in every host. A host that declines — or
-cannot elicit at all — costs the user nothing: the audit proceeds on
-built-in defaults and the result carries the same questions as data,
-so the host's own question UI can ask and call again.
+cannot elicit at all — gets the same questions back as data, so its own
+question UI can ask and call again.
+
+What no longer happens is the audit. This module used to describe the
+degradation path as costing the user nothing, because "the audit
+proceeds on built-in defaults" — which meant a first-time user was
+handed a letter grade computed with the analyzer pool off while the
+question that turns the pool on rode along unasked (D26). Setup is a
+precondition now: no answers, no audit. And answering does not start
+one either — configuring the agent and running it are separate
+decisions, and the user makes both (D27).
 """
 from __future__ import annotations
 
@@ -29,6 +37,17 @@ from ._user_config import (
 from .config import CONFIG_FILENAME, discovered_config, load_config
 
 _DEPTHS = ("baseline", "moderate", "heavy")
+
+
+class SetupRequired(RuntimeError):
+    """A read was asked for a repository that has not been set up.
+
+    The tool answers this case with questions. A resource cannot: it has
+    no elicitation seam and returns text or nothing. So it refuses, and
+    names the door that can ask — which is better than the alternative
+    an audit found on this path, serving the fallback-tier report D26
+    exists to prevent (D30).
+    """
 
 # The composition note, verbatim requirement: a user deciding about the
 # pool must understand what discovery and scanning will actually do.
@@ -189,20 +208,40 @@ def setup_pending(root: Path) -> bool:
     condition is *written answers*. A declined ask is re-asked on the
     next call — the memo that an audit completed (D13) answers a
     different question and must not silence this one.
+
+    Answers, not a file. This asked `discovered_config`, which is an
+    `is_file()` check, so an empty `{}` ended setup and the repository
+    was treated as configured while nobody had answered anything (D30).
+    A file that parses to nothing is the same state as no file. A file
+    that does not parse is neither, and says so rather than surfacing a
+    `JSONDecodeError` from somewhere deeper.
     """
-    return (
-        discovered_config(Path(root)) is None
-        and user_config_answers() is None
-    )
+    discovered = discovered_config(Path(root))
+    if discovered is not None:
+        try:
+            content = json.loads(Path(discovered).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as unreadable:
+            raise SetupRequired(
+                f"{discovered} exists but cannot be read as JSON "
+                f"({unreadable}). Repair or delete it; setup cannot tell "
+                "whether this repository has been configured."
+            ) from unreadable
+        if isinstance(content, dict) and content:
+            return False
+    return user_config_answers() is None
 
 
 async def maybe_elicit_setup(context: Any, root: Path) -> dict[str, Any] | None:
     """One structured elicitation on first contact; the merged config on accept.
 
     ``None`` for every other outcome — already configured, declined,
-    or a host that cannot elicit. The caller proceeds on defaults and
-    publishes the questions as data instead (D3's degradation rule):
-    a missing capability must cost an ask, never hang an audit.
+    or a host that cannot elicit. The caller then publishes the same
+    questions as data and returns them unanswered; it does not audit.
+    D3's degradation rule used to end "never hang an audit", and the
+    audit it protected was one nobody had asked for (D26).
+
+    Accepting writes the answers and still returns no report: the next
+    call offers run-or-reconfigure, and the user says when (D27).
     """
     if context is None or not setup_pending(root):
         return None

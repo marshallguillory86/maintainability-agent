@@ -123,7 +123,17 @@ def test_every_closing_citation_names_a_test_that_exists() -> None:
             f"{ident} names no *Closing test:* — an entry whose falsifier "
             "is only prose cannot be held to pointing at a real one"
         )
-        problems += _misdirected(ident, " ".join(closing[1:]), by_module, everywhere)
+        citation = " ".join(closing[1:])
+        # A file name is not a falsifier. An audit closed an entry with
+        # nothing but a `tests/....py` path on the closing line and this
+        # check passed, because it only looked for names to resolve and
+        # found none to object to. "Which test fails if this defect
+        # returns?" has to have an answer (D32).
+        assert re.search(r"\btest_\w+\b", citation), (
+            f"{ident} closes on a file with no test named in it; a reader "
+            "cannot tell which test fails if the defect returns"
+        )
+        problems += _misdirected(ident, citation, by_module, everywhere)
 
     assert not problems, (
         "the register closes entries on falsifiers a reader cannot run: "

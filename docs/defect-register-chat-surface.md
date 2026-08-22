@@ -381,6 +381,34 @@ whether the audit runs.
 *Closing test:* `test_the_skill_calls_the_tool_before_inspecting_configuration`
 in `tests/test_chat_primary_docs.py`.
 
+### D22 — Closed: the delivery question offers every presentation the product ships
+
+Found in the field on 2026-08-21, in the same run that produced D21.
+Asked to audit a repository, the host agent offered two choices —
+"chat only" or "chat plus save to a path you name" — and then asked
+where to write the markdown. The HTML report was never mentioned. The
+product ships three presentations (`chat`, `markdown`, `html`), the
+`format` argument accepts all three, and first-run setup already asks
+which one the user prefers; the operator's reaction was simply "what
+happened to my HTML report option?"
+
+Nothing in the product had lost the option. The skill's presentation
+step named only chat and "a location", so the agent filled the gap with
+an option set of its own invention — the D21 failure mode one layer
+down: improvising a question the product already asks properly. The MCP
+prompt had the correct three-way wording all along, which is why the
+defect was invisible to whichever surface a reviewer happened to read.
+
+The skill now states the three presentations, routes the answer to
+`format`, names the two-option shape as the thing not to substitute,
+and makes the save location a second question asked only after a file
+format was chosen. Both instruction surfaces are checked together, and
+against the setup vocabulary rather than a copy of it, so a fourth
+presentation would have to reach the instructions to ship.
+
+*Closing test:* `test_every_delivery_surface_offers_all_three_presentations`
+in `tests/test_chat_primary_docs.py`.
+
 ## Disposition
 
 Every entry in this register is closed, each behind a test that would fail if
@@ -392,4 +420,6 @@ each reopened after their first close, when audits reproduced a descriptor
 race, a hard-link write-through, a short write, and three kinds of occupancy
 the installer ignored. D20 was found by audit in the MCP write boundary and is
 the one security defect in this register: a repository could name a history
-path outside itself and be believed.
+path outside itself and be believed. D21 and D22 came from the same field
+run and are the same shape: an instruction surface that left a gap, and an
+agent that filled it by improvising a question the tool already asks.

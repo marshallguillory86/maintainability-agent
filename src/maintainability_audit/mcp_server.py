@@ -156,7 +156,16 @@ def _bind_tools(server: Any, ledger: _RootLedger,
                 annotations: dict[str, Any], context_type: Any) -> None:
     _bind_audit_tool(server, ledger, annotations["audit"], context_type)
 
-    @server.tool(name="get_agent_info", annotations=annotations["info"], structured_output=True)
+    @server.tool(
+        name="get_agent_info",
+        # What a person is being asked to approve, in their own
+        # words. A host prompting "proceed with
+        # mcp__maintainability-agent__get_agent_info?" shows the
+        # wire identifier because nothing better was offered; the
+        # spec reads `title` first for exactly this.
+        title="Check maintainability agent version and allowed roots",
+        annotations=annotations["info"], structured_output=True,
+    )
     def get_agent_info_tool() -> dict[str, Any]:
         """Return the installed agent version, transport and authorized repository roots."""
         return server_info(ledger.current())
@@ -230,8 +239,11 @@ def _bind_audit_tool(server: Any, ledger: _RootLedger,
     audit_repository_tool.__annotations__["grant"] = Annotated[
         ElicitationResult[Any], Resolve(grant_resolver)
     ]
-    server.tool(name="audit_repository", annotations=annotation,
-                structured_output=True)(audit_repository_tool)
+    server.tool(
+        name="audit_repository",
+        title="Audit this repository's maintainability",
+        annotations=annotation, structured_output=True,
+    )(audit_repository_tool)
 
 
 def _bind_resources(

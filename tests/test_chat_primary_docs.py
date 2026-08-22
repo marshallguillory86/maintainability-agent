@@ -217,3 +217,67 @@ def test_the_skill_calls_the_tool_before_inspecting_configuration() -> None:
     assert "configuration check first" not in skill.lower(), (
         "the config-archaeology instruction is back"
     )
+
+
+def test_every_delivery_surface_offers_all_three_presentations() -> None:
+    """D22: an agent that invents the delivery question deletes html.
+
+    Found in the field: asked to audit a repository, the host offered
+    "chat only" or "chat plus a saved file", then asked where to write
+    the markdown. The html report — a presentation the product ships
+    and setup can already have chosen — was never mentioned, because
+    the skill named only chat and a file location. The MCP prompt got
+    this right and the skill did not, so the surfaces are checked
+    together: whichever one a host reads, it sees the same three.
+    """
+    from maintainability_audit._first_run import PRESENTATIONS
+
+    # Bound to the setup vocabulary rather than a copy of it: a fourth
+    # presentation would have to reach the instructions too.
+    assert "html" in PRESENTATIONS
+
+    skill = _read(SKILL)
+    step = skill.split("3.", maxsplit=1)[1].split("\n4.", maxsplit=1)[0].lower()
+    for presentation in PRESENTATIONS:
+        assert presentation in step, (
+            f"the skill's presentation step never offers {presentation}"
+        )
+    assert "format" in step, "the skill does not route the answer to `format`"
+    # The two-option shape that caused this is named so the instruction
+    # cannot quietly regress into it.
+    assert "substitute" in step or "own option set" in step
+
+    prompt = _read(ROOT / "src/maintainability_audit/mcp_server.py")
+    body = prompt.split("def maintainability_agent_prompt", maxsplit=1)[1]
+    body = body.split("def ", maxsplit=1)[0].lower()
+    for presentation in PRESENTATIONS:
+        assert presentation in body, (
+            f"the MCP prompt never offers {presentation}"
+        )
+
+    mirror = _read(ROOT / "src/maintainability_audit/_skill_data/SKILL.md")
+    assert mirror == skill, "the shipped skill mirror drifted from the source skill"
+
+
+def test_every_tool_offers_a_human_readable_title(tmp_path: Path) -> None:
+    """A permission prompt should name the action, not the wire identifier.
+
+    Found in the field: the host asked "Do you want to proceed with
+    mcp__maintainability-agent__get_agent_info?" — it had nothing but
+    the transport name to show. The spec reads `title` before falling
+    back to `name`, so every tool states what a person is approving.
+    """
+    import asyncio
+
+    from maintainability_audit.mcp_server import create_server
+
+    tools = asyncio.run(create_server(roots=(tmp_path.resolve(),)).list_tools())
+    assert tools, "the server exposed no tools"
+    for tool in tools:
+        assert tool.title, f"{tool.name} has no display title"
+        assert "mcp__" not in tool.title and "_" not in tool.title, (
+            f"{tool.name}'s title reads like an identifier: {tool.title!r}"
+        )
+        assert tool.title[0].isupper(), (
+            f"{tool.name}'s title is not a sentence: {tool.title!r}"
+        )

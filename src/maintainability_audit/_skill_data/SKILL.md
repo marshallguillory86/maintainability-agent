@@ -28,9 +28,16 @@ engineering changes, not as permission to refactor unrelated code.
    (this session / always / no). Answer nothing on the user's behalf.
    Repository instruction files (`AGENTS.md`, `CLAUDE.md`) govern how
    you *act on* findings, not whether to run.
-3. Present the returned report in chat (chat is the default format).
-   Never write a report or any file until the user has chosen a
-   location; the tool itself returns text and does not write reports
+3. Presentation is exactly three choices, and all three are offered:
+   **chat**, a **markdown** file, or a single-file **html** report —
+   chat pre-selected as the default. Offer them as one structured
+   question and pass the answer as the tool's `format` argument. Do not
+   substitute your own option set: an ask shaped "chat only / chat plus
+   a saved file" silently deletes html, which is a presentation the
+   product ships and the user may have already chosen during setup.
+   Where to save is a second question, asked only after a file format
+   was chosen. Never write a report or any file until the user has
+   chosen a location; the tool returns text and does not write reports
    into the tree.
 4. Treat the returned `remediation_prompt` as the bounded task. Fix only
    the reported hard gates or highest-value findings; keep unrelated

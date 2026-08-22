@@ -181,9 +181,14 @@ def test_the_register_states_a_falsifier_for_every_entry() -> None:
         )
         return
 
+    # Every `test_...` the register names, resolved against the suite.
+    # Naming a token that merely looks like a test was the whole check
+    # until an audit found two entries citing tests that had been
+    # renamed out of existence — D3 and D14, both broken by renames in
+    # this very branch, both passing this test. A citation nobody
+    # resolves is not a falsifier; it is a claim about one.
     for ident, _title in headings:
-        section = entries.split(f"### {ident} — ", maxsplit=1)[1]
-        section = section.split("\n### ", maxsplit=1)[0]
+        section = _entry(entries, ident)
         # Substance, not phrasing: some entries write "Closing test",
         # some "Closing suite", some name the tests inline. What every
         # closed entry must do is point at a real falsifier.
@@ -194,6 +199,54 @@ def test_the_register_states_a_falsifier_for_every_entry() -> None:
     # The security entry names both doors it had to bound.
     assert "test_mcp_history_rejects_parent_traversal_without_external_write" in register
     assert "test_the_cli_door_applies_the_same_boundary" in register
+
+
+def _entry(entries: str, ident: str) -> str:
+    return entries.split(f"### {ident} — ", maxsplit=1)[1].split("\n### ", maxsplit=1)[0]
+
+
+def test_every_closing_citation_names_a_test_that_exists() -> None:
+    """A citation nobody resolves is a claim about a falsifier, not one.
+
+    The register's guarantee is that each closed entry names the test
+    that would fail if its defect returned. Nothing checked the name
+    resolved, so when a branch renamed two tests, D2, D3 and D14 went on
+    closing on functions that no longer existed — and the register test
+    passed, because the names still *looked* like tests.
+
+    Only the closing citation is held to this. Entry prose legitimately
+    names tests that are gone: D27 quotes the old name of a test it
+    renamed, as the history it exists to record. Telling a falsifier
+    from a mention is what the ``*Closing test:*`` marker is for, which
+    is why the marker is mandatory — D14 cited its falsifier in prose
+    and went unchecked for precisely that reason.
+    """
+    entries = _read(REGISTER).split("## Disposition", maxsplit=1)[0]
+    modules = {path.stem for path in (ROOT / "tests").glob("test_*.py")}
+    functions = {
+        name
+        for path in (ROOT / "tests").glob("test_*.py")
+        for name in re.findall(r"^def (test_\w+)", _read(path), re.MULTILINE)
+    }
+
+    dangling = []
+    for ident in re.findall(r"^### (D\d+) — ", entries, re.MULTILINE):
+        closing = re.split(
+            r"\*Closing (?:test|tests|suite|suites):\*", _entry(entries, ident),
+        )
+        assert len(closing) > 1, (
+            f"{ident} names no *Closing test:* — an entry whose falsifier "
+            "is only prose cannot be held to pointing at a real one"
+        )
+        cited = set(re.findall(r"\b(test_\w+)\b", " ".join(closing[1:])))
+        dangling += [f"{ident} closes on {name}"
+                     for name in sorted(cited - functions - modules)]
+
+    assert not dangling, (
+        "the register closes entries on falsifiers that do not exist — a "
+        "rename left the entry pointing at nothing, and the citation is "
+        "the whole guarantee: " + "; ".join(dangling)
+    )
 
 
 def test_the_skill_calls_the_tool_before_inspecting_configuration() -> None:

@@ -1,9 +1,10 @@
 # Help for the chat workflow
 
 The primary surface for maintainability-agent is an AI chat host driving the
-local MCP process. The deterministic audit measures the repository and returns
-a bounded work order; the host shows it to the coding agent without granting
-permission for unrelated refactoring. The CLI is the automation and CI surface.
+local MCP process. After configuration is answered and the user chooses to
+run, the deterministic audit measures the repository and returns a bounded
+work order; the host shows it to the coding agent without granting permission
+for unrelated refactoring. The CLI is the automation and CI surface.
 
 Start with the part of the conversation you need:
 

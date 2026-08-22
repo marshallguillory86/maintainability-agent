@@ -44,17 +44,26 @@ pool cannot supply a complete scored dimension (ADR 006).
 An unconfigured repository audited over MCP now receives one structured
 setup set covering analyzer depth and license policy, pool execution, scan
 history consent, economic context and report format. Accepted answers are
-written to the repository and user configuration tiers and apply to that same audit.
+written to the repository and user configuration tiers.
 Declined or unsupported elicitation returns the same questions in
 `setup_needed`; while both configuration tiers remain absent, later calls
 ask again. Only written answers end setup elicitation.
+
+> **Amended 2026-08-22 (superseded in part by D26 and D27).** This entry
+> closed on answers that "apply to that same audit", and that clause is
+> struck: answering setup configures the repository and returns the
+> run-or-reconfigure choice, never a report. What D2 actually settled —
+> that first contact asks, in structured form, and persists to both
+> tiers — still holds. The closing citation below is restamped to the
+> test that carries it now; the original name is kept in D27, which
+> records the rename and why.
 
 Report save location is a separate host question at save time. The local
 MCP process returns report text and never writes a report file; the host
 asks where to save it when the user chooses a file presentation.
 
 *Closing tests:* `test_setup_triggers_only_when_both_configuration_tiers_are_absent`,
-`test_one_native_elicitation_applies_answers_to_that_same_audit`,
+`test_one_native_elicitation_configures_and_then_asks_before_auditing`,
 and `test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails` in
 `tests/test_first_run_elicitation.py`; plus
 `test_unanswered_setup_is_reelicited_until_answers_are_written` and
@@ -66,14 +75,23 @@ and `test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails` in
 First-run chat setup uses one structured MCP elicitation with disclosed
 options and defaults, including **chat** as the presentation default. A
 decline or host without elicitation support receives those same structured
-questions in `setup_needed` and the audit proceeds on documented defaults.
+questions in `setup_needed`.
 The `maintainability-agent` slash prompt now tells the host to use its
 structured elicitation or question UI for presentation, with chat
 pre-selected, instead of prescribing a free-text ask.
 
+> **Amended 2026-08-22 (superseded in part by D26).** This entry closed
+> on "and the audit proceeds on documented defaults", which is struck:
+> that audit was the defect D26 removed, and an unanswered call now
+> returns the questions and nothing else. D3's actual subject — that
+> the questions are structured choices with disclosed defaults, on both
+> the elicited and the handed-back path — is unaffected. The second
+> closing citation is restamped to the test's current name.
+
 *Closing tests:* `test_setup_questions_are_structured_choices_with_disclosed_defaults`
-and `test_declined_or_unsupported_elicitation_uses_defaults_and_returns_setup_needed`
-in `tests/test_first_run_elicitation.py`, plus
+in `tests/test_first_run_elicitation.py`,
+`test_declined_or_unsupported_elicitation_returns_questions_not_an_audit`
+in `tests/test_setup_precondition.py`, plus
 `test_slash_prompt_uses_structured_presentation_choice_with_chat_default` in
 `tests/test_consent_and_grant.py`.
 
@@ -221,12 +239,20 @@ absent rather than crashing an audit.
 ### D14 — Closed: the chat integration applies setup and root grants
 
 The chat integration is built: one native MCP elicitation applies analyzer,
-depth, license, history-consent, economics and presentation answers to that
-same audit and persists them for later calls. Out-of-roots tool requests now
+depth, license, history-consent, economics and presentation answers and
+persists them for later calls. Out-of-roots tool requests now
 ride the structured grant path, and the slash prompt delegates presentation
-to the host's structured question mechanism. This is driven end to end by
-`test_one_native_elicitation_applies_answers_to_that_same_audit` in
-`tests/test_first_run_elicitation.py`, the grant tests in
+to the host's structured question mechanism.
+
+> **Amended 2026-08-22 (superseded in part by D27).** "to that same
+> audit" is struck here for the reason given in D2: the elicitation
+> configures the repository and the call returns the run-or-reconfigure
+> choice. This entry also cited its falsifier in prose rather than
+> under a *Closing test* marker, which is how its citation survived a
+> rename unnoticed — the marker is now mandatory and machine-checked.
+
+*Closing tests:* `test_one_native_elicitation_configures_and_then_asks_before_auditing`
+in `tests/test_first_run_elicitation.py`, the grant tests in
 `tests/test_root_grants.py`, and the consent and slash-prompt tests in
 `tests/test_consent_and_grant.py`.
 
@@ -531,7 +557,17 @@ finished report has no reason to go looking for the questions.
 Setup is now a precondition. A repository with neither a repository
 config nor a user tier returns `audit_ran: false`, the question set,
 and a `setup_instruction` — no report, no score, nothing to mistake for
-an answer. Answering yields the real audit on the next call. Elicitation
+an answer.
+
+> **Amended 2026-08-22 (extended by D27).** As shipped, this entry
+> closed on "answering yields the real audit on the next call", and
+> that clause is struck: it was the half of the ruling this entry got
+> wrong. Answering configures the repository; the next call returns the
+> run-or-reconfigure choice and the user says when to run. D26's own
+> subject — that an unconfigured repository is never audited — stands
+> unchanged.
+
+Elicitation
 is unaffected: a host that can be elicited is asked *before* the audit
 and never reaches this path. An explicit `config_path` also passes
 through, so automation is not gated on an interactive answer.

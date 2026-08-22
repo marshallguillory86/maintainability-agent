@@ -38,6 +38,17 @@ from .config import CONFIG_FILENAME, discovered_config, load_config
 
 _DEPTHS = ("baseline", "moderate", "heavy")
 
+
+class SetupRequired(RuntimeError):
+    """A read was asked for a repository that has not been set up.
+
+    The tool answers this case with questions. A resource cannot: it has
+    no elicitation seam and returns text or nothing. So it refuses, and
+    names the door that can ask — which is better than the alternative
+    an audit found on this path, serving the fallback-tier report D26
+    exists to prevent (D30).
+    """
+
 # The composition note, verbatim requirement: a user deciding about the
 # pool must understand what discovery and scanning will actually do.
 _POOL_PROMPT = (
@@ -197,11 +208,27 @@ def setup_pending(root: Path) -> bool:
     condition is *written answers*. A declined ask is re-asked on the
     next call — the memo that an audit completed (D13) answers a
     different question and must not silence this one.
+
+    Answers, not a file. This asked `discovered_config`, which is an
+    `is_file()` check, so an empty `{}` ended setup and the repository
+    was treated as configured while nobody had answered anything (D30).
+    A file that parses to nothing is the same state as no file. A file
+    that does not parse is neither, and says so rather than surfacing a
+    `JSONDecodeError` from somewhere deeper.
     """
-    return (
-        discovered_config(Path(root)) is None
-        and user_config_answers() is None
-    )
+    discovered = discovered_config(Path(root))
+    if discovered is not None:
+        try:
+            content = json.loads(Path(discovered).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as unreadable:
+            raise SetupRequired(
+                f"{discovered} exists but cannot be read as JSON "
+                f"({unreadable}). Repair or delete it; setup cannot tell "
+                "whether this repository has been configured."
+            ) from unreadable
+        if isinstance(content, dict) and content:
+            return False
+    return user_config_answers() is None
 
 
 async def maybe_elicit_setup(context: Any, root: Path) -> dict[str, Any] | None:

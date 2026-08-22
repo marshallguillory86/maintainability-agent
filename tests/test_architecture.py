@@ -108,8 +108,13 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
 # size line: authorization, tri-states, and the D5/D6 loop record.
 # `_mcp_grants` is the D10 grant machinery split from `mcp_server` at
 # the same size gate: the ledger, the question, and the consent it binds.
+# `_mcp_gate` is what the audit answers with when it is not answering
+# with an audit — the D26 setup precondition and the D27 run-or-
+# reconfigure choice, split from `_mcp_audit` at the same size gate.
+# Entry, because deciding to ask a person rather than compute is an
+# entry-layer decision; nothing below may make it.
 ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup", "_mcp_audit",
-         "_skill_install",
+         "_skill_install", "_mcp_gate",
          "_mcp_grants"}
 BOUNDARY = {"evidence"}
 

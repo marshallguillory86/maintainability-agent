@@ -63,9 +63,10 @@ MCP process returns report text and never writes a report file; the host
 asks where to save it when the user chooses a file presentation.
 
 *Closing tests:* `test_setup_triggers_only_when_both_configuration_tiers_are_absent`,
-`test_one_native_elicitation_configures_and_then_asks_before_auditing`,
-and `test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails` in
-`tests/test_first_run_elicitation.py`; plus
+and `test_one_native_elicitation_configures_and_then_asks_before_auditing`
+in `tests/test_first_run_elicitation.py`;
+`test_a_completed_mcp_audit_marks_seen_even_when_a_gate_fails` in
+`tests/test_setup_precondition.py`; plus
 `test_unanswered_setup_is_reelicited_until_answers_are_written` and
 `test_repeated_declines_keep_returning_the_same_setup_needed_block` in
 `tests/test_first_run_reelicitation.py`.
@@ -573,8 +574,8 @@ and never reaches this path. An explicit `config_path` also passes
 through, so automation is not gated on an interactive answer.
 
 *Closing tests:* `test_setup_is_a_precondition_and_answering_it_yields_the_real_report`
-in `tests/test_first_run_elicitation.py` asserts the loop whole —
-questions, then answers, then a report honouring the chosen html
+in `tests/test_setup_precondition.py` asserts the loop whole —
+questions, then the choice, then a report honouring the chosen html
 presentation — because refusing to audit is only correct if answering
 unblocks it. `test_declined_or_unsupported_elicitation_returns_questions_not_an_audit`
 in the same file pins the degradation path, and
@@ -619,12 +620,12 @@ replacement. One consequence worth stating: two calls produce one
 history record, because configuring is not scanning.
 
 *Closing tests:* `test_setup_is_a_precondition_and_answering_it_yields_the_real_report`
-in `tests/test_first_run_elicitation.py` walks the whole flow —
+in `tests/test_setup_precondition.py` walks the whole flow —
 questions, choice, reconfigure, run — and
 `test_one_native_elicitation_configures_and_then_asks_before_auditing`
-holds the elicitation path to it.
+in `tests/test_first_run_elicitation.py` holds the elicitation path to it.
 
-### D28 — Open: the first-run help misdescribes the economics questions
+### D28 — Closed: the first-run help misdescribes the economics questions
 
 Found by Grok on 2026-08-22, auditing the docs against the code.
 `docs/help/first-run.md` presents economics as a single bullet —
@@ -638,11 +639,19 @@ Assigned to Codex as a documentation fix. Release-blocking under the
 standing rule that a release ships only from an empty known-defect
 ledger.
 
-*Closing test:* pending — the fix must be held by a check that reads
-the question set from `setup_questions` rather than restating it, in
-the manner of `test_every_delivery_surface_offers_all_three_presentations`.
+Fixed by Codex. The page now lists all nine fields with their
+defaults and says the labor bounds appear whatever the economics answer
+is. Writing the falsifier turned up a second omission on the same page:
+it named `chat` as the presentation default without naming `markdown`
+or `html` — the invisibility that D22 and D25 are about, on the page a
+first-time reader is sent to. Corrected in the same pass.
 
-### D29 — Open: ADR 011 states a status that stopped being true
+*Closing test:* `test_the_first_run_help_describes_the_form_a_person_actually_sees`
+in `tests/test_written_record.py`, which reads the fields and their
+defaults from `setup_questions` rather than restating them, so a
+question added to the form has to reach the page before it ships.
+
+### D29 — Closed: ADR 011 states a status that stopped being true
 
 Found by Grok on 2026-08-22. `docs/adr-011-three-report-presentations.md`,
 Decision item 4, ends "that free-text ask remains open under D3". D3 is
@@ -655,18 +664,92 @@ The remedy is a dated amendment stamp under that item, in the form the
 register now uses for its own superseded clauses, not an edit to the
 decision. Assigned to Codex.
 
-*Closing test:* pending — a check that no ADR asserts a register entry
-is open while the register records it closed would block the class
-rather than this instance.
+Fixed by Codex with a dated amendment stamp beneath the decision
+item, leaving the decision text as the history it is.
+
+*Closing test:* `test_no_document_says_a_register_entry_is_open_that_the_register_closed`
+in `tests/test_written_record.py`. It blocks the class rather than
+the instance: any document under `docs/` claiming a register entry is
+open, while the register records it closed, fails until the claim is
+corrected or stamped — and a stamp directly beneath the claim counts,
+which is the form an ADR has to take.
+
+### D30 — Closed: the setup gate is every door, not one call site
+
+Found by Grok on 2026-08-22, auditing D21–D27. D26 made setup a
+precondition at `audit_repository`, and an audit of the *other* doors
+found the gate was one door wide.
+
+The High: `maintainability://report/{root}` reaches `build_report`
+directly and never passes through the gate, so it still served the
+fallback-tier report for an unconfigured repository — the exact
+artefact D26 exists to prevent, on the same chat surface. A resource
+has no elicitation seam and cannot ask, so it refuses and names the
+door that can.
+
+Three more from the same pass. A completed audit still carried
+`setup_needed`, because `_finish_result` re-attached the questions
+whenever the repository was pending: `audit_ran: true` beside a demand
+to configure, D26's shape surviving on the one path that bypasses its
+gate. An empty `{}` counted as configured, because the check was
+`is_file()` and a file is not an answer; a file that parses to nothing
+is now the same state as no file, and one that does not parse refuses
+by name instead of surfacing a `JSONDecodeError` from deeper in.
+
+And the audit corrected this register. D27 claimed the `action="run"`
+default was how the CLI and the report resource skip the gate. Neither
+calls that function at all, and the precondition outranks the action
+regardless — an unconfigured repository returns questions however
+emphatically it is told to run. The docstring said otherwise for a day.
+
+The shape of the fix matters more than any one hole: the falsifiers
+enumerate the doors rather than asserting the rule at a call site,
+because a precondition proven at one seam is a precondition on that
+seam.
+
+*Closing tests:* `test_the_report_resource_refuses_an_unconfigured_repository`,
+`test_an_explicit_config_path_audits_without_carrying_setup_questions`,
+`test_a_config_file_with_no_answers_in_it_is_not_configured`,
+`test_an_unreadable_config_refuses_instead_of_leaking_a_parse_error`, and
+`test_run_never_overrides_the_setup_precondition` in
+`tests/test_setup_gate_completeness.py`.
+
+### D31 — Closed: a closing citation names a findable test, not merely a real one
+
+Found by Grok on 2026-08-22, attacking the citation check added the
+same day. That check resolved every name under a *Closing test* marker
+against the suite, which stopped entries closing on deleted tests. It
+did not check the entry named the right *file*: the module stem in the
+cited path counted as its own hit, so an entry could send a reader to
+`tests/test_first_run_elicitation.py` for a function living in
+`tests/test_setup_precondition.py` and pass. Three entries were doing
+exactly that — D2, D26 and D27 — because the split that created
+`test_setup_precondition.py` moved the tests and left the citations
+behind. A falsifier a reader cannot find is not a falsifier.
+
+The collector also missed `async def test_...`. No async test exists in
+this tree, so nothing was slipping through; the hole was real and is
+closed.
+
+Grok's third defeat stands and is recorded rather than fixed: the check
+cannot read assertions, so an entry may cite a live test that proves
+something other than its defect. Blocking that mechanically would mean
+deciding what a test asserts, which is the reviewer's job. It is named
+here so the limit is known rather than assumed away.
+
+*Closing test:* `test_every_closing_citation_names_a_test_that_exists`
+in `tests/test_written_record.py`.
 
 ## Disposition
 
-**Two entries are open: D28 and D29, both documentation, both assigned to
-Codex.** This matters beyond their size, because the standing rule is that a
-release ships only from an empty known-defect ledger — so until they close,
-0.9.2 does not cut, and D23's fix does not reach an installed copy. Filing
-them here rather than leaving them in a chat message is the point: a ledger
-that gates a release has to be the whole ledger.
+**Every entry is closed.** D28 and D29 were opened and closed on 2026-08-22
+under the standing rule that a release ships only from an empty known-defect
+ledger; filing them here rather than leaving them in a chat message is what
+made them countable. D30 and D31 came from the audit of D21–D27 and are the
+most instructive pair in the register: both are defects *in the fixes*, found
+because the fixes were audited rather than trusted. D30 is a precondition that
+guarded one door of four. D31 is a check that verified a falsifier existed
+without verifying a reader could find it.
 
 Every closed entry sits behind a test that would fail if its defect returned,
 and since 2026-08-22 that citation is machine-checked — three entries had been

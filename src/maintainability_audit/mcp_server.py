@@ -32,6 +32,7 @@ from ._mcp_grants import (
     _grant_resolver_for,
     _RootLedger,
 )
+from ._mcp_setup import SetupRequired as SetupRequired
 from ._mcp_setup import setup_pending, setup_schema
 from ._scan_history import DEFAULT_HISTORY_PATH
 from .config import (
@@ -125,8 +126,21 @@ def _report_markdown(repository_root: str, roots: tuple[Path, ...]) -> str:
     — the resource reads the CLI's series and never appends a scan —
     so both doors render one stored series byte-identically (audit
     flag on dde539b).
+
+    Setup is a precondition here too (D30). This resource reaches
+    `build_report` directly, so D26's gate on the tool did not cover it,
+    and an audit found it still serving the fallback-tier report for an
+    unconfigured repository — the exact artefact D26 exists to prevent,
+    on the same chat surface. A resource has no elicitation seam and
+    cannot ask, so it refuses and says which door can.
     """
     root = authorize_repository(repository_root, roots)
+    if setup_pending(root):
+        raise SetupRequired(
+            f"{root} has not been set up, so there is no report to read. "
+            "Call the audit_repository tool: it returns the setup questions, "
+            "and after they are answered a report exists to serve."
+        )
     config = load_config(discovered_config(root))
     report = build_report(root, config)
     history_path = repository_path(

@@ -6,14 +6,20 @@ inspect the repository first. Unset `action` never audits.
 If both the repository's `maintainability-agent.json` and the XDG user
 configuration are absent, the call returns `setup_needed` with the setup
 questions and `audit_ran: false` — no report, no score, no grade. A host that
-can elicit asks those questions as one structured form with visible defaults:
+can elicit asks those nine fields as one structured form with visible defaults:
 
 - run the validated analyzer pool: yes;
 - analyzer depth: moderate;
 - license policy: permissive;
-- record scan history in this repository: yes;
-- economic context: skip, or low/base/high loaded labor rates;
-- presentation: chat.
+- economic context: skip;
+- loaded labor rate, lower bound: 90 per hour;
+- loaded labor rate, central estimate: 140 per hour;
+- loaded labor rate, upper bound: 210 per hour;
+- presentation: chat, markdown or html — default chat;
+- record scan history in this repository: yes.
+
+All three labor-rate fields are shown even when economic context is set to
+`skip`; that choice leaves the economic scenario out of reports.
 
 Accepted answers are written to both configuration tiers. Answering does not
 start an audit, including when the host elicited the questions on that call.

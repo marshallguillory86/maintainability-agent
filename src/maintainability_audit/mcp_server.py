@@ -355,7 +355,20 @@ def _bind_resources(
         security=AuthorizedRootSecurity(),
     )
     def report_resource(root: str) -> str:
-        return _report_markdown(root, ledger.current())
+        # Translated at the boundary, because a refusal nobody reads is
+        # not a refusal. `SetupRequired` reached the client as a bare
+        # -32603 "Error creating resource from template ..." — the
+        # sentence naming the door that *can* ask survived only as
+        # `__cause__` on the server side, where no user looks. D30
+        # claimed this refusal named that door; the wire said otherwise
+        # (D32). `ResourceError` is the SDK's own type and its message
+        # is what the protocol carries.
+        from mcp.server.mcpserver.exceptions import ResourceError
+
+        try:
+            return _report_markdown(root, ledger.current())
+        except SetupRequired as refusal:
+            raise ResourceError(str(refusal)) from refusal
 
     def report_template_descriptor() -> str:
         """Replace ``{root}`` with an authorized absolute repository path."""

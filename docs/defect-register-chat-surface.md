@@ -589,6 +589,7 @@ questions, then the choice, then a report honouring the chosen html
 presentation — because refusing to audit is only correct if answering
 unblocks it. `test_declined_or_unsupported_elicitation_returns_questions_not_an_audit`
 in the same file pins the degradation path.
+
 ### D27 — Closed: configuring is not running, and setup is reachable on every run
 
 Marshall, 2026-08-21, after D26 shipped half of it: *"The point of the
@@ -680,7 +681,7 @@ open, while the register records it closed, fails until the claim is
 corrected or stamped — and a stamp directly beneath the claim counts,
 which is the form an ADR has to take.
 
-### D30 — Closed: the setup gate is every door, not one call site
+### D30 — Closed: the setup gate is every chat door, not one call site
 
 Found by Grok on 2026-08-22, auditing D21–D27. D26 made setup a
 precondition at `audit_repository`, and an audit of the *other* doors
@@ -712,6 +713,14 @@ The shape of the fix matters more than any one hole: the falsifiers
 enumerate the doors rather than asserting the rule at a call site,
 because a precondition proven at one seam is a precondition on that
 seam.
+
+> **Amended 2026-08-22 (D32).** The title said "every door" and a
+> second audit round measured it: the CLI, `build_report` and
+> `--backfill` still score an unconfigured tree. That is the
+> automation/CI door behaving as designed — a caller that has already
+> decided, with no person to ask — but "every door" claimed more than
+> the fix delivers, so the title now says *chat* door. The distinction
+> is the product's, not an excuse: chat asks, automation assumes.
 
 *Closing tests:* `test_the_report_resource_refuses_an_unconfigured_repository`,
 `test_an_explicit_config_path_audits_without_carrying_setup_questions`,
@@ -746,6 +755,53 @@ here so the limit is known rather than assumed away.
 *Closing test:* `test_every_closing_citation_names_a_test_that_exists`
 in `tests/test_written_record.py`.
 
+### D32 — Closed: the refusal reaches the reader, on every door
+
+Found by Grok on 2026-08-22, round 2, attacking round 1's fixes. Three
+of the four findings are defects in D30 and D31; the fourth is a claim
+this register made that the wire disproved.
+
+**The refusal did not survive the protocol.** D30 said the report
+resource "refuses and names the door that can ask". Read through a real
+client, `SetupRequired` arrived as a bare `-32603` carrying "Error
+creating resource from template …", and the sentence naming
+`audit_repository` survived only as `__cause__` on the server side,
+where no user looks. In-process the refusal looked perfect, which is
+exactly why the test that proved it was in-process. It is now raised as
+the SDK's own `ResourceError` at the boundary, and asserted through a
+client rather than an exception handler.
+
+**One repository state, two experiences.** A truncated config made the
+MCP tool and resource refuse by name while the CLI let a raw
+`JSONDecodeError` traceback out — on the door people run unattended,
+where a traceback is the least useful outcome available. The CLI now
+refuses in its own idiom, naming the file to repair.
+
+**A file name is not a falsifier.** D31's check required cited names to
+exist and to live in the cited file, and Grok closed an entry with
+nothing but a path on the closing line: no name to resolve, so nothing
+to object to, so it passed. "Which test fails if this defect returns?"
+must have an answer, and now must have one written down.
+
+**And the title overclaimed.** D30 said "every door"; the CLI,
+`build_report` and `--backfill` still score an unconfigured tree. That
+is the automation door behaving as designed — a caller that has already
+decided, with nobody to ask — but the entry claimed more than the fix
+delivered. Retitled to *chat* door and stamped, rather than left to
+read as a promise the code does not keep.
+
+Two of Grok's attacks are recorded as accepted limits rather than
+fixed: a citation naming a real test that proves something other than
+its entry's defect (D31 already says no check can read assertions), and
+a test living in `conftest.py`, which the collector does not scan
+because no closing citation names it.
+
+*Closing tests:* `test_the_resource_refusal_survives_the_protocol` and
+`test_the_cli_refuses_an_unreadable_config_in_its_own_idiom` in
+`tests/test_setup_gate_completeness.py`; the file-only citation is
+refused by `test_every_closing_citation_names_a_test_that_exists` in
+`tests/test_written_record.py`.
+
 ## Disposition
 
 **Every entry is closed.** D28 and D29 were opened and closed on 2026-08-22
@@ -755,7 +811,12 @@ made them countable. D30 and D31 came from the audit of D21–D27 and are the
 most instructive pair in the register: both are defects *in the fixes*, found
 because the fixes were audited rather than trusted. D30 is a precondition that
 guarded one door of four. D31 is a check that verified a falsifier existed
-without verifying a reader could find it.
+without verifying a reader could find it. D32 is the pair's own audit round:
+a refusal that read correctly in-process and arrived at the client as an
+internal error, a CLI that crashed where the chat doors refused politely, and
+a title that claimed more than its fix delivered. Three rounds running, the
+defects have been in the fixes rather than in the code they fixed — which is
+the argument for auditing a fix as hard as the thing it repairs.
 
 Every closed entry sits behind a test that would fail if its defect returned,
 and since 2026-08-22 that citation is machine-checked — three entries had been

@@ -624,11 +624,55 @@ questions, choice, reconfigure, run — and
 `test_one_native_elicitation_configures_and_then_asks_before_auditing`
 holds the elicitation path to it.
 
+### D28 — Open: the first-run help misdescribes the economics questions
+
+Found by Grok on 2026-08-22, auditing the docs against the code.
+`docs/help/first-run.md` presents economics as a single bullet —
+"economic context: skip, or low/base/high loaded labor rates". The form
+has four economics fields: the `economics` include/skip choice and
+three labor bounds, and the bounds are in the elicitation schema
+**unconditionally**, so a person answering "skip" is still shown all
+three. A reader of the help page cannot predict what they will see.
+
+Assigned to Codex as a documentation fix. Release-blocking under the
+standing rule that a release ships only from an empty known-defect
+ledger.
+
+*Closing test:* pending — the fix must be held by a check that reads
+the question set from `setup_questions` rather than restating it, in
+the manner of `test_every_delivery_surface_offers_all_three_presentations`.
+
+### D29 — Open: ADR 011 states a status that stopped being true
+
+Found by Grok on 2026-08-22. `docs/adr-011-three-report-presentations.md`,
+Decision item 4, ends "that free-text ask remains open under D3". D3 is
+closed. The decision text itself is history and must not be rewritten —
+an ADR records what was decided when it was decided — but a *status*
+claim inside one goes stale and misleads a reader who takes the ADR as
+current.
+
+The remedy is a dated amendment stamp under that item, in the form the
+register now uses for its own superseded clauses, not an edit to the
+decision. Assigned to Codex.
+
+*Closing test:* pending — a check that no ADR asserts a register entry
+is open while the register records it closed would block the class
+rather than this instance.
+
 ## Disposition
 
-Every entry in this register is closed, each behind a test that would fail if
-the defect returned — and the count is read from the entries themselves, never
-asserted as a number that stops describing the register when it grows. D15 was
+**Two entries are open: D28 and D29, both documentation, both assigned to
+Codex.** This matters beyond their size, because the standing rule is that a
+release ships only from an empty known-defect ledger — so until they close,
+0.9.2 does not cut, and D23's fix does not reach an installed copy. Filing
+them here rather than leaving them in a chat message is the point: a ledger
+that gates a release has to be the whole ledger.
+
+Every closed entry sits behind a test that would fail if its defect returned,
+and since 2026-08-22 that citation is machine-checked — three entries had been
+closing on tests a rename had deleted. The count is read from the entries
+themselves, never asserted as a number that stops describing the register when
+it grows. D15 was
 reopened twice: once when an audit found its close had rewritten the
 requirement, once when the proof turned out to be vacuous. D18 and D19 were
 each reopened after their first close, when audits reproduced a descriptor

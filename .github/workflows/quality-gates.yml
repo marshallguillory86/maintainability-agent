@@ -82,7 +82,18 @@ jobs:
         # cloud service requirement" and "no vendor lock-in", so an expired
         # token or a moved project must not block a PR whose deterministic
         # checks all pass. A red mark here means "go look at the token".
-        if: github.event_name != 'schedule'
+        #
+        # Main only, because the plan on this private project covers the
+        # main branch alone. Run on a pull request it reports "Not
+        # analyzed", and the SonarCloud app posts a failed quality gate
+        # from no data — a check that cannot go green on any PR, ever.
+        # `continue-on-error` keeps the *job* green but cannot suppress
+        # that app's own commit status, so the scan has to not run.
+        #
+        # This file already states the principle it was violating: a
+        # pipeline that fails on something advisory teaches people to
+        # ignore it, and then it protects nothing.
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         continue-on-error: true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

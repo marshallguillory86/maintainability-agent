@@ -725,7 +725,7 @@ seam.
 *Closing tests:* `test_the_report_resource_refuses_an_unconfigured_repository`,
 `test_an_explicit_config_path_audits_without_carrying_setup_questions`,
 `test_a_config_file_with_no_answers_in_it_is_not_configured`,
-`test_an_unreadable_config_refuses_instead_of_leaking_a_parse_error`, and
+`test_an_unreadable_repository_config_refuses_at_the_setup_check`, and
 `test_run_never_overrides_the_setup_precondition` in
 `tests/test_setup_gate_completeness.py`.
 

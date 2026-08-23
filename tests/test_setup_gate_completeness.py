@@ -134,7 +134,41 @@ def test_the_cli_refuses_an_unreadable_config_in_its_own_idiom(
     assert "JSONDecodeError" not in message or "cannot be read as JSON" in message
 
 
-def test_an_unreadable_config_refuses_instead_of_leaking_a_parse_error(
+def test_an_unreadable_config_refuses_the_same_way_through_every_door(
+    tmp_path: Path,
+) -> None:
+    """One broken file, one answer — whichever door you came in by (D32).
+
+    An audit found three answers to one repository state: the MCP tool
+    and resource refused by name, the CLI leaked a `JSONDecodeError`
+    traceback, and a caller passing `config_path` got the same raw
+    error because supplying a config skips the setup gate entirely.
+    Loading moved behind one helper so the doors cannot drift again.
+    """
+    from maintainability_audit.config import ConfigUnreadable, load_config
+
+    root = _repo(tmp_path)
+    broken = root / "broken.json"
+    broken.write_text('{"version": 1', encoding="utf-8")
+
+    with pytest.raises(ConfigUnreadable) as direct:
+        load_config(str(broken))
+    assert "broken.json" in str(direct.value)
+
+    with pytest.raises(ConfigUnreadable):
+        audit_repository(
+            str(root), config_path="broken.json", action="run",
+            record_history=False, roots=(tmp_path.resolve(),),
+        )
+
+    # A JSON document that parses but is not an object is unreadable
+    # too: a list has no configuration in it.
+    broken.write_text("[1, 2, 3]", encoding="utf-8")
+    with pytest.raises(ConfigUnreadable):
+        load_config(str(broken))
+
+
+def test_an_unreadable_repository_config_refuses_at_the_setup_check(
     tmp_path: Path,
 ) -> None:
     """Neither configured nor unconfigured — and it must say so.

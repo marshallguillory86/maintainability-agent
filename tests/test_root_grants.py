@@ -151,7 +151,13 @@ def test_report_resource_never_elicits_or_persists_a_root_grant(tmp_path: Path) 
     root = _repo(tmp_path / "outside", config=_config())
     server = create_server(roots=(allowed.resolve(),))
 
-    with pytest.raises(PathNotAllowed):
+    # Wrapped as `ResourceError` so the refusal's remedy crosses the
+    # wire (D33); the cause is still the boundary refusal, and the
+    # subject here is unchanged — a read never elicits and never grants.
+    from mcp.server.mcpserver.exceptions import ResourceError
+
+    with pytest.raises(ResourceError) as refusal:
         _resource_text(server, root)
 
+    assert isinstance(refusal.value.__cause__, PathNotAllowed)
     assert not user_config_path().exists()

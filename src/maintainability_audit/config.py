@@ -165,6 +165,16 @@ DEFAULT_CONFIG: dict[str, Any] = {
 }
 
 
+class ConfigUnreadable(ValueError):
+    """A configuration file exists but cannot be understood.
+
+    Distinct from absence on purpose: absent means "ask the setup
+    questions", unreadable means "a person has to look at this file".
+    Conflating them would either re-ask someone who has already
+    answered, or silently audit against defaults they did not choose.
+    """
+
+
 class PathNotAllowed(ValueError):
     """A configured path escaped the repository it belongs to.
 
@@ -256,5 +266,31 @@ def load_config(path: str | None) -> dict[str, Any]:
     if user_tier is not None:
         deep_update(config, user_tier)
     if path:
-        deep_update(config, json.loads(Path(path).read_text(encoding="utf-8")))
+        deep_update(config, _configured(Path(path)))
     return config
+
+
+def _configured(path: Path) -> dict[str, Any]:
+    """The repository's own file, or a refusal that names it.
+
+    Every door loads through here, so every door answers a broken
+    config the same way. An audit found three answers to one state: the
+    MCP tool and resource refused by name, while the CLI and any caller
+    passing `config_path` let a raw `JSONDecodeError` out — the latter
+    bypassing the setup gate entirely, since supplying a config is how
+    a caller says the question is already answered (D32).
+    """
+    try:
+        content = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as unreadable:
+        raise ConfigUnreadable(
+            f"{path} cannot be read as JSON ({unreadable}). Repair or "
+            "delete it; the audit cannot tell how this repository is "
+            "configured."
+        ) from unreadable
+    if not isinstance(content, dict):
+        raise ConfigUnreadable(
+            f"{path} is not a JSON object; a configuration cannot be "
+            f"read from {type(content).__name__}."
+        )
+    return content

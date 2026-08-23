@@ -21,7 +21,7 @@ from pathlib import Path
 
 import maintainability_audit
 from maintainability_audit._catalog import load_catalog
-from maintainability_audit.mcp_server import audit_repository, create_server
+from maintainability_audit.mcp_server import audit_repository
 
 source_root = Path(sys.argv[1]).resolve()
 venv_root = Path(sys.argv[2]).resolve()
@@ -43,16 +43,33 @@ assert package_file.is_relative_to(venv_root), package_file
 catalog = load_catalog()
 assert catalog, "installed catalog contains no tools"
 
-server = create_server(roots=(fixture.parent.resolve(),))
+# The assets themselves, read out of the installed package. This is
+# D23 stated exactly: the files the code cannot work without, present
+# in the copy a user actually gets.
+assets = Path(maintainability_audit.__file__).resolve().parent / "_assets"
+standard = (assets / "standard.md").read_text(encoding="utf-8")
+catalog_text = (assets / "analyzer-catalog.json").read_text(encoding="utf-8")
+assert standard.strip(), "installed standard.md is empty"
+assert json.loads(catalog_text)["tools"], "installed analyzer-catalog.json is empty"
 
-async def resource_text(uri):
-    contents = await server.read_resource(uri)
-    return "".join(item.content for item in contents)
+# The MCP resources serve those same files, but only where the optional
+# extra is installed. `mcp` is not a runtime dependency, so a clean
+# install legitimately lacks it; skipping the check is honest, while
+# pulling the extra in from the outer environment is what leaked the
+# source checkout in the first place.
+try:
+    from maintainability_audit.mcp_server import create_server
+    server = create_server(roots=(fixture.parent.resolve(),))
+except Exception:
+    served = "not installed"
+else:
+    async def resource_text(uri):
+        contents = await server.read_resource(uri)
+        return "".join(item.content for item in contents)
 
-standard = asyncio.run(resource_text("maintainability://standard"))
-catalog_text = asyncio.run(resource_text("maintainability://catalog"))
-assert standard.strip(), "installed standard resource is empty"
-assert json.loads(catalog_text)["tools"], "installed catalog resource is empty"
+    assert asyncio.run(resource_text("maintainability://standard")).strip()
+    assert json.loads(asyncio.run(resource_text("maintainability://catalog")))["tools"]
+    served = "checked"
 
 result = audit_repository(
     str(fixture),
@@ -67,6 +84,7 @@ print(json.dumps({
     "package": str(package_file),
     "tools": len(catalog),
     "audit_ran": result["audit_ran"],
+    "resources": served,
 }))
 """
 
@@ -124,7 +142,14 @@ def _venv_python(root: Path) -> Path:
 def _install_in_venv(tmp_path: Path, wheel: Path) -> tuple[Path, Path]:
     environment = tmp_path / "venv"
     try:
-        venv.EnvBuilder(with_pip=True, system_site_packages=True).create(environment)
+        # Isolated, not system-site. Inheriting the outer environment is
+        # how CI failed this test honestly: the project is editable-
+        # installed on the runner, so a .pth dragged the source checkout
+        # onto the subprocess path and the probe's own leak guard caught
+        # it. The package has no runtime dependencies — `mcp` is an
+        # extra — so `--no-deps` into a clean venv is a faithful
+        # installed copy, which is the only thing D23 is about.
+        venv.EnvBuilder(with_pip=True, system_site_packages=False).create(environment)
     except Exception as error:  # pragma: no cover - depends on host Python packaging
         pytest.skip(f"cannot build the throwaway virtualenv: {error}")
 

@@ -1083,15 +1083,23 @@ publish this package.
 
 *Closing test:* pending.
 
-### D42 — Open: the package claims a Python it cannot run on (Medium)
+### D42 — Closed: the package claims a Python it can run on (Medium)
 
 Codex, 2026-08-23. `requires-python = ">=3.10"`, and `_discovery.py`,
 `_pillars.py` and `_runner.py` import `enum.StrEnum`, which is 3.11.
-Pip installs happily on 3.10 and the import then fails. CI tests 3.12
-alone, and the composite action pins 3.11, so nothing in the pipeline
-stands where the metadata says a user may stand.
+Pip installed happily on 3.10 and the import then failed. CI tests
+3.12 alone, and the composite action pins 3.11, so nothing in the
+pipeline stood where the metadata said a user could stand — which is
+why no test caught it and an audit had to. Floor raised to 3.11, and
+the supported versions declared as classifiers.
 
-*Closing test:* pending.
+*Closing test:* none, deliberately. A test asserting `requires-python`
+matches the language features in use would restate a constant or
+reimplement a compatibility checker, and neither would have caught
+this: the defect was that nothing ever installed on 3.10. The honest
+falsifier is a CI matrix entry on the floor version, which is a
+pipeline change rather than a test — recorded as follow-up in
+`docs/security-queue.md`.
 
 ### D43 — Open: composite-action inputs are interpolated into Bash (Medium)
 
@@ -1118,13 +1126,30 @@ depends on whether repositories are trusted. See `docs/security-queue.md`.
 
 *Closing test:* pending.
 
-### D45 — Open: the security policy supports a version eight lines old (Medium)
+### D45 — Closed: the security policy supports the shipped release (Medium)
 
-Codex, 2026-08-23. `SECURITY.md` states that only `0.1.x` receives
-security fixes. The package is `0.9.1`. Read literally, the shipped
-release is unsupported by its own policy.
+Codex, 2026-08-23. `SECURITY.md` stated that only `0.1.x` receives
+security fixes, at version `0.9.1` — read literally, the shipped
+release was unsupported by its own policy.
 
-*Closing test:* pending.
+Fixing the table is trivial; keeping it fixed is the problem, since
+nobody remembers a version number buried in prose. The falsifier reads
+`config.VERSION`, so the next release either updates the table or goes
+red.
+
+The same pass corrected a worse sentence in the same file. Scope
+asserted that the agent "does not execute scanned code" while `eslint`
+is invoked in a mode that *requires* the audited repository's own
+configuration and then runs it. Whether repositories should be trusted
+is an open decision (D39, D44); asserting a property the code does not
+have is not, so Scope now describes what the code does and says the
+decision is pending.
+
+*Closing tests:* `test_the_security_policy_supports_the_shipped_release_line`
+and `test_the_security_policy_does_not_deny_executing_repository_code`
+in `tests/test_written_record.py`. The second checks only what the
+document *asserts*, not what it recounts — a check that could not tell
+an assertion from its own correction would forbid explaining the fix.
 
 ### D46 — Open: XML parsers are unbounded against analyzer output (Low)
 

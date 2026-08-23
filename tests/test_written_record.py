@@ -115,10 +115,20 @@ def test_every_closing_citation_names_a_test_that_exists() -> None:
     everywhere = set().union(*by_module.values())
 
     problems = []
-    for ident in re.findall(r"^### (D\d+) — ", entries, re.MULTILINE):
-        closing = re.split(
-            r"\*Closing (?:test|tests|suite|suites):\*", _entry(entries, ident),
-        )
+    for ident, title in re.findall(r"^### (D\d+) — (.+)$", entries, re.MULTILINE):
+        section = _entry(entries, ident)
+        # An open entry has no falsifier yet — that is what open means —
+        # and demanding one would push a writer to cite something
+        # adjacent just to satisfy the check. What it must not do is
+        # *claim* one, so `pending` is the only accepted placeholder and
+        # it is checked below.
+        if "Closed" not in title:
+            assert "pending" in section.lower(), (
+                f"{ident} is open but does not say its falsifier is pending; "
+                "an open entry may name no test, and must claim none"
+            )
+            continue
+        closing = re.split(r"\*Closing (?:test|tests|suite|suites):\*", section)
         assert len(closing) > 1, (
             f"{ident} names no *Closing test:* — an entry whose falsifier "
             "is only prose cannot be held to pointing at a real one"

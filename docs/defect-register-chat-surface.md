@@ -859,9 +859,139 @@ in `tests/test_written_record.py`;
 `test_an_unreadable_repository_config_refuses_at_the_setup_check` in
 `tests/test_setup_gate_completeness.py`.
 
+### D34 — Open: config, history and baseline writes open by name (High)
+
+Grok, 2026-08-23, security pass. D18 closed this class for the skill
+installer — check the path, then open the name — and paid for
+descriptor binding, `O_NOFOLLOW`, and staging plus `os.replace`,
+because a hardlink defeats `O_NOFOLLOW` outright. None of that reached
+the three writes a normal audit performs.
+
+Reproduced here, independently of the report:
+
+* **S1.** A dangling `maintainability-agent.json` symlink pointing
+  outside the repository. `setup_pending` reads `True` (`is_file()` is
+  false on a dangling link), and `apply_answers` then writes 205 bytes
+  of configuration *through* the link. The repository path remains a
+  symlink. `_first_run._persist` shares the primitive, and reconfigure
+  re-enters the same function.
+* **S2.** `.maintainability/history.jsonl` hardlinked to a file
+  outside the repository. `repository_path` accepts it — resolution
+  and `is_relative_to` bound the *name*, never the inode — and
+  `append_scan` appends onto the outside file.
+* **S6.** `write_baseline=True` with `baseline_path="README.md"`
+  truncates source. The MCP description and `docs/architecture.md`
+  both promise five artifacts and "never source"; the boundary check
+  is only "inside the granted root", and the model supplies that
+  argument on the primary surface.
+
+*Closing test:* pending.
+
+### D35 — Open: the audited tree can enable tool acquisition (High)
+
+Grok, 2026-08-23. `product-intent.md` P1 is explicit that acquisition
+is opt-in and that **a user** enables `analyzers.acquire_tools`.
+`load_config` is equally explicit that a repository always beats a
+person. `_analysis.analyze` then calls
+`set_tool_acquisition(bool(settings.get("acquire_tools")))`, so a pull
+request that adds four words to a config file causes the host to run
+`npx --yes <tool>` — unpinned, honouring the tree's own `.npmrc`.
+
+Two aggravations. The published `maintainability-agent.schema.json`
+declares `analyzers` with `additionalProperties: false` and does not
+list `acquire_tools` at all, so the contract says the key is illegal
+while the runtime honours it — the schema is never loaded. And
+`_ACQUIRE_TOOLS` is a process-wide global, so two overlapping audits
+on a long-lived MCP can flip it under each other.
+
+License policy already gets this right: deny always wins, and no
+repository can override it. Acquisition is the same kind of decision
+and does not.
+
+*Closing test:* pending.
+
+### D36 — Open: repository config supplies unbounded read paths (High)
+
+Grok, 2026-08-23. D20 bounded `paths.history` with `repository_path`
+after an audit reproduced an escape. The same class survives in two
+fields that were never given the same treatment.
+
+* **S4.** `analyzers.class_dirs` reaches `_target_dirs` as
+  `root / relative`, and `Path("/tmp/repo") / "/"` is `/`. Confirmed
+  here: a repository config naming `/` yields `/` as a scan target,
+  which is also an `rglob("*.class")` over the filesystem on an MCP
+  child with no timeout.
+* **S9.** `expand_files` collects symlinked files, so a repository can
+  point `app.py` at a file outside the grant and have analyzers read
+  it. Same uid, but it is precisely the boundary D20 exists to hold.
+
+*Closing test:* pending.
+
+### D37 — Open: the CLI passes git options the MCP door rejects (Medium)
+
+Grok, 2026-08-23. `validate_revspec` refuses leading-dash arguments,
+and the MCP tool calls it. The CLI's `--changed-only` and `--backfill`
+do not, and neither `changed_paths` nor `_backfill._git` places `--`
+before the revspec: `changed_paths(repo, "--output=<path>")` creates
+that file. Option injection, not shell injection — there is no
+`shell=True` anywhere in `src/`.
+
+Beside it, and arguably worse for the product's own claims: `run_git`
+swallows every failure as `except Exception: return ""`, so a failed
+shallow-clone check reads as "not shallow" and a failed `git log`
+becomes `files_changed: 0`. `history.py` states that "no history" and
+"no changes" must never be confused, and this is the code path that
+confuses them. Neither git spawner sets a timeout, and an inherited
+`GIT_DIR` overrides both `cwd` and `-C`.
+
+*Closing test:* pending.
+
+### D38 — Open: a standing root grant can be retargeted by a rename (Medium)
+
+Grok, 2026-08-23. `persist_root_grant` stores the resolved path as a
+string; `allowed_roots()` resolves it again at process start.
+Elicitation refuses a symlink retarget in-process, and a restart does
+not: rename the granted directory, leave a symlink at the old name
+pointing somewhere sensitive, and the allow-list follows it with no
+new consent.
+
+*Closing test:* pending.
+
+### D39 — Accepted residual: analyzers are runtimes, not parsers
+
+Grok, 2026-08-23, filed as a disclosure defect rather than a fix.
+`eslint` runs with no `--no-eslintrc`, and `has_config` *requires* a
+project config before running, so an audit of an allowed root executes
+`eslint.config.js` from the tree under audit; mypy runs without
+`--no-plugins`. Children inherit the host environment.
+
+Child sandboxing is refused as a design direction and this entry does
+not reopen it. What it records is that P1 discloses "children are not
+network-sandboxed" and does not disclose "we execute configuration
+code from the tree under audit". Isolated config and `--no-plugins`
+are a smaller, separate fix than a sandbox.
+
+*Closing test:* pending — disclosure, then optionally the flags.
+
 ## Disposition
 
-**Every entry is closed.** D28 and D29 were opened and closed on 2026-08-22
+**Six entries are open: D34 through D39, all from a security pass on
+2026-08-23, four of them reproduced independently before being filed.** They
+are the reason 0.9.2 does not cut. Two are the classes this register already
+paid to close and never applied everywhere: D18 bound the skill installer's
+writes by descriptor, and config, history and baseline still open by name;
+D20 bounded `paths.history`, and `class_dirs` and `expand_files` still take
+unbounded paths from the audited tree. One, D35, is a trust inversion —
+`product-intent.md` P1 says a *user* enables tool acquisition, and a
+repository config overrides the user tier, so a pull request can make the
+host run `npx --yes`.
+
+The lesson is not that the fixes were wrong. It is that each was applied to
+the seam an audit happened to be looking at. "Close the class" means every
+door that shares the primitive, and three rounds of chat-surface auditing
+never looked at the write primitives at all.
+
+D28 and D29 were opened and closed on 2026-08-22
 under the standing rule that a release ships only from an empty known-defect
 ledger; filing them here rather than leaving them in a chat message is what
 made them countable. D30 and D31 came from the audit of D21–D27 and are the

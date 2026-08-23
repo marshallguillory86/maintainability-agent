@@ -44,7 +44,7 @@ so none of it needs a ruling.
 | # | Entry | What | State |
 |---|---|---|---|
 | 1 | D34 | Config, history and baseline writes open by name; hardlink and symlink escape | **closed** |
-| 2 | D36 | `class_dirs`, `expand_files` and the scan itself follow paths out of the root | queued |
+| 2 | D36 | `class_dirs`, `expand_files` and the scan itself follow paths out of the root | **closed** |
 | 3 | D35 | Repository config can enable tool acquisition against P1 | queued |
 | 4 | D40 | Repository-configured regex is a trivial ReDoS | queued |
 | 5 | D42 | `requires-python` claims 3.10; `StrEnum` needs 3.11 | queued |

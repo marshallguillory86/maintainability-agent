@@ -1093,13 +1093,23 @@ pipeline stood where the metadata said a user could stand — which is
 why no test caught it and an audit had to. Floor raised to 3.11, and
 the supported versions declared as classifiers.
 
-*Closing test:* none, deliberately. A test asserting `requires-python`
-matches the language features in use would restate a constant or
-reimplement a compatibility checker, and neither would have caught
-this: the defect was that nothing ever installed on 3.10. The honest
-falsifier is a CI matrix entry on the floor version, which is a
-pipeline change rather than a test — recorded as follow-up in
-`docs/security-queue.md`.
+I first recorded that no honest falsifier existed here, on the grounds
+that any such test would restate a constant. The register's own
+citation lint disagreed — it refuses a closed entry that names no
+test — and it was right. The check does not restate the floor; it ties
+the floor to the language features actually imported, which is the
+relationship that broke.
+
+Its first version matched the bare word anywhere and flagged
+`_economics.py` for the English "override" in a docstring. A check that
+cries wolf is a check somebody turns off, so it reads import and
+decorator lines only.
+
+*Closing test:* `test_the_declared_python_floor_supports_the_features_in_use`
+in `tests/test_written_record.py`, verified by lowering the floor back
+to 3.10 and watching it name `_discovery.py` and `StrEnum`. A CI matrix
+entry on the floor version is still worth having and stays recorded as
+follow-up in `docs/security-queue.md`.
 
 ### D43 — Open: composite-action inputs are interpolated into Bash (Medium)
 

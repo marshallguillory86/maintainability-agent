@@ -305,3 +305,57 @@ def test_the_security_policy_does_not_deny_executing_repository_code() -> None:
         "SECURITY.md asserts the agent does not execute scanned code; "
         "analyzers still run repository-provided configuration"
     )
+
+
+def test_the_declared_python_floor_supports_the_features_in_use() -> None:
+    """D42: metadata that promises a Python the code cannot run on.
+
+    `requires-python` said `>=3.10` while three runtime modules import
+    `enum.StrEnum`, which is 3.11. Pip installed happily on 3.10 and
+    the import then failed — and nothing caught it, because CI runs
+    3.12 and the composite action pins 3.11, so no machine in the
+    pipeline ever stood where the metadata said a user could stand.
+
+    I first recorded that no honest test was possible here, on the
+    grounds that any such check restates a constant. That was wrong.
+    This does not restate the floor; it ties the floor to the language
+    features actually imported, which is the relationship that broke.
+    A CI matrix entry on the floor version is still worth having, and
+    is still recorded as follow-up — but it is not the only check
+    available.
+    """
+    import re as _re
+
+    features = {
+        # feature -> (minimum minor version, why)
+        "StrEnum": (11, "enum.StrEnum landed in 3.11"),
+        "ExceptionGroup": (11, "ExceptionGroup landed in 3.11"),
+        "tomllib": (11, "tomllib landed in 3.11"),
+        "override": (12, "typing.override landed in 3.12"),
+    }
+
+    declared = _re.search(
+        r'requires-python\s*=\s*">=3\.(\d+)"',
+        _read(ROOT / "pyproject.toml"),
+    )
+    assert declared, "pyproject.toml no longer declares a requires-python floor"
+    floor = int(declared.group(1))
+
+    package = ROOT / "src" / "maintainability_audit"
+    for module in sorted(package.rglob("*.py")):
+        # Imports and decorators only. A first version matched the bare
+        # word anywhere and flagged `_economics.py` for the English
+        # "override" in a docstring — a check that cries wolf is a check
+        # somebody turns off.
+        lines = [
+            line for line in _read(module).splitlines()
+            if line.startswith(("import ", "from ")) or line.lstrip().startswith("@")
+        ]
+        text = "\n".join(lines)
+        for feature, (needs, why) in features.items():
+            if _re.search(rf"\b{feature}\b", text) and needs > floor:
+                raise AssertionError(
+                    f"{module.relative_to(ROOT)} uses {feature} ({why}) but "
+                    f"pyproject declares >=3.{floor}; pip would install on "
+                    f"3.{floor} and the import would fail"
+                )

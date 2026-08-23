@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import re
+import time
 from pathlib import Path
 from typing import Any
 
@@ -73,13 +74,66 @@ def duplicate_blocks(
     return sorted(dupes, key=lambda item: item["count"], reverse=True)
 
 
+#: Two probes, short then longer, and the ordering is what bounds the
+#: cost. Timing a pattern only works if the measurement returns, and
+#: the audit's `(a+)+$` never finished on the thirty-one characters it
+#: was reported with — 2^31 steps would not finish this week.
+#:
+#: Measured here: at twenty characters `(a+)+$` costs ~42 ms and
+#: `(a*)*$` ~64 ms, against ~0.01 ms for a real pattern, so one cheap
+#: probe catches the violent family. `(a|aa)+$` grows more slowly and
+#: needs ~1.4 ms at twenty but ~9.7 ms at twenty-four. Only patterns
+#: that survive the first probe reach the second, so the worst a bomb
+#: can cost before being refused is the sum of the two budgets rather
+#: than the second-nearly-a-second-long search on its own.
+_PATTERN_PROBES = ("a" * 20 + "!", "a" * 24 + "!")
+
+#: Three orders of magnitude above any honest pattern at those lengths,
+#: and far below every bomb measured. A slow machine cannot close that.
+_PATTERN_BUDGET_SECONDS = 0.005
+
+
+def _compiled_within_budget(rule: dict[str, Any]) -> re.Pattern[str] | None:
+    """Compile a configured pattern, and drop it if it is a bomb (D40).
+
+    `risk_patterns` come from the audited repository and are applied to
+    every source line. Python's `re` has no timeout and no step limit,
+    so one nested quantifier is a denial of service against the host —
+    the security policy names crafted-configuration DoS as in scope,
+    which makes this a promise the code was breaking.
+
+    Measured rather than pattern-matched. Detecting "dangerous regexes"
+    syntactically means a blocklist that is both leaky and prone to
+    refusing legitimate patterns; timing the pattern against a probe
+    string asks the only question that matters. Refused patterns are
+    skipped rather than fatal: a repository's own lint config should
+    not be able to fail someone else's audit.
+    """
+    try:
+        pattern = re.compile(rule["pattern"], re.IGNORECASE)
+    except re.error:
+        return None
+
+    for probe in _PATTERN_PROBES:
+        started = time.perf_counter()
+        try:
+            pattern.search(probe)
+        except re.error:
+            return None
+        if time.perf_counter() - started > _PATTERN_BUDGET_SECONDS:
+            return None
+    return pattern
+
+
 def risk_findings(
     root: Path, files: list[Path], config: dict[str, Any], index: SourceIndex | None = None
 ) -> list[RiskFinding]:
     source = index_or_new(index)
     findings: list[RiskFinding] = []
     for rule in config.get("risk_patterns", []):
-        pattern = re.compile(rule["pattern"], re.IGNORECASE)
+        pattern = _compiled_within_budget(rule)
+        if pattern is None:
+            continue
         allowed = set(rule.get("extensions", []))
         for path in files:
             if allowed and path.suffix not in allowed:

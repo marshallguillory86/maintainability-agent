@@ -1034,7 +1034,7 @@ are a smaller, separate fix than a sandbox.
 
 *Closing test:* pending — disclosure, then optionally the flags.
 
-### D40 — Open: a repository-configured regex is a denial of service (High)
+### D40 — Closed: a repository's regex cannot hang the host (High)
 
 Codex, 2026-08-23, proven. `risk_patterns` are compiled from repository
 configuration and applied to every source line. The schema bounds
@@ -1042,10 +1042,33 @@ neither their complexity nor their size. Pattern `(a+)+$` against
 thirty-one `a` characters and a `!` did not finish in two seconds.
 
 The security policy names crafted-configuration denial of service as in
-scope, so this is a defect against a stated promise rather than a new
+scope, so this was a defect against a stated promise rather than a new
 requirement.
 
-*Closing test:* pending.
+Patterns are measured rather than inspected. Recognising a dangerous
+regex syntactically means a blocklist that is both leaky and prone to
+refusing honest patterns; running it against a probe asks the only
+question that matters. The probe has to be short enough to *return* —
+timing something that never finishes measures nothing — so there are
+two: twenty characters, where `(a+)+$` costs ~42 ms against ~0.01 ms
+for a real pattern, and twenty-four, which is where the slower
+`(a|aa)+$` family finally shows itself at ~9.7 ms. Only patterns that
+survive the first reach the second, so a bomb costs the sum of two
+small budgets rather than the near-second its own longer search takes.
+
+A refused pattern is skipped, not fatal: a repository's own lint config
+should not be able to fail somebody else's audit, and the other rules
+keep running.
+
+*Closing tests:* `test_a_backtracking_pattern_is_refused` across four
+shapes of catastrophic backtracking,
+`test_an_uncompilable_pattern_is_refused_rather_than_raised`,
+`test_every_shipped_pattern_survives_the_budget` — the guard must not
+quietly disarm the product's own detectors —
+`test_a_hostile_pattern_does_not_stall_a_scan` with the clock running
+through the real scanning path, and
+`test_a_refused_pattern_does_not_silence_the_others`, all in
+`tests/test_pattern_budget.py`.
 
 ### D41 — Open: release authority rides mutable Action references (High)
 

@@ -166,12 +166,25 @@ def test_the_config_key_reaches_the_switch(monkeypatch: pytest.MonkeyPatch) -> N
 
 
 def test_analyze_honours_the_opt_in(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """The switch is thrown from configuration at analysis time, both ways.
+    """The switch is thrown at analysis time, from the user's own tier.
 
     Asserted through `analyze()` because a module-level switch nobody
     sets is exactly the `prompt_when_interactive` defect again: a key
     that exists, documented, read by nothing.
+
+    The source moved. This test used to set `config["analyzers"]` and
+    watch the switch flip, which was the behaviour an audit named as a
+    trust inversion: the merged config carries the *audited
+    repository's* value, so the tree could enable a fetch on the host.
+    P1 says a user enables acquisition, so the answer now comes from
+    the XDG user tier and the repository cannot reach it (D35).
     """
+    import json
+
+    from maintainability_audit._user_config import user_config_path
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "xdg-state"))
     from maintainability_audit._analysis import analyze
     from maintainability_audit.config import load_config
 
@@ -186,11 +199,16 @@ def test_analyze_honours_the_opt_in(monkeypatch: pytest.MonkeyPatch, tmp_path: P
 
     config = load_config(None)
     analyze(tmp_path, config)
-    config["analyzers"] = {"acquire_tools": True}
-    analyze(tmp_path, config)
+
+    tier = user_config_path()
+    tier.parent.mkdir(parents=True, exist_ok=True)
+    tier.write_text(
+        json.dumps({"analyzers": {"acquire_tools": True}}), encoding="utf-8",
+    )
+    analyze(tmp_path, load_config(None))
 
     assert observed and observed[0] is False and observed[-1] is True, (
-        f"analyze() never threw the acquisition switch from config: {observed}"
+        f"analyze() never threw the acquisition switch from the user tier: {observed}"
     )
 
 

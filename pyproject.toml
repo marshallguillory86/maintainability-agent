@@ -29,9 +29,17 @@ maintainability-agent = "maintainability_audit.cli:main"
 maintainability-agent-mcp = "maintainability_audit.mcp_server:main"
 
 [project.optional-dependencies]
-test = ["pytest>=8", "pytest-cov>=5", "jsonschema>=4"]
+# `setuptools` is a test dependency, not just a build one: the two
+# artifact-boundary tests stage a real distribution, and they are the
+# only thing standing between this project and a repeat of D23 — nine
+# releases that shipped with no analyzer catalog because the suite
+# tested a source checkout instead of an artifact. They used to skip
+# when the backend was absent, which is how they ran on no CI machine
+# at all while reporting green. A lint now forbids them to skip, so the
+# backend has to be declared where the tests can find it.
+test = ["pytest>=8", "pytest-cov>=5", "jsonschema>=4", "setuptools>=70"]
 mcp = ["mcp>=2,<3"]
-dev = ["pytest>=8", "pytest-cov>=5", "jsonschema>=4", "ruff>=0.5", "pip-audit>=2.7", "mcp>=2,<3", "PyYAML>=6"]
+dev = ["pytest>=8", "pytest-cov>=5", "jsonschema>=4", "ruff>=0.5", "pip-audit>=2.7", "mcp>=2,<3", "PyYAML>=6", "setuptools>=70"]
 
 [tool.setuptools.package-data]
 # `_assets` carries the runtime data the code cannot work without: the

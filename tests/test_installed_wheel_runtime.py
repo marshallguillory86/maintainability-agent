@@ -21,7 +21,7 @@ from pathlib import Path
 
 import maintainability_audit
 from maintainability_audit._catalog import load_catalog
-from maintainability_audit.mcp_server import audit_repository
+from maintainability_audit.mcp_server import audit_repository, create_server
 
 source_root = Path(sys.argv[1]).resolve()
 venv_root = Path(sys.argv[2]).resolve()
@@ -52,24 +52,17 @@ catalog_text = (assets / "analyzer-catalog.json").read_text(encoding="utf-8")
 assert standard.strip(), "installed standard.md is empty"
 assert json.loads(catalog_text)["tools"], "installed analyzer-catalog.json is empty"
 
-# The MCP resources serve those same files, but only where the optional
-# extra is installed. `mcp` is not a runtime dependency, so a clean
-# install legitimately lacks it; skipping the check is honest, while
-# pulling the extra in from the outer environment is what leaked the
-# source checkout in the first place.
-try:
-    from maintainability_audit.mcp_server import create_server
-    server = create_server(roots=(fixture.parent.resolve(),))
-except Exception:
-    served = "not installed"
-else:
-    async def resource_text(uri):
-        contents = await server.read_resource(uri)
-        return "".join(item.content for item in contents)
+# The optional MCP extra is deliberately installed into this isolated
+# environment. Resource import or serving failures are therefore test
+# failures, not an excuse to omit one of D23's published contracts.
+server = create_server(roots=(fixture.parent.resolve(),))
 
-    assert asyncio.run(resource_text("maintainability://standard")).strip()
-    assert json.loads(asyncio.run(resource_text("maintainability://catalog")))["tools"]
-    served = "checked"
+async def resource_text(uri):
+    contents = await server.read_resource(uri)
+    return "".join(item.content for item in contents)
+
+assert asyncio.run(resource_text("maintainability://standard")).strip()
+assert json.loads(asyncio.run(resource_text("maintainability://catalog")))["tools"]
 
 result = audit_repository(
     str(fixture),
@@ -84,7 +77,7 @@ print(json.dumps({
     "package": str(package_file),
     "tools": len(catalog),
     "audit_ran": result["audit_ran"],
-    "resources": served,
+    "resources": "checked",
 }))
 """
 
@@ -142,16 +135,12 @@ def _venv_python(root: Path) -> Path:
 def _install_in_venv(tmp_path: Path, wheel: Path) -> tuple[Path, Path]:
     environment = tmp_path / "venv"
     try:
-        # Isolated, not system-site. Inheriting the outer environment is
-        # how CI failed this test honestly: the project is editable-
-        # installed on the runner, so a .pth dragged the source checkout
-        # onto the subprocess path and the probe's own leak guard caught
-        # it. The package has no runtime dependencies — `mcp` is an
-        # extra — so `--no-deps` into a clean venv is a faithful
-        # installed copy, which is the only thing D23 is about.
+        # Isolated, not system-site. Inheriting the outer environment is how CI
+        # can drag an editable source checkout onto the subprocess path. The
+        # MCP extra is installed below so its resource contract is mandatory.
         venv.EnvBuilder(with_pip=True, system_site_packages=False).create(environment)
     except Exception as error:  # pragma: no cover - depends on host Python packaging
-        pytest.skip(f"cannot build the throwaway virtualenv: {error}")
+        pytest.fail(f"cannot build the throwaway virtualenv: {error}")
 
     python = _venv_python(environment)
     result = _run(
@@ -160,9 +149,8 @@ def _install_in_venv(tmp_path: Path, wheel: Path) -> tuple[Path, Path]:
             "-m",
             "pip",
             "install",
-            "--no-deps",
             "--ignore-installed",
-            str(wheel),
+            f"{wheel}[mcp]",
         ],
         cwd=tmp_path,
         env=_clean_env(tmp_path),
@@ -235,6 +223,7 @@ def test_an_actually_installed_wheel_serves_assets_and_audits(
     outcome = json.loads(result.stdout.strip().splitlines()[-1])
     assert outcome["tools"] > 0
     assert outcome["audit_ran"] is True
+    assert outcome["resources"] == "checked"
 
 
 @pytest.mark.parametrize(

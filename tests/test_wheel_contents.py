@@ -16,6 +16,7 @@ built distribution. This one stages the build and reads what came out.
 
 from __future__ import annotations
 
+import ast
 import json
 import subprocess
 import sys
@@ -36,7 +37,6 @@ REQUIRED = (
 @pytest.fixture(scope="module")
 def wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """The real artifact, built the way a release builds it."""
-    pytest.importorskip("setuptools", reason="staging a build needs the backend")
     out = tmp_path_factory.mktemp("build")
     # `build_py` rather than a full wheel: it is the step that copies
     # package data into the staging tree a wheel is zipped from, so it
@@ -58,6 +58,33 @@ def wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
     if result.returncode != 0:
         pytest.fail(f"build staging failed:\n{result.stdout}\n{result.stderr}")
     return out
+
+
+def test_packaging_defenses_have_no_skip_exit() -> None:
+    """A missing packaging prerequisite must be red, never invisible under ``-q``."""
+    test_files = (
+        ROOT / "tests" / "test_wheel_contents.py",
+        ROOT / "tests" / "test_installed_wheel_runtime.py",
+    )
+    skip_calls = []
+    for test_file in test_files:
+        tree = ast.parse(test_file.read_text(encoding="utf-8"), filename=str(test_file))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            function = node.func
+            if (
+                isinstance(function, ast.Attribute)
+                and isinstance(function.value, ast.Name)
+                and function.value.id == "pytest"
+                and function.attr in {"skip", "importorskip"}
+            ):
+                skip_calls.append(f"{test_file.name}:{node.lineno} pytest.{function.attr}")
+
+    assert not skip_calls, (
+        "artifact-boundary tests may not skip when their environment is incomplete: "
+        + "; ".join(skip_calls)
+    )
 
 
 def test_the_built_distribution_carries_the_catalog_and_the_standard(

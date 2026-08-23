@@ -47,10 +47,10 @@ so none of it needs a ruling.
 | 2 | D36 | `class_dirs`, `expand_files` and the scan itself follow paths out of the root | **closed** |
 | 3 | D35 | Repository config can enable tool acquisition against P1 | **closed** |
 | 4 | D40 | Repository-configured regex is a trivial ReDoS | **closed** |
-| 5 | D42 | `requires-python` claims 3.10; `StrEnum` needs 3.11 | queued |
+| 5 | D42 | `requires-python` claims 3.10; `StrEnum` needs 3.11 | **closed** |
 | 6 | D43 | Composite action interpolates inputs into Bash | queued |
 | 7 | D41 | Release authority rides mutable third-party Action tags | queued |
-| 8 | D45 | `SECURITY.md` supports `0.1.x`; the package is `0.9.1` | queued |
+| 8 | D45 | `SECURITY.md` supports `0.1.x`; the package is `0.9.1` | **closed** |
 | 9 | D37 | CLI passes git options the MCP door rejects; no timeouts; swallowed errors | queued |
 | 10 | D38 | A standing grant follows a renamed directory after restart | queued |
 | 11 | D46 | XML parsers unbounded against analyzer output | queued |
@@ -69,3 +69,11 @@ the tree's own code".
 Every fix below ships a falsifier. Several ship a lint, because the
 defect classes here — open-by-name writes, unbounded configured paths —
 were each closed once already at one seam and left open at the others.
+
+## Follow-up that is not a defect
+
+D42 raised the Python floor to 3.11. The honest check is a CI matrix
+entry that installs and imports on the floor version, because the
+defect was that nothing ever ran there — a test asserting the metadata
+matches the language features in use would restate a constant. That is
+a pipeline change and belongs to whoever next touches CI.

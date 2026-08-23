@@ -13,6 +13,7 @@ about the same history file.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 from pathlib import Path
@@ -259,6 +260,35 @@ def _record_resolved(record_history: bool | None, history_path: Path,
     return history_path.exists() or consent is True
 
 
+def _refuse_clobbering_non_baseline(target: Path) -> None:
+    """A baseline may replace a baseline, and nothing else (D34).
+
+    `baseline_path` arrives from a model on the primary surface, and
+    being inside the granted root was the only check. An audit pointed
+    it at `README.md` and the file became baseline JSON — in a tool
+    whose MCP description and architecture both promise five artifacts
+    and "never source".
+
+    An absent file is fine, and so is one this tool already wrote. Any
+    other existing file is someone's work.
+    """
+    if not target.exists():
+        return
+    try:
+        existing = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as unreadable:
+        raise PathNotAllowed(
+            f"{target} exists and is not a readable baseline "
+            f"({unreadable}); refusing to overwrite it."
+        ) from unreadable
+    if not (isinstance(existing, dict) and "identities" in existing):
+        raise PathNotAllowed(
+            f"{target} exists and is not a baseline; refusing to "
+            "overwrite it. Choose a path that is absent or holds a "
+            "baseline this tool wrote."
+        )
+
+
 def _baseline_workflow(report: dict[str, Any], root: Path,
                        baseline_path: str | None,
                        write: bool) -> list[str] | None:
@@ -277,6 +307,7 @@ def _baseline_workflow(report: dict[str, Any], root: Path,
     if not (target == root or target.is_relative_to(root)):
         raise PathNotAllowed(f"baseline_path {target} is outside repository_root {root}")
     if write:
+        _refuse_clobbering_non_baseline(target)
         target.parent.mkdir(parents=True, exist_ok=True)
         write_baseline_file(str(target), report)
     if not target.is_file():

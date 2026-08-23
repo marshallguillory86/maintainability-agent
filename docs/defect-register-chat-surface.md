@@ -859,7 +859,7 @@ in `tests/test_written_record.py`;
 `test_an_unreadable_repository_config_refuses_at_the_setup_check` in
 `tests/test_setup_gate_completeness.py`.
 
-### D34 — Open: config, history and baseline writes open by name (High)
+### D34 — Closed: config, history and baseline writes cannot be redirected (High)
 
 Grok, 2026-08-23, security pass. D18 closed this class for the skill
 installer — check the path, then open the name — and paid for
@@ -885,7 +885,29 @@ Reproduced here, independently of the report:
   is only "inside the granted root", and the model supplies that
   argument on the primary surface.
 
-*Closing test:* pending.
+Every write into an audited tree now goes through `_safe_write`,
+which refuses a symlink at the name *before* resolving it — asking the
+resolved path is useless, since it is always the target — refuses a
+symlinked directory anywhere between the root and the file, and stages
+into a fresh file that it renames over the name. That last property is
+the only one that defeats a hardlink: the existing inode is never
+opened, so an outside file keeps its contents and merely stops being
+this name. History gave up append mode to get it, which costs a read
+of a few kilobytes.
+
+Baseline splits into two questions, because they have different
+answers. Redirection is refused by the writer for every caller. Not
+overwriting *source* is refused where the path arrives from a model —
+`_baseline_workflow` — and a CLI caller keeping baselines outside the
+tree is left alone, which was always allowed.
+
+*Closing tests:* `test_setup_refuses_to_write_config_through_a_symlink`,
+`test_setup_refuses_a_symlink_pointing_back_inside_the_repository`,
+`test_history_append_cannot_reach_a_hardlinked_inode`,
+`test_a_first_scan_still_records_normally`,
+`test_a_baseline_may_not_overwrite_something_that_is_not_one` and
+`test_a_baseline_may_replace_a_baseline` in
+`tests/test_write_boundary.py`.
 
 ### D35 — Open: the audited tree can enable tool acquisition (High)
 
@@ -972,6 +994,85 @@ code from the tree under audit". Isolated config and `--no-plugins`
 are a smaller, separate fix than a sandbox.
 
 *Closing test:* pending — disclosure, then optionally the flags.
+
+### D40 — Open: a repository-configured regex is a denial of service (High)
+
+Codex, 2026-08-23, proven. `risk_patterns` are compiled from repository
+configuration and applied to every source line. The schema bounds
+neither their complexity nor their size. Pattern `(a+)+$` against
+thirty-one `a` characters and a `!` did not finish in two seconds.
+
+The security policy names crafted-configuration denial of service as in
+scope, so this is a defect against a stated promise rather than a new
+requirement.
+
+*Closing test:* pending.
+
+### D41 — Open: release authority rides mutable Action references (High)
+
+Codex, 2026-08-23, proven. Every workflow action is referenced by tag
+or branch. `release.yml` hands OIDC publication authority — `id-token:
+write` — to `pypa/gh-action-pypi-publish@release/v1`, a moved-branch
+reference rather than an immutable commit. Checkout, setup-python,
+uploads, the CodeQL upload, GitHub Script and Sonar are the same.
+
+Whoever controls those references at run time runs in the job that can
+publish this package.
+
+*Closing test:* pending.
+
+### D42 — Open: the package claims a Python it cannot run on (Medium)
+
+Codex, 2026-08-23. `requires-python = ">=3.10"`, and `_discovery.py`,
+`_pillars.py` and `_runner.py` import `enum.StrEnum`, which is 3.11.
+Pip installs happily on 3.10 and the import then fails. CI tests 3.12
+alone, and the composite action pins 3.11, so nothing in the pipeline
+stands where the metadata says a user may stand.
+
+*Closing test:* pending.
+
+### D43 — Open: composite-action inputs are interpolated into Bash (Medium)
+
+Codex, 2026-08-23, proven. `action.yml` embeds `${{ inputs.* }}`
+directly inside a `run:` script, so shell metacharacters in an
+untrusted input parse as Bash. Inputs belong in the environment and
+then in an argument array, as data.
+
+*Closing test:* pending.
+
+### D44 — Open: MCP annotations contradict the behaviour (Medium)
+
+Codex, 2026-08-23. The audit tool declares itself non-destructive and
+closed-world, and `tests/test_mcp_server.py` locks both values. Neither
+survives optional network acquisition, unsandboxed analyzer networking,
+executable repository analyzer configuration, or the config, history
+and baseline writes.
+
+Test-backed misinformation is worse than an untested claim: the suite
+is the reason nobody re-examined it.
+
+**Blocked on the trust decision** — what these annotations should say
+depends on whether repositories are trusted. See `docs/security-queue.md`.
+
+*Closing test:* pending.
+
+### D45 — Open: the security policy supports a version eight lines old (Medium)
+
+Codex, 2026-08-23. `SECURITY.md` states that only `0.1.x` receives
+security fixes. The package is `0.9.1`. Read literally, the shipped
+release is unsupported by its own policy.
+
+*Closing test:* pending.
+
+### D46 — Open: XML parsers are unbounded against analyzer output (Low)
+
+Codex, 2026-08-23, inferred rather than demonstrated. `_generic.py` and
+`_jvm_adapters.py` parse analyzer XML with `ElementTree.fromstring`.
+The input is a child process this agent spawned, not an upload, so the
+realistic exposure is resource exhaustion from a hostile or
+PATH-hijacked analyzer rather than classic XXE.
+
+*Closing test:* pending.
 
 ## Disposition
 

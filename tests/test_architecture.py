@@ -27,6 +27,13 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
                # `_user_config` is the XDG user tier and its state (D13):
                # file reads and atomic writes, no internal imports.
                "_user_config",
+               # `_safe_write` is the one way this agent writes into a
+               # tree it is auditing: bounded, symlink-refusing, staged
+               # then renamed so no existing inode is ever opened for
+               # writing. A foundation because every writing layer above
+               # must reach it and it may reach nothing but `config`
+               # (D34).
+               "_safe_write",
                # ADR 009's structured identity and matching relation is a
                # foundation shared by the gate, recurrence and presentation.
                "_finding_match",

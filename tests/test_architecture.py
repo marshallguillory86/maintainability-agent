@@ -114,7 +114,7 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
 # Entry, because deciding to ask a person rather than compute is an
 # entry-layer decision; nothing below may make it.
 ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup", "_mcp_audit",
-         "_skill_install", "_mcp_gate",
+         "_skill_install", "_mcp_gate", "_mcp_resources",
          "_mcp_grants"}
 BOUNDARY = {"evidence"}
 

@@ -87,14 +87,20 @@ def test_the_workflow_restores_history_before_the_audit_and_saves_after() -> Non
     )
     assert DEFAULT_HISTORY_PATH in WORKFLOW[restore:audit]
     assert DEFAULT_HISTORY_PATH in save_block.split("upload-artifact", 1)[0]
-    assert "${{" in save_block.split("\n", 12)[0] + WORKFLOW[WORKFLOW.find("key:", save):save + 200], (
-        "the save key is fixed and can be saved once"
+    # Located by searching, not by counting characters from `save`. The
+    # original read a fixed 200-character window, which broke the day
+    # the `uses:` line above it grew a pinned commit SHA — the recipe
+    # was unchanged and the test failed anyway (D41).
+    save_key = re.search(r"^\s*key:.*$", save_block, re.MULTILINE)
+    assert save_key, "the save step names no cache key"
+    assert "${{" in save_key.group(0), (
+        "the save key is fixed, so the cache can be written once and "
+        "every later run silently keeps the first history"
     )
     # Rolling key lives on the save step; prefix restore-keys on restore.
     assert "restore-keys" in WORKFLOW[restore:audit], (
         "without restore-keys the rolling save key never matches on the next run"
     )
-    assert "${{" in WORKFLOW[WORKFLOW.find("key:", save):save + 160]
     assert re.search(r"record-history:\s*[\"']true[\"']", WORKFLOW), (
         "the workflow caches the history but never tells the action to record it"
     )

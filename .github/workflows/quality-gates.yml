@@ -43,14 +43,14 @@ jobs:
     name: Verify (lint, deps, tests, coverage)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # SonarQube Cloud needs full history for new-code metrics, and
           # the maintainability audit needs it for the history aspects.
           # At the default depth of 1 those are unmeasured, which costs
           # roughly a grade and withholds a verified grade entirely.
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Upgrade pip itself (fixes CVE-2026-6357 in pip 26.0.1)
@@ -72,7 +72,7 @@ jobs:
             --cov-report=xml:coverage.xml \
             --cov-fail-under=92
       - name: Upload coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: coverage
@@ -99,16 +99,16 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: SonarSource/sonarqube-scan-action@v8
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8
 
   audit:
     name: Audit (maintainability + security)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install the agents
@@ -156,13 +156,13 @@ jobs:
 
       # --- surface the findings where people look --------------------------
       - name: Upload maintainability SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@42947a340483f03ba47bb1a039b2c519aab3df85 # v3
         if: always()
         with:
           sarif_file: maintainability.sarif
           category: maintainability-agent
       - name: Upload security SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@42947a340483f03ba47bb1a039b2c519aab3df85 # v3
         if: always()
         with:
           sarif_file: secure-code.sarif
@@ -173,7 +173,7 @@ jobs:
         # thread into noise and people stop reading it — which is the same
         # failure as a gate nobody trusts.
         if: always() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const fs = require('fs');
@@ -208,7 +208,7 @@ jobs:
             }
 
       - name: Upload audit artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: audit-artifacts

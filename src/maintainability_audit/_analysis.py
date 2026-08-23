@@ -39,6 +39,7 @@ from ._discovery import CATALOG_LANGUAGE, discover
 from ._metrics_types import KNOWN_SOURCE_SUFFIXES, Finding, Measurement
 from ._runner import Outcome, Probe, run
 from ._selection import Selected, select_runnable
+from .config import acquisition_permitted
 
 
 @dataclass(frozen=True)
@@ -290,7 +291,10 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
     # dead-code as *examined* — a tool with no input examining a concern.
     # Before any probe: a fetch during the availability check is the
     # same unconfigured fetch as one during analysis.
-    set_tool_acquisition(bool(settings.get("acquire_tools")))
+    # The user tier, not the merged config: a repository always beats a
+    # person for thresholds, and must never beat them on whether this
+    # host fetches and executes a package (D35).
+    set_tool_acquisition(acquisition_permitted())
     inventory = discover(root, config)
     excludes = exclusions_for(config, inventory)  # two inputs, see `Exclusions`
     analysis.languages = {

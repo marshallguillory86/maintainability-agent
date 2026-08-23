@@ -235,6 +235,37 @@ def discovered_config(root: Path) -> str | None:
     return str(candidate) if candidate.is_file() else None
 
 
+def acquisition_permitted() -> bool:
+    """Whether *this user* has enabled tool acquisition (D35).
+
+    Read from the XDG user tier alone, never from the merged config,
+    and that is the whole point. `load_config` states that a repository
+    always beats a person, which is right for thresholds and
+    exclusions — the repository knows its own code. It is exactly wrong
+    for acquisition: `product-intent.md` P1 says a **user** enables
+    `analyzers.acquire_tools`, and an audit showed that four words in a
+    pull request otherwise make the host run `npx --yes` on an unpinned
+    package, honouring the tree's own `.npmrc`.
+
+    License policy already works this way — deny wins, and no
+    repository can override an organisation's prohibition. Acquisition
+    is the same shape of decision and was the only one taking the
+    audited tree's word for it.
+
+    A repository that sets the key is ignored rather than refused: it
+    is a preference the tool declines to act on, not an attack worth
+    failing a scan over, and the environment work order already tells
+    the user which tools are missing and how to install them.
+    """
+    from ._user_config import user_config_answers
+
+    answers = user_config_answers() or {}
+    analyzers = answers.get("analyzers")
+    if not isinstance(analyzers, dict):
+        return False
+    return bool(analyzers.get("acquire_tools", False))
+
+
 def analyzers_run_default(config: dict[str, Any]) -> bool:
     """The repository's standing pool decision — one reading, every seam.
 

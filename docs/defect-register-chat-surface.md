@@ -909,7 +909,7 @@ tree is left alone, which was always allowed.
 `test_a_baseline_may_replace_a_baseline` in
 `tests/test_write_boundary.py`.
 
-### D35 — Open: the audited tree can enable tool acquisition (High)
+### D35 — Closed: the audited tree cannot enable tool acquisition (High)
 
 Grok, 2026-08-23. `product-intent.md` P1 is explicit that acquisition
 is opt-in and that **a user** enables `analyzers.acquire_tools`.
@@ -928,9 +928,30 @@ on a long-lived MCP can flip it under each other.
 
 License policy already gets this right: deny always wins, and no
 repository can override it. Acquisition is the same kind of decision
-and does not.
+and did not.
 
-*Closing test:* pending.
+`acquisition_permitted()` reads the XDG user tier alone and never the
+merged config, so a repository stating the key is ignored — a
+preference the tool declines to act on rather than an attack worth
+failing a scan over, since the environment work order already names
+every missing tool and how to install it. The key is now declared in
+the schema too: `analyzers` is `additionalProperties: false` and did
+not list it, so the published contract called it illegal while the
+runtime obeyed, and nothing caught the contradiction because the
+schema is never loaded.
+
+`test_analyze_honours_the_opt_in` used to set `config["analyzers"]` and
+watch the switch flip — it asserted the inversion. It reads the user
+tier now.
+
+*Closing tests:* `test_no_configuration_means_no_acquisition`,
+`test_the_user_tier_can_enable_acquisition`,
+`test_a_repository_cannot_enable_acquisition`,
+`test_a_repository_cannot_revoke_a_users_choice` and
+`test_the_schema_declares_the_key_the_runtime_reads` in
+`tests/test_acquisition_trust.py`; plus
+`test_analyze_honours_the_opt_in` in
+`tests/test_network_disclosure.py`.
 
 ### D36 — Closed: the agent reads inside the grant, wherever the path came from (High)
 

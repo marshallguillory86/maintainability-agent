@@ -932,7 +932,7 @@ and does not.
 
 *Closing test:* pending.
 
-### D36 — Open: repository config supplies unbounded read paths (High)
+### D36 — Closed: the agent reads inside the grant, wherever the path came from (High)
 
 Grok, 2026-08-23. D20 bounded `paths.history` with `repository_path`
 after an audit reproduced an escape. The same class survives in two
@@ -943,11 +943,29 @@ fields that were never given the same treatment.
   here: a repository config naming `/` yields `/` as a scan target,
   which is also an `rglob("*.class")` over the filesystem on an MCP
   child with no timeout.
-* **S9.** `expand_files` collects symlinked files, so a repository can
-  point `app.py` at a file outside the grant and have analyzers read
-  it. Same uid, but it is precisely the boundary D20 exists to hold.
+* **S9 / Codex 1.** `expand_files` and the built-in scan both use
+  `is_file()`, which follows symlinks. Codex proved the sharper half:
+  a repository containing `linked.py -> ../outside.py` had that file
+  read, measured, and returned in the report — `TOP_SECRET_VALUE = 42`
+  inside a findings payload. `expand_files` is worse still, because
+  its output becomes analyzer argv.
 
-*Closing test:* pending.
+`iter_files` and `expand_files` now check where a path *lands*, and
+`class_dirs` goes through `repository_path` like `paths.history` did
+after D20. Symlinks that resolve inside the root stay allowed: they are
+ordinary in real trees, and refusing them would quietly shrink the
+population a score is computed over.
+
+One thing the falsifier deliberately does not assert: that the name
+never appears anywhere in the report. `git_status_short` lists the
+symlink as untracked, which is git describing the working tree rather
+than this agent reading past its grant.
+
+*Closing tests:* `test_a_symlink_out_of_the_tree_is_never_scanned`,
+`test_a_symlink_that_stays_inside_the_tree_is_still_scanned`,
+`test_analyzer_argv_never_names_a_file_outside_the_tree` and
+`test_class_dirs_from_repository_config_cannot_leave_the_tree` in
+`tests/test_read_boundary.py`.
 
 ### D37 — Open: the CLI passes git options the MCP door rejects (Medium)
 

@@ -280,10 +280,20 @@ class SpotBugsAdapter(BaseAdapter):
     def _target_dirs(
         self, root: Path, class_dirs: Sequence[str] | None = None,
     ) -> tuple[Path, ...]:
+        # Bounded like `paths.history` was after D20, and for the same
+        # reason: this list comes from the audited repository's own
+        # config. `Path("/tmp/repo") / "/"` is `/`, so a four-character
+        # entry turned a bytecode scan into an `rglob("*.class")` over
+        # the filesystem, on a child with no timeout (D36).
+        from .config import PathNotAllowed, repository_path
+
         extras = tuple(class_dirs) if class_dirs is not None else tuple(self.class_dirs)
         found = []
         for relative in (*self._DEFAULT_CLASS_DIRS, *extras):
-            candidate = root / relative
+            try:
+                candidate = repository_path(root, str(relative), str(relative))
+            except PathNotAllowed:
+                continue
             if candidate.is_dir() and any(candidate.rglob("*.class")):
                 found.append(candidate)
         return tuple(found)

@@ -257,3 +257,51 @@ def test_no_document_says_a_register_entry_is_open_that_the_register_closed() ->
         "documents assert a register entry is open that the register records "
         "as closed; correct the claim or stamp it: " + "; ".join(stale)
     )
+
+
+def test_the_security_policy_supports_the_shipped_release_line() -> None:
+    """D45: a policy naming a dead version line supports nothing.
+
+    `SECURITY.md` still said `0.1.x` at version 0.9.1 — eight release
+    lines of drift, which read literally meant the shipped release
+    received no security fixes. Nobody noticed because nothing looked.
+
+    Checked against `config.VERSION` rather than a written-in number,
+    so the next release either updates the table or fails here.
+    """
+    from maintainability_audit.config import VERSION
+
+    line = ".".join(VERSION.split(".")[:2])
+    policy = _read(ROOT / "SECURITY.md")
+    assert f"`{line}.x`" in policy, (
+        f"SECURITY.md does not name the shipped release line {line}.x; "
+        "its supported-versions table has drifted from the package"
+    )
+
+
+def test_the_security_policy_does_not_deny_executing_repository_code() -> None:
+    """The claim an audit disproved, and why it cannot come back quietly.
+
+    `SECURITY.md` asserted the agent "does not execute scanned code"
+    while `eslint` was being invoked in a mode that *requires* the
+    audited repository's own configuration and then runs it. Whether
+    repositories should be trusted is an open product decision (D39,
+    D44); asserting a property the code does not have is not.
+
+    Deliberately narrow: this does not demand any particular wording,
+    only that the denial is gone and the behaviour is named.
+    """
+    policy = _read(ROOT / "SECURITY.md")
+    assert "execute code from the repository" in policy.lower(), (
+        "SECURITY.md no longer discloses that analyzers run repository code"
+    )
+
+    # Only what the document *asserts*, not what it recounts. The entry
+    # explaining why the old claim was wrong necessarily quotes it, and
+    # a check that cannot tell an assertion from its own correction
+    # would forbid explaining the fix.
+    asserted = policy.split("This sentence previously read", maxsplit=1)[0].lower()
+    assert "not execute scanned code" not in " ".join(asserted.split()), (
+        "SECURITY.md asserts the agent does not execute scanned code; "
+        "analyzers still run repository-provided configuration"
+    )

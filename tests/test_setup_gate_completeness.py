@@ -178,13 +178,20 @@ def test_an_unreadable_repository_config_refuses_at_the_setup_check(
     actionable. It fails closed either way; the difference is whether
     the message names the file and what to do about it.
     """
+    from maintainability_audit.config import ConfigUnreadable
+
     root = _repo(tmp_path)
-    (root / "maintainability-agent.json").write_text('{"version": 1', encoding="utf-8")
+    config = root / "maintainability-agent.json"
 
-    with pytest.raises(SetupRequired) as refusal:
-        setup_pending(root)
-
-    assert "maintainability-agent.json" in str(refusal.value)
+    # `ConfigUnreadable`, not a setup-specific error: the setup check
+    # and the loader now share one parser, so one broken file cannot
+    # mean "ask the questions" on one door and "refuse" on another. An
+    # audit found a JSON array doing exactly that (D33).
+    for unreadable in ('{"version": 1', "[1, 2, 3]", '"a string"'):
+        config.write_text(unreadable, encoding="utf-8")
+        with pytest.raises(ConfigUnreadable) as refusal:
+            setup_pending(root)
+        assert "maintainability-agent.json" in str(refusal.value), unreadable
 
 
 def test_the_resource_refusal_survives_the_protocol(tmp_path: Path) -> None:
@@ -231,6 +238,63 @@ def test_the_resource_refusal_survives_the_protocol(tmp_path: Path) -> None:
         f"the refusal reached the client without naming the door that can "
         f"ask: {joined[:200]}"
     )
+
+
+def test_every_resource_refusal_reaches_the_client_with_its_remedy(
+    tmp_path: Path,
+) -> None:
+    """Not just the refusal an audit happened to name (D33).
+
+    The first fix wrapped `SetupRequired` alone, so a root outside the
+    allow-list still arrived as a bare "Internal server error" — losing
+    the `--allow-root` sentence that tells the reader what to do. On the
+    wire, a deliberate refusal and an unexpected crash looked identical.
+    Every refusal this resource can raise is checked, because "the one
+    we thought of" is how the first version passed.
+    """
+    import asyncio
+    import logging
+
+    from mcp import Client
+
+    from maintainability_audit.mcp_server import create_server
+
+    unconfigured = _repo(tmp_path)
+    outside = tmp_path.parent / "outside-the-roots"
+    outside.mkdir(exist_ok=True)
+    not_a_directory = unconfigured / "README.md"
+
+    cases = {
+        str(unconfigured): "audit_repository",   # setup pending
+        str(outside): "allow",                   # boundary, names the remedy
+        str(not_a_directory): "director",        # not a repository at all
+    }
+
+    async def refusal_for(target: str) -> str:
+        async with Client(create_server(roots=(tmp_path.resolve(),))) as client:
+            try:
+                await client.read_resource(f"maintainability://report/{target}")
+            except Exception as raised:  # noqa: BLE001 - the wire shape is the subject
+                return " ".join(
+                    str(item) for item in getattr(raised, "exceptions", [raised])
+                )
+        return ""
+
+    logging.disable(logging.CRITICAL)
+    try:
+        for target, expected in cases.items():
+            message = asyncio.run(refusal_for(target))
+            assert message, f"{target} served content instead of refusing"
+            assert "Internal server error" not in message, (
+                f"{target} refused as an internal error, telling the reader "
+                f"nothing: {message[:120]}"
+            )
+            assert expected in message.lower(), (
+                f"{target} refused without naming the remedy "
+                f"({expected!r}): {message[:160]}"
+            )
+    finally:
+        logging.disable(logging.NOTSET)
 
 
 def test_run_never_overrides_the_setup_precondition(tmp_path: Path) -> None:

@@ -35,6 +35,7 @@ from ._user_config import (
     write_user_answers,
 )
 from .config import CONFIG_FILENAME, discovered_config, load_config
+from .config import _configured as _read_config
 
 _DEPTHS = ("baseline", "moderate", "heavy")
 
@@ -216,18 +217,14 @@ def setup_pending(root: Path) -> bool:
     that does not parse is neither, and says so rather than surfacing a
     `JSONDecodeError` from somewhere deeper.
     """
+    # One parser, shared with `load_config`. This had its own
+    # `json.loads` and its own exception, so a JSON array made the MCP
+    # tool ask the setup questions while the CLI refused the file — one
+    # repository state, two answers, which is the exact defect D32 set
+    # out to remove and left standing here (D33).
     discovered = discovered_config(Path(root))
-    if discovered is not None:
-        try:
-            content = json.loads(Path(discovered).read_text(encoding="utf-8"))
-        except (OSError, ValueError) as unreadable:
-            raise SetupRequired(
-                f"{discovered} exists but cannot be read as JSON "
-                f"({unreadable}). Repair or delete it; setup cannot tell "
-                "whether this repository has been configured."
-            ) from unreadable
-        if isinstance(content, dict) and content:
-            return False
+    if discovered is not None and _read_config(Path(discovered)):
+        return False
     return user_config_answers() is None
 
 

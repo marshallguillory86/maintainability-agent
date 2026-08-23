@@ -1070,7 +1070,7 @@ through the real scanning path, and
 `test_a_refused_pattern_does_not_silence_the_others`, all in
 `tests/test_pattern_budget.py`.
 
-### D41 — Open: release authority rides mutable Action references (High)
+### D41 — Closed: every action is pinned to a commit (High)
 
 Codex, 2026-08-23, proven. Every workflow action is referenced by tag
 or branch. `release.yml` hands OIDC publication authority — `id-token:
@@ -1081,7 +1081,19 @@ uploads, the CodeQL upload, GitHub Script and Sonar are the same.
 Whoever controls those references at run time runs in the job that can
 publish this package.
 
-*Closing test:* pending.
+Twenty references across three workflows and the composite action are
+now commit SHAs, each with its version as a trailing comment so a
+reader can still tell what is pinned. This repository's own action
+stays on `@main` on purpose: pinning it would mean CI could never
+exercise the commit under review.
+
+*Closing tests:* `test_every_third_party_action_is_pinned_to_a_commit`,
+parametrized over every workflow file, and
+`test_the_publishing_job_is_pinned_hardest_of_all` in
+`tests/test_workflow_supply_chain.py`. The second is deliberately
+redundant with the first: a general rule is easy to relax for one
+awkward case, and the publish job is the case nobody should relax it
+for.
 
 ### D42 — Closed: the package claims a Python it can run on (Medium)
 
@@ -1111,14 +1123,28 @@ to 3.10 and watching it name `_discovery.py` and `StrEnum`. A CI matrix
 entry on the floor version is still worth having and stays recorded as
 follow-up in `docs/security-queue.md`.
 
-### D43 — Open: composite-action inputs are interpolated into Bash (Medium)
+### D43 — Closed: composite-action inputs are data, not source (Medium)
 
-Codex, 2026-08-23, proven. `action.yml` embeds `${{ inputs.* }}`
-directly inside a `run:` script, so shell metacharacters in an
-untrusted input parse as Bash. Inputs belong in the environment and
-then in an argument array, as data.
+Codex, 2026-08-23, proven. `action.yml` embedded `${{ inputs.* }}`
+directly inside a `run:` script. GitHub substitutes those *before* bash
+parses the script, so an input was never an argument — it was source
+code, and a path containing a shell metacharacter was enough to break a
+run by accident.
 
-*Closing test:* pending.
+Inputs arrive through `env:` now and are appended to the argument array
+quoted, which keeps each one a single word however it is spelled.
+
+*Closing tests:* `test_the_composite_action_never_interpolates_inputs_into_bash`
+and `test_the_composite_action_still_passes_every_input_through` in
+`tests/test_workflow_supply_chain.py`. The second exists because moving
+inputs to `env:` is exactly the kind of edit that silently drops one,
+and a lost `--changed-only` would look like a passing test while
+auditing the whole repository on every pull request.
+
+Both are parsed by hand rather than with PyYAML: this repository keeps
+its `test` extra thin and `test_declared_imports` refuses a dev-only
+parser in tests. I added PyYAML anyway, that lint caught it, and the
+parser was rewritten.
 
 ### D44 — Open: MCP annotations contradict the behaviour (Medium)
 

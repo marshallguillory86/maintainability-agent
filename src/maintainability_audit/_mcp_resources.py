@@ -127,33 +127,17 @@ def _bind_resources(
         security=root_security(),
     )
     def report_resource(root: str) -> str:
-        # Translated at the boundary, because a refusal nobody reads is
-        # not a refusal. `SetupRequired` reached the client as a bare
-        # -32603 "Error creating resource from template ..." — the
-        # sentence naming the door that *can* ask survived only as
-        # `__cause__` on the server side, where no user looks. D30
-        # claimed this refusal named that door; the wire said otherwise
-        # (D32). `ResourceError` is the SDK's own type and its message
-        # is what the protocol carries.
+        # Every refusal is translated, not just the one an audit named:
+        # the SDK discards an unknown exception's message, and a reader
+        # who gets "Internal server error" cannot tell a deliberate
+        # refusal from a crash. `ValueError` covers the boundary cases —
+        # `PathNotAllowed` and `ConfigUnreadable` derive from it, and a
+        # root that is not a directory raises it plainly. See D32, D33.
         from mcp.server.mcpserver.exceptions import ResourceError
 
         try:
             return _report_markdown(root, ledger.current())
         except (SetupRequired, ValueError) as refusal:
-            # Every refusal, not just the one an audit happened to name.
-            # The first fix wrapped `SetupRequired` alone, so a root
-            # outside the allow-list still reached the client as a bare
-            # "Internal server error" — losing the `--allow-root`
-            # sentence that tells the reader how to fix it. Refusing
-            # deliberately and refusing by accident look identical on
-            # the wire unless the message crosses (D33).
-            #
-            # `ValueError` covers the boundary refusals — `PathNotAllowed`
-            # and `ConfigUnreadable` both derive from it, and
-            # `authorize_repository` raises it plainly for a root that
-            # is not a directory. An unexpected `ValueError` reaching a
-            # reader as its own message is still better than reaching
-            # them as "Internal server error".
             raise ResourceError(str(refusal)) from refusal
 
     def report_template_descriptor() -> str:

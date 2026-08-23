@@ -323,10 +323,20 @@ def _bind_resources(
         """
 
         def validate(self, params: dict[str, Any]) -> str | None:
+            from mcp.server.mcpserver.exceptions import ResourceError
+
             root = params.get("root")
             if not isinstance(root, str):
                 return "root"
-            authorize_repository(root, ledger.current())
+            try:
+                authorize_repository(root, ledger.current())
+            except ValueError as refusal:
+                # Security runs before the resource function, so the
+                # handler down there never sees this one. Wrapping only
+                # the reader left every boundary refusal arriving as
+                # "Internal server error" — the `--allow-root` remedy
+                # discarded at the layer that knows it (D33).
+                raise ResourceError(str(refusal)) from refusal
             return None
 
     @server.resource(
@@ -367,7 +377,21 @@ def _bind_resources(
 
         try:
             return _report_markdown(root, ledger.current())
-        except SetupRequired as refusal:
+        except (SetupRequired, ValueError) as refusal:
+            # Every refusal, not just the one an audit happened to name.
+            # The first fix wrapped `SetupRequired` alone, so a root
+            # outside the allow-list still reached the client as a bare
+            # "Internal server error" — losing the `--allow-root`
+            # sentence that tells the reader how to fix it. Refusing
+            # deliberately and refusing by accident look identical on
+            # the wire unless the message crosses (D33).
+            #
+            # `ValueError` covers the boundary refusals — `PathNotAllowed`
+            # and `ConfigUnreadable` both derive from it, and
+            # `authorize_repository` raises it plainly for a root that
+            # is not a directory. An unexpected `ValueError` reaching a
+            # reader as its own message is still better than reaching
+            # them as "Internal server error".
             raise ResourceError(str(refusal)) from refusal
 
     def report_template_descriptor() -> str:

@@ -125,11 +125,15 @@ def test_every_closing_citation_names_a_test_that_exists() -> None:
         )
         citation = " ".join(closing[1:])
         # A file name is not a falsifier. An audit closed an entry with
-        # nothing but a `tests/....py` path on the closing line and this
-        # check passed, because it only looked for names to resolve and
-        # found none to object to. "Which test fails if this defect
-        # returns?" has to have an answer (D32).
-        assert re.search(r"\btest_\w+\b", citation), (
+        # nothing but a `tests/….py` path and the first version of this
+        # check passed it, because it looked for names to resolve and
+        # found none to object to. The second version demanded a
+        # `test_` token and passed the same attack, because the token it
+        # found was the *filename inside the path* — a check that reads
+        # `tests/test_x.py` as "names test_x" cannot tell a citation
+        # from an address. Paths are stripped before looking (D33).
+        named = re.findall(r"\btest_\w+\b", re.sub(r"tests/\S+\.py", " ", citation))
+        assert named, (
             f"{ident} closes on a file with no test named in it; a reader "
             "cannot tell which test fails if the defect returns"
         )

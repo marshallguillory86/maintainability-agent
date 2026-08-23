@@ -235,7 +235,16 @@ The XDG state file records repositories by absolute root, making first-run
 detection persistent; corrupt or unreadable user files are treated as
 absent rather than crashing an audit.
 
-*Closing suite:* `tests/test_user_config_tier.py`.
+*Closing tests:* `test_user_paths_honor_xdg_environment`,
+`test_user_and_repository_config_merge_in_precedence_order`,
+`test_any_loaded_config_tier_defaults_the_pool_on_and_explicit_false_wins`,
+`test_corrupt_user_config_reads_as_absent` and
+`test_successful_cli_audit_marks_the_repository_seen` in
+`tests/test_user_config_tier.py`. Named individually because "the whole
+suite" is not a falsifier: an audit tightened the citation check on
+2026-08-23 and this entry was the one closing on a bare path, which
+tells a reader where to look but never which test fails if the tier
+stops being honoured (D33).
 
 ### D14 — Closed: the chat integration applies setup and root grants
 
@@ -285,11 +294,17 @@ attempted, a catalogued tool this project cannot invoke is stated as
 `no-adapter` rather than counted runnable, and `coverage.selection`
 carries the disjoint `runnable` and `inventory_filtered` sets.
 
-*Closing tests:* `tests/test_d15_goal_directed.py` (the requirement as
-originally written, including a minimality proof that reads the
-coverage document's real `by_language` key — an earlier version read a
-key that never existed and passed itself on the empty result) and
-`tests/test_d15_composition.py` (the two-shape composition pins).
+*Closing tests:* `test_inventory_deselects_before_any_probe_or_spawn`,
+`test_selection_composes_the_runnable_set_before_the_run_loop`,
+`test_the_runnable_set_is_minimal_for_the_trees_languages` — the
+minimality proof, which reads the coverage document's real
+`by_language` key after an earlier version read a key that never
+existed and passed itself on the empty result — and
+`test_a_catalogued_tool_without_an_adapter_is_not_called_runnable` in
+`tests/test_d15_goal_directed.py`; plus
+`test_one_report_composes_source_read_and_artifact_read` and
+`test_stale_artifact_evidence_is_stated_on_the_composed_summary` in
+`tests/test_d15_composition.py`, the two-shape composition pins.
 
 *Round-four verification on `5a7857c`: reopened.* A catalog tool with no
 adapter is still returned as `Selected` when its catalog languages overlap the
@@ -802,6 +817,48 @@ because no closing citation names it.
 refused by `test_every_closing_citation_names_a_test_that_exists` in
 `tests/test_written_record.py`.
 
+### D33 — Closed: the fixes for D32, audited
+
+Grok's round 3, on 2026-08-23, attacking round 2's fixes. Three
+findings, all in code written the day before, plus one this check
+turned up on its own.
+
+**"Name a test" was satisfied by naming a file.** D32 added an
+assertion that a closing citation must contain a `test_` token. It
+passed the very attack it was written against, because the token it
+found was the *filename inside the path*: `tests/test_x.py` reads as
+"names test_x". Paths are stripped before looking now. Tightening it
+immediately caught two entries closing on a bare suite — D13 and D15,
+both predating the check and both invisible to every earlier version of
+it. Their falsifiers are named individually.
+
+**Only one refusal reached the reader.** D32 wrapped `SetupRequired` so
+its message crossed the wire, and stopped there. A root outside the
+allow-list still arrived as "Internal server error", discarding the
+`--allow-root` sentence at the one layer that knows it — and that
+refusal is raised in the SDK's security callback, before the resource
+function the wrapper lives in. Both layers translate now, and the
+falsifier walks every refusal the resource can raise rather than the
+one an audit happened to name.
+
+**Two parsers, one file.** `setup_pending` kept its own `json.loads`
+beside `load_config`'s, so a JSON array made the MCP tool ask the setup
+questions while the CLI refused the file. One state, two answers —
+which is the defect D32 set out to remove and left standing one call
+away. They share a parser now.
+
+Also corrected: `load_catalog`'s missing-file message told the reader
+to rebuild from `tools/build_catalog.py`. Whoever sees that message on
+an installed copy has no such repository, and their actual problem is
+an incomplete install — which is D23 exactly. It now says which
+situation they are in.
+
+*Closing tests:* `test_every_closing_citation_names_a_test_that_exists`
+in `tests/test_written_record.py`;
+`test_every_resource_refusal_reaches_the_client_with_its_remedy` and
+`test_an_unreadable_repository_config_refuses_at_the_setup_check` in
+`tests/test_setup_gate_completeness.py`.
+
 ## Disposition
 
 **Every entry is closed.** D28 and D29 were opened and closed on 2026-08-22
@@ -814,9 +871,17 @@ guarded one door of four. D31 is a check that verified a falsifier existed
 without verifying a reader could find it. D32 is the pair's own audit round:
 a refusal that read correctly in-process and arrived at the client as an
 internal error, a CLI that crashed where the chat doors refused politely, and
-a title that claimed more than its fix delivered. Three rounds running, the
-defects have been in the fixes rather than in the code they fixed — which is
-the argument for auditing a fix as hard as the thing it repairs.
+a title that claimed more than its fix delivered. D33 is the round after that,
+and the pattern held a fourth time: a check that verified a citation named a
+test, satisfied by the filename in the path; a refusal translated on one layer
+of two; two parsers reading one file to opposite conclusions.
+
+Four rounds running, every defect has been in a fix rather than in the code it
+repaired. That is not a run of bad luck. A fix is written by someone who has
+just convinced themselves they understand the problem, and it is tested by
+someone in that same state — so the test tends to assert the thing the author
+was already thinking about. Auditing a fix as hard as the thing it repairs is
+the only step that has reliably caught this, and every round of it has paid.
 
 Every closed entry sits behind a test that would fail if its defect returned,
 and since 2026-08-22 that citation is machine-checked — three entries had been

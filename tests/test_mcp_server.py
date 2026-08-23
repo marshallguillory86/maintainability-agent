@@ -344,8 +344,18 @@ def test_a_report_resource_refuses_a_path_outside_the_allowed_roots(tmp_path: Pa
     uri = str(resources[0].uri).replace("{repository_root}", str(outside)).replace(
         "{root}", str(outside))
 
-    with pytest.raises(PathNotAllowed):
+    # `ResourceError` wrapping the boundary refusal, not the bare
+    # `PathNotAllowed`: the SDK discards an unknown exception's message
+    # and the client saw only "Internal server error", so the refusal is
+    # translated at the security layer now. The cause is preserved and
+    # the remedy has to survive into the message a reader gets (D33).
+    from mcp.server.mcpserver.exceptions import ResourceError
+
+    with pytest.raises(ResourceError) as refusal:
         _read(server, uri)
+
+    assert isinstance(refusal.value.__cause__, PathNotAllowed)
+    assert "--allow-root" in str(refusal.value)
 
 
 def test_the_slash_command_prompt_is_named_for_this_agent(tmp_path: Path) -> None:

@@ -746,6 +746,46 @@ here so the limit is known rather than assumed away.
 *Closing test:* `test_every_closing_citation_names_a_test_that_exists`
 in `tests/test_written_record.py`.
 
+### D32 — Closed: the call-first rule reaches the door hosts are actually handed
+
+Found in the field on 2026-08-24, on a fresh clone, by the operator
+starting a first-run test. The host's opening move was a question about
+`maintainability-agent.json` being "committed in HEAD but deleted in
+your working tree (unstaged)", offering three ways to proceed: restore
+it and audit, audit against HEAD's copy without restoring, or treat the
+repository as unconfigured. Every option was coherent and none of them
+should have been asked. It is D21 returned intact — configuration
+archaeology standing in for the call — and the operator's report named
+the aggravating fact: none of it makes sense to someone who has just
+cloned a repository.
+
+D21's fix was correct and it was not wrong to close. Its falsifier read
+`skills/maintainability-agent/SKILL.md` and stopped there. The skill is
+opt-in; `SERVER_INSTRUCTIONS` is what every chat host receives on
+connect, and it said nothing about the order at all. Its one adjacent
+sentence — "do not substitute questions of your own" — sits inside the
+clause about replies that are not audits, so it reads as a rule about
+what to do *after* calling. Nothing forbade the deliberation that comes
+before.
+
+The MCP prompt was worse than silent. It opened "First offer the
+presentation choice ... Then call `audit_repository`", which is both
+stale against D26 (the presentation question belongs after the setup
+and run/reconfigure asks, not before the first call) and an explicit
+licence for the shape of the defect: ask something, then call. A host
+reading the surface it was handed was told to put a question first.
+
+Both MCP surfaces now carry D21's rule in D21's words, and the prompt
+states the current two-ask contract instead of the old one. The
+falsifier holds all three instruction surfaces to it together, which is
+the check D22 had already established four entries earlier and that
+nobody applied backwards to D21.
+
+*Closing test:* `test_every_chat_instruction_surface_calls_the_tool_before_inspecting_config`
+in `tests/test_chat_primary_docs.py`. D21's own test is left as it
+stands: it holds the skill, and the skill was never the surface that
+failed here.
+
 ## Disposition
 
 **Every entry is closed.** D28 and D29 were opened and closed on 2026-08-22
@@ -783,4 +823,8 @@ same sentence: the product produced the right thing and nothing told the
 agent to use it. D26 is the one that stopped treating that as a documentation
 problem — the audit no longer runs at all until the repository has been set
 up, so there is no premature grade for an agent to report in place of the
-questions.
+questions. D32 is the register's first true recurrence: D21
+came back through a door D22 had already taught the project to check, because a
+lesson learned in one entry was applied forward and never backward. A fix is not
+shipped when the behavior is corrected on the surface where it was noticed; it is
+shipped when every surface a host may read says the same thing.

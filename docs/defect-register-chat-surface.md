@@ -802,6 +802,16 @@ read is refused, nothing is written, the message names the boundary,
 and the domain type is preserved as `__cause__`. That holds on 2.0.0
 and 2.1.0 both, and is strictly stronger than what it replaced.
 
+The product's own gate failed this fix twice before it passed, which is
+the dogfood loop working rather than a detour worth hiding. Declaring
+the refusals pushed `_bind_audit_tool` to 82 lines against a maximum of
+80, and the split that answered it — `_audit_tool_for` — is the second
+function carved out of that binder for exactly this reason, after
+`_register_audit_tool`. The file then crossed 500 lines, and what came
+back out was the explanatory prose, not the code: the reasoning belongs
+in this entry, and the module keeps the five lines a reader needs at
+the seam. Neither threshold was touched.
+
 *Closing test:* `test_a_refusal_is_declared_rather_than_crashing_out_of_either_seam`
 in `tests/test_root_grants.py`, which asserts the contract rather than
 the symptom: a refusal must never reach a caller as one of the SDK's

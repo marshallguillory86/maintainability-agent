@@ -45,6 +45,10 @@ An out-of-roots audit elicitation offers **this session**, **always**, and
 **no**, with **this session** pre-selected. Always persists a user-tier
 `allowed_roots` entry; a session grant changes only the running process; no
 returns the static `--allow-root` and environment-variable remedies.
+How that refusal survives MCP is the entry-layer transport rule in
+[architecture.md](architecture.md#the-rules-and-why-each-exists): only the
+transport declares the named anticipated refusals that may carry their text to
+the caller.
 
 ### Decision 6 — Verification-audit L scope stays in one slice
 

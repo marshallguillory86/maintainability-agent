@@ -49,9 +49,9 @@ Repeat `--allow-root` to authorize unrelated repository directories. With no exp
 | `--backfill-interval N` | With `--backfill`, scan every Nth commit instead of all of them. |
 | `--sarif-output` | Write SARIF report for GitHub code scanning. |
 | `--init-agent-standards` | Generate model/tool-specific instruction files and exit without running an audit. |
-| `--install-skill` | Copy the packaged agent skill into the skills directory and exit. Re-run after every upgrade: an installed skill that drifts from the shipped one teaches agents a dead workflow. |
+| `--install-skill` | Copy the packaged agent skill into the skills directory and exit. Re-run after every upgrade: an installed skill that drifts from the shipped one teaches agents a dead workflow. What it writes is the `_skill_data` payload inside the distribution; the command reads that payload and compares it against what is already installed, and it does not consult the repository. That the payload matches the reviewed `skills/maintainability-agent/SKILL.md` is held by the suite — `tests/test_wheel_contents.py` asserts it byte-for-byte against a staged build — not by a check at run time. |
 | `--skills-dir` | Where `--install-skill` writes (default `~/.claude/skills`). |
-| `--force-skill` | With `--install-skill`: overwrite a differing installed copy and remove files the package no longer ships. Without it, a differing copy is refused with the list of differences. |
+| `--force-skill` | With `--install-skill`: overwrite a differing installed copy and remove files the package no longer ships. Without it, a differing copy is refused with the list of differences against the packaged payload. |
 | `--target` | Instruction target. Repeatable. |
 | `--instructions-output-dir` | Output directory for generated instruction files. |
 

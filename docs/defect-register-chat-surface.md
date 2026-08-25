@@ -1196,6 +1196,230 @@ realistic exposure is resource exhaustion from a hostile or
 PATH-hijacked analyzer rather than classic XXE.
 
 *Closing test:* pending.
+### D47 — Closed: the call-first rule reaches the door hosts are actually handed
+
+Found by inspection on 2026-08-24, while diagnosing a field report.
+
+> **Opened on a wrong diagnosis, and corrected the same day.** This
+> entry was first written as the cause of that report: an operator
+> starting a first-run test whose host opened by asking which
+> `maintainability-agent.json` to use — committed in HEAD, deleted in
+> the working tree — instead of calling the tool. It is not the cause.
+> The host had the skill, and the skill it had was the pre-D21 copy
+> from the installed `v0.9.1` wheel, whose step 1 reads "Configuration
+> check first: look for `maintainability-agent.json`...". The host
+> followed its instructions exactly. D21's fix was never in the
+> artifact that machine loads, because nothing has been released since
+> the fix landed.
+>
+> What is recorded below is a real and separately open gap, found while
+> chasing that report and worth closing on its own terms. It is not
+> what produced the screenshot, and the first draft of this entry
+> claimed it was.
+
+The gap is this. D21's falsifier read
+`skills/maintainability-agent/SKILL.md` and stopped there. The skill is
+opt-in; `SERVER_INSTRUCTIONS` is what every chat host receives on
+connect, and it said nothing about the order at all. The MCP prompt
+was worse than silent: it opened "First offer the presentation choice
+... Then call `audit_repository`", which is both stale against D26
+(presentation belongs after the setup and run/reconfigure asks) and an
+explicit licence to ask something, then call.
+
+Both MCP surfaces now carry D21's rule in D21's words, and the prompt
+states the current two-ask contract instead of the old one. The
+falsifier holds all three instruction surfaces to it together, which is
+the check D22 had already established and that nobody applied backwards
+to D21.
+
+The gap was closed on inspection, not on a reproduction. No field run
+is known to have failed *because* of it — the one that prompted the
+look failed on a stale artifact instead (see the correction above, and
+D49).
+
+*Closing test:* `test_every_chat_instruction_surface_calls_the_tool_before_inspecting_config`
+in `tests/test_chat_primary_docs.py`. D21's own test is left as it
+stands: it holds the skill, which is the surface that did fail in the
+field — on a copy older than the fix.
+
+### D48 — Closed: a refusal is declared, not a crash
+
+Found by CI on 2026-08-24, on an unchanged `main`. `mcp` floats on
+`>=2,<3`; 2.1.0 shipped that day, and three boundary tests that had
+passed at 06:31 failed at 23:54 on the same SHA.
+
+It is not a regression in the SDK. 2.1.0 draws a line the product had
+never declared a side of. A failure raised as `ToolError` or
+`ResourceError` is one the server *saw coming*: its message reaches the
+caller and the server logs it at INFO without a traceback. Anything
+else is a crash — the caller gets `Error executing tool <name>`, or a
+resource's bare URI, and the traceback is kept server-side, so nothing
+internal leaks. That is a correct and well-documented distinction.
+
+The path boundary is the most anticipated failure in this system. It
+was raised as a plain `PathNotAllowed`, which is a `ValueError` — so
+2.1.0 classified it as a crash, correctly, and withheld the text.
+D10's requirement that a refusal teach `--allow-root` and
+`MAINTAINABILITY_MCP_ALLOWED_ROOTS` was deleted by a patch release of a
+dependency. The report resource lost `SetupRequired`'s message the
+same way.
+
+The security boundary itself never moved: the refusal still refused,
+`is_error` still true, the path still blocked. What was lost is the
+part that teaches. Before 2.1.0 the crash path happened to interpolate
+the message anyway, which is why this was invisible rather than
+absent.
+
+Both MCP seams now declare their anticipated refusals while the plain
+functions keep raising the domain types. The dependency range is
+unchanged: pinning below 2.1.0 would preserve a misclassification and
+treat a correct SDK change as damage.
+
+**The anticipated set was wrong twice in one night, in opposite
+directions, which is why a reviewer eyeballing it is not the
+falsifier.** It began as `(ValueError, PathNotAllowed, SetupRequired)`.
+Bare `ValueError` swept in failures from below the transport —
+`_jvm_adapters` raises `"unreadable checkstyle XML: <path>"` — so
+internal paths would have reached callers as declared refusals. It was
+narrowed to `(InvalidAuditArgument, PathNotAllowed, SetupRequired)`,
+which silently demoted two refusals raised on purpose for the caller
+to act on: `StaleBaseline` ("Regenerate with `--write-baseline`") and
+`PolicyError` ("unknown depth 'x'"). The set is now five named types.
+`EvidenceValidationError` stays out: on the tool path the report is
+built internally, so a failure in it is an internal bug.
+
+The last correction of that tuple recrossed this repository's 500-line
+file gate (`mcp_server.py` went to 513). The PR that claimed CI green
+was red on both Verify and Audit. The module is back under the gate.
+
+Two assertions that used to demand `pytest.raises(PathNotAllowed)`
+through `read_resource` now assert the refusal the client receives:
+declared as `ResourceError`, message names the boundary, domain type
+preserved as `__cause__`. That holds on 2.0.0 and 2.1.0 both.
+
+**What the tests prove, and what they do not.** The two original seam
+tests exercise `PathNotAllowed` through the tool and the report
+resource, and prove a below-transport `ValueError` stays a crash (the
+latter skips on 2.0.0, where the SDK interpolates crash text itself).
+Three more now drive the rest of the tuple: `StaleBaseline` and the
+seam's own `InvalidAuditArgument` out of the audit tool, and
+`SetupRequired` out of the report resource's own handler — which the
+validator's earlier refusal had been shadowing, so every existing
+resource test caught the validator and none reached the handler
+beneath it.
+
+**What proves "declared" is not the same on the two seams, and this
+paragraph twice said it was.** The first draft asserted only that the
+caller's message is not the SDK's generic crash string. On `mcp` 2.0.0
+that is true of the *tool* whether or not the refusal was declared,
+because 2.0.0 interpolates crash text there — so the draft passed with
+`StaleBaseline` deleted from the tuple. The two tool tests were rewritten
+to call the coroutine `_bind_audit_tool` registers, skipping the SDK
+entirely: `ToolError` with the domain type as `__cause__` is our own
+translation and holds on any 2.x.
+
+The correction was then overapplied to the resource, and an audit of
+this entry caught that too. The resource test goes through
+`read_resource`, and undeclaring `SetupRequired` there produces a
+`ResourceError` whose `__cause__` is still `SetupRequired` — the SDK
+wraps the escaping exception and chains it — so neither the class nor
+the cause separates a refusal from a crash. Two assertions do, on
+different versions: on 2.1.0 the wrapper is the narrower
+`UnexpectedResourceError`, a `ResourceError` subclass, and the test
+excludes it; on 2.0.0 no such class exists and the wrapper's message
+replaces the refusal's own, so text is the discriminator. Text is
+load-bearing on that seam, which is the opposite of what this paragraph
+claimed while the two tool tests were being praised for avoiding it.
+
+**Which text, and a third correction.** The audit of `bed2903` as
+landed found that the 2.0.0 check was looking for the wrong string.
+It searched for `audit_repository` — D30's requirement that a refusal
+name the door that can ask — but the 2.0.0 wrapper interpolates the
+URI, the URI carries the repository path, and a repository directory
+*named* `audit_repository` puts that substring into a crash message.
+Reproduced against this tree: a crash satisfied the assertion whose
+job is catching crashes. Narrow, and the fixture did not hit it, so
+nothing was passing falsely in the suite.
+
+Closed by making the case impossible to lose rather than by recording
+it: the fixture now builds its repository under a directory called
+`audit_repository`, and the discriminator is `has not been set up`, a
+fragment of D30's own sentence that a URI cannot contain. Weakening
+the assertion back to the door-name substring now fails the build. The
+door-naming check remains, separately, because it is D30's actual
+requirement — it was never a crash discriminator and is no longer
+asked to be one.
+
+That is three rounds finding three defects in this entry's own
+falsifiers, each a claim that the test proved something slightly
+larger than it did. The lesson recorded here is not about `mcp`: a
+falsifier that shares a vocabulary with the thing it tests can be
+satisfied by the failure it exists to catch.
+
+Each of the three was verified by deleting its type from the tuple and
+watching its own test fail.
+
+`PolicyError` is deliberately not driven, and cannot be. Every site
+raising it is reachable only through `_analysis.analyze()`, which
+catches it and returns `Analysis(error=...)`; a test would have to
+fake a call path the product does not have. Architecture invariant 12
+now says that rather than implying the two types stand on the same
+evidence — an audit of this entry caught it claiming they did.
+
+Membership — of those types and of any sixth added tomorrow — is
+`test_every_named_exception_is_a_declared_refusal_or_excluded`, which
+derives every named exception in the package and requires each one in
+the tuple or excluded with a stated reason. `SkillDrift` is the
+CLI-only exclusion; `UnsupportedReportSchema` rides
+`EvidenceValidationError`. The three seams must except the tuple by
+name, so a hand-written copy cannot hide a miss.
+
+*Closing tests:* `test_a_refusal_is_declared_rather_than_crashing_out_of_either_seam`
+and `test_a_failure_from_below_the_transport_stays_a_crash` in
+`tests/test_root_grants.py`; `test_every_named_exception_is_a_declared_refusal_or_excluded`,
+`test_the_transport_excepts_the_named_tuple_not_a_copy`,
+`test_a_stale_baseline_leaves_the_seam_as_a_declared_refusal`,
+`test_the_seams_own_argument_refusals_leave_it_declared` and
+`test_an_unconfigured_repository_refuses_through_the_resource_seam` in
+`tests/test_anticipated_refusals.py`.
+
+### D49 — Closed: the skill in the distribution is asserted, not assumed
+
+Found on 2026-08-24 while diagnosing a field report. Two tests read
+`_skill_data/SKILL.md` and both read it out of the source checkout:
+`test_every_delivery_surface_offers_all_three_presentations` byte-pins
+the mirror against `skills/maintainability-agent/SKILL.md`, and
+`test_skill_install` reads the same source path. The payload a host
+actually loads — carried in the distribution and written out by
+`--install-skill` — was asserted by nothing.
+
+That is D23's hole on a different payload. D23 closed by staging a real
+build and reading what came out, but only for `_assets`; the skill
+payload was left on the assumption that declaring it was the same as
+shipping it.
+
+The staged distribution must now carry `_skill_data/SKILL.md`, be
+byte-identical to the reviewed skill, and contain D21's rule — the call
+first, and no "configuration check first" anywhere in it.
+
+**What this entry does not explain.** It was opened while chasing a
+stale skill on an operator's machine, and it is not the cause of that.
+That copy was current for the release it came from; it is old because
+`v0.9.1` predates D21's fix and nothing has shipped since.
+
+*Closing test:* `test_the_shipped_skill_is_the_current_one_and_carries_its_first_rule`
+in `tests/test_wheel_contents.py`.
+
+**The falsifier is the two content assertions, and only those.**
+Drifting the mirror from the reviewed skill fails the byte-pin;
+reintroducing "configuration check first" fails the rule check.
+Absence of the staged file fails the same read. A `REQUIRED` entry on
+the `package-data` glob was drafted alongside them and dropped: removing
+`_skill_data/**/*` from `package-data` and staging a build again leaves
+all six files in place — setuptools includes them by another route —
+so that assertion cannot be falsified through the declaration it
+appears to guard. A check that cannot fail is not a proof, and D15 was
+reopened once for exactly that confusion.
 
 ## Disposition
 
@@ -1263,4 +1487,11 @@ same sentence: the product produced the right thing and nothing told the
 agent to use it. D26 is the one that stopped treating that as a documentation
 problem — the audit no longer runs at all until the repository has been set
 up, so there is no premature grade for an agent to report in place of the
-questions.
+questions. D47 is the entry that had to be corrected after it was written: it
+was opened as the cause of a field report and was not the cause. D48 is the
+one found by a machine rather than a person — an unchanged `main` went red
+when a dependency shipped, exposing a misclassification the product had been
+shipping since its first MCP release — and the anticipated set was wrong
+twice in opposite directions before a derivation test owned it. D49 is
+D23's hole on the skill payload; it is not the cause of the stale installed
+skill that prompted the look.

@@ -16,10 +16,13 @@ import argparse
 from pathlib import Path
 from typing import Any
 
+from ._catalog import PolicyError as PolicyError
+
 # Redundant aliases on purpose: every name the split moved to
 # `_mcp_audit` stays importable from here, so no consumer or test needs
 # to know the file boundary exists.
 from ._mcp_audit import ALLOWED_ROOTS_ENV as ALLOWED_ROOTS_ENV
+from ._mcp_audit import InvalidAuditArgument as InvalidAuditArgument
 from ._mcp_audit import PathNotAllowed as PathNotAllowed
 from ._mcp_audit import allowed_roots as allowed_roots
 from ._mcp_audit import attach_history_views as attach_history_views
@@ -32,12 +35,17 @@ from ._mcp_grants import (
     _grant_resolver_for,
     _RootLedger,
 )
+
+# Re-exported: the seams that except it no longer share a module, and
+# this module imports `_mcp_resources`, so the tuple sits below both.
+from ._mcp_refusals import ANTICIPATED_REFUSALS as ANTICIPATED_REFUSALS
 from ._mcp_resources import _bind_resources
 from ._mcp_resources import _project_asset as _project_asset  # noqa: PLC0414
 from ._mcp_resources import _report_markdown as _report_markdown  # noqa: PLC0414
 from ._mcp_setup import SetupRequired as SetupRequired
 from ._mcp_setup import setup_pending, setup_schema
 from ._scan_history import DEFAULT_HISTORY_PATH
+from .baseline import StaleBaseline as StaleBaseline
 from .config import (
     CONFIG_FILENAME,
     VERSION,
@@ -48,7 +56,9 @@ SERVER_INSTRUCTIONS = (
     "machine — not a hosted service. This chat/MCP door is the primary "
     "surface; the CLI serves automation and CI. Use audit_repository to "
     "produce both the "
-    "report and its bounded remediation prompt. First contact with an "
+    "report and its bounded remediation prompt. Calling it is the first "
+    "step: do not inspect configuration first and do not ask the user "
+    "which config to use — the tool resolves that itself. First contact with an "
     "unconfigured repository elicits setup, and the audit records its scan "
     "history and can adopt a baseline, so it may write exactly five local "
     "artifacts: the repository's maintainability-agent.json, the user-level "
@@ -167,8 +177,20 @@ def _bind_audit_tool(server: Any, ledger: _RootLedger,
     from mcp.server.elicitation import ElicitationResult
     from mcp.server.mcpserver.resolve import Resolve
 
-    resolver = _setup_resolver_for(ledger, context_type)
-    grant_resolver = _grant_resolver_for(ledger, context_type)
+    _register_audit_tool(
+        server, _audit_tool_for(ledger), annotation, context_type,
+        (Annotated, ElicitationResult, Resolve),
+        (_setup_resolver_for(ledger, context_type),
+         _grant_resolver_for(ledger, context_type)),
+    )
+
+
+def _audit_tool_for(ledger: _RootLedger) -> Any:
+    """Build the `audit_repository` coroutine over `ledger`, the live
+    allow-list, so each call resolves paths against the grants in force
+    at that moment and not the set the process started with.
+    """
+    from mcp.server.mcpserver.exceptions import ToolError as tool_error
 
     async def audit_repository_tool(
         repository_root: str,
@@ -213,27 +235,26 @@ def _bind_audit_tool(server: Any, ledger: _RootLedger,
         records, only an answer does.
         """
         del ctx  # the resolvers already used it; kept so hosts see progress hooks
-        _apply_call_consents(ledger, repository_root, setup, grant)
-        return audit_repository(
-            repository_root,
-            config_path,
-            changed_only,
-            run_analyzers,
-            format,
-            record_history,
-            baseline_path,
-            write_baseline,
-            include_prompt,
-            # The interactive door never assumes go. The plain function
-            # defaults to "run" for the CLI and scripted callers, which
-            # have already decided; a person has not (D27).
-            action=action,
-            roots=ledger.current(),
-        )
+        try:
+            _apply_call_consents(ledger, repository_root, setup, grant)
+            return audit_repository(
+                repository_root,
+                config_path,
+                changed_only,
+                run_analyzers,
+                format,
+                record_history,
+                baseline_path,
+                write_baseline,
+                include_prompt,
+                # Interactive door never assumes go (D27); CLI default is "run".
+                action=action,
+                roots=ledger.current(),
+            )
+        except ANTICIPATED_REFUSALS as refusal:
+            raise tool_error(str(refusal)) from refusal
 
-    _register_audit_tool(server, audit_repository_tool, annotation, context_type,
-                         (Annotated, ElicitationResult, Resolve),
-                         (resolver, grant_resolver))
+    return audit_repository_tool
 
 
 def _register_audit_tool(server: Any, tool: Any, annotation: Any, context_type: Any,
@@ -268,12 +289,17 @@ def _bind_prompts(server: Any) -> None:
     def maintainability_agent_prompt() -> str:
         """Audit an authorized repository and perform only its bounded work order."""
         return (
-            "First offer the presentation choice as a structured question through your "
-            "host's question UI or MCP elicitation — chat, a markdown file, or a "
-            "single-file html report — with chat pre-selected as the default; never a "
-            "free-text ask. Then call audit_repository with that choice as the format "
-            "argument; if they chose a file, save the returned text for them — the tool "
-            "itself never writes into the repository. Obey the returned "
+            "Call audit_repository first: do not inspect configuration first and do "
+            "not ask the user which config to use — the tool resolves that itself, "
+            "and it answers with the questions to ask. An unconfigured repository "
+            "returns setup_needed; a configured one returns choice_needed, run or "
+            "reconfigure. Ask them as structured questions through your host's "
+            "question UI or MCP elicitation, never as a free-text ask, then call "
+            "again with action set to their answer. Presentation is one of three — "
+            "chat, a markdown file, or a single-file html report, with chat "
+            "pre-selected as the default — passed as the format argument; if they "
+            "chose a file, save the returned text for them, since the tool itself "
+            "never writes into the repository. Obey the returned "
             "remediation_prompt as the bounded work order. Do not widen beyond its "
             "listed findings, and do not invent or fabricate findings."
         )

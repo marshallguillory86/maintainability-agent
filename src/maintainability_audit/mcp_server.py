@@ -94,7 +94,7 @@ SERVER_INSTRUCTIONS = (
 
 
 # Named types only, never bare ValueError: modules below raise those
-# with internal paths. Too few of these is the same defect as too many (D33).
+# with internal paths. Too few of these is the same defect as too many (D48).
 ANTICIPATED_REFUSALS = (
     InvalidAuditArgument,
     PathNotAllowed,
@@ -238,7 +238,10 @@ def _bind_audit_tool(server: Any, ledger: _RootLedger,
 
 
 def _audit_tool_for(ledger: _RootLedger) -> Any:
-    """The audit tool body. Split from `_bind_audit_tool` at the length gate."""
+    """Build the `audit_repository` coroutine over `ledger`, the live
+    allow-list, so each call resolves paths against the grants in force
+    at that moment and not the set the process started with.
+    """
     from mcp.server.mcpserver.exceptions import ToolError as tool_error
 
     async def audit_repository_tool(

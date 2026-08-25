@@ -177,7 +177,7 @@ def test_the_skill_calls_the_tool_before_inspecting_configuration() -> None:
 
 
 def test_every_chat_instruction_surface_calls_the_tool_before_inspecting_config() -> None:
-    """D32: D21's rule reached the skill and stopped there.
+    """D47: D21's rule reached the skill and stopped there.
 
     Found by inspection on 2026-08-24 while diagnosing a field report.
     The report itself is *not* explained by this: that host loaded a

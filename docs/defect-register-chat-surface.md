@@ -746,7 +746,24 @@ here so the limit is known rather than assumed away.
 *Closing test:* `test_every_closing_citation_names_a_test_that_exists`
 in `tests/test_written_record.py`.
 
-### D32 — Closed: the call-first rule reaches the door hosts are actually handed
+## D32–D46 are reserved, not missing
+
+The next entry below is D47. Nothing was deleted. D32 through D46 belong
+to the security and boundary work on `fix/round-two-findings`, which was
+opened first and mints those identifiers; the three entries below were
+originally written as D32–D34 on a branch cut from the same commit, so
+for a day two live branches defined six different defects under three
+identifiers.
+
+That is worse than it looks. The release gate is "zero open entries in
+this register", which is only countable if an entry number means one
+defect. Colliding identifiers do not conflict in git — the two branches
+touch different regions of this file — so nothing would have failed until
+a reader tried to work out which D34 a changelog line meant. The smaller
+branch renumbered. The gap stays as written so the reason survives the
+merge, and it closes when `fix/round-two-findings` lands.
+
+### D47 — Closed: the call-first rule reaches the door hosts are actually handed
 
 Found by inspection on 2026-08-24, while diagnosing a field report.
 
@@ -785,14 +802,14 @@ to D21.
 The gap was closed on inspection, not on a reproduction. No field run
 is known to have failed *because* of it — the one that prompted the
 look failed on a stale artifact instead (see the correction above, and
-D34).
+D49).
 
 *Closing test:* `test_every_chat_instruction_surface_calls_the_tool_before_inspecting_config`
 in `tests/test_chat_primary_docs.py`. D21's own test is left as it
 stands: it holds the skill, which is the surface that did fail in the
 field — on a copy older than the fix.
 
-### D33 — Closed: a refusal is declared, not a crash
+### D48 — Closed: a refusal is declared, not a crash
 
 Found by CI on 2026-08-24, on an unchanged `main`. `mcp` floats on
 `>=2,<3`; 2.1.0 shipped that day, and three boundary tests that had
@@ -847,12 +864,36 @@ through `read_resource` now assert the refusal the client receives:
 declared as `ResourceError`, message names the boundary, domain type
 preserved as `__cause__`. That holds on 2.0.0 and 2.1.0 both.
 
-**What the tests prove, and what they do not.** The two seam tests
-exercise `PathNotAllowed` through the tool and the report resource, and
-prove a below-transport `ValueError` stays a crash (the latter skips
-on 2.0.0, where the SDK interpolates crash text itself). They do not
-raise `StaleBaseline` or `PolicyError` through those seams. Membership
-of those types — and of any sixth type added tomorrow — is
+**What the tests prove, and what they do not.** The two original seam
+tests exercise `PathNotAllowed` through the tool and the report
+resource, and prove a below-transport `ValueError` stays a crash (the
+latter skips on 2.0.0, where the SDK interpolates crash text itself).
+Three more now drive the rest of the tuple: `StaleBaseline` and the
+seam's own `InvalidAuditArgument` out of the audit tool, and
+`SetupRequired` out of the report resource's own handler — which the
+validator's earlier refusal had been shadowing, so every existing
+resource test caught the validator and none reached the handler
+beneath it.
+
+Those three assert against the registered seam rather than a client,
+and the reason is a defect that was written into this file first. The
+draft asserted that the caller's message is not the SDK's generic
+crash string. On `mcp` 2.0.0 that is true whether or not the refusal
+was ever declared, because 2.0.0 interpolates crash text — so the
+draft passed with `StaleBaseline` deleted from the tuple. What is
+version-independent is the translation itself: an anticipated refusal
+leaves the seam as `ToolError` or `ResourceError` carrying its domain
+type as `__cause__`. Each of the three was verified by deleting its
+type from the tuple and watching the test fail.
+
+`PolicyError` is deliberately not driven, and cannot be. Every site
+raising it is reachable only through `_analysis.analyze()`, which
+catches it and returns `Analysis(error=...)`; a test would have to
+fake a call path the product does not have. Architecture invariant 12
+now says that rather than implying the two types stand on the same
+evidence — an audit of this entry caught it claiming they did.
+
+Membership — of those types and of any sixth added tomorrow — is
 `test_every_named_exception_is_a_declared_refusal_or_excluded`, which
 derives every named exception in the package and requires each one in
 the tuple or excluded with a stated reason. `SkillDrift` is the
@@ -862,11 +903,14 @@ name, so a hand-written copy cannot hide a miss.
 
 *Closing tests:* `test_a_refusal_is_declared_rather_than_crashing_out_of_either_seam`
 and `test_a_failure_from_below_the_transport_stays_a_crash` in
-`tests/test_root_grants.py`; `test_every_named_exception_is_a_declared_refusal_or_excluded`
-and `test_the_transport_excepts_the_named_tuple_not_a_copy` in
+`tests/test_root_grants.py`; `test_every_named_exception_is_a_declared_refusal_or_excluded`,
+`test_the_transport_excepts_the_named_tuple_not_a_copy`,
+`test_a_stale_baseline_leaves_the_seam_as_a_declared_refusal`,
+`test_the_seams_own_argument_refusals_leave_it_declared` and
+`test_an_unconfigured_repository_refuses_through_the_resource_seam` in
 `tests/test_anticipated_refusals.py`.
 
-### D34 — Closed: the skill in the distribution is asserted, not assumed
+### D49 — Closed: the skill in the distribution is asserted, not assumed
 
 Found on 2026-08-24 while diagnosing a field report. Two tests read
 `_skill_data/SKILL.md` and both read it out of the source checkout:
@@ -941,11 +985,11 @@ same sentence: the product produced the right thing and nothing told the
 agent to use it. D26 is the one that stopped treating that as a documentation
 problem — the audit no longer runs at all until the repository has been set
 up, so there is no premature grade for an agent to report in place of the
-questions. D32 is the entry that had to be corrected after it was written: it
-was opened as the cause of a field report and was not the cause. D33 is the
+questions. D47 is the entry that had to be corrected after it was written: it
+was opened as the cause of a field report and was not the cause. D48 is the
 one found by a machine rather than a person — an unchanged `main` went red
 when a dependency shipped, exposing a misclassification the product had been
 shipping since its first MCP release — and the anticipated set was wrong
-twice in opposite directions before a derivation test owned it. D34 is
+twice in opposite directions before a derivation test owned it. D49 is
 D23's hole on the skill payload; it is not the cause of the stale installed
 skill that prompted the look.

@@ -166,7 +166,7 @@ def test_report_resource_never_elicits_or_persists_a_root_grant(tmp_path: Path) 
 def test_a_refusal_is_declared_rather_than_crashing_out_of_either_seam(
     tmp_path: Path,
 ) -> None:
-    """D33: the SDK tells a refusal from a crash, and ours read as crashes.
+    """D48: the SDK tells a refusal from a crash, and ours read as crashes.
 
     `mcp` 2.1 draws a line the product had never declared a side of. A
     failure raised as `ToolError`/`ResourceError` is one the server *saw
@@ -226,7 +226,7 @@ def test_a_refusal_is_declared_rather_than_crashing_out_of_either_seam(
 
 
 def test_a_failure_from_below_the_transport_stays_a_crash(tmp_path: Path) -> None:
-    """D33: declaring refusals must not turn every ValueError into one.
+    """D48: declaring refusals must not turn every ValueError into one.
 
     The first version of the fix listed bare `ValueError` as anticipated.
     That reads as harmless — the seam's own argument validation raises

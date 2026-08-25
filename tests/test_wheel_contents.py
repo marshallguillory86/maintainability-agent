@@ -126,7 +126,7 @@ def test_the_packaged_standard_matches_the_documented_one() -> None:
 def test_the_shipped_skill_is_the_current_one_and_carries_its_first_rule(
     wheel: Path,
 ) -> None:
-    """D34: the skill a user loads is the staged one, not the repo one.
+    """D49: the skill a user loads is the staged one, not the repo one.
 
     Two tests already read `_skill_data/SKILL.md`, and both read it out
     of the source checkout: `test_every_delivery_surface_offers_all_three_presentations`

@@ -22,7 +22,39 @@ All notable changes to Maintainability Agent will be documented here.
   type added tomorrow fails the build instead of a reviewer. Surfaced when
   `mcp` 2.1.0 stopped interpolating crash text; the dependency range is
   unchanged, because the SDK's behavior is correct and the misclassification
-  was ours (D33).
+  was ours (D48). Every member of that set which can reach a seam is now
+  driven through one — `StaleBaseline` and `InvalidAuditArgument` out of the
+  audit tool, `SetupRequired` out of the report resource's own handler, each
+  verified by deleting its type from the tuple and watching the test fail.
+  The first draft of those tests asserted that the caller's message is not
+  the SDK's generic crash string, which on `mcp` 2.0.0 is true either way;
+  it passed with `StaleBaseline` removed. They assert the translation itself
+  instead.
+- **Three documentation claims that outran the code.** An audit of the change
+  above found each of them. Architecture invariant 12 justified `PolicyError`'s
+  place in the anticipated set by saying a missing type stops teaching — but
+  `PolicyError` cannot reach any seam, because `_analysis.analyze()` catches it
+  and returns `Analysis(error=...)`; it is declared ahead of a path that does
+  not exist yet, and the invariant now says so while keeping the claim for
+  `StaleBaseline`, which does travel. `docs/cli.md` described `--install-skill`
+  as checking its copy against the reviewed
+  `skills/maintainability-agent/SKILL.md`; the command reads the packaged
+  `_skill_data` payload and consults no repository, and what holds that payload
+  to the reviewed file is the suite. And `_audit_tool_for`'s docstring
+  explained the function in terms of this repository's own 500-line gate
+  rather than what it does.
+
+### Changed
+
+- **The three entries below are renumbered D47–D49; the register jumps from
+  D31 to D47.** They were written as D32–D34 on a branch cut from the same
+  commit as `fix/round-two-findings`, which had already minted D32–D46, so for
+  a day two live branches defined six different defects under three
+  identifiers. Nothing conflicts in git — the branches touch different regions
+  of the register — so nothing would have failed until a reader tried to work
+  out which D34 a changelog line meant. The release gate is "zero open entries
+  in the register", which is only countable if an entry number means one
+  defect. The gap is reserved, not missing, and closes when that branch lands.
 - **The chat surface calls the audit before it inspects configuration, on every
   door it is reached through.** D21 established the rule — call
   `audit_repository` first, never deliberate over a missing or stale
@@ -32,14 +64,14 @@ All notable changes to Maintainability Agent will be documented here.
   `audit_repository`". Both MCP surfaces now state the rule in D21's words.
   Found by inspection while diagnosing a field report that this does not
   explain — that host loaded a pre-D21 skill from a wheel older than the fix
-  (D32).
+  (D47).
 - **The skill inside the distribution is checked, not assumed.** Two tests read
   `_skill_data/SKILL.md` from the source checkout, so the payload a host
   actually loads — carried in the built distribution and written out by
   `--install-skill` — was asserted by nothing. The staged build must now carry
   it, byte-identical to the reviewed skill, with D21's call-first rule in it
   and no "configuration check first" anywhere. Same shape as D23, on the
-  payload D23 did not cover (D34).
+  payload D23 did not cover (D49).
 
 ## 0.9.1 - 2026-08-21
 

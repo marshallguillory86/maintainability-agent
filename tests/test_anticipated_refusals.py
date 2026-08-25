@@ -307,10 +307,21 @@ def test_an_unconfigured_repository_refuses_through_the_resource_seam() -> None:
     narrower `UnexpectedResourceError`, which subclasses `ResourceError`
     and so is caught by the same `pytest.raises`; excluding it is what
     separates the two there. On 2.0.0 no such class exists and the
-    wrapper's message — "Error creating resource from template …" —
-    replaces the refusal's own text, so the sentence naming the door is
-    the discriminator. Both assertions are load-bearing, on different
-    versions.
+    wrapper's message — "Error creating resource from template {uri}" —
+    replaces the refusal's own text, so text is the discriminator there.
+    Both assertions are load-bearing, on different versions.
+
+    **Which text, though.** An audit of this test found that checking
+    for `audit_repository` alone false-passes on 2.0.0: the wrapper
+    interpolates the URI, the URI contains the repository path, and a
+    repository directory *named* `audit_repository` puts the substring
+    into the crash message. Reproduced — a crash then satisfied the
+    check that exists to catch crashes.
+
+    So the fixture builds the repository under exactly that directory
+    name, and the discriminator is a fragment of D30's own sentence
+    that cannot survive being replaced. Weakening the assertion back to
+    the substring is now a failing test rather than a silent hole.
     """
     from mcp.server.mcpserver.exceptions import ResourceError
 
@@ -320,7 +331,10 @@ def test_an_unconfigured_repository_refuses_through_the_resource_seam() -> None:
         UnexpectedResourceError = ()  # type: ignore[assignment,misc]
 
     with tempfile.TemporaryDirectory() as work:
-        base = Path(work)
+        # Adversarial on purpose: this name lands in the URI, and so in
+        # the 2.0.0 crash wrapper's message. See the docstring.
+        base = Path(work) / "audit_repository"
+        base.mkdir()
         root = _repo(base)  # authorized below, deliberately unconfigured
         server = create_server(roots=(base.resolve(),))
 
@@ -331,6 +345,15 @@ def test_an_unconfigured_repository_refuses_through_the_resource_seam() -> None:
     assert not isinstance(refusal.value, UnexpectedResourceError), (
         "the resource refusal reached the reader as the SDK's crash wrapper"
     )
+    # The discriminator on 2.0.0. A crash replaces the refusal's text
+    # wholesale, and this fragment cannot appear in an interpolated URI.
+    assert "has not been set up" in message, (
+        "the refusal's own text did not survive: the reader got the SDK's "
+        f"crash wrapper instead of D30's sentence: {message}"
+    )
+    # D30's actual requirement, kept separately: the refusal names the
+    # door that *can* ask. On its own this is not a crash/refusal
+    # discriminator — see the docstring.
     assert "audit_repository" in message, (
         "the resource refusal reached the reader without naming the door "
         f"that can ask: {message}"

@@ -26,10 +26,17 @@ All notable changes to Maintainability Agent will be documented here.
   driven through one — `StaleBaseline` and `InvalidAuditArgument` out of the
   audit tool, `SetupRequired` out of the report resource's own handler, each
   verified by deleting its type from the tuple and watching the test fail.
-  The first draft of those tests asserted that the caller's message is not
-  the SDK's generic crash string, which on `mcp` 2.0.0 is true either way;
-  it passed with `StaleBaseline` removed. They assert the translation itself
-  instead.
+  What proves "declared" differs by seam, and two drafts of these tests got
+  it wrong in opposite directions. The first asserted only that the caller's
+  message is not the SDK's generic crash string, which on `mcp` 2.0.0 is true
+  of the tool either way — it passed with `StaleBaseline` removed. The tool
+  tests now call the registered coroutine directly, so `ToolError` plus the
+  chained domain type is our own translation on any 2.x. Applying that same
+  reasoning to the resource was the second mistake: there the SDK wraps and
+  chains an escaping exception, so a crash also arrives as `ResourceError`
+  with the original `__cause__`. That test excludes the 2.1.0 crash wrapper
+  `UnexpectedResourceError` and requires the refusal's own text, which is
+  what separates the two on 2.0.0.
 - **Three documentation claims that outran the code.** An audit of the change
   above found each of them. Architecture invariant 12 justified `PolicyError`'s
   place in the anticipated set by saying a missing type stops teaching — but

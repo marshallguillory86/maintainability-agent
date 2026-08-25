@@ -875,16 +875,32 @@ validator's earlier refusal had been shadowing, so every existing
 resource test caught the validator and none reached the handler
 beneath it.
 
-Those three assert against the registered seam rather than a client,
-and the reason is a defect that was written into this file first. The
-draft asserted that the caller's message is not the SDK's generic
-crash string. On `mcp` 2.0.0 that is true whether or not the refusal
-was ever declared, because 2.0.0 interpolates crash text — so the
-draft passed with `StaleBaseline` deleted from the tuple. What is
-version-independent is the translation itself: an anticipated refusal
-leaves the seam as `ToolError` or `ResourceError` carrying its domain
-type as `__cause__`. Each of the three was verified by deleting its
-type from the tuple and watching the test fail.
+**What proves "declared" is not the same on the two seams, and this
+paragraph twice said it was.** The first draft asserted only that the
+caller's message is not the SDK's generic crash string. On `mcp` 2.0.0
+that is true of the *tool* whether or not the refusal was declared,
+because 2.0.0 interpolates crash text there — so the draft passed with
+`StaleBaseline` deleted from the tuple. The two tool tests were rewritten
+to call the coroutine `_bind_audit_tool` registers, skipping the SDK
+entirely: `ToolError` with the domain type as `__cause__` is our own
+translation and holds on any 2.x.
+
+The correction was then overapplied to the resource, and an audit of
+this entry caught that too. The resource test goes through
+`read_resource`, and undeclaring `SetupRequired` there produces a
+`ResourceError` whose `__cause__` is still `SetupRequired` — the SDK
+wraps the escaping exception and chains it — so neither the class nor
+the cause separates a refusal from a crash. Two assertions do, on
+different versions: on 2.1.0 the wrapper is the narrower
+`UnexpectedResourceError`, a `ResourceError` subclass, and the test
+excludes it; on 2.0.0 no such class exists and the wrapper's message
+replaces the refusal's own, so the sentence naming `audit_repository`
+is the discriminator. Text is load-bearing on that seam, which is the
+opposite of what this paragraph claimed while the two tool tests were
+being praised for avoiding it.
+
+Each of the three was verified by deleting its type from the tuple and
+watching its own test fail.
 
 `PolicyError` is deliberately not driven, and cannot be. Every site
 raising it is reachable only through `_analysis.analyze()`, which

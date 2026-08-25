@@ -19,6 +19,7 @@ from typing import Any
 import pytest
 from _mcp_fixtures import _config, _repo, _resource_text
 
+from maintainability_audit._mcp_audit import InvalidAuditArgument
 from maintainability_audit._mcp_grants import _RootLedger
 from maintainability_audit._mcp_setup import SetupRequired
 from maintainability_audit.baseline import StaleBaseline
@@ -267,15 +268,19 @@ def test_the_seams_own_argument_refusals_leave_it_declared() -> None:
                 "repository_root": str(root), "format": "yaml", "action": "run",
             },
         }
-        seen: dict[str, str] = {}
+        seen: dict[str, tuple[str, Any]] = {}
         for expected, arguments in cases.items():
             with pytest.raises(ToolError) as refusal:
                 asyncio.run(tool(**arguments))
-            seen[expected] = str(refusal.value)
+            seen[expected] = (str(refusal.value), refusal.value.__cause__)
 
-    for expected, message in seen.items():
+    for expected, (message, cause) in seen.items():
         assert expected in message, (
             f"expected {expected!r} in the declared refusal, got: {message}"
+        )
+        assert isinstance(cause, InvalidAuditArgument), (
+            f"{expected!r} lost the domain type it was translated from: "
+            f"{type(cause).__name__}"
         )
 
 
@@ -292,8 +297,27 @@ def test_an_unconfigured_repository_refuses_through_the_resource_seam() -> None:
     The validator refuses an unauthorized root first, so every existing
     resource refusal is caught there; this root is authorized and
     unconfigured, which is the one way through to the handler below it.
+
+    Unlike the two tool tests above, this one goes through the SDK, so
+    what proves "declared" is version-dependent and neither the class
+    nor `__cause__` is enough on its own. Undeclaring `SetupRequired`
+    and reading what arrives: the type is still `ResourceError`, and
+    `__cause__` is still `SetupRequired`, because the SDK wraps the
+    escaping exception and chains it. On 2.1.0 the wrapper is the
+    narrower `UnexpectedResourceError`, which subclasses `ResourceError`
+    and so is caught by the same `pytest.raises`; excluding it is what
+    separates the two there. On 2.0.0 no such class exists and the
+    wrapper's message — "Error creating resource from template …" —
+    replaces the refusal's own text, so the sentence naming the door is
+    the discriminator. Both assertions are load-bearing, on different
+    versions.
     """
     from mcp.server.mcpserver.exceptions import ResourceError
+
+    try:
+        from mcp.server.mcpserver.exceptions import UnexpectedResourceError
+    except ImportError:  # pragma: no cover - depends on the resolved mcp
+        UnexpectedResourceError = ()  # type: ignore[assignment,misc]
 
     with tempfile.TemporaryDirectory() as work:
         base = Path(work)
@@ -304,6 +328,9 @@ def test_an_unconfigured_repository_refuses_through_the_resource_seam() -> None:
             _resource_text(server, root)
 
     message = str(refusal.value)
+    assert not isinstance(refusal.value, UnexpectedResourceError), (
+        "the resource refusal reached the reader as the SDK's crash wrapper"
+    )
     assert "audit_repository" in message, (
         "the resource refusal reached the reader without naming the door "
         f"that can ask: {message}"

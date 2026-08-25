@@ -802,6 +802,28 @@ read is refused, nothing is written, the message names the boundary,
 and the domain type is preserved as `__cause__`. That holds on 2.0.0
 and 2.1.0 both, and is strictly stronger than what it replaced.
 
+**The first version of this fix widened the boundary it was written to
+restore, and that is recorded rather than quietly corrected.**
+`ANTICIPATED_REFUSALS` began as `(ValueError, PathNotAllowed,
+SetupRequired)`. Bare `ValueError` reads as harmless — the seam's own
+argument validation raises it — but modules below the transport raise it
+too, with messages that name internal state and paths: `_formula` raises
+"a category must retain at least one applicable aspect",
+`_jvm_adapters` raises "unreadable checkstyle XML: <error>". Under that
+tuple each would have reached an MCP caller as a *declared* refusal
+carrying its text, which is exactly the leak the SDK's crash path
+exists to prevent. A fix for a refusal that says too little had turned
+into one that says too much.
+
+The seam's own argument validation now raises a named
+`InvalidAuditArgument`, a `ValueError` subclass so the CLI and every
+test matching on `ValueError` keep working, and only named types are
+anticipated. Demonstrated in both directions on 2.1.0: with the broad
+tuple an internal path reaches the caller, with the narrow one it does
+not. The falsifier skips on 2.0.0 rather than pretending, because that
+SDK interpolates the original message into the crash text itself, so no
+product change could withhold it there and there is nothing to assert.
+
 The product's own gate failed this fix twice before it passed, which is
 the dogfood loop working rather than a detour worth hiding. Declaring
 the refusals pushed `_bind_audit_tool` to 82 lines against a maximum of
@@ -812,9 +834,12 @@ back out was the explanatory prose, not the code: the reasoning belongs
 in this entry, and the module keeps the five lines a reader needs at
 the seam. Neither threshold was touched.
 
-*Closing test:* `test_a_refusal_is_declared_rather_than_crashing_out_of_either_seam`
-in `tests/test_root_grants.py`, which asserts the contract rather than
-the symptom: a refusal must never reach a caller as one of the SDK's
+*Closing tests:* `test_a_refusal_is_declared_rather_than_crashing_out_of_either_seam`
+and `test_a_failure_from_below_the_transport_stays_a_crash`, both in
+`tests/test_root_grants.py`. The second holds the line the first fix
+crossed: a failure raised below the transport must still reach the
+caller as the generic crash text, with nothing internal in it. The
+first asserts the contract rather than the symptom: a refusal must never reach a caller as one of the SDK's
 `Unexpected*` wrappers, whichever 2.x resolves, because that wrapper is
 the SDK saying this server crashed. Verified against both 2.0.0 and
 2.1.0, and confirmed to fail against 2.1.0 without the declaration.

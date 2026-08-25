@@ -222,3 +222,63 @@ def test_a_refusal_is_declared_rather_than_crashing_out_of_either_seam(
         "the resource boundary refusal reaches the reader as a crash"
     )
     assert "outside" in str(refusal.value).lower()
+
+def test_a_failure_from_below_the_transport_stays_a_crash(tmp_path: Path) -> None:
+    """D33: declaring refusals must not turn every ValueError into one.
+
+    The first version of the fix listed bare `ValueError` as anticipated.
+    That reads as harmless — the seam's own argument validation raises
+    it — but modules below the transport raise it too, with messages
+    that name internal state and file paths: `_formula` raises "a
+    category must retain at least one applicable aspect",
+    `_jvm_adapters` raises "unreadable checkstyle XML: <error>". Under
+    that tuple each would have reached an MCP caller as a declared
+    refusal carrying its text, which is precisely the leak the SDK's
+    crash path exists to prevent. The fix would have widened the
+    boundary it was written to restore.
+
+    Only named seam types are anticipated now. This holds that line from
+    the outside: a failure raised below the transport must reach the
+    caller as the generic crash text, with nothing internal in it.
+    """
+    from mcp import Client
+
+    from maintainability_audit import mcp_server
+
+    try:
+        # The probe is the capability, not the version string. Before
+        # this class existed the SDK interpolated the original message
+        # into the crash text itself, so no product change could keep it
+        # from the caller and there is nothing here to assert.
+        from mcp.server.mcpserver.exceptions import UnexpectedToolError  # noqa: F401
+    except ImportError:  # pragma: no cover - depends on the resolved mcp
+        pytest.skip("this mcp does not withhold crash text; the leak is its own")
+
+    root = _repo(tmp_path / "repo", config=_config())
+    server = create_server(roots=(tmp_path.resolve(),))
+
+    secret = "/etc/some-internal-path-no-caller-should-see"
+
+    def explode(*_args: Any, **_kwargs: Any) -> None:
+        raise ValueError(f"unreadable checkstyle XML: {secret}")
+
+    async def call() -> Any:
+        async with Client(server) as client:
+            return await client.call_tool(
+                "audit_repository",
+                {"repository_root": str(root), "action": "run"},
+            )
+
+    original = mcp_server.audit_repository
+    mcp_server.audit_repository = explode
+    try:
+        result = asyncio.run(call())
+    finally:
+        mcp_server.audit_repository = original
+
+    assert result.is_error
+    message = _tool_text(result)
+    assert secret not in message, (
+        "a failure from below the transport leaked its message to the caller"
+    )
+    assert "checkstyle" not in message.lower()

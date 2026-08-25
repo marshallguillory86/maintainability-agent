@@ -46,6 +46,19 @@ from .renderers import render_markdown
 from .report import build_report
 
 ALLOWED_ROOTS_ENV = "MAINTAINABILITY_MCP_ALLOWED_ROOTS"
+
+
+class InvalidAuditArgument(ValueError):
+    """An argument this seam rejected before any audit began.
+
+    Named so the transport can tell the refusals it makes on purpose
+    from a `ValueError` raised somewhere below it. `_formula`,
+    `_jvm_adapters` and others raise bare `ValueError`s whose messages
+    name internal state and file paths; those must stay crashes, whose
+    text the SDK withholds. A `ValueError` subclass keeps every existing
+    caller — the CLI and the tests that match on `ValueError` — working
+    unchanged.
+    """
 DEFAULT_BASELINE_PATH = ".maintainability/baseline.json"
 _REVSPEC = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/@^~:+-]*(?:\.{2,3}[A-Za-z0-9._/@^~:+-]+)?")
 
@@ -81,7 +94,7 @@ def _inside(path: Path, roots: tuple[Path, ...]) -> bool:
 def authorize_repository(repository_root: str, roots: tuple[Path, ...]) -> Path:
     root = _resolved(repository_root)
     if not root.is_dir():
-        raise ValueError(f"repository_root is not a directory: {root}")
+        raise InvalidAuditArgument(f"repository_root is not a directory: {root}")
     if not _inside(root, roots):
         allowed = ", ".join(str(item) for item in roots)
         raise PathNotAllowed(
@@ -98,7 +111,7 @@ def authorize_config(config_path: str | None, root: Path) -> str | None:
         return None
     config = _resolved(config_path, relative_to=root)
     if not config.is_file():
-        raise ValueError(f"config_path is not a file: {config}")
+        raise InvalidAuditArgument(f"config_path is not a file: {config}")
     if not (config == root or config.is_relative_to(root)):
         raise PathNotAllowed(f"config_path {config} is outside repository_root {root}")
     return str(config)
@@ -109,7 +122,7 @@ def validate_revspec(changed_only: str | None) -> str | None:
     if changed_only is None:
         return None
     if len(changed_only) > 200 or not _REVSPEC.fullmatch(changed_only):
-        raise ValueError("changed_only must be one git revision or range without whitespace or options")
+        raise InvalidAuditArgument("changed_only must be one git revision or range without whitespace or options")
     return changed_only
 
 
@@ -344,7 +357,7 @@ def _finish_result(result: dict[str, Any], format: str, root: Path,
     files are the CLI's job (ADR 011 §4).
     """
     if format not in ("chat", "markdown", "html", "json"):
-        raise ValueError(f"format must be chat, markdown, html or json, not {format!r}")
+        raise InvalidAuditArgument(f"format must be chat, markdown, html or json, not {format!r}")
     # D8: the requested format governs the payload — one findings body
     # per call (html also carries Markdown: chat shows Markdown
     # whatever else was requested, ADR 011). The report dict travels

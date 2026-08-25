@@ -20,6 +20,7 @@ from typing import Any
 # `_mcp_audit` stays importable from here, so no consumer or test needs
 # to know the file boundary exists.
 from ._mcp_audit import ALLOWED_ROOTS_ENV as ALLOWED_ROOTS_ENV
+from ._mcp_audit import InvalidAuditArgument as InvalidAuditArgument
 from ._mcp_audit import PathNotAllowed as PathNotAllowed
 from ._mcp_audit import allowed_roots as allowed_roots
 from ._mcp_audit import attach_history_views as attach_history_views
@@ -90,9 +91,11 @@ SERVER_INSTRUCTIONS = (
 # Refusals this seam makes on purpose, as opposed to a crash. The SDK
 # carries an anticipated failure's message to the caller and reduces a
 # crash to "Error executing tool <name>", so a refusal that is not
-# declared teaches nothing (D33). `PathNotAllowed` is a `ValueError`,
-# named here for the reader rather than for the tuple.
-ANTICIPATED_REFUSALS = (ValueError, PathNotAllowed, SetupRequired)
+# declared teaches nothing (D33). Named types only, never bare
+# `ValueError`: modules below the transport raise those with messages
+# that name internal state and file paths, and those must stay crashes
+# whose text the SDK withholds.
+ANTICIPATED_REFUSALS = (InvalidAuditArgument, PathNotAllowed, SetupRequired)
 
 
 def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:

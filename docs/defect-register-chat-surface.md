@@ -894,10 +894,34 @@ the cause separates a refusal from a crash. Two assertions do, on
 different versions: on 2.1.0 the wrapper is the narrower
 `UnexpectedResourceError`, a `ResourceError` subclass, and the test
 excludes it; on 2.0.0 no such class exists and the wrapper's message
-replaces the refusal's own, so the sentence naming `audit_repository`
-is the discriminator. Text is load-bearing on that seam, which is the
-opposite of what this paragraph claimed while the two tool tests were
-being praised for avoiding it.
+replaces the refusal's own, so text is the discriminator. Text is
+load-bearing on that seam, which is the opposite of what this paragraph
+claimed while the two tool tests were being praised for avoiding it.
+
+**Which text, and a third correction.** The audit of `bed2903` as
+landed found that the 2.0.0 check was looking for the wrong string.
+It searched for `audit_repository` — D30's requirement that a refusal
+name the door that can ask — but the 2.0.0 wrapper interpolates the
+URI, the URI carries the repository path, and a repository directory
+*named* `audit_repository` puts that substring into a crash message.
+Reproduced against this tree: a crash satisfied the assertion whose
+job is catching crashes. Narrow, and the fixture did not hit it, so
+nothing was passing falsely in the suite.
+
+Closed by making the case impossible to lose rather than by recording
+it: the fixture now builds its repository under a directory called
+`audit_repository`, and the discriminator is `has not been set up`, a
+fragment of D30's own sentence that a URI cannot contain. Weakening
+the assertion back to the door-name substring now fails the build. The
+door-naming check remains, separately, because it is D30's actual
+requirement — it was never a crash discriminator and is no longer
+asked to be one.
+
+That is three rounds finding three defects in this entry's own
+falsifiers, each a claim that the test proved something slightly
+larger than it did. The lesson recorded here is not about `mcp`: a
+falsifier that shares a vocabulary with the thing it tests can be
+satisfied by the failure it exists to catch.
 
 Each of the three was verified by deleting its type from the tuple and
 watching its own test fail.

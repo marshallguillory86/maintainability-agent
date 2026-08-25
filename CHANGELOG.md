@@ -36,7 +36,15 @@ All notable changes to Maintainability Agent will be documented here.
   chains an escaping exception, so a crash also arrives as `ResourceError`
   with the original `__cause__`. That test excludes the 2.1.0 crash wrapper
   `UnexpectedResourceError` and requires the refusal's own text, which is
-  what separates the two on 2.0.0.
+  what separates the two on 2.0.0. The third mistake was *which* text: it
+  looked for `audit_repository`, and the 2.0.0 wrapper interpolates the URI,
+  so a repository directory of that name puts the substring into a crash
+  message — reproduced, a crash satisfying the assertion meant to catch
+  crashes. The fixture now builds under exactly that directory name and the
+  discriminator is `has not been set up`, a fragment of the refusal's own
+  sentence that a URI cannot carry; the door-naming check stays as D30's
+  separate requirement. A falsifier that shares a vocabulary with the thing
+  it tests can be satisfied by the failure it exists to catch.
 - **Three documentation claims that outran the code.** An audit of the change
   above found each of them. Architecture invariant 12 justified `PolicyError`'s
   place in the anticipated set by saying a missing type stops teaching — but

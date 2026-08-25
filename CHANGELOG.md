@@ -13,7 +13,7 @@ All notable changes to Maintainability Agent will be documented here.
   product raised its most anticipated failure, the allowed-roots boundary, as a
   plain `PathNotAllowed`, so it was classified as a crash and its text
   withheld: a user pointing the tool outside its roots was no longer told why,
-  nor that `--allow-root` and `MAINTAINABILITY_ALLOWED_ROOTS` exist. The report
+  nor that `--allow-root` and `MAINTAINABILITY_MCP_ALLOWED_ROOTS` exist. The report
   resource lost `SetupRequired`'s message the same way. Both MCP seams now
   declare their anticipated refusals (`ToolError`, `ResourceError`) while the
   plain functions keep raising the domain types for the CLI and library

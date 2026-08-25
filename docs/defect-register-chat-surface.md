@@ -765,7 +765,7 @@ raised deliberately, at a seam whose entire job is refusing, with a
 message written to name both static grant doors. It was raised as a
 plain `PathNotAllowed`, which is a `ValueError` — so 2.1.0 classified
 it as a crash, correctly, and withheld the text. D10's requirement that
-a refusal teach `--allow-root` and `MAINTAINABILITY_ALLOWED_ROOTS`
+a refusal teach `--allow-root` and `MAINTAINABILITY_MCP_ALLOWED_ROOTS`
 was deleted by a patch release of a dependency. The report resource
 lost `SetupRequired`'s message the same way, which is D30's remedy
 pointing at the door that can ask.

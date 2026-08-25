@@ -45,6 +45,10 @@ root to the user configuration, never the repository configuration. No—or a
 host without elicitation—returns the boundary error with the `--allow-root` and
 `MAINTAINABILITY_MCP_ALLOWED_ROOTS` remedies. Report-resource reads never ask
 for or persist a grant.
+How that boundary text survives MCP is the entry-layer transport rule in
+[../architecture.md](../architecture.md#the-rules-and-why-each-exists): only
+the transport declares the named anticipated refusals that may carry their text
+to the caller.
 
 ## History consent and files
 

@@ -4,6 +4,82 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+### Fixed
+
+- **A boundary refusal reaches the caller as a refusal, not as a crash.** The
+  MCP SDK distinguishes a failure the server anticipated — whose message
+  reaches the caller — from a crash, which is reduced to `Error executing tool
+  <name>` (or a resource's bare URI) with the traceback kept server-side. This
+  product raised its most anticipated failure, the allowed-roots boundary, as a
+  plain `PathNotAllowed`, so it was classified as a crash and its text
+  withheld: a user pointing the tool outside its roots was no longer told why,
+  nor that `--allow-root` and `MAINTAINABILITY_MCP_ALLOWED_ROOTS` exist. The
+  report resource lost `SetupRequired`'s message the same way. Both MCP seams
+  now declare their anticipated refusals (`ToolError`, `ResourceError`) while
+  the plain functions keep raising the domain types for the CLI and library
+  callers. The anticipated set is derived from every named exception in the
+  package: each is in the tuple, or excluded with a stated reason, so a sixth
+  type added tomorrow fails the build instead of a reviewer. Surfaced when
+  `mcp` 2.1.0 stopped interpolating crash text; the dependency range is
+  unchanged, because the SDK's behavior is correct and the misclassification
+  was ours (D48). Every member of that set which can reach a seam is now
+  driven through one — `StaleBaseline` and `InvalidAuditArgument` out of the
+  audit tool, `SetupRequired` out of the report resource's own handler, each
+  verified by deleting its type from the tuple and watching the test fail.
+  What proves "declared" differs by seam, and two drafts of these tests got
+  it wrong in opposite directions. The first asserted only that the caller's
+  message is not the SDK's generic crash string, which on `mcp` 2.0.0 is true
+  of the tool either way — it passed with `StaleBaseline` removed. The tool
+  tests now call the registered coroutine directly, so `ToolError` plus the
+  chained domain type is our own translation on any 2.x. Applying that same
+  reasoning to the resource was the second mistake: there the SDK wraps and
+  chains an escaping exception, so a crash also arrives as `ResourceError`
+  with the original `__cause__`. That test excludes the 2.1.0 crash wrapper
+  `UnexpectedResourceError` and requires the refusal's own text, which is
+  what separates the two on 2.0.0.
+- **Three documentation claims that outran the code.** An audit of the change
+  above found each of them. Architecture invariant 12 justified `PolicyError`'s
+  place in the anticipated set by saying a missing type stops teaching — but
+  `PolicyError` cannot reach any seam, because `_analysis.analyze()` catches it
+  and returns `Analysis(error=...)`; it is declared ahead of a path that does
+  not exist yet, and the invariant now says so while keeping the claim for
+  `StaleBaseline`, which does travel. `docs/cli.md` described `--install-skill`
+  as checking its copy against the reviewed
+  `skills/maintainability-agent/SKILL.md`; the command reads the packaged
+  `_skill_data` payload and consults no repository, and what holds that payload
+  to the reviewed file is the suite. And `_audit_tool_for`'s docstring
+  explained the function in terms of this repository's own 500-line gate
+  rather than what it does.
+
+### Changed
+
+- **The three entries below are renumbered D47–D49; the register jumps from
+  D31 to D47.** They were written as D32–D34 on a branch cut from the same
+  commit as `fix/round-two-findings`, which had already minted D32–D46, so for
+  a day two live branches defined six different defects under three
+  identifiers. Nothing conflicts in git — the branches touch different regions
+  of the register — so nothing would have failed until a reader tried to work
+  out which D34 a changelog line meant. The release gate is "zero open entries
+  in the register", which is only countable if an entry number means one
+  defect. The gap is reserved, not missing, and closes when that branch lands.
+- **The chat surface calls the audit before it inspects configuration, on every
+  door it is reached through.** D21 established the rule — call
+  `audit_repository` first, never deliberate over a missing or stale
+  `maintainability-agent.json` — but its falsifier read only the opt-in skill.
+  `SERVER_INSTRUCTIONS` never carried the rule, and the slash prompt taught
+  the opposite: "First offer the presentation choice ... Then call
+  `audit_repository`". Both MCP surfaces now state the rule in D21's words.
+  Found by inspection while diagnosing a field report that this does not
+  explain — that host loaded a pre-D21 skill from a wheel older than the fix
+  (D47).
+- **The skill inside the distribution is checked, not assumed.** Two tests read
+  `_skill_data/SKILL.md` from the source checkout, so the payload a host
+  actually loads — carried in the built distribution and written out by
+  `--install-skill` — was asserted by nothing. The staged build must now carry
+  it, byte-identical to the reviewed skill, with D21's call-first rule in it
+  and no "configuration check first" anywhere. Same shape as D23, on the
+  payload D23 did not cover (D49).
+
 ## 0.9.1 - 2026-08-21
 
 ### Security

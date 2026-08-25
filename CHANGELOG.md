@@ -4,6 +4,43 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+### Fixed
+
+- **A boundary refusal reaches the caller as a refusal, not as a crash.** The
+  MCP SDK distinguishes a failure the server anticipated — whose message
+  reaches the caller — from a crash, which is reduced to `Error executing tool
+  <name>` (or a resource's bare URI) with the traceback kept server-side. This
+  product raised its most anticipated failure, the allowed-roots boundary, as a
+  plain `PathNotAllowed`, so it was classified as a crash and its text
+  withheld: a user pointing the tool outside its roots was no longer told why,
+  nor that `--allow-root` and `MAINTAINABILITY_MCP_ALLOWED_ROOTS` exist. The
+  report resource lost `SetupRequired`'s message the same way. Both MCP seams
+  now declare their anticipated refusals (`ToolError`, `ResourceError`) while
+  the plain functions keep raising the domain types for the CLI and library
+  callers. The anticipated set is derived from every named exception in the
+  package: each is in the tuple, or excluded with a stated reason, so a sixth
+  type added tomorrow fails the build instead of a reviewer. Surfaced when
+  `mcp` 2.1.0 stopped interpolating crash text; the dependency range is
+  unchanged, because the SDK's behavior is correct and the misclassification
+  was ours (D33).
+- **The chat surface calls the audit before it inspects configuration, on every
+  door it is reached through.** D21 established the rule — call
+  `audit_repository` first, never deliberate over a missing or stale
+  `maintainability-agent.json` — but its falsifier read only the opt-in skill.
+  `SERVER_INSTRUCTIONS` never carried the rule, and the slash prompt taught
+  the opposite: "First offer the presentation choice ... Then call
+  `audit_repository`". Both MCP surfaces now state the rule in D21's words.
+  Found by inspection while diagnosing a field report that this does not
+  explain — that host loaded a pre-D21 skill from a wheel older than the fix
+  (D32).
+- **The skill inside the distribution is checked, not assumed.** Two tests read
+  `_skill_data/SKILL.md` from the source checkout, so the payload a host
+  actually loads — carried in the built distribution and written out by
+  `--install-skill` — was asserted by nothing. The staged build must now carry
+  it, byte-identical to the reviewed skill, with D21's call-first rule in it
+  and no "configuration check first" anywhere. Same shape as D23, on the
+  payload D23 did not cover (D34).
+
 ## 0.9.1 - 2026-08-21
 
 ### Security

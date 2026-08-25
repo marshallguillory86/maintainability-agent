@@ -176,6 +176,71 @@ def test_the_skill_calls_the_tool_before_inspecting_configuration() -> None:
     )
 
 
+def test_every_chat_instruction_surface_calls_the_tool_before_inspecting_config() -> None:
+    """D32: D21's rule reached the skill and stopped there.
+
+    Found by inspection on 2026-08-24 while diagnosing a field report.
+    The report itself is *not* explained by this: that host loaded a
+    pre-D21 skill out of an installed wheel older than the fix, and
+    followed its "Configuration check first" step exactly. This entry
+    was first written as that report's cause and corrected the same day
+    (see the register); the gap below is real and was separately open.
+
+    D21's fix was right, and its falsifier read
+    skills/maintainability-agent/SKILL.md and nothing else. The skill is
+    opt-in; the server instructions are what every chat host receives on
+    connect, and they said nothing about the order. The MCP prompt
+    actively taught the wrong one: "First offer the presentation choice
+    ... Then call audit_repository." A host reading the door it was
+    handed was told to ask first.
+
+    D22 already learned this lesson and checked both surfaces together.
+    Applying it only forward, never back to D21, is how the rule came to
+    live on the one surface a host may never read.
+    """
+    # Read as source, so the adjacent-string joins have to be closed up
+    # before a sentence is a sentence again.
+    prompt_body = re.sub(r'"\s*"', "", (
+        _read(ROOT / "src/maintainability_audit/mcp_server.py")
+        .split("def maintainability_agent_prompt", maxsplit=1)[1]
+        .split("\ndef ", maxsplit=1)[0]
+    ))
+    skill = _read(SKILL)
+    first_step = skill.split("## Core Workflow", maxsplit=1)[1].split("2.", maxsplit=1)[0]
+
+    surfaces = {
+        "MCP server instructions": SERVER_INSTRUCTIONS,
+        "MCP prompt": prompt_body,
+        "skill": first_step,
+    }
+    for name, surface in surfaces.items():
+        lowered = " ".join(surface.lower().split())
+        assert "audit_repository" in lowered, (
+            f"the {name} never names the call that is supposed to come first"
+        )
+        assert "do not inspect configuration" in lowered, (
+            f"the {name} does not forbid inspecting configuration first"
+        )
+        assert "do not ask the user which config" in lowered, (
+            f"the {name} does not forbid asking which config to use"
+        )
+
+    # The two MCP surfaces state the ordering outright: the skill's is
+    # positional — it is step 1 — and D21's test holds that.
+    for name in ("MCP server instructions", "MCP prompt"):
+        normalized = " ".join(surfaces[name].lower().split())
+        assert re.search(r"call(?:ing)? (?:it|audit_repository)[^.]{0,40}first",
+                         normalized), (
+            f"the {name} does not say the call comes first"
+        )
+
+    # The prompt's original wording is the regression shape: it put a
+    # question of the host's before the first call.
+    assert "first offer" not in " ".join(prompt_body.lower().split()), (
+        "the MCP prompt tells the host to ask something before calling"
+    )
+
+
 def test_every_delivery_surface_offers_all_three_presentations() -> None:
     """D22: an agent that invents the delivery question deletes html.
 

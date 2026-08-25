@@ -13,6 +13,7 @@ from typing import Any
 
 from ._mcp_audit import attach_history_views, authorize_repository
 from ._mcp_grants import _RootLedger
+from ._mcp_refusals import ANTICIPATED_REFUSALS
 from ._mcp_setup import SetupRequired, setup_pending
 from ._scan_history import DEFAULT_HISTORY_PATH
 from .config import discovered_config, load_config, repository_path
@@ -81,12 +82,12 @@ def _authorized_root_security(ledger: _RootLedger, resource_security: Any) -> An
                 return "root"
             try:
                 authorize_repository(root, ledger.current())
-            except ValueError as refusal:
+            except ANTICIPATED_REFUSALS as refusal:
                 # Security runs before the resource function, so the
                 # handler down there never sees this one. Wrapping only
                 # the reader left every boundary refusal arriving as
                 # "Internal server error" — the `--allow-root` remedy
-                # discarded at the layer that knows it (D33).
+                # discarded at the layer that knows it (D48).
                 raise ResourceError(str(refusal)) from refusal
             return None
 
@@ -130,14 +131,15 @@ def _bind_resources(
         # Every refusal is translated, not just the one an audit named:
         # the SDK discards an unknown exception's message, and a reader
         # who gets "Internal server error" cannot tell a deliberate
-        # refusal from a crash. `ValueError` covers the boundary cases —
-        # `PathNotAllowed` and `ConfigUnreadable` derive from it, and a
-        # root that is not a directory raises it plainly. See D32, D33.
+        # refusal from a crash. The named tuple, never bare `ValueError`:
+        # modules below this seam raise those with internal paths in the
+        # message, and the crash path is right to withhold them. See
+        # D47, D48 and architecture invariant 12.
         from mcp.server.mcpserver.exceptions import ResourceError
 
         try:
             return _report_markdown(root, ledger.current())
-        except (SetupRequired, ValueError) as refusal:
+        except ANTICIPATED_REFUSALS as refusal:
             raise ResourceError(str(refusal)) from refusal
 
     def report_template_descriptor() -> str:

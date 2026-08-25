@@ -16,6 +16,8 @@ import argparse
 from pathlib import Path
 from typing import Any
 
+from ._catalog import PolicyError as PolicyError
+
 # Redundant aliases on purpose: every name the split moved to
 # `_mcp_audit` stays importable from here, so no consumer or test needs
 # to know the file boundary exists.
@@ -36,6 +38,7 @@ from ._mcp_grants import (
 from ._mcp_setup import SetupRequired as SetupRequired
 from ._mcp_setup import setup_pending, setup_schema
 from ._scan_history import DEFAULT_HISTORY_PATH
+from .baseline import StaleBaseline as StaleBaseline
 from .config import (
     CONFIG_FILENAME,
     VERSION,
@@ -88,14 +91,24 @@ SERVER_INSTRUCTIONS = (
 )
 
 
-# Refusals this seam makes on purpose, as opposed to a crash. The SDK
-# carries an anticipated failure's message to the caller and reduces a
-# crash to "Error executing tool <name>", so a refusal that is not
-# declared teaches nothing (D33). Named types only, never bare
-# `ValueError`: modules below the transport raise those with messages
-# that name internal state and file paths, and those must stay crashes
-# whose text the SDK withholds.
-ANTICIPATED_REFUSALS = (InvalidAuditArgument, PathNotAllowed, SetupRequired)
+# Refusals this product raises on purpose for the caller to act on, as
+# opposed to a crash. The SDK carries an anticipated failure's message
+# to the caller and reduces a crash to "Error executing tool <name>",
+# so a refusal that is not declared teaches nothing (D33).
+#
+# Named types only, never bare `ValueError`: modules below the transport
+# raise those with messages that name internal state and file paths, and
+# those must stay crashes whose text the SDK withholds. But every type
+# here *is* actionable by the person reading it — regenerate the
+# baseline, fix the config, grant the root, answer setup — so listing
+# too few is the same defect pointing the other way.
+ANTICIPATED_REFUSALS = (
+    InvalidAuditArgument,   # this seam's own argument validation
+    PathNotAllowed,         # the allowed-roots boundary (D10/D20)
+    SetupRequired,          # the setup precondition (D26/D30)
+    StaleBaseline,          # "Regenerate with --write-baseline"
+    PolicyError,            # the repository config names something unknown
+)
 
 
 def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:

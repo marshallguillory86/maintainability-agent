@@ -818,7 +818,20 @@ into one that says too much.
 The seam's own argument validation now raises a named
 `InvalidAuditArgument`, a `ValueError` subclass so the CLI and every
 test matching on `ValueError` keep working, and only named types are
-anticipated. Demonstrated in both directions on 2.1.0: with the broad
+anticipated.
+
+**Then the narrowing was itself too narrow, which is the same defect
+pointing the other way.** The first list — `InvalidAuditArgument`,
+`PathNotAllowed`, `SetupRequired` — silently demoted two refusals this
+product raises deliberately for the caller to act on. `StaleBaseline`
+says "Regenerate with `--write-baseline`" and is reachable through the
+tool's `baseline_path`; `PolicyError` says "unknown depth 'x'; expected
+one of [...]" when the repository config names something the catalog
+does not contain. Both became crashes, so both stopped teaching. Under
+the *original* broad tuple they had been correct by accident. Two
+passes, two errors, in opposite directions, on the same five-line
+declaration — which is the argument for the test contract naming the
+set rather than a reviewer eyeballing it. Demonstrated in both directions on 2.1.0: with the broad
 tuple an internal path reaches the caller, with the narrow one it does
 not. The falsifier skips on 2.0.0 rather than pretending, because that
 SDK interpolates the original message into the crash text itself, so no

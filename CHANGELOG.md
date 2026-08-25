@@ -13,11 +13,11 @@ All notable changes to Maintainability Agent will be documented here.
   `SERVER_INSTRUCTIONS`, the text every MCP host receives on connect, never
   carried the rule at all, and the slash prompt taught the opposite: "First
   offer the presentation choice ... Then call `audit_repository`", wording that
-  was also stale against D26's two-ask contract. A fresh clone reopened D21 in
-  the field, the host's opening move being a question about a config file
-  deleted in the working tree rather than the call. Both MCP surfaces now state
-  the rule in D21's words, the prompt states the current contract, and a single
-  falsifier holds all three instruction surfaces to it together (D32).
+  was also stale against D26's two-ask contract. Both MCP surfaces now state the
+  rule in D21's words, the prompt states the current contract, and a single
+  falsifier holds all three instruction surfaces to it together. Found by
+  inspection while diagnosing a field report that this does not explain — that
+  host loaded a pre-D21 skill from a wheel older than the fix (D32).
 
 ## 0.9.1 - 2026-08-21
 

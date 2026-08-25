@@ -748,18 +748,27 @@ in `tests/test_written_record.py`.
 
 ### D32 — Closed: the call-first rule reaches the door hosts are actually handed
 
-Found in the field on 2026-08-24, on a fresh clone, by the operator
-starting a first-run test. The host's opening move was a question about
-`maintainability-agent.json` being "committed in HEAD but deleted in
-your working tree (unstaged)", offering three ways to proceed: restore
-it and audit, audit against HEAD's copy without restoring, or treat the
-repository as unconfigured. Every option was coherent and none of them
-should have been asked. It is D21 returned intact — configuration
-archaeology standing in for the call — and the operator's report named
-the aggravating fact: none of it makes sense to someone who has just
-cloned a repository.
+Found by inspection on 2026-08-24, while diagnosing a field report.
 
-D21's fix was correct and it was not wrong to close. Its falsifier read
+> **Opened on a wrong diagnosis, and corrected the same day.** This
+> entry was first written as the cause of that report: an operator
+> starting a first-run test whose host opened by asking which
+> `maintainability-agent.json` to use — committed in HEAD, deleted in
+> the working tree — instead of calling the tool. It is not the cause.
+> The host had the skill, and the skill it had was the pre-D21 copy
+> from the installed `v0.9.1` wheel, whose step 1 reads "Configuration
+> check first: look for `maintainability-agent.json`...". The host
+> followed its instructions exactly. D21's fix was never in the
+> artifact that machine loads, because nothing has been released since
+> the fix landed.
+>
+> What is recorded below is a real and separately open gap, found while
+> chasing that report and worth closing on its own terms. It is not
+> what produced the screenshot, and the first draft of this entry
+> claimed it was. An entry that takes credit for a cause it did not
+> have is worse than no entry, because the next reader stops looking.
+
+The gap is this. D21's falsifier read
 `skills/maintainability-agent/SKILL.md` and stopped there. The skill is
 opt-in; `SERVER_INSTRUCTIONS` is what every chat host receives on
 connect, and it said nothing about the order at all. Its one adjacent
@@ -781,10 +790,16 @@ falsifier holds all three instruction surfaces to it together, which is
 the check D22 had already established four entries earlier and that
 nobody applied backwards to D21.
 
+The gap was closed on inspection, not on a reproduction. No field run
+is known to have failed *because* of it — the one that prompted the
+look failed on a stale artifact instead (see the correction above, and
+D34). It is recorded as a real hole in the instruction surfaces, which
+it is, and not as a diagnosed cause, which it is not.
+
 *Closing test:* `test_every_chat_instruction_surface_calls_the_tool_before_inspecting_config`
 in `tests/test_chat_primary_docs.py`. D21's own test is left as it
-stands: it holds the skill, and the skill was never the surface that
-failed here.
+stands: it holds the skill, which is the surface that did fail in the
+field — on a copy older than the fix.
 
 ## Disposition
 
@@ -823,8 +838,10 @@ same sentence: the product produced the right thing and nothing told the
 agent to use it. D26 is the one that stopped treating that as a documentation
 problem — the audit no longer runs at all until the repository has been set
 up, so there is no premature grade for an agent to report in place of the
-questions. D32 is the register's first true recurrence: D21
-came back through a door D22 had already taught the project to check, because a
-lesson learned in one entry was applied forward and never backward. A fix is not
-shipped when the behavior is corrected on the surface where it was noticed; it is
-shipped when every surface a host may read says the same thing.
+questions. D32 is the entry that had to be corrected after it was
+written: it was opened as the cause of a field report and was not the cause,
+and the correction is kept in the entry rather than tidied away, because an
+entry that takes credit for a cause it did not have stops the next reader
+looking. What it does record is real — a lesson D22 learned was applied forward
+and never backward to D21, so the rule reached the opt-in skill and neither MCP
+surface.

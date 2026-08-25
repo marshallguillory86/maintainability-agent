@@ -179,23 +179,24 @@ def test_the_skill_calls_the_tool_before_inspecting_configuration() -> None:
 def test_every_chat_instruction_surface_calls_the_tool_before_inspecting_config() -> None:
     """D32: D21's rule reached the skill and stopped there.
 
-    Found in the field on 2026-08-24, on a fresh clone. The host opened
-    with a question about `maintainability-agent.json` being "committed
-    in HEAD but deleted in your working tree", offering the operator a
-    choice between restoring it, auditing against HEAD's copy, or
-    treating the repository as unconfigured. That is D21 exactly —
-    configuration archaeology in place of the call — and D21's fix was
-    real, but its falsifier read the skill and nothing else.
+    Found by inspection on 2026-08-24 while diagnosing a field report.
+    The report itself is *not* explained by this: that host loaded a
+    pre-D21 skill out of an installed wheel older than the fix, and
+    followed its "Configuration check first" step exactly. This entry
+    was first written as that report's cause and corrected the same day
+    (see the register); the gap below is real and was separately open.
 
-    The skill is opt-in; the server instructions are what every chat
-    host receives on connect, and they said nothing about the order.
-    Worse, the MCP prompt actively taught the wrong one: "First offer
-    the presentation choice ... Then call audit_repository." A host
-    reading the door it was actually handed was told to ask first.
+    D21's fix was right, and its falsifier read
+    skills/maintainability-agent/SKILL.md and nothing else. The skill is
+    opt-in; the server instructions are what every chat host receives on
+    connect, and they said nothing about the order. The MCP prompt
+    actively taught the wrong one: "First offer the presentation choice
+    ... Then call audit_repository." A host reading the door it was
+    handed was told to ask first.
 
     D22 already learned this lesson and checked both surfaces together.
-    Applying it only forward, never back to D21, is how the same defect
-    walked through the door D22 had closed.
+    Applying it only forward, never back to D21, is how the rule came to
+    live on the one surface a host may never read.
     """
     # Read as source, so the adjacent-string joins have to be closed up
     # before a sentence is a sentence again.

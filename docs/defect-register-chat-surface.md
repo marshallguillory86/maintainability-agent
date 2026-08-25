@@ -1018,7 +1018,7 @@ new consent.
 
 *Closing test:* pending.
 
-### D39 — Accepted residual: analyzers are runtimes, not parsers
+### D39 — Open: the audit executes configuration from the tree it audits (Medium)
 
 Grok, 2026-08-23, filed as a disclosure defect rather than a fix.
 `eslint` runs with no `--no-eslintrc`, and `has_config` *requires* a
@@ -1027,12 +1027,31 @@ project config before running, so an audit of an allowed root executes
 `--no-plugins`. Children inherit the host environment.
 
 Child sandboxing is refused as a design direction and this entry does
-not reopen it. What it records is that P1 discloses "children are not
-network-sandboxed" and does not disclose "we execute configuration
-code from the tree under audit". Isolated config and `--no-plugins`
-are a smaller, separate fix than a sandbox.
+not reopen it. What it recorded originally is that P1 discloses
+"children are not network-sandboxed" and does not disclose "we execute
+configuration code from the tree under audit".
 
-*Closing test:* pending — disclosure, then optionally the flags.
+**Reclassified 2026-08-25 from accepted residual to defect.** It was
+filed as a disclosure gap because the alternative looked like a
+sandbox, and the entry offered "disclosure, then optionally the flags"
+as its closing test. [Decision 9](decisions.md) removes the option:
+the agent does not execute the audited tree's code, and configuration
+is code. `SECURITY.md` already said as much, so the promise was never
+the thing that was wrong — this is the code drifting from a published
+claim, which is a defect by this project's own closure rules and not
+something disclosure can settle.
+
+Scope shrank with [Decision 10](decisions.md). `eslint` is the analyzer
+that *requires* the tree's flat config, and JavaScript is not a v1.0
+language, so it leaves the default pool rather than gaining a flag.
+What stays in scope is Python: mypy and pylint may load configured
+plugins and must run with that disabled. The fix is therefore two
+narrow changes plus a falsifier, not the sandbox this entry was afraid
+of.
+
+*Closing test:* pending — a test that no selected analyzer's invocation
+can load configuration or plugins from the audited tree, swept over the
+pool rather than asserted for the two tools named here.
 
 ### D40 — Closed: a repository's regex cannot hang the host (High)
 

@@ -10,7 +10,7 @@ exists because the audits arrived as prose and the operator left for a
 flight — a queue nobody can read is a queue that gets reordered by
 whoever touches it last.
 
-## The one decision that is not mine
+## The one decision that was not mine — answered 2026-08-25
 
 **Are repositories trusted?** Both audits converge here (Grok R1,
 Codex 2), and it is genuinely product intent, so it stays open until
@@ -33,7 +33,20 @@ Two coherent answers:
 
 Child sandboxing stays refused and neither option reopens it.
 
-**Not started.** Picking either would be inventing intent.
+**Answered: neither, because the question is moot.** Marshall drew the
+line at *executing code* rather than at trusting repositories — see
+[Decision 9](decisions.md). The agent does not run the audited tree's
+code, and its configuration is code. Option 2's mechanism is what
+ships (agent-owned configuration, plugin loading disabled, scrubbed
+environment); option 2's framing is not, because the guarantee is not
+"we distrust you" but "we never run it".
+
+Most of the exposure leaves by scope rather than by engineering:
+eslint is the analyzer that *requires* the tree's own flat config, and
+JavaScript is not a v1.0 language ([Decision 10](decisions.md)). What
+remains is mypy and pylint, which are Python and therefore in scope,
+and which merely *may* load configured plugins — they run with that
+disabled.
 
 ## Order of work
 
@@ -54,8 +67,8 @@ so none of it needs a ruling.
 | 9 | D37 | CLI passes git options the MCP door rejects; no timeouts; swallowed errors | queued |
 | 10 | D38 | A standing grant follows a renamed directory after restart | queued |
 | 11 | D46 | XML parsers unbounded against analyzer output | queued |
-| 12 | D44 | MCP annotations contradict behaviour | blocked on the trust decision |
-| 13 | D39 | Analyzer configuration executes | blocked on the trust decision |
+| 12 | D44 | MCP annotations contradict behaviour | unblocked by Decision 9; queued |
+| 13 | D39 | Analyzer configuration executes | **reclassified**: Decision 9 makes this a defect, not a residual |
 
 ## Why green CI missed almost all of it
 

@@ -4,6 +4,16 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+### Fixed
+
+- **The skill inside the distribution is checked, not assumed.** Two tests read
+  `_skill_data/SKILL.md`, and both read it from the source checkout, so the
+  copy a host actually loads — carried in the built distribution and written
+  out by `--install-skill` — was asserted by nothing. The staged build must now
+  carry it, byte-identical to the reviewed skill, with D21's call-first rule in
+  it and no "configuration check first" anywhere. Same shape as D23, on the
+  payload D23 did not cover (D34).
+
 ## 0.9.1 - 2026-08-21
 
 ### Security

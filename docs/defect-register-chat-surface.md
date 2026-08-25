@@ -746,6 +746,51 @@ here so the limit is known rather than assumed away.
 *Closing test:* `test_every_closing_citation_names_a_test_that_exists`
 in `tests/test_written_record.py`.
 
+### D34 — Closed: the skill in the distribution is asserted, not assumed
+
+Found on 2026-08-24 while diagnosing a field report. Two tests read
+`_skill_data/SKILL.md` and both read it out of the source checkout:
+`test_every_delivery_surface_offers_all_three_presentations` byte-pins
+the mirror against `skills/maintainability-agent/SKILL.md`, and
+`test_skill_install` reads the same source path. The copy a host
+actually loads — carried in the distribution, written out by
+`--install-skill` — was asserted by nothing.
+
+That is D23's hole on a different payload. D23 closed by staging a real
+build and reading what came out, but only for `_assets`; the skill
+payload, which `--install-skill` cannot work without, was left on the
+assumption that declaring it was the same as shipping it.
+
+The staged distribution must now carry `_skill_data/SKILL.md`, be
+byte-identical to the reviewed skill, and contain D21's rule — the call
+first, and no "configuration check first" anywhere in it. Content, not
+presence: a distribution that ships the rule's file without the rule in
+it is the empty-catalog lesson repeated, and that assertion already
+exists two tests above for exactly this reason.
+
+**What this entry does not explain.** It was opened while chasing a
+stale skill on an operator's machine, and it is not the cause of that.
+That copy was current for the release it came from; it is old because
+`v0.9.1` predates D21's fix and nothing has shipped since. This entry
+closes a hole that was real and separately open — it would not have
+caught the field failure, and saying otherwise would make the register
+a worse record than the field report it came from.
+
+*Closing test:* `test_the_shipped_skill_is_the_current_one_and_carries_its_first_rule`
+in `tests/test_wheel_contents.py`.
+
+**The falsifier is the two content assertions, and only those.** Both
+were confirmed to fail: drifting the mirror from the reviewed skill
+fails the byte-pin, and reintroducing "configuration check first" into
+both copies fails the rule check. The `REQUIRED` entry added alongside
+them is *not* load-bearing and is not claimed as proof. Removing
+`_skill_data/**/*` from `package-data` and staging a build again leaves
+all six files in place — setuptools includes them by another route — so
+that assertion cannot be falsified through the declaration it appears
+to guard. It still catches an outright absence, which is why it stays,
+but a check that cannot fail is not a proof, and D15 was reopened once
+for exactly that confusion.
+
 ## Disposition
 
 **Every entry is closed.** D28 and D29 were opened and closed on 2026-08-22

@@ -746,6 +746,69 @@ here so the limit is known rather than assumed away.
 *Closing test:* `test_every_closing_citation_names_a_test_that_exists`
 in `tests/test_written_record.py`.
 
+### D33 — Closed: a refusal is declared, not a crash
+
+Found by CI on 2026-08-24, on an unchanged `main`. `mcp` floats on
+`>=2,<3`; 2.1.0 shipped that day, and three boundary tests that had
+passed at 06:31 failed at 23:54 on the same SHA.
+
+It is not a regression in the SDK. 2.1.0 draws a line the product had
+never declared a side of. A failure raised as `ToolError` or
+`ResourceError` is one the server *saw coming*: its message reaches the
+caller and the server logs it at INFO without a traceback. Anything
+else is a crash — the caller gets `Error executing tool <name>`, or a
+resource's bare URI, and the traceback is kept server-side, so nothing
+internal leaks. That is a correct and well-documented distinction.
+
+The path boundary is the most anticipated failure in this system. It is
+raised deliberately, at a seam whose entire job is refusing, with a
+message written to name both static grant doors. It was raised as a
+plain `PathNotAllowed`, which is a `ValueError` — so 2.1.0 classified
+it as a crash, correctly, and withheld the text. D10's requirement that
+a refusal teach `--allow-root` and `MAINTAINABILITY_ALLOWED_ROOTS`
+was deleted by a patch release of a dependency. The report resource
+lost `SetupRequired`'s message the same way, which is D30's remedy
+pointing at the door that can ask.
+
+The security boundary itself never moved: the refusal still refused,
+`is_error` still true, the path still blocked. What was lost is the
+part that teaches.
+
+Before 2.1.0 the crash path happened to interpolate the message anyway,
+which is why this was invisible rather than absent. It was never
+correct: every boundary refusal this product has ever made was being
+logged server-side as a crash, with a traceback, because that is what
+the product declared it to be.
+
+The two MCP seams now declare their anticipated refusals — the audit
+tool as `ToolError`, the report resource and its security validator as
+`ResourceError` — while the plain functions keep raising the domain
+types, because the CLI and every library caller depend on those and
+only the transport should translate.
+
+**The dependency range is not the defect and was not narrowed.** The
+tempting fix was to pin below 2.1.0, and it would have been wrong
+twice: it would preserve a misclassification the product should never
+have shipped, and it would treat a correct SDK change as damage. The
+tests were right, the code was wrong, and CI reported it accurately on
+the first run after the release. Pinning would have bought silence.
+
+Two assertions in the closing tests were changed, which is the move
+that can launder a regression, so the reasoning is recorded rather than
+assumed. They asserted `pytest.raises(PathNotAllowed)` through
+`read_resource` — a property of which exceptions the SDK let past, not
+of the contract. They now assert what D10 and D20 actually require: the
+read is refused, nothing is written, the message names the boundary,
+and the domain type is preserved as `__cause__`. That holds on 2.0.0
+and 2.1.0 both, and is strictly stronger than what it replaced.
+
+*Closing test:* `test_a_refusal_is_declared_rather_than_crashing_out_of_either_seam`
+in `tests/test_root_grants.py`, which asserts the contract rather than
+the symptom: a refusal must never reach a caller as one of the SDK's
+`Unexpected*` wrappers, whichever 2.x resolves, because that wrapper is
+the SDK saying this server crashed. Verified against both 2.0.0 and
+2.1.0, and confirmed to fail against 2.1.0 without the declaration.
+
 ## Disposition
 
 **Every entry is closed.** D28 and D29 were opened and closed on 2026-08-22
@@ -783,4 +846,8 @@ same sentence: the product produced the right thing and nothing told the
 agent to use it. D26 is the one that stopped treating that as a documentation
 problem — the audit no longer runs at all until the repository has been set
 up, so there is no premature grade for an agent to report in place of the
-questions.
+questions. D33 is the one entry found by a machine rather than a
+person: an unchanged `main` went red when a dependency shipped, and what it
+exposed was not the dependency but a misclassification the product had been
+shipping since its first MCP release — every boundary refusal declared, to the
+SDK, as a crash.

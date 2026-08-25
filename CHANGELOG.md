@@ -4,6 +4,24 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+### Fixed
+
+- **A boundary refusal reaches the caller as a refusal, not as a crash.** The
+  MCP SDK distinguishes a failure the server anticipated — whose message
+  reaches the caller — from a crash, which is reduced to `Error executing tool
+  <name>` (or a resource's bare URI) with the traceback kept server-side. This
+  product raised its most anticipated failure, the allowed-roots boundary, as a
+  plain `PathNotAllowed`, so it was classified as a crash and its text
+  withheld: a user pointing the tool outside its roots was no longer told why,
+  nor that `--allow-root` and `MAINTAINABILITY_ALLOWED_ROOTS` exist. The report
+  resource lost `SetupRequired`'s message the same way. Both MCP seams now
+  declare their anticipated refusals (`ToolError`, `ResourceError`) while the
+  plain functions keep raising the domain types for the CLI and library
+  callers. Surfaced when `mcp` 2.1.0 stopped interpolating crash text, which is
+  why it had been invisible rather than absent; the dependency range is
+  unchanged, because the SDK's behavior is correct and the misclassification
+  was ours (D33).
+
 ## 0.9.1 - 2026-08-21
 
 ### Security

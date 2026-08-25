@@ -151,7 +151,74 @@ def test_report_resource_never_elicits_or_persists_a_root_grant(tmp_path: Path) 
     root = _repo(tmp_path / "outside", config=_config())
     server = create_server(roots=(allowed.resolve(),))
 
-    with pytest.raises(PathNotAllowed):
+    # The refusal a reader actually receives: declared, so it carries
+    # the boundary text, with the domain type preserved as the cause.
+    from mcp.server.mcpserver.exceptions import ResourceError
+
+    with pytest.raises(ResourceError) as refusal:
         _resource_text(server, root)
+    assert "outside" in str(refusal.value).lower()
+    assert isinstance(refusal.value.__cause__, PathNotAllowed)
 
     assert not user_config_path().exists()
+
+def test_a_refusal_is_declared_rather_than_crashing_out_of_either_seam(
+    tmp_path: Path,
+) -> None:
+    """D33: the SDK tells a refusal from a crash, and ours read as crashes.
+
+    `mcp` 2.1 draws a line the product had never declared a side of. A
+    failure raised as `ToolError`/`ResourceError` is one the server *saw
+    coming*: its message reaches the caller and the server logs it at
+    INFO. Anything else is a crash — the caller gets `Error executing
+    tool <name>`, or a resource's bare URI, and the traceback is kept
+    server-side.
+
+    The path boundary is the most anticipated failure in this system.
+    It was raised as a plain `PathNotAllowed`, so 2.1 classified it as a
+    crash, correctly, and withheld the text — deleting D10's
+    requirement that a refusal name both static grant doors. Before 2.1
+    the crash path leaked the message anyway, so the misclassification
+    was invisible rather than absent: every boundary refusal this
+    product ever made was being logged as a server crash.
+
+    Asserted as the contract rather than the symptom. A refusal must
+    never reach a caller as one of the SDK's `Unexpected*` wrappers,
+    whichever 2.x is resolved, because that wrapper *is* the SDK saying
+    "this server crashed".
+    """
+    from mcp import Client
+    from mcp.server.mcpserver.exceptions import ResourceError
+
+    try:
+        # 2.1 named the crash wrappers. 2.0 has no separate class for
+        # them, so there is nothing to exclude there and an empty tuple
+        # makes the isinstance check below correctly false.
+        from mcp.server.mcpserver.exceptions import UnexpectedResourceError
+    except ImportError:  # pragma: no cover - depends on the resolved mcp
+        UnexpectedResourceError = ()  # type: ignore[assignment,misc]
+
+    allowed = tmp_path / "allowed"
+    allowed.mkdir()
+    outside = _repo(tmp_path / "outside", config=_config())
+    server = create_server(roots=(allowed.resolve(),))
+
+    async def call() -> Any:
+        async with Client(server) as client:
+            return await client.call_tool(
+                "audit_repository", {"repository_root": str(outside)},
+            )
+
+    result = asyncio.run(call())
+    assert result.is_error
+    message = _tool_text(result)
+    # The generic crash text is what this entry exists to keep out.
+    assert message.strip().lower() != "error executing tool audit_repository"
+    assert "outside" in message.lower() or "boundary" in message.lower()
+
+    with pytest.raises(ResourceError) as refusal:
+        _resource_text(server, outside)
+    assert not isinstance(refusal.value, UnexpectedResourceError), (
+        "the resource boundary refusal reaches the reader as a crash"
+    )
+    assert "outside" in str(refusal.value).lower()

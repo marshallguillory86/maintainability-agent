@@ -87,6 +87,23 @@ SERVER_INSTRUCTIONS = (
 )
 
 
+# Refusals this seam raises on purpose, as opposed to a crash. The SDK
+# draws that line itself: an anticipated failure reaches the client
+# carrying its message, while a crash is reduced to "Error executing
+# tool <name>" (or the bare URI, for a resource) with the traceback
+# kept server-side. Every refusal listed here is one the caller must be
+# able to read — a boundary refusal that does not name `--allow-root`
+# and the environment variable teaches nothing (D10), and a setup
+# precondition that does not say which door to use is a dead end (D30).
+#
+# `PathNotAllowed` is a `ValueError`; it is named for the reader, not
+# for the tuple. Argument validation raises plain `ValueError` here on
+# the SDK's own convention, which treats a validation `ValueError` as
+# anticipated. Anything else stays a crash, which is what crashes are
+# for: nothing internal reaches the client.
+ANTICIPATED_REFUSALS = (ValueError, PathNotAllowed, SetupRequired)
+
+
 def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
     authorized_roots = roots if roots is not None else allowed_roots()
     return {
@@ -210,6 +227,7 @@ def _bind_audit_tool(server: Any, ledger: _RootLedger,
     from typing import Annotated
 
     from mcp.server.elicitation import ElicitationResult
+    from mcp.server.mcpserver.exceptions import ToolError as tool_error
     from mcp.server.mcpserver.resolve import Resolve
 
     resolver = _setup_resolver_for(ledger, context_type)
@@ -258,23 +276,30 @@ def _bind_audit_tool(server: Any, ledger: _RootLedger,
         records, only an answer does.
         """
         del ctx  # the resolvers already used it; kept so hosts see progress hooks
-        _apply_call_consents(ledger, repository_root, setup, grant)
-        return audit_repository(
-            repository_root,
-            config_path,
-            changed_only,
-            run_analyzers,
-            format,
-            record_history,
-            baseline_path,
-            write_baseline,
-            include_prompt,
-            # The interactive door never assumes go. The plain function
-            # defaults to "run" for the CLI and scripted callers, which
-            # have already decided; a person has not (D27).
-            action=action,
-            roots=ledger.current(),
-        )
+        try:
+            _apply_call_consents(ledger, repository_root, setup, grant)
+            return audit_repository(
+                repository_root,
+                config_path,
+                changed_only,
+                run_analyzers,
+                format,
+                record_history,
+                baseline_path,
+                write_baseline,
+                include_prompt,
+                # The interactive door never assumes go. The plain
+                # function defaults to "run" for the CLI and scripted
+                # callers, which have already decided; a person has not
+                # (D27).
+                action=action,
+                roots=ledger.current(),
+            )
+        except ANTICIPATED_REFUSALS as refusal:
+            # Declared, so the message survives to the caller. The plain
+            # function keeps raising the domain type for the CLI and for
+            # library callers; only the transport translates.
+            raise tool_error(str(refusal)) from refusal
 
     _register_audit_tool(server, audit_repository_tool, annotation, context_type,
                          (Annotated, ElicitationResult, Resolve),
@@ -314,6 +339,8 @@ def _bind_resources(
     function_resource: Any,
     resource_security: Any,
 ) -> None:
+    from mcp.server.mcpserver.exceptions import ResourceError as resource_error
+
     class AuthorizedRootSecurity(resource_security):
         """Validate an absolute template argument against this server's allow-list.
 
@@ -326,7 +353,10 @@ def _bind_resources(
             root = params.get("root")
             if not isinstance(root, str):
                 return "root"
-            authorize_repository(root, ledger.current())
+            try:
+                authorize_repository(root, ledger.current())
+            except ANTICIPATED_REFUSALS as refusal:
+                raise resource_error(str(refusal)) from refusal
             return None
 
     @server.resource(
@@ -355,7 +385,14 @@ def _bind_resources(
         security=AuthorizedRootSecurity(),
     )
     def report_resource(root: str) -> str:
-        return _report_markdown(root, ledger.current())
+        try:
+            return _report_markdown(root, ledger.current())
+        except ANTICIPATED_REFUSALS as refusal:
+            # Without this the reader is told only the URI it already
+            # knows. `SetupRequired` exists to name the door that can
+            # ask the questions (D30), which is unreadable if the text
+            # is withheld.
+            raise resource_error(str(refusal)) from refusal
 
     def report_template_descriptor() -> str:
         """Replace ``{root}`` with an authorized absolute repository path."""

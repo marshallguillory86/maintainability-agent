@@ -75,6 +75,61 @@ are not added to that response.
 
 Decisions 005–007 were written together after a repository containing one production function was reported as 5.0 / A+, evidence complete, verified. They address three distinct causes of that single result: no rate has a minimum population (005), the evidence comes from six homegrown detectors rather than the mature analyzers the README says to pair with (006), and nothing distinguishes *a clean scan* from *an enforced standard* (007).
 
+### Decision 9 — The line is executing code
+
+- Recorded: 2026-08-25
+
+**This agent never executes the audited repository's code, and its
+configuration is code.** An eslint flat config is a JavaScript program; a
+pylint or mypy plugin is a Python module. Loading either to produce a
+finding is executing the tree, so the boundary is drawn at execution
+rather than at a judgment about whether a given repository is
+trustworthy.
+
+This answers the question `security-queue.md` recorded as *"the one
+decision that is not mine"* — are repositories trusted? — by making it
+moot. The agent does not need to decide; it does not run their code
+either way.
+
+**A pillar that can only be measured by running the code waits for a
+future version.** It is not approximated, not half-measured, and not
+shipped behind a caveat. `test_effectiveness` was already `unscored` for
+exactly this reason ("requires running the suite (mutation/coverage);
+this audit never executes code"), and that entry now reflects a rule
+rather than a limitation.
+
+Consequences: `SECURITY.md`'s existing claim becomes true rather than
+aspirational. D39 stops being an accepted residual and becomes a defect
+— the promise was right and the code drifted from it. Analyzers that
+require the tree's own configuration leave the default pool; analyzers
+that merely *may* load configured plugins (mypy, pylint) run with that
+loading disabled. Child sandboxing stays refused and this does not
+reopen it: not executing the tree is a narrower and cheaper guarantee
+than containing it while it runs.
+
+### Decision 10 — v1.0 ships Python and Java
+
+- Recorded: 2026-08-25
+
+**v1.0 is the current language capability with an empty defect ledger,
+not a larger language matrix.** Python (`ast`, exact declaration ranges)
+and Java (dedicated scanner) are the two languages with real declaration
+parsers, and they are what v1.0 claims.
+
+Further languages — Fortran, C#, C, Rust, then JavaScript and the rest —
+arrive **one adapter per release**, not as a batch. Marshall's reason,
+in his words: he is an agilist, and a six-language batch is the opposite
+of that. The catalog already carries analyzer coverage for those
+ecosystems, so each release adds a declaration parser to a pool that can
+already measure something.
+
+Consequences: v1.0's remaining work is the defect ledger, not new
+adapters. Every language outside Python and Java keeps its current
+honest behaviour — file length, duplication and risk, with declaration
+rates **withheld** and the missing parser named — which is already what
+`language-support.md` documents and what P7 requires. Nothing is claimed
+for a language whose declarations were never parsed.
+
 ## Statuses
 
 - **Proposed** — written up with options; not yet decided. May be edited freely.

@@ -344,8 +344,19 @@ def test_a_report_resource_refuses_a_path_outside_the_allowed_roots(tmp_path: Pa
     uri = str(resources[0].uri).replace("{repository_root}", str(outside)).replace(
         "{root}", str(outside))
 
-    with pytest.raises(PathNotAllowed):
+    # Asserted through the refusal the *client* receives, not through
+    # whichever exception the SDK happens to let past. `ResourceError`
+    # is the declared form — a failure the server saw coming, whose
+    # message reaches the reader — and the boundary is worth nothing if
+    # the reader cannot tell a refusal from a crash. Before this was
+    # declared, mcp 2.1 correctly classified the refusal as a crash and
+    # withheld the text, leaving only the URI the caller already knew.
+    from mcp.server.mcpserver.exceptions import ResourceError
+
+    with pytest.raises(ResourceError) as refusal:
         _read(server, uri)
+    assert "outside" in str(refusal.value).lower()
+    assert isinstance(refusal.value.__cause__, PathNotAllowed)
 
 
 def test_the_slash_command_prompt_is_named_for_this_agent(tmp_path: Path) -> None:

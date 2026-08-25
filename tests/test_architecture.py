@@ -118,11 +118,15 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
 # `_mcp_gate` is what the audit answers with when it is not answering
 # with an audit — the D26 setup precondition and the D27 run-or-
 # reconfigure choice, split from `_mcp_audit` at the same size gate.
+# `_mcp_refusals` is the set of domain types the transport may turn
+# into the SDK's declared refusals. Below both seam-binding modules,
+# because `mcp_server` imports `_mcp_resources` and a tuple beside
+# either would be a cycle for the other.
 # Entry, because deciding to ask a person rather than compute is an
 # entry-layer decision; nothing below may make it.
 ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup", "_mcp_audit",
          "_skill_install", "_mcp_gate", "_mcp_resources",
-         "_mcp_grants"}
+         "_mcp_grants", "_mcp_refusals"}
 BOUNDARY = {"evidence"}
 
 LAYERS = {

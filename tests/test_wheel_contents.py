@@ -148,3 +148,47 @@ def test_the_packaged_standard_matches_the_documented_one() -> None:
     assert packaged == documented, (
         "the packaged standard drifted from docs/standard.md; copy it across"
     )
+
+
+def test_the_shipped_skill_is_the_current_one_and_carries_its_first_rule(
+    wheel: Path,
+) -> None:
+    """D49: the skill a user loads is the staged one, not the repo one.
+
+    Two tests already read `_skill_data/SKILL.md`, and both read it out
+    of the source checkout: `test_every_delivery_surface_offers_all_three_presentations`
+    byte-pins the mirror against `skills/maintainability-agent/SKILL.md`,
+    and `test_skill_install` reads the same source path. So the file
+    that a host actually loads — the copy carried in the distribution
+    and written out by `--install-skill` — was asserted by nothing.
+
+    That is D23's hole, still open on a different payload. Content, not
+    presence: D21 removed a "configuration check first" instruction
+    that sent hosts hunting for `maintainability-agent.json` before
+    calling the tool; a distribution that ships the rule's file without
+    the rule in it is the same outage with a better disguise.
+
+    Presence is this read of the staged tree, not the `package-data`
+    glob. Removing `_skill_data/**/*` from that declaration still
+    copies the files — setuptools includes them by another route — so
+    a REQUIRED entry on the glob cannot fail the way it looks like it
+    would. The register records that limit.
+    """
+    staged = wheel / "maintainability_audit/_skill_data/SKILL.md"
+    source = ROOT / "skills" / "maintainability-agent" / "SKILL.md"
+    shipped = staged.read_text(encoding="utf-8")
+
+    assert shipped == source.read_text(encoding="utf-8"), (
+        "the staged skill drifted from skills/maintainability-agent/SKILL.md; "
+        "the copy a user installs is not the copy this repository reviews"
+    )
+
+    workflow = shipped.split("## Core Workflow", maxsplit=1)[1]
+    first_step = workflow.split("2.", maxsplit=1)[0].lower()
+    assert "audit_repository" in first_step, (
+        "the shipped skill's first step is not the call"
+    )
+    assert "do not inspect configuration" in first_step
+    assert "configuration check first" not in shipped.lower(), (
+        "the shipped skill still tells hosts to go looking for a config"
+    )

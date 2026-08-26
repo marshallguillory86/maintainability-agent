@@ -1310,7 +1310,7 @@ its `test` extra thin and `test_declared_imports` refuses a dev-only
 parser in tests. I added PyYAML anyway, that lint caught it, and the
 parser was rewritten.
 
-### D44 — Open: MCP annotations contradict the behaviour (Medium)
+### D44 — Closed: the annotations are derived from the behaviour (Medium)
 
 Codex, 2026-08-23. The audit tool declares itself non-destructive and
 closed-world, and `tests/test_mcp_server.py` locks both values. Neither
@@ -1321,10 +1321,40 @@ and baseline writes.
 Test-backed misinformation is worse than an untested claim: the suite
 is the reason nobody re-examined it.
 
-**Blocked on the trust decision** — what these annotations should say
-depends on whether repositories are trusted. See `docs/security-queue.md`.
+~~**Blocked on the trust decision**~~ — unblocked by
+[Decision 9](decisions.md), which answered it by drawing the line at
+executing code instead.
 
-*Closing test:* pending.
+**Closed 2026-08-25.** `audit_repository` now advertises
+`destructive_hint=True` and `open_world_hint=True`. It replaces an
+existing configuration when setup reruns and an existing baseline when
+asked to write one — non-additive updates to files in the user's
+repository, which is what the destructive hint means. That only the
+agent's own five artifacts are ever touched (D34) is a real guarantee
+and a different claim from "additive". And it is not closed-world:
+`analyzers.acquire_tools` can fetch a missing Node tool through
+`npx --yes`, and analyzers are ordinary local children this package
+does not sandbox, which P1 discloses in as many words. `get_agent_info`
+was accurate and is unchanged.
+
+Decision 9 removed exactly one of the four reasons this entry gave —
+the tree's own analyzer configuration no longer executes (D39). It did
+not make the tool closed-world, and the other three stood.
+
+**The lesson is the lock, not the values.** Two tests asserted
+non-destructive and closed-world for *every* tool, and a third
+statement sat in `ide-agent-integration.md`. Changing the literals
+would have left the same defect available, so the falsifiers derive
+each hint from a fact stated elsewhere in the package: the hint must
+follow `server_info`'s list of what this agent writes, and follow the
+existence of the acquisition setting. Changing the behaviour without
+changing the hint now fails.
+
+*Closing tests:* `test_a_tool_that_writes_is_not_advertised_as_read_only`,
+`test_replacing_a_file_a_user_owns_is_advertised_as_destructive`,
+`test_a_tool_that_can_reach_the_network_is_not_advertised_as_closed_world`
+and `test_the_read_only_tool_is_still_read_only` in
+`tests/test_annotations_match_behaviour.py`.
 
 ### D45 — Closed: the security policy supports the shipped release (Medium)
 
@@ -1587,7 +1617,7 @@ reopened once for exactly that confusion.
 
 ## Disposition
 
-**Two entries are open: D44 and D46.** D34 through D37 were
+**One entry is open: D46.** D34 through D37 were
 filed by the same 2026-08-23 security pass and have since closed; this
 paragraph named them as open for two days after they were not, which is
 the register describing a state a reader cannot verify from its own

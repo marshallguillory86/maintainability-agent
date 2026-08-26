@@ -23,6 +23,12 @@ classifiers = [
   "Environment :: Console",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: MIT License",
+  # POSIX because that is what has been demonstrated. CI runs Linux,
+  # development runs macOS, and nothing has ever run on Windows: seven
+  # test files create symlinks with no platform guard, and `os.symlink`
+  # needs Developer Mode there. Claiming an untested platform is the
+  # defect this project keeps finding in itself (D63).
+  "Operating System :: POSIX",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.11",

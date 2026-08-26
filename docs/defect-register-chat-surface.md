@@ -2231,8 +2231,29 @@ directory.
 command in `run_git`, the one place this package builds a git argv,
 which is what makes the promise checkable at all.
 
-*Closing test:* `test_every_git_command_disables_gits_own_housekeeping`
-in `tests/test_git_argv.py`.
+**The fix was right and the test still failed.** macOS went red again on
+the very next run, with the same `maintenance.lock`. Auto-maintenance
+**detaches**: `git maintenance run --auto` returns immediately and the
+work lands milliseconds later. The scheduler here was not the product at
+all — it was the fixture's own `git commit`, which sets the repository
+up before the audit is ever called, and whose maintenance then fires
+inside the window between the before and after snapshots.
+
+Same commit, three CI runs, two failures and one pass. That is the
+signature of a race, and it is the second time in this entry that a
+probabilistic symptom pointed at the wrong culprit.
+
+So there are two halves. The product no longer *triggers* maintenance,
+which is the real guarantee and is pinned to the argv. And the suite no
+longer *schedules* it either: a session-scoped conftest fixture exports
+`GIT_CONFIG_COUNT`/`KEY`/`VALUE`, which reaches every git the suite
+runs, product and fixture alike. Its falsifier asks git what it resolved
+rather than asserting the variables are set — the difference between
+proving conftest ran and proving git listened.
+
+*Closing tests:* `test_every_git_command_disables_gits_own_housekeeping`
+and `test_the_suites_own_git_has_maintenance_disabled` in
+`tests/test_git_argv.py`.
 
 ## Disposition
 

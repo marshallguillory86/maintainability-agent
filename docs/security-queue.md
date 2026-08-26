@@ -13,8 +13,10 @@ whoever touches it last.
 ## The one decision that was not mine — answered 2026-08-25
 
 **Are repositories trusted?** Both audits converge here (Grok R1,
-Codex 2), and it is genuinely product intent, so it stays open until
-Marshall rules.
+Codex 2), and it is genuinely product intent, so it stayed open until
+Marshall ruled on 2026-08-25. The ruling is below; the two options
+are kept because a decision that lists only the chosen path is a
+rationalization.
 
 Today the agent runs `eslint` such that it *requires* and executes the
 audited tree's own configuration, and mypy and pylint can load
@@ -37,16 +39,23 @@ Child sandboxing stays refused and neither option reopens it.
 line at *executing code* rather than at trusting repositories — see
 [Decision 9](decisions.md). The agent does not run the audited tree's
 code, and its configuration is code. Option 2's mechanism is what
-ships (agent-owned configuration, plugin loading disabled, scrubbed
-environment); option 2's framing is not, because the guarantee is not
-"we distrust you" but "we never run it".
+**will** ship (agent-owned configuration, plugin loading disabled,
+scrubbed environment); option 2's framing is not, because the
+guarantee is not "we distrust you" but "we never run it".
+
+**None of that mechanism exists yet.** No adapter passes
+`--no-eslintrc` or `--no-plugins`, eslint still requires the tree's
+own flat config, and `_runner` spawns analyzers with the inherited
+environment. That is why D39 is **Open**: the decision is made and
+the code has not moved. An earlier revision of this paragraph said
+the mechanism ships, which described work nobody had done.
 
 Most of the exposure leaves by scope rather than by engineering:
 eslint is the analyzer that *requires* the tree's own flat config, and
 JavaScript is not a v1.0 language ([Decision 10](decisions.md)). What
 remains is mypy and pylint, which are Python and therefore in scope,
-and which merely *may* load configured plugins — they run with that
-disabled.
+and which merely *may* load configured plugins — they will run with
+that disabled, under D39.
 
 ## Order of work
 

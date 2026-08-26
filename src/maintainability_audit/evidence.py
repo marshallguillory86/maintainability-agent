@@ -29,23 +29,15 @@ from math import isinf, isnan
 from typing import Any
 
 # The report structure this module understands. Owned by
-# ``report.build_report``, which stamps it; see docs/report-contract.md
-# for the compatibility policy. Deliberately not the baseline file's
-# ``version``, which numbers a different artifact.
+# ``report.build_report``, which stamps it. Deliberately not the
+# baseline file's ``version``, which numbers a different artifact.
 #
-# Version 2 (ADR 001 stage 8) removed the ambiguous compatibility score
-# fields — ``overall``, ``overall_range``, ``grade``, ``grade_blockers``
-# — in favour of ``maintainability_estimate``, ``maintainability_range``
-# and ``verified_grade``. No version-1 migration exists, and that is a
-# decision rather than an omission: the consumer inventory in
-# docs/report-contract.md established that nothing rescores a persisted
-# report, so a migration would serve no caller.
-#
-# Version 3 (ADR 005) makes ``maintainability_estimate`` and
-# ``maintainability_range`` nullable and adds ``insufficient`` to
-# ``evidence_status.status``. A scope-limited scan carries no
-# whole-repository score, so consumers must handle null where they
-# previously assumed a number.
+# **docs/report-contract.md is the compatibility policy** — what each
+# version changed, why version 1 is not migrated, and which consumers
+# that decision was checked against. It is not restated here: this
+# module is a leaf that imports nothing first-party, so its 500-line
+# budget is permanent, and a paragraph duplicated from a page it already
+# links is the cheapest thing in it to lose.
 REPORT_SCHEMA_VERSION = 3
 
 # What a run examined. ``full`` is the whole tree; anything else is a
@@ -402,11 +394,22 @@ NO_SCANNED_FILES_CHANGED = ("commits landed inside the history window but "
 
 
 def _empty_window_reason(section: Mapping[str, Any]) -> str:
-    """Which of the three empty windows this is (D66) — the plain
-    wording when the counts are absent, as a pre-D66 report carries."""
+    """Which of the three empty windows this is (D66, D74).
+
+    Neither field is a `HistoryEvidence` member, so nothing upstream
+    validates them and an incoherent pair earns the least specific
+    answer -- a confidently wrong reason is the defect D66 removes.
+    `read` is the non-merge subset of `seen`, so it cannot exceed it,
+    and `bool` is an `int` (D74).
+    """
     seen = section.get("commits_in_window")
     read = section.get("commits_considered")
-    if not isinstance(seen, int) or not isinstance(read, int) or not seen:
+    coherent = (
+        isinstance(seen, int) and isinstance(read, int)
+        and not isinstance(seen, bool) and not isinstance(read, bool)
+        and 0 <= read <= seen
+    )
+    if not coherent or not seen:
         return EMPTY_WINDOW
     return MERGES_ONLY if read == 0 else NO_SCANNED_FILES_CHANGED
 
@@ -427,12 +430,9 @@ def _normalize_history(report: dict[str, Any]) -> HistoryEvidence:
     section = _require_mapping(raw, "history")
     states = _states_for(HistoryEvidence, section, "history", HISTORY_FIELD_ABSENT)
     _check_relations(states, HISTORY_SUBSETS, HISTORY_SUMS, "history")
-    # An empty window is not a quiet repository. Every count below
-    # `files_changed` is a share of that zero; left as Measured(0) they
-    # fed `evidence_status: complete` while `_history_rate_aspect`
-    # already returned None (D56). NotApplicable, not Unknown: the
-    # window *was* read, and "nothing to divide by" is not "could not
-    # look" — the distinction this module exists to keep.
+    # An empty window is not a quiet repository (D56). NotApplicable,
+    # not Unknown: the window *was* read, and "nothing to divide by" is
+    # not "could not look".
     changed = states["files_changed"]
     if isinstance(changed, Measured) and not changed.value:
         reason = _empty_window_reason(section)

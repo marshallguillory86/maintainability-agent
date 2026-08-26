@@ -1127,6 +1127,20 @@ that was demonstrated. A component *above* it being replaced is a
 residual the weaker rule does not catch, and is why new grants are
 stored resolved.
 
+**And the falsifier for the reopen failed CI on its first run.** It
+asserted that `/tmp` is a symlink, which is true on macOS and false on
+Linux, so it hard-failed on the platform it was meant to protect
+instead of skipping there. Every local full-suite run had been green,
+because every local run was on one platform: a platform fact asserted
+rather than constructed is invisible to a single-machine regression
+check, and this project's own discipline of diffing the whole suite
+against a baseline cannot see it either.
+
+The test builds its own symlinked parent now — a real directory, a link
+to it, and a grant underneath the link — so it exercises the case on
+every platform rather than skipping where the platform does not
+volunteer one.
+
 *Closing tests:* `test_a_standing_grant_does_not_follow_a_renamed_directory`
 and `test_a_grant_under_a_symlinked_parent_survives_a_restart` in
 `tests/test_grant_only_user_tier.py`.

@@ -176,10 +176,16 @@ def test_the_first_run_help_describes_the_form_a_person_actually_sees() -> None:
     """D28: the help page is read against the question set, not a memory of it.
 
     The page grouped economics as one bullet — "skip, or low/base/high
-    loaded labor rates" — while the form asks four separate fields, and
-    the three labor bounds sit in the elicitation schema
-    unconditionally. Someone answering "skip" is still shown all three,
-    and the page gave them no way to expect that.
+    loaded labor rates" — while the form asked four separate fields and
+    the three bounds sat in the schema unconditionally. D28 made the
+    page describe that.
+
+    The form has since changed, and this test inverted with it: the
+    bounds are a second ask now, put only to someone who answered
+    `include`, because asking three money questions of a person who
+    just declined money is not a description problem. The page must
+    describe *that*, and the check reads both stages from the code so
+    neither can drift into merely being old.
 
     Read from `setup_questions`, so a question added to the form has to
     reach the page before it ships, and a page that restates the form
@@ -200,13 +206,27 @@ def test_the_first_run_help_describes_the_form_a_person_actually_sees() -> None:
             f"{question['name']!r}, which the form shows"
         )
 
-    labor = [q for q in questions if q["name"].startswith("labor_")]
-    assert len(labor) == 3, "the labor bounds changed shape; re-read the page"
-    # The specific misdescription: bounds presented as conditional.
+    from maintainability_audit._mcp_setup import economics_bound_questions
+
+    assert not [q for q in questions if q["name"].startswith("labor_")], (
+        "a labor rate is back on the first form, which is asked of "
+        "everyone including the people who declined the economic scenario"
+    )
+    bounds = economics_bound_questions()
+    assert len(bounds) == 3, "the labor bounds changed shape; re-read the page"
+    for question in bounds:
+        assert str(question["default"]) in page, (
+            f"the help page never states the default {question['default']!r} "
+            f"for {question['name']!r}, which the second form shows"
+        )
+
     lowered = " ".join(page.lower().split())
-    assert "even when" in lowered or "unconditional" in lowered, (
-        "the page does not tell the reader the labor fields appear "
-        "regardless of the economics answer"
+    assert "second question set" in lowered or "only if you include" in lowered, (
+        "the page does not tell the reader the labor rates are a second "
+        "ask that follows including the economic scenario"
+    )
+    assert "0 < low <= base <= high" in page, (
+        "the page does not state the rule the rates are refused against"
     )
     for presentation in PRESENTATIONS:
         assert presentation in lowered

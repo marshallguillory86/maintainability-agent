@@ -12,14 +12,24 @@ can elicit asks those nine fields as one structured form with visible defaults:
 - analyzer depth: moderate;
 - license policy: permissive;
 - economic context: skip;
-- loaded labor rate, lower bound: 90 per hour;
-- loaded labor rate, central estimate: 140 per hour;
-- loaded labor rate, upper bound: 210 per hour;
 - presentation: chat, markdown or html — default chat;
 - record scan history in this repository: yes.
 
-All three labor-rate fields are shown even when economic context is set to
-`skip`; that choice leaves the economic scenario out of reports.
+**The labor rates are a second question set, asked only if you include the
+economic scenario.** Answer `include` and the next call asks three more:
+
+- loaded labor rate, lower bound — default 90 per hour;
+- loaded labor rate, central estimate — default 140 per hour;
+- loaded labor rate, upper bound — default 210 per hour.
+
+Answer `skip` — the default — and you are never asked. Until this was staged, all three were on the first form
+regardless, so the common path answered three money questions for something
+it had just declined.
+
+They are refused if they do not satisfy `0 < low <= base <= high`. That check
+used to live in scoring, so an impossible set was accepted here, written to
+both tiers, and surfaced two calls later as an error about a file the person
+had already left behind.
 
 Accepted answers are written to both configuration tiers. Answering does not
 start an audit, including when the host elicited the questions on that call.

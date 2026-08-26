@@ -131,6 +131,10 @@ def persist_root_grant(root: Path) -> None:
     config = load_user_config() or {}
     grants = config.get("allowed_roots")
     entries = [str(entry) for entry in grants] if isinstance(grants, list) else []
+    # Stored resolved. A grant recorded as `/tmp/work` cannot be checked
+    # strictly later, because `/tmp` is a symlink on macOS and the path
+    # never resolves to itself (D38).
+    root = Path(root).expanduser().resolve()
     if str(root) not in entries:
         entries.append(str(root))
     config["allowed_roots"] = entries

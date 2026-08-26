@@ -187,3 +187,59 @@ def test_a_standing_grant_does_not_follow_a_renamed_directory(
         "dropped, not honoured against the link"
     )
     assert launch in after, "the launch root must be unaffected"
+
+
+def test_a_grant_under_a_symlinked_parent_survives_a_restart(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D38 reopened: the fix dropped every ordinary macOS grant.
+
+    The predicate honoured a stored grant only when its path contained
+    no symlink in any component. `/tmp` and `/var` are symlinks here and
+    every `tempfile` directory sits under one, so a grant recorded as
+    `/tmp/work` was dropped on every start and the person who said
+    "always" was asked again forever — the inverse of the defect the
+    entry set out to close.
+
+    The original closing test could not see it: it resolved the path
+    before storing, so it only ever exercised a canonical entry. This
+    one deliberately does not.
+    """
+    import os
+
+    from maintainability_audit import _mcp_audit
+
+    granted = Path("/tmp") / "ma-d38-symlinked-parent"
+    granted.mkdir(exist_ok=True)
+    assert Path("/tmp").resolve() != Path("/tmp"), (
+        "this platform does not symlink /tmp; the case cannot be exercised"
+    )
+    try:
+        monkeypatch.setattr(
+            _mcp_audit, "load_user_config", lambda: {"allowed_roots": [str(granted)]})
+        roots = _mcp_audit.allowed_roots(explicit=(str(granted.parent),))
+        # Compared resolved: the allow-list is resolved on the way out,
+        # so `/tmp/x` comes back as `/private/tmp/x`. What matters is
+        # that the entry survived at all — it used to be dropped.
+        assert granted.resolve() in roots, (
+            "a grant whose parent is a symlink was dropped, which is every "
+            f"grant under /tmp or /var on this platform: {roots}"
+        )
+
+        # And the swap it exists to refuse is still refused.
+        elsewhere = Path("/tmp") / "ma-d38-elsewhere"
+        elsewhere.mkdir(exist_ok=True)
+        granted.rmdir()
+        os.symlink(elsewhere, granted)
+        after = _mcp_audit.allowed_roots(explicit=(str(granted.parent),))
+        assert elsewhere.resolve() not in after, (
+            f"the grant followed a symlink planted at the granted name: {after}"
+        )
+    finally:
+        if granted.is_symlink():
+            granted.unlink()
+        elif granted.exists():
+            granted.rmdir()
+        spare = Path("/tmp") / "ma-d38-elsewhere"
+        if spare.exists():
+            spare.rmdir()

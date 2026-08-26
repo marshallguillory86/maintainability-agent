@@ -41,7 +41,7 @@ from .deadcode import dead_declarations
 from .declarations import DECLARATION_SUFFIXES
 from .duplication import duplicate_blocks, risk_findings
 from .evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY
-from .git_tools import run_git
+from .git_tools import probe_git
 from .history import history_section
 from .idioms import divergent_idioms
 from .metrics import (
@@ -300,11 +300,14 @@ def _provenance(
     the document assumes an answer to.
     """
     return {
-        "git_branch": run_git(["branch", "--show-current"], root),
+        # Probed: a directory that is not a repository is a supported
+        # audit target, so a failing git command is an expected answer
+        # rather than the D37 fault.
+        "git_branch": probe_git(["branch", "--show-current"], root),
         # The commit this report describes. Without it a scan history is
         # a list of scores with no anchor, and recurrence — "cleared,
         # then returned, in these commits" — has nothing to name.
-        "git_commit": run_git(["rev-parse", "HEAD"], root),
+        "git_commit": probe_git(["rev-parse", "HEAD"], root),
         "git_status_short": git_status,
         "mode": "changed-only" if only_paths is not None else "full",
         "changed_revspec": changed_revspec,
@@ -447,7 +450,7 @@ def build_report(
     dead = dead_declarations(root, files, source)
     idioms = divergent_idioms(root, files, config, source)
     risks = risk_findings(root, files, config, source)
-    git_status = run_git(["status", "--short"], root)
+    git_status = probe_git(["status", "--short"], root)
     gates, summary = _compute_gates_and_summary(
         root, config, git_status, files, file_metrics, function_metrics, len(dupes), len(risks)
     )

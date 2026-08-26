@@ -45,6 +45,18 @@ EXCLUSIONS: dict[str, str] = {
     "UnsupportedReportSchema": (
         "subclass of EvidenceValidationError; same exclusion"
     ),
+    "InvalidRevspec": (
+        "the MCP door converts it: validate_revspec catches it and raises "
+        "InvalidAuditArgument, which is in the tuple, and changed_paths is "
+        "only reached on that path after validation has already run"
+    ),
+    "GitCommandFailed": (
+        "a git invocation that was expected to succeed did not — an "
+        "environmental fault, not a refusal a caller can act on, and its "
+        "message can carry an OSError naming host paths; the non-repository "
+        "and shallow-clone cases a user can actually cause are answered by "
+        "probe_git instead of raised"
+    ),
     "SkillDrift": (
         "CLI --install-skill only; never raised through the MCP tool "
         "or resource seams"

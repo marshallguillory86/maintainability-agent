@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .git_tools import run_git
+from .git_tools import probe_git
 
 # Enough to make collision fanciful without making a fingerprint
 # unreadable in a diff. These land in checked-in baseline files and in
@@ -200,7 +200,9 @@ def rename_map(root: Path, old_commit: str, new_commit: str) -> dict[str, str]:
     """
     if not old_commit or not new_commit or old_commit == new_commit:
         return {}
-    output = run_git(
+    # Probed on purpose, as this function's docstring already promised:
+    # no map means no rename glue, never a crash.
+    output = probe_git(
         ["diff", "--name-status", "--find-renames", old_commit, new_commit], root,
     )
     renames: dict[str, str] = {}

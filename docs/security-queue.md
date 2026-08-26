@@ -64,7 +64,7 @@ so none of it needs a ruling.
 | 6 | D43 | Composite action interpolates inputs into Bash | **closed** |
 | 7 | D41 | Release authority rides mutable third-party Action tags | **closed** |
 | 8 | D45 | `SECURITY.md` supports `0.1.x`; the package is `0.9.1` | **closed** |
-| 9 | D37 | CLI passes git options the MCP door rejects; no timeouts; swallowed errors | queued |
+| 9 | D37 | CLI passes git options the MCP door rejects; no timeouts; swallowed errors | **closed** |
 | 10 | D38 | A standing grant follows a renamed directory after restart | queued |
 | 11 | D46 | XML parsers unbounded against analyzer output | queued |
 | 12 | D44 | MCP annotations contradict behaviour | unblocked by Decision 9; queued |

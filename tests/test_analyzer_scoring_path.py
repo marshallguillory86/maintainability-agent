@@ -13,7 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from test_analyzer_bridge import (
+from _analyzer_fixtures import (
     _clean_tree,
     _complete_declaration_measurements,
     _rollup_with_analyzer_primary,

@@ -193,6 +193,34 @@ def _commits(root: Path, since: str) -> list[tuple[str, list[tuple[str, int, int
     return parsed
 
 
+def window_commits(root: Path, since: str = DEFAULT_SINCE) -> tuple[int, int]:
+    """`(commits in the window, commits this audit will read)`.
+
+    Three different repositories produce `files_changed: 0`, and the
+    first version of the empty-window handling told all three the same
+    thing -- "no commit falls inside the history window" -- which is
+    plainly false for two of them:
+
+    * nothing was committed in the window at all;
+    * every commit in it is a merge, dropped by `--no-merges` because a
+      merge's numstat re-reports churn already counted on the branch;
+    * commits landed, but touched only files this audit does not scan --
+      a lockfile, a vendored tree, an excluded directory.
+
+    Only the first is a quiet window. The other two are windows this
+    agent *filtered to* empty, and saying so is P8: the report states
+    what examined each value. Two `rev-list --count` calls, which read
+    no file contents and parse nothing (D66).
+    """
+    total = run_git(["rev-list", "--count", f"--since={since}", "HEAD"], root)
+    considered = run_git(
+        ["rev-list", "--count", "--no-merges", f"--since={since}", "HEAD"], root)
+    return (
+        int(total.strip()) if total.strip().isdigit() else 0,
+        int(considered.strip()) if considered.strip().isdigit() else 0,
+    )
+
+
 def file_churn(root: Path, since: str = DEFAULT_SINCE, tracked: set[str] | None = None) -> dict[str, FileChurn]:
     """Commits, line churn and author count per file over the window.
 
@@ -293,8 +321,11 @@ def history_section(
         for pair in pairs
         if all(PurePosixPath(path).suffix in DECLARATION_SUFFIXES for path in pair["files"])
     )
+    in_window, considered = window_commits(root, since)
     return {
         "window": since,
+        "commits_in_window": in_window,
+        "commits_considered": considered,
         "files_changed": len(churn),
         "hotspots": ranked[:25],
         "change_coupling": pairs[:25],

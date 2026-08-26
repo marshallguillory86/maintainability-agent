@@ -57,22 +57,43 @@ NO_TREE_CONFIG: dict[str, str] = {}
 # fifteen, so ruff sat in the baseline pool unclassified. The module
 # docstring claimed "every tool the pool can invoke". This is that
 # claim, made true.
-ADAPTER_CONFIG: dict[str, str] = {
-    "eslint": "REFUSED: a flat config is a JavaScript program",
-    "checkstyle": "agent-supplied ruleset via -c; the tree's is never read",
-    "pmd": "agent-supplied rulesets via --rulesets",
-    "spotbugs": "agent-supplied exclude file; reads bytecode, not config",
-    "jscpd": "reads .jscpd.json — JSON data, executes nothing",
-    "ruff": "reads pyproject.toml / ruff.toml — TOML data, executes nothing",
-    "flake8": "reads setup.cfg / tox.ini / .flake8 — INI data, executes nothing",
-    "pydocstyle": "reads setup.cfg — INI data, executes nothing",
-    "interrogate": "reads pyproject.toml — TOML data, executes nothing",
-    "vulture": "no configuration file; flags only",
-    "lizard": "no configuration file; flags only",
-    "radon": "reads radon.cfg — INI data, executes nothing",
-    "complexipy": "no configuration file; flags only",
-    "cohesion": "no configuration file; flags only",
-    "multimetric": "no configuration file; flags only",
+# Three states, and only one of them is a human judgment.
+#
+# REFUSED and ISOLATED are checked against the argv the runner would
+# actually spawn. DATA_ONLY is the residue: a claim that the tool's
+# configuration carries settings and not code. That claim is written
+# from documentation and cannot be machine-checked here, which is
+# exactly how the flake8 cell was wrong — it said "INI data, executes
+# nothing" while flake8 documents `[flake8:local-plugins]`, which names
+# `module:Checker` entries and a `paths` list into the tree and imports
+# them (D64).
+#
+# So DATA_ONLY entries carry the config surface they were judged
+# against. When a tool grows a plugin hook, the entry is what someone
+# re-reads.
+REFUSED = "REFUSED"
+ISOLATED = "ISOLATED"
+
+ADAPTER_CONFIG: dict[str, tuple[str, str]] = {
+    "eslint": (REFUSED, "a flat config is a JavaScript program"),
+    "flake8": (ISOLATED + ":--isolated",
+               "[flake8:local-plugins] imports module:Checker from the tree"),
+    "checkstyle": ("DATA_ONLY", "agent-supplied ruleset via -c; the tree's is never read"),
+    "pmd": ("DATA_ONLY", "agent-supplied rulesets via --rulesets"),
+    "spotbugs": ("DATA_ONLY", "agent-supplied exclude file; reads bytecode, not config"),
+    "jscpd": ("DATA_ONLY", ".jscpd.json / package.json#jscpd — reporter and store "
+                           "names are npm packages, not paths in the tree"),
+    "ruff": ("DATA_ONLY", "pyproject.toml / ruff.toml — no plugin mechanism exists; "
+                          "the linter is a single Rust binary"),
+    "pydocstyle": ("DATA_ONLY", "setup.cfg / pyproject.toml — select/ignore lists only"),
+    "interrogate": ("DATA_ONLY", "[tool.interrogate] — flags, globs and regexes, no hook"),
+    "vulture": ("DATA_ONLY", "[tool.vulture] — paths and confidence, no hook"),
+    "lizard": ("DATA_ONLY", "no configuration file; -E extensions are lizard's own, "
+                            "named on the command line by this project"),
+    "radon": ("DATA_ONLY", "radon.cfg / pyproject.toml — argument defaults"),
+    "complexipy": ("DATA_ONLY", "no configuration file; flags only"),
+    "cohesion": ("DATA_ONLY", "no configuration file; flags only"),
+    "multimetric": ("DATA_ONLY", "no configuration file; flags only"),
 }
 
 
@@ -80,31 +101,49 @@ def test_every_adapter_is_classified_for_what_its_configuration_executes() -> No
     """Fifteen adapters, not the two declared tools.
 
     The sweep this replaces diffed `DECLARED`, which holds pylint and
-    mypy, while the pool invokes fifteen — so ruff, baseline tier and
-    in the default pool, was never asked the question the sweep exists
-    to ask. Same shape as the first git sweep matching only list
-    literals: a narrow set, a green test, and a docstring claiming the
-    class.
+    mypy, while the pool invokes fifteen — so ruff and flake8, both in
+    the default pool, were never asked the question the sweep exists to
+    ask.
     """
     from maintainability_audit._tool_adapters import ADAPTERS
 
     unclassified = sorted(set(ADAPTERS) - set(ADAPTER_CONFIG))
     assert not unclassified, (
         "adapters with no statement of what their configuration would "
-        f"execute: {unclassified}. Add each to ADAPTER_CONFIG — reading a "
-        "repository's TOML preferences is not executing its code, and "
-        "saying which one it is has to be deliberate"
+        f"execute: {unclassified}"
     )
     stale = sorted(set(ADAPTER_CONFIG) - set(ADAPTERS))
     assert not stale, f"ADAPTER_CONFIG names adapters that do not exist: {stale}"
-    assert all(reason.strip() for reason in ADAPTER_CONFIG.values())
+    assert all(reason.strip() for _, reason in ADAPTER_CONFIG.values())
+
+
+def test_an_isolated_adapter_actually_carries_its_flag() -> None:
+    """ISOLATED is checked against argv, not taken on trust.
+
+    The flake8 cell claimed the tool executes nothing while it was
+    spawned with no isolation flag at all. A classification that names a
+    flag has to produce it.
+    """
+    from pathlib import Path
+
+    from maintainability_audit._tool_adapters import adapter_for
+
+    for slug, (state, reason) in sorted(ADAPTER_CONFIG.items()):
+        if not state.startswith(ISOLATED):
+            continue
+        flag = state.split(":", 1)[1]
+        argv = adapter_for(slug).invocation(Path("/tmp/probe"), excludes=()).argv
+        assert flag in argv, (
+            f"{slug} is classified isolated by {flag} and is spawned "
+            f"without it, so {reason}: {argv}"
+        )
 
 
 def test_an_adapter_whose_config_executes_code_is_refused_not_isolated() -> None:
     """The REFUSED marker and the adapter property say the same thing."""
     from maintainability_audit._tool_adapters import ADAPTERS, adapter_for
 
-    marked = {s for s, why in ADAPTER_CONFIG.items() if why.startswith("REFUSED")}
+    marked = {s for s, (state, _) in ADAPTER_CONFIG.items() if state == REFUSED}
     declaring = {
         slug for slug in ADAPTERS
         if getattr(adapter_for(slug), "executes_audited_configuration", False)
@@ -256,3 +295,60 @@ def test_the_devnull_config_path_exists_on_this_platform() -> None:
     """Both flags point at `os.devnull`; a missing path would make the
     tool error rather than isolate it."""
     assert Path(os.devnull).exists()
+
+
+def test_no_document_presents_a_refused_analyzer_as_one_this_agent_runs() -> None:
+    """Decision 9 is a behaviour; the docs that predate it must say so.
+
+    Two ADRs listed eslint among the tools this agent invokes -- ADR 006
+    under its *Detected* tier, ADR 008 as the worked example of a tool
+    configured from the rubric. Both were written before Decision 9
+    ruled that configuration is code, and both survived the change
+    because nothing checked them against it. An operator reading either
+    one would install a tool this agent will always refuse.
+
+    Swept from the adapters rather than from a list of sentences,
+    because the next tool refused for the same reason will not be named
+    eslint, and the last review of these documents forbade exactly one
+    sentence and missed everything either side of it.
+    """
+    import inspect
+    import re
+
+    from maintainability_audit import _verdict_adapters
+
+    refused: set[str] = set()
+    for name in dir(_verdict_adapters):
+        candidate = getattr(_verdict_adapters, name)
+        if not (inspect.isclass(candidate) and name.endswith("Adapter")):
+            continue
+        if getattr(candidate, "executes_audited_configuration", False):
+            refused.add(re.sub(r"Adapter$", "", name).lower())
+
+    assert refused, (
+        "no adapter declares that its configuration executes the audited "
+        "tree, so this sweep proves nothing -- has the flag been renamed?"
+    )
+
+    # Lines that assert this agent invokes a tool, as opposed to lines
+    # that explain why it will not.
+    claims = re.compile(
+        r"used when already on `PATH`|installed with the package|"
+        r"the agent \*\*sets it from the rubric\*\*",
+    )
+    docs = Path(__file__).resolve().parents[1] / "docs"
+    offenders: list[str] = []
+    for path in sorted(docs.rglob("*.md")):
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if not claims.search(line):
+                continue
+            offenders += [
+                f"{path.name}:{number} claims this agent runs {slug}"
+                for slug in refused
+                if re.search(rf"\b{re.escape(slug)}\b", line, re.IGNORECASE)
+            ]
+
+    assert not offenders, (
+        "a document tells the operator to install an analyzer that "
+        f"selection refuses on every run: {offenders}"
+    )

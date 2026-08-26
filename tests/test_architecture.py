@@ -107,6 +107,11 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # `_semantic_view` prints the ADR 003 semantic block with
                 # its class labels intact and computes none of it.
                 "_semantic_view",
+                # `_coverage_notes` is the coverage section's prose about
+                # its own gaps -- one source only, a dimension the analyzer
+                # tier declined, nothing examined -- split from `_scan_view`
+                # at the file-size line.
+                "_coverage_notes",
                 "_scan_view", "_history_view", "_identity"}
 # `_first_run` is terminal interaction — it prompts, which no layer
 # below entry may ever do, and writes the config file the entry then

@@ -89,52 +89,38 @@ def allowed_roots(explicit: tuple[str, ...] = ()) -> tuple[Path, ...]:
 def _grant_still_names_what_was_granted(entry: str) -> bool:
     """True when a stored grant still points at the directory it named.
 
-    A grant is persisted as a resolved, canonical path, so a stored
-    entry that no longer resolves to itself is one whose path has
-    acquired a symlink since — the directory renamed away and something
-    else left at the old name. Re-resolving it at start-up would follow
-    that link and extend the allow-list to a directory nobody consented
-    to (D38).
+    A grant is persisted resolved, so a stored entry that no longer
+    resolves to itself is one whose path has acquired a symlink since —
+    the directory renamed away and something else left at the old name.
+    Re-resolving it at start-up would follow that link and extend the
+    allow-list to a directory nobody consented to (D38).
 
-    The in-process seam already refuses this: `_RootLedger.consume_ask`
-    surrenders the path the user was actually shown, so a symlink
-    retargeted during the elicitation round-trip cannot swap it. A
-    restart went around that, because the allow-list was rebuilt from
-    strings. Same rule, applied where the strings are read: the grant
-    authorizes what the question named, or it is not honoured.
+    **Canonical or nothing, and the middle ground is gone.** The first
+    fix required exactly this and dropped every ordinary macOS grant,
+    because `/tmp` and `/var` are symlinks there. The second honoured a
+    non-canonical entry unless the granted path was itself a link — and
+    an audit walked straight through it by retargeting the *parent*, one
+    directory up from the leaf that rule checked (D65).
 
-    Fails closed. A dropped grant is not an error — the user is asked
-    again the next time that root is used, which is the whole point.
+    There is no third rule. A bare path with no record of what it
+    resolved to when it was granted cannot be defended: nothing to
+    compare against means nothing to detect. So the product persists the
+    resolved path, those entries are checkable, and an entry that is not
+    canonical is refused rather than guessed at — with `server_info`
+    naming it, because the first version of this dropped grants in
+    silence and that is what made it hard to see.
     """
     candidate = Path(entry).expanduser()
     if not candidate.is_absolute():
         return False
     try:
-        resolved = candidate.resolve()
-        if resolved == candidate:
-            # Canonical, which is what this agent now persists. Any swap —
-            # the granted directory replaced by a link, or a component
-            # above it replaced — makes it stop resolving to itself.
-            return True
-        # Not canonical, so it was hand-written or persisted before
-        # grants were stored resolved. `/tmp` and `/var` are symlinks on
-        # macOS and every `tempfile` directory sits under one, so the
-        # strict rule dropped ordinary grants: someone who wrote
-        # `/tmp/work` into allowed_roots was asked again forever, as if
-        # they had never said "always". That was the inverse of the
-        # defect D38 set out to close, and its closing test could not
-        # see it because the test resolved the path before storing it.
-        #
-        # The weaker rule for these: the granted path itself must not be
-        # a link, which is the swap that was demonstrated. A component
-        # *above* it being replaced is a residual this does not catch,
-        # and is why the grant is stored resolved from now on.
-        return not candidate.is_symlink() and resolved.is_dir()
+        return candidate.resolve() == candidate
     except OSError:
         return False
 
 
 def _persisted_root_grants() -> tuple[str, ...]:
+    """The stored grants this process honours."""
     grants = (load_user_config() or {}).get("allowed_roots")
     if not isinstance(grants, list):
         return ()
@@ -142,6 +128,37 @@ def _persisted_root_grants() -> tuple[str, ...]:
         str(entry) for entry in grants
         if _grant_still_names_what_was_granted(str(entry))
     )
+
+
+def refused_root_grants() -> tuple[dict[str, str], ...]:
+    """Stored grants this process will not honour, and why.
+
+    Surfaced through `server_info` so a hand-written entry that is
+    quietly doing nothing can be seen and corrected.
+    """
+    grants = (load_user_config() or {}).get("allowed_roots")
+    if not isinstance(grants, list):
+        return ()
+    refused = []
+    for entry in grants:
+        text = str(entry)
+        if _grant_still_names_what_was_granted(text):
+            continue
+        candidate = Path(text).expanduser()
+        try:
+            resolved = str(candidate.resolve())
+        except OSError:
+            resolved = "<unresolvable>"
+        refused.append({
+            "entry": text,
+            "reason": (
+                "not a canonical path: it resolves to a different path, so "
+                "this agent cannot tell a symlinked spelling from a "
+                "directory that was swapped after you granted it"
+            ),
+            "write_instead": resolved,
+        })
+    return tuple(refused)
 
 
 def _inside(path: Path, roots: tuple[Path, ...]) -> bool:

@@ -29,6 +29,7 @@ from ._mcp_audit import attach_history_views as attach_history_views
 from ._mcp_audit import audit_repository as audit_repository
 from ._mcp_audit import authorize_config as authorize_config
 from ._mcp_audit import authorize_repository as authorize_repository
+from ._mcp_audit import refused_root_grants as refused_root_grants
 from ._mcp_audit import validate_revspec as validate_revspec
 from ._mcp_grants import (
     _apply_call_consents,
@@ -43,7 +44,7 @@ from ._mcp_resources import _bind_resources
 from ._mcp_resources import _project_asset as _project_asset  # noqa: PLC0414
 from ._mcp_resources import _report_markdown as _report_markdown  # noqa: PLC0414
 from ._mcp_setup import SetupRequired as SetupRequired
-from ._mcp_setup import setup_pending, setup_schema
+from ._mcp_setup import economics_bounds_pending, setup_pending, setup_schema
 from ._scan_history import DEFAULT_HISTORY_PATH
 from .baseline import StaleBaseline as StaleBaseline
 from .config import (
@@ -111,6 +112,11 @@ def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
                    "baseline (.maintainability/baseline.json)"],
         "never_writes": ["source", "reports"],
         "allowed_roots": [str(root) for root in authorized_roots],
+        # Stored grants this process will not honour. A hand-written
+        # entry that is not canonical is refused rather than guessed at
+        # (D65), and refusing in silence is what made the first two
+        # versions of that rule hard to see.
+        "refused_root_grants": [dict(item) for item in refused_root_grants()],
     }
 
 
@@ -139,12 +145,20 @@ def _setup_resolver_for(ledger: _RootLedger, context_type: Any) -> Any:
             return None
         if not setup_pending(root):
             return None
+        # `root`, not a bare call. Without it `setup_schema` can only ever
+        # return the first stage, so someone who answered "include" was
+        # handed the same six questions again on every call and the
+        # economic scenario never completed. The staged ask was tested by
+        # calling `setup_schema(root)` directly; this is the seam that
+        # actually asks, and it was passing no root at all.
         return Elicit(
             message=(
+                "The economic scenario needs three labor rates."
+                if economics_bounds_pending(root) else
                 "First run in this repository and no configuration found — "
                 "configure maintainability-agent now? Defaults are pre-selected."
             ),
-            schema=setup_schema(),
+            schema=setup_schema(root),
         )
 
     first_run_setup.__annotations__["ctx"] = context_type

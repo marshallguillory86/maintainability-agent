@@ -75,7 +75,7 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 
 | # | Promise | Falsified by |
 |---|---|---|
-| P1 | The audit is deterministic: same tree, config, pinned analyzer versions **and scan history** in, same *evidence, findings and score* out. Three fields describe the run rather than the repository and are recorded without being compared — the absolute `root`, `git_status_short`, and each analyzer's wall-clock `seconds`; see below. History is an input, not decoration — a finding that cleared and returned twice is different information from one seen for the first time, so an identical tree reports differently against different histories, and that is the feature working. **The analysis itself performs no network access and invokes no language model.** Tool acquisition is opt-in through `analyzers.acquire_tools` and defaults off; when enabled, it may fetch a missing tool and records the acquired version | Two runs disagreeing on identical tree, config, versions and history, or any network access during analysis |
+| P1 | The audit is deterministic: same tree, config, pinned analyzer versions **and scan history** in, same *evidence, findings and score* out — **at a fixed point in time.** The history window is relative to the wall clock (see below), so the same tree audited on two different days can report different history rates. Three further fields describe the run rather than the repository and are recorded without being compared — the absolute `root`, `git_status_short`, and each analyzer's wall-clock `seconds`; see below. History is an input, not decoration — a finding that cleared and returned twice is different information from one seen for the first time, so an identical tree reports differently against different histories, and that is the feature working. **The analysis itself performs no network access and invokes no language model.** Tool acquisition is opt-in through `analyzers.acquire_tools` and defaults off; when enabled, it may fetch a missing tool and records the acquired version | Two runs disagreeing on identical tree, config, versions and history, or any network access during analysis |
 | P2 | The score applies the same rubric to every repository, and the rubric is readable in source | A repo-specific code path changing a weight or band |
 | P3 | Withholding evidence cannot improve the reported grade | Any input whose removal raises the graded field |
 | P4 | The overall equals the weighted mean of the categories printed beside it | A report where the arithmetic does not check |
@@ -105,6 +105,28 @@ table exists to prevent — a promise kept green by a check narrower than
 the promise. They are named above now, and
 `test_the_determinism_exceptions_are_exactly_the_disclosed_ones` fails
 if the strip list grows without this page growing with it.
+
+**Why P1 names the history window.** The three excepted fields above
+are recorded and not compared. The history window is a fourth exception
+of a different kind, and it went undisclosed longer: `DEFAULT_SINCE` is
+`12 months ago`, which git resolves against the wall clock at the moment
+the audit runs. It is not configurable.
+
+So "same tree, config, pinned analyzer versions and scan history in,
+same score out" is true within a run and false across days. A commit
+ages out of the window overnight and the churn, hotspot, coupling and
+ownership rates move underneath an unchanged tree — no input changed,
+and the grade did. That is a real determinism limit, not a rounding
+one, and it is the same shape as the three fields above: legitimate
+behaviour kept invisible by a check narrower than the promise. The
+determinism test compares two runs seconds apart, which is precisely
+the interval over which this cannot fail.
+
+Named rather than removed, because a fixed absolute window would make
+every report a different question over time, and pinning the window per
+repository is a config decision nobody has asked for.
+`test_the_history_window_is_disclosed_as_clock_relative` fails if the
+window changes without this paragraph changing with it.
 
 **What P1 does not police.** External analyzers run as local child processes (`_runner`). This package does not wrap them in a network sandbox, and it does not inspect whether *they* open sockets. A future SaaS CLI adapter would be a different product. The host that prints a report into an IDE chat (Grok, Claude, …) is also outside this process. P1 is enforced as determinism plus no HTTP client in `src/` that uploads the tree — not as “no packet can leave the box.”
 

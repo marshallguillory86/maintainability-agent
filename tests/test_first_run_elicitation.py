@@ -400,3 +400,63 @@ def test_server_discloses_the_local_five_artifact_write_boundary(
     assert ".maintainability/baseline.json" in disclosure
     assert _forbids(disclosure, "source")
     assert _forbids(disclosure, "report")
+
+
+def test_the_native_resolver_reaches_the_second_stage(tmp_path: Path) -> None:
+    """The staged ask, driven through the seam that actually asks.
+
+    `_setup_resolver_for` called `setup_schema()` with no root, so it
+    could only ever build the first stage: someone who answered
+    `economics=include` was handed the same six questions again on every
+    call, and the economic scenario never completed. The repository sat
+    at `economic_context.requested: true` forever.
+
+    The staged ask *was* tested — by calling `setup_schema(root)`
+    directly, which is the function and not the seam. This drives the
+    resolver, which is what a host reaches.
+    """
+    from types import SimpleNamespace
+
+    from maintainability_audit._mcp_grants import _RootLedger
+    from maintainability_audit._mcp_setup import apply_answers
+    from maintainability_audit.mcp_server import _setup_resolver_for
+
+    class _Capabilities:
+        elicitation = object()
+
+    context = SimpleNamespace(client_capabilities=_Capabilities())
+    root = _repo(tmp_path)
+    resolver = _setup_resolver_for(_RootLedger((tmp_path.resolve(),)), object)
+
+    first = resolver(str(root), context)
+    assert first is not None, "the first call elicited nothing"
+    assert set(first.schema.model_fields) == {
+        "run_pool", "depth", "license_policy", "economics",
+        "default_format", "record_scan_history",
+    }, f"the first stage asked {sorted(first.schema.model_fields)}"
+
+    apply_answers(root, {
+        "run_pool": "yes", "depth": "moderate", "license_policy": "permissive",
+        "economics": "include", "default_format": "chat",
+        "record_scan_history": "yes",
+    })
+
+    second = resolver(str(root), context)
+    assert second is not None, (
+        "including the economic scenario left setup complete with no rates; "
+        "the second stage never runs"
+    )
+    assert set(second.schema.model_fields) == {
+        "labor_low", "labor_base", "labor_high"
+    }, (
+        "the second call re-asked the first stage instead of the rates: "
+        f"{sorted(second.schema.model_fields)}"
+    )
+    assert "rate" in second.message.lower(), (
+        f"the second stage does not say what it is asking for: {second.message}"
+    )
+
+    apply_answers(root, {"labor_low": 90, "labor_base": 140, "labor_high": 210})
+    assert resolver(str(root), context) is None, (
+        "setup keeps eliciting after every question has been answered"
+    )

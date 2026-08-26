@@ -335,11 +335,26 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
         # never a report). get_agent_info remains a pure read.
         "audit": ToolAnnotations(
             read_only_hint=False,
-            destructive_hint=False,
+            # D44. This said False, and a test locked it, which is why
+            # nobody re-read it for three rounds. Setup rewrites an
+            # existing configuration and `write_baseline` replaces an
+            # existing baseline — both non-additive updates to files in
+            # the user's repository, which is what this hint is for.
+            # Only the agent's own five artifacts are ever touched
+            # (D34), and that is a different claim from "additive".
+            destructive_hint=True,
             # First contact can write setup state and start a history
             # series (L2): a retry is not a no-op.
             idempotent_hint=False,
-            open_world_hint=False,
+            # Also D44, and also locked False. Two things reach outside
+            # this process and neither is closed-world: with
+            # `analyzers.acquire_tools` enabled a missing Node tool is
+            # fetched through `npx --yes`, and analyzers are ordinary
+            # local children this package does not sandbox — P1 says so
+            # in as many words. Decision 9 removed the third reason the
+            # entry gave (the tree's own configuration no longer
+            # executes, D39); it did not make the tool closed-world.
+            open_world_hint=True,
         ),
         "info": ToolAnnotations(
             read_only_hint=True,

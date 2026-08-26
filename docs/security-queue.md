@@ -76,7 +76,7 @@ so none of it needs a ruling.
 | 9 | D37 | CLI passes git options the MCP door rejects; no timeouts; swallowed errors | **closed** |
 | 10 | D38 | A standing grant follows a renamed directory after restart | **closed** |
 | 11 | D46 | XML parsers unbounded against analyzer output | queued |
-| 12 | D44 | MCP annotations contradict behaviour | unblocked by Decision 9; queued |
+| 12 | D44 | MCP annotations contradict behaviour | **closed** |
 | 13 | D39 | Analyzer configuration executes | **closed** |
 
 ## Why green CI missed almost all of it

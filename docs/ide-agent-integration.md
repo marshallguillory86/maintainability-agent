@@ -281,8 +281,14 @@ Security properties are part of the contract:
   the five disclosed artifacts: repository config, XDG user config, XDG user
   state, repository scan history and repository baseline — never a report or
   source artifact;
-- `get_agent_info` advertises MCP read-only; `audit_repository` advertises its
-  bounded setup/state writes. Both remain non-destructive and closed-world.
+- `get_agent_info` advertises MCP read-only, non-destructive and closed-world,
+  and is all three. `audit_repository` advertises its bounded setup/state
+  writes, and is **destructive** and **open-world**: it replaces an existing
+  configuration or baseline when asked to, and with `analyzers.acquire_tools`
+  enabled it may fetch a missing Node tool, while analyzers run as local
+  children this package does not sandbox. It said non-destructive and
+  closed-world until D44; two tests locked those values, which is why the
+  claim outlived three audit rounds.
 
 This is a local integration. It needs no VPS and opens no listening socket.
 

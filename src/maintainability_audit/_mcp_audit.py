@@ -131,10 +131,10 @@ def _persisted_root_grants() -> tuple[str, ...]:
 
 
 def refused_root_grants() -> tuple[dict[str, str], ...]:
-    """Stored grants this process will not honour, and why.
+    """Stored grants this process will not honour, and why (D38, D72).
 
-    Surfaced through `server_info` so a hand-written entry that is
-    quietly doing nothing can be seen and corrected.
+    Surfaced through `server_info` so a hand-written entry quietly doing
+    nothing can be seen — without disclosing what it resolved to.
     """
     grants = (load_user_config() or {}).get("allowed_roots")
     if not isinstance(grants, list):
@@ -144,11 +144,6 @@ def refused_root_grants() -> tuple[dict[str, str], ...]:
         text = str(entry)
         if _grant_still_names_what_was_granted(text):
             continue
-        candidate = Path(text).expanduser()
-        try:
-            resolved = str(candidate.resolve())
-        except OSError:
-            resolved = "<unresolvable>"
         refused.append({
             "entry": text,
             "reason": (
@@ -156,7 +151,12 @@ def refused_root_grants() -> tuple[dict[str, str], ...]:
                 "this agent cannot tell a symlinked spelling from a "
                 "directory that was swapped after you granted it"
             ),
-            "write_instead": resolved,
+            # Deliberately *not* the resolved path (D72): returning it
+            # told whatever host reads `server_info` where a symlink the
+            # user named actually points. The entry is echoed because
+            # the user wrote it; its target is not ours to publish.
+            "repair": ("grant this root again through setup, which stores "
+                       "the path it resolved to when you consented"),
         })
     return tuple(refused)
 

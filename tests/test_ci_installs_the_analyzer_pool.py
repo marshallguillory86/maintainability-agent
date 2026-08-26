@@ -20,6 +20,7 @@ them so the exemption stays visible.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -52,19 +53,62 @@ def test_the_catalog_still_has_pip_installable_adapters() -> None:
     )
 
 
+_YAML_KEY = re.compile(r"^[\w-]+:")
+
+
+def _pip_installed_by_ci() -> set[str]:
+    """Package names every `pip install` in the workflows actually names.
+
+    Tokenised from the command text with comment-only lines dropped
+    first, so a mention in a comment or a job name cannot stand in for
+    an install -- which is exactly what the substring version accepted.
+
+    Read as text rather than parsed as YAML on purpose: PyYAML is kept
+    off the test extra so a catalog-regen parser does not land in every
+    test install, and `test_pyproject_extras_are_accounted_for` enforces
+    that. A check that needed a forbidden dependency would be a worse
+    answer than the one it replaced.
+    """
+    installed: set[str] = set()
+    for path in sorted(WORKFLOW.parent.glob("*.yml")):
+        lines = [
+            line for line in path.read_text(encoding="utf-8").splitlines()
+            if not line.lstrip().startswith("#")
+        ]
+        for index, line in enumerate(lines):
+            if "pip install" not in line:
+                continue
+            words = line.split("pip install", 1)[1].split()
+            # A folded `run: >` block continues the command across lines
+            # until the next YAML key or list item.
+            for following in lines[index + 1:]:
+                stripped = following.strip()
+                if (not stripped or stripped.startswith("- ")
+                        or _YAML_KEY.match(stripped)):
+                    break
+                words += stripped.split()
+            installed |= {
+                word for word in words if word and not word.startswith("-")
+            }
+    return installed
+
+
 @pytest.mark.parametrize("slug", sorted(_pip_installable_adapters()))
 def test_ci_installs_every_pip_installable_adapter(slug: str) -> None:
     """An adapter CI never installs is an adapter CI never runs.
 
-    `ruff` is a dev extra rather than a pool install and is accepted
-    either way -- what matters is that the executable is present when the
-    suite runs, not which line put it there.
+    Read out of the actual `pip install` commands rather than out of the
+    file. The first version asked whether the slug appeared *anywhere* in
+    the workflow text, which a comment satisfies: an audit deleted
+    `flake8` from the install line, left `# flake8 is installed by this
+    step` behind, and all fourteen of these passed while the adapter went
+    uninstalled. A check a comment can satisfy is not a check.
     """
-    text = WORKFLOW.read_text(encoding="utf-8")
-    assert slug in text, (
-        f"{slug} has an implemented adapter and installs with pip, but CI "
-        "never installs it -- so its tests skip and the adapter ships "
-        "having never been invoked. Add it to the analyzer-pool step."
+    installed = _pip_installed_by_ci()
+    assert slug in installed, (
+        f"{slug} has an implemented adapter and installs with pip, but no "
+        f"CI step installs it -- so its tests skip and the adapter ships "
+        f"having never been invoked. Installed by CI: {sorted(installed)}"
     )
 
 

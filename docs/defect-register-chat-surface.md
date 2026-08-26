@@ -1038,10 +1038,46 @@ assertions about the two spawners that exist today. That is deliberate:
 this defect class was closed at the MCP door and left open at the CLI,
 which is the mistake the register keeps recording.
 
+**Audited by Codex and Grok independently, and three residues closed in
+the same entry.** Both rounds on 337a03a found the same thing from
+different directions: the fix had been applied to the sites this entry
+named and not to the class.
+
+- `has_history`'s third probe still read a *failed* shallow check as
+  "not shallow" — `probe_git(...) != "true"` — so a git that cannot
+  answer the question reported complete history. That is the sentence
+  D37 opened with, still implemented three lines below the two probes
+  that were fixed. It now fails closed: only an explicit `"false"`
+  establishes completeness.
+- `rename_map` probed its diff, so a timeout or an unreadable object
+  became "no renames" and a `git mv` surfaced every moved finding as
+  new — the ADR 009 hole, produced by the spawner. The two legitimate
+  empty cases (a commit git no longer has, equal commits) are
+  established by probing for the commits first; the diff itself is
+  strict.
+- The `require_clean_worktree` gate read a failed `git status` as an
+  empty one, so a plain directory satisfied it. `worktree_status`
+  returns `None` for "not a worktree", which the gate now fails on
+  rather than passing.
+
+**And the sweep was syntactic, not structural.** It matched only
+`subprocess.*` calls whose first argument was a list *literal*
+beginning with `"git"`; a spawn built from a variable, a tuple, a
+concatenation or a module constant evaded it while the test stayed
+green and this entry claimed a new git call would fail there. Deciding
+which spawns are git is undecidable, so it stopped trying: every
+subprocess spawn in the package is now classified, and the analyzer
+child is named in `ENV_EXEMPT` with its reason rather than silently
+unchecked.
+
 *Closing tests:* `test_an_option_shaped_revspec_never_reaches_git`,
 `test_a_failed_git_command_is_not_an_empty_answer`,
-`test_a_repository_is_read_through_its_own_path_not_an_inherited_one`
-and `test_every_git_spawn_is_bounded_and_scrubbed` in
+`test_a_repository_is_read_through_its_own_path_not_an_inherited_one`,
+`test_every_subprocess_spawn_is_bounded_and_classified`,
+`test_an_unborn_head_reports_absence_not_quiet_history`,
+`test_a_shallow_clone_reports_absence`,
+`test_an_unanswerable_shallow_check_withholds_rather_than_claims` and
+`test_a_rename_is_read_from_git_and_a_failure_is_not_no_renames` in
 `tests/test_git_argv.py`.
 
 ### D38 — Open: a standing root grant can be retargeted by a rename (Medium)
@@ -1479,9 +1515,15 @@ reopened once for exactly that confusion.
 
 ## Disposition
 
-**Six entries are open: D34 through D39, all from a security pass on
-2026-08-23, four of them reproduced independently before being filed.** They
-are the reason 0.9.2 does not cut. Two are the classes this register already
+**Four entries are open: D38, D39, D44 and D46.** D34 through D37 were
+filed by the same 2026-08-23 security pass and have since closed; this
+paragraph named them as open for two days after they were not, which is
+the register describing a state a reader cannot verify from its own
+headings. The count is now derived from the headings above rather than
+carried in prose, and `test_the_disposition_names_the_entries_that_are_open`
+fails if the two disagree.
+
+Those four are the reason v1.0 does not cut. Two are the classes this register already
 paid to close and never applied everywhere: D18 bound the skill installer's
 writes by descriptor, and config, history and baseline still open by name;
 D20 bounded `paths.history`, and `class_dirs` and `expand_files` still take

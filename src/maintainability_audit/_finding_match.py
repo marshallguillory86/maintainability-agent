@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .git_tools import probe_git
+from .git_tools import probe_git, run_git
 
 # Enough to make collision fanciful without making a fingerprint
 # unreadable in a diff. These land in checked-in baseline files and in
@@ -195,15 +195,27 @@ def rename_map(root: Path, old_commit: str, new_commit: str) -> dict[str, str]:
     Only `R` status lines count: git's rename detection is the evidence
     that a file moved, and nothing weaker (a matching digest at a new
     path) is accepted in its place. Empty or equal commits yield an
-    empty map, as does any git failure — no map means no rename glue,
-    never a crash.
+    empty map, and so does a commit git no longer has — a baseline
+    written before a rebase or a gc names one that legitimately went
+    away, and "cannot compare" is a real answer there.
+
+    **A failing diff is not one of those answers (D37).** This call used
+    `probe_git`, so a timeout or an unreadable object became "no
+    renames", and a `git mv` then surfaced every moved finding as new —
+    the ADR 009 hole, produced by the spawner rather than by the
+    matcher. The two legitimate cases are established by probing for the
+    commits first; anything that fails after that is a fault and is
+    raised.
     """
     if not old_commit or not new_commit or old_commit == new_commit:
         return {}
-    # Probed on purpose, as this function's docstring already promised:
-    # no map means no rename glue, never a crash.
-    output = probe_git(
-        ["diff", "--name-status", "--find-renames", old_commit, new_commit], root,
+    # "Does git still have this commit" is exactly the shape probe_git
+    # is for: a non-zero exit *is* the answer.
+    for commit in (old_commit, new_commit):
+        if not probe_git(["rev-parse", "--verify", f"{commit}^{{commit}}"], root):
+            return {}
+    output = run_git(
+        ["diff", "--name-status", "--find-renames", old_commit, new_commit, "--"], root,
     )
     renames: dict[str, str] = {}
     for line in output.splitlines():

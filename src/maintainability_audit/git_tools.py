@@ -133,3 +133,18 @@ def changed_paths(root: Path, revspec: str) -> set[str]:
     if not output:
         return set()
     return {line.strip().replace(os.sep, "/") for line in output.splitlines() if line.strip()}
+
+
+def worktree_status(root: Path) -> str | None:
+    """Porcelain status, or `None` when git cannot answer.
+
+    `None` is not "clean". A gate that requires a clean worktree was
+    reading a failed `git status` as an empty status and passing, so a
+    plain directory satisfied `require_clean_worktree` — the negative
+    answer there is "this is not a worktree", which is not the same
+    claim and must not be allowed to stand in for it (D37).
+    """
+    try:
+        return run_git(["status", "--short"], root)
+    except GitCommandFailed:
+        return None

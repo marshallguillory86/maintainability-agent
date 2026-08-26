@@ -41,7 +41,7 @@ from .deadcode import dead_declarations
 from .declarations import DECLARATION_SUFFIXES
 from .duplication import duplicate_blocks, risk_findings
 from .evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY
-from .git_tools import probe_git
+from .git_tools import probe_git, worktree_status
 from .history import history_section
 from .idioms import divergent_idioms
 from .metrics import (
@@ -450,7 +450,9 @@ def build_report(
     dead = dead_declarations(root, files, source)
     idioms = divergent_idioms(root, files, config, source)
     risks = risk_findings(root, files, config, source)
-    git_status = probe_git(["status", "--short"], root)
+    # `None` when this is not a worktree, which the clean-worktree
+    # gate must be able to tell apart from an empty status (D37).
+    git_status = worktree_status(root)
     gates, summary = _compute_gates_and_summary(
         root, config, git_status, files, file_metrics, function_metrics, len(dupes), len(risks)
     )

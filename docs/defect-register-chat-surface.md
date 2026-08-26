@@ -1381,7 +1381,7 @@ in `tests/test_written_record.py`. The second checks only what the
 document *asserts*, not what it recounts — a check that could not tell
 an assertion from its own correction would forbid explaining the fix.
 
-### D46 — Open: XML parsers are unbounded against analyzer output (Low)
+### D46 — Closed: an analyzer cannot decide how much work reading it is (Low)
 
 Codex, 2026-08-23, inferred rather than demonstrated. `_generic.py` and
 `_jvm_adapters.py` parse analyzer XML with `ElementTree.fromstring`.
@@ -1389,7 +1389,38 @@ The input is a child process this agent spawned, not an upload, so the
 realistic exposure is resource exhaustion from a hostile or
 PATH-hijacked analyzer rather than classic XXE.
 
-*Closing test:* pending.
+**Closed 2026-08-25, and it stopped being inferred.** The hedge was
+right about XXE and wrong about the risk: external entity expansion and
+DTD retrieval are already safe in this interpreter, which is what
+"XXE" usually names. What `ElementTree` still does is expand *internal*
+entities — four levels of the standard shape take a 400-byte document
+to 30,000 characters here, and each further level multiplies by ten.
+
+The obvious fix is to disable expat's entity handler, and CPython 3.11
+does not expose the underlying parser to reach it. The narrower guard
+is better anyway: no analyzer this project runs emits a DTD, so a
+document declaring entities is not output this code should be reading.
+`_xml.parse_analyzer_xml` refuses it before a parser sees it, and
+refuses absurd length as well — the flood case a declaration check
+cannot catch, because a bomb is small by construction.
+
+`AnalyzerXmlRefused` subclasses `ElementTree.ParseError` so that both
+call sites keep the handling they already had: unreadable analyzer
+output is a stated coverage gap, never a crash. Output this project
+declines to read is exactly that.
+
+The sweep is the part that matters. `ElementTree.fromstring` now
+appears once in the package, inside the guard, and a test walks every
+module to keep it that way — a third parse site added tomorrow is how
+this would otherwise come back.
+
+*Closing tests:* `test_an_entity_bomb_is_refused_before_it_is_expanded`,
+`test_a_declared_doctype_is_refused_even_without_entities`,
+`test_absurdly_large_output_is_refused_rather_than_read`,
+`test_real_analyzer_output_still_parses`,
+`test_a_refusal_reads_as_unparseable_output_to_every_caller` and
+`test_no_parse_site_bypasses_the_guard` in
+`tests/test_analyzer_xml_bounds.py`.
 ### D47 — Closed: the call-first rule reaches the door hosts are actually handed
 
 Found by inspection on 2026-08-24, while diagnosing a field report.
@@ -1617,7 +1648,14 @@ reopened once for exactly that confusion.
 
 ## Disposition
 
-**One entry is open: D46.** D34 through D37 were
+**Every entry in this register is closed.** D32 through D46 came from
+two independent security audits on 2026-08-23 and closed over the two
+days after; D47 through D49 came from the chat-surface work that
+preceded them. The count is derived from the headings above and checked
+by `test_the_disposition_names_the_entries_that_are_open`, which
+required this sentence rather than an omission — with nothing open, a
+disposition that simply lists no entries reads exactly like a parser
+that stopped working. D34 through D37 were
 filed by the same 2026-08-23 security pass and have since closed; this
 paragraph named them as open for two days after they were not, which is
 the register describing a state a reader cannot verify from its own

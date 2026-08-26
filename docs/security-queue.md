@@ -75,7 +75,7 @@ so none of it needs a ruling.
 | 8 | D45 | `SECURITY.md` supports `0.1.x`; the package is `0.9.1` | **closed** |
 | 9 | D37 | CLI passes git options the MCP door rejects; no timeouts; swallowed errors | **closed** |
 | 10 | D38 | A standing grant follows a renamed directory after restart | **closed** |
-| 11 | D46 | XML parsers unbounded against analyzer output | queued |
+| 11 | D46 | XML parsers unbounded against analyzer output | **closed** |
 | 12 | D44 | MCP annotations contradict behaviour | **closed** |
 | 13 | D39 | Analyzer configuration executes | **closed** |
 

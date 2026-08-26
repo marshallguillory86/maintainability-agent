@@ -100,6 +100,7 @@ flowchart TB
     _cognitive["_cognitive"]
     _ranges["_ranges"]
     _tokens["_tokens"]
+    _xml["_xml"]
   end
 
   subgraph foundations["foundations"]

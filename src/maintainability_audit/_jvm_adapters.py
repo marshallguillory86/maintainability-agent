@@ -25,6 +25,7 @@ from ._generic import parse_checkstyle
 from ._metric_adapters import expand_files
 from ._metrics_types import Finding
 from ._runner import Invocation, ToolResult
+from ._xml import parse_analyzer_xml
 
 
 class PmdAdapter(BaseAdapter):
@@ -356,7 +357,7 @@ class SpotBugsAdapter(BaseAdapter):
         # SourceLine's sourcepath — the report names the source a human
         # can edit, never the .class artifact.
         try:
-            root = ElementTree.fromstring(result.stdout or "<BugCollection/>")
+            root = parse_analyzer_xml(result.stdout, fallback="<BugCollection/>")
         except ElementTree.ParseError as error:
             raise ValueError(f"unreadable BugCollection XML: {error}") from error
         return Extraction(findings=tuple(

@@ -19,6 +19,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from _ast_reading import calls_reaching, reachable_names
 
 from maintainability_audit._backfill import commits_in_range
 from maintainability_audit.git_tools import (
@@ -172,7 +173,8 @@ def test_a_repository_is_read_through_its_own_path_not_an_inherited_one(
             os.environ["GIT_DIR"] = previous
 
 
-SPAWN_CALLS = {"run", "check_output", "Popen", "check_call"}
+SPAWN_CALLS = {"run", "check_output", "Popen", "check_call", "call", "getoutput",
+               "getstatusoutput"}
 
 # A spawn that may inherit the caller's environment, and why. A reason is
 # the classification; an empty string is not one. Anything not listed
@@ -181,26 +183,21 @@ ENV_EXEMPT: dict[str, str] = {}
 
 
 def _subprocess_spawns(tree: ast.AST) -> list[ast.Call]:
-    """Every `subprocess.*` spawn in a module, however its argv is built.
+    """Every `subprocess` spawn in a module, however its argv is built.
 
-    Deliberately not "calls whose first argument is a literal list
+    Deliberately not "calls whose first argument is a list literal
     starting with `git`". That was the first version, and an audit
-    showed it enforced almost nothing: a spawn built from a variable, a
-    tuple, a concatenation, a module constant, or through a one-line
-    helper all evaded it while the test stayed green and the docstring
-    claimed a new git call would fail here.
+    showed it enforced almost nothing. The second matched the literal
+    attribute `subprocess.<call>`, and a later audit showed
+    `import subprocess as sp` and `from subprocess import run` walked
+    past that too — twice narrow, in two different ways.
 
-    Deciding *which* spawns are git is undecidable in general, so this
-    stops trying. Every spawn in the package is classified instead —
-    which is stronger, and cheap, because there are three.
+    Name resolution lives in `_ast_reading` because the XML sweep needs
+    the same thing, and two copies of it put both functions over this
+    project's own complexity gate.
     """
-    spawns = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Call) and getattr(node.func, "attr", None) in SPAWN_CALLS:
-            value = getattr(node.func, "value", None)
-            if isinstance(value, ast.Name) and value.id == "subprocess":
-                spawns.append(node)
-    return spawns
+    aliases, direct = reachable_names(tree, "subprocess", SPAWN_CALLS)
+    return calls_reaching(tree, aliases, direct, SPAWN_CALLS)
 
 
 def test_every_subprocess_spawn_is_bounded_and_classified() -> None:
@@ -220,9 +217,16 @@ def test_every_subprocess_spawn_is_bounded_and_classified() -> None:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for call in _subprocess_spawns(tree):
             found += 1
-            keywords = {kw.arg for kw in call.keywords}
+            keywords = {kw.arg: kw.value for kw in call.keywords}
             where = f"{path.name}:{call.lineno}"
-            if "timeout" not in keywords:
+            timeout = keywords.get("timeout")
+            bounded = timeout is not None and not (
+                isinstance(timeout, ast.Constant) and timeout.value is None
+            )
+            if not bounded:
+                # `timeout=None` is the documented spelling of "wait
+                # forever", and counting it as bounded is why presence
+                # was never the property worth testing.
                 unbounded.append(where)
             if "env" not in keywords and path.name not in ENV_EXEMPT:
                 unclassified.append(where)

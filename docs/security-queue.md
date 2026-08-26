@@ -43,19 +43,19 @@ code, and its configuration is code. Option 2's mechanism is what
 scrubbed environment); option 2's framing is not, because the
 guarantee is not "we distrust you" but "we never run it".
 
-**None of that mechanism exists yet.** No adapter passes
-`--no-eslintrc` or `--no-plugins`, eslint still requires the tree's
-own flat config, and `_runner` spawns analyzers with the inherited
-environment. That is why D39 is **Open**: the decision is made and
-the code has not moved. An earlier revision of this paragraph said
-the mechanism ships, which described work nobody had done.
+**That mechanism now exists (D39, closed 2026-08-25).** pylint is
+spawned with `--rcfile`, mypy with `--config-file`, eslint is refused
+by selection rather than run, and the analyzer child's environment has
+the code-loading variables removed. An earlier revision of this
+paragraph said the mechanism shipped while none of it had been
+written; it is kept here, corrected, rather than deleted.
 
 Most of the exposure leaves by scope rather than by engineering:
 eslint is the analyzer that *requires* the tree's own flat config, and
 JavaScript is not a v1.0 language ([Decision 10](decisions.md)). What
 remains is mypy and pylint, which are Python and therefore in scope,
-and which merely *may* load configured plugins — they will run with
-that disabled, under D39.
+and which merely *may* load configured plugins — they run with that
+disabled.
 
 ## Order of work
 
@@ -77,7 +77,7 @@ so none of it needs a ruling.
 | 10 | D38 | A standing grant follows a renamed directory after restart | **closed** |
 | 11 | D46 | XML parsers unbounded against analyzer output | queued |
 | 12 | D44 | MCP annotations contradict behaviour | unblocked by Decision 9; queued |
-| 13 | D39 | Analyzer configuration executes | **reclassified**: Decision 9 makes this a defect, not a residual |
+| 13 | D39 | Analyzer configuration executes | **closed** |
 
 ## Why green CI missed almost all of it
 

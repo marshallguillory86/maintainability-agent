@@ -41,22 +41,41 @@ send any code to LLMs, and performs no network access during analysis
 unless the user explicitly enables tool acquisition in their own
 configuration.
 
-**It does execute code from the repository under audit, and that is not
-yet a settled design.** The agent invokes external analyzers, and
-`eslint` in particular *requires* a project configuration and then runs
-it; mypy and pylint can load configured plugins. Those children inherit
-this host's environment. So a repository you audit can run code as you.
+**It does not execute code from the repository under audit, and
+configuration counts as code.** An `eslint` flat config is a JavaScript
+program, a `pylint` `init-hook=` runs arbitrary Python before analysis
+begins, and a `mypy` `plugins =` imports a module out of the tree. So
+eslint is refused by selection rather than run, pylint is invoked with
+`--rcfile` and mypy with `--config-file`, both pointed at the null
+device, and the analyzer child's environment has `PYTHONPATH`,
+`PYTHONSTARTUP`, `NODE_PATH`, `NODE_OPTIONS` and the `LD_`/`DYLD_` pair
+removed so nothing outside your own choice decides what it loads.
 
-This sentence previously read that the agent does not execute scanned
-code, which was untrue and audit-proven so (Codex, 2026-08-23). Whether
-the answer is "repositories are trusted, say so plainly" or
-"repositories are untrusted, so invoke analyzers with agent-owned
-configuration and a scrubbed environment" is an open product decision,
-tracked as D39 and D44 in the defect register with the reasoning in
-`docs/security-queue.md`. Until it is made, this section describes what
-the code does rather than what anyone would prefer it did.
+**This section has now been wrong in both directions, and both are
+recorded rather than quietly rewritten.** It first said the agent does
+not execute scanned code, which was untrue and audit-proven so (Codex,
+2026-08-23). It was corrected to say the agent *does*, with the
+question left open as D39 and D44. Marshall settled it on 2026-08-25 by
+drawing the line at execution rather than at trusting repositories
+(Decision 9), both entries closed, and this file kept describing the
+defect for a further day — a promise that had become true while its
+own documentation still denied it.
 
-Audit only repositories you would be willing to run a build from.
+**What this is not.** Analyzers are ordinary local child processes and
+this package does not sandbox them: it does not police what they open,
+and it makes no claim that one cannot reach the network. The narrower
+guarantee is the one made here — nothing from the audited tree chooses
+what those children run. Child sandboxing is refused as a design
+direction and the reasoning is in `docs/security-queue.md`.
+
+Two isolation flags are structurally asserted everywhere and spawned
+only where the binary exists, which `docs/analyzer-pool.md` discloses:
+on a machine without pylint and mypy installed, they are documented and
+asserted rather than demonstrated.
+
+Audit only repositories you would be willing to run a build from. The
+guarantee above is about this agent's own behaviour, not about the
+analyzers you install to work with it.
 
 In-scope:
 

@@ -299,31 +299,59 @@ def test_the_security_policy_supports_the_shipped_release_line() -> None:
     )
 
 
-def test_the_security_policy_does_not_deny_executing_repository_code() -> None:
-    """The claim an audit disproved, and why it cannot come back quietly.
+def test_the_security_policy_states_the_guarantee_the_code_keeps() -> None:
+    """This claim has now been wrong in both directions.
 
-    `SECURITY.md` asserted the agent "does not execute scanned code"
-    while `eslint` was being invoked in a mode that *requires* the
-    audited repository's own configuration and then runs it. Whether
-    repositories should be trusted is an open product decision (D39,
-    D44); asserting a property the code does not have is not.
+    `SECURITY.md` first asserted the agent "does not execute scanned
+    code" while eslint was being invoked in a mode that *requires* the
+    audited repository's configuration and then runs it. That was
+    corrected to say the agent does execute it, with the question left
+    open as D39 and D44.
 
-    Deliberately narrow: this does not demand any particular wording,
-    only that the denial is gone and the behaviour is named.
+    Decision 9 then settled it and the code caught up — eslint refused,
+    pylint and mypy isolated, the child's environment scrubbed — and
+    this file kept describing the defect for another day. A promise
+    that has become true while its own documentation denies it is the
+    same defect class as the reverse, and neither direction is caught
+    by a check that only forbids one sentence.
+
+    So this reads the file against the code rather than against a
+    phrase: whatever the policy says, the adapter that cannot run
+    without the tree's configuration must be refused, and the two
+    isolated tools must carry their flags.
     """
-    policy = _read(ROOT / "SECURITY.md")
-    assert "execute code from the repository" in policy.lower(), (
-        "SECURITY.md no longer discloses that analyzers run repository code"
-    )
+    from maintainability_audit._generic import DECLARED, declared_adapter
+    from maintainability_audit._tool_adapters import ADAPTERS, adapter_for
 
-    # Only what the document *asserts*, not what it recounts. The entry
-    # explaining why the old claim was wrong necessarily quotes it, and
-    # a check that cannot tell an assertion from its own correction
-    # would forbid explaining the fix.
-    asserted = policy.split("This sentence previously read", maxsplit=1)[0].lower()
-    assert "not execute scanned code" not in " ".join(asserted.split()), (
-        "SECURITY.md asserts the agent does not execute scanned code; "
-        "analyzers still run repository-provided configuration"
+    policy = " ".join(_read(ROOT / "SECURITY.md").lower().split())
+    denies = "does not execute code from the repository" in policy
+    claims_it_does = "it does execute code from the repository" in policy
+
+    refused = {
+        slug for slug in ADAPTERS
+        if getattr(adapter_for(slug), "executes_audited_configuration", False)
+    }
+    isolated = {
+        slug for slug in DECLARED
+        if any(
+            item.startswith(("--rcfile=", "--config-file="))
+            for item in declared_adapter(slug).invocation(ROOT, excludes=()).argv
+        )
+    }
+    honoured = bool(refused) and isolated == set(DECLARED)
+
+    assert denies or claims_it_does, (
+        "SECURITY.md says nothing either way about executing repository "
+        "code, which is the one thing a reader comes to this file for"
+    )
+    assert denies == honoured, (
+        "SECURITY.md and the code disagree about executing repository "
+        f"code. policy denies it: {denies}. refused adapters: "
+        f"{sorted(refused)}, isolated declared tools: {sorted(isolated)} "
+        f"of {sorted(DECLARED)}"
+    )
+    assert not claims_it_does or not honoured, (
+        "SECURITY.md still describes the defect Decision 9 closed"
     )
 
 

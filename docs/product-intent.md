@@ -75,7 +75,7 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 
 | # | Promise | Falsified by |
 |---|---|---|
-| P1 | The audit is deterministic: same tree, config, pinned analyzer versions **and scan history** in, same report out. History is an input, not decoration — a finding that cleared and returned twice is different information from one seen for the first time, so an identical tree reports differently against different histories, and that is the feature working. **The analysis itself performs no network access and invokes no language model.** Tool acquisition is opt-in through `analyzers.acquire_tools` and defaults off; when enabled, it may fetch a missing tool and records the acquired version | Two runs disagreeing on identical tree, config, versions and history, or any network access during analysis |
+| P1 | The audit is deterministic: same tree, config, pinned analyzer versions **and scan history** in, same *evidence, findings and score* out. Three fields describe the run rather than the repository and are recorded without being compared — the absolute `root`, `git_status_short`, and each analyzer's wall-clock `seconds`; see below. History is an input, not decoration — a finding that cleared and returned twice is different information from one seen for the first time, so an identical tree reports differently against different histories, and that is the feature working. **The analysis itself performs no network access and invokes no language model.** Tool acquisition is opt-in through `analyzers.acquire_tools` and defaults off; when enabled, it may fetch a missing tool and records the acquired version | Two runs disagreeing on identical tree, config, versions and history, or any network access during analysis |
 | P2 | The score applies the same rubric to every repository, and the rubric is readable in source | A repo-specific code path changing a weight or band |
 | P3 | Withholding evidence cannot improve the reported grade | Any input whose removal raises the graded field |
 | P4 | The overall equals the weighted mean of the categories printed beside it | A report where the arithmetic does not check |
@@ -89,6 +89,22 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 P1 read "no network, no LLM" when the tool was pure computation over a file tree. Under [ADR 006](adr-006-analyzer-evidence.md) it invokes external analyzers, and some of those live in ecosystems whose normal installation path is a fetch — `npx` for the Node tools most obviously.
 
 Two honest options existed: refuse to acquire tools, which makes the multi-language story depend on every user hand-installing a dozen ecosystems; or provide an explicit acquisition choice and disclose it. The latter was chosen, so the promise separates **analysis** from **acquisition**. Analysis still touches no network and no model: **this agent does not transmit the audited source.** Acquisition defaults off. When a user enables `analyzers.acquire_tools`, a missing tool may be fetched and its version is recorded in the report so the run remains reproducible.
+
+**Why P1 names three excepted fields.** An audit ran the same tree
+twice and found the reports differing by one millisecond, on an
+analyzer's `seconds`. The promise said "same report out" and the
+determinism check had been quietly stripping `root`,
+`git_status_short` and every `seconds` for as long as it had existed —
+so the promise was false of the JSON a consumer actually diffs, and
+true only of the test's own projection.
+
+The exceptions are legitimate: a duration is a fact about the run, not
+about the repository, and an absolute path is not portable. What was
+wrong was that they were undisclosed, which is exactly the shape this
+table exists to prevent — a promise kept green by a check narrower than
+the promise. They are named above now, and
+`test_the_determinism_exceptions_are_exactly_the_disclosed_ones` fails
+if the strip list grows without this page growing with it.
 
 **What P1 does not police.** External analyzers run as local child processes (`_runner`). This package does not wrap them in a network sandbox, and it does not inspect whether *they* open sockets. A future SaaS CLI adapter would be a different product. The host that prints a report into an IDE chat (Grok, Claude, …) is also outside this process. P1 is enforced as determinism plus no HTTP client in `src/` that uploads the tree — not as “no packet can leave the box.”
 

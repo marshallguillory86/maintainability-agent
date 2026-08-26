@@ -1958,6 +1958,41 @@ hide inside it.
 *Closing test:* `test_the_release_plan_table_is_measured_not_remembered`
 in `tests/test_release_plan.py`.
 
+### D63 — Closed: the platform is claimed where it is demonstrated (Medium)
+
+Marshall, 2026-08-26: *"what about the poor windows users?"* — asked
+about a test of mine that had just failed CI for asserting `/tmp` is a
+symlink. The answer was larger than the test.
+
+`pyproject` named no operating system at all. CI runs `ubuntu-latest`
+and nothing else. Seven test files create symlinks with no platform
+guard, and `os.symlink` needs Developer Mode on Windows, so the suite
+cannot reach the point of reporting whether the product works there. A
+case-insensitive filesystem would also meet D38's standing-grant check,
+which compares a stored path against its resolved form.
+
+Meanwhile two documents implied Windows was supported: `config-schema.md`
+said exclude patterns are "normalized across Unix and Windows path
+separators", and `ide-agent-integration.md` names the `;` separator.
+Normalizing separators is not the same claim as running on the
+platform, and a reader takes the friendlier reading.
+
+`Operating System :: POSIX` is declared, both documents say Windows is
+untested, and README carries a platform section that states the
+evidence rather than a preference. Widening the claim means adding a
+`windows-latest` runner and guarding those seven fixtures; the tests
+below fail the moment either half moves without the other.
+
+**Fourth in two days.** JS scored without being claimed, `SECURITY.md`
+denying what the code did, P1 promising more than it compared, and now
+a platform nobody had run. Every one was a claim resting on a check
+that only ran where the claim was true.
+
+*Closing tests:* `test_the_package_claims_the_platform_it_is_tested_on`,
+`test_ci_runs_only_platforms_the_package_claims` and
+`test_the_symlink_fixtures_are_still_unguarded` in
+`tests/test_platform_claim.py`.
+
 ## Disposition
 
 **Every entry in this register is closed.** D32 through D46 came from
@@ -1968,7 +2003,8 @@ preceded them; D50 through D55 came from UAT preparation on 2026-08-25
 audit of the whole repository; D56 through D62 came from a Grok audit of
 the whole repository on 2026-08-26, which also reopened D38. Its
 verdict was that the register was "an empty ledger, not an empty
-defect list", and on every finding it was right. The count is derived from the headings above and checked
+defect list", and on every finding it was right. D63 came from Marshall
+asking who the product is for, on 2026-08-26. The count is derived from the headings above and checked
 by `test_the_disposition_names_the_entries_that_are_open`, which
 required this sentence rather than an omission — with nothing open, a
 disposition that simply lists no entries reads exactly like a parser

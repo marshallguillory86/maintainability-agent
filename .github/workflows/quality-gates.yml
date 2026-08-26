@@ -101,17 +101,25 @@ jobs:
         # token or a moved project must not block a PR whose deterministic
         # checks all pass. A red mark here means "go look at the token".
         #
-        # Main only, because the plan on this private project covers the
-        # main branch alone. Run on a pull request it reports "Not
-        # analyzed", and the SonarCloud app posts a failed quality gate
-        # from no data — a check that cannot go green on any PR, ever.
-        # `continue-on-error` keeps the *job* green but cannot suppress
-        # that app's own commit status, so the scan has to not run.
+        # This comment used to read "main only, because the plan on this
+        # private project covers the main branch alone". Both halves were
+        # false. The repository is public and has been since 2026-05-09,
+        # and SonarCloud is free and unlimited for public projects,
+        # pull request analysis included.
         #
-        # This file already states the principle it was violating: a
-        # pipeline that fails on something advisory teaches people to
-        # ignore it, and then it protects nothing.
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        # The symptom was real: "Not analyzed", and a quality gate the
+        # app built from no data. The cause was that SonarCloud's main
+        # branch was named `master`, which has never existed here, while
+        # `main` sat alongside it as a *short-lived* branch merging into
+        # it. So every scan of the real default branch was filed as a
+        # feature branch off a main branch that had never been analyzed,
+        # leaving pull requests with no baseline to diff against.
+        #
+        # Renamed 2026-08-26. Runs on pull requests again, where a
+        # cross-check is worth something — still advisory, still
+        # `continue-on-error`, because this project's rules are "no cloud
+        # service requirement" and "no vendor lock-in": an expired token
+        # must never block a PR whose deterministic checks all pass.
         continue-on-error: true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

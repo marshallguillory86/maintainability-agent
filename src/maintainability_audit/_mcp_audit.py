@@ -110,7 +110,26 @@ def _grant_still_names_what_was_granted(entry: str) -> bool:
     if not candidate.is_absolute():
         return False
     try:
-        return candidate.resolve() == candidate
+        resolved = candidate.resolve()
+        if resolved == candidate:
+            # Canonical, which is what this agent now persists. Any swap —
+            # the granted directory replaced by a link, or a component
+            # above it replaced — makes it stop resolving to itself.
+            return True
+        # Not canonical, so it was hand-written or persisted before
+        # grants were stored resolved. `/tmp` and `/var` are symlinks on
+        # macOS and every `tempfile` directory sits under one, so the
+        # strict rule dropped ordinary grants: someone who wrote
+        # `/tmp/work` into allowed_roots was asked again forever, as if
+        # they had never said "always". That was the inverse of the
+        # defect D38 set out to close, and its closing test could not
+        # see it because the test resolved the path before storing it.
+        #
+        # The weaker rule for these: the granted path itself must not be
+        # a link, which is the swap that was demonstrated. A component
+        # *above* it being replaced is a residual this does not catch,
+        # and is why the grant is stored resolved from now on.
+        return not candidate.is_symlink() and resolved.is_dir()
     except OSError:
         return False
 

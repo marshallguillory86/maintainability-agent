@@ -124,11 +124,35 @@ ecosystems, so each release adds a declaration parser to a pool that can
 already measure something.
 
 Consequences: v1.0's remaining work is the defect ledger, not new
-adapters. Every language outside Python and Java keeps its current
-honest behaviour — file length, duplication and risk, with declaration
-rates **withheld** and the missing parser named — which is already what
-`language-support.md` documents and what P7 requires. Nothing is claimed
-for a language whose declarations were never parsed.
+adapters. Every language outside Python and Java gets file length,
+duplication and risk, with declaration rates **withheld** and the
+missing parser named, which is what P7 requires.
+
+**Amended 2026-08-26.** The paragraph above said every language
+outside Python and Java has declaration rates withheld. That was never
+true: the brace scanner reads JS, TS, JSX and HTML, so a JavaScript
+repository was handed a declaration population, `evidence_status:
+complete` and a verified grade while this decision claimed two
+languages. An audit found the contradiction and the sentence was mine.
+
+The resolution is that the claim follows the capability, not the
+reverse. Marshall, on being shown that lizard, jscpd and multimetric
+are baseline-tier adapters that read JavaScript: *"keep JS in since we
+have a detector and can score it."*
+
+So v1.0's declaration languages are **Python, Java, JS, TS, JSX and
+HTML** — everything this project can detect and score — and
+`docs/language-support.md` says exactly that. The one-adapter-per-
+release cadence is unchanged and applies to languages nothing here
+reads yet: Go, Rust, C, C# and Fortran, which are absent from the
+default extensions rather than scanned and unscored.
+
+The rule the falsifier holds is the narrow one that was actually
+broken: a declaration population must never come from a language the
+tool can neither parse nor hand to an adapter, and the page and the
+parser must name the same set.
+`test_the_parsed_languages_are_exactly_the_documented_languages` fails
+in either direction.
 
 ## Statuses
 

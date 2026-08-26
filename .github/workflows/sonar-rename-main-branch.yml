@@ -14,6 +14,13 @@ name: Sonar — rename main branch
 # GitHub. Delete this file once the rename has been confirmed.
 
 on:
+  # `workflow_dispatch` only works for workflows already on the default
+  # branch, and this one is deliberately never going to reach it. So it
+  # fires on its own file changing, which happens exactly twice: when it
+  # is added, and when it is deleted.
+  push:
+    paths:
+      - ".github/workflows/sonar-rename-main-branch.yml"
   workflow_dispatch:
 
 permissions:

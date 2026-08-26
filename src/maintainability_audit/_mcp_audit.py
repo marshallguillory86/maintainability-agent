@@ -86,9 +86,43 @@ def allowed_roots(explicit: tuple[str, ...] = ()) -> tuple[Path, ...]:
     return tuple(_resolved(root) for root in (*roots, *_persisted_root_grants()))
 
 
+def _grant_still_names_what_was_granted(entry: str) -> bool:
+    """True when a stored grant still points at the directory it named.
+
+    A grant is persisted as a resolved, canonical path, so a stored
+    entry that no longer resolves to itself is one whose path has
+    acquired a symlink since — the directory renamed away and something
+    else left at the old name. Re-resolving it at start-up would follow
+    that link and extend the allow-list to a directory nobody consented
+    to (D38).
+
+    The in-process seam already refuses this: `_RootLedger.consume_ask`
+    surrenders the path the user was actually shown, so a symlink
+    retargeted during the elicitation round-trip cannot swap it. A
+    restart went around that, because the allow-list was rebuilt from
+    strings. Same rule, applied where the strings are read: the grant
+    authorizes what the question named, or it is not honoured.
+
+    Fails closed. A dropped grant is not an error — the user is asked
+    again the next time that root is used, which is the whole point.
+    """
+    candidate = Path(entry).expanduser()
+    if not candidate.is_absolute():
+        return False
+    try:
+        return candidate.resolve() == candidate
+    except OSError:
+        return False
+
+
 def _persisted_root_grants() -> tuple[str, ...]:
     grants = (load_user_config() or {}).get("allowed_roots")
-    return tuple(str(entry) for entry in grants) if isinstance(grants, list) else ()
+    if not isinstance(grants, list):
+        return ()
+    return tuple(
+        str(entry) for entry in grants
+        if _grant_still_names_what_was_granted(str(entry))
+    )
 
 
 def _inside(path: Path, roots: tuple[Path, ...]) -> bool:

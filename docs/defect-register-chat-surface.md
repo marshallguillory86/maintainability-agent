@@ -1080,7 +1080,7 @@ unchecked.
 `test_a_rename_is_read_from_git_and_a_failure_is_not_no_renames` in
 `tests/test_git_argv.py`.
 
-### D38 — Open: a standing root grant can be retargeted by a rename (Medium)
+### D38 — Closed: a standing grant authorizes what the question named (Medium)
 
 Grok, 2026-08-23. `persist_root_grant` stores the resolved path as a
 string; `allowed_roots()` resolves it again at process start.
@@ -1089,7 +1089,27 @@ not: rename the granted directory, leave a symlink at the old name
 pointing somewhere sensitive, and the allow-list follows it with no
 new consent.
 
-*Closing test:* pending.
+**Closed 2026-08-25, reproduced first.** Granting `project`, renaming
+it away and leaving a symlink at the old name put `secrets` in the
+allow-list on the next start, with no question asked.
+
+The in-process seam was already right, which is what makes this a
+missed sibling rather than a new idea: `_RootLedger.consume_ask`
+surrenders the path the user was actually shown, so a link retargeted
+during the elicitation round-trip cannot swap the consented directory
+(the TOCTOU found on 6b2fb76). A restart went around it, because the
+allow-list was rebuilt from strings and re-resolved. Same rule, applied
+where the strings are read: a persisted grant is honoured only while it
+still resolves to itself, which a path that has acquired a symlink no
+longer does.
+
+Fails closed, and a dropped grant is not an error — the user is asked
+again the next time that root is used, which is the point. A granted
+directory that was simply deleted keeps its entry and audits nothing,
+because there is no directory there to audit.
+
+*Closing test:* `test_a_standing_grant_does_not_follow_a_renamed_directory`
+in `tests/test_grant_only_user_tier.py`.
 
 ### D39 — Open: the audit executes configuration from the tree it audits (Medium)
 
@@ -1553,7 +1573,7 @@ reopened once for exactly that confusion.
 
 ## Disposition
 
-**Four entries are open: D38, D39, D44 and D46.** D34 through D37 were
+**Three entries are open: D39, D44 and D46.** D34 through D37 were
 filed by the same 2026-08-23 security pass and have since closed; this
 paragraph named them as open for two days after they were not, which is
 the register describing a state a reader cannot verify from its own

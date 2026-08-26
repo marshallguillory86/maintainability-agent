@@ -23,11 +23,11 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from xml.etree import ElementTree
 
 from ._adapters import BaseAdapter, Extraction
 from ._metrics_types import Finding
 from ._runner import ToolResult
+from ._xml import parse_analyzer_xml
 
 
 @dataclass(frozen=True)
@@ -112,7 +112,7 @@ def parse_checkstyle(text: str, slug: str, concern: str) -> Extraction:
     PMD, Checkstyle, phpcs and several others share it, so one parser
     reaches a whole ecosystem the project currently cannot touch.
     """
-    root = ElementTree.fromstring(text or "<checkstyle/>")  # noqa: S314 - tool output, not untrusted input
+    root = parse_analyzer_xml(text, fallback="<checkstyle/>")
     findings = []
     for file_node in root.iter("file"):
         path = file_node.get("name", "")

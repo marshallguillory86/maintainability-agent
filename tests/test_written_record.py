@@ -384,7 +384,19 @@ def test_the_disposition_names_the_entries_that_are_open() -> None:
     assert claim, "the disposition no longer opens with a bolded claim"
     claimed = sorted({int(n) for n in re.findall(r"\bD(\d+)\b", claim.group(1))})
 
-    assert open_headings, "no entry is marked Open; the pattern or the register changed"
+    if not open_headings:
+        # The ledger reached zero, which is the state a release cuts
+        # from. The claim must say so in words rather than list nothing,
+        # because an empty list reads identically to a broken parser.
+        assert not claimed, (
+            "no entry is marked Open, but the disposition still names "
+            f"{[f'D{n}' for n in claimed]}"
+        )
+        assert "closed" in claim.group(1).lower(), (
+            "with nothing open the disposition must say every entry is "
+            f"closed, not merely omit them: {claim.group(1)[:120]}"
+        )
+        return
     assert claimed == open_headings, (
         "the disposition names a different open set than the headings do: "
         f"prose={[f'D{n}' for n in claimed]} "

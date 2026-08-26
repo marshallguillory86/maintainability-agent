@@ -1,0 +1,54 @@
+name: Sonar — rename main branch
+
+# One-off maintenance, run by hand and then deleted.
+#
+# The SonarCloud project's main branch is named `master`, which does not
+# exist in this repository and never has -- the default branch is `main`.
+# So every analysis of `main` was filed as a non-main branch, the
+# configured main branch was never analyzed, and pull request analysis
+# had no baseline to compare against. That produced "Not analyzed" plus
+# a quality gate built from no data, which is why the scan in
+# quality-gates.yml is restricted to main-only pushes.
+#
+# The workflow exists rather than a local curl so SONAR_TOKEN stays in
+# GitHub. Delete this file once the rename has been confirmed.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rename:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show the current branch list
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          curl -sS -u "$SONAR_TOKEN:" \
+            "https://sonarcloud.io/api/project_branches/list?project=marshallguillory86_maintainability-agent"
+          echo
+      - name: Rename the main branch to main
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          code=$(curl -sS -o /tmp/out.txt -w '%{http_code}' -X POST -u "$SONAR_TOKEN:" \
+            "https://sonarcloud.io/api/project_branches/rename" \
+            -d "project=marshallguillory86_maintainability-agent" \
+            -d "name=main")
+          echo "HTTP $code"; cat /tmp/out.txt; echo
+          # 204 is success and returns no body. Anything else is a real
+          # failure and must fail the job rather than read as done.
+          [ "$code" = "204" ] || [ "$code" = "200" ]
+      - name: Confirm the rename took
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          curl -sS -u "$SONAR_TOKEN:" \
+            "https://sonarcloud.io/api/project_branches/list?project=marshallguillory86_maintainability-agent" \
+            | tee /tmp/branches.json
+          echo
+          grep -q '"name":"main"' /tmp/branches.json || {
+            echo "the branch list still does not contain main"; exit 1; }

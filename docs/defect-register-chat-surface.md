@@ -1141,8 +1141,29 @@ to it, and a grant underneath the link — so it exercises the case on
 every platform rather than skipping where the platform does not
 volunteer one.
 
-*Closing tests:* `test_a_standing_grant_does_not_follow_a_renamed_directory`
-and `test_a_grant_under_a_symlinked_parent_survives_a_restart` in
+**Reopened and re-closed a second time, 2026-08-26.** The rule above —
+honour a non-canonical entry unless the granted path is itself a link —
+names its own residual in the paragraph that states it: *"a component
+above it being replaced is a residual the weaker rule does not catch."*
+Grok walked through exactly that. Retarget the *parent* of a stored
+grant, one directory above the leaf the rule checked, and the
+allow-list follows it on the next start.
+
+There is no third rule. A bare path with no record of what it resolved
+to when it was granted cannot be defended: nothing to compare against
+means nothing to detect, and each attempt to defend it moved the hole
+one directory up rather than closing it.
+
+So: canonical or refused. The product persists resolved paths, which
+are checkable, and a hand-written entry that is not canonical is
+refused. Refused *aloud* — `server_info` now carries
+`refused_root_grants`, each with the reason and the canonical spelling
+to write instead, because dropping grants in silence is what made the
+first version of this rule invisible for two days.
+
+*Closing tests:* `test_a_standing_grant_does_not_follow_a_renamed_directory`,
+`test_a_non_canonical_grant_is_refused_and_said_so` and
+`test_a_grant_the_product_made_is_canonical_and_survives` in
 `tests/test_grant_only_user_tier.py`.
 
 ### D39 — Closed: the audit takes no configuration from the tree it audits (Medium)
@@ -1993,6 +2014,195 @@ that only ran where the claim was true.
 `test_the_symlink_fixtures_are_still_unguarded` in
 `tests/test_platform_claim.py`.
 
+### D64 — Closed: flake8 reads no configuration from the tree (Medium)
+
+Grok, 2026-08-26. D39 isolated pylint and mypy and swept for the rest,
+and the sweep covered two tools out of fifteen. `flake8` reads
+`setup.cfg`, `tox.ini` and `.flake8` from the tree under audit, which
+sets its own thresholds and select-lists — the score moving with a
+config file is exactly what P2 forbids, and Decision 9 forbids reading
+the tree's configuration at all.
+
+`--isolated` is passed now. The wider fix is that the classification
+stopped being prose: `ADAPTER_CONFIG` carries three states — `REFUSED`,
+`ISOLATED:<flag>`, and `DATA_ONLY` — and only the last is a human
+judgment, which now has to name the configuration surface it was judged
+against. The isolated entries are checked against the argv the adapter
+actually builds, so an isolation flag claimed in the table and absent
+from the invocation fails.
+
+*Closing tests:* `test_every_adapter_is_classified_for_what_its_configuration_executes`,
+`test_an_isolated_adapter_actually_carries_its_flag` and
+`test_no_selectable_adapter_needs_the_audited_trees_configuration` in
+`tests/test_analyzer_config_isolation.py`.
+
+### D65 — Closed: two ADRs still had eslint running (Low)
+
+Codex, 2026-08-26. Decision 9 refuses eslint outright — an eslint flat
+config is a JavaScript program, so honouring it means executing the
+audited tree. The adapter declares `executes_audited_configuration` and
+selection drops it on every run.
+
+Two ADRs written before that decision still told the reader otherwise.
+ADR 006 listed `eslint` in its *Detected* tier, the tools "used when
+already on `PATH`", and ADR 008 used eslint as its worked example of a
+tool whose threshold the agent sets from the rubric — and offered "or a
+generated config" as a way to do it, which is the same forbidden thing
+spelled differently. An operator following either page installs a tool
+this agent will always refuse.
+
+Both are amended in place rather than rewritten, because the reasoning
+around them is still correct about *findings*. ADR 008's escape hatch is
+withdrawn: a threshold is rubric-drivable through argv or not at all.
+
+The falsifier sweeps the refused adapters and reads the docs for lines
+that claim this agent *runs* a tool, so the next tool refused for the
+same reason is caught without being named. The previous review of these
+documents forbade exactly one sentence in `SECURITY.md` and missed
+everything either side of it.
+
+*Closing test:* `test_no_document_presents_a_refused_analyzer_as_one_this_agent_runs`
+in `tests/test_analyzer_config_isolation.py`.
+
+### D66 — Closed: an empty history window says which kind of empty (Medium)
+
+Grok, 2026-08-26, reopening D56 one layer down. D56 established that
+`files_changed: 0` is not a measured zero and marked every history rate
+not applicable. It then told every reader the same reason: *"no commit
+falls inside the history window."*
+
+Three different repositories produce that zero, and the sentence is
+false for two of them. Nothing was committed in the window. Or every
+commit in it is a merge, dropped by `--no-merges` because a merge's
+numstat re-reports churn already counted on the branch. Or commits
+landed and touched only files this audit does not scan — a lockfile, a
+vendored tree, an excluded directory. Only the first is a quiet window;
+the other two are windows this agent *filtered* to empty, and a reader
+told the first sentence goes to check their clone depth.
+
+`window_commits` counts both — commits in the window, and commits this
+audit will read — with two `rev-list --count` calls that parse nothing.
+The evidence reason and the rendered sentence are chosen from those
+counts, and both fall back to the original wording for a report written
+before the counts existed.
+
+*Closing tests:* `test_a_merge_only_window_is_not_reported_as_a_quiet_one`,
+`test_a_window_filtered_to_empty_says_so` and
+`test_a_genuinely_empty_window_still_reads_as_empty` in
+`tests/test_history_window.py`.
+
+### D67 — Closed: the sweeps resolve dotted spellings (Medium)
+
+Grok, 2026-08-26 — the ninth evasion of the same two sweeps, and the
+third time their name resolution has been wrong.
+
+Version one matched a literal attribute, so `import subprocess as sp`
+and `from subprocess import run` walked past. Version two resolved the
+*bound name*, which is right for `import subprocess` and wrong for
+`import xml.etree.ElementTree`: that statement binds `xml`, and the
+call is written `xml.etree.ElementTree.fromstring(...)`, whose base is
+an attribute chain rather than a plain name. The sweep looked for a
+`Name` and found an `Attribute`, so an unguarded XML parse — the entity
+bomb D46 exists to stop — was reachable with a green suite.
+
+Resolution is by dotted *spelling* now, matched by prefix. More
+importantly the resolver has its own falsifier: ten spellings of an
+unguarded parse, five of a spawn, and four unrelated calls that must
+not be flagged. It earned its place immediately — it caught a
+regression in the rewrite that classified every `from x import member`
+as a module alias, which the two sweeps it serves would have reported
+as clean.
+
+*Closing tests:* `test_every_spelling_of_an_unguarded_parse_is_seen`,
+`test_every_spelling_of_a_spawn_is_seen` and
+`test_the_resolver_does_not_widen_to_unrelated_calls` in
+`tests/test_ast_reading_resolves_spellings.py`.
+
+### D68 — Closed: the declarations dimension names its source (Medium)
+
+Grok, 2026-08-26. `DECLARATION_CRITERIA` requires cyclomatic
+complexity, declaration lines **and** cognitive complexity, because the
+built-in path fails a declaration on any one of the three and a rate
+built from a narrower set is not comparable to it. lizard emits the
+first two.
+
+So for a JavaScript repository with lizard installed and nothing else,
+`_declaration_pressure` returns `None` and the built-in brace scanner
+scores the dimension — on every run, by construction. The fallback is
+correct. It was silent, which P8 forbids: a declarations rate with
+nothing saying what produced it.
+
+It also made a decision page wrong. Decision 10's amendment justified
+keeping JavaScript by citing lizard, jscpd and multimetric as
+baseline-tier adapters that read it. Marshall's ruling — *"keep JS in
+since we have a detector and can score it"* — is exactly right about
+the brace scanner and was never about the pool; the page credited the
+pool for work the pool cannot do here. Corrected in place.
+
+`dimensions_declined` now rides on the coverage document with the
+missing concepts named, and the coverage section renders it.
+
+*Closing tests:* `test_lizard_alone_cannot_drive_the_declarations_dimension`,
+`test_the_fallback_is_attributed_rather_than_inferred` and
+`test_the_declined_dimension_reaches_the_reader` in
+`tests/test_declaration_source.py`.
+
+### D69 — Closed: P1 discloses that the history window moves (Medium)
+
+Grok, 2026-08-26. `DEFAULT_SINCE` is `12 months ago`, resolved by git
+against the wall clock at the moment the audit runs, and it is not
+configurable. P1 promised "same tree, config, pinned analyzer versions
+and scan history in, same evidence, findings and score out" and named
+three excepted fields, none of which is this.
+
+An unchanged tree audited a week apart reports different churn, hotspot,
+coupling and ownership rates. No input changed and the grade moved.
+
+The determinism test cannot see it and neither can the runs it is built
+on: they audit the same tree seconds apart, which is precisely the
+interval over which a twelve-month window cannot shift. Fifth of the
+same shape — a promise kept green by a check narrower than the promise.
+
+Disclosed rather than removed. A fixed absolute window would make every
+report a different question over time, and per-repository pinning is a
+config decision nobody has asked for. The falsifier holds the page to
+the constant, so changing the window without changing the disclosure
+fails.
+
+*Closing test:* `test_the_history_window_is_disclosed_as_clock_relative`
+in `tests/test_determinism.py`.
+
+### D70 — Closed: the POSIX claim runs on both POSIX platforms (Medium)
+
+Grok, 2026-08-26, reopening D63. `test_ci_runs_only_platforms_the_package_claims`
+forbade `windows` in `runs-on` and was treated as demonstrating the
+claim. `Operating System :: POSIX` covers macOS as well as Linux, and CI
+had only ever run one Linux image, so half the declared platform was
+claimed and never executed. The check was narrower than the claim it
+protected — the same finding this register keeps recording.
+
+**Why macOS was never added is the more interesting half.** Seven test
+fixtures pinned `PATH=/usr/bin:/bin` when scrubbing the environment for
+a child `git`. On the macOS machine this project is developed on, that
+pin *is* a shim: `/usr/bin/git` is Xcode's stub, Command Line Tools are
+unavailable, and every one of those fixtures dies with `xcrun: error:
+invalid active developer path` before git runs.
+
+That is the entire local baseline — 101 failures and 191 errors, diffed
+run after run as "known" — from one line, and none of it says anything
+about the product. A real regression landing in any of those seven files
+had 292 places to hide, and this project's own discipline of diffing the
+whole suite against a baseline is what made that survivable-looking.
+
+`tests/_git_path.py` resolves the directory of the `git` actually on
+PATH; the environment stays scrubbed. A `macos-latest` job runs the
+suite, and the platform test now requires a runner for every family the
+classifier claims rather than merely forbidding one it does not.
+
+*Closing tests:* `test_ci_runs_only_platforms_the_package_claims` in
+`tests/test_platform_claim.py`, and the suite itself on the macOS
+runner.
+
 ## Disposition
 
 **Every entry in this register is closed.** D32 through D46 came from
@@ -2004,7 +2214,21 @@ audit of the whole repository; D56 through D62 came from a Grok audit of
 the whole repository on 2026-08-26, which also reopened D38. Its
 verdict was that the register was "an empty ledger, not an empty
 defect list", and on every finding it was right. D63 came from Marshall
-asking who the product is for, on 2026-08-26. The count is derived from the headings above and checked
+asking who the product is for, on 2026-08-26. D64 through D70 came from
+a second round of both audits on 2026-08-26, run against the fixes for
+the first — four of the seven reopened an entry that had already been
+closed once, and three of those reopens went through the *closing test*
+rather than around the fix.
+
+**D70 is the one worth reading twice.** The local baseline this project
+diffs every change against — 101 failures and 191 errors, carried run
+after run as "known" — was a single line in seven test fixtures pinning
+`PATH=/usr/bin:/bin`, which on this project's own development machine
+resolves to Xcode's stub rather than to git. None of those 292 results
+said anything about the product, and any real regression landing in
+those files had 292 places to hide. The discipline of diffing against a
+baseline was working exactly as designed and was protecting a number
+that meant nothing. The count is derived from the headings above and checked
 by `test_the_disposition_names_the_entries_that_are_open`, which
 required this sentence rather than an omission — with nothing open, a
 disposition that simply lists no entries reads exactly like a parser

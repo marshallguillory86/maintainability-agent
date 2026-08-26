@@ -15,6 +15,8 @@ import json
 import subprocess
 from pathlib import Path
 
+from _git_path import GIT_PATH
+
 from maintainability_audit.baseline import BASELINE_VERSION, write_baseline
 from maintainability_audit.cli import (
     DEFAULT_CONFIG,
@@ -33,7 +35,7 @@ def commit_all(root: Path) -> None:
     assertion is really testing the missing-evidence rule.
     """
     env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
-           "GIT_COMMITTER_EMAIL": "t@t", "PATH": "/usr/bin:/bin", "HOME": str(root)}
+           "GIT_COMMITTER_EMAIL": "t@t", "PATH": GIT_PATH, "HOME": str(root)}
     for command in (["git", "init", "--quiet"], ["git", "add", "-A"],
                     ["git", "commit", "--quiet", "-m", "start"]):
         subprocess.run(command, cwd=root, check=True, capture_output=True, env=env)
@@ -116,7 +118,7 @@ def test_report_contains_iso_score(tmp_path: Path) -> None:
     write(tmp_path / "app.py", "def ok():\n    return 1\n")
     write(tmp_path / "test_app.py", "from app import ok\n\ndef test_ok():\n    assert ok() == 1\n")
     env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
-           "GIT_COMMITTER_EMAIL": "t@t", "PATH": "/usr/bin:/bin", "HOME": str(tmp_path)}
+           "GIT_COMMITTER_EMAIL": "t@t", "PATH": GIT_PATH, "HOME": str(tmp_path)}
     for command in (["git", "init", "--quiet"], ["git", "add", "-A"],
                     ["git", "commit", "--quiet", "-m", "start"]):
         subprocess.run(command, cwd=tmp_path, check=True, capture_output=True, env=env)

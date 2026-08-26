@@ -220,3 +220,43 @@ def test_the_determinism_exceptions_are_exactly_the_disclosed_ones() -> None:
         f"the determinism check silently ignores {undisclosed}, which P1 "
         "does not disclose"
     )
+
+
+def test_the_history_window_is_disclosed_as_clock_relative() -> None:
+    """P1 is true within a run and false across days; it must say so.
+
+    `DEFAULT_SINCE` is a *relative* expression, resolved by git against
+    the wall clock at the moment the audit runs. So an unchanged tree
+    audited on two different days can report different churn, hotspot,
+    coupling and ownership rates -- no input changed, and the grade
+    moved. P1 promised "same tree, config, versions and history in, same
+    score out" and named three excepted fields, none of which is this.
+
+    The test above cannot catch it and neither can the runs at the top
+    of this file: they audit the same tree seconds apart, which is
+    exactly the interval over which a twelve-month window cannot shift.
+    A promise kept green by a check narrower than the promise -- the
+    fourth of that shape in this project -- so the disclosure is held to
+    the constant rather than to a sentence someone remembered to write.
+    """
+    from maintainability_audit.history import DEFAULT_SINCE
+
+    assert "ago" in DEFAULT_SINCE, (
+        f"the history window {DEFAULT_SINCE!r} no longer reads as relative "
+        "to now; if it has become an absolute date, P1's disclosure below "
+        "is the thing that is now wrong"
+    )
+
+    intent = (Path(__file__).resolve().parents[1] / "docs" / "product-intent.md")
+    text = intent.read_text(encoding="utf-8")
+    row = next(line for line in text.splitlines() if line.startswith("| P1 |"))
+    assert "wall clock" in row, (
+        "P1's own row does not say the history window moves with the clock, "
+        "so a reader diffing two reports a week apart has been promised "
+        "they will match"
+    )
+    assert f"`{DEFAULT_SINCE}`" in text, (
+        f"the window is {DEFAULT_SINCE!r} and product-intent quotes a "
+        "different one, so the disclosure describes a window that is not "
+        "the one being used"
+    )

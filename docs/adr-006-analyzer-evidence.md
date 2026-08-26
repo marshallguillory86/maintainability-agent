@@ -97,10 +97,12 @@ This gives the interval an empirical meaning it has never had, using machinery a
 Analyzers span ecosystems and cannot all be a hard dependency. Three tiers:
 
 - **Core** — installed with the package, always present: `lizard` (multi-language metrics), `jscpd` where Node exists, `radon`, `ruff`.
-- **Detected** — used when already on `PATH`: `eslint`, `pylint`, `vulture`, `complexipy`, `interrogate`, `golangci-lint`, `detekt`, `PMD`, `clippy`, `cppcheck`, `rubocop`, `phpstan`, `swiftlint`.
+- **Detected** — used when already on `PATH`: `pylint`, `vulture`, `complexipy`, `interrogate`, `golangci-lint`, `detekt`, `PMD`, `clippy`, `cppcheck`, `rubocop`, `phpstan`, `swiftlint`.
 - **Declared** — named in configuration by the operator, for site-specific analyzers.
 
 Missing tools degrade evidence strength and are reported. They never fail the run, and they never silently become a clean result.
+
+**Superseded in part by Decision 9.** This ADR listed `eslint` under *Detected*. Decision 9 rules that the agent never executes the audited repository's code and that configuration counts as code; an eslint flat config is a JavaScript program, so eslint cannot be invoked at all. Its adapter now declares `executes_audited_configuration`, and selection refuses every adapter that does — reported as a deselection with that reason, not silently dropped. The rest of this tier list stands.
 
 ## Options considered
 

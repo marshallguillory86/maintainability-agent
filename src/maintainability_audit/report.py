@@ -31,6 +31,7 @@ from ._pressures import (
     ExternalPressures,
     analyzer_pressures,
     analyzer_production_pressures,
+    declined_dimensions,
 )
 from ._semantic import semantic_findings
 from ._semantic_policy import load_semantic_policy
@@ -205,8 +206,14 @@ def _analyzer_sections(
         return {"coverage": None, "findings": [], "measurements": {},
                 "pressures": None, "environment": []}
     analysis = analyze(root, config)
+    coverage = coverage_document(analysis)
+    # P8: where the analyzer tier could not drive a dimension, say so on
+    # the coverage document rather than leaving the built-in fallback to
+    # be inferred from an absent number. Attached here because only this
+    # layer holds both the measurements and the rubric's thresholds.
+    coverage["dimensions_declined"] = list(declined_dimensions(analysis.measurements))
     return {
-        "coverage": coverage_document(analysis),
+        "coverage": coverage,
         # ADR 006 §2c: what did not run and what it would take, for the
         # user to act on. Emitted here because only the analysis knows
         # which tools were *selected*; the agent never runs the commands.

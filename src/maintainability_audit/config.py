@@ -331,6 +331,72 @@ def _shaped_like_the_defaults(candidate: dict[str, Any], where: str) -> None:
                 f"{where}: {key!r} must be a list, not "
                 f"{type(value).__name__}. Repair or delete it."
             )
+        _shaped_inside(key, default, value, where)
+
+
+def _kinds_for(fallback: Any) -> tuple[type, ...]:
+    """What a nested value must be, read off the shipped default.
+
+    Empty when the default is something this check has no opinion about,
+    which the caller treats as "leave it alone" -- a shape check, not a
+    schema. `bool` is listed before the numbers deliberately: it is a
+    subclass of `int`, so order decides whether `true` passes for a
+    threshold, and the caller re-checks it for that reason.
+    """
+    if isinstance(fallback, bool):
+        return (bool,)
+    if isinstance(fallback, (int, float)):
+        return (int, float)
+    for kind in (str, list, dict):
+        if isinstance(fallback, kind):
+            return (kind,)
+    return ()
+
+
+def _shaped_inside(
+    key: str, default: Any, value: Any, where: str
+) -> None:
+    """The same check one level down, where the crashes actually were.
+
+    The first version stopped at the top level, so `{"thresholds":
+    "nope"}` was refused while `{"thresholds": {"max_file_lines": "a"}}`
+    reached scoring and raised a raw `TypeError`, `{"expected_files":
+    [1]}` raised one from the path join, and
+    `{"hard_gates": {"require_readme": []}}` was accepted and *silently
+    disabled the gate*, because an empty list is falsy. That last one is
+    the worst of the three: no error, and a required check quietly
+    stopped being required.
+
+    Types come from `DEFAULT_CONFIG` again rather than a table. Unknown
+    nested keys stay permitted for the same reason unknown top-level
+    keys are: this is a shape check, not a schema.
+    """
+    if isinstance(default, dict) and isinstance(value, dict):
+        for name, fallback in default.items():
+            if name not in value or name == "_doc":
+                continue
+            expected = _kinds_for(fallback)
+            actual = value[name]
+            if not expected:
+                continue
+            # `bool` is a subclass of `int`, so a bare isinstance check
+            # would accept `true` for a threshold that wants a number.
+            wrong_bool = isinstance(actual, bool) and bool not in expected
+            if wrong_bool or not isinstance(actual, expected):
+                raise ConfigUnreadable(
+                    f"{where}: {key}.{name} must be "
+                    f"{' or '.join(kind.__name__ for kind in expected)}, not "
+                    f"{type(actual).__name__}. Repair or delete it."
+                )
+    elif isinstance(default, list) and isinstance(value, list):
+        kinds = {type(item) for item in default} or {str}
+        for index, item in enumerate(value):
+            if not isinstance(item, tuple(kinds)):
+                raise ConfigUnreadable(
+                    f"{where}: {key}[{index}] must be "
+                    f"{' or '.join(kind.__name__ for kind in kinds)}, not "
+                    f"{type(item).__name__}. Repair or delete it."
+                )
 
 
 def _configured(path: Path) -> dict[str, Any]:

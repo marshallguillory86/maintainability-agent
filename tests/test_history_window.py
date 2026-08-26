@@ -114,3 +114,141 @@ def test_a_repository_whose_commits_predate_the_window_gets_no_verified_grade(
         assert aspects.get(name) != 5.0, (
             f"{name} scored a perfect 5.0 from a window containing no commits"
         )
+
+
+def _commit(root: Path, message: str) -> None:
+    subprocess.run(
+        ["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t",
+         "-c", "commit.gpgsign=false", "commit", "-qm", message],
+        check=True,
+    )
+
+
+def _repo(work: str, name: str) -> Path:
+    """A git repository with a first commit inside the window."""
+    root = Path(work) / name
+    root.mkdir()
+    (root / "README.md").write_text("# r\n", encoding="utf-8")
+    for index in range(60):
+        (root / f"m{index}.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    subprocess.run(["git", "-C", str(root), "add", "."], check=True)
+    _commit(root, "base")
+    return root
+
+
+def test_the_window_counts_what_the_log_actually_held(
+    real_population_floors: object,
+) -> None:
+    """D66: the report carries both counts, from a real repository.
+
+    Without these two numbers the three causes of `files_changed: 0` are
+    indistinguishable downstream, which is the whole defect.
+    """
+    with tempfile.TemporaryDirectory() as work:
+        root = _repo(work, "counted")
+        (root / "m0.py").write_text("def f():\n    return 2\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(root), "add", "."], check=True)
+        _commit(root, "second")
+        report = build_report(root, load_config(None))
+
+    history = report["history"]
+    assert history["commits_in_window"] == 2, history
+    assert history["commits_considered"] == 2, history
+    assert history["files_changed"] >= 1, history
+
+
+def test_a_window_filtered_to_empty_says_so() -> None:
+    """Commits landed; none touched a file this audit scans.
+
+    The lockfile case. `file_churn` restricts to tracked source paths, so
+    a window of dependency bumps produces `files_changed: 0` from a log
+    that read every one of them -- and the reader was told nothing was
+    committed at all.
+    """
+    from maintainability_audit.evidence import (
+        NO_SCANNED_FILES_CHANGED,
+        NotApplicable,
+        _normalize_history,
+    )
+    from maintainability_audit.renderers import render_history_markdown
+
+    report = _empty_window_report(commits_in_window=7, commits_considered=7)
+    state = _normalize_history(report).qualifying_hotspots
+    assert isinstance(state, NotApplicable), state
+    assert state.reason == NO_SCANNED_FILES_CHANGED, (
+        "seven commits were read and filtered out, and the reader was told "
+        f"the window was empty: {state.reason}"
+    )
+
+    rendered = "\n".join(render_history_markdown(report))
+    assert "filtered to empty" in rendered, rendered
+    assert "No commit falls inside" not in rendered, (
+        "the report claims nothing was committed in a window holding seven "
+        f"commits: {rendered}"
+    )
+
+
+def test_a_merge_only_window_is_not_reported_as_a_quiet_one() -> None:
+    """Every commit in the window is a merge, so `--no-merges` emptied it."""
+    from maintainability_audit.evidence import (
+        MERGES_ONLY,
+        NotApplicable,
+        _normalize_history,
+    )
+    from maintainability_audit.renderers import render_history_markdown
+
+    report = _empty_window_report(commits_in_window=4, commits_considered=0)
+    state = _normalize_history(report).multi_commit_files
+    assert isinstance(state, NotApplicable) and state.reason == MERGES_ONLY, state
+    rendered = "\n".join(render_history_markdown(report))
+    assert "are merges" in rendered, rendered
+    assert "No commit falls inside" not in rendered, rendered
+
+
+def test_a_genuinely_empty_window_still_reads_as_empty() -> None:
+    """The case D56 closed must not become collateral of D66's wording."""
+    from maintainability_audit.evidence import (
+        EMPTY_WINDOW,
+        NotApplicable,
+        _normalize_history,
+    )
+    from maintainability_audit.renderers import render_history_markdown
+
+    report = _empty_window_report(commits_in_window=0, commits_considered=0)
+    state = _normalize_history(report).qualifying_hotspots
+    assert isinstance(state, NotApplicable) and state.reason == EMPTY_WINDOW, state
+    assert "No commit falls inside" in "\n".join(render_history_markdown(report))
+
+
+def test_a_report_written_before_the_counts_existed_still_normalizes() -> None:
+    """Reports already on disk carry neither count and must not crash."""
+    from maintainability_audit.evidence import (
+        EMPTY_WINDOW,
+        NotApplicable,
+        _normalize_history,
+    )
+    from maintainability_audit.renderers import render_history_markdown
+
+    report = _empty_window_report()
+    state = _normalize_history(report).code_coupling_pairs
+    assert isinstance(state, NotApplicable) and state.reason == EMPTY_WINDOW, state
+    assert "No commit falls inside" in "\n".join(render_history_markdown(report))
+
+
+def _empty_window_report(**counts: int) -> dict:
+    """A report whose window produced no churn, however it got there."""
+    history = {
+        "window": "12 months ago",
+        "files_changed": 0,
+        "qualifying_hotspots": 0,
+        "code_coupling_pairs": 0,
+        "multi_commit_files": 0,
+        "single_author_files": 0,
+    }
+    history.update(counts)
+    # Normalized through `_normalize_history` rather than the public
+    # entry point: the whole-report path needs a summary this case has
+    # no opinion about, and inventing one would put the fixture's
+    # numbers in front of the behaviour under test.
+    return {"history": history}

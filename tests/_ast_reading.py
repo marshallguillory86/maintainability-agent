@@ -178,55 +178,96 @@ def _is_package(name: str, package: str) -> bool:
     return name == package or name.startswith(f"{package}.")
 
 
-def _bound_as(alias: ast.alias) -> str:
-    """The local name an `import x.y.z` statement binds."""
-    return alias.asname or alias.name.split(".")[-1]
+def _spelled_as(alias: ast.alias) -> str:
+    """How an `import` statement's target can be spelled at a call site.
+
+    Not the name it binds, which is what the second version returned.
+    `import xml.etree.ElementTree` binds `xml` and reaches the module
+    only through the full dotted path, so neither the bound name nor
+    the trailing component is what a call site will read.
+    """
+    return alias.asname or alias.name
+
+
+def _dotted(node: ast.expr) -> str | None:
+    """The dotted spelling of a Name/Attribute chain, or None."""
+    parts: list[str] = []
+    while isinstance(node, ast.Attribute):
+        parts.append(node.attr)
+        node = node.value
+    if not isinstance(node, ast.Name):
+        return None
+    parts.append(node.id)
+    return ".".join(reversed(parts))
 
 
 def reachable_names(
     module: ast.Module, package: str, members: set[str]
 ) -> tuple[set[str], set[str]]:
-    """Every name `package` is reachable under here, and its imported members.
+    """Every spelling `package` is reachable under here, and its members.
 
     Two sweeps needed the same thing and each grew its own copy, which
     put both over this project's function-complexity gate. They were
-    also both written twice: the first versions matched a literal
-    attribute — `subprocess.run`, `ElementTree.fromstring` — so
-    `import subprocess as sp` and `from subprocess import run` walked
-    straight past. Resolving the names is the whole difference between
-    linting a class and linting a spelling.
+    also written three times. The first matched a literal attribute --
+    `subprocess.run`, `ElementTree.fromstring` -- so `import subprocess
+    as sp` and `from subprocess import run` walked straight past. The
+    second resolved bound *names*, and an audit walked through that too:
+    `import xml.etree.ElementTree` binds `xml`, and the call is written
+    `xml.etree.ElementTree.fromstring(...)`, whose base is an attribute
+    chain rather than a plain name. So this resolves dotted *spellings*,
+    and the matching below is by prefix.
 
-    Returns `(aliases, direct)`: names the module itself is bound to,
-    and names from `members` imported out of it directly.
+    Returns `(aliases, direct)`: dotted spellings the module is reachable
+    under, and names from `members` imported out of it directly.
     """
     aliases: set[str] = set()
     direct: set[str] = set()
     for node in ast.walk(module):
         if isinstance(node, ast.Import):
             aliases |= {
-                _bound_as(alias) for alias in node.names
+                _spelled_as(alias) for alias in node.names
                 if _is_package(alias.name, package)
             }
-        elif isinstance(node, ast.ImportFrom) and _is_package(node.module or "", package):
+        elif isinstance(node, ast.ImportFrom):
+            base = node.module or ""
             for alias in node.names:
-                target = direct if alias.name in members else aliases
-                target.add(alias.asname or alias.name)
+                # Members first: `from subprocess import run` names a
+                # member, and `subprocess.run` also reads as "inside the
+                # package" to the test below -- which is how the first
+                # draft of this reclassified every direct import as a
+                # module alias, caught by the spelling falsifier.
+                if _is_package(base, package) and alias.name in members:
+                    direct.add(alias.asname or alias.name)
+                # `from xml import etree` names the package one level
+                # down, so the module is what `base.name` spells.
+                elif _is_package(f"{base}.{alias.name}", package) or _is_package(
+                    base, package
+                ):
+                    aliases.add(alias.asname or alias.name)
     return aliases, direct
 
 
 def calls_reaching(
     module: ast.Module, aliases: set[str], direct: set[str], members: set[str]
 ) -> list[ast.Call]:
-    """Calls of `members` through `aliases`, or of `direct` names outright."""
+    """Calls of `members` under `aliases`, or of `direct` names outright.
+
+    Prefix matching, not equality: an alias of `etree` still covers
+    `etree.ElementTree.fromstring`, one dotted step further down.
+    """
     found: list[ast.Call] = []
     for node in ast.walk(module):
         if not isinstance(node, ast.Call):
             continue
-        func = node.func
-        if isinstance(func, ast.Attribute) and func.attr in members:
-            value = getattr(func, "value", None)
-            if isinstance(value, ast.Name) and value.id in aliases:
+        spelled = _dotted(node.func)
+        if spelled is None:
+            continue
+        prefix, _, last = spelled.rpartition(".")
+        if not prefix:
+            if spelled in direct:
                 found.append(node)
-        elif isinstance(func, ast.Name) and func.id in direct:
+        elif last in members and any(
+            prefix == alias or prefix.startswith(f"{alias}.") for alias in aliases
+        ):
             found.append(node)
     return found

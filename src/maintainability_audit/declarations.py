@@ -24,11 +24,37 @@ from ._ranges import indent_bounded_end, java_declaration_ranges, js_declaration
 # files, 8.5% of its source, while its `.js` was read normally.
 BRACE_SUFFIXES = {".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".html"}
 
+# The languages v1.0 claims, and the only ones it parses declarations
+# for. Python by `ast` (exact) and Java by its own scanner.
+#
+# The JS/TS/HTML brace scanner still exists and still works, and this
+# deliberately stops using it. The tool was scoring `declaration size`
+# for JavaScript, issuing a verified grade on it, and telling the
+# reader nothing about which of its languages had been parsed — while
+# the product claimed Python and Java. Claiming a language means the
+# rubric was calibrated for it and the parser's under-reporting is
+# documented; neither is true of the brace scanner today, so scoring
+# from it was a claim nobody had earned (Decision 10).
+#
+# Adding a language to v1.next means adding it here *and* to
+# `docs/language-support.md`, together —
+# `test_the_parsed_languages_are_exactly_the_claimed_languages` fails
+# when they disagree. Everything outside this set keeps the honest
+# path: file length, duplication and risk are measured, and declaration
+# rates are **withheld** with the missing parser named, which is what
+# P7 requires of a population nobody read.
 # Every extension we attempt declaration detection on at all.
 # `.java` is listed separately from `BRACE_SUFFIXES`: Java is
 # brace-delimited but its declarations are not the JS scanner's — it has
 # constructors, annotations and generic parameter lists that the JS
 # patterns would misread — so it gets its own detector in `_ranges`.
+#
+# JS, TS, JSX and HTML are here and stay here: the brace scanner reads
+# them, and three baseline-tier adapters (lizard, jscpd, multimetric)
+# measure them. A language belongs in this set when this project can
+# actually detect and score it, which is the rule the claim has to
+# follow rather than the other way round (Decision 10, amended
+# 2026-08-26).
 DECLARATION_SUFFIXES = {".py", ".java"} | BRACE_SUFFIXES
 
 

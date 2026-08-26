@@ -1108,8 +1108,28 @@ again the next time that root is used, which is the point. A granted
 directory that was simply deleted keeps its entry and audits nothing,
 because there is no directory there to audit.
 
-*Closing test:* `test_a_standing_grant_does_not_follow_a_renamed_directory`
-in `tests/test_grant_only_user_tier.py`.
+**Reopened and re-closed 2026-08-26.** The predicate that closed this
+was the inverse defect. It honoured a stored grant only when the path
+contained no symlink in any component — which on macOS is the ordinary
+spelling of `/tmp`, `/var` and every `tempfile` directory. Grok
+reproduced it: a grant recorded as `/tmp/work` was dropped on every
+start, so someone who said "always" was asked again forever.
+
+The closing test could not see it. It called `tmp_path.resolve()`
+before storing, so it only ever exercised a path that was already
+canonical.
+
+Grants persist resolved now. A canonical entry is honoured only while
+it still resolves to itself, which is the original guard; an entry that
+is not canonical — hand-written, or written before this change — is
+honoured unless the granted path is itself a link, which is the swap
+that was demonstrated. A component *above* it being replaced is a
+residual the weaker rule does not catch, and is why new grants are
+stored resolved.
+
+*Closing tests:* `test_a_standing_grant_does_not_follow_a_renamed_directory`
+and `test_a_grant_under_a_symlinked_parent_survives_a_restart` in
+`tests/test_grant_only_user_tier.py`.
 
 ### D39 — Closed: the audit takes no configuration from the tree it audits (Medium)
 
@@ -1751,6 +1771,63 @@ live switch does nothing.
 *Closing test:* `test_no_document_offers_an_analyzer_selection_refuses`
 in `tests/test_config_shape.py`.
 
+### D56 — Closed: an empty history window is unknown, not perfect (High)
+
+Grok, 2026-08-26. `_history_rate_aspect` returned **5.0** for
+`files_changed == 0`, commented "had history to read; nothing changed
+in the window". A repository whose only commit predates the twelve
+month window therefore scored full marks on every history aspect —
+with a filthy working tree the photograph could see and the window
+could not. Reproduced on a real repository: one commit dated 400 days
+ago, an untracked file with eighty nested conditionals, history rates
+5.0.
+
+Worse in the direction P3 names. Withholding the history object
+*lowers* the result (estimate 4.80, no verified grade). Supplying an
+empty window *raises* it to 5.00 and A+. Evidence that says nothing
+outscored evidence that was absent.
+
+This is D37's collapse one layer up. There, a *failed* `git log`
+produced zeros and the zeros read as quiet; the fix made the spawner
+raise. Here the log succeeds and produces the same zeros honestly, and
+they mean the same thing: no denominator, therefore no rate. A shallow
+clone and an empty window are the same state, and the docstring above
+this function already said a shallow clone must not grade as clean or
+dirty.
+
+*Closing test:* `test_an_empty_window_is_unknown_rather_than_perfect`
+in `tests/test_history_window.py`.
+
+### D57 — Closed: the documented languages and the parsed languages are one set (High)
+
+Grok, 2026-08-26. `docs/language-support.md` and Decision 10 said v1.0
+handles Python and Java. The scanner also read JS, TS, JSX and HTML, so
+a repository of 140 JavaScript files was reported with
+`declarations_scanned=140`, `evidence_status: complete` and a verified
+**B**, and the Markdown scored `declaration size`.
+
+The first two attempts at this were both wrong and are recorded because
+the sequence is the lesson. Narrowing only the sentence left the
+contradiction the audit had already named. Narrowing the parser to
+`{.py, .java}` removed JavaScript dead-code detection, idiom
+divergence, near-duplicate pairing and ADR 003's TypeScript work — and
+Marshall's question, *"if you don't have detectors, linters, etc for
+those languages and no adaptor then please explain how option C is
+valuable at all?"*, is what produced the check that should have come
+first: **lizard, jscpd and multimetric are baseline-tier adapters that
+read JavaScript**, and baseline in this project means installed, run
+and parsed. Only eslint is refused, and only for its config.
+
+So the claim follows the capability. The declaration languages are
+Python, Java, JS, TS, JSX and HTML, the page says so, and the
+one-adapter-per-release cadence applies to what nothing here reads —
+Go, Rust, C, C# and Fortran, absent from the default extensions rather
+than scanned and unscored.
+
+*Closing tests:* `test_the_parsed_languages_are_exactly_the_documented_languages`
+and `test_every_scanned_source_suffix_can_be_read_by_something` in
+`tests/test_claimed_languages.py`.
+
 ## Disposition
 
 **Every entry in this register is closed.** D32 through D46 came from
@@ -1758,7 +1835,8 @@ two independent security audits on 2026-08-23 and closed over the two
 days after; D47 through D49 came from the chat-surface work that
 preceded them; D50 through D55 came from UAT preparation on 2026-08-25
 — one from Marshall reading the question set and five from a Codex
-audit of the whole repository. The count is derived from the headings above and checked
+audit of the whole repository; D56 and D57 came from a Grok audit of
+the whole repository on 2026-08-26, which also reopened D38. The count is derived from the headings above and checked
 by `test_the_disposition_names_the_entries_that_are_open`, which
 required this sentence rather than an omission — with nothing open, a
 disposition that simply lists no entries reads exactly like a parser

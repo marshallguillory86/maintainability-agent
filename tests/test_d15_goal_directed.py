@@ -100,16 +100,34 @@ def test_inventory_deselects_before_any_probe_or_spawn(
 
 
 def test_the_run_names_installs_that_close_language_gaps(tmp_path: Path) -> None:
-    """Unmeasured concerns come with the installs that would close them."""
+    """Unmeasured concerns come with the installs that would close them.
+
+    And only those that would. This asserted `eslint` until Decision 9:
+    the tree has JavaScript, eslint was selected and uninstalled, so the
+    work order named it. Installing it would no longer help — selection
+    refuses it because honouring an eslint flat config means executing a
+    JavaScript program from the audited tree — and a remedy that does
+    not close the gap it names is worse than no remedy, because someone
+    follows it (D39).
+    """
     report = build_report(_mixed_repo(tmp_path / "gaps"), _config(), run_analyzers=True)
     order = {item["tool"]: item for item in report["environment_work_order"]}
 
-    # The tree has JavaScript; eslint is selected, uninstalled here,
-    # and the work order names it with the concepts installing it
-    # restores — the before-or-with-results install naming D15 demands.
-    assert "eslint" in order, "the JS gap produced no install remedy"
-    assert order["eslint"]["install"]
-    assert order["eslint"]["concepts"]
+    assert order, "no install remedy was named for any gap"
+    for item in order.values():
+        assert item["install"] and item["concepts"]
+
+    assert "eslint" not in order, (
+        "the work order tells the reader to install a tool this agent "
+        "refuses to run; following it would close nothing"
+    )
+    refused = {
+        row["tool"]
+        for rows in report["analyzer_coverage"]["by_outcome"].values()
+        for row in rows
+        if row.get("tool") == "eslint"
+    }
+    assert refused == {"eslint"}, "eslint vanished from coverage instead of being stated"
 
     gaps = report["analyzer_coverage"].get("gaps_by_language") or {}
     assert gaps, "the coverage section states no per-language gaps to close"

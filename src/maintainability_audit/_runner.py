@@ -26,6 +26,7 @@ did not run is not a clean result.
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import subprocess
@@ -134,6 +135,39 @@ def locate(executable: str) -> str | None:
     return shutil.which(executable)
 
 
+# Variables that make an interpreter or a linter load code from
+# somewhere the operator did not choose. `PYTHONPATH` and `NODE_PATH`
+# put a directory on an import path; `PYTHONSTARTUP` names a file
+# executed before anything else; the `LD_`/`DYLD_` pair inject shared
+# objects into the child. An audited tree that sets any of them in the
+# environment this process inherited would be choosing what its own
+# analyzer imports (D39, Decision 9).
+_CODE_LOADING_VARS = (
+    "PYTHONPATH",
+    "PYTHONSTARTUP",
+    "PYTHONHOME",
+    "PYTHONEXECUTABLE",
+    "NODE_PATH",
+    "NODE_OPTIONS",
+    "LD_PRELOAD",
+    "LD_LIBRARY_PATH",
+    "DYLD_INSERT_LIBRARIES",
+    "DYLD_LIBRARY_PATH",
+)
+
+
+def analyzer_env() -> dict[str, str]:
+    """The environment an analyzer child gets.
+
+    Not a sandbox, and not claimed as one: the child is a normal local
+    process and this package does not contain it. What this removes is
+    the narrower thing Decision 9 rules out — a path that makes the
+    analyzer *load code* the operator did not choose. `PATH` stays,
+    because the tool has to be found.
+    """
+    return {k: v for k, v in os.environ.items() if k not in _CODE_LOADING_VARS}
+
+
 def _probe(slug: str, argv: tuple[str, ...]) -> ToolResult:
     executable = argv[0]
     resolved = locate(executable)
@@ -231,6 +265,7 @@ def run(
             capture_output=True,
             text=True,
             timeout=timeout_seconds,
+            env=analyzer_env(),
             check=False,
         )
     except subprocess.TimeoutExpired:

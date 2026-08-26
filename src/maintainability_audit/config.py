@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 VERSION = "0.9.1"
@@ -301,6 +301,38 @@ def load_config(path: str | None) -> dict[str, Any]:
     return config
 
 
+def _shaped_like_the_defaults(candidate: dict[str, Any], where: str) -> None:
+    """Refuse a known key whose value is the wrong shape.
+
+    Syntax was the only thing checked: a file could parse, have an
+    object root, and still say `"thresholds": "nope"`. That merged
+    cleanly and surfaced later as a raw `TypeError: string indices must
+    be integers` from somewhere in scoring, and `"hard_gates": []` as an
+    `AttributeError` on a list — two stack traces for one broken file,
+    neither of them naming it.
+
+    Derived from `DEFAULT_CONFIG` rather than a hand-written table, so a
+    key added there is checked the day it is added. Unknown keys are
+    still permitted: this is a shape check, not a schema, and refusing
+    what it does not recognise would break every config written against
+    a newer version of this tool.
+    """
+    for key, default in DEFAULT_CONFIG.items():
+        if key not in candidate:
+            continue
+        value = candidate[key]
+        if isinstance(default, dict) and not isinstance(value, dict):
+            raise ConfigUnreadable(
+                f"{where}: {key!r} must be an object, not "
+                f"{type(value).__name__}. Repair or delete it."
+            )
+        if isinstance(default, list) and not isinstance(value, list):
+            raise ConfigUnreadable(
+                f"{where}: {key!r} must be a list, not "
+                f"{type(value).__name__}. Repair or delete it."
+            )
+
+
 def _configured(path: Path) -> dict[str, Any]:
     """The repository's own file, or a refusal that names it.
 
@@ -334,4 +366,31 @@ def _configured(path: Path) -> dict[str, Any]:
             f"{path} is not a JSON object; a configuration cannot be "
             f"read from {type(content).__name__}."
         )
+    _shaped_like_the_defaults(content, str(path))
+    _repository_relative(content, str(path))
     return content
+
+
+def _repository_relative(candidate: dict[str, Any], where: str) -> None:
+    """`expected_files` names files in the repository, not on the host.
+
+    `paths.history` was bounded by D20 and this was not, so a config
+    could say `/etc/passwd` or `../outside` and the audit would report
+    whether that existed — a repository-controlled probe of the machine
+    running it, answered in the report.
+    """
+    entries = candidate.get("expected_files")
+    if not isinstance(entries, list):
+        return
+    for entry in entries:
+        text = str(entry)
+        if PurePosixPath(text).is_absolute() or Path(text).is_absolute():
+            raise ConfigUnreadable(
+                f"{where}: expected_files entry {text!r} is absolute; "
+                "these name files inside the repository."
+            )
+        if ".." in Path(text).parts:
+            raise ConfigUnreadable(
+                f"{where}: expected_files entry {text!r} leaves the "
+                "repository; these name files inside it."
+            )

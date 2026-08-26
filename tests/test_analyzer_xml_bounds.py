@@ -15,6 +15,7 @@ why the entry hedged.
 from __future__ import annotations
 
 import pytest
+from _ast_reading import calls_reaching, reachable_names
 
 from maintainability_audit._xml import (
     MAX_ANALYZER_XML_CHARS,
@@ -127,19 +128,18 @@ def test_no_parse_site_bypasses_the_guard() -> None:
     import ast
     from pathlib import Path
 
+    parsers = {"fromstring", "parse", "XML", "fromstringlist", "XMLParser"}
     package = Path(__file__).resolve().parents[1] / "src" / "maintainability_audit"
     offenders = []
     for path in sorted(package.rglob("*.py")):
         if path.name == "_xml.py":
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Call) and getattr(node.func, "attr", "") in {
-                "fromstring", "parse", "XML", "fromstringlist",
-            }:
-                value = getattr(node.func, "value", None)
-                if isinstance(value, ast.Name) and value.id == "ElementTree":
-                    offenders.append(f"{path.name}:{node.lineno}")
+        aliases, direct = reachable_names(tree, "xml.etree", parsers)
+        offenders += [
+            f"{path.name}:{call.lineno}"
+            for call in calls_reaching(tree, aliases, direct, parsers)
+        ]
 
     assert not offenders, (
         "analyzer XML parsed outside the guard, so an entity bomb would "

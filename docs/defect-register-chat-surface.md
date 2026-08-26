@@ -1396,7 +1396,7 @@ have is not, so Scope now describes what the code does and says the
 decision is pending.
 
 *Closing tests:* `test_the_security_policy_supports_the_shipped_release_line`
-and `test_the_security_policy_does_not_deny_executing_repository_code`
+and `test_the_security_policy_states_the_guarantee_the_code_keeps`
 in `tests/test_written_record.py`. The second checks only what the
 document *asserts*, not what it recounts — a check that could not tell
 an assertion from its own correction would forbid explaining the fix.
@@ -1828,6 +1828,122 @@ than scanned and unscored.
 and `test_every_scanned_source_suffix_can_be_read_by_something` in
 `tests/test_claimed_languages.py`.
 
+### D58 — Closed: the generated standards pack teaches call-first (High)
+
+Grok, 2026-08-26. `--init-agent-standards` writes `AGENTS.md`,
+`CLAUDE.md` and their siblings, and every one of them opened with
+"Start with a configuration check (`maintainability-agent.json`, then
+the user tier)" — the archaeology D21 exists to stop, shipped into the
+file an agent reads before anything else.
+
+D47 closed that class by enumerating three surfaces: the MCP server
+instructions, the slash prompt, and the skill. This is the fourth, and
+D47's own write-up of D21 says what went wrong here: a falsifier that
+read one file and called the class closed.
+
+Worse, the two closed entries contradicted each other. D17's closing
+test **required** the generated pack to contain "configuration" and
+"check", so honouring D21 there would have failed the suite. Both were
+green, and neither could see the other.
+
+The pack now carries D21's wording verbatim, D47's sweep runs over four
+surfaces, and D17's assertion asks for the call instead of the check.
+
+*Closing test:* `test_every_chat_instruction_surface_calls_the_tool_before_inspecting_config`
+in `tests/test_chat_primary_docs.py`.
+
+### D59 — Closed: the sweeps lint the class, not a name (High)
+
+Grok, 2026-08-26, three of them together.
+
+*The isolation sweep covered two tools.* It diffed `DECLARED` — pylint
+and mypy — while `ADAPTERS` holds fifteen, so ruff sat in the baseline
+pool, in the default selection, never asked the question the sweep
+exists to ask. Every adapter is now classified by what honouring its
+configuration would *execute*, which is the actual line Decision 9
+draws: a ruff or flake8 config is TOML and INI, and a repository
+choosing which of its own lint rules apply is policy about its own
+code. The flag check also asserted only that `--rcfile=` was present,
+so `--rcfile=.pylintrc` would have passed; it asserts the value now.
+
+*The subprocess sweep matched `subprocess.<call>`.* `import subprocess
+as sp`, `from subprocess import run`, `subprocess.call` and
+`getoutput` all evaded it, and `timeout=None` counted as bounded
+because presence was the test. It resolves aliases and from-imports
+now, and treats an explicit `None` as unbounded.
+
+*The XML sweep had the same shape*, matching `ElementTree.fromstring`
+by name, so a from-import walked past it.
+
+This is the third generation of these checks. The first git sweep
+matched only list literals beginning with `"git"`; that was replaced
+after an audit, and the replacement was narrow in a different way. What
+they have in common is that each was written to catch "a call added
+tomorrow" and each matched a spelling instead.
+
+*Closing tests:* `test_every_adapter_is_classified_for_what_its_configuration_executes`
+and `test_an_adapter_whose_config_executes_code_is_refused_not_isolated`
+in `tests/test_analyzer_config_isolation.py`;
+`test_every_subprocess_spawn_is_bounded_and_classified` in
+`tests/test_git_argv.py`; `test_no_parse_site_bypasses_the_guard` in
+`tests/test_analyzer_xml_bounds.py`.
+
+### D60 — Closed: SECURITY.md states the guarantee the code keeps (Medium)
+
+Grok, 2026-08-26. Decision 9 closed D39 and D44 on 2026-08-25 and
+`SECURITY.md` kept describing the defect for a further day: that the
+agent executes repository code, that mypy and pylint can load
+configured plugins, that children inherit the host environment, and
+that the question is open.
+
+**Wrong in both directions now.** The file first denied executing
+scanned code while eslint was being invoked in a mode that requires the
+tree's configuration and then runs it (Codex, 2026-08-23). It was
+corrected to assert the opposite. Then the code changed under it.
+
+Both directions are recorded rather than quietly rewritten, and the
+test no longer forbids a sentence: it reads the policy against the
+adapters, and fails if the file and the code disagree either way. A
+test that asserts a phrase protects the phrase, not the property —
+which is the third time that shape has come up today.
+
+*Closing test:* `test_the_security_policy_states_the_guarantee_the_code_keeps`
+in `tests/test_written_record.py`.
+
+### D61 — Closed: P1 names the fields that are not compared (Low)
+
+Grok, 2026-08-26. P1 promised "same report out" and two runs on one
+tree differed by a millisecond, on an analyzer's wall-clock `seconds`.
+The determinism check had been stripping `root`, `git_status_short`
+and every `seconds` for as long as it had existed, so the promise was
+false of the JSON a consumer diffs and true only of the test's own
+projection.
+
+The exceptions are legitimate — a duration is a fact about the run, not
+about the repository. Being undisclosed was not. P1 names them, and a
+field added to the strip list without reaching the page now fails.
+
+*Closing test:* `test_the_determinism_exceptions_are_exactly_the_disclosed_ones`
+in `tests/test_determinism.py`.
+
+### D62 — Closed: the release plan is measured, not remembered (Low)
+
+Grok, 2026-08-26. The plan's own warning is that a previous version of
+its table "survived fifty-five commits past the point it stopped being
+true". It then did it again: last tag 0.7.0 with v0.9.1 shipped, 14,122
+lines against 20,071, 1,097 tests against 1,560. Re-measured, and the
+warning now records both occurrences.
+
+The first draft of this entry closed with "*Closing test:* none",
+arguing that a measurement goes stale by existing. The register does
+not allow that, and it is right not to: the tag is exact and the counts
+are checkable within a stated tolerance, wide enough to survive
+ordinary work and narrow enough that another fifty-five commits cannot
+hide inside it.
+
+*Closing test:* `test_the_release_plan_table_is_measured_not_remembered`
+in `tests/test_release_plan.py`.
+
 ## Disposition
 
 **Every entry in this register is closed.** D32 through D46 came from
@@ -1835,8 +1951,10 @@ two independent security audits on 2026-08-23 and closed over the two
 days after; D47 through D49 came from the chat-surface work that
 preceded them; D50 through D55 came from UAT preparation on 2026-08-25
 — one from Marshall reading the question set and five from a Codex
-audit of the whole repository; D56 and D57 came from a Grok audit of
-the whole repository on 2026-08-26, which also reopened D38. The count is derived from the headings above and checked
+audit of the whole repository; D56 through D62 came from a Grok audit of
+the whole repository on 2026-08-26, which also reopened D38. Its
+verdict was that the register was "an empty ledger, not an empty
+defect list", and on every finding it was right. The count is derived from the headings above and checked
 by `test_the_disposition_names_the_entries_that_are_open`, which
 required this sentence rather than an omission — with nothing open, a
 disposition that simply lists no entries reads exactly like a parser

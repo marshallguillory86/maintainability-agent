@@ -181,3 +181,42 @@ def test_the_analysis_opens_no_sockets(tmp_path: Path) -> None:
         socket.socket = original  # type: ignore[misc]
 
     assert report["summary"]["files_scanned"] >= 60
+
+
+DISCLOSED_VARIABLE_FIELDS = {"root", "git_status_short", "seconds"}
+
+
+def test_the_determinism_exceptions_are_exactly_the_disclosed_ones() -> None:
+    """P1's exception list and this file's stripping cannot drift apart.
+
+    `_comparable` dropped `root`, `git_status_short` and every analyzer
+    `seconds` while P1 promised "same report out". An audit ran two
+    audits and found them differing by a millisecond on a `seconds`
+    value: the promise was false of the JSON a consumer diffs and true
+    only of this test's stripped projection.
+
+    The exceptions are legitimate — a duration describes the run, not
+    the repository — so P1 now names them, and this holds the two
+    together. A field added to the strip list without reaching the
+    promise fails here.
+    """
+    intent = (Path(__file__).resolve().parents[1] / "docs" / "product-intent.md")
+    row = next(
+        line for line in intent.read_text(encoding="utf-8").splitlines()
+        if line.startswith("| P1 |")
+    )
+    for field in DISCLOSED_VARIABLE_FIELDS:
+        assert f"`{field}`" in row, (
+            f"P1 does not disclose that {field!r} varies between runs, and "
+            "the determinism check strips it"
+        )
+
+    source = Path(__file__).read_text(encoding="utf-8")
+    stripped = set(re.findall(r'key != "([a-z_]+)"', source))
+    stripped |= set(re.findall(r'k not in \{"([a-z_]+)", "([a-z_]+)"\}', source)[0]) \
+        if re.search(r'k not in \{"[a-z_]+", "[a-z_]+"\}', source) else set()
+    undisclosed = sorted(stripped - DISCLOSED_VARIABLE_FIELDS)
+    assert not undisclosed, (
+        f"the determinism check silently ignores {undisclosed}, which P1 "
+        "does not disclose"
+    )

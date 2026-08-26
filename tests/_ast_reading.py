@@ -171,3 +171,62 @@ def recomputed_counts(tools):
             1 for tool in tools if tool["adapter"] == "implemented"
         ),
     }
+
+
+def _is_package(name: str, package: str) -> bool:
+    """Whether an imported name is `package` itself or something inside it."""
+    return name == package or name.startswith(f"{package}.")
+
+
+def _bound_as(alias: ast.alias) -> str:
+    """The local name an `import x.y.z` statement binds."""
+    return alias.asname or alias.name.split(".")[-1]
+
+
+def reachable_names(
+    module: ast.Module, package: str, members: set[str]
+) -> tuple[set[str], set[str]]:
+    """Every name `package` is reachable under here, and its imported members.
+
+    Two sweeps needed the same thing and each grew its own copy, which
+    put both over this project's function-complexity gate. They were
+    also both written twice: the first versions matched a literal
+    attribute — `subprocess.run`, `ElementTree.fromstring` — so
+    `import subprocess as sp` and `from subprocess import run` walked
+    straight past. Resolving the names is the whole difference between
+    linting a class and linting a spelling.
+
+    Returns `(aliases, direct)`: names the module itself is bound to,
+    and names from `members` imported out of it directly.
+    """
+    aliases: set[str] = set()
+    direct: set[str] = set()
+    for node in ast.walk(module):
+        if isinstance(node, ast.Import):
+            aliases |= {
+                _bound_as(alias) for alias in node.names
+                if _is_package(alias.name, package)
+            }
+        elif isinstance(node, ast.ImportFrom) and _is_package(node.module or "", package):
+            for alias in node.names:
+                target = direct if alias.name in members else aliases
+                target.add(alias.asname or alias.name)
+    return aliases, direct
+
+
+def calls_reaching(
+    module: ast.Module, aliases: set[str], direct: set[str], members: set[str]
+) -> list[ast.Call]:
+    """Calls of `members` through `aliases`, or of `direct` names outright."""
+    found: list[ast.Call] = []
+    for node in ast.walk(module):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Attribute) and func.attr in members:
+            value = getattr(func, "value", None)
+            if isinstance(value, ast.Name) and value.id in aliases:
+                found.append(node)
+        elif isinstance(func, ast.Name) and func.id in direct:
+            found.append(node)
+    return found

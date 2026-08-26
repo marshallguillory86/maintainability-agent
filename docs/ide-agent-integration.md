@@ -256,7 +256,8 @@ Repeat `--allow-root` to authorize unrelated repository directories. If no
 argument is supplied, the server permits only its launch directory. The
 `MAINTAINABILITY_MCP_ALLOWED_ROOTS` environment variable is an alternative;
 separate multiple roots with the platform path separator (`:` on macOS/Linux,
-`;` on Windows). For audit-tool calls, an elicitation-capable host can instead
+`;` on Windows, which the code honours and nobody has tested — this is
+POSIX-only software). For audit-tool calls, an elicitation-capable host can instead
 offer a structured **this session** (default), **always**, or **no** grant.
 Session grants live only in the process; always grants persist only in the XDG
 user configuration. Report resources never ask for or persist a grant.

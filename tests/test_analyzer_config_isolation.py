@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -297,6 +298,76 @@ def test_the_devnull_config_path_exists_on_this_platform() -> None:
     assert Path(os.devnull).exists()
 
 
+# Acquisition language, not narrative. The harm D65 names is precise:
+# "an operator following either page installs a tool this agent will
+# always refuse." Prose that *describes* eslint -- the register
+# recording the defect, the roadmap listing tools this project does not
+# replace, an ADR quoting an old experiment -- costs an operator
+# nothing. D75: the first version listed three exact phrasings lifted
+# from the two sentences it was written to catch.
+_ACQUIRE = re.compile(
+    r"\b(install|installs|installed|installing|installation|"
+    r"available|detected|prerequisite|prerequisites|"
+    r"already on|on `?PATH`?|add to your|set up)\b",
+    re.IGNORECASE,
+)
+# Exonerated by *this sentence*, never by the neighbourhood: proximity
+# exoneration is gameable, and a claim inserted directly beneath the
+# paragraph refusing eslint was exonerated by it -- backwards, since a
+# refusal nearby is where a false claim does the most damage (D75).
+_EXONERATES = re.compile(
+    r"refus|cannot run|can not run|never run|does not run|do not run|"
+    r"not eslint|deselect|declines|will always refuse|superseded|"
+    r"out of every selection",
+    re.IGNORECASE,
+)
+# Incident records, exempt by name and for a stated reason: they exist
+# to describe what the product used to do wrongly, so the old behaviour
+# appears in them by definition. Everything else is operator-facing.
+_RECORDS = {
+    "defect-register-chat-surface.md": "the record of the defect itself",
+    "security-queue.md": "the working order that produced D39",
+    "roadmap.md": "lists tools this project does not replace",
+}
+
+
+def _refused_adapter_slugs() -> set[str]:
+    """Adapters selection drops because their config is code."""
+    import inspect
+
+    from maintainability_audit import _verdict_adapters
+
+    return {
+        re.sub(r"Adapter$", "", name).lower()
+        for name in dir(_verdict_adapters)
+        if (inspect.isclass(getattr(_verdict_adapters, name))
+            and name.endswith("Adapter")
+            and getattr(getattr(_verdict_adapters, name),
+                        "executes_audited_configuration", False))
+    }
+
+
+def _acquisition_claims(docs: Path, refused: set[str]) -> list[str]:
+    """Lines telling an operator to obtain a tool that is always refused."""
+    offenders: list[str] = []
+    for path in sorted(docs.rglob("*.md")):
+        if path.name in _RECORDS:
+            continue
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if not _ACQUIRE.search(line) or _EXONERATES.search(line):
+                continue
+            named = [
+                slug for slug in refused
+                if re.search(rf"\b{re.escape(slug)}\b", line, re.IGNORECASE)
+            ]
+            if named:
+                offenders.append(
+                    f"{path.name}:{number} tells an operator to obtain "
+                    f"{named}: {line.strip()[:90]}"
+                )
+    return offenders
+
+
 def test_no_document_presents_a_refused_analyzer_as_one_this_agent_runs() -> None:
     """Decision 9 is a behaviour; the docs that predate it must say so.
 
@@ -309,45 +380,16 @@ def test_no_document_presents_a_refused_analyzer_as_one_this_agent_runs() -> Non
 
     Swept from the adapters rather than from a list of sentences,
     because the next tool refused for the same reason will not be named
-    eslint, and the last review of these documents forbade exactly one
-    sentence and missed everything either side of it.
+    eslint -- and because the first version of this test *was* such a
+    list, and an audit walked past it in one line (D75).
     """
-    import inspect
-    import re
-
-    from maintainability_audit import _verdict_adapters
-
-    refused: set[str] = set()
-    for name in dir(_verdict_adapters):
-        candidate = getattr(_verdict_adapters, name)
-        if not (inspect.isclass(candidate) and name.endswith("Adapter")):
-            continue
-        if getattr(candidate, "executes_audited_configuration", False):
-            refused.add(re.sub(r"Adapter$", "", name).lower())
-
+    refused = _refused_adapter_slugs()
     assert refused, (
         "no adapter declares that its configuration executes the audited "
         "tree, so this sweep proves nothing -- has the flag been renamed?"
     )
-
-    # Lines that assert this agent invokes a tool, as opposed to lines
-    # that explain why it will not.
-    claims = re.compile(
-        r"used when already on `PATH`|installed with the package|"
-        r"the agent \*\*sets it from the rubric\*\*",
-    )
-    docs = Path(__file__).resolve().parents[1] / "docs"
-    offenders: list[str] = []
-    for path in sorted(docs.rglob("*.md")):
-        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            if not claims.search(line):
-                continue
-            offenders += [
-                f"{path.name}:{number} claims this agent runs {slug}"
-                for slug in refused
-                if re.search(rf"\b{re.escape(slug)}\b", line, re.IGNORECASE)
-            ]
-
+    offenders = _acquisition_claims(
+        Path(__file__).resolve().parents[1] / "docs", refused)
     assert not offenders, (
         "a document tells the operator to install an analyzer that "
         f"selection refuses on every run: {offenders}"

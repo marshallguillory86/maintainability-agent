@@ -2255,6 +2255,126 @@ proving conftest ran and proving git listened.
 and `test_the_suites_own_git_has_maintenance_disabled` in
 `tests/test_git_argv.py`.
 
+### D72 — Closed: a refusal does not disclose where a symlink points (High)
+
+Codex, 2026-08-26. D38's refusal carried `write_instead`: the canonical
+path the entry resolved to, so the user could correct their config. It
+was the more helpful message, and it told whatever host reads
+`server_info` where a symlink the user named actually points — a
+directory the user never put in their config, published over the
+transport by the very mechanism added to make refusals visible.
+
+D48's rule is that host paths do not cross the transport. A helpful
+refusal is not an exception to it, and "we surfaced it so it would not
+be silent" is not a reason to surface more than the user supplied.
+
+The entry itself is still echoed, because the user wrote it. Its target
+is not ours to publish. `repair` names the flow instead: grant the root
+again through setup, which stores the path it resolved to at the moment
+of consent.
+
+*Closing test:* `test_a_non_canonical_grant_is_refused_and_said_so` in
+`tests/test_grant_only_user_tier.py`, which now asserts the resolved
+target appears in no field of the refusal.
+
+### D73 — Closed: the one git spawn that is not run_git (High)
+
+Codex, 2026-08-26, one commit after D71 closed. `_backfill._git` builds
+its own argv and does not go through `run_git`, so it ran `rev-list`
+without `gc.auto=0` / `maintenance.auto=false` — and
+`commits_in_range()` reaches it before any worktree exists. D71's whole
+claim is that reading a repository cannot let git rewrite it, and this
+was a read that could.
+
+**The closing test could not see it.** It parsed `git_tools.py` alone,
+because that was where the fix lived. A rule about *every git command*,
+held by a check that read one file — and there was exactly one git
+command elsewhere in the package.
+
+The sweep reads every module now: any argv whose first element is the
+literal `"git"` must carry `READ_ONLY_GIT_CONFIG`, and it asserts it
+found at least two spawns, because finding one is the state that hid
+this.
+
+*Closing test:* `test_every_git_command_disables_gits_own_housekeeping`
+in `tests/test_git_argv.py`.
+
+### D74 — Closed: an incoherent window explains itself as unknown (Medium)
+
+Codex, 2026-08-26. `commits_in_window` and `commits_considered` are not
+`HistoryEvidence` members, so nothing upstream validates them, and
+`_empty_window_reason` asked only `isinstance(..., int)`. `True` is an
+`int`. A report carrying `commits_in_window: true, commits_considered:
+0` was told, confidently, that every commit in its window was a merge.
+Negative counts and a subset larger than its set did the same.
+
+D66 exists to stop a wrong reason being stated confidently, so the fix
+is not a better guess: an incoherent pair earns the least specific
+answer. Bools rejected, negatives rejected, and a non-merge subset that
+exceeds the set it is drawn from rejected.
+
+*Closing test:* `test_an_incoherent_pair_of_counts_earns_the_least_specific_reason`
+in `tests/test_history_window.py`, seven payloads.
+
+### D75 — Closed: the doc sweep recognises more than three sentences (Medium)
+
+Codex, 2026-08-26. D65's closing test matched three exact phrasings,
+lifted from the two sentences it was written to catch. Adding
+*"maintainability-agent runs eslint whenever it is installed"* to an ADR
+left it green. A check shaped like the defect it already found is not a
+check — the same criticism this register has recorded five times, now
+about a test written to prevent it.
+
+Two wrong versions before the third. Matching every verb flagged nine
+lines of history: the register recording the defect, the roadmap listing
+tools this project does not replace, an ADR quoting an old experiment.
+Then proximity exoneration turned out to be gameable in the most direct
+way possible — a claim inserted directly beneath the paragraph refusing
+eslint was exonerated by it, which is backwards, since a refusal nearby
+is exactly where a false claim does the most damage.
+
+What it checks now is the harm D65 actually names: *acquisition*
+language beside a refused tool's name, exonerated only by the same
+sentence, in operator-facing documents. The three incident records are
+exempt by name and with reasons, because describing the old behaviour is
+what they are for.
+
+*Closing test:* `test_no_document_presents_a_refused_analyzer_as_one_this_agent_runs`
+in `tests/test_analyzer_config_isolation.py`, verified against four
+distinct phrasings.
+
+### D76 — Closed: P1 is held to the window a report is built with (Medium)
+
+Codex, 2026-08-26. D69's closing test compared the prose to the
+`DEFAULT_SINCE` constant. Changing `history_section`'s default to
+`"24 months ago"` left the constant untouched and the test green, with
+the disclosure describing a window nothing used.
+
+It now reads the *effective* window — the signature default — requires
+it to equal the constant the page quotes, and checks by AST that
+`report.py` does not pass a window of its own, since a call site that
+overrides the default makes the disclosed value fiction.
+
+*Closing test:* `test_the_history_window_is_disclosed_as_clock_relative`
+in `tests/test_determinism.py`.
+
+### D77 — Closed: a comment cannot stand in for an install (Medium)
+
+Codex, 2026-08-26. The test asserting CI installs every pip-installable
+adapter asked whether the slug appeared *anywhere* in the workflow file.
+Deleting `flake8` from the install line and leaving
+`# flake8 is installed by this step` behind kept all fourteen green
+while the adapter went uninstalled.
+
+It parses the YAML now and tokenises the actual `pip install` commands,
+with comments stripped first. That immediately found a real gap the
+substring version could not: `ruff` reached CI only through `.[dev]`,
+so the pool step never named it. Rather than carve an exemption for it,
+the claim was made literally true.
+
+*Closing test:* `test_ci_installs_every_pip_installable_adapter` in
+`tests/test_ci_installs_the_analyzer_pool.py`.
+
 ## Disposition
 
 **Every entry in this register is closed.** D32 through D46 came from

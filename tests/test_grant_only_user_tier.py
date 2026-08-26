@@ -234,8 +234,19 @@ def test_a_non_canonical_grant_is_refused_and_said_so(
     assert [item["entry"] for item in refused] == [str(link / "work")], (
         f"the refusal was silent, which is the defect that hid rule one: {refused}"
     )
-    assert refused[0]["write_instead"] == str((outer / "work").resolve())
     assert "canonical" in refused[0]["reason"]
+    # The repair names the flow, never the resolved target. An earlier
+    # version returned the canonical path as `write_instead`, which was
+    # the friendlier message and also told whatever host reads
+    # `server_info` where a symlink the user named actually points --
+    # a directory the user never put in their config. D48's rule is
+    # that host paths do not cross the transport, and a helpful refusal
+    # is not an exception to it.
+    assert "setup" in refused[0]["repair"]
+    leaked = str((outer / "work").resolve())
+    assert all(leaked not in str(value) for value in refused[0].values()), (
+        f"the refusal disclosed the symlink's target: {refused[0]}"
+    )
 
     # The attack the entry was reopened for: retarget the parent.
     link.unlink()

@@ -89,7 +89,7 @@ def validate_revspec(revspec: str) -> str:
 #: Applied here rather than at each call site because this is the one
 #: place that builds a git argv, which is what makes the promise
 #: checkable at all.
-_READ_ONLY = ("-c", "gc.auto=0", "-c", "maintenance.auto=false")
+READ_ONLY_GIT_CONFIG = ("-c", "gc.auto=0", "-c", "maintenance.auto=false")
 
 
 def run_git(args: list[str], cwd: Path) -> str:
@@ -99,7 +99,7 @@ def run_git(args: list[str], cwd: Path) -> str:
     """
     try:
         completed = subprocess.run(  # noqa: S603 - argv list, never a shell
-            ["git", *_READ_ONLY, *args],
+            ["git", *READ_ONLY_GIT_CONFIG, *args],
             cwd=cwd,
             text=True,
             capture_output=True,

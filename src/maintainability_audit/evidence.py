@@ -23,7 +23,7 @@ report, which is a different statement from "ownership is unknown".
 """
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, fields
 from math import isinf, isnan
 from typing import Any
@@ -390,6 +390,25 @@ NO_HISTORY = "report carries no history block: shallow clone, or not a git repos
 HISTORY_FIELD_ABSENT = "history block present but this count was not recorded"
 SUMMARY_FIELD_ABSENT = "summary does not carry this count"
 NO_SETTLED_FILES = "no file has three or more commits, so ownership concentration has no population"
+# The three ways a window produces no churn, told apart because telling
+# the other two that the window was empty is false (D66). Inline rather
+# than in a module of their own: `evidence` imports nothing first-party.
+_NO_POP = ", so every history rate has no population to divide by"
+EMPTY_WINDOW = "no commit falls inside the history window" + _NO_POP
+MERGES_ONLY = ("every commit in the history window is a merge, and a merge's "
+               "numstat re-reports churn already counted on the branch" + _NO_POP)
+NO_SCANNED_FILES_CHANGED = ("commits landed inside the history window but "
+                            "touched no file this audit scans" + _NO_POP)
+
+
+def _empty_window_reason(section: Mapping[str, Any]) -> str:
+    """Which of the three empty windows this is (D66) — the plain
+    wording when the counts are absent, as a pre-D66 report carries."""
+    seen = section.get("commits_in_window")
+    read = section.get("commits_considered")
+    if not isinstance(seen, int) or not isinstance(read, int) or not seen:
+        return EMPTY_WINDOW
+    return MERGES_ONLY if read == 0 else NO_SCANNED_FILES_CHANGED
 
 
 def _normalize_history(report: dict[str, Any]) -> HistoryEvidence:
@@ -408,6 +427,20 @@ def _normalize_history(report: dict[str, Any]) -> HistoryEvidence:
     section = _require_mapping(raw, "history")
     states = _states_for(HistoryEvidence, section, "history", HISTORY_FIELD_ABSENT)
     _check_relations(states, HISTORY_SUBSETS, HISTORY_SUMS, "history")
+    # An empty window is not a quiet repository. Every count below
+    # `files_changed` is a share of that zero; left as Measured(0) they
+    # fed `evidence_status: complete` while `_history_rate_aspect`
+    # already returned None (D56). NotApplicable, not Unknown: the
+    # window *was* read, and "nothing to divide by" is not "could not
+    # look" — the distinction this module exists to keep.
+    changed = states["files_changed"]
+    if isinstance(changed, Measured) and not changed.value:
+        reason = _empty_window_reason(section)
+        for name in ("qualifying_hotspots", "code_coupling_pairs",
+                     "multi_commit_files", "single_author_files"):
+            if isinstance(states[name], Measured):
+                states[name] = NotApplicable(reason, f"history.{name}")
+
     settled = states["multi_commit_files"]
     owners = states["single_author_files"]
     if isinstance(settled, Measured) and not settled.value and isinstance(owners, Measured):

@@ -189,56 +189,101 @@ def test_a_standing_grant_does_not_follow_a_renamed_directory(
     assert launch in after, "the launch root must be unaffected"
 
 
-def test_a_grant_under_a_symlinked_parent_survives_a_restart(
+def test_a_non_canonical_grant_is_refused_and_said_so(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """D38 reopened: the fix dropped every ordinary macOS grant.
+    """D38, third rule: canonical or refused, and never in silence.
 
-    The predicate honoured a stored grant only when its path contained
-    no symlink in any component. `/tmp` and `/var` are symlinks on
-    macOS and every `tempfile` directory sits under one, so a grant
-    recorded as `/tmp/work` was dropped on every start and the person
-    who said "always" was asked again forever — the inverse of the
-    defect the entry set out to close.
+    The first rule required a canonical path and dropped every ordinary
+    macOS grant, because `/tmp` and `/var` are symlinks there. The
+    second honoured a non-canonical entry unless the granted path was
+    itself a link — and an audit walked through it by retargeting the
+    *parent*, one directory above the leaf that rule checked.
 
-    The original closing test could not see it: it resolved the path
-    before storing, so it only ever exercised a canonical entry.
-
-    The symlinked parent is built here rather than borrowed from the
-    platform. The first version of this test asserted that `/tmp` is a
-    link, which is true on macOS and false on Linux, so it passed
-    locally and hard-failed in CI — a platform fact asserted where a
-    constructed fixture was needed.
+    There is no third rule available. A bare path with no record of
+    what it resolved to when granted cannot be defended: nothing to
+    compare against means nothing to detect. So the product persists
+    resolved paths, which are checkable, and a hand-written entry that
+    is not canonical is refused — and named in `server_info`, because
+    dropping grants in silence is what made the first rule hard to see.
     """
     import os
 
     from maintainability_audit import _mcp_audit
 
-    real = tmp_path / "real"
-    real.mkdir()
-    (real / "work").mkdir()
-    (real / "elsewhere").mkdir()
-
+    outer = tmp_path / "outer"
+    outer.mkdir()
+    (outer / "work").mkdir()
+    secrets = tmp_path / "secrets"
+    secrets.mkdir()
+    (secrets / "work").mkdir()
     link = tmp_path / "link"
-    os.symlink(real, link)
-    granted = link / "work"
-    assert granted.resolve() != granted, "the fixture's parent is not a symlink"
+    os.symlink(outer, link)
 
     monkeypatch.setattr(
-        _mcp_audit, "load_user_config", lambda: {"allowed_roots": [str(granted)]})
+        _mcp_audit, "load_user_config",
+        lambda: {"allowed_roots": [str(link / "work")]})
 
     roots = _mcp_audit.allowed_roots(explicit=(str(tmp_path),))
-    assert granted.resolve() in roots, (
-        "a grant whose parent is a symlink was dropped, which on macOS is "
-        f"every grant under /tmp or /var: {roots}"
+    assert (outer / "work").resolve() not in roots, (
+        "a non-canonical grant was honoured; its parent can be retargeted "
+        "and nothing here could tell"
     )
 
-    # And the swap it exists to refuse is still refused: replace the
-    # granted directory itself with a link somewhere else.
-    (real / "work").rmdir()
-    os.symlink(real / "elsewhere", real / "work")
+    refused = _mcp_audit.refused_root_grants()
+    assert [item["entry"] for item in refused] == [str(link / "work")], (
+        f"the refusal was silent, which is the defect that hid rule one: {refused}"
+    )
+    assert refused[0]["write_instead"] == str((outer / "work").resolve())
+    assert "canonical" in refused[0]["reason"]
 
+    # The attack the entry was reopened for: retarget the parent.
+    link.unlink()
+    os.symlink(secrets, link)
     after = _mcp_audit.allowed_roots(explicit=(str(tmp_path),))
-    assert (real / "elsewhere").resolve() not in after, (
-        f"the grant followed a symlink planted at the granted name: {after}"
+    assert (secrets / "work").resolve() not in after, (
+        "retargeting the parent of a stored grant extended the allow-list"
     )
+
+
+def test_a_grant_the_product_made_is_canonical_and_survives(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The path a user actually takes, which must not be collateral.
+
+    `persist_root_grant` resolves before storing, so an "always" grant
+    made through the elicitation is canonical and honoured — including
+    when the directory sits under a symlinked parent, which on macOS is
+    every temporary directory.
+    """
+    import os
+
+    from maintainability_audit import _mcp_audit
+    from maintainability_audit._user_config import persist_root_grant
+
+    outer = tmp_path / "outer"
+    outer.mkdir()
+    (outer / "work").mkdir()
+    link = tmp_path / "link"
+    os.symlink(outer, link)
+
+    stored: dict[str, list[str]] = {}
+    monkeypatch.setattr(
+        "maintainability_audit._user_config.load_user_config", lambda: dict(stored))
+    monkeypatch.setattr(
+        "maintainability_audit._user_config.write_user_config",
+        lambda payload: stored.update(payload))
+
+    # Granted by the spelling a host would hand over: through the link.
+    persist_root_grant(link / "work")
+    assert stored["allowed_roots"] == [str((outer / "work").resolve())], (
+        "the grant was stored as written rather than resolved, so it cannot "
+        "be checked later"
+    )
+
+    monkeypatch.setattr(_mcp_audit, "load_user_config", lambda: dict(stored))
+    roots = _mcp_audit.allowed_roots(explicit=(str(tmp_path),))
+    assert (outer / "work").resolve() in roots, (
+        "a grant the product itself made was dropped on the next start"
+    )
+    assert not _mcp_audit.refused_root_grants()

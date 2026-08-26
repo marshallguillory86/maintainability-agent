@@ -140,6 +140,26 @@ reverse. Marshall, on being shown that lizard, jscpd and multimetric
 are baseline-tier adapters that read JavaScript: *"keep JS in since we
 have a detector and can score it."*
 
+**Corrected 2026-08-26, on the same page's own evidence.** The sentence
+above got the *supporting* fact wrong even though the decision is
+right. The detector that scores JavaScript declarations is this
+project's own brace scanner (`_ranges`, `_cognitive.brace_cognitive`),
+not the analyzer pool. `DECLARATION_CRITERIA` requires cyclomatic
+complexity, declaration lines **and** cognitive complexity, because the
+built-in path fails a declaration on any of the three and a rate built
+from a narrower set is not comparable to it. lizard emits the first
+two. So for a JavaScript repository with lizard installed and nothing
+else, `_declaration_pressure` returns `None` and the built-in tier
+scores the dimension -- every time, by construction, not by accident.
+
+Marshall's ruling stands unchanged: *we have a detector and can score
+it* is exactly true of the brace scanner, and `language-support.md`
+already names brace/paren depth as the mechanism. What was wrong was
+this page crediting the pool for work the pool cannot do here. The
+analyzers that read JavaScript still contribute duplication (jscpd) and
+file metrics (multimetric); they do not drive the declarations
+dimension, and PMD is the only catalogued tool that could.
+
 So v1.0's declaration languages are **Python, Java, JS, TS, JSX and
 HTML** — everything this project can detect and score — and
 `docs/language-support.md` says exactly that. The one-adapter-per-

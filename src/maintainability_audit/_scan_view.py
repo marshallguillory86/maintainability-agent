@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ._coverage_notes import coverage_notes
 from ._work_order import work_order_rows
 
 
@@ -105,30 +106,7 @@ def analyzer_coverage_markdown(coverage: dict[str, Any] | None) -> list[str]:
 
     lines.extend(_by_language_rows(coverage))
 
-    single = coverage.get("concepts_single_source") or []
-    if single:
-        # Between covered and unexamined. A reader deciding how much
-        # weight to put on a finding needs to know nothing corroborated it.
-        lines.extend([
-            "**One source only:** " + ", ".join(f"`{c}`" for c in single) + ".",
-            "",
-            "A built-in detector examined these and no external tool did, so "
-            "nothing corroborates them. Install a tool covering the concern to "
-            "get a second opinion.",
-            "",
-        ])
-
-    unexamined = coverage["concepts_unexamined"]
-    if unexamined:
-        # The point of the whole section. Silence about a concern is not
-        # health, and a reader who is not told will assume it is.
-        lines.extend([
-            "**Nothing examined:** " + ", ".join(f"`{c}`" for c in unexamined) + ".",
-            "",
-            "These concerns are unmeasured, not clean. Install a tool that covers them, "
-            "or widen `analyzers.depth`, to have them reported.",
-            "",
-        ])
+    lines.extend(coverage_notes(coverage))
     return lines
 
 

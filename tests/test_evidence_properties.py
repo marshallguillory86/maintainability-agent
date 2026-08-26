@@ -31,6 +31,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from _git_path import GIT_PATH
 
 from maintainability_audit._formula import rollup
 from maintainability_audit._verification import DEFAULT_V1_NOT_REQUIRED, DEFAULT_V1_REQUIRED
@@ -56,7 +57,7 @@ MODEL_PATHS = tuple(
 ENV = {
     "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
     "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t",
-    "PATH": "/usr/bin:/bin",
+    "PATH": GIT_PATH,
 }
 
 

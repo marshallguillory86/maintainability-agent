@@ -11,6 +11,11 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+# ---------------------------------------------------------------------------
+# Rename notation
+# ---------------------------------------------------------------------------
+from _git_path import GIT_PATH
+
 from maintainability_audit.history import (
     FileChurn,
     _rename_target,
@@ -20,9 +25,6 @@ from maintainability_audit.history import (
     hotspots,
 )
 
-# ---------------------------------------------------------------------------
-# Rename notation
-# ---------------------------------------------------------------------------
 
 def test_plain_paths_pass_through() -> None:
     assert _rename_target("src/app.py") == "src/app.py"
@@ -76,7 +78,7 @@ def test_hotspots_require_both_churn_and_complexity() -> None:
 def _git(path: Path, *args: str) -> None:
     subprocess.run(
         ["git", *args], cwd=path, check=True, capture_output=True,
-        env={"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "PATH": "/usr/bin:/bin",
+        env={"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "PATH": GIT_PATH,
              "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t",
              "HOME": str(path)},
     )

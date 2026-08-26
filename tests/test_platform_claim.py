@@ -51,6 +51,23 @@ def test_ci_runs_only_platforms_the_package_claims() -> None:
         f"{CLAIMED_PLATFORM}. Either the classifier grows or the runner goes"
     )
 
+    # The half this test was missing. Forbidding a Windows runner is not
+    # a demonstration that POSIX works -- `Operating System :: POSIX`
+    # covers macOS and Linux, and for as long as this check existed the
+    # evidence behind it was one Linux image. An audit walked straight
+    # through that: the claim was wider than the thing checking it, the
+    # fourth time this project has shipped that shape.
+    families = {"linux": ("ubuntu",), "macos": ("macos",)}
+    missing = sorted(
+        name for name, images in families.items()
+        if not any(image in runner.lower() for runner in runners for image in images)
+    )
+    assert not missing, (
+        f"the package claims {CLAIMED_PLATFORM}, which covers {missing}, and "
+        "no CI runner exercises it -- the claim rests on a platform nobody "
+        "has run"
+    )
+
 
 def test_the_symlink_fixtures_are_still_unguarded() -> None:
     """The concrete reason Windows is unclaimed, kept visible.

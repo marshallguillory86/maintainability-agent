@@ -137,3 +137,53 @@ def test_environment_work_order_reaches_every_format(
 
     order = result["environment_work_order"]
     assert order and all(item["concepts"] for item in order)
+
+
+def test_a_standing_grant_does_not_follow_a_renamed_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D38: a restart rebuilt the allow-list from strings and re-resolved them.
+
+    The in-process seam already refused this. `_RootLedger.consume_ask`
+    surrenders the path the user was actually shown, so a symlink
+    retargeted during the elicitation round-trip cannot swap the
+    consented directory. A restart went around that guard entirely,
+    because `allowed_roots` re-resolved the stored path — rename the
+    granted directory, leave a symlink at the old name, and the
+    allow-list followed it to somewhere nobody consented to.
+
+    Reproduced before it was fixed: granting `project` and then swapping
+    it put `secrets` in the allow-list.
+    """
+    import os
+
+    from maintainability_audit import _mcp_audit
+
+    base = tmp_path.resolve()
+    granted = base / "project"
+    granted.mkdir()
+    secrets = base / "secrets"
+    secrets.mkdir()
+    (secrets / "id_rsa").write_text("KEY\n", encoding="utf-8")
+    launch = base / "launch"
+    launch.mkdir()
+
+    monkeypatch.setattr(
+        _mcp_audit, "load_user_config", lambda: {"allowed_roots": [str(granted)]})
+
+    kept = _mcp_audit.allowed_roots(explicit=(str(launch),))
+    assert granted in kept, "an untouched standing grant must survive a restart"
+
+    granted.rename(base / "project-moved")
+    os.symlink(secrets, granted)
+
+    after = _mcp_audit.allowed_roots(explicit=(str(launch),))
+    assert secrets not in after, (
+        "the standing grant followed a symlink to a directory the user "
+        "never consented to"
+    )
+    assert granted not in after, (
+        "a grant whose path stopped naming what was granted must be "
+        "dropped, not honoured against the link"
+    )
+    assert launch in after, "the launch root must be unaffected"

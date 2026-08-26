@@ -57,6 +57,24 @@ jobs:
         run: python3 -m pip install --upgrade pip
       - name: Install tool with dev extras
         run: python3 -m pip install -e ".[dev]"
+      - name: Install the pip-installable analyzer pool
+        # Deliberately NOT a dev extra. ADR 006 makes analyzers runtime
+        # prerequisites the user supplies, never package dependencies,
+        # so CI supplies them the same way a user would -- installed
+        # into the environment, discovered on PATH.
+        #
+        # Without this the adapters ship unexercised: 44 of the suite's
+        # skips were "<tool> is not installed", so the 15 hand-written
+        # adapters were covered only by their unit tests and never by an
+        # actual invocation.
+        #
+        # Unpinned on purpose. An unchanged main going red because an
+        # analyzer shipped a new version is the signal D48 was filed
+        # from, and it is worth more than a quiet pin.
+        run: >
+          python3 -m pip install
+          cohesion complexipy flake8 interrogate lizard multimetric
+          mypy pydocstyle pylint radon vulture
       - name: Lint (ruff)
         run: ruff check src tests tools
       - name: Dependency CVE scan (pip-audit)

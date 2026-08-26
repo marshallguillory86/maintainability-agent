@@ -130,14 +130,14 @@ Analyzers live in ecosystems, and the agent runs the ones it can reach. Nothing 
 | Runtime | Needed for | Install |
 |---|---|---|
 | Python 3.11+ | The agent itself, and lizard, radon, ruff, vulture, complexipy, interrogate, pydocstyle, multimetric, pylint, mypy | ships with the package |
-| **Node.js 18+** | **jscpd** (multi-language clone detection), eslint, and the JS/TS toolchain | `brew install node` / your platform's package manager |
+| **Node.js 18+** | **jscpd** (multi-language clone detection) and the JS/TS toolchain. Not eslint: it is refused, see above | `brew install node` / your platform's package manager |
 | JDK 17+ | PMD, Checkstyle, and SpotBugs | `brew install openjdk`; install PMD with `brew install pmd` or its upstream distribution; install Checkstyle with `brew install checkstyle`; install SpotBugs with `brew install spotbugs`. SpotBugs reads bytecode that already exists (`target/classes`, `build/classes`); the agent never runs the build. |
 | Go toolchain | golangci-lint (no adapter yet) | `brew install go` |
 | Rust toolchain | clippy (no adapter yet) | `brew install rust` |
 
-**Node tools are fetched only if you opt in.** With `analyzers.acquire_tools` set, a missing `jscpd` or `eslint` is invoked through `npx --yes`, which downloads the package — a network action [P1](product-intent.md#what-it-promises) discloses, with the fetched version recorded in the report. By default it is **off**: a missing Node tool is reported `not-installed` in coverage and appears in the environment work order with its install command, and nothing is fetched. **This agent does not transmit your code** in either mode.
+**Node tools are fetched only if you opt in.** With `analyzers.acquire_tools` set, a missing `jscpd` is invoked through `npx --yes`, which downloads the package — a network action [P1](product-intent.md#what-it-promises) discloses, with the fetched version recorded in the report. By default it is **off**: a missing Node tool is reported `not-installed` in coverage and appears in the environment work order with its install command, and nothing is fetched. **This agent does not transmit your code** in either mode.
 
-**Child tools are not network-sandboxed.** Once `lizard`, `eslint`, or any other adapter runs, this process does not police outbound connections. Install tools yourself and keep them off `npx` if you need an air-gapped analysis.
+**Child tools are not network-sandboxed.** Once `lizard`, `jscpd`, or any other adapter runs, this process does not police outbound connections. Install tools yourself and keep them off `npx` if you need an air-gapped analysis.
 
 To avoid the fetch entirely — in an air-gapped build, or to pin a version — install the tool ahead of time and it will be used directly:
 
@@ -162,7 +162,7 @@ npm install -g jscpd@5
 | multimetric | baseline | Multi-language metrics | version 2.4.4; contributed in the checked-in analyzer corpus |
 | pylint | moderate | Design smells | 107 messages on `src/` |
 | mypy | moderate | Type diagnostics | Generic diagnostic output |
-| eslint | moderate | JS/TS complexity, depth, params | complexity 11, max-depth 5 |
+| eslint | moderate | JS/TS complexity, depth, params | **refused since D39** — it cannot run without executing the tree's flat config. The adapter is kept, not deleted: it becomes usable the day the tool can be invoked without that config |
 | flake8 | moderate | Style, mccabe complexity, unused code | parses its default `path:row:col: CODE message` lines |
 | cohesion | moderate | Per-class cohesion percentage | parses its verbose class report; measurements, not gates |
 | pmd | moderate | Java cognitive and cyclomatic complexity verdicts | `pmd check` with a pinned local ruleset; SARIF output; install with `brew install pmd`, verify with `pmd --version` |

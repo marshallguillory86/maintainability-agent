@@ -110,11 +110,40 @@ def setup_questions(config: dict[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
+BOUNDS = (("labor_low", "lower bound", 90),
+          ("labor_base", "central estimate", 140),
+          ("labor_high", "upper bound", 210))
+
+
+def economics_bound_questions() -> list[dict[str, Any]]:
+    """The three rates, asked only of someone who said yes to the gate."""
+    return [
+        {
+            "name": name,
+            "prompt": f"Labor rate, {label} (per hour).",
+            "options": [suggestion],
+            "default": suggestion,
+        }
+        for name, label, suggestion in BOUNDS
+    ]
+
+
 def _economics_questions() -> list[dict[str, Any]]:
-    """The declinable ADR 004 ask: one gate choice, three bounds."""
-    bounds = (("labor_low", "lower bound", 90),
-              ("labor_base", "central estimate", 140),
-              ("labor_high", "upper bound", 210))
+    """The gate alone. The bounds are a second ask, and only on yes.
+
+    This returned the gate *and* all three rates in one flat model, so
+    a user whose answer was "skip" — the default — was still asked three
+    labor-rate questions for a thing they had just declined. The
+    docstring called it "the declinable ask" while nothing about it was
+    declinable.
+
+    It also lost the opposite case. `_economics_block` needs all three
+    rates and returns None without them, so answering "include" in a
+    round that carried no rates wrote no economic context at all: the
+    user asked for money in the report and silently did not get it.
+    Staging the ask fixes both, because the bounds are now asked exactly
+    when they are wanted and setup stays pending until they arrive.
+    """
     return [
         {
             "name": "economics",
@@ -125,15 +154,6 @@ def _economics_questions() -> list[dict[str, Any]]:
             "options": ["include", "skip"],
             "default": "skip",
         },
-        *(
-            {
-                "name": name,
-                "prompt": f"Labor rate, {label} (per hour).",
-                "options": [suggestion],
-                "default": suggestion,
-            }
-            for name, label, suggestion in bounds
-        ),
     ]
 
 
@@ -146,11 +166,17 @@ def _numeric(value: Any) -> float | None:
 
 
 def _economics_block(answers: dict[str, Any]) -> dict[str, Any] | None:
-    """The ADR 004 shape, or None when declined or incomplete.
+    """The ADR 004 shape, a request awaiting its rates, or None.
 
     Declining skips the block entirely — an absent economic context is
     a real answer, and a half-filled one would put invented money in a
     report (ADR 004).
+
+    Accepting without rates is neither of those. It used to return None,
+    which is the same value as declining, so someone who asked for the
+    economic scenario was recorded as having refused it. It now records
+    the request, and `economics_bounds_pending` reads that to ask for
+    the rates on the next call.
     """
     if not _accepted(answers.get("economics")):
         return None
@@ -159,7 +185,17 @@ def _economics_block(answers: dict[str, Any]) -> dict[str, Any] | None:
         for name in ("low", "base", "high")
     }
     if any(value is None for value in bounds.values()):
-        return None
+        return {"version": 1, "requested": True}
+    if not 0 < bounds["low"] <= bounds["base"] <= bounds["high"]:
+        # Refused here rather than written and left to explode later.
+        # Setup accepted low=-1 and wrote both tiers happily; the next
+        # `action="run"` raised a raw ValueError from the scoring path,
+        # so the person who broke it was two calls away from the message.
+        raise SetupRequired(
+            "labor rates must satisfy 0 < low <= base <= high; got "
+            f"low={bounds['low']}, base={bounds['base']}, high={bounds['high']}. "
+            "Answer the three rates again."
+        )
     return {
         "version": 1,
         "loaded_engineering_cost_per_hour": {
@@ -176,6 +212,8 @@ def apply_answers(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
     (D13's whole point). Repository config still wins where they later
     diverge.
     """
+    if _is_bounds_only(answers):
+        return _apply_bounds(root, answers)
     payload: dict[str, Any] = {
         "version": 1,
         "analyzers": {
@@ -209,6 +247,49 @@ def apply_answers(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
     return load_config(str(config_path))
 
 
+def economics_bounds_pending(root: Path) -> bool:
+    """True when the user asked for the economic scenario and has no rates.
+
+    The second stage of the first-run ask. It exists so the three labor
+    questions are put only to someone who wants them, and so that
+    wanting them is not silently discarded.
+    """
+    discovered = discovered_config(Path(root))
+    stored = _read_config(Path(discovered)) if discovered is not None else None
+    block = (stored or {}).get("economic_context")
+    if not isinstance(block, dict):
+        return False
+    return bool(block.get("requested")) and not block.get(
+        "loaded_engineering_cost_per_hour")
+
+
+def _is_bounds_only(answers: dict[str, Any]) -> bool:
+    """A stage-two reply: the rates, and nothing the first stage asked."""
+    names = {name for name, _, _ in BOUNDS}
+    given = {key for key, value in answers.items() if value is not None}
+    return bool(given) and given <= names
+
+
+def _apply_bounds(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
+    """Fill the rates into a configuration that already has its answers.
+
+    A merge, never a rebuild: the first stage's answers are already
+    written, and constructing the payload again from a reply that
+    carries only rates would reset every one of them to a default.
+    """
+    economics = _economics_block({"economics": "include", **answers})
+    discovered = discovered_config(Path(root))
+    stored = dict(_read_config(Path(discovered)) or {}) if discovered else {}
+    stored["economic_context"] = economics
+    config_path = Path(root) / CONFIG_FILENAME
+    write_bounded(
+        Path(root), config_path,
+        json.dumps(stored, indent=2, sort_keys=True) + "\n",
+    )
+    write_user_answers(stored)
+    return load_config(str(config_path))
+
+
 def setup_pending(root: Path) -> bool:
     """Whether first-run setup still has questions to ask for `root`.
 
@@ -231,7 +312,10 @@ def setup_pending(root: Path) -> bool:
     # out to remove and left standing here (D33).
     discovered = discovered_config(Path(root))
     if discovered is not None and _read_config(Path(discovered)):
-        return False
+        # Configured, unless the person asked for the economic scenario
+        # and has not been asked for its rates yet. That is the second
+        # stage of the ask, not a new one.
+        return economics_bounds_pending(root)
     return user_config_answers() is None
 
 
@@ -268,8 +352,16 @@ async def maybe_elicit_setup(context: Any, root: Path) -> dict[str, Any] | None:
     return apply_answers(Path(root), answers)
 
 
-def setup_schema():
-    """The one elicitation model for the current question set."""
+def setup_schema(root: Path | None = None):
+    """The elicitation model for whichever stage this repository is in.
+
+    Two stages, because the three labor rates are only wanted by
+    someone who said yes to the gate. Asking them of everyone is what
+    Marshall called basic logic broken, and he was right: the default
+    answer to the gate is "skip".
+    """
+    if root is not None and economics_bounds_pending(root):
+        return _schema_for(economics_bound_questions())
     return _schema_for(setup_questions(load_config(None)))
 
 

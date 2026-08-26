@@ -1646,12 +1646,119 @@ so that assertion cannot be falsified through the declaration it
 appears to guard. A check that cannot fail is not a proof, and D15 was
 reopened once for exactly that confusion.
 
+### D50 — Closed: the economics ask stops at the question it gates (High)
+
+Marshall, 2026-08-25, during UAT preparation: *"if the user declines
+economics, should never ask the labor rate questions. that is basic
+logic."*
+
+`_economics_questions` returned the gate **and** all three labor rates
+in one flat elicitation model, and the gate's default is `skip`. So the
+default path walked a person through three money questions for
+something they had just declined. The function's own docstring called
+it "the declinable ADR 004 ask" while nothing about it was declinable.
+
+Two stages now: six questions, then the three rates only for someone
+who answered `include`. `setup_pending` stays true until the rates
+arrive, so the second ask is the existing gate doing its job rather
+than a new mechanism.
+
+**Codex had examined this surface and filed it under no-finding**,
+citing `docs/help/first-run.md` — which stated plainly that the labor
+fields remain visible after `skip`. The page was accurate. D28 had made
+it accurate, and accuracy about a bad form is what kept the form. An
+audit that checks code against documentation cannot catch a defect both
+of them share.
+
+*Closing tests:* `test_setup_questions_are_structured_choices_with_disclosed_defaults`
+and `test_apply_answers_persists_economics_and_format_to_both_tiers` in
+`tests/test_first_run_elicitation.py`;
+`test_the_first_run_help_describes_the_form_a_person_actually_sees` in
+`tests/test_written_record.py`.
+
+### D51 — Closed: asking for the economic scenario is not the same as declining it (High)
+
+Found while closing D50. `_economics_block` needs all three rates and
+returned `None` without them — the same value as declining — so a user
+who answered `include` in a round that carried no rates had no economic
+context written and was never asked again. The one thing they said yes
+to was the one thing silently discarded.
+
+The gate answer is recorded as a request now, and
+`economics_bounds_pending` reads it to ask for the rates on the next
+call.
+
+*Closing test:* `test_apply_answers_persists_economics_and_format_to_both_tiers`
+in `tests/test_first_run_elicitation.py`.
+
+### D52 — Closed: a labor rate is refused where it is answered (High)
+
+Codex, 2026-08-25. Setup accepted `labor_low=-1` and wrote both
+configuration tiers happily; the next `action="run"` raised a raw
+`ValueError: loaded_engineering_cost_per_hour must satisfy 0 < low <=
+base <= high` from the scoring path. Same for `low > base`. The person
+who typed the number was two calls and one document away from the
+message about it.
+
+The rule is checked where the answer is given, and the refusal names
+the three values it got.
+
+*Closing test:* `test_apply_answers_persists_economics_and_format_to_both_tiers`
+in `tests/test_first_run_elicitation.py`.
+
+### D53 — Closed: a configuration key of the wrong shape is refused, not crashed on (High)
+
+Codex, 2026-08-25. `_configured` validated JSON syntax and an object
+root, then merged whatever it found. `{"thresholds": "nope"}` surfaced
+as a raw `TypeError: string indices must be integers` from inside
+scoring, and `{"hard_gates": []}` as an `AttributeError` on a list —
+two stack traces for one broken file, neither naming the file.
+
+`ConfigUnreadable` already existed for exactly this reader and covered
+only unparseable bytes. It now covers a known key whose value is the
+wrong container, derived from `DEFAULT_CONFIG` so a key added there is
+checked the day it is added. Unknown keys stay permitted: this is a
+shape check, not a schema, and refusing what it does not recognise
+would break every config written against a newer version.
+
+*Closing test:* `test_a_known_key_of_the_wrong_shape_is_refused_by_name`
+in `tests/test_config_shape.py`.
+
+### D54 — Closed: `expected_files` names files in the repository (Medium)
+
+Codex, 2026-08-25. `paths.history` was bounded by D20 and this was
+not, so a repository config could say `/etc/passwd` or `../outside`
+and the report would state whether that existed — a repository-
+controlled probe of the machine auditing it, answered in the output.
+Absolute entries and entries containing `..` are refused by name.
+
+*Closing test:* `test_expected_files_cannot_leave_the_repository`
+in `tests/test_config_shape.py`.
+
+### D55 — Closed: the documents stop offering a tool the product refuses (Medium)
+
+Codex, 2026-08-25, and both halves are mine. `analyzer-pool.md` still
+listed eslint as a Node runtime need, as fetchable through `npx`, and
+as a verified moderate adapter — three offers to install a tool D39
+had just made unrunnable. The D39 change corrected the prose two
+paragraphs above and left the tables.
+
+`maintainability-agent.schema.json` also described
+`prompt_when_interactive` as "Reserved. Stored and not read." while
+`_first_run` reads it, so an IDE user consulting the schema was told a
+live switch does nothing.
+
+*Closing test:* `test_no_document_offers_an_analyzer_selection_refuses`
+in `tests/test_config_shape.py`.
+
 ## Disposition
 
 **Every entry in this register is closed.** D32 through D46 came from
 two independent security audits on 2026-08-23 and closed over the two
 days after; D47 through D49 came from the chat-surface work that
-preceded them. The count is derived from the headings above and checked
+preceded them; D50 through D55 came from UAT preparation on 2026-08-25
+— one from Marshall reading the question set and five from a Codex
+audit of the whole repository. The count is derived from the headings above and checked
 by `test_the_disposition_names_the_entries_that_are_open`, which
 required this sentence rather than an omission — with nothing open, a
 disposition that simply lists no entries reads exactly like a parser

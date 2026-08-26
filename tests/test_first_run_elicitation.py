@@ -101,13 +101,24 @@ def test_setup_questions_are_structured_choices_with_disclosed_defaults() -> Non
     assert _normalized(_named_question(questions, "license")["default"]) == "permissive"
     assert _normalized(_named_question(questions, "format")["default"]) == "chat"
 
+    # The first form asks whether money is wanted, and stops there. The
+    # three rates are a second ask, put only to someone who said yes —
+    # the first form used to carry all four, so the default answer
+    # ("skip") still walked a person through three labor-rate questions.
+    from maintainability_audit._mcp_setup import economics_bound_questions
+
     economics = [
         question for question in questions
         if any(word in _question_text(question) for word in ("economic", "labor", "cost"))
     ]
-    economics_contract = json.dumps(economics).lower()
-    for word in ("low", "base", "high", "skip"):
-        assert word in economics_contract
+    assert [q["name"] for q in economics] == ["economics"], (
+        f"the first form carries more than the gate: {[q['name'] for q in economics]}"
+    )
+    assert "skip" in json.dumps(economics).lower()
+
+    bounds_contract = json.dumps(economics_bound_questions()).lower()
+    for word in ("low", "base", "high"):
+        assert word in bounds_contract
 
 
 class StubElicitContext:
@@ -194,11 +205,20 @@ def _assert_persisted_answers(payload: dict) -> None:
     assert analyzers["run"] is True or _normalized(analyzers["run"]) == "yes"
     assert analyzers["depth"] == "moderate"
     assert analyzers["license_policy"] == "permissive"
-    assert payload["economic_context"]["loaded_engineering_cost_per_hour"] == {
-        "low": 90,
-        "base": 140,
-        "high": 210,
-    }
+    # Two stages: the gate is recorded as a request, and the rates fill
+    # it in on the next call. A request that arrived with no rates used
+    # to be written as nothing at all — the same shape as declining —
+    # so asking for the economic scenario silently got you none of it.
+    economics = payload["economic_context"]
+    if "loaded_engineering_cost_per_hour" in economics:
+        assert economics["loaded_engineering_cost_per_hour"] == {
+            "low": 90, "base": 140, "high": 210,
+        }
+    else:
+        assert economics.get("requested") is True, (
+            "including the economic scenario recorded neither rates nor a "
+            "request, which is indistinguishable from declining it"
+        )
     assert _has_persisted_chat_default(payload)
 
 

@@ -2203,6 +2203,37 @@ classifier claims rather than merely forbidding one it does not.
 `tests/test_platform_claim.py`, and the suite itself on the macOS
 runner.
 
+### D71 — Closed: reading a repository does not let git rewrite it (High)
+
+Found by the macOS CI runner on 2026-08-26, hours after that runner was
+added for D70 — the second defect that runner has paid for.
+
+Every git command this package runs is a read: `log`, `rev-list`,
+`status`, `rev-parse`. But git runs housekeeping of its own after many
+commands, and housekeeping repacks objects and writes commit-graphs
+*inside* `.git`. So an audit that promises never to write the tree it
+audits was letting git write it, on our behalf, one directory down.
+
+It surfaced as `.git/objects/maintenance.lock` appearing between the
+before and after snapshots in
+`test_audit_returns_the_report_without_writing_source_or_reports` and
+`test_the_tool_takes_a_format_argument_and_never_prompts`.
+
+**Why now, on identical product code.** Auto-maintenance triggers on
+accumulated loose objects rather than on every invocation. D66 added two
+`rev-list --count` calls per audit and pushed a latent defect over the
+threshold. Two earlier CI runs of the same code passed, which is exactly
+what a probabilistic check looks like from the inside — and why the fix
+is pinned to the argv rather than to a snapshot of a temporary
+directory.
+
+`gc.auto=0` and `maintenance.auto=false` are prepended to every git
+command in `run_git`, the one place this package builds a git argv,
+which is what makes the promise checkable at all.
+
+*Closing test:* `test_every_git_command_disables_gits_own_housekeeping`
+in `tests/test_git_argv.py`.
+
 ## Disposition
 
 **Every entry in this register is closed.** D32 through D46 came from

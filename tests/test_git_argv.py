@@ -391,3 +391,52 @@ def test_the_analyzer_child_cannot_be_told_what_to_import() -> None:
                 os.environ.pop(key, None)
             else:
                 os.environ[key] = value
+
+
+def test_every_git_command_disables_gits_own_housekeeping() -> None:
+    """D71: reading a repository must not let git rewrite it.
+
+    Every git command this package runs is a read. But git runs
+    housekeeping of its own after many commands, and housekeeping
+    repacks objects and writes commit-graphs *inside* `.git` -- so a
+    read-only audit still wrote to the tree it audited.
+
+    A macOS CI run caught it as `.git/objects/maintenance.lock` turning
+    up in a tree the MCP tool promises never to write. It surfaced only
+    then because auto-maintenance triggers on accumulated loose objects
+    rather than on every call: D66 added two `rev-list` invocations per
+    audit and pushed a latent defect over the line. Two earlier runs of
+    the same product code passed.
+
+    So the guarantee is pinned to the argv rather than to a snapshot of
+    a temporary directory, which is what made it probabilistic. The
+    settings are prepended for every command in one place, and this
+    fails if that place stops applying them.
+    """
+    from maintainability_audit.git_tools import _READ_ONLY
+
+    assert _READ_ONLY == ("-c", "gc.auto=0", "-c", "maintenance.auto=false"), (
+        f"the read-only git settings changed: {_READ_ONLY}"
+    )
+
+    source = (PACKAGE / "git_tools.py").read_text(encoding="utf-8")
+    tree = ast.parse(source, filename="git_tools.py")
+    spawns = _subprocess_spawns(tree)
+    assert spawns, "no spawn found in git_tools; this sweep proves nothing"
+
+    for call in spawns:
+        argv = call.args[0] if call.args else None
+        assert isinstance(argv, ast.List), (
+            f"git_tools.py:{call.lineno} builds its argv somewhere this "
+            "check cannot read"
+        )
+        starred = [
+            element.value.id
+            for element in argv.elts
+            if isinstance(element, ast.Starred) and isinstance(element.value, ast.Name)
+        ]
+        assert "_READ_ONLY" in starred, (
+            f"git_tools.py:{call.lineno} runs git without _READ_ONLY, so "
+            "git may repack objects and write commit-graphs into the "
+            "repository this package only meant to read"
+        )

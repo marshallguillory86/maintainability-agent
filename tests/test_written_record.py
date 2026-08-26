@@ -359,3 +359,34 @@ def test_the_declared_python_floor_supports_the_features_in_use() -> None:
                     f"pyproject declares >=3.{floor}; pip would install on "
                     f"3.{floor} and the import would fail"
                 )
+
+
+def test_the_disposition_names_the_entries_that_are_open() -> None:
+    """The prose count and the headings cannot drift apart.
+
+    The disposition read "Six entries are open: D34 through D39" for two
+    days after D34-D37 closed. Nothing failed, because the existing
+    checks read the headings and the *count* lived in a sentence. A
+    ledger that gates a release has to be countable from the register
+    itself, so the sentence is now derived from the headings and checked
+    against them.
+    """
+    register = _read(REGISTER)
+    open_headings = sorted(
+        int(number)
+        for number in re.findall(r"^### D(\d+) — Open", register, re.MULTILINE)
+    )
+    disposition = register.split("## Disposition", maxsplit=1)[1]
+    # Only the bolded claim: the prose around it legitimately names
+    # entries that closed, and counting those would make this test
+    # fail on an accurate register.
+    claim = re.search(r"\*\*(.+?)\*\*", disposition, re.DOTALL)
+    assert claim, "the disposition no longer opens with a bolded claim"
+    claimed = sorted({int(n) for n in re.findall(r"\bD(\d+)\b", claim.group(1))})
+
+    assert open_headings, "no entry is marked Open; the pattern or the register changed"
+    assert claimed == open_headings, (
+        "the disposition names a different open set than the headings do: "
+        f"prose={[f'D{n}' for n in claimed]} "
+        f"headings={[f'D{n}' for n in open_headings]}"
+    )

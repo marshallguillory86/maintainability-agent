@@ -988,7 +988,7 @@ than this agent reading past its grant.
 `test_class_dirs_from_repository_config_cannot_leave_the_tree` in
 `tests/test_read_boundary.py`.
 
-### D37 — Open: the CLI passes git options the MCP door rejects (Medium)
+### D37 — Closed: git argv is validated, bounded, and its failures are not data (Medium)
 
 Grok, 2026-08-23. `validate_revspec` refuses leading-dash arguments,
 and the MCP tool calls it. The CLI's `--changed-only` and `--backfill`
@@ -1005,7 +1005,44 @@ becomes `files_changed: 0`. `history.py` states that "no history" and
 confuses them. Neither git spawner sets a timeout, and an inherited
 `GIT_DIR` overrides both `cwd` and `-C`.
 
-*Closing test:* pending.
+**Closed 2026-08-25.** Four faults in one entry, and the fix for each
+is placed where a fifth caller cannot miss it.
+
+*The revspec.* One definition now, `git_tools.validate_revspec`, lifted
+from the MCP door rather than written a second time — the first draft
+of a fresh pattern admitted `-rf`, because putting `-` in a character
+class allows it in the first position too. `changed_paths` and
+`commits_in_range` validate before git sees anything, so the CLI door
+inherits the guard rather than being told to remember it, and both
+append `--`. Validation rather than `--end-of-options`, which needs git
+2.24 and would make the guarantee depend on the host's git.
+
+*Failure is not emptiness.* `run_git` raised nothing and answered every
+error with `""`, so a failed `git log` reached `_commits` as no commits
+and was published as `files_changed: 0` — the precise confusion
+`has_history` was written to prevent, created by the spawner beneath
+it. `run_git` now raises. The two calls where a non-zero exit **is** the
+answer — "is this a repository at all" — use `probe_git`, which says so
+at the call site, and the report's own git metadata probes too because
+a directory that is not a repository is a supported audit target.
+Making the strict case the default is the point: tolerating failure is
+now something a reader can see.
+
+*Bounded and bound.* Both spawners pass a timeout, and both scrub
+`GIT_DIR` and its seven siblings, which outrank `cwd` and `-C` — an
+inherited value silently redirected every command here, including the
+worktree writes in `_backfill`.
+
+The last two are held by a sweep over the package rather than by
+assertions about the two spawners that exist today. That is deliberate:
+this defect class was closed at the MCP door and left open at the CLI,
+which is the mistake the register keeps recording.
+
+*Closing tests:* `test_an_option_shaped_revspec_never_reaches_git`,
+`test_a_failed_git_command_is_not_an_empty_answer`,
+`test_a_repository_is_read_through_its_own_path_not_an_inherited_one`
+and `test_every_git_spawn_is_bounded_and_scrubbed` in
+`tests/test_git_argv.py`.
 
 ### D38 — Open: a standing root grant can be retargeted by a rename (Medium)
 

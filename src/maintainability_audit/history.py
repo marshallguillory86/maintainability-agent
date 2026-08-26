@@ -41,7 +41,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from .declarations import DECLARATION_SUFFIXES
-from .git_tools import run_git
+from .git_tools import probe_git, run_git
 
 # Commits touching more than this are migrations, reformats, licence
 # header sweeps and dependency bumps. They co-change hundreds of
@@ -78,14 +78,24 @@ class FileChurn:
 
 
 def has_history(root: Path) -> bool:
-    """False for a shallow clone or a directory that is not a repo.
+    """False for a shallow clone, an unborn branch, or a non-repository.
 
     Distinguishes "no history available" from "no changes", which are
     opposite findings that a zero would conflate.
     """
-    if not run_git(["rev-parse", "--git-dir"], root):
+    # `probe_git`, not `run_git`: here a failing git command *is* the
+    # answer — "not a repository" — which is the one shape D37 does
+    # not consider a lie.
+    if not probe_git(["rev-parse", "--git-dir"], root):
         return False
-    return run_git(["rev-parse", "--is-shallow-repository"], root) != "true"
+    # An initialized repository with no commits answers `--git-dir`
+    # happily and then fails every `git log` against its unborn HEAD.
+    # It has no history in the only sense this module means, and saying
+    # so here is what lets `_commits` treat a log failure as a fault
+    # rather than as an empty answer (D37).
+    if not probe_git(["rev-parse", "HEAD"], root):
+        return False
+    return probe_git(["rev-parse", "--is-shallow-repository"], root) != "true"
 
 
 def _normalize(path: str) -> str:

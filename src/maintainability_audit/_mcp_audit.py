@@ -41,7 +41,8 @@ from .config import (
     repository_path,
 )
 from .config import PathNotAllowed as PathNotAllowed  # noqa: PLC0414 - re-export
-from .git_tools import changed_paths, run_git
+from .git_tools import InvalidRevspec, changed_paths, probe_git
+from .git_tools import validate_revspec as _validate_revspec
 from .prompts import render_ai_prompt
 from .renderers import render_markdown
 from .report import build_report
@@ -124,9 +125,15 @@ def validate_revspec(changed_only: str | None) -> str | None:
     """Admit one inert git revision expression, never command-line options."""
     if changed_only is None:
         return None
-    if len(changed_only) > 200 or not _REVSPEC.fullmatch(changed_only):
-        raise InvalidAuditArgument("changed_only must be one git revision or range without whitespace or options")
-    return changed_only
+    # One definition, in `git_tools`, so the door and the spawner cannot
+    # drift apart (D37). The MCP contract keeps its own exception type.
+    try:
+        return _validate_revspec(changed_only)
+    except InvalidRevspec as invalid:
+        raise InvalidAuditArgument(
+            "changed_only must be one git revision or range without "
+            "whitespace or options"
+        ) from invalid
 
 
 def audit_repository(
@@ -230,7 +237,7 @@ def _top_level_result(report: dict[str, Any], root: Path, status: str,
         # is one key a consumer can read rather than the absence of
         # another (D26/D27).
         "audit_ran": True,
-        "source_commit": run_git(["rev-parse", "HEAD"], root) or None,
+        "source_commit": probe_git(["rev-parse", "HEAD"], root) or None,
         "worktree_dirty": bool(status),
         "gate_passed": not report["hard_gate_failures"],
         # Stated at the top level so a caller cannot mistake an audit that

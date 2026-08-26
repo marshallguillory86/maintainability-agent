@@ -75,6 +75,30 @@ python tools/resolve_pool.py --concerns documentation
 | `heavy` | 17 | Moderate plus slower or configuration-hungry tools; none are added today |
 | `all` | up to 448 | Every eligible tool that speaks a detected language |
 
+**Analyzers never take their configuration from the tree they audit.**
+[Decision 9](decisions.md) draws the line at executing code, and
+configuration is code: pylint's `init-hook=` runs arbitrary Python
+before analysis begins, a mypy `plugins =` imports a module out of the
+repository, and an eslint flat config *is* a JavaScript program. So
+pylint is spawned with `--rcfile`, mypy with `--config-file`, and
+eslint — which cannot run at all without the tree's config — is refused
+by selection and reported as `refused` rather than run. The analyzer
+child also gets an environment with `PYTHONPATH`, `NODE_PATH`,
+`NODE_OPTIONS`, `PYTHONSTARTUP` and the `LD_`/`DYLD_` pair removed, so
+nothing outside the operator's choice can decide what it loads. This is
+not a sandbox and is not claimed as one; the child is an ordinary local
+process.
+
+The two isolation flags are **structurally checked everywhere and
+spawned only where the binary exists** — the same disclosure the two
+JVM tools carry below. `test_every_declared_tool_is_classified_for_tree_configuration`
+forces every declared tool to be isolated or to state that it reads no
+tree configuration, and the live tests plant a hostile `pylintrc` and
+`mypy.ini` and assert the tree's code never runs. Those live tests skip
+wherever the tool is absent, including this project's CI, so on a
+machine without pylint and mypy the flags are documented-and-asserted
+rather than demonstrated.
+
 **A tier below `all` is a promise that the tool works.** Nothing is placed in `baseline`, `moderate` or `heavy` until this project has installed it, run it, and parsed its output — with two disclosed exceptions: **Checkstyle and SpotBugs** are verified against recorded real output (their conditional live tests skip wherever no binary exists, including this project's CI), so their live spawn is unproven until someone supplies the binaries. PMD has run live. That is why these numbers are small and why they grow one verified tool at a time.
 
 `all` is the honest name for the rest: known to exist, license recorded, **invocation not yet implemented**. Selecting `all` today runs the same tools as `heavy` and reports the remainder as unavailable-no-adapter. It is not a lie by omission — the report says exactly which of them ran.

@@ -79,6 +79,19 @@ def validate_revspec(revspec: str) -> str:
     return revspec
 
 
+#: Config that stops git writing to the repository we only meant to read.
+#: Every command this package runs is a read -- `log`, `rev-list`,
+#: `status`, `rev-parse` -- but git may run housekeeping of its own
+#: afterwards, and housekeeping repacks objects and writes commit-graphs
+#: inside `.git`. A macOS CI run caught it as `.git/objects/maintenance.lock`
+#: appearing in a tree the MCP tool promises never to write (D71).
+#:
+#: Applied here rather than at each call site because this is the one
+#: place that builds a git argv, which is what makes the promise
+#: checkable at all.
+_READ_ONLY = ("-c", "gc.auto=0", "-c", "maintenance.auto=false")
+
+
 def run_git(args: list[str], cwd: Path) -> str:
     """Run git and return its stdout. Raises if it does not succeed.
 
@@ -86,7 +99,7 @@ def run_git(args: list[str], cwd: Path) -> str:
     """
     try:
         completed = subprocess.run(  # noqa: S603 - argv list, never a shell
-            ["git", *args],
+            ["git", *_READ_ONLY, *args],
             cwd=cwd,
             text=True,
             capture_output=True,

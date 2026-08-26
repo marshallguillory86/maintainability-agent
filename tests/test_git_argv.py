@@ -172,47 +172,188 @@ def test_a_repository_is_read_through_its_own_path_not_an_inherited_one(
             os.environ["GIT_DIR"] = previous
 
 
-def _git_spawns(tree: ast.AST) -> list[ast.Call]:
-    """Every `subprocess.*` call in a module whose argv literal starts with git."""
+SPAWN_CALLS = {"run", "check_output", "Popen", "check_call"}
+
+# A spawn that may inherit the caller's environment, and why. A reason is
+# the classification; an empty string is not one. Anything not listed
+# must pass `env`.
+ENV_EXEMPT: dict[str, str] = {
+    "_runner.py": (
+        "the analyzer child, whose environment is D39's subject: it needs "
+        "PATH to locate the tool, and what else it may inherit is the open "
+        "question that entry exists to settle. Tracked there, not waived here"
+    ),
+}
+
+
+def _subprocess_spawns(tree: ast.AST) -> list[ast.Call]:
+    """Every `subprocess.*` spawn in a module, however its argv is built.
+
+    Deliberately not "calls whose first argument is a literal list
+    starting with `git`". That was the first version, and an audit
+    showed it enforced almost nothing: a spawn built from a variable, a
+    tuple, a concatenation, a module constant, or through a one-line
+    helper all evaded it while the test stayed green and the docstring
+    claimed a new git call would fail here.
+
+    Deciding *which* spawns are git is undecidable in general, so this
+    stops trying. Every spawn in the package is classified instead —
+    which is stronger, and cheap, because there are three.
+    """
     spawns = []
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        name = getattr(func, "attr", None)
-        if name not in {"run", "check_output", "Popen", "check_call"}:
-            continue
-        if not node.args:
-            continue
-        argv = node.args[0]
-        first = argv.elts[0] if isinstance(argv, ast.List) and argv.elts else None
-        if isinstance(first, ast.Constant) and first.value == "git":
-            spawns.append(node)
+        if isinstance(node, ast.Call) and getattr(node.func, "attr", None) in SPAWN_CALLS:
+            value = getattr(node.func, "value", None)
+            if isinstance(value, ast.Name) and value.id == "subprocess":
+                spawns.append(node)
     return spawns
 
 
-def test_every_git_spawn_is_bounded_and_scrubbed() -> None:
-    """Swept over the package, because this was fixed at one door before.
+def test_every_subprocess_spawn_is_bounded_and_classified() -> None:
+    """A spawn added tomorrow fails here, however its argv is written.
 
-    A new git call added tomorrow without a timeout, or holding the
-    caller's `GIT_DIR`, fails here rather than waiting for the next
-    audit to notice it.
+    Two properties. *Bounded*: no child of this process may run without
+    a timeout, because a wedged one hangs the host that asked for an
+    audit. *Scrubbed*: it passes an explicit environment, or it is named
+    in `ENV_EXEMPT` with a reason — `GIT_DIR` and its siblings outrank
+    both `cwd` and `-C`, so an inherited value silently redirects a
+    command at another repository.
     """
     unbounded: list[str] = []
-    unscrubbed: list[str] = []
+    unclassified: list[str] = []
     found = 0
     for path in sorted(PACKAGE.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for call in _git_spawns(tree):
+        for call in _subprocess_spawns(tree):
             found += 1
             keywords = {kw.arg for kw in call.keywords}
             where = f"{path.name}:{call.lineno}"
             if "timeout" not in keywords:
                 unbounded.append(where)
-            if "env" not in keywords:
-                unscrubbed.append(where)
+            if "env" not in keywords and path.name not in ENV_EXEMPT:
+                unclassified.append(where)
 
-    assert found >= 2, f"the sweep found no git spawns to check ({found})"
-    assert not unbounded, f"git spawned with no timeout: {unbounded}"
-    assert not unscrubbed, f"git spawned holding the inherited environment: {unscrubbed}"
+    assert found >= 3, f"the sweep found {found} spawns; it should see every one"
+    assert not unbounded, f"a child process with no timeout: {unbounded}"
+    assert not unclassified, (
+        "a spawn inherits the caller's environment without being classified "
+        f"in ENV_EXEMPT with a reason: {unclassified}"
+    )
+    assert all(reason.strip() for reason in ENV_EXEMPT.values()), (
+        "an exemption without a reason is not a classification"
+    )
+    assert set(ENV_EXEMPT) <= {p.name for p in PACKAGE.rglob("*.py")}, (
+        "ENV_EXEMPT names a module the package does not contain"
+    )
     assert GIT_TIMEOUT_SECONDS > 0
+
+
+def _commit(root: Path, message: str) -> None:
+    subprocess.run(["git", "-C", str(root), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t",
+         "commit", "-qm", message], check=True)
+
+
+def test_an_unborn_head_reports_absence_not_quiet_history(tmp_path: Path) -> None:
+    """A repository with no commits, which the first fix missed.
+
+    `rev-parse --git-dir` succeeds here and every `git log` then fails on
+    the unborn HEAD. While the spawner swallowed that, the history
+    section was computed from zeros and the tree scored as though its
+    history had been measured and found quiet — evidence completeness
+    manufactured from a failed subprocess, which is P3, not merely D37.
+    """
+    from maintainability_audit.history import has_history
+
+    root = tmp_path / "unborn"
+    root.mkdir()
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    (root / "a.py").write_text("x = 1\n", encoding="utf-8")
+
+    assert probe_git(["rev-parse", "--git-dir"], root), "fixture is not a repository"
+    assert has_history(root) is False, (
+        "an unborn HEAD reported history; zeros from a failed log would "
+        "then read as 'nothing changed'"
+    )
+
+
+def test_a_shallow_clone_reports_absence(tmp_path: Path) -> None:
+    """The case the entry opened with, finally built rather than mocked."""
+    from maintainability_audit.history import has_history
+
+    origin = _repo(tmp_path / "origin")
+    (origin / "b.py").write_text("y = 2\n", encoding="utf-8")
+    _commit(origin, "two")
+
+    shallow = tmp_path / "shallow"
+    subprocess.run(
+        ["git", "clone", "-q", "--depth", "1", f"file://{origin}", str(shallow)],
+        check=True)
+
+    assert probe_git(["rev-parse", "--is-shallow-repository"], shallow) == "true", (
+        "fixture is not actually shallow"
+    )
+    assert has_history(shallow) is False
+    assert has_history(origin) is True, "a full clone must still report history"
+
+
+def test_an_unanswerable_shallow_check_withholds_rather_than_claims(
+    tmp_path: Path,
+) -> None:
+    """Fail closed: `!= "true"` read a failed check as "not shallow".
+
+    A git that does not know `--is-shallow-repository` errors, the error
+    became "", and `"" != "true"` reported complete history — the same
+    failure-becomes-evidence collapse D37 closed at `git log`, left
+    standing three lines above it.
+    """
+    from unittest.mock import patch
+
+    from maintainability_audit import history as history_module
+
+    root = _repo(tmp_path / "repo")
+
+    def unanswerable(args: list[str], cwd: Path) -> str:
+        if "--is-shallow-repository" in args:
+            raise GitCommandFailed("this git does not know the option")
+        return "ok"
+
+    with patch.object(history_module, "run_git", unanswerable):
+        assert history_module.has_history(root) is False, (
+            "an unanswerable shallow check claimed complete history"
+        )
+
+
+def test_a_rename_is_read_from_git_and_a_failure_is_not_no_renames(
+    tmp_path: Path,
+) -> None:
+    """D37: `rename_map` probed, so a fault arrived as missing rename glue.
+
+    The negative answer here is a successful diff with no `R` lines, not
+    a failing command — so a timeout or an unreadable object became "no
+    renames" and every moved finding surfaced as new on a `git mv`, which
+    is the ADR 009 hole produced by the spawner rather than the matcher.
+    A commit git no longer has is the one legitimate empty case and is
+    established by probing for it first.
+    """
+    from unittest.mock import patch
+
+    from maintainability_audit import _finding_match
+    from maintainability_audit._finding_match import rename_map
+
+    root = _repo(tmp_path / "repo")
+    old = run_git(["rev-parse", "HEAD"], root)
+    subprocess.run(["git", "-C", str(root), "mv", "a.py", "moved.py"], check=True)
+    _commit(root, "move")
+    new = run_git(["rev-parse", "HEAD"], root)
+
+    assert rename_map(root, old, new) == {"a.py": "moved.py"}
+    # A commit that is gone: legitimately empty, never a crash.
+    assert rename_map(root, "0" * 40, new) == {}
+
+    def broken(args: list[str], cwd: Path) -> str:
+        raise GitCommandFailed("timed out")
+
+    with patch.object(_finding_match, "run_git", broken), pytest.raises(GitCommandFailed):
+        rename_map(root, old, new)

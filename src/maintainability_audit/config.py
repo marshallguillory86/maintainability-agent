@@ -314,8 +314,18 @@ def _configured(path: Path) -> dict[str, Any]:
     try:
         content = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as unreadable:
+        # `strerror` for an OSError, never `str(unreadable)`: the latter
+        # appends the OS filename, and when `read_text` followed a
+        # symlink that filename is the *target* — a path outside the
+        # repository, which the caller never named, travelling inside a
+        # declared MCP refusal. A JSONDecodeError carries only a
+        # position, so its text is safe to pass on.
+        detail = getattr(unreadable, "strerror", None) or (
+            str(unreadable) if isinstance(unreadable, ValueError) else
+            type(unreadable).__name__
+        )
         raise ConfigUnreadable(
-            f"{path} cannot be read as JSON ({unreadable}). Repair or "
+            f"{path} cannot be read as JSON ({detail}). Repair or "
             "delete it; the audit cannot tell how this repository is "
             "configured."
         ) from unreadable

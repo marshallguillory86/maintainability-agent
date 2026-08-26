@@ -41,7 +41,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from .declarations import DECLARATION_SUFFIXES
-from .git_tools import probe_git, run_git
+from .git_tools import GitCommandFailed, probe_git, run_git
 
 # Commits touching more than this are migrations, reformats, licence
 # header sweeps and dependency bumps. They co-change hundreds of
@@ -95,7 +95,22 @@ def has_history(root: Path) -> bool:
     # rather than as an empty answer (D37).
     if not probe_git(["rev-parse", "HEAD"], root):
         return False
-    return probe_git(["rev-parse", "--is-shallow-repository"], root) != "true"
+    # Fail closed, and note what the first version of this line did:
+    # `probe_git(...) != "true"` reads a *failed* shallow check as "not
+    # shallow", so any git that cannot answer the question — one that
+    # does not know the option, or a repository it cannot read — was
+    # reported as having complete history. That is the same
+    # failure-becomes-evidence collapse D37 closed at `git log`, left
+    # standing three lines above it.
+    #
+    # Only an explicit "false" establishes completeness. Anything else,
+    # including an error, means this module cannot say history is
+    # available, and P3 requires the unverifiable case to withhold
+    # rather than to claim.
+    try:
+        return run_git(["rev-parse", "--is-shallow-repository"], root) == "false"
+    except GitCommandFailed:
+        return False
 
 
 def _normalize(path: str) -> str:

@@ -285,6 +285,14 @@ class Flake8Adapter(BaseAdapter):
     def __init__(self) -> None:
         super().__init__(
             slug="flake8", emits="verdict", executable="flake8",
+            # `--isolated`: flake8 documents `[flake8:local-plugins]`,
+            # which names `module:Checker` entries and a `paths` list
+            # pointing into the tree, and imports them. That is running
+            # the audited repository's Python, which Decision 9 forbids
+            # and which eslint was refused for. An audit table in the
+            # test suite asserted this tool "executes nothing" — written
+            # from memory, never probed (D64).
+            extra_args=("--isolated",),
             concepts=("style", "complexity", "dead-code"),
             findings_exit_codes=(0, 1), exclude_flag="--exclude",
             # flake8 matches each --exclude entry by fnmatch against the

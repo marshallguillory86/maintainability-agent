@@ -65,9 +65,11 @@ The catalog gains a required `emits` field: `metric`, `verdict`, or `both`.
 
 ### The rubric drives the tools, not the reverse
 
-Where a tool's threshold is configurable from the command line or a generated config, the agent **sets it from the rubric** and ignores any project-local configuration for scoring purposes. eslint invoked with the rubric's complexity limit produces counts that mean what the rubric says they mean.
+Where a tool's threshold is configurable **from the command line**, the agent **sets it from the rubric** and ignores any project-local configuration for scoring purposes. Counts then mean what the rubric says they mean.
 
 Where a threshold cannot be forced, the tool is verdict-only for that concept and its output never becomes a rate.
+
+**Amended by Decision 9.** This section originally read "from the command line *or a generated config*", and used eslint as its example. Generating a config for a tool that reads it as a program — an eslint flat config is JavaScript — means executing code from, or alongside, the audited tree, which Decision 9 forbids. The escape hatch is withdrawn: a threshold is rubric-drivable only through argv. eslint is refused outright rather than configured (see ADR 006), so it is no longer the example here; the tools that carry the rule today take an isolation flag on the command line and nothing else.
 
 Project-local lint configuration is still honored for the developer's own workflow; it simply does not get to move the score. A score that moves with a config file is not a measurement of the code.
 

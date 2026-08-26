@@ -23,11 +23,12 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools" / "calibration"))
 
 import measure_fix_breadth as breadth  # noqa: E402
+from _git_path import GIT_PATH
 
 ENV = {
     "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
     "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t",
-    "PATH": "/usr/bin:/bin",
+    "PATH": GIT_PATH,
 }
 
 

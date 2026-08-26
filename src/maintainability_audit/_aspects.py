@@ -51,7 +51,20 @@ def _history_rate_aspect(history: HistoryEvidence, count_of: str) -> float | Non
     if changed is None:
         return None
     if changed == 0:
-        return 5.0  # had history to read; nothing changed in the window
+        # Unknown, not perfect. This returned 5.0 — "had history to
+        # read; nothing changed in the window" — and an audit showed
+        # what that grades: a repository whose only commit predates the
+        # twelve-month window scores A+ on every history aspect, while
+        # its working tree is filthy. The photograph could see the mess
+        # and the window could not.
+        #
+        # A rate needs a denominator. Zero files changed is no
+        # denominator, which is the same state as a shallow clone —
+        # nothing was observed — and D37 closed exactly this collapse
+        # one layer down, where a *failed* log produced the same zeros.
+        # A successful log over an empty window produces them honestly
+        # and they mean no less and no more: unknown.
+        return None
     # Full counts computed by history_section before its display lists
     # are truncated. Reading len() of a capped list here made the rate
     # fall as repositories grew — the forbidden size-bias class — so an

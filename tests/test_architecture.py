@@ -42,7 +42,10 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
                # data -- a leaf that reads the shipped catalog and nothing
                # else.
                "_runner", "_catalog"}
-PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens"}
+# `_xml` reads analyzer XML and refuses what it will not parse — a
+# parser with no internal imports, so it sits with the other
+# parsers rather than with the adapters that call it (D46).
+PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens", "_xml"}
 # ADR 003: `_semantic` normalizes and classifies; `_semantic_ts` reads
 # TypeScript facts (recordings, an already-installed tsc through
 # `_runner`, and source text). Both observe and neither scores —

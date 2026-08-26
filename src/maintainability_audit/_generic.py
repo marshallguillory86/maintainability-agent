@@ -19,6 +19,7 @@ only source for it.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -239,7 +240,12 @@ DECLARED: dict[str, ToolSpec] = {
     "pylint": ToolSpec(
         slug="pylint", executable="pylint", output_format="json-findings",
         concerns=("style", "structure"),
-        args=("--output-format=json", "--score=n"),
+        # `--rcfile` stops the search for .pylintrc / pyproject.toml in
+        # the audited tree. That search is what loads `load-plugins=`
+        # and `init-hook=`, and `init-hook` executes arbitrary Python
+        # before analysis begins — the tree choosing what runs inside
+        # our process tree, which Decision 9 forbids (D39).
+        args=("--output-format=json", "--score=n", f"--rcfile={os.devnull}"),
         exclude_flag="--ignore-paths", exclude_dialect="regex",
         # pylint's exit status is a bitmask of message categories -- 1
         # fatal, 2 error, 4 warning, 8 refactor, 16 convention -- so any
@@ -252,7 +258,11 @@ DECLARED: dict[str, ToolSpec] = {
         # Closes `types`, which nothing else in the pool examines.
         slug="mypy", executable="mypy", output_format="json-lines",
         concerns=("types",),
-        args=("--output", "json", "--no-error-summary", "--ignore-missing-imports"),
+        # `--config-file` likewise: mypy's own config discovery is what
+        # honours `plugins =`, and a mypy plugin is an importable Python
+        # module in the tree under audit (D39, Decision 9).
+        args=("--output", "json", "--no-error-summary", "--ignore-missing-imports",
+              f"--config-file={os.devnull}"),
         json_keys=("file", "line", "message"),
         exclude_flag="--exclude", exclude_dialect="rel_regex",
         exclude_repeat=True,

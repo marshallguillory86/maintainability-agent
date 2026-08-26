@@ -256,6 +256,21 @@ def built_in_coverage() -> list[ToolCoverage]:
     ]
 
 
+def _deselected_outcome(reason: str) -> str:
+    """The coverage outcome for a tool selection declined to run.
+
+    "refused" is its own value because eslint *has* an adapter: reporting
+    it as no-adapter would tell the reader to go and write one that
+    already exists. It is declined on policy — Decision 9, configuration
+    is code — not missing (D39).
+    """
+    if reason == "inventory":
+        return "not-applicable"
+    if reason == "executes-audited-config":
+        return "refused"
+    return "no-adapter"
+
+
 def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> Analysis:
     """Run the configured analyzer pool over `root`.
 
@@ -318,7 +333,7 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
     analysis.coverage.extend(
         ToolCoverage(
             slug=fact.slug,
-            outcome="not-applicable" if fact.reason == "inventory" else "no-adapter",
+            outcome=_deselected_outcome(fact.reason),
             detail=fact.detail,
             concepts=fact.concepts, languages=fact.languages,
             inventory_filtered=fact.reason == "inventory",

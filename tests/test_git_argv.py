@@ -177,13 +177,7 @@ SPAWN_CALLS = {"run", "check_output", "Popen", "check_call"}
 # A spawn that may inherit the caller's environment, and why. A reason is
 # the classification; an empty string is not one. Anything not listed
 # must pass `env`.
-ENV_EXEMPT: dict[str, str] = {
-    "_runner.py": (
-        "the analyzer child, whose environment is D39's subject: it needs "
-        "PATH to locate the tool, and what else it may inherit is the open "
-        "question that entry exists to settle. Tracked there, not waived here"
-    ),
-}
+ENV_EXEMPT: dict[str, str] = {}
 
 
 def _subprocess_spawns(tree: ast.AST) -> list[ast.Call]:
@@ -357,3 +351,39 @@ def test_a_rename_is_read_from_git_and_a_failure_is_not_no_renames(
 
     with patch.object(_finding_match, "run_git", broken), pytest.raises(GitCommandFailed):
         rename_map(root, old, new)
+
+
+def test_the_analyzer_child_cannot_be_told_what_to_import() -> None:
+    """D39 / Decision 9: the environment cannot choose the analyzer's code.
+
+    Not a sandbox and not claimed as one. What it removes is the narrow
+    thing the decision rules out — a variable that makes an interpreter
+    or a linter load code the operator did not choose. `PATH` survives,
+    because the tool still has to be found.
+    """
+    from maintainability_audit._runner import analyzer_env
+
+    loaders = {
+        "PYTHONPATH": "/tmp/evil",
+        "PYTHONSTARTUP": "/tmp/evil.py",
+        "PYTHONHOME": "/tmp",
+        "NODE_PATH": "/tmp/node",
+        "NODE_OPTIONS": "--require /tmp/evil.js",
+        "LD_PRELOAD": "/tmp/evil.so",
+        "DYLD_INSERT_LIBRARIES": "/tmp/evil.dylib",
+    }
+    original = {k: os.environ.get(k) for k in loaders}
+    try:
+        os.environ.update(loaders)
+        env = analyzer_env()
+        leaked = sorted(k for k in loaders if k in env)
+        assert not leaked, f"the analyzer child could be told what to load: {leaked}"
+        assert "PATH" in env or "PATH" not in os.environ, (
+            "the scrub took PATH and the tool can no longer be found"
+        )
+    finally:
+        for key, value in original.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value

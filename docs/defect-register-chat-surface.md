@@ -1122,9 +1122,47 @@ plugins and must run with that disabled. The fix is therefore two
 narrow changes plus a falsifier, not the sandbox this entry was afraid
 of.
 
-*Closing test:* pending — a test that no selected analyzer's invocation
-can load configuration or plugins from the audited tree, swept over the
-pool rather than asserted for the two tools named here.
+**Two thirds closed 2026-08-25; the entry stays Open for the third.**
+
+*The environment.* `_runner` spawned every analyzer with the inherited
+environment, so `PYTHONPATH`, `NODE_PATH`, `NODE_OPTIONS`,
+`PYTHONSTARTUP` and the `LD_`/`DYLD_` pair could choose what the tool
+loads. `analyzer_env()` removes them and keeps `PATH`, because the tool
+still has to be found. Not a sandbox and not claimed as one — the
+narrower guarantee Decision 9 actually makes.
+
+*eslint.* It cannot run without the tree's flat config, and a flat
+config is a JavaScript program. `EslintAdapter` now declares
+`executes_audited_configuration`, and selection refuses any adapter
+that does — a property rather than a slug check, so the next tool
+needing the tree's own config is refused without anyone remembering
+this entry. Refusal is its own coverage outcome: reporting it as
+`no-adapter` told the reader to write an adapter that already exists.
+The work order also stopped naming eslint as an install that would
+close a JavaScript gap; following that remedy would have closed
+nothing.
+
+*Still open: mypy and pylint.* Both run through `DECLARED` in
+`_generic`, both read the tree's configuration, and pylint's
+`init-hook=` executes arbitrary Python at startup. The isolation flags
+are `--config-file=` and `--rcfile=`, and **neither tool is installed
+in this repository, in CI, or in `pyproject`** — so the flags cannot be
+verified here and a wrong one would not fail any check. `DECLARED`'s
+own rule is that an entry is a promise the tool works and that nothing
+may be invented for it; adding a blind flag would break that rule in
+the change that cites it. The options are recorded in
+`docs/security-queue.md` and the choice is Marshall's.
+
+Tests do hold the two thirds that closed — the environment scrub and
+the refusal each ship a falsifier, named in the changelog — but this
+entry claims none of them, because an entry that is Open must not read
+as half-closed. The falsifier D39 closes on is the sweep it asks for:
+no selected analyzer's invocation can load configuration from the tree
+under audit. Writing it today would pass vacuously, since the only
+tools it would examine are the two still unresolved.
+
+*Closing test:* pending — the pool-wide sweep, once the mypy and pylint
+question is decided.
 
 ### D40 — Closed: a repository's regex cannot hang the host (High)
 

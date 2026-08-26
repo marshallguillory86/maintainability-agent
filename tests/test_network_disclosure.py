@@ -253,7 +253,18 @@ def test_analyze_does_not_build_fetching_argv_when_acquisition_is_off(
 
     analyze(tmp_path, config, probe=RecordingProbe())
 
-    assert set(observed) == {"eslint", "jscpd"}
+    # `jscpd` alone since Decision 9: eslint is refused before an argv is
+    # ever built for it, because honouring its flat config means running
+    # a JavaScript program from the audited tree. The property under test
+    # is unchanged and still exercised — jscpd is the npx-acquired tool
+    # this test exists for — but it is now asserted as a property rather
+    # than as a fixed set, so the next tool that leaves the pool does not
+    # look like this test failing.
+    assert observed, "no tool argv was built, so the fetching check proves nothing"
+    assert "jscpd" in observed, "the npx-acquired tool is no longer exercised here"
+    assert "eslint" not in observed, (
+        "an argv was built for a tool selection refuses to run"
+    )
     for slug, argv in observed.items():
         assert "npx" not in argv and "--yes" not in argv, (
             f"analyze() built a fetching runner argv for missing {slug}: {argv}"

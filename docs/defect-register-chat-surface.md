@@ -1111,7 +1111,7 @@ because there is no directory there to audit.
 *Closing test:* `test_a_standing_grant_does_not_follow_a_renamed_directory`
 in `tests/test_grant_only_user_tier.py`.
 
-### D39 — Open: the audit executes configuration from the tree it audits (Medium)
+### D39 — Closed: the audit takes no configuration from the tree it audits (Medium)
 
 Grok, 2026-08-23, filed as a disclosure defect rather than a fix.
 `eslint` runs with no `--no-eslintrc`, and `has_config` *requires* a
@@ -1162,27 +1162,41 @@ The work order also stopped naming eslint as an install that would
 close a JavaScript gap; following that remedy would have closed
 nothing.
 
-*Still open: mypy and pylint.* Both run through `DECLARED` in
-`_generic`, both read the tree's configuration, and pylint's
-`init-hook=` executes arbitrary Python at startup. The isolation flags
-are `--config-file=` and `--rcfile=`, and **neither tool is installed
-in this repository, in CI, or in `pyproject`** — so the flags cannot be
-verified here and a wrong one would not fail any check. `DECLARED`'s
-own rule is that an entry is a promise the tool works and that nothing
-may be invented for it; adding a blind flag would break that rule in
-the change that cites it. The options are recorded in
-`docs/security-queue.md` and the choice is Marshall's.
+*mypy and pylint.* Both run through `DECLARED` in `_generic`, both
+read the tree's configuration, and pylint's `init-hook=` executes
+arbitrary Python at startup. They are spawned with `--config-file` and
+`--rcfile` pointed at `os.devnull`, which stops the search that honours
+`plugins =`, `load-plugins=` and `init-hook=`.
 
-Tests do hold the two thirds that closed — the environment scrub and
-the refusal each ship a falsifier, named in the changelog — but this
-entry claims none of them, because an entry that is Open must not read
-as half-closed. The falsifier D39 closes on is the sweep it asks for:
-no selected analyzer's invocation can load configuration from the tree
-under audit. Writing it today would pass vacuously, since the only
-tools it would examine are the two still unresolved.
+This entry stalled for a while on the wrong question. Neither tool is
+installed on this machine, so the flags could not be demonstrated here,
+and the proposal was to add them as dev dependencies to make CI prove
+them. Marshall rejected the premise: analyzers are **runtime
+prerequisites the user supplies**, never dependencies of this package —
+`analyzer-pool.md` says so, and making one a dependency would
+contradict the pool's whole design. The absence was a machine that had
+changed, not an architecture.
 
-*Closing test:* pending — the pool-wide sweep, once the mypy and pylint
-question is decided.
+The pattern the pool already discloses is the answer.
+Checkstyle and SpotBugs sit in their tiers with live spawns that skip
+wherever nobody supplied the binary, including CI. The isolation flags
+follow it: a structural sweep that always runs and forces every
+declared tool to be isolated or to state it reads no tree
+configuration, and live tests that plant a hostile `pylintrc` and
+`mypy.ini` and assert the tree's code never runs — skipped where the
+tool is absent. On a machine with pylint and mypy installed, that is
+demonstration; here it is documentation plus an asserted argv, and the
+disclosure says which.
+
+*Closing tests:* `test_every_declared_tool_is_classified_for_tree_configuration`,
+`test_a_declared_tool_is_invoked_with_its_configuration_isolated`,
+`test_no_selectable_adapter_needs_the_audited_trees_configuration`,
+`test_pylint_does_not_run_the_trees_init_hook` and
+`test_mypy_does_not_load_a_plugin_from_the_tree` in
+`tests/test_analyzer_config_isolation.py`;
+`test_the_analyzer_child_cannot_be_told_what_to_import` in
+`tests/test_git_argv.py`. The last two of the first group skip where
+the binary is absent, which `analyzer-pool.md` discloses.
 
 ### D40 — Closed: a repository's regex cannot hang the host (High)
 
@@ -1573,7 +1587,7 @@ reopened once for exactly that confusion.
 
 ## Disposition
 
-**Three entries are open: D39, D44 and D46.** D34 through D37 were
+**Two entries are open: D44 and D46.** D34 through D37 were
 filed by the same 2026-08-23 security pass and have since closed; this
 paragraph named them as open for two days after they were not, which is
 the register describing a state a reader cannot verify from its own

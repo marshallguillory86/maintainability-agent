@@ -45,6 +45,75 @@ CONFIG_ISOLATION = {
 # the classification; an empty string is not one.
 NO_TREE_CONFIG: dict[str, str] = {}
 
+# Every hand-written adapter, classified by what honouring its
+# configuration would *execute*. Decision 9 draws the line at running
+# the audited tree's code, not at reading its preferences: a ruff or
+# flake8 config is TOML and INI, and a repository choosing which of its
+# own lint rules apply is policy about its own code, which the eslint
+# adapter's docstring already argued and which is fine for a verdict
+# emitter that contributes no rate.
+#
+# The sweep covered `DECLARED` — two tools — while `ADAPTERS` holds
+# fifteen, so ruff sat in the baseline pool unclassified. The module
+# docstring claimed "every tool the pool can invoke". This is that
+# claim, made true.
+ADAPTER_CONFIG: dict[str, str] = {
+    "eslint": "REFUSED: a flat config is a JavaScript program",
+    "checkstyle": "agent-supplied ruleset via -c; the tree's is never read",
+    "pmd": "agent-supplied rulesets via --rulesets",
+    "spotbugs": "agent-supplied exclude file; reads bytecode, not config",
+    "jscpd": "reads .jscpd.json — JSON data, executes nothing",
+    "ruff": "reads pyproject.toml / ruff.toml — TOML data, executes nothing",
+    "flake8": "reads setup.cfg / tox.ini / .flake8 — INI data, executes nothing",
+    "pydocstyle": "reads setup.cfg — INI data, executes nothing",
+    "interrogate": "reads pyproject.toml — TOML data, executes nothing",
+    "vulture": "no configuration file; flags only",
+    "lizard": "no configuration file; flags only",
+    "radon": "reads radon.cfg — INI data, executes nothing",
+    "complexipy": "no configuration file; flags only",
+    "cohesion": "no configuration file; flags only",
+    "multimetric": "no configuration file; flags only",
+}
+
+
+def test_every_adapter_is_classified_for_what_its_configuration_executes() -> None:
+    """Fifteen adapters, not the two declared tools.
+
+    The sweep this replaces diffed `DECLARED`, which holds pylint and
+    mypy, while the pool invokes fifteen — so ruff, baseline tier and
+    in the default pool, was never asked the question the sweep exists
+    to ask. Same shape as the first git sweep matching only list
+    literals: a narrow set, a green test, and a docstring claiming the
+    class.
+    """
+    from maintainability_audit._tool_adapters import ADAPTERS
+
+    unclassified = sorted(set(ADAPTERS) - set(ADAPTER_CONFIG))
+    assert not unclassified, (
+        "adapters with no statement of what their configuration would "
+        f"execute: {unclassified}. Add each to ADAPTER_CONFIG — reading a "
+        "repository's TOML preferences is not executing its code, and "
+        "saying which one it is has to be deliberate"
+    )
+    stale = sorted(set(ADAPTER_CONFIG) - set(ADAPTERS))
+    assert not stale, f"ADAPTER_CONFIG names adapters that do not exist: {stale}"
+    assert all(reason.strip() for reason in ADAPTER_CONFIG.values())
+
+
+def test_an_adapter_whose_config_executes_code_is_refused_not_isolated() -> None:
+    """The REFUSED marker and the adapter property say the same thing."""
+    from maintainability_audit._tool_adapters import ADAPTERS, adapter_for
+
+    marked = {s for s, why in ADAPTER_CONFIG.items() if why.startswith("REFUSED")}
+    declaring = {
+        slug for slug in ADAPTERS
+        if getattr(adapter_for(slug), "executes_audited_configuration", False)
+    }
+    assert marked == declaring, (
+        "the table and the adapters disagree about which tools are "
+        f"refused: table={sorted(marked)} adapters={sorted(declaring)}"
+    )
+
 
 def test_every_declared_tool_is_classified_for_tree_configuration() -> None:
     """A declared tool added tomorrow must say which it is.
@@ -82,6 +151,13 @@ def test_a_declared_tool_is_invoked_with_its_configuration_isolated(
     assert carrier, (
         f"{slug} is spawned without {flag}, so the audited tree's own "
         f"configuration is honoured and {mechanism}: {argv}"
+    )
+    # The value, not just the flag. `--rcfile=.pylintrc` starts with the
+    # flag and points straight back into the tree, which is the thing
+    # being prevented.
+    assert all(item.split("=", 1)[1] == os.devnull for item in carrier), (
+        f"{slug} passes {flag} pointing somewhere other than {os.devnull}, "
+        f"so {mechanism} is still reachable: {carrier}"
     )
 
 

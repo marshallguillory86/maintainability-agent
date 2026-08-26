@@ -30,7 +30,12 @@ import subprocess
 from pathlib import Path
 
 from ._scan_history import ScanRecord, read_history
-from .git_tools import GIT_TIMEOUT_SECONDS, git_env, validate_revspec
+from .git_tools import (
+    GIT_TIMEOUT_SECONDS,
+    READ_ONLY_GIT_CONFIG,
+    git_env,
+    validate_revspec,
+)
 
 
 def _git(root: Path, *args: str) -> str:
@@ -43,7 +48,13 @@ def _git(root: Path, *args: str) -> str:
     """
     try:
         result = subprocess.run(  # noqa: S603 - argv list, never a shell
-            ["git", "-C", str(root), *args],
+            # D71: this spawn is not `run_git`, and the sweep that was
+            # meant to hold that rule only read `git_tools.py` -- so
+            # the one git command in this package that lives
+            # somewhere else went uncovered. `commits_in_range` runs
+            # `rev-list` here before any worktree exists, which is
+            # exactly the read that can schedule housekeeping.
+            ["git", *READ_ONLY_GIT_CONFIG, "-C", str(root), *args],
             capture_output=True, text=True, check=False,
             timeout=GIT_TIMEOUT_SECONDS, env=git_env())
     except subprocess.TimeoutExpired as expired:

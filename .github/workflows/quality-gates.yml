@@ -74,7 +74,7 @@ jobs:
         run: >
           python3 -m pip install
           cohesion complexipy flake8 interrogate lizard multimetric
-          mypy pydocstyle pylint radon vulture
+          mypy pydocstyle pylint radon ruff vulture
       - name: Lint (ruff)
         run: ruff check src tests tools
       - name: Dependency CVE scan (pip-audit)

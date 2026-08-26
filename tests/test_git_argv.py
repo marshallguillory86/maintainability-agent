@@ -405,41 +405,51 @@ def test_every_git_command_disables_gits_own_housekeeping() -> None:
     up in a tree the MCP tool promises never to write. It surfaced only
     then because auto-maintenance triggers on accumulated loose objects
     rather than on every call: D66 added two `rev-list` invocations per
-    audit and pushed a latent defect over the line. Two earlier runs of
-    the same product code passed.
+    audit and pushed a latent defect over the line.
 
-    So the guarantee is pinned to the argv rather than to a snapshot of
-    a temporary directory, which is what made it probabilistic. The
-    settings are prepended for every command in one place, and this
-    fails if that place stops applying them.
+    **This sweep read only `git_tools.py` when it was written**, and an
+    audit found the one git spawn in this package that lives elsewhere
+    -- `_backfill._git`, which runs `rev-list` before any worktree
+    exists. A rule about every git command, held by a check that read
+    one file. So it reads every module now, and any argv beginning with
+    a literal "git" has to carry the settings.
     """
-    from maintainability_audit.git_tools import _READ_ONLY
+    from maintainability_audit.git_tools import READ_ONLY_GIT_CONFIG
 
-    assert _READ_ONLY == ("-c", "gc.auto=0", "-c", "maintenance.auto=false"), (
-        f"the read-only git settings changed: {_READ_ONLY}"
+    assert READ_ONLY_GIT_CONFIG == ("-c", "gc.auto=0", "-c", "maintenance.auto=false"), (
+        f"the read-only git settings changed: {READ_ONLY_GIT_CONFIG}"
     )
 
-    source = (PACKAGE / "git_tools.py").read_text(encoding="utf-8")
-    tree = ast.parse(source, filename="git_tools.py")
-    spawns = _subprocess_spawns(tree)
-    assert spawns, "no spawn found in git_tools; this sweep proves nothing"
+    unguarded: list[str] = []
+    found = 0
+    for path in sorted(PACKAGE.rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for call in _subprocess_spawns(tree):
+            argv = call.args[0] if call.args else None
+            if not isinstance(argv, ast.List) or not argv.elts:
+                continue
+            head = argv.elts[0]
+            if not (isinstance(head, ast.Constant) and head.value == "git"):
+                continue
+            found += 1
+            starred = {
+                element.value.id
+                for element in argv.elts
+                if isinstance(element, ast.Starred)
+                and isinstance(element.value, ast.Name)
+            }
+            if "READ_ONLY_GIT_CONFIG" not in starred:
+                unguarded.append(f"{path.name}:{call.lineno}")
 
-    for call in spawns:
-        argv = call.args[0] if call.args else None
-        assert isinstance(argv, ast.List), (
-            f"git_tools.py:{call.lineno} builds its argv somewhere this "
-            "check cannot read"
-        )
-        starred = [
-            element.value.id
-            for element in argv.elts
-            if isinstance(element, ast.Starred) and isinstance(element.value, ast.Name)
-        ]
-        assert "_READ_ONLY" in starred, (
-            f"git_tools.py:{call.lineno} runs git without _READ_ONLY, so "
-            "git may repack objects and write commit-graphs into the "
-            "repository this package only meant to read"
-        )
+    assert found >= 2, (
+        f"the sweep found {found} git spawns; it should see every one, and "
+        "seeing only one is how the backfill spawn stayed uncovered"
+    )
+    assert not unguarded, (
+        f"{unguarded} run git without READ_ONLY_GIT_CONFIG, so git may "
+        "repack objects and write commit-graphs into a repository this "
+        "package only meant to read"
+    )
 
 
 def test_the_suites_own_git_has_maintenance_disabled(tmp_path: Path) -> None:

@@ -239,7 +239,40 @@ def test_the_history_window_is_disclosed_as_clock_relative() -> None:
     fourth of that shape in this project -- so the disclosure is held to
     the constant rather than to a sentence someone remembered to write.
     """
-    from maintainability_audit.history import DEFAULT_SINCE
+    import ast
+    import inspect
+
+    from maintainability_audit import history as history_module
+    from maintainability_audit.history import DEFAULT_SINCE, history_section
+
+    # The *effective* window, not the constant. The first version of
+    # this compared the prose to `DEFAULT_SINCE` alone, so changing
+    # `history_section`'s default to "24 months ago" left the constant
+    # untouched, the test green, and the disclosure describing a window
+    # nothing used. An audit made exactly that change and walked past.
+    effective = inspect.signature(history_section).parameters["since"].default
+    assert effective == DEFAULT_SINCE, (
+        f"history_section defaults to {effective!r} while the constant this "
+        f"page is held to is {DEFAULT_SINCE!r}; the disclosure describes a "
+        "window that is not the one being used"
+    )
+
+    # And the production call site must not override it, or the default
+    # above is not what a report actually gets.
+    report_source = (
+        Path(inspect.getsourcefile(history_module)).parent / "report.py"
+    ).read_text(encoding="utf-8")
+    for call in ast.walk(ast.parse(report_source)):
+        if (isinstance(call, ast.Call)
+                and getattr(call.func, "id", "") == "history_section"):
+            assert not any(kw.arg == "since" for kw in call.keywords), (
+                "report.py passes its own history window, so the disclosed "
+                "default is not the window a report is built with"
+            )
+            assert len(call.args) <= 3, (
+                "report.py passes a fourth positional argument to "
+                "history_section, which is the window"
+            )
 
     assert "ago" in DEFAULT_SINCE, (
         f"the history window {DEFAULT_SINCE!r} no longer reads as relative "

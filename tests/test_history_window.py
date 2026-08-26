@@ -26,6 +26,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from maintainability_audit._aspects import _history_rate_aspect
 from maintainability_audit.config import load_config
 from maintainability_audit.evidence import HistoryEvidence, Measured
@@ -252,3 +254,46 @@ def _empty_window_report(**counts: int) -> dict:
     # no opinion about, and inventing one would put the fixture's
     # numbers in front of the behaviour under test.
     return {"history": history}
+
+
+@pytest.mark.parametrize(
+    "counts",
+    [
+        pytest.param({"commits_in_window": True, "commits_considered": 0}, id="bool-is-an-int"),
+        pytest.param({"commits_in_window": -4, "commits_considered": 0}, id="negative window"),
+        pytest.param({"commits_in_window": 2, "commits_considered": -1}, id="negative subset"),
+        pytest.param({"commits_in_window": 2, "commits_considered": 9}, id="subset exceeds set"),
+        pytest.param({"commits_in_window": "7", "commits_considered": 7}, id="string count"),
+        pytest.param({"commits_in_window": 3.5, "commits_considered": 0}, id="fractional commits"),
+        pytest.param({"commits_in_window": 7}, id="half the pair"),
+    ],
+)
+def test_an_incoherent_pair_of_counts_earns_the_least_specific_reason(
+    counts: dict[str, object],
+) -> None:
+    """D66's reason must be *right*, and it cannot be from nonsense.
+
+    These two fields are not `HistoryEvidence` members, so nothing
+    upstream validates them. The first version asked only
+    `isinstance(..., int)` -- under which `True` is an int worth one
+    commit, so `commits_in_window: true` with `commits_considered: 0`
+    told the reader, confidently, that every commit in their window was
+    a merge. An audit found it by handing over a corrupt report.
+
+    A wrong reason stated confidently is the exact defect D66 exists to
+    remove, so an incoherent pair falls back to the plain empty-window
+    wording rather than to whichever specific story it happens to fit.
+    """
+    from maintainability_audit.evidence import (
+        EMPTY_WINDOW,
+        NotApplicable,
+        _normalize_history,
+    )
+
+    report = _empty_window_report(**counts)  # type: ignore[arg-type]
+    state = _normalize_history(report).qualifying_hotspots
+    assert isinstance(state, NotApplicable), state
+    assert state.reason == EMPTY_WINDOW, (
+        f"counts {counts} are not two coherent commit counts and produced a "
+        f"confident explanation anyway: {state.reason}"
+    )

@@ -20,6 +20,20 @@ import re
 _STRING_TOKEN = r"'(?:\\.|[^'\\])*'?|\"(?:\\.|[^\"\\])*\"?|`(?:\\.|[^`\\])*`?"
 _TOKEN_RE = re.compile(rf"//|/\*|{_STRING_TOKEN}")
 
+# A `/` begins a regex literal only where a *value* may begin. After an
+# identifier, a number or a closing bracket it is division. This is the
+# standard heuristic and it is the whole disambiguation JavaScript
+# offers without a parser.
+#
+# Unmasked, a regex literal's contents were read as code: every `?` in
+# `/a?b?c?d?e?/` counted as a decision point, so a one-line function
+# returning a pattern scored cyclomatic 6 against a McCabe number of 1
+# (D86). `_ranges` separately notes that an unbalanced brace inside one
+# can desync brace depth, which this also closes.
+_REGEX_TOKEN = r"/(?![/*])(?:\\.|\[(?:\\.|[^\]\\])*\]|[^/\\\n\[])+/[dgimsuvy]*"
+_REGEX_RE = re.compile(_REGEX_TOKEN)
+_VALUE_MAY_BEGIN = re.compile(r"(?:^|[({\[,;:!&|?+\-*%=<>~^]|\b(?:return|typeof|case|in|of|do|else|yield|await|new|delete|void|throw))\s*$")
+
 
 def _blank(text: str) -> str:
     return " " * len(text)
@@ -39,10 +53,26 @@ def _mask_code(text: str) -> tuple[str, bool, bool]:
     while True:
         match = _TOKEN_RE.search(text, position)
         if match is None:
-            parts.append(text[position:])
+            tail = text[position:]
+            gap = _REGEX_RE.search(tail)
+            if gap is not None and _VALUE_MAY_BEGIN.search(tail[: gap.start()]):
+                parts.append(tail[: gap.start()])
+                parts.append(_blank(gap.group(0)))
+                position = position + gap.end()
+                continue
+            parts.append(tail)
             return "".join(parts), False, False
-        parts.append(text[position : match.start()])
+        before = text[position : match.start()]
         token = match.group(0)
+        # A regex literal starting before this token would swallow it,
+        # so look for one in the gap first.
+        gap = _REGEX_RE.search(before)
+        if gap is not None and _VALUE_MAY_BEGIN.search(before[: gap.start()]):
+            parts.append(before[: gap.start()])
+            parts.append(_blank(gap.group(0)))
+            position = position + gap.end()
+            continue
+        parts.append(before)
         position = match.end()
         if token == "//":
             return "".join(parts) + _blank(text[match.start() :]), False, False

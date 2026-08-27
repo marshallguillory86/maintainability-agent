@@ -357,6 +357,11 @@ def test_every_test_named_in_the_architecture_doc_exists() -> None:
         path.read_text(encoding="utf-8") for path in (ROOT / "tests").glob("test_*.py")
     )
     existing_files = {path.name for path in (ROOT / "tests").glob("test_*.py")}
+    assert existing_files and suite, (
+        "the test suite was not read, so every name the document cites "
+        "would resolve against nothing and this check would pass over an "
+        "empty set"
+    )
 
     missing = [
         name

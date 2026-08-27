@@ -184,6 +184,20 @@ def test_the_analysis_opens_no_sockets(tmp_path: Path) -> None:
 
 
 DISCLOSED_VARIABLE_FIELDS = {"root", "git_status_short", "seconds"}
+ANALYZER_POOL = (
+    "cohesion",
+    "complexipy",
+    "flake8",
+    "interrogate",
+    "lizard",
+    "multimetric",
+    "mypy",
+    "pydocstyle",
+    "pylint",
+    "radon",
+    "ruff",
+    "vulture",
+)
 
 
 def test_the_determinism_exceptions_are_exactly_the_disclosed_ones() -> None:
@@ -295,19 +309,26 @@ def test_the_history_window_is_disclosed_as_clock_relative() -> None:
     )
 
 
-def test_the_pipeline_does_not_claim_to_pin_what_it_installs_loose() -> None:
-    """D89: P1's condition and the gating pipeline, held together.
+def _job_block(workflow: str, name: str) -> str:
+    pattern = re.compile(rf"(?ms)^  {re.escape(name)}:\n(.*?)(?=^  [a-z0-9-]+:\n|\Z)")
+    match = pattern.search(workflow)
+    assert match, f"workflow job {name!r} is missing"
+    return match.group(1)
 
-    P1's determinism is conditional on pinned analyzer versions. The
-    workflow installs the pool unpinned on purpose, so a green run does
-    not test that condition -- it tests that the suite passed against
-    today's analyzers. An audit put it exactly: the pipeline that would
-    certify 1.0 does not pin what P1 depends on.
 
-    The gap is disclosed rather than papered over, and this fails the
-    moment the two stop matching: either the workflow gains a pin, in
-    which case the disclosure is stale, or the disclosure is removed
-    while the pool stays loose.
+def test_the_gating_pipeline_pins_the_analyzers_and_the_scheduled_run_detects_drift() -> None:
+    """D89 closed: gating is pinned, schedule floats and fails on drift.
+
+    P1 is a statement about two runs with the same pinned analyzer
+    inputs. So the jobs that judge a pull request must install the pool
+    through checked-in constraints. The old "an analyzer shipped" signal
+    still matters too, but it belongs on the weekly scheduled run, where
+    an unpinned install is compared against the checked-in freeze and
+    fails visibly when the resolver result moves.
+
+    This does not accept either arrangement. It fails if the gates float,
+    if the scheduled drift check starts pinning, or if the page stops
+    describing the split that the workflow actually implements.
     """
     workflow = (
         Path(__file__).resolve().parents[1]
@@ -316,24 +337,61 @@ def test_the_pipeline_does_not_claim_to_pin_what_it_installs_loose() -> None:
     intent = (
         Path(__file__).resolve().parents[1] / "docs" / "product-intent.md"
     ).read_text(encoding="utf-8")
+    verify = _job_block(workflow, "verify")
+    audit = _job_block(workflow, "audit")
+    drift = _job_block(workflow, "analyzer-drift")
 
-    pool = next(
-        (block for block in workflow.split("- name:")
-         if "analyzer pool" in block),
+    for name, job in (("verify", verify), ("audit", audit)):
+        assert "--constraint constraints/analyzers.txt" in job, (
+            f"{name} installs the analyzer pool without the checked-in "
+            "constraints file, so the PR gate floats"
+        )
+        for tool in ANALYZER_POOL:
+            assert re.search(rf"\b{re.escape(tool)}\b", job), (
+                f"{name} no longer names {tool}, so the pinned gate is "
+                "not installing the full pip analyzer pool"
+            )
+
+    assert "github.event_name == 'schedule'" in drift, (
+        "the unpinned analyzer drift job is no longer limited to the "
+        "scheduled run"
+    )
+    assert "Install the analyzer pool unpinned in a throwaway venv" in drift, (
+        "the scheduled job no longer says it is doing the unpinned "
+        "install in a throwaway environment"
+    )
+    install = next(
+        (block for block in drift.split("- name:")
+         if "Install the analyzer pool unpinned in a throwaway venv" in block),
         None,
     )
-    assert pool is not None, "the analyzer-pool install step is gone"
-
-    pinned = "==" in pool or "--constraint" in pool or "-c constraints" in pool
-    disclosed = "installs the analyzer pool" in intent and "unpinned" in intent
-
-    assert pinned != disclosed or not (pinned or disclosed), (
-        "the workflow pins the analyzer pool while product-intent still "
-        "discloses that it does not, or the reverse. P1's condition and "
-        f"the pipeline have to agree: pinned={pinned} disclosed={disclosed}"
+    assert install is not None, "the scheduled unpinned install step is gone"
+    assert "--constraint" not in install and "==" not in install, (
+        "the scheduled drift detector pins the analyzer install, so it "
+        "cannot detect movement in the floating pool"
     )
-    assert disclosed, (
-        "the pool is installed unpinned and product-intent no longer says "
-        "so, which lets a green pipeline read as evidence for a promise "
-        "it does not test"
+    for tool in ANALYZER_POOL:
+        assert re.search(rf"\b{re.escape(tool)}\b", install), (
+            f"the scheduled drift install no longer names {tool}, so it "
+            "is not checking the same analyzer pool as the gates"
+        )
+    assert "pip freeze --all" in drift and "diff -u constraints/analyzers.txt" in drift, (
+        "the scheduled run no longer fails visibly on a diff between the "
+        "unpinned resolution and the checked-in constraints"
     )
+
+    assert "`verify` and `audit` install the twelve" in intent, (
+        "product-intent no longer says the PR gates are the pinned runs "
+        "that certify P1"
+    )
+    assert "scheduled run keeps the old drift signal" in intent and "unpinned" in intent, (
+        "product-intent no longer says the weekly scheduled run is the "
+        "unpinned drift detector"
+    )
+    assert "fails visibly on a diff" in intent, (
+        "product-intent no longer says how analyzer drift is surfaced"
+    )
+    assert (
+        "`test_the_gating_pipeline_pins_the_analyzers_and_the_scheduled_run_detects_drift`"
+        in intent
+    ), "product-intent cites a different falsifier for the gating/schedule split"

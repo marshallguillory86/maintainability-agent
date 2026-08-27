@@ -2722,30 +2722,30 @@ stands on its own.
 *Closing test:* `test_the_product_runs_only_git_commands_that_read` in
 `tests/test_git_read_only.py`.
 
-### D89 — Open: CI does not pin what P1 depends on (Medium)
+### D89 — Closed: gating CI now pins what P1 depends on (Medium)
 
 Grok, UAT audit. P1's determinism is conditional on pinned analyzer
-versions. The gating pipeline installs the pool **unpinned**, on
+versions. The gating pipeline had installed the pool **unpinned**, on
 purpose, so that an unchanged `main` going red because an analyzer
 shipped is a signal rather than a silence.
 
-Both halves are defensible and together they leave a gap that has to be
-said out loud: a green run certifies the suite passed against *today's*
-analyzers, and does not certify P1's condition, which is about two runs.
+That disclosure is now closed into the workflow. `constraints/analyzers.txt`
+checks in the Python 3.12 resolver output for the twelve pip-installed
+analyzers and their dependency closure, and the gating jobs (`verify`,
+`audit`) install through it. A green PR gate therefore certifies the
+pinned-input condition P1 actually states, not merely that the suite
+passed against that day's analyzer releases.
 
-**This entry is a disclosure, not a fix.** Closing it properly means a
-checked-in constraints file for the gating job with the drift check
-moved to the scheduled run, so both properties hold at once. That needs
-resolved versions, which needs installing the pool, which is not this
-agent's to do. `docs/product-intent.md` now says so where a reader meets
-P1, and the falsifier fails if the workflow gains a pin without the page
-losing the disclosure, or the reverse.
+The old drift signal is kept rather than deleted. The weekly scheduled
+run creates a throwaway virtualenv, installs the same top-level pool
+**unpinned**, freezes what pip resolved, and fails on a diff against the
+checked-in constraints. Analyzer movement still turns the scheduled run
+red, but the merge gate no longer floats.
 
-**Falsifier: pending.** A test holds the workflow and the page together
-so the disclosure cannot go stale, but that is a check on the *wording*,
-not on the property. The property — two runs agreeing given pinned
-versions — has no test on the gating pipeline and will not have one
-until the pool is pinned there.
+*Closing tests:* `test_the_gating_pipeline_pins_the_analyzers_and_the_scheduled_run_detects_drift`
+in `tests/test_determinism.py`.
+
+*Roles:* found=grok prompt=marshall fix=codex test=codex run=ci
 
 ### D90 — Closed: a stale grant does not veto a launch root (High)
 
@@ -2928,18 +2928,17 @@ in `tests/test_authorization_freshness.py`.
 
 ## Disposition
 
-**One entry is open: D89.** The gating pipeline installs the analyzer
-pool unpinned, so a green run does not test the condition P1's
-determinism rests on. Both halves of that are deliberate and the gap is
-disclosed where a reader meets P1, but a disclosure is not a fix, and
-this register does not get to call it one. Closing it needs a
-constraints file built from resolved versions.
+**Every entry is closed.** D89 closed on 2026-08-27 when the PR gates
+started installing a checked-in analyzer constraints file and the weekly
+scheduled run kept analyzer drift visible by failing on an unpinned
+resolver diff.
 
-That is the first time this page has not claimed an empty ledger, and
-the reason is worth keeping: an audit observed that the register can be
-empty while the proof it cites is failing in CI, and that "0 open" was
-being read as "known good". An entry that is disclosed rather than
-fixed is open.
+That is the first time this page has returned to an empty ledger after
+carrying a deliberately open disclosure, and the reason is worth
+keeping: an audit observed that the register can be empty while the
+proof it cites is failing in CI, and that "0 open" was being read as
+"known good". An entry disclosed rather than fixed stayed open here
+until the workflow actually changed.
 
 **Every other entry is closed.** D32 through D46 came from
 two independent security audits on 2026-08-23 and closed over the two

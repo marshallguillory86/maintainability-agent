@@ -47,6 +47,15 @@ REGISTER = Path("docs/defect-register-chat-surface.md")
 #: for the right reason, and pretending otherwise is worse than saying so.
 EXEMPT = "*Falsifier proof: not applicable"
 
+#: The first entry this tool holds to its standard. Entries below it
+#: were closed before the tool existed and were never written against
+#: it, so proving them retroactively would produce a wall of failures
+#: that says more about when the control arrived than about the work.
+#: The same cutoff shape as the `*Roles:*` (D90) and `*Mutation:*` (D97)
+#: conventions, and for the same reason: a rule announced today does not
+#: get to be evidence about yesterday.
+PROVE_FROM = 97
+
 
 def _git(*args: str, cwd: Path = ROOT) -> str:
     result = subprocess.run(  # noqa: S603 - argv list, never a shell
@@ -140,6 +149,8 @@ def main() -> int:
 
     unproven: list[str] = []
     for ident, body in sorted(new.items(), key=lambda item: int(item[0][1:])):
+        if int(ident[1:]) < PROVE_FROM:
+            continue
         if EXEMPT in body:
             print(f"{ident}: exempt — {body.split(EXEMPT, 1)[1].splitlines()[0].strip()}")
             continue

@@ -19,6 +19,49 @@ degraded on the chat path. The theme across all seventeen entries is one
 defect class: **capability wired to the TTY, viewer shipped to the primary
 surface.**
 
+## The falsifier standard
+
+**Thirty of the entries below are one defect.** Not thirty defects with
+a family resemblance — one mechanism, fixed thirty times without being
+named, which is why it kept coming back. It was found by asking why
+instead of closing the thirty-first.
+
+The shape, every time:
+
+1. A **universal claim** exists. *"No analyzer reads configuration from
+   the audited tree." "Every git command disables housekeeping." "No
+   document presents a refused analyzer as runnable."*
+2. An audit finds **one instance** where the claim is false.
+3. The check is written **from the instance**, not from the claim.
+4. The check goes green, and the claim is still false everywhere else.
+
+Step 3 happens because the author has a reproduction in hand and no
+enumeration of what the claim quantifies over. It surfaces two ways: the
+population is hand-picked — two adapters of fifteen, three sentences,
+one file of a package — or the property is approximated by a string
+instead of executed: `"pytest" in job`, `"42" not in document`, the
+presence of a `diff` command that had been neutered with `|| true`.
+
+**Mutation testing did not catch it, and the reason is the useful part.**
+Mutation was being applied — to the instance that motivated the fix,
+which is *inside* the sample the check was written from. So the mutation
+confirmed the sample and said nothing about the claim. Every time an
+auditor broke one of these, their mutation came from outside the sample
+and the author's came from inside it.
+
+So a falsifier for a universal claim owes three things:
+
+| Clause | Enforced by |
+|---|---|
+| **Derive the population** from the source of truth — `ADAPTERS`, an `rglob`, the catalog — never a list typed by hand | review; the shape is visible |
+| **Assert the population is not empty**, so a sweep that matched nothing fails instead of passing | `tests/test_falsifier_standard.py` |
+| **Mutate outside the sample**: the proof must break a member the test does not name | stated in `*Mutation:*`, required from D97 |
+
+The third cannot be checked mechanically, so it is required to be
+*written down*. An author who has to say which member they broke, and
+why it sits outside what the test names, cannot make the substitution
+silently.
+
 ## Roles, recorded from D90
 
 Every entry from **D90** onward carries a `*Roles:*` line naming who did
@@ -2925,6 +2968,59 @@ the next one along. Every closer read the function it was written for.
 in `tests/test_authorization_freshness.py`.
 
 *Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
+
+### D97 — Closed: the class behind thirty entries (High)
+
+Marshall, 2026-08-27: *"have you asked WHY? these same type of defect
+keep coming back so you can address the root cause? it seems like a
+class of defect that is easily addressable, but you keep treating
+symptoms."*
+
+No, I had not. Thirty of the ninety-six entries above are **one
+mechanism**, closed thirty times, each with a bespoke fix and no
+question about why the next one arrived. The mechanism, the three
+clauses that answer it, and why mutation testing was not catching it are
+written up under *The falsifier standard* at the top of this file.
+
+The short version: a check written from the instance that motivated it
+rather than from the claim it defends, and a mutation drawn from the
+same sample as the assertion, so the mutation confirmed the sample and
+said nothing about the claim. Every time an auditor broke one of these,
+they mutated a member the test did not name.
+
+**What it cost to leave unnamed:** four adapters of fifteen swept, three
+sentences of a document, one file of a package, one keyword of a value
+list, a `pytest` that `echo pytest` satisfied, a `diff` that `|| true`
+neutered, and a security rule enforced on every analyzer and never asked
+of git.
+
+`tests/test_falsifier_standard.py` enforces clause two over the suite:
+sixteen tests derive a population by walking the filesystem, and every
+one of them must now assert it found something. Four did not. Clause
+three is required to be stated on every entry from D97.
+
+**The control had the defect three times while being built**, which is
+the strongest evidence that it needed to be mechanical rather than
+remembered: it counted `ast.walk` as a filesystem walk and reported
+twenty of thirty-three violations that were not; and it accepted *any*
+population being asserted, so a test binding two populations was covered
+by guarding either. That last one was found by mutating a guard the
+check did not name — the clause catching its own author.
+
+*Closing tests:* `test_a_sweep_asserts_its_population_is_not_empty` and
+`test_there_are_sweeps_to_check` in `tests/test_falsifier_standard.py`;
+`test_entries_from_the_cutoff_state_what_their_mutation_broke` in
+`tests/test_roles_recorded.py`.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
+
+*Mutation:* removed the population guard from
+`test_release_plan::test_the_release_plan_table_is_measured_not_remembered`
+and separately from `test_written_record`. Neither is named by
+`test_a_sweep_asserts_its_population_is_not_empty`, which derives its
+subjects from the suite rather than listing them — so breaking either is
+a member the closing test does not know about. The first draft of the
+closer survived the `test_files` mutation and was fixed because of it.
 
 ## Disposition
 

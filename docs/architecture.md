@@ -26,6 +26,7 @@ flowchart TB
     _skill_install["_skill_install"]
     dunder_main["__main__"]
     mcp_server["mcp_server"]
+    _grant_ledger["_grant_ledger"]
   end
 
   subgraph presentation["presentation — reads the report dict"]

@@ -199,9 +199,14 @@ def repository_path(root: Path, configured: str | None, default: str) -> Path:
     candidate = Path(configured or default).expanduser()
     target = (candidate if candidate.is_absolute() else root / candidate).resolve()
     if target != root and not target.is_relative_to(root):
+        # The configured spelling, never what it resolved to. This
+        # door runs on an ordinary audit whenever the repository's own
+        # config names a path, so a symlinked `history.jsonl` published
+        # its target to the chat host. Fifth in the family D72 opened
+        # and D82 and D91 each closed one of (D96).
         raise PathNotAllowed(
-            f"configured path {configured or default!r} resolves to {target}, "
-            f"outside the repository {root}"
+            f"configured path {configured or default!r} resolves outside "
+            "the repository it configures"
         )
     return target
 

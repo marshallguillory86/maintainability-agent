@@ -34,6 +34,32 @@ _REGEX_TOKEN = r"/(?![/*])(?:\\.|\[(?:\\.|[^\]\\])*\]|[^/\\\n\[])+/[dgimsuvy]*"
 _REGEX_RE = re.compile(_REGEX_TOKEN)
 _VALUE_MAY_BEGIN = re.compile(r"(?:^|[({\[,;:!&|?+\-*%=<>~^]|\b(?:return|typeof|case|in|of|do|else|yield|await|new|delete|void|throw))\s*$")
 
+#: `)` is the one position the character alone cannot decide. `if (x) /re/`
+#: begins a value; `f(x) / 2` is division. What separates them is the token
+#: owning the matching `(`, so the paren is walked back to and asked. D86
+#: masked regex literals and its closer used `return`, already in the list
+#: above, so `if (x) /a?b?c?d?e?/` kept scoring 7 against a McCabe 2 (D95).
+_CONTROL_PAREN = re.compile(r"\b(?:if|while|for|switch|catch)\s*\($")
+
+
+def _value_may_begin(before: str) -> bool:
+    """Whether a `/` at the end of `before` opens a regex literal."""
+    if _VALUE_MAY_BEGIN.search(before):
+        return True
+    trimmed = before.rstrip()
+    if not trimmed.endswith(")"):
+        return False
+    depth = 0
+    for index in range(len(trimmed) - 1, -1, -1):
+        char = trimmed[index]
+        if char == ")":
+            depth += 1
+        elif char == "(":
+            depth -= 1
+            if depth == 0:
+                return bool(_CONTROL_PAREN.search(trimmed[: index + 1]))
+    return False
+
 
 def _blank(text: str) -> str:
     return " " * len(text)
@@ -55,7 +81,7 @@ def _mask_code(text: str) -> tuple[str, bool, bool]:
         if match is None:
             tail = text[position:]
             gap = _REGEX_RE.search(tail)
-            if gap is not None and _VALUE_MAY_BEGIN.search(tail[: gap.start()]):
+            if gap is not None and _value_may_begin(tail[: gap.start()]):
                 parts.append(tail[: gap.start()])
                 parts.append(_blank(gap.group(0)))
                 position = position + gap.end()
@@ -67,7 +93,7 @@ def _mask_code(text: str) -> tuple[str, bool, bool]:
         # A regex literal starting before this token would swallow it,
         # so look for one in the gap first.
         gap = _REGEX_RE.search(before)
-        if gap is not None and _VALUE_MAY_BEGIN.search(before[: gap.start()]):
+        if gap is not None and _value_may_begin(before[: gap.start()]):
             parts.append(before[: gap.start()])
             parts.append(_blank(gap.group(0)))
             position = position + gap.end()

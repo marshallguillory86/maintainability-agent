@@ -90,7 +90,7 @@ def test_config_must_be_a_file_inside_the_repository(tmp_path: Path) -> None:
     outside.write_text("{}", encoding="utf-8")
 
     assert authorize_config("maintainability-agent.json", root) == str(inside.resolve())
-    with pytest.raises(PathNotAllowed, match="outside repository_root"):
+    with pytest.raises(PathNotAllowed, match="outside the repository"):
         authorize_config(str(outside), root)
 
 

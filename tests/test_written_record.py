@@ -74,6 +74,26 @@ def test_the_register_states_a_falsifier_for_every_entry() -> None:
     assert "test_the_cli_door_applies_the_same_boundary" in register
 
 
+def _cited_region(section: str, ident: str) -> str:
+    """The part of an entry that claims to name a falsifier.
+
+    It ends at the next `*Field:*` marker, not at the end of the entry.
+    `*Roles:*` and `*Mutation:*` sit after it and legitimately name
+    tests -- a mutation statement is *required* to say which member it
+    broke -- so reading to the end made every such statement look like a
+    miscited falsifier. The region a check reads has to be the region
+    the claim is about.
+    """
+    closing = re.split(r"\*Closing (?:test|tests|suite|suites):\*", section)
+    assert len(closing) > 1, (
+        f"{ident} names no *Closing test:* — an entry whose falsifier "
+        "is only prose cannot be held to pointing at a real one"
+    )
+    return " ".join(
+        re.split(r"\n\*\w+:\*", block)[0] for block in closing[1:]
+    )
+
+
 def _entry(entries: str, ident: str) -> str:
     return entries.split(f"### {ident} — ", maxsplit=1)[1].split("\n### ", maxsplit=1)[0]
 
@@ -112,6 +132,11 @@ def test_every_closing_citation_names_a_test_that_exists() -> None:
                                   _read(path), re.MULTILINE))
         for path in (ROOT / "tests").glob("test_*.py")
     }
+    assert by_module, (
+        "no test modules were read, so every citation below resolves "
+        "against an empty index and this check passes over nothing -- "
+        "which is the shape it exists to catch elsewhere"
+    )
     everywhere = set().union(*by_module.values())
 
     problems = []
@@ -128,12 +153,7 @@ def test_every_closing_citation_names_a_test_that_exists() -> None:
                 "an open entry may name no test, and must claim none"
             )
             continue
-        closing = re.split(r"\*Closing (?:test|tests|suite|suites):\*", section)
-        assert len(closing) > 1, (
-            f"{ident} names no *Closing test:* — an entry whose falsifier "
-            "is only prose cannot be held to pointing at a real one"
-        )
-        citation = " ".join(closing[1:])
+        citation = _cited_region(section, ident)
         # A file name is not a falsifier. An audit closed an entry with
         # nothing but a `tests/….py` path and the first version of this
         # check passed it, because it looked for names to resolve and

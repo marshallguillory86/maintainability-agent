@@ -140,10 +140,16 @@ def test_entries_from_the_cutoff_state_what_their_mutation_broke() -> None:
     test did not name. That is the move, and this is the line that makes
     an author perform it deliberately.
     """
-    missing = [
-        f"D{number}" for number, body in _entries()
-        if number >= MUTATION_FROM and "*Mutation:*" not in body
-    ]
+    subject = [(number, body) for number, body in _entries() if number >= MUTATION_FROM]
+    # Clause two, applied to this check's own population. Without it the
+    # test passes over an empty list at any commit predating the cutoff
+    # -- which `tools/prove_falsifiers.py` caught by running it against
+    # the base, where no entry reaches D97 and it asserted nothing.
+    assert subject, (
+        f"no entry reaches D{MUTATION_FROM}, so this asserts over nothing "
+        "and the mutation requirement is unenforced"
+    )
+    missing = [f"D{number}" for number, body in subject if "*Mutation:*" not in body]
     assert not missing, (
         f"entries at or after D{MUTATION_FROM} that do not say what their "
         f"mutation broke: {missing}. State the member you broke and why it "

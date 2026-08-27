@@ -2765,7 +2765,7 @@ stands on its own.
 *Closing test:* `test_the_product_runs_only_git_commands_that_read` in
 `tests/test_git_read_only.py`.
 
-### D89 — Closed: gating CI now pins what P1 depends on (Medium)
+### D89 — Open: gating CI pins, on the wrong platform (Medium)
 
 Grok, UAT audit. P1's determinism is conditional on pinned analyzer
 versions. The gating pipeline had installed the pool **unpinned**, on
@@ -2785,10 +2785,43 @@ run creates a throwaway virtualenv, installs the same top-level pool
 checked-in constraints. Analyzer movement still turns the scheduled run
 red, but the merge gate no longer floats.
 
-*Closing tests:* `test_the_gating_pipeline_pins_the_analyzers_and_the_scheduled_run_detects_drift`
-in `tests/test_determinism.py`.
+**Reopened 2026-08-27, unclosed on review.** Three defects in the fix,
+two of them the class D97 names:
 
-*Roles:* found=grok prompt=marshall fix=codex test=codex run=ci
+*The drift check could never pass.* It diffed the constraints file --
+eight lines of provenance comments -- against raw `pip freeze` output,
+which has none, so the scheduled run went red every week whether or not
+anything drifted. This file's own header says a pipeline that fails on
+something advisory teaches people to ignore it.
+
+*Its test could not see that.* It asserted the string `diff -u
+constraints/analyzers.txt` was present. Appending `|| true` -- which
+neuters drift detection entirely -- left it green. The second version
+asserted the step mentions stripping, and replacing the helper body with
+`cat` left *that* green. The third runs the workflow's own normaliser
+against the real constraints file and checks its output could have come
+from `pip freeze`.
+
+*The pin does not match the platform it constrains.* The closure was
+resolved on macOS arm64; `verify`, `audit` and the drift job all run
+`ubuntu-latest`. The pinned install may not resolve there at all, and
+the drift comparison would report platform-divergent closures as
+analyzer drift, weekly, forever.
+
+**Still open on that last one.** Closing it needs the pool resolved on
+Linux, which needs installing the pool — the reason this entry existed
+in the first place. `resolve-constraints` in the workflow produces that
+file from a runner; until it is checked in,
+`test_the_constraints_were_resolved_on_the_platform_the_gates_run_on`
+is `xfail(strict=True)`, so it fails the day the situation is fixed and
+the marker is left behind, and the suite is neither red nor lying.
+
+*Falsifier: pending* for the platform residual. The two closed halves
+are held by `test_the_gating_jobs_install_through_the_constraints_file`
+and `test_the_scheduled_drift_job_floats_and_can_actually_fail` in
+`tests/test_analyzer_pinning.py`.
+
+*Roles:* found=grok prompt=marshall fix=codex+claude test=codex+claude run=mutation
 
 ### D90 — Closed: a stale grant does not veto a launch root (High)
 
@@ -3022,19 +3055,71 @@ subjects from the suite rather than listing them — so breaking either is
 a member the closing test does not know about. The first draft of the
 closer survived the `test_files` mutation and was fixed because of it.
 
+### D98 — Closed: the first Codex-authored fix, reviewed (High)
+
+Reviewed 2026-08-27, the first change under the split where Codex wrote
+the code. Three defects, and what they were is more useful than that
+there were three.
+
+**The drift check could never pass.** It diffed `constraints/analyzers.txt`
+— eight lines of provenance comments — against raw `pip freeze` output,
+which has none. Non-empty every run, drift or no drift. The comparison
+normalises both sides now.
+
+**Its test could not see that.** It asserted the string `diff -u
+constraints/analyzers.txt` appeared. Appending `|| true` neuters drift
+detection entirely and left it green. My replacement asserted the step
+*mentions* stripping — and replacing the helper body with `cat` left
+*that* green. The third version extracts the workflow's own normaliser
+and **runs** it against the real constraints file, checking the output
+is something `pip freeze` could have produced.
+
+Two string-shaped checks in a row, mine and Codex's, on the day D97
+named that exact class. The standard is easy to state and hard to
+apply, which is the argument for the parts of it that are mechanical.
+
+**The pin does not match the platform it constrains** — see D89, which
+this reopened.
+
+**What the review says about the experiment.** Codex's work was good on
+the parts I asked for: real resolved versions, honest provenance, the
+closure decision made explicitly rather than silently, gates pinned,
+drift moved rather than deleted. Its failure mode was the same as mine —
+a check written from the artifact rather than the behaviour — which is
+evidence that the split does not fix this class by itself. What found
+all three was mutation from outside the sample, run by someone who was
+not the author. That is the part that transfers.
+
+*Closing tests:* `test_the_gating_jobs_install_through_the_constraints_file`,
+`test_the_scheduled_drift_job_floats_and_can_actually_fail` and
+`test_product_intent_describes_the_arrangement_the_workflow_implements`
+in `tests/test_analyzer_pinning.py`.
+
+*Roles:* found=claude prompt=marshall fix=codex+claude test=claude run=mutation
+
+*Mutation:* appended `|| true` to the drift comparison, and separately
+replaced the normaliser body with `cat`. Neither is named by the closing
+tests, which locate the step by its name line and then execute what it
+defines — so both break a member the tests do not enumerate. The first
+two versions of the closer survived one of these each.
+
 ## Disposition
 
-**Every entry is closed.** D89 closed on 2026-08-27 when the PR gates
-started installing a checked-in analyzer constraints file and the weekly
-scheduled run kept analyzer drift visible by failing on an unpinned
-resolver diff.
+**One entry is open: D89.** It was closed on 2026-08-27 and reopened the
+same day on review. Two of its three defects are fixed — a drift check
+that could never pass, and a test that `|| true` defeated. The third is
+not: the analyzer closure was resolved on macOS and the jobs it
+constrains run Linux, and re-resolving it means installing the pool,
+which is the reason the entry existed at all. The workflow now carries a
+job that produces the Linux resolution from a runner; until that file is
+checked in the residual is marked `xfail(strict=True)` rather than
+hidden or left red.
 
-That is the first time this page has returned to an empty ledger after
-carrying a deliberately open disclosure, and the reason is worth
-keeping: an audit observed that the register can be empty while the
-proof it cites is failing in CI, and that "0 open" was being read as
-"known good". An entry disclosed rather than fixed stayed open here
-until the workflow actually changed.
+This page reached an empty ledger twice and gave it back twice, which is
+the useful part. An audit observed that the register can be empty while
+the proof it cites is failing in CI, and that "0 open" was being read as
+"known good". A closure that does not survive being checked is not a
+closure.
 
 **Every other entry is closed.** D32 through D46 came from
 two independent security audits on 2026-08-23 and closed over the two

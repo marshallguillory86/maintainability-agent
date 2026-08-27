@@ -139,7 +139,13 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
 # either would be a cycle for the other.
 # Entry, because deciding to ask a person rather than compute is an
 # entry-layer decision; nothing below may make it.
+# `_grant_ledger` reads the persisted root-grant list and asks
+# `_stored_grants` whether each entry still names what was consented to.
+# Entry layer beside `_mcp_audit`: it reaches `_user_config` for the
+# file and the rule module for the judgment, and the audit door is its
+# only consumer.
 ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup", "_mcp_audit",
+         "_grant_ledger",
          "_skill_install", "_mcp_gate", "_mcp_resources",
          "_mcp_grants", "_mcp_refusals"}
 BOUNDARY = {"evidence"}

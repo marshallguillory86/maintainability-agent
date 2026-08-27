@@ -27,6 +27,13 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
                # `_user_config` is the XDG user tier and its state (D13):
                # file reads and atomic writes, no internal imports.
                "_user_config",
+               # `_stored_grants` decides whether a persisted root grant
+               # still names the directory the user consented to. A
+               # foundation because both the writer (`_user_config`) and
+               # the reader (`_mcp_audit`) must reach the same rule, and
+               # four versions of it were broken by the two sides
+               # comparing paths their own way (D79).
+               "_stored_grants",
                # `_safe_write` is the one way this agent writes into a
                # tree it is auditing: bounded, symlink-refusing, staged
                # then renamed so no existing inode is ever opened for

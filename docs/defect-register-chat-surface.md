@@ -2252,8 +2252,9 @@ rather than asserting the variables are set — the difference between
 proving conftest ran and proving git listened.
 
 *Closing tests:* `test_every_git_command_disables_gits_own_housekeeping`
-and `test_the_suites_own_git_has_maintenance_disabled` in
-`tests/test_git_argv.py`.
+in `tests/test_git_argv.py`, and
+`test_the_suites_own_git_has_maintenance_disabled` in
+`tests/test_git_read_only.py`.
 
 ### D72 — Closed: a refusal does not disclose where a symlink points (High)
 
@@ -2374,6 +2375,137 @@ the claim was made literally true.
 
 *Closing test:* `test_ci_installs_every_pip_installable_adapter` in
 `tests/test_ci_installs_the_analyzer_pool.py`.
+
+### D78 — Closed: the JS complexity number is about the code (High)
+
+Grok, 2026-08-26. Decision 10 keeps JavaScript because this project has
+a detector that can score it, and D68 made the fallback to that detector
+*visible*. Grok's sentence is the finding: **visibility is not
+accuracy.** D68's closer checks that the built-in scanner is attributed
+and never asks whether its number means anything.
+
+`COMPLEXITY_RE` counted every `?` character as a decision point. In
+JavaScript `?` is three operators and only one is a decision. `?.` is
+defensive member access. `??` is one decision written with two
+characters, so a bare `\?` counted each one **twice**. `?` ternary is
+the branch the rule was written for.
+
+Reproduced at the shipped thresholds:
+
+```javascript
+function pick(u) {
+  return u?.user?.profile?.settings?.theme
+      ?? u?.user?.prefs?.theme
+      ?? "light";
+}
+```
+
+**Cyclomatic 12, status warn.** Its McCabe number is 1. An eight-way
+fallback chain scored 15, one under the hard gate. It fires hardest on
+exactly the modern JavaScript this project claims to score, which is P7:
+a score issued where the thing measured was not the code. After the fix,
+3 and 8, and genuinely branching code is unchanged.
+
+Grok's other JS observations — regex literals unmasked, brace-free
+bodies charged flat, object-literal arrows not detected as declarations
+— are disclosed limitations in `_ranges` and `_cognitive` and are not
+closed here. This entry closes the one that produced numbers that were
+simply wrong.
+
+*Closing tests:* `test_the_scored_complexity_is_the_functions_complexity`,
+`test_a_defaulting_expression_does_not_warn` and
+`test_python_complexity_is_unchanged_by_the_javascript_fix` in
+`tests/test_js_complexity_operators.py`.
+
+### D79 — Closed: a grant records what it was, not only where (High)
+
+Grok, 2026-08-26 — the fourth predicate in three days, and the one whose
+prediction was written into the finding: *"D38 is the one that will be
+filed again if this round is closed by tightening `resolve()==self`
+without an inode."*
+
+Two holes, both reproduced. `Path.resolve()` is not `strict=True`, so a
+directory nobody has created "resolves to itself" and was honoured —
+hand-write it, get no refusal, then create it or mount over it. And
+`resolve()` preserves case, so on APFS `/USERS/marshallguillory/...`
+exists, resolves to itself, and was treated as a product-made grant.
+
+**The pattern is the finding.** Four rules compared better and better
+strings, and each moved the hole rather than closing it, because a path
+is a *name* and names alias: symlinks, case-insensitive volumes, bind
+mounts, a directory created after the question was answered. Version
+three's own docstring said so — *"a bare path with no record of what it
+resolved to when it was granted cannot be defended"* — and then honoured
+bare paths anyway.
+
+So this version stops comparing names. `persist_root_grant` records the
+directory's device and inode at the moment of consent, and a grant is
+honoured only when the directory at that path is still that directory.
+The recreated-directory case, which every previous rule honoured because
+by name nothing changed, is refused by the same check that refuses a
+swapped symlink — and so are bind mounts, which no spelling rule could
+have reached.
+
+**A hand-written entry carries no identity and is refused.** That is the
+deliberate consequence rather than an oversight: it is exactly the bare
+path the rule cannot defend. Existing users are asked once more, which
+D38 established is not an error.
+
+Not claimed: that this ends the series. What is claimed is that the
+thing compared is no longer a spelling.
+
+*Closing tests:* `test_a_grant_to_a_directory_that_does_not_exist_is_refused`,
+`test_a_case_variant_spelling_is_refused` and
+`test_a_granted_directory_replaced_by_another_is_refused` in
+`tests/test_grant_only_user_tier.py`.
+
+### D80 — Closed: the population floors are bounded from below (High)
+
+Grok, 2026-08-26, in a table of "checks that cannot fail the property
+they name". `test_no_calibration_member_is_unscoreable_by_the_scale_it_calibrates`
+bounds the floors from *above* — a floor may not exceed the corpus
+minimum. Nothing bounded them from below.
+
+Set `files_scanned` to 1 and every check in that file stays green while
+a one-file repository collects a verified grade. That is the exact
+result ADR 005 exists to prevent and the one P7 names: a score issued as
+a consequence of not looking.
+
+Asserted against the behaviour rather than the constant — one file, one
+declaration, no score, however the table is edited — with the invariant
+also stated on the table so someone editing it sees why it has two
+sides.
+
+*Closing tests:* `test_a_hello_world_repository_is_never_scored_whatever_the_floors_say`
+and `test_the_floors_are_bounded_from_below_as_well_as_above` in
+`tests/test_population_floors.py`.
+
+### D81 — Closed: the witnesses no longer share fate with what they watch (High)
+
+Grok, 2026-08-26, reopening D71 at the layer Codex's version of the same
+finding did not reach. D73 fixed the backfill argv and widened the
+sweep; this is the other half.
+
+The conftest guard exports `GIT_CONFIG_*` for the whole suite so that
+fixtures cannot schedule git maintenance. It also covers the product.
+So the "never writes the tree" snapshot tests — the only witnesses to
+D71 — would stay green if `READ_ONLY_GIT_CONFIG` were deleted from
+`run_git` tomorrow, because maintenance would not fire either way.
+
+**Demonstrated rather than argued.** With the settings removed from
+`run_git`, all 36 snapshot tests pass and the new witness fails. It
+records the argv of every git a real audit spawns and asserts each
+carries the settings: it watches the product, not the environment, and
+is deterministic where the snapshot was probabilistic.
+
+The same finding named D70's closer: `runs-on: macos-latest` with
+`run: true` satisfied it, so POSIX could be "demonstrated" by a job that
+does nothing. The macOS job now has to run the suite.
+
+*Closing tests:* `test_a_real_audit_spawns_no_git_without_the_read_only_settings`
+in `tests/test_git_read_only.py`, and
+`test_the_macos_runner_actually_runs_the_suite` in
+`tests/test_platform_claim.py`.
 
 ## Disposition
 

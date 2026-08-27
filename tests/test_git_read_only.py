@@ -20,6 +20,8 @@ probabilistic, and indifferent to what the environment says.
 
 from __future__ import annotations
 
+import contextlib
+import os
 import subprocess
 from pathlib import Path
 
@@ -191,4 +193,108 @@ def test_the_product_runs_only_git_commands_that_read(
         "the audit ran a git subcommand outside the read-only set, so git "
         "may schedule housekeeping after it and the reasoning in this "
         f"docstring no longer holds: {writing}"
+    )
+
+
+#: Repository config keys git will execute, each with a payload shape and
+#: the command that reaches it. A key added to `READ_ONLY_GIT_CONFIG`
+#: without a row here is a claim nobody checked.
+EXECUTING_KEYS = [
+    ("core.fsmonitor", "fsmonitor", ["status", "--short"]),
+    ("core.alternateRefsCommand", "plain", ["rev-list", "--count", "HEAD"]),
+    ("diff.external", "plain", ["diff"]),
+]
+
+
+def _repo_that_runs_a_script(root: Path, key: str, shape: str) -> Path:
+    """A repository whose own config points `key` at a script."""
+    import subprocess as real_subprocess
+
+    root.mkdir()
+    marker = root / "EXECUTED"
+    script = root / "payload.sh"
+    body = f'#!/bin/sh\ntouch "{marker}"\n'
+    if shape == "fsmonitor":
+        body += 'printf "/\\0"\n'
+    script.write_text(body, encoding="utf-8")
+    script.chmod(0o755)
+    (root / "a.txt").write_text("x\n", encoding="utf-8")
+    real_subprocess.run(["git", "init", "-q", str(root)], check=True)
+    real_subprocess.run(["git", "-C", str(root), "add", "a.txt"], check=True)
+    real_subprocess.run(
+        ["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t",
+         "commit", "-qm", "one"], check=True)
+    real_subprocess.run(
+        ["git", "-C", str(root), "config", key, str(script)], check=True)
+    return marker
+
+
+@pytest.mark.parametrize(
+    ("key", "shape", "argv"), EXECUTING_KEYS,
+    ids=[key for key, _shape, _argv in EXECUTING_KEYS],
+)
+def test_the_audited_repository_cannot_choose_what_this_process_runs(
+    key: str, shape: str, argv: list[str], tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D92: Decision 9 covers git, which it did not.
+
+    "This agent never executes the audited repository's code, and its
+    configuration is code." The analyzer adapters were held to that --
+    eslint refused outright, pylint and mypy pointed at `/dev/null`.
+    **Git was not.** `core.fsmonitor` names a command git runs, and
+    `worktree_status` runs `git status` on every git-backed audit, so a
+    repository could execute arbitrary code in this process simply by
+    being audited. The demonstration also wrote a file into the
+    worktree, which the MCP door promises never happens.
+
+    `READ_ONLY_GIT_CONFIG` disabled housekeeping (D71) and said nothing
+    about hooks. Every key here is checked, not only the one an audit
+    demonstrated, because the previous rule scoped to the commands of
+    the day missed the spawn that lived elsewhere (D73).
+    """
+    from maintainability_audit.git_tools import run_git
+
+    # The system and global tiers are scrubbed so only the repository's
+    # own config can be responsible for anything that happens.
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", os.devnull)
+
+    root = tmp_path / "hostile"
+    marker = _repo_that_runs_a_script(root, key, shape)
+    # A failing git is fine here: what is on trial is whether the
+    # repository's config ran, not whether the command succeeded.
+    with contextlib.suppress(Exception):
+        run_git(argv, root)
+
+    assert not marker.exists(), (
+        f"the audited repository's {key} ran a script in this process; "
+        "Decision 9 says configuration is code and this agent does not "
+        "run the audited tree's"
+    )
+
+
+def test_worktree_status_on_a_hostile_repository_changes_nothing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The reproduction as reported, through the function that runs it.
+
+    `worktree_status` is on the default path of every git-backed audit,
+    which is what made `core.fsmonitor` reachable without anyone opting
+    in to anything.
+    """
+    from maintainability_audit.git_tools import worktree_status
+
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", os.devnull)
+
+    root = tmp_path / "hostile"
+    marker = _repo_that_runs_a_script(root, "core.fsmonitor", "fsmonitor")
+    before = {path.name for path in root.rglob("*")}
+
+    worktree_status(root)
+
+    assert not marker.exists(), "the repository's config executed on an audit"
+    assert {path.name for path in root.rglob("*")} == before, (
+        "auditing the repository added a file to its worktree"
     )

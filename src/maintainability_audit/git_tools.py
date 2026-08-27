@@ -79,17 +79,49 @@ def validate_revspec(revspec: str) -> str:
     return revspec
 
 
-#: Config that stops git writing to the repository we only meant to read.
-#: Every command this package runs is a read -- `log`, `rev-list`,
-#: `status`, `rev-parse` -- but git may run housekeeping of its own
-#: afterwards, and housekeeping repacks objects and writes commit-graphs
-#: inside `.git`. A macOS CI run caught it as `.git/objects/maintenance.lock`
+#: Config that stops git writing to, or **running code from**, the
+#: repository we only meant to read.
+#:
+#: Two rules, learned in that order.
+#:
+#: *Do not write.* Git runs housekeeping of its own after many commands,
+#: and housekeeping repacks objects and writes commit-graphs inside
+#: `.git`. A macOS CI run caught it as `.git/objects/maintenance.lock`
 #: appearing in a tree the MCP tool promises never to write (D71).
 #:
-#: Applied here rather than at each call site because this is the one
-#: place that builds a git argv, which is what makes the promise
-#: checkable at all.
-READ_ONLY_GIT_CONFIG = ("-c", "gc.auto=0", "-c", "maintenance.auto=false")
+#: *Do not execute.* Decision 9 says this agent never runs the audited
+#: repository's code and that configuration counts as code. The analyzer
+#: adapters were held to that; **git was not**. A repository whose
+#: `.git/config` sets `core.fsmonitor` gets arbitrary code execution in
+#: this process on `git status`, which `worktree_status` runs on every
+#: git-backed audit — and the demonstration wrote a file into the
+#: worktree, which the MCP door separately promises never happens (D92).
+#:
+#: The list is wider than the one vector that was demonstrated. Every
+#: key here is one git will execute, whether or not today's command set
+#: reaches it, because the command set grows and the last rule scoped to
+#: today's commands (D73) missed the one spawn that lived elsewhere.
+#:
+#: **Residual, disclosed rather than closed:** content filters
+#: (`filter.<driver>.clean`) and `diff.*.textconv` execute too and are
+#: keyed by a driver name from the tree's `.gitattributes`, so no fixed
+#: `-c` can disable them. They are reachable through worktree-content
+#: diffs; this package's only `diff` compares two commits by name and
+#: status, which does not filter content. See `test_git_read_only`.
+READ_ONLY_GIT_CONFIG = (
+    # Housekeeping: do not write (D71).
+    "-c", "gc.auto=0",
+    "-c", "maintenance.auto=false",
+    # Execution: do not run the tree's code (D92).
+    "-c", "core.fsmonitor=false",
+    "-c", "core.hooksPath=/dev/null",
+    "-c", "core.pager=cat",
+    "-c", "core.sshCommand=false",
+    "-c", "core.alternateRefsCommand=",
+    "-c", "diff.external=",
+    "-c", "credential.helper=",
+    "-c", "protocol.ext.allow=never",
+)
 
 
 def run_git(args: list[str], cwd: Path) -> str:

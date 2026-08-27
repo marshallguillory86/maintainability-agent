@@ -416,9 +416,18 @@ def test_every_git_command_disables_gits_own_housekeeping() -> None:
     """
     from maintainability_audit.git_tools import READ_ONLY_GIT_CONFIG
 
-    assert READ_ONLY_GIT_CONFIG == ("-c", "gc.auto=0", "-c", "maintenance.auto=false"), (
-        f"the read-only git settings changed: {READ_ONLY_GIT_CONFIG}"
-    )
+    # The housekeeping half, by presence rather than by exact tuple.
+    # Pinning the literal was right while the tuple held one rule; it
+    # broke the day the tuple grew a second one -- the keys that stop
+    # the audited repository *executing* code through git (D92) -- and
+    # a check that fails when a guarantee is added is a check that
+    # argues against adding guarantees.
+    settings = set(READ_ONLY_GIT_CONFIG)
+    for required in ("gc.auto=0", "maintenance.auto=false"):
+        assert required in settings, (
+            f"{required} is no longer passed, so git may repack objects "
+            f"into a repository this package only reads: {READ_ONLY_GIT_CONFIG}"
+        )
 
     unguarded: list[str] = []
     found = 0

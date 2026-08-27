@@ -14,12 +14,20 @@ about the same history file.
 from __future__ import annotations
 
 import json
-import os
 import re
 from pathlib import Path
 from typing import Any
 
 from ._calibration import CALIBRATION_C
+from ._grant_ledger import (
+    ALLOWED_ROOTS_ENV as ALLOWED_ROOTS_ENV,  # noqa: PLC0414 - re-export
+)
+from ._grant_ledger import (
+    _resolved,
+    _stored_grants_and_identities,
+)
+from ._grant_ledger import allowed_roots as allowed_roots  # noqa: PLC0414
+from ._grant_ledger import refused_root_grants as refused_root_grants  # noqa: PLC0414
 from ._mcp_gate import _gate
 from ._recurrence import escalations
 from ._scan_history import (
@@ -30,14 +38,11 @@ from ._scan_history import (
     segments,
 )
 from ._stored_grants import (
-    IDENTITY_KEY,
-    REPAIR,
     StaleStandingGrant,
-    refusal_reason,
     refuse_a_stale_standing_grant,
 )
 from ._trends import trend_report
-from ._user_config import load_user_config, mark_repo_seen
+from ._user_config import mark_repo_seen
 from ._work_order import prompt_targets
 from .baseline import finding_fingerprints
 from .config import (
@@ -53,8 +58,6 @@ from .git_tools import validate_revspec as _validate_revspec
 from .prompts import render_ai_prompt
 from .renderers import render_markdown
 from .report import build_report
-
-ALLOWED_ROOTS_ENV = "MAINTAINABILITY_MCP_ALLOWED_ROOTS"
 
 
 class InvalidAuditArgument(ValueError):
@@ -73,74 +76,6 @@ class InvalidAuditArgument(ValueError):
 DEFAULT_BASELINE_PATH = ".maintainability/baseline.json"
 _REVSPEC = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/@^~:+-]*(?:\.{2,3}[A-Za-z0-9._/@^~:+-]+)?")
 
-def _resolved(path: str | Path, *, relative_to: Path | None = None) -> Path:
-    candidate = Path(path).expanduser()
-    if not candidate.is_absolute() and relative_to is not None:
-        candidate = relative_to / candidate
-    return candidate.resolve()
-
-
-def allowed_roots(explicit: tuple[str, ...] = ()) -> tuple[Path, ...]:
-    """Resolve the server allow-list once, defaulting to its launch directory.
-
-    "Always" grants the user made through the D10 elicitation live in
-    the user-tier config and join whatever the launch configured — a
-    standing grant must survive a restart, which launch flags alone
-    cannot promise.
-    """
-    configured = explicit or tuple(filter(None, os.environ.get(ALLOWED_ROOTS_ENV, "").split(os.pathsep)))
-    roots = configured or (str(Path.cwd()),)
-    return tuple(_resolved(root) for root in (*roots, *_persisted_root_grants()))
-
-
-def _grant_still_names_what_was_granted(entry: str, recorded: object = None) -> bool:
-    """True when a stored grant still names the directory it named.
-
-    The rule and the four versions it took live in `_stored_grants`.
-    """
-    return refusal_reason(entry, recorded) is None
-
-
-def _stored_grants_and_identities() -> tuple[list[str], dict[str, object]]:
-    """The persisted allow-list and what each entry resolved to."""
-    config = load_user_config() or {}
-    grants = config.get("allowed_roots")
-    identities = config.get(IDENTITY_KEY)
-    return (
-        [str(entry) for entry in grants] if isinstance(grants, list) else [],
-        identities if isinstance(identities, dict) else {},
-    )
-
-
-def _persisted_root_grants() -> tuple[str, ...]:
-    """The stored grants this process honours."""
-    entries, identities = _stored_grants_and_identities()
-    return tuple(
-        entry for entry in entries
-        if refusal_reason(entry, identities.get(entry)) is None
-    )
-
-
-def refused_root_grants() -> tuple[dict[str, str], ...]:
-    """Stored grants this process will not honour, and why (D38, D72).
-
-    Surfaced through `server_info` so a hand-written entry quietly doing
-    nothing can be seen — without disclosing what it resolved to.
-    """
-    entries, identities = _stored_grants_and_identities()
-    refused = []
-    for entry in entries:
-        reason = refusal_reason(entry, identities.get(entry))
-        if reason is None:
-            continue
-        # The entry is echoed because the user wrote it. What it resolves
-        # to is not ours to publish: returning it told whatever host
-        # reads `server_info` where a symlink the user named actually
-        # points (D72).
-        refused.append({"entry": entry, "reason": reason, "repair": REPAIR})
-    return tuple(refused)
-
-
 def _inside(path: Path, roots: tuple[Path, ...]) -> bool:
     return any(path == root or path.is_relative_to(root) for root in roots)
 
@@ -150,34 +85,57 @@ def authorize_repository(repository_root: str, roots: tuple[Path, ...]) -> Path:
     if not root.is_dir():
         raise InvalidAuditArgument("repository_root is not a directory")
     if not _inside(root, roots):
-        # The *supplied* spelling, never the resolved one. Naming
-        # `root` here told the host where a symlink the user typed
-        # actually points — the same disclosure D72 removed from
-        # `server_info`, left standing at the other door because that
-        # entry's falsifier only read the refusal dict (D82).
+        # The *supplied* spelling, never the resolved one: naming
+        # `root` told the host where a symlink the user typed actually
+        # points, the disclosure D72 removed from `server_info` (D82).
         raise PathNotAllowed(
             f"repository_root {repository_root} is outside the allowed "
             "roots. Grant standing access by relaunching the server with "
             f"--allow-root, by listing the path in ${ALLOWED_ROOTS_ENV}, "
             "or by answering the grant question when it is asked."
         )
+    _check_freshness_when_a_grant_is_the_only_cover(root, roots)
+    return root
+
+
+def _check_freshness_when_a_grant_is_the_only_cover(
+    root: Path, roots: tuple[Path, ...]
+) -> None:
+    """Freshness decides only where consent is the sole authorization.
+
+    A launch root authorizes on its own; applying D83's re-check to
+    anything a stale grant merely *covered* revoked access this
+    process's own configuration had granted (D90).
+    """
+    entries, identities = _stored_grants_and_identities()
+    granted = tuple(_resolved(entry) for entry in entries)
+    launch = tuple(item for item in roots if item not in granted)
+    if _inside(root, launch):
+        return
     try:
-        refuse_a_stale_standing_grant(root, *_stored_grants_and_identities())
+        refuse_a_stale_standing_grant(root, entries, identities)
     except StaleStandingGrant as stale:
         # Re-raised as the declared refusal so the transport keeps
         # translating it rather than treating it as a crash (D48).
         raise PathNotAllowed(str(stale)) from stale
-    return root
 
 
 def authorize_config(config_path: str | None, root: Path) -> str | None:
     if config_path is None:
         return None
     config = _resolved(config_path, relative_to=root)
+    # The supplied spelling in both refusals, never the resolved one:
+    # D82 closed this next door and left it standing here, where a
+    # caller naming `innocent.json` was told the symlink's target and
+    # the canonical repository path (D91).
     if not config.is_file():
-        raise InvalidAuditArgument(f"config_path is not a file: {config}")
+        raise InvalidAuditArgument(f"config_path is not a file: {config_path}")
     if not (config == root or config.is_relative_to(root)):
-        raise PathNotAllowed(f"config_path {config} is outside repository_root {root}")
+        raise PathNotAllowed(
+            f"config_path {config_path} is outside the repository being "
+            "audited. A config file must live inside the repository it "
+            "configures."
+        )
     return str(config)
 
 
@@ -387,7 +345,11 @@ def _baseline_workflow(report: dict[str, Any], root: Path,
 
     target = _resolved(baseline_path or str(DEFAULT_BASELINE_PATH), relative_to=root)
     if not (target == root or target.is_relative_to(root)):
-        raise PathNotAllowed(f"baseline_path {target} is outside repository_root {root}")
+        # The supplied spelling, never the resolved target (D96).
+        raise PathNotAllowed(
+            f"baseline_path {baseline_path or DEFAULT_BASELINE_PATH} is "
+            "outside the repository being audited"
+        )
     if write:
         _refuse_clobbering_non_baseline(target)
         target.parent.mkdir(parents=True, exist_ok=True)

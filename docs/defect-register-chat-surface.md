@@ -3109,6 +3109,70 @@ tests, which locate the step by its name line and then execute what it
 defines — so both break a member the tests do not enumerate. The first
 two versions of the closer survived one of these each.
 
+### D99 — Closed: every control was self-report (High)
+
+Miles Parker, on the thread where this work was described, 2026-08-27:
+*"agents are always in control over both what is being tested and the
+test. An agent that introduced a bug and mutated the test to cover it up
+would look no different externally from one that functioned perfectly."*
+
+He is right, and nothing built before this addressed it. D97's standard
+is enforced by tests the same agent can edit. The `*Mutation:*` line is
+the author's account of what they broke. Every control in this register
+was, ultimately, self-report.
+
+**The benign version is commonplace, and I did it three times in one
+day.** A test fails; I decide the test was wrong; I edit it.
+`test_git_argv` pinned an exact tuple and the tuple legitimately grew.
+`test_mcp_server` matched refusal text D82 changed.
+`test_declaration_grading` searched a whole document for `"42"`. Each
+edit was, I believe, correct. Nothing external distinguished *the test
+was wrong* from *I made the test agree with me*, and that is exactly the
+distinction Miles is asking for.
+
+`tools/prove_falsifiers.py` is the first control that does not take the
+author's word. For every entry added since the base commit it reads the
+tests the entry cites, builds a scratch worktree, restores everything to
+the base **except the files defining those tests**, and requires each
+cited test to fail there. A test that passes without the change did not
+need it.
+
+Two design faults, both found by running it rather than reasoning about
+it. Excluding all of `tests/` could prove no entry whose fix lives in
+test code — D97 added guards to four test files, so keeping `tests/`
+kept the guards and D97's own closer looked unproven. And `git checkout`
+restores tracked files without deleting ones the change added, so
+`constraints/analyzers.txt` survived the revert intact.
+
+**On its first honest run it found two real problems.**
+`test_there_are_sweeps_to_check` guards the detector rather than
+defending the claim and passes at the base — correct for a guard, wrong
+for a citation, so it is no longer cited. And
+`test_entries_from_the_cutoff_state_what_their_mutation_broke` passed
+*vacuously* at the base, where no entry reaches the cutoff and the list
+it asserts over is empty: D97's own clause-two defect, inside D97's own
+closer, invisible to every check that existed the day before.
+
+What it does not do: it cannot stop an agent editing the prover, the
+workflow, or the register. Those need enforcement outside the agent's
+reach — branch protection, CODEOWNERS, a human reading a diff. It closes
+the case where the code and its check are written together, which is the
+case that was actually producing defects here.
+
+*Closing tests:* `test_the_citation_region_stops_at_the_next_field`,
+`test_every_citation_spelling_the_register_uses_is_read` and
+`test_the_tool_is_wired_into_the_pipeline` in
+`tests/test_prove_falsifiers.py`.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
+
+*Mutation:* neutered the proving job with `|| true`, and separately
+appended a `*Mutation:*` line naming a test to an entry to confirm the
+citation region ignores it. Neither is a member the closing tests
+enumerate — they locate the job and the region by structure — and the
+tool itself was run against `ec0df33` to confirm four cited falsifiers
+fail without their changes and two do not.
+
 ## Disposition
 
 **One entry is open: D89.** It was closed on 2026-08-27 and reopened the

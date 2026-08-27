@@ -50,10 +50,12 @@ def test_the_release_plan_table_is_measured_not_remembered() -> None:
         )
 
     modules = sorted((ROOT / "src").rglob("*.py"))
+    assert modules, "no source modules found; the counts below mean nothing"
     lines = sum(
         len(path.read_text(encoding="utf-8").splitlines()) for path in modules
     )
     test_files = list((ROOT / "tests").glob("test_*.py"))
+    assert test_files, "no test files found; the counts below mean nothing"
 
     for label, actual in (
         ("Production code", lines),

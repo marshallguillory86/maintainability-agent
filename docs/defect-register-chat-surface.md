@@ -3040,8 +3040,14 @@ population being asserted, so a test binding two populations was covered
 by guarding either. That last one was found by mutating a guard the
 check did not name — the clause catching its own author.
 
-*Closing tests:* `test_a_sweep_asserts_its_population_is_not_empty` and
-`test_there_are_sweeps_to_check` in `tests/test_falsifier_standard.py`;
+The detector's own non-empty guard is deliberately **not** cited below.
+It defends the detector rather than the claim, and
+`tools/prove_falsifiers.py` showed it passing at the base — correct for
+a guard, wrong for a closer. A citation region that named it would be
+claiming a proof it cannot give.
+
+*Closing tests:* `test_a_sweep_asserts_its_population_is_not_empty` in
+`tests/test_falsifier_standard.py` and
 `test_entries_from_the_cutoff_state_what_their_mutation_broke` in
 `tests/test_roles_recorded.py`.
 

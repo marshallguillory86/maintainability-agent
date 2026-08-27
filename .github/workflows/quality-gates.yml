@@ -157,6 +157,46 @@ jobs:
       - name: Tests
         run: python3 -m pytest -q
 
+  # Run by hand to produce the file `constraints/analyzers.txt` should
+  # be. The pool has to be resolved on the platform it constrains, and
+  # the only Linux this project can reach is a runner -- which is also
+  # why D89 could not be closed by the agent that found it: closing it
+  # means installing the pool.
+  #
+  # Download the artifact, check it in, drop the xfail in
+  # `test_the_constraints_were_resolved_on_the_platform_the_gates_run_on`.
+  resolve-constraints:
+    name: Resolve the analyzer pool on Linux (manual)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Resolve and record
+        run: |
+          python3 -m venv /tmp/resolve
+          /tmp/resolve/bin/python -m pip install --upgrade pip
+          /tmp/resolve/bin/python -m pip install \
+            cohesion complexipy flake8 interrogate lizard multimetric \
+            mypy pydocstyle pylint radon ruff vulture
+          {
+            printf '# Resolved on %s with Python %s on %s.\n' \
+              "$(date -u +%Y-%m-%d)" \
+              "$(/tmp/resolve/bin/python -c 'import platform; print(platform.python_version())')" \
+              "$(/tmp/resolve/bin/python -c 'import platform; print(platform.platform())')"
+            printf '# Produced by the resolve-constraints job in quality-gates.yml.\n'
+            printf '# Full dependency closure: a transitive change can move analyzer\n'
+            printf '# output while the top-level version stays put.\n'
+            /tmp/resolve/bin/python -m pip freeze --all | grep -v '^pip=='
+          } > analyzers.txt
+          cat analyzers.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: analyzers-constraints-linux
+          path: analyzers.txt
+
   analyzer-drift:
     name: Analyzer drift (scheduled, unpinned)
     if: github.event_name == 'schedule'
@@ -178,10 +218,20 @@ jobs:
             cohesion complexipy flake8 interrogate lizard multimetric \
             mypy pydocstyle pylint radon ruff vulture
       - name: Fail visibly if the analyzer resolution drifted
+        # Compared like with like. The first version diffed the raw
+        # constraints file, which carries eight comment lines of
+        # provenance, against `pip freeze` output, which carries none --
+        # so the diff was non-empty on every run whether or not anything
+        # had drifted. A check that can never pass is worth less than no
+        # check: this file's own header says a pipeline that fails on
+        # something advisory teaches people to ignore it.
         run: |
+          strip() { grep -v '^#' "$1" | grep -v '^[[:space:]]*$' | sort -f; }
           /tmp/analyzer-drift/bin/python -m pip freeze --all \
-            | grep -v '^pip==' > /tmp/analyzer-drift.freeze
-          diff -u constraints/analyzers.txt /tmp/analyzer-drift.freeze
+            | grep -v '^pip==' > /tmp/analyzer-drift.raw
+          strip constraints/analyzers.txt > /tmp/pinned.txt
+          strip /tmp/analyzer-drift.raw > /tmp/resolved.txt
+          diff -u /tmp/pinned.txt /tmp/resolved.txt
 
   audit:
     name: Audit (maintainability + security)

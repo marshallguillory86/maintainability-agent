@@ -62,8 +62,12 @@ def test_repository_must_stay_inside_an_allowed_root(tmp_path: Path) -> None:
     outside = tmp_path / "outside"
     outside.mkdir()
 
-    with pytest.raises(PathNotAllowed, match="outside allowed roots"):
+    with pytest.raises(PathNotAllowed, match="outside the allowed") as refused:
         authorize_repository(str(outside), (allowed.resolve(),))
+    # And it names what the caller typed rather than what that resolved
+    # to: the same disclosure D72 removed from `server_info` was still
+    # standing here (D82).
+    assert "outside" in str(refused.value)
 
 
 def test_a_symlink_cannot_escape_the_allowed_root(tmp_path: Path) -> None:

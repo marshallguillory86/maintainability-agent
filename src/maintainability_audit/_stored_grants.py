@@ -41,6 +41,15 @@ from pathlib import Path
 #: Where `persist_root_grant` records what each grant resolved to.
 IDENTITY_KEY = "allowed_root_identity"
 
+
+class StaleStandingGrant(Exception):
+    """A persisted grant no longer names the directory it was given for.
+
+    Raised where the grant is *used*, not where it is loaded, and
+    re-raised by the audit door as `PathNotAllowed` so the transport
+    keeps its declared refusal type (D83).
+    """
+
 NO_IDENTITY = (
     "no record of what this path was when it was granted, so nothing here "
     "can tell it from a directory created or mounted afterwards"
@@ -120,3 +129,43 @@ def refusal_reason(entry: str, recorded: object) -> str | None:
     if directory_identity(candidate) != list(recorded):
         return CHANGED_IDENTITY
     return None
+
+
+def refuse_a_stale_standing_grant(
+    root: Path, entries: list[str], identities: dict[str, object]
+) -> None:
+    """Re-check persisted grants at *use*, not only at start-up (D83).
+
+    `allowed_roots()` runs once, when the server is built, and the
+    ledger it produces is a tuple of paths. `authorize_repository` then
+    only asked whether the request was *inside* one of them. So a
+    standing grant whose directory was swapped after the process started
+    kept authorizing whatever now sits at that path until the host died
+    — and an MCP server is long-lived, which is the surface this product
+    calls primary.
+
+    This is D38's original shape: the in-process seam was already right,
+    and a later read of a stored fact went around it. There the stored
+    fact was a path; here it is an identity, and the later read was not
+    happening at all.
+
+    Launch roots (`--allow-root`, the environment, the working
+    directory) carry no recorded identity and are not re-checked: they
+    are this process's own configuration rather than a standing consent.
+    """
+    for entry in entries:
+        # Resolved only to find which grant covers this request; the
+        # grant itself is then re-validated by the rule that does not
+        # trust resolution.
+        try:
+            granted = Path(entry).expanduser().resolve()
+        except OSError:
+            continue
+        if not (root == granted or root.is_relative_to(granted)):
+            continue
+        if refusal_reason(entry, identities.get(entry)) is not None:
+            raise StaleStandingGrant(
+                "the standing grant covering this repository no longer "
+                "names the directory it was given for, so it has been "
+                "withdrawn. Grant it again when asked."
+            )

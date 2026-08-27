@@ -353,6 +353,33 @@ def _kinds_for(fallback: Any) -> tuple[type, ...]:
     return ()
 
 
+def _shaped_members(
+    key: str, default: dict[str, Any], value: dict[str, Any], where: str
+) -> None:
+    """Each known nested key, by the type its default carries."""
+    for name, fallback in default.items():
+        if name not in value or name == "_doc":
+            continue
+        expected = _kinds_for(fallback)
+        if not expected:
+            continue
+        actual = value[name]
+        # `bool` is a subclass of `int`, so a bare isinstance check would
+        # accept `true` for a threshold that wants a number.
+        wrong_bool = isinstance(actual, bool) and bool not in expected
+        if wrong_bool or not isinstance(actual, expected):
+            raise ConfigUnreadable(
+                f"{where}: {key}.{name} must be "
+                f"{' or '.join(kind.__name__ for kind in expected)}, not "
+                f"{type(actual).__name__}. Repair or delete it."
+            )
+        # And the members, not only the container: the list branch in
+        # `_shaped_inside` only ever ran for a *top-level* list, so
+        # `{"paths": {"include_extensions": [1]}}` was accepted and the
+        # audit reported a clean scan of nothing (D84).
+        _shaped_inside(f"{key}.{name}", fallback, actual, where)
+
+
 def _shaped_inside(
     key: str, default: Any, value: Any, where: str
 ) -> None:
@@ -372,22 +399,7 @@ def _shaped_inside(
     keys are: this is a shape check, not a schema.
     """
     if isinstance(default, dict) and isinstance(value, dict):
-        for name, fallback in default.items():
-            if name not in value or name == "_doc":
-                continue
-            expected = _kinds_for(fallback)
-            actual = value[name]
-            if not expected:
-                continue
-            # `bool` is a subclass of `int`, so a bare isinstance check
-            # would accept `true` for a threshold that wants a number.
-            wrong_bool = isinstance(actual, bool) and bool not in expected
-            if wrong_bool or not isinstance(actual, expected):
-                raise ConfigUnreadable(
-                    f"{where}: {key}.{name} must be "
-                    f"{' or '.join(kind.__name__ for kind in expected)}, not "
-                    f"{type(actual).__name__}. Repair or delete it."
-                )
+        _shaped_members(key, default, value, where)
     elif isinstance(default, list) and isinstance(value, list):
         kinds = {type(item) for item in default} or {str}
         for index, item in enumerate(value):

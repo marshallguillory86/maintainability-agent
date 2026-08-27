@@ -29,7 +29,13 @@ from ._scan_history import (
     record_of,
     segments,
 )
-from ._stored_grants import IDENTITY_KEY, REPAIR, refusal_reason
+from ._stored_grants import (
+    IDENTITY_KEY,
+    REPAIR,
+    StaleStandingGrant,
+    refusal_reason,
+    refuse_a_stale_standing_grant,
+)
 from ._trends import trend_report
 from ._user_config import load_user_config, mark_repo_seen
 from ._work_order import prompt_targets
@@ -142,15 +148,25 @@ def _inside(path: Path, roots: tuple[Path, ...]) -> bool:
 def authorize_repository(repository_root: str, roots: tuple[Path, ...]) -> Path:
     root = _resolved(repository_root)
     if not root.is_dir():
-        raise InvalidAuditArgument(f"repository_root is not a directory: {root}")
+        raise InvalidAuditArgument("repository_root is not a directory")
     if not _inside(root, roots):
-        allowed = ", ".join(str(item) for item in roots)
+        # The *supplied* spelling, never the resolved one. Naming
+        # `root` here told the host where a symlink the user typed
+        # actually points — the same disclosure D72 removed from
+        # `server_info`, left standing at the other door because that
+        # entry's falsifier only read the refusal dict (D82).
         raise PathNotAllowed(
-            f"repository_root {root} is outside allowed roots: {allowed}. "
-            f"Grant standing access by relaunching the server with "
-            f"--allow-root {root} or by listing the path in "
-            f"${ALLOWED_ROOTS_ENV}."
+            f"repository_root {repository_root} is outside the allowed "
+            "roots. Grant standing access by relaunching the server with "
+            f"--allow-root, by listing the path in ${ALLOWED_ROOTS_ENV}, "
+            "or by answering the grant question when it is asked."
         )
+    try:
+        refuse_a_stale_standing_grant(root, *_stored_grants_and_identities())
+    except StaleStandingGrant as stale:
+        # Re-raised as the declared refusal so the transport keeps
+        # translating it rather than treating it as a crash (D48).
+        raise PathNotAllowed(str(stale)) from stale
     return root
 
 

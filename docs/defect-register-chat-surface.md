@@ -2519,6 +2519,83 @@ in `tests/test_git_read_only.py`, and
 `test_the_macos_runner_actually_runs_the_suite` in
 `tests/test_platform_claim.py`.
 
+### D82 — Closed: the audit door stops naming symlink targets too (High)
+
+Grok, UAT audit of `2fa909e`. D72 removed the resolved path from
+`server_info`'s refusals because D48 forbids host paths crossing the
+transport. `authorize_repository` kept doing it: the user names
+`innocent`, and its `PathNotAllowed` tells the host `secret-target`.
+
+**D72's falsifier asserted the resolved path appears in no field of the
+refusal dictionary.** It never read the exception. One door was closed
+and its neighbour was left open by a check shaped around the door that
+had been reported — the register's recurring defect, and the second time
+in three days that a fix's own closer defined the fix's scope.
+
+The refusal echoes the spelling the user supplied, which is theirs
+already, and says how to obtain a grant without resolving anything. The
+sibling refusal for a non-directory is checked for the same leak.
+
+*Closing tests:* `test_a_refusal_does_not_tell_the_host_where_a_symlink_points`
+and `test_a_missing_directory_refusal_does_not_name_the_resolved_path`
+in `tests/test_authorization_freshness.py`.
+
+### D83 — Closed: a standing grant is re-checked at use, not at start-up (High)
+
+Grok, UAT audit of `2fa909e` — and the most consequential finding of the
+round, because D79 was closed without it and reads as complete.
+
+`allowed_roots()` runs **once**, when the server is constructed, and
+produces a tuple of paths. `authorize_repository` then asked one
+question: is this request inside one of them? So the identity D79
+records at consent was verified at start-up and never again. Swap the
+granted directory afterwards and the audit keeps authorizing whatever
+now sits at that path for the life of the process — and an MCP server
+is long-lived, on the surface this product calls primary.
+
+Reproduced in-process: grant `project`, rename it away, recreate it with
+`pwned.txt` inside, ask again. **Authorized.** Only a restart refused it.
+
+This is D38's original shape returning a fifth time: the in-process seam
+was already right, and a later read of a stored fact went around it.
+There the stored fact was a path and the read followed a symlink; here
+the stored fact is an identity and the read was not happening at all.
+Every version of this entry has fixed *where* the check compares and
+left *when* it runs alone.
+
+Persisted grants are re-validated at each authorization. Launch roots —
+`--allow-root`, the environment, the working directory — are not: they
+carry no recorded identity because they are this process's own
+configuration rather than a standing consent, and re-checking them would
+refuse every ordinary launch.
+
+*Closing tests:* `test_a_swapped_directory_loses_its_grant_without_a_restart`
+and `test_a_launch_root_is_not_re_checked` in
+`tests/test_authorization_freshness.py`. The check lives in
+`_stored_grants` beside the rule it applies, and the audit door
+re-raises it as `PathNotAllowed` so the transport keeps translating a
+declared refusal rather than seeing a crash (D48).
+
+### D84 — Closed: a nested list's members are shaped too (Medium)
+
+Codex, UAT audit of `2fa909e`. `_shaped_inside` has a branch that
+validates list items and it only ever ran for a **top-level** list. So
+`{"paths": {"include_extensions": [1]}}` was accepted: the value is a
+list, which is all that was asked.
+
+The audit then matched no file, exited 0, and reported a clean scan of
+nothing with forty source files "unread". That is worse than a crash and
+is exactly the concealment D53 exists to prevent — a type error turned
+into an apparently valid empty result, which a reader cannot tell from a
+repository that genuinely has no source in it.
+
+The dict branch now recurses, so a member is checked wherever it lives.
+Refused by name: `paths.include_extensions[0] must be str, not int`.
+
+*Closing tests:* `test_a_nested_list_member_of_the_wrong_type_is_refused_by_name`
+and `test_a_valid_nested_list_still_loads` in
+`tests/test_config_shape.py`.
+
 ## Disposition
 
 **Every entry in this register is closed.** D32 through D46 came from

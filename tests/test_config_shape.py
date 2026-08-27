@@ -21,7 +21,12 @@ from typing import Any
 
 import pytest
 
-from maintainability_audit.config import DEFAULT_CONFIG, ConfigUnreadable, load_config
+from maintainability_audit.config import (
+    CONFIG_FILENAME,
+    DEFAULT_CONFIG,
+    ConfigUnreadable,
+    load_config,
+)
 
 DOCS = Path(__file__).resolve().parents[1] / "docs"
 SCHEMA = Path(__file__).resolve().parents[1] / "maintainability-agent.schema.json"
@@ -179,3 +184,53 @@ def test_the_schema_does_not_call_a_live_setting_reserved() -> None:
     assert not reserved, (
         f"the schema calls a setting reserved and unread: {reserved}"
     )
+
+
+NESTED_LIST_MEMBERS = [
+    pytest.param({"paths": {"include_extensions": [1]}},
+                 "paths.include_extensions[0]", id="extension is a number"),
+    pytest.param({"paths": {"exclude_patterns": [{"a": 1}]}},
+                 "paths.exclude_patterns[0]", id="exclude pattern is an object"),
+    pytest.param({"paths": {"exclude_patterns": [None]}},
+                 "paths.exclude_patterns[0]", id="exclude pattern is null"),
+]
+
+
+@pytest.mark.parametrize(("payload", "named"), [
+    (case.values[0], case.values[1]) for case in NESTED_LIST_MEMBERS
+], ids=[case.id for case in NESTED_LIST_MEMBERS])
+def test_a_nested_list_member_of_the_wrong_type_is_refused_by_name(
+    payload: dict, named: str, tmp_path: Path,
+) -> None:
+    """D84: the container was checked and the members were not.
+
+    `_shaped_inside` has a branch that validates list items, and it only
+    ever ran for a *top-level* list. So `{"paths": {"include_extensions":
+    [1]}}` was accepted: the value is a list, which is all that was
+    asked. The audit then matched no file, exited 0, and reported a
+    clean scan of nothing with forty source files "unread".
+
+    That is worse than a crash and is the concealment D53 exists to
+    prevent -- a type error turned into an apparently valid empty
+    result, which a reader has no way to tell from a repository that
+    genuinely has no source in it.
+    """
+    config = tmp_path / CONFIG_FILENAME
+    config.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ConfigUnreadable) as refused:
+        load_config(str(config))
+    assert named in str(refused.value), (
+        f"the refusal did not name the offending member: {refused.value}"
+    )
+
+
+def test_a_valid_nested_list_still_loads(tmp_path: Path) -> None:
+    """The fix must not refuse the configuration people actually write."""
+    config = tmp_path / CONFIG_FILENAME
+    config.write_text(
+        json.dumps({"paths": {"include_extensions": [".py", ".js"]}}),
+        encoding="utf-8",
+    )
+    loaded = load_config(str(config))
+    assert loaded["paths"]["include_extensions"] == [".py", ".js"]

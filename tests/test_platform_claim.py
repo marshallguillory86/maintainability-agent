@@ -94,3 +94,44 @@ def test_the_symlink_fixtures_are_still_unguarded() -> None:
         "claiming POSIX only has gone stale — re-read README's platform "
         "section before widening or narrowing the claim"
     )
+
+
+def test_the_macos_runner_actually_runs_the_suite() -> None:
+    """D81: a `runs-on` line is not a demonstration.
+
+    `test_ci_runs_only_platforms_the_package_claims` requires a runner
+    whose image name contains `macos`. An audit pointed out what that
+    accepts: `runs-on: macos-latest` with `run: true` satisfies it, and
+    POSIX is "demonstrated" by a job that does nothing. Same shape as
+    the 292-result baseline this project spent a day removing -- a green
+    box whose contents do not mean the claim.
+
+    What the second platform is *for* is running the suite, so that is
+    what is checked. Deliberately not lint, coverage or CVE scanning:
+    those are properties of the project rather than of the platform, and
+    D70 says so.
+    """
+    text = (ROOT / ".github" / "workflows" / "quality-gates.yml").read_text(
+        encoding="utf-8")
+    lines = text.splitlines()
+
+    starts = [
+        index for index, line in enumerate(lines)
+        if "runs-on:" in line and "macos" in line.lower()
+    ]
+    assert starts, "no macOS runner; the claim rests on one platform again"
+
+    for start in starts:
+        # The job body runs until the next line at or below the depth of
+        # the `runs-on:` key itself.
+        depth = len(lines[start]) - len(lines[start].lstrip())
+        body: list[str] = []
+        for line in lines[start + 1:]:
+            if line.strip() and (len(line) - len(line.lstrip())) < depth:
+                break
+            body.append(line)
+        joined = "\n".join(body)
+        assert "pytest" in joined, (
+            "the macOS job never runs the test suite, so the POSIX claim "
+            f"rests on a job that proves nothing:\n{joined[:400]}"
+        )

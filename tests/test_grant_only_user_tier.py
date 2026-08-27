@@ -168,8 +168,18 @@ def test_a_standing_grant_does_not_follow_a_renamed_directory(
     launch = base / "launch"
     launch.mkdir()
 
-    monkeypatch.setattr(
-        _mcp_audit, "load_user_config", lambda: {"allowed_roots": [str(granted)]})
+    # Built the way the product builds one -- through the elicitation --
+    # because a grant now records what the directory *was* as well as
+    # where it was, and a hand-written entry carries no such record
+    # (D79). Hand-writing it here would have tested the legacy path
+    # while claiming to test the standing grant.
+    from maintainability_audit._stored_grants import IDENTITY_KEY, directory_identity
+
+    stored = {
+        "allowed_roots": [str(granted)],
+        IDENTITY_KEY: {str(granted): directory_identity(granted)},
+    }
+    monkeypatch.setattr(_mcp_audit, "load_user_config", lambda: dict(stored))
 
     kept = _mcp_audit.allowed_roots(explicit=(str(launch),))
     assert granted in kept, "an untouched standing grant must survive a restart"
@@ -298,3 +308,115 @@ def test_a_grant_the_product_made_is_canonical_and_survives(
         "a grant the product itself made was dropped on the next start"
     )
     assert not _mcp_audit.refused_root_grants()
+
+
+def test_a_grant_to_a_directory_that_does_not_exist_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D79, the fourth hole in the same predicate.
+
+    `Path.resolve()` is not `strict=True`, so a path nobody has created
+    "resolves to itself" and passed the canonical test. Hand-write one
+    into `allowed_roots`, get no refusal, then create the directory --
+    or mount something over it -- and a grant now covers a directory
+    that did not exist when the user said yes.
+
+    The grant has to name a directory that is there *now*, at the moment
+    it is honoured, not one that could appear later.
+    """
+    from maintainability_audit import _mcp_audit
+
+    ghost = tmp_path / "not-created-yet"
+    monkeypatch.setattr(
+        _mcp_audit, "load_user_config", lambda: {"allowed_roots": [str(ghost)]})
+
+    roots = set(_mcp_audit.allowed_roots(explicit=(str(tmp_path),)))
+    assert not roots & {ghost, ghost.resolve()}, (
+        "a grant to a path nobody has created was honoured"
+    )
+
+    # The attack it enables, and the reason a spelling rule could never
+    # close this: create the directory afterwards and it is
+    # indistinguishable from a granted one *by name*. Only the identity
+    # recorded at consent tells them apart, and a hand-written entry has
+    # none (D79).
+    ghost.mkdir()
+    assert ghost.resolve() not in set(_mcp_audit.allowed_roots(
+        explicit=(str(tmp_path),))), (
+        "creating the directory after the fact activated a grant nobody "
+        "was asked for"
+    )
+    reasons = [item["reason"] for item in _mcp_audit.refused_root_grants()]
+    assert reasons and "no record" in reasons[0], reasons
+
+
+def test_a_granted_directory_replaced_by_another_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The whole class, closed by identity rather than by spelling.
+
+    Four rules compared better and better strings and each moved the
+    hole instead of closing it. A path is a *name*, and names alias:
+    symlinks, case-insensitive volumes, bind mounts, a directory created
+    after the question was answered. What none of those can forge is
+    which directory it actually is.
+
+    Here the granted path keeps its exact spelling, still resolves to
+    itself, still exists, and is still a directory -- and every previous
+    rule honoured it, because by name nothing changed.
+    """
+    from maintainability_audit import _mcp_audit
+    from maintainability_audit._stored_grants import IDENTITY_KEY, directory_identity
+
+    granted = tmp_path / "work"
+    granted.mkdir()
+    stored = {
+        "allowed_roots": [str(granted)],
+        IDENTITY_KEY: {str(granted): directory_identity(granted)},
+    }
+    monkeypatch.setattr(_mcp_audit, "load_user_config", lambda: dict(stored))
+    assert granted in set(_mcp_audit.allowed_roots(explicit=(str(tmp_path),)))
+
+    # Same name, same spelling, different directory.
+    granted.rmdir()
+    granted.mkdir()
+    assert granted.resolve() == granted and granted.is_dir()
+    assert granted not in set(_mcp_audit.allowed_roots(explicit=(str(tmp_path),))), (
+        "a directory recreated under the granted name inherited the grant; "
+        "by name it is identical, which is why name comparison never "
+        "closed this"
+    )
+    reasons = [item["reason"] for item in _mcp_audit.refused_root_grants()]
+    assert reasons and "not the one you granted" in reasons[0], reasons
+
+
+def test_a_case_variant_spelling_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The same hole wearing the local filesystem's clothes.
+
+    `resolve()` preserves case, so on a case-insensitive volume -- APFS,
+    which is this project's development platform -- `/USERS/...` both
+    exists and resolves to itself. A non-canonical *spelling* was
+    treated as a product-made grant.
+
+    Skipped where the filesystem is case-sensitive, because there the
+    variant genuinely is a different path and refusing it proves nothing.
+    """
+    from maintainability_audit import _mcp_audit
+
+    work = tmp_path / "Work"
+    work.mkdir()
+    variant = tmp_path / "WORK"
+    if not variant.exists():
+        pytest.skip("case-sensitive filesystem: the variant is a different path")
+
+    monkeypatch.setattr(
+        _mcp_audit, "load_user_config", lambda: {"allowed_roots": [str(variant)]})
+    roots = _mcp_audit.allowed_roots(explicit=(str(tmp_path),))
+    assert work.resolve() not in roots and variant not in roots, (
+        "a case-variant spelling was honoured; path identity is string "
+        "identity here, and two strings named one directory"
+    )
+    assert [item["entry"] for item in _mcp_audit.refused_root_grants()] == [
+        str(variant)], "the refusal was silent"

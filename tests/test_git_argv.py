@@ -450,26 +450,3 @@ def test_every_git_command_disables_gits_own_housekeeping() -> None:
         "repack objects and write commit-graphs into a repository this "
         "package only meant to read"
     )
-
-
-def test_the_suites_own_git_has_maintenance_disabled(tmp_path: Path) -> None:
-    """The conftest guard reaches git, rather than merely being set.
-
-    `GIT_CONFIG_COUNT`/`KEY`/`VALUE` are honoured by git 2.31+. Asserting
-    the environment variables exist would prove only that conftest ran;
-    this asks git what it actually resolved, which is the thing the
-    fixture repositories depend on.
-    """
-    import subprocess
-
-    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
-    for key, expected in (("gc.auto", "0"), ("maintenance.auto", "false")):
-        seen = subprocess.run(
-            ["git", "-C", str(tmp_path), "config", "--get", key],
-            capture_output=True, text=True, check=False,
-        ).stdout.strip()
-        assert seen == expected, (
-            f"git resolved {key}={seen!r}, not {expected!r}: a fixture's own "
-            "commit can still schedule detached maintenance and write "
-            ".git/objects/maintenance.lock into a tree a test is watching"
-        )

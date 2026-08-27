@@ -16,6 +16,7 @@ applies here: claim what you can demonstrate.
 from __future__ import annotations
 
 import ast
+import re
 import tomllib
 from pathlib import Path
 
@@ -130,8 +131,22 @@ def test_the_macos_runner_actually_runs_the_suite() -> None:
             if line.strip() and (len(line) - len(line.lstrip())) < depth:
                 break
             body.append(line)
-        joined = "\n".join(body)
-        assert "pytest" in joined, (
-            "the macOS job never runs the test suite, so the POSIX claim "
-            f"rests on a job that proves nothing:\n{joined[:400]}"
+        # Not `"pytest" in joined`. That was the first spelling and an
+        # audit named what it accepts: `echo pytest` passes, and so does
+        # a pytest invocation naming one file, which would let the job
+        # stop running the product's suite without this noticing. D77
+        # had just taught the same lesson one job over -- a comment is
+        # not an install (D87).
+        runs = [
+            line.split("run:", 1)[1].strip()
+            for line in body if "run:" in line
+        ]
+        suite = [
+            command for command in runs
+            if re.fullmatch(r"(?:python3?\s+-m\s+)?pytest(?:\s+-\S+)*", command)
+        ]
+        assert suite, (
+            "the macOS job never runs the whole test suite -- a command "
+            "naming specific paths, or merely containing the word, leaves "
+            f"the POSIX claim resting on a job that proves nothing: {runs}"
         )

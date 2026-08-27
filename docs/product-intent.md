@@ -128,6 +128,27 @@ repository is a config decision nobody has asked for.
 `test_the_history_window_is_disclosed_as_clock_relative` fails if the
 window changes without this paragraph changing with it.
 
+**Why P1 says "pinned" and CI does not pin.** P1's determinism is
+*conditional*: same tree, config, **pinned analyzer versions** and scan
+history in, same evidence out. The condition is real and the report
+records each analyzer's version so two runs can be compared on it.
+
+The pipeline that gates this repository installs the analyzer pool
+**unpinned**, deliberately, so that an unchanged `main` going red
+because an analyzer shipped is a signal rather than a silence — the
+signal D48 was filed from. The consequence has to be said plainly: a
+green CI run certifies that the suite passed against *today's*
+analyzers. It does not certify P1's condition, because that condition is
+about two runs, and nothing here compares yesterday's versions to
+today's.
+
+Closing that properly means a checked-in constraints file for the gating
+job with the drift check moved to the scheduled run, so both properties
+hold at once. It is not done, and this paragraph exists so nobody reads
+a green pipeline as evidence of a promise it does not test.
+`test_the_pipeline_does_not_claim_to_pin_what_it_installs_loose` holds
+the workflow and this page together.
+
 **What P1 does not police.** External analyzers run as local child processes (`_runner`). This package does not wrap them in a network sandbox, and it does not inspect whether *they* open sockets. A future SaaS CLI adapter would be a different product. The host that prints a report into an IDE chat (Grok, Claude, …) is also outside this process. P1 is enforced as determinism plus no HTTP client in `src/` that uploads the tree — not as “no packet can leave the box.”
 
 The prerequisites this creates are listed in [the analyzer pool](analyzer-pool.md#runtime-prerequisites) rather than left for a user to discover from a failure.

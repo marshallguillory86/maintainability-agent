@@ -29,6 +29,7 @@ from ._scan_history import (
     record_of,
     segments,
 )
+from ._stored_grants import IDENTITY_KEY, REPAIR, refusal_reason
 from ._trends import trend_report
 from ._user_config import load_user_config, mark_repo_seen
 from ._work_order import prompt_targets
@@ -86,47 +87,31 @@ def allowed_roots(explicit: tuple[str, ...] = ()) -> tuple[Path, ...]:
     return tuple(_resolved(root) for root in (*roots, *_persisted_root_grants()))
 
 
-def _grant_still_names_what_was_granted(entry: str) -> bool:
-    """True when a stored grant still points at the directory it named.
+def _grant_still_names_what_was_granted(entry: str, recorded: object = None) -> bool:
+    """True when a stored grant still names the directory it named.
 
-    A grant is persisted resolved, so a stored entry that no longer
-    resolves to itself is one whose path has acquired a symlink since —
-    the directory renamed away and something else left at the old name.
-    Re-resolving it at start-up would follow that link and extend the
-    allow-list to a directory nobody consented to (D38).
-
-    **Canonical or nothing, and the middle ground is gone.** The first
-    fix required exactly this and dropped every ordinary macOS grant,
-    because `/tmp` and `/var` are symlinks there. The second honoured a
-    non-canonical entry unless the granted path was itself a link — and
-    an audit walked straight through it by retargeting the *parent*, one
-    directory up from the leaf that rule checked (D65).
-
-    There is no third rule. A bare path with no record of what it
-    resolved to when it was granted cannot be defended: nothing to
-    compare against means nothing to detect. So the product persists the
-    resolved path, those entries are checkable, and an entry that is not
-    canonical is refused rather than guessed at — with `server_info`
-    naming it, because the first version of this dropped grants in
-    silence and that is what made it hard to see.
+    The rule and the four versions it took live in `_stored_grants`.
     """
-    candidate = Path(entry).expanduser()
-    if not candidate.is_absolute():
-        return False
-    try:
-        return candidate.resolve() == candidate
-    except OSError:
-        return False
+    return refusal_reason(entry, recorded) is None
+
+
+def _stored_grants_and_identities() -> tuple[list[str], dict[str, object]]:
+    """The persisted allow-list and what each entry resolved to."""
+    config = load_user_config() or {}
+    grants = config.get("allowed_roots")
+    identities = config.get(IDENTITY_KEY)
+    return (
+        [str(entry) for entry in grants] if isinstance(grants, list) else [],
+        identities if isinstance(identities, dict) else {},
+    )
 
 
 def _persisted_root_grants() -> tuple[str, ...]:
     """The stored grants this process honours."""
-    grants = (load_user_config() or {}).get("allowed_roots")
-    if not isinstance(grants, list):
-        return ()
+    entries, identities = _stored_grants_and_identities()
     return tuple(
-        str(entry) for entry in grants
-        if _grant_still_names_what_was_granted(str(entry))
+        entry for entry in entries
+        if refusal_reason(entry, identities.get(entry)) is None
     )
 
 
@@ -136,28 +121,17 @@ def refused_root_grants() -> tuple[dict[str, str], ...]:
     Surfaced through `server_info` so a hand-written entry quietly doing
     nothing can be seen — without disclosing what it resolved to.
     """
-    grants = (load_user_config() or {}).get("allowed_roots")
-    if not isinstance(grants, list):
-        return ()
+    entries, identities = _stored_grants_and_identities()
     refused = []
-    for entry in grants:
-        text = str(entry)
-        if _grant_still_names_what_was_granted(text):
+    for entry in entries:
+        reason = refusal_reason(entry, identities.get(entry))
+        if reason is None:
             continue
-        refused.append({
-            "entry": text,
-            "reason": (
-                "not a canonical path: it resolves to a different path, so "
-                "this agent cannot tell a symlinked spelling from a "
-                "directory that was swapped after you granted it"
-            ),
-            # Deliberately *not* the resolved path (D72): returning it
-            # told whatever host reads `server_info` where a symlink the
-            # user named actually points. The entry is echoed because
-            # the user wrote it; its target is not ours to publish.
-            "repair": ("grant this root again through setup, which stores "
-                       "the path it resolved to when you consented"),
-        })
+        # The entry is echoed because the user wrote it. What it resolves
+        # to is not ours to publish: returning it told whatever host
+        # reads `server_info` where a symlink the user named actually
+        # points (D72).
+        refused.append({"entry": entry, "reason": reason, "repair": REPAIR})
     return tuple(refused)
 
 

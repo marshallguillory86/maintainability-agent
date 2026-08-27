@@ -110,6 +110,7 @@ flowchart TB
     _hotspots["_hotspots"]
     config["config"]
     _user_config["_user_config"]
+    _stored_grants["_stored_grants"]
     _safe_write["_safe_write"]
     git_tools["git_tools"]
     _scan_history["_scan_history"]

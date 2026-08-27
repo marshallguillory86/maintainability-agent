@@ -53,6 +53,17 @@ _CLASS_RE = re.compile(rf"^class\s+({_NAME})\b")
 _FUNCTION_RE = re.compile(rf"^function\s*\*?\s*({_NAME})\s*{_GENERICS}\(")
 # `load = async (…) =>`, `parse = function`, `toId = x => x.id`.
 _ASSIGNED_RE = re.compile(rf"^({_NAME})\s*(?::[^=;]*)?=\s*(?:async\s+)?(?:function\b|{_NAME}\s*=>|{_GENERICS}\()")
+
+# Object-literal members: `{ onSave: (a) => {...} }` and
+# `{ onLoad: function (b) {...} }`. This is how a React or Node codebase
+# writes most of its interesting logic, and none of it was detected --
+# so an audit of such a tree scored whatever loose `function`
+# declarations sat beside the handlers and reported the file examined
+# (D86). A `name:` prefix cannot be a control keyword, which is what
+# keeps this off `if (` and `for (`.
+_PROPERTY_RE = re.compile(
+    rf"^({_NAME})\s*:\s*(?:async\s+)?(?:function\b\s*\*?\s*\(|{_NAME}\s*=>|\([^)]*\)\s*=>)"
+)
 _METHOD_RE = re.compile(rf"^\*?\s*({_NAME})\s*{_GENERICS}\(")
 
 # Control-flow keywords share the `name(` shape with a method
@@ -141,6 +152,9 @@ def _declaration(line: str) -> tuple[str, str] | None:
     assigned = _ASSIGNED_RE.match(tail)
     if assigned is not None and _named(assigned) and _is_assignment(tail):
         return assigned.group(1), "function"
+    prop = _PROPERTY_RE.match(tail)
+    if prop is not None and _named(prop):
+        return prop.group(1), "function"
     method = _METHOD_RE.match(tail)
     if method is not None and _named(method) and _is_method(tail, method):
         return method.group(1), "function"

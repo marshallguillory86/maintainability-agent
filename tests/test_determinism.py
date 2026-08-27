@@ -293,3 +293,47 @@ def test_the_history_window_is_disclosed_as_clock_relative() -> None:
         "different one, so the disclosure describes a window that is not "
         "the one being used"
     )
+
+
+def test_the_pipeline_does_not_claim_to_pin_what_it_installs_loose() -> None:
+    """D89: P1's condition and the gating pipeline, held together.
+
+    P1's determinism is conditional on pinned analyzer versions. The
+    workflow installs the pool unpinned on purpose, so a green run does
+    not test that condition -- it tests that the suite passed against
+    today's analyzers. An audit put it exactly: the pipeline that would
+    certify 1.0 does not pin what P1 depends on.
+
+    The gap is disclosed rather than papered over, and this fails the
+    moment the two stop matching: either the workflow gains a pin, in
+    which case the disclosure is stale, or the disclosure is removed
+    while the pool stays loose.
+    """
+    workflow = (
+        Path(__file__).resolve().parents[1]
+        / ".github" / "workflows" / "quality-gates.yml"
+    ).read_text(encoding="utf-8")
+    intent = (
+        Path(__file__).resolve().parents[1] / "docs" / "product-intent.md"
+    ).read_text(encoding="utf-8")
+
+    pool = next(
+        (block for block in workflow.split("- name:")
+         if "analyzer pool" in block),
+        None,
+    )
+    assert pool is not None, "the analyzer-pool install step is gone"
+
+    pinned = "==" in pool or "--constraint" in pool or "-c constraints" in pool
+    disclosed = "installs the analyzer pool" in intent and "unpinned" in intent
+
+    assert pinned != disclosed or not (pinned or disclosed), (
+        "the workflow pins the analyzer pool while product-intent still "
+        "discloses that it does not, or the reverse. P1's condition and "
+        f"the pipeline have to agree: pinned={pinned} disclosed={disclosed}"
+    )
+    assert disclosed, (
+        "the pool is installed unpinned and product-intent no longer says "
+        "so, which lets a green pipeline read as evidence for a promise "
+        "it does not test"
+    )

@@ -28,6 +28,49 @@ import pytest
 from maintainability_audit.git_tools import READ_ONLY_GIT_CONFIG
 
 
+def _audit_a_repository(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> list[list[str]]:
+    """Audit a one-commit repository; return every git argv it spawned.
+
+    Shared by the two witnesses below, which otherwise duplicated this
+    setup verbatim and tripped the project's own duplication gate.
+
+    The original `subprocess.run` is captured before patching, because
+    `git_tools.subprocess` is this same module object and patching its
+    `run` would replace the function the wrapper calls through to. The
+    recorder is installed *after* the fixture's own init/add/commit,
+    which are this file's setup rather than the product's behaviour.
+    """
+    import subprocess as real_subprocess
+
+    from maintainability_audit import _backfill, git_tools
+    from maintainability_audit.config import load_config
+    from maintainability_audit.report import build_report
+
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "m.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    real_subprocess.run(["git", "init", "-q", str(root)], check=True)
+    real_subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+    real_subprocess.run(
+        ["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t",
+         "commit", "-qm", "one"], check=True)
+
+    spawned: list[list[str]] = []
+    original_run = real_subprocess.run
+
+    def recording_run(argv, *args, **kwargs):  # type: ignore[no-untyped-def]
+        if isinstance(argv, (list, tuple)) and argv and argv[0] == "git":
+            spawned.append(list(argv))
+        return original_run(argv, *args, **kwargs)  # noqa: S603
+
+    monkeypatch.setattr(git_tools.subprocess, "run", recording_run)
+    monkeypatch.setattr(_backfill.subprocess, "run", recording_run)
+    build_report(root, load_config(None))
+    return spawned
+
+
 def test_the_suites_own_git_has_maintenance_disabled(tmp_path: Path) -> None:
     """The conftest guard reaches git, rather than merely being set.
 
@@ -69,37 +112,7 @@ def test_a_real_audit_spawns_no_git_without_the_read_only_settings(
     took two CI runs to appear -- and it does not care what the
     environment says, which is the property the snapshot lost.
     """
-    import subprocess as real_subprocess
-
-    from maintainability_audit import _backfill, git_tools
-    from maintainability_audit.config import load_config
-    from maintainability_audit.report import build_report
-
-    spawned: list[list[str]] = []
-    # Captured before patching: `git_tools.subprocess` is the same module
-    # object as this one, so patching its `run` replaces the function the
-    # wrapper would otherwise call through to.
-    original_run = real_subprocess.run
-
-    def recording_run(argv, *args, **kwargs):  # type: ignore[no-untyped-def]
-        if isinstance(argv, (list, tuple)) and argv and argv[0] == "git":
-            spawned.append(list(argv))
-        return original_run(argv, *args, **kwargs)  # noqa: S603
-
-    root = tmp_path / "repo"
-    root.mkdir()
-    (root / "m.py").write_text("def f():\n    return 1\n", encoding="utf-8")
-    real_subprocess.run(["git", "init", "-q", str(root)], check=True)
-    real_subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
-    real_subprocess.run(
-        ["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t",
-         "commit", "-qm", "one"], check=True)
-
-    # Installed only around the audit: the fixture's own init/add/commit
-    # are this test's setup, not the product's behaviour.
-    monkeypatch.setattr(git_tools.subprocess, "run", recording_run)
-    monkeypatch.setattr(_backfill.subprocess, "run", recording_run)
-    build_report(root, load_config(None))
+    spawned = _audit_a_repository(tmp_path, monkeypatch)
 
 
     assert spawned, "the audit spawned no git at all; this witness saw nothing"
@@ -110,4 +123,72 @@ def test_a_real_audit_spawns_no_git_without_the_read_only_settings(
     assert not naked, (
         "the audit spawned git without the read-only settings, so git may "
         f"repack objects into the repository it was only reading: {naked}"
+    )
+
+
+#: Git subcommands this package is allowed to run. All of them read.
+READ_ONLY_SUBCOMMANDS = frozenset({
+    "log", "rev-list", "rev-parse", "status", "diff", "show",
+    "cat-file", "ls-files", "ls-tree", "for-each-ref", "worktree",
+    # `branch` reads as this package invokes it (`--show-current`) and
+    # writes with `-d`/`-D`/`-m`/`-M`, so the subcommand alone is too
+    # coarse and the flags are checked as well.
+    "branch",
+})
+
+#: Flags that turn a listed subcommand into a write.
+WRITING_FLAGS = frozenset({
+    "-d", "-D", "-m", "-M", "--delete", "--move", "--force", "-f",
+    "--set-upstream-to", "--edit-description", "--prune", "--add",
+})
+
+
+def test_the_product_runs_only_git_commands_that_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D88: why the argv recorder is the *only* witness available here.
+
+    The objection was fair: the recorder above watches the argv, the
+    promise is about the tree, and the 36 snapshot tests still share an
+    environment with the fixtures -- so they would not notice if
+    `READ_ONLY_GIT_CONFIG` vanished.
+
+    Two attempts at a tree witness failed, and the second failure is the
+    answer. Removing the suite's guard was not enough: maintenance is
+    threshold-driven and merely *allowed* to fire. Making the
+    environment hostile with `gc.auto=1` was not enough either, and that
+    one passed with the settings deleted -- which would have shipped a
+    test that passes either way into the entry that exists to stop them.
+
+    The reason is that git runs housekeeping after commands that
+    **write** -- `commit`, `merge`, `fetch` -- and this package runs
+    none of them. The `maintenance.lock` that opened D71 was scheduled
+    by a *fixture's* `git commit`, which is what D71's second half
+    already concluded. No audit of an unmodified repository can produce
+    the write a snapshot would catch, so a passing snapshot proves
+    nothing in either direction.
+
+    What is checkable is the premise. It found one the list had missed
+    -- `git branch --show-current` -- on its first run. If a writing
+    subcommand is ever added the reasoning above stops holding and this
+    fails; the argv guarantee does not depend on the premise and stands
+    on its own.
+    """
+    spawned = _audit_a_repository(tmp_path, monkeypatch)
+    assert spawned, "the audit spawned no git; this check saw nothing"
+
+    writing = []
+    for argv in spawned:
+        subcommand = next(
+            (part for part in argv[1:]
+             if not part.startswith("-") and part != "-C"
+             and "=" not in part and not part.startswith("/")),
+            None,
+        )
+        if subcommand is not None and subcommand not in READ_ONLY_SUBCOMMANDS or WRITING_FLAGS.intersection(argv):
+            writing.append(argv)
+    assert not writing, (
+        "the audit ran a git subcommand outside the read-only set, so git "
+        "may schedule housekeeping after it and the reasoning in this "
+        f"docstring no longer holds: {writing}"
     )

@@ -7,6 +7,7 @@ receives security fixes.
 
 | Version | Supported |
 |---------|-----------|
+| `1.0.x` | ✅ | (release candidates included)
 | `0.9.x` | ✅ |
 | < `0.9` | ❌ |
 

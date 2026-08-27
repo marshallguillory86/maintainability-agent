@@ -157,7 +157,7 @@ def test_a_standing_grant_does_not_follow_a_renamed_directory(
     """
     import os
 
-    from maintainability_audit import _mcp_audit
+    from maintainability_audit import _grant_ledger, _mcp_audit
 
     base = tmp_path.resolve()
     granted = base / "project"
@@ -179,7 +179,7 @@ def test_a_standing_grant_does_not_follow_a_renamed_directory(
         "allowed_roots": [str(granted)],
         IDENTITY_KEY: {str(granted): directory_identity(granted)},
     }
-    monkeypatch.setattr(_mcp_audit, "load_user_config", lambda: dict(stored))
+    monkeypatch.setattr(_grant_ledger, "load_user_config", lambda: dict(stored))
 
     kept = _mcp_audit.allowed_roots(explicit=(str(launch),))
     assert granted in kept, "an untouched standing grant must survive a restart"
@@ -219,7 +219,7 @@ def test_a_non_canonical_grant_is_refused_and_said_so(
     """
     import os
 
-    from maintainability_audit import _mcp_audit
+    from maintainability_audit import _grant_ledger, _mcp_audit
 
     outer = tmp_path / "outer"
     outer.mkdir()
@@ -231,7 +231,7 @@ def test_a_non_canonical_grant_is_refused_and_said_so(
     os.symlink(outer, link)
 
     monkeypatch.setattr(
-        _mcp_audit, "load_user_config",
+        _grant_ledger, "load_user_config",
         lambda: {"allowed_roots": [str(link / "work")]})
 
     roots = _mcp_audit.allowed_roots(explicit=(str(tmp_path),))
@@ -279,7 +279,7 @@ def test_a_grant_the_product_made_is_canonical_and_survives(
     """
     import os
 
-    from maintainability_audit import _mcp_audit
+    from maintainability_audit import _grant_ledger, _mcp_audit
     from maintainability_audit._user_config import persist_root_grant
 
     outer = tmp_path / "outer"
@@ -302,7 +302,7 @@ def test_a_grant_the_product_made_is_canonical_and_survives(
         "be checked later"
     )
 
-    monkeypatch.setattr(_mcp_audit, "load_user_config", lambda: dict(stored))
+    monkeypatch.setattr(_grant_ledger, "load_user_config", lambda: dict(stored))
     roots = _mcp_audit.allowed_roots(explicit=(str(tmp_path),))
     assert (outer / "work").resolve() in roots, (
         "a grant the product itself made was dropped on the next start"
@@ -324,11 +324,11 @@ def test_a_grant_to_a_directory_that_does_not_exist_is_refused(
     The grant has to name a directory that is there *now*, at the moment
     it is honoured, not one that could appear later.
     """
-    from maintainability_audit import _mcp_audit
+    from maintainability_audit import _grant_ledger, _mcp_audit
 
     ghost = tmp_path / "not-created-yet"
     monkeypatch.setattr(
-        _mcp_audit, "load_user_config", lambda: {"allowed_roots": [str(ghost)]})
+        _grant_ledger, "load_user_config", lambda: {"allowed_roots": [str(ghost)]})
 
     roots = set(_mcp_audit.allowed_roots(explicit=(str(tmp_path),)))
     assert not roots & {ghost, ghost.resolve()}, (
@@ -363,7 +363,7 @@ def test_a_granted_directory_swapped_for_another_is_refused(
     A different directory is moved into place, so the inode differs and
     the swap is visible.
     """
-    from maintainability_audit import _mcp_audit
+    from maintainability_audit import _grant_ledger, _mcp_audit
     from maintainability_audit._stored_grants import IDENTITY_KEY, directory_identity
 
     granted = tmp_path / "work"
@@ -376,7 +376,7 @@ def test_a_granted_directory_swapped_for_another_is_refused(
         "allowed_roots": [str(granted)],
         IDENTITY_KEY: {str(granted): directory_identity(granted)},
     }
-    monkeypatch.setattr(_mcp_audit, "load_user_config", lambda: dict(stored))
+    monkeypatch.setattr(_grant_ledger, "load_user_config", lambda: dict(stored))
     assert granted in set(_mcp_audit.allowed_roots(explicit=(str(tmp_path),)))
 
     granted.rmdir()
@@ -413,7 +413,7 @@ def test_inode_reuse_is_the_disclosed_limit_of_identity(
     with a *different* directory. It does not close same-inode reuse,
     and D79 says so rather than implying otherwise.
     """
-    from maintainability_audit import _mcp_audit
+    from maintainability_audit import _grant_ledger, _mcp_audit
     from maintainability_audit._stored_grants import IDENTITY_KEY, directory_identity
 
     granted = tmp_path / "work"
@@ -423,7 +423,7 @@ def test_inode_reuse_is_the_disclosed_limit_of_identity(
         "allowed_roots": [str(granted)],
         IDENTITY_KEY: {str(granted): recorded},
     }
-    monkeypatch.setattr(_mcp_audit, "load_user_config", lambda: dict(stored))
+    monkeypatch.setattr(_grant_ledger, "load_user_config", lambda: dict(stored))
 
     granted.rmdir()
     granted.mkdir()
@@ -456,7 +456,7 @@ def test_a_case_variant_spelling_is_refused(
     Skipped where the filesystem is case-sensitive, because there the
     variant genuinely is a different path and refusing it proves nothing.
     """
-    from maintainability_audit import _mcp_audit
+    from maintainability_audit import _grant_ledger, _mcp_audit
 
     work = tmp_path / "Work"
     work.mkdir()
@@ -465,7 +465,7 @@ def test_a_case_variant_spelling_is_refused(
         pytest.skip("case-sensitive filesystem: the variant is a different path")
 
     monkeypatch.setattr(
-        _mcp_audit, "load_user_config", lambda: {"allowed_roots": [str(variant)]})
+        _grant_ledger, "load_user_config", lambda: {"allowed_roots": [str(variant)]})
     roots = set(_mcp_audit.allowed_roots(explicit=(str(tmp_path),)))
     assert work.resolve() not in roots and variant not in roots, (
         "a case-variant spelling was honoured; path identity is string "

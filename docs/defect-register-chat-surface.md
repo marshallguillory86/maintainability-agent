@@ -19,6 +19,38 @@ degraded on the chat path. The theme across all seventeen entries is one
 defect class: **capability wired to the TTY, viewer shipped to the primary
 surface.**
 
+## Roles, recorded from D90
+
+Every entry from **D90** onward carries a `*Roles:*` line naming who did
+each part:
+
+```
+*Roles:* found=grok prompt=claude fix=claude test=codex run=ci
+```
+
+* `found` — the agent or person whose audit produced the finding.
+* `prompt` — who wrote the audit prompt that produced it. Not the same
+  question: an auditor searches where it is pointed, and every finding
+  in D64–D89 came from a prompt written by the same agent that wrote the
+  code being audited.
+* `fix` — who implemented the change.
+* `test` — who wrote the falsifier. **The interesting one.** A fix and
+  its check written by one mind share that mind's blind spot, which is
+  the mechanism behind eleven of this register's entries being findings
+  about an inadequate check rather than about the product.
+* `run` — where it was verified: `local`, `ci`, or `mutation` when a
+  fix was proved by reverting it and watching the cited test fail.
+
+**Entries before D90 have no `*Roles:*` line and are not backfilled.**
+The authorship of those falsifiers is not recorded anywhere, and
+reconstructing it from memory would put invented data into a register
+whose entire value is that its claims are checkable. Where an early
+entry names its reporter it does so in prose, which is all that is
+known.
+
+The working split this records, set 2026-08-26: **Claude writes code,
+Codex writes tests and docs, Grok audits, and Codex may audit.**
+
 ## Entries
 
 ### D1 — Closed: analyzer pool execution is config-driven at every seam
@@ -2714,6 +2746,185 @@ so the disclosure cannot go stale, but that is a check on the *wording*,
 not on the property. The property — two runs agreeing given pinned
 versions — has no test on the gating pipeline and will not have one
 until the pool is pinned there.
+
+### D90 — Closed: a stale grant does not veto a launch root (High)
+
+Codex, 2026-08-26, against a fix made the same day. D83 re-checks
+persisted grants at use, and applied that check to any request a stale
+grant happened to *cover*. So launching with `--allow-root <base>` while
+holding a stale grant for `<base>/project` refused `<base>/project` —
+which the launch root authorized on its own, with no consent involved.
+
+A freshness rule that revokes access this process's own configuration
+granted is not a tightening; it is a denial of service. The fix for a
+security defect introduced an availability one, on the same day, in the
+same function.
+
+**And D83's closer passed throughout.** Its fixture launched on the
+granted directory's *parent*, so that scenario always had independent
+launch cover and never isolated the standing grant it claimed to test.
+The test was green because of the over-broad behaviour rather than
+despite it. Fixed here: the fixture launches on a sibling, which is what
+makes the grant the only thing under test.
+
+Authorization now separates its two sources. A launch root — the flag,
+the environment, the working directory — authorizes on its own. Only
+when a persisted grant is the *sole* cover does freshness decide.
+
+*Closing tests:* `test_a_launch_root_still_authorizes_despite_a_stale_grant_beneath_it`
+and `test_a_stale_grant_with_no_launch_cover_is_still_refused` in
+`tests/test_authorization_freshness.py`.
+
+*Roles:* found=codex prompt=claude fix=claude test=claude run=mutation
+
+### D91 — Closed: the config door stops publishing paths too (High)
+
+Codex, 2026-08-26. D82 removed the resolved path from
+`authorize_repository`'s refusal. `authorize_config`, eleven lines
+below it, published **two**: a caller naming `innocent.json` was told
+the symlink's target and the canonical repository path.
+
+D82's falsifier read `authorize_repository` and stopped there, so the
+fix that removed one disclosure left a larger one beside it untouched.
+That is the fourth door in this family — `server_info` (D72), the
+repository refusal (D82), the not-a-directory refusal (D82), and now
+this — and each was found only when someone looked at the next one
+along.
+
+Both refusals here name the spelling the caller supplied, which is
+theirs already, and resolve nothing into the message.
+
+*Closing test:* `test_the_config_refusals_name_no_resolved_path` in
+`tests/test_authorization_freshness.py`.
+
+*Roles:* found=codex prompt=claude fix=claude test=claude run=mutation
+
+### D92 — Closed: an audited repository cannot run code in this process (Critical)
+
+Grok, 2026-08-26, and the most serious defect found in this project.
+
+Decision 9: *"this agent never executes the audited repository's code,
+and its configuration is code."* That was enforced on the analyzer
+adapters — eslint refused outright, pylint and mypy pointed at
+`os.devnull`, and a sweep held every adapter to a classification. **Git
+was never asked the question.**
+
+`core.fsmonitor` is a repository config key naming a command git
+executes. `worktree_status` runs `git status` on every git-backed
+audit, which is the default path. Reproduced: a repo whose
+`.git/config` sets `core.fsmonitor` to a script in its own tree ran
+that script in the auditor's process, and the payload wrote a file into
+the worktree — which the MCP door separately promises never happens.
+The product then returned `?? PWNED` as the status string, having
+created `PWNED` itself.
+
+`READ_ONLY_GIT_CONFIG` existed and disabled *housekeeping* (D71). One
+rule about git writing, none about git executing.
+
+The list is wider than the demonstrated vector — `core.hooksPath`,
+`core.pager`, `core.sshCommand`, `core.alternateRefsCommand`,
+`diff.external`, `credential.helper`, `protocol.ext.allow` — because
+the command set grows, and the last rule scoped to the commands of the
+day missed the one spawn that lived elsewhere (D73).
+
+**Residual, disclosed rather than closed:** content filters
+(`filter.<driver>.clean`) and `diff.*.textconv` execute too and are
+keyed by a driver name from the tree's own `.gitattributes`, so no
+fixed `-c` disables them. Verified they fire on a worktree-content
+`git diff` and not on this package's only diff, which compares two
+commits by name and status.
+
+**It also falsifies D88's reasoning.** That entry argued no tree-level
+witness for the git promise could exist because "this package runs only
+reads". `status` is a read that executes. The premise was wrong, not
+merely the conclusion.
+
+*Closing tests:* `test_the_audited_repository_cannot_choose_what_this_process_runs`
+and `test_worktree_status_on_a_hostile_repository_changes_nothing` in
+`tests/test_git_read_only.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
+
+### D93 — Closed: TypeScript type members are not declarations (High)
+
+Grok, 2026-08-26, against D86 — closed the same morning.
+
+`_PROPERTY_RE` matches `name: (args) =>`, which is also how TypeScript
+writes an interface member. So `onSave: (a: string) => void;` counted as
+a one-line, complexity-1 function.
+
+The cost is not cosmetic. Forty files of real functions scored
+`insufficient` and were refused a grade. The same forty with an
+`interface` of three typed arrows each reported **160 declarations**,
+crossed the population floor, diluted band pressure fourfold, lifted
+`declaration_size` from 1.4 to 3.0, and issued a **verified C**. The
+type members are what bought the letter — P7 (a grade from a population
+that is not there) and P3 (withheld evidence improving the result) in
+one step.
+
+Type blocks are skipped now: inside `interface X { … }` or
+`type X = { … }`, nothing is a declaration.
+
+*Closing tests:* `test_type_members_are_not_counted_as_declarations` and
+`test_a_real_object_literal_member_is_still_found` in
+`tests/test_js_declarations.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
+
+### D94 — Closed: string-keyed members are declarations too (High)
+
+Grok, 2026-08-26, the other half of D86. Masking blanks string literals
+before any pattern runs, so `"onSave": (a) => {` arrives as
+`        : (a) => {` and the name is gone. Quoted keys were invisible,
+and a lone `function helper()` beside them still marked the file
+examined — D86's original shape exactly.
+
+**D86's closer used the unquoted instance, which is the one masking
+does not destroy.** Some keys must be quoted: `"on-error"` is not a
+valid identifier.
+
+The name is recovered from the line before masking touched it.
+
+*Closing tests:* `test_a_string_keyed_member_is_a_declaration` and
+`test_a_sibling_function_does_not_stand_in_for_the_handlers` in
+`tests/test_js_declarations.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
+
+### D95 — Closed: a regex after a control paren is not code (Medium)
+
+Grok, 2026-08-26, third against D86. `_VALUE_MAY_BEGIN` lists the
+positions where a `/` opens a regex literal. It includes `return`,
+which is the keyword D86's own closer used. It does not include `)`.
+
+So `if (x) /a?b?c?d?e?/;` scored **complexity 7** against a McCabe
+number of 2, while `return /a?b?c?d?e?/;` — the tested case — scored 1.
+
+`)` is the one position a character cannot decide: `if (x) /re/` opens a
+value and `f(x) / 2` is division. The paren is walked back to and the
+token owning it is asked.
+
+*Closing test:* `test_a_regex_literal_is_masked_wherever_a_value_may_begin`
+in `tests/test_js_declarations.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
+
+### D96 — Closed: the last two doors stop publishing resolved paths (High)
+
+Grok, 2026-08-26. D72 removed a resolved path from `server_info`, D82
+from `authorize_repository`, D91 from `authorize_config`. Two more were
+still open: `baseline_path`, and `config.repository_path` — which runs
+on an **ordinary audit** whenever the repository's own config names a
+path, so a symlinked `history.jsonl` published its target to the chat
+host.
+
+Six doors, one family, and each was found only when someone looked at
+the next one along. Every closer read the function it was written for.
+
+*Closing test:* `test_no_repository_scoped_path_refusal_names_what_it_resolved_to`
+in `tests/test_authorization_freshness.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
 
 ## Disposition
 

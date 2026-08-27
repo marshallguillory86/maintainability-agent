@@ -66,6 +66,44 @@ _PROPERTY_RE = re.compile(
 )
 _METHOD_RE = re.compile(rf"^\*?\s*({_NAME})\s*{_GENERICS}\(")
 
+# A TypeScript type block. Its members use the same `name: (a) => …`
+# shape as an object literal, and they declare a *type*, not a function
+# body -- so counting them as declarations invented a population.
+#
+# An audit measured what that was worth: forty files of real functions
+# scored `insufficient` and were refused a grade, and the same forty
+# with an `interface` of three typed arrows each reported 160
+# declarations, crossed the population floor, diluted band pressure
+# fourfold and issued a verified C. The type members are what bought
+# the letter (D93).
+# A property whose key was a *string*. Masking blanks string literals
+# before any pattern runs, so `"onSave": (a) => {` arrives as
+# `        : (a) => {` and `_PROPERTY_RE` -- which needs a name -- cannot
+# see it. D86 closed the unquoted case and its example was the instance
+# masking does not destroy; quoted keys stayed invisible, and a lone
+# `function helper()` beside them still marked the file examined. Some
+# keys *must* be quoted: `"on-error"` is not a valid identifier (D94).
+_BLANKED_PROPERTY_RE = re.compile(
+    r"^\s*:\s*(?:async\s+)?(?:function\b\s*\*?\s*\(|\([^)]*\)\s*=>|[A-Za-z_$][\w$]*\s*=>)"
+)
+#: The same shape for method shorthand: `"on-error"(e) {`.
+_BLANKED_METHOD_RE = re.compile(r"^\s*\([^)]*\)\s*\{")
+#: Recovers the name from the line before masking blanked it.
+_QUOTED_KEY_RE = re.compile(r"""^\s*(['"])([^'"\\]+)\1\s*:?""")
+
+
+def _quoted_property(masked: str, original: str) -> str | None:
+    """The name of a string-keyed member, or None."""
+    if not (_BLANKED_PROPERTY_RE.match(masked) or _BLANKED_METHOD_RE.match(masked)):
+        return None
+    key = _QUOTED_KEY_RE.match(original)
+    return key.group(2) if key else None
+
+
+_TYPE_BLOCK_RE = re.compile(
+    rf"^(?:export\s+)?(?:declare\s+)?(?:interface\s+{_NAME}|type\s+{_NAME}\s*=)"
+)
+
 # Control-flow keywords share the `name(` shape with a method
 # declaration. Without this list `if (ready) {` reads as a method named
 # `if`. Kept deliberately short: every entry also blocks a legitimate
@@ -252,8 +290,22 @@ def js_declaration_ranges(lines: list[str]) -> tuple[list[DeclRange], list[str]]
     """
     masked = mask_lines(lines)
     ranges: list[DeclRange] = []
+    type_block_ends: int | None = None
     for number, text in enumerate(masked, start=1):
+        # Inside `interface X { … }` or `type X = { … }` nothing is a
+        # declaration: its members are types wearing a function's shape
+        # (D93).
+        if type_block_ends is not None and number <= type_block_ends:
+            continue
+        type_block_ends = None
+        if _TYPE_BLOCK_RE.match(_strip_modifiers(text).strip()):
+            end = _block_end(masked, number)
+            type_block_ends = end if end is not None else number
+            continue
         found = _declaration(text)
+        if found is None:
+            name = _quoted_property(text, lines[number - 1])
+            found = (name, "function") if name else None
         if found is None:
             continue
         end = _block_end(masked, number)

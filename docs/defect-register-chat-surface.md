@@ -2441,10 +2441,21 @@ bare paths anyway.
 So this version stops comparing names. `persist_root_grant` records the
 directory's device and inode at the moment of consent, and a grant is
 honoured only when the directory at that path is still that directory.
-The recreated-directory case, which every previous rule honoured because
-by name nothing changed, is refused by the same check that refuses a
-swapped symlink — and so are bind mounts, which no spelling rule could
-have reached.
+A directory *swapped* for another under the granted name — identical by
+name, which is why every previous rule honoured it — is refused by the
+same check that refuses a swapped symlink, and so are bind mounts, case
+variants and ghost paths, none of which a spelling rule could reach.
+
+**Where identity stops, disclosed rather than implied.** Deleting a
+directory and immediately recreating it is a case `(device, inode)`
+cannot reliably see: ext4 hands the inode straight back, so the
+recreated directory is identical by every field recorded at consent.
+APFS does not reuse. The first version of the falsifier asserted a
+refusal for that case, passed on macOS — including the macOS runner
+added the day before — and failed on Linux CI. That is a claim wider
+than its mechanism, which is this register's own recurring defect
+arriving from the other side, and it was caught by infrastructure added
+two days earlier for a different reason.
 
 **A hand-written entry carries no identity and is refused.** That is the
 deliberate consequence rather than an oversight: it is exactly the bare
@@ -2455,8 +2466,9 @@ Not claimed: that this ends the series. What is claimed is that the
 thing compared is no longer a spelling.
 
 *Closing tests:* `test_a_grant_to_a_directory_that_does_not_exist_is_refused`,
-`test_a_case_variant_spelling_is_refused` and
-`test_a_granted_directory_replaced_by_another_is_refused` in
+`test_a_case_variant_spelling_is_refused`,
+`test_a_granted_directory_swapped_for_another_is_refused` and
+`test_inode_reuse_is_the_disclosed_limit_of_identity` in
 `tests/test_grant_only_user_tier.py`.
 
 ### D80 — Closed: the population floors are bounded from below (High)

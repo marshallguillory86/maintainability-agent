@@ -350,26 +350,28 @@ def test_a_grant_to_a_directory_that_does_not_exist_is_refused(
     assert reasons and "no record" in reasons[0], reasons
 
 
-def test_a_granted_directory_replaced_by_another_is_refused(
+def test_a_granted_directory_swapped_for_another_is_refused(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The whole class, closed by identity rather than by spelling.
+    """The attack identity closes and spelling never could.
 
-    Four rules compared better and better strings and each moved the
-    hole instead of closing it. A path is a *name*, and names alias:
-    symlinks, case-insensitive volumes, bind mounts, a directory created
-    after the question was answered. What none of those can forge is
-    which directory it actually is.
+    The granted path keeps its exact spelling, still resolves to itself,
+    still exists, and is still a directory. Every one of the four
+    previous rules honoured it, because *by name* nothing changed --
+    which is the whole reason this stopped comparing names.
 
-    Here the granted path keeps its exact spelling, still resolves to
-    itself, still exists, and is still a directory -- and every previous
-    rule honoured it, because by name nothing changed.
+    A different directory is moved into place, so the inode differs and
+    the swap is visible.
     """
     from maintainability_audit import _mcp_audit
     from maintainability_audit._stored_grants import IDENTITY_KEY, directory_identity
 
     granted = tmp_path / "work"
     granted.mkdir()
+    intruder = tmp_path / "secrets"
+    intruder.mkdir()
+    (intruder / "id_rsa").write_text("KEY\n", encoding="utf-8")
+
     stored = {
         "allowed_roots": [str(granted)],
         IDENTITY_KEY: {str(granted): directory_identity(granted)},
@@ -377,17 +379,68 @@ def test_a_granted_directory_replaced_by_another_is_refused(
     monkeypatch.setattr(_mcp_audit, "load_user_config", lambda: dict(stored))
     assert granted in set(_mcp_audit.allowed_roots(explicit=(str(tmp_path),)))
 
-    # Same name, same spelling, different directory.
     granted.rmdir()
-    granted.mkdir()
+    intruder.rename(granted)
     assert granted.resolve() == granted and granted.is_dir()
+    assert (granted / "id_rsa").exists(), "the fixture did not swap the tree"
+
     assert granted not in set(_mcp_audit.allowed_roots(explicit=(str(tmp_path),))), (
-        "a directory recreated under the granted name inherited the grant; "
+        "another directory moved into the granted name inherited the grant; "
         "by name it is identical, which is why name comparison never "
         "closed this"
     )
     reasons = [item["reason"] for item in _mcp_audit.refused_root_grants()]
     assert reasons and "not the one you granted" in reasons[0], reasons
+
+
+def test_inode_reuse_is_the_disclosed_limit_of_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Where identity stops, stated rather than assumed.
+
+    Deleting a directory and immediately recreating it is a case
+    `(device, inode)` **cannot reliably see**: ext4 hands the inode
+    straight back, so the recreated directory is identical by every
+    field recorded at consent. APFS does not reuse, which is why the
+    first version of this test asserted a refusal, passed on macOS --
+    including the macOS CI runner added the day before -- and failed on
+    Linux.
+
+    That is a claim wider than its mechanism, which is the same defect
+    this register keeps recording, arriving from the other side. So the
+    limit is asserted where it holds and disclosed where it does not:
+    identity closes bind mounts, case variants, ghost paths and swaps
+    with a *different* directory. It does not close same-inode reuse,
+    and D79 says so rather than implying otherwise.
+    """
+    from maintainability_audit import _mcp_audit
+    from maintainability_audit._stored_grants import IDENTITY_KEY, directory_identity
+
+    granted = tmp_path / "work"
+    granted.mkdir()
+    recorded = directory_identity(granted)
+    stored = {
+        "allowed_roots": [str(granted)],
+        IDENTITY_KEY: {str(granted): recorded},
+    }
+    monkeypatch.setattr(_mcp_audit, "load_user_config", lambda: dict(stored))
+
+    granted.rmdir()
+    granted.mkdir()
+    honoured = granted in set(_mcp_audit.allowed_roots(explicit=(str(tmp_path),)))
+
+    if directory_identity(granted) == recorded:
+        assert honoured, (
+            "the filesystem reused the inode, so the recreated directory is "
+            "identical by everything recorded at consent -- if this is now "
+            "refused, something else is doing the work and D79's disclosure "
+            "is wrong"
+        )
+    else:
+        assert not honoured, (
+            "the inode changed and the grant was honoured anyway, which is "
+            "the check D79 exists to make"
+        )
 
 
 def test_a_case_variant_spelling_is_refused(
@@ -413,7 +466,7 @@ def test_a_case_variant_spelling_is_refused(
 
     monkeypatch.setattr(
         _mcp_audit, "load_user_config", lambda: {"allowed_roots": [str(variant)]})
-    roots = _mcp_audit.allowed_roots(explicit=(str(tmp_path),))
+    roots = set(_mcp_audit.allowed_roots(explicit=(str(tmp_path),)))
     assert work.resolve() not in roots and variant not in roots, (
         "a case-variant spelling was honoured; path identity is string "
         "identity here, and two strings named one directory"

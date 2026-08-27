@@ -2596,9 +2596,141 @@ Refused by name: `paths.include_extensions[0] must be str, not int`.
 and `test_a_valid_nested_list_still_loads` in
 `tests/test_config_shape.py`.
 
+### D85 — Closed: the version string is a claim like any other (High)
+
+Grok, UAT audit. Acceptance testing *for 1.0* was about to run against
+an artifact naming itself `0.9.1` and `Development Status :: 3 - Alpha`.
+A tester would report a version that is not the thing under test, and
+this project already shipped nine releases whose contents did not match
+what they claimed (D23).
+
+`1.0.0rc1`, `Development Status :: 4 - Beta`. Not `1.0.0`: the release
+plan tags 1.0 at 8.10, after acceptance (8.8) and a hostile audit of the
+artifact that passed it (8.9), and a version string follows evidence
+rather than intention like every other claim here. A candidate is
+exactly what this is.
+
+The falsifier holds the three copies of the version together and refuses
+a bare `1.0.0` while 8.10 still says the tag waits on 8.9 — so the
+version cannot be promoted ahead of the gates by editing one file.
+
+*Closing tests:* `test_every_copy_of_the_version_says_the_same_thing`,
+`test_a_final_1_0_0_is_not_claimed_before_its_gates_close`,
+`test_the_maturity_classifier_matches_the_version` and
+`test_security_support_covers_the_shipped_version` in
+`tests/test_version_claim.py`.
+
+### D86 — Closed: the JS scanner sees the file's actual functions (High)
+
+Grok, UAT audit, continuing D78. That entry fixed `?` arithmetic and
+left the rest disclosed; the objection is that disclosure is not a score.
+
+Two defects, both reproduced. `function f() { return /a?b?c?d?e?/; }`
+scored cyclomatic **6** — the regex literal's contents were read as
+code, because masking scrubbed comments and strings and not regex
+literals. And `{ onSave: (a) => {...}, onLoad: function (b) {...} }`
+produced **no declarations at all**, which is how a React or Node
+codebase writes most of its interesting logic: the audit scored whatever
+loose `function` statements happened to sit beside the handlers and
+reported the file examined.
+
+Masking now recognises a regex literal where a *value* may begin, which
+is the standard heuristic and the whole disambiguation JavaScript offers
+without a parser — `a / b ? 1 : 2` is untouched. The brace scanner
+detects `name:` members, a prefix that cannot be a control keyword and
+so does not collide with `if (`. The example above now scores 1, and
+all three declarations are found.
+
+*Closing tests:* `test_the_scored_complexity_is_the_functions_complexity`
+and the cases beside it in `tests/test_js_complexity_operators.py`.
+
+### D87 — Closed: the macOS job runs the suite, not the word (Medium)
+
+Grok, UAT audit. D81 required `"pytest"` in the macOS job body. `echo
+pytest` satisfies that, and so does a pytest invocation naming one file
+— which would let the job stop running the product's suite without
+anything noticing. D77 had taught the same lesson one job over: a
+comment is not an install.
+
+The run commands are parsed now, and one of them has to *be* a
+whole-suite pytest invocation rather than contain the word. Verified
+against both bypasses.
+
+*Closing test:* `test_the_macos_runner_actually_runs_the_suite` in
+`tests/test_platform_claim.py`.
+
+### D88 — Closed: why the argv recorder is the only witness (Medium)
+
+Grok, UAT audit. D81's recorder watches the argv; the promise is about
+the tree; the 36 snapshot tests still run under the suite-wide
+`GIT_CONFIG_*` guard and would not notice if `READ_ONLY_GIT_CONFIG`
+vanished. The objection is correct.
+
+**Two attempts at a tree witness failed, and the second failure is the
+answer.** Removing the guard was not enough — maintenance is
+threshold-driven and merely *allowed* to fire. Making the environment
+hostile with `gc.auto=1` was not enough either, and that one passed with
+the settings deleted, which would have shipped a test that passes either
+way into the entry that exists to prevent them.
+
+The reason is that git runs housekeeping after commands that **write** —
+`commit`, `merge`, `fetch` — and this package runs none of them. The
+`maintenance.lock` that opened D71 was scheduled by a fixture's own
+`git commit`, which is what D71's second half already concluded. No
+audit of an unmodified repository can produce the write a snapshot would
+catch, so a passing snapshot proves nothing in either direction.
+
+What is checkable is the premise, and that is what is checked: every git
+subcommand the audit spawns is a read, flags included. It found one the
+list had missed — `git branch --show-current` — on its first run. If a
+writing subcommand is ever added the reasoning stops holding and this
+fails, while the argv guarantee, which does not depend on the premise,
+stands on its own.
+
+*Closing test:* `test_the_product_runs_only_git_commands_that_read` in
+`tests/test_git_read_only.py`.
+
+### D89 — Open: CI does not pin what P1 depends on (Medium)
+
+Grok, UAT audit. P1's determinism is conditional on pinned analyzer
+versions. The gating pipeline installs the pool **unpinned**, on
+purpose, so that an unchanged `main` going red because an analyzer
+shipped is a signal rather than a silence.
+
+Both halves are defensible and together they leave a gap that has to be
+said out loud: a green run certifies the suite passed against *today's*
+analyzers, and does not certify P1's condition, which is about two runs.
+
+**This entry is a disclosure, not a fix.** Closing it properly means a
+checked-in constraints file for the gating job with the drift check
+moved to the scheduled run, so both properties hold at once. That needs
+resolved versions, which needs installing the pool, which is not this
+agent's to do. `docs/product-intent.md` now says so where a reader meets
+P1, and the falsifier fails if the workflow gains a pin without the page
+losing the disclosure, or the reverse.
+
+**Falsifier: pending.** A test holds the workflow and the page together
+so the disclosure cannot go stale, but that is a check on the *wording*,
+not on the property. The property — two runs agreeing given pinned
+versions — has no test on the gating pipeline and will not have one
+until the pool is pinned there.
+
 ## Disposition
 
-**Every entry in this register is closed.** D32 through D46 came from
+**One entry is open: D89.** The gating pipeline installs the analyzer
+pool unpinned, so a green run does not test the condition P1's
+determinism rests on. Both halves of that are deliberate and the gap is
+disclosed where a reader meets P1, but a disclosure is not a fix, and
+this register does not get to call it one. Closing it needs a
+constraints file built from resolved versions.
+
+That is the first time this page has not claimed an empty ledger, and
+the reason is worth keeping: an audit observed that the register can be
+empty while the proof it cites is failing in CI, and that "0 open" was
+being read as "known good". An entry that is disclosed rather than
+fixed is open.
+
+**Every other entry is closed.** D32 through D46 came from
 two independent security audits on 2026-08-23 and closed over the two
 days after; D47 through D49 came from the chat-surface work that
 preceded them; D50 through D55 came from UAT preparation on 2026-08-25

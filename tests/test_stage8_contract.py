@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from _git_path import GIT_PATH
 
 from maintainability_audit.config import load_config
 from maintainability_audit.evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY, UnsupportedReportSchema
@@ -47,7 +48,7 @@ RENAMED = {
 ENV = {
     "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
     "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t",
-    "PATH": "/usr/bin:/bin",
+    "PATH": GIT_PATH,
 }
 
 

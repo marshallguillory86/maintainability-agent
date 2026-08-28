@@ -119,4 +119,21 @@ def write_baseline(path: str, report: dict[str, Any]) -> None:
         "findings": [identity.fingerprint for identity in identities],
         "identities": [asdict(identity) for identity in identities],
     }
-    Path(path).write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    # Staged and bounded (D34). `baseline_path` is a caller argument on
+    # the primary surface, and the previous write truncated whatever the
+    # name pointed at — including source, in a tool that promises never
+    # to write source.
+    from ._safe_write import write_bounded
+
+    # Bounded to the chosen directory, not to the repository: a CLI
+    # caller may legitimately keep baselines outside the tree, and that
+    # contract predates this fix. What the writer removes is redirection
+    # — a symlink at the name, or a hardlink whose inode would be
+    # truncated in place. Refusing to clobber *source* is a different
+    # question, decided where the path arrives from a model rather than
+    # a person: see `_baseline_workflow` (D34).
+    target = Path(path)
+    write_bounded(
+        target.parent, target,
+        json.dumps(data, indent=2, sort_keys=True) + "\n",
+    )

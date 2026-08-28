@@ -209,7 +209,21 @@ def _interactive_config(root: Path, config_arg: str | None) -> dict:
     dict in memory so this very run prices its own report.
     """
     maybe_prompt_first_run(root, config_arg)
-    config = load_config(config_arg or discovered_config(root))
+    source = config_arg or discovered_config(root)
+    try:
+        config = load_config(source)
+    except ValueError as unreadable:
+        # Same answer the chat doors give, in the CLI's idiom. A
+        # truncated or hand-edited config used to surface a raw
+        # `JSONDecodeError` traceback here while the MCP tool and
+        # resource refused by name — one repository state, two
+        # experiences, and the worse one on the door people run
+        # unattended (D32).
+        raise SystemExit(
+            f"maintainability-agent: {source} cannot be read as JSON "
+            f"({unreadable}). Repair or delete it; the audit cannot tell "
+            "whether this repository has been configured."
+        ) from unreadable
     maybe_prompt_economics(root, config)
     return config
 

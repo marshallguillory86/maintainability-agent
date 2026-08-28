@@ -357,6 +357,7 @@ def test_analyzer_coverage_counts_only_evidence_that_survives_provenance_filteri
     ) -> Invocation:
         del paths, excludes
         relative = sorted(path.relative_to(root).as_posix() for path in root.rglob("*.py"))
+        assert relative, "the fixture tree holds no Python; the argv proves nothing"
         return Invocation(argv=(adapter.executable, *relative))
 
     monkeypatch.setattr(adapter, "invocation", ignore_exclusions)

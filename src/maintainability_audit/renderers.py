@@ -233,6 +233,38 @@ def render_grade_blockers(report: dict[str, Any]) -> list[str]:
     ]
 
 
+def _empty_window_sentence(history: dict[str, Any]) -> str:
+    """What the reader is told when the window produced no churn.
+
+    Three causes, and telling all three "no commit falls inside the
+    history window" sent readers of the last two to check their clone
+    depth for a window that was in fact filtered to empty (D66). The
+    fallback is the original sentence, which is what a report written
+    before these counts existed still carries.
+    """
+    window = history["window"]
+    in_window = history.get("commits_in_window")
+    considered = history.get("commits_considered")
+    if not isinstance(in_window, int) or not isinstance(considered, int) or in_window == 0:
+        return (
+            f"No commit falls inside the history window ({window}). "
+            "This is not a quiet repository — it is a window with "
+            "nothing in it."
+        )
+    if considered == 0:
+        return (
+            f"All {in_window} commits inside the history window ({window}) "
+            "are merges. A merge's line counts re-report churn already "
+            "counted on the branch it merged, so this audit reads none "
+            "of them."
+        )
+    return (
+        f"{considered} of the {in_window} commits inside the history "
+        f"window ({window}) were read, and none of them touched a file "
+        "this audit scans — the window is filtered to empty, not quiet."
+    )
+
+
 def render_history_markdown(report: dict[str, Any]) -> list[str]:
     """What the log says about where change cost is actually being paid.
 
@@ -243,6 +275,23 @@ def render_history_markdown(report: dict[str, Any]) -> list[str]:
     history = report.get("history")
     if history is None:
         return []
+    if not history.get("files_changed"):
+        # The window was read and held no commits. Rendering the empty
+        # tables below would say "no hotspots", which reads as a quiet
+        # repository — and the reader was previously told "Evidence
+        # complete" with nothing about the window at all, while the
+        # scoring layer had already marked every history rate
+        # not-applicable. P8: the report states what examined each value
+        # (D56, reopened by Codex).
+        return [
+            "### History",
+            "",
+            f"{_empty_window_sentence(history)} "
+            "Churn, hotspots, coupling and ownership have no population "
+            "to measure, and the history aspects are reported as not "
+            "applicable rather than as zero.",
+            "",
+        ]
     hot_rows = [
         [f"`{item['file']}`", str(item["commits"]), str(item["lines_changed"]),
          str(item["complexity"]), str(item["authors"]), str(item["score"])]

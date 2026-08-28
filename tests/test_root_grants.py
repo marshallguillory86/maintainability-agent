@@ -160,6 +160,7 @@ def test_report_resource_never_elicits_or_persists_a_root_grant(tmp_path: Path) 
     assert "outside" in str(refusal.value).lower()
     assert isinstance(refusal.value.__cause__, PathNotAllowed)
 
+    assert isinstance(refusal.value.__cause__, PathNotAllowed)
     assert not user_config_path().exists()
 
 

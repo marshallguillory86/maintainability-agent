@@ -50,13 +50,20 @@ def expand_files(
     # bounded prefixes by `Exclusions.covers`. Running both through one
     # `part in skip` loop is what made `lib` mean every directory called
     # lib and quietly dropped first-party `src/lib/owned.py`.
+    # The same boundary the built-in scan applies (D36). These paths
+    # become analyzer argv, so a symlink out of the tree does not just
+    # get read — it gets handed to a child process as a target.
+    from .metrics import within
+
     skip = tuple(e.rstrip("/") for e in excludes)
     covers = getattr(excludes, "covers", lambda _relative: False)
+    resolved_root = root.resolve()
     return tuple(
         str(path)
         for path in sorted(root.rglob("*"))
         if path.suffix in suffixes
         and path.is_file()
+        and within(resolved_root, path)
         and not any(part in skip for part in path.parts)
         and not covers(path.relative_to(root).as_posix())
     )[:MAX_EXPANDED_FILES]

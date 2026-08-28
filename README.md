@@ -119,6 +119,29 @@ python3 -m maintainability_audit --root . --config maintainability-agent.json
 
 For an editable dev install, see [CONTRIBUTING.md](CONTRIBUTING.md#local-verification).
 
+## Platform support
+
+**POSIX. Linux and macOS are what this has run on; Windows is untested
+and not claimed.**
+
+That is a statement about evidence, not a refusal. CI runs Linux,
+development runs macOS, and nothing here has ever executed on Windows.
+Seven test files create symlinks with no platform guard, and
+`os.symlink` needs Developer Mode on Windows, so the suite does not
+reach the point of telling anyone whether the product works there. A
+case-insensitive filesystem would also meet the standing-grant check,
+which compares a stored path against its resolved form.
+
+Two documents implied Windows support until 2026-08-26 — path
+separators are normalized, and the integration guide names the `;`
+separator — and normalizing separators is not the same claim as running
+on the platform. Both now say so.
+
+Adding `windows-latest` to the CI matrix and fixing what falls out is
+the way this changes. Until someone does that, the honest answer is
+that nobody knows, and saying nothing would leave a reader to assume
+the friendlier one.
+
 ## Automation / CI: CLI
 
 Use the CLI for scripts, repeatable local automation, and CI gates.

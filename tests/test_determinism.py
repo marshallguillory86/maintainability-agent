@@ -181,3 +181,119 @@ def test_the_analysis_opens_no_sockets(tmp_path: Path) -> None:
         socket.socket = original  # type: ignore[misc]
 
     assert report["summary"]["files_scanned"] >= 60
+
+
+DISCLOSED_VARIABLE_FIELDS = {"root", "git_status_short", "seconds"}
+
+
+def test_the_determinism_exceptions_are_exactly_the_disclosed_ones() -> None:
+    """P1's exception list and this file's stripping cannot drift apart.
+
+    `_comparable` dropped `root`, `git_status_short` and every analyzer
+    `seconds` while P1 promised "same report out". An audit ran two
+    audits and found them differing by a millisecond on a `seconds`
+    value: the promise was false of the JSON a consumer diffs and true
+    only of this test's stripped projection.
+
+    The exceptions are legitimate — a duration describes the run, not
+    the repository — so P1 now names them, and this holds the two
+    together. A field added to the strip list without reaching the
+    promise fails here.
+    """
+    intent = (Path(__file__).resolve().parents[1] / "docs" / "product-intent.md")
+    row = next(
+        line for line in intent.read_text(encoding="utf-8").splitlines()
+        if line.startswith("| P1 |")
+    )
+    for field in DISCLOSED_VARIABLE_FIELDS:
+        assert f"`{field}`" in row, (
+            f"P1 does not disclose that {field!r} varies between runs, and "
+            "the determinism check strips it"
+        )
+
+    source = Path(__file__).read_text(encoding="utf-8")
+    stripped = set(re.findall(r'key != "([a-z_]+)"', source))
+    stripped |= set(re.findall(r'k not in \{"([a-z_]+)", "([a-z_]+)"\}', source)[0]) \
+        if re.search(r'k not in \{"[a-z_]+", "[a-z_]+"\}', source) else set()
+    undisclosed = sorted(stripped - DISCLOSED_VARIABLE_FIELDS)
+    assert not undisclosed, (
+        f"the determinism check silently ignores {undisclosed}, which P1 "
+        "does not disclose"
+    )
+
+
+def test_the_history_window_is_disclosed_as_clock_relative() -> None:
+    """P1 is true within a run and false across days; it must say so.
+
+    `DEFAULT_SINCE` is a *relative* expression, resolved by git against
+    the wall clock at the moment the audit runs. So an unchanged tree
+    audited on two different days can report different churn, hotspot,
+    coupling and ownership rates -- no input changed, and the grade
+    moved. P1 promised "same tree, config, versions and history in, same
+    score out" and named three excepted fields, none of which is this.
+
+    The test above cannot catch it and neither can the runs at the top
+    of this file: they audit the same tree seconds apart, which is
+    exactly the interval over which a twelve-month window cannot shift.
+    A promise kept green by a check narrower than the promise -- the
+    fourth of that shape in this project -- so the disclosure is held to
+    the constant rather than to a sentence someone remembered to write.
+    """
+    import ast
+    import inspect
+
+    from maintainability_audit import history as history_module
+    from maintainability_audit.history import DEFAULT_SINCE, history_section
+
+    # The *effective* window, not the constant. The first version of
+    # this compared the prose to `DEFAULT_SINCE` alone, so changing
+    # `history_section`'s default to "24 months ago" left the constant
+    # untouched, the test green, and the disclosure describing a window
+    # nothing used. An audit made exactly that change and walked past.
+    effective = inspect.signature(history_section).parameters["since"].default
+    assert effective == DEFAULT_SINCE, (
+        f"history_section defaults to {effective!r} while the constant this "
+        f"page is held to is {DEFAULT_SINCE!r}; the disclosure describes a "
+        "window that is not the one being used"
+    )
+
+    # And the production call site must not override it, or the default
+    # above is not what a report actually gets.
+    report_source = (
+        Path(inspect.getsourcefile(history_module)).parent / "report.py"
+    ).read_text(encoding="utf-8")
+    for call in ast.walk(ast.parse(report_source)):
+        if (isinstance(call, ast.Call)
+                and getattr(call.func, "id", "") == "history_section"):
+            assert not any(kw.arg == "since" for kw in call.keywords), (
+                "report.py passes its own history window, so the disclosed "
+                "default is not the window a report is built with"
+            )
+            assert len(call.args) <= 3, (
+                "report.py passes a fourth positional argument to "
+                "history_section, which is the window"
+            )
+
+    assert "ago" in DEFAULT_SINCE, (
+        f"the history window {DEFAULT_SINCE!r} no longer reads as relative "
+        "to now; if it has become an absolute date, P1's disclosure below "
+        "is the thing that is now wrong"
+    )
+
+    intent = (Path(__file__).resolve().parents[1] / "docs" / "product-intent.md")
+    text = intent.read_text(encoding="utf-8")
+    row = next(line for line in text.splitlines() if line.startswith("| P1 |"))
+    assert "wall clock" in row, (
+        "P1's own row does not say the history window moves with the clock, "
+        "so a reader diffing two reports a week apart has been promised "
+        "they will match"
+    )
+    assert f"`{DEFAULT_SINCE}`" in text, (
+        f"the window is {DEFAULT_SINCE!r} and product-intent quotes a "
+        "different one, so the disclosure describes a window that is not "
+        "the one being used"
+    )
+
+
+
+

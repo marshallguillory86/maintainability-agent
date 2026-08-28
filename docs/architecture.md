@@ -20,10 +20,13 @@ flowchart TB
     _mcp_setup["_mcp_setup"]
     _mcp_audit["_mcp_audit"]
     _mcp_gate["_mcp_gate"]
+    _mcp_resources["_mcp_resources"]
     _mcp_grants["_mcp_grants"]
+    _mcp_refusals["_mcp_refusals"]
     _skill_install["_skill_install"]
     dunder_main["__main__"]
     mcp_server["mcp_server"]
+    _grant_ledger["_grant_ledger"]
   end
 
   subgraph presentation["presentation — reads the report dict"]
@@ -33,6 +36,7 @@ flowchart TB
     baseline["baseline"]
     _evidence_view["_evidence_view"]
     _scan_view["_scan_view"]
+    _coverage_notes["_coverage_notes"]
     _html_view["_html_view"]
     _economics_view["_economics_view"]
     _semantic_view["_semantic_view"]
@@ -98,6 +102,7 @@ flowchart TB
     _cognitive["_cognitive"]
     _ranges["_ranges"]
     _tokens["_tokens"]
+    _xml["_xml"]
   end
 
   subgraph foundations["foundations"]
@@ -106,6 +111,8 @@ flowchart TB
     _hotspots["_hotspots"]
     config["config"]
     _user_config["_user_config"]
+    _stored_grants["_stored_grants"]
+    _safe_write["_safe_write"]
     git_tools["git_tools"]
     _scan_history["_scan_history"]
     _finding_match["_finding_match"]
@@ -125,7 +132,7 @@ flowchart TB
   parsing --> foundations
 ```
 
-`_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_finding_match` owns structured identity and matching; `_identity` presents the ordinal labels derived from the report. `_user_config` owns the XDG user configuration and per-repository seen state; it belongs beside `config` in foundations. `_semantic` classifies type-backed findings; `_semantic_ts` supplies TypeScript type facts from recordings or an already-installed `tsc`; `_semantic_policy` loads the optional checked-in policy.
+`_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_finding_match` owns structured identity and matching; `_identity` presents the ordinal labels derived from the report. `_user_config` owns the XDG user configuration and per-repository seen state; it belongs beside `config` in foundations. `_safe_write` is the single way the agent writes into a tree it is auditing — bounded, symlink-refusing, staged and renamed so no existing inode is opened for writing — and sits in foundations for the same reason: every layer that writes must reach it, and it reaches nothing but `config` (D34). `_semantic` classifies type-backed findings; `_semantic_ts` supplies TypeScript type facts from recordings or an already-installed `tsc`; `_semantic_policy` loads the optional checked-in policy.
 
 | Layer | Owns | May import |
 | --- | --- | --- |
@@ -135,7 +142,7 @@ flowchart TB
 | **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
 | **assembly** | Running the scan, running the analyzer pool (`_analysis`) and stating what it found (`_documents`), the environment work order composed from coverage (`_environment`), recording the built-in detectors as their own source tier (`_built_ins`), ordering the work by risk against effort and recomputing each item's worth (`_work_order`, weights in `_work_order_weights`), assembling the report dict, invoking the scorer once | anything below |
 | **presentation** | Markdown/chat, a self-contained HTML report, PR comment, SARIF, baseline, remediation prompt, `_evidence_view` (shared estimate/range/evidence/verified-grade wording), and `_identity` (labels and digests consumed from the report, never source). The renderers consume one report dictionary and do not score | foundations, the report dict |
-| **entry** | Argument parsing, transport, output routing, exit codes, and the first-run TTY prompt (`_first_run`) and its chat-path twin (`_mcp_setup`, MCP elicitation) and the MCP audit tool itself (`_mcp_audit`, split from `mcp_server`) and the D10 root-grant machinery (`_mcp_grants`, same split) and the setup/run gate that answers with questions instead of a report (`_mcp_gate`) and the packaged-skill sync (`_skill_install`) — the one layer where the tool may ask a question | anything below |
+| **entry** | Argument parsing, transport, output routing, exit codes, and the first-run TTY prompt (`_first_run`) and its chat-path twin (`_mcp_setup`, MCP elicitation) and the MCP audit tool itself (`_mcp_audit`, split from `mcp_server`) and the D10 root-grant machinery (`_mcp_grants`, same split) and the setup/run gate that answers with questions instead of a report (`_mcp_gate`) and the MCP resources, which answer reads and can never ask (`_mcp_resources`) and the set of refusals the transport may declare (`_mcp_refusals`, shared by both seam-binding modules so neither has to import the other) and the packaged-skill sync (`_skill_install`) — the one layer where the tool may ask a question | anything below |
 
 ## The rules, and why each exists
 
@@ -175,7 +182,7 @@ Practice level is a claim about enforcement, not about code. If it could read so
 No function returns their average. [ADR 007](adr-007-pillars-and-practice.md) invariant 2 exists because a single composite number would destroy both.
 
 **12. Only the transport declares anticipated refusals.**
-The plain functions keep raising the domain types — `InvalidAuditArgument`, `PathNotAllowed`, `SetupRequired`, `StaleBaseline` and `PolicyError` — because the CLI and every library caller depend on them. At the entry seam, the transport translates only named anticipated refusals into the SDK's declared forms: `ToolError` from the audit tool, `ResourceError` from the report resource and its security validator, with the message reaching the caller. Everything else stays a crash: the caller gets `Error executing tool <name>` or a bare resource URI, and the traceback stays server-side so nothing internal leaks. The list lives in `mcp_server.py` as `ANTICIPATED_REFUSALS`. It is named types only, never bare `ValueError`: modules below the transport raise those with internal paths in the message. It is also the *whole* set of refusals a caller can act on — a type missing from it stops teaching just as surely as an undeclared one, which is why `StaleBaseline` belongs there: it travels this path for real, from `_baseline_workflow` through `findings_not_in_baseline` and `load_baseline_identities` to `_read`, and its message tells the caller to regenerate the baseline. `PolicyError` is in the tuple on different grounds, and the difference is stated because this sentence first claimed the same grounds for both and was wrong about one. `PolicyError` cannot presently reach any of the three seams: every site that raises it — `load_catalog`, `settings_from`, `resolve_pool` — is reachable only through `_analysis.analyze()`, which catches it and returns `Analysis(error=...)` instead of raising, exactly as that function's docstring promises. It is declared ahead of a seam-level configuration path that does not exist yet. Dropping it would be defensible today and would silently lose the remedy on the day such a path appears, because the derivation test below would by then count the type as already accounted for. `EvidenceValidationError` is excluded outright: on this path the report is built internally, so a failure in it is an internal bug. A reviewer eyeballing that list got it wrong twice in opposite directions; `test_every_named_exception_is_a_declared_refusal_or_excluded` classifies every named exception in the package (in the tuple, or excluded with a stated reason) and `test_the_transport_excepts_the_named_tuple_not_a_copy` holds the three seams to the tuple by name. Before any of this was declared, `mcp` 2.1.0 correctly classified every boundary refusal as a crash, so the refusal still refused but stopped teaching its remedy.
+The plain functions keep raising the domain types — `InvalidAuditArgument`, `PathNotAllowed`, `SetupRequired`, `StaleBaseline`, `PolicyError` and `ConfigUnreadable` — because the CLI and every library caller depend on them. At the entry seam, the transport translates only named anticipated refusals into the SDK's declared forms: `ToolError` from the audit tool, `ResourceError` from the report resource and its security validator, with the message reaching the caller. Everything else stays a crash: the caller gets `Error executing tool <name>` or a bare resource URI, and the traceback stays server-side so nothing internal leaks. The list lives in `_mcp_refusals.py` as `ANTICIPATED_REFUSALS`, re-exported from `mcp_server` — it sits below both seam-binding modules because `mcp_server` imports `_mcp_resources`, so a tuple beside either would be a cycle for the other. It is named types only, never bare `ValueError`: modules below the transport raise those with internal paths in the message. It is also the *whole* set of refusals a caller can act on — a type missing from it stops teaching just as surely as an undeclared one, which is why `StaleBaseline` belongs there: it travels this path for real, from `_baseline_workflow` through `findings_not_in_baseline` and `load_baseline_identities` to `_read`, and its message tells the caller to regenerate the baseline. `PolicyError` is in the tuple on different grounds, and the difference is stated because this sentence first claimed the same grounds for both and was wrong about one. `PolicyError` cannot presently reach any of the three seams: every site that raises it — `load_catalog`, `settings_from`, `resolve_pool` — is reachable only through `_analysis.analyze()`, which catches it and returns `Analysis(error=...)` instead of raising, exactly as that function's docstring promises. It is declared ahead of a seam-level configuration path that does not exist yet. Dropping it would be defensible today and would silently lose the remedy on the day such a path appears, because the derivation test below would by then count the type as already accounted for. `ConfigUnreadable` joined the tuple when the security branch introduced it: a configuration file that exists and cannot be parsed is a refusal the caller can act on, and its message names the file they pointed at. It carried a second path for a while — the interpolated `OSError` appends the OS filename, which for a symlinked config is the *target* — so it now reports `strerror` alone. `EvidenceValidationError` is excluded outright: on this path the report is built internally, so a failure in it is an internal bug. A reviewer eyeballing that list got it wrong twice in opposite directions; `test_every_named_exception_is_a_declared_refusal_or_excluded` classifies every named exception in the package (in the tuple, or excluded with a stated reason) and `test_the_transport_excepts_the_named_tuple_not_a_copy` holds the three seams to the tuple by name, across every transport module rather than one — it counted seams in `mcp_server` alone until the resource bindings moved out from under it. Before any of this was declared, `mcp` 2.1.0 correctly classified every boundary refusal as a crash, so the refusal still refused but stopped teaching its remedy.
 
 ## Data flow
 

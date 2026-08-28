@@ -25,6 +25,7 @@ from ._generic import parse_checkstyle
 from ._metric_adapters import expand_files
 from ._metrics_types import Finding
 from ._runner import Invocation, ToolResult
+from ._xml import parse_analyzer_xml
 
 
 class PmdAdapter(BaseAdapter):
@@ -280,10 +281,20 @@ class SpotBugsAdapter(BaseAdapter):
     def _target_dirs(
         self, root: Path, class_dirs: Sequence[str] | None = None,
     ) -> tuple[Path, ...]:
+        # Bounded like `paths.history` was after D20, and for the same
+        # reason: this list comes from the audited repository's own
+        # config. `Path("/tmp/repo") / "/"` is `/`, so a four-character
+        # entry turned a bytecode scan into an `rglob("*.class")` over
+        # the filesystem, on a child with no timeout (D36).
+        from .config import PathNotAllowed, repository_path
+
         extras = tuple(class_dirs) if class_dirs is not None else tuple(self.class_dirs)
         found = []
         for relative in (*self._DEFAULT_CLASS_DIRS, *extras):
-            candidate = root / relative
+            try:
+                candidate = repository_path(root, str(relative), str(relative))
+            except PathNotAllowed:
+                continue
             if candidate.is_dir() and any(candidate.rglob("*.class")):
                 found.append(candidate)
         return tuple(found)
@@ -346,7 +357,7 @@ class SpotBugsAdapter(BaseAdapter):
         # SourceLine's sourcepath — the report names the source a human
         # can edit, never the .class artifact.
         try:
-            root = ElementTree.fromstring(result.stdout or "<BugCollection/>")
+            root = parse_analyzer_xml(result.stdout, fallback="<BugCollection/>")
         except ElementTree.ParseError as error:
             raise ValueError(f"unreadable BugCollection XML: {error}") from error
         return Extraction(findings=tuple(

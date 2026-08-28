@@ -101,8 +101,18 @@ def _interactive_prompt_is_read() -> bool:
 
 
 def _mcp_resources_exist() -> bool:
-    text = (PACKAGE / "mcp_server.py").read_text(encoding="utf-8")
-    return bool(re.search(r"list_resources|@\w*\.resource\b|Resource\(", text))
+    """Anywhere in the package, not in one file.
+
+    This read `mcp_server.py` alone, which was the same thing until the
+    resources were split into `_mcp_resources` at the file-length gate.
+    The claim being checked is that the product registers resources at
+    all; tying it to a filename made a refactor look like a regression.
+    """
+    return any(
+        re.search(r"list_resources|@\w*\.resource\b|Resource\(",
+                  module.read_text(encoding="utf-8"))
+        for module in PACKAGE.glob("*.py")
+    )
 
 
 def _mcp_is_cli_subcommand() -> bool:

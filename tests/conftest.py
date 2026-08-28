@@ -21,6 +21,8 @@ becoming a hole big enough to hide a regression in:
 from __future__ import annotations
 
 import json
+import os
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -71,3 +73,50 @@ def test_the_shipped_floors_are_the_corpus_minima() -> None:
     assert all(value > 0 for value in SHIPPED_FLOORS.values()), (
         "a zero floor ships nothing; the hello-world A+ comes straight back"
     )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _git_never_maintains_the_fixtures() -> Iterator[None]:
+    """Stop git's background maintenance writing into fixture repos.
+
+    Several tests assert that an audit leaves the tree it audited byte
+    for byte unchanged. `git commit` schedules `git maintenance run
+    --auto`, which **detaches**, so the maintenance a fixture's own
+    commit scheduled lands milliseconds later -- inside the window
+    between those tests' before and after snapshots -- and writes
+    `.git/objects/maintenance.lock`.
+
+    That is the fixture's git, not the product's. D71 stopped the
+    product from triggering maintenance (`run_git` prepends the same two
+    settings to every command it builds), and macOS CI kept failing
+    afterwards because the commit that *set up* the repository had
+    already scheduled it. Same commit, three CI runs, two failures and
+    one pass: a race, not a regression.
+
+    Session-scoped and via `GIT_CONFIG_*` so it reaches every git in the
+    suite, including the ones spawned deep inside the product, without
+    each fixture having to remember. `git_env()` does not scrub these --
+    it scrubs the location overrides (`GIT_DIR` and siblings), which
+    redirect a command at another repository; these only turn off
+    housekeeping.
+    """
+    settings = (("gc.auto", "0"), ("maintenance.auto", "false"))
+    previous = {
+        name: os.environ.get(name)
+        for name in ("GIT_CONFIG_COUNT", *(
+            f"GIT_CONFIG_{part}_{index}"
+            for index in range(len(settings)) for part in ("KEY", "VALUE")
+        ))
+    }
+    os.environ["GIT_CONFIG_COUNT"] = str(len(settings))
+    for index, (key, value) in enumerate(settings):
+        os.environ[f"GIT_CONFIG_KEY_{index}"] = key
+        os.environ[f"GIT_CONFIG_VALUE_{index}"] = value
+    try:
+        yield
+    finally:
+        for name, value in previous.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value

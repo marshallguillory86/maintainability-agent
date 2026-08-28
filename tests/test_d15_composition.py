@@ -292,13 +292,13 @@ def test_d15_is_closed_past_tense_behind_this_file() -> None:
     disposition = register.split("## Disposition", maxsplit=1)[1].lower()
     assert "only d15 remains open" not in disposition
     assert "closed" in disposition
-    # Counted from the headings rather than a written-in number: the
-    # register grew to nineteen when two audit-reproduced defects were
-    # entered, and a hardcoded count silently stops describing it.
-    headings = re.findall(r"^### D\d+ — (.+)$", register, re.MULTILINE)
-    assert headings
-    unclosed = [line for line in headings if "Closed" not in line]
-    assert not unclosed, f"entries still open: {unclosed}"
+    # D15's own closure, not the whole register's. This asserted that no
+    # entry anywhere was open, which was true the day it was written and
+    # became a test that requires a lie: the only way to keep it green
+    # once a security pass reproduced six defects would have been to not
+    # file them. A register that cannot hold an open entry cannot be the
+    # release gate it is used as (D34–D39).
+    assert re.search(r"^### D15 — Closed", register, re.MULTILINE)
 
     adr = ADR_012.read_text(encoding="utf-8")
     assert "still to be written" not in adr

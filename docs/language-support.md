@@ -8,10 +8,26 @@ ends, and — deliberately — where it under-reports.
 | Language | Declaration ranges | Accuracy |
 |---|---|---|
 | Python (`.py`) | `ast` — exact `end_lineno` | Exact. Falls back to the pattern scan only if the file has a syntax error. |
+| Java (`.java`) | dedicated scanner: methods, constructors and types, bounded by their own braces | Bounded. Under-reports — see below. |
 | JS / TS / JSX / TSX (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`) | brace/paren depth over a comment- and string-masked copy | Bounded by the declaration's own braces. |
 | HTML (`.html`) | same brace scanner, so inline `<script>` bodies are measured | Bounded. |
-| Java (`.java`) | dedicated scanner: methods, constructors and types, bounded by their own braces | Bounded. Under-reports — see below. |
-| Anything else | not parsed for declarations | File length, duplication and risk only. Adding the suffix to `include_extensions` does not produce a declaration population. |
+| Anything else | not parsed for declarations | File length, duplication and risk only, and declaration rates **withheld** with the missing parser named. Adding the suffix to `include_extensions` does not produce a declaration population. |
+
+**This table is the claim, and it is enforced.** An audit found the
+page and [Decision 10](decisions.md) saying v1.0 handled Python and
+Java while the scanner also read JS, TS, JSX and HTML — and it does,
+with three baseline-tier adapters (lizard, jscpd, multimetric)
+measuring those files besides. The mismatch was in the writing, not the
+code: a language belongs here when this project can detect and score
+it.
+
+What the tool must never do is produce a declaration population for a
+language it can neither parse nor send to an adapter. That is the P7
+failure — a number a reader with the repository in front of them would
+call absurd —
+and `test_the_parsed_languages_are_exactly_the_claimed_languages`
+fails when this page and the parser disagree in either direction, so a
+suffix added to one has to reach the other.
 
 Only these extensions get declaration-level findings. Every other
 extension in `include_extensions` is still measured for file length,

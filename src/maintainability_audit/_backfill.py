@@ -30,11 +30,36 @@ import subprocess
 from pathlib import Path
 
 from ._scan_history import ScanRecord, read_history
+from .git_tools import (
+    GIT_TIMEOUT_SECONDS,
+    READ_ONLY_GIT_CONFIG,
+    git_env,
+    validate_revspec,
+)
 
 
 def _git(root: Path, *args: str) -> str:
-    result = subprocess.run(
-        ["git", "-C", str(root), *args], capture_output=True, text=True, check=False)
+    """Run git in `root`, raising on any failure.
+
+    `-C` alone does not bind the repository: `GIT_DIR` and its siblings
+    outrank it, so an inherited value would silently redirect these
+    commands — and the worktree ones below write. The environment is
+    scrubbed and the child is bounded, both D37.
+    """
+    try:
+        result = subprocess.run(  # noqa: S603 - argv list, never a shell
+            # D71: this spawn is not `run_git`, and the sweep that was
+            # meant to hold that rule only read `git_tools.py` -- so
+            # the one git command in this package that lives
+            # somewhere else went uncovered. `commits_in_range` runs
+            # `rev-list` here before any worktree exists, which is
+            # exactly the read that can schedule housekeeping.
+            ["git", *READ_ONLY_GIT_CONFIG, "-C", str(root), *args],
+            capture_output=True, text=True, check=False,
+            timeout=GIT_TIMEOUT_SECONDS, env=git_env())
+    except subprocess.TimeoutExpired as expired:
+        raise ValueError(
+            f"{' '.join(args)} timed out after {GIT_TIMEOUT_SECONDS}s") from expired
     if result.returncode != 0:
         raise ValueError(
             f"{' '.join(args)} failed: {result.stderr.strip()[:200] or 'unknown error'}")
@@ -53,7 +78,10 @@ def commits_in_range(root: Path, revspec: str) -> list[str]:
     commits" would leave someone believing their history was complete.
     """
     try:
-        output = _git(root, "rev-list", "--reverse", revspec)
+        # Validated before git sees it: `--output=<path>` would be read as
+        # an option and create that file (D37). The MCP door checked this
+        # and the CLI's --backfill did not.
+        output = _git(root, "rev-list", "--reverse", validate_revspec(revspec), "--")
     except ValueError as error:
         raise ValueError(f"{revspec!r} is not a valid commit range: {error}") from error
     return output.split()

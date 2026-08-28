@@ -43,20 +43,40 @@ jobs:
     name: Verify (lint, deps, tests, coverage)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # SonarQube Cloud needs full history for new-code metrics, and
           # the maintainability audit needs it for the history aspects.
           # At the default depth of 1 those are unmeasured, which costs
           # roughly a grade and withholds a verified grade entirely.
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Upgrade pip itself (fixes CVE-2026-6357 in pip 26.0.1)
         run: python3 -m pip install --upgrade pip
       - name: Install tool with dev extras
         run: python3 -m pip install -e ".[dev]"
+      - name: Install the pinned analyzer pool
+        # Deliberately NOT a dev extra. ADR 006 makes analyzers runtime
+        # prerequisites the user supplies, never package dependencies,
+        # so CI supplies them the same way a user would -- installed
+        # into the environment, discovered on PATH.
+        #
+        # Without this the adapters ship unexercised: 44 of the suite's
+        # skips were "<tool> is not installed", so the 15 hand-written
+        # adapters were covered only by their unit tests and never by an
+        # actual invocation.
+        #
+        # These are the PR gates, so they must satisfy P1's condition:
+        # same tree, config, history and pinned analyzer versions in,
+        # same result out. The scheduled drift job below keeps the old
+        # "analyzer moved" signal, but the gates themselves pin.
+        run: >
+          python3 -m pip install
+          --constraint constraints/analyzers.txt
+          cohesion complexipy flake8 interrogate lizard multimetric
+          mypy pydocstyle pylint radon ruff vulture
       - name: Lint (ruff)
         run: ruff check src tests tools
       - name: Dependency CVE scan (pip-audit)
@@ -72,7 +92,7 @@ jobs:
             --cov-report=xml:coverage.xml \
             --cov-fail-under=92
       - name: Upload coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: coverage
@@ -82,22 +102,193 @@ jobs:
         # cloud service requirement" and "no vendor lock-in", so an expired
         # token or a moved project must not block a PR whose deterministic
         # checks all pass. A red mark here means "go look at the token".
-        if: github.event_name != 'schedule'
+        #
+        # This comment used to read "main only, because the plan on this
+        # private project covers the main branch alone". Both halves were
+        # false. The repository is public and has been since 2026-05-09,
+        # and SonarCloud is free and unlimited for public projects,
+        # pull request analysis included.
+        #
+        # The symptom was real: "Not analyzed", and a quality gate the
+        # app built from no data. The cause was that SonarCloud's main
+        # branch was named `master`, which has never existed here, while
+        # `main` sat alongside it as a *short-lived* branch merging into
+        # it. So every scan of the real default branch was filed as a
+        # feature branch off a main branch that had never been analyzed,
+        # leaving pull requests with no baseline to diff against.
+        #
+        # Renamed 2026-08-26. Runs on pull requests again, where a
+        # cross-check is worth something — still advisory, still
+        # `continue-on-error`, because this project's rules are "no cloud
+        # service requirement" and "no vendor lock-in": an expired token
+        # must never block a PR whose deterministic checks all pass.
+        #
+        # **Pull requests and main, nothing else.** Re-enabling PR
+        # analysis removed the condition entirely rather than narrowing
+        # it, so every push to a feature branch ran a *second* scan that
+        # treated the branch as long-lived. That analysis has no
+        # meaningful new-code baseline, fails its quality gate, and the
+        # SonarCloud app posts the failure as a commit status — a red
+        # mark on every push that means nothing, which is the thing this
+        # file's header warns teaches people to ignore the signal.
+        if: >
+          github.event_name == 'pull_request' ||
+          (github.event_name == 'push' && github.ref == 'refs/heads/main')
         continue-on-error: true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: SonarSource/sonarqube-scan-action@v8
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8
+        with:
+          # Wait for the server-side gate and print which condition
+          # failed. Without this the action submits the analysis and
+          # exits, SonarCloud computes the gate afterwards, and its app
+          # posts a bare red status with no description and no link —
+          # unreadable from CI, and unreadable by anyone without the
+          # token, which is how it cost half an hour twice today.
+          # `continue-on-error` above still keeps the job green: the
+          # point is a legible log line, not a new gate.
+          args: -Dsonar.qualitygate.wait=true
+
+  # `pyproject` declares `Operating System :: POSIX`, and until this job
+  # existed the only evidence behind that claim was one Linux image. An
+  # audit put it plainly: the platform test forbade `windows` in
+  # `runs-on` and called that a demonstration, so macOS was claimed and
+  # never once run (D63, reopened).
+  #
+  # Tests only. Coverage thresholds, pip-audit and Sonar are properties
+  # of the project rather than of the platform, and running them twice
+  # buys nothing but a second thing to keep green. What this job answers
+  # is the one question the Linux runner cannot: does the product work
+  # on the other POSIX this package claims.
+  verify-macos:
+    name: Verify on macOS (tests)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Upgrade pip itself (fixes CVE-2026-6357 in pip 26.0.1)
+        run: python3 -m pip install --upgrade pip
+      - name: Install tool with dev extras
+        run: python3 -m pip install -e ".[dev]"
+      - name: Tests
+        run: python3 -m pytest -q
+
+  # Run by hand to produce the file `constraints/analyzers.txt` should
+  # be. The pool has to be resolved on the platform it constrains, and
+  # the only Linux this project can reach is a runner -- which is also
+  # why D89 could not be closed by the agent that found it: closing it
+  # means installing the pool.
+  #
+  # Download the artifact, check it in, drop the xfail in
+  # `test_the_constraints_were_resolved_on_the_platform_the_gates_run_on`.
+  resolve-constraints:
+    name: Resolve the analyzer pool on Linux (manual)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Resolve and record
+        run: |
+          python3 -m venv /tmp/resolve
+          /tmp/resolve/bin/python -m pip install --upgrade pip
+          /tmp/resolve/bin/python -m pip install \
+            cohesion complexipy flake8 interrogate lizard multimetric \
+            mypy pydocstyle pylint radon ruff vulture
+          {
+            printf '# Resolved on %s with Python %s on %s.\n' \
+              "$(date -u +%Y-%m-%d)" \
+              "$(/tmp/resolve/bin/python -c 'import platform; print(platform.python_version())')" \
+              "$(/tmp/resolve/bin/python -c 'import platform; print(platform.platform())')"
+            printf '# Produced by the resolve-constraints job in quality-gates.yml.\n'
+            printf '# Full dependency closure: a transitive change can move analyzer\n'
+            printf '# output while the top-level version stays put.\n'
+            /tmp/resolve/bin/python -m pip freeze --all | grep -v '^pip=='
+          } > analyzers.txt
+          cat analyzers.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: analyzers-constraints-linux
+          path: analyzers.txt
+
+  # Every falsifier a new register entry cites has to fail without the
+  # change it claims to defend. That was the author's word until now,
+  # recorded in a `*Mutation:*` line and believed.
+  #
+  # Miles Parker named the hole: an agent controls both the code and its
+  # test, so one that introduced a bug and adjusted the check to cover
+  # it looks identical from outside to one that got it right. The benign
+  # version is commonplace — a test fails, the author decides the test
+  # was wrong, and edits it. Sometimes that is correct, and nothing
+  # external could tell. This is the check that can tell.
+  prove-falsifiers:
+    name: Falsifiers fail without their fix
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install tool with dev extras
+        run: python3 -m pip install -e ".[dev]"
+      - name: Prove each newly cited falsifier
+        run: python3 tools/prove_falsifiers.py --base "origin/${{ github.base_ref }}"
+
+  analyzer-drift:
+    name: Analyzer drift (scheduled, unpinned)
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install the analyzer pool unpinned in a throwaway venv
+        # Deliberately separate from the PR gates above. An unchanged
+        # `main` going red because an analyzer shipped is still a useful
+        # signal, but it belongs on the scheduled drift check rather
+        # than on the merge gate that is meant to certify P1.
+        run: |
+          python3 -m venv /tmp/analyzer-drift
+          /tmp/analyzer-drift/bin/python -m pip install --upgrade pip
+          /tmp/analyzer-drift/bin/python -m pip install \
+            cohesion complexipy flake8 interrogate lizard multimetric \
+            mypy pydocstyle pylint radon ruff vulture
+      - name: Fail visibly if the analyzer resolution drifted
+        # Compared like with like. The first version diffed the raw
+        # constraints file, which carries eight comment lines of
+        # provenance, against `pip freeze` output, which carries none --
+        # so the diff was non-empty on every run whether or not anything
+        # had drifted. A check that can never pass is worth less than no
+        # check: this file's own header says a pipeline that fails on
+        # something advisory teaches people to ignore it.
+        run: |
+          strip() { grep -v '^#' "$1" | grep -v '^[[:space:]]*$' | sort -f; }
+          /tmp/analyzer-drift/bin/python -m pip freeze --all \
+            | grep -v '^pip==' > /tmp/analyzer-drift.raw
+          strip constraints/analyzers.txt > /tmp/pinned.txt
+          strip /tmp/analyzer-drift.raw > /tmp/resolved.txt
+          diff -u /tmp/pinned.txt /tmp/resolved.txt
 
   audit:
     name: Audit (maintainability + security)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install the agents
@@ -108,6 +299,14 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install -e ".[dev]"
           python3 -m pip install secure-code-agent
+      - name: Install the pinned analyzer pool
+        # The maintainability gate runs these analyzers in this job, so
+        # the audit gate must use the same checked-in versions as verify.
+        run: >
+          python3 -m pip install
+          --constraint constraints/analyzers.txt
+          cohesion complexipy flake8 interrogate lizard multimetric
+          mypy pydocstyle pylint radon ruff vulture
 
       # --- maintainability -------------------------------------------------
       # `--fail-on-gate` fails on hard-gate findings only. It does not read
@@ -145,13 +344,13 @@ jobs:
 
       # --- surface the findings where people look --------------------------
       - name: Upload maintainability SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@42947a340483f03ba47bb1a039b2c519aab3df85 # v3
         if: always()
         with:
           sarif_file: maintainability.sarif
           category: maintainability-agent
       - name: Upload security SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@42947a340483f03ba47bb1a039b2c519aab3df85 # v3
         if: always()
         with:
           sarif_file: secure-code.sarif
@@ -162,7 +361,7 @@ jobs:
         # thread into noise and people stop reading it — which is the same
         # failure as a gate nobody trusts.
         if: always() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const fs = require('fs');
@@ -197,7 +396,7 @@ jobs:
             }
 
       - name: Upload audit artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: audit-artifacts

@@ -74,6 +74,26 @@ def test_the_register_states_a_falsifier_for_every_entry() -> None:
     assert "test_the_cli_door_applies_the_same_boundary" in register
 
 
+def _cited_region(section: str, ident: str) -> str:
+    """The part of an entry that claims to name a falsifier.
+
+    It ends at the next `*Field:*` marker, not at the end of the entry.
+    `*Roles:*` and `*Mutation:*` sit after it and legitimately name
+    tests -- a mutation statement is *required* to say which member it
+    broke -- so reading to the end made every such statement look like a
+    miscited falsifier. The region a check reads has to be the region
+    the claim is about.
+    """
+    closing = re.split(r"\*Closing (?:test|tests|suite|suites):\*", section)
+    assert len(closing) > 1, (
+        f"{ident} names no *Closing test:* — an entry whose falsifier "
+        "is only prose cannot be held to pointing at a real one"
+    )
+    return " ".join(
+        re.split(r"\n\*\w+:\*", block)[0] for block in closing[1:]
+    )
+
+
 def _entry(entries: str, ident: str) -> str:
     return entries.split(f"### {ident} — ", maxsplit=1)[1].split("\n### ", maxsplit=1)[0]
 
@@ -112,18 +132,42 @@ def test_every_closing_citation_names_a_test_that_exists() -> None:
                                   _read(path), re.MULTILINE))
         for path in (ROOT / "tests").glob("test_*.py")
     }
+    assert by_module, (
+        "no test modules were read, so every citation below resolves "
+        "against an empty index and this check passes over nothing -- "
+        "which is the shape it exists to catch elsewhere"
+    )
     everywhere = set().union(*by_module.values())
 
     problems = []
-    for ident in re.findall(r"^### (D\d+) — ", entries, re.MULTILINE):
-        closing = re.split(
-            r"\*Closing (?:test|tests|suite|suites):\*", _entry(entries, ident),
+    for ident, title in re.findall(r"^### (D\d+) — (.+)$", entries, re.MULTILINE):
+        section = _entry(entries, ident)
+        # An open entry has no falsifier yet — that is what open means —
+        # and demanding one would push a writer to cite something
+        # adjacent just to satisfy the check. What it must not do is
+        # *claim* one, so `pending` is the only accepted placeholder and
+        # it is checked below.
+        if "Closed" not in title:
+            assert "pending" in section.lower(), (
+                f"{ident} is open but does not say its falsifier is pending; "
+                "an open entry may name no test, and must claim none"
+            )
+            continue
+        citation = _cited_region(section, ident)
+        # A file name is not a falsifier. An audit closed an entry with
+        # nothing but a `tests/….py` path and the first version of this
+        # check passed it, because it looked for names to resolve and
+        # found none to object to. The second version demanded a
+        # `test_` token and passed the same attack, because the token it
+        # found was the *filename inside the path* — a check that reads
+        # `tests/test_x.py` as "names test_x" cannot tell a citation
+        # from an address. Paths are stripped before looking (D33).
+        named = re.findall(r"\btest_\w+\b", re.sub(r"tests/\S+\.py", " ", citation))
+        assert named, (
+            f"{ident} closes on a file with no test named in it; a reader "
+            "cannot tell which test fails if the defect returns"
         )
-        assert len(closing) > 1, (
-            f"{ident} names no *Closing test:* — an entry whose falsifier "
-            "is only prose cannot be held to pointing at a real one"
-        )
-        problems += _misdirected(ident, " ".join(closing[1:]), by_module, everywhere)
+        problems += _misdirected(ident, citation, by_module, everywhere)
 
     assert not problems, (
         "the register closes entries on falsifiers a reader cannot run: "
@@ -152,10 +196,16 @@ def test_the_first_run_help_describes_the_form_a_person_actually_sees() -> None:
     """D28: the help page is read against the question set, not a memory of it.
 
     The page grouped economics as one bullet — "skip, or low/base/high
-    loaded labor rates" — while the form asks four separate fields, and
-    the three labor bounds sit in the elicitation schema
-    unconditionally. Someone answering "skip" is still shown all three,
-    and the page gave them no way to expect that.
+    loaded labor rates" — while the form asked four separate fields and
+    the three bounds sat in the schema unconditionally. D28 made the
+    page describe that.
+
+    The form has since changed, and this test inverted with it: the
+    bounds are a second ask now, put only to someone who answered
+    `include`, because asking three money questions of a person who
+    just declined money is not a description problem. The page must
+    describe *that*, and the check reads both stages from the code so
+    neither can drift into merely being old.
 
     Read from `setup_questions`, so a question added to the form has to
     reach the page before it ships, and a page that restates the form
@@ -176,13 +226,27 @@ def test_the_first_run_help_describes_the_form_a_person_actually_sees() -> None:
             f"{question['name']!r}, which the form shows"
         )
 
-    labor = [q for q in questions if q["name"].startswith("labor_")]
-    assert len(labor) == 3, "the labor bounds changed shape; re-read the page"
-    # The specific misdescription: bounds presented as conditional.
+    from maintainability_audit._mcp_setup import economics_bound_questions
+
+    assert not [q for q in questions if q["name"].startswith("labor_")], (
+        "a labor rate is back on the first form, which is asked of "
+        "everyone including the people who declined the economic scenario"
+    )
+    bounds = economics_bound_questions()
+    assert len(bounds) == 3, "the labor bounds changed shape; re-read the page"
+    for question in bounds:
+        assert str(question["default"]) in page, (
+            f"the help page never states the default {question['default']!r} "
+            f"for {question['name']!r}, which the second form shows"
+        )
+
     lowered = " ".join(page.lower().split())
-    assert "even when" in lowered or "unconditional" in lowered, (
-        "the page does not tell the reader the labor fields appear "
-        "regardless of the economics answer"
+    assert "second question set" in lowered or "only if you include" in lowered, (
+        "the page does not tell the reader the labor rates are a second "
+        "ask that follows including the economic scenario"
+    )
+    assert "0 < low <= base <= high" in page, (
+        "the page does not state the rule the rates are refused against"
     )
     for presentation in PRESENTATIONS:
         assert presentation in lowered
@@ -232,4 +296,177 @@ def test_no_document_says_a_register_entry_is_open_that_the_register_closed() ->
     assert not stale, (
         "documents assert a register entry is open that the register records "
         "as closed; correct the claim or stamp it: " + "; ".join(stale)
+    )
+
+
+def test_the_security_policy_supports_the_shipped_release_line() -> None:
+    """D45: a policy naming a dead version line supports nothing.
+
+    `SECURITY.md` still said `0.1.x` at version 0.9.1 — eight release
+    lines of drift, which read literally meant the shipped release
+    received no security fixes. Nobody noticed because nothing looked.
+
+    Checked against `config.VERSION` rather than a written-in number,
+    so the next release either updates the table or fails here.
+    """
+    from maintainability_audit.config import VERSION
+
+    line = ".".join(VERSION.split(".")[:2])
+    policy = _read(ROOT / "SECURITY.md")
+    assert f"`{line}.x`" in policy, (
+        f"SECURITY.md does not name the shipped release line {line}.x; "
+        "its supported-versions table has drifted from the package"
+    )
+
+
+def test_the_security_policy_states_the_guarantee_the_code_keeps() -> None:
+    """This claim has now been wrong in both directions.
+
+    `SECURITY.md` first asserted the agent "does not execute scanned
+    code" while eslint was being invoked in a mode that *requires* the
+    audited repository's configuration and then runs it. That was
+    corrected to say the agent does execute it, with the question left
+    open as D39 and D44.
+
+    Decision 9 then settled it and the code caught up — eslint refused,
+    pylint and mypy isolated, the child's environment scrubbed — and
+    this file kept describing the defect for another day. A promise
+    that has become true while its own documentation denies it is the
+    same defect class as the reverse, and neither direction is caught
+    by a check that only forbids one sentence.
+
+    So this reads the file against the code rather than against a
+    phrase: whatever the policy says, the adapter that cannot run
+    without the tree's configuration must be refused, and the two
+    isolated tools must carry their flags.
+    """
+    from maintainability_audit._generic import DECLARED, declared_adapter
+    from maintainability_audit._tool_adapters import ADAPTERS, adapter_for
+
+    policy = " ".join(_read(ROOT / "SECURITY.md").lower().split())
+    denies = "does not execute code from the repository" in policy
+    claims_it_does = "it does execute code from the repository" in policy
+
+    refused = {
+        slug for slug in ADAPTERS
+        if getattr(adapter_for(slug), "executes_audited_configuration", False)
+    }
+    isolated = {
+        slug for slug in DECLARED
+        if any(
+            item.startswith(("--rcfile=", "--config-file="))
+            for item in declared_adapter(slug).invocation(ROOT, excludes=()).argv
+        )
+    }
+    honoured = bool(refused) and isolated == set(DECLARED)
+
+    assert denies or claims_it_does, (
+        "SECURITY.md says nothing either way about executing repository "
+        "code, which is the one thing a reader comes to this file for"
+    )
+    assert denies == honoured, (
+        "SECURITY.md and the code disagree about executing repository "
+        f"code. policy denies it: {denies}. refused adapters: "
+        f"{sorted(refused)}, isolated declared tools: {sorted(isolated)} "
+        f"of {sorted(DECLARED)}"
+    )
+    assert not claims_it_does or not honoured, (
+        "SECURITY.md still describes the defect Decision 9 closed"
+    )
+
+
+def test_the_declared_python_floor_supports_the_features_in_use() -> None:
+    """D42: metadata that promises a Python the code cannot run on.
+
+    `requires-python` said `>=3.10` while three runtime modules import
+    `enum.StrEnum`, which is 3.11. Pip installed happily on 3.10 and
+    the import then failed — and nothing caught it, because CI runs
+    3.12 and the composite action pins 3.11, so no machine in the
+    pipeline ever stood where the metadata said a user could stand.
+
+    I first recorded that no honest test was possible here, on the
+    grounds that any such check restates a constant. That was wrong.
+    This does not restate the floor; it ties the floor to the language
+    features actually imported, which is the relationship that broke.
+    A CI matrix entry on the floor version is still worth having, and
+    is still recorded as follow-up — but it is not the only check
+    available.
+    """
+    import re as _re
+
+    features = {
+        # feature -> (minimum minor version, why)
+        "StrEnum": (11, "enum.StrEnum landed in 3.11"),
+        "ExceptionGroup": (11, "ExceptionGroup landed in 3.11"),
+        "tomllib": (11, "tomllib landed in 3.11"),
+        "override": (12, "typing.override landed in 3.12"),
+    }
+
+    declared = _re.search(
+        r'requires-python\s*=\s*">=3\.(\d+)"',
+        _read(ROOT / "pyproject.toml"),
+    )
+    assert declared, "pyproject.toml no longer declares a requires-python floor"
+    floor = int(declared.group(1))
+
+    package = ROOT / "src" / "maintainability_audit"
+    for module in sorted(package.rglob("*.py")):
+        # Imports and decorators only. A first version matched the bare
+        # word anywhere and flagged `_economics.py` for the English
+        # "override" in a docstring — a check that cries wolf is a check
+        # somebody turns off.
+        lines = [
+            line for line in _read(module).splitlines()
+            if line.startswith(("import ", "from ")) or line.lstrip().startswith("@")
+        ]
+        text = "\n".join(lines)
+        for feature, (needs, why) in features.items():
+            if _re.search(rf"\b{feature}\b", text) and needs > floor:
+                raise AssertionError(
+                    f"{module.relative_to(ROOT)} uses {feature} ({why}) but "
+                    f"pyproject declares >=3.{floor}; pip would install on "
+                    f"3.{floor} and the import would fail"
+                )
+
+
+def test_the_disposition_names_the_entries_that_are_open() -> None:
+    """The prose count and the headings cannot drift apart.
+
+    The disposition read "Six entries are open: D34 through D39" for two
+    days after D34-D37 closed. Nothing failed, because the existing
+    checks read the headings and the *count* lived in a sentence. A
+    ledger that gates a release has to be countable from the register
+    itself, so the sentence is now derived from the headings and checked
+    against them.
+    """
+    register = _read(REGISTER)
+    open_headings = sorted(
+        int(number)
+        for number in re.findall(r"^### D(\d+) — Open", register, re.MULTILINE)
+    )
+    disposition = register.split("## Disposition", maxsplit=1)[1]
+    # Only the bolded claim: the prose around it legitimately names
+    # entries that closed, and counting those would make this test
+    # fail on an accurate register.
+    claim = re.search(r"\*\*(.+?)\*\*", disposition, re.DOTALL)
+    assert claim, "the disposition no longer opens with a bolded claim"
+    claimed = sorted({int(n) for n in re.findall(r"\bD(\d+)\b", claim.group(1))})
+
+    if not open_headings:
+        # The ledger reached zero, which is the state a release cuts
+        # from. The claim must say so in words rather than list nothing,
+        # because an empty list reads identically to a broken parser.
+        assert not claimed, (
+            "no entry is marked Open, but the disposition still names "
+            f"{[f'D{n}' for n in claimed]}"
+        )
+        assert "closed" in claim.group(1).lower(), (
+            "with nothing open the disposition must say every entry is "
+            f"closed, not merely omit them: {claim.group(1)[:120]}"
+        )
+        return
+    assert claimed == open_headings, (
+        "the disposition names a different open set than the headings do: "
+        f"prose={[f'D{n}' for n in claimed]} "
+        f"headings={[f'D{n}' for n in open_headings]}"
     )

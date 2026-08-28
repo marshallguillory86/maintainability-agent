@@ -206,7 +206,7 @@
         },
         "prompt_when_interactive": {
           "type": "boolean",
-          "description": "Reserved. Stored and not read. First-run prompt is release-plan 6.1."
+          "description": "Whether the CLI may ask first-run questions on a terminal. Read by _first_run; config wins over terminal interactivity (decision 7). First-run prompt is release-plan 6.1."
         },
         "allow_tools": {
           "type": "array",
@@ -274,6 +274,11 @@
             "type": "string"
           },
           "description": "Extra directories of compiled Java classes for SpotBugs, in addition to target/classes and build/classes. The agent never builds these (ADR 012)."
+        },
+        "acquire_tools": {
+          "type": "boolean",
+          "default": false,
+          "description": "Declared so this schema describes the key the runtime reads. Setting it in a repository file has no effect: acquisition is a decision the user makes in their own configuration tier, because it fetches and executes a package on their machine (product-intent P1, D35). A repository stating a preference here is ignored, not refused."
         }
       },
       "additionalProperties": false

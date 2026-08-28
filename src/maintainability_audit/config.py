@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
-VERSION = "0.9.1"
+VERSION = "1.0.0rc1"
 
 PROJECT_URL = "https://github.com/marshallguillory86/maintainability-agent"
 
@@ -165,6 +165,16 @@ DEFAULT_CONFIG: dict[str, Any] = {
 }
 
 
+class ConfigUnreadable(ValueError):
+    """A configuration file exists but cannot be understood.
+
+    Distinct from absence on purpose: absent means "ask the setup
+    questions", unreadable means "a person has to look at this file".
+    Conflating them would either re-ask someone who has already
+    answered, or silently audit against defaults they did not choose.
+    """
+
+
 class PathNotAllowed(ValueError):
     """A configured path escaped the repository it belongs to.
 
@@ -189,9 +199,14 @@ def repository_path(root: Path, configured: str | None, default: str) -> Path:
     candidate = Path(configured or default).expanduser()
     target = (candidate if candidate.is_absolute() else root / candidate).resolve()
     if target != root and not target.is_relative_to(root):
+        # The configured spelling, never what it resolved to. This
+        # door runs on an ordinary audit whenever the repository's own
+        # config names a path, so a symlinked `history.jsonl` published
+        # its target to the chat host. Fifth in the family D72 opened
+        # and D82 and D91 each closed one of (D96).
         raise PathNotAllowed(
-            f"configured path {configured or default!r} resolves to {target}, "
-            f"outside the repository {root}"
+            f"configured path {configured or default!r} resolves outside "
+            "the repository it configures"
         )
     return target
 
@@ -225,6 +240,37 @@ def discovered_config(root: Path) -> str | None:
     return str(candidate) if candidate.is_file() else None
 
 
+def acquisition_permitted() -> bool:
+    """Whether *this user* has enabled tool acquisition (D35).
+
+    Read from the XDG user tier alone, never from the merged config,
+    and that is the whole point. `load_config` states that a repository
+    always beats a person, which is right for thresholds and
+    exclusions — the repository knows its own code. It is exactly wrong
+    for acquisition: `product-intent.md` P1 says a **user** enables
+    `analyzers.acquire_tools`, and an audit showed that four words in a
+    pull request otherwise make the host run `npx --yes` on an unpinned
+    package, honouring the tree's own `.npmrc`.
+
+    License policy already works this way — deny wins, and no
+    repository can override an organisation's prohibition. Acquisition
+    is the same shape of decision and was the only one taking the
+    audited tree's word for it.
+
+    A repository that sets the key is ignored rather than refused: it
+    is a preference the tool declines to act on, not an attack worth
+    failing a scan over, and the environment work order already tells
+    the user which tools are missing and how to install them.
+    """
+    from ._user_config import user_config_answers
+
+    answers = user_config_answers() or {}
+    analyzers = answers.get("analyzers")
+    if not isinstance(analyzers, dict):
+        return False
+    return bool(analyzers.get("acquire_tools", False))
+
+
 def analyzers_run_default(config: dict[str, Any]) -> bool:
     """The repository's standing pool decision — one reading, every seam.
 
@@ -256,5 +302,178 @@ def load_config(path: str | None) -> dict[str, Any]:
     if user_tier is not None:
         deep_update(config, user_tier)
     if path:
-        deep_update(config, json.loads(Path(path).read_text(encoding="utf-8")))
+        deep_update(config, _configured(Path(path)))
     return config
+
+
+def _shaped_like_the_defaults(candidate: dict[str, Any], where: str) -> None:
+    """Refuse a known key whose value is the wrong shape.
+
+    Syntax was the only thing checked: a file could parse, have an
+    object root, and still say `"thresholds": "nope"`. That merged
+    cleanly and surfaced later as a raw `TypeError: string indices must
+    be integers` from somewhere in scoring, and `"hard_gates": []` as an
+    `AttributeError` on a list — two stack traces for one broken file,
+    neither of them naming it.
+
+    Derived from `DEFAULT_CONFIG` rather than a hand-written table, so a
+    key added there is checked the day it is added. Unknown keys are
+    still permitted: this is a shape check, not a schema, and refusing
+    what it does not recognise would break every config written against
+    a newer version of this tool.
+    """
+    for key, default in DEFAULT_CONFIG.items():
+        if key not in candidate:
+            continue
+        value = candidate[key]
+        if isinstance(default, dict) and not isinstance(value, dict):
+            raise ConfigUnreadable(
+                f"{where}: {key!r} must be an object, not "
+                f"{type(value).__name__}. Repair or delete it."
+            )
+        if isinstance(default, list) and not isinstance(value, list):
+            raise ConfigUnreadable(
+                f"{where}: {key!r} must be a list, not "
+                f"{type(value).__name__}. Repair or delete it."
+            )
+        _shaped_inside(key, default, value, where)
+
+
+def _kinds_for(fallback: Any) -> tuple[type, ...]:
+    """What a nested value must be, read off the shipped default.
+
+    Empty when the default is something this check has no opinion about,
+    which the caller treats as "leave it alone" -- a shape check, not a
+    schema. `bool` is listed before the numbers deliberately: it is a
+    subclass of `int`, so order decides whether `true` passes for a
+    threshold, and the caller re-checks it for that reason.
+    """
+    if isinstance(fallback, bool):
+        return (bool,)
+    if isinstance(fallback, (int, float)):
+        return (int, float)
+    for kind in (str, list, dict):
+        if isinstance(fallback, kind):
+            return (kind,)
+    return ()
+
+
+def _shaped_members(
+    key: str, default: dict[str, Any], value: dict[str, Any], where: str
+) -> None:
+    """Each known nested key, by the type its default carries."""
+    for name, fallback in default.items():
+        if name not in value or name == "_doc":
+            continue
+        expected = _kinds_for(fallback)
+        if not expected:
+            continue
+        actual = value[name]
+        # `bool` is a subclass of `int`, so a bare isinstance check would
+        # accept `true` for a threshold that wants a number.
+        wrong_bool = isinstance(actual, bool) and bool not in expected
+        if wrong_bool or not isinstance(actual, expected):
+            raise ConfigUnreadable(
+                f"{where}: {key}.{name} must be "
+                f"{' or '.join(kind.__name__ for kind in expected)}, not "
+                f"{type(actual).__name__}. Repair or delete it."
+            )
+        # And the members, not only the container: the list branch in
+        # `_shaped_inside` only ever ran for a *top-level* list, so
+        # `{"paths": {"include_extensions": [1]}}` was accepted and the
+        # audit reported a clean scan of nothing (D84).
+        _shaped_inside(f"{key}.{name}", fallback, actual, where)
+
+
+def _shaped_inside(
+    key: str, default: Any, value: Any, where: str
+) -> None:
+    """The same check one level down, where the crashes actually were.
+
+    The first version stopped at the top level, so `{"thresholds":
+    "nope"}` was refused while `{"thresholds": {"max_file_lines": "a"}}`
+    reached scoring and raised a raw `TypeError`, `{"expected_files":
+    [1]}` raised one from the path join, and
+    `{"hard_gates": {"require_readme": []}}` was accepted and *silently
+    disabled the gate*, because an empty list is falsy. That last one is
+    the worst of the three: no error, and a required check quietly
+    stopped being required.
+
+    Types come from `DEFAULT_CONFIG` again rather than a table. Unknown
+    nested keys stay permitted for the same reason unknown top-level
+    keys are: this is a shape check, not a schema.
+    """
+    if isinstance(default, dict) and isinstance(value, dict):
+        _shaped_members(key, default, value, where)
+    elif isinstance(default, list) and isinstance(value, list):
+        kinds = {type(item) for item in default} or {str}
+        for index, item in enumerate(value):
+            if not isinstance(item, tuple(kinds)):
+                raise ConfigUnreadable(
+                    f"{where}: {key}[{index}] must be "
+                    f"{' or '.join(kind.__name__ for kind in kinds)}, not "
+                    f"{type(item).__name__}. Repair or delete it."
+                )
+
+
+def _configured(path: Path) -> dict[str, Any]:
+    """The repository's own file, or a refusal that names it.
+
+    Every door loads through here, so every door answers a broken
+    config the same way. An audit found three answers to one state: the
+    MCP tool and resource refused by name, while the CLI and any caller
+    passing `config_path` let a raw `JSONDecodeError` out — the latter
+    bypassing the setup gate entirely, since supplying a config is how
+    a caller says the question is already answered (D32).
+    """
+    try:
+        content = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as unreadable:
+        # `strerror` for an OSError, never `str(unreadable)`: the latter
+        # appends the OS filename, and when `read_text` followed a
+        # symlink that filename is the *target* — a path outside the
+        # repository, which the caller never named, travelling inside a
+        # declared MCP refusal. A JSONDecodeError carries only a
+        # position, so its text is safe to pass on.
+        detail = getattr(unreadable, "strerror", None) or (
+            str(unreadable) if isinstance(unreadable, ValueError) else
+            type(unreadable).__name__
+        )
+        raise ConfigUnreadable(
+            f"{path} cannot be read as JSON ({detail}). Repair or "
+            "delete it; the audit cannot tell how this repository is "
+            "configured."
+        ) from unreadable
+    if not isinstance(content, dict):
+        raise ConfigUnreadable(
+            f"{path} is not a JSON object; a configuration cannot be "
+            f"read from {type(content).__name__}."
+        )
+    _shaped_like_the_defaults(content, str(path))
+    _repository_relative(content, str(path))
+    return content
+
+
+def _repository_relative(candidate: dict[str, Any], where: str) -> None:
+    """`expected_files` names files in the repository, not on the host.
+
+    `paths.history` was bounded by D20 and this was not, so a config
+    could say `/etc/passwd` or `../outside` and the audit would report
+    whether that existed — a repository-controlled probe of the machine
+    running it, answered in the report.
+    """
+    entries = candidate.get("expected_files")
+    if not isinstance(entries, list):
+        return
+    for entry in entries:
+        text = str(entry)
+        if PurePosixPath(text).is_absolute() or Path(text).is_absolute():
+            raise ConfigUnreadable(
+                f"{where}: expected_files entry {text!r} is absolute; "
+                "these name files inside the repository."
+            )
+        if ".." in Path(text).parts:
+            raise ConfigUnreadable(
+                f"{where}: expected_files entry {text!r} leaves the "
+                "repository; these name files inside it."
+            )

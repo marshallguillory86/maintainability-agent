@@ -75,6 +75,30 @@ python tools/resolve_pool.py --concerns documentation
 | `heavy` | 17 | Moderate plus slower or configuration-hungry tools; none are added today |
 | `all` | up to 448 | Every eligible tool that speaks a detected language |
 
+**Analyzers never take their configuration from the tree they audit.**
+[Decision 9](decisions.md) draws the line at executing code, and
+configuration is code: pylint's `init-hook=` runs arbitrary Python
+before analysis begins, a mypy `plugins =` imports a module out of the
+repository, and an eslint flat config *is* a JavaScript program. So
+pylint is spawned with `--rcfile`, mypy with `--config-file`, and
+eslint — which cannot run at all without the tree's config — is refused
+by selection and reported as `refused` rather than run. The analyzer
+child also gets an environment with `PYTHONPATH`, `NODE_PATH`,
+`NODE_OPTIONS`, `PYTHONSTARTUP` and the `LD_`/`DYLD_` pair removed, so
+nothing outside the operator's choice can decide what it loads. This is
+not a sandbox and is not claimed as one; the child is an ordinary local
+process.
+
+The two isolation flags are **structurally checked everywhere and
+spawned only where the binary exists** — the same disclosure the two
+JVM tools carry below. `test_every_declared_tool_is_classified_for_tree_configuration`
+forces every declared tool to be isolated or to state that it reads no
+tree configuration, and the live tests plant a hostile `pylintrc` and
+`mypy.ini` and assert the tree's code never runs. Those live tests skip
+wherever the tool is absent, including this project's CI, so on a
+machine without pylint and mypy the flags are documented-and-asserted
+rather than demonstrated.
+
 **A tier below `all` is a promise that the tool works.** Nothing is placed in `baseline`, `moderate` or `heavy` until this project has installed it, run it, and parsed its output — with two disclosed exceptions: **Checkstyle and SpotBugs** are verified against recorded real output (their conditional live tests skip wherever no binary exists, including this project's CI), so their live spawn is unproven until someone supplies the binaries. PMD has run live. That is why these numbers are small and why they grow one verified tool at a time.
 
 `all` is the honest name for the rest: known to exist, license recorded, **invocation not yet implemented**. Selecting `all` today runs the same tools as `heavy` and reports the remainder as unavailable-no-adapter. It is not a lie by omission — the report says exactly which of them ran.
@@ -106,14 +130,14 @@ Analyzers live in ecosystems, and the agent runs the ones it can reach. Nothing 
 | Runtime | Needed for | Install |
 |---|---|---|
 | Python 3.11+ | The agent itself, and lizard, radon, ruff, vulture, complexipy, interrogate, pydocstyle, multimetric, pylint, mypy | ships with the package |
-| **Node.js 18+** | **jscpd** (multi-language clone detection), eslint, and the JS/TS toolchain | `brew install node` / your platform's package manager |
+| **Node.js 18+** | **jscpd** (multi-language clone detection) and the JS/TS toolchain. Not eslint: it is refused, see above | `brew install node` / your platform's package manager |
 | JDK 17+ | PMD, Checkstyle, and SpotBugs | `brew install openjdk`; install PMD with `brew install pmd` or its upstream distribution; install Checkstyle with `brew install checkstyle`; install SpotBugs with `brew install spotbugs`. SpotBugs reads bytecode that already exists (`target/classes`, `build/classes`); the agent never runs the build. |
 | Go toolchain | golangci-lint (no adapter yet) | `brew install go` |
 | Rust toolchain | clippy (no adapter yet) | `brew install rust` |
 
-**Node tools are fetched only if you opt in.** With `analyzers.acquire_tools` set, a missing `jscpd` or `eslint` is invoked through `npx --yes`, which downloads the package — a network action [P1](product-intent.md#what-it-promises) discloses, with the fetched version recorded in the report. By default it is **off**: a missing Node tool is reported `not-installed` in coverage and appears in the environment work order with its install command, and nothing is fetched. **This agent does not transmit your code** in either mode.
+**Node tools are fetched only if you opt in.** With `analyzers.acquire_tools` set, a missing `jscpd` is invoked through `npx --yes`, which downloads the package — a network action [P1](product-intent.md#what-it-promises) discloses, with the fetched version recorded in the report. By default it is **off**: a missing Node tool is reported `not-installed` in coverage and appears in the environment work order with its install command, and nothing is fetched. **This agent does not transmit your code** in either mode.
 
-**Child tools are not network-sandboxed.** Once `lizard`, `eslint`, or any other adapter runs, this process does not police outbound connections. Install tools yourself and keep them off `npx` if you need an air-gapped analysis.
+**Child tools are not network-sandboxed.** Once `lizard`, `jscpd`, or any other adapter runs, this process does not police outbound connections. Install tools yourself and keep them off `npx` if you need an air-gapped analysis.
 
 To avoid the fetch entirely — in an air-gapped build, or to pin a version — install the tool ahead of time and it will be used directly:
 
@@ -138,7 +162,7 @@ npm install -g jscpd@5
 | multimetric | baseline | Multi-language metrics | version 2.4.4; contributed in the checked-in analyzer corpus |
 | pylint | moderate | Design smells | 107 messages on `src/` |
 | mypy | moderate | Type diagnostics | Generic diagnostic output |
-| eslint | moderate | JS/TS complexity, depth, params | complexity 11, max-depth 5 |
+| eslint | moderate | JS/TS complexity, depth, params | **refused since D39** — it cannot run without executing the tree's flat config. The adapter is kept, not deleted: it becomes usable the day the tool can be invoked without that config |
 | flake8 | moderate | Style, mccabe complexity, unused code | parses its default `path:row:col: CODE message` lines |
 | cohesion | moderate | Per-class cohesion percentage | parses its verbose class report; measurements, not gates |
 | pmd | moderate | Java cognitive and cyclomatic complexity verdicts | `pmd check` with a pinned local ruleset; SARIF output; install with `brew install pmd`, verify with `pmd --version` |

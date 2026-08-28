@@ -101,13 +101,24 @@ def test_setup_questions_are_structured_choices_with_disclosed_defaults() -> Non
     assert _normalized(_named_question(questions, "license")["default"]) == "permissive"
     assert _normalized(_named_question(questions, "format")["default"]) == "chat"
 
+    # The first form asks whether money is wanted, and stops there. The
+    # three rates are a second ask, put only to someone who said yes —
+    # the first form used to carry all four, so the default answer
+    # ("skip") still walked a person through three labor-rate questions.
+    from maintainability_audit._mcp_setup import economics_bound_questions
+
     economics = [
         question for question in questions
         if any(word in _question_text(question) for word in ("economic", "labor", "cost"))
     ]
-    economics_contract = json.dumps(economics).lower()
-    for word in ("low", "base", "high", "skip"):
-        assert word in economics_contract
+    assert [q["name"] for q in economics] == ["economics"], (
+        f"the first form carries more than the gate: {[q['name'] for q in economics]}"
+    )
+    assert "skip" in json.dumps(economics).lower()
+
+    bounds_contract = json.dumps(economics_bound_questions()).lower()
+    for word in ("low", "base", "high"):
+        assert word in bounds_contract
 
 
 class StubElicitContext:
@@ -194,11 +205,20 @@ def _assert_persisted_answers(payload: dict) -> None:
     assert analyzers["run"] is True or _normalized(analyzers["run"]) == "yes"
     assert analyzers["depth"] == "moderate"
     assert analyzers["license_policy"] == "permissive"
-    assert payload["economic_context"]["loaded_engineering_cost_per_hour"] == {
-        "low": 90,
-        "base": 140,
-        "high": 210,
-    }
+    # Two stages: the gate is recorded as a request, and the rates fill
+    # it in on the next call. A request that arrived with no rates used
+    # to be written as nothing at all — the same shape as declining —
+    # so asking for the economic scenario silently got you none of it.
+    economics = payload["economic_context"]
+    if "loaded_engineering_cost_per_hour" in economics:
+        assert economics["loaded_engineering_cost_per_hour"] == {
+            "low": 90, "base": 140, "high": 210,
+        }
+    else:
+        assert economics.get("requested") is True, (
+            "including the economic scenario recorded neither rates nor a "
+            "request, which is indistinguishable from declining it"
+        )
     assert _has_persisted_chat_default(payload)
 
 
@@ -380,3 +400,63 @@ def test_server_discloses_the_local_five_artifact_write_boundary(
     assert ".maintainability/baseline.json" in disclosure
     assert _forbids(disclosure, "source")
     assert _forbids(disclosure, "report")
+
+
+def test_the_native_resolver_reaches_the_second_stage(tmp_path: Path) -> None:
+    """The staged ask, driven through the seam that actually asks.
+
+    `_setup_resolver_for` called `setup_schema()` with no root, so it
+    could only ever build the first stage: someone who answered
+    `economics=include` was handed the same six questions again on every
+    call, and the economic scenario never completed. The repository sat
+    at `economic_context.requested: true` forever.
+
+    The staged ask *was* tested — by calling `setup_schema(root)`
+    directly, which is the function and not the seam. This drives the
+    resolver, which is what a host reaches.
+    """
+    from types import SimpleNamespace
+
+    from maintainability_audit._mcp_grants import _RootLedger
+    from maintainability_audit._mcp_setup import apply_answers
+    from maintainability_audit.mcp_server import _setup_resolver_for
+
+    class _Capabilities:
+        elicitation = object()
+
+    context = SimpleNamespace(client_capabilities=_Capabilities())
+    root = _repo(tmp_path)
+    resolver = _setup_resolver_for(_RootLedger((tmp_path.resolve(),)), object)
+
+    first = resolver(str(root), context)
+    assert first is not None, "the first call elicited nothing"
+    assert set(first.schema.model_fields) == {
+        "run_pool", "depth", "license_policy", "economics",
+        "default_format", "record_scan_history",
+    }, f"the first stage asked {sorted(first.schema.model_fields)}"
+
+    apply_answers(root, {
+        "run_pool": "yes", "depth": "moderate", "license_policy": "permissive",
+        "economics": "include", "default_format": "chat",
+        "record_scan_history": "yes",
+    })
+
+    second = resolver(str(root), context)
+    assert second is not None, (
+        "including the economic scenario left setup complete with no rates; "
+        "the second stage never runs"
+    )
+    assert set(second.schema.model_fields) == {
+        "labor_low", "labor_base", "labor_high"
+    }, (
+        "the second call re-asked the first stage instead of the rates: "
+        f"{sorted(second.schema.model_fields)}"
+    )
+    assert "rate" in second.message.lower(), (
+        f"the second stage does not say what it is asking for: {second.message}"
+    )
+
+    apply_answers(root, {"labor_low": 90, "labor_base": 140, "labor_high": 210})
+    assert resolver(str(root), context) is None, (
+        "setup keeps eliciting after every question has been answered"
+    )

@@ -31,16 +31,38 @@ from maintainability_audit.mcp_server import (
 
 PACKAGE = Path(__file__).resolve().parents[1] / "src" / "maintainability_audit"
 MCP_SERVER = PACKAGE / "mcp_server.py"
+# Every module that binds an MCP seam. The transport is two files
+# since the resource bindings moved out of `mcp_server`.
+TRANSPORT_MODULES = (MCP_SERVER, PACKAGE / "_mcp_resources.py")
 
 # Exception subclasses that must not be translated. A reason is the
 # proof; an empty string is not a classification.
 EXCLUSIONS: dict[str, str] = {
+    "StaleStandingGrant": (
+        "never reaches the transport: `_stored_grants` raises it where a "
+        "grant is used, and `authorize_repository` re-raises it as "
+        "PathNotAllowed, which is in the tuple. It exists as its own type "
+        "so the rule can live beside the grant logic without that module "
+        "importing the MCP layer (D83)"
+    ),
     "EvidenceValidationError": (
         "on the MCP tool path the report is built internally, so a "
         "failure is an internal bug; the crash path is right to withhold it"
     ),
     "UnsupportedReportSchema": (
         "subclass of EvidenceValidationError; same exclusion"
+    ),
+    "InvalidRevspec": (
+        "the MCP door converts it: validate_revspec catches it and raises "
+        "InvalidAuditArgument, which is in the tuple, and changed_paths is "
+        "only reached on that path after validation has already run"
+    ),
+    "GitCommandFailed": (
+        "a git invocation that was expected to succeed did not — an "
+        "environmental fault, not a refusal a caller can act on, and its "
+        "message can carry an OSError naming host paths; the non-repository "
+        "and shallow-clone cases a user can actually cause are answered by "
+        "probe_git instead of raised"
     ),
     "SkillDrift": (
         "CLI --install-skill only; never raised through the MCP tool "
@@ -161,9 +183,23 @@ def test_the_transport_excepts_the_named_tuple_not_a_copy() -> None:
     site omits a type. The night's second miss — StaleBaseline and
     PolicyError dropped from the tuple — would have been invisible at
     those sites if they listed three types by hand.
+
+    Scanned across every transport module, not just `mcp_server`. The
+    report resource and its security validator moved to
+    `_mcp_resources` when that file crossed the length gate, and this
+    check counted seams in one file: after the move it saw one of three
+    and would have been satisfied by deleting the other two. The
+    module that arrived carrying them excepted bare `ValueError`, which
+    is the defect D48 exists to prevent, so the gap was not theoretical.
     """
-    tree = ast.parse(MCP_SERVER.read_text(encoding="utf-8"), filename=str(MCP_SERVER))
-    caught, listed = _except_handler_types(tree)
+    caught: list[str] = []
+    listed: list[tuple[str, ...]] = []
+    for module in TRANSPORT_MODULES:
+        tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
+        module_caught, module_listed = _except_handler_types(tree)
+        caught += module_caught
+        listed += module_listed
+
     anticipated_names = {cls.__name__ for cls in ANTICIPATED_REFUSALS}
     # A hand-written subset of the tuple is the night's second miss
     # wearing a different coat. `except (PathNotAllowed, ValueError)` in
@@ -173,7 +209,8 @@ def test_the_transport_excepts_the_named_tuple_not_a_copy() -> None:
 
     assert caught.count("ANTICIPATED_REFUSALS") >= 3, (
         "the tool, the report resource and its security validator must "
-        f"except ANTICIPATED_REFUSALS; found {caught}"
+        f"except ANTICIPATED_REFUSALS; found {caught} across "
+        f"{[m.name for m in TRANSPORT_MODULES]}"
     )
     assert not stale, (
         "an except site lists anticipated types by hand instead of the "

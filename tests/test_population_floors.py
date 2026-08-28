@@ -247,3 +247,62 @@ def test_a_reason_follows_the_floor_it_reports(tmp_path: Path, monkeypatch) -> N
     files_reason = next(r for r in reasons if r["measurement"] == "summary.files_scanned")
 
     assert "999" in files_reason["reason"], "the sentence did not follow the table"
+
+
+def test_a_hello_world_repository_is_never_scored_whatever_the_floors_say(
+    tmp_path: Path, real_population_floors: object,
+) -> None:
+    """D80: the floors are bounded from below by what they must refuse.
+
+    `test_no_calibration_member_is_unscoreable_by_the_scale_it_calibrates`
+    bounds the floors from *above* -- a floor may not exceed the corpus
+    minimum. An audit pointed out that nothing bounds them from below.
+    Set `files_scanned` to 1 and every check in this file stays green
+    while a one-file repository collects a verified A+, which is the
+    exact result ADR 005 was written to prevent and the one P7 names:
+    a score issued as a consequence of not looking.
+
+    So the property is asserted directly, against the behaviour rather
+    than the constant. One file, one declaration, and no score --
+    however the table is edited.
+    """
+    root = _repo(tmp_path, files=1, decls_per_file=1)
+    scored = score_report(build_report(root, load_config(None)))
+
+    assert scored["maintainability_estimate"] is None, (
+        "a repository holding one file and one function was given a "
+        f"score of {scored['maintainability_estimate']}; the floors are "
+        "low enough to be no floor at all"
+    )
+    assert scored["evidence_status"]["status"] == "insufficient", (
+        scored["evidence_status"]
+    )
+
+
+def test_the_floors_are_bounded_from_below_as_well_as_above(
+    real_population_floors: object,
+) -> None:
+    """The table itself, so the reason is visible without running a scan.
+
+    The companion above proves the behaviour; this states the invariant
+    the behaviour rests on, so someone editing the table sees why it has
+    two sides. A floor of 1 admits everything; a floor above the corpus
+    minimum refuses the repositories that define the scale.
+    """
+    repos = json.loads(CORPUS.read_text(encoding="utf-8"))["repos"]
+    assert repos, "corpus fixture is empty; this test would pass vacuously"
+
+    smallest_files = min(r["source_files"] for r in repos)
+    smallest_decls = min(r["declarations"] for r in repos)
+    # Half the smallest calibration member is the loosest bound that
+    # still excludes a toy repository. It is a bound, not a
+    # recommendation: the shipped values sit at the corpus minima.
+    assert POPULATION_FLOORS["files_scanned"] > smallest_files // 2, (
+        f"the file floor is {POPULATION_FLOORS['files_scanned']} against a "
+        f"corpus minimum of {smallest_files}; a floor that low scores "
+        "repositories nobody could form a judgment about"
+    )
+    assert POPULATION_FLOORS["declarations_scanned"] > smallest_decls // 2, (
+        f"the declaration floor is {POPULATION_FLOORS['declarations_scanned']} "
+        f"against a corpus minimum of {smallest_decls}"
+    )

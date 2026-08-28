@@ -130,7 +130,13 @@ def test_integration_guide_and_generated_packs_teach_chat_before_automation(
     for name, surface in surfaces:
         lowered = surface.lower()
         assert _states_chat_is_primary(surface), f"{name} is not chat-primary"
-        assert "configuration" in lowered and "check" in lowered, name
+        # Was `"configuration" in lowered and "check" in lowered`, which
+        # required every generated pack to say "configuration check" —
+        # the archaeology D21 forbids. Two closed entries in direct
+        # contradiction, both green, until an audit read the pack.
+        assert "audit_repository" in lowered, (
+            f"{name} does not name the call that comes first (D21)"
+        )
         assert "elicitation" in lowered or "question ui" in lowered, name
         assert _states_no_unchosen_file(surface), name
         assert "cli" in lowered and ("automation" in lowered or "ci" in lowered), name
@@ -208,10 +214,21 @@ def test_every_chat_instruction_surface_calls_the_tool_before_inspecting_config(
     skill = _read(SKILL)
     first_step = skill.split("## Core Workflow", maxsplit=1)[1].split("2.", maxsplit=1)[0]
 
+    # Four doors, not three. D47 enumerated the two MCP strings and the
+    # skill and called the class closed; `--init-agent-standards` writes
+    # a fourth into every AGENTS.md and CLAUDE.md, and it still opened
+    # with "start with a configuration check" — the exact archaeology
+    # D21 exists to stop, shipped into the file an agent reads first.
+    # Same shape as D47's own account of D21: a falsifier that read one
+    # file and called the class closed.
+    from maintainability_audit.config import load_config
+    from maintainability_audit.instructions import instruction_body
+
     surfaces = {
         "MCP server instructions": SERVER_INSTRUCTIONS,
         "MCP prompt": prompt_body,
         "skill": first_step,
+        "generated standards pack": instruction_body("generic", load_config(None)),
     }
     for name, surface in surfaces.items():
         lowered = " ".join(surface.lower().split())

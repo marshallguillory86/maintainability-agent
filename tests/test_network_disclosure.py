@@ -166,12 +166,25 @@ def test_the_config_key_reaches_the_switch(monkeypatch: pytest.MonkeyPatch) -> N
 
 
 def test_analyze_honours_the_opt_in(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """The switch is thrown from configuration at analysis time, both ways.
+    """The switch is thrown at analysis time, from the user's own tier.
 
     Asserted through `analyze()` because a module-level switch nobody
     sets is exactly the `prompt_when_interactive` defect again: a key
     that exists, documented, read by nothing.
+
+    The source moved. This test used to set `config["analyzers"]` and
+    watch the switch flip, which was the behaviour an audit named as a
+    trust inversion: the merged config carries the *audited
+    repository's* value, so the tree could enable a fetch on the host.
+    P1 says a user enables acquisition, so the answer now comes from
+    the XDG user tier and the repository cannot reach it (D35).
     """
+    import json
+
+    from maintainability_audit._user_config import user_config_path
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    monkeypatch.setenv("XDG_STATE_HOME", str(tmp_path / "xdg-state"))
     from maintainability_audit._analysis import analyze
     from maintainability_audit.config import load_config
 
@@ -186,11 +199,16 @@ def test_analyze_honours_the_opt_in(monkeypatch: pytest.MonkeyPatch, tmp_path: P
 
     config = load_config(None)
     analyze(tmp_path, config)
-    config["analyzers"] = {"acquire_tools": True}
-    analyze(tmp_path, config)
+
+    tier = user_config_path()
+    tier.parent.mkdir(parents=True, exist_ok=True)
+    tier.write_text(
+        json.dumps({"analyzers": {"acquire_tools": True}}), encoding="utf-8",
+    )
+    analyze(tmp_path, load_config(None))
 
     assert observed and observed[0] is False and observed[-1] is True, (
-        f"analyze() never threw the acquisition switch from config: {observed}"
+        f"analyze() never threw the acquisition switch from the user tier: {observed}"
     )
 
 
@@ -235,7 +253,18 @@ def test_analyze_does_not_build_fetching_argv_when_acquisition_is_off(
 
     analyze(tmp_path, config, probe=RecordingProbe())
 
-    assert set(observed) == {"eslint", "jscpd"}
+    # `jscpd` alone since Decision 9: eslint is refused before an argv is
+    # ever built for it, because honouring its flat config means running
+    # a JavaScript program from the audited tree. The property under test
+    # is unchanged and still exercised — jscpd is the npx-acquired tool
+    # this test exists for — but it is now asserted as a property rather
+    # than as a fixed set, so the next tool that leaves the pool does not
+    # look like this test failing.
+    assert observed, "no tool argv was built, so the fetching check proves nothing"
+    assert "jscpd" in observed, "the npx-acquired tool is no longer exercised here"
+    assert "eslint" not in observed, (
+        "an argv was built for a tool selection refuses to run"
+    )
     for slug, argv in observed.items():
         assert "npx" not in argv and "--yes" not in argv, (
             f"analyze() built a fetching runner argv for missing {slug}: {argv}"

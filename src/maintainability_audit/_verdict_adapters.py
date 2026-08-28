@@ -180,11 +180,24 @@ class EslintAdapter(BaseAdapter):
     as unavailable-no-config rather than as a clean result, which is the
     honest answer and the one that tells the user what to do.
 
-    Running under the project's own config is deliberate. Their rule
+    Running under the project's own config was deliberate: their rule
     selection shapes their findings — that is their policy about their
     code — and cannot shape their score, because a verdict emitter
     contributes no rate.
+
+    **Decision 9 ends that.** An eslint flat config is a JavaScript
+    program, so honouring it is executing the audited tree, which this
+    agent does not do. The flag below takes the adapter out of every
+    selection; it is not deleted, because the reasoning above is still
+    correct about *findings* and the adapter becomes usable again the
+    day the tool can be invoked without the tree's config. JavaScript is
+    not a v1.0 language (Decision 10), so nothing in scope loses
+    coverage today.
     """
+
+    #: Honouring this tool's configuration means running code from the
+    #: tree under audit. Selection refuses any adapter that says so.
+    executes_audited_configuration = True
 
     _CONFIGS = (
         "eslint.config.js", "eslint.config.mjs", "eslint.config.cjs",
@@ -272,6 +285,14 @@ class Flake8Adapter(BaseAdapter):
     def __init__(self) -> None:
         super().__init__(
             slug="flake8", emits="verdict", executable="flake8",
+            # `--isolated`: flake8 documents `[flake8:local-plugins]`,
+            # which names `module:Checker` entries and a `paths` list
+            # pointing into the tree, and imports them. That is running
+            # the audited repository's Python, which Decision 9 forbids
+            # and which eslint was refused for. An audit table in the
+            # test suite asserted this tool "executes nothing" — written
+            # from memory, never probed (D64).
+            extra_args=("--isolated",),
             concepts=("style", "complexity", "dead-code"),
             findings_exit_codes=(0, 1), exclude_flag="--exclude",
             # flake8 matches each --exclude entry by fnmatch against the

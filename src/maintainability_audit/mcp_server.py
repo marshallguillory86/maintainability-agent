@@ -29,25 +29,28 @@ from ._mcp_audit import attach_history_views as attach_history_views
 from ._mcp_audit import audit_repository as audit_repository
 from ._mcp_audit import authorize_config as authorize_config
 from ._mcp_audit import authorize_repository as authorize_repository
+from ._mcp_audit import refused_root_grants as refused_root_grants
 from ._mcp_audit import validate_revspec as validate_revspec
 from ._mcp_grants import (
     _apply_call_consents,
     _grant_resolver_for,
     _RootLedger,
 )
+
+# Re-exported: the seams that except it no longer share a module, and
+# this module imports `_mcp_resources`, so the tuple sits below both.
+from ._mcp_refusals import ANTICIPATED_REFUSALS as ANTICIPATED_REFUSALS
+from ._mcp_resources import _bind_resources
+from ._mcp_resources import _project_asset as _project_asset  # noqa: PLC0414
+from ._mcp_resources import _report_markdown as _report_markdown  # noqa: PLC0414
 from ._mcp_setup import SetupRequired as SetupRequired
-from ._mcp_setup import setup_pending, setup_schema
+from ._mcp_setup import economics_bounds_pending, setup_pending, setup_schema
 from ._scan_history import DEFAULT_HISTORY_PATH
 from .baseline import StaleBaseline as StaleBaseline
 from .config import (
     CONFIG_FILENAME,
     VERSION,
-    discovered_config,
-    load_config,
-    repository_path,
 )
-from .renderers import render_markdown
-from .report import build_report
 
 SERVER_INSTRUCTIONS = (
     "Deterministic maintainability audits from a local stdio process on this "
@@ -93,17 +96,6 @@ SERVER_INSTRUCTIONS = (
 )
 
 
-# Named types only, never bare ValueError: modules below raise those
-# with internal paths. Too few of these is the same defect as too many (D48).
-ANTICIPATED_REFUSALS = (
-    InvalidAuditArgument,
-    PathNotAllowed,
-    SetupRequired,
-    StaleBaseline,
-    PolicyError,
-)
-
-
 def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
     authorized_roots = roots if roots is not None else allowed_roots()
     return {
@@ -120,50 +112,12 @@ def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
                    "baseline (.maintainability/baseline.json)"],
         "never_writes": ["source", "reports"],
         "allowed_roots": [str(root) for root in authorized_roots],
+        # Stored grants this process will not honour. A hand-written
+        # entry that is not canonical is refused rather than guessed at
+        # (D65), and refusing in silence is what made the first two
+        # versions of that rule hard to see.
+        "refused_root_grants": [dict(item) for item in refused_root_grants()],
     }
-
-
-def _project_asset(name: str) -> str:
-    """Read one shipped project fact without accepting a caller-controlled path.
-
-    Resolved inside the package. The previous form climbed to the
-    repository root, so both resource reads worked in a checkout and
-    raised `FileNotFoundError` from every installed copy — the same
-    defect that hid the analyzer catalog from nine releases.
-    """
-    path = Path(__file__).resolve().parent / "_assets" / name
-    return path.read_text(encoding="utf-8")
-
-
-def _report_markdown(repository_root: str, roots: tuple[Path, ...]) -> str:
-    """Render the same report as the CLI would, through the same path boundary.
-
-    No ``run_analyzers`` argument on purpose: ``build_report`` resolves
-    the tri-state from the config (D1). History views attach read-only
-    — the resource reads the CLI's series and never appends a scan —
-    so both doors render one stored series byte-identically (audit
-    flag on dde539b).
-
-    Setup is a precondition here too (D30). This resource reaches
-    `build_report` directly, so D26's gate on the tool did not cover it,
-    and an audit found it still serving the fallback-tier report for an
-    unconfigured repository — the exact artefact D26 exists to prevent,
-    on the same chat surface. A resource has no elicitation seam and
-    cannot ask, so it refuses and says which door can.
-    """
-    root = authorize_repository(repository_root, roots)
-    if setup_pending(root):
-        raise SetupRequired(
-            f"{root} has not been set up, so there is no report to read. "
-            "Call the audit_repository tool: it returns the setup questions, "
-            "and after they are answered a report exists to serve."
-        )
-    config = load_config(discovered_config(root))
-    report = build_report(root, config)
-    history_path = repository_path(
-        root, (config.get("paths") or {}).get("history"), DEFAULT_HISTORY_PATH)
-    attach_history_views(report, history_path, root)
-    return render_markdown(report)
 
 
 def _setup_resolver_for(ledger: _RootLedger, context_type: Any) -> Any:
@@ -191,12 +145,20 @@ def _setup_resolver_for(ledger: _RootLedger, context_type: Any) -> Any:
             return None
         if not setup_pending(root):
             return None
+        # `root`, not a bare call. Without it `setup_schema` can only ever
+        # return the first stage, so someone who answered "include" was
+        # handed the same six questions again on every call and the
+        # economic scenario never completed. The staged ask was tested by
+        # calling `setup_schema(root)` directly; this is the seam that
+        # actually asks, and it was passing no root at all.
         return Elicit(
             message=(
+                "The economic scenario needs three labor rates."
+                if economics_bounds_pending(root) else
                 "First run in this repository and no configuration found — "
                 "configure maintainability-agent now? Defaults are pre-selected."
             ),
-            schema=setup_schema(),
+            schema=setup_schema(root),
         )
 
     first_run_setup.__annotations__["ctx"] = context_type
@@ -336,76 +298,6 @@ def _register_audit_tool(server: Any, tool: Any, annotation: Any, context_type: 
     )(tool)
 
 
-def _bind_resources(
-    server: Any,
-    ledger: _RootLedger,
-    function_resource: Any,
-    resource_security: Any,
-) -> None:
-    from mcp.server.mcpserver.exceptions import ResourceError as resource_error
-
-    class AuthorizedRootSecurity(resource_security):
-        """Validate an absolute template argument against this server's allow-list.
-
-        Reads never ask: a resource outside the boundary raises, and only
-        the audit tool can offer the D10 grant question (a read has no
-        elicitation seam and must not gain one).
-        """
-
-        def validate(self, params: dict[str, Any]) -> str | None:
-            root = params.get("root")
-            if not isinstance(root, str):
-                return "root"
-            try:
-                authorize_repository(root, ledger.current())
-            except ANTICIPATED_REFUSALS as refusal:
-                raise resource_error(str(refusal)) from refusal
-            return None
-
-    @server.resource(
-        "maintainability://standard",
-        name="maintainability-standard",
-        description="The applied maintainability rubric.",
-        mime_type="text/markdown",
-    )
-    def standard_resource() -> str:
-        return _project_asset("standard.md")
-
-    @server.resource(
-        "maintainability://catalog",
-        name="analyzer-catalog",
-        description="The shipped analyzer catalog and its provenance.",
-        mime_type="application/json",
-    )
-    def catalog_resource() -> str:
-        return _project_asset("analyzer-catalog.json")
-
-    @server.resource(
-        "maintainability://report/{+root}",
-        name="maintainability-report",
-        description="The production Markdown report for an authorized repository root.",
-        mime_type="text/markdown",
-        security=AuthorizedRootSecurity(),
-    )
-    def report_resource(root: str) -> str:
-        try:
-            return _report_markdown(root, ledger.current())
-        except ANTICIPATED_REFUSALS as refusal:
-            raise resource_error(str(refusal)) from refusal
-
-    def report_template_descriptor() -> str:
-        """Replace ``{root}`` with an authorized absolute repository path."""
-        return "Use maintainability://report/{root} with an authorized repository root."
-
-    server.add_resource(function_resource.from_function(
-        fn=report_template_descriptor,
-        uri="maintainability://report/{root}",
-        name="maintainability-report-template",
-        description="Template descriptor for the Markdown report resource.",
-        mime_type="text/markdown",
-    ))
-
-
 def _bind_prompts(server: Any) -> None:
     @server.prompt(name="maintainability-agent")
     def maintainability_agent_prompt() -> str:
@@ -457,11 +349,26 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
         # never a report). get_agent_info remains a pure read.
         "audit": ToolAnnotations(
             read_only_hint=False,
-            destructive_hint=False,
+            # D44. This said False, and a test locked it, which is why
+            # nobody re-read it for three rounds. Setup rewrites an
+            # existing configuration and `write_baseline` replaces an
+            # existing baseline — both non-additive updates to files in
+            # the user's repository, which is what this hint is for.
+            # Only the agent's own five artifacts are ever touched
+            # (D34), and that is a different claim from "additive".
+            destructive_hint=True,
             # First contact can write setup state and start a history
             # series (L2): a retry is not a no-op.
             idempotent_hint=False,
-            open_world_hint=False,
+            # Also D44, and also locked False. Two things reach outside
+            # this process and neither is closed-world: with
+            # `analyzers.acquire_tools` enabled a missing Node tool is
+            # fetched through `npx --yes`, and analyzers are ordinary
+            # local children this package does not sandbox — P1 says so
+            # in as many words. Decision 9 removed the third reason the
+            # entry gave (the tree's own configuration no longer
+            # executes, D39); it did not make the tool closed-world.
+            open_world_hint=True,
         ),
         "info": ToolAnnotations(
             read_only_hint=True,

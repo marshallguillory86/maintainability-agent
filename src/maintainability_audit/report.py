@@ -31,6 +31,7 @@ from ._pressures import (
     ExternalPressures,
     analyzer_pressures,
     analyzer_production_pressures,
+    declined_dimensions,
 )
 from ._semantic import semantic_findings
 from ._semantic_policy import load_semantic_policy
@@ -41,7 +42,7 @@ from .deadcode import dead_declarations
 from .declarations import DECLARATION_SUFFIXES
 from .duplication import duplicate_blocks, risk_findings
 from .evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY
-from .git_tools import run_git
+from .git_tools import probe_git, worktree_status
 from .history import history_section
 from .idioms import divergent_idioms
 from .metrics import (
@@ -205,8 +206,14 @@ def _analyzer_sections(
         return {"coverage": None, "findings": [], "measurements": {},
                 "pressures": None, "environment": []}
     analysis = analyze(root, config)
+    coverage = coverage_document(analysis)
+    # P8: where the analyzer tier could not drive a dimension, say so on
+    # the coverage document rather than leaving the built-in fallback to
+    # be inferred from an absent number. Attached here because only this
+    # layer holds both the measurements and the rubric's thresholds.
+    coverage["dimensions_declined"] = list(declined_dimensions(analysis.measurements))
     return {
-        "coverage": coverage_document(analysis),
+        "coverage": coverage,
         # ADR 006 §2c: what did not run and what it would take, for the
         # user to act on. Emitted here because only the analysis knows
         # which tools were *selected*; the agent never runs the commands.
@@ -300,11 +307,14 @@ def _provenance(
     the document assumes an answer to.
     """
     return {
-        "git_branch": run_git(["branch", "--show-current"], root),
+        # Probed: a directory that is not a repository is a supported
+        # audit target, so a failing git command is an expected answer
+        # rather than the D37 fault.
+        "git_branch": probe_git(["branch", "--show-current"], root),
         # The commit this report describes. Without it a scan history is
         # a list of scores with no anchor, and recurrence — "cleared,
         # then returned, in these commits" — has nothing to name.
-        "git_commit": run_git(["rev-parse", "HEAD"], root),
+        "git_commit": probe_git(["rev-parse", "HEAD"], root),
         "git_status_short": git_status,
         "mode": "changed-only" if only_paths is not None else "full",
         "changed_revspec": changed_revspec,
@@ -447,7 +457,9 @@ def build_report(
     dead = dead_declarations(root, files, source)
     idioms = divergent_idioms(root, files, config, source)
     risks = risk_findings(root, files, config, source)
-    git_status = run_git(["status", "--short"], root)
+    # `None` when this is not a worktree, which the clean-worktree
+    # gate must be able to tell apart from an empty status (D37).
+    git_status = worktree_status(root)
     gates, summary = _compute_gates_and_summary(
         root, config, git_status, files, file_metrics, function_metrics, len(dupes), len(risks)
     )

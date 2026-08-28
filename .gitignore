@@ -42,3 +42,15 @@ tools/validation/reports/
 # Analyzer scratch. jscpd writes this next to the scanned tree.
 .jscpd-out/
 **/.jscpd-out/
+
+# Real secrets. `.env.example` is the committed stub; `.env` itself
+# never is. There was no rule here at all, which is the kind of gap
+# that holds until the first time it doesn't.
+.env
+.env.*
+!.env.example
+
+# xgrok's generated project scaffolding. Tool output, not authored --
+# its `suggestedRun` is `python -m src.main`, which is not how this
+# project runs. Same reason the agent-standards files above are ignored.
+.xgrok/

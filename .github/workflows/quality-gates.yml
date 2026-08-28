@@ -140,6 +140,16 @@ jobs:
           SONAR_HOST_URL: https://sonarcloud.io
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8
+        with:
+          # Wait for the server-side gate and print which condition
+          # failed. Without this the action submits the analysis and
+          # exits, SonarCloud computes the gate afterwards, and its app
+          # posts a bare red status with no description and no link —
+          # unreadable from CI, and unreadable by anyone without the
+          # token, which is how it cost half an hour twice today.
+          # `continue-on-error` above still keeps the job green: the
+          # point is a legible log line, not a new gate.
+          args: -Dsonar.qualitygate.wait=true
 
   # `pyproject` declares `Operating System :: POSIX`, and until this job
   # existed the only evidence behind that claim was one Linux image. An

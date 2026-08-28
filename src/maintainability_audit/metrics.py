@@ -39,12 +39,36 @@ def is_excluded(rel: str, patterns: list[str]) -> bool:
     return False
 
 
+def within(root: Path, path: Path) -> bool:
+    """Whether a discovered path really lives under the granted root.
+
+    `is_file()` follows symlinks, so a repository could point
+    `linked.py` at a file outside the tree and have its contents read
+    into the report — an audit did exactly that and got
+    `TOP_SECRET_VALUE = 42` back in a findings payload (D36).
+    `SECURITY.md` puts reads outside `--root` in scope, so this is a
+    promise the code was breaking, not a new restriction.
+
+    Symlinks *within* the root stay allowed: they resolve inside the
+    grant, they are ordinary in real trees, and refusing them would
+    drop first-party code the operator asked to be audited.
+    """
+    try:
+        resolved = path.resolve()
+    except OSError:
+        return False
+    return resolved == root or root in resolved.parents
+
+
 def iter_files(root: Path, config: dict[str, Any], only_paths: set[str] | None = None) -> list[Path]:
     include_ext = set(config["paths"]["include_extensions"])
     excludes = config["paths"]["exclude_patterns"]
+    resolved_root = root.resolve()
     out: list[Path] = []
     for path in root.rglob("*"):
         if not path.is_file():
+            continue
+        if not within(resolved_root, path):
             continue
         rel = str(path.relative_to(root)).replace(os.sep, "/")
         if is_excluded(rel, excludes):
@@ -187,7 +211,7 @@ def collect_metrics(
 def hard_gate_failures(
     root: Path,
     config: dict[str, Any],
-    git_status: str,
+    git_status: str | None,
     failed_files: list[FileMetric],
     failed_functions: list[FunctionMetric],
     duplicate_count: int,
@@ -203,8 +227,16 @@ def hard_gate_failures(
         gates.append("A README is required but none was found.")
     if hard.get("require_test_command") and not expected_commands.get("test"):
         gates.append("A documented test command is required but missing from config.")
-    if hard.get("require_clean_worktree") and git_status:
-        gates.append("Worktree must be clean for this audit gate.")
+    if hard.get("require_clean_worktree"):
+        if git_status is None:
+            # Not "clean" — unreadable. A plain directory used to satisfy
+            # this gate because a failed `git status` arrived as an empty
+            # one (D37).
+            gates.append(
+                "A clean worktree is required, but this is not a git worktree "
+                "so its state could not be read.")
+        elif git_status:
+            gates.append("Worktree must be clean for this audit gate.")
     # Opt-in. Measured across the reference corpus these fired on every
     # single repository -- duplicate counts of 33 to 5,325 against a
     # default max of 20 -- so leaving them always-on made --fail-on-gate

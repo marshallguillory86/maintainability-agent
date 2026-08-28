@@ -256,7 +256,8 @@ Repeat `--allow-root` to authorize unrelated repository directories. If no
 argument is supplied, the server permits only its launch directory. The
 `MAINTAINABILITY_MCP_ALLOWED_ROOTS` environment variable is an alternative;
 separate multiple roots with the platform path separator (`:` on macOS/Linux,
-`;` on Windows). For audit-tool calls, an elicitation-capable host can instead
+`;` on Windows, which the code honours and nobody has tested — this is
+POSIX-only software). For audit-tool calls, an elicitation-capable host can instead
 offer a structured **this session** (default), **always**, or **no** grant.
 Session grants live only in the process; always grants persist only in the XDG
 user configuration. Report resources never ask for or persist a grant.
@@ -281,8 +282,14 @@ Security properties are part of the contract:
   the five disclosed artifacts: repository config, XDG user config, XDG user
   state, repository scan history and repository baseline — never a report or
   source artifact;
-- `get_agent_info` advertises MCP read-only; `audit_repository` advertises its
-  bounded setup/state writes. Both remain non-destructive and closed-world.
+- `get_agent_info` advertises MCP read-only, non-destructive and closed-world,
+  and is all three. `audit_repository` advertises its bounded setup/state
+  writes, and is **destructive** and **open-world**: it replaces an existing
+  configuration or baseline when asked to, and with `analyzers.acquire_tools`
+  enabled it may fetch a missing Node tool, while analyzers run as local
+  children this package does not sandbox. It said non-destructive and
+  closed-world until D44; two tests locked those values, which is why the
+  claim outlived three audit rounds.
 
 This is a local integration. It needs no VPS and opens no listening socket.
 

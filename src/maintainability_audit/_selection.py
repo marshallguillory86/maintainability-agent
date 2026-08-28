@@ -104,6 +104,23 @@ def select_runnable(
                     reason="no-adapter",
                 ))
                 continue
+            if getattr(adapter, "executes_audited_configuration", False):
+                # Decision 9: configuration is code, and this agent does
+                # not run the audited tree's. A property of the adapter
+                # rather than a slug check, so the next tool that needs
+                # the tree's own config is refused without anyone
+                # remembering to add it here (D39).
+                deselected.append(Deselected(
+                    slug=tool["slug"],
+                    detail=(
+                        "cannot run without executing configuration from the "
+                        "audited tree, which this agent does not do"
+                    ),
+                    concepts=tuple(tool["measures"]),
+                    languages=reads,
+                    reason="executes-audited-config",
+                ))
+                continue
             runnable.append(Selected(tool=tool, adapter=adapter, reads=reads))
             continue
         present = ", ".join(sorted(inventory.languages)) or "no recognised source"

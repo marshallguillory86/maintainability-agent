@@ -142,8 +142,23 @@ def test_class_hotspot_is_labelled_and_hides_its_double_counted_complexity() -> 
     rendered = render_markdown(flagged_class_report())
 
     assert "`ScanWorker` (class)" in rendered
-    assert "42" not in rendered
     assert "| Declaration |" in rendered
+
+    # The row, not the document. `"42" not in rendered` was the first
+    # spelling, and it read every number anywhere in the report: it
+    # started failing the day the history block learned to say how many
+    # commits it had read, because this repository happened to have 142.
+    # A whole-document substring search for a bare integer is not a
+    # check that the class's complexity is hidden -- it is a check that
+    # the digits never occur, which is a different and unmeetable claim.
+    row = next(
+        line for line in rendered.splitlines()
+        if "`ScanWorker` (class)" in line
+    )
+    assert "42" not in row, (
+        "the class's complexity is printed beside it; it is the sum of "
+        f"branches already charged to its own methods: {row}"
+    )
 
 
 def test_function_hotspot_still_reports_its_complexity() -> None:

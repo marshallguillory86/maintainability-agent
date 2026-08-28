@@ -41,7 +41,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from .declarations import DECLARATION_SUFFIXES
-from .git_tools import run_git
+from .git_tools import GitCommandFailed, probe_git, run_git
 
 # Commits touching more than this are migrations, reformats, licence
 # header sweeps and dependency bumps. They co-change hundreds of
@@ -78,14 +78,39 @@ class FileChurn:
 
 
 def has_history(root: Path) -> bool:
-    """False for a shallow clone or a directory that is not a repo.
+    """False for a shallow clone, an unborn branch, or a non-repository.
 
     Distinguishes "no history available" from "no changes", which are
     opposite findings that a zero would conflate.
     """
-    if not run_git(["rev-parse", "--git-dir"], root):
+    # `probe_git`, not `run_git`: here a failing git command *is* the
+    # answer — "not a repository" — which is the one shape D37 does
+    # not consider a lie.
+    if not probe_git(["rev-parse", "--git-dir"], root):
         return False
-    return run_git(["rev-parse", "--is-shallow-repository"], root) != "true"
+    # An initialized repository with no commits answers `--git-dir`
+    # happily and then fails every `git log` against its unborn HEAD.
+    # It has no history in the only sense this module means, and saying
+    # so here is what lets `_commits` treat a log failure as a fault
+    # rather than as an empty answer (D37).
+    if not probe_git(["rev-parse", "HEAD"], root):
+        return False
+    # Fail closed, and note what the first version of this line did:
+    # `probe_git(...) != "true"` reads a *failed* shallow check as "not
+    # shallow", so any git that cannot answer the question — one that
+    # does not know the option, or a repository it cannot read — was
+    # reported as having complete history. That is the same
+    # failure-becomes-evidence collapse D37 closed at `git log`, left
+    # standing three lines above it.
+    #
+    # Only an explicit "false" establishes completeness. Anything else,
+    # including an error, means this module cannot say history is
+    # available, and P3 requires the unverifiable case to withhold
+    # rather than to claim.
+    try:
+        return run_git(["rev-parse", "--is-shallow-repository"], root) == "false"
+    except GitCommandFailed:
+        return False
 
 
 def _normalize(path: str) -> str:
@@ -166,6 +191,34 @@ def _commits(root: Path, since: str) -> list[tuple[str, list[tuple[str, int, int
             ))
         parsed.append((author.strip(), files))
     return parsed
+
+
+def window_commits(root: Path, since: str = DEFAULT_SINCE) -> tuple[int, int]:
+    """`(commits in the window, commits this audit will read)`.
+
+    Three different repositories produce `files_changed: 0`, and the
+    first version of the empty-window handling told all three the same
+    thing -- "no commit falls inside the history window" -- which is
+    plainly false for two of them:
+
+    * nothing was committed in the window at all;
+    * every commit in it is a merge, dropped by `--no-merges` because a
+      merge's numstat re-reports churn already counted on the branch;
+    * commits landed, but touched only files this audit does not scan --
+      a lockfile, a vendored tree, an excluded directory.
+
+    Only the first is a quiet window. The other two are windows this
+    agent *filtered to* empty, and saying so is P8: the report states
+    what examined each value. Two `rev-list --count` calls, which read
+    no file contents and parse nothing (D66).
+    """
+    total = run_git(["rev-list", "--count", f"--since={since}", "HEAD"], root)
+    considered = run_git(
+        ["rev-list", "--count", "--no-merges", f"--since={since}", "HEAD"], root)
+    return (
+        int(total.strip()) if total.strip().isdigit() else 0,
+        int(considered.strip()) if considered.strip().isdigit() else 0,
+    )
 
 
 def file_churn(root: Path, since: str = DEFAULT_SINCE, tracked: set[str] | None = None) -> dict[str, FileChurn]:
@@ -268,8 +321,11 @@ def history_section(
         for pair in pairs
         if all(PurePosixPath(path).suffix in DECLARATION_SUFFIXES for path in pair["files"])
     )
+    in_window, considered = window_commits(root, since)
     return {
         "window": since,
+        "commits_in_window": in_window,
+        "commits_considered": considered,
         "files_changed": len(churn),
         "hotspots": ranked[:25],
         "change_coupling": pairs[:25],

@@ -21,9 +21,36 @@ FUNC_PATTERNS = [
     (re.compile(r"^\s*(?:(?:export|default|async)\s+)*function\s+([A-Za-z_$][\w$]*)\s*(?:<[^()]*>\s*)?\("), "function"),
     (re.compile(r"^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>"), "function"),
     (re.compile(r"^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)\b"), "class"),
+    # Object-literal members. `{ onSave: (a) => {...} }` and
+    # `{ onLoad: function (b) {...} }` are how a React or Node codebase
+    # writes most of its interesting logic, and neither was detected --
+    # so an audit of such a tree scored whatever loose `function`
+    # declarations happened to sit beside them and reported the file as
+    # examined (D86). A `name:` prefix cannot be a control keyword, so
+    # these do not collide with `if (`/`for (` the way bare method
+    # shorthand would.
+    (re.compile(r"^\s*([A-Za-z_$][\w$]*)\s*:\s*(?:async\s*)?\([^)]*\)\s*=>"), "function"),
+    (re.compile(r"^\s*([A-Za-z_$][\w$]*)\s*:\s*(?:async\s+)?function\s*\*?\s*\("), "function"),
 ]
 
-COMPLEXITY_RE = re.compile(r"\b(if|elif|for|while|except|case|catch)\b|&&|\|\||\?")
+# Decision points. The `?` alternatives are three distinct operators in
+# JavaScript and the first version counted them as one character each,
+# which was both over-broad and arithmetically wrong (D78):
+#
+# * `?.` optional chaining — not a decision. `u?.a?.b?.c` is one member
+#   access written defensively, and it was scoring four.
+# * `??` nullish coalescing — one decision, like `||`. Two characters,
+#   so a bare `\?` counted every one of them twice.
+# * `?` ternary — one decision, which is the only case originally meant.
+#
+# Together those made `return u?.user?.profile?.settings?.theme ?? "x"`
+# a complexity-12 warning for a function whose McCabe number is 1. A
+# rate computed from that is not a measurement of the code (P7), and it
+# fires hardest on exactly the modern JavaScript this project claims to
+# score.
+COMPLEXITY_RE = re.compile(
+    r"\b(if|elif|for|while|except|case|catch)\b|&&|\|\||\?\?|\?(?![.?])"
+)
 
 
 class DeclRange(NamedTuple):

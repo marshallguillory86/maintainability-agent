@@ -213,15 +213,32 @@ def segments(records: list[ScanRecord]) -> list[Segment]:
     return found
 
 
-def append_scan(path: Path, record: ScanRecord) -> None:
-    """Add one line. Never touches what is already there.
+def append_scan(path: Path, record: ScanRecord, root: Path | None = None) -> None:
+    """Add one line, without ever opening the existing inode for writing.
 
-    Opened in append mode with no read and no seek, so there is no code
-    path that could rewrite an earlier scan even by mistake.
+    Append mode was the obvious implementation and the wrong one. An
+    audit hardlinked this file to a target outside the repository and
+    watched a scan record land on it: `repository_path` had bounded the
+    *name*, and `open("a")` then wrote to whatever inode the name
+    pointed at (D34). `O_NOFOLLOW` is no help against a hardlink.
+
+    So the file is rewritten through a staged replacement instead. That
+    costs a read of a history measured in kilobytes and buys the only
+    property that actually holds: no existing inode is opened, so a
+    hardlink keeps its contents and stops being this name.
+
+    ``root`` is optional so the many existing callers that pass a path
+    already bounded by `repository_path` keep working; when it is
+    absent the file's own directory bounds the write, which still
+    refuses symlinks and still stages.
     """
+    from ._safe_write import write_bounded
+
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as handle:
-        handle.write(record.as_line() + "\n")
+    write_bounded(
+        Path(root) if root is not None else path.parent,
+        path, record.as_line() + "\n", append=True,
+    )
 
 
 # Fields stored as sequences, derived from the dataclass rather than

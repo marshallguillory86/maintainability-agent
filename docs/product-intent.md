@@ -75,7 +75,7 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 
 | # | Promise | Falsified by |
 |---|---|---|
-| P1 | The audit is deterministic: same tree, config, pinned analyzer versions **and scan history** in, same report out. History is an input, not decoration — a finding that cleared and returned twice is different information from one seen for the first time, so an identical tree reports differently against different histories, and that is the feature working. **The analysis itself performs no network access and invokes no language model.** Tool acquisition is opt-in through `analyzers.acquire_tools` and defaults off; when enabled, it may fetch a missing tool and records the acquired version | Two runs disagreeing on identical tree, config, versions and history, or any network access during analysis |
+| P1 | The audit is deterministic: same tree, config, pinned analyzer versions **and scan history** in, same *evidence, findings and score* out — **at a fixed point in time.** The history window is relative to the wall clock (see below), so the same tree audited on two different days can report different history rates. Three further fields describe the run rather than the repository and are recorded without being compared — the absolute `root`, `git_status_short`, and each analyzer's wall-clock `seconds`; see below. History is an input, not decoration — a finding that cleared and returned twice is different information from one seen for the first time, so an identical tree reports differently against different histories, and that is the feature working. **The analysis itself performs no network access and invokes no language model.** Tool acquisition is opt-in through `analyzers.acquire_tools` and defaults off; when enabled, it may fetch a missing tool and records the acquired version | Two runs disagreeing on identical tree, config, versions and history, or any network access during analysis |
 | P2 | The score applies the same rubric to every repository, and the rubric is readable in source | A repo-specific code path changing a weight or band |
 | P3 | Withholding evidence cannot improve the reported grade | Any input whose removal raises the graded field |
 | P4 | The overall equals the weighted mean of the categories printed beside it | A report where the arithmetic does not check |
@@ -89,6 +89,63 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 P1 read "no network, no LLM" when the tool was pure computation over a file tree. Under [ADR 006](adr-006-analyzer-evidence.md) it invokes external analyzers, and some of those live in ecosystems whose normal installation path is a fetch — `npx` for the Node tools most obviously.
 
 Two honest options existed: refuse to acquire tools, which makes the multi-language story depend on every user hand-installing a dozen ecosystems; or provide an explicit acquisition choice and disclose it. The latter was chosen, so the promise separates **analysis** from **acquisition**. Analysis still touches no network and no model: **this agent does not transmit the audited source.** Acquisition defaults off. When a user enables `analyzers.acquire_tools`, a missing tool may be fetched and its version is recorded in the report so the run remains reproducible.
+
+**Why P1 names three excepted fields.** An audit ran the same tree
+twice and found the reports differing by one millisecond, on an
+analyzer's `seconds`. The promise said "same report out" and the
+determinism check had been quietly stripping `root`,
+`git_status_short` and every `seconds` for as long as it had existed —
+so the promise was false of the JSON a consumer actually diffs, and
+true only of the test's own projection.
+
+The exceptions are legitimate: a duration is a fact about the run, not
+about the repository, and an absolute path is not portable. What was
+wrong was that they were undisclosed, which is exactly the shape this
+table exists to prevent — a promise kept green by a check narrower than
+the promise. They are named above now, and
+`test_the_determinism_exceptions_are_exactly_the_disclosed_ones` fails
+if the strip list grows without this page growing with it.
+
+**Why P1 names the history window.** The three excepted fields above
+are recorded and not compared. The history window is a fourth exception
+of a different kind, and it went undisclosed longer: `DEFAULT_SINCE` is
+`12 months ago`, which git resolves against the wall clock at the moment
+the audit runs. It is not configurable.
+
+So "same tree, config, pinned analyzer versions and scan history in,
+same score out" is true within a run and false across days. A commit
+ages out of the window overnight and the churn, hotspot, coupling and
+ownership rates move underneath an unchanged tree — no input changed,
+and the grade did. That is a real determinism limit, not a rounding
+one, and it is the same shape as the three fields above: legitimate
+behaviour kept invisible by a check narrower than the promise. The
+determinism test compares two runs seconds apart, which is precisely
+the interval over which this cannot fail.
+
+Named rather than removed, because a fixed absolute window would make
+every report a different question over time, and pinning the window per
+repository is a config decision nobody has asked for.
+`test_the_history_window_is_disclosed_as_clock_relative` fails if the
+window changes without this paragraph changing with it.
+
+**Why P1 says "pinned" and CI splits gating from drift detection.** P1's determinism is
+*conditional*: same tree, config, **pinned analyzer versions** and scan
+history in, same evidence out. The condition is real and the report
+records each analyzer's version so two runs can be compared on it.
+
+The PR gates now do pin it. `verify` and `audit` install the twelve
+pip analyzers through checked-in `constraints/analyzers.txt`, so a
+green gating run certifies P1 against a fixed analyzer input set rather
+than against whatever PyPI served that day.
+
+The weekly scheduled run keeps the old drift signal on purpose. It
+installs the same top-level analyzer pool **unpinned** in a throwaway
+virtualenv, freezes what pip resolved, and fails visibly on a diff
+against `constraints/analyzers.txt`. That preserves the D48 signal — an
+unchanged `main` going red because an analyzer shipped — without asking
+the merge gate to certify a floating environment.
+`test_the_gating_pipeline_pins_the_analyzers_and_the_scheduled_run_detects_drift`
+holds the workflow and this page together.
 
 **What P1 does not police.** External analyzers run as local child processes (`_runner`). This package does not wrap them in a network sandbox, and it does not inspect whether *they* open sockets. A future SaaS CLI adapter would be a different product. The host that prints a report into an IDE chat (Grok, Claude, …) is also outside this process. P1 is enforced as determinism plus no HTTP client in `src/` that uploads the tree — not as “no packet can leave the box.”
 

@@ -39,6 +39,7 @@ from ._discovery import CATALOG_LANGUAGE, discover
 from ._metrics_types import KNOWN_SOURCE_SUFFIXES, Finding, Measurement
 from ._runner import Outcome, Probe, run
 from ._selection import Selected, select_runnable
+from .config import acquisition_permitted
 
 
 @dataclass(frozen=True)
@@ -255,6 +256,21 @@ def built_in_coverage() -> list[ToolCoverage]:
     ]
 
 
+def _deselected_outcome(reason: str) -> str:
+    """The coverage outcome for a tool selection declined to run.
+
+    "refused" is its own value because eslint *has* an adapter: reporting
+    it as no-adapter would tell the reader to go and write one that
+    already exists. It is declined on policy — Decision 9, configuration
+    is code — not missing (D39).
+    """
+    if reason == "inventory":
+        return "not-applicable"
+    if reason == "executes-audited-config":
+        return "refused"
+    return "no-adapter"
+
+
 def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> Analysis:
     """Run the configured analyzer pool over `root`.
 
@@ -290,7 +306,10 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
     # dead-code as *examined* — a tool with no input examining a concern.
     # Before any probe: a fetch during the availability check is the
     # same unconfigured fetch as one during analysis.
-    set_tool_acquisition(bool(settings.get("acquire_tools")))
+    # The user tier, not the merged config: a repository always beats a
+    # person for thresholds, and must never beat them on whether this
+    # host fetches and executes a package (D35).
+    set_tool_acquisition(acquisition_permitted())
     inventory = discover(root, config)
     excludes = exclusions_for(config, inventory)  # two inputs, see `Exclusions`
     analysis.languages = {
@@ -314,7 +333,7 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
     analysis.coverage.extend(
         ToolCoverage(
             slug=fact.slug,
-            outcome="not-applicable" if fact.reason == "inventory" else "no-adapter",
+            outcome=_deselected_outcome(fact.reason),
             detail=fact.detail,
             concepts=fact.concepts, languages=fact.languages,
             inventory_filtered=fact.reason == "inventory",

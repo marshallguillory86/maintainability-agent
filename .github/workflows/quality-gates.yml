@@ -122,6 +122,18 @@ jobs:
         # `continue-on-error`, because this project's rules are "no cloud
         # service requirement" and "no vendor lock-in": an expired token
         # must never block a PR whose deterministic checks all pass.
+        #
+        # **Pull requests and main, nothing else.** Re-enabling PR
+        # analysis removed the condition entirely rather than narrowing
+        # it, so every push to a feature branch ran a *second* scan that
+        # treated the branch as long-lived. That analysis has no
+        # meaningful new-code baseline, fails its quality gate, and the
+        # SonarCloud app posts the failure as a commit status — a red
+        # mark on every push that means nothing, which is the thing this
+        # file's header warns teaches people to ignore the signal.
+        if: >
+          github.event_name == 'pull_request' ||
+          (github.event_name == 'push' && github.ref == 'refs/heads/main')
         continue-on-error: true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -1114,7 +1114,7 @@ this defect class was closed at the MCP door and left open at the CLI,
 which is the mistake the register keeps recording.
 
 **Audited by Codex and Grok independently, and three residues closed in
-the same entry.** Both rounds on 337a03a found the same thing from
+the same entry.** Both rounds on 0bc2b57 found the same thing from
 different directions: the fix had been applied to the sites this entry
 named and not to the class.
 
@@ -1686,7 +1686,7 @@ replaces the refusal's own, so text is the discriminator. Text is
 load-bearing on that seam, which is the opposite of what this paragraph
 claimed while the two tool tests were being praised for avoiding it.
 
-**Which text, and a third correction.** The audit of `bed2903` as
+**Which text, and a third correction.** The audit of `790a47e` as
 landed found that the 2.0.0 check was looking for the wrong string.
 It searched for `audit_repository` — D30's requirement that a refusal
 name the door that can ask — but the 2.0.0 wrapper interpolates the
@@ -2596,7 +2596,7 @@ in `tests/test_git_read_only.py`, and
 
 ### D82 — Closed: the audit door stops naming symlink targets too (High)
 
-Grok, UAT audit of `2fa909e`. D72 removed the resolved path from
+Grok, UAT audit of `199fb1b`. D72 removed the resolved path from
 `server_info`'s refusals because D48 forbids host paths crossing the
 transport. `authorize_repository` kept doing it: the user names
 `innocent`, and its `PathNotAllowed` tells the host `secret-target`.
@@ -2617,7 +2617,7 @@ in `tests/test_authorization_freshness.py`.
 
 ### D83 — Closed: a standing grant is re-checked at use, not at start-up (High)
 
-Grok, UAT audit of `2fa909e` — and the most consequential finding of the
+Grok, UAT audit of `199fb1b` — and the most consequential finding of the
 round, because D79 was closed without it and reads as complete.
 
 `allowed_roots()` runs **once**, when the server is constructed, and
@@ -2653,7 +2653,7 @@ declared refusal rather than seeing a crash (D48).
 
 ### D84 — Closed: a nested list's members are shaped too (Medium)
 
-Codex, UAT audit of `2fa909e`. `_shaped_inside` has a branch that
+Codex, UAT audit of `199fb1b`. `_shaped_inside` has a branch that
 validates list items and it only ever ran for a **top-level** list. So
 `{"paths": {"include_extensions": [1]}}` was accepted: the value is a
 list, which is all that was asked.
@@ -2819,7 +2819,7 @@ the drift comparison would report platform-divergent closures as
 analyzer drift, weekly, forever.
 
 **Closed 2026-08-28.** `resolve-constraints` was dispatched against
-`9dffe3f` and its artefact is now the checked-in file: Python 3.12.14 on
+`717da4d` and its artefact is now the checked-in file: Python 3.12.14 on
 `Linux-6.17.0-1022-azure-x86_64-with-glibc2.39`, the platform `verify`,
 `audit` and `analyzer-drift` actually run on. The `xfail(strict=True)`
 marker did what it was put there to do — it turned into `XPASS(strict)`
@@ -3202,7 +3202,7 @@ case that was actually producing defects here.
 appended a `*Mutation:*` line naming a test to an entry to confirm the
 citation region ignores it. Neither is a member the closing tests
 enumerate — they locate the job and the region by structure — and the
-tool itself was run against `ec0df33` to confirm four cited falsifiers
+tool itself was run against `bc21f4d` to confirm four cited falsifiers
 fail without their changes and two do not.
 
 ### D100 — Closed: the artifact promoted itself to a 1.0 candidate (High)

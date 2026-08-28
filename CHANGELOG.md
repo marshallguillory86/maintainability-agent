@@ -2,19 +2,6 @@
 
 All notable changes to Maintainability Agent will be documented here.
 
-## 1.0.0rc1 — unreleased
-
-**A release candidate, not a release.** `docs/release-plan.md` tags 1.0 at
-8.10, *after* Marshall's acceptance run (8.8) and a hostile audit of the
-artifact that passed it (8.9). Neither has happened.
-
-The version is `1.0.0rc1` rather than `0.9.1` because an audit pointed out
-that acceptance testing *for 1.0* was about to run against an artifact
-naming itself 0.9.1 Alpha — the tester would report a version that is not
-the thing under test. It is not `1.0.0` because that is 8.10's to claim,
-and this project's rule is that a version string is a claim like any
-other: it follows the evidence rather than the intention.
-
 ## Unreleased
 
 ### Fixed

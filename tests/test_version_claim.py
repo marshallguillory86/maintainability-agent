@@ -20,6 +20,7 @@ candidate may -- that is what a candidate is.
 from __future__ import annotations
 
 import re
+import subprocess
 import tomllib
 from pathlib import Path
 
@@ -93,4 +94,77 @@ def test_security_support_covers_the_shipped_version() -> None:
     family = ".".join(series.split(".")[:2])
     assert f"`{family}" in supported or f"`{declared}" in supported, (
         f"SECURITY.md does not list {declared} as supported"
+    )
+
+
+def _every_declared_copy() -> dict[str, str]:
+    """Every file that states the package version, found by sweep.
+
+    Not a hand-typed list of three. D100's claim quantifies over *every*
+    copy, so the population is derived: a fourth holder added tomorrow
+    is covered without anyone remembering this test exists.
+    """
+    literal = re.compile(r'(?:^version|\bVERSION|__version__)\s*=\s*"([^"]+)"', re.M)
+    found: dict[str, str] = {}
+    for path in [ROOT / "pyproject.toml", *sorted((ROOT / "src").rglob("*.py"))]:
+        for match in literal.finditer(path.read_text(encoding="utf-8")):
+            found[str(path.relative_to(ROOT))] = match.group(1)
+    return found
+
+
+def _latest_release_tag() -> str:
+    """The newest release tag, read from git rather than from a plan.
+
+    An earlier version of this check read the release plan's 8.8 row.
+    That was the wrong anchor: a row in a document is a sentence anyone
+    can edit, and citing it made the bar sound like it was about a 1.0
+    programme. It is not. The operative fact is simpler — what has
+    actually been released — and a tag is the record of that.
+    """
+    listed = subprocess.run(
+        ["git", "-C", str(ROOT), "tag", "--list", "v*", "--sort=-v:refname"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    tags = [line.strip() for line in listed.stdout.splitlines() if line.strip()]
+    assert tags, (
+        "no v* tags are visible, so release history cannot be read; this "
+        "check fails rather than passing on an empty tag list, which is "
+        "what a shallow clone without fetched tags would produce"
+    )
+    return tags[0]
+
+
+def _major(version: str) -> int:
+    matched = re.match(r"(\d+)", version)
+    assert matched, f"version {version!r} does not begin with a number"
+    return int(matched.group(1))
+
+
+def test_no_copy_claims_a_major_line_above_the_latest_release() -> None:
+    """D100: the version cannot outrun the releases.
+
+    D85 promoted every copy to `1.0.0rc1` while the newest tag was
+    `v0.9.1`, and its falsifier allowed it because that check only ever
+    refused a bare `1.0.0`. A candidate suffix is not a smaller claim
+    than the release — it is the same claim about the same major line,
+    made more quietly.
+
+    So the bar is the major line, and it is read from the tags. Nothing
+    may declare 1.x until a 1.x is tagged, and on the day one is the bar
+    lifts by itself. No document has a vote.
+    """
+    copies = _every_declared_copy()
+    assert len(copies) >= 3, (
+        f"the sweep found {len(copies)} version declarations; it should find "
+        f"at least pyproject, config.VERSION and __init__: {copies}"
+    )
+
+    tag = _latest_release_tag()
+    released = _major(tag.lstrip("v"))
+    ahead = {p: v for p, v in copies.items() if _major(v) > released}
+    assert not ahead, (
+        f"the package declares a major line above the newest release {tag}: "
+        f"{ahead}. A release candidate is still that claim."
     )

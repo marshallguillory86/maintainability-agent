@@ -136,6 +136,26 @@ def _prove(base: str, node_ids: list[str], tree: Path) -> tuple[list[str], list[
     return failed, passed
 
 
+def _prove_one(ident: str, names: list[str], base: str) -> list[str]:
+    """Prove one entry's falsifiers. Returns the ones that did not."""
+    tree = Path(tempfile.mkdtemp(prefix="falsifier-"))
+    try:
+        _git("worktree", "add", "--detach", "--quiet", str(tree), "HEAD")
+        node_ids = _node_ids(names, tree)
+        if not node_ids:
+            return [f"{ident} cites {names}, none of which resolve"]
+        failed, passed = _prove(base, node_ids, tree)
+        for node in failed:
+            print(f"{ident}: {node} fails without the change — proven")
+        return [
+            f"{ident}: {node} PASSES without the change, so it does not defend it"
+            for node in passed
+        ]
+    finally:
+        _git("worktree", "remove", "--force", str(tree))
+        shutil.rmtree(tree, ignore_errors=True)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", required=True, help="commit the fixes land on top of")
@@ -161,24 +181,7 @@ def main() -> int:
         if not names:
             unproven.append(f"{ident} cites no test")
             continue
-        tree = Path(tempfile.mkdtemp(prefix="falsifier-"))
-        try:
-            _git("worktree", "add", "--detach", "--quiet", str(tree), "HEAD")
-            node_ids = _node_ids(names, tree)
-            if not node_ids:
-                unproven.append(f"{ident} cites {names}, none of which resolve")
-                continue
-            failed, passed = _prove(base, node_ids, tree)
-            for node in failed:
-                print(f"{ident}: {node} fails without the change — proven")
-            for node in passed:
-                unproven.append(
-                    f"{ident}: {node} PASSES without the change, so it does "
-                    "not defend it"
-                )
-        finally:
-            _git("worktree", "remove", "--force", str(tree))
-            shutil.rmtree(tree, ignore_errors=True)
+        unproven += _prove_one(ident, names, base)
 
     if unproven:
         print("\nfalsifiers that do not falsify:")

@@ -2765,7 +2765,7 @@ stands on its own.
 *Closing test:* `test_the_product_runs_only_git_commands_that_read` in
 `tests/test_git_read_only.py`.
 
-### D89 — Open: gating CI pins, on the wrong platform (Medium)
+### D89 — Closed: gating CI pins, on the wrong platform (Medium)
 
 Grok, UAT audit. P1's determinism is conditional on pinned analyzer
 versions. The gating pipeline had installed the pool **unpinned**, on
@@ -2808,18 +2808,40 @@ resolved on macOS arm64; `verify`, `audit` and the drift job all run
 the drift comparison would report platform-divergent closures as
 analyzer drift, weekly, forever.
 
-**Still open on that last one.** Closing it needs the pool resolved on
-Linux, which needs installing the pool — the reason this entry existed
-in the first place. `resolve-constraints` in the workflow produces that
-file from a runner; until it is checked in,
-`test_the_constraints_were_resolved_on_the_platform_the_gates_run_on`
-is `xfail(strict=True)`, so it fails the day the situation is fixed and
-the marker is left behind, and the suite is neither red nor lying.
+**Closed 2026-08-28.** `resolve-constraints` was dispatched against
+`9dffe3f` and its artefact is now the checked-in file: Python 3.12.14 on
+`Linux-6.17.0-1022-azure-x86_64-with-glibc2.39`, the platform `verify`,
+`audit` and `analyzer-drift` actually run on. The `xfail(strict=True)`
+marker did what it was put there to do — it turned into `XPASS(strict)`
+the moment the file landed, so the closure could not be taken without
+also removing the marker.
 
-*Falsifier: pending* for the platform residual. The two closed halves
-are held by `test_the_gating_jobs_install_through_the_constraints_file`
-and `test_the_scheduled_drift_job_floats_and_can_actually_fail` in
+The residual was written on the assumption that the two closures would
+diverge. They do not, and that is worth recording rather than assuming:
+both platforms resolve the same forty-two packages, no entry is
+platform-conditional, and the only differences are `platformdirs`
+4.11.4 → 4.11.5 and `ruff` 0.16.4 → 0.16.5, two releases that shipped in
+the day between the resolutions. So the weekly drift comparison was
+never going to report platform divergence as analyzer drift on this
+pool. That was a real risk when it was written and it is now a measured
+non-risk, which is a different thing from a guess that happened to hold.
+
+*Closing tests:* `test_the_constraints_were_resolved_on_the_platform_the_gates_run_on`,
+`test_the_gating_jobs_install_through_the_constraints_file` and
+`test_the_scheduled_drift_job_floats_and_can_actually_fail` in
 `tests/test_analyzer_pinning.py`.
+
+*Mutation:* the platform check was broken twice, both outside the
+sample it asserts over — it reads the constraints file and the
+workflow, and neither mutation touched the test. Rewriting the
+provenance header to name macOS again failed it; deleting every comment
+line from the constraints file failed it on the "records no provenance"
+clause. Restoring the artefact passed it. The claim is about which
+platform resolved the pins, and both mutations make that claim false in
+the two ways it can be false: wrong platform, or no way to tell.
+
+The platform residual was closed by claude: dispatched
+`resolve-constraints`, checked in its artefact, removed the marker.
 
 *Roles:* found=grok prompt=marshall fix=codex+claude test=codex+claude run=mutation
 
@@ -3175,15 +3197,13 @@ fail without their changes and two do not.
 
 ## Disposition
 
-**One entry is open: D89.** It was closed on 2026-08-27 and reopened the
-same day on review. Two of its three defects are fixed — a drift check
-that could never pass, and a test that `|| true` defeated. The third is
-not: the analyzer closure was resolved on macOS and the jobs it
-constrains run Linux, and re-resolving it means installing the pool,
-which is the reason the entry existed at all. The workflow now carries a
-job that produces the Linux resolution from a runner; until that file is
-checked in the residual is marked `xfail(strict=True)` rather than
-hidden or left red.
+**Every entry is closed and none is open.** D89 was the last, and
+closed on 2026-08-28 when
+the `resolve-constraints` job produced the Linux closure the gating jobs
+had been pinned against a macOS resolution of. Its `xfail(strict=True)`
+residual became `XPASS(strict)` on the day the file landed, which is the
+behaviour that marker exists for: it fails when the situation is fixed,
+so the fix cannot be taken while the marker is left behind.
 
 This page reached an empty ledger twice and gave it back twice, which is
 the useful part. An audit observed that the register can be empty while
@@ -3191,7 +3211,7 @@ the proof it cites is failing in CI, and that "0 open" was being read as
 "known good". A closure that does not survive being checked is not a
 closure.
 
-**Every other entry is closed.** D32 through D46 came from
+**Where the rest came from.** D32 through D46 came from
 two independent security audits on 2026-08-23 and closed over the two
 days after; D47 through D49 came from the chat-surface work that
 preceded them; D50 through D55 came from UAT preparation on 2026-08-25

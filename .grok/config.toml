@@ -1,0 +1,71 @@
+# ⚠ INERT ON THIS MACHINE — VERIFIED 2026-08-24, NOT A LIVE CONTROL.
+#
+# Project-scoped [permission] rules load only once the folder is trusted
+# (`/hooks-trust` in the TUI; build 1.0.5 exposes no --trust flag).
+# `grok inspect` reports "Project trusted: no", and a write probe run
+# under this file SUCCEEDED. Enforcement therefore lives in the
+# `grok-audit` launcher (~/.grok/bin/grok-audit), where --deny is always
+# enforced and the same probe was refused.
+#
+# Trust the folder and this becomes a real second layer. Until then it
+# documents the intent and enforces nothing. Recorded loudly because a
+# control that fails open silently is precisely what this repo's audit
+# loop exists to catch.
+#
+# Grok's seat in this repository is HOSTILE AUDITOR. Report-only.
+#
+# RULES.md (2026-08-14, 2026-08-16) puts Grok in the chain audit-only:
+# "Report-only. Check done against the prompt and the tests, not the
+# wrap-up. Repair only when asked. Do not implement product code
+# unasked. Do not drive the queue, open PRs, merge, pull main, invoke
+# the product, or start the next slice."
+#
+# That rule lived only in prose, and the audit step was skipped twice
+# before a header line was required to prove it ran. This file is the
+# same lesson applied one layer down: the auditor cannot write, because
+# deny wins over every allow and over every permission mode. An auditor
+# that can edit the code it is auditing is a coder with a second opinion.
+
+[permission]
+
+# Report-only. No file mutation of any kind, in any mode.
+deny = [
+  "Edit",
+  "Write",
+
+  # Bash is left available on purpose — an audit reads the tree and runs
+  # the tests, and git's read-only verbs auto-approve. What is denied is
+  # everything that would let the auditor change the record it audits,
+  # advance the branch under a frozen SHA, or act as the orchestrator
+  # RULES.md says it is not.
+  "Bash(git add *)",
+  "Bash(git commit *)",
+  "Bash(git push *)",
+  "Bash(git checkout *)",
+  "Bash(git switch *)",
+  "Bash(git reset *)",
+  "Bash(git revert *)",
+  "Bash(git merge *)",
+  "Bash(git rebase *)",
+  "Bash(git pull *)",
+  "Bash(git stash *)",
+  "Bash(git tag *)",
+  "Bash(gh pr *)",
+  "Bash(gh release *)",
+  "Bash(gh workflow *)",
+
+  # tee is the documented hole in the read-only shell list: it writes
+  # its stdin to arbitrary paths, so it is a file edit wearing a pipe.
+  "Bash(tee *)",
+  "Bash(rm *)",
+  "Bash(mv *)",
+  "Bash(pip install *)",
+  "Bash(python3 -m pip install *)",
+]
+
+# Running the suite is the audit's evidence. Findings are checked
+# against the tests, never against a wrap-up.
+allow = [
+  "Bash(python3 -m pytest *)",
+  "Bash(pytest *)",
+]

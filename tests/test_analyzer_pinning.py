@@ -24,8 +24,6 @@ import re
 import subprocess
 from pathlib import Path
 
-import pytest
-
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "quality-gates.yml"
 
@@ -159,17 +157,6 @@ def test_product_intent_describes_the_arrangement_the_workflow_implements() -> N
         )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "D89 residual: constraints/analyzers.txt was resolved on macOS "
-        "arm64 while the jobs it constrains run ubuntu-latest. Closing it "
-        "needs a Linux resolve, which needs installing the pool -- the "
-        "reason D89 existed. `resolve-constraints` in the workflow "
-        "produces that file; strict, so this fails the day it is fixed "
-        "and the marker is left behind."
-    ),
-)
 def test_the_constraints_were_resolved_on_the_platform_the_gates_run_on() -> None:
     """A pin resolved somewhere else is not a pin.
 

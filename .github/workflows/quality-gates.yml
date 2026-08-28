@@ -151,6 +151,46 @@ jobs:
           # point is a legible log line, not a new gate.
           args: -Dsonar.qualitygate.wait=true
 
+      # `qualitygate.wait` prints FAILED and a dashboard link, and stops
+      # there. The link is useless to anyone without access, and the
+      # dashboard is the only place the *conditions* live -- so a red
+      # gate stayed "go and look" rather than "coverage on new code is
+      # 61%". This asks the server which conditions it failed on and
+      # prints them, so the log answers the question the log raises.
+      #
+      # The token is the same one the scan uses; SonarCloud takes it as
+      # the basic-auth username with an empty password.
+      - name: Name the failing quality-gate conditions
+        if: >
+          always() && (github.event_name == 'pull_request' ||
+          (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+        continue-on-error: true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -uo pipefail
+          key=marshallguillory86_maintainability-agent
+          if [ -n "${PR:-}" ]; then scope="pullRequest=$PR"; else scope="branch=main"; fi
+          status=$(curl -sS -u "$SONAR_TOKEN:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$key&$scope")
+          echo "$status" | python3 -c '
+          import json, sys
+          body = json.load(sys.stdin)
+          if "errors" in body:
+              print("could not read the gate:", body["errors"])
+              raise SystemExit(0)
+          st = body["projectStatus"]
+          print("quality gate:", st["status"])
+          for c in st.get("conditions", []):
+              if c["status"] == "OK":
+                  continue
+              print("  FAILED %s: actual=%s %s threshold=%s" % (
+                  c.get("metricKey", c.get("metric", "?")),
+                  c.get("actualValue", "none"),
+                  c.get("comparator", "?"), c.get("errorThreshold", "?")))
+          '
+
   # `pyproject` declares `Operating System :: POSIX`, and until this job
   # existed the only evidence behind that claim was one Linux image. An
   # audit put it plainly: the platform test forbade `windows` in

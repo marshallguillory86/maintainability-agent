@@ -3258,7 +3258,7 @@ major line above the newest release, and on the day a 1.x is tagged the
 bar lifts by itself. No document gets a vote.
 
 The authorship lint — `test_entries_from_d89_record_who_did_the_work` in
-`tests/test_written_record.py` — is deliberately *not* cited as a
+`tests/test_declared_authorship.py` — is deliberately *not* cited as a
 closing test. It cannot fail at the base commit, because D89 through
 D99 already carry the line; it prevents the next omission rather than
 proving this one. Calling it a falsifier would be the same overclaim

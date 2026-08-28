@@ -4,7 +4,7 @@ import json
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-VERSION = "1.0.0rc1"
+VERSION = "0.9.1"
 
 PROJECT_URL = "https://github.com/marshallguillory86/maintainability-agent"
 

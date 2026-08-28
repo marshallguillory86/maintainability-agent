@@ -28,6 +28,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from ._stored_grants import IDENTITY_KEY, directory_identity
+
 _APP_DIR = "maintainability-agent"
 
 
@@ -64,7 +66,7 @@ def load_user_config() -> dict[str, Any] | None:
 # user config holding only these must read as "never answered setup":
 # granting the audit access to one repository is not choosing the
 # product's configuration (presence must not be read as an answer).
-_GRANT_KEYS = frozenset({"allowed_roots"})
+_GRANT_KEYS = frozenset({"allowed_roots", IDENTITY_KEY})
 
 
 def user_config_answers() -> dict[str, Any] | None:
@@ -131,9 +133,25 @@ def persist_root_grant(root: Path) -> None:
     config = load_user_config() or {}
     grants = config.get("allowed_roots")
     entries = [str(entry) for entry in grants] if isinstance(grants, list) else []
+    # Stored resolved. A grant recorded as `/tmp/work` cannot be checked
+    # strictly later, because `/tmp` is a symlink on macOS and the path
+    # never resolves to itself (D38).
+    root = Path(root).expanduser().resolve()
     if str(root) not in entries:
         entries.append(str(root))
     config["allowed_roots"] = entries
+    # And *what* it was, not only where. Four versions of the honouring
+    # rule were broken by comparing better and better strings, because a
+    # path is a name and names alias: symlinks, case-insensitive volumes,
+    # bind mounts, a directory created after the question was answered.
+    # Recording the device and inode at the moment of consent is the
+    # thing none of those spellings can forge (D79).
+    identity = directory_identity(root)
+    if identity is not None:
+        recorded = config.get(IDENTITY_KEY)
+        recorded = dict(recorded) if isinstance(recorded, dict) else {}
+        recorded[str(root)] = identity
+        config[IDENTITY_KEY] = recorded
     write_user_config(config)
 
 

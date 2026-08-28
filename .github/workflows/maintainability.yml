@@ -27,7 +27,7 @@ jobs:
   maintainability:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # `changed-only` resolves a revspec against the base branch.
           # The default fetch-depth of 1 checks out a single commit with
@@ -40,7 +40,7 @@ jobs:
       # per run — a cache key is immutable once saved, so re-saving an
       # append-only file needs a fresh key each time — and the prefix in
       # restore-keys picks up the newest previous one.
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .maintainability/history.jsonl
           key: maintainability-history-${{ github.run_id }}
@@ -83,7 +83,7 @@ jobs:
       # that fails a gate is exactly the one the next run needs to
       # remember — recurrence exists for those.
       - if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .maintainability/history.jsonl
           key: maintainability-history-${{ github.run_id }}
@@ -92,7 +92,7 @@ jobs:
       # explains it. Without this the run that most needs reading is the
       # one that uploads nothing.
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: maintainability
           path: |

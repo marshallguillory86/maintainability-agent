@@ -72,7 +72,13 @@ def _allowed(extras: frozenset[str]) -> set[str]:
 def _first_party(name: str) -> bool:
     if name == "maintainability_audit" or name.startswith("test_"):
         return True
-    if name in {"_ast_reading", "_mcp_fixtures", "_scoring_fixtures", "conftest"}:
+    # Derived rather than listed. The literal set this replaces named
+    # four helper modules, so the fifth -- `_git_path`, added to stop
+    # seven fixtures pinning a PATH that is a shim on macOS -- failed
+    # here as an undeclared third-party dependency. A rule whose
+    # membership has to be remembered is the shape this project keeps
+    # finding at the bottom of its audits.
+    if name == "conftest" or any(path.stem == name for path in TESTS.rglob("*.py")):
         return True
     return any(path.stem == name for path in TOOLS.rglob("*.py"))
 

@@ -19,6 +19,81 @@ degraded on the chat path. The theme across all seventeen entries is one
 defect class: **capability wired to the TTY, viewer shipped to the primary
 surface.**
 
+## The falsifier standard
+
+**Thirty of the entries below are one defect.** Not thirty defects with
+a family resemblance — one mechanism, fixed thirty times without being
+named, which is why it kept coming back. It was found by asking why
+instead of closing the thirty-first.
+
+The shape, every time:
+
+1. A **universal claim** exists. *"No analyzer reads configuration from
+   the audited tree." "Every git command disables housekeeping." "No
+   document presents a refused analyzer as runnable."*
+2. An audit finds **one instance** where the claim is false.
+3. The check is written **from the instance**, not from the claim.
+4. The check goes green, and the claim is still false everywhere else.
+
+Step 3 happens because the author has a reproduction in hand and no
+enumeration of what the claim quantifies over. It surfaces two ways: the
+population is hand-picked — two adapters of fifteen, three sentences,
+one file of a package — or the property is approximated by a string
+instead of executed: `"pytest" in job`, `"42" not in document`, the
+presence of a `diff` command that had been neutered with `|| true`.
+
+**Mutation testing did not catch it, and the reason is the useful part.**
+Mutation was being applied — to the instance that motivated the fix,
+which is *inside* the sample the check was written from. So the mutation
+confirmed the sample and said nothing about the claim. Every time an
+auditor broke one of these, their mutation came from outside the sample
+and the author's came from inside it.
+
+So a falsifier for a universal claim owes three things:
+
+| Clause | Enforced by |
+|---|---|
+| **Derive the population** from the source of truth — `ADAPTERS`, an `rglob`, the catalog — never a list typed by hand | review; the shape is visible |
+| **Assert the population is not empty**, so a sweep that matched nothing fails instead of passing | `tests/test_falsifier_standard.py` |
+| **Mutate outside the sample**: the proof must break a member the test does not name | stated in `*Mutation:*`, required from D97 |
+
+The third cannot be checked mechanically, so it is required to be
+*written down*. An author who has to say which member they broke, and
+why it sits outside what the test names, cannot make the substitution
+silently.
+
+## Roles, recorded from D90
+
+Every entry from **D90** onward carries a `*Roles:*` line naming who did
+each part:
+
+```
+*Roles:* found=grok prompt=claude fix=claude test=codex run=ci
+```
+
+* `found` — the agent or person whose audit produced the finding.
+* `prompt` — who wrote the audit prompt that produced it. Not the same
+  question: an auditor searches where it is pointed, and every finding
+  in D64–D89 came from a prompt written by the same agent that wrote the
+  code being audited.
+* `fix` — who implemented the change.
+* `test` — who wrote the falsifier. **The interesting one.** A fix and
+  its check written by one mind share that mind's blind spot, which is
+  the mechanism behind eleven of this register's entries being findings
+  about an inadequate check rather than about the product.
+* `run` — where it was verified: `local`, `ci`, or `mutation` when a
+  fix was proved by reverting it and watching the cited test fail.
+
+**Entries before D90 have no `*Roles:*` line and are not backfilled.**
+The authorship of those falsifiers is not recorded anywhere, and
+reconstructing it from memory would put invented data into a register
+whose entire value is that its claims are checkable. Where an early
+entry names its reporter it does so in prose, which is all that is
+known.
+
+The working split this records, set 2026-08-26: **Claude writes code,
+Codex writes tests and docs, Grok audits, and Codex may audit.**
+
 ## Entries
 
 ### D1 — Closed: analyzer pool execution is config-driven at every seam
@@ -235,7 +310,16 @@ The XDG state file records repositories by absolute root, making first-run
 detection persistent; corrupt or unreadable user files are treated as
 absent rather than crashing an audit.
 
-*Closing suite:* `tests/test_user_config_tier.py`.
+*Closing tests:* `test_user_paths_honor_xdg_environment`,
+`test_user_and_repository_config_merge_in_precedence_order`,
+`test_any_loaded_config_tier_defaults_the_pool_on_and_explicit_false_wins`,
+`test_corrupt_user_config_reads_as_absent` and
+`test_successful_cli_audit_marks_the_repository_seen` in
+`tests/test_user_config_tier.py`. Named individually because "the whole
+suite" is not a falsifier: an audit tightened the citation check on
+2026-08-23 and this entry was the one closing on a bare path, which
+tells a reader where to look but never which test fails if the tier
+stops being honoured (D33).
 
 ### D14 — Closed: the chat integration applies setup and root grants
 
@@ -285,11 +369,17 @@ attempted, a catalogued tool this project cannot invoke is stated as
 `no-adapter` rather than counted runnable, and `coverage.selection`
 carries the disjoint `runnable` and `inventory_filtered` sets.
 
-*Closing tests:* `tests/test_d15_goal_directed.py` (the requirement as
-originally written, including a minimality proof that reads the
-coverage document's real `by_language` key — an earlier version read a
-key that never existed and passed itself on the empty result) and
-`tests/test_d15_composition.py` (the two-shape composition pins).
+*Closing tests:* `test_inventory_deselects_before_any_probe_or_spawn`,
+`test_selection_composes_the_runnable_set_before_the_run_loop`,
+`test_the_runnable_set_is_minimal_for_the_trees_languages` — the
+minimality proof, which reads the coverage document's real
+`by_language` key after an earlier version read a key that never
+existed and passed itself on the empty result — and
+`test_a_catalogued_tool_without_an_adapter_is_not_called_runnable` in
+`tests/test_d15_goal_directed.py`; plus
+`test_one_report_composes_source_read_and_artifact_read` and
+`test_stale_artifact_evidence_is_stated_on_the_composed_summary` in
+`tests/test_d15_composition.py`, the two-shape composition pins.
 
 *Round-four verification on `5a7857c`: reopened.* A catalog tool with no
 adapter is still returned as `Selected` when its catalog languages overlap the
@@ -589,6 +679,7 @@ questions, then the choice, then a report honouring the chosen html
 presentation — because refusing to audit is only correct if answering
 unblocks it. `test_declined_or_unsupported_elicitation_returns_questions_not_an_audit`
 in the same file pins the degradation path.
+
 ### D27 — Closed: configuring is not running, and setup is reachable on every run
 
 Marshall, 2026-08-21, after D26 shipped half of it: *"The point of the
@@ -680,7 +771,7 @@ open, while the register records it closed, fails until the claim is
 corrected or stamped — and a stamp directly beneath the claim counts,
 which is the form an ADR has to take.
 
-### D30 — Closed: the setup gate is every door, not one call site
+### D30 — Closed: the setup gate is every chat door, not one call site
 
 Found by Grok on 2026-08-22, auditing D21–D27. D26 made setup a
 precondition at `audit_repository`, and an audit of the *other* doors
@@ -713,10 +804,18 @@ enumerate the doors rather than asserting the rule at a call site,
 because a precondition proven at one seam is a precondition on that
 seam.
 
+> **Amended 2026-08-22 (D32).** The title said "every door" and a
+> second audit round measured it: the CLI, `build_report` and
+> `--backfill` still score an unconfigured tree. That is the
+> automation/CI door behaving as designed — a caller that has already
+> decided, with no person to ask — but "every door" claimed more than
+> the fix delivers, so the title now says *chat* door. The distinction
+> is the product's, not an excuse: chat asks, automation assumes.
+
 *Closing tests:* `test_the_report_resource_refuses_an_unconfigured_repository`,
 `test_an_explicit_config_path_audits_without_carrying_setup_questions`,
 `test_a_config_file_with_no_answers_in_it_is_not_configured`,
-`test_an_unreadable_config_refuses_instead_of_leaking_a_parse_error`, and
+`test_an_unreadable_repository_config_refuses_at_the_setup_check`, and
 `test_run_never_overrides_the_setup_precondition` in
 `tests/test_setup_gate_completeness.py`.
 
@@ -746,23 +845,712 @@ here so the limit is known rather than assumed away.
 *Closing test:* `test_every_closing_citation_names_a_test_that_exists`
 in `tests/test_written_record.py`.
 
-## D32–D46 are reserved, not missing
+### D32 — Closed: the refusal reaches the reader, on every door
 
-The next entry below is D47. Nothing was deleted. D32 through D46 belong
-to the security and boundary work on `fix/round-two-findings`, which was
-opened first and mints those identifiers; the three entries below were
-originally written as D32–D34 on a branch cut from the same commit, so
-for a day two live branches defined six different defects under three
-identifiers.
+Found by Grok on 2026-08-22, round 2, attacking round 1's fixes. Three
+of the four findings are defects in D30 and D31; the fourth is a claim
+this register made that the wire disproved.
 
-That is worse than it looks. The release gate is "zero open entries in
-this register", which is only countable if an entry number means one
-defect. Colliding identifiers do not conflict in git — the two branches
-touch different regions of this file — so nothing would have failed until
-a reader tried to work out which D34 a changelog line meant. The smaller
-branch renumbered. The gap stays as written so the reason survives the
-merge, and it closes when `fix/round-two-findings` lands.
+**The refusal did not survive the protocol.** D30 said the report
+resource "refuses and names the door that can ask". Read through a real
+client, `SetupRequired` arrived as a bare `-32603` carrying "Error
+creating resource from template …", and the sentence naming
+`audit_repository` survived only as `__cause__` on the server side,
+where no user looks. In-process the refusal looked perfect, which is
+exactly why the test that proved it was in-process. It is now raised as
+the SDK's own `ResourceError` at the boundary, and asserted through a
+client rather than an exception handler.
 
+**One repository state, two experiences.** A truncated config made the
+MCP tool and resource refuse by name while the CLI let a raw
+`JSONDecodeError` traceback out — on the door people run unattended,
+where a traceback is the least useful outcome available. The CLI now
+refuses in its own idiom, naming the file to repair.
+
+**A file name is not a falsifier.** D31's check required cited names to
+exist and to live in the cited file, and Grok closed an entry with
+nothing but a path on the closing line: no name to resolve, so nothing
+to object to, so it passed. "Which test fails if this defect returns?"
+must have an answer, and now must have one written down.
+
+**And the title overclaimed.** D30 said "every door"; the CLI,
+`build_report` and `--backfill` still score an unconfigured tree. That
+is the automation door behaving as designed — a caller that has already
+decided, with nobody to ask — but the entry claimed more than the fix
+delivered. Retitled to *chat* door and stamped, rather than left to
+read as a promise the code does not keep.
+
+Two of Grok's attacks are recorded as accepted limits rather than
+fixed: a citation naming a real test that proves something other than
+its entry's defect (D31 already says no check can read assertions), and
+a test living in `conftest.py`, which the collector does not scan
+because no closing citation names it.
+
+*Closing tests:* `test_the_resource_refusal_survives_the_protocol` and
+`test_the_cli_refuses_an_unreadable_config_in_its_own_idiom` in
+`tests/test_setup_gate_completeness.py`; the file-only citation is
+refused by `test_every_closing_citation_names_a_test_that_exists` in
+`tests/test_written_record.py`.
+
+### D33 — Closed: the fixes for D32, audited
+
+Grok's round 3, on 2026-08-23, attacking round 2's fixes. Three
+findings, all in code written the day before, plus one this check
+turned up on its own.
+
+**"Name a test" was satisfied by naming a file.** D32 added an
+assertion that a closing citation must contain a `test_` token. It
+passed the very attack it was written against, because the token it
+found was the *filename inside the path*: `tests/test_x.py` reads as
+"names test_x". Paths are stripped before looking now. Tightening it
+immediately caught two entries closing on a bare suite — D13 and D15,
+both predating the check and both invisible to every earlier version of
+it. Their falsifiers are named individually.
+
+**Only one refusal reached the reader.** D32 wrapped `SetupRequired` so
+its message crossed the wire, and stopped there. A root outside the
+allow-list still arrived as "Internal server error", discarding the
+`--allow-root` sentence at the one layer that knows it — and that
+refusal is raised in the SDK's security callback, before the resource
+function the wrapper lives in. Both layers translate now, and the
+falsifier walks every refusal the resource can raise rather than the
+one an audit happened to name.
+
+**Two parsers, one file.** `setup_pending` kept its own `json.loads`
+beside `load_config`'s, so a JSON array made the MCP tool ask the setup
+questions while the CLI refused the file. One state, two answers —
+which is the defect D32 set out to remove and left standing one call
+away. They share a parser now.
+
+Also corrected: `load_catalog`'s missing-file message told the reader
+to rebuild from `tools/build_catalog.py`. Whoever sees that message on
+an installed copy has no such repository, and their actual problem is
+an incomplete install — which is D23 exactly. It now says which
+situation they are in.
+
+*Closing tests:* `test_every_closing_citation_names_a_test_that_exists`
+in `tests/test_written_record.py`;
+`test_every_resource_refusal_reaches_the_client_with_its_remedy` and
+`test_an_unreadable_repository_config_refuses_at_the_setup_check` in
+`tests/test_setup_gate_completeness.py`.
+
+### D34 — Closed: config, history and baseline writes cannot be redirected (High)
+
+Grok, 2026-08-23, security pass. D18 closed this class for the skill
+installer — check the path, then open the name — and paid for
+descriptor binding, `O_NOFOLLOW`, and staging plus `os.replace`,
+because a hardlink defeats `O_NOFOLLOW` outright. None of that reached
+the three writes a normal audit performs.
+
+Reproduced here, independently of the report:
+
+* **S1.** A dangling `maintainability-agent.json` symlink pointing
+  outside the repository. `setup_pending` reads `True` (`is_file()` is
+  false on a dangling link), and `apply_answers` then writes 205 bytes
+  of configuration *through* the link. The repository path remains a
+  symlink. `_first_run._persist` shares the primitive, and reconfigure
+  re-enters the same function.
+* **S2.** `.maintainability/history.jsonl` hardlinked to a file
+  outside the repository. `repository_path` accepts it — resolution
+  and `is_relative_to` bound the *name*, never the inode — and
+  `append_scan` appends onto the outside file.
+* **S6.** `write_baseline=True` with `baseline_path="README.md"`
+  truncates source. The MCP description and `docs/architecture.md`
+  both promise five artifacts and "never source"; the boundary check
+  is only "inside the granted root", and the model supplies that
+  argument on the primary surface.
+
+Every write into an audited tree now goes through `_safe_write`,
+which refuses a symlink at the name *before* resolving it — asking the
+resolved path is useless, since it is always the target — refuses a
+symlinked directory anywhere between the root and the file, and stages
+into a fresh file that it renames over the name. That last property is
+the only one that defeats a hardlink: the existing inode is never
+opened, so an outside file keeps its contents and merely stops being
+this name. History gave up append mode to get it, which costs a read
+of a few kilobytes.
+
+Baseline splits into two questions, because they have different
+answers. Redirection is refused by the writer for every caller. Not
+overwriting *source* is refused where the path arrives from a model —
+`_baseline_workflow` — and a CLI caller keeping baselines outside the
+tree is left alone, which was always allowed.
+
+*Closing tests:* `test_setup_refuses_to_write_config_through_a_symlink`,
+`test_setup_refuses_a_symlink_pointing_back_inside_the_repository`,
+`test_history_append_cannot_reach_a_hardlinked_inode`,
+`test_a_first_scan_still_records_normally`,
+`test_a_baseline_may_not_overwrite_something_that_is_not_one` and
+`test_a_baseline_may_replace_a_baseline` in
+`tests/test_write_boundary.py`.
+
+### D35 — Closed: the audited tree cannot enable tool acquisition (High)
+
+Grok, 2026-08-23. `product-intent.md` P1 is explicit that acquisition
+is opt-in and that **a user** enables `analyzers.acquire_tools`.
+`load_config` is equally explicit that a repository always beats a
+person. `_analysis.analyze` then calls
+`set_tool_acquisition(bool(settings.get("acquire_tools")))`, so a pull
+request that adds four words to a config file causes the host to run
+`npx --yes <tool>` — unpinned, honouring the tree's own `.npmrc`.
+
+Two aggravations. The published `maintainability-agent.schema.json`
+declares `analyzers` with `additionalProperties: false` and does not
+list `acquire_tools` at all, so the contract says the key is illegal
+while the runtime honours it — the schema is never loaded. And
+`_ACQUIRE_TOOLS` is a process-wide global, so two overlapping audits
+on a long-lived MCP can flip it under each other.
+
+License policy already gets this right: deny always wins, and no
+repository can override it. Acquisition is the same kind of decision
+and did not.
+
+`acquisition_permitted()` reads the XDG user tier alone and never the
+merged config, so a repository stating the key is ignored — a
+preference the tool declines to act on rather than an attack worth
+failing a scan over, since the environment work order already names
+every missing tool and how to install it. The key is now declared in
+the schema too: `analyzers` is `additionalProperties: false` and did
+not list it, so the published contract called it illegal while the
+runtime obeyed, and nothing caught the contradiction because the
+schema is never loaded.
+
+`test_analyze_honours_the_opt_in` used to set `config["analyzers"]` and
+watch the switch flip — it asserted the inversion. It reads the user
+tier now.
+
+*Closing tests:* `test_no_configuration_means_no_acquisition`,
+`test_the_user_tier_can_enable_acquisition`,
+`test_a_repository_cannot_enable_acquisition`,
+`test_a_repository_cannot_revoke_a_users_choice` and
+`test_the_schema_declares_the_key_the_runtime_reads` in
+`tests/test_acquisition_trust.py`; plus
+`test_analyze_honours_the_opt_in` in
+`tests/test_network_disclosure.py`.
+
+### D36 — Closed: the agent reads inside the grant, wherever the path came from (High)
+
+Grok, 2026-08-23. D20 bounded `paths.history` with `repository_path`
+after an audit reproduced an escape. The same class survives in two
+fields that were never given the same treatment.
+
+* **S4.** `analyzers.class_dirs` reaches `_target_dirs` as
+  `root / relative`, and `Path("/tmp/repo") / "/"` is `/`. Confirmed
+  here: a repository config naming `/` yields `/` as a scan target,
+  which is also an `rglob("*.class")` over the filesystem on an MCP
+  child with no timeout.
+* **S9 / Codex 1.** `expand_files` and the built-in scan both use
+  `is_file()`, which follows symlinks. Codex proved the sharper half:
+  a repository containing `linked.py -> ../outside.py` had that file
+  read, measured, and returned in the report — `TOP_SECRET_VALUE = 42`
+  inside a findings payload. `expand_files` is worse still, because
+  its output becomes analyzer argv.
+
+`iter_files` and `expand_files` now check where a path *lands*, and
+`class_dirs` goes through `repository_path` like `paths.history` did
+after D20. Symlinks that resolve inside the root stay allowed: they are
+ordinary in real trees, and refusing them would quietly shrink the
+population a score is computed over.
+
+One thing the falsifier deliberately does not assert: that the name
+never appears anywhere in the report. `git_status_short` lists the
+symlink as untracked, which is git describing the working tree rather
+than this agent reading past its grant.
+
+*Closing tests:* `test_a_symlink_out_of_the_tree_is_never_scanned`,
+`test_a_symlink_that_stays_inside_the_tree_is_still_scanned`,
+`test_analyzer_argv_never_names_a_file_outside_the_tree` and
+`test_class_dirs_from_repository_config_cannot_leave_the_tree` in
+`tests/test_read_boundary.py`.
+
+### D37 — Closed: git argv is validated, bounded, and its failures are not data (Medium)
+
+Grok, 2026-08-23. `validate_revspec` refuses leading-dash arguments,
+and the MCP tool calls it. The CLI's `--changed-only` and `--backfill`
+do not, and neither `changed_paths` nor `_backfill._git` places `--`
+before the revspec: `changed_paths(repo, "--output=<path>")` creates
+that file. Option injection, not shell injection — there is no
+`shell=True` anywhere in `src/`.
+
+Beside it, and arguably worse for the product's own claims: `run_git`
+swallows every failure as `except Exception: return ""`, so a failed
+shallow-clone check reads as "not shallow" and a failed `git log`
+becomes `files_changed: 0`. `history.py` states that "no history" and
+"no changes" must never be confused, and this is the code path that
+confuses them. Neither git spawner sets a timeout, and an inherited
+`GIT_DIR` overrides both `cwd` and `-C`.
+
+**Closed 2026-08-25.** Four faults in one entry, and the fix for each
+is placed where a fifth caller cannot miss it.
+
+*The revspec.* One definition now, `git_tools.validate_revspec`, lifted
+from the MCP door rather than written a second time — the first draft
+of a fresh pattern admitted `-rf`, because putting `-` in a character
+class allows it in the first position too. `changed_paths` and
+`commits_in_range` validate before git sees anything, so the CLI door
+inherits the guard rather than being told to remember it, and both
+append `--`. Validation rather than `--end-of-options`, which needs git
+2.24 and would make the guarantee depend on the host's git.
+
+*Failure is not emptiness.* `run_git` raised nothing and answered every
+error with `""`, so a failed `git log` reached `_commits` as no commits
+and was published as `files_changed: 0` — the precise confusion
+`has_history` was written to prevent, created by the spawner beneath
+it. `run_git` now raises. The two calls where a non-zero exit **is** the
+answer — "is this a repository at all" — use `probe_git`, which says so
+at the call site, and the report's own git metadata probes too because
+a directory that is not a repository is a supported audit target.
+Making the strict case the default is the point: tolerating failure is
+now something a reader can see.
+
+*Bounded and bound.* Both spawners pass a timeout, and both scrub
+`GIT_DIR` and its seven siblings, which outrank `cwd` and `-C` — an
+inherited value silently redirected every command here, including the
+worktree writes in `_backfill`.
+
+The last two are held by a sweep over the package rather than by
+assertions about the two spawners that exist today. That is deliberate:
+this defect class was closed at the MCP door and left open at the CLI,
+which is the mistake the register keeps recording.
+
+**Audited by Codex and Grok independently, and three residues closed in
+the same entry.** Both rounds on 337a03a found the same thing from
+different directions: the fix had been applied to the sites this entry
+named and not to the class.
+
+- `has_history`'s third probe still read a *failed* shallow check as
+  "not shallow" — `probe_git(...) != "true"` — so a git that cannot
+  answer the question reported complete history. That is the sentence
+  D37 opened with, still implemented three lines below the two probes
+  that were fixed. It now fails closed: only an explicit `"false"`
+  establishes completeness.
+- `rename_map` probed its diff, so a timeout or an unreadable object
+  became "no renames" and a `git mv` surfaced every moved finding as
+  new — the ADR 009 hole, produced by the spawner. The two legitimate
+  empty cases (a commit git no longer has, equal commits) are
+  established by probing for the commits first; the diff itself is
+  strict.
+- The `require_clean_worktree` gate read a failed `git status` as an
+  empty one, so a plain directory satisfied it. `worktree_status`
+  returns `None` for "not a worktree", which the gate now fails on
+  rather than passing.
+
+**And the sweep was syntactic, not structural.** It matched only
+`subprocess.*` calls whose first argument was a list *literal*
+beginning with `"git"`; a spawn built from a variable, a tuple, a
+concatenation or a module constant evaded it while the test stayed
+green and this entry claimed a new git call would fail there. Deciding
+which spawns are git is undecidable, so it stopped trying: every
+subprocess spawn in the package is now classified, and the analyzer
+child is named in `ENV_EXEMPT` with its reason rather than silently
+unchecked.
+
+*Closing tests:* `test_an_option_shaped_revspec_never_reaches_git`,
+`test_a_failed_git_command_is_not_an_empty_answer`,
+`test_a_repository_is_read_through_its_own_path_not_an_inherited_one`,
+`test_every_subprocess_spawn_is_bounded_and_classified`,
+`test_an_unborn_head_reports_absence_not_quiet_history`,
+`test_a_shallow_clone_reports_absence`,
+`test_an_unanswerable_shallow_check_withholds_rather_than_claims` and
+`test_a_rename_is_read_from_git_and_a_failure_is_not_no_renames` in
+`tests/test_git_argv.py`.
+
+### D38 — Closed: a standing grant authorizes what the question named (Medium)
+
+Grok, 2026-08-23. `persist_root_grant` stores the resolved path as a
+string; `allowed_roots()` resolves it again at process start.
+Elicitation refuses a symlink retarget in-process, and a restart does
+not: rename the granted directory, leave a symlink at the old name
+pointing somewhere sensitive, and the allow-list follows it with no
+new consent.
+
+**Closed 2026-08-25, reproduced first.** Granting `project`, renaming
+it away and leaving a symlink at the old name put `secrets` in the
+allow-list on the next start, with no question asked.
+
+The in-process seam was already right, which is what makes this a
+missed sibling rather than a new idea: `_RootLedger.consume_ask`
+surrenders the path the user was actually shown, so a link retargeted
+during the elicitation round-trip cannot swap the consented directory
+(the TOCTOU found on 6b2fb76). A restart went around it, because the
+allow-list was rebuilt from strings and re-resolved. Same rule, applied
+where the strings are read: a persisted grant is honoured only while it
+still resolves to itself, which a path that has acquired a symlink no
+longer does.
+
+Fails closed, and a dropped grant is not an error — the user is asked
+again the next time that root is used, which is the point. A granted
+directory that was simply deleted keeps its entry and audits nothing,
+because there is no directory there to audit.
+
+**Reopened and re-closed 2026-08-26.** The predicate that closed this
+was the inverse defect. It honoured a stored grant only when the path
+contained no symlink in any component — which on macOS is the ordinary
+spelling of `/tmp`, `/var` and every `tempfile` directory. Grok
+reproduced it: a grant recorded as `/tmp/work` was dropped on every
+start, so someone who said "always" was asked again forever.
+
+The closing test could not see it. It called `tmp_path.resolve()`
+before storing, so it only ever exercised a path that was already
+canonical.
+
+Grants persist resolved now. A canonical entry is honoured only while
+it still resolves to itself, which is the original guard; an entry that
+is not canonical — hand-written, or written before this change — is
+honoured unless the granted path is itself a link, which is the swap
+that was demonstrated. A component *above* it being replaced is a
+residual the weaker rule does not catch, and is why new grants are
+stored resolved.
+
+**And the falsifier for the reopen failed CI on its first run.** It
+asserted that `/tmp` is a symlink, which is true on macOS and false on
+Linux, so it hard-failed on the platform it was meant to protect
+instead of skipping there. Every local full-suite run had been green,
+because every local run was on one platform: a platform fact asserted
+rather than constructed is invisible to a single-machine regression
+check, and this project's own discipline of diffing the whole suite
+against a baseline cannot see it either.
+
+The test builds its own symlinked parent now — a real directory, a link
+to it, and a grant underneath the link — so it exercises the case on
+every platform rather than skipping where the platform does not
+volunteer one.
+
+**Reopened and re-closed a second time, 2026-08-26.** The rule above —
+honour a non-canonical entry unless the granted path is itself a link —
+names its own residual in the paragraph that states it: *"a component
+above it being replaced is a residual the weaker rule does not catch."*
+Grok walked through exactly that. Retarget the *parent* of a stored
+grant, one directory above the leaf the rule checked, and the
+allow-list follows it on the next start.
+
+There is no third rule. A bare path with no record of what it resolved
+to when it was granted cannot be defended: nothing to compare against
+means nothing to detect, and each attempt to defend it moved the hole
+one directory up rather than closing it.
+
+So: canonical or refused. The product persists resolved paths, which
+are checkable, and a hand-written entry that is not canonical is
+refused. Refused *aloud* — `server_info` now carries
+`refused_root_grants`, each with the reason and the canonical spelling
+to write instead, because dropping grants in silence is what made the
+first version of this rule invisible for two days.
+
+*Closing tests:* `test_a_standing_grant_does_not_follow_a_renamed_directory`,
+`test_a_non_canonical_grant_is_refused_and_said_so` and
+`test_a_grant_the_product_made_is_canonical_and_survives` in
+`tests/test_grant_only_user_tier.py`.
+
+### D39 — Closed: the audit takes no configuration from the tree it audits (Medium)
+
+Grok, 2026-08-23, filed as a disclosure defect rather than a fix.
+`eslint` runs with no `--no-eslintrc`, and `has_config` *requires* a
+project config before running, so an audit of an allowed root executes
+`eslint.config.js` from the tree under audit; mypy runs without
+`--no-plugins`. Children inherit the host environment.
+
+Child sandboxing is refused as a design direction and this entry does
+not reopen it. What it recorded originally is that P1 discloses
+"children are not network-sandboxed" and does not disclose "we execute
+configuration code from the tree under audit".
+
+**Reclassified 2026-08-25 from accepted residual to defect.** It was
+filed as a disclosure gap because the alternative looked like a
+sandbox, and the entry offered "disclosure, then optionally the flags"
+as its closing test. [Decision 9](decisions.md) removes the option:
+the agent does not execute the audited tree's code, and configuration
+is code. `SECURITY.md` already said as much, so the promise was never
+the thing that was wrong — this is the code drifting from a published
+claim, which is a defect by this project's own closure rules and not
+something disclosure can settle.
+
+Scope shrank with [Decision 10](decisions.md). `eslint` is the analyzer
+that *requires* the tree's flat config, and JavaScript is not a v1.0
+language, so it leaves the default pool rather than gaining a flag.
+What stays in scope is Python: mypy and pylint may load configured
+plugins and must run with that disabled. The fix is therefore two
+narrow changes plus a falsifier, not the sandbox this entry was afraid
+of.
+
+**Two thirds closed 2026-08-25; the entry stays Open for the third.**
+
+*The environment.* `_runner` spawned every analyzer with the inherited
+environment, so `PYTHONPATH`, `NODE_PATH`, `NODE_OPTIONS`,
+`PYTHONSTARTUP` and the `LD_`/`DYLD_` pair could choose what the tool
+loads. `analyzer_env()` removes them and keeps `PATH`, because the tool
+still has to be found. Not a sandbox and not claimed as one — the
+narrower guarantee Decision 9 actually makes.
+
+*eslint.* It cannot run without the tree's flat config, and a flat
+config is a JavaScript program. `EslintAdapter` now declares
+`executes_audited_configuration`, and selection refuses any adapter
+that does — a property rather than a slug check, so the next tool
+needing the tree's own config is refused without anyone remembering
+this entry. Refusal is its own coverage outcome: reporting it as
+`no-adapter` told the reader to write an adapter that already exists.
+The work order also stopped naming eslint as an install that would
+close a JavaScript gap; following that remedy would have closed
+nothing.
+
+*mypy and pylint.* Both run through `DECLARED` in `_generic`, both
+read the tree's configuration, and pylint's `init-hook=` executes
+arbitrary Python at startup. They are spawned with `--config-file` and
+`--rcfile` pointed at `os.devnull`, which stops the search that honours
+`plugins =`, `load-plugins=` and `init-hook=`.
+
+This entry stalled for a while on the wrong question. Neither tool is
+installed on this machine, so the flags could not be demonstrated here,
+and the proposal was to add them as dev dependencies to make CI prove
+them. Marshall rejected the premise: analyzers are **runtime
+prerequisites the user supplies**, never dependencies of this package —
+`analyzer-pool.md` says so, and making one a dependency would
+contradict the pool's whole design. The absence was a machine that had
+changed, not an architecture.
+
+The pattern the pool already discloses is the answer.
+Checkstyle and SpotBugs sit in their tiers with live spawns that skip
+wherever nobody supplied the binary, including CI. The isolation flags
+follow it: a structural sweep that always runs and forces every
+declared tool to be isolated or to state it reads no tree
+configuration, and live tests that plant a hostile `pylintrc` and
+`mypy.ini` and assert the tree's code never runs — skipped where the
+tool is absent. On a machine with pylint and mypy installed, that is
+demonstration; here it is documentation plus an asserted argv, and the
+disclosure says which.
+
+*Closing tests:* `test_every_declared_tool_is_classified_for_tree_configuration`,
+`test_a_declared_tool_is_invoked_with_its_configuration_isolated`,
+`test_no_selectable_adapter_needs_the_audited_trees_configuration`,
+`test_pylint_does_not_run_the_trees_init_hook` and
+`test_mypy_does_not_load_a_plugin_from_the_tree` in
+`tests/test_analyzer_config_isolation.py`;
+`test_the_analyzer_child_cannot_be_told_what_to_import` in
+`tests/test_git_argv.py`. The last two of the first group skip where
+the binary is absent, which `analyzer-pool.md` discloses.
+
+### D40 — Closed: a repository's regex cannot hang the host (High)
+
+Codex, 2026-08-23, proven. `risk_patterns` are compiled from repository
+configuration and applied to every source line. The schema bounds
+neither their complexity nor their size. Pattern `(a+)+$` against
+thirty-one `a` characters and a `!` did not finish in two seconds.
+
+The security policy names crafted-configuration denial of service as in
+scope, so this was a defect against a stated promise rather than a new
+requirement.
+
+Patterns are measured rather than inspected. Recognising a dangerous
+regex syntactically means a blocklist that is both leaky and prone to
+refusing honest patterns; running it against a probe asks the only
+question that matters. The probe has to be short enough to *return* —
+timing something that never finishes measures nothing — so there are
+two: twenty characters, where `(a+)+$` costs ~42 ms against ~0.01 ms
+for a real pattern, and twenty-four, which is where the slower
+`(a|aa)+$` family finally shows itself at ~9.7 ms. Only patterns that
+survive the first reach the second, so a bomb costs the sum of two
+small budgets rather than the near-second its own longer search takes.
+
+A refused pattern is skipped, not fatal: a repository's own lint config
+should not be able to fail somebody else's audit, and the other rules
+keep running.
+
+*Closing tests:* `test_a_backtracking_pattern_is_refused` across four
+shapes of catastrophic backtracking,
+`test_an_uncompilable_pattern_is_refused_rather_than_raised`,
+`test_every_shipped_pattern_survives_the_budget` — the guard must not
+quietly disarm the product's own detectors —
+`test_a_hostile_pattern_does_not_stall_a_scan` with the clock running
+through the real scanning path, and
+`test_a_refused_pattern_does_not_silence_the_others`, all in
+`tests/test_pattern_budget.py`.
+
+### D41 — Closed: every action is pinned to a commit (High)
+
+Codex, 2026-08-23, proven. Every workflow action is referenced by tag
+or branch. `release.yml` hands OIDC publication authority — `id-token:
+write` — to `pypa/gh-action-pypi-publish@release/v1`, a moved-branch
+reference rather than an immutable commit. Checkout, setup-python,
+uploads, the CodeQL upload, GitHub Script and Sonar are the same.
+
+Whoever controls those references at run time runs in the job that can
+publish this package.
+
+Twenty references across three workflows and the composite action are
+now commit SHAs, each with its version as a trailing comment so a
+reader can still tell what is pinned. This repository's own action
+stays on `@main` on purpose: pinning it would mean CI could never
+exercise the commit under review.
+
+*Closing tests:* `test_every_third_party_action_is_pinned_to_a_commit`,
+parametrized over every workflow file, and
+`test_the_publishing_job_is_pinned_hardest_of_all` in
+`tests/test_workflow_supply_chain.py`. The second is deliberately
+redundant with the first: a general rule is easy to relax for one
+awkward case, and the publish job is the case nobody should relax it
+for.
+
+### D42 — Closed: the package claims a Python it can run on (Medium)
+
+Codex, 2026-08-23. `requires-python = ">=3.10"`, and `_discovery.py`,
+`_pillars.py` and `_runner.py` import `enum.StrEnum`, which is 3.11.
+Pip installed happily on 3.10 and the import then failed. CI tests
+3.12 alone, and the composite action pins 3.11, so nothing in the
+pipeline stood where the metadata said a user could stand — which is
+why no test caught it and an audit had to. Floor raised to 3.11, and
+the supported versions declared as classifiers.
+
+I first recorded that no honest falsifier existed here, on the grounds
+that any such test would restate a constant. The register's own
+citation lint disagreed — it refuses a closed entry that names no
+test — and it was right. The check does not restate the floor; it ties
+the floor to the language features actually imported, which is the
+relationship that broke.
+
+Its first version matched the bare word anywhere and flagged
+`_economics.py` for the English "override" in a docstring. A check that
+cries wolf is a check somebody turns off, so it reads import and
+decorator lines only.
+
+*Closing test:* `test_the_declared_python_floor_supports_the_features_in_use`
+in `tests/test_written_record.py`, verified by lowering the floor back
+to 3.10 and watching it name `_discovery.py` and `StrEnum`. A CI matrix
+entry on the floor version is still worth having and stays recorded as
+follow-up in `docs/security-queue.md`.
+
+### D43 — Closed: composite-action inputs are data, not source (Medium)
+
+Codex, 2026-08-23, proven. `action.yml` embedded `${{ inputs.* }}`
+directly inside a `run:` script. GitHub substitutes those *before* bash
+parses the script, so an input was never an argument — it was source
+code, and a path containing a shell metacharacter was enough to break a
+run by accident.
+
+Inputs arrive through `env:` now and are appended to the argument array
+quoted, which keeps each one a single word however it is spelled.
+
+*Closing tests:* `test_the_composite_action_never_interpolates_inputs_into_bash`
+and `test_the_composite_action_still_passes_every_input_through` in
+`tests/test_workflow_supply_chain.py`. The second exists because moving
+inputs to `env:` is exactly the kind of edit that silently drops one,
+and a lost `--changed-only` would look like a passing test while
+auditing the whole repository on every pull request.
+
+Both are parsed by hand rather than with PyYAML: this repository keeps
+its `test` extra thin and `test_declared_imports` refuses a dev-only
+parser in tests. I added PyYAML anyway, that lint caught it, and the
+parser was rewritten.
+
+### D44 — Closed: the annotations are derived from the behaviour (Medium)
+
+Codex, 2026-08-23. The audit tool declares itself non-destructive and
+closed-world, and `tests/test_mcp_server.py` locks both values. Neither
+survives optional network acquisition, unsandboxed analyzer networking,
+executable repository analyzer configuration, or the config, history
+and baseline writes.
+
+Test-backed misinformation is worse than an untested claim: the suite
+is the reason nobody re-examined it.
+
+~~**Blocked on the trust decision**~~ — unblocked by
+[Decision 9](decisions.md), which answered it by drawing the line at
+executing code instead.
+
+**Closed 2026-08-25.** `audit_repository` now advertises
+`destructive_hint=True` and `open_world_hint=True`. It replaces an
+existing configuration when setup reruns and an existing baseline when
+asked to write one — non-additive updates to files in the user's
+repository, which is what the destructive hint means. That only the
+agent's own five artifacts are ever touched (D34) is a real guarantee
+and a different claim from "additive". And it is not closed-world:
+`analyzers.acquire_tools` can fetch a missing Node tool through
+`npx --yes`, and analyzers are ordinary local children this package
+does not sandbox, which P1 discloses in as many words. `get_agent_info`
+was accurate and is unchanged.
+
+Decision 9 removed exactly one of the four reasons this entry gave —
+the tree's own analyzer configuration no longer executes (D39). It did
+not make the tool closed-world, and the other three stood.
+
+**The lesson is the lock, not the values.** Two tests asserted
+non-destructive and closed-world for *every* tool, and a third
+statement sat in `ide-agent-integration.md`. Changing the literals
+would have left the same defect available, so the falsifiers derive
+each hint from a fact stated elsewhere in the package: the hint must
+follow `server_info`'s list of what this agent writes, and follow the
+existence of the acquisition setting. Changing the behaviour without
+changing the hint now fails.
+
+*Closing tests:* `test_a_tool_that_writes_is_not_advertised_as_read_only`,
+`test_replacing_a_file_a_user_owns_is_advertised_as_destructive`,
+`test_a_tool_that_can_reach_the_network_is_not_advertised_as_closed_world`
+and `test_the_read_only_tool_is_still_read_only` in
+`tests/test_annotations_match_behaviour.py`.
+
+### D45 — Closed: the security policy supports the shipped release (Medium)
+
+Codex, 2026-08-23. `SECURITY.md` stated that only `0.1.x` receives
+security fixes, at version `0.9.1` — read literally, the shipped
+release was unsupported by its own policy.
+
+Fixing the table is trivial; keeping it fixed is the problem, since
+nobody remembers a version number buried in prose. The falsifier reads
+`config.VERSION`, so the next release either updates the table or goes
+red.
+
+The same pass corrected a worse sentence in the same file. Scope
+asserted that the agent "does not execute scanned code" while `eslint`
+is invoked in a mode that *requires* the audited repository's own
+configuration and then runs it. Whether repositories should be trusted
+is an open decision (D39, D44); asserting a property the code does not
+have is not, so Scope now describes what the code does and says the
+decision is pending.
+
+*Closing tests:* `test_the_security_policy_supports_the_shipped_release_line`
+and `test_the_security_policy_states_the_guarantee_the_code_keeps`
+in `tests/test_written_record.py`. The second checks only what the
+document *asserts*, not what it recounts — a check that could not tell
+an assertion from its own correction would forbid explaining the fix.
+
+### D46 — Closed: an analyzer cannot decide how much work reading it is (Low)
+
+Codex, 2026-08-23, inferred rather than demonstrated. `_generic.py` and
+`_jvm_adapters.py` parse analyzer XML with `ElementTree.fromstring`.
+The input is a child process this agent spawned, not an upload, so the
+realistic exposure is resource exhaustion from a hostile or
+PATH-hijacked analyzer rather than classic XXE.
+
+**Closed 2026-08-25, and it stopped being inferred.** The hedge was
+right about XXE and wrong about the risk: external entity expansion and
+DTD retrieval are already safe in this interpreter, which is what
+"XXE" usually names. What `ElementTree` still does is expand *internal*
+entities — four levels of the standard shape take a 400-byte document
+to 30,000 characters here, and each further level multiplies by ten.
+
+The obvious fix is to disable expat's entity handler, and CPython 3.11
+does not expose the underlying parser to reach it. The narrower guard
+is better anyway: no analyzer this project runs emits a DTD, so a
+document declaring entities is not output this code should be reading.
+`_xml.parse_analyzer_xml` refuses it before a parser sees it, and
+refuses absurd length as well — the flood case a declaration check
+cannot catch, because a bomb is small by construction.
+
+`AnalyzerXmlRefused` subclasses `ElementTree.ParseError` so that both
+call sites keep the handling they already had: unreadable analyzer
+output is a stated coverage gap, never a crash. Output this project
+declines to read is exactly that.
+
+The sweep is the part that matters. `ElementTree.fromstring` now
+appears once in the package, inside the guard, and a test walks every
+module to keep it that way — a third parse site added tomorrow is how
+this would otherwise come back.
+
+*Closing tests:* `test_an_entity_bomb_is_refused_before_it_is_expanded`,
+`test_a_declared_doctype_is_refused_even_without_entities`,
+`test_absurdly_large_output_is_refused_rather_than_read`,
+`test_real_analyzer_output_still_parses`,
+`test_a_refusal_reads_as_unparseable_output_to_every_caller` and
+`test_no_parse_site_bypasses_the_guard` in
+`tests/test_analyzer_xml_bounds.py`.
 ### D47 — Closed: the call-first rule reaches the door hosts are actually handed
 
 Found by inspection on 2026-08-24, while diagnosing a field report.
@@ -988,16 +1776,1491 @@ so that assertion cannot be falsified through the declaration it
 appears to guard. A check that cannot fail is not a proof, and D15 was
 reopened once for exactly that confusion.
 
+### D50 — Closed: the economics ask stops at the question it gates (High)
+
+Marshall, 2026-08-25, during UAT preparation: *"if the user declines
+economics, should never ask the labor rate questions. that is basic
+logic."*
+
+`_economics_questions` returned the gate **and** all three labor rates
+in one flat elicitation model, and the gate's default is `skip`. So the
+default path walked a person through three money questions for
+something they had just declined. The function's own docstring called
+it "the declinable ADR 004 ask" while nothing about it was declinable.
+
+Two stages now: six questions, then the three rates only for someone
+who answered `include`. `setup_pending` stays true until the rates
+arrive, so the second ask is the existing gate doing its job rather
+than a new mechanism.
+
+**Codex had examined this surface and filed it under no-finding**,
+citing `docs/help/first-run.md` — which stated plainly that the labor
+fields remain visible after `skip`. The page was accurate. D28 had made
+it accurate, and accuracy about a bad form is what kept the form. An
+audit that checks code against documentation cannot catch a defect both
+of them share.
+
+*Closing tests:* `test_setup_questions_are_structured_choices_with_disclosed_defaults`
+and `test_apply_answers_persists_economics_and_format_to_both_tiers` in
+`tests/test_first_run_elicitation.py`;
+`test_the_first_run_help_describes_the_form_a_person_actually_sees` in
+`tests/test_written_record.py`.
+
+### D51 — Closed: asking for the economic scenario is not the same as declining it (High)
+
+Found while closing D50. `_economics_block` needs all three rates and
+returned `None` without them — the same value as declining — so a user
+who answered `include` in a round that carried no rates had no economic
+context written and was never asked again. The one thing they said yes
+to was the one thing silently discarded.
+
+The gate answer is recorded as a request now, and
+`economics_bounds_pending` reads it to ask for the rates on the next
+call.
+
+*Closing test:* `test_apply_answers_persists_economics_and_format_to_both_tiers`
+in `tests/test_first_run_elicitation.py`.
+
+### D52 — Closed: a labor rate is refused where it is answered (High)
+
+Codex, 2026-08-25. Setup accepted `labor_low=-1` and wrote both
+configuration tiers happily; the next `action="run"` raised a raw
+`ValueError: loaded_engineering_cost_per_hour must satisfy 0 < low <=
+base <= high` from the scoring path. Same for `low > base`. The person
+who typed the number was two calls and one document away from the
+message about it.
+
+The rule is checked where the answer is given, and the refusal names
+the three values it got.
+
+*Closing test:* `test_apply_answers_persists_economics_and_format_to_both_tiers`
+in `tests/test_first_run_elicitation.py`.
+
+### D53 — Closed: a configuration key of the wrong shape is refused, not crashed on (High)
+
+Codex, 2026-08-25. `_configured` validated JSON syntax and an object
+root, then merged whatever it found. `{"thresholds": "nope"}` surfaced
+as a raw `TypeError: string indices must be integers` from inside
+scoring, and `{"hard_gates": []}` as an `AttributeError` on a list —
+two stack traces for one broken file, neither naming the file.
+
+`ConfigUnreadable` already existed for exactly this reader and covered
+only unparseable bytes. It now covers a known key whose value is the
+wrong container, derived from `DEFAULT_CONFIG` so a key added there is
+checked the day it is added. Unknown keys stay permitted: this is a
+shape check, not a schema, and refusing what it does not recognise
+would break every config written against a newer version.
+
+*Closing test:* `test_a_known_key_of_the_wrong_shape_is_refused_by_name`
+in `tests/test_config_shape.py`.
+
+### D54 — Closed: `expected_files` names files in the repository (Medium)
+
+Codex, 2026-08-25. `paths.history` was bounded by D20 and this was
+not, so a repository config could say `/etc/passwd` or `../outside`
+and the report would state whether that existed — a repository-
+controlled probe of the machine auditing it, answered in the output.
+Absolute entries and entries containing `..` are refused by name.
+
+*Closing test:* `test_expected_files_cannot_leave_the_repository`
+in `tests/test_config_shape.py`.
+
+### D55 — Closed: the documents stop offering a tool the product refuses (Medium)
+
+Codex, 2026-08-25, and both halves are mine. `analyzer-pool.md` still
+listed eslint as a Node runtime need, as fetchable through `npx`, and
+as a verified moderate adapter — three offers to install a tool D39
+had just made unrunnable. The D39 change corrected the prose two
+paragraphs above and left the tables.
+
+`maintainability-agent.schema.json` also described
+`prompt_when_interactive` as "Reserved. Stored and not read." while
+`_first_run` reads it, so an IDE user consulting the schema was told a
+live switch does nothing.
+
+*Closing test:* `test_no_document_offers_an_analyzer_selection_refuses`
+in `tests/test_config_shape.py`.
+
+### D56 — Closed: an empty history window is unknown, not perfect (High)
+
+Grok, 2026-08-26. `_history_rate_aspect` returned **5.0** for
+`files_changed == 0`, commented "had history to read; nothing changed
+in the window". A repository whose only commit predates the twelve
+month window therefore scored full marks on every history aspect —
+with a filthy working tree the photograph could see and the window
+could not. Reproduced on a real repository: one commit dated 400 days
+ago, an untracked file with eighty nested conditionals, history rates
+5.0.
+
+Worse in the direction P3 names. Withholding the history object
+*lowers* the result (estimate 4.80, no verified grade). Supplying an
+empty window *raises* it to 5.00 and A+. Evidence that says nothing
+outscored evidence that was absent.
+
+This is D37's collapse one layer up. There, a *failed* `git log`
+produced zeros and the zeros read as quiet; the fix made the spawner
+raise. Here the log succeeds and produces the same zeros honestly, and
+they mean the same thing: no denominator, therefore no rate. A shallow
+clone and an empty window are the same state, and the docstring above
+this function already said a shallow clone must not grade as clean or
+dirty.
+
+*Closing test:* `test_an_empty_window_is_unknown_rather_than_perfect`
+in `tests/test_history_window.py`.
+
+### D57 — Closed: the documented languages and the parsed languages are one set (High)
+
+Grok, 2026-08-26. `docs/language-support.md` and Decision 10 said v1.0
+handles Python and Java. The scanner also read JS, TS, JSX and HTML, so
+a repository of 140 JavaScript files was reported with
+`declarations_scanned=140`, `evidence_status: complete` and a verified
+**B**, and the Markdown scored `declaration size`.
+
+The first two attempts at this were both wrong and are recorded because
+the sequence is the lesson. Narrowing only the sentence left the
+contradiction the audit had already named. Narrowing the parser to
+`{.py, .java}` removed JavaScript dead-code detection, idiom
+divergence, near-duplicate pairing and ADR 003's TypeScript work — and
+Marshall's question, *"if you don't have detectors, linters, etc for
+those languages and no adaptor then please explain how option C is
+valuable at all?"*, is what produced the check that should have come
+first: **lizard, jscpd and multimetric are baseline-tier adapters that
+read JavaScript**, and baseline in this project means installed, run
+and parsed. Only eslint is refused, and only for its config.
+
+So the claim follows the capability. The declaration languages are
+Python, Java, JS, TS, JSX and HTML, the page says so, and the
+one-adapter-per-release cadence applies to what nothing here reads —
+Go, Rust, C, C# and Fortran, absent from the default extensions rather
+than scanned and unscored.
+
+*Closing tests:* `test_the_parsed_languages_are_exactly_the_documented_languages`
+and `test_every_scanned_source_suffix_can_be_read_by_something` in
+`tests/test_claimed_languages.py`.
+
+### D58 — Closed: the generated standards pack teaches call-first (High)
+
+Grok, 2026-08-26. `--init-agent-standards` writes `AGENTS.md`,
+`CLAUDE.md` and their siblings, and every one of them opened with
+"Start with a configuration check (`maintainability-agent.json`, then
+the user tier)" — the archaeology D21 exists to stop, shipped into the
+file an agent reads before anything else.
+
+D47 closed that class by enumerating three surfaces: the MCP server
+instructions, the slash prompt, and the skill. This is the fourth, and
+D47's own write-up of D21 says what went wrong here: a falsifier that
+read one file and called the class closed.
+
+Worse, the two closed entries contradicted each other. D17's closing
+test **required** the generated pack to contain "configuration" and
+"check", so honouring D21 there would have failed the suite. Both were
+green, and neither could see the other.
+
+The pack now carries D21's wording verbatim, D47's sweep runs over four
+surfaces, and D17's assertion asks for the call instead of the check.
+
+*Closing test:* `test_every_chat_instruction_surface_calls_the_tool_before_inspecting_config`
+in `tests/test_chat_primary_docs.py`.
+
+### D59 — Closed: the sweeps lint the class, not a name (High)
+
+Grok, 2026-08-26, three of them together.
+
+*The isolation sweep covered two tools.* It diffed `DECLARED` — pylint
+and mypy — while `ADAPTERS` holds fifteen, so ruff sat in the baseline
+pool, in the default selection, never asked the question the sweep
+exists to ask. Every adapter is now classified by what honouring its
+configuration would *execute*, which is the actual line Decision 9
+draws: a ruff or flake8 config is TOML and INI, and a repository
+choosing which of its own lint rules apply is policy about its own
+code. The flag check also asserted only that `--rcfile=` was present,
+so `--rcfile=.pylintrc` would have passed; it asserts the value now.
+
+*The subprocess sweep matched `subprocess.<call>`.* `import subprocess
+as sp`, `from subprocess import run`, `subprocess.call` and
+`getoutput` all evaded it, and `timeout=None` counted as bounded
+because presence was the test. It resolves aliases and from-imports
+now, and treats an explicit `None` as unbounded.
+
+*The XML sweep had the same shape*, matching `ElementTree.fromstring`
+by name, so a from-import walked past it.
+
+This is the third generation of these checks. The first git sweep
+matched only list literals beginning with `"git"`; that was replaced
+after an audit, and the replacement was narrow in a different way. What
+they have in common is that each was written to catch "a call added
+tomorrow" and each matched a spelling instead.
+
+*Closing tests:* `test_every_adapter_is_classified_for_what_its_configuration_executes`
+and `test_an_adapter_whose_config_executes_code_is_refused_not_isolated`
+in `tests/test_analyzer_config_isolation.py`;
+`test_every_subprocess_spawn_is_bounded_and_classified` in
+`tests/test_git_argv.py`; `test_no_parse_site_bypasses_the_guard` in
+`tests/test_analyzer_xml_bounds.py`.
+
+### D60 — Closed: SECURITY.md states the guarantee the code keeps (Medium)
+
+Grok, 2026-08-26. Decision 9 closed D39 and D44 on 2026-08-25 and
+`SECURITY.md` kept describing the defect for a further day: that the
+agent executes repository code, that mypy and pylint can load
+configured plugins, that children inherit the host environment, and
+that the question is open.
+
+**Wrong in both directions now.** The file first denied executing
+scanned code while eslint was being invoked in a mode that requires the
+tree's configuration and then runs it (Codex, 2026-08-23). It was
+corrected to assert the opposite. Then the code changed under it.
+
+Both directions are recorded rather than quietly rewritten, and the
+test no longer forbids a sentence: it reads the policy against the
+adapters, and fails if the file and the code disagree either way. A
+test that asserts a phrase protects the phrase, not the property —
+which is the third time that shape has come up today.
+
+*Closing test:* `test_the_security_policy_states_the_guarantee_the_code_keeps`
+in `tests/test_written_record.py`.
+
+### D61 — Closed: P1 names the fields that are not compared (Low)
+
+Grok, 2026-08-26. P1 promised "same report out" and two runs on one
+tree differed by a millisecond, on an analyzer's wall-clock `seconds`.
+The determinism check had been stripping `root`, `git_status_short`
+and every `seconds` for as long as it had existed, so the promise was
+false of the JSON a consumer diffs and true only of the test's own
+projection.
+
+The exceptions are legitimate — a duration is a fact about the run, not
+about the repository. Being undisclosed was not. P1 names them, and a
+field added to the strip list without reaching the page now fails.
+
+*Closing test:* `test_the_determinism_exceptions_are_exactly_the_disclosed_ones`
+in `tests/test_determinism.py`.
+
+### D62 — Closed: the release plan is measured, not remembered (Low)
+
+Grok, 2026-08-26. The plan's own warning is that a previous version of
+its table "survived fifty-five commits past the point it stopped being
+true". It then did it again: last tag 0.7.0 with v0.9.1 shipped, 14,122
+lines against 20,071, 1,097 tests against 1,560. Re-measured, and the
+warning now records both occurrences.
+
+The first draft of this entry closed with "*Closing test:* none",
+arguing that a measurement goes stale by existing. The register does
+not allow that, and it is right not to: the tag is exact and the counts
+are checkable within a stated tolerance, wide enough to survive
+ordinary work and narrow enough that another fifty-five commits cannot
+hide inside it.
+
+*Closing test:* `test_the_release_plan_table_is_measured_not_remembered`
+in `tests/test_release_plan.py`.
+
+### D63 — Closed: the platform is claimed where it is demonstrated (Medium)
+
+Marshall, 2026-08-26: *"what about the poor windows users?"* — asked
+about a test of mine that had just failed CI for asserting `/tmp` is a
+symlink. The answer was larger than the test.
+
+`pyproject` named no operating system at all. CI runs `ubuntu-latest`
+and nothing else. Seven test files create symlinks with no platform
+guard, and `os.symlink` needs Developer Mode on Windows, so the suite
+cannot reach the point of reporting whether the product works there. A
+case-insensitive filesystem would also meet D38's standing-grant check,
+which compares a stored path against its resolved form.
+
+Meanwhile two documents implied Windows was supported: `config-schema.md`
+said exclude patterns are "normalized across Unix and Windows path
+separators", and `ide-agent-integration.md` names the `;` separator.
+Normalizing separators is not the same claim as running on the
+platform, and a reader takes the friendlier reading.
+
+`Operating System :: POSIX` is declared, both documents say Windows is
+untested, and README carries a platform section that states the
+evidence rather than a preference. Widening the claim means adding a
+`windows-latest` runner and guarding those seven fixtures; the tests
+below fail the moment either half moves without the other.
+
+**Fourth in two days.** JS scored without being claimed, `SECURITY.md`
+denying what the code did, P1 promising more than it compared, and now
+a platform nobody had run. Every one was a claim resting on a check
+that only ran where the claim was true.
+
+*Closing tests:* `test_the_package_claims_the_platform_it_is_tested_on`,
+`test_ci_runs_only_platforms_the_package_claims` and
+`test_the_symlink_fixtures_are_still_unguarded` in
+`tests/test_platform_claim.py`.
+
+### D64 — Closed: flake8 reads no configuration from the tree (Medium)
+
+Grok, 2026-08-26. D39 isolated pylint and mypy and swept for the rest,
+and the sweep covered two tools out of fifteen. `flake8` reads
+`setup.cfg`, `tox.ini` and `.flake8` from the tree under audit, which
+sets its own thresholds and select-lists — the score moving with a
+config file is exactly what P2 forbids, and Decision 9 forbids reading
+the tree's configuration at all.
+
+`--isolated` is passed now. The wider fix is that the classification
+stopped being prose: `ADAPTER_CONFIG` carries three states — `REFUSED`,
+`ISOLATED:<flag>`, and `DATA_ONLY` — and only the last is a human
+judgment, which now has to name the configuration surface it was judged
+against. The isolated entries are checked against the argv the adapter
+actually builds, so an isolation flag claimed in the table and absent
+from the invocation fails.
+
+*Closing tests:* `test_every_adapter_is_classified_for_what_its_configuration_executes`,
+`test_an_isolated_adapter_actually_carries_its_flag` and
+`test_no_selectable_adapter_needs_the_audited_trees_configuration` in
+`tests/test_analyzer_config_isolation.py`.
+
+### D65 — Closed: two ADRs still had eslint running (Low)
+
+Codex, 2026-08-26. Decision 9 refuses eslint outright — an eslint flat
+config is a JavaScript program, so honouring it means executing the
+audited tree. The adapter declares `executes_audited_configuration` and
+selection drops it on every run.
+
+Two ADRs written before that decision still told the reader otherwise.
+ADR 006 listed `eslint` in its *Detected* tier, the tools "used when
+already on `PATH`", and ADR 008 used eslint as its worked example of a
+tool whose threshold the agent sets from the rubric — and offered "or a
+generated config" as a way to do it, which is the same forbidden thing
+spelled differently. An operator following either page installs a tool
+this agent will always refuse.
+
+Both are amended in place rather than rewritten, because the reasoning
+around them is still correct about *findings*. ADR 008's escape hatch is
+withdrawn: a threshold is rubric-drivable through argv or not at all.
+
+The falsifier sweeps the refused adapters and reads the docs for lines
+that claim this agent *runs* a tool, so the next tool refused for the
+same reason is caught without being named. The previous review of these
+documents forbade exactly one sentence in `SECURITY.md` and missed
+everything either side of it.
+
+*Closing test:* `test_no_document_presents_a_refused_analyzer_as_one_this_agent_runs`
+in `tests/test_analyzer_config_isolation.py`.
+
+### D66 — Closed: an empty history window says which kind of empty (Medium)
+
+Grok, 2026-08-26, reopening D56 one layer down. D56 established that
+`files_changed: 0` is not a measured zero and marked every history rate
+not applicable. It then told every reader the same reason: *"no commit
+falls inside the history window."*
+
+Three different repositories produce that zero, and the sentence is
+false for two of them. Nothing was committed in the window. Or every
+commit in it is a merge, dropped by `--no-merges` because a merge's
+numstat re-reports churn already counted on the branch. Or commits
+landed and touched only files this audit does not scan — a lockfile, a
+vendored tree, an excluded directory. Only the first is a quiet window;
+the other two are windows this agent *filtered* to empty, and a reader
+told the first sentence goes to check their clone depth.
+
+`window_commits` counts both — commits in the window, and commits this
+audit will read — with two `rev-list --count` calls that parse nothing.
+The evidence reason and the rendered sentence are chosen from those
+counts, and both fall back to the original wording for a report written
+before the counts existed.
+
+*Closing tests:* `test_a_merge_only_window_is_not_reported_as_a_quiet_one`,
+`test_a_window_filtered_to_empty_says_so` and
+`test_a_genuinely_empty_window_still_reads_as_empty` in
+`tests/test_history_window.py`.
+
+### D67 — Closed: the sweeps resolve dotted spellings (Medium)
+
+Grok, 2026-08-26 — the ninth evasion of the same two sweeps, and the
+third time their name resolution has been wrong.
+
+Version one matched a literal attribute, so `import subprocess as sp`
+and `from subprocess import run` walked past. Version two resolved the
+*bound name*, which is right for `import subprocess` and wrong for
+`import xml.etree.ElementTree`: that statement binds `xml`, and the
+call is written `xml.etree.ElementTree.fromstring(...)`, whose base is
+an attribute chain rather than a plain name. The sweep looked for a
+`Name` and found an `Attribute`, so an unguarded XML parse — the entity
+bomb D46 exists to stop — was reachable with a green suite.
+
+Resolution is by dotted *spelling* now, matched by prefix. More
+importantly the resolver has its own falsifier: ten spellings of an
+unguarded parse, five of a spawn, and four unrelated calls that must
+not be flagged. It earned its place immediately — it caught a
+regression in the rewrite that classified every `from x import member`
+as a module alias, which the two sweeps it serves would have reported
+as clean.
+
+*Closing tests:* `test_every_spelling_of_an_unguarded_parse_is_seen`,
+`test_every_spelling_of_a_spawn_is_seen` and
+`test_the_resolver_does_not_widen_to_unrelated_calls` in
+`tests/test_ast_reading_resolves_spellings.py`.
+
+### D68 — Closed: the declarations dimension names its source (Medium)
+
+Grok, 2026-08-26. `DECLARATION_CRITERIA` requires cyclomatic
+complexity, declaration lines **and** cognitive complexity, because the
+built-in path fails a declaration on any one of the three and a rate
+built from a narrower set is not comparable to it. lizard emits the
+first two.
+
+So for a JavaScript repository with lizard installed and nothing else,
+`_declaration_pressure` returns `None` and the built-in brace scanner
+scores the dimension — on every run, by construction. The fallback is
+correct. It was silent, which P8 forbids: a declarations rate with
+nothing saying what produced it.
+
+It also made a decision page wrong. Decision 10's amendment justified
+keeping JavaScript by citing lizard, jscpd and multimetric as
+baseline-tier adapters that read it. Marshall's ruling — *"keep JS in
+since we have a detector and can score it"* — is exactly right about
+the brace scanner and was never about the pool; the page credited the
+pool for work the pool cannot do here. Corrected in place.
+
+`dimensions_declined` now rides on the coverage document with the
+missing concepts named, and the coverage section renders it.
+
+*Closing tests:* `test_lizard_alone_cannot_drive_the_declarations_dimension`,
+`test_the_fallback_is_attributed_rather_than_inferred` and
+`test_the_declined_dimension_reaches_the_reader` in
+`tests/test_declaration_source.py`.
+
+### D69 — Closed: P1 discloses that the history window moves (Medium)
+
+Grok, 2026-08-26. `DEFAULT_SINCE` is `12 months ago`, resolved by git
+against the wall clock at the moment the audit runs, and it is not
+configurable. P1 promised "same tree, config, pinned analyzer versions
+and scan history in, same evidence, findings and score out" and named
+three excepted fields, none of which is this.
+
+An unchanged tree audited a week apart reports different churn, hotspot,
+coupling and ownership rates. No input changed and the grade moved.
+
+The determinism test cannot see it and neither can the runs it is built
+on: they audit the same tree seconds apart, which is precisely the
+interval over which a twelve-month window cannot shift. Fifth of the
+same shape — a promise kept green by a check narrower than the promise.
+
+Disclosed rather than removed. A fixed absolute window would make every
+report a different question over time, and per-repository pinning is a
+config decision nobody has asked for. The falsifier holds the page to
+the constant, so changing the window without changing the disclosure
+fails.
+
+*Closing test:* `test_the_history_window_is_disclosed_as_clock_relative`
+in `tests/test_determinism.py`.
+
+### D70 — Closed: the POSIX claim runs on both POSIX platforms (Medium)
+
+Grok, 2026-08-26, reopening D63. `test_ci_runs_only_platforms_the_package_claims`
+forbade `windows` in `runs-on` and was treated as demonstrating the
+claim. `Operating System :: POSIX` covers macOS as well as Linux, and CI
+had only ever run one Linux image, so half the declared platform was
+claimed and never executed. The check was narrower than the claim it
+protected — the same finding this register keeps recording.
+
+**Why macOS was never added is the more interesting half.** Seven test
+fixtures pinned `PATH=/usr/bin:/bin` when scrubbing the environment for
+a child `git`. On the macOS machine this project is developed on, that
+pin *is* a shim: `/usr/bin/git` is Xcode's stub, Command Line Tools are
+unavailable, and every one of those fixtures dies with `xcrun: error:
+invalid active developer path` before git runs.
+
+That is the entire local baseline — 101 failures and 191 errors, diffed
+run after run as "known" — from one line, and none of it says anything
+about the product. A real regression landing in any of those seven files
+had 292 places to hide, and this project's own discipline of diffing the
+whole suite against a baseline is what made that survivable-looking.
+
+`tests/_git_path.py` resolves the directory of the `git` actually on
+PATH; the environment stays scrubbed. A `macos-latest` job runs the
+suite, and the platform test now requires a runner for every family the
+classifier claims rather than merely forbidding one it does not.
+
+*Closing tests:* `test_ci_runs_only_platforms_the_package_claims` in
+`tests/test_platform_claim.py`, and the suite itself on the macOS
+runner.
+
+### D71 — Closed: reading a repository does not let git rewrite it (High)
+
+Found by the macOS CI runner on 2026-08-26, hours after that runner was
+added for D70 — the second defect that runner has paid for.
+
+Every git command this package runs is a read: `log`, `rev-list`,
+`status`, `rev-parse`. But git runs housekeeping of its own after many
+commands, and housekeeping repacks objects and writes commit-graphs
+*inside* `.git`. So an audit that promises never to write the tree it
+audits was letting git write it, on our behalf, one directory down.
+
+It surfaced as `.git/objects/maintenance.lock` appearing between the
+before and after snapshots in
+`test_audit_returns_the_report_without_writing_source_or_reports` and
+`test_the_tool_takes_a_format_argument_and_never_prompts`.
+
+**Why now, on identical product code.** Auto-maintenance triggers on
+accumulated loose objects rather than on every invocation. D66 added two
+`rev-list --count` calls per audit and pushed a latent defect over the
+threshold. Two earlier CI runs of the same code passed, which is exactly
+what a probabilistic check looks like from the inside — and why the fix
+is pinned to the argv rather than to a snapshot of a temporary
+directory.
+
+`gc.auto=0` and `maintenance.auto=false` are prepended to every git
+command in `run_git`, the one place this package builds a git argv,
+which is what makes the promise checkable at all.
+
+**The fix was right and the test still failed.** macOS went red again on
+the very next run, with the same `maintenance.lock`. Auto-maintenance
+**detaches**: `git maintenance run --auto` returns immediately and the
+work lands milliseconds later. The scheduler here was not the product at
+all — it was the fixture's own `git commit`, which sets the repository
+up before the audit is ever called, and whose maintenance then fires
+inside the window between the before and after snapshots.
+
+Same commit, three CI runs, two failures and one pass. That is the
+signature of a race, and it is the second time in this entry that a
+probabilistic symptom pointed at the wrong culprit.
+
+So there are two halves. The product no longer *triggers* maintenance,
+which is the real guarantee and is pinned to the argv. And the suite no
+longer *schedules* it either: a session-scoped conftest fixture exports
+`GIT_CONFIG_COUNT`/`KEY`/`VALUE`, which reaches every git the suite
+runs, product and fixture alike. Its falsifier asks git what it resolved
+rather than asserting the variables are set — the difference between
+proving conftest ran and proving git listened.
+
+*Closing tests:* `test_every_git_command_disables_gits_own_housekeeping`
+in `tests/test_git_argv.py`, and
+`test_the_suites_own_git_has_maintenance_disabled` in
+`tests/test_git_read_only.py`.
+
+### D72 — Closed: a refusal does not disclose where a symlink points (High)
+
+Codex, 2026-08-26. D38's refusal carried `write_instead`: the canonical
+path the entry resolved to, so the user could correct their config. It
+was the more helpful message, and it told whatever host reads
+`server_info` where a symlink the user named actually points — a
+directory the user never put in their config, published over the
+transport by the very mechanism added to make refusals visible.
+
+D48's rule is that host paths do not cross the transport. A helpful
+refusal is not an exception to it, and "we surfaced it so it would not
+be silent" is not a reason to surface more than the user supplied.
+
+The entry itself is still echoed, because the user wrote it. Its target
+is not ours to publish. `repair` names the flow instead: grant the root
+again through setup, which stores the path it resolved to at the moment
+of consent.
+
+*Closing test:* `test_a_non_canonical_grant_is_refused_and_said_so` in
+`tests/test_grant_only_user_tier.py`, which now asserts the resolved
+target appears in no field of the refusal.
+
+### D73 — Closed: the one git spawn that is not run_git (High)
+
+Codex, 2026-08-26, one commit after D71 closed. `_backfill._git` builds
+its own argv and does not go through `run_git`, so it ran `rev-list`
+without `gc.auto=0` / `maintenance.auto=false` — and
+`commits_in_range()` reaches it before any worktree exists. D71's whole
+claim is that reading a repository cannot let git rewrite it, and this
+was a read that could.
+
+**The closing test could not see it.** It parsed `git_tools.py` alone,
+because that was where the fix lived. A rule about *every git command*,
+held by a check that read one file — and there was exactly one git
+command elsewhere in the package.
+
+The sweep reads every module now: any argv whose first element is the
+literal `"git"` must carry `READ_ONLY_GIT_CONFIG`, and it asserts it
+found at least two spawns, because finding one is the state that hid
+this.
+
+*Closing test:* `test_every_git_command_disables_gits_own_housekeeping`
+in `tests/test_git_argv.py`.
+
+### D74 — Closed: an incoherent window explains itself as unknown (Medium)
+
+Codex, 2026-08-26. `commits_in_window` and `commits_considered` are not
+`HistoryEvidence` members, so nothing upstream validates them, and
+`_empty_window_reason` asked only `isinstance(..., int)`. `True` is an
+`int`. A report carrying `commits_in_window: true, commits_considered:
+0` was told, confidently, that every commit in its window was a merge.
+Negative counts and a subset larger than its set did the same.
+
+D66 exists to stop a wrong reason being stated confidently, so the fix
+is not a better guess: an incoherent pair earns the least specific
+answer. Bools rejected, negatives rejected, and a non-merge subset that
+exceeds the set it is drawn from rejected.
+
+*Closing test:* `test_an_incoherent_pair_of_counts_earns_the_least_specific_reason`
+in `tests/test_history_window.py`, seven payloads.
+
+### D75 — Closed: the doc sweep recognises more than three sentences (Medium)
+
+Codex, 2026-08-26. D65's closing test matched three exact phrasings,
+lifted from the two sentences it was written to catch. Adding
+*"maintainability-agent runs eslint whenever it is installed"* to an ADR
+left it green. A check shaped like the defect it already found is not a
+check — the same criticism this register has recorded five times, now
+about a test written to prevent it.
+
+Two wrong versions before the third. Matching every verb flagged nine
+lines of history: the register recording the defect, the roadmap listing
+tools this project does not replace, an ADR quoting an old experiment.
+Then proximity exoneration turned out to be gameable in the most direct
+way possible — a claim inserted directly beneath the paragraph refusing
+eslint was exonerated by it, which is backwards, since a refusal nearby
+is exactly where a false claim does the most damage.
+
+What it checks now is the harm D65 actually names: *acquisition*
+language beside a refused tool's name, exonerated only by the same
+sentence, in operator-facing documents. The three incident records are
+exempt by name and with reasons, because describing the old behaviour is
+what they are for.
+
+*Closing test:* `test_no_document_presents_a_refused_analyzer_as_one_this_agent_runs`
+in `tests/test_analyzer_config_isolation.py`, verified against four
+distinct phrasings.
+
+### D76 — Closed: P1 is held to the window a report is built with (Medium)
+
+Codex, 2026-08-26. D69's closing test compared the prose to the
+`DEFAULT_SINCE` constant. Changing `history_section`'s default to
+`"24 months ago"` left the constant untouched and the test green, with
+the disclosure describing a window nothing used.
+
+It now reads the *effective* window — the signature default — requires
+it to equal the constant the page quotes, and checks by AST that
+`report.py` does not pass a window of its own, since a call site that
+overrides the default makes the disclosed value fiction.
+
+*Closing test:* `test_the_history_window_is_disclosed_as_clock_relative`
+in `tests/test_determinism.py`.
+
+### D77 — Closed: a comment cannot stand in for an install (Medium)
+
+Codex, 2026-08-26. The test asserting CI installs every pip-installable
+adapter asked whether the slug appeared *anywhere* in the workflow file.
+Deleting `flake8` from the install line and leaving
+`# flake8 is installed by this step` behind kept all fourteen green
+while the adapter went uninstalled.
+
+It parses the YAML now and tokenises the actual `pip install` commands,
+with comments stripped first. That immediately found a real gap the
+substring version could not: `ruff` reached CI only through `.[dev]`,
+so the pool step never named it. Rather than carve an exemption for it,
+the claim was made literally true.
+
+*Closing test:* `test_ci_installs_every_pip_installable_adapter` in
+`tests/test_ci_installs_the_analyzer_pool.py`.
+
+### D78 — Closed: the JS complexity number is about the code (High)
+
+Grok, 2026-08-26. Decision 10 keeps JavaScript because this project has
+a detector that can score it, and D68 made the fallback to that detector
+*visible*. Grok's sentence is the finding: **visibility is not
+accuracy.** D68's closer checks that the built-in scanner is attributed
+and never asks whether its number means anything.
+
+`COMPLEXITY_RE` counted every `?` character as a decision point. In
+JavaScript `?` is three operators and only one is a decision. `?.` is
+defensive member access. `??` is one decision written with two
+characters, so a bare `\?` counted each one **twice**. `?` ternary is
+the branch the rule was written for.
+
+Reproduced at the shipped thresholds:
+
+```javascript
+function pick(u) {
+  return u?.user?.profile?.settings?.theme
+      ?? u?.user?.prefs?.theme
+      ?? "light";
+}
+```
+
+**Cyclomatic 12, status warn.** Its McCabe number is 1. An eight-way
+fallback chain scored 15, one under the hard gate. It fires hardest on
+exactly the modern JavaScript this project claims to score, which is P7:
+a score issued where the thing measured was not the code. After the fix,
+3 and 8, and genuinely branching code is unchanged.
+
+Grok's other JS observations — regex literals unmasked, brace-free
+bodies charged flat, object-literal arrows not detected as declarations
+— are disclosed limitations in `_ranges` and `_cognitive` and are not
+closed here. This entry closes the one that produced numbers that were
+simply wrong.
+
+*Closing tests:* `test_the_scored_complexity_is_the_functions_complexity`,
+`test_a_defaulting_expression_does_not_warn` and
+`test_python_complexity_is_unchanged_by_the_javascript_fix` in
+`tests/test_js_complexity_operators.py`.
+
+### D79 — Closed: a grant records what it was, not only where (High)
+
+Grok, 2026-08-26 — the fourth predicate in three days, and the one whose
+prediction was written into the finding: *"D38 is the one that will be
+filed again if this round is closed by tightening `resolve()==self`
+without an inode."*
+
+Two holes, both reproduced. `Path.resolve()` is not `strict=True`, so a
+directory nobody has created "resolves to itself" and was honoured —
+hand-write it, get no refusal, then create it or mount over it. And
+`resolve()` preserves case, so on APFS `/USERS/marshallguillory/...`
+exists, resolves to itself, and was treated as a product-made grant.
+
+**The pattern is the finding.** Four rules compared better and better
+strings, and each moved the hole rather than closing it, because a path
+is a *name* and names alias: symlinks, case-insensitive volumes, bind
+mounts, a directory created after the question was answered. Version
+three's own docstring said so — *"a bare path with no record of what it
+resolved to when it was granted cannot be defended"* — and then honoured
+bare paths anyway.
+
+So this version stops comparing names. `persist_root_grant` records the
+directory's device and inode at the moment of consent, and a grant is
+honoured only when the directory at that path is still that directory.
+A directory *swapped* for another under the granted name — identical by
+name, which is why every previous rule honoured it — is refused by the
+same check that refuses a swapped symlink, and so are bind mounts, case
+variants and ghost paths, none of which a spelling rule could reach.
+
+**Where identity stops, disclosed rather than implied.** Deleting a
+directory and immediately recreating it is a case `(device, inode)`
+cannot reliably see: ext4 hands the inode straight back, so the
+recreated directory is identical by every field recorded at consent.
+APFS does not reuse. The first version of the falsifier asserted a
+refusal for that case, passed on macOS — including the macOS runner
+added the day before — and failed on Linux CI. That is a claim wider
+than its mechanism, which is this register's own recurring defect
+arriving from the other side, and it was caught by infrastructure added
+two days earlier for a different reason.
+
+**A hand-written entry carries no identity and is refused.** That is the
+deliberate consequence rather than an oversight: it is exactly the bare
+path the rule cannot defend. Existing users are asked once more, which
+D38 established is not an error.
+
+Not claimed: that this ends the series. What is claimed is that the
+thing compared is no longer a spelling.
+
+*Closing tests:* `test_a_grant_to_a_directory_that_does_not_exist_is_refused`,
+`test_a_case_variant_spelling_is_refused`,
+`test_a_granted_directory_swapped_for_another_is_refused` and
+`test_inode_reuse_is_the_disclosed_limit_of_identity` in
+`tests/test_grant_only_user_tier.py`.
+
+### D80 — Closed: the population floors are bounded from below (High)
+
+Grok, 2026-08-26, in a table of "checks that cannot fail the property
+they name". `test_no_calibration_member_is_unscoreable_by_the_scale_it_calibrates`
+bounds the floors from *above* — a floor may not exceed the corpus
+minimum. Nothing bounded them from below.
+
+Set `files_scanned` to 1 and every check in that file stays green while
+a one-file repository collects a verified grade. That is the exact
+result ADR 005 exists to prevent and the one P7 names: a score issued as
+a consequence of not looking.
+
+Asserted against the behaviour rather than the constant — one file, one
+declaration, no score, however the table is edited — with the invariant
+also stated on the table so someone editing it sees why it has two
+sides.
+
+*Closing tests:* `test_a_hello_world_repository_is_never_scored_whatever_the_floors_say`
+and `test_the_floors_are_bounded_from_below_as_well_as_above` in
+`tests/test_population_floors.py`.
+
+### D81 — Closed: the witnesses no longer share fate with what they watch (High)
+
+Grok, 2026-08-26, reopening D71 at the layer Codex's version of the same
+finding did not reach. D73 fixed the backfill argv and widened the
+sweep; this is the other half.
+
+The conftest guard exports `GIT_CONFIG_*` for the whole suite so that
+fixtures cannot schedule git maintenance. It also covers the product.
+So the "never writes the tree" snapshot tests — the only witnesses to
+D71 — would stay green if `READ_ONLY_GIT_CONFIG` were deleted from
+`run_git` tomorrow, because maintenance would not fire either way.
+
+**Demonstrated rather than argued.** With the settings removed from
+`run_git`, all 36 snapshot tests pass and the new witness fails. It
+records the argv of every git a real audit spawns and asserts each
+carries the settings: it watches the product, not the environment, and
+is deterministic where the snapshot was probabilistic.
+
+The same finding named D70's closer: `runs-on: macos-latest` with
+`run: true` satisfied it, so POSIX could be "demonstrated" by a job that
+does nothing. The macOS job now has to run the suite.
+
+*Closing tests:* `test_a_real_audit_spawns_no_git_without_the_read_only_settings`
+in `tests/test_git_read_only.py`, and
+`test_the_macos_runner_actually_runs_the_suite` in
+`tests/test_platform_claim.py`.
+
+### D82 — Closed: the audit door stops naming symlink targets too (High)
+
+Grok, UAT audit of `2fa909e`. D72 removed the resolved path from
+`server_info`'s refusals because D48 forbids host paths crossing the
+transport. `authorize_repository` kept doing it: the user names
+`innocent`, and its `PathNotAllowed` tells the host `secret-target`.
+
+**D72's falsifier asserted the resolved path appears in no field of the
+refusal dictionary.** It never read the exception. One door was closed
+and its neighbour was left open by a check shaped around the door that
+had been reported — the register's recurring defect, and the second time
+in three days that a fix's own closer defined the fix's scope.
+
+The refusal echoes the spelling the user supplied, which is theirs
+already, and says how to obtain a grant without resolving anything. The
+sibling refusal for a non-directory is checked for the same leak.
+
+*Closing tests:* `test_a_refusal_does_not_tell_the_host_where_a_symlink_points`
+and `test_a_missing_directory_refusal_does_not_name_the_resolved_path`
+in `tests/test_authorization_freshness.py`.
+
+### D83 — Closed: a standing grant is re-checked at use, not at start-up (High)
+
+Grok, UAT audit of `2fa909e` — and the most consequential finding of the
+round, because D79 was closed without it and reads as complete.
+
+`allowed_roots()` runs **once**, when the server is constructed, and
+produces a tuple of paths. `authorize_repository` then asked one
+question: is this request inside one of them? So the identity D79
+records at consent was verified at start-up and never again. Swap the
+granted directory afterwards and the audit keeps authorizing whatever
+now sits at that path for the life of the process — and an MCP server
+is long-lived, on the surface this product calls primary.
+
+Reproduced in-process: grant `project`, rename it away, recreate it with
+`pwned.txt` inside, ask again. **Authorized.** Only a restart refused it.
+
+This is D38's original shape returning a fifth time: the in-process seam
+was already right, and a later read of a stored fact went around it.
+There the stored fact was a path and the read followed a symlink; here
+the stored fact is an identity and the read was not happening at all.
+Every version of this entry has fixed *where* the check compares and
+left *when* it runs alone.
+
+Persisted grants are re-validated at each authorization. Launch roots —
+`--allow-root`, the environment, the working directory — are not: they
+carry no recorded identity because they are this process's own
+configuration rather than a standing consent, and re-checking them would
+refuse every ordinary launch.
+
+*Closing tests:* `test_a_swapped_directory_loses_its_grant_without_a_restart`
+and `test_a_launch_root_is_not_re_checked` in
+`tests/test_authorization_freshness.py`. The check lives in
+`_stored_grants` beside the rule it applies, and the audit door
+re-raises it as `PathNotAllowed` so the transport keeps translating a
+declared refusal rather than seeing a crash (D48).
+
+### D84 — Closed: a nested list's members are shaped too (Medium)
+
+Codex, UAT audit of `2fa909e`. `_shaped_inside` has a branch that
+validates list items and it only ever ran for a **top-level** list. So
+`{"paths": {"include_extensions": [1]}}` was accepted: the value is a
+list, which is all that was asked.
+
+The audit then matched no file, exited 0, and reported a clean scan of
+nothing with forty source files "unread". That is worse than a crash and
+is exactly the concealment D53 exists to prevent — a type error turned
+into an apparently valid empty result, which a reader cannot tell from a
+repository that genuinely has no source in it.
+
+The dict branch now recurses, so a member is checked wherever it lives.
+Refused by name: `paths.include_extensions[0] must be str, not int`.
+
+*Closing tests:* `test_a_nested_list_member_of_the_wrong_type_is_refused_by_name`
+and `test_a_valid_nested_list_still_loads` in
+`tests/test_config_shape.py`.
+
+### D85 — Closed: the version string is a claim like any other (High)
+
+Grok, UAT audit. Acceptance testing *for 1.0* was about to run against
+an artifact naming itself `0.9.1` and `Development Status :: 3 - Alpha`.
+A tester would report a version that is not the thing under test, and
+this project already shipped nine releases whose contents did not match
+what they claimed (D23).
+
+`1.0.0rc1`, `Development Status :: 4 - Beta`. Not `1.0.0`: the release
+plan tags 1.0 at 8.10, after acceptance (8.8) and a hostile audit of the
+artifact that passed it (8.9), and a version string follows evidence
+rather than intention like every other claim here. A candidate is
+exactly what this is.
+
+The falsifier holds the three copies of the version together and refuses
+a bare `1.0.0` while 8.10 still says the tag waits on 8.9 — so the
+version cannot be promoted ahead of the gates by editing one file.
+
+*Closing tests:* `test_every_copy_of_the_version_says_the_same_thing`,
+`test_a_final_1_0_0_is_not_claimed_before_its_gates_close`,
+`test_the_maturity_classifier_matches_the_version` and
+`test_security_support_covers_the_shipped_version` in
+`tests/test_version_claim.py`.
+
+### D86 — Closed: the JS scanner sees the file's actual functions (High)
+
+Grok, UAT audit, continuing D78. That entry fixed `?` arithmetic and
+left the rest disclosed; the objection is that disclosure is not a score.
+
+Two defects, both reproduced. `function f() { return /a?b?c?d?e?/; }`
+scored cyclomatic **6** — the regex literal's contents were read as
+code, because masking scrubbed comments and strings and not regex
+literals. And `{ onSave: (a) => {...}, onLoad: function (b) {...} }`
+produced **no declarations at all**, which is how a React or Node
+codebase writes most of its interesting logic: the audit scored whatever
+loose `function` statements happened to sit beside the handlers and
+reported the file examined.
+
+Masking now recognises a regex literal where a *value* may begin, which
+is the standard heuristic and the whole disambiguation JavaScript offers
+without a parser — `a / b ? 1 : 2` is untouched. The brace scanner
+detects `name:` members, a prefix that cannot be a control keyword and
+so does not collide with `if (`. The example above now scores 1, and
+all three declarations are found.
+
+*Closing tests:* `test_the_scored_complexity_is_the_functions_complexity`
+and the cases beside it in `tests/test_js_complexity_operators.py`.
+
+### D87 — Closed: the macOS job runs the suite, not the word (Medium)
+
+Grok, UAT audit. D81 required `"pytest"` in the macOS job body. `echo
+pytest` satisfies that, and so does a pytest invocation naming one file
+— which would let the job stop running the product's suite without
+anything noticing. D77 had taught the same lesson one job over: a
+comment is not an install.
+
+The run commands are parsed now, and one of them has to *be* a
+whole-suite pytest invocation rather than contain the word. Verified
+against both bypasses.
+
+*Closing test:* `test_the_macos_runner_actually_runs_the_suite` in
+`tests/test_platform_claim.py`.
+
+### D88 — Closed: why the argv recorder is the only witness (Medium)
+
+Grok, UAT audit. D81's recorder watches the argv; the promise is about
+the tree; the 36 snapshot tests still run under the suite-wide
+`GIT_CONFIG_*` guard and would not notice if `READ_ONLY_GIT_CONFIG`
+vanished. The objection is correct.
+
+**Two attempts at a tree witness failed, and the second failure is the
+answer.** Removing the guard was not enough — maintenance is
+threshold-driven and merely *allowed* to fire. Making the environment
+hostile with `gc.auto=1` was not enough either, and that one passed with
+the settings deleted, which would have shipped a test that passes either
+way into the entry that exists to prevent them.
+
+The reason is that git runs housekeeping after commands that **write** —
+`commit`, `merge`, `fetch` — and this package runs none of them. The
+`maintenance.lock` that opened D71 was scheduled by a fixture's own
+`git commit`, which is what D71's second half already concluded. No
+audit of an unmodified repository can produce the write a snapshot would
+catch, so a passing snapshot proves nothing in either direction.
+
+What is checkable is the premise, and that is what is checked: every git
+subcommand the audit spawns is a read, flags included. It found one the
+list had missed — `git branch --show-current` — on its first run. If a
+writing subcommand is ever added the reasoning stops holding and this
+fails, while the argv guarantee, which does not depend on the premise,
+stands on its own.
+
+*Closing test:* `test_the_product_runs_only_git_commands_that_read` in
+`tests/test_git_read_only.py`.
+
+### D89 — Open: gating CI pins, on the wrong platform (Medium)
+
+Grok, UAT audit. P1's determinism is conditional on pinned analyzer
+versions. The gating pipeline had installed the pool **unpinned**, on
+purpose, so that an unchanged `main` going red because an analyzer
+shipped is a signal rather than a silence.
+
+That disclosure is now closed into the workflow. `constraints/analyzers.txt`
+checks in the Python 3.12 resolver output for the twelve pip-installed
+analyzers and their dependency closure, and the gating jobs (`verify`,
+`audit`) install through it. A green PR gate therefore certifies the
+pinned-input condition P1 actually states, not merely that the suite
+passed against that day's analyzer releases.
+
+The old drift signal is kept rather than deleted. The weekly scheduled
+run creates a throwaway virtualenv, installs the same top-level pool
+**unpinned**, freezes what pip resolved, and fails on a diff against the
+checked-in constraints. Analyzer movement still turns the scheduled run
+red, but the merge gate no longer floats.
+
+**Reopened 2026-08-27, unclosed on review.** Three defects in the fix,
+two of them the class D97 names:
+
+*The drift check could never pass.* It diffed the constraints file --
+eight lines of provenance comments -- against raw `pip freeze` output,
+which has none, so the scheduled run went red every week whether or not
+anything drifted. This file's own header says a pipeline that fails on
+something advisory teaches people to ignore it.
+
+*Its test could not see that.* It asserted the string `diff -u
+constraints/analyzers.txt` was present. Appending `|| true` -- which
+neuters drift detection entirely -- left it green. The second version
+asserted the step mentions stripping, and replacing the helper body with
+`cat` left *that* green. The third runs the workflow's own normaliser
+against the real constraints file and checks its output could have come
+from `pip freeze`.
+
+*The pin does not match the platform it constrains.* The closure was
+resolved on macOS arm64; `verify`, `audit` and the drift job all run
+`ubuntu-latest`. The pinned install may not resolve there at all, and
+the drift comparison would report platform-divergent closures as
+analyzer drift, weekly, forever.
+
+**Still open on that last one.** Closing it needs the pool resolved on
+Linux, which needs installing the pool — the reason this entry existed
+in the first place. `resolve-constraints` in the workflow produces that
+file from a runner; until it is checked in,
+`test_the_constraints_were_resolved_on_the_platform_the_gates_run_on`
+is `xfail(strict=True)`, so it fails the day the situation is fixed and
+the marker is left behind, and the suite is neither red nor lying.
+
+*Falsifier: pending* for the platform residual. The two closed halves
+are held by `test_the_gating_jobs_install_through_the_constraints_file`
+and `test_the_scheduled_drift_job_floats_and_can_actually_fail` in
+`tests/test_analyzer_pinning.py`.
+
+*Roles:* found=grok prompt=marshall fix=codex+claude test=codex+claude run=mutation
+
+### D90 — Closed: a stale grant does not veto a launch root (High)
+
+Codex, 2026-08-26, against a fix made the same day. D83 re-checks
+persisted grants at use, and applied that check to any request a stale
+grant happened to *cover*. So launching with `--allow-root <base>` while
+holding a stale grant for `<base>/project` refused `<base>/project` —
+which the launch root authorized on its own, with no consent involved.
+
+A freshness rule that revokes access this process's own configuration
+granted is not a tightening; it is a denial of service. The fix for a
+security defect introduced an availability one, on the same day, in the
+same function.
+
+**And D83's closer passed throughout.** Its fixture launched on the
+granted directory's *parent*, so that scenario always had independent
+launch cover and never isolated the standing grant it claimed to test.
+The test was green because of the over-broad behaviour rather than
+despite it. Fixed here: the fixture launches on a sibling, which is what
+makes the grant the only thing under test.
+
+Authorization now separates its two sources. A launch root — the flag,
+the environment, the working directory — authorizes on its own. Only
+when a persisted grant is the *sole* cover does freshness decide.
+
+*Closing tests:* `test_a_launch_root_still_authorizes_despite_a_stale_grant_beneath_it`
+and `test_a_stale_grant_with_no_launch_cover_is_still_refused` in
+`tests/test_authorization_freshness.py`.
+
+*Roles:* found=codex prompt=claude fix=claude test=claude run=mutation
+
+### D91 — Closed: the config door stops publishing paths too (High)
+
+Codex, 2026-08-26. D82 removed the resolved path from
+`authorize_repository`'s refusal. `authorize_config`, eleven lines
+below it, published **two**: a caller naming `innocent.json` was told
+the symlink's target and the canonical repository path.
+
+D82's falsifier read `authorize_repository` and stopped there, so the
+fix that removed one disclosure left a larger one beside it untouched.
+That is the fourth door in this family — `server_info` (D72), the
+repository refusal (D82), the not-a-directory refusal (D82), and now
+this — and each was found only when someone looked at the next one
+along.
+
+Both refusals here name the spelling the caller supplied, which is
+theirs already, and resolve nothing into the message.
+
+*Closing test:* `test_the_config_refusals_name_no_resolved_path` in
+`tests/test_authorization_freshness.py`.
+
+*Roles:* found=codex prompt=claude fix=claude test=claude run=mutation
+
+### D92 — Closed: an audited repository cannot run code in this process (Critical)
+
+Grok, 2026-08-26, and the most serious defect found in this project.
+
+Decision 9: *"this agent never executes the audited repository's code,
+and its configuration is code."* That was enforced on the analyzer
+adapters — eslint refused outright, pylint and mypy pointed at
+`os.devnull`, and a sweep held every adapter to a classification. **Git
+was never asked the question.**
+
+`core.fsmonitor` is a repository config key naming a command git
+executes. `worktree_status` runs `git status` on every git-backed
+audit, which is the default path. Reproduced: a repo whose
+`.git/config` sets `core.fsmonitor` to a script in its own tree ran
+that script in the auditor's process, and the payload wrote a file into
+the worktree — which the MCP door separately promises never happens.
+The product then returned `?? PWNED` as the status string, having
+created `PWNED` itself.
+
+`READ_ONLY_GIT_CONFIG` existed and disabled *housekeeping* (D71). One
+rule about git writing, none about git executing.
+
+The list is wider than the demonstrated vector — `core.hooksPath`,
+`core.pager`, `core.sshCommand`, `core.alternateRefsCommand`,
+`diff.external`, `credential.helper`, `protocol.ext.allow` — because
+the command set grows, and the last rule scoped to the commands of the
+day missed the one spawn that lived elsewhere (D73).
+
+**Residual, disclosed rather than closed:** content filters
+(`filter.<driver>.clean`) and `diff.*.textconv` execute too and are
+keyed by a driver name from the tree's own `.gitattributes`, so no
+fixed `-c` disables them. Verified they fire on a worktree-content
+`git diff` and not on this package's only diff, which compares two
+commits by name and status.
+
+**It also falsifies D88's reasoning.** That entry argued no tree-level
+witness for the git promise could exist because "this package runs only
+reads". `status` is a read that executes. The premise was wrong, not
+merely the conclusion.
+
+*Closing tests:* `test_the_audited_repository_cannot_choose_what_this_process_runs`
+and `test_worktree_status_on_a_hostile_repository_changes_nothing` in
+`tests/test_git_read_only.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
+
+### D93 — Closed: TypeScript type members are not declarations (High)
+
+Grok, 2026-08-26, against D86 — closed the same morning.
+
+`_PROPERTY_RE` matches `name: (args) =>`, which is also how TypeScript
+writes an interface member. So `onSave: (a: string) => void;` counted as
+a one-line, complexity-1 function.
+
+The cost is not cosmetic. Forty files of real functions scored
+`insufficient` and were refused a grade. The same forty with an
+`interface` of three typed arrows each reported **160 declarations**,
+crossed the population floor, diluted band pressure fourfold, lifted
+`declaration_size` from 1.4 to 3.0, and issued a **verified C**. The
+type members are what bought the letter — P7 (a grade from a population
+that is not there) and P3 (withheld evidence improving the result) in
+one step.
+
+Type blocks are skipped now: inside `interface X { … }` or
+`type X = { … }`, nothing is a declaration.
+
+*Closing tests:* `test_type_members_are_not_counted_as_declarations` and
+`test_a_real_object_literal_member_is_still_found` in
+`tests/test_js_declarations.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
+
+### D94 — Closed: string-keyed members are declarations too (High)
+
+Grok, 2026-08-26, the other half of D86. Masking blanks string literals
+before any pattern runs, so `"onSave": (a) => {` arrives as
+`        : (a) => {` and the name is gone. Quoted keys were invisible,
+and a lone `function helper()` beside them still marked the file
+examined — D86's original shape exactly.
+
+**D86's closer used the unquoted instance, which is the one masking
+does not destroy.** Some keys must be quoted: `"on-error"` is not a
+valid identifier.
+
+The name is recovered from the line before masking touched it.
+
+*Closing tests:* `test_a_string_keyed_member_is_a_declaration` and
+`test_a_sibling_function_does_not_stand_in_for_the_handlers` in
+`tests/test_js_declarations.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
+
+### D95 — Closed: a regex after a control paren is not code (Medium)
+
+Grok, 2026-08-26, third against D86. `_VALUE_MAY_BEGIN` lists the
+positions where a `/` opens a regex literal. It includes `return`,
+which is the keyword D86's own closer used. It does not include `)`.
+
+So `if (x) /a?b?c?d?e?/;` scored **complexity 7** against a McCabe
+number of 2, while `return /a?b?c?d?e?/;` — the tested case — scored 1.
+
+`)` is the one position a character cannot decide: `if (x) /re/` opens a
+value and `f(x) / 2` is division. The paren is walked back to and the
+token owning it is asked.
+
+*Closing test:* `test_a_regex_literal_is_masked_wherever_a_value_may_begin`
+in `tests/test_js_declarations.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
+
+### D96 — Closed: the last two doors stop publishing resolved paths (High)
+
+Grok, 2026-08-26. D72 removed a resolved path from `server_info`, D82
+from `authorize_repository`, D91 from `authorize_config`. Two more were
+still open: `baseline_path`, and `config.repository_path` — which runs
+on an **ordinary audit** whenever the repository's own config names a
+path, so a symlinked `history.jsonl` published its target to the chat
+host.
+
+Six doors, one family, and each was found only when someone looked at
+the next one along. Every closer read the function it was written for.
+
+*Closing test:* `test_no_repository_scoped_path_refusal_names_what_it_resolved_to`
+in `tests/test_authorization_freshness.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
+
+### D97 — Closed: the class behind thirty entries (High)
+
+Marshall, 2026-08-27: *"have you asked WHY? these same type of defect
+keep coming back so you can address the root cause? it seems like a
+class of defect that is easily addressable, but you keep treating
+symptoms."*
+
+No, I had not. Thirty of the ninety-six entries above are **one
+mechanism**, closed thirty times, each with a bespoke fix and no
+question about why the next one arrived. The mechanism, the three
+clauses that answer it, and why mutation testing was not catching it are
+written up under *The falsifier standard* at the top of this file.
+
+The short version: a check written from the instance that motivated it
+rather than from the claim it defends, and a mutation drawn from the
+same sample as the assertion, so the mutation confirmed the sample and
+said nothing about the claim. Every time an auditor broke one of these,
+they mutated a member the test did not name.
+
+**What it cost to leave unnamed:** four adapters of fifteen swept, three
+sentences of a document, one file of a package, one keyword of a value
+list, a `pytest` that `echo pytest` satisfied, a `diff` that `|| true`
+neutered, and a security rule enforced on every analyzer and never asked
+of git.
+
+`tests/test_falsifier_standard.py` enforces clause two over the suite:
+sixteen tests derive a population by walking the filesystem, and every
+one of them must now assert it found something. Four did not. Clause
+three is required to be stated on every entry from D97.
+
+**The control had the defect three times while being built**, which is
+the strongest evidence that it needed to be mechanical rather than
+remembered: it counted `ast.walk` as a filesystem walk and reported
+twenty of thirty-three violations that were not; and it accepted *any*
+population being asserted, so a test binding two populations was covered
+by guarding either. That last one was found by mutating a guard the
+check did not name — the clause catching its own author.
+
+The detector's own non-empty guard is deliberately **not** cited below.
+It defends the detector rather than the claim, and
+`tools/prove_falsifiers.py` showed it passing at the base — correct for
+a guard, wrong for a closer. A citation region that named it would be
+claiming a proof it cannot give.
+
+*Closing tests:* `test_a_sweep_asserts_its_population_is_not_empty` in
+`tests/test_falsifier_standard.py` and
+`test_entries_from_the_cutoff_state_what_their_mutation_broke` in
+`tests/test_roles_recorded.py`.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
+
+*Mutation:* removed the population guard from
+`test_release_plan::test_the_release_plan_table_is_measured_not_remembered`
+and separately from `test_written_record`. Neither is named by
+`test_a_sweep_asserts_its_population_is_not_empty`, which derives its
+subjects from the suite rather than listing them — so breaking either is
+a member the closing test does not know about. The first draft of the
+closer survived the `test_files` mutation and was fixed because of it.
+
+### D98 — Closed: the first Codex-authored fix, reviewed (High)
+
+Reviewed 2026-08-27, the first change under the split where Codex wrote
+the code. Three defects, and what they were is more useful than that
+there were three.
+
+**The drift check could never pass.** It diffed `constraints/analyzers.txt`
+— eight lines of provenance comments — against raw `pip freeze` output,
+which has none. Non-empty every run, drift or no drift. The comparison
+normalises both sides now.
+
+**Its test could not see that.** It asserted the string `diff -u
+constraints/analyzers.txt` appeared. Appending `|| true` neuters drift
+detection entirely and left it green. My replacement asserted the step
+*mentions* stripping — and replacing the helper body with `cat` left
+*that* green. The third version extracts the workflow's own normaliser
+and **runs** it against the real constraints file, checking the output
+is something `pip freeze` could have produced.
+
+Two string-shaped checks in a row, mine and Codex's, on the day D97
+named that exact class. The standard is easy to state and hard to
+apply, which is the argument for the parts of it that are mechanical.
+
+**The pin does not match the platform it constrains** — see D89, which
+this reopened.
+
+**What the review says about the experiment.** Codex's work was good on
+the parts I asked for: real resolved versions, honest provenance, the
+closure decision made explicitly rather than silently, gates pinned,
+drift moved rather than deleted. Its failure mode was the same as mine —
+a check written from the artifact rather than the behaviour — which is
+evidence that the split does not fix this class by itself. What found
+all three was mutation from outside the sample, run by someone who was
+not the author. That is the part that transfers.
+
+*Closing tests:* `test_the_gating_jobs_install_through_the_constraints_file`,
+`test_the_scheduled_drift_job_floats_and_can_actually_fail` and
+`test_product_intent_describes_the_arrangement_the_workflow_implements`
+in `tests/test_analyzer_pinning.py`.
+
+*Roles:* found=claude prompt=marshall fix=codex+claude test=claude run=mutation
+
+*Mutation:* appended `|| true` to the drift comparison, and separately
+replaced the normaliser body with `cat`. Neither is named by the closing
+tests, which locate the step by its name line and then execute what it
+defines — so both break a member the tests do not enumerate. The first
+two versions of the closer survived one of these each.
+
+### D99 — Closed: every control was self-report (High)
+
+Miles Parker, on the thread where this work was described, 2026-08-27:
+*"agents are always in control over both what is being tested and the
+test. An agent that introduced a bug and mutated the test to cover it up
+would look no different externally from one that functioned perfectly."*
+
+He is right, and nothing built before this addressed it. D97's standard
+is enforced by tests the same agent can edit. The `*Mutation:*` line is
+the author's account of what they broke. Every control in this register
+was, ultimately, self-report.
+
+**The benign version is commonplace, and I did it three times in one
+day.** A test fails; I decide the test was wrong; I edit it.
+`test_git_argv` pinned an exact tuple and the tuple legitimately grew.
+`test_mcp_server` matched refusal text D82 changed.
+`test_declaration_grading` searched a whole document for `"42"`. Each
+edit was, I believe, correct. Nothing external distinguished *the test
+was wrong* from *I made the test agree with me*, and that is exactly the
+distinction Miles is asking for.
+
+`tools/prove_falsifiers.py` is the first control that does not take the
+author's word. For every entry added since the base commit it reads the
+tests the entry cites, builds a scratch worktree, restores everything to
+the base **except the files defining those tests**, and requires each
+cited test to fail there. A test that passes without the change did not
+need it.
+
+Two design faults, both found by running it rather than reasoning about
+it. Excluding all of `tests/` could prove no entry whose fix lives in
+test code — D97 added guards to four test files, so keeping `tests/`
+kept the guards and D97's own closer looked unproven. And `git checkout`
+restores tracked files without deleting ones the change added, so
+`constraints/analyzers.txt` survived the revert intact.
+
+**On its first honest run it found two real problems.**
+`test_there_are_sweeps_to_check` guards the detector rather than
+defending the claim and passes at the base — correct for a guard, wrong
+for a citation, so it is no longer cited. And
+`test_entries_from_the_cutoff_state_what_their_mutation_broke` passed
+*vacuously* at the base, where no entry reaches the cutoff and the list
+it asserts over is empty: D97's own clause-two defect, inside D97's own
+closer, invisible to every check that existed the day before.
+
+What it does not do: it cannot stop an agent editing the prover, the
+workflow, or the register. Those need enforcement outside the agent's
+reach — branch protection, CODEOWNERS, a human reading a diff. It closes
+the case where the code and its check are written together, which is the
+case that was actually producing defects here.
+
+*Closing tests:* `test_the_citation_region_stops_at_the_next_field`,
+`test_every_citation_spelling_the_register_uses_is_read` and
+`test_the_tool_is_wired_into_the_pipeline` in
+`tests/test_prove_falsifiers.py`.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
+
+*Mutation:* neutered the proving job with `|| true`, and separately
+appended a `*Mutation:*` line naming a test to an entry to confirm the
+citation region ignores it. Neither is a member the closing tests
+enumerate — they locate the job and the region by structure — and the
+tool itself was run against `ec0df33` to confirm four cited falsifiers
+fail without their changes and two do not.
+
 ## Disposition
 
-**Every entry is closed.** D28 and D29 were opened and closed on 2026-08-22
+**One entry is open: D89.** It was closed on 2026-08-27 and reopened the
+same day on review. Two of its three defects are fixed — a drift check
+that could never pass, and a test that `|| true` defeated. The third is
+not: the analyzer closure was resolved on macOS and the jobs it
+constrains run Linux, and re-resolving it means installing the pool,
+which is the reason the entry existed at all. The workflow now carries a
+job that produces the Linux resolution from a runner; until that file is
+checked in the residual is marked `xfail(strict=True)` rather than
+hidden or left red.
+
+This page reached an empty ledger twice and gave it back twice, which is
+the useful part. An audit observed that the register can be empty while
+the proof it cites is failing in CI, and that "0 open" was being read as
+"known good". A closure that does not survive being checked is not a
+closure.
+
+**Every other entry is closed.** D32 through D46 came from
+two independent security audits on 2026-08-23 and closed over the two
+days after; D47 through D49 came from the chat-surface work that
+preceded them; D50 through D55 came from UAT preparation on 2026-08-25
+— one from Marshall reading the question set and five from a Codex
+audit of the whole repository; D56 through D62 came from a Grok audit of
+the whole repository on 2026-08-26, which also reopened D38. Its
+verdict was that the register was "an empty ledger, not an empty
+defect list", and on every finding it was right. D63 came from Marshall
+asking who the product is for, on 2026-08-26. D64 through D70 came from
+a second round of both audits on 2026-08-26, run against the fixes for
+the first — four of the seven reopened an entry that had already been
+closed once, and three of those reopens went through the *closing test*
+rather than around the fix.
+
+**D70 is the one worth reading twice.** The local baseline this project
+diffs every change against — 101 failures and 191 errors, carried run
+after run as "known" — was a single line in seven test fixtures pinning
+`PATH=/usr/bin:/bin`, which on this project's own development machine
+resolves to Xcode's stub rather than to git. None of those 292 results
+said anything about the product, and any real regression landing in
+those files had 292 places to hide. The discipline of diffing against a
+baseline was working exactly as designed and was protecting a number
+that meant nothing. The count is derived from the headings above and checked
+by `test_the_disposition_names_the_entries_that_are_open`, which
+required this sentence rather than an omission — with nothing open, a
+disposition that simply lists no entries reads exactly like a parser
+that stopped working. D34 through D37 were
+filed by the same 2026-08-23 security pass and have since closed; this
+paragraph named them as open for two days after they were not, which is
+the register describing a state a reader cannot verify from its own
+headings. The count is now derived from the headings above rather than
+carried in prose, and `test_the_disposition_names_the_entries_that_are_open`
+fails if the two disagree.
+
+Those four are the reason v1.0 does not cut. Two are the classes this register already
+paid to close and never applied everywhere: D18 bound the skill installer's
+writes by descriptor, and config, history and baseline still open by name;
+D20 bounded `paths.history`, and `class_dirs` and `expand_files` still take
+unbounded paths from the audited tree. One, D35, is a trust inversion —
+`product-intent.md` P1 says a *user* enables tool acquisition, and a
+repository config overrides the user tier, so a pull request can make the
+host run `npx --yes`.
+
+The lesson is not that the fixes were wrong. It is that each was applied to
+the seam an audit happened to be looking at. "Close the class" means every
+door that shares the primitive, and three rounds of chat-surface auditing
+never looked at the write primitives at all.
+
+D28 and D29 were opened and closed on 2026-08-22
 under the standing rule that a release ships only from an empty known-defect
 ledger; filing them here rather than leaving them in a chat message is what
 made them countable. D30 and D31 came from the audit of D21–D27 and are the
 most instructive pair in the register: both are defects *in the fixes*, found
 because the fixes were audited rather than trusted. D30 is a precondition that
 guarded one door of four. D31 is a check that verified a falsifier existed
-without verifying a reader could find it.
+without verifying a reader could find it. D32 is the pair's own audit round:
+a refusal that read correctly in-process and arrived at the client as an
+internal error, a CLI that crashed where the chat doors refused politely, and
+a title that claimed more than its fix delivered. D33 is the round after that,
+and the pattern held a fourth time: a check that verified a citation named a
+test, satisfied by the filename in the path; a refusal translated on one layer
+of two; two parsers reading one file to opposite conclusions.
+
+Four rounds running, every defect has been in a fix rather than in the code it
+repaired. That is not a run of bad luck. A fix is written by someone who has
+just convinced themselves they understand the problem, and it is tested by
+someone in that same state — so the test tends to assert the thing the author
+was already thinking about. Auditing a fix as hard as the thing it repairs is
+the only step that has reliably caught this, and every round of it has paid.
 
 Every closed entry sits behind a test that would fail if its defect returned,
 and since 2026-08-22 that citation is machine-checked — three entries had been

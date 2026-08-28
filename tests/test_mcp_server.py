@@ -62,8 +62,12 @@ def test_repository_must_stay_inside_an_allowed_root(tmp_path: Path) -> None:
     outside = tmp_path / "outside"
     outside.mkdir()
 
-    with pytest.raises(PathNotAllowed, match="outside allowed roots"):
+    with pytest.raises(PathNotAllowed, match="outside the allowed") as refused:
         authorize_repository(str(outside), (allowed.resolve(),))
+    # And it names what the caller typed rather than what that resolved
+    # to: the same disclosure D72 removed from `server_info` was still
+    # standing here (D82).
+    assert "outside" in str(refused.value)
 
 
 def test_a_symlink_cannot_escape_the_allowed_root(tmp_path: Path) -> None:
@@ -86,7 +90,7 @@ def test_config_must_be_a_file_inside_the_repository(tmp_path: Path) -> None:
     outside.write_text("{}", encoding="utf-8")
 
     assert authorize_config("maintainability-agent.json", root) == str(inside.resolve())
-    with pytest.raises(PathNotAllowed, match="outside repository_root"):
+    with pytest.raises(PathNotAllowed, match="outside the repository"):
         authorize_config(str(outside), root)
 
 
@@ -127,9 +131,18 @@ def test_a_client_sees_the_two_tools_and_can_call_one(tmp_path: Path) -> None:
             assert by_name["audit_repository"].annotations.read_only_hint is False
             assert by_name["get_agent_info"].annotations is not None
             assert by_name["get_agent_info"].annotations.read_only_hint is True
-            for tool in by_name.values():
-                assert tool.annotations.destructive_hint is False
-                assert tool.annotations.open_world_hint is False
+            # D44: these were both locked False for every tool, and the
+            # lock is why nobody re-read them. The audit tool rewrites
+            # configuration and can replace a baseline, and it reaches
+            # outside this process through opt-in `npx` acquisition and
+            # through analyzers this package does not sandbox. The read
+            # tool is genuinely neither.
+            audit = by_name["audit_repository"].annotations
+            assert audit.destructive_hint is True
+            assert audit.open_world_hint is True
+            info = by_name["get_agent_info"].annotations
+            assert info.destructive_hint is False
+            assert info.open_world_hint is False
 
             result = await client.call_tool(
                 "audit_repository",
@@ -358,6 +371,9 @@ def test_a_report_resource_refuses_a_path_outside_the_allowed_roots(tmp_path: Pa
     assert "outside" in str(refusal.value).lower()
     assert isinstance(refusal.value.__cause__, PathNotAllowed)
 
+    assert isinstance(refusal.value.__cause__, PathNotAllowed)
+    assert "--allow-root" in str(refusal.value)
+
 
 def test_the_slash_command_prompt_is_named_for_this_agent(tmp_path: Path) -> None:
     prompts = _prompts(_server(tmp_path))
@@ -421,9 +437,16 @@ def test_the_two_tools_survive_the_new_primitives(tmp_path: Path) -> None:
         assert by_name["audit_repository"].annotations.read_only_hint is False
         assert by_name["get_agent_info"].annotations is not None
         assert by_name["get_agent_info"].annotations.read_only_hint is True
-        for tool in by_name.values():
-            assert tool.annotations.destructive_hint is False
-            assert tool.annotations.open_world_hint is False
+        # D44, the second of the two places that locked this. Both said
+        # every tool is non-destructive and closed-world; the audit tool
+        # is neither, and two tests agreeing is exactly why it went
+        # three rounds without being re-read.
+        audit = by_name["audit_repository"].annotations
+        assert audit.destructive_hint is True
+        assert audit.open_world_hint is True
+        info = by_name["get_agent_info"].annotations
+        assert info.destructive_hint is False
+        assert info.open_world_hint is False
 
     asyncio.run(exercise())
 

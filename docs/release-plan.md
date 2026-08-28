@@ -4,13 +4,13 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 ## Where this actually stands
 
-*Measured 2026-08-14. Regenerate the counts before quoting them; the previous version of this table survived fifty-five commits past the point it stopped being true, which is the drift this project exists to catch.*
+*Measured 2026-08-26. Regenerate the counts before quoting them: the previous version of this table survived fifty-five commits past the point it stopped being true, and then did it again — an audit on 2026-08-26 found it still naming 0.7.0 as the last tag while v0.9.1 was shipped and 26 further commits sat on the branch. Twice now, in the paperwork of the project that exists to catch drift.*
 
 | Fact | Value |
 |---|---|
-| Last tagged version | 0.7.0 |
-| Production code | 14,122 lines across 62 modules |
-| Tests | 1,097 collected across 80 files |
+| Last tagged version | v0.9.1 |
+| Production code | 20,071 lines across 82 modules |
+| Tests | 1,560 collected across 132 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
 | Known open exit conditions in Phases 0–5 | Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) **shipped**. |
 | Later phases outstanding | 6.1–6.4, 7.1–7.4 and 8.1–8.7 shipped. **1.0 still waits on Marshall's acceptance (8.8), the 7.5 hostile audit (8.9), and the human tag (8.10).** |

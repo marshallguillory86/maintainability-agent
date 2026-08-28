@@ -200,6 +200,52 @@ DECLARATION_CRITERIA: tuple[tuple[str, str, str], ...] = (
 ANALYZER_DIMENSIONS: tuple[str, ...] = ("declarations",)
 
 
+def declaration_concepts_missing(covered: set[str]) -> tuple[str, ...]:
+    """Criteria the analyzers did not supply, in rubric order.
+
+    The fallback this decides is correct and used to be silent, which P8
+    forbids: the reader saw a declarations rate with nothing saying what
+    produced it. It is not a rare path either. lizard reports cyclomatic
+    complexity and declaration lines and no cognitive complexity, so a
+    JavaScript repository with lizard installed and nothing else takes
+    this branch on *every* run -- by construction, and an audit had to
+    point out that the page justifying JavaScript support credited the
+    analyzer pool for work the built-in scanner was doing.
+    """
+    return tuple(
+        concept for concept, _warn, _fail in DECLARATION_CRITERIA
+        if concept not in covered
+    )
+
+
+def declined_dimensions(
+    measurements: list[Measurement], production_only: bool = False
+) -> tuple[dict[str, Any], ...]:
+    """Dimensions the analyzer tier could not drive, and why.
+
+    Reported so the built-in fallback is attributable rather than
+    inferred from a missing number (P8).
+    """
+    covered = {
+        measurement.concept for measurement in measurements
+        if not (production_only and is_test_path(measurement.path or measurement.unit))
+    }
+    missing = declaration_concepts_missing(covered)
+    if not missing:
+        return ()
+    return ({
+        "dimension": "declarations",
+        "missing_concepts": list(missing),
+        "measured_by": "built-in detectors",
+        "reason": (
+            "no analyzer supplied " + ", ".join(missing) + ", and a "
+            "declaration rate built from a narrower criterion set is not "
+            "comparable to the rubric's, which fails a declaration on any "
+            "of the three"
+        ),
+    },)
+
+
 def _breach_counts(
     per_unit: dict[str, dict[str, float]], thresholds: dict[str, Any]
 ) -> tuple[int, int]:
@@ -271,7 +317,7 @@ def _declaration_pressure(
     # drives the estimate, so it is `None` — unmeasured, falling back to
     # the built-in tier — rather than a confident number about nothing.
     covered = {concept for values in per_unit.values() for concept in values}
-    if not all(concept in covered for concept, _w, _f in DECLARATION_CRITERIA):
+    if declaration_concepts_missing(covered):
         return dict.fromkeys(ANALYZER_DIMENSIONS)
 
     # Banded, not counted (ADR 008, 3.2): each unit takes the worst band

@@ -22,6 +22,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from _git_path import GIT_PATH
 
 from maintainability_audit import _evidence_view as view
 from maintainability_audit._evidence_view import NOT_VERIFIED
@@ -35,7 +36,7 @@ from maintainability_audit.sarif import report_to_sarif
 ENV = {
     "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
     "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t",
-    "PATH": "/usr/bin:/bin",
+    "PATH": GIT_PATH,
 }
 
 

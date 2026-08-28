@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from test_analyzer_bridge import _clean_tree
+from _analyzer_fixtures import _clean_tree
 
 from maintainability_audit._corroborate import combine
 from maintainability_audit._metrics_types import Measurement

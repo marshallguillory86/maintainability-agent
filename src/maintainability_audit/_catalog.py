@@ -120,9 +120,16 @@ def load_catalog(path: str | None = None) -> tuple[dict[str, Any], ...]:
     """Every catalog entry. Cached — the file is data and does not change mid-run."""
     source = Path(path) if path else CATALOG_PATH
     if not source.exists():
+        # Advice for whoever is actually reading this. A developer in a
+        # checkout rebuilds it; a user of an installed copy cannot —
+        # they have an incomplete install, which is precisely what D23
+        # was, and telling them to run a build script from a repository
+        # they do not have wastes the one message they get.
         raise PolicyError(
-            f"analyzer catalog missing at {source}. Rebuild it with "
-            "tools/build_catalog.py; the package cannot select tools without it."
+            f"analyzer catalog missing at {source}. In an installed copy "
+            "this means the package shipped without its data: reinstall "
+            "maintainability-agent. In a source checkout, rebuild it with "
+            "tools/build_catalog.py. Without it no analyzer can be selected."
         )
     return tuple(json.loads(source.read_text(encoding="utf-8"))["tools"])
 

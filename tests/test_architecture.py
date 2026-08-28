@@ -27,6 +27,20 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
                # `_user_config` is the XDG user tier and its state (D13):
                # file reads and atomic writes, no internal imports.
                "_user_config",
+               # `_stored_grants` decides whether a persisted root grant
+               # still names the directory the user consented to. A
+               # foundation because both the writer (`_user_config`) and
+               # the reader (`_mcp_audit`) must reach the same rule, and
+               # four versions of it were broken by the two sides
+               # comparing paths their own way (D79).
+               "_stored_grants",
+               # `_safe_write` is the one way this agent writes into a
+               # tree it is auditing: bounded, symlink-refusing, staged
+               # then renamed so no existing inode is ever opened for
+               # writing. A foundation because every writing layer above
+               # must reach it and it may reach nothing but `config`
+               # (D34).
+               "_safe_write",
                # ADR 009's structured identity and matching relation is a
                # foundation shared by the gate, recurrence and presentation.
                "_finding_match",
@@ -35,7 +49,10 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
                # data -- a leaf that reads the shipped catalog and nothing
                # else.
                "_runner", "_catalog"}
-PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens"}
+# `_xml` reads analyzer XML and refuses what it will not parse — a
+# parser with no internal imports, so it sits with the other
+# parsers rather than with the adapters that call it (D46).
+PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens", "_xml"}
 # ADR 003: `_semantic` normalizes and classifies; `_semantic_ts` reads
 # TypeScript facts (recordings, an already-installed tsc through
 # `_runner`, and source text). Both observe and neither scores —
@@ -97,6 +114,11 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # `_semantic_view` prints the ADR 003 semantic block with
                 # its class labels intact and computes none of it.
                 "_semantic_view",
+                # `_coverage_notes` is the coverage section's prose about
+                # its own gaps -- one source only, a dimension the analyzer
+                # tier declined, nothing examined -- split from `_scan_view`
+                # at the file-size line.
+                "_coverage_notes",
                 "_scan_view", "_history_view", "_identity"}
 # `_first_run` is terminal interaction — it prompts, which no layer
 # below entry may ever do, and writes the config file the entry then
@@ -111,11 +133,21 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
 # `_mcp_gate` is what the audit answers with when it is not answering
 # with an audit — the D26 setup precondition and the D27 run-or-
 # reconfigure choice, split from `_mcp_audit` at the same size gate.
+# `_mcp_refusals` is the set of domain types the transport may turn
+# into the SDK's declared refusals. Below both seam-binding modules,
+# because `mcp_server` imports `_mcp_resources` and a tuple beside
+# either would be a cycle for the other.
 # Entry, because deciding to ask a person rather than compute is an
 # entry-layer decision; nothing below may make it.
+# `_grant_ledger` reads the persisted root-grant list and asks
+# `_stored_grants` whether each entry still names what was consented to.
+# Entry layer beside `_mcp_audit`: it reaches `_user_config` for the
+# file and the rule module for the judgment, and the audit door is its
+# only consumer.
 ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup", "_mcp_audit",
-         "_skill_install", "_mcp_gate",
-         "_mcp_grants"}
+         "_grant_ledger",
+         "_skill_install", "_mcp_gate", "_mcp_resources",
+         "_mcp_grants", "_mcp_refusals"}
 BOUNDARY = {"evidence"}
 
 LAYERS = {
@@ -325,6 +357,11 @@ def test_every_test_named_in_the_architecture_doc_exists() -> None:
         path.read_text(encoding="utf-8") for path in (ROOT / "tests").glob("test_*.py")
     )
     existing_files = {path.name for path in (ROOT / "tests").glob("test_*.py")}
+    assert existing_files and suite, (
+        "the test suite was not read, so every name the document cites "
+        "would resolve against nothing and this check would pass over an "
+        "empty set"
+    )
 
     missing = [
         name

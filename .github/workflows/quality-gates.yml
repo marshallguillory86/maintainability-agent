@@ -285,6 +285,46 @@ jobs:
       - name: Prove each newly cited falsifier
         run: python3 tools/prove_falsifiers.py --base "origin/${{ github.base_ref }}"
 
+  declared-authorship:
+    name: Every commit declares who wrote it
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Each commit carries an Agent trailer
+        # Every agent in this project commits under Marshall's git
+        # identity, so `git log` cannot say who did the work. D100 is
+        # what that costs: the version was promoted to a 1.0 release
+        # candidate and the record could not name who decided it.
+        #
+        # The trailer is a declaration, not a proof -- a commit naming
+        # the wrong agent passes this check. Proof needs per-agent
+        # signing keys and required_signatures on the branch. RULES.md
+        # says so rather than letting this read as more than it is.
+        run: |
+          set -euo pipefail
+          range="origin/${{ github.base_ref }}..HEAD"
+          commits=$(git rev-list --no-merges "$range")
+          if [ -z "$commits" ]; then
+            echo "no non-merge commits in $range; this check proved nothing"
+            exit 1
+          fi
+          failed=0
+          for sha in $commits; do
+            agent=$(git show -s --format='%(trailers:key=Agent,valueonly)' "$sha" | tr -d '[:space:]')
+            case "$agent" in
+              claude|codex|grok|marshall)
+                echo "ok    $sha  Agent: $agent" ;;
+              "")
+                echo "FAIL  $sha  no Agent: trailer"; failed=1 ;;
+              *)
+                echo "FAIL  $sha  unknown Agent: $agent"; failed=1 ;;
+            esac
+          done
+          exit $failed
+
   analyzer-drift:
     name: Analyzer drift (scheduled, unpinned)
     if: github.event_name == 'schedule'

@@ -470,3 +470,43 @@ def test_the_disposition_names_the_entries_that_are_open() -> None:
         f"prose={[f'D{n}' for n in claimed]} "
         f"headings={[f'D{n}' for n in open_headings]}"
     )
+
+
+def test_entries_from_d89_record_who_did_the_work() -> None:
+    """D100: the record has to be able to say who decided something.
+
+    Asked who promoted the version to a 1.0 candidate, the register
+    could not answer. D85 carries no `*Roles:*` line, and every agent
+    here commits under the same git identity, so `git log` settles
+    nothing either.
+
+    The convention began at D89 and eleven entries have followed it
+    since, on nothing but habit. This is the lint that makes it a rule.
+    The cutoff is D89 because that is where the practice actually
+    starts — not D100, which would be picking a number that makes the
+    check easy. D1-D88 cannot be reconstructed and are left stated in
+    D100 rather than invented.
+    """
+    register = _read(REGISTER)
+    heads = list(re.finditer(r"^### D(\d+) — .*$", register, re.MULTILINE))
+    assert heads, "no register entries found; this sweep matched nothing"
+
+    governed = []
+    missing = []
+    for index, head in enumerate(heads):
+        number = int(head.group(1))
+        if number < 89:
+            continue
+        governed.append(number)
+        end = heads[index + 1].start() if index + 1 < len(heads) else len(register)
+        if "*Roles:*" not in register[head.start():end]:
+            missing.append(f"D{number}")
+
+    assert governed, (
+        "no entry at or after D89, so this check proved nothing; it must "
+        "fail rather than pass vacuously"
+    )
+    assert not missing, (
+        "entries from D89 must record who found, fixed and tested them; "
+        f"missing a *Roles:* line: {missing}"
+    )

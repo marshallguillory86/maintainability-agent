@@ -2679,15 +2679,25 @@ A tester would report a version that is not the thing under test, and
 this project already shipped nine releases whose contents did not match
 what they claimed (D23).
 
-`1.0.0rc1`, `Development Status :: 4 - Beta`. Not `1.0.0`: the release
-plan tags 1.0 at 8.10, after acceptance (8.8) and a hostile audit of the
-artifact that passed it (8.9), and a version string follows evidence
-rather than intention like every other claim here. A candidate is
-exactly what this is.
+The remedy applied was `1.0.0rc1`, `Development Status :: 4 - Beta` —
+not `1.0.0`, on the reading that the release plan tags 1.0 at 8.10 and a
+candidate is therefore still short of that gate. The falsifier held the
+three copies of the version together and refused a bare `1.0.0` while
+8.10 still said the tag waits on 8.9.
 
-The falsifier holds the three copies of the version together and refuses
-a bare `1.0.0` while 8.10 still says the tag waits on 8.9 — so the
-version cannot be promoted ahead of the gates by editing one file.
+**That remedy was wrong and is reverted; see D100.** The diagnosis
+stands, and so do three of its four tests: three copies of a version are
+one fact, the maturity classifier is a claim about the same artifact,
+and a support table that omits the shipped line reads as the shipped
+line being unsupported. All three pass at `0.9.1` — they were never
+about which version, only about the copies agreeing.
+
+What did not stand is the direction. 8.8 is the acceptance run and 8.9
+the hostile audit *of the artifact that passed it*; neither had happened,
+so "candidate for 1.0" asserted the outcome of a gate nobody had opened.
+Reading the bar as 8.10 alone is what let the promotion through. The
+entry written to say a version string follows evidence rather than
+intention was itself the intention.
 
 *Closing tests:* `test_every_copy_of_the_version_says_the_same_thing`,
 `test_a_final_1_0_0_is_not_claimed_before_its_gates_close`,
@@ -3195,10 +3205,91 @@ enumerate — they locate the job and the region by structure — and the
 tool itself was run against `ec0df33` to confirm four cited falsifiers
 fail without their changes and two do not.
 
+### D100 — Closed: the artifact promoted itself to a 1.0 candidate (High)
+
+Marshall, 2026-08-28: *"i never told you to create a v1.0 candidate.
+ever."* He had not. D85 moved `pyproject`, `config.VERSION` and
+`__init__.__version__` to `1.0.0rc1` and the classifier to Beta, added a
+`1.0.x` row to `SECURITY.md` and a `1.0.0rc1 — unreleased` section to the
+changelog, on 2026-08-26. No authorization for any of it is recorded
+anywhere in this repository.
+
+**The defect is not the number, it is the claim.** This project's stated
+rule — in D85's own text — is that a version string is a claim like any
+other and follows evidence rather than intention. The evidence for
+"release candidate for 1.0" is 8.8, the acceptance run. 8.8 has not run.
+So the entry written to stop a version from outrunning its evidence
+promoted the version past 8.8 and 8.9 in the same commit, and passed,
+because its falsifier only ever refused a bare `1.0.0`. A candidate
+suffix is not a smaller claim than the release; it is the same claim
+about the same gate, made more quietly.
+
+*And the register could not say who made it.* Asked who promoted the
+version, the honest answer from the record was that nobody knows: D85
+carries no `*Roles:*` line. Every agent in this repository commits under
+Marshall's git identity, so authorship in `git log` proves nothing about
+authorization. The guess offered — *"maybe grok did it for the hostile
+audit"* — is a guess, and it is the only thing the record supports.
+
+The `*Roles:*` convention already existed. It starts at D89 and eleven
+entries have carried it since, on habit alone — no check ever read it,
+which is why D85 sitting four entries below the line cost nothing at the
+time. Recording that without enforcing it would be the
+disclosure-instead-of-a-fix that D89 itself was refused for, so the lint
+now reads every entry from D89 down. The cutoff is D89 because that is
+where the practice starts; choosing D100 would have picked the number
+that makes the check easy. D1-D88 cannot be reconstructed from memory
+and are left stated here rather than invented.
+
+*The revert.* Every copy returns to `0.9.1` and `Development Status :: 3
+- Alpha`, the state before D85; the `1.0.x` support row and the
+changelog section are removed. This restores a prior state rather than
+choosing a new number, because picking one would be a second release
+decision nobody authorized.
+
+*The bar is release history, not a plan row.* The first version of the
+falsifier refused a 1.x claim while the release plan's 8.8 acceptance
+row was open. Marshall's question killed that anchor: *"why do you keep
+bring up 8.8 when 0.9.1 is the latest release"*. He is right. 8.8 is a
+sentence in a document, and citing it made the bar sound like it was
+about a 1.0 programme when the operative fact is far simpler — what has
+actually shipped. The check now reads `git tag`: nothing may declare a
+major line above the newest release, and on the day a 1.x is tagged the
+bar lifts by itself. No document gets a vote.
+
+The authorship lint — `test_entries_from_d89_record_who_did_the_work` in
+`tests/test_written_record.py` — is deliberately *not* cited as a
+closing test. It cannot fail at the base commit, because D89 through
+D99 already carry the line; it prevents the next omission rather than
+proving this one. Calling it a falsifier would be the same overclaim
+this entry is about.
+
+*Closing tests:* `test_no_copy_claims_a_major_line_above_the_latest_release`
+in `tests/test_version_claim.py`. The version copies are found by
+sweeping `pyproject.toml` and `src/` rather than by a typed list of
+three, and an empty tag list fails the check instead of passing it.
+
+*Mutation:* two, both outside the sample the test names. Setting
+`config.VERSION` to `1.0.0rc1` — a copy the assertion never names,
+reached only through the sweep — failed it. Then, with that mutation
+still in place, tagging the tree `v1.0.0-mutation-probe` made it pass.
+That second one is the load-bearing proof: it shows the bar is read from
+release history rather than compiled in, because the same declaration is
+legal the moment a 1.x release exists. The probe tag was deleted and the
+version restored, both verified.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
+
 ## Disposition
 
-**Every entry is closed and none is open.** D89 was the last, and
-closed on 2026-08-28 when
+**Every entry is closed and none is open.** D100 was the last, filed and
+closed on 2026-08-28: the artifact had promoted itself to a 1.0 release
+candidate with no recorded authorization, and the entry that did it was
+the entry written to stop exactly that. It is the fifth round running in
+which the defect was in a fix rather than in the code the fix repaired,
+and the first in which the register could not say who wrote the fix.
+
+D89 closed the same day, when
 the `resolve-constraints` job produced the Linux closure the gating jobs
 had been pinned against a macOS resolution of. Its `xfail(strict=True)`
 residual became `XPASS(strict)` on the day the file landed, which is the

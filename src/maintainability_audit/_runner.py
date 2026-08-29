@@ -262,6 +262,15 @@ def _probe(slug: str, argv: tuple[str, ...]) -> ToolResult:
     )
 
 
+#: A terminal colour/style escape. complexipy paints its version
+#: (`\x1b[1;36m7.0\x1b[0m...`), and a painted version stored as the pin is
+#: a pin that changes with a tool's colour choices, not its version. The
+#: determinism suite stripped these before comparing, which hid that the
+#: stored value carried them; stripping at capture makes the recorded pin
+#: the version and nothing else (Grok e88b429 audit).
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+
+
 def version_line(banner: str) -> str:
     """The line of a version banner that actually names a version.
 
@@ -271,10 +280,10 @@ def version_line(banner: str) -> str:
     banner with none falls back to its first line, which is all the
     tool offered.
     """
-    lines = banner.splitlines()
+    lines = _ANSI_ESCAPE.sub("", banner).splitlines()
     named = next(
         (line.strip() for line in lines if re.search(r"\d\.\d", line)),
-        lines[0],
+        lines[0] if lines else "",
     )
     return named[:120]
 

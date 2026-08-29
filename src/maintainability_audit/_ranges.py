@@ -64,6 +64,18 @@ _ASSIGNED_RE = re.compile(rf"^({_NAME})\s*(?::[^=;]*)?=\s*(?:async\s+)?(?:functi
 _PROPERTY_RE = re.compile(
     rf"^({_NAME})\s*:\s*(?:async\s+)?(?:function\b\s*\*?\s*\(|{_NAME}\s*=>|\([^)]*\)\s*=>)"
 )
+# A class field typed as a function -- `onSave: (e: Event) => void;` -- is
+# a type annotation, not a function. In a class body `name: T` declares a
+# field of type T; a value would need `name = ...`, so `name: (...) => X`
+# can only be a function-type annotation, with X a return type and no
+# body. D93 skipped these inside `interface`/`type` blocks but not inside
+# a class, so class fields still minted a declaration population (Grok
+# e88b429 audit). The `;` terminator and the absence of a block `{` after
+# the arrow are what tell an annotation from a real arrow-valued property
+# (`onSave: (a) => { ... }`), which keeps its body and stays counted.
+_FUNCTION_TYPE_ANNOTATION_RE = re.compile(
+    rf"^({_NAME})\s*:\s*(?:async\s+)?\([^)]*\)\s*=>\s*[^{{;=]+;\s*$"
+)
 _METHOD_RE = re.compile(rf"^\*?\s*({_NAME})\s*{_GENERICS}\(")
 
 # A TypeScript type block. Its members use the same `name: (a) => …`
@@ -301,6 +313,9 @@ def js_declaration_ranges(lines: list[str]) -> tuple[list[DeclRange], list[str]]
         if _TYPE_BLOCK_RE.match(_strip_modifiers(text).strip()):
             end = _block_end(masked, number)
             type_block_ends = end if end is not None else number
+            continue
+        if _FUNCTION_TYPE_ANNOTATION_RE.match(_strip_modifiers(text).strip()):
+            # A class field typed as a function, not a function (D93).
             continue
         found = _declaration(text)
         if found is None:

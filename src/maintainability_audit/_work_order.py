@@ -194,6 +194,16 @@ def _items_from_idioms(report: dict[str, Any]) -> list[dict[str, Any]]:
     return items
 
 
+def _locate(finding: dict[str, Any]) -> tuple[str | None, int | None]:
+    """Path/line; a duplicate block carries only `locations`, which the old path/line read dropped (Grok e88b429)."""
+    path = finding.get("path") or finding.get("first_path")
+    line = finding.get("line") or finding.get("first_line") or finding.get("start_line")
+    if path is None and (locs := finding.get("locations")):
+        path, _, tail = str(locs[0]).rpartition(":")
+        line = int(tail) if line is None and tail.isdigit() else line
+    return path, line
+
+
 def _items_from_counted(report: dict[str, Any]) -> list[dict[str, Any]]:
     """Classes the report carries as located lists."""
     sources = (
@@ -210,18 +220,17 @@ def _items_from_counted(report: dict[str, Any]) -> list[dict[str, Any]]:
     for name, key, label in sources:
         weight = CLASS_RISK_EFFORT[name]
         for finding in report.get(key) or []:
-            path = finding.get("path") or finding.get("first_path")
+            path, line = _locate(finding)
             if not path:
-                # No location means nothing to act on. Dropped rather
-                # than emitted without one (ADR 007 §3, task 4.6).
-                continue
+                continue  # no location, nothing to act on (ADR 007 §3, 4.6)
             item = {
                 "finding_class": name,
                 "title": f"{label} in {path}",
                 "path": path,
-                "line": finding.get("line") or finding.get("first_line"),
+                "line": line,
                 "target": f"remove the {label}",
-                "severity": float(finding.get("lines") or finding.get("similarity") or 1),
+                "severity": float(finding.get("lines") or finding.get("similarity")
+                                   or finding.get("count") or 1),
                 "weight": weight,
             }
             if name == "risk-pattern":

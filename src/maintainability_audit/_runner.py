@@ -26,11 +26,13 @@ did not run is not a clean result.
 
 from __future__ import annotations
 
+import functools
 import os
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -173,7 +175,49 @@ def analyzer_env() -> dict[str, str]:
     analyzer *load code* the operator did not choose. `PATH` stays,
     because the tool has to be found.
     """
-    return {k: v for k, v in os.environ.items() if k not in _CODE_LOADING_VARS}
+    env = {k: v for k, v in os.environ.items() if k not in _CODE_LOADING_VARS}
+    registry = _user_npm_registry()
+    if registry is not None:
+        # A user who enables `acquire_tools` chooses to fetch a tool; the
+        # audited tree does not get to choose *where from*. npm reads a
+        # `.npmrc` from the working directory, so a repo shipping
+        # `registry=https://evil/` silently redirects that fetch. Forcing
+        # the registry through the environment -- which npm ranks above a
+        # project `.npmrc` -- pins it to the value the user configured for
+        # themselves, read below where the tree cannot vote. Marshall's
+        # call, 2026-08-29: let the user pull tools, do not let the tree
+        # pick the source.
+        env["npm_config_registry"] = registry
+    return env
+
+
+@functools.lru_cache(maxsize=1)
+def _user_npm_registry() -> str | None:
+    """The user's own npm registry, resolved where the tree cannot vote.
+
+    Read with `npm config get` from a fresh empty directory, so a
+    `.npmrc` in the repository under audit -- or in whatever directory
+    the audit happens to run from -- has no say in the answer. Returns
+    ``None`` when npm is absent (a Python-only audit never fetches a Node
+    tool) or cannot say, and the environment is then left untouched.
+    """
+    npm = shutil.which("npm")
+    if npm is None:
+        return None
+    neutral = tempfile.mkdtemp(prefix="ma-npm-")
+    try:
+        completed = subprocess.run(  # noqa: S603 - argv list, never a shell
+            [npm, "config", "get", "registry"],
+            cwd=neutral, capture_output=True, text=True, timeout=30,
+            env={k: v for k, v in os.environ.items() if k not in _CODE_LOADING_VARS},
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    finally:
+        os.rmdir(neutral)
+    value = completed.stdout.strip()
+    return value or None if completed.returncode == 0 else None
 
 
 def _probe(slug: str, argv: tuple[str, ...]) -> ToolResult:

@@ -162,8 +162,16 @@ jobs:
           set -euo pipefail
           git config gpg.ssh.allowedSignersFile .github/allowed_signers
           range="origin/${{ github.base_ref }}..HEAD"
-          commits=$(git rev-list --no-merges "$range")
-          if [ -z "$commits" ]; then
+          # Signatures are checked over *every* commit, merges included,
+          # while the range is still required to contain a non-merge commit.
+          # The two are separate questions and were wrongly answered by one
+          # `--no-merges`: a merge carries the conflict resolution its
+          # author wrote, so an unsigned merge is unattested content, and
+          # skipping it let exactly that through (found by audit). Requiring
+          # a non-merge commit stays, because a range of nothing but merges
+          # still proves nothing about who wrote the work.
+          commits=$(git rev-list "$range")
+          if [ -z "$(git rev-list --no-merges "$range")" ]; then
             echo "no non-merge commits in $range; this check proved nothing"
             exit 1
           fi

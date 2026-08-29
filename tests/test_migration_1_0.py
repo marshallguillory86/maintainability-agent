@@ -59,7 +59,16 @@ def test_adr_006_states_the_environment_work_order_ships() -> None:
     assert "Not shipped (2.5c)" not in text, (
         "the ADR still defers the environment work order; report[\"environment_work_order\"] ships it"
     )
-    assert "never installs" in text.lower(), "the line that may not blur has to stay stated"
+    # The blanket "never installs" was reconciled away (Grok UAT audit):
+    # a user may enable acquisition, so the absolute was a user-visible
+    # contradiction the moment they did. The line that may not blur is the
+    # boundary that actually matters and must stay stated -- acquisition is
+    # the user's to enable, and the audited tree's never.
+    lowered = text.lower()
+    assert "acquire_tools" in text and "cannot enable it" in lowered, (
+        "the boundary that may not blur has to stay stated: a user may "
+        "enable acquisition, an audited tree may not"
+    )
 
 
 def test_the_index_and_readme_point_at_the_1_0_guide() -> None:

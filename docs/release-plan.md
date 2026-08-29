@@ -68,7 +68,7 @@ Implements the executable half of [ADR 006](adr-006-analyzer-evidence.md). The l
 | 2.4 | Baseline adapter tranche: lizard, multimetric, jscpd, radon, ruff, vulture, complexipy, interrogate, pydocstyle | Each parses real output on the corpus; per-adapter fixture tests. The later moderate tranche brings the runnable total to fourteen (twelve native plus pylint and mypy). |
 | 2.5 | Coverage reporting in the report | Every run states tools attempted, run, unavailable and why, with versions |
 | 2.5b | Coverage gaps per language and concern | A concern with no tool running against it is `Unknown`, never clean |
-| 2.5c | Environment work order | **Shipped.** `report["environment_work_order"]` names each selected tool that could not run, why, the install command and the verification; rendered after coverage in the Markdown report; the agent never installs (`tests/test_environment_work_order.py`) |
+| 2.5c | Environment work order | **Shipped.** `report["environment_work_order"]` names each selected tool that could not run, why, the install command and the verification; rendered after coverage in the Markdown report. Acquisition stays off unless the user enables `analyzers.acquire_tools` in user-tier configuration (`tests/test_environment_work_order.py`) |
 | 2.6 | Rubric-driven tool configuration | Changing a project's `eslint.config.mjs` provably does not move the score |
 | 2.7 | Five moderate adapters | **Shipped**, deliberately as four: pylint, flake8, eslint and cohesion parse real recorded output (`tests/test_adapter_recordings.py`); xenon is deliberately unadapted — a threshold gate over radon contributes no independent measurement, and two tools agreeing because one *is* the other would inflate corroboration |
 | 2.8 | Determinism under pinned versions | Two runs on one tree with identical tool versions are byte-identical |
@@ -227,6 +227,6 @@ If the finish line has to move nearer, these can be deferred without making the 
 - **Phase 5 backfill (5.5)** — history still accumulates going forward.
 - **Phase 6 MCP (6.2, 6.3)** — the CLI covers CI, which is the load-bearing entry point.
 - **Adapters beyond the ten baseline ones (2.7)** — the pool grows over time by design; `all` already reports honestly what it could not run.
-- **2.5c environment work order** — shipped: the install-command artifact now rides beside coverage. The agent still never installs.
+- **2.5c environment work order** — shipped: the install-command artifact now rides beside coverage. Acquisition remains opt-in in user-tier configuration; the audited tree cannot enable it.
 
 What cannot be cut without the tool lying: population floors (Phase 1), coverage reporting (2.5), and rubric-driven tool configuration (2.6). Those three are what stop the score from being fiction.

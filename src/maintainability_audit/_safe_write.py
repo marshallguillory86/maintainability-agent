@@ -30,11 +30,10 @@ does not, because a hardlink is not a link in the sense it checks.
 from __future__ import annotations
 
 import os
+import tempfile
 from pathlib import Path
 
 from .config import PathNotAllowed, repository_path
-
-_STAGING_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
 
 
 def bounded_target(root: Path, configured: str | None, default: str) -> Path:
@@ -110,11 +109,22 @@ def _stage_and_replace(target: Path, body: str) -> Path:
     outside the repository keeps its contents and merely stops being
     this name — which is exactly what D18 established and D34 found
     missing here.
+
+    The staging name is unique per call. A fixed `.{name}.incoming` was
+    guessable, and the audited tree could plant that exact file: `O_EXCL`
+    then raised `FileExistsError` and took the write primitive down with a
+    crash the tree chose the timing of (Grok e88b429 audit). `mkstemp`
+    creates an exclusive file under a random name in the same directory,
+    so nothing the tree pre-places can collide with it, and it still lands
+    on the same filesystem for an atomic `os.replace`.
     """
-    staging = target.parent / f".{target.name}.incoming"
     encoded = body.encode("utf-8")
-    handle = os.open(staging, _STAGING_FLAGS, 0o644)
+    handle, staging_name = tempfile.mkstemp(
+        dir=target.parent, prefix=f".{target.name}.", suffix=".incoming"
+    )
+    staging = Path(staging_name)
     try:
+        os.fchmod(handle, 0o644)  # mkstemp makes 0600; match the old mode
         written = 0
         while written < len(encoded):
             # A short write reported as success leaves a truncated
@@ -127,7 +137,11 @@ def _stage_and_replace(target: Path, body: str) -> Path:
                 )
             written += sent
         os.fsync(handle)
-    finally:
+    except BaseException:
+        os.close(handle)
+        staging.unlink(missing_ok=True)
+        raise
+    else:
         os.close(handle)
 
     try:

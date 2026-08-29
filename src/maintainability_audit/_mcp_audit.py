@@ -343,13 +343,14 @@ def _baseline_workflow(report: dict[str, Any], root: Path,
     from .baseline import findings_not_in_baseline
     from .baseline import write_baseline as write_baseline_file
 
-    target = _resolved(baseline_path or str(DEFAULT_BASELINE_PATH), relative_to=root)
-    if not (target == root or target.is_relative_to(root)):
-        # The supplied spelling, never the resolved target (D96).
-        raise PathNotAllowed(
-            f"baseline_path {baseline_path or DEFAULT_BASELINE_PATH} is "
-            "outside the repository being audited"
-        )
+    # `repository_path`, not `_resolved`, so the baseline write is bounded
+    # by exactly the guard the history write already had. `_resolved`
+    # resolves and this then bounded the resolved path, so an inward
+    # `.maintainability -> src` symlink kept the target inside the root and
+    # the write landed in source -- the D34 escape history refused and
+    # baseline did not (Grok e88b429 audit). `repository_path` refuses a
+    # symlink anywhere on the route and keeps the same boundary check.
+    target = repository_path(root, baseline_path, str(DEFAULT_BASELINE_PATH))
     if write:
         _refuse_clobbering_non_baseline(target)
         target.parent.mkdir(parents=True, exist_ok=True)

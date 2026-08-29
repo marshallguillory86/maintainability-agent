@@ -210,25 +210,22 @@ def repository_path(root: Path, configured: str | None, default: str) -> Path:
             f"configured path {configured or default!r} resolves outside "
             "the repository it configures"
         )
-    # A `.maintainability -> src` link keeps the target inside the root,
-    # so the boundary check above passes on the resolved path while the
-    # write still lands in source. The link shows only on the lexical route.
+    # An inward `.maintainability -> src` link passes the boundary check on
+    # the resolved path; it shows only on the lexical route (D34).
     _refuse_symlinked_route(root, base)
     return target
 
 
 def _refuse_symlinked_route(root: Path, base: Path) -> None:
-    """No component between root and target may be a symlink, checked on
-    the lexical path where a followed link still shows (D34). A link back
-    inside the root is refused just as one pointing out is.
+    """No component between root and target may be a symlink, seen on the
+    lexical path -- a link back inside the root is refused as one out (D34).
     """
     current = Path(os.path.normpath(base))
     while current.is_relative_to(root) and current != root:
         if current.is_symlink():
             raise PathNotAllowed(
                 f"{current} is a symlink; the audited tree cannot redirect "
-                "where this agent reads or writes, inside the root or out."
-            )
+                "where this agent reads or writes.")
         current = current.parent
 
 
@@ -258,7 +255,10 @@ def discovered_config(root: Path) -> str | None:
     fix living in one caller looks like from the outside.
     """
     candidate = root / CONFIG_FILENAME
-    return str(candidate) if candidate.is_file() else None
+    # Refuse a symlink: `is_file()` follows one out of the grant (D36/e88b429).
+    if candidate.is_symlink() or not candidate.is_file():
+        return None
+    return str(candidate)
 
 
 def acquisition_permitted() -> bool:

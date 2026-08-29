@@ -140,7 +140,11 @@ def _affected_changes_per_year(report: dict[str, Any]) -> tuple[float, str]:
     items = report.get("work_order") or []
     churn = _churn_by_path(report)
     if churn:
-        touched = sum(churn.get(item.get("path") or "", 0) for item in items)
+        # Once per file, not once per row. A file with several work-order
+        # items -- a long function and dead code in the same module --
+        # has one churn history, and summing it per row multiplied that
+        # file's yearly changes by its finding count (Grok e88b429 audit).
+        touched = sum(churn.get(path, 0) for path in {item.get("path") or "" for item in items})
         if touched:
             return float(touched), (
                 "affected changes/year taken from hotspot churn over the "

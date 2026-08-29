@@ -117,18 +117,36 @@ def _executive_strip(report: dict[str, Any], score: dict[str, Any],
     ]
 
 
+def _comparable_tail(records: list[Any]) -> list[Any]:
+    """The current comparable run -- the last segment `segments` produces.
+
+    Markdown and the MCP path report per segment, breaking a series
+    wherever the rubric, analyzers or scored languages changed (ADR 009).
+    The HTML skin walked every stored record instead, so a first-vs-last
+    estimate straddling a break read as "Improving across N scans" when
+    the two numbers were produced by different instruments and cannot be
+    compared at all (Grok e88b429 audit). Restricting to the last segment
+    puts the HTML skin on the same comparability rule as the others.
+    """
+    from ._scan_history import segments
+    parts = segments(records)
+    return parts[-1].records if parts else records
+
+
 def _direction_sentence(records: list[Any]) -> str:
-    """The series direction, from stored estimates only. Never a forecast."""
-    estimates = [r.estimate for r in records if r.estimate is not None]
+    """The current series' direction, from stored estimates only. Never a
+    forecast, and never across an instrument break (ADR 009)."""
+    comparable = _comparable_tail(records)
+    estimates = [r.estimate for r in comparable if r.estimate is not None]
     if len(estimates) < 2:
         return "No history yet: this is the first recorded scan." if len(estimates) < 1 \
-            else "No history yet beyond this scan; direction needs two."
+            else "No comparable history beyond this scan; direction needs two."
     first, last = estimates[0], estimates[-1]
     if last > first:
-        return f"Improving across {len(estimates)} recorded scans ({first} to {last})."
+        return f"Improving across {len(estimates)} comparable scans ({first} to {last})."
     if last < first:
-        return f"Declining across {len(estimates)} recorded scans ({first} to {last})."
-    return f"Flat across {len(estimates)} recorded scans (at {last})."
+        return f"Declining across {len(estimates)} comparable scans ({first} to {last})."
+    return f"Flat across {len(estimates)} comparable scans (at {last})."
 
 
 def _history_table(records: list[Any]) -> list[str]:
@@ -158,6 +176,12 @@ def _history_table(records: list[Any]) -> list[str]:
 
 
 def _chart_sections(records: list[Any], score: dict[str, Any]) -> list[str]:
+    # The estimate is a deliberate rollup series: every recorded scan
+    # carries one, including schema-1 records, so all of them are plotted
+    # (test_schema_one_records_are_gaps_on_pillar_and_practice_charts). The
+    # comparability rule ADR 009 enforces lives in the prose that names a
+    # direction -- `_direction_sentence`, which reads the comparable tail
+    # only -- not in whether a point appears on the rollup chart.
     parts = ["<h2>Estimate over recorded scans</h2>"]
     estimate_points = [
         (index, r.estimate, r.range_low, r.range_high)

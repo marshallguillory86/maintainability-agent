@@ -139,9 +139,13 @@ def locate(executable: str) -> str | None:
 # somewhere the operator did not choose. `PYTHONPATH` and `NODE_PATH`
 # put a directory on an import path; `PYTHONSTARTUP` names a file
 # executed before anything else; the `LD_`/`DYLD_` pair inject shared
-# objects into the child. An audited tree that sets any of them in the
+# objects into the child; the `JAVA*`/`CLASSPATH` group is the same rule
+# for the JVM analyzers (PMD, Checkstyle, SpotBugs) — every JVM launch
+# reads the option vars at startup, and `-javaagent:` in one of them
+# loads an agent jar, which is code execution just as surely as a
+# `PYTHONPATH` import. An audited tree that sets any of them in the
 # environment this process inherited would be choosing what its own
-# analyzer imports (D39, Decision 9).
+# analyzer runs (D39, Decision 9).
 _CODE_LOADING_VARS = (
     "PYTHONPATH",
     "PYTHONSTARTUP",
@@ -153,6 +157,10 @@ _CODE_LOADING_VARS = (
     "LD_LIBRARY_PATH",
     "DYLD_INSERT_LIBRARIES",
     "DYLD_LIBRARY_PATH",
+    "JAVA_TOOL_OPTIONS",
+    "_JAVA_OPTIONS",
+    "JDK_JAVA_OPTIONS",
+    "CLASSPATH",
 )
 
 

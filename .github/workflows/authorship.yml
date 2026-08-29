@@ -37,6 +37,20 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          # The branch tip, not the default `refs/pull/N/merge`. On a
+          # pull_request event the default checkout is a merge commit
+          # GitHub builds for CI: authored by the PR author, committed by
+          # `noreply@github.com`, signed by nobody. Nobody wrote it, so it
+          # has no agent to declare and no key on the allow-list to verify
+          # against -- the signature gate below read it as `E` and failed
+          # the run on GitHub's own artifact.
+          #
+          # `--no-merges` used to hide this, and that was the wrong cure:
+          # it also skipped the merges a developer actually makes, which
+          # carry their conflict resolution. Checking out the real tip
+          # removes the synthetic commit from history entirely, so those
+          # merges can be checked without CI tripping over its own.
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - name: Each commit carries an Agent trailer
         # Every agent in this project commits under Marshall's git

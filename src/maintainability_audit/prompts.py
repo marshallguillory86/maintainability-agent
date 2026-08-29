@@ -290,7 +290,7 @@ def _escalated_fingerprints(report: dict[str, Any]) -> set[str]:
 
 
 def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
-    from ._identity import declaration_identities, file_fingerprint
+    from ._identity import declaration_identities, file_fingerprint, risk_identities
 
     escalated = _escalated_fingerprints(report)
     # Looked up, not rebuilt. `escalated` holds identities the history
@@ -313,7 +313,17 @@ def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
         and file_fingerprint(i["path"]) not in escalated
     ]
     lines.extend(bulleted_section("Large files to inspect for responsibility splits:", large_files))
-    risks = [f"`{i['path']}:{i['line']}` {i['name']}: {i['text']}" for i in report["risk_findings"][:20]]
+    # Risk findings honour the same escalation as the hotspots and large
+    # files above: a design-review candidate is announced as withheld in
+    # the escalation note, so listing it here too presented it twice and
+    # contradicted that note (P5, Grok e88b429 audit). The rule was
+    # enforced on every focus category except this one.
+    risk_ids = risk_identities(report)
+    risks = [
+        f"`{i['path']}:{i['line']}` {i['name']}: {i['text']}"
+        for i in report["risk_findings"][:20]
+        if risk_ids.get((i["path"], i["name"], i["line"])) not in escalated
+    ]
     lines.extend(bulleted_section("Risk pattern findings to verify:", risks))
     dupes = [
         f"Repeated block appears {i['count']} times near: {', '.join(i['locations'][:5])}"

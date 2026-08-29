@@ -78,7 +78,7 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 | P1 | The audit is deterministic: same tree, config, pinned analyzer versions **and scan history** in, same *evidence, findings and score* out — **at a fixed point in time.** The history window is relative to the wall clock (see below), so the same tree audited on two different days can report different history rates. Three further fields describe the run rather than the repository and are recorded without being compared — the absolute `root`, `git_status_short`, and each analyzer's wall-clock `seconds`; see below. History is an input, not decoration — a finding that cleared and returned twice is different information from one seen for the first time, so an identical tree reports differently against different histories, and that is the feature working. **The analysis itself performs no network access and invokes no language model.** Tool acquisition is opt-in through `analyzers.acquire_tools` and defaults off; when enabled, it may fetch a missing tool and records the acquired version | Two runs disagreeing on identical tree, config, versions and history, or any network access during analysis |
 | P2 | The score applies the same rubric to every repository, and the rubric is readable in source | A repo-specific code path changing a weight or band |
 | P3 | Withholding evidence cannot improve the reported grade | Any input whose removal raises the graded field |
-| P4 | The overall equals the weighted mean of the categories printed beside it | A report where the arithmetic does not check |
+| P4 | `maintainability_estimate` equals the weighted mean of the categories printed beside it | A report where the arithmetic does not check |
 | P5 | The remediation prompt names only findings the audit actually produced | A prompt instruction with no corresponding finding |
 | P6 | Every empirical claim in this repo is reproducible from checked-in pinned inputs | A quoted number that cannot be re-derived offline |
 | P7 | A score is issued only where enough was examined to support it, and never as a consequence of not looking | A number a reader with the repository in front of them would call absurd |
@@ -178,7 +178,7 @@ Six audit rounds went in circles for one reason: claims of different kinds were 
 
 ### Tier 1 — Deterministic property
 
-*"The overall is the mean of the printed categories."* A statement about what the code does.
+*"`maintainability_estimate` is the mean of the printed categories."* A statement about what the code does.
 
 **Requires:** a test that fails if it stops being true. Not an example — a property over the real field set or input space. No study, no debate.
 

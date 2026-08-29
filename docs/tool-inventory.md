@@ -53,7 +53,7 @@ Three things follow from the table, and they are the actual work:
 
 **Availability must be reported, never assumed.** A tool that is not installed is not a clean result. That was the hole behind a one-function repository scoring 5.0/A+: six shallow built-in checks found nothing, and the rubric read that as excellence. `--analyzers` now prints which tools were attempted, which ran, which were unavailable and why. A concern nobody looked at is reported unexamined, never clean.
 
-**Installation has to be explicit and layered.** Python tools install with the package; Node tools need `npx`; Java, Go, Rust and C tools are per-ecosystem binaries. The agent never installs. A small proven core (lizard, jscpd, ruff, radon) runs when present; the rest is reported unavailable rather than pretended to have looked.
+**Installation has to be explicit and layered.** Python tools install with the package; Node tools need `npx`; Java, Go, Rust and C tools are per-ecosystem binaries. Acquisition is off unless the user enables `analyzers.acquire_tools` in user-tier configuration; the audited tree cannot enable it. A small proven core (lizard, jscpd, ruff, radon) runs when present; the rest is reported unavailable rather than pretended to have looked.
 
 **The rubric is a metric over their findings** where they measured a full concept set, with the built-in detectors as the labelled fallback. That change is [ADR 006](adr-006-analyzer-evidence.md).
 

@@ -6,9 +6,11 @@ not contribute, the reason, the exact install command, and how to verify
 it worked — in the same shape as the code work order, so a person can
 run it or hand it to their own agent (ADR 006 §2c).
 
-The line that may never blur: **the agent never installs anything.**
-Installation is a network and privilege action belonging to the user.
-This module emits text.
+The line that may never blur: **acquisition is the user's to enable and
+the audited tree's never.** Installation is a network and privilege
+action belonging to the user; it is off by default, a user may turn on
+`analyzers.acquire_tools`, and an audited tree cannot. This module emits
+text either way.
 """
 from __future__ import annotations
 

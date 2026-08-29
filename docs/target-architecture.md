@@ -208,7 +208,7 @@ Four of nine concerns unexamined on the majority language. Without this section 
 
 So every report carries a coverage gap list, and each gap says what would close it: the tools, and the prerequisite runtime — a JDK for PMD and Checkstyle, Node for the JS toolchain, the Go or Rust toolchain, the .NET SDK.
 
-**The agent never installs anything.** Installing is a network and privilege action and it is the user's decision. What the agent emits is an *environment work order* in the same shape as the code work order — what is missing, why it matters, and the exact command — so a human can run it or hand it to their own AI agent to run. Same artifact, either consumer.
+**Acquisition is a user-tier decision.** Installing is a network and privilege action and it is off by default. A user may enable `analyzers.acquire_tools`; the audited tree cannot enable it. What the agent emits is an *environment work order* in the same shape as the code work order — what is missing, why it matters, and the exact command — so a human can run it or hand it to their own AI agent to run. Same artifact, either consumer.
 
 **Availability is proven by invocation, never by `PATH`.** Measured here: `/usr/bin/java` exists and `command -v java` succeeds, but it is the macOS stub with no JDK behind it, so PMD refused to run through it. Presence on `PATH` says nothing about whether a tool works.
 

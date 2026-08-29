@@ -1,0 +1,28 @@
+# Keys permitted to sign commits on this repository.
+#
+# Consumed by CI (`gpg.ssh.allowedSignersFile`) so the signature check in
+# quality-gates.yml verifies against a list that lives in the repo and
+# changes only by reviewed pull request -- not against whatever happens
+# to be on a runner or a laptop.
+#
+# One key per machine, never one key copied between them: a shared key
+# cannot tell you which machine signed. Add a machine by adding a line
+# here in the same PR that registers the key on GitHub with
+# `gh ssh-key add <pub> --type signing --title "<machine> signing key"`.
+#
+# Every agent on a machine shares that machine's key, so a signature
+# establishes "this machine, with a human present to authorise the key,
+# asserts what the commit says" -- and no more. Which agent did the work
+# is the `Agent:` trailer. That trailer is not a loose claim: the
+# signature is computed over the whole commit object, message and
+# trailers included, so altering `Agent: claude` to `Agent: grok` after
+# the fact turns the signature bad (`%G?` = B). It is tamper-evident and
+# human-attested. It is not independent proof that the attestation was
+# truthful, and RULES.md says so rather than letting this read as more
+# than it is.
+#
+# Remove a line the moment a machine is lost or retired. This file is
+# the revocation list.
+
+152444602+marshallguillory86@users.noreply.github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINL2xiAXV91ZBefta7ptHxTBRTh5UQ5v8xoRLLCPFDtG marshall signing key (MacBook Pro)
+152444602+marshallguillory86@users.noreply.github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII5ZPJwdmjlrBCRxffcB/7Y4H9bRo2ua1jrNjdm2hBdE Mac Studio 2025 signing key

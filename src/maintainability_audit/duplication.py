@@ -54,9 +54,18 @@ def duplicate_blocks(
     seen: dict[tuple[str, ...], list[str]] = {}
     for path in files:
         lines = [normalize_for_dup(line) for line in source.lines(path)]
-        useful = [line for line in lines if line and not line.startswith(("//", "#", "/*", "*", '"', "'"))]
+        # Each useful line keeps its original 1-based source line number.
+        # The index into this filtered list is not a source line: reporting
+        # `idx + 1` pointed a reader at the Nth non-comment line, not line N
+        # of the file, so every duplicate location was off by however many
+        # comments and blanks preceded it (Grok e88b429 audit).
+        useful = [
+            (number, line)
+            for number, line in enumerate(lines, start=1)
+            if line and not line.startswith(("//", "#", "/*", "*", '"', "'"))
+        ]
         for idx in range(0, max(0, len(useful) - block_size + 1)):
-            block = tuple(useful[idx : idx + block_size])
+            block = tuple(line for _, line in useful[idx : idx + block_size])
             if len(set(block)) <= 1:
                 continue
             # Skip blocks made entirely of low-information lines (bare
@@ -64,7 +73,8 @@ def duplicate_blocks(
             # ``_is_trivial_dup_line`` docstring for the rationale.
             if all(_is_trivial_dup_line(item) for item in block):
                 continue
-            seen.setdefault(block, []).append(f"{path.relative_to(root)}:{idx + 1}")
+            source_line = useful[idx][0]
+            seen.setdefault(block, []).append(f"{path.relative_to(root)}:{source_line}")
 
     dupes = []
     for block, locations in seen.items():

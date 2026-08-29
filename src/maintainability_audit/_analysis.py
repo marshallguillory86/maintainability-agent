@@ -290,6 +290,9 @@ def analyze(root: Path, config: dict[str, Any], probe: Probe | None = None) -> A
         concerns=tuple(settings["concerns"]),
     )
     probe = probe or Probe()
+    # `settings_from` has already clamped this to a sane band, so a
+    # repository config cannot set a per-analyzer wall clock long enough
+    # to stall the host (the crafted-config DoS family D40).
     timeout = int(settings["timeout_seconds"])
     # The same exclusions the built-in scan honours. Without them every
     # analyzer walks .venv and node_modules and reports vendored code as

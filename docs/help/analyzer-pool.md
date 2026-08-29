@@ -7,8 +7,9 @@ not a clean result.
 
 Configuration selects tools by concern, depth, license policy, language, and
 explicit allow/deny rules. `analyzers.run` controls whether the pool runs;
-explicit per-call choices override it. Tool acquisition remains opt-in. The
-agent never installs an analyzer for the user.
+explicit per-call choices override it. Tool acquisition remains opt-in: a user
+may enable `analyzers.acquire_tools` in user-tier configuration, but the
+audited tree cannot enable it.
 
 Every selected tool records an outcome and version or an unavailable reason.
 When a selected analyzer cannot run, the top-level `environment_work_order`

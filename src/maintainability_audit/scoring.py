@@ -135,10 +135,18 @@ _GATED_ORDER = ["A+", "A"]
 
 
 def _gate_failures(grade: str, readings: dict[str, float]) -> list[str]:
+    # Direct lookup, not `readings.get(name, 0.0)`. `_gate_readings`
+    # builds the readings with exactly the keys every grade's gates name,
+    # and reports an unmeasured one as `inf` so it fails every ceiling. A
+    # `.get` default of 0.0 would have done the opposite -- turned a
+    # missing reading into a perfect one and cleared the gate -- which is
+    # the "absence read as excellence" ADR 001 forbids, and which
+    # architecture.md already states was removed. A future gate key with
+    # no reading should raise here, not silently pass.
     return [
-        f"{name} {readings.get(name, 0.0):.3f} exceeds the {grade} ceiling of {ceiling:g}"
+        f"{name} {readings[name]:.3f} exceeds the {grade} ceiling of {ceiling:g}"
         for name, ceiling in GRADE_GATES[grade].items()
-        if readings.get(name, 0.0) > ceiling
+        if readings[name] > ceiling
     ]
 
 

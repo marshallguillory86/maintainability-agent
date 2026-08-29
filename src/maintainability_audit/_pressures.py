@@ -27,9 +27,10 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any
 
+from ._bands import SEVERE
 from ._calibration import DIMENSION_REFERENCES, WARN_WEIGHT
 from ._metrics_types import Measurement, is_test_path
-from .evidence import Measured, SummaryEvidence
+from .evidence import Measured, SummaryEvidence, Unknown
 
 
 def measured(state: object) -> float | None:
@@ -77,6 +78,19 @@ def _banded(banded_state: object, population: float | None,
     value = measured(banded_state)
     if value is not None:
         return float(value)
+    if isinstance(banded_state, Unknown):
+        # Withheld, not absent, and priced at the worst case. The band is a
+        # refinement that can only *add* pressure over the count rate (a
+        # warn at complexity 12 is worse than a plain warn), so falling
+        # back to the count rate when the band is withheld only improved
+        # the score -- the P3 hole Grok's e88b429 audit named. Dropping the
+        # dimension is no better: averaging over the rest can still improve
+        # the estimate when the withheld dimension was worse than its
+        # peers. `SEVERE` is the only value that cannot improve any
+        # dimension, so withholding a band can never raise the estimate,
+        # and the field is required (`_verification`) so the grade is
+        # withheld too.
+        return SEVERE
     return _weighted_rate(failures, warnings, population)
 
 

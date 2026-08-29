@@ -34,6 +34,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+from .config import PathNotAllowed
+
 # Versioned separately from the report contract. The two change for
 # different reasons — a report field is a consumer-facing break, a
 # history field is a migration of stored data — and one number for both
@@ -234,11 +236,71 @@ def append_scan(path: Path, record: ScanRecord, root: Path | None = None) -> Non
     """
     from ._safe_write import write_bounded
 
+    _refuse_clobbering_non_history(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     write_bounded(
         Path(root) if root is not None else path.parent,
         path, record.as_line() + "\n", append=True,
     )
+
+
+def _refuse_clobbering_non_history(target: Path) -> None:
+    """A scan record may extend a history, and nothing else.
+
+    The history path comes from the repository's own config, and being
+    inside the granted root was the only check. An audit set
+    ``paths.history`` to ``README.md`` and watched an audit append a JSON
+    line onto source -- in a tool whose contract is five artifacts and
+    "never source". `write_bounded` refuses a symlink or an irregular
+    file but not a plain one, because appending to a plain file is
+    exactly what a history *is*; the file's contents are what tell a
+    history apart from someone's work. This is the history twin of
+    `_refuse_clobbering_non_baseline`.
+
+    An absent or empty file is fine, and so is one whose every line is a
+    scan record this tool wrote. A single foreign line is someone else's
+    file.
+    """
+    if not target.exists() or target.is_symlink():
+        # Absence is fine; a symlink is `write_bounded`'s to refuse, with
+        # the message that fits that case.
+        return
+    if target.stat().st_nlink > 1:
+        # A hardlink is the *other* redirect, and `write_bounded` already
+        # answers it: its staged replacement severs the link, so the
+        # outside inode keeps its contents and this name becomes a fresh
+        # history. Content-checking it here would refuse the very write
+        # that defence is designed to perform safely (the D34 hardlink
+        # case). This guard is only for a plain file sitting where the
+        # history should go -- the `paths.history: README.md` attack.
+        return
+    try:
+        lines = [ln for ln in target.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    except (OSError, ValueError) as unreadable:
+        raise PathNotAllowed(
+            f"{target} exists and cannot be read as a scan history "
+            f"({unreadable}); refusing to write over it."
+        ) from unreadable
+    # At least one line must be a scan record. `read_history` already
+    # tolerates a single corrupt line -- a truncated write costs one scan,
+    # never the series -- so requiring *every* line to parse would freeze a
+    # slightly-damaged history against all further appends. The distinction
+    # this needs is coarser and exact for it: a file with zero records is
+    # not this tool's history, it is someone's source (`README.md`).
+    if not any(_is_scan_record(line) for line in lines):
+        raise PathNotAllowed(
+            f"{target} exists and is not a scan history; refusing to "
+            "write over it. Choose a path that is absent or holds a "
+            "history this tool wrote."
+        )
+
+
+def _is_scan_record(line: str) -> bool:
+    try:
+        record = json.loads(line)
+    except ValueError:
+        return False
+    return isinstance(record, dict) and "recorded_at" in record
 
 
 # Fields stored as sequences, derived from the dataclass rather than

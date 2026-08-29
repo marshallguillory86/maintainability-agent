@@ -102,12 +102,21 @@ def validate_revspec(revspec: str) -> str:
 #: reaches it, because the command set grows and the last rule scoped to
 #: today's commands (D73) missed the one spawn that lived elsewhere.
 #:
-#: **Residual, disclosed rather than closed:** content filters
-#: (`filter.<driver>.clean`) and `diff.*.textconv` execute too and are
-#: keyed by a driver name from the tree's `.gitattributes`, so no fixed
-#: `-c` can disable them. They are reachable through worktree-content
-#: diffs; this package's only `diff` compares two commits by name and
-#: status, which does not filter content. See `test_git_read_only`.
+#: Content filters (`filter.<driver>.clean`/`.smudge`) and
+#: `diff.<driver>.textconv` execute too, and are keyed by a driver name
+#: the tree chooses in its `.gitattributes`, so no fixed `-c` can name
+#: them away. D92 disclosed them as residual on the belief that this
+#: package only diffs two commits by name and status. That was false:
+#: `worktree_status` runs `git status --short`, which runs a `clean`
+#: filter whenever it must re-hash a file (a racy-clean mtime, a fresh
+#: checkout), and that is host code execution on any tree that merely
+#: exists as a git repository. Demonstrated, not theorised.
+#:
+#: The fix is not another named key but `attr.tree` (below), which cuts
+#: off the selection those drivers depend on: git reads gitattributes
+#: from the given tree instead of the worktree, and an empty tree has
+#: none, so no driver is ever chosen and neither filter nor textconv
+#: nor external diff runs, whatever `.gitattributes` says.
 READ_ONLY_GIT_CONFIG = (
     # Housekeeping: do not write (D71).
     "-c", "gc.auto=0",
@@ -123,6 +132,46 @@ READ_ONLY_GIT_CONFIG = (
     "-c", "protocol.ext.allow=never",
 )
 
+#: The empty tree, per object format. `attr.tree` needs an actual tree
+#: object of the repository's own format: pointing it at a missing ref
+#: silently falls back to the worktree's `.gitattributes` (unsafe), and a
+#: hash of the wrong format is ignored the same way. Both are the
+#: well-known constants git ships; there is nothing to look up.
+_EMPTY_TREE = {
+    "sha1": "4b825dc642cb6eb9a060e54bf8d69288fbee4904",
+    "sha256": "6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321",
+}
+
+#: One `git rev-parse` per repository, remembered. Detecting the object
+#: format reads no worktree content and consults no gitattributes, so it
+#: is safe to run before the `attr.tree` guard is in place.
+_OBJECT_FORMAT_CACHE: dict[str, str] = {}
+
+
+def _attr_tree_config(cwd: Path) -> tuple[str, ...]:
+    """`-c attr.tree=<empty tree>` for this repository's object format.
+
+    Returns nothing when the format cannot be determined -- that path is
+    not a repository, so there is no `.gitattributes` for a driver to
+    hide in, and the git command that follows will fail on its own terms
+    rather than silently running unprotected.
+    """
+    key = str(cwd)
+    fmt = _OBJECT_FORMAT_CACHE.get(key)
+    if fmt is None:
+        try:
+            completed = subprocess.run(  # noqa: S603 - argv list, never a shell
+                ["git", *READ_ONLY_GIT_CONFIG, "rev-parse", "--show-object-format"],
+                cwd=cwd, text=True, capture_output=True,
+                timeout=GIT_TIMEOUT_SECONDS, env=git_env(), check=False,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return ()
+        fmt = completed.stdout.strip() if completed.returncode == 0 else ""
+        _OBJECT_FORMAT_CACHE[key] = fmt
+    empty = _EMPTY_TREE.get(fmt)
+    return ("-c", f"attr.tree={empty}") if empty else ()
+
 
 def run_git(args: list[str], cwd: Path) -> str:
     """Run git and return its stdout. Raises if it does not succeed.
@@ -131,7 +180,7 @@ def run_git(args: list[str], cwd: Path) -> str:
     """
     try:
         completed = subprocess.run(  # noqa: S603 - argv list, never a shell
-            ["git", *READ_ONLY_GIT_CONFIG, *args],
+            ["git", *READ_ONLY_GIT_CONFIG, *_attr_tree_config(cwd), *args],
             cwd=cwd,
             text=True,
             capture_output=True,

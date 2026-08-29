@@ -261,8 +261,13 @@ DECLARED: dict[str, ToolSpec] = {
         # `--config-file` likewise: mypy's own config discovery is what
         # honours `plugins =`, and a mypy plugin is an importable Python
         # module in the tree under audit (D39, Decision 9).
+        #
+        # `--cache-dir` is mypy's documented spelling for "do not cache":
+        # without it mypy writes `.mypy_cache/` into its cwd, which is the
+        # repository under audit, and this door's contract is that it
+        # never writes the tree.
         args=("--output", "json", "--no-error-summary", "--ignore-missing-imports",
-              f"--config-file={os.devnull}"),
+              f"--config-file={os.devnull}", f"--cache-dir={os.devnull}"),
         json_keys=("file", "line", "message"),
         exclude_flag="--exclude", exclude_dialect="rel_regex",
         exclude_repeat=True,

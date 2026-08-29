@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from ._runner import Invocation, locate, run
+from .metrics import within
 
 # Where a repository can check in its recorded type analysis. Versioned
 # input, not cache: the recording names the tool and version so the
@@ -108,10 +109,18 @@ def discover_type_analysis(root: Path) -> dict[str, Any] | None:
 
 
 def _typescript_sources(root: Path) -> list[Path]:
+    # `within` because `is_file()` follows symlinks: a `linked.ts`
+    # pointing at a file outside the root would otherwise be read into a
+    # semantic finding, the same escape D36 closed for `iter_files` and
+    # `expand_files`. This walk builds its own file list from `rglob`
+    # rather than reusing theirs, so the land check has to be repeated
+    # here or it is not applied here at all.
+    resolved_root = root.resolve()
     return sorted(
         path for path in root.rglob("*")
         if path.suffix in _TS_SUFFIXES
         and path.is_file()
+        and within(resolved_root, path)
         and not (set(path.relative_to(root).parts[:-1]) & _SKIP_PARTS)
     )
 

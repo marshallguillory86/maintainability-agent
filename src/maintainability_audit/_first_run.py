@@ -27,7 +27,7 @@ import sys
 from pathlib import Path
 
 from ._catalog import DEFAULTS, DEPTH_ORDER, LICENSE_POLICIES
-from .config import CONFIG_FILENAME, discovered_config
+from .config import CONFIG_FILENAME, PathNotAllowed, discovered_config
 
 # One retry per question, then the default. An audit must never be able
 # to loop forever on a held-down return key.
@@ -94,13 +94,17 @@ def _persist(root: Path, depth: str, policy: str) -> None:
     defaults would freeze today's defaults into the repository, so a
     later release could never improve them for this user.
     """
-    target = root / CONFIG_FILENAME
-    target.write_text(
-        json.dumps(
-            {"analyzers": {"depth": depth, "license_policy": policy}},
-            indent=2,
-        ) + "\n",
-        encoding="utf-8",
+    from ._safe_write import write_bounded
+
+    # Bounded and staged, exactly as the MCP door's `apply_answers` is.
+    # A dangling `maintainability-agent.json` symlink took first-run
+    # configuration outside the repository, because `write_text` follows
+    # the link; the CLI door was the same class D34 closed on the MCP
+    # door and only there. Chat is the primary surface, but this is a
+    # live door on the same primitive.
+    target = write_bounded(
+        root, root / CONFIG_FILENAME,
+        json.dumps({"analyzers": {"depth": depth, "license_policy": policy}}, indent=2) + "\n",
     )
     print(f"Wrote {target}")
 
@@ -162,12 +166,22 @@ def maybe_prompt_economics(root: Path, config: dict) -> None:
         print(f"  ignored: expected low <= base <= high, got {labor}")
         return
 
+    from ._safe_write import write_bounded
+
     target = root / CONFIG_FILENAME
+    # A symlink here would redirect both the read of the existing config
+    # and the write. `write_bounded` refuses it on the write; refuse it
+    # before the read too, so a linked config cannot be read out either.
+    if target.is_symlink():
+        raise PathNotAllowed(
+            f"{target} is a symlink; the audited tree cannot redirect "
+            "where first-run configuration is read or written."
+        )
     existing = json.loads(target.read_text(encoding="utf-8")) if target.exists() else {}
     existing["economic_context"] = {
         "version": 1,
         "loaded_engineering_cost_per_hour": labor,
     }
-    target.write_text(json.dumps(existing, indent=2) + "\n", encoding="utf-8")
+    written = write_bounded(root, target, json.dumps(existing, indent=2) + "\n")
     config["economic_context"] = existing["economic_context"]
-    print(f"Wrote {target}")
+    print(f"Wrote {written}")

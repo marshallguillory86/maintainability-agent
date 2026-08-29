@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -197,7 +198,8 @@ def repository_path(root: Path, configured: str | None, default: str) -> Path:
     """
     root = Path(root).resolve()
     candidate = Path(configured or default).expanduser()
-    target = (candidate if candidate.is_absolute() else root / candidate).resolve()
+    base = candidate if candidate.is_absolute() else root / candidate
+    target = base.resolve()
     if target != root and not target.is_relative_to(root):
         # The configured spelling, never what it resolved to. This
         # door runs on an ordinary audit whenever the repository's own
@@ -208,7 +210,26 @@ def repository_path(root: Path, configured: str | None, default: str) -> Path:
             f"configured path {configured or default!r} resolves outside "
             "the repository it configures"
         )
+    # A `.maintainability -> src` link keeps the target inside the root,
+    # so the boundary check above passes on the resolved path while the
+    # write still lands in source. The link shows only on the lexical route.
+    _refuse_symlinked_route(root, base)
     return target
+
+
+def _refuse_symlinked_route(root: Path, base: Path) -> None:
+    """No component between root and target may be a symlink, checked on
+    the lexical path where a followed link still shows (D34). A link back
+    inside the root is refused just as one pointing out is.
+    """
+    current = Path(os.path.normpath(base))
+    while current.is_relative_to(root) and current != root:
+        if current.is_symlink():
+            raise PathNotAllowed(
+                f"{current} is a symlink; the audited tree cannot redirect "
+                "where this agent reads or writes, inside the root or out."
+            )
+        current = current.parent
 
 
 def deep_update(base: dict[str, Any], override: dict[str, Any]) -> None:

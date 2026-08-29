@@ -154,7 +154,30 @@ def settings_from(config: dict[str, Any]) -> dict[str, Any]:
     unknown = set(settings["concerns"]) - set(CONCERNS) - {"all"}
     if unknown:
         raise PolicyError(f"unknown concerns {sorted(unknown)}; expected from {list(CONCERNS)}")
+    settings["timeout_seconds"] = _bounded_timeout(settings["timeout_seconds"])
     return settings
+
+
+#: The widest per-analyzer wall clock a configured value may ask for. An
+#: hour is far past any real analyzer on any real tree and still bounds
+#: the host against a repository config that names a number designed
+#: never to return -- the crafted-config DoS family D40, in a new field.
+MAX_TIMEOUT_SECONDS = 3600
+MIN_TIMEOUT_SECONDS = 1
+
+
+def _bounded_timeout(configured: Any) -> int:
+    """A per-analyzer timeout the audited tree cannot weaponise.
+
+    A non-integer, or one outside the sane band, falls back to the
+    catalog default rather than propagating a value that would make an
+    analyzer child wait for years or fire before the tool can start.
+    """
+    try:
+        seconds = int(configured)
+    except (TypeError, ValueError):
+        return int(DEFAULTS["timeout_seconds"])
+    return max(MIN_TIMEOUT_SECONDS, min(seconds, MAX_TIMEOUT_SECONDS))
 
 
 def decide(tool: dict[str, Any], settings: dict[str, Any]) -> Selection:

@@ -31,19 +31,12 @@ def _rows(text: str) -> list[list[str]]:
 
 SOURCE_SUFFIXES = (".py", ".js", ".mjs", ".cjs", ".ts", ".java", ".c", ".cpp",
                    ".h", ".go", ".rb", ".php")
-# A tool asked about thousands of files still has to fit on a command line,
-# and a shortened file list is a shortened audit. The old fixed cap of 400
-# was both arbitrary and silent: 400 paths is ~20 KB against an ARG_MAX of
-# a megabyte or more, so it truncated ordinary large trees for no OS reason
-# and said nothing (Grok e88b429 audit, #5). The budget below is derived
-# from the real limit, and `expand_files` now *states* a truncation through
-# the module logger instead of dropping files quietly.
-#
-# A quarter of ARG_MAX, floored, leaves generous room for the executable,
-# flags and the inherited environment on the same command line. A tree with
-# more source than this in one language is at the genuine OS limit, where a
-# single invocation cannot name every file and chunked invocation would be
-# the only complete answer -- disclosed rather than hidden.
+# A file list has to fit on a command line. The old fixed cap of 400 was
+# arbitrary and silent -- ~20 KB against an ARG_MAX of a megabyte -- so it
+# truncated ordinary trees for no OS reason and said nothing (e88b429 #5).
+# The budget is a quarter of the real ARG_MAX (room left for the exe, flags
+# and env); beyond it a single invocation genuinely cannot name every file,
+# and `expand_files` states the truncation through the logger, not silently.
 _ARG_MAX = os.sysconf("SC_ARG_MAX") if hasattr(os, "sysconf") else 262144
 _ARGV_BYTE_BUDGET = max(_ARG_MAX // 4, 131072)
 
@@ -279,7 +272,17 @@ class JscpdAdapter(BaseAdapter):
     def _read(self, result: ToolResult) -> Extraction:
         report = self._report_dir / "jscpd-report.json"
         raw = report.read_text(encoding="utf-8") if report.exists() else result.stdout
-        payload = json.loads(raw or "{}")
+        if not raw.strip():
+            # No report file and no stdout is "ran, produced nothing",
+            # which the old `or "{}"` default read as zero duplicates --
+            # absence as clean (e88b429 #13). A real clean jscpd run still
+            # writes a report with a statistics block; nothing at all is a
+            # parse failure, not a clean tree.
+            raise ValueError(
+                "jscpd produced neither a report file nor output; "
+                "a run that wrote nothing is not zero duplicates"
+            )
+        payload = json.loads(raw)
         totals = payload.get("statistics", {}).get("total", {})
         measurements = []
         if "percentage" in totals:

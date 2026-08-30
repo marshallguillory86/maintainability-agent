@@ -14,7 +14,6 @@ from maintainability_audit.evidence import Unknown, normalize_report_evidence
 from maintainability_audit.report import build_report
 from maintainability_audit.scoring import _BANDS, score_evidence
 
-
 BAND_FIELDS = (
     "declaration_band_pressure",
     "production_declaration_band_pressure",

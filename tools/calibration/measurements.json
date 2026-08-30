@@ -27,7 +27,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.028265765765765765,
+    "declaration_band_pressure": 0.029922779922779925,
+    "production_file_band_pressure": 0.038,
+    "production_declaration_band_pressure": 0.03794829024186823
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -90,7 +94,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.0460140537921008,
+    "declaration_band_pressure": 0.03218197529134263,
+    "production_file_band_pressure": 0.03392348392348392,
+    "production_declaration_band_pressure": 0.06543018547217917
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -153,7 +161,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.054104477611940295,
+    "declaration_band_pressure": 0.09978308026030369,
+    "production_file_band_pressure": 0.03866666666666667,
+    "production_declaration_band_pressure": 0.1158699808795411
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -215,7 +227,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.04967776584317938,
+    "declaration_band_pressure": 0.050094102885821834,
+    "production_file_band_pressure": 0.09057187017001544,
+    "production_declaration_band_pressure": 0.08136295805007461
    },
    "analyzer_dimensions": {
     "declarations": 0.053540401322364886
@@ -279,7 +295,11 @@
     "idiom_concern_count": 1,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.011187265089542339,
+    "declaration_band_pressure": 0.0677936507936508,
+    "production_file_band_pressure": 0.006871849296895729,
+    "production_declaration_band_pressure": 0.0930902543326581
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -342,7 +362,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.036855036855036855,
+    "declaration_band_pressure": 0.03909691629955947,
+    "production_file_band_pressure": 0.035521235521235525,
+    "production_declaration_band_pressure": 0.08653846153846154
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -405,7 +429,11 @@
     "idiom_concern_count": 0,
     "has_readme": false,
     "has_changelog": true,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.043243243243243246,
+    "declaration_band_pressure": 0.02935483870967742,
+    "production_file_band_pressure": 0.05245901639344262,
+    "production_declaration_band_pressure": 0.03135135135135135
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -468,7 +496,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.061291369240752756,
+    "declaration_band_pressure": 0.020279502361147735,
+    "production_file_band_pressure": 0.05185528756957329,
+    "production_declaration_band_pressure": 0.03772971969556339
    },
    "analyzer_dimensions": {
     "declarations": 0.019205526770293607
@@ -536,7 +568,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.09993108201240525,
+    "declaration_band_pressure": 0.08793047956227873,
+    "production_file_band_pressure": 0.07056338028169014,
+    "production_declaration_band_pressure": 0.09077474249888043
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -599,7 +635,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.11832844574780059,
+    "declaration_band_pressure": 0.07738807509799876,
+    "production_file_band_pressure": 0.09453551912568306,
+    "production_declaration_band_pressure": 0.09378185524974515
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -662,7 +702,11 @@
     "idiom_concern_count": 0,
     "has_readme": false,
     "has_changelog": false,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.055414012738853505,
+    "declaration_band_pressure": 0.011510791366906475,
+    "production_file_band_pressure": 0.04193548387096774,
+    "production_declaration_band_pressure": 0.03611111111111111
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -724,7 +768,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.02476224022543149,
+    "declaration_band_pressure": 0.046259461362436194,
+    "production_file_band_pressure": 0.025749318801089917,
+    "production_declaration_band_pressure": 0.04870466321243523
    },
    "analyzer_dimensions": {
     "declarations": 0.045850314931456096
@@ -793,7 +841,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.06126126126126126,
+    "declaration_band_pressure": 0.01597051597051597,
+    "production_file_band_pressure": 0.07924528301886792,
+    "production_declaration_band_pressure": 0.045867768595041325
    },
    "analyzer_dimensions": {
     "declarations": 0.010380779691749773
@@ -858,7 +910,11 @@
     "idiom_concern_count": 2,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.014915442195730523,
+    "declaration_band_pressure": 0.05946023542922768,
+    "production_file_band_pressure": 0.01459169256852218,
+    "production_declaration_band_pressure": 0.09145183175033922
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -921,7 +977,11 @@
     "idiom_concern_count": 0,
     "has_readme": false,
     "has_changelog": false,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.06777777777777778,
+    "declaration_band_pressure": 0.05833333333333333,
+    "production_file_band_pressure": 0.07368421052631578,
+    "production_declaration_band_pressure": 0.098
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -990,7 +1050,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.027472527472527472,
+    "declaration_band_pressure": 0.020489977728285078,
+    "production_file_band_pressure": 0.03013698630136986,
+    "production_declaration_band_pressure": 0.031452991452991456
    },
    "analyzer_dimensions": {
     "declarations": 0.024462809917355374
@@ -1055,7 +1119,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.06969162995594713,
+    "declaration_band_pressure": 0.06676310415248468,
+    "production_file_band_pressure": 0.04258271077908218,
+    "production_declaration_band_pressure": 0.0855509126896855
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1118,7 +1186,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.06344827586206897,
+    "declaration_band_pressure": 0.0791871921182266,
+    "production_file_band_pressure": 0.0261744966442953,
+    "production_declaration_band_pressure": 0.18413793103448275
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1180,7 +1252,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.15034965034965037,
+    "declaration_band_pressure": 0.051807796490401604,
+    "production_file_band_pressure": 0.15143884892086332,
+    "production_declaration_band_pressure": 0.06473471127210739
    },
    "analyzer_dimensions": {
     "declarations": 0.042480840193017316
@@ -1249,7 +1325,11 @@
     "idiom_concern_count": 1,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.08127808287568647,
+    "declaration_band_pressure": 0.03203234062354583,
+    "production_file_band_pressure": 0.07975409836065574,
+    "production_declaration_band_pressure": 0.017352034072551037
    },
    "analyzer_dimensions": {
     "declarations": 0.03685904133060303
@@ -1312,7 +1392,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.14358974358974358,
+    "declaration_band_pressure": 0.03814553990610329,
+    "production_file_band_pressure": 0.11379310344827587,
+    "production_declaration_band_pressure": 0.052181500872600345
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1374,7 +1458,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.07857142857142857,
+    "declaration_band_pressure": 0.013624100719424461,
+    "production_file_band_pressure": 0.07870370370370369,
+    "production_declaration_band_pressure": 0.013262476894639556
    },
    "analyzer_dimensions": {
     "declarations": 0.00718232044198895
@@ -1439,7 +1527,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.013746793420854083,
+    "declaration_band_pressure": 0.0640501125575022,
+    "production_file_band_pressure": 0.00986523842432619,
+    "production_declaration_band_pressure": 0.09177607848795268
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1502,7 +1594,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.06852559205500382,
+    "declaration_band_pressure": 0.08291295277830457,
+    "production_file_band_pressure": 0.05850746268656716,
+    "production_declaration_band_pressure": 0.12907608695652173
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1565,7 +1661,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.06487127371273713,
+    "declaration_band_pressure": 0.07651391862955031,
+    "production_file_band_pressure": 0.06874148114493411,
+    "production_declaration_band_pressure": 0.10188577947788739
    },
    "analyzer_dimensions": {
     "declarations": 0.06261052430339817
@@ -1633,7 +1733,11 @@
     "idiom_concern_count": 2,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.059178682427268564,
+    "declaration_band_pressure": 0.06453309183330655,
+    "production_file_band_pressure": 0.04424153673873718,
+    "production_declaration_band_pressure": 0.09479456940945671
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1702,7 +1806,11 @@
     "idiom_concern_count": 2,
     "has_readme": false,
     "has_changelog": false,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.014261555806087936,
+    "declaration_band_pressure": 0.013855753349238394,
+    "production_file_band_pressure": 0.006475349521707138,
+    "production_declaration_band_pressure": 0.019522326064382138
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1765,7 +1873,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.0801989150090416,
+    "declaration_band_pressure": 0.08348659003831417,
+    "production_file_band_pressure": 0.08577549271636675,
+    "production_declaration_band_pressure": 0.06534164159862484
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1835,7 +1947,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.07045454545454545,
+    "declaration_band_pressure": 0.10671140939597315,
+    "production_file_band_pressure": 0.07549019607843137,
+    "production_declaration_band_pressure": 0.11932457786116323
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1898,7 +2014,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.05465587044534413,
+    "declaration_band_pressure": 0.01170787155441887,
+    "production_file_band_pressure": 0.032989690721649485,
+    "production_declaration_band_pressure": 0.015744274809160304
    },
    "analyzer_dimensions": {
     "declarations": 0.004243683692442306
@@ -1963,7 +2083,11 @@
     "idiom_concern_count": 1,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.029734444659817796,
+    "declaration_band_pressure": 0.06810849393290506,
+    "production_file_band_pressure": 0.017713811237199003,
+    "production_declaration_band_pressure": 0.09683113568694172
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2026,7 +2150,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.008921933085501859,
+    "declaration_band_pressure": 0.06037735849056604,
+    "production_file_band_pressure": 0.057777777777777775,
+    "production_declaration_band_pressure": 0.10094117647058823
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2089,7 +2217,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.018658892128279883,
+    "declaration_band_pressure": 0.049437627811860944,
+    "production_file_band_pressure": 0.018658892128279883,
+    "production_declaration_band_pressure": 0.049437627811860944
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2152,7 +2284,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.09838709677419355,
+    "declaration_band_pressure": 0.07049645390070922,
+    "production_file_band_pressure": 0.05080645161290323,
+    "production_declaration_band_pressure": 0.1931237721021611
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2215,7 +2351,11 @@
     "idiom_concern_count": 1,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.11770135746606336,
+    "declaration_band_pressure": 0.061723916162332415,
+    "production_file_band_pressure": 0.1148383812674981,
+    "production_declaration_band_pressure": 0.07751268456758452
    },
    "analyzer_dimensions": {
     "declarations": 0.0628965275692985
@@ -2280,7 +2420,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.11175,
+    "declaration_band_pressure": 0.11310636404094349,
+    "production_file_band_pressure": 0.11272727272727273,
+    "production_declaration_band_pressure": 0.11394404332129963
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2349,7 +2493,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.02197083961789844,
+    "declaration_band_pressure": 0.08573529411764706,
+    "production_file_band_pressure": 0.02028061224489796,
+    "production_declaration_band_pressure": 0.10755368098159508
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2412,7 +2560,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.009340616465079984,
+    "declaration_band_pressure": 0.07868826798152932,
+    "production_file_band_pressure": 0.06328125,
+    "production_declaration_band_pressure": 0.12232261493489237
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2475,7 +2627,11 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true
+    "has_docs_dir": true,
+    "file_band_pressure": 0.04045801526717557,
+    "declaration_band_pressure": 0.08686484618043554,
+    "production_file_band_pressure": 0.03717514124293785,
+    "production_declaration_band_pressure": 0.09174541947926712
    },
    "analyzer_dimensions": {
     "declarations": 0.0723391812865497
@@ -2540,7 +2696,11 @@
     "idiom_concern_count": 1,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false
+    "has_docs_dir": false,
+    "file_band_pressure": 0.0639647577092511,
+    "declaration_band_pressure": 0.06533898305084745,
+    "production_file_band_pressure": 0.06076066790352505,
+    "production_declaration_band_pressure": 0.07200849362977767
    },
    "analyzer_dimensions": {
     "declarations": 0.051586919932676126

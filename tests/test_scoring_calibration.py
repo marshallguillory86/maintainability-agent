@@ -17,6 +17,12 @@ back quietly:
 """
 from __future__ import annotations
 
+from _scoring_fixtures import (  # shared fixtures, one source (dedup)
+    _evidence_summary,
+    score_report,
+    summary,
+)
+
 from maintainability_audit._calibration import DIMENSION_REFERENCES, WARN_WEIGHT
 from maintainability_audit.evidence import (
     REPORT_SCHEMA_VERSION,
@@ -24,21 +30,6 @@ from maintainability_audit.evidence import (
     normalize_report_evidence,
 )
 from maintainability_audit.scoring import dimension_pressures, grade_for, normalize
-from maintainability_audit.scoring import score_report as _score_report
-
-
-def score_report(report: dict) -> dict:
-    """Stamp the schema version, then score.
-
-    Production reports carry ``schema_version`` because ``build_report``
-    stamps it, and since ADR 001 stage 4 the scorer validates it at the
-    normalization boundary rather than trusting a raw dictionary. The
-    hand-built fixtures below predate that and would otherwise be
-    rejected. This shim makes them *conform* to the production contract;
-    it does not bypass it — the version gate itself is tested against
-    real reports in ``test_evidence_normalization.py``.
-    """
-    return _score_report({SCHEMA_VERSION_KEY: REPORT_SCHEMA_VERSION, **report})
 
 
 def _evidence_of(raw_summary: dict) -> object:
@@ -50,33 +41,6 @@ def _evidence_of(raw_summary: dict) -> object:
     """
     payload = {SCHEMA_VERSION_KEY: REPORT_SCHEMA_VERSION, "summary": raw_summary}
     return normalize_report_evidence(payload).summary
-
-
-def summary(files: int, decls: int, **overrides: int) -> dict[str, int]:
-    base = {
-        "files_scanned": files,
-        "declarations_scanned": decls,
-        "production_files_scanned": files,
-        "production_declarations_scanned": decls,
-        "file_warnings": 0,
-        "file_failures": 0,
-        "function_warnings": 0,
-        "function_failures": 0,
-        "production_file_warnings": 0,
-        "production_file_failures": 0,
-        "production_function_warnings": 0,
-        "production_function_failures": 0,
-        "duplicate_blocks": 0,
-        "risk_findings": 0,
-        "hard_gate_failures": 0,
-        "production_hard_gate_failures": 0,
-        # A fixture wanting a grade claims a full read; Unknown withholds one.
-        "unread_source_files": 0,
-        "read_source_files": files,
-        "undetected_declaration_files": 0,
-    }
-    base.update(overrides)
-    return base
 
 
 def score(files: int, decls: int, **overrides: int) -> dict:
@@ -267,17 +231,6 @@ def test_dimensions_can_disagree_with_each_other() -> None:
 # ---------------------------------------------------------------------------
 # Unknown-evidence pricing: what concealment can and cannot buy
 # ---------------------------------------------------------------------------
-
-def _evidence_summary(**overrides: object) -> dict:
-    full = summary(500, 1000)
-    full.update({
-        "test_file_count": 100, "production_declarations_scanned": 650,
-        "dead_code_count": 0, "near_duplicate_count": 0, "idiom_concern_count": 0,
-        "has_readme": True, "has_changelog": True, "has_docs_dir": True,
-    })
-    full.update(overrides)
-    return full
-
 
 def _history(**overrides) -> dict:
     base = {

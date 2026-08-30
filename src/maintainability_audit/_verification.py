@@ -88,23 +88,30 @@ DEFAULT_V1_REQUIRED: frozenset[str] = frozenset({
     "history.code_coupling_pairs",
     "history.multi_commit_files",
     "history.single_author_files",
-})
-
-# Inputs v1 deliberately does not require. Empty today; a scoring input
-# that should not withhold a grade is recorded here so the omission is a
-# decision on the record rather than a gap.
-# The band pressures are refinements of counts v1 already requires: a
-# report missing them predates the band wiring (3.2), and the scorer
-# falls back to the count rate it required all along — a coarser number,
-# not an unverifiable one. Requiring them would retroactively unverify
-# every schema-1 report over a formula change, which is a v2 decision
-# nobody has made.
-DEFAULT_V1_NOT_REQUIRED: frozenset[str] = frozenset({
+    # The 3.2 band pressures. Score-bearing: the band matrix prices a
+    # complexity-12 warn above a plain warn, so it can only add pressure
+    # over the count rate. Withholding one therefore only improves the
+    # score -- the P3 hole Grok's e88b429 audit named -- so an absent band
+    # withholds the grade rather than quietly falling back to the coarser
+    # count rate. `_pressures._banded` no longer prices an Unknown band at
+    # the count rate for the same reason.
     "summary.declaration_band_pressure",
     "summary.production_declaration_band_pressure",
     "summary.file_band_pressure",
     "summary.production_file_band_pressure",
 })
+
+# Inputs v1 deliberately does not require. Empty: a scoring input that
+# should not withhold a grade is recorded here so the omission is a
+# decision on the record rather than a gap.
+#
+# The four 3.2 band pressures used to live here, on the reasoning that a
+# missing band predated the wiring and the count-rate fallback was a
+# coarser-but-verifiable number. Grok's e88b429 audit showed that was a
+# P3 hole: the band can only add pressure over the count rate, so
+# withholding it only ever improved the score, and this list kept the
+# concealment sweep from ever noticing. They are now required (above).
+DEFAULT_V1_NOT_REQUIRED: frozenset[str] = frozenset()
 
 COMPLETE = "complete"
 INCOMPLETE = "incomplete"

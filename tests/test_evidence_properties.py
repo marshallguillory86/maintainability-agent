@@ -49,6 +49,16 @@ from maintainability_audit.evidence import (
 from maintainability_audit.report import build_report
 from maintainability_audit.scoring import score_evidence
 
+# The four 3.2 band-pressure fields. Required (see DEFAULT_V1_REQUIRED),
+# but priced worst-case rather than unmeasured when withheld -- the #9 P3
+# fix -- so the concealment sweep treats them as their own case.
+_BAND_FIELDS = frozenset({
+    "summary.declaration_band_pressure",
+    "summary.production_declaration_band_pressure",
+    "summary.file_band_pressure",
+    "summary.production_file_band_pressure",
+})
+
 MODEL_PATHS = tuple(
     [f"summary.{field.name}" for field in SummaryEvidence.__dataclass_fields__.values()]
     + [f"history.{field.name}" for field in HistoryEvidence.__dataclass_fields__.values()]
@@ -273,6 +283,22 @@ def test_an_aspect_that_uses_a_concealed_input_is_unmeasured_not_re_estimated(
 
     hidden = score_evidence(concealed(settled_evidence, path))["aspects"]
 
+    if path in _BAND_FIELDS:
+        # The band fields are the one required group priced worst-case, not
+        # unmeasured, when withheld (#9, P3): the band can only add pressure
+        # over the count rate, so a withheld band is `SEVERE`, and an aspect
+        # reading it may move -- but only downward. It may never improve, and
+        # it does not go None. Assert exactly that.
+        improved = {
+            name: (baseline[name], value)
+            for name, value in hidden.items()
+            if value is not None and baseline[name] is not None and value > baseline[name]
+        }
+        assert not improved, (
+            f"concealing {path} improved {improved}; a withheld band must price worst-case"
+        )
+        return
+
     re_estimated = {
         name: (baseline[name], value)
         for name, value in hidden.items()
@@ -452,6 +478,9 @@ def test_the_sweep_covers_both_summary_and_nested_history(
     """
     swept = resolved_required_paths(settled_evidence)
 
-    assert len([p for p in swept if p.startswith("summary.")]) == 26
+    # 30, not 26: the four 3.2 band-pressure fields became required when
+    # #9 closed the P3 hole (a withheld band could improve the score), so
+    # the sweep now reaches them too.
+    assert len([p for p in swept if p.startswith("summary.")]) == 30
     assert len([p for p in swept if p.startswith("history.")]) == 5
     assert len(swept) == len(DEFAULT_V1_REQUIRED)

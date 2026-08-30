@@ -266,6 +266,16 @@ def _summary(entry: dict) -> dict:
     })
     summary.setdefault("production_files_scanned", files)
     summary.setdefault("production_declarations_scanned", decls)
+    # The band pressures score_report now reads (a withheld band prices
+    # worst-case, #9), set to the stored dimension pressures so the live
+    # score matches the derivation's structural aspects rather than
+    # SEVERE-ing an absent band.
+    prod_dims = entry.get("production_dimensions") or {}
+    summary.setdefault("file_band_pressure", dims["file_size"])
+    summary.setdefault("declaration_band_pressure", dims["declarations"])
+    summary.setdefault("production_file_band_pressure", prod_dims.get("file_size", dims["file_size"]))
+    summary.setdefault("production_declaration_band_pressure",
+                       prod_dims.get("declarations", dims["declarations"]))
     return summary
 
 
@@ -355,6 +365,13 @@ def _mixed_row(index: int, analyzer_declarations: float | None) -> dict:
             "has_readme": True,
             "has_changelog": True,
             "has_docs_dir": True,
+            # The band pressures the derivation now reads through the shipped
+            # normalizer -- equal to this row's stored dimension pressures,
+            # so a withheld band is not SEVERE-priced here (#9).
+            "file_band_pressure": 0.03 + index * 0.002,
+            "declaration_band_pressure": built_in_declarations,
+            "production_file_band_pressure": 0.025 + index * 0.002,
+            "production_declaration_band_pressure": built_in_declarations,
         },
     }
 

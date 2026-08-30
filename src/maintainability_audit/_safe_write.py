@@ -29,6 +29,7 @@ does not, because a hardlink is not a link in the sense it checks.
 
 from __future__ import annotations
 
+import json
 import os
 import tempfile
 from pathlib import Path
@@ -77,6 +78,90 @@ def write_bounded(root: Path, target: Path, body: str, *, append: bool = False) 
     if append and resolved.is_file():
         existing = resolved.read_text(encoding="utf-8")
     return _stage_and_replace(resolved, existing + body)
+
+
+def write_artifact(
+    grant_root: Path,
+    target: Path,
+    body: str,
+    *,
+    append: bool = False,
+    json_artifact: bool = False,
+) -> Path:
+    """A product-artifact write on a path a person chose, still refusing
+    what the audited tree could do to it.
+
+    The CLI reaches here for the baseline and the rendered outputs
+    (``--output``, ``--sarif-output``, the HTML report, the instruction
+    pack). Each names a path a person picked, which may sit *outside* the
+    audited tree -- a contract that predates D34 -- so unlike config and
+    history this write is not bounded to the grant. What it still refuses
+    is the audited tree's redirection:
+
+    * A symlinked route the tree could plant exists only *inside* the
+      tree. So when the named path falls within the grant the write goes
+      through ``write_bounded`` and inherits the lexical route refusal --
+      ``.maintainability -> src`` on both ``/var`` and ``/private/var``
+      spellings of the same macOS path (Grok 63ab820 audit; the earlier
+      ``write_bounded(target.parent, target)`` bound the check to the
+      symlink itself and checked nothing). A path outside the grant is on
+      ground the audited tree does not control; only the final component
+      and the inode need defending there.
+    * ``json_artifact`` refuses to overwrite a file that is not already
+      JSON -- ``write_baseline(baseline_path="README.md")`` truncated a
+      README once (D34), and a stage-and-replace still unlinks that inode
+      from its name, so staging alone does not make the promise that this
+      tool never writes source.
+    """
+    target_abs = Path(os.path.abspath(os.path.expanduser(str(target))))
+    if json_artifact and target_abs.is_file():
+        _refuse_nonjson_clobber(target_abs)
+    grant_real = os.path.realpath(grant_root)
+    # Membership is decided on the *real* path so a ``/var`` spelling of
+    # the target and a ``/private/var`` spelling of the grant name the
+    # same tree (Grok 63ab820 audit); the unresolved ``target_abs`` is
+    # still what reaches ``write_bounded``, so its lexical route refusal
+    # sees the ``.maintainability -> src`` link the real path erased.
+    target_real = os.path.realpath(target_abs)
+    within = target_real == grant_real or target_real.startswith(grant_real + os.sep)
+    if within:
+        return write_bounded(grant_root, target_abs, body, append=append)
+    # Outside the grant: the person's own ground, which the audited tree
+    # cannot reach a symlink into. Defend the name and the inode only.
+    if target_abs.is_symlink():
+        raise PathNotAllowed(
+            f"{target_abs} is a symlink. A link where a plain file is "
+            "expected is how a write is redirected, and where it points "
+            "does not make it safe."
+        )
+    if target_abs.exists() and not target_abs.is_file():
+        raise PathNotAllowed(
+            f"{target_abs} is not a regular file this agent may write."
+        )
+    target_abs.parent.mkdir(parents=True, exist_ok=True)
+    existing = ""
+    if append and target_abs.is_file():
+        existing = target_abs.read_text(encoding="utf-8")
+    return _stage_and_replace(target_abs, existing + body)
+
+
+def _refuse_nonjson_clobber(target: Path) -> None:
+    """Refuse to truncate a file that is not already JSON.
+
+    A JSON artifact (a baseline, the config) overwrites its own prior
+    JSON and never source. Parsing the existing bytes is the honest test
+    of "is this one of ours": a baseline parses, ``README.md`` and a
+    Python module do not -- so the ``baseline_path="README.md"`` write
+    that once truncated a README is refused before the stage begins.
+    """
+    try:
+        raw = target.read_text(encoding="utf-8")
+        json.loads(raw)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as reason:
+        raise PathNotAllowed(
+            f"{target} already exists and is not a JSON artifact; this "
+            "agent writes its JSON here and will not truncate another file."
+        ) from reason
 
 
 def _refuse_symlinked_parents(root: Path, target: Path) -> None:

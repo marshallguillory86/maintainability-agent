@@ -123,17 +123,20 @@ def write_baseline(path: str, report: dict[str, Any]) -> None:
     # the primary surface, and the previous write truncated whatever the
     # name pointed at — including source, in a tool that promises never
     # to write source.
-    from ._safe_write import write_bounded
+    from ._safe_write import write_artifact
 
-    # Bounded to the chosen directory, not to the repository: a CLI
-    # caller may legitimately keep baselines outside the tree, and that
-    # contract predates this fix. What the writer removes is redirection
-    # — a symlink at the name, or a hardlink whose inode would be
-    # truncated in place. Refusing to clobber *source* is a different
-    # question, decided where the path arrives from a model rather than
-    # a person: see `_baseline_workflow` (D34).
-    target = Path(path)
-    write_bounded(
-        target.parent, target,
+    # Bound to the repository the report was taken in, not to the
+    # baseline's own parent directory: `write_bounded(target.parent, ...)`
+    # bound the symlink check to the symlink itself and so checked
+    # nothing, which is how `.maintainability -> src` still redirected the
+    # baseline into source (Grok 63ab820 audit). `write_artifact` keeps
+    # the predating contract that a baseline may live outside the tree —
+    # a path outside the grant is written on the operator's own ground —
+    # while a path inside the grant inherits the lexical route refusal,
+    # and `json_artifact` refuses to truncate a non-JSON file such as
+    # README.md.
+    write_artifact(
+        Path(report["root"]), Path(path),
         json.dumps(data, indent=2, sort_keys=True) + "\n",
+        json_artifact=True,
     )

@@ -114,49 +114,40 @@ def write_artifact(
       tool never writes source.
     """
     target_abs = Path(os.path.abspath(os.path.expanduser(str(target))))
-    if json_artifact and target_abs.is_file():
-        _refuse_nonjson_clobber(target_abs)
     grant_real = os.path.realpath(grant_root)
     # Membership is decided on the *real* path so a ``/var`` spelling of
     # the target and a ``/private/var`` spelling of the grant name the
-    # same tree (Grok 63ab820 audit); the unresolved ``target_abs`` is
-    # still what reaches ``write_bounded``, so its lexical route refusal
-    # sees the ``.maintainability -> src`` link the real path erased.
+    # same tree (Grok 63ab820 audit). In-tree, the write is bound to the
+    # grant and inherits its lexical route refusal (the ``.maintainability
+    # -> src`` link the real path erased); out-of-tree, it is bound to the
+    # operator's own directory -- ground the audited tree cannot plant a
+    # symlink into. Either way every filesystem access goes through
+    # ``write_bounded`` / ``repository_path``, which validates the
+    # constructed path first, so no caller argument reaches a bare open.
     target_real = os.path.realpath(target_abs)
     within = target_real == grant_real or target_real.startswith(grant_real + os.sep)
-    if within:
-        return write_bounded(grant_root, target_abs, body, append=append)
-    # Outside the grant: the person's own ground, which the audited tree
-    # cannot reach a symlink into. Defend the name and the inode only.
-    if target_abs.is_symlink():
-        raise PathNotAllowed(
-            f"{target_abs} is a symlink. A link where a plain file is "
-            "expected is how a write is redirected, and where it points "
-            "does not make it safe."
-        )
-    if target_abs.exists() and not target_abs.is_file():
-        raise PathNotAllowed(
-            f"{target_abs} is not a regular file this agent may write."
-        )
-    target_abs.parent.mkdir(parents=True, exist_ok=True)
-    existing = ""
-    if append and target_abs.is_file():
-        existing = target_abs.read_text(encoding="utf-8")
-    return _stage_and_replace(target_abs, existing + body)
+    root = Path(grant_root) if within else target_abs.parent
+    if json_artifact:
+        _refuse_nonjson_clobber(root, target_abs)
+    return write_bounded(root, target_abs, body, append=append)
 
 
-def _refuse_nonjson_clobber(target: Path) -> None:
+def _refuse_nonjson_clobber(root: Path, target: Path) -> None:
     """Refuse to truncate a file that is not already JSON.
 
     A JSON artifact (a baseline, the config) overwrites its own prior
     JSON and never source. Parsing the existing bytes is the honest test
     of "is this one of ours": a baseline parses, ``README.md`` and a
     Python module do not -- so the ``baseline_path="README.md"`` write
-    that once truncated a README is refused before the stage begins.
+    that once truncated a README is refused before the stage begins. The
+    path is bounded through ``repository_path`` before it is read, so the
+    check never opens a name it has not first validated.
     """
+    resolved = repository_path(root, str(target), str(target))
+    if not resolved.is_file():
+        return
     try:
-        raw = target.read_text(encoding="utf-8")
-        json.loads(raw)
+        json.loads(resolved.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as reason:
         raise PathNotAllowed(
             f"{target} already exists and is not a JSON artifact; this "

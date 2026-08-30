@@ -118,8 +118,9 @@ def test_write_baseline_refuses_the_inward_route_on_either_spelling(spelling: st
     if spelling == "/private/var":
         root = Path(os.path.realpath(root))
     target = root / ".maintainability" / "baseline.json"
+    report = _report(root)
     with pytest.raises(PathNotAllowed):
-        write_baseline(str(target), _report(root))
+        write_baseline(str(target), report)
     # The realpath of the redirect target: source was never written.
     assert not (Path(os.path.realpath(root)) / "src" / "baseline.json").exists()
 
@@ -131,8 +132,9 @@ def test_write_baseline_refuses_to_truncate_a_non_json_file() -> None:
     root = _inward_symlink_repo()
     readme = root / "README.md"
     readme.write_text("# real docs\n", encoding="utf-8")
+    report = _report(root)
     with pytest.raises(PathNotAllowed):
-        write_baseline(str(readme), _report(root))
+        write_baseline(str(readme), report)
     assert readme.read_text(encoding="utf-8") == "# real docs\n"
 
 

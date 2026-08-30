@@ -190,22 +190,18 @@ class PathNotAllowed(ValueError):
 def repository_path(root: Path, configured: str | None, default: str) -> Path:
     """A configured repository-scoped path, resolved and bounded.
 
-    Every read, existence check, mkdir and append of a configured
-    output path goes through here. `resolve()` collapses `..` and
-    follows symlinks before the check, so traversal, absolute escapes
-    and symlink escapes are all one comparison rather than three
-    special cases.
+    Every read, existence check, mkdir and append of a configured path
+    goes through here. `resolve()` follows symlinks and collapses `..`
+    first, so traversal and symlink escapes are one comparison.
     """
     root = Path(root).resolve()
     candidate = Path(configured or default).expanduser()
     base = candidate if candidate.is_absolute() else root / candidate
     target = base.resolve()
     if target != root and not target.is_relative_to(root):
-        # The configured spelling, never what it resolved to. This
-        # door runs on an ordinary audit whenever the repository's own
-        # config names a path, so a symlinked `history.jsonl` published
-        # its target to the chat host. Fifth in the family D72 opened
-        # and D82 and D91 each closed one of (D96).
+        # The configured spelling, never what it resolved to: a symlinked
+        # `history.jsonl` once published its target to the chat host.
+        # Fifth in the D72/D82/D91 family (D96).
         raise PathNotAllowed(
             f"configured path {configured or default!r} resolves outside "
             "the repository it configures"
@@ -217,15 +213,19 @@ def repository_path(root: Path, configured: str | None, default: str) -> Path:
 
 
 def _refuse_symlinked_route(root: Path, base: Path) -> None:
-    """No component between root and target may be a symlink, seen on the
-    lexical path -- a link back inside the root is refused as one out (D34).
+    """No component between root and target may be a symlink, on the
+    lexical path (D34). The stop compares *real* paths so a ``/var`` root
+    against a ``/private/var`` target does not skip the walk (63ab820).
     """
+    root_real = os.path.realpath(root)
     current = Path(os.path.normpath(base))
-    while current.is_relative_to(root) and current != root:
+    while os.path.realpath(current) != root_real:
         if current.is_symlink():
             raise PathNotAllowed(
                 f"{current} is a symlink; the audited tree cannot redirect "
                 "where this agent reads or writes.")
+        if current.parent == current:
+            return  # filesystem root reached without meeting the grant
         current = current.parent
 
 

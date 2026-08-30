@@ -76,7 +76,14 @@ def local_tsc_analysis(root: Path) -> dict[str, Any] | None:
                    findings_exit_codes=(0, 1, 2)),
         cwd=root,
     )
-    if not result.stdout and result.exit_code is None:
+    # `usable` is the only signal that means "tsc ran": a config error
+    # (FAILED, exit 3+) or a findings exit that produced an empty body
+    # (NOT_WORKING) both leave `exit_code` set and `stdout` empty, so the
+    # old `exit_code is None` guard let them through and reported an empty
+    # `diagnostics` list as a clean type check -- absence read as a pass,
+    # the class ADR 001 forbids (Grok 63ab820 audit). A RAN with no output
+    # is the real "compiled, no type errors".
+    if not result.usable:
         return None
     diagnostics = []
     for line in result.stdout.splitlines():

@@ -94,10 +94,15 @@ def instruction_path_for_target(target: str, output_dir: Path) -> Path:
 
 
 def write_instruction_pack(targets: list[str], output_dir: Path, config: dict[str, Any]) -> list[str]:
+    # Each instruction file is a product-artifact write: `output_dir`
+    # comes from a person (`--instructions-output-dir`), so the write is
+    # bound to that directory and refuses a symlinked route the audited
+    # tree could plant beneath it (Grok 63ab820 audit).
+    from ._safe_write import write_artifact
+
     written: list[str] = []
     for target in targets:
         path = instruction_path_for_target(target, output_dir)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(instruction_body(target, config) + "\n", encoding="utf-8")
+        write_artifact(output_dir, path, instruction_body(target, config) + "\n")
         written.append(str(path))
     return written

@@ -46,13 +46,15 @@ _GENERICS = r"(?:<[^()]*>\s*)?"
 # Leading keywords are stripped once per line so the declaration
 # patterns below stay small and don't each repeat the modifier list.
 _MODIFIER_PREFIX_RE = re.compile(
-    r"^\s*(?:(?:export|default|declare|abstract|async|const|let|var"
+    r"^\s*(?:(?:export|default|declare|abstract|async|const|let|var|override"
     r"|public|private|protected|static|readonly|get|set)\s+)*"
 )
+# A class member may be private (`#name`); member patterns allow a leading `#`.
+_MEMBER_NAME = rf"#?{_NAME}"
 _CLASS_RE = re.compile(rf"^class\s+({_NAME})\b")
 _FUNCTION_RE = re.compile(rf"^function\s*\*?\s*({_NAME})\s*{_GENERICS}\(")
-# `load = async (…) =>`, `parse = function`, `toId = x => x.id`.
-_ASSIGNED_RE = re.compile(rf"^({_NAME})\s*(?::[^=;]*)?=\s*(?:async\s+)?(?:function\b|{_NAME}\s*=>|{_GENERICS}\()")
+# `load = async (…) =>`, `parse = function`, `toId = x => x.id`, `#tick = () =>`.
+_ASSIGNED_RE = re.compile(rf"^({_MEMBER_NAME})\s*(?::[^=;]*)?=\s*(?:async\s+)?(?:function\b|{_NAME}\s*=>|{_GENERICS}\()")
 
 # Object-literal members: `{ onSave: (a) => {...} }` and
 # `{ onLoad: function (b) {...} }`. This is how a React or Node codebase
@@ -76,7 +78,7 @@ _PROPERTY_RE = re.compile(
 _FUNCTION_TYPE_ANNOTATION_RE = re.compile(
     rf"^({_NAME})\s*:\s*(?:async\s+)?\([^)]*\)\s*=>\s*[^{{;=]+;\s*$"
 )
-_METHOD_RE = re.compile(rf"^\*?\s*({_NAME})\s*{_GENERICS}\(")
+_METHOD_RE = re.compile(rf"^\*?\s*({_MEMBER_NAME})\s*{_GENERICS}\(")
 
 # A TypeScript type block. Its members use the same `name: (a) => …`
 # shape as an object literal, and they declare a *type*, not a function
@@ -153,15 +155,20 @@ def _open_depth(line: str) -> int:
 def _is_method(tail: str, match: re.Match[str]) -> bool:
     """Reject the call expressions that share a method's ``name(`` shape.
 
-    ``useEffect(() => {`` and ``describe("x", () => {`` also open a line
-    with an identifier, a paren, and close it with a brace. What sets
-    them apart from a real method is that their argument list does not
-    finish on the same line while the line still ends in ``{``.
+    ``useEffect(() => {`` and ``describe("x", () => {`` also open with an
+    identifier and a paren, but their argument list does not finish on the
+    same line while it still ends in ``{``.
+
+    When the paren closes on the line, a real method opens a body brace
+    after it -- run-on (`f(x) {`) or single-line (`f(x) { return x }`). A
+    trailing-`{` test missed the single-line one (Grok 63ab820 audit); a
+    call (`foo(x);`) or a signature (`foo(): T;`) has no brace and stays out.
     """
     trimmed = tail.rstrip()
-    if _matching_paren(tail, match.end() - 1) is None:
+    closing = _matching_paren(tail, match.end() - 1)
+    if closing is None:
         return trimmed.endswith(("(", ","))
-    return trimmed.endswith("{")
+    return "{" in tail[closing + 1:]
 
 
 def _is_assignment(tail: str) -> bool:
@@ -272,6 +279,26 @@ def _block_end(masked: list[str], start: int) -> int | None:
     return None
 
 
+def _is_bare_signature(masked: list[str], start: int, end: int) -> bool:
+    """A declaration that terminates without opening a body or an arrow
+    value: `declare function f(): void;`, a TS overload signature, an
+    abstract method. No body to measure, so counting one mints a member
+    with no code behind it (Grok 63ab820 audit). A real function/method
+    opens a block `{`; an expression member carries `=>`; neither, closed
+    on `;`, is signature only. `f() {}` and `g = () => x;` still count.
+    """
+    depth = [0, 0, 0]
+    opened = False
+    for number in range(start, end + 1):
+        text = masked[number - 1]
+        if "=>" in text:
+            return False
+        opened, _finished = _scan_line(text, depth, opened)
+        if opened:
+            return False
+    return True
+
+
 def _indent_width(text: str) -> int:
     return len(text) - len(text.lstrip())
 
@@ -326,7 +353,10 @@ def js_declaration_ranges(lines: list[str]) -> tuple[list[DeclRange], list[str]]
         end = _block_end(masked, number)
         if end is None:
             end = indent_bounded_end(lines, number)
-        ranges.append(DeclRange(number, max(end, number), found[0], found[1]))
+        end = max(end, number)
+        if _is_bare_signature(masked, number, end):
+            continue  # declare/overload/abstract: a shape with no body (63ab820)
+        ranges.append(DeclRange(number, end, found[0], found[1]))
     return ranges, masked
 
 

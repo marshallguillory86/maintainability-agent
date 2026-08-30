@@ -108,6 +108,10 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # `_html_view` is the ADR 011 HTML skin: it reads the report
                 # dict and stored records and computes no score.
                 "_html_view",
+                # `_html_report_sections` holds the HTML coverage and trend
+                # sections, split from `_html_view` at the file-size line;
+                # it formats report dict fields and computes no score.
+                "_html_report_sections",
                 # `_economics_view` prints the ADR 004 scenario block and
                 # computes none of it.
                 "_economics_view",

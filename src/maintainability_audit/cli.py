@@ -14,6 +14,7 @@ from ._first_run import (
     maybe_prompt_first_run,
 )
 from ._mcp_audit import record_scan_and_attach
+from ._safe_write import write_artifact
 from ._scan_history import (
     DEFAULT_HISTORY_PATH,
     read_history,
@@ -158,20 +159,26 @@ def _selection_from(
 
 
 def write_outputs(args: argparse.Namespace, report: dict, rendered: str) -> None:
+    # Every rendered output the operator asks for is a product-artifact
+    # write: a raw `Path(name).write_text` followed the tree's symlink
+    # into source, so each goes through `write_artifact`, bound to the
+    # repository the report was taken in (Grok 63ab820 audit).
+    root = Path(report["root"])
     if args.output:
-        Path(args.output).write_text(rendered + "\n", encoding="utf-8")
+        write_artifact(root, Path(args.output), rendered + "\n")
     else:
         print(rendered)
     if args.prompt_output:
-        Path(args.prompt_output).write_text(render_ai_prompt(report) + "\n", encoding="utf-8")
+        write_artifact(root, Path(args.prompt_output), render_ai_prompt(report) + "\n")
     if args.comment_output:
-        Path(args.comment_output).write_text(render_pr_comment(report) + "\n", encoding="utf-8")
+        write_artifact(root, Path(args.comment_output), render_pr_comment(report) + "\n")
     if args.agent_instructions_output:
-        Path(args.agent_instructions_output).write_text(render_agent_instructions(report) + "\n", encoding="utf-8")
+        write_artifact(root, Path(args.agent_instructions_output), render_agent_instructions(report) + "\n")
     if args.write_baseline:
         write_baseline(args.write_baseline, report)
     if args.sarif_output:
-        Path(args.sarif_output).write_text(json.dumps(report_to_sarif(report), indent=2) + "\n", encoding="utf-8")
+        write_artifact(root, Path(args.sarif_output),
+                       json.dumps(report_to_sarif(report), indent=2) + "\n", json_artifact=True)
 
 
 def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
@@ -336,8 +343,8 @@ def _render_presentation(args: argparse.Namespace, report: dict, history_path: P
             args.output = "maintainability-report.md"
     args.format = args.format or "markdown"
     if args.html_output:
-        Path(args.html_output).write_text(
-            render_html(report, read_history(history_path)) + "\n", encoding="utf-8")
+        write_artifact(Path(report["root"]), Path(args.html_output),
+                       render_html(report, read_history(history_path)) + "\n")
     if args.format == "json":
         return json.dumps(report, indent=2, sort_keys=True)
     if args.format == "html":

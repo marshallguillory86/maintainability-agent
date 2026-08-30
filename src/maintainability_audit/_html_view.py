@@ -25,6 +25,7 @@ from html import escape
 from typing import Any
 
 from . import _evidence_view as view
+from ._html_report_sections import coverage_section, trend_section
 from ._semantic_view import semantic_class_label
 
 _WIDTH, _HEIGHT, _PAD = 640, 260, 40
@@ -76,8 +77,10 @@ def render_html(report: dict[str, Any], records: list[Any]) -> str:
         f"<p class='muted'>Root: {escape(str(report.get('root', '')))} — "
         f"branch {escape(str(report.get('git_branch') or '(unknown)'))}</p>",
         *_executive_strip(report, score, records),
+        *coverage_section(report),
         *_history_table(records),
         *_chart_sections(records, score),
+        *trend_section(report),
         *_work_order_section(report),
         *_hard_gate_section(report),
         *_unidentified_paths_section(report),

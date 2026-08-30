@@ -35,12 +35,23 @@ _ATTEMPTS = 2
 
 
 def maybe_prompt_first_run(root: Path, explicit_config: str | None) -> None:
-    """Ask for depth and license policy, once, when that is appropriate.
+    """Run first-run setup at a terminal, once, through the shared answers.
 
-    Called before configuration is loaded. Writes the answers to the
-    repository root and returns; the caller's ordinary ``discovered_config``
-    then finds the file it would have found on any later run, so the
-    prompt has no second code path into the audit.
+    One setup, not one per surface. `_mcp_setup` asks the identical
+    question set over MCP elicitation and persists through the same
+    `apply_answers`; this is that setup's terminal transport (the arch
+    "chat-path twin"). The CLI had drifted to a depth/license-only subset
+    that never answered pool execution, so the mere existence of the file
+    it wrote defaulted the pool on and marked setup complete for a
+    decision nobody made (Grok 63ab820 audit). Asking `run_pool` and
+    `record_scan_history` here, and persisting through `apply_answers`,
+    makes a repository configured at a terminal identical to one
+    configured in chat.
+
+    Economics (a staged, declinable add) and the presentation format
+    (asked every invoke, ADR 011) keep their own prompts. Writes the
+    config `discovered_config` then finds on any later run, so the prompt
+    has no second code path into the audit.
     """
     if explicit_config or discovered_config(root) is not None:
         return
@@ -49,15 +60,23 @@ def maybe_prompt_first_run(root: Path, explicit_config: str | None) -> None:
     if not bool(DEFAULTS.get("prompt_when_interactive")):
         return
 
-    depth = _ask(
-        f"Analyzer depth {DEPTH_ORDER} [{DEFAULTS['depth']}]: ",
-        tuple(DEPTH_ORDER), str(DEFAULTS["depth"]),
-    )
-    policy = _ask(
-        f"License policy {tuple(sorted(LICENSE_POLICIES))} [{DEFAULTS['license_policy']}]: ",
-        tuple(LICENSE_POLICIES), str(DEFAULTS["license_policy"]),
-    )
-    _persist(root, depth, policy)
+    from ._mcp_setup import apply_answers
+
+    answers = {
+        "run_pool": _ask(
+            "Run the external analyzer pool? (yes/no) [yes]: ", ("yes", "no"), "yes"),
+        "depth": _ask(
+            f"Analyzer depth {DEPTH_ORDER} [{DEFAULTS['depth']}]: ",
+            tuple(DEPTH_ORDER), str(DEFAULTS["depth"])),
+        "license_policy": _ask(
+            f"License policy {tuple(sorted(LICENSE_POLICIES))} [{DEFAULTS['license_policy']}]: ",
+            tuple(LICENSE_POLICIES), str(DEFAULTS["license_policy"])),
+        "record_scan_history": _ask(
+            "Record scan history so recurrence can be tracked? (yes/no) [yes]: ",
+            ("yes", "no"), "yes"),
+    }
+    apply_answers(root, answers)
+    print(f"Wrote {root / CONFIG_FILENAME}")
 
 
 def _stdin_is_a_tty() -> bool:
@@ -85,28 +104,6 @@ def _ask(question: str, allowed: tuple[str, ...], default: str) -> str:
             return answer
         print(f"  {answer!r} is not one of {allowed}")
     return default
-
-
-def _persist(root: Path, depth: str, policy: str) -> None:
-    """The answers, in the file every later run already looks for.
-
-    Only the two answered keys are written. Restating the rest of the
-    defaults would freeze today's defaults into the repository, so a
-    later release could never improve them for this user.
-    """
-    from ._safe_write import write_bounded
-
-    # Bounded and staged, exactly as the MCP door's `apply_answers` is.
-    # A dangling `maintainability-agent.json` symlink took first-run
-    # configuration outside the repository, because `write_text` follows
-    # the link; the CLI door was the same class D34 closed on the MCP
-    # door and only there. Chat is the primary surface, but this is a
-    # live door on the same primitive.
-    target = write_bounded(
-        root, root / CONFIG_FILENAME,
-        json.dumps({"analyzers": {"depth": depth, "license_policy": policy}}, indent=2) + "\n",
-    )
-    print(f"Wrote {target}")
 
 
 # The three presentations, and what each means (ADR 011). Order matters:

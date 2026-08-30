@@ -287,3 +287,37 @@ def test_first_party_code_under_a_classified_name_still_reports(tmp_path: Path) 
     kept = [item.path for item in ours_only(measurements, root, inventory)]
 
     assert kept == [str(root / "src" / "lib" / "owned.py")]
+
+
+def test_expand_files_states_a_truncation_instead_of_dropping_it_silently(
+    tmp_path: Path, caplog,
+) -> None:
+    """A file list too long for the command line is stated, not silent (#5).
+
+    The old fixed cap of 400 dropped files from any larger tree without a
+    word, so the analyzer measured a fraction and the report claimed the
+    whole. The budget is now the real argv limit, and a truncation is
+    logged rather than hidden.
+    """
+    from maintainability_audit._metric_adapters import _ARGV_BYTE_BUDGET, expand_files
+
+    small = tmp_path / "small"
+    (small / "pkg").mkdir(parents=True)
+    for i in range(20):
+        (small / "pkg" / f"m{i}.py").write_text("x", encoding="utf-8")
+    assert len(expand_files(small, ())) == 20, "a tree under budget keeps every file"
+
+    big = tmp_path / "big"
+    (big / "pkg").mkdir(parents=True)
+    count = (_ARGV_BYTE_BUDGET // 24) + 500
+    for i in range(count):
+        (big / "pkg" / f"file_{i:06d}.py").write_text("x", encoding="utf-8")
+
+    import logging
+    with caplog.at_level(logging.WARNING, logger="maintainability_audit._metric_adapters"):
+        kept = expand_files(big, ())
+
+    assert len(kept) < count, "a tree over the argv budget is truncated"
+    assert any("truncated" in record.message for record in caplog.records), (
+        "truncation must be stated, not silent"
+    )

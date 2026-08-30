@@ -306,6 +306,19 @@ def _looks_like_a_stub(banner: str) -> bool:
     return any(marker in lowered for marker in _STUB_MARKERS)
 
 
+def _is_findings_exit_with_empty_body(completed: subprocess.CompletedProcess) -> bool:
+    """A non-zero "found something" exit that produced nothing at all.
+
+    Ruff and flake8 exit 1 to report findings, Checkstyle a non-zero
+    count; any of them exiting non-zero with an empty body did nothing
+    usable, and RAN would price that as a clean run (e88b429 #13). Exit 0
+    with an empty body is a real "looked, found nothing" and is not this.
+    """
+    return (completed.returncode != 0
+            and not completed.stdout.strip()
+            and not completed.stderr.strip())
+
+
 def run(
     slug: str,
     invocation: Invocation,
@@ -362,6 +375,19 @@ def run(
             detail=(
                 f"{invocation.argv[0]} exited {completed.returncode}: "
                 f"{(completed.stderr or completed.stdout).strip().splitlines()[:1] or ['no output']}"
+            ),
+        )
+    if _is_findings_exit_with_empty_body(completed):
+        return ToolResult(
+            slug=slug,
+            outcome=Outcome.NOT_WORKING,
+            stdout=completed.stdout,
+            stderr=completed.stderr,
+            exit_code=completed.returncode,
+            duration_seconds=duration,
+            detail=(
+                f"{invocation.argv[0]} exited {completed.returncode} with no output; "
+                "a findings exit that produced nothing is not a clean run"
             ),
         )
     return ToolResult(

@@ -279,7 +279,17 @@ class JscpdAdapter(BaseAdapter):
     def _read(self, result: ToolResult) -> Extraction:
         report = self._report_dir / "jscpd-report.json"
         raw = report.read_text(encoding="utf-8") if report.exists() else result.stdout
-        payload = json.loads(raw or "{}")
+        if not raw.strip():
+            # No report file and no stdout is "ran, produced nothing",
+            # which the old `or "{}"` default read as zero duplicates --
+            # absence as clean (e88b429 #13). A real clean jscpd run still
+            # writes a report with a statistics block; nothing at all is a
+            # parse failure, not a clean tree.
+            raise ValueError(
+                "jscpd produced neither a report file nor output; "
+                "a run that wrote nothing is not zero duplicates"
+            )
+        payload = json.loads(raw)
         totals = payload.get("statistics", {}).get("total", {})
         measurements = []
         if "percentage" in totals:

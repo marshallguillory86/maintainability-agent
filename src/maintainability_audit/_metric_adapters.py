@@ -13,6 +13,8 @@ from __future__ import annotations
 import csv
 import io
 import json
+import logging
+import os
 import re
 import tempfile
 from collections.abc import Iterable, Sequence
@@ -29,11 +31,23 @@ def _rows(text: str) -> list[list[str]]:
 
 SOURCE_SUFFIXES = (".py", ".js", ".mjs", ".cjs", ".ts", ".java", ".c", ".cpp",
                    ".h", ".go", ".rb", ".php")
-# A tool asked about thousands of files still has to fit on a command line.
-# Beyond this the list is capped -- and the cap is a stated limit rather
-# than a silent truncation, because a shortened file list is a shortened
-# audit.
-MAX_EXPANDED_FILES = 400
+# A tool asked about thousands of files still has to fit on a command line,
+# and a shortened file list is a shortened audit. The old fixed cap of 400
+# was both arbitrary and silent: 400 paths is ~20 KB against an ARG_MAX of
+# a megabyte or more, so it truncated ordinary large trees for no OS reason
+# and said nothing (Grok e88b429 audit, #5). The budget below is derived
+# from the real limit, and `expand_files` now *states* a truncation through
+# the module logger instead of dropping files quietly.
+#
+# A quarter of ARG_MAX, floored, leaves generous room for the executable,
+# flags and the inherited environment on the same command line. A tree with
+# more source than this in one language is at the genuine OS limit, where a
+# single invocation cannot name every file and chunked invocation would be
+# the only complete answer -- disclosed rather than hidden.
+_ARG_MAX = os.sysconf("SC_ARG_MAX") if hasattr(os, "sysconf") else 262144
+_ARGV_BYTE_BUDGET = max(_ARG_MAX // 4, 131072)
+
+logger = logging.getLogger(__name__)
 
 
 def expand_files(
@@ -58,7 +72,7 @@ def expand_files(
     skip = tuple(e.rstrip("/") for e in excludes)
     covers = getattr(excludes, "covers", lambda _relative: False)
     resolved_root = root.resolve()
-    return tuple(
+    eligible = [
         str(path)
         for path in sorted(root.rglob("*"))
         if path.suffix in suffixes
@@ -66,7 +80,23 @@ def expand_files(
         and within(resolved_root, path)
         and not any(part in skip for part in path.parts)
         and not covers(path.relative_to(root).as_posix())
-    )[:MAX_EXPANDED_FILES]
+    ]
+    kept: list[str] = []
+    used = 0
+    for name in eligible:
+        used += len(name.encode("utf-8")) + 1  # +1 for the argv separator
+        if used > _ARGV_BYTE_BUDGET and kept:
+            break
+        kept.append(name)
+    if len(kept) < len(eligible):
+        # Stated, not silent: a shortened file list is a shortened audit,
+        # and the reader has to know the tool saw only part of the tree.
+        logger.warning(
+            "file list for %s truncated to %d of %d files (%d-byte argv budget); "
+            "the remaining %d were not handed to the analyzer",
+            root, len(kept), len(eligible), _ARGV_BYTE_BUDGET, len(eligible) - len(kept),
+        )
+    return tuple(kept)
 
 
 

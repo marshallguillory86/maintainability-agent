@@ -28,31 +28,37 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parents[1] / "src" / "maintainability_audit"
 
 
+def _is_git_argv(arg: ast.expr) -> bool:
+    return (isinstance(arg, ast.List) and bool(arg.elts)
+            and isinstance(arg.elts[0], ast.Constant) and arg.elts[0].value == "git")
+
+
+def _splat_name(elt: ast.Starred) -> str:
+    value = elt.value
+    if isinstance(value, ast.Name):
+        return value.id
+    if isinstance(value, ast.Call):
+        return getattr(value.func, "id", getattr(value.func, "attr", ""))
+    return ""
+
+
+def _parse_git_argv(arg: ast.List) -> tuple[list[str], list[str]]:
+    splats = [_splat_name(e) for e in arg.elts if isinstance(e, ast.Starred)]
+    consts = [e.value for e in arg.elts
+              if isinstance(e, ast.Constant) and isinstance(e.value, str)]
+    return splats, consts
+
+
 def _git_spawns() -> list[tuple[str, int, list[str], list[str]]]:
     """(file, line, splatted guard names, constant string args) per git argv."""
     spawns = []
     for path in sorted(SRC.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            for arg in node.args:
-                if not (isinstance(arg, ast.List) and arg.elts
-                        and isinstance(arg.elts[0], ast.Constant)
-                        and arg.elts[0].value == "git"):
-                    continue
-                splats: list[str] = []
-                consts: list[str] = []
-                for elt in arg.elts:
-                    if isinstance(elt, ast.Starred):
-                        v = elt.value
-                        if isinstance(v, ast.Name):
-                            splats.append(v.id)
-                        elif isinstance(v, ast.Call):
-                            fn = v.func
-                            splats.append(getattr(fn, "id", getattr(fn, "attr", "")))
-                    elif isinstance(elt, ast.Constant) and isinstance(elt.value, str):
-                        consts.append(elt.value)
+            git_args = [a for a in getattr(node, "args", []) if _is_git_argv(a)] \
+                if isinstance(node, ast.Call) else []
+            for arg in git_args:
+                splats, consts = _parse_git_argv(arg)
                 spawns.append((path.name, node.lineno, splats, consts))
     return spawns
 

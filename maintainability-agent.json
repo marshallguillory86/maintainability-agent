@@ -44,6 +44,7 @@
       "maintainability.sarif",
       "coverage.xml",
       "AGENTS-maintainability.md",
+      "docs/self-audit.md",
       "tools/calibration/*.json",
       "tools/validation/*.json",
       "tools/experiments/*/results.json",

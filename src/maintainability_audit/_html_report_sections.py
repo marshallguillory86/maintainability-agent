@@ -14,6 +14,7 @@ from __future__ import annotations
 from html import escape
 from typing import Any
 
+from ._evidence_view import test_suite_lines
 from ._hotspots import hotspot_cognitive, hotspot_complexity, hotspot_name
 from ._scan_view import POSTURE_NOTE
 from ._tdd_view import tdd_sentences
@@ -94,6 +95,7 @@ def remaining_sections(report: dict[str, Any]) -> list[str]:
     return [
         *_economic_section(report),
         *_tdd_section(report),
+        *_test_suite_section(report),
         *_pillars_section(report),
         *_iso_section(report),
         *_aspects_section(report),
@@ -108,6 +110,17 @@ def _tdd_section(report: dict[str, Any]) -> list[str]:
     if not sentences:
         return []
     parts = ["<h2>TDD-shaped tests</h2>"]
+    parts.extend(f"<p>{escape(sentence)}</p>" for sentence in sentences)
+    return parts
+
+
+def _test_suite_section(report: dict[str, Any]) -> list[str]:
+    """The opted-in suite's result — same sentences as the Markdown skin,
+    so a failed run is visible here too (ADR 011 decision 5, P8)."""
+    sentences = test_suite_lines(report.get("test_suite"))
+    if not sentences:
+        return []
+    parts = ["<h2>Test Suite</h2>"]
     parts.extend(f"<p>{escape(sentence)}</p>" for sentence in sentences)
     return parts
 

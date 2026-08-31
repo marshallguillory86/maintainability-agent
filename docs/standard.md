@@ -26,7 +26,7 @@ The CLI emits an ISO/IEC 25010-inspired score from 0 to 5 for each category plus
 
 The score is a three-layer rollup, and every layer is visible in the report (`score.aspects`, `score.rubric`) and in [`_formula.py`](../src/maintainability_audit/_formula.py), which is the single source both the scorer and the calibration derive from.
 
-**Layer 1 — aspects.** Thirteen measured aspects, each scored 0–5. Two kinds:
+**Layer 1 — aspects.** Fourteen measured aspects, each scored 0–5. Two kinds:
 
 |aspect|kind|measured as|
 |---|---|---|
@@ -221,12 +221,13 @@ These are structural proxies — file size, declaration size, approximate comple
 | 1 | Poor. Frequent regressions, unclear ownership, weak tests, or heavy coupling. |
 | 0 | Unmaintainable in this area. Safe change is not realistic without remediation. |
 
-Current scoring inputs (the thirteen aspects above, i.e.):
+Current scoring inputs (the fourteen aspects above, i.e.):
 
 - file warnings and failures; function/class size, cyclomatic and cognitive complexity warnings and failures
 - duplicate block count; near-duplicate declarations; unreferenced private declarations; competing-library concerns
 - configured risk-pattern findings; hard-gate failures
 - test presence (share of declarations in test files)
+- test effectiveness (line coverage from the opted-in suite as `coverage / 20`; NotApplicable without opt-in)
 - documentation artifacts (README, changelog, docs directory)
 - history, when available: churn hotspots, code-to-code change coupling, single-author concentration
 

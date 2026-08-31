@@ -64,6 +64,9 @@ PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens", "_xml"}
 # the looking (ADR 006).
 SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "idioms",
             "similarity", "_semantic", "_semantic_ts",
+            # The opt-in test-suite runner: the one scanner that executes the
+            # audited tree's own code, default-off (Class 5).
+            "_test_execution",
             # Path pairing and TDD-shaped constructs. Not chronology.
             "_test_pairing",
             "history", "_adapters",

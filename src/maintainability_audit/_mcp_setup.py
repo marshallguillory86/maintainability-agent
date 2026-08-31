@@ -90,6 +90,20 @@ def setup_questions(config: dict[str, Any]) -> list[dict[str, Any]]:
         },
         *_economics_questions(),
         {
+            # Decision 9 amendment (plan-81dc6870 Class 5): the one place
+            # the agent may run the audited tree's own code, and only on an
+            # explicit, disclosed, default-off opt-in.
+            "name": "run_tests",
+            "prompt": (
+                "Run this repository's documented test command so the report "
+                "can measure test effectiveness (coverage / pass-fail)? THIS "
+                "EXECUTES THE TREE, including any network the suite uses. Skip "
+                "leaves test effectiveness unscored and says so."
+            ),
+            "options": ["yes", "no"],
+            "default": "no",
+        },
+        {
             "name": "default_format",
             "prompt": "Default report presentation for this user.",
             "options": ["chat", "markdown", "html"],
@@ -214,6 +228,8 @@ def apply_answers(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
     """
     if _is_bounds_only(answers):
         return _apply_bounds(root, answers)
+    if _is_command_only(answers):
+        return _apply_command(root, answers)
     payload: dict[str, Any] = {
         "version": 1,
         "analyzers": {
@@ -228,6 +244,13 @@ def apply_answers(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
         # of the file-existence rule (decision 4).
         "history": {
             "record": _accepted(answers.get("record_scan_history", "yes")),
+        },
+        # Decision 9 amendment (Class 5): the disclosed opt-in to run the
+        # tree's own suite. Requested here; the command is a staged second
+        # ask, and nothing executes until both are present and selection
+        # opts in.
+        "test_execution": {
+            "requested": _accepted(answers.get("run_tests", "no")),
         },
     }
     economics = _economics_block(answers)
@@ -290,6 +313,70 @@ def _apply_bounds(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
     return load_config(str(config_path))
 
 
+def test_command_questions() -> list[dict[str, Any]]:
+    """The one command, asked only of someone who opted into running it.
+
+    A free-text answer (empty options), the second stage of the opt-in the
+    way the labor rates are the second stage of the economic scenario.
+    """
+    return [{
+        "name": "test_command",
+        "prompt": (
+            "The command that runs this repository's test suite "
+            "(e.g. `pytest`, `npm test`). It runs in the repository root, "
+            "and leaving it blank cancels the opt-in."
+        ),
+        "options": [],
+        "default": "",
+    }]
+
+
+def test_command_pending(root: Path) -> bool:
+    """True when the operator opted to run tests and no command is stored.
+
+    The second stage of the opt-in, mirroring `economics_bounds_pending`:
+    the command is asked only of someone who said yes, and saying yes is
+    not silently discarded.
+    """
+    discovered = discovered_config(Path(root))
+    stored = _read_config(Path(discovered)) if discovered is not None else None
+    if not isinstance(stored, dict):
+        return False
+    requested = bool((stored.get("test_execution") or {}).get("requested"))
+    command = (stored.get("expected_commands") or {}).get("test")
+    return requested and not command
+
+
+def _is_command_only(answers: dict[str, Any]) -> bool:
+    """A stage-two reply carrying only the test command."""
+    given = {key for key, value in answers.items() if value is not None}
+    return given == {"test_command"}
+
+
+def _apply_command(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
+    """Merge the test command into a configuration that already has its
+    answers, exactly as `_apply_bounds` merges the rates. A blank command
+    cancels the opt-in rather than looping the ask forever."""
+    import shlex
+
+    command = str(answers.get("test_command") or "").strip()
+    discovered = discovered_config(Path(root))
+    stored = dict(_read_config(Path(discovered)) or {}) if discovered else {}
+    if command:
+        commands = dict(stored.get("expected_commands") or {})
+        commands["test"] = shlex.split(command)
+        stored["expected_commands"] = commands
+    else:
+        stored["test_execution"] = {"requested": False}
+    config_path = Path(root) / CONFIG_FILENAME
+    write_bounded(
+        Path(root), config_path,
+        json.dumps(stored, indent=2, sort_keys=True) + "\n",
+    )
+    write_user_answers(stored)
+    return load_config(str(config_path))
+
+
 def setup_pending(root: Path) -> bool:
     """Whether first-run setup still has questions to ask for `root`.
 
@@ -312,10 +399,11 @@ def setup_pending(root: Path) -> bool:
     # out to remove and left standing here (D33).
     discovered = discovered_config(Path(root))
     if discovered is not None and _read_config(Path(discovered)):
-        # Configured, unless the person asked for the economic scenario
-        # and has not been asked for its rates yet. That is the second
-        # stage of the ask, not a new one.
-        return economics_bounds_pending(root)
+        # Configured, unless a second-stage ask is still open: the economic
+        # rates for someone who wanted the scenario, or the test command for
+        # someone who opted to run the suite. Both are stage two of an ask
+        # already begun, not a new one.
+        return economics_bounds_pending(root) or test_command_pending(root)
     return user_config_answers() is None
 
 
@@ -362,6 +450,8 @@ def setup_schema(root: Path | None = None):
     """
     if root is not None and economics_bounds_pending(root):
         return _schema_for(economics_bound_questions())
+    if root is not None and test_command_pending(root):
+        return _schema_for(test_command_questions())
     return _schema_for(setup_questions(load_config(None)))
 
 
@@ -378,8 +468,12 @@ def _schema_for(questions: list[dict[str, Any]]):
     fields: dict[str, Any] = {}
     for question in questions:
         options = question["options"]
-        text_options = all(isinstance(option, str) for option in options)
-        kind = Literal[tuple(options)] if text_options else float  # type: ignore[valid-type]
+        if not options:
+            kind: Any = str  # a free-text answer, e.g. a test command
+        elif all(isinstance(option, str) for option in options):
+            kind = Literal[tuple(options)]  # type: ignore[valid-type]
+        else:
+            kind = float
         fields[question["name"]] = (
             kind,
             Field(default=question["default"], description=question["prompt"]),

@@ -68,9 +68,7 @@ from ._second_source import (
 )
 from ._verification import INSUFFICIENT, verification
 from .evidence import (
-    EvidenceState,
     NormalizedEvidence,
-    NotApplicable,
     SummaryEvidence,
     normalize_report_evidence,
 )
@@ -179,7 +177,7 @@ def _evidence_rules(
     blockers: list[str],
     aspects: dict[str, float | None],
     untested: bool | None,
-    ownership_evidence: EvidenceState,
+    not_applicable: frozenset[str],
 ) -> tuple[str, list[str]]:
     """The two rules that keep A-grades honest about evidence.
 
@@ -193,17 +191,21 @@ def _evidence_rules(
     fetch-depth: 0 for the full grade.)
 
     "Couldn't look" blocks; "looked and there was nothing to measure"
-    does not — knowledge_concentration is None on a young repo whose log
-    is fully readable but where no file has three commits yet, and that
-    None carries no penalty.
+    does not — an aspect is None either because it is Unknown (missing
+    evidence, which must block) or NotApplicable (a resolved absence of
+    population, which must not). ``not_applicable`` is the authority on
+    which: knowledge_concentration on a young repo whose log is readable
+    but no file has three commits, and test_effectiveness whenever the
+    operator did not opt the suite in, are both None-but-not-missing.
     """
     if untested:
         blockers = [*blockers, "no test evidence found: A-grades require it"]
         if grade in GRADE_GATES:
             grade = "B"
-    missing = sorted(name for name, value in aspects.items() if value is None)
-    if isinstance(ownership_evidence, NotApplicable):
-        missing = [name for name in missing if name != "knowledge_concentration"]
+    missing = sorted(
+        name for name, value in aspects.items()
+        if value is None and name not in not_applicable
+    )
     if missing:
         # Stated whatever the grade, not only when it is being demoted
         # from an A. Grading on the evidence floor can push a repo well
@@ -222,6 +224,7 @@ def _grade_on_the_floor(
     aspects: dict[str, float | None],
     untested: bool | None,
     interval: tuple[float, float, float],
+    not_applicable: frozenset[str],
 ) -> tuple[str, list[str]]:
     """Band the grade from the evidence floor, and say so when it bites.
 
@@ -249,7 +252,7 @@ def _grade_on_the_floor(
         blockers,
         aspects,
         untested,
-        evidence.history.single_author_files,
+        not_applicable,
     )
 
 
@@ -272,9 +275,31 @@ def score_report(
     the mean of the numbers printed beside it.
     """
     unpaired = bool((report.get("tdd_structure") or {}).get("unpaired_fail_band"))
+    coverage = (report.get("test_suite") or {}).get("coverage_percent")
     return score_evidence(
-        normalize_report_evidence(report), external, unpaired_hotspot=unpaired,
+        normalize_report_evidence(report), external,
+        unpaired_hotspot=unpaired, test_coverage=coverage,
     )
+
+
+def _seat_coverage_aspect(
+    aspects: dict[str, float | None],
+    not_applicable: frozenset[str],
+    test_coverage: float | None,
+) -> frozenset[str]:
+    """Seat the opt-in coverage aspect (Class 5) and resolve its state.
+
+    A line-coverage percent becomes a 0-5 score, ``coverage / 20``.
+    Without a coverage artifact ``test_effectiveness`` stays NotApplicable
+    — excluded from testability so the category renormalizes to exactly
+    its pre-Class-5 value — rather than an unknown priced at the anchor.
+    """
+    aspects["test_effectiveness"] = (
+        None if test_coverage is None else clamp_score(test_coverage / 20)
+    )
+    if test_coverage is None:
+        return not_applicable
+    return not_applicable - {"test_effectiveness"}
 
 
 def score_evidence(
@@ -282,6 +307,7 @@ def score_evidence(
     external: ExternalPressures | None = None,
     *,
     unpaired_hotspot: bool = False,
+    test_coverage: float | None = None,
 ) -> dict[str, Any]:
     """Score an already-normalized model — the seam validation ends at.
 
@@ -303,7 +329,9 @@ def score_evidence(
     )
     normalized = normalize(pressures)
     aspects = aspect_scores(evidence, normalized, production)
-    not_applicable = not_applicable_aspects(evidence)
+    not_applicable = _seat_coverage_aspect(
+        aspects, not_applicable_aspects(evidence), test_coverage
+    )
     untested = is_untested(summary)
     overall, rounded_categories = overall_from_aspects(
         aspects,
@@ -330,19 +358,10 @@ def score_evidence(
     # interval and never averaged into the estimate (ADR 006 §4).
     low, high = widen_for_spread(external, (low, high))
 
-    # The grade is banded from the *floor*, not the point estimate. The
-    # point estimate prices unknowns at the corpus anchor, so a repo
-    # whose hidden evidence is worse than typical is flattered by hiding
-    # it — an audit demonstrated 3.9/C with the history visible against
-    # 4.5/B with the same history withheld. Printing the interval made
-    # that visible to a careful reader and left every machine consumer
-    # (CI gate, badge, ranking) reading the flattered field. Grading the
-    # floor makes concealment monotonically unprofitable: hiding an
-    # aspect can only widen the interval downward, so it can never raise
-    # the grade. Supply the evidence and the floor rises to meet the
-    # point estimate.
+    # Banded from the *floor*, not the point estimate, so concealment is
+    # monotonically unprofitable — see `_grade_on_the_floor`.
     grade, blockers = _grade_on_the_floor(
-        evidence, pressures, aspects, untested, (overall, low, high)
+        evidence, pressures, aspects, untested, (overall, low, high), not_applicable
     )
     if unpaired_hotspot:
         blockers = [

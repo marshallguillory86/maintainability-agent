@@ -44,7 +44,12 @@ from ._mcp_resources import _bind_resources
 from ._mcp_resources import _project_asset as _project_asset  # noqa: PLC0414
 from ._mcp_resources import _report_markdown as _report_markdown  # noqa: PLC0414
 from ._mcp_setup import SetupRequired as SetupRequired
-from ._mcp_setup import economics_bounds_pending, setup_pending, setup_schema
+from ._mcp_setup import (
+    economics_bounds_pending,
+    setup_pending,
+    setup_schema,
+    test_command_pending,
+)
 from ._scan_history import DEFAULT_HISTORY_PATH
 from .baseline import StaleBaseline as StaleBaseline
 from .config import (
@@ -120,6 +125,27 @@ def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
     }
 
 
+def _setup_stage_message(root: str) -> str:
+    """The elicitation prompt for whichever setup stage is pending.
+
+    Each staged follow-up says what it is asking for, so a host never
+    re-presents "configure now?" when it is really collecting the labor
+    rates or the opted-in test command. The order matches `setup_pending`:
+    economics bounds, then the Class 5 test command, then first run.
+    """
+    if economics_bounds_pending(root):
+        return "The economic scenario needs three labor rates."
+    if test_command_pending(root):
+        return (
+            "Running the test suite needs the exact command to run "
+            "(e.g. `pytest -q`). Leave it blank to cancel."
+        )
+    return (
+        "First run in this repository and no configuration found — "
+        "configure maintainability-agent now? Defaults are pre-selected."
+    )
+
+
 def _setup_resolver_for(ledger: _RootLedger, context_type: Any) -> Any:
     """The first-run ask as a resolver: the framework owns the transport.
 
@@ -152,12 +178,7 @@ def _setup_resolver_for(ledger: _RootLedger, context_type: Any) -> Any:
         # calling `setup_schema(root)` directly; this is the seam that
         # actually asks, and it was passing no root at all.
         return Elicit(
-            message=(
-                "The economic scenario needs three labor rates."
-                if economics_bounds_pending(root) else
-                "First run in this repository and no configuration found — "
-                "configure maintainability-agent now? Defaults are pre-selected."
-            ),
+            message=_setup_stage_message(root),
             schema=setup_schema(root),
         )
 

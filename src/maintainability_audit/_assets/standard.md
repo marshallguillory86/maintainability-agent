@@ -36,6 +36,7 @@ The score is a three-layer rollup, and every layer is visible in the report (`sc
 |risk_patterns|calibrated|configured risk-pattern density vs. corpus median|
 |policy_gates|calibrated|hard-gate failures vs. the one-failure unit|
 |test_presence|rubric|share of declarations living in test files (0 test files → 0.0)|
+|test_effectiveness|rubric|line coverage from the opted-in test suite as `coverage / 20`; NotApplicable without opt-in|
 |dead_code|rubric|unreferenced private declarations per production declaration|
 |near_duplication|rubric|near-duplicate declarations per production declaration|
 |idiom_consistency|rubric|count of concerns served by competing libraries|
@@ -62,7 +63,7 @@ That property is only as good as the definition of "unmeasured", and the first v
 |reusability|duplication .30, near_duplication .30, idiom_consistency .25, file_size .15|
 |analyzability|declaration_size .30, documentation .20, dead_code .15, risk_patterns .15, churn_hotspots .10, knowledge_concentration .10|
 |modifiability|change_coupling .25, duplication .20, churn_hotspots .15, risk_patterns .15, knowledge_concentration .10, policy_gates .10, file_size .05|
-|testability|test_presence .50, declaration_size .30, policy_gates .20|
+|testability|test_presence .40, declaration_size .24, policy_gates .16, test_effectiveness .20|
 
 Every aspect in Layer 1 appears in at least one of those rows, and `test_every_scored_aspect_carries_weight_in_some_category` fails the build if one does not. It was added because one of them didn't: `knowledge_concentration` was measured, printed under "Aspect Scores" and documented here while carrying weight in no category, so a repository could move from every settled file having many authors to every settled file having one and score identically. Thirteen aspects were advertised and twelve were doing the work. Bus factor now costs a tenth of analyzability and a tenth of modifiability — code only one person has touched is code only one person can read quickly or change safely — and the constant was re-fitted around it.
 
@@ -76,14 +77,14 @@ The calibration constant is fitted so the **corpus median rolls up to exactly 4.
 
 - **A repository with production code and no test evidence cannot receive an A-grade.** Zero test files, or test files containing zero declarations — an empty test-shaped artifact bought an A once, and that hole is closed — cap testability at 2.0 and demote with a named blocker. The published meaning of a 5 includes "tested", and that sentence is enforced, not aspirational.
 - **A fail-band production unit with no paired test file cannot report testability 5.0.** Path pairing is structure, not chronology. Cap 4.0 with a named blocker. HTML, CSS and Markdown are not this population.
-- **Unknown evidence blocks the top grades.** A+ is published as "nothing is wrong anywhere"; a shallow clone that hides coupling, hotspots and ownership is not that — it is "nothing was wrong in what could be seen". Unmeasured aspects demote to B with a blocker naming them, and because the grade bands the evidence floor, they usually cost more than that one step. The blocker is now stated at every grade, not only when an A is being withheld: a demotion nobody explains is the failure this list exists to prevent. "Couldn't look" blocks; "looked and there was nothing to measure" (a young repo where no file has three commits yet) does not.
+- **Unknown evidence blocks the top grades.** A+ is published as "nothing is wrong anywhere"; a shallow clone that hides coupling, hotspots and ownership is not that — it is "nothing was wrong in what could be seen". Unmeasured aspects demote to B with a blocker naming them, and because the grade bands the evidence floor, they usually cost more than that one step. The blocker is now stated at every grade, not only when an A is being withheld: a demotion nobody explains is the failure this list exists to prevent. "Couldn't look" blocks; "looked and there was nothing to measure" (a young repo where no file has three commits yet, or `test_effectiveness` where the operator did not opt the suite in) does not.
 - **NotApplicable evidence is resolved, not uncertain.** An aspect with no population is removed from its category denominator for the point estimate and both bounds. It receives neither a perfect score nor an unknown price, so a complete young repository's range collapses without charging it for a population that does not exist.
+- **Test effectiveness is scored only on opt-in.** The tool never runs the audited tree by default (Decision 9). The lone exception is an explicit, per-repository operator opt-in to run the tree's *own documented* test command; line coverage from that run scores `test_effectiveness` as `coverage / 20`. Without opt-in the aspect is NotApplicable, testability renormalizes to exactly its pre-coverage weighting, and no grade is capped for its absence.
 
 **What is not scored, and why.** These are aspects of maintainability by any honest definition; no measurement in this tool reaches them, so they appear in every report's rubric as unscored rather than being silently absent:
 
 |aspect|why it is not scored|
 |---|---|
-|test_effectiveness|requires running the suite (mutation/coverage); this audit never executes code|
 |naming_quality|no static proxy survives contact; a wrong-name detector needs semantics|
 |comment_accuracy|comments are deliberately unparsed; staleness needs meaning, not structure|
 |indirection_depth|call-graph construction is not implemented for the supported languages|
@@ -249,7 +250,7 @@ Grades:
 | cyclomatic complexity | `cyclomatic_complexity` | same measurement |
 | duplication % | `duplication` | same measurement, expressed as a rate over files |
 | code churn | `churn` | same measurement, over a stated window |
-| coverage % | — | **not measured.** Supplied by the operator or absent; never inferred |
+| coverage % | `test_effectiveness` | **measured only on opt-in.** When the operator opts the tree's own test suite in (Decision 9, amended 2026-08-31), line coverage scores `test_effectiveness` as `coverage / 20`; otherwise the aspect is NotApplicable and coverage is never inferred |
 | **bus factor** | `knowledge_concentration` | **different quantity.** Bus factor counts the people whose loss would stall the project. This counts the share of settled files (3+ commits) that exactly one person has touched. A repository where one author owns 80% of files can still have a bus factor of four, so the names are not interchangeable |
 
 `test_the_ownership_aspect_does_not_claim_to_be_bus_factor` fails the build if the ownership key is renamed to the framework's term.

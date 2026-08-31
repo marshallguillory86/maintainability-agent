@@ -24,8 +24,9 @@ engineering changes, not as permission to refactor unrelated code.
 2. Choices arrive as structured questions — MCP elicitation or the
    host's question UI — never free text. First-run setup is the **same
    questions** on chat, MCP, and an interactive CLI TTY (analyzer
-   pool, depth, license policy, economics, presentation, history
-   consent). There is not a different CLI or MCP process. Out-of-roots
+   pool, depth, license policy, economics, test-suite execution,
+   presentation, history consent). There is not a different CLI or MCP
+   process. Out-of-roots
    grants (this session / always / no) are the MCP server boundary, not
    a second setup. Answer nothing on the user's behalf.
    Repository instruction files (`AGENTS.md`, `CLAUDE.md`) govern how

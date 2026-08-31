@@ -74,6 +74,12 @@ def maybe_prompt_first_run(root: Path, explicit_config: str | None) -> None:
         "record_scan_history": _ask(
             "Record scan history so recurrence can be tracked? (yes/no) [yes]: ",
             ("yes", "no"), "yes"),
+        # Decision 9 amendment (Class 5): disclosed, default-off opt-in to
+        # run the tree's own suite. Asked on every surface so a repository
+        # configured at a terminal and one in chat stay byte-identical.
+        "run_tests": _ask(
+            "Run this repository's test suite for coverage? THIS EXECUTES THE "
+            "TREE. (yes/no) [no]: ", ("yes", "no"), "no"),
     }
     apply_answers(root, answers)
     print(f"Wrote {root / CONFIG_FILENAME}")
@@ -181,4 +187,49 @@ def maybe_prompt_economics(root: Path, config: dict) -> None:
     }
     written = write_bounded(root, target, json.dumps(existing, indent=2) + "\n")
     config["economic_context"] = existing["economic_context"]
+    print(f"Wrote {written}")
+
+
+def maybe_prompt_test_command(root: Path, config: dict) -> None:
+    """Ask the opted-in operator for the test command, once -- the CLI half
+    of the Class 5 second stage, mirroring the labor-rate ask. Fires only at
+    a TTY, only when the suite was opted into and no command is stored, and
+    a blank answer cancels the opt-in. Nothing runs until a command exists.
+    """
+    import shlex
+
+    if not _stdin_is_a_tty():
+        return
+    if (config.get("analyzers") or {}).get(
+        "prompt_when_interactive", DEFAULTS["prompt_when_interactive"]
+    ) is False:
+        return
+    if not (config.get("test_execution") or {}).get("requested"):
+        return
+    if (config.get("expected_commands") or {}).get("test"):
+        return
+
+    answer = input(
+        "The command that runs this repository's test suite, e.g. `pytest` "
+        "(Enter to cancel running it): "
+    ).strip()
+
+    from ._safe_write import write_bounded
+
+    target = root / CONFIG_FILENAME
+    if target.is_symlink():
+        raise PathNotAllowed(
+            f"{target} is a symlink; the audited tree cannot redirect "
+            "where first-run configuration is read or written."
+        )
+    existing = json.loads(target.read_text(encoding="utf-8")) if target.exists() else {}
+    if answer:
+        commands = dict(existing.get("expected_commands") or {})
+        commands["test"] = shlex.split(answer)
+        existing["expected_commands"] = commands
+        config["expected_commands"] = commands
+    else:
+        existing["test_execution"] = {"requested": False}  # declined cancels the opt-in
+        config["test_execution"] = {"requested": False}
+    written = write_bounded(root, target, json.dumps(existing, indent=2) + "\n")
     print(f"Wrote {written}")

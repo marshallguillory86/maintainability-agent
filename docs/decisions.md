@@ -99,6 +99,22 @@ exactly this reason ("requires running the suite (mutation/coverage);
 this audit never executes code"), and that entry now reflects a rule
 rather than a limitation.
 
+**Amended 2026-08-31 (Class 5 — opt-in suite execution).** The pillar
+`test_effectiveness` named above no longer waits unconditionally. The one
+exception to "never executes the audited repository's code" is an
+explicit, per-repository operator opt-in: setup asks — defaulting to
+**no** — whether to run the tree's *own documented* test command, and
+only a `yes` together with a recorded command lets the audit spawn it.
+The default is unchanged and total: with no opt-in the agent never runs
+the tree, and every report produced without it keeps the original
+guarantee verbatim. This is consent to run one operator-named command,
+not a retreat from the boundary — it does not load the tree's
+configuration as code (Decision 9's actual target), does not reopen child
+sandboxing, and runs nothing the operator did not name. Coverage from
+that run scores `test_effectiveness` as `coverage / 20`; without it the
+aspect is `NotApplicable`, scored exactly as if the pillar were still
+deferred.
+
 Consequences: `SECURITY.md`'s existing claim becomes true rather than
 aspirational. D39 stops being an accepted residual and becomes a defect
 — the promise was right and the code drifted from it. Analyzers that

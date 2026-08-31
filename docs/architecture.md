@@ -77,6 +77,7 @@ flowchart TB
     _semantic["_semantic"]
     _semantic_ts["_semantic_ts"]
     _test_pairing["_test_pairing"]
+    _test_execution["_test_execution"]
   end
 
   subgraph scoring["scoring"]
@@ -172,7 +173,7 @@ The normalization boundary is deliberately a leaf. Everything it needs arrives a
 One existed: `_derive` needed the scorer and the scorer needed the calibration, so `_derive` imported from inside a function body. Splitting `scoring` into `_pressures` / `_aspects` / `scoring` removed it. Cycles are how layering rots without anyone deciding to rot it.
 
 **7. Only `_runner` runs analyzers; only `_runner`, `git_tools` and `_backfill` may spawn a process.**
-Adapters describe invocations; they do not perform them. `_backfill` talks to git directly rather than through `git_tools` — a remaining inconsistency, not a third analyzer runner.
+Adapters describe invocations; they do not perform them. `_backfill` talks to git directly rather than through `git_tools` — a remaining inconsistency, not a third analyzer runner. `_test_execution` (Class 5) is not a fourth spawn point: it runs the operator's opted-in test command *through* `_runner`, so the one execution path the tree can reach still funnels through the single runner (Decision 9, amended 2026-08-31).
 
 **8. Analyzer adapters may not import scoring.**
 The same rule scanners already live under, for the same reason: an adapter that could see the rubric would eventually be tuned to it.

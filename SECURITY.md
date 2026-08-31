@@ -51,6 +51,16 @@ device, and the analyzer child's environment has `PYTHONPATH`,
 `PYTHONSTARTUP`, `NODE_PATH`, `NODE_OPTIONS` and the `LD_`/`DYLD_` pair
 removed so nothing outside your own choice decides what it loads.
 
+**The one exception is an explicit opt-in to run the tree's own test
+command.** Setup asks — defaulting to **no** — whether to run the
+repository's documented test command for a coverage reading, and only a
+`yes` together with a recorded command lets the audit spawn it. This is
+the sole path by which anything from the audited tree runs, it is off
+until the operator turns it on per repository, and it executes exactly
+the one command they named — not the tree's configuration, plugins, or
+build. With no opt-in the guarantee above is unchanged and total
+(Decision 9, amended 2026-08-31).
+
 **This section has now been wrong in both directions, and both are
 recorded rather than quietly rewritten.** It first said the agent does
 not execute scanned code, which was untrue and audit-proven so (Codex,

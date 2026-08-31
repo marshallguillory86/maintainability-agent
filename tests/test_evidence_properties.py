@@ -380,7 +380,15 @@ def test_fully_measured_evidence_collapses_the_range(settled_evidence: Normalize
     """
     score = score_evidence(settled_evidence)
 
-    assert [name for name, value in score["aspects"].items() if value is None] == []
+    # test_effectiveness is None here because this fixture opts no suite
+    # in, so its coverage is NotApplicable rather than Unknown; a resolved
+    # absence contributes no uncertainty, so the range still collapses.
+    # Every other aspect is genuinely measured.
+    unresolved = [
+        name for name, value in score["aspects"].items()
+        if value is None and name != "test_effectiveness"
+    ]
+    assert unresolved == []
     assert score["evidence_status"]["status"] == "complete"
     assert score["verified_grade"] is not None
     assert score["maintainability_range"] == [score["maintainability_estimate"], score["maintainability_estimate"]]

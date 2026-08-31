@@ -12,6 +12,7 @@ from ._first_run import (
     ask_presentation,
     maybe_prompt_economics,
     maybe_prompt_first_run,
+    maybe_prompt_test_command,
 )
 from ._mcp_audit import record_scan_and_attach
 from ._safe_write import write_artifact
@@ -232,6 +233,7 @@ def _interactive_config(root: Path, config_arg: str | None) -> dict:
             "whether this repository has been configured."
         ) from unreadable
     maybe_prompt_economics(root, config)
+    maybe_prompt_test_command(root, config)
     return config
 
 

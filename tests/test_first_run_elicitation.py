@@ -432,7 +432,7 @@ def test_the_native_resolver_reaches_the_second_stage(tmp_path: Path) -> None:
     assert first is not None, "the first call elicited nothing"
     assert set(first.schema.model_fields) == {
         "run_pool", "depth", "license_policy", "economics",
-        "default_format", "record_scan_history",
+        "run_tests", "default_format", "record_scan_history",
     }, f"the first stage asked {sorted(first.schema.model_fields)}"
 
     apply_answers(root, {

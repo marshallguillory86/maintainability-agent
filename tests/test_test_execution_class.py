@@ -299,3 +299,29 @@ def test_the_cli_stage_two_records_the_test_command(
     cancelled = run_stage("   ")
     assert cancelled["test_execution"]["requested"] is False, "a blank answer did not cancel"
     assert "test" not in (cancelled.get("expected_commands") or {})
+
+
+def test_the_opted_in_suite_uses_its_own_timeout_not_the_analyzer_cap(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """C2: a whole suite is slower than an analyzer, so it must not inherit
+    the 120s analyzer cap that was killing real suites. Default 600s,
+    overridable under `test_execution.timeout_seconds`."""
+    from maintainability_audit import _test_execution
+    from maintainability_audit._runner import Outcome, ToolResult
+
+    captured: dict[str, int] = {}
+
+    def fake_run(slug, invocation, *, cwd, timeout_seconds):
+        captured["timeout"] = timeout_seconds
+        return ToolResult(slug=slug, outcome=Outcome.FAILED, exit_code=0, detail="")
+
+    monkeypatch.setattr(_test_execution, "run", fake_run)
+
+    _test_execution.run_test_suite(tmp_path, _opted_in(["pytest"]))
+    assert captured["timeout"] == 600, "the suite inherited the 120s analyzer cap"
+
+    override = _opted_in(["pytest"])
+    override["test_execution"]["timeout_seconds"] = 900
+    _test_execution.run_test_suite(tmp_path, override)
+    assert captured["timeout"] == 900, "the configured suite timeout was ignored"

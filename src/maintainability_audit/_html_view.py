@@ -73,8 +73,8 @@ def render_html(report: dict[str, Any], records: list[Any]) -> str:
         "<title>Maintainability Report</title>",
         f"<style>{_CSS}</style></head><body>",
         "<h1>Maintainability Report</h1>",
-        f"<p class='muted'>Root: {escape(str(report.get('root', '')))} — "
-        f"branch {escape(str(report.get('git_branch') or '(unknown)'))}</p>",
+        f"<p class='muted'>Generated {escape(str(report.get('generated_at') or '(unknown)'))} &middot; commit {escape(str(report.get('git_commit') or '(none)'))} &middot; branch {escape(str(report.get('git_branch') or '(unknown)'))}"  # noqa: E501 - one metadata line under the title (G)
+        f" &middot; root {escape(str(report.get('root', '')))} &middot; standard {escape(str(score.get('standard', '')))}</p>",
         *_executive_strip(report, score, records),
         *coverage_section(report),
         *_history_table(records),

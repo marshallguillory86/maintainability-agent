@@ -33,6 +33,10 @@ from ._xml import AnalyzerXmlRefused, parse_analyzer_xml
 
 _ENV_ASSIGNMENT = re.compile(r"^[A-Za-z_]\w*=")
 
+# A test suite is slower than an analyzer; the 120s analyzer cap killed
+# real suites mid-run. Ten minutes by default, overridable per repository.
+DEFAULT_SUITE_TIMEOUT_SECONDS = 600
+
 
 def _parse_command(command: list[str]) -> tuple[dict[str, str], list[str]]:
     """Split a stored test command into ``(env, argv)``.
@@ -77,7 +81,12 @@ def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
         return None
     command = list(config["expected_commands"]["test"])
     env, argv = _parse_command(command)
-    timeout = int((config.get("analyzers") or {}).get("timeout_seconds", 120))
+    # A whole test suite is legitimately slower than a single analyzer, so
+    # it gets its own timeout rather than the 120s analyzer cap that was
+    # killing real suites mid-run. Operator-configurable under
+    # `test_execution.timeout_seconds`.
+    timeout = int((config.get("test_execution") or {}).get(
+        "timeout_seconds", DEFAULT_SUITE_TIMEOUT_SECONDS))
     if not argv:
         # A command that is only env assignments (or empty) names no
         # program to run. Report it as configured but unrunnable rather

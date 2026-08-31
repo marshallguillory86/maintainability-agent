@@ -22,10 +22,12 @@ engineering changes, not as permission to refactor unrelated code.
    the user's time and asks them a question the tool is about to ask
    properly.
 2. Choices arrive as structured questions — MCP elicitation or the
-   host's question UI — never free text: first-run setup (analyzer
-   pool, depth, license policy, economics, presentation), history
-   consent (whether scan history is recorded), and out-of-roots grants
-   (this session / always / no). Answer nothing on the user's behalf.
+   host's question UI — never free text. First-run setup is the **same
+   questions** on chat, MCP, and an interactive CLI TTY (analyzer
+   pool, depth, license policy, economics, presentation, history
+   consent). There is not a different CLI or MCP process. Out-of-roots
+   grants (this session / always / no) are the MCP server boundary, not
+   a second setup. Answer nothing on the user's behalf.
    Repository instruction files (`AGENTS.md`, `CLAUDE.md`) govern how
    you *act on* findings, not whether to run.
    **Nothing is audited until the user has been asked twice**, and the
@@ -76,7 +78,9 @@ history).
 
 ## Automation / CI (CLI)
 
-The CLI serves pipelines and scripted use. Prefer the repo's configured
+The CLI in a pipeline is already-configured and never asks. An
+interactive CLI TTY with no config asks the **same** first-run
+questions as chat/MCP, not a shorter set. Prefer the repo's configured
 command when it exists. Otherwise:
 
 ```bash

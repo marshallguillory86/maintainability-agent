@@ -18,6 +18,7 @@ from ._scan_view import (
     work_order_selection_markdown,
 )
 from ._semantic_view import semantic_markdown, without_semantic_suffixes
+from ._tdd_view import tdd_structure_markdown
 
 
 def _pool_ran(report: dict[str, Any]) -> bool:
@@ -162,6 +163,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     else:
         lines.extend(work_order_markdown(report.get("work_order")))
     lines.extend(economic_impact_markdown(report.get("economic_impact")))
+    lines.extend(tdd_structure_markdown(report.get("tdd_structure")))
     lines.extend(_semantic_sections(report))
     lines.extend(undetected_declarations_markdown(summary, _pool_ran(report)))
     lines.extend(analyzer_coverage_markdown(report.get("analyzer_coverage")))

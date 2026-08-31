@@ -5,6 +5,7 @@ local MCP process. After configuration is answered and the user chooses to
 run, the deterministic audit measures the repository and returns a bounded
 work order; the host shows it to the coding agent without granting permission
 for unrelated refactoring. The CLI is the automation and CI surface.
+**Chat, MCP, and an interactive CLI TTY are one setup: the same questions.**
 
 Start with the part of the conversation you need:
 

@@ -149,6 +149,58 @@ def test_opted_in_coverage_scores_test_effectiveness_and_moves_testability(tmp_p
     )
 
 
+def test_a_stored_command_is_normalized_into_env_and_argv() -> None:
+    """A command the no-shell runner could not execute is now normalized.
+
+    The failing field case: `["PYTHONPATH=src python3 -m pytest -q"]` — one
+    list element holding a whole shell-style command line with an env
+    prefix, which ran as a single argv token named `PYTHONPATH=src ...`
+    and could not be found.
+    """
+    from maintainability_audit._test_execution import _parse_command
+
+    env, argv = _parse_command(["PYTHONPATH=src python3 -m pytest -q"])
+    assert env == {"PYTHONPATH": "src"}
+    assert argv == ["python3", "-m", "pytest", "-q"]
+
+    # already-tokenized argv with no env prefix is unchanged
+    assert _parse_command(["pytest", "-q"]) == ({}, ["pytest", "-q"])
+    # only assignments, no program
+    assert _parse_command(["FOO=bar"]) == ({"FOO": "bar"}, [])
+
+
+def test_an_env_prefixed_command_runs_with_that_env(tmp_path: Path) -> None:
+    """The falsifier: an env prefix reaches the child as environment.
+
+    The script only produces coverage when the env var the operator's
+    prefix sets is present, so a run that ignored the prefix reads no
+    coverage. Configured as the single-string shape that failed in the
+    field.
+    """
+    script = tmp_path / "run.sh"
+    script.write_text(
+        '#!/bin/sh\n'
+        'if [ "$MARK" = "on" ]; then '
+        'printf \'%s\' \'<coverage line-rate="0.5"/>\' > coverage.xml; fi\nexit 0\n',
+        encoding="utf-8",
+    )
+    script.chmod(script.stat().st_mode | stat.S_IEXEC)
+    config = {"test_execution": {"requested": True},
+              "expected_commands": {"test": ["MARK=on ./run.sh"]}}
+    result = run_test_suite(tmp_path, config)
+    assert result["ran"] is True, "the env-prefixed command did not execute"
+    assert result["coverage_percent"] == 50.0, "the env prefix did not reach the child"
+
+
+def test_a_command_that_is_only_env_does_not_spawn(tmp_path: Path) -> None:
+    """Assignments with no program name nothing to run — reported, not spawned."""
+    config = {"test_execution": {"requested": True},
+              "expected_commands": {"test": ["FOO=bar"]}}
+    result = run_test_suite(tmp_path, config)
+    assert result["ran"] is False
+    assert result["coverage_percent"] is None
+
+
 def _git_repo(tmp_path: Path) -> Path:
     """A committed fixture repo, so setup treats it as first-run."""
     import subprocess

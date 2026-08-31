@@ -131,7 +131,11 @@ def test_the_interval_widens_around_the_analyzer_estimate(evidence) -> None:
     into the other.
     """
     built_in = score_evidence(evidence)
-    swapped = score_evidence(evidence, _both(0.3))
+    # A clearly divergent analyzer reading: the "not averaged" check below
+    # only means anything when the two readings are far enough apart that
+    # their mean is a distinct number. At a one-tenth gap the mean rounds
+    # onto one of them and the check cannot tell a blend from the primary.
+    swapped = score_evidence(evidence, _both(1.0))
 
     low, high = swapped["maintainability_range"]
     estimate = swapped["maintainability_estimate"]

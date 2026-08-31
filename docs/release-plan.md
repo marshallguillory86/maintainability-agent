@@ -19,7 +19,7 @@ This table is a navigation summary, not a second implementation register. Phase 
 
 Two things are deliberately open rather than done:
 
-- **The calibration constant is 2.2658** (was 2.6279). Re-derived 2026-08-14 against the analyzer-primary mix after provenance exclusions. Corpus median still rolls up to 4.0. Old and new values are recorded in `_calibration.py`.
+- **The calibration constant is 5.8843** (2.6279 → 2.2658 on 2026-08-14, then 2.2658 → 5.8843 on 2026-08-31). The 08-31 re-fit followed a corpus re-measure: the stored measurements had gone stale, and plan-81dc6870 Class 4's clone-grouping had dropped the built-in duplication reading roughly fourteenfold, so every report scored duplication against a reference ~14x too high. All 40 pinned repos were re-measured `--with-analyzers`; the duplication reference moved 3.8644 → 0.28 and declarations 0.0860 → 0.1005. Corpus median still rolls up to 4.0 (a well-run codebase earns a B). Old and new values are recorded in `_calibration.py`, and a scanner-counting guard now fails if a change like Class 4 silently invalidates the reference again.
 - **ADR 007 §4's rename is refused**, and the deviation is recorded there and in `standard.md`: the ownership aspect measures the share of settled files one person owns, which is not the bus factor, and adopting the name would claim a measurement the tool never makes.
 
 ## Phase 0 — Land what exists, fix what is broken

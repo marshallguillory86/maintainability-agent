@@ -93,12 +93,14 @@ exposure; standard risk×effort severity remains on the report so both sorts
 are visible. Per-finding dollar lines are not in v1 — the $ range is a
 rollup over the current work-order set.
 
-**Ask once, then persist.** On a TTY, if no labor range is configured, the
-CLI may ask. Non-TTY / CI never calls `input()`. Answers are written into
-`maintainability-agent.json` under `economic_context`. Later runs read the
-file. For one run, flags and environment variables override the file.
-`prompt_when_interactive: false` keeps even a terminal run silent (same
-switch as the 6.1 depth/license ask).
+**Ask once, then persist.** The labor gate is part of the **same**
+first-run question set on chat, MCP, and a CLI TTY
+([first run](help/first-run.md)). Non-TTY / CI never asks. Answers are
+written into `maintainability-agent.json` under `economic_context`.
+Later runs read the file. For one run, flags and environment variables
+override the file. `prompt_when_interactive: false` keeps even an
+interactive run silent (the same switch as the rest of first-run
+setup).
 
 **Required for any $ block:** loaded engineering cost per hour as
 low / base / high, plus a currency **label** (default `USD`; no exchange

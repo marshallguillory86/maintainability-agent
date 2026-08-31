@@ -25,7 +25,8 @@ from html import escape
 from typing import Any
 
 from . import _evidence_view as view
-from ._html_report_sections import coverage_section, trend_section
+from ._html_report_sections import coverage_section, remaining_sections, trend_section
+from ._scan_view import WORK_ORDER_LIMIT
 from ._semantic_view import semantic_class_label
 
 _WIDTH, _HEIGHT, _PAD = 640, 260, 40
@@ -81,6 +82,7 @@ def render_html(report: dict[str, Any], records: list[Any]) -> str:
         *_history_table(records),
         *_chart_sections(records, score),
         *trend_section(report),
+        *remaining_sections(report),
         *_work_order_section(report),
         *_hard_gate_section(report),
         *_unidentified_paths_section(report),
@@ -389,12 +391,13 @@ def _work_order_section(report: dict[str, Any]) -> list[str]:
     items = report.get("work_order") or []
     if not items:
         return []
+    shown = items[:WORK_ORDER_LIMIT]
     rows = [
         "<h2>Work order</h2>",
         "<table><tr><th>Severity</th><th>Band</th><th>Finding</th>"
         "<th>Location</th><th>Do</th></tr>",
     ]
-    for item in items:
+    for item in shown:
         severity = severity_of(item.get("risk"))
         line = item.get("line")
         location = f"{item.get('path') or ''}" + (f":{line}" if line else "")
@@ -406,6 +409,12 @@ def _work_order_section(report: dict[str, Any]) -> list[str]:
             f"<td>{escape(str(item.get('target') or ''))}</td></tr>"
         )
     rows.append("</table>")
+    leftover = len(items) - WORK_ORDER_LIMIT
+    if leftover > 0:
+        rows.append(
+            f"<p>...and {leftover} more. A list longer than "
+            f"{WORK_ORDER_LIMIT} is a backlog, not a plan.</p>"
+        )
     return rows
 
 

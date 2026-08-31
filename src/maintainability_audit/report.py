@@ -47,6 +47,7 @@ from .git_tools import probe_git, worktree_status
 from .history import history_section
 from .idioms import divergent_idioms
 from .metrics import (
+    _in_asset_dir,
     collect_metrics,
     hard_gate_failures,
     is_test_path,
@@ -443,21 +444,21 @@ def build_report(
     # from directory names, which is what let a vendored tree and 10,759
     # generated files into a repository's score.
     inventory = discover(root, config)
-    not_ours = {
-        path for path, verdict in inventory.provenance.items()
-        if verdict in (Provenance.GENERATED, Provenance.VENDORED)
-    }
+    not_ours = inventory.not_ours()
+    asset_dirs = inventory.asset_dirs()
     # One index for the whole audit: each file is read once and parsed
     # once, rather than once per scanner.
     source = SourceIndex()
     files, file_metrics, function_metrics = collect_metrics(
-        root, config, only_paths, source, excluded=not_ours)
+        root, config, only_paths, source, excluded=not_ours, asset_dirs=asset_dirs)
     thresholds = config["thresholds"]
-    dupes = duplicate_blocks(root, files, int(thresholds["duplicate_block_lines"]), source)
-    near_duplicates = near_duplicate_findings(root, files, source)
-    dead = dead_declarations(root, files, source)
-    idioms = divergent_idioms(root, files, config, source)
-    risks = risk_findings(root, files, config, source)
+    source_files = [p for p in files  # assets keep file length, leave corpus scans (Class 4)
+                    if not _in_asset_dir(p.relative_to(root).as_posix(), asset_dirs)]
+    dupes = duplicate_blocks(root, source_files, int(thresholds["duplicate_block_lines"]), source)
+    near_duplicates = near_duplicate_findings(root, source_files, source)
+    dead = dead_declarations(root, source_files, source)
+    idioms = divergent_idioms(root, source_files, config, source)
+    risks = risk_findings(root, source_files, config, source)
     # `None` when this is not a worktree, which the clean-worktree
     # gate must be able to tell apart from an empty status (D37).
     git_status = worktree_status(root)

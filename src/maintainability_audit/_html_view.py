@@ -13,11 +13,9 @@ risk (`CLASS_RISK_EFFORT` in the standard): risk 5 is Severe, 4 High,
 organize the existing findings for a reader; they change no estimate,
 range or grade, which is why this module may not import the scorer.
 
-Two series the charts must never merge: pillar *condition* and
-*practice* maturity answer different questions (ADR 007), so they are
-two charts. A schema-1 record carries neither and appears as a gap —
-plotted where its data exists (the rollup estimate) and absent where it
-does not, never interpolated.
+Two series the charts never merge: pillar *condition* and *practice*
+maturity answer different questions (ADR 007). A schema-1 record carries
+neither and appears as a gap, plotted only where its data exists.
 """
 from __future__ import annotations
 
@@ -26,7 +24,7 @@ from typing import Any
 
 from . import _evidence_view as view
 from ._html_report_sections import coverage_section, remaining_sections, trend_section
-from ._work_order_view import WORK_ORDER_LIMIT
+from ._work_order_view import prompt_body_lines
 from ._semantic_view import semantic_class_label
 
 _WIDTH, _HEIGHT, _PAD = 640, 260, 40
@@ -391,13 +389,14 @@ def _work_order_section(report: dict[str, Any]) -> list[str]:
     items = report.get("work_order") or []
     if not items:
         return []
-    shown = items[:WORK_ORDER_LIMIT]
+    root_label = report.get("root") or "."
     rows = [
         "<h2>Work order</h2>",
         "<table><tr><th>Severity</th><th>Band</th><th>Finding</th>"
         "<th>Location</th><th>Do</th></tr>",
     ]
-    for item in shown:
+    # The whole backlog — the HTML report is complete, not a bounded UI.
+    for item in items:
         severity = severity_of(item.get("risk"))
         line = item.get("line")
         location = f"{item.get('path') or ''}" + (f":{line}" if line else "")
@@ -409,12 +408,16 @@ def _work_order_section(report: dict[str, Any]) -> list[str]:
             f"<td>{escape(str(item.get('target') or ''))}</td></tr>"
         )
     rows.append("</table>")
-    leftover = len(items) - WORK_ORDER_LIMIT
-    if leftover > 0:
-        rows.append(
-            f"<p>...and {leftover} more. A list longer than "
-            f"{WORK_ORDER_LIMIT} is a backlog, not a plan.</p>"
-        )
+    # A copy-paste prompt per item (issue E), same text as Markdown, in <pre>.
+    rows.extend([
+        "<h3>Copy-paste prompts</h3>",
+        "<p>One self-contained prompt per item — copy any block into a coding "
+        "agent.</p>",
+    ])
+    for item in items:
+        body = "\n".join(prompt_body_lines(item, root_label))
+        rows.append(f"<h4>{escape(str(item.get('title') or ''))}</h4>")
+        rows.append(f"<pre>{escape(body)}</pre>")
     return rows
 
 

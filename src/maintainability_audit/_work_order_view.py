@@ -34,22 +34,25 @@ _REPORT_POINTER = (
 )
 
 
-def item_prompt_block(item: dict[str, Any], root_label: str = ".") -> list[str]:
-    """A self-contained, copy-paste remediation prompt for one work-order item.
+def item_location(item: dict[str, Any]) -> str:
+    """`path` or `path:line` — the one spelling both skins print."""
+    return item["path"] + (f":{item['line']}" if item.get("line") else "")
+
+
+def prompt_body_lines(item: dict[str, Any], root_label: str = ".") -> list[str]:
+    """The copy-paste prompt text for one item, skin-agnostic.
 
     Deterministic: built entirely from the item's own fields, so the same
-    audit yields the same block every time — no LLM decides its content.
-    Fenced as ``text`` so a reader copies the whole thing into a coding
-    agent without any surrounding report. That is the point of the
-    per-item form: the prompt travels alone and still says what to do,
-    where, why, and how to check it.
+    audit yields the same prompt every time — no LLM decides its content.
+    Markdown fences it as ``text`` and HTML wraps it in ``<pre>``; the text
+    between is identical, so the two skins can never disagree about what an
+    agent is being asked to do.
     """
-    location = item["path"] + (f":{item['line']}" if item.get("line") else "")
     verify = item.get("verification") or "python -m maintainability_audit --root . --format json"
-    body = [
+    return [
         f"Repository: {root_label}",
         f"Task: {item['target']}.",
-        f"Location: {location}",
+        f"Location: {item_location(item)}",
         f"Why: {item['rationale']}",
         "",
         "Make one small, reviewable change. Do not alter public behavior or "
@@ -57,12 +60,22 @@ def item_prompt_block(item: dict[str, Any], root_label: str = ".") -> list[str]:
         "leave it unchanged; add or update a test when behavior changes.",
         f"Verify when done: {verify}",
     ]
+
+
+def item_prompt_block(item: dict[str, Any], root_label: str = ".") -> list[str]:
+    """One item's copy-paste prompt as Markdown: heading, then a fenced block.
+
+    Fenced as ``text`` so a reader copies the whole thing into a coding
+    agent without any surrounding report — the point of the per-item form:
+    the prompt travels alone and still says what, where, why, and how to
+    check it.
+    """
     return [
         f"#### {item['title']}",
-        f"`{location}` · {item['band']}",
+        f"`{item_location(item)}` · {item['band']}",
         "",
         "```text",
-        *body,
+        *prompt_body_lines(item, root_label),
         "```",
         "",
     ]

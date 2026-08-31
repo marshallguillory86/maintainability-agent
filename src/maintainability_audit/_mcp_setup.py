@@ -89,20 +89,7 @@ def setup_questions(config: dict[str, Any]) -> list[dict[str, Any]]:
             "default": "permissive",
         },
         *_economics_questions(),
-        {
-            # Decision 9 amendment (plan-81dc6870 Class 5): the one place
-            # the agent may run the audited tree's own code, and only on an
-            # explicit, disclosed, default-off opt-in.
-            "name": "run_tests",
-            "prompt": (
-                "Run this repository's documented test command so the report "
-                "can measure test effectiveness (coverage / pass-fail)? THIS "
-                "EXECUTES THE TREE, including any network the suite uses. Skip "
-                "leaves test effectiveness unscored and says so."
-            ),
-            "options": ["yes", "no"],
-            "default": "no",
-        },
+        *run_tests_question(),
         {
             "name": "default_format",
             "prompt": "Default report presentation for this user.",
@@ -311,6 +298,38 @@ def _apply_bounds(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
     )
     write_user_answers(stored)
     return load_config(str(config_path))
+
+
+def run_tests_question() -> list[dict[str, Any]]:
+    """The Class 5 opt-in to run the tree's own suite — the one place the
+    agent may execute the audited code, default off (Decision 9 amendment)."""
+    return [{
+        "name": "run_tests",
+        "prompt": (
+            "Run this repository's documented test command so the report "
+            "can measure test effectiveness (coverage / pass-fail)? THIS "
+            "EXECUTES THE TREE, including any network the suite uses. Skip "
+            "leaves test effectiveness unscored and says so."
+        ),
+        "options": ["yes", "no"],
+        "default": "no",
+    }]
+
+
+def run_tests_pending(root: Path) -> bool:
+    """A configured repository whose config predates the test-suite opt-in:
+    it carries the `history` consent a first-run setup writes but no
+    `test_execution` key, so the operator was never offered the opt-in. Used
+    to surface it as a discovery line on the run/reconfigure choice — not a
+    forced re-ask, which would break the configured-repo contract. A present
+    key (even `requested: false`) means it was asked. Gated on `history` so a
+    hand-maintained config — paths, thresholds, no setup answers — is not
+    mistaken for a lapsed first run (this repository included).
+    """
+    discovered = discovered_config(Path(root))
+    stored = _read_config(Path(discovered)) if discovered is not None else None
+    return (isinstance(stored, dict) and "history" in stored
+            and "test_execution" not in stored)
 
 
 def test_command_questions() -> list[dict[str, Any]]:

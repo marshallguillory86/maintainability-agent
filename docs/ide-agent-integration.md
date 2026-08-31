@@ -2,7 +2,9 @@
 
 This guide shows how to use maintainability-agent with editors and AI coding
 agents. **Chat is the primary surface; the CLI is the automation and CI
-surface.**
+surface.** **Chat, MCP, and an interactive CLI TTY are one setup: the same questions**
+([first run](help/first-run.md)). MCP allowed-root grants are a server
+boundary, not a second questionnaire.
 
 ## Primary chat workflow
 

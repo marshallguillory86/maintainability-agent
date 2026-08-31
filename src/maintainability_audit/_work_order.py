@@ -1,30 +1,8 @@
 """What to fix first, what it is worth, and how to check — ADR 007 §3.
 
-The tool has always produced a score and a list of findings. Neither
-answers the question a reader actually opens the report to ask: *what do
-I do on Monday morning.* A list ordered by count or severity alone
-answers it badly and in a specific way — a prompt that opens with eighty
-line-length violations is emitting Fill-Ins in the position reserved for
-the work that matters, which is the structural cause of nit-loops.
-
-So each finding class declares two judgments, **risk** (what it costs to
-leave alone) and **effort** (what it costs to fix), and their matrix
-orders the work: Quick Wins lead, Major Projects are named but never
-inlined into a prompt, Fill-Ins are offered opportunistically, and
-Reconsider is suppressed. The weightings are published in `standard.md`
-rather than buried here, because a judgment nobody can see is a judgment
-nobody can argue with.
-
-Two properties make an item worth reading:
-
-**The delta is computed.** Each item's score movement comes from a real
-rubric recomputation with that finding removed — `scoring.score_report`
-over an amended summary, the same entry point every consumer uses. An
-estimated delta has the authority of arithmetic and none of its content.
-
-**Nothing is emitted that cannot be checked.** An item without a
-location, a target and a verification command is advice, and advice is
-what this tool exists to replace.
+Risk x effort orders the work. Deltas are rubric recomputations. An
+item without a location, a target and a verification command is omitted.
+Weightings live in `standard.md`.
 """
 
 from __future__ import annotations
@@ -124,14 +102,35 @@ def _items_from_hotspots(report: dict[str, Any]) -> list[dict[str, Any]]:
                 f"reduce below the configured limits "
                 f"(currently {hotspot['lines']} lines, complexity {hotspot['complexity']})"
             ),
-            # Every oversized declaration shares one class delta, so the
-            # delta cannot order them and the list came out alphabetical
-            # — telling a reader to start with whichever file sorted
-            # first rather than with the 803-line one.
             "severity": float(hotspot["lines"]) + 4.0 * float(hotspot["complexity"]),
             "fingerprint": identities[
                 (hotspot["path"], hotspot["name"], hotspot["start_line"])
             ],
+            "rationale": (
+                "a long function is where every future change has to be "
+                "understood first; extracting one is bounded, local work"
+                if float(hotspot["complexity"]) <= 10
+                else None
+            ),
+            "weight": weight,
+        })
+    return items
+
+
+def _items_from_unpaired(report: dict[str, Any]) -> list[dict[str, Any]]:
+    """Fail-band production units with no paired test file."""
+    weight = CLASS_RISK_EFFORT["unpaired-hotspot"]
+    items = []
+    for finding in (report.get("tdd_structure") or {}).get("unpaired_fail_band") or []:
+        path = finding["path"]
+        name = finding.get("name") or path
+        items.append({
+            "finding_class": "unpaired-hotspot",
+            "title": f"unpaired {finding['kind']} in {path}",
+            "path": path,
+            "line": finding.get("line"),
+            "target": f"add a paired test for `{name}`",
+            "severity": float(finding.get("lines") or 1),
             "weight": weight,
         })
     return items
@@ -252,6 +251,7 @@ def work_order(report: dict[str, Any], include_reconsider: bool = False) -> list
         + _items_from_files(report)
         + _items_from_counted(report)
         + _items_from_idioms(report)
+        + _items_from_unpaired(report)
     )
 
     # Two recomputations per class, and the second is the one worth
@@ -272,6 +272,7 @@ def work_order(report: dict[str, Any], include_reconsider: bool = False) -> list
     items: list[dict[str, Any]] = []
     for entry in raw:
         weight: ClassWeight = entry.pop("weight")
+        override = entry.pop("rationale", None)
         name = entry["finding_class"]
         if name not in per_class:
             per_class[name] = _delta_for(report, weight.counter, 1)
@@ -284,7 +285,7 @@ def work_order(report: dict[str, Any], include_reconsider: bool = False) -> list
             "band": band.value,
             "risk": weight.risk,
             "effort": weight.effort,
-            "rationale": weight.rationale,
+            "rationale": override or weight.rationale,
             # What clearing this one finding moves the published score,
             # which is honestly zero more often than not.
             "delta": per_class[name],
@@ -401,25 +402,20 @@ def combined_delta(report: dict[str, Any], items: list[dict[str, Any]]) -> float
 
 def prompt_items(items: list[dict[str, Any]], limit: int = 12,
                  escalated: set[str] | None = None) -> list[dict[str, Any]]:
-    """The subset safe to hand an agent.
+    """Agent subset: no major projects, no escalated returns; Severe leads.
 
-    Major Projects are named in the report and withheld here. An agent
-    told to deduplicate a pattern across forty files produces exactly the
-    sprawling, unreviewable diff the bounded prompt exists to prevent —
-    the work is real, and it needs a human to scope it first.
-
-    `escalated` withholds findings that have already been fixed and come
-    back twice. Re-issuing advice the history shows does not hold is the
-    nit-loop: the same patch produces the same return, and the evidence
-    says the finding is a symptom. Naming it in the report while the
-    prompt asks for it a third time would change nothing.
+    Economic reorder may bury a risk-5 item under hot-file Fill-Ins. The
+    table can stay exposure-ordered; the paste of 12 cannot drop Severe.
     """
     blocked = escalated or set()
-    return [
+    eligible = [
         item for item in items
         if item["band"] != Band.MAJOR_PROJECT.value
         and item.get("fingerprint") not in blocked
-    ][:limit]
+    ]
+    severe = [item for item in eligible if item.get("risk") == 5]
+    rest = [item for item in eligible if item.get("risk") != 5]
+    return (severe + rest)[:limit]
 
 
 # The axes a reader can narrow by. Every one is a field already on the

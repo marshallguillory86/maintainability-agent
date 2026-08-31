@@ -80,6 +80,17 @@ CLASS_RISK_EFFORT: dict[str, ClassWeight] = {
         counter="dead_code_count",
         population="declarations_scanned",
     ),
+    "unpaired-hotspot": ClassWeight(
+        risk=4, effort=2,
+        rationale=(
+            "an oversized production unit with no paired test is where "
+            "changes land unguarded; adding a characterization test is "
+            "bounded, local work"
+        ),
+        verification="python -m maintainability_audit --root . --format json",
+        counter="production_function_failures",
+        population="production_declarations_scanned",
+    ),
     "risk-pattern": ClassWeight(
         risk=5, effort=1,
         rationale=(

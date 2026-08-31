@@ -176,7 +176,7 @@ Until that exists, a small repository gets path 2: a complete audit, every findi
 
 | # | Task | Exit condition |
 |---|---|---|
-| 6.1 | Interactive first-run prompt for concerns, depth, policy | **Shipped.** Prompts only on a TTY with no config; never in CI; the answer persists to `maintainability-agent.json` (`tests/test_first_run_prompt.py`) |
+| 6.1 | Interactive first-run prompt | **Shipped.** Chat, MCP, and a CLI TTY ask the **same** questions ([first run](help/first-run.md)); never in CI; the answer persists to `maintainability-agent.json`. A CLI that asks only depth and policy is a bug against that set, not a second process. |
 | 6.2 | **Done.** MCP server as a subcommand | `maintainability-agent mcp` exposes all three primitives: `tools` run the audit, `resources` expose rubric/report/catalog, `prompts` is the slash command |
 | 6.3 | **Done.** Markdown retrievable from chat | The MCP report resource is byte-identical to `render_markdown(build_report(...))` |
 | 6.4 | CI recipes | **Shipped.** GitHub Actions and a generic runner, with history caching — cache restore/save around `--record-history`, saving even on failed runs (`tests/test_ci_history_recipe.py`) |

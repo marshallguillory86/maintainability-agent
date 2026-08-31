@@ -3,7 +3,8 @@
 A chat-primary deterministic maintainability audit and bounded work-order
 generator for repositories that use AI coding agents (Claude, Codex, Cursor,
 Copilot, Windsurf, …). **Chat is the primary surface; the CLI is the
-automation and CI surface.** The shipped invokable skill makes
+automation and CI surface.** **Chat, MCP, and an interactive CLI TTY are one setup: the same questions.**
+The shipped invokable skill makes
 `/maintainability-agent` one keystroke away in Codex, Claude Code, and GitHub
 Copilot Chat.
 

@@ -65,9 +65,10 @@ it with `maintainability-agent mcp`; the existing `maintainability-agent-mcp`
 console script remains available for IDE configurations. This is additive, not
 a report-schema or baseline break.
 
-The first run at a TTY can now ask for analyzer depth and license policy when
-no config exists, then write the answer to `maintainability-agent.json`.
-Non-TTY and already-configured runs do not ask. Analyzer runs also publish an
+The first run asks the **same** setup questions on a CLI TTY as on
+chat/MCP ([first run](help/first-run.md)) when no config exists, then
+writes the answers to `maintainability-agent.json`. Non-TTY and
+already-configured runs do not ask. Analyzer runs also publish an
 environment work order for selected tools that were unavailable; the agent
 does not install them.
 

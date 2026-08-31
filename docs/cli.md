@@ -1,5 +1,9 @@
 # CLI Reference
 
+Interactive first-run on a TTY is the **same** setup questions as chat/MCP
+([first run and questions](help/first-run.md)). There is not a CLI
+questionnaire. CI and a non-TTY never ask.
+
 ## Audit
 
 ```bash

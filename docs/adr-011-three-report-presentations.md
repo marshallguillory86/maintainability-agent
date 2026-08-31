@@ -45,7 +45,13 @@ MCP is a local stdio process and does not run `input()`. It may write exactly fi
    - **practice / maturity level over time** (separate series — never averaged with condition, [ADR 007](adr-007-pillars-and-practice.md))
    - current-run category bars
    Schema-1 scans appear on the rollup series and are gaps on pillar/practice charts. Empty history is an empty state, not a fabricated sparkline.
-   Same remaining sections as Markdown: coverage, trend text, work order / prompt, findings.
+   Same remaining sections as Markdown: coverage, trend text, economic
+   context, pillars (with practice caps), ISO categories, aspect scores
+   including the unscored list, environment work order, largest files,
+   function hotspots, work order / prompt, findings. A heading Markdown
+   prints because the report dict has the data cannot be HTML-only-absent;
+   `tests/test_html_section_parity_class.py` holds the catalog, not two
+   leftover headings.
    Finding rows carry a presentation severity derived from the published class risk in the [standard](standard.md) and `CLASS_RISK_EFFORT`: risk 5 is **Severe**, 4 is **High**, 3 is **Medium**, and 1–2 is **Low**. Hard-gate failures display as **Severe**. These labels organize the existing findings; they do not change the estimate, range, or verified grade.
 
 6. **SARIF and the PR comment stay.** They are CI artifacts, not this trio.

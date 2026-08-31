@@ -16,6 +16,15 @@ most users. The individual wiring defects found when this contract first met a
 real host—and their closing tests—are recorded in the
 [chat-surface defect register](defect-register-chat-surface.md).
 
+**Chat, MCP, and an interactive CLI TTY are one setup: the same questions.**
+MCP is the chat transport, not a third questionnaire.
+The questions are the set in [first run and questions](help/first-run.md)
+(`setup_questions` in source). There is not a CLI setup, a chat setup,
+and an MCP setup. A surface that asks a subset is a bug. CI, a
+non-TTY, and an explicit `--config` never ask — that is not a
+different question set; there is no operator. MCP allowed-root grants
+are a server boundary, not first-run setup.
+
 ## The job it does
 
 Agents write code faster than humans can read it. The ratio of code-written to code-reviewed has collapsed, and unmaintainable code that used to accumulate over years can now accumulate in an afternoon. The same speed is the way out: an agent pointed at specific, deterministic findings can fix them at the same rate they appear.
@@ -164,6 +173,7 @@ P7 is that missing question, stated as a falsifiable property. P8 makes it check
 This list exists because the project has already broken it once and retracted. Adding a claim in these shapes requires deleting it from this list first, with the evidence that earns it.
 
 - **That it detects AI-written code**, or that any metric distinguishes AI authorship. Tested with a matched control and [retracted](studies.md#does-this-detect-ai-written-code). Any revival needs a pre-registered design with commit-level authorship.
+- **That it detected TDD/BDD chronology or test quality.** It may report TDD-shaped file pairing and constructs. It may not say tests were written first, or that they would catch a regression, unless the operator opted into suite execution and coverage was parsed.
 - **That the score predicts business outcomes** — defect rates, delivery speed, cost. No outcome study has been run. The rubric is a standard, not a model of the future.
 - **That a configured economic scenario is a prediction or observed saving.** User inputs make assumptions explicit; they do not validate the model. Scenario ranges must remain separate from the score until held-out outcomes establish predictive performance.
 - **That a heuristic can recover experienced engineering judgment.** A repeated string dispatch or repeatedly patched abstraction can justify a design-review candidate. It does not prove which abstraction is correct.

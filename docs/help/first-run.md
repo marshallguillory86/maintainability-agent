@@ -1,12 +1,23 @@
 # First run and questions
 
-Call `audit_repository`. The tool checks configuration; the host does not
-inspect the repository first. Unset `action` never audits.
+**Chat, MCP, and an interactive CLI TTY are one setup: the same questions.**
+MCP is the chat transport, not a third questionnaire.
+There is not a CLI process, a chat process, and an MCP process. The
+list below is the set. A surface that asks a subset is a bug.
+
+CI, a non-TTY, and an explicit `--config` never ask. That is not a
+different questionnaire; there is no operator. MCP allowed-root grants
+(this session / always / no) are a server boundary, not these questions.
+
+Call `audit_repository` on the chat path, or run the CLI at a TTY with
+no config. The tool checks configuration; the host does not inspect the
+repository first. Unset MCP `action` never audits.
 
 If both the repository's `maintainability-agent.json` and the XDG user
-configuration are absent, the call returns `setup_needed` with the setup
-questions and `audit_ran: false` — no report, no score, no grade. A host that
-can elicit asks those nine fields as one structured form with visible defaults:
+configuration are absent, the interactive surface asks the setup
+questions and does not audit — no report, no score, no grade. On MCP
+that is `setup_needed` with `audit_ran: false`. A host that can elicit
+asks those fields as one structured form with visible defaults:
 
 - run the validated analyzer pool: yes;
 - analyzer depth: moderate;

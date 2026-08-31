@@ -17,6 +17,7 @@ import pytest
 from _mcp_fixtures import (
     _commit,
     _config,
+    _drop_generated_line,
     _large_function,
     _repo,
     _resource_text,
@@ -193,7 +194,8 @@ def test_analyzer_enabled_resource_matches_cli_and_chat_matches_json_render(
     ]) == 0
     served = _resource_text(create_server(roots=(tmp_path.resolve(),)), root)
     assert "Analyzer Coverage" in served and "lizard" in served
-    assert served.encode() == output.read_bytes().removesuffix(b"\n")
+    assert _drop_generated_line(served) == _drop_generated_line(
+        output.read_text(encoding="utf-8").removesuffix("\n"))
 
     json_result = _audit(root, format="json", record_history=False)
     chat_result = _audit(root, format="chat", record_history=False)
@@ -205,8 +207,8 @@ def test_analyzer_enabled_resource_matches_cli_and_chat_matches_json_render(
     # Chat is the bounded UI view (issue A: the inline surface must stay under
     # the host's payload cap), so it is the same renderer's bounded output —
     # not the complete report, which is the markdown/html *file*.
-    assert chat_result["report_markdown"] == render_markdown(
-        json_result["report"], complete=False)
+    assert _drop_generated_line(chat_result["report_markdown"]) == _drop_generated_line(
+        render_markdown(json_result["report"], complete=False))
 
 
 def test_baseline_results_are_exclusive_and_self_consult_is_empty(tmp_path: Path) -> None:

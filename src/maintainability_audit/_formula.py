@@ -51,6 +51,8 @@ UNKNOWN_ASPECT_SCORE = 4.0
 # rollup: an audit found the point score applying it and the uncertainty
 # interval not, producing a "range" that excluded the score it bounded.
 UNTESTED_TESTABILITY_CAP = 2.0
+# Fail-band production unit with no paired test file: cannot print 5.0.
+UNPAIRED_HOTSPOT_TESTABILITY_CAP = 4.0
 
 # Aspect -> the dimension pressure it curves (calibrated aspects only).
 CALIBRATED_ASPECTS: dict[str, str] = {
@@ -286,6 +288,7 @@ def overall_from_aspects(
     aspect_scores: dict[str, float | None],
     *,
     untested: bool | None = False,
+    unpaired_hotspot: bool = False,
     unknown_price: float = UNKNOWN_ASPECT_SCORE,
     not_applicable: frozenset[str] | None = None,
 ) -> tuple[float, dict[str, float]]:
@@ -311,6 +314,9 @@ def overall_from_aspects(
     }
     if cap_testability(untested, unknown_price):
         categories["testability"] = min(categories["testability"], UNTESTED_TESTABILITY_CAP)
+    elif unpaired_hotspot:
+        categories["testability"] = min(
+            categories["testability"], UNPAIRED_HOTSPOT_TESTABILITY_CAP)
     displayed = {name: clamp_score(value) for name, value in categories.items()}
     return overall_from_displayed(displayed), displayed
 
@@ -336,6 +342,7 @@ def overall_bounds(
     aspect_scores: dict[str, float | None],
     *,
     untested: bool | None = False,
+    unpaired_hotspot: bool = False,
     not_applicable: frozenset[str] | None = None,
 ) -> tuple[float, float]:
     """The overall's floor and ceiling over every unmeasured aspect.
@@ -355,12 +362,14 @@ def overall_bounds(
     low, _ = overall_from_aspects(
         aspect_scores,
         untested=untested,
+        unpaired_hotspot=unpaired_hotspot,
         unknown_price=0.0,
         not_applicable=not_applicable,
     )
     high, _ = overall_from_aspects(
         aspect_scores,
         untested=untested,
+        unpaired_hotspot=unpaired_hotspot,
         unknown_price=5.0,
         not_applicable=not_applicable,
     )

@@ -43,6 +43,7 @@ flowchart TB
     _semantic_view["_semantic_view"]
     _history_view["_history_view"]
     _identity["_identity"]
+    _tdd_view["_tdd_view"]
   end
 
   subgraph assembly["assembly — builds the report, calls the scorer once"]
@@ -75,6 +76,7 @@ flowchart TB
     _selection["_selection"]
     _semantic["_semantic"]
     _semantic_ts["_semantic_ts"]
+    _test_pairing["_test_pairing"]
   end
 
   subgraph scoring["scoring"]
@@ -135,6 +137,8 @@ flowchart TB
 
 `_bands` sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). `_finding_match` owns structured identity and matching; `_identity` presents the ordinal labels derived from the report. `_user_config` owns the XDG user configuration and per-repository seen state; it belongs beside `config` in foundations. `_safe_write` is the single way the agent writes into a tree it is auditing — bounded, symlink-refusing, staged and renamed so no existing inode is opened for writing — and sits in foundations for the same reason: every layer that writes must reach it, and it reaches nothing but `config` (D34). `_semantic` classifies type-backed findings; `_semantic_ts` supplies TypeScript type facts from recordings or an already-installed `tsc`; `_semantic_policy` loads the optional checked-in policy.
 
+**Chat, MCP, and an interactive CLI TTY are one setup: the same questions.** MCP is the chat transport, not a third questionnaire. `_first_run` and `_mcp_setup` are two transports of `setup_questions`, not two processes. CI and a non-TTY never ask.
+
 | Layer | Owns | May import |
 | --- | --- | --- |
 | **foundations** | Data types, config defaults, git invocation, masking primitives, `_finding_match` (structured identities plus the one matching relation used by gates and recurrence), and `_semantic_policy` | nothing internal except `_finding_match` using `git_tools` for rename evidence |
@@ -143,7 +147,7 @@ flowchart TB
 | **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
 | **assembly** | Running the scan, running the analyzer pool (`_analysis`) and stating what it found (`_documents`), the environment work order composed from coverage (`_environment`), recording the built-in detectors as their own source tier (`_built_ins`), ordering the work by risk against effort and recomputing each item's worth (`_work_order`, weights in `_work_order_weights`), assembling the report dict, invoking the scorer once | anything below |
 | **presentation** | Markdown/chat, a self-contained HTML report, PR comment, SARIF, baseline, remediation prompt, `_evidence_view` (shared estimate/range/evidence/verified-grade wording), and `_identity` (labels and digests consumed from the report, never source). The renderers consume one report dictionary and do not score | foundations, presentation helpers, the report dict, and `_work_order`'s presentation-facing prompt selection |
-| **entry** | Argument parsing, transport, output routing, exit codes, and the first-run TTY prompt (`_first_run`) and its chat-path twin (`_mcp_setup`, MCP elicitation) and the MCP audit tool itself (`_mcp_audit`, split from `mcp_server`) and the D10 root-grant machinery (`_mcp_grants`, same split) and the setup/run gate that answers with questions instead of a report (`_mcp_gate`) and the MCP resources, which answer reads and can never ask (`_mcp_resources`) and the set of refusals the transport may declare (`_mcp_refusals`, shared by both seam-binding modules so neither has to import the other) and the packaged-skill sync (`_skill_install`) — the one layer where the tool may ask a question | anything below |
+| **entry** | Argument parsing, transport, output routing, exit codes, and first-run setup — **one question set**, two transports (`_first_run` on a CLI TTY, `_mcp_setup` over MCP elicitation; chat is MCP, not a third set) — and the MCP audit tool itself (`_mcp_audit`, split from `mcp_server`) and the D10 root-grant machinery (`_mcp_grants`, same split; grants are a server boundary, not setup) and the setup/run gate that answers with questions instead of a report (`_mcp_gate`) and the MCP resources, which answer reads and can never ask (`_mcp_resources`) and the set of refusals the transport may declare (`_mcp_refusals`, shared by both seam-binding modules so neither has to import the other) and the packaged-skill sync (`_skill_install`) — the one layer where the tool may ask a question | anything below |
 
 ## The rules, and why each exists
 

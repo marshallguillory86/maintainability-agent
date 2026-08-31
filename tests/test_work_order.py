@@ -51,6 +51,7 @@ from maintainability_audit._work_order import (
     CLASS_RISK_EFFORT,
     Band,
     band_of,
+    prompt_items,
     work_order,
 )
 
@@ -355,4 +356,41 @@ def test_within_a_class_the_worst_offender_leads(tmp_path: Path) -> None:
     )
 
 
-# --------------------------------------------------------------------
+def test_prompt_items_keep_severe_inside_the_bounded_subset() -> None:
+    """Economics may reorder the table; the agent paste cannot drop risk 5.
+
+    bighound 2026-08-30: tokens.py absence-as-zero was Severe, then 13th
+    after churn reorder, then missing from prompt_items[:12].
+    """
+    items = [
+        {"title": f"hot-{n}", "band": Band.QUICK_WIN.value, "risk": 4, "delta": 0.0}
+        for n in range(12)
+    ]
+    items.append(
+        {"title": "absence-as-zero", "band": Band.QUICK_WIN.value, "risk": 5, "delta": 0.0}
+    )
+    offered = [item["title"] for item in prompt_items(items)]
+    assert offered[0] == "absence-as-zero"
+    assert "absence-as-zero" in offered
+    assert len(offered) == 12
+
+
+def test_a_long_unbranching_function_is_not_called_branching(
+    tmp_path: Path,
+) -> None:
+    """Complexity 5 is length, not branching. The class template lied."""
+    from maintainability_audit.config import load_config
+    from maintainability_audit.report import build_report
+
+    body = "def big():\n" + "    x = 1\n" * 85 + "    return x\n"
+    root = _repo(tmp_path / "long", {
+        **{f"pkg/mod{n}.py": "def f():\n    return 1\n" for n in range(60)},
+        "pkg/long.py": body,
+    })
+    items = [
+        i for i in work_order(build_report(root, load_config(None)))
+        if i["finding_class"] == "oversized-declaration" and "big" in i["title"]
+    ]
+    assert items, "the 85-line function must be a hotspot"
+    assert "branching" not in items[0]["rationale"]
+

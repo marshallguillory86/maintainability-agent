@@ -164,7 +164,7 @@ Two independent selectors narrow it, because *how much work* and *what may we le
 - **depth** — `baseline`(9) / `moderate`(17) / `heavy`(17) / `all`(448). A tier below `all` is a promise the tool works; nothing enters one until it has been installed, run and parsed.
 - **license policy** — `permissive`(368) / `copyleft-weak`(403) / `copyleft-any`(448) / `commercial-free-tier`(474) / `unverified`. Some organizations forbid copyleft outright, so the policy is enforceable rather than advisory.
 
-Both are set in the `analyzers` block of the config file, or answered interactively on first run at a terminal, and both are **recorded in the report** — a score from four tools and a score from forty are not the same measurement and must not be silently comparable. Individual tools and whole license classes can be denied; **every deny wins, including over an explicit allow**, because an organization's prohibition must not be overridable per repository.
+Both are set in the `analyzers` block of the config file, or answered on first run — the **same** questions on chat, MCP, and a CLI TTY — and both are **recorded in the report** — a score from four tools and a score from forty are not the same measurement and must not be silently comparable. Individual tools and whole license classes can be denied; **every deny wins, including over an explicit allow**, because an organization's prohibition must not be overridable per repository.
 
 Full inventory and the classification rules: [the analyzer pool](analyzer-pool.md). Config fields: [config schema](config-schema.md#analyzer-policy-analyzers).
 
@@ -238,8 +238,8 @@ Two reports with different analyzer coverage are not comparable, so coverage is 
 
 | Entry point | For | Contract |
 |---|---|---|
-| **CLI** | CI runners, Makefiles, merge gates | Exit codes, files on disk, never prompts, deterministic |
-| **MCP server** | Chat, slash commands, agentic loops | `tools` run the audit, `resources` expose rubric and report, `prompts` are the slash command |
+| **CLI** | CI runners, Makefiles, merge gates; interactive TTY is the same first-run as chat | Exit codes, files on disk, deterministic once configured. CI never prompts. A TTY with no config asks the same questions as MCP/chat, not a shorter set. |
+| **MCP server** | Chat, slash commands, agentic loops | `tools` run the audit, `resources` expose rubric and report, `prompts` are the slash command. Setup questions are the same as an interactive CLI TTY. |
 
 **Getting the Markdown out.** From the CLI it is already a file: `--format markdown --output report.md`. From chat the same document is exposed as an MCP resource with a Markdown media type, so the client can display it inline *and* the user can save it — one rendering, two ways to reach it. The chat path must never produce a summary that the downloadable file does not contain; if the two disagree, the file is authoritative and the summary is the bug.
 

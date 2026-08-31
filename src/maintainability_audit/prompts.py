@@ -12,6 +12,7 @@ from typing import Any
 
 from . import _evidence_view as view
 from ._hotspots import hotspot_measure, hotspot_name
+from ._tdd_view import tdd_sentences
 from ._work_order import prompt_items
 
 
@@ -62,11 +63,19 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         score, report.get("analyzer_coverage") is not None))
     lines.extend(prompt_escalation_note(report))
     lines.extend(prompt_work_order(report))
+    lines.extend(prompt_tdd_section(report))
     lines.extend(prompt_semantic_section(report))
     lines.extend(prompt_pressure_section(score))
     lines.extend(prompt_focus_sections(report))
     lines.extend(prompt_deliverable())
     return "\n".join(lines)
+
+
+def prompt_tdd_section(report: dict[str, Any]) -> list[str]:
+    sentences = tdd_sentences(report.get("tdd_structure"))
+    if not sentences:
+        return []
+    return ["## TDD-shaped tests", "", *sentences, ""]
 
 
 def prompt_semantic_section(report: dict[str, Any]) -> list[str]:

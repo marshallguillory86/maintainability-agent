@@ -271,12 +271,17 @@ def score_report(
     audits caught two versions of the same lie, an overall that was not
     the mean of the numbers printed beside it.
     """
-    return score_evidence(normalize_report_evidence(report), external)
+    unpaired = bool((report.get("tdd_structure") or {}).get("unpaired_fail_band"))
+    return score_evidence(
+        normalize_report_evidence(report), external, unpaired_hotspot=unpaired,
+    )
 
 
 def score_evidence(
     evidence: NormalizedEvidence,
     external: ExternalPressures | None = None,
+    *,
+    unpaired_hotspot: bool = False,
 ) -> dict[str, Any]:
     """Score an already-normalized model — the seam validation ends at.
 
@@ -303,11 +308,13 @@ def score_evidence(
     overall, rounded_categories = overall_from_aspects(
         aspects,
         untested=untested,
+        unpaired_hotspot=unpaired_hotspot,
         not_applicable=not_applicable,
     )
     low, high = overall_bounds(
         aspects,
         untested=untested,
+        unpaired_hotspot=unpaired_hotspot,
         not_applicable=not_applicable,
     )
     # Disagreement between the two sources is real uncertainty about the
@@ -337,6 +344,11 @@ def score_evidence(
     grade, blockers = _grade_on_the_floor(
         evidence, pressures, aspects, untested, (overall, low, high)
     )
+    if unpaired_hotspot:
+        blockers = [
+            *blockers,
+            "unpaired fail-band production unit: testability capped at 4.0",
+        ]
     measurable = {name: value for name, value in normalized.items() if value is not None}
     worst = sorted(measurable.items(), key=lambda item: -item[1])
     document = _score_document(

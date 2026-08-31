@@ -75,6 +75,7 @@ The calibration constant is fitted so the **corpus median rolls up to exactly 4.
 **Grades on top of the number:** A+/A are gated on per-dimension ceilings (below), and two evidence rules bind them:
 
 - **A repository with production code and no test evidence cannot receive an A-grade.** Zero test files, or test files containing zero declarations — an empty test-shaped artifact bought an A once, and that hole is closed — cap testability at 2.0 and demote with a named blocker. The published meaning of a 5 includes "tested", and that sentence is enforced, not aspirational.
+- **A fail-band production unit with no paired test file cannot report testability 5.0.** Path pairing is structure, not chronology. Cap 4.0 with a named blocker. HTML, CSS and Markdown are not this population.
 - **Unknown evidence blocks the top grades.** A+ is published as "nothing is wrong anywhere"; a shallow clone that hides coupling, hotspots and ownership is not that — it is "nothing was wrong in what could be seen". Unmeasured aspects demote to B with a blocker naming them, and because the grade bands the evidence floor, they usually cost more than that one step. The blocker is now stated at every grade, not only when an A is being withheld: a demotion nobody explains is the failure this list exists to prevent. "Couldn't look" blocks; "looked and there was nothing to measure" (a young repo where no file has three commits yet) does not.
 - **NotApplicable evidence is resolved, not uncertain.** An aspect with no population is removed from its category denominator for the point estimate and both bounds. It receives neither a perfect score nor an unknown price, so a complete young repository's range collapses without charging it for a population that does not exist.
 
@@ -274,6 +275,7 @@ place it in one of four bands:
 |---|---:|---:|---|---|
 | `risk-pattern` | 5 | 1 | **quick-win** | a configured risk pattern is a rule this project chose to enforce on itself, and each hit is a single located line |
 | `oversized-declaration` | 4 | 2 | **quick-win** | a long, branching function is where defects concentrate and where every future change has to be understood first; extracting one is bounded, local work |
+| `unpaired-hotspot` | 4 | 2 | **quick-win** | an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work |
 | `duplicate-block` | 4 | 4 | **major-project** | duplicated logic means a fix applied in one place and missed in the others; deduplicating across a codebase is a design change, not a tidy-up |
 | `oversized-file` | 3 | 3 | **major-project** | a file past the limit hides its own structure, but splitting one touches every importer and is a change worth reviewing on its own |
 | `near-duplicate` | 3 | 4 | **major-project** | near-copies drift apart silently, which is worse than exact duplication; reconciling them requires deciding which behaviour was intended |

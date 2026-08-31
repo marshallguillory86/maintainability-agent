@@ -36,6 +36,7 @@ from ._pressures import (
 from ._semantic import semantic_findings
 from ._semantic_policy import load_semantic_policy
 from ._semantic_ts import discover_type_analysis
+from ._test_pairing import describe_tdd
 from ._work_order import work_order
 from .config import analyzers_run_default
 from .deadcode import dead_declarations
@@ -473,15 +474,12 @@ def build_report(
         file_metrics, function_metrics, risks, dupes, near_duplicates, dead, idioms,
         external_findings, git_status, only_paths, changed_revspec, config,
     )
-    # After assembly, because the history section is the last input the
-    # built-in coverage rows need. Without it those rows shipped zeros.
     if analyzer["coverage"]:
         record_built_in_counts(analyzer["coverage"], report)
+    report["tdd_structure"] = describe_tdd(
+        root, file_metrics, function_metrics, source)
     report["score"] = score_report(report, analyzer["pressures"])
-    # After scoring, because condition rolls up the aspect scores. The two
-    # axes stay separate all the way out (ADR 007 §2): practice says
-    # whether anything is enforced, condition says what the analyzers
-    # found, and no field anywhere offers their mean.
+    # Condition rolls up aspects; practice stays a separate axis (ADR 007).
     report["practice"] = practice_level(root).as_dict()
     report["pillars"] = pillar_report(report["score"], report["practice"])
     _attach_semantics(report, root, config)

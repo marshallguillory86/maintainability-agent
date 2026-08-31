@@ -16,6 +16,7 @@ from typing import Any
 
 from ._hotspots import hotspot_cognitive, hotspot_complexity, hotspot_name
 from ._scan_view import POSTURE_NOTE
+from ._tdd_view import tdd_sentences
 
 
 def coverage_section(report: dict[str, Any]) -> list[str]:
@@ -92,6 +93,7 @@ def remaining_sections(report: dict[str, Any]) -> list[str]:
     """Economics, pillars, ISO/aspects, environment, hotspots, largest files."""
     return [
         *_economic_section(report),
+        *_tdd_section(report),
         *_pillars_section(report),
         *_iso_section(report),
         *_aspects_section(report),
@@ -99,6 +101,15 @@ def remaining_sections(report: dict[str, Any]) -> list[str]:
         *_largest_files_section(report),
         *_hotspots_section(report),
     ]
+
+
+def _tdd_section(report: dict[str, Any]) -> list[str]:
+    sentences = tdd_sentences(report.get("tdd_structure"))
+    if not sentences:
+        return []
+    parts = ["<h2>TDD-shaped tests</h2>"]
+    parts.extend(f"<p>{escape(sentence)}</p>" for sentence in sentences)
+    return parts
 
 
 def _table(headers: list[str], rows: list[list[str]]) -> list[str]:

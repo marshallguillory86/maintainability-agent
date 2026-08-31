@@ -64,6 +64,8 @@ PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens", "_xml"}
 # the looking (ADR 006).
 SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "idioms",
             "similarity", "_semantic", "_semantic_ts",
+            # Path pairing and TDD-shaped constructs. Not chronology.
+            "_test_pairing",
             "history", "_adapters",
             # `_generic` is the same layer: it turns tool output into
             # findings, differing only in that its parsers are shared
@@ -123,7 +125,9 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # tier declined, nothing examined -- split from `_scan_view`
                 # at the file-size line.
                 "_coverage_notes",
-                "_scan_view", "_history_view", "_identity"}
+                "_scan_view", "_history_view", "_identity",
+                # TDD-structure sentences shared by chat, Markdown, HTML.
+                "_tdd_view"}
 # `_first_run` is terminal interaction — it prompts, which no layer
 # below entry may ever do, and writes the config file the entry then
 # loads through ordinary discovery.

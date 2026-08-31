@@ -192,6 +192,26 @@ def _misdirected(ident: str, citation: str, by_module: dict[str, set[str]],
     return problems
 
 
+def test_setup_is_one_question_set_on_every_interactive_surface() -> None:
+    """CLI / chat / MCP are not three questionnaires.
+
+    Marshall 2026-08-30: "cli/chat is the same setup questions." The
+    governing pages must say that in those words so an implementor
+    cannot invent a CLI-only depth+policy ask and call it a second
+    process. `setup_questions` is the set; a subset is a bug.
+    """
+    sentence = "Chat, MCP, and an interactive CLI TTY are one setup: the same questions."
+    pages = (
+        ROOT / "docs" / "product-intent.md",
+        ROOT / "docs" / "architecture.md",
+        HELP / "first-run.md",
+    )
+    missing = [path.name for path in pages if sentence not in _read(path)]
+    assert not missing, (
+        f"these pages never state that setup is one question set: {missing}"
+    )
+
+
 def test_the_first_run_help_describes_the_form_a_person_actually_sees() -> None:
     """D28: the help page is read against the question set, not a memory of it.
 

@@ -173,8 +173,8 @@ The **user's** model consumes that and writes the improvement prompt. This keeps
 
 | Entry point | For | Contract |
 |---|---|---|
-| **CLI** | CI runners, Makefiles, pre-merge gates | Exit codes, files on disk, no prompting, fully deterministic |
-| **MCP server** | Chat, agentic loops | Tools run the audit and describe the boundary; resources expose the rubric, analyzer catalog and Markdown report; the `maintainability-agent` prompt supplies the bounded slash command |
+| **CLI** | CI runners, Makefiles, pre-merge gates; interactive TTY uses the same first-run questions as chat | Exit codes, files on disk, fully deterministic once configured. CI / non-TTY never prompts. An interactive TTY with no config asks the **same** setup questions as MCP/chat ([first run](help/first-run.md)) — not a shorter CLI set. |
+| **MCP server** | Chat, agentic loops | Tools run the audit and describe the boundary; resources expose the rubric, analyzer catalog and Markdown report; the `maintainability-agent` prompt supplies the bounded slash command. Setup questions are the same as an interactive CLI TTY. |
 
 The implementation maps MCP's three primitives onto the requirement without inventing anything: a slash command *is* an MCP prompt, "let the model read the rubric and scores" *is* MCP resources, and "run the audit" *is* an MCP tool.
 
@@ -211,7 +211,7 @@ Such findings **escalate** out of the nit class into a design-review candidate, 
 4. Combination across tools happens on measurements, before banding, never on verdicts.
 5. Production/test attribution is performed by the agent, never taken from a tool.
 6. The audit performs no network access and invokes no language model.
-7. The CLI path never prompts and never varies its pool between runs given the same configuration.
+7. The CLI path never prompts **once configured**, and never varies its pool between runs given the same configuration. CI / non-TTY never prompts. Interactive first-run is the same question set as chat/MCP, not a second process.
 8. A finding's identity is stable across runs, so recurrence is a fact rather than a coincidence of formatting.
 9. A full report is produced on every run, whether or not a remediation prompt is generated or a model is ever invoked.
 10. Every report states its analyzer coverage, and no score is presented without it.

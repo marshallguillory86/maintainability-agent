@@ -23,6 +23,15 @@ honour and into the pipeline:
 A test that passes there did not need the change it claims to defend,
 which is what a weakened check looks like from the outside.
 
+The same revert proof also covers the second falsifier convention: the
+population-derived ``tests/*_class.py`` files. ``test_falsifier_standard``
+already enforces that each asserts a non-empty population, but nothing
+enforced that one fails without its change — so a plan's worth of class
+falsifiers once merged while this gate, reading only the register, proved
+nothing. Every ``*_class.py`` file the change *adds* is now revert-proven
+too. Only added files: a modified one may defend a fix older than this
+base, which would revert to a tree where it legitimately passes.
+
 An import error counts as a failure, which is a weaker signal than a
 real assertion failure: it proves the test does not pass at the base
 without proving it measures the right thing. Entries relying on that are
@@ -156,6 +165,64 @@ def _prove_one(ident: str, names: list[str], base: str) -> list[str]:
         shutil.rmtree(tree, ignore_errors=True)
 
 
+def _added_class_falsifiers(base: str) -> list[str]:
+    """`tests/*_class.py` files this change *adds*, in sorted order.
+
+    The population-derived class falsifiers are a second convention beside
+    the register (``test_falsifier_standard`` enforces their non-empty
+    population; nothing enforced that they fail without their change). This
+    brings them under the same revert proof — but only the ones the change
+    *adds*. A file the change merely *modifies* may defend a fix that
+    predates this base, so reverting to the base leaves a tree where the
+    test legitimately passes; proving it would be a false accusation. An
+    added file arrives with the change it defends, so the base cannot
+    already contain it.
+    """
+    added = _git("diff", "--name-only", "--diff-filter=A", base, "HEAD").splitlines()
+    return sorted(path for path in added if _is_class_falsifier(path))
+
+
+def _is_class_falsifier(path: str) -> bool:
+    """A ``tests/*_class.py`` population-derived falsifier file."""
+    return path.startswith("tests/") and path.endswith("_class.py")
+
+
+def _tests_in(source: str, filename: str) -> list[str]:
+    """Every ``test_`` function a file defines, as pytest node ids."""
+    return [
+        f"tests/{filename}::{match.group(1)}"
+        for match in re.finditer(r"^\s*(?:async\s+)?def (test_\w+)\b", source, re.M)
+    ]
+
+
+def _prove_class_files(paths: list[str], base: str) -> list[str]:
+    """Revert-prove every added class falsifier in one scratch worktree.
+
+    Returns the node ids that PASSED at the base, i.e. did not defend the
+    change they shipped with. Reuses ``_prove``: the class files stay as
+    this commit wrote them while everything else reverts, so each test runs
+    against the world before the fix and must fail.
+    """
+    tree = Path(tempfile.mkdtemp(prefix="falsifier-class-"))
+    try:
+        _git("worktree", "add", "--detach", "--quiet", str(tree), "HEAD")
+        node_ids: list[str] = []
+        for path in paths:
+            node_ids += _tests_in((tree / path).read_text(encoding="utf-8"), Path(path).name)
+        if not node_ids:
+            return []
+        failed, passed = _prove(base, node_ids, tree)
+        for node in failed:
+            print(f"class falsifier: {node} fails without the change — proven")
+        return [
+            f"class falsifier {node} PASSES without the change, so it does not defend it"
+            for node in passed
+        ]
+    finally:
+        _git("worktree", "remove", "--force", str(tree))
+        shutil.rmtree(tree, ignore_errors=True)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", required=True, help="commit the fixes land on top of")
@@ -163,8 +230,9 @@ def main() -> int:
     base = _git("rev-parse", args.base).strip()
 
     new = _new_entries(base)
-    if not new:
-        print("no new register entries; nothing to prove")
+    class_files = _added_class_falsifiers(base)
+    if not new and not class_files:
+        print("no new register entries or added class falsifiers; nothing to prove")
         return 0
 
     unproven: list[str] = []
@@ -182,6 +250,11 @@ def main() -> int:
             unproven.append(f"{ident} cites no test")
             continue
         unproven += _prove_one(ident, names, base)
+
+    if class_files:
+        print(f"\nproving {len(class_files)} added class falsifier(s): "
+              f"{', '.join(class_files)}")
+        unproven += _prove_class_files(class_files, base)
 
     if unproven:
         print("\nfalsifiers that do not falsify:")

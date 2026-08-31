@@ -93,6 +93,32 @@ def test_every_citation_spelling_the_register_uses_is_read(
     assert prover._cited(body) == expected
 
 
+def test_class_falsifier_files_are_recognised_but_other_tests_are_not() -> None:
+    """Only `tests/*_class.py` is a class falsifier the prover reverts.
+
+    A plain test file, or a `_class.py` outside `tests/`, is not the
+    population-derived convention and must not be dragged into the proof.
+    """
+    assert prover._is_class_falsifier("tests/test_clone_group_class.py")
+    assert not prover._is_class_falsifier("tests/test_scanning.py")
+    assert not prover._is_class_falsifier("src/maintainability_audit/_class.py")
+
+
+def test_every_test_function_in_a_class_file_becomes_a_node_id() -> None:
+    """The proof runs the whole file: a class falsifier that added a
+    passing decoy beside its real assertion cannot hide it from the sweep."""
+    source = (
+        "import pytest\n\n"
+        "def helper():\n    return 1\n\n"
+        "def test_alpha():\n    assert helper() == 1\n\n"
+        "async def test_beta():\n    assert True\n"
+    )
+    assert prover._tests_in(source, "test_x_class.py") == [
+        "tests/test_x_class.py::test_alpha",
+        "tests/test_x_class.py::test_beta",
+    ]
+
+
 def test_the_tool_is_wired_into_the_pipeline() -> None:
     """A prover nobody runs proves nothing.
 

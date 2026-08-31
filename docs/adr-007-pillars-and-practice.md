@@ -56,7 +56,7 @@ Declaring scope per pillar is itself a fix. Today the tool is silent about effic
 
 ### 2. Every pillar reports two independent values that are never averaged together
 
-**Practice level (1–5)** — the framework's maturity rubric, scored from detectable evidence of enforcement: does a linter config exist, is it wired into CI, is there a coverage gate, are complexity thresholds configured, are ADRs maintained, is there a duplication check. This is measured by looking at the repository's configuration and CI, not its source.
+**Practice level (1–5)** — the framework's maturity rubric, scored from detectable evidence of enforcement: does a linter config exist, is it wired into CI, is there a coverage gate, are complexity thresholds configured, are ADRs maintained, is there a duplication check. This is measured by looking at the repository's configuration and CI, not its source. Configuration is read wherever it lives — a gate in a nested `api/pyproject.toml`, a `docs/decisions/` folder not named `adr*` — bounded by the same exclusion the scan uses so a vendored manifest does not count (plan-81dc6870 Class 3).
 
 **Code condition** — what the analyzers found, normalized over population, as the tool scores today.
 

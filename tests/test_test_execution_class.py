@@ -8,8 +8,11 @@ audit — the load-bearing case is that the default path spawns nothing.
 
 from __future__ import annotations
 
+import json
 import stat
 from pathlib import Path
+
+import pytest
 
 from maintainability_audit._test_execution import run_test_suite, suite_opted_in
 
@@ -72,6 +75,78 @@ def test_no_coverage_artifact_leaves_coverage_unknown(tmp_path: Path) -> None:
     result = run_test_suite(tmp_path, _opted_in(command))
     assert result["ran"] is True
     assert result["coverage_percent"] is None, "coverage must not be invented"
+
+
+def test_a_committed_coverage_artifact_is_not_scored(tmp_path: Path) -> None:
+    """The provenance falsifier: a coverage.xml the tree carried, and the
+    suite did not touch, must not score `test_effectiveness` — otherwise a
+    repository could set its own coverage by committing the file."""
+    (tmp_path / "coverage.xml").write_text(
+        '<coverage line-rate="0.99"/>', encoding="utf-8")
+    command = _fake_suite(tmp_path, 0)  # passes, does NOT write coverage.xml
+    result = run_test_suite(tmp_path, _opted_in(command))
+    assert result["ran"] is True
+    assert result["coverage_percent"] is None, (
+        "a pre-existing coverage.xml this run did not produce was scored"
+    )
+
+
+def test_a_suite_that_refreshes_coverage_is_scored(tmp_path: Path) -> None:
+    """The complement: when the suite overwrites even a pre-existing
+    artifact, that is this run's output and is read normally."""
+    (tmp_path / "coverage.xml").write_text(
+        '<coverage line-rate="0.10"/>', encoding="utf-8")
+    command = _fake_suite(tmp_path, 0, coverage_line_rate="0.88")
+    result = run_test_suite(tmp_path, _opted_in(command))
+    assert result["coverage_percent"] == 88.0, (
+        "the suite's own fresh coverage.xml should be read"
+    )
+
+
+def test_a_symlinked_coverage_artifact_is_refused(tmp_path: Path) -> None:
+    """Posture parity with `_safe_write`: a coverage.xml the tree points
+    elsewhere by symlink is not followed."""
+    real = tmp_path / "real_coverage.xml"
+    real.write_text('<coverage line-rate="0.95"/>', encoding="utf-8")
+    command = _fake_suite(tmp_path, 0)  # writes no coverage.xml of its own
+    (tmp_path / "coverage.xml").symlink_to(real)
+    result = run_test_suite(tmp_path, _opted_in(command))
+    assert result["coverage_percent"] is None, "a symlinked coverage.xml was followed"
+
+
+def test_opted_in_coverage_scores_test_effectiveness_and_moves_testability(tmp_path: Path) -> None:
+    """The scored-coverage path, end to end through `score_report`.
+
+    Without a suite run the aspect is NotApplicable (None); with a coverage
+    reading it scores `coverage / 20` and is no longer excluded, so more
+    coverage lifts testability. Guards the one genuinely new *scored* path
+    Class 5 added, which extraction-only tests never exercise.
+    """
+    from maintainability_audit.config import load_config
+    from maintainability_audit.report import build_report
+    from maintainability_audit.scoring import score_report
+
+    root = _git_repo(tmp_path)
+    # A test file, so the tree is not "untested" — otherwise testability is
+    # capped at 2.0 and the coverage contribution cannot be observed.
+    (root / "test_app.py").write_text(
+        "from app import ok\n\n\ndef test_ok():\n    assert ok() == 1\n", encoding="utf-8")
+    report = build_report(root, load_config(None))
+    assert score_report(report)["aspects"]["test_effectiveness"] is None
+
+    def scored(coverage: float) -> dict:
+        report["test_suite"] = {
+            "command": ["pytest"], "ran": True, "exit_code": 0,
+            "passed": True, "detail": "", "coverage_percent": coverage,
+        }
+        return score_report(report)
+
+    low, high = scored(10.0), scored(90.0)
+    assert low["aspects"]["test_effectiveness"] == 0.5   # 10 / 20
+    assert high["aspects"]["test_effectiveness"] == 4.5  # 90 / 20
+    assert high["categories"]["testability"] > low["categories"]["testability"], (
+        "coverage is scored but does not move the testability category"
+    )
 
 
 def _git_repo(tmp_path: Path) -> Path:
@@ -141,3 +216,34 @@ def test_opting_the_suite_in_stages_a_second_ask_for_the_command(tmp_path: Path)
         "the opted-in command was not recorded for the runner to spawn"
     )
     assert config["test_execution"]["requested"] is True
+
+
+def test_the_cli_stage_two_records_the_test_command(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The CLI half of the Class 5 second stage (`maybe_prompt_test_command`).
+
+    Mirrors the MCP staged ask: an opted-in config with no command prompts
+    for one and shlex-splits it into `expected_commands.test`; a blank
+    answer cancels the opt-in rather than looping forever. Previously
+    untested, so a regression here was invisible.
+    """
+    from maintainability_audit import _first_run
+    from maintainability_audit._mcp_setup import CONFIG_FILENAME
+
+    root = _git_repo(tmp_path)
+    monkeypatch.setattr(_first_run, "_stdin_is_a_tty", lambda: True)
+
+    def run_stage(answer: str) -> dict:
+        (root / CONFIG_FILENAME).write_text(
+            json.dumps({"test_execution": {"requested": True}}), encoding="utf-8")
+        monkeypatch.setattr("builtins.input", lambda *_: answer)
+        _first_run.maybe_prompt_test_command(root, {"test_execution": {"requested": True}})
+        return json.loads((root / CONFIG_FILENAME).read_text(encoding="utf-8"))
+
+    recorded = run_stage("pytest -q")
+    assert recorded["expected_commands"]["test"] == ["pytest", "-q"]
+
+    cancelled = run_stage("   ")
+    assert cancelled["test_execution"]["requested"] is False, "a blank answer did not cancel"
+    assert "test" not in (cancelled.get("expected_commands") or {})

@@ -306,3 +306,36 @@ def unidentified_paths_markdown(paths: list[str]) -> list[str]:
     lines.extend(f"- `{path}`" for path in paths)
     lines.append("")
     return lines
+
+
+def test_suite_lines(block: dict[str, Any] | None) -> list[str]:
+    """Skin-agnostic sentences describing the opted-in suite run.
+
+    Empty on the default path (no opt-in, no ``test_suite`` block), so the
+    section is absent from a report that never ran the tree. When it did
+    run, both skins render these same sentences, so a failed suite reads
+    as failed everywhere rather than being silently indistinguishable from
+    a pass — the report states what examined ``test_effectiveness`` (P8),
+    which is the suite named here.
+    """
+    if not block:
+        return []
+    command = " ".join(block.get("command") or []) or "(unset)"
+    if block.get("ran"):
+        outcome = "passed" if block.get("passed") else f"failed (exit {block.get('exit_code')})"
+    else:
+        outcome = f"did not run (exit {block.get('exit_code')})"
+    coverage = block.get("coverage_percent")
+    coverage_text = (
+        f"{coverage}% line coverage" if coverage is not None
+        else "no coverage reported by the run"
+    )
+    lines = [
+        f"The operator opted in to running the repository's test command; it {outcome}.",
+        f"Command: {command}",
+        f"Coverage: {coverage_text}",
+    ]
+    detail = (block.get("detail") or "").strip()
+    if detail and not block.get("passed"):
+        lines.append(f"Detail: {detail}")
+    return lines

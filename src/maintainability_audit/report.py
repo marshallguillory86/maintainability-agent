@@ -481,7 +481,7 @@ def build_report(
         root, file_metrics, function_metrics, source)
     report["score"] = score_report(report, analyzer["pressures"])
     # Condition rolls up aspects; practice stays a separate axis (ADR 007).
-    report["practice"] = practice_level(root).as_dict()
+    report["practice"] = practice_level(root, config).as_dict()
     report["pillars"] = pillar_report(report["score"], report["practice"])
     _attach_semantics(report, root, config)
     # Last, because every item's delta is a rubric recomputation and the

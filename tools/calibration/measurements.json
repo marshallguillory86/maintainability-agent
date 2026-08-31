@@ -1,37 +1,33 @@
 {
- "measured_on": "2026-08-14",
+ "measured_on": "2026-08-31",
  "corpus_size": 40,
  "measurements": [
   {
    "repo": "Chart.js",
    "files": 888,
-   "declarations": 1554,
+   "declarations": 1719,
    "dimensions": {
-    "file_size": 0.028265765765765765,
-    "declarations": 0.029922779922779925,
-    "duplication": 5.490990990990991,
+    "file_size": 0.03800675675675676,
+    "declarations": 0.04506957047791894,
+    "duplication": 0.2849099099099099,
     "risk": 0.00563063063063063,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 638,
-    "production_declarations_scanned": 1199,
+    "production_declarations_scanned": 1245,
     "production_files_scanned": 250,
     "production_file_warnings": 15,
     "production_file_failures": 5,
-    "production_function_warnings": 55,
+    "production_function_warnings": 57,
     "production_function_failures": 29,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 0,
+    "dead_code_count": 1,
     "near_duplicate_count": 1,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.028265765765765765,
-    "declaration_band_pressure": 0.029922779922779925,
-    "production_file_band_pressure": 0.038,
-    "production_declaration_band_pressure": 0.03794829024186823
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -64,41 +60,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.038,
-    "declarations": 0.03794829024186823,
+    "file_size": 0.062,
+    "declarations": 0.06124581939799331,
     "gates": 0.0
    }
   },
   {
    "repo": "angular",
    "files": 8254,
-   "declarations": 42819,
+   "declarations": 43503,
    "dimensions": {
-    "file_size": 0.0460140537921008,
-    "declarations": 0.03218197529134263,
-    "duplication": 5.161618609159196,
-    "risk": 0.17397625393748486,
+    "file_size": 0.06472619336079477,
+    "declarations": 0.062321949847008756,
+    "duplication": 0.4035619093772716,
+    "risk": 0.16670705112672643,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 3311,
-    "production_declarations_scanned": 20003,
+    "production_declarations_scanned": 21363,
     "production_files_scanned": 4914,
     "production_file_warnings": 209,
     "production_file_failures": 104,
-    "production_function_warnings": 966,
-    "production_function_failures": 1019,
+    "production_function_warnings": 988,
+    "production_function_failures": 1029,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 4,
-    "near_duplicate_count": 127,
+    "dead_code_count": 25,
+    "near_duplicate_count": 132,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.0460140537921008,
-    "declaration_band_pressure": 0.03218197529134263,
-    "production_file_band_pressure": 0.03392348392348392,
-    "production_declaration_band_pressure": 0.06543018547217917
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -131,41 +123,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.03392348392348392,
-    "declarations": 0.06543018547217917,
+    "file_size": 0.05504680504680505,
+    "declarations": 0.08732107407794379,
     "gates": 0.0
    }
   },
   {
    "repo": "anime",
    "files": 268,
-   "declarations": 922,
+   "declarations": 1517,
    "dimensions": {
-    "file_size": 0.054104477611940295,
-    "declarations": 0.09978308026030369,
-    "duplication": 8.843283582089553,
+    "file_size": 0.08675373134328358,
+    "declarations": 0.06879648411088574,
+    "duplication": 0.8022388059701493,
     "risk": 0.14925373134328357,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 116,
-    "production_declarations_scanned": 523,
+    "production_declarations_scanned": 687,
     "production_files_scanned": 150,
     "production_file_warnings": 6,
     "production_file_failures": 4,
     "production_function_warnings": 22,
-    "production_function_failures": 54,
+    "production_function_failures": 55,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 3,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.054104477611940295,
-    "declaration_band_pressure": 0.09978308026030369,
-    "production_file_band_pressure": 0.03866666666666667,
-    "production_declaration_band_pressure": 0.1158699808795411
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -197,8 +185,8 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.03866666666666667,
-    "declarations": 0.1158699808795411,
+    "file_size": 0.06833333333333333,
+    "declarations": 0.10022522522522523,
     "gates": 0.0
    }
   },
@@ -207,9 +195,9 @@
    "files": 1862,
    "declarations": 12752,
    "dimensions": {
-    "file_size": 0.04967776584317938,
-    "declarations": 0.050094102885821834,
-    "duplication": 1.8839957035445758,
+    "file_size": 0.07062298603651987,
+    "declarations": 0.07463835744283714,
+    "duplication": 0.14500537056928034,
     "risk": 0.2620837808807734,
     "gates": 0.0
    },
@@ -220,24 +208,20 @@
     "production_file_warnings": 62,
     "production_file_failures": 40,
     "production_function_warnings": 319,
-    "production_function_failures": 395,
+    "production_function_failures": 394,
     "production_hard_gate_failures": 0,
     "dead_code_count": 35,
     "near_duplicate_count": 15,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.04967776584317938,
-    "declaration_band_pressure": 0.050094102885821834,
-    "production_file_band_pressure": 0.09057187017001544,
-    "production_declaration_band_pressure": 0.08136295805007461
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.053540401322364886
+    "declarations": 0.0646405430422709
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07340110667867714
+    "declarations": 0.09054285714285715
    },
    "analyzer_coverage": {
     "tools": [
@@ -265,41 +249,37 @@
     "single_source": []
    },
    "production_dimensions": {
-    "file_size": 0.09057187017001544,
-    "declarations": 0.08136295805007461,
+    "file_size": 0.12248840803709428,
+    "declarations": 0.11394221254700178,
     "gates": 0.0
    }
   },
   {
    "repo": "ant-design",
    "files": 4523,
-   "declarations": 6300,
+   "declarations": 5782,
    "dimensions": {
-    "file_size": 0.011187265089542339,
-    "declarations": 0.0677936507936508,
-    "duplication": 1.7959319036038028,
+    "file_size": 0.025812513818262214,
+    "declarations": 0.09837201246969172,
+    "duplication": 0.19080256466946716,
     "risk": 0.014370992703957551,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 670,
-    "production_declarations_scanned": 4443,
+    "production_declarations_scanned": 4489,
     "production_files_scanned": 3769,
     "production_file_warnings": 63,
     "production_file_failures": 7,
-    "production_function_warnings": 252,
-    "production_function_failures": 338,
+    "production_function_warnings": 244,
+    "production_function_failures": 339,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 1,
+    "dead_code_count": 7,
     "near_duplicate_count": 17,
     "idiom_concern_count": 1,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.011187265089542339,
-    "declaration_band_pressure": 0.0677936507936508,
-    "production_file_band_pressure": 0.006871849296895729,
-    "production_declaration_band_pressure": 0.0930902543326581
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -332,41 +312,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.006871849296895729,
-    "declarations": 0.0930902543326581,
+    "file_size": 0.019700185725656672,
+    "declarations": 0.12076460098082925,
     "gates": 0.0
    }
   },
   {
    "repo": "axios",
    "files": 407,
-   "declarations": 908,
+   "declarations": 1002,
    "dimensions": {
-    "file_size": 0.036855036855036855,
-    "declarations": 0.03909691629955947,
-    "duplication": 7.27027027027027,
+    "file_size": 0.056511056511056514,
+    "declarations": 0.05625,
+    "duplication": 0.7272727272727273,
     "risk": 0.014742014742014743,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 147,
-    "production_declarations_scanned": 364,
+    "production_declarations_scanned": 327,
     "production_files_scanned": 259,
     "production_file_warnings": 14,
     "production_file_failures": 5,
     "production_function_warnings": 25,
-    "production_function_failures": 24,
+    "production_function_failures": 22,
     "production_hard_gate_failures": 0,
     "dead_code_count": 2,
     "near_duplicate_count": 1,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.036855036855036855,
-    "declaration_band_pressure": 0.03909691629955947,
-    "production_file_band_pressure": 0.035521235521235525,
-    "production_declaration_band_pressure": 0.08653846153846154
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -399,41 +375,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.035521235521235525,
-    "declarations": 0.08653846153846154,
+    "file_size": 0.05308880308880309,
+    "declarations": 0.1265923566878981,
     "gates": 0.0
    }
   },
   {
    "repo": "code-server",
    "files": 111,
-   "declarations": 310,
+   "declarations": 277,
    "dimensions": {
-    "file_size": 0.043243243243243246,
-    "declarations": 0.02935483870967742,
-    "duplication": 0.6396396396396397,
+    "file_size": 0.06981981981981981,
+    "declarations": 0.06201550387596899,
+    "duplication": 0.08108108108108109,
     "risk": 0.13513513513513514,
     "gates": 0.05
    },
    "evidence": {
     "test_file_count": 50,
-    "production_declarations_scanned": 185,
+    "production_declarations_scanned": 186,
     "production_files_scanned": 61,
     "production_file_warnings": 4,
     "production_file_failures": 2,
     "production_function_warnings": 6,
     "production_function_failures": 4,
     "production_hard_gate_failures": 1,
-    "dead_code_count": 0,
+    "dead_code_count": 2,
     "near_duplicate_count": 0,
     "idiom_concern_count": 0,
     "has_readme": false,
     "has_changelog": true,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.043243243243243246,
-    "declaration_band_pressure": 0.02935483870967742,
-    "production_file_band_pressure": 0.05245901639344262,
-    "production_declaration_band_pressure": 0.03135135135135135
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -466,47 +438,43 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.05245901639344262,
-    "declarations": 0.03135135135135135,
+    "file_size": 0.08196721311475409,
+    "declarations": 0.0804093567251462,
     "gates": 0.05
    }
   },
   {
    "repo": "django",
    "files": 3082,
-   "declarations": 41717,
+   "declarations": 41730,
    "dimensions": {
-    "file_size": 0.061291369240752756,
-    "declarations": 0.020279502361147735,
-    "duplication": 1.2203114860480209,
+    "file_size": 0.08492861778066191,
+    "declarations": 0.032804198937463995,
+    "duplication": 0.2673588578844906,
     "risk": 0.018494484101232965,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 1978,
-    "production_declarations_scanned": 10774,
+    "production_declarations_scanned": 10778,
     "production_files_scanned": 1078,
     "production_file_warnings": 93,
     "production_file_failures": 28,
-    "production_function_warnings": 365,
-    "production_function_failures": 297,
+    "production_function_warnings": 369,
+    "production_function_failures": 302,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 5,
+    "dead_code_count": 8,
     "near_duplicate_count": 21,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.061291369240752756,
-    "declaration_band_pressure": 0.020279502361147735,
-    "production_file_band_pressure": 0.05185528756957329,
-    "production_declaration_band_pressure": 0.03772971969556339
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.019205526770293607
+    "declarations": 0.02998570562245517
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.036028287461773695
+    "declarations": 0.04769338021338506
    },
    "analyzer_coverage": {
     "tools": [
@@ -538,41 +506,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.05185528756957329,
-    "declarations": 0.03772971969556339,
+    "file_size": 0.08696660482374768,
+    "declarations": 0.05737383909589348,
     "gates": 0.0
    }
   },
   {
    "repo": "echarts",
    "files": 1451,
-   "declarations": 6214,
+   "declarations": 4364,
    "dimensions": {
-    "file_size": 0.09993108201240525,
-    "declarations": 0.08793047956227873,
-    "duplication": 13.558235699517574,
-    "risk": 0.33769813921433495,
+    "file_size": 0.15213645761543762,
+    "declarations": 0.12932091198823242,
+    "duplication": 0.05651274982770503,
+    "risk": 0.30668504479669195,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 736,
-    "production_declarations_scanned": 4466,
+    "production_declarations_scanned": 4364,
     "production_files_scanned": 710,
     "production_file_warnings": 77,
     "production_file_failures": 27,
-    "production_function_warnings": 338,
-    "production_function_failures": 304,
+    "production_function_warnings": 355,
+    "production_function_failures": 320,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
-    "near_duplicate_count": 4,
+    "near_duplicate_count": 5,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.09993108201240525,
-    "declaration_band_pressure": 0.08793047956227873,
-    "production_file_band_pressure": 0.07056338028169014,
-    "production_declaration_band_pressure": 0.09077474249888043
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -605,41 +569,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.07056338028169014,
-    "declarations": 0.09077474249888043,
+    "file_size": 0.11795774647887323,
+    "declarations": 0.12932091198823242,
     "gates": 0.0
    }
   },
   {
    "repo": "excalidraw",
    "files": 682,
-   "declarations": 4847,
+   "declarations": 3927,
    "dimensions": {
-    "file_size": 0.11832844574780059,
-    "declarations": 0.07738807509799876,
-    "duplication": 5.249266862170088,
+    "file_size": 0.14846041055718476,
+    "declarations": 0.12535835287985406,
+    "duplication": 0.6964809384164223,
     "risk": 0.19501466275659823,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 133,
-    "production_declarations_scanned": 3924,
+    "production_declarations_scanned": 3440,
     "production_files_scanned": 549,
     "production_file_warnings": 43,
     "production_file_failures": 39,
-    "production_function_warnings": 240,
-    "production_function_failures": 296,
+    "production_function_warnings": 245,
+    "production_function_failures": 295,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 1,
-    "near_duplicate_count": 2,
+    "dead_code_count": 3,
+    "near_duplicate_count": 3,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.11832844574780059,
-    "declaration_band_pressure": 0.07738807509799876,
-    "production_file_band_pressure": 0.09453551912568306,
-    "production_declaration_band_pressure": 0.09378185524974515
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -672,25 +632,25 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.09453551912568306,
-    "declarations": 0.09378185524974515,
+    "file_size": 0.12522768670309653,
+    "declarations": 0.14009518143961927,
     "gates": 0.0
    }
   },
   {
    "repo": "express",
    "files": 157,
-   "declarations": 139,
+   "declarations": 185,
    "dimensions": {
-    "file_size": 0.055414012738853505,
-    "declarations": 0.011510791366906475,
-    "duplication": 2.267515923566879,
+    "file_size": 0.07643312101910828,
+    "declarations": 0.016216216216216217,
+    "duplication": 0.5414012738853503,
     "risk": 0.18471337579617833,
     "gates": 0.05
    },
    "evidence": {
     "test_file_count": 95,
-    "production_declarations_scanned": 36,
+    "production_declarations_scanned": 54,
     "production_files_scanned": 62,
     "production_file_warnings": 2,
     "production_file_failures": 2,
@@ -702,11 +662,7 @@
     "idiom_concern_count": 0,
     "has_readme": false,
     "has_changelog": false,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.055414012738853505,
-    "declaration_band_pressure": 0.011510791366906475,
-    "production_file_band_pressure": 0.04193548387096774,
-    "production_declaration_band_pressure": 0.03611111111111111
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -738,8 +694,8 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.04193548387096774,
-    "declarations": 0.03611111111111111,
+    "file_size": 0.05241935483870968,
+    "declarations": 0.046296296296296294,
     "gates": 0.05
    }
   },
@@ -748,9 +704,9 @@
    "files": 2839,
    "declarations": 5681,
    "dimensions": {
-    "file_size": 0.02476224022543149,
-    "declarations": 0.046259461362436194,
-    "duplication": 1.6118351532229658,
+    "file_size": 0.05671010919337795,
+    "declarations": 0.0572373696872494,
+    "duplication": 0.11201127157449806,
     "risk": 0.07044734061289186,
     "gates": 0.0
    },
@@ -768,17 +724,13 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.02476224022543149,
-    "declaration_band_pressure": 0.046259461362436194,
-    "production_file_band_pressure": 0.025749318801089917,
-    "production_declaration_band_pressure": 0.04870466321243523
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.045850314931456096
+    "declarations": 0.04474554907830471
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.03704164077066501
+    "declarations": 0.04549071618037135
    },
    "analyzer_coverage": {
     "tools": [
@@ -811,8 +763,8 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.025749318801089917,
-    "declarations": 0.04870466321243523,
+    "file_size": 0.060286103542234334,
+    "declarations": 0.07666098807495741,
     "gates": 0.0
    }
   },
@@ -821,9 +773,9 @@
    "files": 111,
    "declarations": 1628,
    "dimensions": {
-    "file_size": 0.06126126126126126,
-    "declarations": 0.01597051597051597,
-    "duplication": 1.0990990990990992,
+    "file_size": 0.0945945945945946,
+    "declarations": 0.03167574931880109,
+    "duplication": 0.11711711711711711,
     "risk": 0.0,
     "gates": 0.0
    },
@@ -841,17 +793,13 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.06126126126126126,
-    "declaration_band_pressure": 0.01597051597051597,
-    "production_file_band_pressure": 0.07924528301886792,
-    "production_declaration_band_pressure": 0.045867768595041325
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.010380779691749773
+    "declarations": 0.02759009009009009
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.026825842696629215
+    "declarations": 0.05184331797235023
    },
    "analyzer_coverage": {
     "tools": [
@@ -880,41 +828,37 @@
     "single_source": []
    },
    "production_dimensions": {
-    "file_size": 0.07924528301886792,
-    "declarations": 0.045867768595041325,
+    "file_size": 0.10849056603773585,
+    "declarations": 0.07674418604651163,
     "gates": 0.0
    }
   },
   {
    "repo": "freeCodeCamp",
    "files": 18035,
-   "declarations": 3483,
+   "declarations": 2566,
    "dimensions": {
-    "file_size": 0.014915442195730523,
-    "declarations": 0.05946023542922768,
-    "duplication": 3.4060992514555033,
+    "file_size": 0.043498752425838644,
+    "declarations": 0.10603960396039604,
+    "duplication": 0.1095647352370391,
     "risk": 0.06321042417521486,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 340,
-    "production_declarations_scanned": 2211,
+    "production_declarations_scanned": 2195,
     "production_files_scanned": 17695,
     "production_file_warnings": 624,
     "production_file_failures": 71,
-    "production_function_warnings": 144,
-    "production_function_failures": 159,
+    "production_function_warnings": 139,
+    "production_function_failures": 156,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 0,
+    "dead_code_count": 11,
     "near_duplicate_count": 5,
     "idiom_concern_count": 2,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.014915442195730523,
-    "declaration_band_pressure": 0.05946023542922768,
-    "production_file_band_pressure": 0.01459169256852218,
-    "production_declaration_band_pressure": 0.09145183175033922
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -947,41 +891,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.01459169256852218,
-    "declarations": 0.09145183175033922,
+    "file_size": 0.04299237072619384,
+    "declarations": 0.1201701931922723,
     "gates": 0.0
    }
   },
   {
    "repo": "github-readme-stats",
    "files": 90,
-   "declarations": 252,
+   "declarations": 164,
    "dimensions": {
-    "file_size": 0.06777777777777778,
-    "declarations": 0.05833333333333333,
-    "duplication": 5.188888888888889,
+    "file_size": 0.08888888888888889,
+    "declarations": 0.12578616352201258,
+    "duplication": 0.5111111111111111,
     "risk": 0.011111111111111112,
     "gates": 0.05
    },
    "evidence": {
     "test_file_count": 33,
-    "production_declarations_scanned": 150,
+    "production_declarations_scanned": 149,
     "production_files_scanned": 57,
     "production_file_warnings": 4,
     "production_file_failures": 3,
-    "production_function_warnings": 9,
-    "production_function_failures": 12,
+    "production_function_warnings": 10,
+    "production_function_failures": 11,
     "production_hard_gate_failures": 1,
     "dead_code_count": 0,
     "near_duplicate_count": 0,
     "idiom_concern_count": 0,
     "has_readme": false,
     "has_changelog": false,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.06777777777777778,
-    "declaration_band_pressure": 0.05833333333333333,
-    "production_file_band_pressure": 0.07368421052631578,
-    "production_declaration_band_pressure": 0.098
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1020,8 +960,8 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.07368421052631578,
-    "declarations": 0.098,
+    "file_size": 0.08333333333333333,
+    "declarations": 0.13541666666666666,
     "gates": 0.05
    }
   },
@@ -1030,9 +970,9 @@
    "files": 91,
    "declarations": 898,
    "dimensions": {
-    "file_size": 0.027472527472527472,
-    "declarations": 0.020489977728285078,
-    "duplication": 0.04395604395604396,
+    "file_size": 0.06043956043956044,
+    "declarations": 0.04223744292237443,
+    "duplication": 0.03296703296703297,
     "risk": 0.07692307692307693,
     "gates": 0.0
    },
@@ -1050,17 +990,13 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.027472527472527472,
-    "declaration_band_pressure": 0.020489977728285078,
-    "production_file_band_pressure": 0.03013698630136986,
-    "production_declaration_band_pressure": 0.031452991452991456
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.024462809917355374
+    "declarations": 0.043451652386780906
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.04736
+    "declarations": 0.07283057851239669
    },
    "analyzer_coverage": {
     "tools": [
@@ -1089,41 +1025,37 @@
     "single_source": []
    },
    "production_dimensions": {
-    "file_size": 0.03013698630136986,
-    "declarations": 0.031452991452991456,
+    "file_size": 0.06506849315068493,
+    "declarations": 0.07928571428571428,
     "gates": 0.0
    }
   },
   {
    "repo": "hoppscotch",
    "files": 1135,
-   "declarations": 5876,
+   "declarations": 5133,
    "dimensions": {
-    "file_size": 0.06969162995594713,
-    "declarations": 0.06676310415248468,
-    "duplication": 6.496035242290749,
+    "file_size": 0.10418502202643172,
+    "declarations": 0.10160788381742739,
+    "duplication": 0.6969162995594713,
     "risk": 0.08105726872246696,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 198,
-    "production_declarations_scanned": 4547,
+    "production_declarations_scanned": 4922,
     "production_files_scanned": 937,
     "production_file_warnings": 43,
     "production_file_failures": 27,
-    "production_function_warnings": 270,
-    "production_function_failures": 308,
+    "production_function_warnings": 275,
+    "production_function_failures": 299,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 0,
-    "near_duplicate_count": 79,
+    "dead_code_count": 20,
+    "near_duplicate_count": 91,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.06969162995594713,
-    "declaration_band_pressure": 0.06676310415248468,
-    "production_file_band_pressure": 0.04258271077908218,
-    "production_declaration_band_pressure": 0.0855509126896855
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1156,41 +1088,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.04258271077908218,
-    "declarations": 0.0855509126896855,
+    "file_size": 0.07043756670224119,
+    "declarations": 0.10510071474983755,
     "gates": 0.0
    }
   },
   {
    "repo": "jquery",
    "files": 290,
-   "declarations": 812,
+   "declarations": 1416,
    "dimensions": {
-    "file_size": 0.06344827586206897,
-    "declarations": 0.0791871921182266,
-    "duplication": 14.472413793103449,
+    "file_size": 0.07327586206896551,
+    "declarations": 0.09692796610169492,
+    "duplication": 0.7793103448275862,
     "risk": 0.05172413793103448,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 139,
-    "production_declarations_scanned": 145,
+    "production_declarations_scanned": 365,
     "production_files_scanned": 149,
     "production_file_warnings": 3,
     "production_file_failures": 3,
-    "production_function_warnings": 9,
-    "production_function_failures": 24,
+    "production_function_warnings": 22,
+    "production_function_failures": 47,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 0,
+    "dead_code_count": 2,
     "near_duplicate_count": 0,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.06344827586206897,
-    "declaration_band_pressure": 0.0791871921182266,
-    "production_file_band_pressure": 0.0261744966442953,
-    "production_declaration_band_pressure": 0.18413793103448275
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1222,8 +1150,8 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.0261744966442953,
-    "declarations": 0.18413793103448275,
+    "file_size": 0.03523489932885906,
+    "declarations": 0.17191780821917807,
     "gates": 0.0
    }
   },
@@ -1232,9 +1160,9 @@
    "files": 858,
    "declarations": 16982,
    "dimensions": {
-    "file_size": 0.15034965034965037,
-    "declarations": 0.051807796490401604,
-    "duplication": 9.994172494172494,
+    "file_size": 0.20862470862470864,
+    "declarations": 0.07157450734857972,
+    "duplication": 1.1993006993006994,
     "risk": 0.15384615384615385,
     "gates": 0.0
    },
@@ -1252,17 +1180,13 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.15034965034965037,
-    "declaration_band_pressure": 0.051807796490401604,
-    "production_file_band_pressure": 0.15143884892086332,
-    "production_declaration_band_pressure": 0.06473471127210739
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.042480840193017316
+    "declarations": 0.05231693989071038
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.05536650418467764
+    "declarations": 0.07532244196044711
    },
    "analyzer_coverage": {
     "tools": [
@@ -1295,19 +1219,19 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.15143884892086332,
-    "declarations": 0.06473471127210739,
+    "file_size": 0.20908273381294964,
+    "declarations": 0.09118900994789199,
     "gates": 0.0
    }
   },
   {
    "repo": "localstack",
    "files": 2003,
-   "declarations": 34384,
+   "declarations": 34383,
    "dimensions": {
-    "file_size": 0.08127808287568647,
-    "declarations": 0.03203234062354583,
-    "duplication": 4.243634548177734,
+    "file_size": 0.1090863704443335,
+    "declarations": 0.07091634441235499,
+    "duplication": 0.5776335496754867,
     "risk": 1.0678981527708438,
     "gates": 0.0
    },
@@ -1317,25 +1241,21 @@
     "production_files_scanned": 1220,
     "production_file_warnings": 71,
     "production_file_failures": 76,
-    "production_function_warnings": 432,
-    "production_function_failures": 343,
+    "production_function_warnings": 433,
+    "production_function_failures": 342,
     "production_hard_gate_failures": 0,
     "dead_code_count": 19,
     "near_duplicate_count": 102,
     "idiom_concern_count": 1,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.08127808287568647,
-    "declaration_band_pressure": 0.03203234062354583,
-    "production_file_band_pressure": 0.07975409836065574,
-    "production_declaration_band_pressure": 0.017352034072551037
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.03685904133060303
+    "declarations": 0.05696685753947597
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.022781843128287217
+    "declarations": 0.036998524084261374
    },
    "analyzer_coverage": {
     "tools": [
@@ -1351,6 +1271,7 @@
      "multimetric",
      "mypy",
      "near-duplicates",
+     "pmd",
      "pydocstyle",
      "risk-patterns",
      "ruff",
@@ -1362,41 +1283,37 @@
     "single_source": []
    },
    "production_dimensions": {
-    "file_size": 0.07975409836065574,
-    "declarations": 0.017352034072551037,
+    "file_size": 0.10594262295081967,
+    "declarations": 0.045758051846032995,
     "gates": 0.0
    }
   },
   {
    "repo": "lodash",
    "files": 39,
-   "declarations": 852,
+   "declarations": 849,
    "dimensions": {
-    "file_size": 0.14358974358974358,
-    "declarations": 0.03814553990610329,
-    "duplication": 4.871794871794871,
+    "file_size": 0.16666666666666666,
+    "declarations": 0.052414605418138985,
+    "duplication": 1.641025641025641,
     "risk": 0.0,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 10,
-    "production_declarations_scanned": 573,
+    "production_declarations_scanned": 571,
     "production_files_scanned": 29,
     "production_file_warnings": 1,
     "production_file_failures": 3,
-    "production_function_warnings": 13,
+    "production_function_warnings": 14,
     "production_function_failures": 26,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 1,
+    "dead_code_count": 4,
     "near_duplicate_count": 1,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.14358974358974358,
-    "declaration_band_pressure": 0.03814553990610329,
-    "production_file_band_pressure": 0.11379310344827587,
-    "production_declaration_band_pressure": 0.052181500872600345
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1428,8 +1345,8 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.11379310344827587,
-    "declarations": 0.052181500872600345,
+    "file_size": 0.12931034482758622,
+    "declarations": 0.07267950963222417,
     "gates": 0.0
    }
   },
@@ -1438,9 +1355,9 @@
    "files": 112,
    "declarations": 2224,
    "dimensions": {
-    "file_size": 0.07857142857142857,
-    "declarations": 0.013624100719424461,
-    "duplication": 0.0625,
+    "file_size": 0.140625,
+    "declarations": 0.02992681651855724,
+    "duplication": 0.026785714285714284,
     "risk": 0.17857142857142858,
     "gates": 0.0
    },
@@ -1458,17 +1375,13 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.07857142857142857,
-    "declaration_band_pressure": 0.013624100719424461,
-    "production_file_band_pressure": 0.07870370370370369,
-    "production_declaration_band_pressure": 0.013262476894639556
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.00718232044198895
+    "declarations": 0.018257575757575757
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.006442080378250591
+    "declarations": 0.017813267813267815
    },
    "analyzer_coverage": {
     "tools": [
@@ -1497,41 +1410,37 @@
     "single_source": []
    },
    "production_dimensions": {
-    "file_size": 0.07870370370370369,
-    "declarations": 0.013262476894639556,
+    "file_size": 0.1388888888888889,
+    "declarations": 0.029082177161152616,
     "gates": 0.0
    }
   },
   {
    "repo": "material-ui",
    "files": 6627,
-   "declarations": 10217,
+   "declarations": 9553,
    "dimensions": {
-    "file_size": 0.013746793420854083,
-    "declarations": 0.0640501125575022,
-    "duplication": 9.316281877169157,
+    "file_size": 0.02557718424626528,
+    "declarations": 0.09119067618647628,
+    "duplication": 0.31416930737890447,
     "risk": 0.03591368643428399,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 832,
-    "production_declarations_scanned": 6931,
+    "production_declarations_scanned": 7596,
     "production_files_scanned": 5788,
     "production_file_warnings": 87,
     "production_file_failures": 31,
-    "production_function_warnings": 397,
-    "production_function_failures": 517,
+    "production_function_warnings": 405,
+    "production_function_failures": 511,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 0,
-    "near_duplicate_count": 97,
+    "dead_code_count": 5,
+    "near_duplicate_count": 99,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.013746793420854083,
-    "declaration_band_pressure": 0.0640501125575022,
-    "production_file_band_pressure": 0.00986523842432619,
-    "production_declaration_band_pressure": 0.09177607848795268
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1564,41 +1473,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.00986523842432619,
-    "declarations": 0.09177607848795268,
+    "file_size": 0.020818935729094677,
+    "declarations": 0.10966358839050132,
     "gates": 0.0
    }
   },
   {
    "repo": "mermaid",
    "files": 1309,
-   "declarations": 5273,
+   "declarations": 3585,
    "dimensions": {
-    "file_size": 0.06852559205500382,
-    "declarations": 0.08291295277830457,
-    "duplication": 12.850267379679144,
-    "risk": 0.13521772345301758,
+    "file_size": 0.10962566844919786,
+    "declarations": 0.13868771726535342,
+    "duplication": 0.5767761650114591,
+    "risk": 0.13445378151260504,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 304,
-    "production_declarations_scanned": 3312,
+    "production_declarations_scanned": 3192,
     "production_files_scanned": 1005,
     "production_file_warnings": 86,
     "production_file_failures": 33,
-    "production_function_warnings": 255,
-    "production_function_failures": 351,
+    "production_function_warnings": 262,
+    "production_function_failures": 310,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 6,
-    "near_duplicate_count": 36,
+    "dead_code_count": 33,
+    "near_duplicate_count": 37,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.06852559205500382,
-    "declaration_band_pressure": 0.08291295277830457,
-    "production_file_band_pressure": 0.05850746268656716,
-    "production_declaration_band_pressure": 0.12907608695652173
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1631,25 +1536,25 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.05850746268656716,
-    "declarations": 0.12907608695652173,
+    "file_size": 0.0962686567164179,
+    "declarations": 0.15179738562091502,
     "gates": 0.0
    }
   },
   {
    "repo": "models",
    "files": 2952,
-   "declarations": 23350,
+   "declarations": 23341,
    "dimensions": {
-    "file_size": 0.06487127371273713,
-    "declarations": 0.07651391862955031,
-    "duplication": 7.85230352303523,
+    "file_size": 0.11780149051490515,
+    "declarations": 0.11785247713797609,
+    "duplication": 0.7876016260162602,
     "risk": 0.14532520325203252,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 751,
-    "production_declarations_scanned": 14901,
+    "production_declarations_scanned": 14892,
     "production_files_scanned": 2201,
     "production_file_warnings": 251,
     "production_file_failures": 76,
@@ -1661,17 +1566,13 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.06487127371273713,
-    "declaration_band_pressure": 0.07651391862955031,
-    "production_file_band_pressure": 0.06874148114493411,
-    "production_declaration_band_pressure": 0.10188577947788739
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.06261052430339817
+    "declarations": 0.08095827776719375
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.08826678904696345
+    "declarations": 0.10420061560745972
    },
    "analyzer_coverage": {
     "tools": [
@@ -1703,47 +1604,43 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.06874148114493411,
-    "declarations": 0.10188577947788739,
+    "file_size": 0.12448886869604725,
+    "declarations": 0.1534559289790742,
     "gates": 0.0
    }
   },
   {
    "repo": "n8n",
    "files": 19627,
-   "declarations": 68461,
+   "declarations": 62787,
    "dimensions": {
-    "file_size": 0.059178682427268564,
-    "declarations": 0.06453309183330655,
-    "duplication": 7.623732613236868,
+    "file_size": 0.09576094156009579,
+    "declarations": 0.08698875300475498,
+    "duplication": 0.5096550669995414,
     "risk": 0.04468334437254802,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 8002,
-    "production_declarations_scanned": 44857,
+    "production_declarations_scanned": 46065,
     "production_files_scanned": 11609,
     "production_file_warnings": 792,
     "production_file_failures": 276,
-    "production_function_warnings": 2964,
-    "production_function_failures": 3363,
+    "production_function_warnings": 2867,
+    "production_function_failures": 3051,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 2,
-    "near_duplicate_count": 466,
+    "dead_code_count": 283,
+    "near_duplicate_count": 480,
     "idiom_concern_count": 2,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.059178682427268564,
-    "declaration_band_pressure": 0.06453309183330655,
-    "production_file_band_pressure": 0.04424153673873718,
-    "production_declaration_band_pressure": 0.09479456940945671
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.11122626679817532
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.07687683381499702
    },
    "analyzer_coverage": {
     "tools": [
@@ -1776,41 +1673,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.04424153673873718,
-    "declarations": 0.09479456940945671,
+    "file_size": 0.07728917219398743,
+    "declarations": 0.11149282069538388,
     "gates": 0.0
    }
   },
   {
    "repo": "nest",
    "files": 1774,
-   "declarations": 5449,
+   "declarations": 5538,
    "dimensions": {
-    "file_size": 0.014261555806087936,
-    "declarations": 0.013855753349238394,
-    "duplication": 2.603720405862458,
+    "file_size": 0.025084554678692222,
+    "declarations": 0.024069884364002012,
+    "duplication": 0.2519729425028185,
     "risk": 0.0016910935738444193,
     "gates": 0.05
    },
    "evidence": {
     "test_file_count": 415,
-    "production_declarations_scanned": 3852,
+    "production_declarations_scanned": 3950,
     "production_files_scanned": 1359,
     "production_file_warnings": 16,
     "production_file_failures": 4,
-    "production_function_warnings": 74,
-    "production_function_failures": 53,
+    "production_function_warnings": 81,
+    "production_function_failures": 52,
     "production_hard_gate_failures": 1,
-    "dead_code_count": 0,
-    "near_duplicate_count": 26,
+    "dead_code_count": 1,
+    "near_duplicate_count": 27,
     "idiom_concern_count": 2,
     "has_readme": false,
     "has_changelog": false,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.014261555806087936,
-    "declaration_band_pressure": 0.013855753349238394,
-    "production_file_band_pressure": 0.006475349521707138,
-    "production_declaration_band_pressure": 0.019522326064382138
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1843,47 +1736,43 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.006475349521707138,
-    "declarations": 0.019522326064382138,
+    "file_size": 0.013245033112582781,
+    "declarations": 0.03051948051948052,
     "gates": 0.05
    }
   },
   {
    "repo": "playwright",
    "files": 2212,
-   "declarations": 15660,
+   "declarations": 11059,
    "dimensions": {
-    "file_size": 0.0801989150090416,
-    "declarations": 0.08348659003831417,
-    "duplication": 19.231012658227847,
-    "risk": 0.6934900542495479,
+    "file_size": 0.1169755877034358,
+    "declarations": 0.07338523644752018,
+    "duplication": 0.7066003616636528,
+    "risk": 0.41726943942133815,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 1010,
-    "production_declarations_scanned": 9308,
+    "production_declarations_scanned": 9916,
     "production_files_scanned": 1167,
     "production_file_warnings": 107,
     "production_file_failures": 68,
-    "production_function_warnings": 414,
-    "production_function_failures": 484,
+    "production_function_warnings": 421,
+    "production_function_failures": 454,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 0,
-    "near_duplicate_count": 52,
+    "dead_code_count": 28,
+    "near_duplicate_count": 60,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.0801989150090416,
-    "declaration_band_pressure": 0.08348659003831417,
-    "production_file_band_pressure": 0.08577549271636675,
-    "production_declaration_band_pressure": 0.06534164159862484
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.07353141147674735
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.05883065004236775
    },
    "analyzer_coverage": {
     "tools": [
@@ -1900,6 +1789,7 @@
      "multimetric",
      "mypy",
      "near-duplicates",
+     "pmd",
      "pydocstyle",
      "radon",
      "risk-patterns",
@@ -1917,41 +1807,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.08577549271636675,
-    "declarations": 0.06534164159862484,
+    "file_size": 0.12724935732647816,
+    "declarations": 0.07772951522951523,
     "gates": 0.0
    }
   },
   {
    "repo": "reveal.js",
    "files": 132,
-   "declarations": 596,
+   "declarations": 566,
    "dimensions": {
-    "file_size": 0.07045454545454545,
-    "declarations": 0.10671140939597315,
-    "duplication": 1.4242424242424243,
+    "file_size": 0.10795454545454546,
+    "declarations": 0.13507326007326007,
+    "duplication": 0.08333333333333333,
     "risk": 0.007575757575757576,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 29,
-    "production_declarations_scanned": 533,
+    "production_declarations_scanned": 558,
     "production_files_scanned": 102,
     "production_file_warnings": 9,
     "production_file_failures": 5,
-    "production_function_warnings": 52,
+    "production_function_warnings": 56,
     "production_function_failures": 48,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 0,
+    "dead_code_count": 1,
     "near_duplicate_count": 1,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.07045454545454545,
-    "declaration_band_pressure": 0.10671140939597315,
-    "production_file_band_pressure": 0.07549019607843137,
-    "production_declaration_band_pressure": 0.11932457786116323
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -1984,8 +1870,8 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.07549019607843137,
-    "declarations": 0.11932457786116323,
+    "file_size": 0.12009803921568628,
+    "declarations": 0.1366171003717472,
     "gates": 0.0
    }
   },
@@ -1994,9 +1880,9 @@
    "files": 494,
    "declarations": 7038,
    "dimensions": {
-    "file_size": 0.05465587044534413,
-    "declarations": 0.01170787155441887,
-    "duplication": 2.2935222672064777,
+    "file_size": 0.09615384615384616,
+    "declarations": 0.021059661620658948,
+    "duplication": 0.3360323886639676,
     "risk": 0.03441295546558704,
     "gates": 0.0
    },
@@ -2014,17 +1900,13 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.05465587044534413,
-    "declaration_band_pressure": 0.01170787155441887,
-    "production_file_band_pressure": 0.032989690721649485,
-    "production_declaration_band_pressure": 0.015744274809160304
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.004243683692442306
+    "declarations": 0.014701378254211332
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.00679611650485437
+    "declarations": 0.022823261858349576
    },
    "analyzer_coverage": {
     "tools": [
@@ -2053,41 +1935,37 @@
     "single_source": []
    },
    "production_dimensions": {
-    "file_size": 0.032989690721649485,
-    "declarations": 0.015744274809160304,
+    "file_size": 0.07989690721649484,
+    "declarations": 0.033129175946547886,
     "gates": 0.0
    }
   },
   {
    "repo": "strapi",
    "files": 5159,
-   "declarations": 14010,
+   "declarations": 13026,
    "dimensions": {
-    "file_size": 0.029734444659817796,
-    "declarations": 0.06810849393290506,
-    "duplication": 3.991277379337081,
+    "file_size": 0.05679395231634038,
+    "declarations": 0.09525107045543013,
+    "duplication": 0.37468501647606123,
     "risk": 0.1477030432254313,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 1536,
-    "production_declarations_scanned": 9404,
+    "production_declarations_scanned": 10046,
     "production_files_scanned": 3613,
     "production_file_warnings": 130,
     "production_file_failures": 25,
-    "production_function_warnings": 582,
-    "production_function_failures": 736,
+    "production_function_warnings": 577,
+    "production_function_failures": 706,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 14,
-    "near_duplicate_count": 72,
+    "dead_code_count": 29,
+    "near_duplicate_count": 75,
     "idiom_concern_count": 1,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.029734444659817796,
-    "declaration_band_pressure": 0.06810849393290506,
-    "production_file_band_pressure": 0.017713811237199003,
-    "production_declaration_band_pressure": 0.09683113568694172
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2120,41 +1998,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.017713811237199003,
-    "declarations": 0.09683113568694172,
+    "file_size": 0.03764184887904788,
+    "declarations": 0.11704602933737987,
     "gates": 0.0
    }
   },
   {
    "repo": "svelte",
    "files": 4035,
-   "declarations": 5565,
+   "declarations": 5632,
    "dimensions": {
-    "file_size": 0.008921933085501859,
-    "declarations": 0.06037735849056604,
-    "duplication": 1.3197026022304832,
+    "file_size": 0.014312267657992565,
+    "declarations": 0.08364813815434431,
+    "duplication": 0.1335811648079306,
     "risk": 0.05675340768277571,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 3264,
-    "production_declarations_scanned": 2550,
+    "production_declarations_scanned": 2525,
     "production_files_scanned": 585,
     "production_file_warnings": 36,
     "production_file_failures": 23,
-    "production_function_warnings": 158,
-    "production_function_failures": 210,
+    "production_function_warnings": 153,
+    "production_function_failures": 209,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 0,
+    "dead_code_count": 44,
     "near_duplicate_count": 5,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.008921933085501859,
-    "declaration_band_pressure": 0.06037735849056604,
-    "production_file_band_pressure": 0.057777777777777775,
-    "production_declaration_band_pressure": 0.10094117647058823
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2187,41 +2061,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.057777777777777775,
-    "declarations": 0.10094117647058823,
+    "file_size": 0.0876068376068376,
+    "declarations": 0.128989898989899,
     "gates": 0.0
    }
   },
   {
    "repo": "tabby",
    "files": 343,
-   "declarations": 1956,
+   "declarations": 2157,
    "dimensions": {
-    "file_size": 0.018658892128279883,
-    "declarations": 0.049437627811860944,
-    "duplication": 0.9504373177842566,
+    "file_size": 0.04008746355685131,
+    "declarations": 0.057096247960848286,
+    "duplication": 0.07580174927113703,
     "risk": 0.03206997084548105,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 0,
-    "production_declarations_scanned": 1956,
+    "production_declarations_scanned": 2157,
     "production_files_scanned": 343,
     "production_file_warnings": 8,
     "production_file_failures": 4,
-    "production_function_warnings": 69,
-    "production_function_failures": 76,
+    "production_function_warnings": 70,
+    "production_function_failures": 66,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 6,
+    "dead_code_count": 20,
     "near_duplicate_count": 4,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.018658892128279883,
-    "declaration_band_pressure": 0.049437627811860944,
-    "production_file_band_pressure": 0.018658892128279883,
-    "production_declaration_band_pressure": 0.049437627811860944
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2254,41 +2124,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.018658892128279883,
-    "declarations": 0.049437627811860944,
+    "file_size": 0.04008746355685131,
+    "declarations": 0.057096247960848286,
     "gates": 0.0
    }
   },
   {
    "repo": "tailwindcss",
    "files": 372,
-   "declarations": 2820,
+   "declarations": 453,
    "dimensions": {
-    "file_size": 0.09838709677419355,
-    "declarations": 0.07049645390070922,
-    "duplication": 15.233870967741936,
-    "risk": 0.0456989247311828,
+    "file_size": 0.1350806451612903,
+    "declarations": 0.18736017897091722,
+    "duplication": 0.24731182795698925,
+    "risk": 0.01881720430107527,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 123,
-    "production_declarations_scanned": 1018,
+    "production_declarations_scanned": 423,
     "production_files_scanned": 248,
     "production_file_warnings": 12,
     "production_file_failures": 9,
-    "production_function_warnings": 92,
-    "production_function_failures": 169,
+    "production_function_warnings": 32,
+    "production_function_failures": 60,
     "production_hard_gate_failures": 0,
     "dead_code_count": 1,
-    "near_duplicate_count": 14,
+    "near_duplicate_count": 6,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.09838709677419355,
-    "declaration_band_pressure": 0.07049645390070922,
-    "production_file_band_pressure": 0.05080645161290323,
-    "production_declaration_band_pressure": 0.1931237721021611
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2321,8 +2187,8 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.05080645161290323,
-    "declarations": 0.1931237721021611,
+    "file_size": 0.0846774193548387,
+    "declarations": 0.19724220623501199,
     "gates": 0.0
    }
   },
@@ -2331,9 +2197,9 @@
    "files": 5525,
    "declarations": 60641,
    "dimensions": {
-    "file_size": 0.11770135746606336,
-    "declarations": 0.061723916162332415,
-    "duplication": 13.689592760180995,
+    "file_size": 0.17683257918552037,
+    "declarations": 0.10182120928296388,
+    "duplication": 0.8526696832579186,
     "risk": 0.20705882352941177,
     "gates": 0.0
    },
@@ -2343,25 +2209,21 @@
     "production_files_scanned": 3929,
     "production_file_warnings": 434,
     "production_file_failures": 321,
-    "production_function_warnings": 2391,
-    "production_function_failures": 2002,
+    "production_function_warnings": 2393,
+    "production_function_failures": 2000,
     "production_hard_gate_failures": 0,
     "dead_code_count": 41,
     "near_duplicate_count": 1331,
     "idiom_concern_count": 1,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.11770135746606336,
-    "declaration_band_pressure": 0.061723916162332415,
-    "production_file_band_pressure": 0.1148383812674981,
-    "production_declaration_band_pressure": 0.07751268456758452
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.0628965275692985
+    "declarations": 0.08343460120711306
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.09384336803983703
+    "declarations": 0.1007560993214956
    },
    "analyzer_coverage": {
     "tools": [
@@ -2390,41 +2252,37 @@
     "single_source": []
    },
    "production_dimensions": {
-    "file_size": 0.1148383812674981,
-    "declarations": 0.07751268456758452,
+    "file_size": 0.17027233392720795,
+    "declarations": 0.1354041130505773,
     "gates": 0.0
    }
   },
   {
    "repo": "uBlock",
    "files": 400,
-   "declarations": 4494,
+   "declarations": 4238,
    "dimensions": {
-    "file_size": 0.11175,
-    "declarations": 0.11310636404094349,
-    "duplication": 3.7375,
-    "risk": 0.155,
+    "file_size": 0.15625,
+    "declarations": 0.13988022488389146,
+    "duplication": 0.275,
+    "risk": 0.13,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 15,
-    "production_declarations_scanned": 4432,
+    "production_declarations_scanned": 4235,
     "production_files_scanned": 385,
     "production_file_warnings": 38,
     "production_file_failures": 32,
-    "production_function_warnings": 310,
-    "production_function_failures": 412,
+    "production_function_warnings": 279,
+    "production_function_failures": 377,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 1,
-    "near_duplicate_count": 35,
+    "dead_code_count": 53,
+    "near_duplicate_count": 18,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.11175,
-    "declaration_band_pressure": 0.11310636404094349,
-    "production_file_band_pressure": 0.11272727272727273,
-    "production_declaration_band_pressure": 0.11394404332129963
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2463,41 +2321,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.11272727272727273,
-    "declarations": 0.11394404332129963,
+    "file_size": 0.15714285714285714,
+    "declarations": 0.13998287671232876,
     "gates": 0.0
    }
   },
   {
    "repo": "vite",
    "files": 1989,
-   "declarations": 3400,
+   "declarations": 3048,
    "dimensions": {
-    "file_size": 0.02197083961789844,
-    "declarations": 0.08573529411764706,
-    "duplication": 1.2840623428858724,
-    "risk": 0.027652086475615886,
+    "file_size": 0.032679738562091505,
+    "declarations": 0.11775544388609716,
+    "duplication": 0.10457516339869281,
+    "risk": 0.026143790849673203,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 405,
-    "production_declarations_scanned": 2608,
+    "production_declarations_scanned": 2551,
     "production_files_scanned": 1568,
     "production_file_warnings": 36,
     "production_file_failures": 21,
-    "production_function_warnings": 155,
-    "production_function_failures": 234,
+    "production_function_warnings": 165,
+    "production_function_failures": 221,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 3,
+    "dead_code_count": 12,
     "near_duplicate_count": 7,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.02197083961789844,
-    "declaration_band_pressure": 0.08573529411764706,
-    "production_file_band_pressure": 0.02028061224489796,
-    "production_declaration_band_pressure": 0.10755368098159508
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2530,41 +2384,37 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.02028061224489796,
-    "declarations": 0.10755368098159508,
+    "file_size": 0.030293367346938774,
+    "declarations": 0.1338748495788207,
     "gates": 0.0
    }
   },
   {
    "repo": "webpack",
    "files": 12815,
-   "declarations": 12777,
+   "declarations": 12109,
    "dimensions": {
-    "file_size": 0.009340616465079984,
-    "declarations": 0.07868826798152932,
-    "duplication": 0.9731564572766289,
-    "risk": 0.015294576667967226,
+    "file_size": 0.013285212641435817,
+    "declarations": 0.10129962613494749,
+    "duplication": 0.09215762777994538,
+    "risk": 0.014904408895825205,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 10604,
-    "production_declarations_scanned": 7526,
+    "production_declarations_scanned": 7340,
     "production_files_scanned": 1408,
     "production_file_warnings": 97,
     "production_file_failures": 60,
-    "production_function_warnings": 432,
-    "production_function_failures": 791,
+    "production_function_warnings": 443,
+    "production_function_failures": 811,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 5,
+    "dead_code_count": 300,
     "near_duplicate_count": 22,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.009340616465079984,
-    "declaration_band_pressure": 0.07868826798152932,
-    "production_file_band_pressure": 0.06328125,
-    "production_declaration_band_pressure": 0.12232261493489237
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
     "declarations": null
@@ -2597,8 +2447,8 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.06328125,
-    "declarations": 0.12232261493489237,
+    "file_size": 0.08966619318181818,
+    "declarations": 0.15132954884971617,
     "gates": 0.0
    }
   },
@@ -2607,9 +2457,9 @@
    "files": 917,
    "declarations": 5786,
    "dimensions": {
-    "file_size": 0.04045801526717557,
-    "declarations": 0.08686484618043554,
-    "duplication": 0.5845147219193021,
+    "file_size": 0.07251908396946564,
+    "declarations": 0.14991482112436116,
+    "duplication": 0.15921483097055616,
     "risk": 0.12213740458015267,
     "gates": 0.0
    },
@@ -2619,7 +2469,7 @@
     "production_files_scanned": 885,
     "production_file_warnings": 43,
     "production_file_failures": 20,
-    "production_function_warnings": 369,
+    "production_function_warnings": 368,
     "production_function_failures": 365,
     "production_hard_gate_failures": 0,
     "dead_code_count": 6,
@@ -2627,17 +2477,13 @@
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": true,
-    "file_band_pressure": 0.04045801526717557,
-    "declaration_band_pressure": 0.08686484618043554,
-    "production_file_band_pressure": 0.03717514124293785,
-    "production_declaration_band_pressure": 0.09174541947926712
+    "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.0723391812865497
+    "declarations": 0.09377480815030431
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.08354823304680038
+    "declarations": 0.10300348010289
    },
    "analyzer_coverage": {
     "tools": [
@@ -2666,8 +2512,8 @@
     "single_source": []
    },
    "production_dimensions": {
-    "file_size": 0.03717514124293785,
-    "declarations": 0.09174541947926712,
+    "file_size": 0.06864406779661017,
+    "declarations": 0.16390590200445435,
     "gates": 0.0
    }
   },
@@ -2676,9 +2522,9 @@
    "files": 1135,
    "declarations": 9440,
    "dimensions": {
-    "file_size": 0.0639647577092511,
-    "declarations": 0.06533898305084745,
-    "duplication": 0.43612334801762115,
+    "file_size": 0.10484581497797357,
+    "declarations": 0.11113951789627466,
+    "duplication": 0.12334801762114538,
     "risk": 0.18766519823788547,
     "gates": 0.0
    },
@@ -2696,17 +2542,13 @@
     "idiom_concern_count": 1,
     "has_readme": true,
     "has_changelog": false,
-    "has_docs_dir": false,
-    "file_band_pressure": 0.0639647577092511,
-    "declaration_band_pressure": 0.06533898305084745,
-    "production_file_band_pressure": 0.06076066790352505,
-    "production_declaration_band_pressure": 0.07200849362977767
+    "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.051586919932676126
+    "declarations": 0.07266428976582125
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.06450209474701901
+    "declarations": 0.08320335348021057
    },
    "analyzer_coverage": {
     "tools": [
@@ -2735,8 +2577,8 @@
     "single_source": []
    },
    "production_dimensions": {
-    "file_size": 0.06076066790352505,
-    "declarations": 0.07200849362977767,
+    "file_size": 0.10111317254174397,
+    "declarations": 0.1275672804532578,
     "gates": 0.0
    }
   }

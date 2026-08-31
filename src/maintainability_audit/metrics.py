@@ -174,12 +174,17 @@ def file_status(lines: int, thresholds: dict[str, int]) -> str:
     return "ok"
 
 
+def _in_asset_dir(rel: str, asset_dirs: set[str]) -> bool:
+    return any(rel == directory or rel.startswith(f"{directory}/") for directory in asset_dirs)
+
+
 def collect_metrics(
     root: Path,
     config: dict[str, Any],
     only_paths: set[str] | None,
     index: SourceIndex | None = None,
     excluded: set[str] | None = None,
+    asset_dirs: set[str] | None = None,
 ) -> tuple[list[Path], list[FileMetric], list[FunctionMetric]]:
     """Measure every file the audit should score.
 
@@ -188,9 +193,16 @@ def collect_metrics(
     later so they never reach a population, a rate or a finding: 10,759
     generated icon files moved a calibration constant, and code the team
     did not write must not move their score in either direction.
+
+    `asset_dirs` carries the saved-page-asset directories. Their files keep
+    a file-length metric — a 1157-line scene is still one row, and still
+    counts as a file scanned — but contribute no declarations. The caller
+    keeps them out of the clone and other corpus scans by filtering the
+    returned list on the same directories (Class 4).
     """
     thresholds = config["thresholds"]
     source = index_or_new(index)
+    asset_dirs = asset_dirs or set()
     files = iter_files(root, config, only_paths)
     if excluded:
         files = [
@@ -203,6 +215,8 @@ def collect_metrics(
         lines = source.lines(path)
         rel = str(path.relative_to(root)).replace(os.sep, "/")
         file_metrics.append(FileMetric(path=rel, lines=len(lines), status=file_status(len(lines), thresholds)))
+        if _in_asset_dir(rel, asset_dirs):
+            continue  # asset snapshot: file length only, no declarations
         if path.suffix in DECLARATION_SUFFIXES:
             function_metrics.extend(detect_functions(root, path, lines, thresholds, source.declarations(path)))
     return files, file_metrics, function_metrics

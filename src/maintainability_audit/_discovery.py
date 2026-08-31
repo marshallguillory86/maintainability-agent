@@ -73,6 +73,8 @@ class Provenance(StrEnum):
     TEST = "test"
     GENERATED = "generated"
     VENDORED = "vendored"
+    # A saved page asset: out of declarations and clones, file length kept.
+    ASSET = "asset"
 
 
 # A banner in the head of a file is the one generation signal that crosses
@@ -152,6 +154,13 @@ class Inventory:
         return {
             path for path, verdict in self.provenance.items()
             if verdict in (Provenance.GENERATED, Provenance.VENDORED)
+        }
+
+    def asset_dirs(self) -> set[str]:
+        """Directories classified as saved page assets (Class 4)."""
+        return {
+            directory for directory, verdict in self.directories.items()
+            if verdict == Provenance.ASSET.value
         }
 
     def exclusions(self) -> tuple[str, ...]:
@@ -327,6 +336,53 @@ def _vendored_directories(root: Path) -> dict[str, str]:
     return found
 
 
+# `scene_v1.2.3.html`: the reliable asset signal — an application does not
+# commit a versioned page. `_MARKUP_SUFFIXES` are scanned but omitted from
+# KNOWN_SOURCE_SUFFIXES, so a folder of them is invisible to the inventory.
+_VERSIONED_SNAPSHOT = re.compile(r"_v\d+(?:\.\d+)+\.html?$", re.IGNORECASE)
+_MARKUP_SUFFIXES = frozenset({".html", ".htm", ".css"})
+
+
+def _asset_snapshot_directories(root: Path, excludes: tuple[str, ...]) -> dict[str, str]:
+    """Directories that are saved page assets, not application source.
+
+    Evidence only, no folder-name list (ADR 010): a versioned page
+    snapshot (`*_vN.N.N.html`), or a folder of two-or-more HTML/CSS pages
+    outnumbering real code beside non-source siblings (png, svg, …).
+    Conservative on purpose -- misclassifying an app template as an asset
+    would drop real code from the score (plan-81dc6870 Class 4).
+    """
+    by_dir: dict[str, list[Path]] = {}
+    for path in root.rglob("*"):
+        relative = path.relative_to(root).as_posix()
+        directory = path.parent.relative_to(root).as_posix()
+        if path.is_file() and directory not in ("", ".") and not is_excluded(relative, list(excludes)):
+            by_dir.setdefault(directory, []).append(path)
+    return {
+        directory: evidence
+        for directory, files in by_dir.items()
+        if (evidence := _asset_evidence(files))
+    }
+
+
+def _asset_evidence(files: list[Path]) -> str | None:
+    """Why a directory is a saved page asset, or None."""
+    versioned = sorted(f.name for f in files if _VERSIONED_SNAPSHOT.search(f.name))
+    if versioned:
+        return f"versioned page snapshot(s): {', '.join(versioned[:3])}"
+    markup = [f for f in files if f.suffix.lower() in _MARKUP_SUFFIXES]
+    code = [f for f in files if f.suffix in KNOWN_SOURCE_SUFFIXES]
+    siblings = sorted({
+        f.suffix.lower() for f in files
+        if f.suffix and f.suffix.lower() not in _MARKUP_SUFFIXES
+        and f.suffix not in KNOWN_SOURCE_SUFFIXES
+    })
+    if len(markup) >= 2 and len(markup) > len(code) and siblings:
+        return (f"{len(markup)} HTML/CSS pages outnumbering source, beside "
+                f"non-source assets ({', '.join(siblings[:4])})")
+    return None
+
+
 def _under(relative: str, directory: str) -> bool:
     return relative == directory or relative.startswith(f"{directory}/")
 
@@ -356,12 +412,19 @@ def discover(root: Path, config: dict[str, Any]) -> Inventory:
     excludes = tuple((config.get("paths") or {}).get("exclude_patterns", ()))
     generated_dirs = _generated_directories(root, excludes)
     vendored_dirs = _vendored_directories(root)
+    # Asset snapshots yield to vendored/generated, already accounted there.
+    asset_dirs = {
+        name: evidence
+        for name, evidence in _asset_snapshot_directories(root, excludes).items()
+        if name not in vendored_dirs and name not in generated_dirs
+    }
 
     inventory = Inventory()
     inventory.directories = {
         **{name: Provenance.VENDORED.value for name in vendored_dirs},
         **{name: Provenance.GENERATED.value for name in generated_dirs
            if name not in vendored_dirs},
+        **{name: Provenance.ASSET.value for name in asset_dirs},
     }
     seen_directories: set[tuple[str, str]] = set()
     for path in sorted(root.rglob("*")):
@@ -372,7 +435,7 @@ def discover(root: Path, config: dict[str, Any]) -> Inventory:
             continue
 
         verdict, evidence, owner = _classify(
-            path, relative, generated_dirs, vendored_dirs)
+            path, relative, generated_dirs, vendored_dirs, asset_dirs)
         if verdict is Provenance.FIRST_PARTY:
             language = KNOWN_SOURCE_SUFFIXES[path.suffix]
             inventory.languages[language] = inventory.languages.get(language, 0) + 1
@@ -387,19 +450,35 @@ def discover(root: Path, config: dict[str, Any]) -> Inventory:
         seen_directories.add(key)
         inventory.classifications.append(
             {"path": owner or relative, "provenance": verdict.value, "evidence": evidence})
+    _record_asset_dirs(inventory, asset_dirs, seen_directories)
     return inventory
+
+
+def _record_asset_dirs(
+    inventory: Inventory, asset_dirs: dict[str, str], seen: set[tuple[str, str]],
+) -> None:
+    """Asset directories in the classifications, including those holding no
+    file the inventory tracks (a folder of `.html`/`.css` and images) (P8)."""
+    for directory, evidence in asset_dirs.items():
+        key = (directory, Provenance.ASSET.value)
+        if key not in seen:
+            seen.add(key)
+            inventory.classifications.append(
+                {"path": directory, "provenance": Provenance.ASSET.value, "evidence": evidence})
 
 
 def _classify(
     path: Path, relative: str,
     generated_dirs: dict[str, str], vendored_dirs: dict[str, str],
+    asset_dirs: dict[str, str],
 ) -> tuple[Provenance, str | None, str | None]:
     """One file's provenance, the evidence for it, and what it belongs to.
 
-    Order is deliberate. Vendored beats generated beats test: a generated
-    file inside a vendored tree is somebody else's generated file, and
-    reporting it as ours-but-generated would be half right in the way
-    that misleads.
+    Order is deliberate. Vendored beats generated beats asset beats test: a
+    generated file inside a vendored tree is somebody else's generated
+    file, and a source file inside an asset snapshot is part of the asset,
+    not first-party code — reporting either the other way is half right in
+    the way that misleads.
     """
     for directory, evidence in vendored_dirs.items():
         if _under(relative, directory):
@@ -407,6 +486,9 @@ def _classify(
     for directory, evidence in generated_dirs.items():
         if _under(relative, directory):
             return Provenance.GENERATED, evidence, directory
+    for directory, evidence in asset_dirs.items():
+        if _under(relative, directory):
+            return Provenance.ASSET, evidence, directory
     for pattern in GENERATED_NAME_PATTERNS:
         if pattern.search(path.name):
             return Provenance.GENERATED, f"filename matches {pattern.pattern}", relative

@@ -38,9 +38,10 @@ Each rule points at something checkable, and the evidence is recorded beside the
 | `generated` | a generation banner in the file's head; a filename shape no human writes (`*.pb.go`, `*_pb2.py`, `*.designer.cs`); a directory a `package.json` script deletes and rebuilds (`rimraf lib && …`) |
 | `vendored` | a `.gitmodules` entry; a script named for the directory it overwrites from upstream (`scripts/sync-ggml.sh` maintaining `ggml/`) |
 | `test` | conventional path and name shapes, now including `TESTING/` |
+| `asset` | a saved page, not source: a versioned page snapshot (`scene_v1.2.3.html`), or a folder of two-or-more HTML/CSS pages outnumbering real code beside non-source siblings (png, svg). Its files keep a file-length finding but leave the declaration and clone populations, so four saved copies of one page are not 861 clone rows (plan-81dc6870 Class 4) |
 | `first-party` | everything else |
 
-`test_every_classification_carries_the_evidence_for_it` refuses a classification with no evidence. A verdict nobody can check is a guess with better manners.
+`test_every_classification_carries_the_evidence_for_it` refuses a classification with no evidence. A verdict nobody can check is a guess with better manners. The same reasoning forbids a `graphics/` name in the exclude list: an asset directory is recognised by what it holds, never by what its authors called it — the exact mistake `ggml/` was.
 
 ### 2. Where there is no evidence, the answer is first-party
 

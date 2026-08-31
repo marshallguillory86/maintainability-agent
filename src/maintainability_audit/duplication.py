@@ -51,7 +51,7 @@ def duplicate_blocks(
     root: Path, files: list[Path], block_size: int, index: SourceIndex | None = None
 ) -> list[dict[str, Any]]:
     source = index_or_new(index)
-    seen: dict[tuple[str, ...], list[str]] = {}
+    seen: dict[tuple[str, ...], list[tuple[str, int]]] = {}
     for path in files:
         lines = [normalize_for_dup(line) for line in source.lines(path)]
         # Each useful line keeps its original 1-based source line number.
@@ -64,6 +64,7 @@ def duplicate_blocks(
             for number, line in enumerate(lines, start=1)
             if line and not line.startswith(("//", "#", "/*", "*", '"', "'"))
         ]
+        rel = str(path.relative_to(root))
         for idx in range(0, max(0, len(useful) - block_size + 1)):
             block = tuple(line for _, line in useful[idx : idx + block_size])
             if len(set(block)) <= 1:
@@ -73,15 +74,80 @@ def duplicate_blocks(
             # ``_is_trivial_dup_line`` docstring for the rationale.
             if all(_is_trivial_dup_line(item) for item in block):
                 continue
-            source_line = useful[idx][0]
-            seen.setdefault(block, []).append(f"{path.relative_to(root)}:{source_line}")
+            seen.setdefault(block, []).append((rel, useful[idx][0]))
 
-    dupes = []
-    for block, locations in seen.items():
-        unique_locations = sorted(set(locations))
-        if len(unique_locations) > 1:
-            dupes.append({"locations": unique_locations[:10], "count": len(unique_locations), "sample": list(block)})
-    return sorted(dupes, key=lambda item: item["count"], reverse=True)
+    occurrences = [
+        (block, sorted(set(locs)))
+        for block, locs in seen.items()
+        if len(set(locs)) > 1
+    ]
+    return _clone_groups(occurrences, block_size)
+
+
+def _clone_groups(
+    occurrences: list[tuple[tuple[str, ...], list[tuple[str, int]]]], block_size: int,
+) -> list[dict[str, Any]]:
+    """Overlapping windows of one clone collapse to a single group.
+
+    A duplicated 200-line block appears as ~200 near-identical windows,
+    each a distinct fingerprint sharing the same files at consecutive
+    lines. Reported one row per window it was 861 line-items of one clone
+    (bighound field test, plan-81dc6870 Class 4); reported one row per
+    clone it is a single finding carrying the occurrence count and the
+    span. Two windows join the same group when they share a file at lines
+    within ``block_size`` — overlapping or adjacent — so genuinely
+    separate clones stay separate.
+    """
+    parent = list(range(len(occurrences)))
+
+    def find(node: int) -> int:
+        while parent[node] != node:
+            parent[node] = parent[parent[node]]
+            node = parent[node]
+        return node
+
+    by_file: dict[str, list[tuple[int, int]]] = {}
+    for index, (_block, locs) in enumerate(occurrences):
+        for rel, line in locs:
+            by_file.setdefault(rel, []).append((line, index))
+    for entries in by_file.values():
+        entries.sort()
+        for (line_a, node_a), (line_b, node_b) in zip(entries, entries[1:], strict=False):
+            if line_b - line_a <= block_size:
+                parent[find(node_a)] = find(node_b)
+
+    members: dict[int, list[int]] = {}
+    for index in range(len(occurrences)):
+        members.setdefault(find(index), []).append(index)
+    return sorted(
+        (_group_finding(ids, occurrences, block_size) for ids in members.values()),
+        key=lambda item: (item["count"], item["lines"]), reverse=True,
+    )
+
+
+def _group_finding(
+    member_ids: list[int],
+    occurrences: list[tuple[tuple[str, ...], list[tuple[str, int]]]],
+    block_size: int,
+) -> dict[str, Any]:
+    """One clone group's row: how many places it repeats, how large it is,
+    and a representative start in each file it touches."""
+    starts: dict[str, int] = {}
+    ends: dict[str, int] = {}
+    fan_out = 0
+    for member in member_ids:
+        _block, locs = occurrences[member]
+        fan_out = max(fan_out, len(locs))
+        for rel, line in locs:
+            starts[rel] = min(starts.get(rel, line), line)
+            ends[rel] = max(ends.get(rel, line), line)
+    span = max(ends[rel] - starts[rel] for rel in starts) + block_size
+    return {
+        "locations": sorted(f"{rel}:{starts[rel]}" for rel in starts)[:10],
+        "count": fan_out,
+        "lines": span,
+        "sample": list(occurrences[member_ids[0]][0]),
+    }
 
 
 #: Two probes, short then longer, and the ordering is what bounds the

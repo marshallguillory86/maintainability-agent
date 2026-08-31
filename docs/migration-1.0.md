@@ -39,7 +39,7 @@ JS/TS trees typically cannot compose the three-criterion set (lizard has no cogn
 
 ### 2. The scale moved
 
-`CALIBRATION_C` **2.6279 → 2.2658**. The declarations reference **0.0599 → 0.0860**. Fitted 2026-08-14 against the analyzer-primary mix after generated and vendored code left the scored population. 13 of 40 corpus members supplied an analyzer declaration reading; 27 stayed on the fallback. Corpus median still rolls up to 4.0. Old and new values are in `_calibration.py`.
+`CALIBRATION_C` **2.6279 → 2.2658** (2026-08-14), then **2.2658 → 5.8843** (2026-08-31). The declarations reference **0.0599 → 0.0860 → 0.1005**, and the duplication reference **3.8644 → 0.28**. The 08-14 fit followed the analyzer-primary mix after generated and vendored code left the scored population. The 08-31 re-fit followed a corpus re-measure: the stored corpus had gone stale, and plan-81dc6870 Class 4 (one clone group per clone, not one finding per overlapping window) dropped the built-in duplication reading roughly fourteenfold, so every report had been scoring duplication against a reference ~14x too high. All 40 pinned repos were re-measured `--with-analyzers`; the corpus median still rolls up to 4.0 (a well-run codebase earns a B). Old and new values are in `_calibration.py`.
 
 A zero-install run (no `--analyzers`) still uses this constant. The same tree can score differently than it did on 0.7.0 with no other change.
 

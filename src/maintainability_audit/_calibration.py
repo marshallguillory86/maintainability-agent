@@ -58,10 +58,35 @@ CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "te
 # declarations moved because the analyzers' population is larger and
 # differently shaped than the built-in parser's; the denominator had
 # to move with the numerator.
+#
+# **2026-08-31, corpus re-measure.** The stored measurements had gone stale:
+# they were the 2026-08-14 corpus, and the scanners moved under them across
+# the intervening work. The largest mover is `duplication` — plan-81dc6870
+# Class 4 collapsed a clone's overlapping windows into a single clone-group
+# finding, so the built-in duplication reading dropped roughly fourteenfold,
+# and every current report scored its duplication against a reference that
+# was ~14x too high (echarts, a heavily-duplicated tree, printed a perfect
+# duplication 5.0). `file_size` and `declarations` moved too. Re-measured all
+# 40 pinned repos `--with-analyzers` (jscpd + lizard + multimetric on all,
+# the Python pool on the 13 Python members). The curve constant re-fitted
+# hard because three of five references moved at once. Old -> new:
+#
+#     file_size      0.0573 -> 0.0858
+#     declarations   0.0860 -> 0.1005
+#     duplication    3.8644 -> 0.28
+#     risk           0.0737 -> 0.0737
+#     gates          0.05   -> 0.05
+#     CALIBRATION_C  2.2658 -> 5.8843
+#
+# The re-measured corpus still rolls up with the median at exactly 4.0 (a
+# well-run repo earns a B); the spread across the 40 is 4 A / 17 B / 19 C.
+# `test_a_scanner_counting_change_is_caught_before_it_rots_the_calibration`
+# now pins the built-in counting so a change like Class 4 fails a test that
+# names this re-run, rather than drifting silently.
 DIMENSION_REFERENCES: dict[str, float] = {
-    "file_size": 0.0573,
-    "declarations": 0.0860,
-    "duplication": 3.8644,
+    "file_size": 0.0858,
+    "declarations": 0.1005,
+    "duplication": 0.28,
     "risk": 0.0737,
     # Fixed, not corpus-derived — see ``_derive.FIXED_REFERENCES``, which
     # is the authority for this value and carries the reasoning. Stated
@@ -124,7 +149,9 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 # to, so c is re-fitted. The reference medians re-measured byte-identical
 # for the third audit running.
 # 2026-08-14: 2.6279 -> 2.2658, fitted against the analyzer-primary mix.
-CALIBRATION_C = 2.2658
+# 2026-08-31: 2.2658 -> 5.8843, re-fitted after the corpus re-measure above
+# (three of five references moved at once, `duplication` most of all).
+CALIBRATION_C = 5.8843
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3

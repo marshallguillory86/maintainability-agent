@@ -284,7 +284,10 @@ def test_sarif_results_are_identical_to_the_pre_stage_seven_output(tmp_path: Pat
 
     `fixtures/pre_stage7_sarif_run.json` was captured by running commit
     91430f3 — the last commit before consumer migration — against the
-    tree `_findings_repo` builds.
+    tree `_findings_repo` builds. Its duplicate-block results were
+    re-anchored when plan-81dc6870 Class 4 collapsed the overlapping
+    windows of one clone into a single clone-group finding; every other
+    result still matches 91430f3.
     """
     expected = json.loads(PRE_STAGE7_SARIF.read_text(encoding="utf-8"))
     assert expected["results"], "the anchor must contain real findings"

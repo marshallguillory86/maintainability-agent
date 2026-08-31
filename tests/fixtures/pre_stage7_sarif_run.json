@@ -1,7 +1,11 @@
 {
   "results": [
     {
+      "ruleId": "maintainability.function_hotspot",
       "level": "error",
+      "message": {
+        "text": "enormous (172 lines, complexity 26, cognitive 25, fail)."
+      },
       "locations": [
         {
           "physicalLocation": {
@@ -13,14 +17,14 @@
             }
           }
         }
-      ],
-      "message": {
-        "text": "enormous (172 lines, complexity 26, cognitive 25, fail)."
-      },
-      "ruleId": "maintainability.function_hotspot"
+      ]
     },
     {
+      "ruleId": "maintainability.duplicate_block",
       "level": "note",
+      "message": {
+        "text": "Duplicate block appears 3 times."
+      },
       "locations": [
         {
           "physicalLocation": {
@@ -32,144 +36,7 @@
             }
           }
         }
-      ],
-      "message": {
-        "text": "Duplicate block appears 3 times."
-      },
-      "ruleId": "maintainability.duplicate_block"
-    },
-    {
-      "level": "note",
-      "locations": [
-        {
-          "physicalLocation": {
-            "artifactLocation": {
-              "uri": "a.py"
-            },
-            "region": {
-              "startLine": 3
-            }
-          }
-        }
-      ],
-      "message": {
-        "text": "Duplicate block appears 3 times."
-      },
-      "ruleId": "maintainability.duplicate_block"
-    },
-    {
-      "level": "note",
-      "locations": [
-        {
-          "physicalLocation": {
-            "artifactLocation": {
-              "uri": "a.py"
-            },
-            "region": {
-              "startLine": 4
-            }
-          }
-        }
-      ],
-      "message": {
-        "text": "Duplicate block appears 3 times."
-      },
-      "ruleId": "maintainability.duplicate_block"
-    },
-    {
-      "level": "note",
-      "locations": [
-        {
-          "physicalLocation": {
-            "artifactLocation": {
-              "uri": "a.py"
-            },
-            "region": {
-              "startLine": 5
-            }
-          }
-        }
-      ],
-      "message": {
-        "text": "Duplicate block appears 3 times."
-      },
-      "ruleId": "maintainability.duplicate_block"
-    },
-    {
-      "level": "note",
-      "locations": [
-        {
-          "physicalLocation": {
-            "artifactLocation": {
-              "uri": "a.py"
-            },
-            "region": {
-              "startLine": 6
-            }
-          }
-        }
-      ],
-      "message": {
-        "text": "Duplicate block appears 3 times."
-      },
-      "ruleId": "maintainability.duplicate_block"
-    },
-    {
-      "level": "note",
-      "locations": [
-        {
-          "physicalLocation": {
-            "artifactLocation": {
-              "uri": "a.py"
-            },
-            "region": {
-              "startLine": 7
-            }
-          }
-        }
-      ],
-      "message": {
-        "text": "Duplicate block appears 3 times."
-      },
-      "ruleId": "maintainability.duplicate_block"
-    },
-    {
-      "level": "note",
-      "locations": [
-        {
-          "physicalLocation": {
-            "artifactLocation": {
-              "uri": "a.py"
-            },
-            "region": {
-              "startLine": 8
-            }
-          }
-        }
-      ],
-      "message": {
-        "text": "Duplicate block appears 3 times."
-      },
-      "ruleId": "maintainability.duplicate_block"
-    },
-    {
-      "level": "note",
-      "locations": [
-        {
-          "physicalLocation": {
-            "artifactLocation": {
-              "uri": "a.py"
-            },
-            "region": {
-              "startLine": 9
-            }
-          }
-        }
-      ],
-      "message": {
-        "text": "Duplicate block appears 3 times."
-      },
-      "ruleId": "maintainability.duplicate_block"
+      ]
     }
   ],
   "rules": [

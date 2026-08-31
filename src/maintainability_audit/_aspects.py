@@ -278,9 +278,14 @@ def not_applicable_aspects(evidence: NormalizedEvidence) -> frozenset[str]:
     from the typed state at the scoring boundary rather than carrying a
     second applicability flag that can disagree with it.
     """
+    # test_effectiveness is NotApplicable unless the opt-in suite measured
+    # coverage (Class 5); score_evidence lifts it out of this set when a
+    # coverage artifact is present. Default here so every path — the live
+    # score and the calibration derivation alike — excludes it identically.
+    aspects = {"test_effectiveness"}
     if isinstance(evidence.history.single_author_files, NotApplicable):
-        return frozenset({"knowledge_concentration"})
-    return frozenset()
+        aspects.add("knowledge_concentration")
+    return frozenset(aspects)
 
 
 def is_untested(summary: SummaryEvidence) -> bool | None:

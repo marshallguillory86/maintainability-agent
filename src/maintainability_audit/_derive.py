@@ -226,7 +226,11 @@ def _corpus_overall(entry: dict[str, Any], references: dict[str, float], c: floa
             production = production_pressures(summary)["declarations"]
         if references["declarations"] > 0 and production is not None:
             scores["declaration_size"] = curve(production / references["declarations"], c)
-    overall, _ = overall_from_aspects(scores, untested=untested)
+    # test_effectiveness is NotApplicable across the corpus (none of it opted
+    # into running a suite), excluded exactly as `score_evidence` excludes it
+    # so the derivation still matches the live score repo by repo (Class 5).
+    overall, _ = overall_from_aspects(
+        scores, untested=untested, not_applicable=frozenset({"test_effectiveness"}))
     return overall
 
 

@@ -64,8 +64,13 @@ CALIBRATED_ASPECTS: dict[str, str] = {
 }
 
 # Every rubric-scored aspect. Order is the report's presentation order.
+# ``test_effectiveness`` is the opt-in coverage aspect (Class 5): scored
+# from the suite's coverage where the operator opted in, NotApplicable
+# otherwise. It is banded like the rest of the rubric, not derived from a
+# corpus reference, so it belongs here rather than in CALIBRATED_ASPECTS.
 RUBRIC_ASPECTS: tuple[str, ...] = (
     "test_presence",
+    "test_effectiveness",
     "dead_code",
     "near_duplication",
     "idiom_consistency",
@@ -117,9 +122,14 @@ CATEGORY_ASPECTS: dict[str, dict[str, float]] = {
         "file_size": 0.05,
     },
     "testability": {
-        "test_presence": 0.50,
-        "declaration_size": 0.30,
-        "policy_gates": 0.20,
+        # test_effectiveness (opt-in coverage, Class 5) takes 0.20; the
+        # other three are the pre-Class-5 0.50/0.30/0.20 scaled by 0.80, so
+        # when effectiveness is NotApplicable (the default — no coverage
+        # artifact) the category renormalizes to exactly its old value.
+        "test_presence": 0.40,
+        "declaration_size": 0.24,
+        "policy_gates": 0.16,
+        "test_effectiveness": 0.20,
     },
 }
 
@@ -201,7 +211,6 @@ CATEGORY_WEIGHTS: dict[str, float] = dict.fromkeys(CATEGORY_ASPECTS, 0.2)
 # Measured aspects of maintainability this tool cannot score, and why.
 # Listed in the rubric so their absence is a statement, not an omission.
 UNSCORED: dict[str, str] = {
-    "test_effectiveness": "requires running the suite (mutation/coverage); this audit never executes code",
     "naming_quality": "no static proxy survives contact; a wrong-name detector needs semantics",
     "comment_accuracy": "comments are deliberately unparsed; staleness needs meaning, not structure",
     "indirection_depth": "call-graph construction is not implemented for the supported languages",

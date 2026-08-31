@@ -89,6 +89,25 @@ def _anchor(name: str) -> dict:
     return json.loads((ANCHORS / f"{name}.json").read_text(encoding="utf-8"))
 
 
+# The two Class 5 deltas to a pre-Class-5 rubric, applied to the frozen
+# anchor so the test states the intended new values rather than reading
+# them back out of the code it is checking. `test_aspect_coverage` and
+# the testability renormalization test guard the weights themselves.
+CLASS5_TESTABILITY = {
+    "test_presence": 0.40, "declaration_size": 0.24,
+    "policy_gates": 0.16, "test_effectiveness": 0.20,
+}
+
+
+def _rubric_after_class5(rubric: dict) -> dict:
+    return {
+        **rubric,
+        "category_aspects": {**rubric["category_aspects"], "testability": CLASS5_TESTABILITY},
+        "unscored": {name: reason for name, reason in rubric["unscored"].items()
+                     if name != "test_effectiveness"},
+    }
+
+
 ANCHOR_NAMES = ("complete", "not_applicable", "unknown_history", "missing_summary")
 
 
@@ -123,9 +142,22 @@ def test_renaming_moved_no_value(name: str, tmp_path: Path) -> None:
         assert anchor["grade_blockers"], (
             "the anchor should have carried floor-grade blockers that stage 8 retires"
         )
-    for unchanged in ("standard", "categories", "aspects", "rubric", "dimensions",
+    for unchanged in ("standard", "categories", "dimensions",
                       "reference", "worst_dimension", "evidence_status", "verified_grade"):
         assert score[unchanged] == anchor[unchanged], unchanged
+    # aspects gained exactly one field after a6b3c0f: test_effectiveness,
+    # the Class 5 opt-in coverage aspect. None of these fixtures opts a
+    # suite in, so it is NotApplicable — present and None — and every
+    # aspect the anchor recorded still matches it value for value.
+    assert score["aspects"]["test_effectiveness"] is None
+    assert {name: value for name, value in score["aspects"].items()
+            if name != "test_effectiveness"} == anchor["aspects"]
+    # The published rubric changed with Class 5 in exactly two ways:
+    # test_effectiveness left `unscored` to become a scored aspect, and
+    # testability was reweighted to make room for it (the other three
+    # scaled by 0.8 so the category renormalizes to its old value while
+    # coverage is NotApplicable). Stated as deltas on the frozen anchor.
+    assert score["rubric"] == _rubric_after_class5(anchor["rubric"])
 
 
 @pytest.mark.parametrize("name", ANCHOR_NAMES)

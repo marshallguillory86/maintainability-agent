@@ -23,6 +23,7 @@ asks those fields as one structured form with visible defaults:
 - analyzer depth: moderate;
 - license policy: permissive;
 - economic context: skip;
+- run this repository's test suite for coverage — **this executes the tree**: no;
 - presentation: chat, markdown or html — default chat;
 - record scan history in this repository: yes.
 
@@ -41,6 +42,20 @@ They are refused if they do not satisfy `0 < low <= base <= high`. That check
 used to live in scoring, so an impossible set was accepted here, written to
 both tiers, and surfaced two calls later as an error about a file the person
 had already left behind.
+
+**The test command is a second question set, asked only if you opt the suite
+in.** Answer `yes` to running the suite and the next call asks one more:
+
+- the exact test command to run, e.g. `pytest -q` or `npm test`.
+
+This is the one exception to the tool never running the audited tree
+(Decision 9, amended 2026-08-31): it executes only the command you name, only
+because you opted in, and only for this repository. A blank answer cancels the
+opt-in. The command is stored in `expected_commands.test`; its line coverage,
+if the run produces a `coverage.xml`, scores `test_effectiveness` as
+`coverage / 20`, and the aspect is NotApplicable on every run that does not opt
+in. Answer `no` — the default — and neither this question nor any execution
+happens.
 
 Accepted answers are written to both configuration tiers. Answering does not
 start an audit, including when the host elicited the questions on that call.

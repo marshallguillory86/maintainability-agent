@@ -26,7 +26,7 @@ from typing import Any
 
 from . import _evidence_view as view
 from ._html_report_sections import coverage_section, remaining_sections, trend_section
-from ._scan_view import WORK_ORDER_LIMIT
+from ._work_order_view import WORK_ORDER_LIMIT
 from ._semantic_view import semantic_class_label
 
 _WIDTH, _HEIGHT, _PAD = 640, 260, 40

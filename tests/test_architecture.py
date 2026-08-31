@@ -129,6 +129,12 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # at the file-size line.
                 "_coverage_notes",
                 "_scan_view", "_history_view", "_identity",
+                # `_work_order_view` renders the work order and its per-item
+                # copy-paste prompts, shared by the Markdown and HTML skins;
+                # split from `_scan_view` at the file-size line, and the seam
+                # is real (this is what to *do*; `_scan_view` is what was
+                # looked at). It reads the report dict and computes no score.
+                "_work_order_view",
                 # TDD-structure sentences shared by chat, Markdown, HTML.
                 "_tdd_view"}
 # `_first_run` is terminal interaction — it prompts, which no layer

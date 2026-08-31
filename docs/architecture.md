@@ -39,6 +39,7 @@ flowchart TB
     _coverage_notes["_coverage_notes"]
     _html_view["_html_view"]
     _html_report_sections["_html_report_sections"]
+    _work_order_view["_work_order_view"]
     _economics_view["_economics_view"]
     _semantic_view["_semantic_view"]
     _history_view["_history_view"]

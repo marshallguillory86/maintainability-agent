@@ -428,7 +428,13 @@ def _finish_result(result: dict[str, Any], format: str, root: Path,
     if format == "json":
         result["report"] = report
     else:
-        result["report_markdown"] = render_markdown(report)
+        # The Markdown payload is the complete report only when Markdown is
+        # the chosen file format. For chat it is the bounded UI view, and
+        # for html the complete content rides in `report_html` while this
+        # stays the bounded Markdown chat shows alongside (ADR 011). This is
+        # what keeps a large repo's inline response under the host's payload
+        # cap instead of being truncated with the remediation prompt in it.
+        result["report_markdown"] = render_markdown(report, complete=(format == "markdown"))
     if format == "html":
         from .renderers import render_html
 

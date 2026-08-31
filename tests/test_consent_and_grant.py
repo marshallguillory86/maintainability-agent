@@ -202,7 +202,11 @@ def test_analyzer_enabled_resource_matches_cli_and_chat_matches_json_render(
     # requested-yes, run-no — identically through each door.
     assert json_result["analyzers_requested"] is chat_result["analyzers_requested"] is True
     assert json_result["analyzers_run"] is chat_result["analyzers_run"] is False
-    assert chat_result["report_markdown"] == render_markdown(json_result["report"])
+    # Chat is the bounded UI view (issue A: the inline surface must stay under
+    # the host's payload cap), so it is the same renderer's bounded output —
+    # not the complete report, which is the markdown/html *file*.
+    assert chat_result["report_markdown"] == render_markdown(
+        json_result["report"], complete=False)
 
 
 def test_baseline_results_are_exclusive_and_self_consult_is_empty(tmp_path: Path) -> None:

@@ -19,7 +19,6 @@ from __future__ import annotations
 from typing import Any
 
 from ._coverage_notes import coverage_notes
-from ._work_order import work_order_rows
 
 
 def _by_language_rows(coverage: dict[str, Any]) -> list[str]:
@@ -374,80 +373,6 @@ def pillars_markdown(
     if practice.get("caps"):
         lines.extend([f"Held at level {practice['level']}: {cap}" for cap in practice["caps"]])
         lines.append("")
-    return lines
-
-
-# How many items a report prints before it stops being a plan and starts
-# being a backlog. The rest are counted, not listed.
-WORK_ORDER_LIMIT = 20
-
-
-def work_order_markdown(items: list[dict[str, Any]] | None) -> list[str]:
-    """The ordered work, worth first, with a way to check each item.
-
-    Quick Wins lead and Major Projects are named — the report shows the
-    whole picture even where the prompt will not, because deciding to
-    take on a forty-file deduplication is a human's call and they cannot
-    make it if nothing tells them it is there.
-    """
-    if not items:
-        return []
-    lines = [
-        "## Work Order", "",
-        "Ordered by what it costs to leave against what it costs to fix "
-        "(see the standard). `Worth` is what clearing the whole class moves "
-        "the score, recomputed through the rubric rather than estimated.",
-        "",
-        "| # | Band | Item | Worth | Target |",
-        "|---:|---|---|---:|---|",
-    ]
-    for index, row in enumerate(work_order_rows(items)[:WORK_ORDER_LIMIT], start=1):
-        location = f"`{row['path']}`" + (f":{row['line']}" if row.get("line") else "")
-        lines.append(
-            f"| {index} | {row['band']} | {row['title']} ({location}) | "
-            f"{row['worth']} | {row['target']} |"
-        )
-    lines.append("")
-    if len(items) > WORK_ORDER_LIMIT:
-        lines.extend([
-            f"...and {len(items) - WORK_ORDER_LIMIT} more. A list longer than "
-            f"{WORK_ORDER_LIMIT} is a backlog, not a plan.",
-            "",
-        ])
-    lines.extend([
-        f"Verify with: `{items[0]['verification']}`",
-        "",
-    ])
-    return lines
-
-
-def work_order_selection_markdown(selection: dict[str, Any] | None) -> list[str]:
-    """What the reader asked for, and what clearing exactly that is worth.
-
-    Recomputed for the selection rather than summed from its items:
-    findings of one class share a denominator, so a sum overstates a
-    work order by more the longer it gets.
-    """
-    if not selection:
-        return []
-    criteria = ", ".join(f"`{axis}={value}`" for axis, value in sorted(selection["criteria"].items()))
-    items = selection["items"]
-    if not items:
-        return ["## Selected Work", "", f"Nothing matches {criteria}.", ""]
-    worth = f"+{selection['worth']:.2f}" if selection["worth"] else "no measurable movement"
-    lines = [
-        "## Selected Work", "",
-        f"{len(items)} item(s) matching {criteria}. Clearing all of them is worth "
-        f"**{worth}** to the maintainability estimate — recomputed for this "
-        "selection, not summed from the items.",
-        "",
-        "| # | Band | Item | Target |",
-        "|---:|---|---|---|",
-    ]
-    for index, item in enumerate(items[:WORK_ORDER_LIMIT], start=1):
-        location = f"`{item['path']}`" + (f":{item['line']}" if item.get("line") else "")
-        lines.append(f"| {index} | {item['band']} | {item['title']} ({location}) | {item['target']} |")
-    lines.extend(["", f"Verify with: `{items[0]['verification']}`", ""])
     return lines
 
 

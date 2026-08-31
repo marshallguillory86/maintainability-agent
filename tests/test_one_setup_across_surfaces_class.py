@@ -40,6 +40,11 @@ _ANSWERS = {
     "run_pool": "no",
     "depth": "heavy",
     "license_policy": "copyleft-weak",
+    # A non-default answer, deliberately: run_tests defaults to "no", so
+    # answering "yes" is what makes the byte-identical comparison actually
+    # exercise it — if either surface dropped the question its config would
+    # lack `test_execution.requested: true` and the two would diverge.
+    "run_tests": "yes",
     "record_scan_history": "no",
 }
 
@@ -82,6 +87,8 @@ def _cli_first_run(root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
             return _ANSWERS["depth"]
         if "policy" in low or "licen" in low:
             return _ANSWERS["license_policy"]
+        if "executes the tree" in low:
+            return _ANSWERS["run_tests"]
         if "history" in low:
             return _ANSWERS["record_scan_history"]
         return ""
@@ -130,9 +137,16 @@ def test_pool_execution_is_an_explicit_answer_not_a_file_side_effect(
 def test_setup_is_complete_after_the_shared_answers(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A terminal setup that answered pool execution completes setup, the
-    same as the chat setup does -- one process, one completion state."""
+    """A terminal setup completes across both stages, the same as chat --
+    one process, one completion state. Opting the suite in (`run_tests=yes`)
+    stages the command ask exactly as the chat surface does; providing the
+    command completes setup."""
     root = tmp_path / "repo"
     root.mkdir()
     _cli_first_run(root, monkeypatch)
+    # The opt-in leaves the command stage pending, mirroring chat.
+    assert setup_pending(root) is True
+    config = load_config(str(root / CONFIG_FILENAME))
+    monkeypatch.setattr("builtins.input", lambda *_: "pytest")
+    _first_run.maybe_prompt_test_command(root, config)
     assert setup_pending(root) is False

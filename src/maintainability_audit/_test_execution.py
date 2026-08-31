@@ -12,6 +12,13 @@ repository root, with no coverage flag injected — if the command already
 produces a coverage artifact it is read, otherwise effectiveness stays
 unscored and says so. A failing suite is *data* (recorded), never a
 maintainability gate.
+
+Coverage is read only from an artifact *this run* produced. A
+``coverage.xml`` the tree already carried — committed, or left by an
+earlier run — is ignored, because its provenance is the repository rather
+than the suite we just executed, and reading it would let a repository
+set its own ``test_effectiveness``. A symlinked artifact is refused
+outright, the same posture ``_safe_write`` takes on the write side.
 """
 from __future__ import annotations
 
@@ -39,6 +46,9 @@ def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
         return None
     command = list(config["expected_commands"]["test"])
     timeout = int((config.get("analyzers") or {}).get("timeout_seconds", 120))
+    # Snapshot the artifact's state *before* the run so a pre-existing
+    # coverage.xml cannot be mistaken for this run's output.
+    before = _coverage_fingerprint(root)
     result = run(
         "test-suite",
         Invocation(argv=tuple(command), findings_exit_codes=(0, 1)),
@@ -56,17 +66,45 @@ def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
         "exit_code": result.exit_code,
         "passed": result.exit_code == 0,
         "detail": result.detail or "",
-        "coverage_percent": _coverage_from_artifacts(root) if ran else None,
+        "coverage_percent": _coverage_from_this_run(root, before) if ran else None,
     }
 
 
-def _coverage_from_artifacts(root: Path) -> float | None:
-    """A coverage percentage from an artifact the suite already produced,
-    or ``None``. Read, never injected — the command decides whether to emit
-    one. Parsed through the same entity-refusing guard the analyzer XML uses,
-    because the artifact is still output from the audited tree (D46)."""
+def _coverage_fingerprint(root: Path) -> int | None:
+    """The coverage artifact's modification time in ns, or ``None``.
+
+    ``None`` covers three cases treated identically: no artifact, a
+    symlinked artifact (refused — we do not follow a link the tree
+    planted), and an unreadable one. The nanosecond mtime is the signal
+    ``_coverage_from_this_run`` compares against to tell a fresh artifact
+    from a pre-existing one.
+    """
     report = root / "coverage.xml"
-    if not report.is_file():
+    if report.is_symlink() or not report.is_file():
+        return None
+    try:
+        return report.stat().st_mtime_ns
+    except OSError:
+        return None
+
+
+def _coverage_from_this_run(root: Path, before: int | None) -> float | None:
+    """A coverage percentage from an artifact *this run* produced, else ``None``.
+
+    The artifact must exist after the run and be newer than the snapshot
+    taken before it: a ``coverage.xml`` the repository committed, or one a
+    previous run left untouched, has the tree for its provenance rather
+    than the suite we just executed, so scoring it would let a repository
+    set its own ``test_effectiveness``. ``before is None`` means there was
+    nothing (or nothing readable) beforehand, so any artifact now present
+    is this run's. Parsed through the same entity-refusing guard the
+    analyzer XML uses, because it is still output from the audited tree.
+    """
+    report = root / "coverage.xml"
+    after = _coverage_fingerprint(root)
+    if after is None:
+        return None
+    if before is not None and after <= before:
         return None
     try:
         element = parse_analyzer_xml(

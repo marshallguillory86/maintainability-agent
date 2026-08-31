@@ -109,6 +109,15 @@ def aspect_table(score: dict[str, Any]) -> list[str]:
     return lines
 
 
+def test_suite_markdown(report: dict[str, Any]) -> list[str]:
+    """The opted-in suite's result, visible so a failed run is not silently
+    identical to a passing one. Absent unless the operator opted in."""
+    sentences = view.test_suite_lines(report.get("test_suite"))
+    if not sentences:
+        return []
+    return ["## Test Suite", "", *[f"- {sentence}" for sentence in sentences], ""]
+
+
 def markdown_table(title: str, headers: list[str], rows: list[list[str]]) -> list[str]:
     if not rows:
         return []
@@ -164,6 +173,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.extend(work_order_markdown(report.get("work_order")))
     lines.extend(economic_impact_markdown(report.get("economic_impact")))
     lines.extend(tdd_structure_markdown(report.get("tdd_structure")))
+    lines.extend(test_suite_markdown(report))
     lines.extend(_semantic_sections(report))
     lines.extend(undetected_declarations_markdown(summary, _pool_ran(report)))
     lines.extend(analyzer_coverage_markdown(report.get("analyzer_coverage")))

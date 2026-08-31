@@ -198,7 +198,7 @@ flowchart LR
   src --> scan["scanners — findings and counts"]
   scan --> summary["report_summary — populations and finding counts"]
   summary --> pressures["dimension_pressures — rates over their populations"]
-  pressures --> aspects["aspect_scores — 13 aspects, 0-5 or None"]
+  pressures --> aspects["aspect_scores — 14 aspects, 0-5 or None"]
   aspects --> categories["categories — five ISO means, rounded as displayed"]
   categories --> estimate["estimate + range — unknowns priced 0 and 5"]
   estimate --> grade["verified grade — banded from the interval floor, or null"]

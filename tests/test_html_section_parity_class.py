@@ -44,6 +44,7 @@ _REQUIRED_SECTIONS = {
         "<h2>ISO/IEC 25010 Maintainability Score</h2>",
     ),
     "aspects": ("## Aspect Scores", "<h2>Aspect Scores</h2>"),
+    "test_suite": ("## Test Suite", "<h2>Test Suite</h2>"),
     "unscored": (
         "## Not Scored — no measurement exists",
         "<h2>Not Scored — no measurement exists</h2>",
@@ -112,6 +113,12 @@ def audited(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[dict, list
     report["analyzer_coverage"] = _COVERAGE
     report["economic_impact"] = _ECONOMIC
     report["environment_work_order"] = _ENVIRONMENT
+    # A failed opted-in suite: the highest-stakes case to keep visible in
+    # both skins (a pass must not read identically to a failure).
+    report["test_suite"] = {
+        "command": ["pytest", "-q"], "ran": True, "exit_code": 1,
+        "passed": False, "detail": "3 failed, 40 passed", "coverage_percent": 72.5,
+    }
     practice = dict(report.get("practice") or {})
     practice.setdefault("level", 3)
     practice.setdefault("summary", "CI runs quality checks on every change")

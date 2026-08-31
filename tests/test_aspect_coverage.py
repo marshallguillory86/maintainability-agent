@@ -123,3 +123,32 @@ def test_the_ownership_aspect_does_not_claim_to_be_bus_factor() -> None:
         "renaming the ownership proxy to `bus_factor` claims a count of "
         "people the tool never computes; see standard.md for the mapping"
     )
+
+
+def test_the_docs_state_the_current_advertised_aspect_count() -> None:
+    """Recurrence guard for the aspect-count drift.
+
+    ``architecture.md``'s data-flow node and ``standard.md``'s Layer-1 line
+    each state a *live* aspect count, and both went stale the day Class 5
+    added the fourteenth aspect while the aspect table beside them already
+    listed it. Anchored to those two exact sentences, so a future aspect
+    fails here until the prose is updated — the historical past-tense
+    counts elsewhere ("thirteen advertised, twelve effective") are left
+    untouched because they describe a fixed moment, not the current set.
+    """
+    from pathlib import Path
+
+    from maintainability_audit._formula import CALIBRATED_ASPECTS, RUBRIC_ASPECTS
+
+    count = len(CALIBRATED_ASPECTS) + len(RUBRIC_ASPECTS)
+    words = {12: "Twelve", 13: "Thirteen", 14: "Fourteen", 15: "Fifteen", 16: "Sixteen"}
+    docs = Path(__file__).resolve().parents[1] / "docs"
+    architecture = (docs / "architecture.md").read_text(encoding="utf-8")
+    standard = (docs / "standard.md").read_text(encoding="utf-8")
+
+    assert f"aspect_scores — {count} aspects" in architecture, (
+        f"docs/architecture.md data-flow node must state {count} aspects"
+    )
+    assert f"{words[count]} measured aspects" in standard, (
+        f"docs/standard.md Layer 1 must state {words[count].lower()} measured aspects"
+    )

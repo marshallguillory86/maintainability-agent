@@ -36,6 +36,7 @@ from ._pressures import (
 from ._semantic import semantic_findings
 from ._semantic_policy import load_semantic_policy
 from ._semantic_ts import discover_type_analysis
+from ._test_execution import run_test_suite
 from ._test_pairing import describe_tdd
 from ._work_order import work_order
 from .config import analyzers_run_default
@@ -57,6 +58,14 @@ from .metrics import (
 from .scoring import score_report
 from .similarity import near_duplicate_findings
 from .source import SourceIndex
+
+
+def _attach_test_suite(report: dict[str, Any], root: Path, config: dict[str, Any]) -> None:
+    """Run the opted-in suite and record it; None and no spawn otherwise, so
+    the default report is unchanged (Decision 9 amendment, Class 5)."""
+    suite = run_test_suite(root, config)
+    if suite is not None:
+        report["test_suite"] = suite
 
 
 def _count_status(metrics: list, status: str) -> int:
@@ -225,12 +234,10 @@ def _analyzer_sections(
         # — visible, so a refusal is never mistaken for an identification.
         "unidentified_source_paths": unidentified_source_paths(analysis, root),
         "measurements": measurement_document(analysis, root),
-        # The analyzers' reading of the scorer's own dimensions, and the
-        # primary source for every dimension it covers (ADR 006 §1).
-        # Where it is None the built-in detector's reading stands, so a
-        # dimension nobody measured is unmeasured rather than clean.
-        # Both populations, because the scorer keeps both and the
-        # production aspects are the ones that actually read this.
+        # The analyzers' reading of the scorer's dimensions, primary for
+        # each it covers (ADR 006 §1); where None the built-in stands, so
+        # an unmeasured dimension is unmeasured, not clean. Both
+        # populations, since the production aspects read this.
         "pressures": ExternalPressures(
             all_code=analyzer_pressures(analysis.measurements, config["thresholds"]),
             production=analyzer_production_pressures(
@@ -379,11 +386,8 @@ def _assemble(
         "function_hotspots": _function_hotspots(function_metrics),
         "duplicate_blocks": dupes[:25],
         # Feeds the near_duplication rubric aspect (rate over production
-        # declarations, banded — not median-normalized, since most repos
-        # sit at zero). NOT evidence about authorship: the 0.6.0 claim
-        # that this rate separates AI-written from human code is
-        # retracted (matched control, p = 0.546; docs/studies.md "Does
-        # this detect AI-written code?").
+        # declarations, banded). NOT authorship evidence: the 0.6.0 claim
+        # this separates AI from human code is retracted (docs/studies.md).
         "near_duplicates": near_duplicates[:25],
         # Feeds the dead_code rubric aspect. Also not evidence about
         # authorship (p = 0.266 against the matched control).
@@ -393,12 +397,10 @@ def _assemble(
         # precision, low recall — the right trade here.
         "divergent_idioms": idioms,
         "risk_findings": [asdict(finding) for finding in risks[:100]],
-        # Churn, hotspots (churn x cognitive complexity) and change
-        # coupling from the repo's own log. Feeds the churn_hotspots,
-        # change_coupling and knowledge_concentration aspects of the
-        # scoring rubric. None — not empty — when the clone is shallow:
-        # "no history" and "no changes" are opposite findings, and the
-        # rubric renormalizes those aspects away rather than guessing.
+        # Churn, hotspots and change coupling from the repo's own log,
+        # feeding the churn_hotspots / change_coupling / knowledge_
+        # concentration aspects. None (not empty) when the clone is shallow:
+        # "no history" and "no changes" are opposite findings.
         "history": history_section(root, file_metrics, function_metrics),
         "external_findings": external_findings or [],
     }
@@ -479,6 +481,7 @@ def build_report(
         record_built_in_counts(analyzer["coverage"], report)
     report["tdd_structure"] = describe_tdd(
         root, file_metrics, function_metrics, source)
+    _attach_test_suite(report, root, config)
     report["score"] = score_report(report, analyzer["pressures"])
     # Condition rolls up aspects; practice stays a separate axis (ADR 007).
     report["practice"] = practice_level(root, config).as_dict()

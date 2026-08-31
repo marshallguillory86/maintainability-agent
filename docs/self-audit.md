@@ -106,11 +106,15 @@ Add these to `paths.include_extensions` and re-run to audit them.
 
 | Aspect | Why |
 |---|---|
-| test effectiveness | requires running the suite (mutation/coverage); this audit never executes code |
 | naming quality | no static proxy survives contact; a wrong-name detector needs semantics |
 | comment accuracy | comments are deliberately unparsed; staleness needs meaning, not structure |
 | indirection depth | call-graph construction is not implemented for the supported languages |
 | architectural coherence | no measurement distinguishes a wrong boundary from an unusual one statically |
+
+`test_effectiveness` left this table with Class 5: it is scored from the
+tree's own test coverage when the operator opts the suite in (Decision 9,
+amended 2026-08-31), and `NotApplicable` otherwise. This self-audit does
+not opt in, so it carries no coverage reading.
 
 ## Largest Files
 

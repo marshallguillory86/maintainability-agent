@@ -278,7 +278,8 @@ def test_not_applicable_rollup_is_the_only_change_to_the_pre_stage_five_anchor(
     shipped = {key: value for key, value in report["score"].items()
                if key not in {"evidence_status", "verified_grade", "analyzer_scored_dimensions"}}
 
-    changed = {"categories", "maintainability_range", "grade", "verified_grade_blockers"}
+    changed = {"categories", "maintainability_range", "grade",
+               "verified_grade_blockers", "aspects", "rubric"}
     assert {key: value for key, value in shipped.items() if key not in changed} == {
         key: value for key, value in expected.items() if key not in changed | {"grade"}
     }
@@ -286,6 +287,23 @@ def test_not_applicable_rollup_is_the_only_change_to_the_pre_stage_five_anchor(
         **expected["categories"],
         "analyzability": 4.6,
         "modifiability": 5.0,
+    }
+    # aspects gained the Class 5 opt-in coverage aspect. This fixture opts
+    # no suite in, so test_effectiveness is NotApplicable — present and
+    # None — and every aspect the anchor recorded is otherwise unchanged.
+    assert shipped["aspects"] == {**expected["aspects"], "test_effectiveness": None}
+    # The published rubric moved test_effectiveness from `unscored` to a
+    # scored aspect and reweighted testability to seat it (the other three
+    # scaled by 0.8 so the category renormalizes to its old value while
+    # coverage is NotApplicable). Stated as deltas on the frozen anchor.
+    class5_testability = {"test_presence": 0.40, "declaration_size": 0.24,
+                          "policy_gates": 0.16, "test_effectiveness": 0.20}
+    assert shipped["rubric"] == {
+        **expected["rubric"],
+        "category_aspects": {**expected["rubric"]["category_aspects"],
+                             "testability": class5_testability},
+        "unscored": {name: reason for name, reason in expected["rubric"]["unscored"].items()
+                     if name != "test_effectiveness"},
     }
     assert shipped["maintainability_range"] == [shipped["maintainability_estimate"], shipped["maintainability_estimate"]]
     # The anchor recorded "A" and the verified grade is "A+". That delta

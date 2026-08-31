@@ -181,7 +181,7 @@ The same rule scanners already live under, for the same reason: an adapter that 
 `evidence` receives already-combined values with their strength and provenance. The boundary stays a leaf and stays the single normalization point; it does not learn about tools.
 
 **10. `_practice` may not read source files.**
-Practice level is a claim about enforcement, not about code. If it could read source, it would drift into being a second, uncalibrated condition score.
+Practice level is a claim about enforcement, not about code. If it could read source, it would drift into being a second, uncalibrated condition score. It reads configuration and CI *wherever they live* — a coverage gate in a nested `api/pyproject.toml`, a decisions folder that is not named `adr*` — through the same exclusion the scan uses, so a vendored manifest is not read as this repository's gate. Nested config is still configuration, not source (plan-81dc6870 Class 3).
 
 **11. Practice level and code condition are never combined.**
 No function returns their average. [ADR 007](adr-007-pillars-and-practice.md) invariant 2 exists because a single composite number would destroy both.

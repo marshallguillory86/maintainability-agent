@@ -38,6 +38,12 @@ He also names the trade-off available once generation outruns verification: scal
 
 **Delivery** — a GitHub Action wrapper that posts and updates PR comments; GitLab and Azure DevOps adapters; historical trend reporting.
 
+**Hostile-audit prompt** — [ADR 013](adr-013-hostile-audit-prompt.md), a third emitter on the prompt seam that seeds an adversarial audit from the report so the loop that builds this tool becomes repeatable. Near-term and low-risk: deterministic input, the LLM reasons outside, no gate, no score.
+
+## Distant future
+
+**Deterministic adversarial-properties detection.** The second play behind [ADR 013](adr-013-hostile-audit-prompt.md): a detection dimension that audits a *target* repository for the hardening classes this agent enforces on itself — a write that follows a symlinked route, an empty tool run read as clean, a caller argument reaching a filesystem or shell sink unvalidated, absence read as a pass. Deterministic and AST/pattern-derivable, so it fits the suite rather than the prompt seam; distinct from [ADR 013](adr-013-hostile-audit-prompt.md)'s emitter, and it brushes the `secure-code-agent` boundary, so it needs an explicit scope decision and its own ADR before any build. A future release, not a next step.
+
 ## Studies that would earn a claim
 
 Listed with the bar each must clear, because the project has retracted one empirical claim already:

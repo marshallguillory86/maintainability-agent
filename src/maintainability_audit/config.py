@@ -5,7 +5,7 @@ import os
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-VERSION = "0.9.1"
+VERSION = "1.0.0"
 
 PROJECT_URL = "https://github.com/marshallguillory86/maintainability-agent"
 

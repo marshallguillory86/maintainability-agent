@@ -2,13 +2,12 @@
 
 ## Supported Versions
 
-This project is in early development. Only the latest release line
-receives security fixes.
+Only the latest release line receives security fixes.
 
 | Version | Supported |
 |---------|-----------|
-| `0.9.x` | ✅ |
-| < `0.9` | ❌ |
+| `1.0.x` | ✅ |
+| < `1.0` | ❌ |
 
 The line above is the shipped one, and keeping it that way is a
 maintenance task nobody remembers. An audit found this table still

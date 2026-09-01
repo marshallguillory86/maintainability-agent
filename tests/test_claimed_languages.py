@@ -91,6 +91,7 @@ def _repo(root: Path, suffix: str, count: int = 140) -> Path:
     body = (
         "def f():\n    return 1\n" if suffix == ".py"
         else "class M { void f() { return; } }\n" if suffix == ".java"
+        else "int f(void) { return 1; }\n" if suffix in (".c", ".h")
         else "function f(){return 1}\n"
     )
     for index in range(count):
@@ -103,7 +104,7 @@ def _repo(root: Path, suffix: str, count: int = 140) -> Path:
     return root
 
 
-@pytest.mark.parametrize("suffix", [".py", ".java", ".js", ".ts"])
+@pytest.mark.parametrize("suffix", [".py", ".java", ".c", ".h", ".js", ".ts"])
 def test_a_claimed_language_produces_the_population_it_claims(
     suffix: str, real_population_floors: object,
 ) -> None:

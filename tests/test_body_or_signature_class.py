@@ -1,7 +1,7 @@
 """Class C (Grok 63ab820): a JS/TS declaration counts iff it has a body.
 
 Two directions, one rule -- a declaration is code to measure only when it
-carries a body (a block ``{``) or an arrow value (``=>``). ``_ranges``
+carries a body (a block ``{``) or an arrow value (``=>``). ``_ranges_js``
 mistook both:
 
 * type-only signatures were counted. ``declare function f(): void;``, a
@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-from maintainability_audit._ranges import js_declaration_ranges
+from maintainability_audit._ranges_js import js_declaration_ranges
 
 SRC = Path(__file__).resolve().parents[1] / "src" / "maintainability_audit"
 
@@ -111,7 +111,7 @@ def test_the_bare_signature_skip_is_wired_into_the_extractor() -> None:
     """Structural guard for the unnamed member: even with no functional
     case naming it, deleting the bodyless-signature skip from
     ``js_declaration_ranges`` fails here."""
-    tree = ast.parse((SRC / "_ranges.py").read_text(encoding="utf-8"))
+    tree = ast.parse((SRC / "_ranges_js.py").read_text(encoding="utf-8"))
     extractor = next(
         n for n in ast.walk(tree)
         if isinstance(n, ast.FunctionDef) and n.name == "js_declaration_ranges"

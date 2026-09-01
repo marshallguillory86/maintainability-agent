@@ -19,8 +19,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "src" / "maintainability_audit"
 DECLARATIONS = PACKAGE / "declarations.py"
-CONFIG = PACKAGE / "config.py"
-RANGES = PACKAGE / "_ranges.py"
+CONFIG = PACKAGE / "_config_defaults.py"   # DEFAULT_CONFIG moved here in 1.1.0
+RANGES = sorted(PACKAGE.glob("_ranges*.py"))
 
 
 def tree(path: Path) -> ast.Module:
@@ -78,36 +78,35 @@ def default_include_extensions() -> set[str]:
     raise AssertionError("DEFAULT_CONFIG paths.include_extensions was not found")
 
 
-def dispatch_branches_for(suffix: str) -> list[ast.If]:
-    """``if`` branches inside ``declaration_ranges`` that test ``suffix``."""
+def scanner_registry() -> dict[str, str]:
+    """``declarations.SCANNERS`` read from source: suffix -> scanner name.
+
+    Replaces the reader that looked for ``if`` branches inside
+    ``declaration_ranges``. 1.1.0 made the dispatch a table, because a
+    branch per language does not survive four more languages — so the
+    guards ask what the table says rather than what the function's
+    control flow looks like. The question is the same one: does this
+    suffix reach a scanner written for it, or the last-resort patterns?
+    """
     module = tree(DECLARATIONS)
     known = assignments(module)
-    dispatcher = next(
-        node for node in module.body
-        if isinstance(node, ast.FunctionDef) and node.name == "declaration_ranges"
-    )
-    return [
-        node for node in ast.walk(dispatcher)
-        if isinstance(node, ast.If) and suffix in strings(node.test, known)
-    ]
+    registry = known.get("SCANNERS")
+    assert registry is not None, "declarations.SCANNERS is missing"
+    found: dict[str, str] = {}
+    for row in registry.elts:
+        suffixes, scanner = row.elts
+        assert isinstance(scanner, ast.Name), "a scanner row must name a function"
+        for suffix in strings(suffixes, known):
+            found[suffix] = scanner.id
+    return found
 
 
-def branch_calls(branch: ast.If) -> tuple[set[str], set[str]]:
-    """``(called names, all referenced names)`` inside one branch body."""
-    body = ast.Module(body=branch.body, type_ignores=[])
-    calls = {
-        node.func.id for node in ast.walk(body)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-    }
-    names = {node.id for node in ast.walk(body) if isinstance(node, ast.Name)}
-    return calls, names
-
-
-def java_range_functions() -> set[str]:
+def range_functions_for(language: str) -> set[str]:
+    """Scanner functions named for ``language`` anywhere in the family."""
     return {
-        node.name for node in tree(RANGES).body
+        node.name for path in RANGES for node in tree(path).body
         if isinstance(node, ast.FunctionDef)
-        and "java" in node.name.lower()
+        and language in node.name.lower()
         and "range" in node.name.lower()
     }
 

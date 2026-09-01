@@ -364,11 +364,20 @@ def test_a_repository_of_only_tests_has_no_production_pressure(
     assert analyzer_production_pressures(only_tests, thresholds)["declarations"] is None
 
 
+# Each body carries a `function decoy() {}` line: it is not valid in the
+# language, and it is exactly what FUNC_PATTERNS matches. If the
+# last-resort regex ever reaches an unparsed language, the decoy is the
+# population it manufactures.
+#
+# `.c` used to be one of these cases and is not one any more — 1.1.0 gave
+# it a scanner of its own, so it now has a real population and is covered
+# by tests/test_c_declarations.py. Both suffixes here must stay languages
+# nothing in this project parses.
 @pytest.mark.parametrize(
     ("suffix", "body"),
     [
         (".go", "package main\nfunc Real() int { return 1 }\nfunction decoy() {}\n"),
-        (".c", "int real(void) { return 1; }\nfunction decoy() {}\n"),
+        (".rs", "fn real() -> i32 { 1 }\nfunction decoy() {}\n"),
     ],
 )
 def test_analyzer_declarations_do_not_enable_func_patterns_for_unparsed_languages(

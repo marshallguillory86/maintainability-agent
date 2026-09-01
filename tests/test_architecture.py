@@ -23,6 +23,10 @@ PACKAGE = ROOT / "src" / "maintainability_audit"
 # Keeping the foundation spawners in one layer is what makes the
 # analyzer half of that rule checkable.
 FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "config",
+               # `_config_defaults` is the shipped default configuration,
+               # split from `config` in 1.1.0: data with no internal
+               # imports, which `config` re-exports.
+               "_config_defaults",
                "git_tools", "instructions", "_semantic_policy",
                # `_user_config` is the XDG user tier and its state (D13):
                # file reads and atomic writes, no internal imports.
@@ -52,7 +56,15 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
 # `_xml` reads analyzer XML and refuses what it will not parse — a
 # parser with no internal imports, so it sits with the other
 # parsers rather than with the adapters that call it (D46).
-PARSING = {"source", "declarations", "_cognitive", "_ranges", "_tokens", "_xml"}
+# The declaration scanners are one module per language over a shared
+# brace core (1.1.0): `_ranges_core` owns the rule that a range is
+# bounded by its own body, and `_ranges_js`, `_ranges_java` and
+# `_ranges_c` own one language's patterns each. They sit together in
+# parsing rather than the core sitting in foundations, because the
+# family is one concern and the next language is a sibling, not a new
+# layer.
+PARSING = {"source", "declarations", "_cognitive", "_tokens", "_xml",
+           "_ranges_core", "_ranges_js", "_ranges_java", "_ranges_c"}
 # ADR 003: `_semantic` normalizes and classifies; `_semantic_ts` reads
 # TypeScript facts (recordings, an already-installed tsc through
 # `_runner`, and source text). Both observe and neither scores —

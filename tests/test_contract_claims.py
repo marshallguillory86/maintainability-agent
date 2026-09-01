@@ -8,7 +8,7 @@ declarations and C stays 2.6279, and the tool inventory still saying
 coverage is the missing concept.
 
 This file is the class lint. The gates follow the constants in
-``evidence.py`` / ``_calibration.py`` / ``_ranges.py``, so they lift
+``evidence.py`` / ``_calibration.py`` / the ``_ranges*`` scanners, so they lift
 when the code moves and fail when the docs do not.
 """
 from __future__ import annotations
@@ -28,7 +28,17 @@ STANDARD = ROOT / "docs" / "standard.md"
 
 
 def _java_ranges_exist() -> bool:
-    return "def java_declaration_ranges" in (PACKAGE / "_ranges.py").read_text(encoding="utf-8")
+    """Searched across the package, not pinned to one file.
+
+    This read `_ranges.py` directly until 1.1.0 split the per-language
+    scanners into their own modules, at which point it would have
+    reported Java missing because the file it looked in had changed —
+    a claim about the product broken by a refactor that changed none of it.
+    """
+    return any(
+        "def java_declaration_ranges" in path.read_text(encoding="utf-8")
+        for path in PACKAGE.glob("_ranges*.py")
+    )
 
 
 def test_report_contract_example_uses_the_shipped_schema_version() -> None:

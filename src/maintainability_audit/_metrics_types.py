@@ -13,7 +13,7 @@ from typing import NamedTuple
 
 # Last-resort detector, used for unparseable Python and for any
 # extension without a dedicated scanner. JS/TS/HTML go through
-# ``_ranges.js_declaration_ranges`` instead, which bounds each body by
+# ``_ranges_js.js_declaration_ranges`` instead, which bounds each body by
 # its own braces. Ranges from these patterns are bounded by
 # indentation, never by the next match — see ``_ranges`` for why.
 FUNC_PATTERNS = [

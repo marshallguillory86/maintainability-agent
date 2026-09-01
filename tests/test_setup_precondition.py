@@ -193,3 +193,53 @@ def test_the_test_suite_opt_in_is_surfaced_on_a_pre_class5_config(tmp_path: Path
     # A hand-maintained config (no setup consent) is not a lapsed first run.
     write({"thresholds": {"max_file_lines": 500}, "paths": {}})
     assert run_tests_pending(tmp_path) is False
+
+
+def test_reconfigure_preserves_hand_tuned_config_the_wizard_never_asks_about(
+    tmp_path: Path,
+) -> None:
+    """A reconfigure merges the wizard's answers over the existing config; it
+    does not rebuild it. The full apply path used to write a payload built
+    only from the answers, overwriting the file wholesale — which erased
+    every field the wizard never asks about (paths/scoping, thresholds,
+    gates, the test command, risk patterns, the instruction pack) and
+    flattened the analyzer block to three keys. This is the falsifier for
+    that data loss: reconfigure, then assert the tuned fields survived and
+    the wizard's own leaves changed.
+    """
+    from maintainability_audit._mcp_setup import apply_answers
+
+    root = _repo(tmp_path)
+    tuned = {
+        "version": 1,
+        "analyzers": {"run": True, "depth": "heavy",
+                      "concerns": ["all"], "timeout_seconds": 120},
+        "paths": {"exclude_patterns": ["vendor/", "generated/"]},
+        "thresholds": {"max_file_lines": 400, "max_complexity": 12},
+        "hard_gates": {"require_readme": True},
+        "expected_commands": {"test": ["pytest", "-q"]},
+        "risk_patterns": [{"name": "eval", "pattern": "eval\\("}],
+        "instruction_pack": {"project_name": "Bighound"},
+    }
+    (root / CONFIG_FILENAME).write_text(json.dumps(tuned), encoding="utf-8")
+
+    apply_answers(root, {
+        "run_pool": "no", "depth": "baseline", "license_policy": "permissive",
+        "economics": "skip", "default_format": "html", "record_scan_history": "no",
+    })
+    saved = json.loads((root / CONFIG_FILENAME).read_text(encoding="utf-8"))
+
+    # Fields the wizard never asks about survive verbatim.
+    assert saved["paths"] == {"exclude_patterns": ["vendor/", "generated/"]}
+    assert saved["thresholds"] == {"max_file_lines": 400, "max_complexity": 12}
+    assert saved["hard_gates"] == {"require_readme": True}
+    assert saved["expected_commands"] == {"test": ["pytest", "-q"]}
+    assert saved["risk_patterns"] == [{"name": "eval", "pattern": "eval\\("}]
+    assert saved["instruction_pack"] == {"project_name": "Bighound"}
+    # Analyzer sub-keys beyond the three the wizard sets are preserved.
+    assert saved["analyzers"]["concerns"] == ["all"]
+    assert saved["analyzers"]["timeout_seconds"] == 120
+    # The wizard's own leaves reflect the new answers.
+    assert saved["analyzers"]["run"] is False
+    assert saved["analyzers"]["depth"] == "baseline"
+    assert saved["presentation"]["format"] == "html"

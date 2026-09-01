@@ -215,7 +215,7 @@ def _legend(names: list[str], colors: list[str]) -> tuple[list[str], int]:
     parts: list[str] = []
     x, y = _PLOT_LEFT, _HEIGHT + 6
     rows = 1
-    for name, color in zip(names, colors):
+    for name, color in zip(names, colors, strict=True):
         width = 22 + len(name) * 6.2  # swatch + text, monospace-ish estimate
         if x + width > _PLOT_RIGHT and x > _PLOT_LEFT:
             x = _PLOT_LEFT
@@ -245,7 +245,7 @@ def multi_line_chart(chart_id: str, series: dict[str, list[tuple]],
     legend, legend_h = _legend(names, colors)
     height = _HEIGHT + legend_h
     parts = [_svg_header(chart_id, height), *_frame(low, high, y_title, x_labels)]
-    for name, color in zip(names, colors):
+    for name, color in zip(names, colors, strict=True):
         points = series[name]
         parts.extend(_polylines(points, count, low, high, color, "1.6"))
         for i, v, *_ in points:

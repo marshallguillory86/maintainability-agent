@@ -30,7 +30,6 @@ from typing import Any
 from ._runner import Invocation, run
 from ._xml import AnalyzerXmlRefused, parse_analyzer_xml
 
-
 _ENV_ASSIGNMENT = re.compile(r"^[A-Za-z_]\w*=")
 
 # A test suite is slower than an analyzer; the 120s analyzer cap killed

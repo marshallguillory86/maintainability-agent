@@ -402,7 +402,8 @@ def test_complete_work_order_carries_a_prompt_for_every_item_bounded_points_at_i
     caps the list and points at the report instead of carrying every prompt.
     """
     from maintainability_audit._work_order_view import (
-        CHAT_WORK_ORDER_LIMIT, work_order_markdown,
+        CHAT_WORK_ORDER_LIMIT,
+        work_order_markdown,
     )
 
     items = [

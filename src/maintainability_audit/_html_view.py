@@ -25,8 +25,8 @@ from typing import Any
 from . import _charts
 from . import _evidence_view as view
 from ._html_report_sections import coverage_section, remaining_sections, trend_section
-from ._work_order_view import prompt_body_lines
 from ._semantic_view import semantic_class_label
+from ._work_order_view import prompt_body_lines
 
 _SEVERITY_BY_RISK = {5: "Severe", 4: "High", 3: "Medium"}
 _SEVERITY_ORDER = ("Severe", "High", "Medium", "Low")

@@ -15,9 +15,9 @@ from ._scan_view import (
     undetected_declarations_markdown,
     unread_source_markdown,
 )
-from ._work_order_view import work_order_markdown, work_order_selection_markdown
 from ._semantic_view import semantic_markdown, without_semantic_suffixes
 from ._tdd_view import tdd_structure_markdown
+from ._work_order_view import work_order_markdown, work_order_selection_markdown
 
 
 def _pool_ran(report: dict[str, Any]) -> bool:

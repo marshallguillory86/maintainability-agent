@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
 from _mcp_fixtures import _drop_generated_line
 
 from maintainability_audit._scan_history import DEFAULT_HISTORY_PATH, read_history

@@ -136,3 +136,52 @@ def test_a_clean_tsc_run_still_reports_available_with_no_diagnostics(
     assert analysis is not None
     assert analysis["status"] == "available"
     assert analysis["diagnostics"] == []
+
+
+def _workspace_repo(tmp_path: Path, *, with_local_tsc: bool) -> Path:
+    """A monorepo whose TypeScript lives in `web/`, not the root — the
+    bighound UAT layout. Optionally with a project-local `tsc`."""
+    web = tmp_path / "web"
+    web.mkdir()
+    (web / "tsconfig.json").write_text("{}", encoding="utf-8")
+    if with_local_tsc:
+        bindir = web / "node_modules" / ".bin"
+        bindir.mkdir(parents=True)
+        (bindir / "tsc").write_text("#!/bin/sh\n", encoding="utf-8")
+    return tmp_path
+
+
+def test_a_workspace_tsconfig_and_local_tsc_are_found_and_paths_re_rooted(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    """The bighound defect: TS config in `web/` and `tsc` in
+    `web/node_modules/.bin` went `unknown` because the old gate only looked
+    at the root tsconfig and the global PATH. Now the workspace is
+    discovered, its local compiler is used, and a diagnostic tsc reports as
+    `src/app.ts` from that workspace is re-rooted to `web/src/app.ts`.
+    """
+    root = _workspace_repo(tmp_path, with_local_tsc=True)
+    # No root tsconfig and nothing on PATH: the old code would return None.
+    assert not (root / "tsconfig.json").exists()
+    monkeypatch.setattr(_semantic_ts, "locate", lambda _name: None)
+    monkeypatch.setattr(_semantic_ts, "run", lambda *a, **k: ToolResult(
+        slug="typescript", outcome=Outcome.RAN, exit_code=1,
+        stdout="src/app.ts(3,5): error TS2345: nope", stderr="", detail=""))
+
+    analysis = _semantic_ts.local_tsc_analysis(root)
+    assert analysis is not None and analysis["status"] == "available"
+    assert [d["path"] for d in analysis["diagnostics"]] == ["web/src/app.ts"]
+
+
+def test_a_workspace_with_a_tsconfig_but_no_tsc_stays_unknown(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    """The honesty half: a tsconfig with no installed compiler anywhere is
+    `unknown`, never a fabricated clean run — the tool still never installs."""
+    root = _workspace_repo(tmp_path, with_local_tsc=False)
+    monkeypatch.setattr(_semantic_ts, "locate", lambda _name: None)
+    called = []
+    monkeypatch.setattr(_semantic_ts, "run", lambda *a, **k: called.append(1))
+
+    assert _semantic_ts.local_tsc_analysis(root) is None
+    assert not called, "tsc was invoked with no compiler resolved"

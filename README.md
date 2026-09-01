@@ -233,6 +233,49 @@ cascade of false ones. Pair it with native tools (ESLint, Ruff, Radon, Semgrep,
 SonarQube, Qlty) rather than replacing them — their SARIF folds in via
 `--sarif-input`. Accuracy and limits: [docs/language-support.md](docs/language-support.md).
 
+## Language support
+
+**Be clear-eyed about this: the tool does not support every language equally,
+and on an unrecognized language it will quietly under-report rather than fail.**
+Coverage comes from two layers.
+
+**Built-in scanner (always on, no dependencies)** — reads function/class
+declarations, sizes and complexity for a fixed set of languages, and **only**
+these:
+
+| Language | How it's measured | Fidelity |
+|---|---|---|
+| Python (`.py`) | `ast` — exact `end_lineno` | Exact |
+| Java (`.java`) | dedicated brace-bounded scanner | Bounded; under-reports some constructs |
+| JS / TS / JSX / TSX / MJS / CJS | brace/paren depth over a masked copy | Bounded by the declaration's own braces |
+| HTML (`.html`) | same brace scanner (inline `<script>`) | Bounded |
+| TypeScript (semantic) | a recorded analysis or a locally-installed `tsc`, workspace projects included | Type-level facts; `unknown` when no checker is present |
+
+Any language **not** in that table — Go, Rust, Ruby, C/C++, C#, PHP, Kotlin,
+Swift, and the rest — is **not parsed for declarations by the built-in
+scanner.** Its files still count toward repo size, but the built-ins produce no
+function-size, complexity, duplication or dead-code findings for them, and the
+estimate leans on whatever evidence *is* available (which is why the report
+discloses its evidence tier and can withhold the grade).
+
+**External analyzer adapters (opt-in pool)** — this is how coverage extends
+beyond the built-in set. When you enable the analyzer pool, the tool shells out
+to mature analyzers and folds their output in through per-tool
+[adapters](docs/adapters.md): **lizard** (cyclomatic complexity across ~a dozen
+languages), **jscpd** (cross-language duplication), **ESLint** (JS/TS),
+**PMD** / **SpotBugs** (JVM), and others in the catalog. These run only when
+selected *and* installed (acquisition is opt-in and off by default), and where
+they measured a full concept set they become the *primary* evidence, with the
+built-ins as the fallback.
+
+So: **first-class today is Python** (and TypeScript for semantics); Java and the
+JS/TS family are bounded-but-real; every other language is only as covered as
+the external analyzer you point at it — and with no analyzer, it is
+under-reported by design. The per-language accuracy, the exact parsed set, and
+the known limitations are documented in
+[docs/language-support.md](docs/language-support.md); the adapter catalog is in
+[docs/adapters.md](docs/adapters.md).
+
 ## What it produces
 
 Any combination of: `maintainability-report.md` (or a single-file HTML report),

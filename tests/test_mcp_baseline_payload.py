@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from _mcp_fixtures import _drop_generated_line
 
 from maintainability_audit._scan_history import DEFAULT_HISTORY_PATH, read_history
 from maintainability_audit.baseline import BASELINE_VERSION
@@ -251,7 +252,10 @@ def test_report_resource_matches_cli_over_stored_history_without_appending(
 
     served = _report_resource(root)
 
-    assert served.encode() == output.read_bytes().removesuffix(b"\n")
+    # Parity but for the run date (G) — a disclosed determinism exception (P1)
+    # that two independently timed renders legitimately stamp differently.
+    assert _drop_generated_line(served) == _drop_generated_line(
+        output.read_text(encoding="utf-8").removesuffix("\n"))
     assert history.read_bytes() == stored, "reading the resource appended a scan"
 
 

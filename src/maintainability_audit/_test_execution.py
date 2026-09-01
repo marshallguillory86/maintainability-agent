@@ -22,11 +22,45 @@ outright, the same posture ``_safe_write`` takes on the write side.
 """
 from __future__ import annotations
 
+import re
+import shlex
 from pathlib import Path
 from typing import Any
 
 from ._runner import Invocation, run
 from ._xml import AnalyzerXmlRefused, parse_analyzer_xml
+
+_ENV_ASSIGNMENT = re.compile(r"^[A-Za-z_]\w*=")
+
+# A test suite is slower than an analyzer; the 120s analyzer cap killed
+# real suites mid-run. Ten minutes by default, overridable per repository.
+DEFAULT_SUITE_TIMEOUT_SECONDS = 600
+
+
+def _parse_command(command: list[str]) -> tuple[dict[str, str], list[str]]:
+    """Split a stored test command into ``(env, argv)``.
+
+    Two shapes setup can leave behind, both normalized here so the
+    no-shell runner can execute them:
+
+    - a single-element list holding a whole command line (``["pytest -q"]``,
+      or a hand-written config) is tokenized with ``shlex`` — a split, not
+      a shell, so nothing is interpreted or expanded;
+    - leading ``NAME=VALUE`` tokens become the child's environment, the way
+      a shell applies ``NAME=VALUE prog`` without a shell. The operator
+      opted this command in explicitly, so ``PYTHONPATH=src pytest`` names
+      env they chose for their own command — it is not the audited tree
+      choosing what the child loads, which is what the stripped default
+      guards against.
+    """
+    tokens = list(command)
+    if len(tokens) == 1 and (" " in tokens[0] or "=" in tokens[0]):
+        tokens = shlex.split(tokens[0])
+    env: dict[str, str] = {}
+    while tokens and _ENV_ASSIGNMENT.match(tokens[0]):
+        name, _, value = tokens.pop(0).partition("=")
+        env[name] = value
+    return env, tokens
 
 
 def suite_opted_in(config: dict[str, Any]) -> bool:
@@ -45,13 +79,27 @@ def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
     if not suite_opted_in(config):
         return None
     command = list(config["expected_commands"]["test"])
-    timeout = int((config.get("analyzers") or {}).get("timeout_seconds", 120))
+    env, argv = _parse_command(command)
+    # A whole test suite is legitimately slower than a single analyzer, so
+    # it gets its own timeout rather than the 120s analyzer cap that was
+    # killing real suites mid-run. Operator-configurable under
+    # `test_execution.timeout_seconds`.
+    timeout = int((config.get("test_execution") or {}).get(
+        "timeout_seconds", DEFAULT_SUITE_TIMEOUT_SECONDS))
+    if not argv:
+        # A command that is only env assignments (or empty) names no
+        # program to run. Report it as configured but unrunnable rather
+        # than spawning nothing and calling it a pass.
+        return {
+            "command": command, "ran": False, "exit_code": None, "passed": False,
+            "detail": "no program in the configured test command", "coverage_percent": None,
+        }
     # Snapshot the artifact's state *before* the run so a pre-existing
     # coverage.xml cannot be mistaken for this run's output.
     before = _coverage_fingerprint(root)
     result = run(
         "test-suite",
-        Invocation(argv=tuple(command), findings_exit_codes=(0, 1)),
+        Invocation(argv=tuple(argv), env=env or None, findings_exit_codes=(0, 1)),
         cwd=root, timeout_seconds=timeout,
     )
     # A test suite executed iff it exited 0 (all passed) or 1 (some failed),

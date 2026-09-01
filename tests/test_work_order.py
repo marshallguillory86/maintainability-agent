@@ -394,3 +394,36 @@ def test_a_long_unbranching_function_is_not_called_branching(
     assert items, "the 85-line function must be a hotspot"
     assert "branching" not in items[0]["rationale"]
 
+
+
+def test_complete_work_order_carries_a_prompt_for_every_item_bounded_points_at_it() -> None:
+    """The report/UI seam (D/D2/E core): the complete report lists the whole
+    backlog with a self-contained copy-paste prompt per item; the bounded UI
+    caps the list and points at the report instead of carrying every prompt.
+    """
+    from maintainability_audit._work_order_view import (
+        CHAT_WORK_ORDER_LIMIT,
+        work_order_markdown,
+    )
+
+    items = [
+        {"finding_class": f"class{i % 3}", "title": f"fix thing {i}",
+         "path": f"m{i}.py", "line": (i or None), "target": f"do task {i}",
+         "rationale": f"because {i}", "band": "quick-win",
+         "verification": "python -m pytest", "class_delta": 0.1, "class_count": 3,
+         "risk": 1}
+        for i in range(CHAT_WORK_ORDER_LIMIT + 15)
+    ]
+
+    complete = "\n".join(work_order_markdown(items, complete=True, root_label="."))
+    for item in items:
+        assert f"#### {item['title']}" in complete, f"no prompt block for {item['title']}"
+        assert f"Task: {item['target']}." in complete
+        assert f"Verify when done: {item['verification']}" in complete
+    assert "```text" in complete
+    assert "is in the HTML or Markdown report" not in complete, "complete report truncated"
+
+    bounded = "\n".join(work_order_markdown(items, complete=False))
+    assert "is in the HTML or Markdown report" in bounded, "bounded UI lost its pointer"
+    assert bounded.count("#### ") == CHAT_WORK_ORDER_LIMIT, "bounded UI did not cap the prompts"
+    assert len(bounded) < len(complete), "bounded UI is not smaller than the report"

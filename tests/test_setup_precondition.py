@@ -165,3 +165,31 @@ def test_setup_is_a_precondition_and_answering_it_yields_the_real_report(
     assert "setup_needed" not in audited, "answered setup still asks"
     assert audited["format"] == "html", "the chosen presentation was not honoured"
     assert audited["report_html"], "html was chosen and no html came back"
+
+
+def test_the_test_suite_opt_in_is_surfaced_on_a_pre_class5_config(tmp_path: Path) -> None:
+    """B: a repository configured before the test-suite opt-in existed was
+    never offered it — its config carries the `history` consent a setup
+    writes but no `test_execution` key. The run/reconfigure choice now names
+    the option (a discovery hint, not a forced re-ask), while a config that
+    already answered it, and a hand-maintained config, are left alone.
+    """
+    from maintainability_audit._mcp_gate import _choose_next
+    from maintainability_audit._mcp_setup import run_tests_pending
+
+    def write(cfg: dict) -> None:
+        (tmp_path / CONFIG_FILENAME).write_text(json.dumps(cfg), encoding="utf-8")
+
+    # A setup-written config predating the opt-in.
+    write({"version": 1, "analyzers": {"run": True}, "history": {"record": True}})
+    assert run_tests_pending(tmp_path) is True
+    assert "opt-in to run its" in _choose_next(tmp_path)["choice_needed"]["prompt"]
+
+    # Already answered — present key, even declined — is not re-surfaced.
+    write({"version": 1, "history": {"record": True}, "test_execution": {"requested": False}})
+    assert run_tests_pending(tmp_path) is False
+    assert "opt-in to run its" not in _choose_next(tmp_path)["choice_needed"]["prompt"]
+
+    # A hand-maintained config (no setup consent) is not a lapsed first run.
+    write({"thresholds": {"max_file_lines": 500}, "paths": {}})
+    assert run_tests_pending(tmp_path) is False

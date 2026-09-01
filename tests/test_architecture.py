@@ -117,6 +117,11 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # sections, split from `_html_view` at the file-size line;
                 # it formats report dict fields and computes no score.
                 "_html_report_sections",
+                # `_charts` builds the ADR 011 SVG charts (deterministic,
+                # offline) from already-computed points; split from
+                # `_html_view` at the file-size line so the chart rebuild had
+                # room. It reads no report and computes no score.
+                "_charts",
                 # `_economics_view` prints the ADR 004 scenario block and
                 # computes none of it.
                 "_economics_view",
@@ -129,6 +134,12 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # at the file-size line.
                 "_coverage_notes",
                 "_scan_view", "_history_view", "_identity",
+                # `_work_order_view` renders the work order and its per-item
+                # copy-paste prompts, shared by the Markdown and HTML skins;
+                # split from `_scan_view` at the file-size line, and the seam
+                # is real (this is what to *do*; `_scan_view` is what was
+                # looked at). It reads the report dict and computes no score.
+                "_work_order_view",
                 # TDD-structure sentences shared by chat, Markdown, HTML.
                 "_tdd_view"}
 # `_first_run` is terminal interaction — it prompts, which no layer

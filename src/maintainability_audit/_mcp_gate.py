@@ -17,7 +17,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from ._mcp_setup import setup_pending, setup_questions
+from ._mcp_setup import run_tests_pending, setup_pending, setup_questions
 from ._user_config import mark_repo_seen
 from .config import VERSION, load_config
 
@@ -85,12 +85,24 @@ def _choose_next(root: Path) -> dict[str, Any]:
     contact (D27).
     """
     result = _envelope(root)
+    prompt = (
+        "This repository is configured. Run the maintainability audit "
+        "now, or go back into setup and change the configuration?"
+    )
+    # Surface the Class 5 opt-in on a config written before it existed. Not
+    # a forced re-ask (that would break the configured-repo contract every
+    # test and CI run depends on) — a discovery line, so `reconfigure` (which
+    # does ask it) is a choice the operator knows to make. This is why a
+    # bighound configured pre-Class-5 was never offered the option.
+    if run_tests_pending(root):
+        prompt += (
+            " New since this repository was configured: an opt-in to run its "
+            "own test suite for a coverage reading (test effectiveness). "
+            "Choose reconfigure to set it up."
+        )
     result["choice_needed"] = {
         "name": "next_action",
-        "prompt": (
-            "This repository is configured. Run the maintainability audit "
-            "now, or go back into setup and change the configuration?"
-        ),
+        "prompt": prompt,
         "options": ["run", "reconfigure"],
         "default": "run",
     }

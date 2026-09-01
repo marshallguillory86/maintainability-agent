@@ -10,6 +10,7 @@ orchestration to live.
 from __future__ import annotations
 
 from dataclasses import asdict
+from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -308,23 +309,22 @@ def _add_inventory(summary: dict[str, Any], inventory: Any) -> None:
 def _provenance(
     root: Path, git_status: str, only_paths: set[str] | None, changed_revspec: str | None
 ) -> dict[str, Any]:
-    """Which tree this report describes, and how much of it was examined.
-
-    Grouped because `_assemble` crossed this project's own 80-line
-    function limit when the commit was added, and because these five
-    fields answer one question — *what was audited* — that the rest of
-    the document assumes an answer to.
+    """Which tree this report describes, how much was examined, and when —
+    grouped to keep `_assemble` under the 80-line function limit, and
+    because these fields answer one question the document assumes: *what
+    was audited*.
     """
     return {
-        # Probed: a directory that is not a repository is a supported
-        # audit target, so a failing git command is an expected answer
-        # rather than the D37 fault.
+        # Probed: a non-repository is a supported audit target, so a failing
+        # git command is an expected answer, not the D37 fault.
         "git_branch": probe_git(["branch", "--show-current"], root),
-        # The commit this report describes. Without it a scan history is
-        # a list of scores with no anchor, and recurrence — "cleared,
-        # then returned, in these commits" — has nothing to name.
+        # The commit this report describes — the anchor scan history and
+        # recurrence ("cleared, then returned, in these commits") name.
         "git_commit": probe_git(["rev-parse", "HEAD"], root),
         "git_status_short": git_status,
+        # When the audit ran — a run-describing field P1 discloses as a
+        # determinism exception (like `git_status_short`); the header prints it.
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "mode": "changed-only" if only_paths is not None else "full",
         "changed_revspec": changed_revspec,
     }

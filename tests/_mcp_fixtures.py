@@ -82,6 +82,19 @@ def _tool_text(result: Any) -> str:
     )
 
 
+def _drop_generated_line(text: str) -> str:
+    """The report header carries the run date (G) — a disclosed determinism
+    exception (P1). Two independently timed renders (the CLI file and the
+    served resource) legitimately stamp different seconds, so a byte-identity
+    check is content parity: every line compared but that one. The ADR 008
+    contract that resource and file never diverge is about *claims*, not the
+    wall clock, so the run-timestamp is the one line it does not cover.
+    """
+    return "\n".join(
+        line for line in text.splitlines() if not line.startswith("- Generated:")
+    )
+
+
 def _grant_answer(params: Any, choice: str) -> Any:
     from mcp import types
 

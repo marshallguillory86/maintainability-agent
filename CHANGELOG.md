@@ -6,6 +6,36 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.0.1 - 2026-09-01
+
+A housekeeping release: no runtime behavior changed (the reconfigure and
+TypeScript-semantic fixes shipped in 1.0.0). This ships the release-pipeline
+fix and internal headroom, and refreshes the docs.
+
+### Changed
+
+- **The release pipeline is idempotent and cuts the GitHub Release itself.**
+  `release.yml` now publishes to PyPI with `skip-existing` (a re-run or
+  re-pointed tag no longer hard-fails with `400 File already exists`) and a
+  new tag-only job creates or updates the GitHub Release from the CHANGELOG
+  section for the tag. A `git push origin vX.Y.Z` runs build → PyPI → GitHub
+  Release end to end, every job safe to re-run.
+- **`_mcp_setup` split for headroom (#127).** The setup persistence
+  (`_apply_bounds`/`_apply_command`/`_persist_answers` and the value helpers)
+  moved to `_setup_persist`, and the `SetupRequired` exception to
+  `_setup_errors`; `apply_answers` stays in `_mcp_setup` and delegates. Output
+  is byte-identical — a pure internal refactor, `_mcp_setup` 500 → 364 lines.
+
+### Documentation
+
+- README gained a **Language support** section — Python is first-class
+  (AST-exact), Java and the JS/TS/JSX/TSX family are bounded, TypeScript
+  semantics come from a local `tsc`, and every other language is
+  under-reported unless an external analyzer (lizard/jscpd/ESLint/PMD/…)
+  covers it — and a **Support/Sponsor** section with `.github/FUNDING.yml`.
+- The architecture Known-debt note no longer pins a stale `CALIBRATION_C`
+  (2.2658 → 5.8843), pointing at `_calibration.py` as the source of truth.
+
 ## 1.0.0 - 2026-09-01
 
 **The 1.0 milestone.** Not a rewrite — a line drawn under a long arc of

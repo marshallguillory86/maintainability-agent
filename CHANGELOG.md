@@ -4,6 +4,57 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+_Nothing yet._
+
+## 1.0.0 - 2026-09-01
+
+**The 1.0 milestone.** Not a rewrite — a line drawn under a long arc of
+subtraction. 1.0 is what remained after every claim this project could not
+stand behind was removed: the scoring engine that graded repo *size* was
+rebuilt into per-dimension rates calibrated against a query-selected corpus
+(0.5.0); the headline claim that near-duplication distinguishes AI-written
+code was **retracted** when a matched control erased the gap (0.6.0); the
+score learned to be **withheld** when the evidence cannot support one, and
+external analyzers became the primary evidence with disagreement widening
+the range rather than being averaged (0.7.0); the surfaces converged on
+**one setup, three transports** with chat as the primary door (0.8–0.9);
+and a real-repo acceptance round (Phase 8, on bighound) hardened the last
+edges. What ships as 1.0 is the thing the whole project is for: a
+deterministic, offline, one-rubric audit whose output is a **bounded work
+order** — a copy-paste prompt per finding that tells an agent to fix
+exactly these and refactor nothing else.
+
+### 1.0 — the bounded work order, delivered
+
+- **The report is the complete work order; chat/CLI is a bounded UI.** The
+  HTML and Markdown reports carry the *entire* backlog with a self-contained
+  copy-paste prompt for every item; the chat/CLI surface stays a tight
+  summary plus a pointer, so a host's payload cap can never truncate the
+  prompt (the tool's whole point). Per-item prompts are deterministic — built
+  from finding fields, no LLM, same bytes for the same inputs.
+- **HTML report charts rebuilt for legibility.** The pillar legend moved to
+  its own band below the plot (it used to overlap the lines), the x-axis is
+  dated, and the y-axis shows the full 0–5 gridline ladder. SVG extracted to
+  `_charts` — still deterministic, offline, library-free.
+- **TypeScript semantic coverage now finds workspace projects and a local
+  `tsc`.** A repo whose `tsconfig.json` lives in a workspace (`web/`,
+  `packages/*`) and whose compiler is in `node_modules/.bin` no longer reports
+  `unknown`. Never installs, never fetches; a missing compiler still reads
+  `unknown`, never a fabricated clean run.
+- **Reconfigure preserves hand-tuned config.** Re-running setup used to write
+  the config from the wizard's answers alone, deleting `paths` scoping,
+  `thresholds`, gates, commands, risk patterns and the instruction pack. It
+  now merges the answers over the existing config. Falsified.
+- **The report header states its provenance** — run date, commit, branch,
+  root, and the scoring standard — in both skins. The run date is a disclosed
+  determinism exception (P1).
+- **The opted-in test suite gets its own timeout** (default 600s) instead of
+  dying to the 120s analyzer cap, and the Class 5 opt-in is surfaced on
+  repositories configured before it existed.
+- **Internal headroom.** `renderers` and `_mcp_setup` were split along real
+  seams (`_markdown_sections`, `_setup_persist`/`_setup_errors`) so neither
+  rides its own 500-line gate; output is byte-identical.
+
 ### Fixed
 
 - **A boundary refusal reaches the caller as a refusal, not as a crash.** The

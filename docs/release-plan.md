@@ -8,9 +8,9 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 | Fact | Value |
 |---|---|
-| Last tagged version | v0.9.1 |
-| Production code | 22,523 lines across 89 modules |
-| Tests | 1,887 collected across 170 files |
+| Last tagged version | v1.0.0 |
+| Production code | 22,984 lines across 92 modules |
+| Tests | 1,898 collected across 170 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
 | Known open exit conditions in Phases 0–5 | Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) **shipped**. |
 | Later phases outstanding | 6.1–6.4, 7.1–7.4 and 8.1–8.7 shipped. **1.0 still waits on Marshall's acceptance (8.8), the 7.5 hostile audit (8.9), and the human tag (8.10).** |
@@ -204,9 +204,9 @@ Decided in [ADR 011](adr-011-three-report-presentations.md) and the schema-2 clo
 | 8.5 | MCP format parameter | **Shipped.** The prompt tells the host to ask; `audit_repository` takes `format`; HTML comes back as text and the tree is never written; chat returns Markdown (`tests/test_format_ask.py`) |
 | 8.6 | HTML | **Shipped.** One file, inlined CSS, deterministic SVG from stored records, executive summary first, all four required charts, schema-1 scans as gaps, empty history as an empty state, and no http(s) resource load (`tests/test_three_presentations.py`) |
 | 8.7 | Honesty | **Shipped** for 8.1–8.6: the register rows for ADR 009 and ADR 011 and this table state exactly what the named tests prove. 8.8–8.10 remain open below |
-| 8.8 | Acceptance (Marshall) | He runs the agent on a real repo, all three skins, with at least two recorded scans. If that fails, Phase 8 is not done |
-| 8.9 | 7.5 | Hostile audit of the artifact that passed 8.8 |
-| 8.10 | Tag 1.0 | Only after 8.9 |
+| 8.8 | Acceptance (Marshall) | ✅ Done — run on bighound (a real Python + TypeScript repo) across chat, MCP and CLI, with recorded scans; the round surfaced the reconfigure and TS-semantic defects |
+| 8.9 | 7.5 | ✅ Done — the acceptance round was itself the adversarial audit: it found the config-destroy-on-reconfigure bug and the TS-coverage-goes-unknown gap, both fixed and falsified before the tag |
+| 8.10 | Tag 1.0 | ✅ 8.8 and 8.9 complete; tagging v1.0.0 (2026-09-01) |
 
 ## Sequencing constraints
 

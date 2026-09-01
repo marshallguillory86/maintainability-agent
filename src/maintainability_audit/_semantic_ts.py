@@ -15,6 +15,7 @@ Two kinds of raw material come from here, and neither is a finding yet:
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -62,38 +63,92 @@ def recorded_type_analysis(root: Path) -> dict[str, Any] | None:
 def local_tsc_analysis(root: Path) -> dict[str, Any] | None:
     """Diagnostics from an already-installed compiler, or nothing.
 
-    Only when the repository carries a tsconfig and `tsc` is already on
-    the PATH — this module never installs, never runs `npx --yes`, and
-    never touches the network. CLI output carries no boundary facts, so
-    `typed_boundaries` is empty and policy checks simply find nothing,
-    which is weaker coverage, not a violation-free result.
+    Runs across the repository root *and* any workspace beneath it that
+    carries a `tsconfig.json` — TS monorepos keep the config in `web/` or
+    `packages/*`, not the root, and a root-only check went blind on exactly
+    the repos this is for. Uses a `tsc` that is already present: the
+    workspace's own `node_modules/.bin/tsc`, the root's, or one on the PATH.
+    Never installs, never runs `npx --yes`, never touches the network — a
+    project-local compiler is the standard install, not an acquisition.
+
+    An absent checker, or a `tsc` that cannot run usably, leaves coverage
+    *unknown*, not clean: a config error (FAILED, exit 3+) or a findings
+    exit with an empty body (NOT_WORKING) both leave `stdout` empty, and
+    reading that as a violation-free type check is the absence-as-a-pass
+    the class ADR 001 forbids (Grok 63ab820 audit). Only a usable run
+    counts; a RAN with no output is the real "compiled, no type errors".
+    CLI output carries no boundary facts, so `typed_boundaries` is empty.
     """
-    if not (root / "tsconfig.json").is_file() or not locate("tsc"):
+    diagnostics: list[dict[str, Any]] = []
+    ran = False
+    for project in _tsconfig_project_dirs(root):
+        tsc = _resolve_tsc(root, project)
+        if tsc is None:
+            continue
+        result = run(
+            "typescript",
+            Invocation(argv=(tsc, "--noEmit", "--pretty", "false"),
+                       findings_exit_codes=(0, 1, 2)),
+            cwd=project,
+        )
+        if not result.usable:
+            continue
+        ran = True
+        diagnostics.extend(
+            _parse_diagnostics(result.stdout, project.relative_to(root)))
+    if not ran:
         return None
-    result = run(
-        "typescript",
-        Invocation(argv=("tsc", "--noEmit", "--pretty", "false"),
-                   findings_exit_codes=(0, 1, 2)),
-        cwd=root,
-    )
-    # `usable` is the only signal that means "tsc ran": a config error
-    # (FAILED, exit 3+) or a findings exit that produced an empty body
-    # (NOT_WORKING) both leave `exit_code` set and `stdout` empty, so the
-    # old `exit_code is None` guard let them through and reported an empty
-    # `diagnostics` list as a clean type check -- absence read as a pass,
-    # the class ADR 001 forbids (Grok 63ab820 audit). A RAN with no output
-    # is the real "compiled, no type errors".
-    if not result.usable:
-        return None
-    diagnostics = []
-    for line in result.stdout.splitlines():
+    return {
+        "tool": "typescript",
+        "version": "local",
+        "status": "available",
+        "diagnostics": _dedup(diagnostics),
+        "typed_boundaries": [],
+    }
+
+
+def _tsconfig_project_dirs(root: Path) -> list[Path]:
+    """The root and every workspace beneath it that carries a `tsconfig.json`.
+
+    `node_modules`/`.git`/recordings and hidden directories are pruned, and
+    the walk stops at depth 3 so a large tree stays bounded.
+    """
+    dirs: list[Path] = []
+    for current, subdirs, files in os.walk(root):
+        depth = len(Path(current).relative_to(root).parts)
+        subdirs[:] = [] if depth >= 3 else [
+            name for name in subdirs
+            if name not in _SKIP_PARTS and not name.startswith(".")
+        ]
+        if "tsconfig.json" in files:
+            dirs.append(Path(current))
+    return sorted(dirs)
+
+
+def _resolve_tsc(root: Path, project: Path) -> str | None:
+    """An already-installed `tsc`: the workspace's own, then the root's,
+    then one on the PATH. Never installs and never fetches."""
+    for base in (project, root):
+        local = base / "node_modules" / ".bin" / "tsc"
+        if local.is_file():
+            return str(local)
+    return "tsc" if locate("tsc") else None
+
+
+def _parse_diagnostics(stdout: str, prefix: Path) -> list[dict[str, Any]]:
+    """tsc's `path(line,col): error TSxxxx: message` lines, with paths
+    re-rooted from the workspace `tsc` ran in back to the repository."""
+    diagnostics: list[dict[str, Any]] = []
+    for line in stdout.splitlines():
         match = _DIAGNOSTIC.match(line.strip())
         if not match:
             continue
         types = _ASSIGNABILITY.search(match.group("message"))
+        reported = match.group("path").replace("\\", "/")
+        path = reported if str(prefix) == "." else (prefix / reported).as_posix()
         diagnostics.append({
             "code": match.group("code"),
-            "path": match.group("path").replace("\\", "/"),
+            "path": path,
             "line": int(match.group("line")),
             "column": int(match.group("column")),
             "symbol": "",
@@ -101,13 +156,21 @@ def local_tsc_analysis(root: Path) -> dict[str, Any] | None:
             "required_type": (types.group("required") or types.group("required2")) if types else "",
             "message": match.group("message"),
         })
-    return {
-        "tool": "typescript",
-        "version": "local",
-        "status": "available",
-        "diagnostics": diagnostics,
-        "typed_boundaries": [],
-    }
+    return diagnostics
+
+
+def _dedup(diagnostics: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One diagnostic per (code, path, line, column): nested project
+    references can report the same error from two tsconfigs."""
+    seen: set[tuple[str, str, int, int]] = set()
+    unique: list[dict[str, Any]] = []
+    for item in diagnostics:
+        key = (item["code"], item["path"], item["line"], item["column"])
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(item)
+    return unique
 
 
 def discover_type_analysis(root: Path) -> dict[str, Any] | None:

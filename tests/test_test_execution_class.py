@@ -232,8 +232,8 @@ def test_opting_the_suite_in_stages_a_second_ask_for_the_command(tmp_path: Path)
     from types import SimpleNamespace
 
     from maintainability_audit._mcp_grants import _RootLedger
-    from maintainability_audit._mcp_setup import CONFIG_FILENAME, apply_answers
-    from maintainability_audit.config import load_config
+    from maintainability_audit._mcp_setup import apply_answers
+    from maintainability_audit.config import CONFIG_FILENAME, load_config
     from maintainability_audit.mcp_server import _setup_resolver_for
 
     class _Capabilities:
@@ -281,7 +281,7 @@ def test_the_cli_stage_two_records_the_test_command(
     untested, so a regression here was invisible.
     """
     from maintainability_audit import _first_run
-    from maintainability_audit._mcp_setup import CONFIG_FILENAME
+    from maintainability_audit.config import CONFIG_FILENAME
 
     root = _git_repo(tmp_path)
     monkeypatch.setattr(_first_run, "_stdin_is_a_tty", lambda: True)

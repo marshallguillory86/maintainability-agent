@@ -18,6 +18,8 @@ flowchart TB
     cli["cli"]
     _first_run["_first_run"]
     _mcp_setup["_mcp_setup"]
+    _setup_persist["_setup_persist"]
+    _setup_errors["_setup_errors"]
     _mcp_audit["_mcp_audit"]
     _mcp_gate["_mcp_gate"]
     _mcp_resources["_mcp_resources"]

@@ -172,8 +172,15 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
 # Entry layer beside `_mcp_audit`: it reaches `_user_config` for the
 # file and the rule module for the judgment, and the audit door is its
 # only consumer.
+# `_setup_persist` is the persist half of setup — the values, the
+# economics block, and the three config writers — split from `_mcp_setup`
+# for headroom (#127). `apply_answers` stays in `_mcp_setup` (the one-setup
+# invariant) and delegates here; this module imports nothing from
+# `_mcp_setup`, so the graph stays acyclic. `_setup_errors` is the single
+# `SetupRequired` exception, on its own leaf so the persist helpers and the
+# ask surface both use it without a cycle.
 ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup", "_mcp_audit",
-         "_grant_ledger",
+         "_grant_ledger", "_setup_persist", "_setup_errors",
          "_skill_install", "_mcp_gate", "_mcp_resources",
          "_mcp_grants", "_mcp_refusals"}
 BOUNDARY = {"evidence"}

@@ -205,28 +205,28 @@ def test_a_mid_series_gap_breaks_the_line(audited) -> None:
     never invented. Two points with a gap between them are two isolated
     points — no segment may join them, because the segment *is* a claim
     about the scan nobody stored."""
-    from maintainability_audit._html_view import _line_chart, _multi_line_chart
+    from maintainability_audit._charts import line_chart, multi_line_chart
 
     gapped = [(0, 1.0, None, None), (2, 2.0, None, None)]
-    assert _line_chart("chart-practice", gapped, 0.0, 5.0).count("<polyline") == 0, (
+    assert line_chart("chart-practice", gapped, 0.0, 5.0).count("<polyline") == 0, (
         "a single polyline joined two points across a missing scan"
     )
 
     joined = [(0, 1.0, None, None), (1, 1.5, None, None), (2, 2.0, None, None)]
-    assert _line_chart("chart-practice", joined, 0.0, 5.0).count("<polyline") == 1
+    assert line_chart("chart-practice", joined, 0.0, 5.0).count("<polyline") == 1
 
     runs = [(0, 1.0, None, None), (1, 1.5, None, None), (3, 2.0, None, None), (4, 2.5, None, None)]
-    assert _line_chart("chart-practice", runs, 0.0, 5.0).count("<polyline") == 2, (
+    assert line_chart("chart-practice", runs, 0.0, 5.0).count("<polyline") == 2, (
         "two consecutive runs around a gap must be two separate segments"
     )
 
     multi = {"readability": gapped}
-    assert _multi_line_chart("chart-pillars", multi, 0.0, 5.0).count("<polyline") == 0, (
+    assert multi_line_chart("chart-pillars", multi, 0.0, 5.0).count("<polyline") == 0, (
         "the pillar chart interpolates across a missing scan"
     )
 
     banded_gap = [(0, 1.0, 0.9, 1.1), (2, 2.0, 1.9, 2.1)]
-    assert _line_chart("chart-estimate", banded_gap, 0.0, 5.0).count("<polygon") == 0, (
+    assert line_chart("chart-estimate", banded_gap, 0.0, 5.0).count("<polygon") == 0, (
         "the uncertainty band was shaded across a missing scan, which claims "
         "a range nobody stored"
     )

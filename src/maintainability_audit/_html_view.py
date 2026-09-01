@@ -22,12 +22,11 @@ from __future__ import annotations
 from html import escape
 from typing import Any
 
+from . import _charts
 from . import _evidence_view as view
 from ._html_report_sections import coverage_section, remaining_sections, trend_section
 from ._work_order_view import prompt_body_lines
 from ._semantic_view import semantic_class_label
-
-_WIDTH, _HEIGHT, _PAD = 640, 260, 40
 
 _SEVERITY_BY_RISK = {5: "Severe", 4: "High", 3: "Medium"}
 _SEVERITY_ORDER = ("Severe", "High", "Medium", "Low")
@@ -185,12 +184,14 @@ def _chart_sections(records: list[Any], score: dict[str, Any]) -> list[str]:
     # comparability rule ADR 009 enforces lives in the prose that names a
     # direction -- `_direction_sentence`, which reads the comparable tail
     # only -- not in whether a point appears on the rollup chart.
+    dates = _scan_dates(records)
     parts = ["<h2>Estimate over recorded scans</h2>"]
     estimate_points = [
         (index, r.estimate, r.range_low, r.range_high)
         for index, r in enumerate(records) if r.estimate is not None
     ]
-    parts.append(_line_chart("chart-estimate", estimate_points, 0.0, 5.0))
+    parts.append(_charts.line_chart("chart-estimate", estimate_points, 0.0, 5.0,
+                                    x_labels=dates))
 
     parts.append("<h2>Pillars over time (condition)</h2>")
     pillar_names = sorted({name for r in records for name in (r.pillars or {})})
@@ -199,7 +200,8 @@ def _chart_sections(records: list[Any], score: dict[str, Any]) -> list[str]:
                for i, r in enumerate(records) if (r.pillars or {}).get(name) is not None]
         for name in pillar_names
     }
-    parts.append(_multi_line_chart("chart-pillars", pillar_series, 0.0, 5.0))
+    parts.append(_charts.multi_line_chart("chart-pillars", pillar_series, 0.0, 5.0,
+                                          x_labels=dates))
     parts.append(_gap_note(records, "pillars"))
 
     parts.append("<h2>Practice level over time (maturity — a separate series)</h2>")
@@ -207,13 +209,26 @@ def _chart_sections(records: list[Any], score: dict[str, Any]) -> list[str]:
         (i, float(r.practice_level), None, None)
         for i, r in enumerate(records) if r.practice_level is not None
     ]
-    parts.append(_line_chart("chart-practice", practice_points, 0.0, 5.0,
-                             y_title="maturity (0-5)"))
+    parts.append(_charts.line_chart("chart-practice", practice_points, 0.0, 5.0,
+                                    y_title="maturity (0-5)", x_labels=dates))
     parts.append(_gap_note(records, "practice_level"))
 
     parts.append("<h2>Categories, this scan</h2>")
-    parts.append(_bar_chart("chart-categories", score.get("categories") or {}))
+    parts.append(_charts.bar_chart("chart-categories", score.get("categories") or {}))
     return parts
+
+
+def _scan_dates(records: list[Any]) -> list[str]:
+    """A short MM-DD label per scan slot for the x-axis, from `recorded_at`.
+
+    The old charts labelled the x-axis with nothing at all, so a reader
+    could not tell which point was which scan. The full ISO stamp is on
+    the point's hover title; the axis carries only the day.
+    """
+    return [
+        str(getattr(r, "recorded_at", "") or "")[5:10] or f"#{i + 1}"
+        for i, r in enumerate(records)
+    ]
 
 
 def _gap_note(records: list[Any], field: str) -> str:
@@ -227,156 +242,6 @@ def _gap_note(records: list[Any], field: str) -> str:
         return (f"<p class='gap-note'>{missing} of {len(records)} recorded scans "
                 "predate this series (schema 1) and appear as gaps.</p>")
     return ""
-
-
-def _x(index: int, count: int) -> float:
-    span = _WIDTH - 2 * _PAD
-    return _PAD + (span * index / max(count - 1, 1))
-
-
-def _y(value: float, low: float, high: float) -> float:
-    span = _HEIGHT - 2 * _PAD
-    return _HEIGHT - _PAD - span * (value - low) / (high - low or 1.0)
-
-
-def _svg_open(chart_id: str, low: float = 0.0, high: float = 5.0,
-              y_title: str = "score (0-5)") -> str:
-    """Framed axes, end ticks and a named scale on every chart.
-
-    The 0 and 5 ticks are the reader's calibration: without them a line
-    at 4.1 and a line at 2.0 look the same shape. Padding keeps the
-    labels off the axis line and inside the viewBox.
-    """
-    return (
-        f'<svg id="{chart_id}" viewBox="0 0 {_WIDTH} {_HEIGHT}" '
-        f'role="img" xmlns="http://www.w3.org/2000/svg">'
-        f'<rect x="0" y="0" width="{_WIDTH}" height="{_HEIGHT}" fill="#fafafa"/>'
-        f'<line x1="{_PAD}" y1="{_PAD}" x2="{_PAD}" y2="{_HEIGHT - _PAD}" '
-        'stroke="#999" stroke-width="1"/>'
-        f'<line x1="{_PAD}" y1="{_HEIGHT - _PAD}" x2="{_WIDTH - _PAD}" '
-        f'y2="{_HEIGHT - _PAD}" stroke="#999" stroke-width="1"/>'
-        f'<text x="{_PAD - 8}" y="{_y(low, low, high) + 4:.1f}" text-anchor="end" '
-        f'font-size="11" fill="#444">{low:g}</text>'
-        f'<text x="{_PAD - 8}" y="{_y(high, low, high) + 4:.1f}" text-anchor="end" '
-        f'font-size="11" fill="#444">{high:g}</text>'
-        f'<text x="14" y="{_HEIGHT / 2:g}" font-size="11" fill="#444" '
-        f'transform="rotate(-90 14 {_HEIGHT / 2:g})" text-anchor="middle">'
-        f"{escape(y_title)}</text>"
-    )
-
-
-def _consecutive_runs(points: list[tuple]) -> list[list[tuple]]:
-    """Split a series wherever a scan is missing.
-
-    A polyline drawn across a missing index is interpolation — a segment
-    claiming a value for the scan nobody stored, which ADR 011
-    invariant 6 forbids. Points on either side of a gap stay plotted;
-    the line between them does not exist.
-    """
-    runs: list[list[tuple]] = []
-    for point in points:
-        if runs and point[0] == runs[-1][-1][0] + 1:
-            runs[-1].append(point)
-        else:
-            runs.append([point])
-    return runs
-
-
-def _polylines(points: list[tuple], count: int, low: float, high: float,
-               color: str, width: str) -> list[str]:
-    """One polyline per consecutive run of two or more scans."""
-    return [
-        '<polyline points="'
-        + " ".join(f"{_x(i, count):.1f},{_y(v, low, high):.1f}" for i, v, *_ in run)
-        + f'" fill="none" stroke="{color}" stroke-width="{width}"/>'
-        for run in _consecutive_runs(points)
-        if len(run) >= 2
-    ]
-
-
-def _line_chart(chart_id: str, points: list[tuple], low: float, high: float,
-                y_title: str = "score (0-5)") -> str:
-    """One series; each point may carry a stored range to shade."""
-    if not points:
-        return (f'{_svg_open(chart_id, low, high, y_title)}'
-                f'<text x="{_WIDTH / 2}" y="{_HEIGHT / 2}" '
-                f'text-anchor="middle" fill="#666">No history yet</text></svg>')
-    count = max(index for index, *_ in points) + 1
-    parts = [_svg_open(chart_id, low, high, y_title)]
-    # The uncertainty band is subject to the same gap rule as the line:
-    # shading across a missing scan claims a range nobody stored.
-    band = [p for p in points if p[2] is not None and p[3] is not None]
-    for run in _consecutive_runs(band):
-        if len(run) < 2:
-            continue
-        upper = " ".join(f"{_x(i, count):.1f},{_y(hi, low, high):.1f}" for i, _v, _lo, hi in run)
-        lower = " ".join(
-            f"{_x(i, count):.1f},{_y(lo_v, low, high):.1f}"
-            for i, _v, lo_v, _hi in reversed(run)
-        )
-        parts.append(f'<polygon points="{upper} {lower}" fill="#dbe9f6"/>')
-    parts.extend(_polylines(points, count, low, high, "#2b6cb0", "2"))
-    for i, v, *_ in points:
-        parts.append(f'<circle cx="{_x(i, count):.1f}" cy="{_y(v, low, high):.1f}" r="3" '
-                     f'fill="#2b6cb0"><title>scan {i + 1}: {v}</title></circle>')
-    parts.append("</svg>")
-    return "".join(parts)
-
-
-_PILLAR_COLORS = ("#2b6cb0", "#2f855a", "#b7791f", "#9b2c2c", "#553c9a")
-
-
-def _multi_line_chart(chart_id: str, series: dict[str, list[tuple]],
-                      low: float, high: float) -> str:
-    if not any(series.values()):
-        return (f'{_svg_open(chart_id, low, high, "condition (0-5)")}'
-                f'<text x="{_WIDTH / 2}" y="{_HEIGHT / 2}" '
-                f'text-anchor="middle" fill="#666">No history yet</text></svg>')
-    count = max(index for points in series.values() for index, *_ in points) + 1
-    parts = [_svg_open(chart_id, low, high, "condition (0-5)")]
-    for offset, (name, points) in enumerate(sorted(series.items())):
-        color = _PILLAR_COLORS[offset % len(_PILLAR_COLORS)]
-        parts.extend(_polylines(points, count, low, high, color, "1.5"))
-        for i, v, *_ in points:
-            parts.append(f'<circle cx="{_x(i, count):.1f}" cy="{_y(v, low, high):.1f}" '
-                         f'r="2.5" fill="{color}"><title>{escape(name)} scan {i + 1}: {v}'
-                         f"</title></circle>")
-    # The legend is part of the chart, not a caption below it: five
-    # same-shaped lines without names is a puzzle, not a report.
-    for offset, name in enumerate(sorted(series)):
-        color = _PILLAR_COLORS[offset % len(_PILLAR_COLORS)]
-        swatch_y = 14 + offset * 14
-        parts.append(f'<rect x="{_PAD + 10}" y="{swatch_y - 8}" width="10" height="10" '
-                     f'fill="{color}"/>')
-        parts.append(f'<text x="{_PAD + 26}" y="{swatch_y}" font-size="11" '
-                     f'fill="#444">{escape(name)}</text>')
-    parts.append("</svg>")
-    return "".join(parts)
-
-
-def _bar_chart(chart_id: str, categories: dict[str, float]) -> str:
-    if not categories:
-        return (f'{_svg_open(chart_id)}<text x="{_WIDTH / 2}" y="{_HEIGHT / 2}" '
-                f'text-anchor="middle" fill="#666">No score this scan</text></svg>')
-    parts = [_svg_open(chart_id)]
-    names = list(categories)
-    slot = (_WIDTH - 2 * _PAD) / len(names)
-    for position, name in enumerate(names):
-        value = float(categories[name])
-        height = (_HEIGHT - 2 * _PAD) * value / 5.0
-        x = _PAD + position * slot + slot * 0.15
-        parts.append(
-            f'<rect x="{x:.1f}" y="{_HEIGHT - _PAD - height:.1f}" '
-            f'width="{slot * 0.7:.1f}" height="{height:.1f}" fill="#2b6cb0">'
-            f"<title>{escape(name)}: {value}</title></rect>"
-        )
-        parts.append(
-            f'<text x="{x + slot * 0.35:.1f}" y="{_HEIGHT - _PAD + 16:.1f}" '
-            f'text-anchor="middle" font-size="10" fill="#444">'
-            f"{escape(name[:12])}</text>"
-        )
-    parts.append("</svg>")
-    return "".join(parts)
 
 
 def _work_order_section(report: dict[str, Any]) -> list[str]:

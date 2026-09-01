@@ -117,6 +117,11 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # sections, split from `_html_view` at the file-size line;
                 # it formats report dict fields and computes no score.
                 "_html_report_sections",
+                # `_charts` builds the ADR 011 SVG charts (deterministic,
+                # offline) from already-computed points; split from
+                # `_html_view` at the file-size line so the chart rebuild had
+                # room. It reads no report and computes no score.
+                "_charts",
                 # `_economics_view` prints the ADR 004 scenario block and
                 # computes none of it.
                 "_economics_view",

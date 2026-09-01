@@ -311,3 +311,43 @@ def test_every_score_chart_has_ticks_space_and_nonoverlapping_labels(
     )
     for pillar in sorted({name for record in records for name in record.pillars}):
         assert pillar in pillar_labels, f"pillar legend dropped {pillar}"
+
+
+def test_charts_are_readable_legend_clear_dated_and_laddered(
+    executive_report: tuple[dict, list],
+) -> None:
+    """The three defects the bighound UAT named, encoded so they cannot come
+    back: the legend never sits on top of the plot, the x-axis is dated, and
+    the y-axis shows the whole 0-5 ladder, not just its two ends.
+    """
+    from maintainability_audit import _charts
+
+    _report, records = executive_report
+    html = render_html(_report, records)
+
+    # 1. The multi-series legend lives below the plot, never painted over the
+    #    lines it names (the old legend was drawn inside the plot at top-left).
+    pillars = _chart(html, "chart-pillars")
+    pillar_names = sorted({name for record in records for name in record.pillars})
+    for attrs, text in _text_nodes(pillars):
+        if text in pillar_names:
+            match = re.search(r'\by=["\']([\d.]+)', attrs)
+            assert match and float(match.group(1)) > _charts._PLOT_BOTTOM, (
+                f"legend entry {text!r} sits inside the plot area"
+            )
+
+    # 2. The time-series charts carry dated x-axis ticks (MM-DD), so a reader
+    #    can tell which point is which scan.
+    for chart_id in ("chart-estimate", "chart-pillars", "chart-practice"):
+        labels = [text for _attrs, text in _text_nodes(_chart(html, chart_id))]
+        dated = [label for label in labels if re.fullmatch(r"\d{2}-\d{2}", label)]
+        assert len(dated) >= 2, f"{chart_id} has no dated x-axis ticks"
+
+    # 3. Every rung of the 0-5 ladder is labelled, not only 0 and 5, so a
+    #    point at 4.1 and a point at 2.0 no longer read as the same shape.
+    for chart_id in CHARTS:
+        labels = [text for _attrs, text in _text_nodes(_chart(html, chart_id))]
+        rungs = {float(label) for label in labels if re.fullmatch(r"\d+", label)}
+        assert {0.0, 1.0, 2.0, 3.0, 4.0, 5.0} <= rungs, (
+            f"{chart_id} labels only {sorted(rungs)}, not the full 0-5 ladder"
+        )

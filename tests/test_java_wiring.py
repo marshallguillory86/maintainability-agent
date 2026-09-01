@@ -9,10 +9,9 @@ from pathlib import Path
 
 from _ast_reading import (
     ROOT,
-    branch_calls,
     declaration_suffixes,
     default_include_extensions,
-    dispatch_branches_for,
+    scanner_registry,
 )
 
 
@@ -25,14 +24,9 @@ def test_java_is_in_the_default_include_extensions() -> None:
 
 
 def test_java_dispatch_uses_only_the_java_range_detector() -> None:
-    branches = dispatch_branches_for(".java")
-    assert branches, "declaration_ranges has no explicit .java branch"
-
-    for branch in branches:
-        calls, names = branch_calls(branch)
-        assert "java_declaration_ranges" in calls
-        assert "_regex_function_ranges" not in calls
-        assert "FUNC_PATTERNS" not in names
+    """Read from `declarations.SCANNERS`, which replaced the `if` chain in
+    1.1.0 — a branch per language does not survive four more languages."""
+    assert scanner_registry().get(".java") == "java_declaration_ranges"
 
 
 def test_project_config_excludes_the_java_range_fixtures() -> None:

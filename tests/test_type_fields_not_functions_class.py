@@ -4,7 +4,7 @@ D93 stopped ``name: (args) => Type`` inflating the declaration count
 inside ``interface`` and ``type`` blocks; the e88b429 fix extended it to
 class fields. This is the class across all four block kinds -- class,
 `implements`, interface, type -- driven through the real JS/TS extractor
-(`_ranges.js_declaration_ranges`), not a single regex. A function-typed
+(`_ranges_js.js_declaration_ranges`), not a single regex. A function-typed
 field is a type annotation, not a body; it must not count. Real methods
 and object-literal arrow handlers, which carry a body, still do -- the
 guard against over-correcting the exclusion into dropping real code.
@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from maintainability_audit._ranges import js_declaration_ranges
+from maintainability_audit._ranges_js import js_declaration_ranges
 
 
 def _names(src: str) -> list[str]:

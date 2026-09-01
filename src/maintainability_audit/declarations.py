@@ -3,8 +3,10 @@
 Extracted from ``metrics.py`` (2026-08-06). ``metrics`` answers "which
 files, and how big"; this module answers "which declarations inside
 them, and are they within budget". The detection strategies it dispatches
-to live in ``_ranges`` (brace-bounded, for C-family sources) and in the
-stdlib ``ast`` (exact, for Python).
+to live in the stdlib ``ast`` (exact, for Python) and in one module per
+language — ``_ranges_js``, ``_ranges_java``, ``_ranges_c`` — over the
+shared brace machinery in ``_ranges_core``. ``SCANNERS`` below is the
+whole dispatch: a language is a row in it, not a branch in a function.
 """
 from __future__ import annotations
 
@@ -15,47 +17,50 @@ from pathlib import Path
 from ._cognitive import brace_cognitive, python_cognitive
 from ._finding_match import normalized_body_digest
 from ._metrics_types import COMPLEXITY_RE, FUNC_PATTERNS, DeclRange, FunctionMetric
-from ._ranges import indent_bounded_end, java_declaration_ranges, js_declaration_ranges
+from ._ranges_c import c_declaration_ranges
+from ._ranges_core import indent_bounded_end
+from ._ranges_java import java_declaration_ranges
+from ._ranges_js import js_declaration_ranges
 
-# Extensions handled by the brace-bounded scanner in ``_ranges``.
+# One set per language, then one table binding each to its scanner.
+#
+# A language belongs here when this project can actually detect and score
+# it — the rule the claim follows, rather than the other way round
+# (Decision 10, amended 2026-08-26). Everything outside these sets keeps
+# the honest path: file length, duplication and risk are measured, and
+# declaration rates are **withheld** with the missing parser named, which
+# is what P7 requires of a population nobody read.
+PYTHON_SUFFIXES = {".py"}
+# Java is brace-delimited but its declarations are not the JS scanner's —
+# constructors, annotations and generic parameter lists the JS patterns
+# would misread — so it has its own scanner, as every language here does.
+JAVA_SUFFIXES = {".java"}
+# `.h` is read as C; the C++ increment (1.2.0) disambiguates it.
+C_SUFFIXES = {".c", ".h"}
 # `.mjs` and `.cjs` are the same JavaScript as `.js` — only the module
 # system differs, and that is invisible to a brace-bounded scan. Their
 # absence was not a decision: babel carried 1,503 unread `.mjs`/`.cjs`
 # files, 8.5% of its source, while its `.js` was read normally.
 BRACE_SUFFIXES = {".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".html"}
 
-# The languages v1.0 claims, and the only ones it parses declarations
-# for. Python by `ast` (exact) and Java by its own scanner.
+# Suffix set -> the scanner that reads it, tried in order. Python is not
+# here: it is parsed exactly by `ast` and only falls back to a scan, so
+# `declaration_ranges` handles it before consulting this table.
 #
-# The JS/TS/HTML brace scanner still exists and still works, and this
-# deliberately stops using it. The tool was scoring `declaration size`
-# for JavaScript, issuing a verified grade on it, and telling the
-# reader nothing about which of its languages had been parsed — while
-# the product claimed Python and Java. Claiming a language means the
-# rubric was calibrated for it and the parser's under-reporting is
-# documented; neither is true of the brace scanner today, so scoring
-# from it was a claim nobody had earned (Decision 10).
-#
-# Adding a language to v1.next means adding it here *and* to
-# `docs/language-support.md`, together —
-# `test_the_parsed_languages_are_exactly_the_claimed_languages` fails
-# when they disagree. Everything outside this set keeps the honest
-# path: file length, duplication and risk are measured, and declaration
-# rates are **withheld** with the missing parser named, which is what
-# P7 requires of a population nobody read.
+# **Adding a language is a row here, a module beside `_ranges_c`, and a
+# row in `docs/language-support.md`** — no edit to the dispatcher, and no
+# edit to `_ranges_core`. The three move together or the suite fails:
+# `test_claimed_languages` compares this set against the documented one
+# in both directions, and `test_every_claimed_language_has_its_own
+# _scanner` fails if a suffix reaches the last-resort patterns.
+SCANNERS: tuple[tuple[set[str], object], ...] = (
+    (JAVA_SUFFIXES, java_declaration_ranges),
+    (C_SUFFIXES, c_declaration_ranges),
+    (BRACE_SUFFIXES, js_declaration_ranges),
+)
+
 # Every extension we attempt declaration detection on at all.
-# `.java` is listed separately from `BRACE_SUFFIXES`: Java is
-# brace-delimited but its declarations are not the JS scanner's — it has
-# constructors, annotations and generic parameter lists that the JS
-# patterns would misread — so it gets its own detector in `_ranges`.
-#
-# JS, TS, JSX and HTML are here and stay here: the brace scanner reads
-# them, and three baseline-tier adapters (lizard, jscpd, multimetric)
-# measure them. A language belongs in this set when this project can
-# actually detect and score it, which is the rule the claim has to
-# follow rather than the other way round (Decision 10, amended
-# 2026-08-26).
-DECLARATION_SUFFIXES = {".py", ".java"} | BRACE_SUFFIXES
+DECLARATION_SUFFIXES = PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | BRACE_SUFFIXES
 
 
 def function_status(lines: int, complexity: int, thresholds: dict[str, int], cognitive: int = 0) -> str:
@@ -167,19 +172,22 @@ def declaration_ranges(path: Path, lines: list[str]) -> tuple[list[DeclRange], l
     source so ``if`` in a doc comment or ``?`` in a URL is not counted as
     a branch.
     """
-    if path.suffix == ".py":
+    if path.suffix in PYTHON_SUFFIXES:
         parsed = _python_function_ranges("\n".join(lines))
         if parsed is not None:
             return parsed, lines
-    if path.suffix == ".java":
-        # Its own detector, never the last-resort patterns: those match
-        # `def`, `function` and arrows, so on Java they find nothing and
-        # report a confident zero. A zero that came from looking in the
-        # wrong language is indistinguishable in the report from a file
-        # with no methods in it.
-        return java_declaration_ranges(lines)
-    if path.suffix in BRACE_SUFFIXES:
-        return js_declaration_ranges(lines)
+        # Only a syntax error reaches the patterns below, and only for
+        # Python — which is the one language they were written for.
+        return _regex_function_ranges(lines), lines
+    for suffixes, scanner in SCANNERS:
+        if path.suffix in suffixes:
+            # Always the language's own scanner, never the last-resort
+            # patterns: those match `def`, `function` and arrows, so on
+            # Java or C they find nothing and report a confident zero. A
+            # zero that came from looking in the wrong language is
+            # indistinguishable in the report from a file that genuinely
+            # has no declarations in it.
+            return scanner(lines)
     return _regex_function_ranges(lines), lines
 
 

@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from maintainability_audit._ranges import java_declaration_ranges
+from maintainability_audit._ranges_java import java_declaration_ranges
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "java"
 RangeMap = dict[tuple[str, int], tuple[int, int, str]]

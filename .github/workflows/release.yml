@@ -14,13 +14,20 @@ name: Release
 #   Workflow name:    release.yml
 #   Environment name: pypi
 #
-# Release process after that:
+# Release process after that — tagging is the only manual step:
 #   1. bump the version in pyproject.toml + __init__.py + config.py
-#   2. add the CHANGELOG entry, merge to main
+#   2. add the CHANGELOG entry (## X.Y.Z), merge to main
 #   3. git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z
 #
-# `workflow_dispatch` publishes whatever version is on the chosen ref,
-# for the first run or to recover a failed publish.
+# Pushing the tag runs three jobs: build+verify the artifact, publish it
+# to PyPI, and cut the GitHub Release with notes read from the CHANGELOG
+# section for that version. All three are idempotent — a re-pushed or
+# re-pointed tag re-runs cleanly (PyPI skips an existing version, the
+# GitHub Release is updated rather than duplicated) instead of going red.
+#
+# `workflow_dispatch` builds and publishes whatever version is on the
+# chosen ref (the GitHub-Release job is tag-only), for the first run or
+# to recover a failed publish.
 
 on:
   push:
@@ -99,3 +106,39 @@ jobs:
           name: distributions
           path: dist/
       - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+        with:
+          # Idempotent publish: a re-triggered or re-pointed tag must not
+          # hard-fail with "400 File already exists" on a version PyPI
+          # already has. A duplicate becomes a no-op instead of a red run.
+          skip-existing: true
+
+  github-release:
+    name: GitHub Release
+    needs: [build, publish]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create or update the Release object for this tag
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Publish the GitHub Release from the changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          # Notes are the CHANGELOG section for this version — one source of
+          # truth, extracted with awk so there is no heredoc to mis-indent.
+          awk -v v="$version" '
+            /^## / { if (p) exit; if ($0 ~ "^## " v) { p = 1; next } }
+            p { print }
+          ' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "Release $version." > notes.md
+          # Idempotent: create the release, or refresh its notes if a re-run
+          # finds it already there. Never a second failing path.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --notes-file notes.md --latest
+          else
+            gh release create "$TAG" --title "$TAG" --notes-file notes.md --latest --verify-tag
+          fi

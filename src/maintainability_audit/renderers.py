@@ -144,10 +144,8 @@ def _semantic_sections(report: dict[str, Any]) -> list[str]:
 
 
 def _report_metadata(report: dict[str, Any], score: dict[str, Any], root_label: str) -> list[str]:
-    """The header block under the title (G): when the audit ran and against
-    what — run date (a disclosed determinism exception), commit, branch,
-    root, and scoring standard.
-    """
+    """Header under the title (G): run date (a disclosed determinism
+    exception), commit, branch, root, and scoring standard."""
     return [
         f"- Generated: {report.get('generated_at') or '(unknown)'}",
         f"- Commit: `{report.get('git_commit') or '(none)'}` · "
@@ -166,7 +164,6 @@ def render_markdown(report: dict[str, Any], *, complete: bool = True) -> str:
     with prompts, then a pointer to the report — so the payload-capped
     surface can never truncate the prompt the way a 75k inline report did.
     """
-    summary = report["summary"]
     score = report["score"]
     root_label = report["root"]
     lines = [
@@ -176,30 +173,47 @@ def render_markdown(report: dict[str, Any], *, complete: bool = True) -> str:
         "",
         "## Summary",
         "",
-        *summary_table(summary, score, _pool_ran(report)),
+        *summary_table(report["summary"], score, _pool_ran(report)),
         "",
     ]
     if not complete:
-        lines.extend(render_grade_blockers(report))
-        if report["hard_gate_failures"]:
-            lines.extend(["## Hard Gate Failures", ""])
-            lines.extend(f"- {gate}" for gate in report["hard_gate_failures"])
-            lines.append("")
-        lines.extend(work_order_markdown(
-            report.get("work_order"), complete=False, root_label=root_label))
-        lines.extend(score_table(score))
-        lines.extend([
-            "---", "",
-            "This is the bounded UI view. The complete report — every finding, "
-            "the full work-order backlog with a copy-paste prompt for each item, "
-            "and coverage, trend and history — is the HTML or Markdown report "
-            "(ask for the `html` or `markdown` format).",
-        ])
-        return "\n".join(lines)
-    # A selection *replaces* the full list rather than sitting above it.
-    # Printing all 41 items below a narrowed set of 2 means the filter
-    # bought the reader nothing, which is what the first version did.
-    # The JSON still carries both, so no consumer loses anything.
+        return _bounded_markdown(report, score, root_label, lines)
+    return _complete_markdown(report, score, root_label, lines)
+
+
+def _hard_gate_lines(report: dict[str, Any]) -> list[str]:
+    """The hard-gate list, printed the same way wherever it appears."""
+    if not report["hard_gate_failures"]:
+        return []
+    return ["## Hard Gate Failures", "",
+            *(f"- {gate}" for gate in report["hard_gate_failures"]), ""]
+
+
+def _bounded_markdown(report: dict[str, Any], score: dict[str, Any],
+                      root_label: str, lines: list[str]) -> str:
+    """The chat/CLI UI view (issue A): score, gates, the top work items with
+    prompts, then a pointer to the complete report so a payload-capped
+    surface can never truncate the prompt."""
+    lines.extend(render_grade_blockers(report))
+    lines.extend(_hard_gate_lines(report))
+    lines.extend(work_order_markdown(
+        report.get("work_order"), complete=False, root_label=root_label))
+    lines.extend(score_table(score))
+    lines.extend([
+        "---", "",
+        "This is the bounded UI view. The complete report — every finding, "
+        "the full work-order backlog with a copy-paste prompt for each item, "
+        "and coverage, trend and history — is the HTML or Markdown report "
+        "(ask for the `html` or `markdown` format).",
+    ])
+    return "\n".join(lines)
+
+
+def _complete_markdown(report: dict[str, Any], score: dict[str, Any],
+                       root_label: str, lines: list[str]) -> str:
+    """The complete report file: every section and the whole work-order
+    backlog (a selection *replaces* the full list; the JSON keeps both)."""
+    summary = report["summary"]
     lines.extend(escalations_markdown(report.get("design_review_candidates")))
     lines.extend(scan_history_markdown(report.get("scan_history")))
     selection = report.get("work_order_selection")
@@ -222,36 +236,21 @@ def render_markdown(report: dict[str, Any], *, complete: bool = True) -> str:
     lines.extend(analyzer_findings_markdown(report.get("analyzer_findings") or []))
     lines.extend(view.unidentified_paths_markdown(
         report.get("unidentified_source_paths") or []))
-    if report["hard_gate_failures"]:
-        lines.extend(["## Hard Gate Failures", ""])
-        lines.extend(f"- {gate}" for gate in report["hard_gate_failures"])
-        lines.append("")
-
+    lines.extend(_hard_gate_lines(report))
     lines.extend(render_evidence_markdown(report))
     lines.extend(render_grade_blockers(report))
     lines.extend(score_table(score))
     file_rows = [[f"`{i['path']}`", str(i["lines"]), i["status"]] for i in report["largest_files"]]
     lines.extend(markdown_table("Largest Files", ["File", "Lines", "Status"], file_rows))
-
     hot_rows = [
-        [
-            f"`{i['path']}`",
-            hotspot_name(i),
-            str(i["start_line"]),
-            str(i["lines"]),
-            hotspot_complexity(i),
-            hotspot_cognitive(i),
-            i["status"],
-        ]
+        [f"`{i['path']}`", hotspot_name(i), str(i["start_line"]), str(i["lines"]),
+         hotspot_complexity(i), hotspot_cognitive(i), i["status"]]
         for i in report["function_hotspots"]
     ]
-    lines.extend(
-        markdown_table(
-            "Function Hotspots",
-            ["File", "Declaration", "Line", "Lines", "Complexity", "Cognitive", "Status"],
-            hot_rows,
-        )
-    )
+    lines.extend(markdown_table(
+        "Function Hotspots",
+        ["File", "Declaration", "Line", "Lines", "Complexity", "Cognitive", "Status"],
+        hot_rows))
     lines.extend(render_risk_markdown(report))
     lines.extend(render_near_duplicate_markdown(report))
     lines.extend(render_dead_code_markdown(report))

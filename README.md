@@ -430,6 +430,17 @@ gate, and the self-audit — is in
 - **Discussion** — the [Discussions tab](https://github.com/marshallguillory86/maintainability-agent/discussions).
 - **Security** — see [`SECURITY.md`](SECURITY.md) and the [private advisory flow](https://github.com/marshallguillory86/maintainability-agent/security/advisories/new). Do **not** post vulnerabilities in public issues.
 
+## Support this work
+
+This is a single-maintainer, MIT-licensed project — free to use, and built on
+a lot of unpaid hours. If it saves you or your team time, please consider
+sponsoring its continued development:
+
+**❤️ [Sponsor on GitHub](https://github.com/sponsors/marshallguillory86)**
+
+Sponsorship is entirely optional and never gates a feature, a fix, or support —
+the whole tool stays free and open. It just helps keep the work going.
+
 ## License
 
 MIT

@@ -224,3 +224,24 @@ def test_absent_economics_omits_the_section_on_both_skins(audited) -> None:
     html = render_html(report, records)
     assert "## Economic Context (scenario)" not in markdown
     assert "<h2>Economic Context (scenario)</h2>" not in html
+
+
+def test_the_html_report_carries_a_copy_paste_prompt_for_every_work_order_item(audited) -> None:
+    """Issue E: the HTML report carried neither the full work-order list nor a
+    prompt per item. It now carries a self-contained copy-paste prompt for
+    every item, with the same body text as the Markdown skin."""
+    report, records = audited
+    if not report.get("work_order"):
+        report = dict(report)
+        report["work_order"] = [{
+            "finding_class": "oversized-file", "title": "app.py is 600 lines",
+            "path": "app.py", "line": None, "target": "split below the limit",
+            "rationale": "too many responsibilities", "band": "quick-win",
+            "verification": "python -m maintainability_audit --root . --format json",
+            "class_delta": 0.1, "class_count": 1, "risk": 2,
+        }]
+    html = render_html(report, records)
+    assert "<h3>Copy-paste prompts</h3>" in html
+    assert html.count("<pre>") >= len(report["work_order"]), "missing per-item prompt blocks"
+    for item in report["work_order"]:
+        assert f"Task: {item['target']}." in html, f"no prompt for {item['title']}"

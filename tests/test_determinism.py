@@ -71,7 +71,8 @@ def _comparable(report: dict) -> str:
             return ANSI_ESCAPE.sub("", value)
         return value
 
-    stripped = {k: v for k, v in report.items() if k not in {"root", "git_status_short"}}
+    stripped = {k: v for k, v in report.items()
+                if k not in {"root", "git_status_short", "generated_at"}}
     return json.dumps(stable(stripped), sort_keys=True, default=str)
 
 
@@ -183,7 +184,7 @@ def test_the_analysis_opens_no_sockets(tmp_path: Path) -> None:
     assert report["summary"]["files_scanned"] >= 60
 
 
-DISCLOSED_VARIABLE_FIELDS = {"root", "git_status_short", "seconds"}
+DISCLOSED_VARIABLE_FIELDS = {"root", "git_status_short", "seconds", "generated_at"}
 
 
 def test_the_determinism_exceptions_are_exactly_the_disclosed_ones() -> None:
@@ -213,8 +214,12 @@ def test_the_determinism_exceptions_are_exactly_the_disclosed_ones() -> None:
 
     source = Path(__file__).read_text(encoding="utf-8")
     stripped = set(re.findall(r'key != "([a-z_]+)"', source))
-    stripped |= set(re.findall(r'k not in \{"([a-z_]+)", "([a-z_]+)"\}', source)[0]) \
-        if re.search(r'k not in \{"[a-z_]+", "[a-z_]+"\}', source) else set()
+    # Parse every field in the `k not in {...}` set, not a fixed count —
+    # the earlier two-field regex went silent the moment a third field
+    # (`generated_at`) was added, which is exactly the drift this checks.
+    block = re.search(r'k not in \{([^}]*)\}', source)
+    if block:
+        stripped |= set(re.findall(r'"([a-z_]+)"', block.group(1)))
     undisclosed = sorted(stripped - DISCLOSED_VARIABLE_FIELDS)
     assert not undisclosed, (
         f"the determinism check silently ignores {undisclosed}, which P1 "

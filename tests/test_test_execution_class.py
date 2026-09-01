@@ -149,6 +149,58 @@ def test_opted_in_coverage_scores_test_effectiveness_and_moves_testability(tmp_p
     )
 
 
+def test_a_stored_command_is_normalized_into_env_and_argv() -> None:
+    """A command the no-shell runner could not execute is now normalized.
+
+    The failing field case: `["PYTHONPATH=src python3 -m pytest -q"]` — one
+    list element holding a whole shell-style command line with an env
+    prefix, which ran as a single argv token named `PYTHONPATH=src ...`
+    and could not be found.
+    """
+    from maintainability_audit._test_execution import _parse_command
+
+    env, argv = _parse_command(["PYTHONPATH=src python3 -m pytest -q"])
+    assert env == {"PYTHONPATH": "src"}
+    assert argv == ["python3", "-m", "pytest", "-q"]
+
+    # already-tokenized argv with no env prefix is unchanged
+    assert _parse_command(["pytest", "-q"]) == ({}, ["pytest", "-q"])
+    # only assignments, no program
+    assert _parse_command(["FOO=bar"]) == ({"FOO": "bar"}, [])
+
+
+def test_an_env_prefixed_command_runs_with_that_env(tmp_path: Path) -> None:
+    """The falsifier: an env prefix reaches the child as environment.
+
+    The script only produces coverage when the env var the operator's
+    prefix sets is present, so a run that ignored the prefix reads no
+    coverage. Configured as the single-string shape that failed in the
+    field.
+    """
+    script = tmp_path / "run.sh"
+    script.write_text(
+        '#!/bin/sh\n'
+        'if [ "$MARK" = "on" ]; then '
+        'printf \'%s\' \'<coverage line-rate="0.5"/>\' > coverage.xml; fi\nexit 0\n',
+        encoding="utf-8",
+    )
+    script.chmod(script.stat().st_mode | stat.S_IEXEC)
+    config = {"test_execution": {"requested": True},
+              "expected_commands": {"test": ["MARK=on ./run.sh"]}}
+    result = run_test_suite(tmp_path, config)
+    assert result["ran"] is True, "the env-prefixed command did not execute"
+    assert result["coverage_percent"] == 50.0, "the env prefix did not reach the child"
+
+
+def test_a_command_that_is_only_env_does_not_spawn(tmp_path: Path) -> None:
+    """Assignments with no program name nothing to run — reported, not spawned."""
+    config = {"test_execution": {"requested": True},
+              "expected_commands": {"test": ["FOO=bar"]}}
+    result = run_test_suite(tmp_path, config)
+    assert result["ran"] is False
+    assert result["coverage_percent"] is None
+
+
 def _git_repo(tmp_path: Path) -> Path:
     """A committed fixture repo, so setup treats it as first-run."""
     import subprocess
@@ -247,3 +299,29 @@ def test_the_cli_stage_two_records_the_test_command(
     cancelled = run_stage("   ")
     assert cancelled["test_execution"]["requested"] is False, "a blank answer did not cancel"
     assert "test" not in (cancelled.get("expected_commands") or {})
+
+
+def test_the_opted_in_suite_uses_its_own_timeout_not_the_analyzer_cap(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """C2: a whole suite is slower than an analyzer, so it must not inherit
+    the 120s analyzer cap that was killing real suites. Default 600s,
+    overridable under `test_execution.timeout_seconds`."""
+    from maintainability_audit import _test_execution
+    from maintainability_audit._runner import Outcome, ToolResult
+
+    captured: dict[str, int] = {}
+
+    def fake_run(slug, invocation, *, cwd, timeout_seconds):
+        captured["timeout"] = timeout_seconds
+        return ToolResult(slug=slug, outcome=Outcome.FAILED, exit_code=0, detail="")
+
+    monkeypatch.setattr(_test_execution, "run", fake_run)
+
+    _test_execution.run_test_suite(tmp_path, _opted_in(["pytest"]))
+    assert captured["timeout"] == 600, "the suite inherited the 120s analyzer cap"
+
+    override = _opted_in(["pytest"])
+    override["test_execution"]["timeout_seconds"] = 900
+    _test_execution.run_test_suite(tmp_path, override)
+    assert captured["timeout"] == 900, "the configured suite timeout was ignored"

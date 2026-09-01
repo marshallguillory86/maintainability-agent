@@ -75,6 +75,13 @@ class Invocation:
     # working directory need somewhere that is not the tree under audit,
     # or the audit changes what later tools see.
     cwd: Path | None = None
+    # Extra environment for the child, merged over the stripped default.
+    # Analyzers leave this None and inherit the code-loading-stripped env;
+    # the only caller that sets it is the opted-in test suite, whose
+    # operator-configured `NAME=VALUE prog` prefix names env the operator
+    # explicitly chose for their own command (Decision 9's opt-in). It is
+    # not the audited tree choosing what the child loads.
+    env: dict[str, str] | None = None
 
 
 @dataclass(frozen=True)
@@ -339,7 +346,7 @@ def run(
             capture_output=True,
             text=True,
             timeout=timeout_seconds,
-            env=analyzer_env(),
+            env={**analyzer_env(), **(invocation.env or {})},
             check=False,
         )
     except subprocess.TimeoutExpired:

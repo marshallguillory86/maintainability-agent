@@ -84,7 +84,7 @@ Each promise is falsifiable, and named so a failure can be reported against it.
 
 | # | Promise | Falsified by |
 |---|---|---|
-| P1 | The audit is deterministic: same tree, config, pinned analyzer versions **and scan history** in, same *evidence, findings and score* out — **at a fixed point in time.** The history window is relative to the wall clock (see below), so the same tree audited on two different days can report different history rates. Three further fields describe the run rather than the repository and are recorded without being compared — the absolute `root`, `git_status_short`, and each analyzer's wall-clock `seconds`; see below. History is an input, not decoration — a finding that cleared and returned twice is different information from one seen for the first time, so an identical tree reports differently against different histories, and that is the feature working. **The analysis itself performs no network access and invokes no language model.** Tool acquisition is opt-in through `analyzers.acquire_tools` and defaults off; when enabled, it may fetch a missing tool and records the acquired version | Two runs disagreeing on identical tree, config, versions and history, or any network access during analysis |
+| P1 | The audit is deterministic: same tree, config, pinned analyzer versions **and scan history** in, same *evidence, findings and score* out — **at a fixed point in time.** The history window is relative to the wall clock (see below), so the same tree audited on two different days can report different history rates. Four further fields describe the run rather than the repository and are recorded without being compared — the absolute `root`, `git_status_short`, each analyzer's wall-clock `seconds`, and the `generated_at` audit timestamp; see below. History is an input, not decoration — a finding that cleared and returned twice is different information from one seen for the first time, so an identical tree reports differently against different histories, and that is the feature working. **The analysis itself performs no network access and invokes no language model.** Tool acquisition is opt-in through `analyzers.acquire_tools` and defaults off; when enabled, it may fetch a missing tool and records the acquired version | Two runs disagreeing on identical tree, config, versions and history, or any network access during analysis |
 | P2 | The score applies the same rubric to every repository, and the rubric is readable in source | A repo-specific code path changing a weight or band |
 | P3 | Withholding evidence cannot improve the reported grade | Any input whose removal raises the graded field |
 | P4 | `maintainability_estimate` equals the weighted mean of the categories printed beside it | A report where the arithmetic does not check |
@@ -99,7 +99,7 @@ P1 read "no network, no LLM" when the tool was pure computation over a file tree
 
 Two honest options existed: refuse to acquire tools, which makes the multi-language story depend on every user hand-installing a dozen ecosystems; or provide an explicit acquisition choice and disclose it. The latter was chosen, so the promise separates **analysis** from **acquisition**. Analysis still touches no network and no model: **this agent does not transmit the audited source.** Acquisition defaults off. When a user enables `analyzers.acquire_tools`, a missing tool may be fetched and its version is recorded in the report so the run remains reproducible.
 
-**Why P1 names three excepted fields.** An audit ran the same tree
+**Why P1 names these excepted fields.** An audit ran the same tree
 twice and found the reports differing by one millisecond, on an
 analyzer's `seconds`. The promise said "same report out" and the
 determinism check had been quietly stripping `root`,
@@ -108,16 +108,20 @@ so the promise was false of the JSON a consumer actually diffs, and
 true only of the test's own projection.
 
 The exceptions are legitimate: a duration is a fact about the run, not
-about the repository, and an absolute path is not portable. What was
-wrong was that they were undisclosed, which is exactly the shape this
+about the repository, and an absolute path is not portable. `generated_at`
+— the wall-clock time the audit ran, added so the report can state under
+its title when it was produced — is the same kind: a fact about the run,
+which the determinism check strips because two audits of one tree
+legitimately differ on it. What was wrong when only the first three were
+stripped was that they were undisclosed, which is exactly the shape this
 table exists to prevent — a promise kept green by a check narrower than
 the promise. They are named above now, and
 `test_the_determinism_exceptions_are_exactly_the_disclosed_ones` fails
 if the strip list grows without this page growing with it.
 
-**Why P1 names the history window.** The three excepted fields above
-are recorded and not compared. The history window is a fourth exception
-of a different kind, and it went undisclosed longer: `DEFAULT_SINCE` is
+**Why P1 names the history window.** The run-describing fields above
+are recorded and not compared. The history window is an exception of a
+different kind, and it went undisclosed longer: `DEFAULT_SINCE` is
 `12 months ago`, which git resolves against the wall clock at the moment
 the audit runs. It is not configurable.
 

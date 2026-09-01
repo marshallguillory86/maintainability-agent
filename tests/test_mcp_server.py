@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from _mcp_fixtures import _drop_generated_line
 
 from maintainability_audit.config import VERSION
 from maintainability_audit.mcp_server import (
@@ -332,7 +333,11 @@ def test_the_report_resource_is_byte_identical_to_the_cli_rendering(tmp_path: Pa
     served = _read(server, uri)
     expected = output.read_text(encoding="utf-8").removesuffix("\n")
 
-    assert served == expected, (
+    # Byte-identical but for the run date (G): the resource and the file are
+    # rendered at different instants, and the header's `Generated:` stamp is a
+    # disclosed determinism exception (P1). ADR 008 governs claims, not the
+    # wall clock, so parity is checked on every line but that one.
+    assert _drop_generated_line(served) == _drop_generated_line(expected), (
         "the report resource is not the CLI rendering; ADR 008 requires the "
         "identical document, and where they disagree the file is authoritative"
     )

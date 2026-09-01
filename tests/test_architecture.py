@@ -117,6 +117,12 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # sections, split from `_html_view` at the file-size line;
                 # it formats report dict fields and computes no score.
                 "_html_report_sections",
+                # `_markdown_sections` holds the leaf Markdown section
+                # renderers and the shared `markdown_table`, split from
+                # `renderers` for headroom (#125). It imports nothing from
+                # `renderers`, so `renderers` imports these back without a
+                # cycle. Reads the report dict and computes no score.
+                "_markdown_sections",
                 # `_charts` builds the ADR 011 SVG charts (deterministic,
                 # offline) from already-computed points; split from
                 # `_html_view` at the file-size line so the chart rebuild had

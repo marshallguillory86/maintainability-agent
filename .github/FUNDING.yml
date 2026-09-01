@@ -1,0 +1,4 @@
+# Surfaces the "Sponsor" button on the repository and enables the
+# funding link in the community profile. GitHub Sponsors only for now;
+# add other platforms (open_collective, ko_fi, custom) here if wanted.
+github: [marshallguillory86]

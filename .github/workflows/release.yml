@@ -69,7 +69,12 @@ jobs:
           maintainability-agent --version
           python3 -m pip install ".[dev]"
           PYTHONPATH=src python3 -m pytest -q
-          maintainability-agent --root . --config maintainability-agent.json --fail-on-gate --output /dev/null
+          # A real file inside the tree, not /dev/null: the D34 safe-write
+          # hardening refuses a non-regular-file target *and* any path outside
+          # the audited root, so the old /dev/null smoke test crashed the built
+          # package on every tag. `maintainability-report.md` sits at the root
+          # and is already in this repo's exclude_patterns.
+          maintainability-agent --root . --config maintainability-agent.json --fail-on-gate --output maintainability-report.md
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

@@ -249,11 +249,12 @@ these:
 |---|---|---|
 | Python (`.py`) | `ast` — exact `end_lineno` | Exact |
 | Java (`.java`) | dedicated brace-bounded scanner | Bounded; under-reports some constructs |
+| C (`.c`, `.h`) | dedicated brace-bounded scanner — functions, `struct`/`enum`/`union` | Bounded; prototypes and macros are not declarations |
 | JS / TS / JSX / TSX / MJS / CJS | brace/paren depth over a masked copy | Bounded by the declaration's own braces |
 | HTML (`.html`) | same brace scanner (inline `<script>`) | Bounded |
 | TypeScript (semantic) | a recorded analysis or a locally-installed `tsc`, workspace projects included | Type-level facts; `unknown` when no checker is present |
 
-Any language **not** in that table — Go, Rust, Ruby, C/C++, C#, PHP, Kotlin,
+Any language **not** in that table — Go, Rust, Ruby, C++, C#, PHP, Kotlin,
 Swift, and the rest — is **not parsed for declarations by the built-in
 scanner.** Its files still count toward repo size, but the built-ins produce no
 function-size, complexity, duplication or dead-code findings for them, and the
@@ -270,8 +271,8 @@ selected *and* installed (acquisition is opt-in and off by default), and where
 they measured a full concept set they become the *primary* evidence, with the
 built-ins as the fallback.
 
-So: **first-class today is Python** (and TypeScript for semantics); Java and the
-JS/TS family are bounded-but-real; every other language is only as covered as
+So: **first-class today is Python** (and TypeScript for semantics); Java, C and
+the JS/TS family are bounded-but-real; every other language is only as covered as
 the external analyzer you point at it — and with no analyzer, it is
 under-reported by design. The per-language accuracy, the exact parsed set, and
 the known limitations are documented in
@@ -442,6 +443,14 @@ sponsoring its continued development:
 
 Sponsorship is entirely optional and never gates a feature, a fix, or support —
 the whole tool stays free and open. It just helps keep the work going.
+
+## Acknowledgements
+
+- **Miles Parker** — identified the friction-signal gap: that the "this keeps
+  fighting me" signal a maintainer accumulates over months is exactly the
+  evidence an LLM cannot hold across sessions, and that a tool positioned
+  between the two should carry it. A contribution of insight rather than code,
+  and it changed what this project is for.
 
 ## License
 

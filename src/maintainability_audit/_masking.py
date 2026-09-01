@@ -1,9 +1,9 @@
 """Lexical scrubbing for C-family sources.
 
-Extracted from ``_ranges.py`` (2026-08-06), the same way
+Extracted from ``_ranges.py`` (2026-08-06, now ``_ranges_js``), the same way
 ``_metrics_types.py`` was extracted from ``metrics.py``: this is a
 separate concern (which characters are code) from the structural
-question ``_ranges`` answers (where a declaration ends), and keeping
+question the ``_ranges*`` scanners answer (where a declaration ends), and keeping
 them apart holds both modules inside the self-audit's file-length
 budget.
 
@@ -28,7 +28,7 @@ _TOKEN_RE = re.compile(rf"//|/\*|{_STRING_TOKEN}")
 # Unmasked, a regex literal's contents were read as code: every `?` in
 # `/a?b?c?d?e?/` counted as a decision point, so a one-line function
 # returning a pattern scored cyclomatic 6 against a McCabe number of 1
-# (D86). `_ranges` separately notes that an unbalanced brace inside one
+# (D86). `_ranges_js` separately notes that an unbalanced brace inside one
 # can desync brace depth, which this also closes.
 _REGEX_TOKEN = r"/(?![/*])(?:\\.|\[(?:\\.|[^\]\\])*\]|[^/\\\n\[])+/[dgimsuvy]*"
 _REGEX_RE = re.compile(_REGEX_TOKEN)

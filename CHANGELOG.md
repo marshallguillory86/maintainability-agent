@@ -6,6 +6,83 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.1.0 - 2026-09-01
+
+**C is a first-class language.** The first of three C-family increments
+(C, then C++ in 1.2.0, then C# in 1.3.0). A C repository now gets
+declaration-level findings from a `pip install` with no analyzer
+installed, instead of a withheld declaration rate.
+
+### Added
+
+- **A dedicated C scanner (`c_declaration_ranges`).** File-scope
+  function definitions and `struct`/`enum`/`union` types, each bounded
+  by its own braces. It reuses the Java scanner's brace primitives
+  rather than inventing a second bounding rule, so the guarantee that
+  covers every other language covers C: **a declaration's range never
+  runs past its own body.** Storage-class and inline keywords and
+  pointer return types are stripped before matching (`static inline int
+  clamp(` is `clamp`; `const char *greeting(` is `greeting`), and the
+  brace may sit on the signature line, on its own line, or after a
+  signature split over several lines — all three are bounded correctly.
+- **`.c` and `.h` are parsed and opened by default.** Both join
+  `DECLARATION_SUFFIXES` and the default `include_extensions`; a suffix
+  is listed in one only when the other agrees, which
+  `test_claimed_languages` enforces in both directions. `.h` is read as
+  C for now; the C++ increment disambiguates it.
+
+Two things are deliberately not declarations: a **prototype** has no
+body, so a header of 40 prototypes is not 40 declarations, and a
+**preprocessor line** is skipped whole, so `#define MAX(a, b) …` is not
+read as a function called `MAX`. K&R-style definitions and
+macro-generated declarations are missed, each costing one declaration
+and never a cascade. The full list is in
+[docs/language-support.md](docs/language-support.md).
+
+**The calibration is unchanged, and that was verified rather than
+assumed.** Only 3 of the 40 pinned corpus repositories contain any C at
+all (27, 16 and 2 files in trees of 4008, 3085 and 878), all three are
+analyzer-primary, and re-deriving the constants with C included moves
+every reference and `CALIBRATION_C` by less than 0.0001. No repository
+is re-graded by this release for a language it does not contain.
+
+### Changed
+
+- **Declaration scanning is one module per language over a shared core.**
+  `_ranges.py` held the brace machinery and the JS/TS patterns together,
+  and sat at its 500-line budget — so every new language either grew that
+  file or reached into it for private names. It is now `_ranges_core`
+  (the rule: a range is bounded by its own body), with `_ranges_js`,
+  `_ranges_java` and `_ranges_c` owning one language's patterns each. The
+  dependency runs one way: a language imports the core, and the core
+  never learns a language.
+- **The dispatch is a table, not an `if` chain.**
+  `declarations.SCANNERS` maps a suffix set to its scanner, so **adding a
+  language is a module and a row** — no edit to the dispatcher, the core,
+  or any structural test. The Java-only wiring guards were generalised to
+  read that table and hold *every* claimed language to the rule, so C++
+  and C# inherit them on arrival.
+- **The shipped defaults moved to `_config_defaults`.** `config.py` was
+  carrying both the default configuration and the loading/validation
+  logic, also at 500 lines, and `include_extensions` is a list every new
+  language must edit. `config` re-exports `DEFAULT_CONFIG` and
+  `DEFAULT_IDIOM_GROUPS`, so every existing import is unchanged.
+
+Together these are the reason 1.1.0 is a structural release and not just
+a scanner: C++ and C# are now additive rather than another argument with
+a file-length gate.
+
+### Fixed
+
+- **`tools/calibration/measure.py --check` no longer rewrites the
+  corpus it checks against.** A check now reports and leaves
+  `measurements.json` alone; previously it overwrote the checked-in
+  analyzer-primary measurements with whatever that run produced. Run
+  without `--with-analyzers` it therefore reported a large false
+  `CALIBRATION_C` drift _and_ left the tree holding the corpus that
+  appeared to prove it. It also now warns when a built-ins-only run is
+  being compared against analyzer-fitted constants.
+
 ## 1.0.1 - 2026-09-01
 
 A housekeeping release: no runtime behavior changed (the reconfigure and

@@ -127,12 +127,13 @@ def test_a_repository_of_unread_source_gets_no_score(tmp_path: Path) -> None:
 def test_a_score_is_never_computed_from_a_minority_of_the_source(tmp_path: Path) -> None:
     """The curl case, reduced — and the one that actually produced a number.
 
-    Ninety unread C files beside ten readable Python ones. The scan sees
+    Ninety unread source files beside readable Python ones. The scan sees
     the Python, clears the population floor on it, and reports a score
-    for the repository. It is a score for a tenth of the repository,
-    and nothing in the output says so.
+    for the repository. It is a score for a fraction of the repository,
+    and nothing in the output says so. (Curl's unread files were C, which
+    1.1.0 reads; the rule is about any unread majority, so these are Rust.)
     """
-    files = {f"lib/mod{n}.c": f"int f{n}(int x) {{ return x + {n}; }}\n" for n in range(90)}
+    files = {f"lib/mod{n}.rs": f"pub fn f{n}(x: i32) -> i32 {{ x + {n} }}\n" for n in range(90)}
     files.update({f"tools/help{n}.py": PYTHON % {"n": n} for n in range(150)})
     root = _repo(tmp_path / "mixed", files)
 
@@ -186,12 +187,11 @@ def test_a_fully_read_repository_is_not_penalised(tmp_path: Path) -> None:
     assert report["score"]["maintainability_estimate"] is not None
 
 
-# `.java` is deliberately absent: it has a detector now, so adding it to
-# `include_extensions` produces a population rather than the false "too
-# small" sentence. These are the suffixes still in the gap.
+# `.java` and `.c` are deliberately absent: each has a detector now (`.c`
+# as of 1.1.0), so adding either to `include_extensions` produces a real
+# population rather than the false "too small" sentence. Still in the gap:
 SOURCE_BY_SUFFIX: dict[str, str] = {
     ".go": "package a\n\nfunc Compute%(n)d(v int) int {\n\tif v > 0 {\n\t\treturn v\n\t}\n\treturn -v\n}\n",
-    ".c": "int compute_%(n)d(int v) {\n    if (v > 0) { return v; }\n    return -v;\n}\n",
     ".rs": "pub fn compute_%(n)d(v: i32) -> i32 {\n    if v > 0 { v } else { -v }\n}\n",
 }
 

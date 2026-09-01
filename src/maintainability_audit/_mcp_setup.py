@@ -206,13 +206,8 @@ def _economics_block(answers: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def apply_answers(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
-    """Persist the answers to both tiers and return the merged config.
-
-    The user tier carries the same payload as the repository file: the
-    person answered once, and their next repository should inherit it
-    (D13's whole point). Repository config still wins where they later
-    diverge.
-    """
+    """Assemble a full reply's payload and hand it to `_persist_answers`.
+    A staged reply (only rates, or only the test command) merges instead."""
     if _is_bounds_only(answers):
         return _apply_bounds(root, answers)
     if _is_command_only(answers):
@@ -224,34 +219,39 @@ def apply_answers(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
             "depth": str(answers.get("depth") or "moderate"),
             "license_policy": str(answers.get("license_policy") or "permissive"),
         },
-        "presentation": {
-            "format": str(answers.get("default_format") or "chat"),
-        },
-        # The persisted consent that resolves record_history=None ahead
-        # of the file-existence rule (decision 4).
-        "history": {
-            "record": _accepted(answers.get("record_scan_history", "yes")),
-        },
-        # Decision 9 amendment (Class 5): the disclosed opt-in to run the
-        # tree's own suite. Requested here; the command is a staged second
-        # ask, and nothing executes until both are present and selection
-        # opts in.
-        "test_execution": {
-            "requested": _accepted(answers.get("run_tests", "no")),
-        },
+        "presentation": {"format": str(answers.get("default_format") or "chat")},
+        # Persisted consent for record_history=None, ahead of file-existence (decision 4).
+        "history": {"record": _accepted(answers.get("record_scan_history", "yes"))},
+        # Decision 9 (Class 5): the disclosed opt-in to run the tree's own
+        # suite; the command is a staged second ask.
+        "test_execution": {"requested": _accepted(answers.get("run_tests", "no"))},
     }
     economics = _economics_block(answers)
     if economics is not None:
         payload["economic_context"] = economics
+    return _persist_answers(root, payload)
 
-    # Bounded and staged: a dangling symlink at this name carried
-    # first-run configuration outside the repository, and `is_file()`
-    # reads false on a dangling link so setup believed nothing was
-    # there (D34).
+
+def _persist_answers(root: Path, payload: dict[str, Any]) -> dict[str, Any]:
+    """Merge the answers over the existing config and write both tiers.
+
+    Merge, never overwrite (D13: the user tier inherits to the next repo):
+    a reconfigure must keep the fields the wizard never asks about — paths,
+    thresholds, gates, commands, risk patterns, instruction pack, analyzer
+    sub-keys beyond run/depth/license. Writing `payload` wholesale erased
+    them — the bug that wiped a repository's scoping on reconfigure.
+    """
     config_path = Path(root) / CONFIG_FILENAME
+    discovered = discovered_config(Path(root))
+    merged = dict(_read_config(Path(discovered)) or {}) if discovered else {}
+    for section in ("analyzers", "presentation", "history", "test_execution"):
+        merged[section] = {**merged.get(section, {}), **payload[section]}
+    merged["version"] = 1
+    if "economic_context" in payload:
+        merged["economic_context"] = payload["economic_context"]
     write_bounded(
         Path(root), config_path,
-        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        json.dumps(merged, indent=2, sort_keys=True) + "\n",
     )
     write_user_answers(payload)
     return load_config(str(config_path))

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -155,15 +156,37 @@ def test_a_client_sees_the_two_tools_and_can_call_one(tmp_path: Path) -> None:
     asyncio.run(exercise())
 
 
+def _child_import_path() -> str:
+    """This process's own import path, for the child to inherit.
+
+    Derived from `sys.path` rather than assumed, so the subprocess
+    imports exactly what the test process is exercising: the package
+    under test (from `src/` in a checkout, site-packages when installed)
+    *and* the `mcp` SDK it needs to answer at all.
+    """
+    return os.pathsep.join(entry for entry in sys.path if entry)
+
+
 def test_real_stdio_process_initializes_and_reports_its_boundary(tmp_path: Path) -> None:
     """Exercise the installed transport, not only the in-memory SDK seam."""
     from mcp import Client, StdioServerParameters
-    from mcp.client.stdio import stdio_client
+    from mcp.client.stdio import get_default_environment, stdio_client
 
     async def exercise() -> None:
         parameters = StdioServerParameters(
             command=sys.executable,
             args=["-m", "maintainability_audit.mcp_server", "--allow-root", str(tmp_path)],
+            # The SDK spawns the child with a scrubbed environment — HOME,
+            # LOGNAME, PATH, SHELL, USER and nothing else — so `PYTHONPATH`
+            # does not survive, and the child could import this package
+            # only where it was already installed. In a source checkout it
+            # died with `ModuleNotFoundError: No module named
+            # 'maintainability_audit'`, the client saw `Connection closed`,
+            # and the one test covering the real stdio transport was
+            # unrunnable outside CI. Handing it this process's own import
+            # path makes it work in both layouts, and covers the `mcp` SDK
+            # the child needs before it can answer anything at all.
+            env={**get_default_environment(), "PYTHONPATH": _child_import_path()},
         )
         async with Client(stdio_client(parameters)) as client:
             result = await client.call_tool("get_agent_info")

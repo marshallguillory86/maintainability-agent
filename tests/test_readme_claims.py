@@ -44,6 +44,49 @@ def test_the_readme_names_the_shipped_version() -> None:
     )
 
 
+def test_the_report_names_the_corpus_its_anchor_is_drawn_from() -> None:
+    """Every multiple is against a corpus of three languages; say which.
+
+    `score.reference` tells a reader that 1.0x is "the median mature-OSS
+    repo". The corpus behind that median is 40 repositories of Python,
+    TypeScript and JavaScript, and this project parses seven languages —
+    so Java, C, C++, C# and Fortran are scored against medians measured
+    on none of their code. LAPACK reports declarations at 7.18x that
+    anchor and fortran-lang/stdlib at 1.10x; the first number is true of
+    LAPACK against mature OSS web code and is not a statement about
+    typical Fortran, because no typical Fortran is in the comparison set.
+
+    The rubric stays uniform, which is the promise (P2). The corpus is
+    not uniform across languages, which is a limit, and a limit that
+    travels only in `docs/standard.md` does not reach the person reading
+    the number.
+    """
+    import json
+    from pathlib import Path as _Path
+
+    from maintainability_audit.config import load_config
+    from maintainability_audit.report import build_report
+
+    corpus = json.loads(
+        (ROOT / "tools" / "calibration" / "corpus.json").read_text(encoding="utf-8")
+    )
+    languages = {(repo.get("language") or "").lower() for repo in corpus["repos"]}
+    assert languages <= {"python", "typescript", "javascript"}, (
+        f"the corpus now spans {sorted(languages)}; the disclosure in "
+        "score.reference and docs/standard.md must name what it actually holds"
+    )
+
+    report = build_report(_Path("."), load_config("maintainability-agent.json"))
+    reference = report["score"]["reference"]
+    assert reference["corpus_languages"] == ["Python", "TypeScript", "JavaScript"]
+    assert "docs/standard.md" in reference["corpus_note"]
+
+    standard = _read(ROOT / "docs" / "standard.md")
+    assert "What the anchor does not cover" in standard, (
+        "the standard must state which languages the corpus omits"
+    )
+
+
 def test_the_readme_language_table_lists_every_parsed_language() -> None:
     """The claim a reader scans first must match the parser.
 

@@ -143,8 +143,21 @@ def test_renaming_moved_no_value(name: str, tmp_path: Path) -> None:
             "the anchor should have carried floor-grade blockers that stage 8 retires"
         )
     for unchanged in ("standard", "categories", "dimensions",
-                      "reference", "worst_dimension", "evidence_status", "verified_grade"):
+                      "worst_dimension", "evidence_status", "verified_grade"):
         assert score[unchanged] == anchor[unchanged], unchanged
+    # `reference` gained exactly two fields after a6b3c0f, and gained them
+    # as a disclosure rather than a change of meaning: the corpus behind
+    # "1.0x = the median mature-OSS repo" is 40 repositories of Python,
+    # TypeScript and JavaScript, and this project now parses seven
+    # languages. The multiple a report prints is unchanged; what is new is
+    # that it says what it is a multiple *of*. Stated as a delta on the
+    # frozen anchor, the way Class 5's aspect and rubric changes are.
+    assert score["reference"] == {
+        **anchor["reference"],
+        "corpus_languages": ["Python", "TypeScript", "JavaScript"],
+        "corpus_note": score["reference"]["corpus_note"],
+    }, "reference gained only the corpus disclosure"
+    assert "docs/standard.md" in score["reference"]["corpus_note"]
     # aspects gained exactly one field after a6b3c0f: test_effectiveness,
     # the Class 5 opt-in coverage aspect. None of these fixtures opts a
     # suite in, so it is NotApplicable — present and None — and every

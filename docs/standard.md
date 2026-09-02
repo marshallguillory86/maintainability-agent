@@ -122,6 +122,31 @@ Calibration is reproducible, not a snapshot someone took once. The corpus is def
 
 > angular · ansible · ant-design · anime · axios · Chart.js · code-server · django · echarts · excalidraw · express · fastapi · flask · freeCodeCamp · github-readme-stats · hackingtool · hoppscotch · jquery · keras · localstack · lodash · manim · material-ui · mermaid · models · n8n · nest · playwright · reveal.js · scrapy · strapi · svelte · tabby · tailwindcss · transformers · uBlock · vite · webpack · youtube-dl · yt-dlp
 
+**What the anchor does not cover.** The corpus is Python, TypeScript
+and JavaScript. This project parses seven languages, and five of them —
+Java, C, C++, C# and Fortran — are scored against medians measured on
+none of their code. The rubric is uniform across repositories, which is
+the promise ([P2](product-intent.md#what-it-promises)); the *corpus* is
+not uniform across languages, which is a limit.
+
+It is a real one. Long, deeply-looped numerical subroutines are idiomatic
+in dense linear algebra and absent from a corpus of web frameworks and
+libraries: audited against this anchor, LAPACK reports declarations at
+**7.18x** the median while fortran-lang/stdlib reports **1.10x**. The
+first number is a true statement about LAPACK relative to mature OSS web
+code, and it is not a statement about typical Fortran, because no typical
+Fortran is in the comparison set.
+
+Two things follow. `score.reference` names the corpus languages in every
+report, so the limit travels with the number rather than living only
+here. And extending the corpus beyond these three languages is a
+deliberate release rather than a patch: new members move `CALIBRATION_C`,
+which re-grades every repository that has ever been scored.
+
+Per-language references would remove the awkwardness and break the
+promise, so they are refused: two repositories must be comparable
+regardless of what they are written in.
+
 **The list is produced by a query, not by preference.** The first corpus was fourteen repositories chosen because the author knew them — selection bias sitting directly underneath a scale used to grade other people's code. [`tools/calibration/select_corpus.py`](../tools/calibration/select_corpus.py) now issues a GitHub search anyone can re-run:
 
 ```text

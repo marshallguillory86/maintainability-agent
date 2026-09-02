@@ -119,6 +119,150 @@ def test_every_test_function_in_a_class_file_becomes_a_node_id() -> None:
     ]
 
 
+def _synthetic_change(tmp_path: Path) -> tuple[str, Path, Path]:
+    """A repository where one value moves, with a test that expects the move.
+
+    Returns `(base, worktree, decoy)`. The decoy holds HEAD's value and
+    stands in for the editable install: a copy of the package importable
+    from outside the worktree.
+    """
+    import os
+    import subprocess
+
+    # This machine carries a global hook refusing any commit whose author
+    # is not the personal identity, and it fires inside scratch
+    # repositories too. The hook documents this override; without it the
+    # commits are refused and the fixture silently proves nothing.
+    environment = {**os.environ, "GIT_IDENTITY_OVERRIDE": "1"}
+    repo = tmp_path / "repo"
+    (repo / "src" / "pkg").mkdir(parents=True)
+    (repo / "tests").mkdir()
+
+    def git(*args: str, cwd: Path = repo) -> str:
+        done = subprocess.run(  # noqa: S603
+            ["git", *args], cwd=cwd, check=True, capture_output=True,
+            text=True, env=environment,
+        )
+        return done.stdout.strip()
+
+    git("init", "-q", ".")
+    git("config", "user.email", "audit@example.invalid")
+    git("config", "user.name", "audit")
+    (repo / "src" / "pkg" / "__init__.py").write_text("VALUE = 1\n", encoding="utf-8")
+    git("add", ".")
+    git("-c", "commit.gpgsign=false", "commit", "-qm", "base")
+    base = git("rev-parse", "HEAD")
+    assert len(base) == 40, "the fixture never committed; it would prove nothing"
+
+    (repo / "src" / "pkg" / "__init__.py").write_text("VALUE = 2\n", encoding="utf-8")
+    (repo / "tests" / "test_value.py").write_text(
+        "from pkg import VALUE\n\n\ndef test_value():\n    assert VALUE == 2\n",
+        encoding="utf-8",
+    )
+    git("add", ".")
+    git("-c", "commit.gpgsign=false", "commit", "-qm", "change")
+
+    tree = tmp_path / "wt"
+    git("worktree", "add", "--detach", "--quiet", str(tree), "HEAD")
+    decoy = tmp_path / "decoy"
+    (decoy / "pkg").mkdir(parents=True)
+    (decoy / "pkg" / "__init__.py").write_text("VALUE = 2\n", encoding="utf-8")
+    return base, tree, decoy
+
+
+def test_the_reverted_tree_is_the_tree_the_tests_import(tmp_path: Path) -> None:
+    """The proof must run the base's code, not merely restore its files.
+
+    `_prove` restores the worktree to the base and runs the new tests
+    inside it — and `pip install -e .` puts the *checkout's* own `src` on
+    the path, so `import maintainability_audit` resolved to HEAD no
+    matter what the worktree held. Reverting the files changed what a
+    test could **read** and nothing about what it could **call**, which
+    is why document falsifiers proved correctly for months while every
+    behaviour falsifier passed vacuously. Measured on the Fortran work:
+    0 of 19 failed at the base before the fix, 18 of 19 after.
+
+    The decoy below is that editable install, in miniature.
+    """
+    import os
+
+    base, tree, decoy = _synthetic_change(tmp_path)
+    # The decoy has to sit where the editable install sits: on this
+    # process's own import path, which is what `_prove` hands the child.
+    # Putting it only in `os.environ` proved nothing — the child's path is
+    # rebuilt from `sys.path`, so the decoy never reached it and the test
+    # failed at the base for the wrong reason, passing this guard under
+    # the very mutation it exists to catch.
+    previous = os.environ.get("PYTHONPATH")
+    os.environ["PYTHONPATH"] = str(decoy)
+    sys.path.insert(0, str(decoy))
+    try:
+        failed, passed = prover._prove(
+            base, ["tests/test_value.py::test_value"], tree
+        )
+    finally:
+        sys.path.remove(str(decoy))
+        if previous is None:
+            os.environ.pop("PYTHONPATH", None)
+        else:
+            os.environ["PYTHONPATH"] = previous
+
+    assert (tree / "src" / "pkg" / "__init__.py").read_text(
+        encoding="utf-8").strip() == "VALUE = 1", "the worktree was never reverted"
+    assert failed == ["tests/test_value.py::test_value"], (
+        "the test passed against the base, so the prover imported the decoy "
+        "rather than the reverted worktree — every behaviour falsifier it "
+        "reports as proven would be vacuous"
+    )
+    assert passed == []
+
+
+def test_a_child_that_never_ran_is_not_a_proof() -> None:
+    """A broken environment must refuse, not report every test as proven.
+
+    `_prove` read every non-zero exit as "failed at the base", which it
+    treats as proof. A child that could not start therefore counted as a
+    successful proof, and an environment broken in any way reported that
+    every falsifier falsified.
+
+    This is not hypothetical: it is what hid the shadowing defect above.
+    The mutation that should have failed that guard passed instead,
+    because the child was exiting 1 with `No module named pytest` and the
+    tool was reading that as evidence.
+
+    The line is output, not exit code — which matters, because a
+    collection error *is* a real signal here. A new test file naming a
+    module the base does not have cannot be collected, and this file's
+    own docstring already counts that as the weaker proof it is. Only a
+    child that printed nothing at all never ran.
+    """
+    import subprocess
+
+    import pytest as _pytest
+
+    def outcome(returncode: int, stdout: str, stderr: str = ""):
+        return subprocess.CompletedProcess(
+            args=["pytest"], returncode=returncode, stdout=stdout, stderr=stderr
+        )
+
+    # The interpreter never reached pytest: nothing on stdout.
+    never_ran = outcome(1, "", "No module named pytest")
+    assert not prover._pytest_reached_a_verdict(never_ran)
+    with _pytest.raises(RuntimeError, match="without producing any output"):
+        prover._refuse_a_run_that_never_happened("tests/t.py::x", never_ran)
+
+    # pytest ran and could not collect: the base lacks the module the new
+    # test imports. Weak, and still evidence about the tree.
+    could_not_collect = outcome(4, "ERROR: found no collectors for tests/t.py::x")
+    assert prover._pytest_reached_a_verdict(could_not_collect)
+    prover._refuse_a_run_that_never_happened("tests/t.py::x", could_not_collect)
+
+    # An ordinary failure, which is what a proof looks like.
+    failed = outcome(1, "1 failed in 0.01s")
+    assert prover._pytest_reached_a_verdict(failed)
+    prover._refuse_a_run_that_never_happened("tests/t.py::x", failed)
+
+
 def test_the_tool_is_wired_into_the_pipeline() -> None:
     """A prover nobody runs proves nothing.
 

@@ -160,6 +160,19 @@ def indent_bounded_end(lines: list[str], start: int) -> int:
 Recogniser = Callable[[str], "tuple[str, str | None] | None"]
 
 
+def _bounded_end(masked: list[str], lines: list[str], start: int) -> int:
+    """Where the declaration at ``start`` ends.
+
+    Its own braces when they resolve, indentation when they do not, and
+    never before the line it started on. Held apart from the walk so the
+    fallback is one statement there rather than three, and so the two
+    ways a body can be bounded are named in one place.
+    """
+    end = _block_end(masked, start)
+    if end is None:
+        end = indent_bounded_end(lines, start)
+    return max(end, start)
+
 def scan_bounded(
     lines: list[str],
     recognise: Recogniser,
@@ -204,10 +217,7 @@ def scan_bounded(
             number += 1
             continue
         name, kind = found
-        end = _block_end(masked, number)
-        if end is None:
-            end = indent_bounded_end(lines, number)
-        end = max(end, number)
+        end = _bounded_end(masked, lines, number)
         if skip_bare and _is_bare_signature(masked, number, end):
             number = end + 1          # a shape with no body: not a definition
             continue

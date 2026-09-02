@@ -109,6 +109,77 @@ def _ruff_concept(code: str) -> str:
 
 
 
+class FortitudeAdapter(BaseAdapter):
+    """Fortran lint rules, as located findings.
+
+    The analyzer tier Fortran did not have. lizard does not read Fortran,
+    so before this the language had a built-in scanner and nothing else,
+    while every other claimed language had an external reading beside it.
+    Fortitude is the closest thing Fortran has to ruff — Rust-fast,
+    `pip install`-able, 100+ rules across correctness, obsolescent
+    features, modernisation, portability and style.
+
+    A verdict emitter: it contributes findings and never a rate. The
+    findings are the point — "subroutine argument 'n' missing 'intent'
+    attribute" names a line and a fix, which no aggregate does.
+
+    **It does not claim `types`.** Its correctness rules are about
+    declaring things explicitly — `implicit none`, `intent`, kind
+    parameters — and a reader who saw `types` in a coverage record would
+    take it to mean the code was type-checked. It is not; nothing
+    type-checks Fortran here. Only `C191: unreachable-statement` maps
+    off `style`, to `dead-code`, because unreachable code is exactly
+    that.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(
+            slug="fortitude", emits="verdict", executable="fortitude",
+            concepts=("style", "dead-code"),
+            findings_exit_codes=(0, 1), exclude_flag="--exclude",
+            exclude_dialect="fnmatch",
+            extra_args=("check", "--output-format", "json"),
+        )
+
+    def _read(self, result: ToolResult) -> Extraction:
+        payload = json.loads(result.stdout or "[]")
+        if not isinstance(payload, list):
+            raise ValueError(
+                f"expected a JSON array of diagnostics, got {type(payload).__name__}"
+            )
+        findings = tuple(
+            Finding(
+                concept=_fortitude_concept(item.get("code") or ""),
+                path=item.get("filename", ""),
+                # `line`, not ruff's `row`: the two tools ship the same
+                # shape with one key renamed, and reading ruff's spelling
+                # here would silently drop every line number.
+                line=(item.get("location") or {}).get("line"),
+                message=item.get("message", ""),
+                tool=self.slug,
+                rule=item.get("code"),
+            )
+            for item in payload
+        )
+        return Extraction(findings=findings)
+
+
+# Fortitude groups its rules by prefix: C correctness, OB obsolescent,
+# MOD modernisation, PORT portability, S style, E errors, T typing, FORT
+# meta. This project's concern vocabulary has no "portability" or
+# "correctness", and inventing one to hold them would put a word in the
+# report that no other tool can fill. They are style findings about
+# Fortran, reported with their own rule code and message intact, which is
+# what a reader acts on.
+_FORTITUDE_CONCEPTS = (("C191", "dead-code"),)
+
+
+def _fortitude_concept(code: str) -> str:
+    for prefix, concern in _FORTITUDE_CONCEPTS:
+        if code.startswith(prefix):
+            return concern
+    return "style"
+
 class PydocstyleAdapter(BaseAdapter):
     """Docstring convention violations, as located findings.
 

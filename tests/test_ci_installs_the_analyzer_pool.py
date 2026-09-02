@@ -39,10 +39,24 @@ def _pip_installable_adapters() -> set[str]:
         tool["slug"]
         for tool in catalog["tools"]
         if tool.get("adapter") == "implemented"
-        # `_INSTALL` holds the non-pip overrides; anything absent from it
-        # falls back to `pip install <slug>` in `environment_work_order`.
-        and tool["slug"] not in _INSTALL
+        # `_INSTALL` overrides the install command; anything absent from
+        # it falls back to `pip install <slug>` in
+        # `environment_work_order`. An override is only an exemption when
+        # it leaves pip entirely — npm or brew. `fortitude` overrides to
+        # `pip install fortitude-lint`, because the distribution and the
+        # command it installs are spelled differently, and treating that
+        # as an exemption would have dropped a pip-installable adapter
+        # out of this sweep for a reason that has nothing to do with pip.
+        and _INSTALL.get(tool["slug"], "pip install").startswith("pip install")
     }
+
+
+def _expected_package(slug: str) -> str:
+    """The distribution name CI must name, which is not always the slug."""
+    from maintainability_audit._environment import _INSTALL
+
+    override = _INSTALL.get(slug)
+    return override.split()[-1] if override else slug
 
 
 def test_the_catalog_still_has_pip_installable_adapters() -> None:
@@ -105,8 +119,10 @@ def test_ci_installs_every_pip_installable_adapter(slug: str) -> None:
     uninstalled. A check a comment can satisfy is not a check.
     """
     installed = _pip_installed_by_ci()
-    assert slug in installed, (
-        f"{slug} has an implemented adapter and installs with pip, but no "
+    package = _expected_package(slug)
+    assert package in installed, (
+        f"{slug} has an implemented adapter and installs with pip (as "
+        f"`{package}`), but no "
         f"CI step installs it -- so its tests skip and the adapter ships "
         f"having never been invoked. Installed by CI: {sorted(installed)}"
     )
@@ -116,12 +132,28 @@ def test_the_non_pip_adapters_are_exempt_by_name() -> None:
     """The Node and JVM tools are excluded on purpose, and it shows.
 
     Kept as an assertion rather than a comment so that moving one of
-    these onto pip -- or adding a sixteenth adapter in a new ecosystem --
+    these onto pip -- or adding an adapter in a new ecosystem --
     surfaces here instead of quietly widening the exemption.
+
+    The exemption is *leaving pip*, not *having an override*. `fortitude`
+    has an override and is still swept above, because it installs with
+    pip under a different distribution name (`fortitude-lint`). Reading
+    every override as an exemption would drop a pip-installable adapter
+    out of the CI-install guard for a reason that has nothing to do with
+    pip — the guard weakening itself as the pool grows.
     """
     from maintainability_audit._environment import _INSTALL
 
-    assert set(_INSTALL) == {"jscpd", "eslint", "pmd", "checkstyle", "spotbugs"}, (
+    non_pip = {
+        slug for slug, command in _INSTALL.items()
+        if not command.startswith("pip install")
+    }
+    assert non_pip == {"jscpd", "eslint", "pmd", "checkstyle", "spotbugs"}, (
         "the set of adapters exempt from the CI pool install changed; "
-        f"confirm the new set is deliberate: {sorted(_INSTALL)}"
+        f"confirm the new set is deliberate: {sorted(non_pip)}"
+    )
+    assert _INSTALL["fortitude"] == "pip install fortitude-lint"
+    assert "fortitude" in _pip_installable_adapters(), (
+        "a pip-installable adapter must stay in the CI-install sweep even "
+        "when its distribution name differs from its command"
     )

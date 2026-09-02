@@ -26,6 +26,7 @@ from ._metric_adapters import (
 from ._verdict_adapters import (
     EslintAdapter,
     Flake8Adapter,
+    FortitudeAdapter,
     PydocstyleAdapter,
     RuffAdapter,
     VultureAdapter,
@@ -37,6 +38,7 @@ ADAPTERS: dict[str, Callable[[], BaseAdapter]] = {
     "complexipy": ComplexipyAdapter,
     "flake8": Flake8Adapter,
     "eslint": EslintAdapter,
+    "fortitude": FortitudeAdapter,
     "interrogate": InterrogateAdapter,
     "jscpd": JscpdAdapter,
     "lizard": LizardAdapter,

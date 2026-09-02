@@ -142,9 +142,19 @@ def _prove(base: str, node_ids: list[str], tree: Path) -> tuple[list[str], list[
     # files on disk changed what the tests could *read* and nothing about
     # what they could *call*, which is why document falsifiers proved
     # correctly here for months while every behaviour falsifier passed
-    # vacuously. `PYTHONPATH` precedes site-packages, so naming the
-    # worktree's own source is the whole fix.
-    environment = {**os.environ, "PYTHONPATH": str(tree / "src")}
+    # vacuously.
+    #
+    # The worktree's own source goes first and the parent's path follows,
+    # rather than replacing it: naming only the worktree left the child
+    # unable to import pytest itself on any interpreter whose pytest
+    # lives outside the default path, and a child that cannot start is
+    # the case immediately below.
+    environment = {
+        **os.environ,
+        "PYTHONPATH": os.pathsep.join(
+            [str(tree / "src"), *(entry for entry in sys.path if entry)]
+        ),
+    }
     failed, passed = [], []
     for node in node_ids:
         result = subprocess.run(  # noqa: S603
@@ -153,8 +163,46 @@ def _prove(base: str, node_ids: list[str], tree: Path) -> tuple[list[str], list[
             cwd=tree, text=True, capture_output=True, check=False, timeout=600,
             env=environment,
         )
+        _refuse_a_run_that_never_happened(node, result)
         (failed if result.returncode != 0 else passed).append(node)
     return failed, passed
+
+
+def _pytest_reached_a_verdict(result: subprocess.CompletedProcess) -> bool:
+    """Whether pytest ran at all, as opposed to never starting.
+
+    `_prove` read every non-zero exit as "the test failed at the base",
+    which it treats as proof. A child that could not start therefore
+    counted as a successful proof, and an environment broken in any way
+    reported that every falsifier falsified. Found while proving the
+    shadowing fix above: the mutation that should have failed its guard
+    passed instead, because the child was exiting 1 with `No module named
+    pytest` and the tool was reading that as evidence.
+
+    The line is drawn at output, not at the exit code. A collection error
+    — the base lacking the module a new test imports — is pytest
+    reporting on the tree, and this file's own docstring already counts
+    that as the weaker signal it is. An interpreter that never reached
+    pytest writes nothing to stdout at all, and that is not evidence
+    about anything.
+    """
+    return bool(result.stdout.strip())
+
+
+def _refuse_a_run_that_never_happened(node: str, result: subprocess.CompletedProcess) -> None:
+    """Raise when the child never got as far as running pytest.
+
+    A proof that cannot tell a failing test from a missing interpreter is
+    worth less than no proof, because it is believed.
+    """
+    if result.returncode == 0 or _pytest_reached_a_verdict(result):
+        return
+    detail = (result.stderr or "").strip().splitlines()
+    raise RuntimeError(
+        f"{node}: pytest exited {result.returncode} without producing any "
+        "output — a broken proof environment, not a falsified test. "
+        f"{detail[-1][:200] if detail else 'no output'}"
+    )
 
 
 def _prove_one(ident: str, names: list[str], base: str) -> list[str]:

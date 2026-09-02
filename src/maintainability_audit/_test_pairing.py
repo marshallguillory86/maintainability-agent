@@ -15,9 +15,22 @@ from ._metrics_types import FileMetric, FunctionMetric, is_test_path
 from .source import SourceIndex, index_or_new
 
 # HTML/CSS/Markdown are not "a page with no test" in the TS/Python sense.
-PAIRABLE = frozenset({".py", ".java", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"})
+#
+# Fortran joins in 1.4.0 *with* the conventions below. Claiming a
+# language here without teaching `subject_stem` and `is_test_path` how
+# its tests are named reports every repository in it as having untested
+# production code — a confident finding, wrong on every project, of
+# exactly the kind this tool exists to prevent. `.pf` is excluded: a
+# pFUnit file is always a test, never a thing needing one.
+PAIRABLE = frozenset({".py", ".java", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx",
+                      ".f90", ".f95", ".f03", ".f08",
+                      ".F90", ".F95", ".F03", ".F08"})
 
 _STEM_SUFFIXES = (".test", ".spec", "_test")
+# Fortran module files are conventionally named `foo_mod.f90`, and the
+# pFUnit convention pairs that with `testFoo_mod.F90`. Dropping `_mod`
+# from both sides is what makes the two stems meet.
+_MODULE_STEM_SUFFIXES = ("_mod", "_module")
 _CONSTRUCTS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("pytest", re.compile(r"\bpytest\b|def test_")),
     ("unittest", re.compile(r"\bunittest\b")),
@@ -32,11 +45,26 @@ def subject_stem(rel: str) -> str:
     stem = Path(rel.replace("\\", "/")).name.rsplit(".", 1)[0].lower()
     for suffix in _STEM_SUFFIXES:
         if stem.endswith(suffix):
-            return stem[: -len(suffix)]
+            return _without_module_suffix(stem[: -len(suffix)])
     if stem.startswith("test_"):
-        return stem[5:]
+        return _without_module_suffix(stem[5:])
     if stem.startswith("test."):
-        return stem[5:]
+        return _without_module_suffix(stem[5:])
+    # pFUnit's camelCase convention: `testFooBar_mod.F90` covers
+    # `fooBar_mod.F90`. Lowercased above, so the boundary the capital
+    # marked is gone and the prefix is all that is left to strip.
+    if stem.startswith("test") and len(stem) > 4:
+        stripped = _without_module_suffix(stem[4:])
+        if stripped:
+            return stripped
+    return _without_module_suffix(stem)
+
+
+def _without_module_suffix(stem: str) -> str:
+    """`gravity_mod` and `gravity` are the same subject."""
+    for suffix in _MODULE_STEM_SUFFIXES:
+        if stem.endswith(suffix) and len(stem) > len(suffix):
+            return stem[: -len(suffix)]
     return stem
 
 

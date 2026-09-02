@@ -6,6 +6,32 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.7.0 - 2026-09-02
+
+**Practice detection speaks the Fortran toolchain.** Every list in
+`_practice` — linter configs, formatter configs, the lint command
+pattern, the gate manifests — was written from the Python, JS, JVM and
+Go ecosystems. Fortran appeared in none of them.
+
+### Fixed
+
+- **A Fortran project that lints on every change scored as though it did
+  not.** Measured on a tree carrying `fortitude.toml`, `.fprettify.rc`
+  and a CI job running both: **level 2, zero signals** — the tool saw
+  nothing. `fortitude` joins the lint commands, `fortitude.toml` and
+  `.fortitude.toml` the linter configs, `.fprettify.rc` and
+  `fprettify.ini` the formatter configs. That tree is now level 3.
+- **`fpm.toml` is read as a gate manifest.** A Fortran project declares
+  its build, its tests and — since fortitude 0.9 — its lint settings
+  there, so a coverage or complexity gate written in it was invisible
+  for exactly the reason one in `pyproject.toml` would have been.
+
+**It does not lift every Fortran repository, and that is the point.**
+`fortran-lang/stdlib` has CI, an `.editorconfig` and no linter at all;
+it was level 2 before this change and is level 2 after. A detector that
+promoted every Fortran tree would be measuring the language rather than
+the practice, so that case is pinned as a test beside the fix.
+
 ## 1.6.0 - 2026-09-02
 
 **Fortran is measured with Fortran's reading.** 1.4.0 found Fortran

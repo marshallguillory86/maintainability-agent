@@ -68,10 +68,16 @@ LINTER_CONFIGS: tuple[str, ...] = (
     ".flake8", ".pylintrc", "ruff.toml", ".ruff.toml",
     ".rubocop.yml", "checkstyle.xml", ".golangci.yml", ".golangci.yaml",
     "clippy.toml", ".clang-tidy", "phpcs.xml", ".swiftlint.yml", "detekt.yml",
+    # Fortran had no entry in any of these lists, so a Fortran project
+    # that configured and ran a linter scored as though it had neither.
+    # Measured on a tree with `fortitude.toml`, `.fprettify.rc` and a CI
+    # job running both: level 2, zero signals.
+    "fortitude.toml", ".fortitude.toml",
 )
 FORMATTER_CONFIGS: tuple[str, ...] = (
     ".prettierrc", ".prettierrc.json", ".prettierrc.yml", ".editorconfig",
     "rustfmt.toml", ".clang-format", ".scalafmt.conf",
+    ".fprettify.rc", "fprettify.ini",
 )
 TYPE_CONFIGS: tuple[str, ...] = ("mypy.ini", ".mypy.ini", "tsconfig.json", "pyrightconfig.json")
 DUPLICATION_CONFIGS: tuple[str, ...] = (".jscpd.json", "jscpd.json", ".cpd.xml")
@@ -79,7 +85,7 @@ DUPLICATION_CONFIGS: tuple[str, ...] = (".jscpd.json", "jscpd.json", ".cpd.xml")
 # Command fragments that mean "a checker runs here".
 LINT_COMMANDS = re.compile(
     r"\b(ruff|eslint|pylint|flake8|rubocop|golangci-lint|clippy|checkstyle|"
-    r"detekt|swiftlint|phpcs|clang-tidy|biome|lint)\b", re.IGNORECASE)
+    r"detekt|swiftlint|phpcs|clang-tidy|biome|fortitude|lint)\b", re.IGNORECASE)
 TYPE_COMMANDS = re.compile(r"\b(mypy|pyright|tsc|flow)\b", re.IGNORECASE)
 DUPLICATION_COMMANDS = re.compile(r"\b(jscpd|cpd|duplication)\b", re.IGNORECASE)
 
@@ -104,6 +110,11 @@ COMPLEXITY_GATES = (
 GATE_MANIFESTS: tuple[str, ...] = (
     "pyproject.toml", "setup.cfg", "package.json", "jest.config.js",
     ".coveragerc", "codecov.yml", ".codecov.yml", "tox.ini",
+    # A Fortran project declares its build, its tests and — since
+    # fortitude 0.9 — its lint settings in `fpm.toml`. Without it, a gate
+    # written there was invisible for the same reason one in
+    # `pyproject.toml` would have been.
+    "fpm.toml",
 )
 
 

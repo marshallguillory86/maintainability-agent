@@ -35,6 +35,31 @@ _MAX_HEADER_LINES = 12
 _BRACKET_DEPTH = {"(": (0, 1), ")": (0, -1), "[": (1, 1), "]": (1, -1)}
 
 
+def _mask_generics(text: str) -> str:
+    """Blank balanced ``<...>`` so a type argument cannot be read as syntax.
+
+    Shared by Java and C# (1.3.0), which write generics the same way.
+    Moved here from ``_ranges_java`` when the second language needed it,
+    rather than copied — one of the two would have grown a fix the
+    other never got.
+
+    `Foo<T extends Bar>` must not end at the first `>`, and
+    `Map<String, List<Integer>> index()` must yield the name `index`
+    rather than something from inside the brackets. Unbalanced `<` — a
+    comparison — is left alone, so the failure direction is "generic not
+    recognised", never "half a line erased".
+    """
+    out = list(text)
+    stack: list[int] = []
+    for index, char in enumerate(text):
+        if char == "<":
+            stack.append(index)
+        elif char == ">" and stack:
+            for position in range(stack.pop(), index + 1):
+                out[position] = " "
+    return "".join(out)
+
+
 def _matching_paren(line: str, opening: int) -> int | None:
     depth = 0
     for index in range(opening, len(line)):

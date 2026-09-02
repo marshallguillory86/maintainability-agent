@@ -75,8 +75,8 @@ jobs:
         run: >
           python3 -m pip install
           --constraint constraints/analyzers.txt
-          cohesion complexipy flake8 interrogate lizard multimetric
-          mypy pydocstyle pylint radon ruff vulture
+          cohesion complexipy flake8 fortitude-lint interrogate lizard
+          multimetric mypy pydocstyle pylint radon ruff vulture
       - name: Lint (ruff)
         run: ruff check src tests tools
       - name: Dependency CVE scan (pip-audit)
@@ -345,8 +345,8 @@ jobs:
         run: >
           python3 -m pip install
           --constraint constraints/analyzers.txt
-          cohesion complexipy flake8 interrogate lizard multimetric
-          mypy pydocstyle pylint radon ruff vulture
+          cohesion complexipy flake8 fortitude-lint interrogate lizard
+          multimetric mypy pydocstyle pylint radon ruff vulture
 
       # --- maintainability -------------------------------------------------
       # `--fail-on-gate` fails on hard-gate findings only. It does not read

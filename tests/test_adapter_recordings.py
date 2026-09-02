@@ -25,6 +25,62 @@ def _registered_adapter(slug: str):
     return adapter
 
 
+def test_fortitude_parses_real_json_output() -> None:
+    """Recorded fortitude 0.9.2 `--output-format json`.
+
+    Two things this pins that a hand-written fixture would not. The
+    location key is `line`, where ruff — whose output is otherwise the
+    same shape — spells it `row`; reading ruff's spelling here would drop
+    every line number silently, leaving findings that name a file and no
+    place in it. And `C191` is the one rule that is not style: code after
+    a `return` is unreachable, which is dead code by any reading.
+    """
+    payload = """[
+      {
+        "code": "PORT021",
+        "filename": "src/sample.f90",
+        "location": {"column": 9, "line": 6},
+        "end_location": {"column": 11, "line": 6},
+        "fix": {"applicability": "unsafe", "message": "Replace with 'real(8)'"},
+        "message": "'real*8' uses non-standard syntax"
+      },
+      {
+        "code": "C191",
+        "filename": "src/sample.f90",
+        "location": {"column": 5, "line": 8},
+        "end_location": {"column": 12, "line": 8},
+        "fix": null,
+        "message": "code following `return` is unreachable"
+      }
+    ]"""
+    extraction = _registered_adapter("fortitude").parse(_ran(payload))
+
+    assert not extraction.measurements, "a linter's verdicts cannot supply a scored rate"
+    assert [
+        (finding.path, finding.line, finding.rule, finding.concept)
+        for finding in extraction.findings
+    ] == [
+        ("src/sample.f90", 6, "PORT021", "style"),
+        ("src/sample.f90", 8, "C191", "dead-code"),
+    ]
+
+
+def test_fortitude_does_not_claim_to_type_check_fortran() -> None:
+    """`implicit none` and `intent` are declarations, not type checking.
+
+    Fortitude's correctness rules are the reason a Fortran maintainer
+    would run it, and they are *about* types — which makes `types` the
+    tempting concept to declare. It would be wrong: a coverage record
+    reading `types` says this repository is type-checked, and nothing
+    here type-checks Fortran. The same mistake was already caught once,
+    for a C++ tree claiming mypy's coverage.
+    """
+    adapter = _registered_adapter("fortitude")
+
+    assert "types" not in adapter.concepts
+    assert set(adapter.concepts) == {"style", "dead-code"}
+
+
 def test_flake8_parses_real_default_output() -> None:
     """Recorded flake8 7.3 default output keeps its actionable location and rule."""
     payload = (

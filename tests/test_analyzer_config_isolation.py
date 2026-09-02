@@ -86,6 +86,9 @@ ADAPTER_CONFIG: dict[str, tuple[str, str]] = {
                            "names are npm packages, not paths in the tree"),
     "ruff": ("DATA_ONLY", "pyproject.toml / ruff.toml — no plugin mechanism exists; "
                           "the linter is a single Rust binary"),
+    "fortitude": ("DATA_ONLY", "fortitude.toml / fpm.toml / pyproject.toml — "
+                               "select and ignore lists only; like ruff it is a "
+                               "single Rust binary with no plugin mechanism"),
     "pydocstyle": ("DATA_ONLY", "setup.cfg / pyproject.toml — select/ignore lists only"),
     "interrogate": ("DATA_ONLY", "[tool.interrogate] — flags, globs and regexes, no hook"),
     "vulture": ("DATA_ONLY", "[tool.vulture] — paths and confidence, no hook"),

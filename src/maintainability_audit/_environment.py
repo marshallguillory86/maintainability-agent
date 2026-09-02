@@ -34,6 +34,11 @@ _INSTALL: dict[str, str] = {
     "pmd": "brew install pmd",
     "checkstyle": "brew install checkstyle",
     "spotbugs": "brew install spotbugs",
+    # The distribution is `fortitude-lint`; the command it installs is
+    # `fortitude`. Falling back to `pip install fortitude` would name a
+    # different project entirely, which is the same trap the JVM tools
+    # above are here to avoid.
+    "fortitude": "pip install fortitude-lint",
 }
 
 # `--version` is the availability probe the runner itself uses, so the

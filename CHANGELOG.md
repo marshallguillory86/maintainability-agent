@@ -6,6 +6,36 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.5.1 - 2026-09-02
+
+Documentation, and two guards so it cannot drift again.
+
+### Fixed
+
+- **The README named version 1.0.0** — five releases stale, at the top of
+  the first thing anyone reads, while four languages were added
+  underneath it. `SECURITY.md` is guarded against exactly this (D45) and
+  the README was not, so it now is: the version line is checked against
+  `config.VERSION`, and the next release either updates it or fails.
+- **The README language table is now held to the parser.**
+  `docs/language-support.md` was already tied to `DECLARATION_SUFFIXES`
+  in both directions; the README carries its own shorter table, which is
+  what most people actually read, and nothing tied it to anything. A
+  language could ship parsed, be documented in `docs/`, and be missing
+  from the front page. The guard caught two rows immediately: the JS/TS
+  row named no suffixes at all, and Fortran omitted `.F95`, `.F03` and
+  `.F08`.
+
+### Documentation
+
+- **A languages line in the header**, so what the tool reads is visible
+  without scrolling to line 238.
+- **Which analyzer covers which language**, as a table. That is the part
+  1.5.0 changed and the page never said: Fortran is the one language with
+  no metric emitter — lizard does not read it and fortitude reports
+  findings rather than measurements — so its declaration population comes
+  from the built-in scanner alone.
+
 ## 1.5.0 - 2026-09-01
 
 **Fortran gets an analyzer.** 1.4.0 shipped the scanner and noted that

@@ -6,6 +6,63 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.2.0 - 2026-09-01
+
+**C++ is a first-class language.** Second of the three C-family
+increments (C shipped in 1.1.0; C# follows in 1.3.0). The architecture
+1.1.0 built held: C++ is a module and a row, with no edit to the
+dispatcher and none to the shared core beyond the loop it now provides.
+
+### Added
+
+- **A dedicated C++ scanner (`cpp_declaration_ranges`).** Free
+  functions, class and struct members, constructors, destructors,
+  operator overloads, and the types themselves — `class`, `struct`,
+  `union`, `enum` and `enum class`. `.cpp`, `.hpp`, `.cc`, `.cxx` and
+  `.hh` are parsed and opened by default.
+- It takes one rule from each neighbour: **types are descended into**,
+  as in Java, because a C++ class holds its methods; **bodyless
+  declarations are skipped**, as in C, so a prototype, a pure virtual
+  (`virtual int area() const = 0;`) and `= default` mint nothing. A
+  header of forty declarations is not forty declarations.
+- Names are reported as a reader searches for them: an out-of-line
+  definition keeps its qualification (`void geo::Widget::draw()` is
+  `geo::Widget::draw`), an operator overload is `operator==`, and a
+  `template <...>` header is stripped so the declaration under it is
+  what gets measured.
+
+`.h` stays **C**. It is the one extension both languages write, and the
+C reading under-reports a C++ header where the reverse would read no
+more and risk more.
+
+### Changed
+
+- **One walk for every brace-delimited language.** `scan_bounded` moves
+  into `_ranges_core` and C, C++ and Java all use it; each language now
+  supplies only its patterns. Java and C each had their own copy of that
+  loop, and C++ and C# would have made four — which is how a fix lands
+  in three of them and the fourth keeps the bug. The two migrated
+  scanners are behaviour-identical, proven by their existing suites
+  passing unchanged.
+
+### Fixed
+
+- **A macro invocation can no longer swallow the next declaration.**
+  `MY_MACRO(x)` on its own line has the shape of an Allman signature — a
+  name, a parameter list, end of line — and the first version of the C++
+  scanner accepted it, letting the *next* line's braces close it. The
+  macro was reported as a function and the real function beneath it
+  disappeared: an invented declaration hiding a true one. An
+  end-of-line tail is now trusted only when a return type was written or
+  the name is qualified. The cost is a constructor braced Allman inside
+  its class, which is missed — the direction this design errs in. C was
+  checked for the same defect and does not have it; its pattern already
+  requires a return type.
+
+17 C++ falsifiers cover namespaces, templates, operator overloads,
+out-of-line definitions, initialiser lists, access specifiers, the macro
+case, control flow and casts inside bodies, and the indentation fallback.
+
 ## 1.1.0 - 2026-09-01
 
 **C is a first-class language.** The first of three C-family increments

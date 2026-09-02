@@ -160,15 +160,19 @@ def test_a_concern_no_tool_reads_for_a_language_is_named_as_a_gap(tmp_path: Path
 def test_a_coverage_claim_names_the_languages_it_is_about(tmp_path: Path) -> None:
     """The claim is scoped to what was scored, and says so.
 
-    For a mostly-C++ tree under the default configuration, only the
-    Python is in the scored population — `.cpp` is not in
-    `include_extensions`, so the C++ is unread and reported by name and
-    count under unread source.
+    This test was written when `.cpp` was not in `include_extensions`:
+    the C++ was unread, only the Python was scored, and `types` was a
+    true claim about the scored population. **1.2.0 shipped a C++
+    scanner**, so the C++ here is now read, parsed and scored — and the
+    claim has to narrow with it. That narrowing is the point rather
+    than a regression: `concepts_covered: [types]` read in isolation
+    says "this repository is type-checked", and mypy cannot examine a
+    line of C++.
 
-    Scoping the claim there is correct, but `concepts_covered: [types]`
-    read in isolation still says "this repository is type-checked". So
-    the coverage record states which languages it covers. A claim that
-    cannot be read without its scope is a claim that will be misread.
+    So the two halves are asserted separately. Per language, the record
+    still says exactly who was type-checked. Repository-wide, `types` is
+    no longer claimable at all, because a claim true of six Python files
+    is not a claim about a tree of sixty C++ ones.
     """
     root = _repo(tmp_path / "composed", {
         **{f"src/mod{n}.cpp": CPP % {"n": n} for n in range(60)},
@@ -178,13 +182,20 @@ def test_a_coverage_claim_names_the_languages_it_is_about(tmp_path: Path) -> Non
     analysis = analyze(root, load_config(None))
     if not _contributed(analysis, "mypy"):
         pytest.skip("mypy did not run")
+    covered = analysis.coverage_by_language()
 
-    assert analysis.scored_languages == ("Python",)
-    assert "types" in analysis.measured_concepts(), (
-        "the Python that was scored is genuinely type-checked"
+    assert analysis.scored_languages == ("Python", "C++")
+    assert "types" in covered["Python"], (
+        "the Python in this tree is genuinely type-checked"
     )
-    # And the C++ that was not scored is not silently included in that.
-    assert "types" not in analysis.coverage_by_language()["C++"]
+    assert "types" not in covered["C++"], (
+        "mypy cannot examine C++; claiming `types` for it is the defect "
+        "this test exists to close"
+    )
+    assert "types" not in analysis.measured_concepts(), (
+        "both languages are scored now, so a claim true of only the "
+        "Python is not a claim about this repository"
+    )
 
 
 def test_a_single_language_repository_is_unaffected(tmp_path: Path) -> None:

@@ -249,9 +249,11 @@ is conventionally `gravity_mod.f90`, so `_mod` comes off both sides when
 pairing. Claiming Fortran without these would report untested production
 code on every Fortran repository there is.
 
-There is no analyzer fallback for Fortran: lizard does not read it, so
-the built-in scanner is the only path to a declaration population rather
-than a zero-install convenience.
+Fortran gained an analyzer in 1.5.0 — **fortitude**, 100+ lint rules —
+but it is a verdict emitter: it reports findings and cannot supply a
+declaration population. lizard, which could, does not read Fortran. So
+the built-in scanner remains the only path to a population here, rather
+than the zero-install convenience it is for C and C++.
 
 ## The rule that matters: a range never runs past its own body
 

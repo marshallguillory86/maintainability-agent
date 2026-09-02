@@ -70,9 +70,9 @@ python tools/resolve_pool.py --concerns documentation
 
 | Depth | Tools | What it means |
 |---|---|---|
-| `baseline` | 9 | Multi-language or zero-config tools, one install, seconds to run |
-| `moderate` | 17 | Baseline plus the mainstream per-language linters |
-| `heavy` | 17 | Moderate plus slower or configuration-hungry tools; none are added today |
+| `baseline` | 10 | Multi-language or zero-config tools, one install, seconds to run |
+| `moderate` | 18 | Baseline plus the mainstream per-language linters |
+| `heavy` | 18 | Moderate plus slower or configuration-hungry tools; none are added today |
 | `all` | up to 448 | Every eligible tool that speaks a detected language |
 
 **Analyzers never take their configuration from the tree they audit.**
@@ -147,7 +147,7 @@ npm install -g jscpd@5
 
 ## Adapter status, stated plainly
 
-**17 tools have adapters**. An inventory entry without an adapter is not a shipped capability.
+**18 tools have adapters**. An inventory entry without an adapter is not a shipped capability.
 
 | Verified | Depth | Concern | Evidence |
 |---|---|---|---|
@@ -159,6 +159,7 @@ npm install -g jscpd@5
 | complexipy | baseline | Cognitive complexity | `history_section` = 14 |
 | interrogate | baseline | Docstring coverage | installed, run |
 | pydocstyle | baseline | Docstring conventions | installed, run |
+| fortitude | baseline | Fortran lint, 100+ rules | version 0.9.2; 8 findings on an 11-line legacy module, including `C191` unreachable code |
 | multimetric | baseline | Multi-language metrics | version 2.4.4; contributed in the checked-in analyzer corpus |
 | pylint | moderate | Design smells | 107 messages on `src/` |
 | mypy | moderate | Type diagnostics | Generic diagnostic output |

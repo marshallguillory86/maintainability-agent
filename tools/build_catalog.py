@@ -108,6 +108,10 @@ VERIFIED_TIERS = {
     "complexipy": "baseline",   # Python cognitive complexity
     "interrogate": "baseline",  # Python docstring coverage
     "pydocstyle": "baseline",   # Python docstring conventions
+    # Rust-fast and zero-config on a Fortran tree, which is what
+    # baseline means. Installed, run and parsed here (1.5.0) before
+    # being moved out of "all" — the rule this table states.
+    "fortitude": "baseline",    # Fortran lint, 100+ rules
     # moderate: needs configuration, tuning, or noticeably more time
     "pylint": "moderate",
     "mypy": "moderate",
@@ -193,9 +197,9 @@ CONCERNS = (
 # flake8 and cohesion have since earned real ones (2.7); cloc and wily
 # have not.
 IMPLEMENTED_ADAPTERS = frozenset({
-    "checkstyle", "cohesion", "complexipy", "eslint", "flake8", "interrogate",
-    "jscpd", "lizard", "multimetric", "mypy", "pydocstyle", "pylint", "radon",
-    "pmd", "ruff", "spotbugs", "vulture",
+    "checkstyle", "cohesion", "complexipy", "eslint", "flake8", "fortitude",
+    "interrogate", "jscpd", "lizard", "multimetric", "mypy", "pydocstyle",
+    "pylint", "radon", "pmd", "ruff", "spotbugs", "vulture",
 })
 
 # Deliberately unadapted, with the reason, so nobody writes one later
@@ -216,6 +220,10 @@ VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {
     "lizard":      ("complexity", "structure", "metrics", "duplication"),
     "radon":       ("complexity", "metrics"),
     "ruff":        ("style", "complexity", "dead-code"),
+    # Not "types": fortitude checks that things are *declared*
+    # (`implicit none`, `intent`, kind parameters), which a reader
+    # would take for type-checking. Nothing type-checks Fortran here.
+    "fortitude":   ("style", "dead-code"),
     "jscpd":       ("duplication",),
     "pylint":      ("structure", "style"),
     "mypy":        ("types",),

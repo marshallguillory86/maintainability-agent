@@ -10,9 +10,9 @@
     "in_source": 760,
     "eligible": 448,
     "by_tier": {
-      "all": 432,
+      "all": 431,
       "moderate": 7,
-      "baseline": 9
+      "baseline": 10
     },
     "by_license_status": {
       "foss": 581,
@@ -30,23 +30,23 @@
       "unverified": 72
     },
     "by_measure": {
-      "style": 7,
+      "style": 8,
       "documentation": 5,
       "metrics": 5,
       "structure": 4,
       "complexity": 8,
+      "dead-code": 3,
       "duplication": 2,
       "types": 1,
       "cognitive_complexity": 1,
-      "cyclomatic_complexity": 1,
-      "dead-code": 2
+      "cyclomatic_complexity": 1
     },
     "eligible_by_license_class": {
       "permissive": 368,
       "weak-copyleft": 35,
       "strong-copyleft": 45
     },
-    "adapters_implemented": 17
+    "adapters_implemented": 18
   },
   "tools": [
     {
@@ -6509,11 +6509,14 @@
         "fortran"
       ],
       "upstream_tags": [],
-      "measures": [],
+      "measures": [
+        "dead-code",
+        "style"
+      ],
       "security_only": false,
       "source": "https://github.com/PlasmaFAIR/fortitude",
-      "tier": "all",
-      "adapter": "none"
+      "tier": "baseline",
+      "adapter": "implemented"
     },
     {
       "slug": "fprettify",

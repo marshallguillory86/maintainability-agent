@@ -20,6 +20,11 @@ them, a row in ``declarations.SCANNERS``, and no edit here.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
+
+from ._masking import mask_lines
+from ._metrics_types import DeclRange
+
 _NAME = r"[A-Za-z_$][\w$]*"
 
 # A declaration whose body brace has not appeared within this many
@@ -146,3 +151,69 @@ def indent_bounded_end(lines: list[str], start: int) -> int:
             continue
         return number if text.lstrip()[0] in "}])" else number - 1
     return len(lines)
+
+
+# A recogniser answers one question about one masked line: is a
+# declaration written here, and if so what is it called and what kind is
+# it. `None` for the kind means "walk into this, but do not grade it" —
+# a C++ namespace holds declarations and is not itself one.
+Recogniser = Callable[[str], "tuple[str, str | None] | None"]
+
+
+def scan_bounded(
+    lines: list[str],
+    recognise: Recogniser,
+    *,
+    descend: tuple[str, ...] = (),
+    skip_preprocessor: bool = False,
+    skip_bare: bool = True,
+) -> tuple[list[DeclRange], list[str]]:
+    """Walk a masked source once, bounding each declaration by its body.
+
+    Every brace-delimited language scans the same way and differs only in
+    what it recognises, so the loop lives here and the patterns live in
+    the language modules. Java and C each had their own copy of this
+    before 1.2.0; C++ and C# would have made four, which is how a fix
+    lands in three of them and the fourth keeps the bug.
+
+    The rules the loop enforces, identically for every language:
+
+    - A body is bounded by its own braces (`_block_end`), and by
+      indentation when braces cannot resolve it. Nothing runs to
+      end-of-file.
+    - A declaration whose body is stepped over cannot contribute
+      declarations of its own, so no statement inside a function is ever
+      offered to `recognise`. Kinds named in `descend` are walked into
+      instead, because that is where members live.
+    - `skip_bare` drops a signature with no body — a C prototype, a C++
+      pure virtual. Java leaves it off: an abstract method is a real
+      declaration there.
+    - `skip_preprocessor` drops `#`-led lines whole, so a function-shaped
+      macro is never measured as a function.
+    """
+    masked = mask_lines(lines)
+    ranges: list[DeclRange] = []
+    number = 1
+    while number <= len(masked):
+        text = masked[number - 1]
+        if skip_preprocessor and text.lstrip().startswith("#"):
+            number += 1
+            continue
+        found = recognise(text)
+        if found is None:
+            number += 1
+            continue
+        name, kind = found
+        end = _block_end(masked, number)
+        if end is None:
+            end = indent_bounded_end(lines, number)
+        end = max(end, number)
+        if skip_bare and _is_bare_signature(masked, number, end):
+            number = end + 1          # a shape with no body: not a definition
+            continue
+        if kind is not None:
+            ranges.append(DeclRange(number, end, name, kind))
+        walk_in = kind is None or kind in descend
+        number = number + 1 if walk_in else end + 1
+    ranges.sort(key=lambda item: (item.start, item.end))
+    return ranges, masked

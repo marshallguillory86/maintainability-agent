@@ -32,7 +32,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     # and ADR 006 says the pool is the product's evidence source.
     "analyzers": {"run": False},
     "paths": {
-        # `.c`/`.h` joined in 1.1.0 with the C scanner. A source suffix is
+        # `.c`/`.h` joined in 1.1.0 with the C scanner, and the C++ set in
+        # 1.2.0. A source suffix is
         # listed here only when something parses it, and parsed only when
         # it is listed: opening a language nothing reads produces the P7
         # population nobody measured, and parsing one the default config
@@ -42,6 +43,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         # _documented_languages`.
         "include_extensions": [
             ".py", ".java", ".c", ".h",
+            ".cpp", ".hpp", ".cc", ".cxx", ".hh",
             ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx",
             ".html", ".css", ".md",
         ],

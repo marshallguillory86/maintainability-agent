@@ -16,9 +16,8 @@ from __future__ import annotations
 
 import re
 
-from ._masking import mask_lines
 from ._metrics_types import DeclRange
-from ._ranges_core import _NAME, _block_end, _matching_paren, indent_bounded_end
+from ._ranges_core import _NAME, _matching_paren, scan_bounded
 
 _JAVA_TYPE_KEYWORD = r"(?:class|interface|enum|record|@interface)"
 _JAVA_TYPE_RE = re.compile(rf"^{_JAVA_TYPE_KEYWORD}\s+({_NAME})\b")
@@ -113,39 +112,23 @@ def _java_declaration(text: str) -> tuple[str, str] | None:
 def java_declaration_ranges(lines: list[str]) -> tuple[list[DeclRange], list[str]]:
     """Methods, constructors and types, each bounded by its own body.
 
-    Walks member context only. A method's body is skipped once its end is
-    known, so no statement inside it can be read as a declaration; a
-    type's body is walked, because that is where its members live. That
-    single rule is what keeps a nested class and its methods visible
-    while `doThing(x);` never becomes a declaration named `doThing`.
+    A type is descended into, because that is where its members live; a
+    method's body is stepped over once its end is known, so no statement
+    inside it can be read as a declaration. That single rule is what
+    keeps a nested class and its methods visible while `doThing(x);`
+    never becomes a declaration named `doThing`.
+
+    Bodyless signatures are kept, unlike C and C++: an abstract or
+    interface method is a real declaration in Java.
 
     Deliberate limitations, all under-reporting:
 
     - Declarations inside anonymous classes and lambdas are not seen,
       because those live inside a method body.
     - Text blocks (``\"\"\"``) are not masked, so a brace inside one can
-      desync depth; `indent_bounded_end` bounds the fallout to the one
+      desync depth; the indentation fallback bounds that to one
       declaration.
     - A field initialised with a method reference or an inline array is
       not a declaration and is not reported as one.
     """
-    masked = mask_lines(lines)
-    ranges: list[DeclRange] = []
-    number = 1
-    while number <= len(masked):
-        found = _java_declaration(masked[number - 1])
-        if found is None:
-            number += 1
-            continue
-        end = _block_end(masked, number)
-        if end is None:
-            end = indent_bounded_end(lines, number)
-        end = max(end, number)
-        ranges.append(DeclRange(number, end, found[0], found[1]))
-        # Descend into a type to find its members; step over a method so
-        # its statements are never offered to the matcher.
-        number = number + 1 if found[1] == "class" else end + 1
-    ranges.sort(key=lambda item: (item.start, item.end))
-    return ranges, masked
-
-
+    return scan_bounded(lines, _java_declaration, descend=("class",), skip_bare=False)

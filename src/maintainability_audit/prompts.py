@@ -261,7 +261,8 @@ def prompt_pressure_section(score: dict[str, Any]) -> list[str]:
         lines.extend(
             [
                 "Where this repo is worse than typical real-world code",
-                "(1.0x = the median of a mature open-source corpus; only elevated dimensions are listed):",
+                "(1.0x = the median of a mature open-source corpus of Python, TypeScript "
+                "and JavaScript; only elevated dimensions are listed):",
                 "",
             ]
         )

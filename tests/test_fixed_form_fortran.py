@@ -8,10 +8,27 @@ column 6, the statement in 7-72, sequence numbers after that, and a
 unit *is*. So it shares the recogniser and the `end`-keyword bounding
 with free-form and differs only in how a line becomes a statement.
 
-The case that earns the whole design is `test_a_continued_condition_...`:
-a condition split across two lines has its `THEN` on the second, and
-reading line by line ends the enclosing procedure at an `END IF` that
-closes a block which never opened.
+**Strength, in this project's own vocabulary** (`architecture.md` grades
+every invariant Property or Regression, and these tests deserve the same
+honesty). The numbers below are measured by mutation, not estimated:
+
+- Swapping the fixed-form masker for the free-form one fails **one of
+  nine** — `test_a_continued_condition_does_not_end_the_procedure_early`.
+  That single test carries the whole card-column rule.
+- Removing Fortran 77 labelled-`DO` tracking fails **three of nine**.
+
+Everything else is a **defensive regression**, not a discriminator: a `C`
+in column 1, a statement label, sequence numbers past column 72, and the
+`ELSE IF` continuation below all assert the right answer, and on these
+inputs the free-form reader reaches the same answer by another route,
+because none of those shapes match its patterns either. Worth keeping;
+they do not prove the masker runs.
+
+That distinction was itself measured the hard way. The `ELSE IF` case was
+added to this file as a *second* load-bearing test and this docstring
+claimed it as one. It is not: without joining, the `IF ... THEN` above it
+still opens and the `END IF` still closes, so the balance holds and the
+answer is right either way. The claim was removed rather than the test.
 """
 
 from __future__ import annotations
@@ -76,6 +93,35 @@ def test_a_continued_condition_does_not_end_the_procedure_early() -> None:
     assert _ranges(src) == [(1, 8, "PICK", "function")], (
         "the procedure must run to its own END, not stop at the END IF "
         "of a block the scanner failed to see open"
+    )
+
+
+def test_an_else_if_continuation_keeps_the_block_open() -> None:
+    """A continued `ELSE IF`, kept as a regression rather than a proof.
+
+    `ELSE IF` continues a block rather than opening one, so a reader that
+    fails to join its continuation still sees the `IF ... THEN` above it
+    open and the `END IF` below it close. The balance holds and the
+    answer comes out right either way — which is why this test passes
+    under the masker mutation and is documented above as defensive.
+    It is worth keeping: it pins the shape against a future change that
+    *would* unbalance it.
+    """
+    src = (
+        "      SUBROUTINE GRADE(A, B)\n"
+        "      REAL A, B\n"
+        "      IF (A .GT. B) THEN\n"
+        "         A = B\n"
+        "      ELSE IF (A .LT. B .AND.\n"
+        "     &         B .GT. 0.0) THEN\n"
+        "         A = 0.0\n"
+        "      END IF\n"
+        "      A = A + 1.0\n"
+        "      END\n"
+    )
+    assert _ranges(src) == [(1, 10, "GRADE", "function")], (
+        "the procedure must run to its own END; a continuation that "
+        "carries THEN is what keeps the ELSE IF balanced"
     )
 
 

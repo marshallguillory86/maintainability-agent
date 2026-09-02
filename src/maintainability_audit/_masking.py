@@ -131,38 +131,28 @@ def _mask_line(line: str, in_block: bool, in_template: bool) -> tuple[str, bool,
     return _mask_code(line)
 
 
+# A Fortran string, or the `!` that starts a comment. The closing quote
+# is optional so an unterminated literal blanks to end of line rather
+# than escaping the mask, and a doubled quote inside a literal is matched
+# by the alternation rather than by a state flag.
+_FORTRAN_LITERAL_RE = re.compile(r"'(?:[^']|'')*'?|\"(?:[^\"]|\"\")*\"?|!")
+
+
 def _mask_fortran_line(line: str) -> str:
     """One free-form Fortran line, with its comment and strings blanked.
 
-    Held apart from the loop because the two jobs read differently: this
-    one is a character walk with a quote state, and the caller is a walk
-    over lines. Together they were nesting deep enough for this project's
-    own gate to flag them, which was fair.
+    Written as a scan over literals rather than a character walk with a
+    quote flag. The walk was correct and this project's own audit put it
+    at cognitive 19 — fair, for what is a small lexer — and the reason
+    was the state flag, which this formulation does not need.
     """
     out = list(line)
-    quote: str | None = None
-    index = 0
-    while index < len(line):
-        char = line[index]
-        if quote is None:
-            if char == "!":
-                for position in range(index, len(line)):
-                    out[position] = " "
-                break
-            if char in "'\"":
-                quote = char
-                out[index] = " "
-            index += 1
-            continue
-        out[index] = " "
-        if char == quote:
-            # A doubled quote is an escaped quote, not the end.
-            if line[index + 1 : index + 2] == quote:
-                out[index + 1] = " "
-                index += 1
-            else:
-                quote = None
-        index += 1
+    for match in _FORTRAN_LITERAL_RE.finditer(line):
+        stop = len(line) if match.group() == "!" else match.end()
+        for position in range(match.start(), stop):
+            out[position] = " "
+        if match.group() == "!":
+            break
     return "".join(out)
 
 

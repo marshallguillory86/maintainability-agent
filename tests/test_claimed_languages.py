@@ -44,7 +44,12 @@ def _documented_suffixes() -> set[str]:
     return {
         suffix
         for row in rows
-        for suffix in re.findall(r"`(\.[A-Za-z]+)`", row)
+        # Digits are part of a suffix (`.f90`, `.f03`) and case is
+        # significant (`.F90` is preprocessed Fortran, and this project
+        # matches suffixes case-sensitively). A letters-only reader saw
+        # none of the Fortran row and reported the page as silent about
+        # nine suffixes it documents in full.
+        for suffix in re.findall(r"`(\.[A-Za-z][A-Za-z0-9]*)`", row)
         if "not parsed" not in row.lower()
     }
 
@@ -85,18 +90,32 @@ def test_every_scanned_source_suffix_can_be_read_by_something() -> None:
     )
 
 
+# One sample of real source per claimed language, by suffix. This was a
+# chain of nested conditionals until 1.4.0, when the fifth language took
+# it to complexity 24 and this project's own gate failed the fixture —
+# correctly. A table is what a per-language lookup wanted to be all
+# along, and the next language is a row rather than another `else if`.
+_SAMPLE_SOURCE: dict[str, str] = {
+    ".py": "def f():\n    return 1\n",
+    ".java": "class M { void f() { return; } }\n",
+    **dict.fromkeys((".c", ".h"), "int f(void) { return 1; }\n"),
+    **dict.fromkeys(
+        (".cpp", ".hpp", ".cc", ".cxx", ".hh"), "struct S { void f() { go(); } };\n"
+    ),
+    ".cs": "class M { public void F() { Go(); } }\n",
+    **dict.fromkeys(
+        (".f90", ".f95", ".f03", ".f08", ".F90", ".F95", ".F03", ".F08", ".pf"),
+        "module m_mod\ncontains\n  subroutine f(n)\n"
+        "    integer :: n\n  end subroutine f\nend module m_mod\n",
+    ),
+}
+_DEFAULT_SAMPLE = "function f(){return 1}\n"      # the JS/TS family
+
+
 def _repo(root: Path, suffix: str, count: int = 140) -> Path:
     root.mkdir(parents=True)
     (root / "README.md").write_text("# r\n", encoding="utf-8")
-    body = (
-        "def f():\n    return 1\n" if suffix == ".py"
-        else "class M { void f() { return; } }\n" if suffix == ".java"
-        else "int f(void) { return 1; }\n" if suffix in (".c", ".h")
-        else "struct S { void f() { go(); } };\n"
-        if suffix in (".cpp", ".hpp", ".cc", ".cxx", ".hh")
-        else "class M { public void F() { Go(); } }\n" if suffix == ".cs"
-        else "function f(){return 1}\n"
-    )
+    body = _SAMPLE_SOURCE.get(suffix, _DEFAULT_SAMPLE)
     for index in range(count):
         (root / f"m{index}{suffix}").write_text(body, encoding="utf-8")
     subprocess.run(["git", "init", "-q", str(root)], check=True)
@@ -110,7 +129,7 @@ def _repo(root: Path, suffix: str, count: int = 140) -> Path:
 @pytest.mark.parametrize(
     "suffix",
     [".py", ".java", ".c", ".h", ".cpp", ".hpp", ".cc", ".cxx", ".hh", ".cs",
-     ".js", ".ts"],
+     ".f90", ".F90", ".f95", ".f03", ".f08", ".pf", ".js", ".ts"],
 )
 def test_a_claimed_language_produces_the_population_it_claims(
     suffix: str, real_population_floors: object,

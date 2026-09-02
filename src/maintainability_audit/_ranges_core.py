@@ -183,6 +183,9 @@ def indent_bounded_end(lines: list[str], start: int) -> int:
 # it. `None` for the kind means "walk into this, but do not grade it" —
 # a C++ namespace holds declarations and is not itself one.
 Recogniser = Callable[[str], "tuple[str, str | None] | None"]
+# Where the declaration starting at a 1-based line ends. Braces by
+# default; Fortran supplies an `end`-keyword finder of its own.
+EndFinder = Callable[[list[str], list[str], int], int] | None
 
 
 def _bounded_end(masked: list[str], lines: list[str], start: int) -> int:
@@ -198,13 +201,16 @@ def _bounded_end(masked: list[str], lines: list[str], start: int) -> int:
         end = indent_bounded_end(lines, start)
     return max(end, start)
 
+
 def scan_bounded(
     lines: list[str],
     recognise: Recogniser,
     *,
     descend: tuple[str, ...] = (),
+    ignore: tuple[str, ...] = (),
     skip_preprocessor: bool = False,
     skip_bare: bool = True,
+    find_end: EndFinder = None,
 ) -> tuple[list[DeclRange], list[str]]:
     """Walk a masked source once, bounding each declaration by its body.
 
@@ -228,7 +234,18 @@ def scan_bounded(
       declaration there.
     - `skip_preprocessor` drops `#`-led lines whole, so a function-shaped
       macro is never measured as a function.
+    - Kinds named in `ignore` are stepped over and never recorded. A
+      Fortran `interface` block is the case: it holds signatures with no
+      bodies, and walking into one would mint a declaration for every
+      procedure the module merely *describes*.
+    - `find_end` decides where a body ends, and is the only part of this
+      walk that is language-shaped. It defaults to braces. Fortran passes
+      its own (1.4.0), because a `subroutine` ends at `end subroutine`
+      and there is not a brace in the language — the *rule* that a range
+      never runs past its own body is what is shared, not the mechanism
+      that enforces it.
     """
+    resolve_end = find_end or _bounded_end
     masked = mask_lines(lines)
     ranges: list[DeclRange] = []
     number = 1
@@ -242,9 +259,12 @@ def scan_bounded(
             number += 1
             continue
         name, kind = found
-        end = _bounded_end(masked, lines, number)
+        end = resolve_end(masked, lines, number)
         if skip_bare and _is_bare_signature(masked, number, end):
             number = end + 1          # a shape with no body: not a definition
+            continue
+        if kind in ignore:
+            number = end + 1          # described, not defined: nothing to grade
             continue
         if kind is not None:
             ranges.append(DeclRange(number, end, name, kind))

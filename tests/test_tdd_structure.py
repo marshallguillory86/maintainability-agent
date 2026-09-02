@@ -23,6 +23,37 @@ def test_subject_stem_pairs_conventional_names() -> None:
     assert subject_stem("lib/util.ts") == subject_stem("lib/util.spec.ts")
 
 
+def test_subject_stem_pairs_the_fortran_conventions() -> None:
+    """Fortran names its tests four ways, and pairing must know all four.
+
+    fpm puts them in `test/`; test-drive writes `test_gravity.f90`;
+    pFUnit writes `.pf` files and the camelCase `testGravity_mod.F90`.
+    A module file is conventionally `gravity_mod.f90`, so `_mod` has to
+    come off both sides or the stems never meet.
+
+    Claiming Fortran in `PAIRABLE` without these would report untested
+    production code on every Fortran repository in existence — one
+    confident finding, wrong everywhere, which is the failure this
+    project exists to prevent.
+    """
+    production = subject_stem("src/gravity_mod.f90")
+
+    assert production == subject_stem("src/gravity.f90")
+    assert production == subject_stem("test/test_gravity.f90")
+    assert production == subject_stem("test/gravity_test.f90")
+    assert production == subject_stem("tests/testGravity_mod.F90")
+    assert production == subject_stem("tests/test_gravity.pf")
+
+
+def test_a_pfunit_file_is_a_test_wherever_it_sits() -> None:
+    """A `.pf` file exists to become a test suite and holds nothing else,
+    so it is a test even outside a `test/` directory."""
+    from maintainability_audit._metrics_types import is_test_path
+
+    assert is_test_path("src/gravity.pf")
+    assert not is_test_path("src/gravity_mod.f90")
+
+
 def _repo(root: Path, files: dict[str, str]) -> Path:
     root.mkdir(parents=True, exist_ok=True)
     subprocess.run(["git", "init", "-q", str(root)], check=True)

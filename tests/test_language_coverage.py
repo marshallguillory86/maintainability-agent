@@ -105,7 +105,10 @@ _PROSE_CLAIM = re.compile(r"(line-pattern|pattern scan|last[- ]resort)", re.I)
 # A claim tied to the one case that is real -- Python whose AST parse
 # failed -- is allowed anywhere.
 _REAL_CASE = re.compile(r"(python|syntax error|unparseable|`?ast`?\b)", re.I)
-_SUFFIX = re.compile(r"`(\.[a-z]+)`")
+# Digits and capitals both occur in real suffixes — `.f90`, `.F90` —
+# and a reader that matched neither silently skipped the rows it was
+# written to police, which is a lint that stops linting without failing.
+_SUFFIX = re.compile(r"`(\.[A-Za-z][A-Za-z0-9]*)`")
 
 
 def _language_table(text: str) -> list[str]:

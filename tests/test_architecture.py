@@ -65,7 +65,7 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
 # layer.
 PARSING = {"source", "declarations", "_cognitive", "_tokens", "_xml",
            "_ranges_core", "_ranges_js", "_ranges_java", "_ranges_c",
-           "_ranges_cpp", "_ranges_csharp"}
+           "_ranges_cpp", "_ranges_csharp", "_ranges_fortran"}
 # ADR 003: `_semantic` normalizes and classifies; `_semantic_ts` reads
 # TypeScript facts (recordings, an already-installed tsc through
 # `_runner`, and source text). Both observe and neither scores —

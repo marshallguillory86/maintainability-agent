@@ -8,14 +8,14 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 | Fact | Value |
 |---|---|
-| Last tagged version | v1.3.0 |
-| Production code | 23,538 lines across 100 modules |
-| Tests | 1,957 collected across 174 files |
+| Last tagged version | v1.4.0 |
+| Production code | 23,799 lines across 101 modules |
+| Tests | 1,980 collected across 175 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
 | Known open exit conditions in Phases 0–5 | Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) **shipped**. |
 | Later phases outstanding | 6.1–6.4, 7.1–7.4 and 8.1–8.7 shipped. **1.0 still waits on Marshall's acceptance (8.8), the 7.5 hostile audit (8.9), and the human tag (8.10).** |
 
-**v1.1.0 shipped C, v1.2.0 C++ and v1.3.0 C#** — the C family is complete, on a scanner architecture where a language is a module and a row, over one shared walk in `_ranges_core`. The row above names the last *tagged* version and is compared verbatim against `git tag`, so it moves in the same step that creates the tag, not before.
+**v1.1.0 shipped C, v1.2.0 C++, v1.3.0 C# and v1.4.0 free-form Fortran** — five languages over one shared walk in `_ranges_core`, where a language is a module and a row. Fortran is the first with no braces, so the walk now takes its bounding rule as an argument. The row above names the last *tagged* version and is compared verbatim against `git tag`, so it moves in the same step that creates the tag, not before.
 
 This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; the explicit 8.8–8.10 release gates remain.
 

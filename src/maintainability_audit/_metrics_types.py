@@ -160,6 +160,10 @@ def is_test_path(rel: str) -> bool:
     name = parts[-1]
     if name.startswith(("test_", "test.")):
         return True
+    # pFUnit source is test source by definition: a `.pf` file exists to
+    # be preprocessed into a test suite and holds nothing else.
+    if name.endswith(".pf"):
+        return True
     stem = name.rsplit(".", 1)[0]
     return stem.endswith(("_test", ".test", ".spec", "_spec"))
 
@@ -190,7 +194,13 @@ KNOWN_SOURCE_SUFFIXES: dict[str, str] = {
     ".ex": "Elixir", ".exs": "Elixir", ".erl": "Erlang", ".hrl": "Erlang",
     ".hs": "Haskell", ".ml": "OCaml", ".mli": "OCaml", ".clj": "Clojure", ".cljs": "Clojure",
     ".f": "Fortran", ".f90": "Fortran", ".f95": "Fortran", ".f03": "Fortran",
-    ".for": "Fortran", ".ftn": "Fortran",
+    ".for": "Fortran", ".ftn": "Fortran", ".f08": "Fortran",
+    # A capital F means "run the C preprocessor first". Suffixes are
+    # matched case-sensitively everywhere here, so the two spellings
+    # are two entries or half of real Fortran is invisible.
+    ".F90": "Fortran", ".F95": "Fortran", ".F03": "Fortran", ".F08": "Fortran",
+    # pFUnit test source: free-form Fortran plus `@test` directives.
+    ".pf": "Fortran",
     ".sh": "Shell", ".bash": "Shell", ".zsh": "Shell", ".ps1": "PowerShell",
     ".sql": "SQL", ".groovy": "Groovy", ".vue": "Vue", ".svelte": "Svelte",
     ".zig": "Zig", ".nim": "Nim", ".cr": "Crystal", ".d": "D", ".ada": "Ada", ".adb": "Ada",

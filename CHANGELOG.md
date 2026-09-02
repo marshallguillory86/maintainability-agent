@@ -4,7 +4,19 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
-_Nothing yet._
+### Fixed
+
+- **The one test covering the real MCP stdio transport could not run
+  outside CI.** It spawns a child process, and the SDK spawns that child
+  with a scrubbed environment — `HOME`, `LOGNAME`, `PATH`, `SHELL`,
+  `USER` and nothing else — so `PYTHONPATH` did not survive. In a source
+  checkout the child died with `ModuleNotFoundError: No module named
+  'maintainability_audit'`, the client reported only `Connection
+  closed`, and the failure looked environmental rather than like a test
+  that could never pass. It now inherits this process's own import path,
+  which covers both layouts (`src/` in a checkout, site-packages when
+  installed) and the `mcp` SDK the child needs before it can answer at
+  all. The full suite now runs locally with nothing deselected.
 
 ## 1.2.0 - 2026-09-01
 

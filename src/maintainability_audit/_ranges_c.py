@@ -19,9 +19,8 @@ from __future__ import annotations
 
 import re
 
-from ._masking import mask_lines
 from ._metrics_types import DeclRange
-from ._ranges_core import _block_end, _is_bare_signature, indent_bounded_end
+from ._ranges_core import scan_bounded
 
 # Storage/qualifier keywords stripped once per line so the function pattern
 # stays simple. Type keywords (`const`, `unsigned`, `long`, `struct`) are NOT
@@ -63,45 +62,11 @@ def _c_declaration(text: str) -> tuple[str, str] | None:
 
 
 def c_declaration_ranges(lines: list[str]) -> tuple[list[DeclRange], list[str]]:
-    """File-scope functions and `struct`/`enum`/`union` types, each bounded by
-    its own body.
+    """File-scope functions and `struct`/`enum`/`union` types.
 
-    Prototypes (`int f(int);`) open no body and are dropped by
-    `_is_bare_signature`, so a header of declarations mints no population.
-    Preprocessor lines are skipped outright — a function-like macro
-    (`#define MAX(a, b) ...`) is not a function. A function's body is stepped
-    over once its end is known, so no statement inside it is offered to the
-    matcher; a type's body is stepped over too, because its members are
-    fields, not declarations.
-
-    Deliberate limitations, all under-reporting:
-
-    - A return type on its own line above the name (`static int\\ncompute(...)`)
-      is not joined, so that definition is missed.
-    - An anonymous `typedef struct { ... } Name;` is not named or counted.
-    - Function-pointer typedefs and K&R parameter declarations end on `;` and
-      read as signatures.
+    Types are not descended into: a C type holds fields, not methods, so
+    there is nothing inside one to grade. Prototypes are skipped because
+    they have no body, and preprocessor lines because a macro is text
+    substitution rather than a function.
     """
-    masked = mask_lines(lines)
-    ranges: list[DeclRange] = []
-    number = 1
-    while number <= len(masked):
-        text = masked[number - 1]
-        if text.lstrip().startswith("#"):        # preprocessor directive
-            number += 1
-            continue
-        found = _c_declaration(text)
-        if found is None:
-            number += 1
-            continue
-        end = _block_end(masked, number)
-        if end is None:
-            end = indent_bounded_end(lines, number)
-        end = max(end, number)
-        if _is_bare_signature(masked, number, end):
-            number = end + 1                     # a prototype: a shape, no body
-            continue
-        ranges.append(DeclRange(number, end, found[0], found[1]))
-        number = end + 1                         # step over the body; no descent
-    ranges.sort(key=lambda item: (item.start, item.end))
-    return ranges, masked
+    return scan_bounded(lines, _c_declaration, skip_preprocessor=True)

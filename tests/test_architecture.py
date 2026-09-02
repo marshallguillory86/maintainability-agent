@@ -64,7 +64,8 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
 # family is one concern and the next language is a sibling, not a new
 # layer.
 PARSING = {"source", "declarations", "_cognitive", "_tokens", "_xml",
-           "_ranges_core", "_ranges_js", "_ranges_java", "_ranges_c"}
+           "_ranges_core", "_ranges_js", "_ranges_java", "_ranges_c",
+           "_ranges_cpp"}
 # ADR 003: `_semantic` normalizes and classifies; `_semantic_ts` reads
 # TypeScript facts (recordings, an already-installed tsc through
 # `_runner`, and source text). Both observe and neither scores —

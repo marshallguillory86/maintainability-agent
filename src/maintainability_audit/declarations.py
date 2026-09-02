@@ -19,6 +19,7 @@ from ._finding_match import normalized_body_digest
 from ._metrics_types import COMPLEXITY_RE, FUNC_PATTERNS, DeclRange, FunctionMetric
 from ._ranges_c import c_declaration_ranges
 from ._ranges_core import indent_bounded_end
+from ._ranges_cpp import cpp_declaration_ranges
 from ._ranges_java import java_declaration_ranges
 from ._ranges_js import js_declaration_ranges
 
@@ -35,8 +36,15 @@ PYTHON_SUFFIXES = {".py"}
 # constructors, annotations and generic parameter lists the JS patterns
 # would misread — so it has its own scanner, as every language here does.
 JAVA_SUFFIXES = {".java"}
-# `.h` is read as C; the C++ increment (1.2.0) disambiguates it.
+# `.h` stays C. It is the one extension both languages write, and C is
+# the safer reading: the C scanner finds a C++ header's free functions
+# and structs and misses its classes, which under-reports. The C++
+# scanner aimed at a C header would read nothing it does not already.
 C_SUFFIXES = {".c", ".h"}
+# C++ (1.2.0). Classes with members, namespaces, templates, operator
+# overloads and out-of-line definitions — none of which the C scanner
+# knows, which is why it is a sibling module and not a C flag.
+CPP_SUFFIXES = {".cpp", ".hpp", ".cc", ".cxx", ".hh"}
 # `.mjs` and `.cjs` are the same JavaScript as `.js` — only the module
 # system differs, and that is invisible to a brace-bounded scan. Their
 # absence was not a decision: babel carried 1,503 unread `.mjs`/`.cjs`
@@ -56,11 +64,14 @@ BRACE_SUFFIXES = {".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".html"}
 SCANNERS: tuple[tuple[set[str], object], ...] = (
     (JAVA_SUFFIXES, java_declaration_ranges),
     (C_SUFFIXES, c_declaration_ranges),
+    (CPP_SUFFIXES, cpp_declaration_ranges),
     (BRACE_SUFFIXES, js_declaration_ranges),
 )
 
 # Every extension we attempt declaration detection on at all.
-DECLARATION_SUFFIXES = PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | BRACE_SUFFIXES
+DECLARATION_SUFFIXES = (
+    PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | CPP_SUFFIXES | BRACE_SUFFIXES
+)
 
 
 def function_status(lines: int, complexity: int, thresholds: dict[str, int], cognitive: int = 0) -> str:

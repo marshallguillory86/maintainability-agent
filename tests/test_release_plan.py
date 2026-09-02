@@ -15,6 +15,8 @@ import re
 import subprocess
 from pathlib import Path
 
+from maintainability_audit.config import VERSION
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -45,8 +47,23 @@ def test_the_release_plan_table_is_measured_not_remembered() -> None:
         capture_output=True, text=True, check=False,
     ).stdout.split()
     if tags:
-        assert f"| Last tagged version | {tags[0]} |" in plan, (
-            f"the release plan does not name {tags[0]} as the last tag"
+        # Either the newest tag, or the version this tree is about to be
+        # tagged as. Both are accepted because demanding only the first
+        # made a clean release impossible: on the release PR the row must
+        # already name the tag (the tag is cut from the commit that
+        # carries it), and until that tag exists the newest one is the
+        # previous release — so the PR fails; name the old tag instead
+        # and the tag build fails, because by then the row is stale. The
+        # v1.1.0 release deadlocked on exactly that, in both directions.
+        #
+        # The staleness this guards against is unaffected. `VERSION` is
+        # bumped deliberately, in the same commit as the row, so a plan
+        # that has drifted fifty-five commits behind matches neither the
+        # newest tag nor the shipped version and still fails here.
+        allowed = {tags[0], f"v{VERSION}"}
+        assert any(f"| Last tagged version | {name} |" in plan for name in allowed), (
+            f"the release plan names neither {tags[0]} (the newest tag) nor "
+            f"v{VERSION} (the version this tree would ship) as the last tag"
         )
 
     modules = sorted((ROOT / "src").rglob("*.py"))

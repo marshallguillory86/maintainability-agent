@@ -6,6 +6,49 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.8.1 - 2026-09-02
+
+1.8.0 fixed the falsifier gate and could not prove it. Running that down
+found a second defect underneath the first, and both are now guarded by
+tests that fail without them.
+
+### Fixed
+
+- **A child that never ran counted as a proof.** `_prove` read every
+  non-zero exit as "the test failed at the base", which it treats as
+  proof — so an interpreter that could not start pytest at all reported
+  that every falsifier falsified. This is not hypothetical: it is what
+  hid the 1.8.0 fix from its own guard. The mutation that should have
+  failed that guard passed instead, because the child was exiting 1 with
+  `No module named pytest` and the tool was reading that as evidence.
+
+  The line is now drawn at **output, not exit code**, because a
+  collection error is a real signal here: a new test file naming a module
+  the base does not have cannot be collected, and this tool already
+  counts that as the weaker proof it is. Only a child that printed
+  nothing at all never ran.
+- **The 1.8.0 fix broke pytest for the child on some interpreters.**
+  Replacing `PYTHONPATH` with the worktree's `src` alone left the child
+  unable to import pytest itself wherever pytest lives outside the
+  default path. The worktree now goes **first** and the parent's path
+  follows.
+
+### Added
+
+- **Two guards, each mutation-verified.** Reverting the shadowing fix
+  fails `test_the_reverted_tree_is_the_tree_the_tests_import`; reverting
+  the never-ran rule fails `test_a_child_that_never_ran_is_not_a_proof`.
+  Both were written, watched to fail, and corrected twice before they
+  discriminated — the first draft passed in 0.14s against a scratch
+  repository whose every commit had been refused by a machine-level hook,
+  and the second put its decoy where the code does not read from. A guard
+  nobody has watched fail is not a guard, and neither of these was until
+  it was.
+
+End to end against v1.5.1, the gate now reports **19 of 20** added tests
+failing without their change, where before the 1.8.0 fix it reported 0 of
+19.
+
 ## 1.8.0 - 2026-09-02
 
 A retrospective audit of everything from v0.9.1 through v1.7.0 — 104

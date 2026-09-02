@@ -41,6 +41,7 @@ reported so a reader knows which kind of proof they have.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -134,12 +135,23 @@ def _prove(base: str, node_ids: list[str], tree: Path) -> tuple[list[str], list[
     ]
     for path in added:
         (tree / path).unlink(missing_ok=True)
+    # The reverted tree must be the tree the tests *import*, and it was
+    # not. `pip install -e .` puts the checkout's own `src` on the path,
+    # so a test run inside this worktree imported the package from the
+    # original checkout — the code at HEAD, never the base. Reverting the
+    # files on disk changed what the tests could *read* and nothing about
+    # what they could *call*, which is why document falsifiers proved
+    # correctly here for months while every behaviour falsifier passed
+    # vacuously. `PYTHONPATH` precedes site-packages, so naming the
+    # worktree's own source is the whole fix.
+    environment = {**os.environ, "PYTHONPATH": str(tree / "src")}
     failed, passed = [], []
     for node in node_ids:
         result = subprocess.run(  # noqa: S603
             [sys.executable, "-m", "pytest", node, "-q", "--no-header",
              "-p", "no:randomly", "--no-cov"],
             cwd=tree, text=True, capture_output=True, check=False, timeout=600,
+            env=environment,
         )
         (failed if result.returncode != 0 else passed).append(node)
     return failed, passed
@@ -187,6 +199,39 @@ def _is_class_falsifier(path: str) -> bool:
     return path.startswith("tests/") and path.endswith("_class.py")
 
 
+# A test file may legitimately cover behaviour that already worked — a
+# characterisation test, or coverage nobody had written yet. Such a file
+# passes at the base and is not a broken falsifier. It says so in its
+# module docstring rather than being assumed, because "this one is fine"
+# is precisely the judgement an agent grading its own homework would make
+# silently.
+COVERS_EXISTING = "Covers existing behaviour:"
+
+
+def _added_test_files(base: str) -> list[str]:
+    """Every ``tests/test_*.py`` this change adds, class falsifiers aside.
+
+    The register and the class-falsifier convention were the only two
+    routes into this proof, and the languages shipped through neither:
+    C, C++, C#, Fortran and fixed-form Fortran arrived as feature
+    increments with roughly 300 tests, none of which CI ever watched
+    fail. The hole was not in the proof but in what reached it, so the
+    selector now follows how work actually arrives.
+
+    Added files only, for the reason the class version gives: a modified
+    file may defend a fix older than this base, and proving it would be a
+    false accusation.
+    """
+    added = _git("diff", "--name-only", "--diff-filter=A", base, "HEAD").splitlines()
+    return sorted(
+        path for path in added
+        if path.startswith("tests/")
+        and Path(path).name.startswith("test_")
+        and path.endswith(".py")
+        and not _is_class_falsifier(path)
+    )
+
+
 def _tests_in(source: str, filename: str) -> list[str]:
     """Every ``test_`` function a file defines, as pytest node ids."""
     return [
@@ -223,6 +268,49 @@ def _prove_class_files(paths: list[str], base: str) -> list[str]:
         shutil.rmtree(tree, ignore_errors=True)
 
 
+def _prove_added_tests(paths: list[str], base: str) -> list[str]:
+    """Revert-prove the tests an added file brings, one worktree for all.
+
+    A file whose every test passes at the base defended nothing that
+    shipped with it. That is reported unless the file declares itself as
+    covering pre-existing behaviour, which is a real and common case and
+    so is allowed — stated, not assumed.
+    """
+    tree = Path(tempfile.mkdtemp(prefix="falsifier-added-"))
+    try:
+        _git("worktree", "add", "--detach", "--quiet", str(tree), "HEAD")
+        node_ids: list[str] = []
+        exempt: set[str] = set()
+        for path in paths:
+            source = (tree / path).read_text(encoding="utf-8")
+            if COVERS_EXISTING in source:
+                reason = source.split(COVERS_EXISTING, 1)[1].splitlines()[0].strip()
+                print(f"{path}: exempt — covers existing behaviour: {reason}")
+                exempt.add(path)
+                continue
+            node_ids += _tests_in(source, Path(path).name)
+        if not node_ids:
+            return []
+        failed, passed = _prove(base, node_ids, tree)
+        print(f"  {len(failed)} of {len(node_ids)} fail without the change")
+        by_file: dict[str, list[str]] = {}
+        for node in passed:
+            by_file.setdefault(node.split("::", 1)[0], []).append(node)
+        return [
+            f"{path}: every test passes without the change "
+            f"({len(nodes)} of {len(nodes)}), so the file defends nothing it "
+            f"shipped with; add `{COVERS_EXISTING} <reason>` to its docstring "
+            "if that is deliberate"
+            for path, nodes in sorted(by_file.items())
+            if path not in exempt
+            and len(nodes) == len(_tests_in((tree / path).read_text(encoding="utf-8"),
+                                            Path(path).name))
+        ]
+    finally:
+        _git("worktree", "remove", "--force", str(tree))
+        shutil.rmtree(tree, ignore_errors=True)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", required=True, help="commit the fixes land on top of")
@@ -231,8 +319,9 @@ def main() -> int:
 
     new = _new_entries(base)
     class_files = _added_class_falsifiers(base)
-    if not new and not class_files:
-        print("no new register entries or added class falsifiers; nothing to prove")
+    added_tests = _added_test_files(base)
+    if not new and not class_files and not added_tests:
+        print("no new register entries, class falsifiers or added tests; nothing to prove")
         return 0
 
     unproven: list[str] = []
@@ -255,6 +344,11 @@ def main() -> int:
         print(f"\nproving {len(class_files)} added class falsifier(s): "
               f"{', '.join(class_files)}")
         unproven += _prove_class_files(class_files, base)
+
+    if added_tests:
+        print(f"\nproving {len(added_tests)} added test file(s): "
+              f"{', '.join(added_tests)}")
+        unproven += _prove_added_tests(added_tests, base)
 
     if unproven:
         print("\nfalsifiers that do not falsify:")

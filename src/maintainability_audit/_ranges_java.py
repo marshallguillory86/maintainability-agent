@@ -17,7 +17,7 @@ from __future__ import annotations
 import re
 
 from ._metrics_types import DeclRange
-from ._ranges_core import _NAME, _matching_paren, scan_bounded
+from ._ranges_core import _NAME, _mask_generics, _matching_paren, scan_bounded
 
 _JAVA_TYPE_KEYWORD = r"(?:class|interface|enum|record|@interface)"
 _JAVA_TYPE_RE = re.compile(rf"^{_JAVA_TYPE_KEYWORD}\s+({_NAME})\b")
@@ -38,26 +38,6 @@ _JAVA_NOT_A_DECLARATION = frozenset(
 # What may follow the parameter list of a real declaration: a body, a
 # throws clause, or nothing at all for an abstract or interface method.
 _JAVA_MEMBER_TAIL_RE = re.compile(r"^\s*(?:\{|throws\b|;)")
-
-
-def _mask_generics(text: str) -> str:
-    """Blank balanced ``<...>`` so a type argument cannot be read as syntax.
-
-    `Foo<T extends Bar>` must not end at the first `>`, and
-    `Map<String, List<Integer>> index()` must yield the name `index`
-    rather than something from inside the brackets. Unbalanced `<` — a
-    comparison — is left alone, so the failure direction is "generic not
-    recognised", never "half a line erased".
-    """
-    out = list(text)
-    stack: list[int] = []
-    for index, char in enumerate(text):
-        if char == "<":
-            stack.append(index)
-        elif char == ">" and stack:
-            for position in range(stack.pop(), index + 1):
-                out[position] = " "
-    return "".join(out)
 
 
 def _strip_java_annotations(text: str) -> str:

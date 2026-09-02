@@ -91,5 +91,17 @@ def test_cpp_is_never_routed_to_the_last_resort_patterns() -> None:
         if suffix in declaration_suffixes():
             assert registry.get(suffix) in detectors, (
                 f"{suffix} is declaration-enabled but is not routed to the "
-                "dedicated C range detector"
+                "dedicated C++ range detector"
             )
+
+
+def test_csharp_is_never_routed_to_the_last_resort_patterns() -> None:
+    """And for 1.3.0's, completing the C family."""
+    registry = scanner_registry()
+    detectors = range_functions_for("csharp_declaration")
+
+    if ".cs" in declaration_suffixes():
+        assert registry.get(".cs") in detectors, (
+            ".cs is declaration-enabled but is not routed to the dedicated "
+            "C# range detector"
+        )

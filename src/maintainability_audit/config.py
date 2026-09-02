@@ -11,7 +11,7 @@ from ._config_defaults import DEFAULT_CONFIG, DEFAULT_IDIOM_GROUPS
 # still the door every caller comes through.
 __all__ = ["DEFAULT_CONFIG", "DEFAULT_IDIOM_GROUPS", "PROJECT_URL", "VERSION"]
 
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 
 PROJECT_URL = "https://github.com/marshallguillory86/maintainability-agent"
 

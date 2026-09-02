@@ -94,6 +94,7 @@ def _repo(root: Path, suffix: str, count: int = 140) -> Path:
         else "int f(void) { return 1; }\n" if suffix in (".c", ".h")
         else "struct S { void f() { go(); } };\n"
         if suffix in (".cpp", ".hpp", ".cc", ".cxx", ".hh")
+        else "class M { public void F() { Go(); } }\n" if suffix == ".cs"
         else "function f(){return 1}\n"
     )
     for index in range(count):
@@ -108,7 +109,8 @@ def _repo(root: Path, suffix: str, count: int = 140) -> Path:
 
 @pytest.mark.parametrize(
     "suffix",
-    [".py", ".java", ".c", ".h", ".cpp", ".hpp", ".cc", ".cxx", ".hh", ".js", ".ts"],
+    [".py", ".java", ".c", ".h", ".cpp", ".hpp", ".cc", ".cxx", ".hh", ".cs",
+     ".js", ".ts"],
 )
 def test_a_claimed_language_produces_the_population_it_claims(
     suffix: str, real_population_floors: object,

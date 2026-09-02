@@ -53,6 +53,49 @@ COMPLEXITY_RE = re.compile(
 )
 
 
+def branch_points(line: str) -> int:
+    """Decision points on one line, for the C family and Python."""
+    return len(COMPLEXITY_RE.findall(line))
+
+
+# Fortran branches on keywords the C-family pattern never looks for, and
+# the pattern it does use is actively wrong here. Measured before this
+# existed: six nested `do` loops scored complexity 1, because `do` — the
+# language's primary loop — is not in it; five `.and.`/`.or.` operators
+# scored 3, because Fortran spells them with dots rather than `&&`; and
+# every `if` was counted twice, because `end if` contains the word `if`.
+# Scientific Fortran is mostly nested loops, so a numerical kernel read
+# as trivial.
+#
+# `end <thing>` closes a construct and decides nothing, so it is removed
+# before anything is counted. `select case` is the header of a construct
+# whose *cases* are the branches, so it goes too — otherwise the header
+# and its first case both count.
+_FORTRAN_CLOSER_RE = re.compile(
+    r"\bend\s*(?:if|do|where|forall|select|associate|block|critical|team|"
+    r"function|subroutine|module|program|type|interface)\b",
+    re.I,
+)
+_FORTRAN_SELECT_RE = re.compile(r"\bselect\s+(?:case|type)\b", re.I)
+# `case default` is the else of a select: it adds no path of its own.
+_FORTRAN_DEFAULT_RE = re.compile(r"\bcase\s+default\b", re.I)
+_FORTRAN_BRANCH_RE = re.compile(
+    r"\b(?:if|do|case|where|elsewhere|forall)\b|\.and\.|\.or\.", re.I
+)
+
+
+def fortran_branch_points(line: str) -> int:
+    """Decision points on one Fortran statement.
+
+    Counted after the closers and the `select` header are removed, so
+    `end if` is not a second `if` and `select case (n)` is not a case.
+    """
+    text = _FORTRAN_CLOSER_RE.sub(" ", line)
+    text = _FORTRAN_SELECT_RE.sub(" ", text)
+    text = _FORTRAN_DEFAULT_RE.sub(" ", text)
+    return len(_FORTRAN_BRANCH_RE.findall(text))
+
+
 class DeclRange(NamedTuple):
     """A detected declaration: 1-based inclusive line span, name, kind.
 
@@ -195,6 +238,7 @@ KNOWN_SOURCE_SUFFIXES: dict[str, str] = {
     ".hs": "Haskell", ".ml": "OCaml", ".mli": "OCaml", ".clj": "Clojure", ".cljs": "Clojure",
     ".f": "Fortran", ".f90": "Fortran", ".f95": "Fortran", ".f03": "Fortran",
     ".for": "Fortran", ".ftn": "Fortran", ".f08": "Fortran",
+    ".F": "Fortran", ".FOR": "Fortran", ".FTN": "Fortran",
     # A capital F means "run the C preprocessor first". Suffixes are
     # matched case-sensitively everywhere here, so the two spellings
     # are two entries or half of real Fortran is invisible.

@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import re
 
+from ._masking import mask_fixed_form_lines, mask_fortran_lines
 from ._metrics_types import DeclRange
 from ._ranges_core import indent_bounded_end, scan_bounded
 
@@ -87,6 +88,12 @@ _BLOCK_END_RE = re.compile(
 # `contains` separates a unit's body from the procedures it holds. It is
 # not a declaration and does not open or close anything.
 _CONTAINS_RE = re.compile(r"^contains\s*$", re.I)
+# Fortran 77's loop: `DO 20 I = 1, N`, closed by the statement
+# labelled 20 — usually `20 CONTINUE` — and not by an `END DO`. A
+# reader that counts it as an opener and waits for `END DO` never
+# balances, so the enclosing procedure never finds its own end.
+_LABELLED_DO_RE = re.compile(r"^do\s+(\d+)\b", re.I)
+_LEADING_LABEL_RE = re.compile(r"^(\d+)\b")
 
 
 def _statement(text: str) -> str:
@@ -101,9 +108,15 @@ def _statement(text: str) -> str:
     return statement[:-1].strip() if statement.endswith("&") else statement
 
 
+def _unlabelled(statement: str) -> str:
+    """A statement with any leading fixed-form label removed."""
+    label = _LEADING_LABEL_RE.match(statement)
+    return statement[label.end():].strip() if label else statement
+
+
 def _fortran_declaration(text: str) -> tuple[str, str | None] | None:
     """``(name, kind)`` for a Fortran program unit on one masked line."""
-    statement = _statement(text)
+    statement = _unlabelled(_statement(text))
     if not statement:
         return None
 
@@ -136,14 +149,31 @@ def _fortran_end(masked: list[str], lines: list[str], start: int) -> int:
     file costs one declaration rather than everything after it.
     """
     depth = 0
+    pending_labels: list[str] = []
     for number in range(start, len(masked) + 1):
         statement = _statement(masked[number - 1])
         if not statement:
             continue
+        label = _LEADING_LABEL_RE.match(statement)
+        if label is not None:
+            # The statement carrying a pending label closes the loop that
+            # named it. Several loops may share one terminator, so every
+            # match is popped.
+            while pending_labels and pending_labels[-1] == label.group(1):
+                pending_labels.pop()
+                depth -= 1
+            statement = statement[label.end():].strip()
+            if not statement:
+                continue
         if _END_RE.match(statement) or _BLOCK_END_RE.match(statement):
             depth -= 1
             if depth <= 0:
                 return number
+            continue
+        labelled_do = _LABELLED_DO_RE.match(statement)
+        if labelled_do is not None:
+            pending_labels.append(labelled_do.group(1))
+            depth += 1
             continue
         if _BLOCK_OPENER_RE.match(statement) or any(
             pattern.match(statement) for pattern in _OPENERS
@@ -178,4 +208,36 @@ def fortran_declaration_ranges(lines: list[str]) -> tuple[list[DeclRange], list[
         ignore=("interface",),
         skip_bare=False,
         find_end=_fortran_end,
+        mask=mask_fortran_lines,
+    )
+
+
+def fixed_form_declaration_ranges(lines: list[str]) -> tuple[list[DeclRange], list[str]]:
+    """The same program units, read from fixed-form source (1.6.0).
+
+    Fortran 77 laid its source out for punched cards: a label in columns
+    1-5, a continuation marker in column 6, the statement in 7-72, and a
+    sequence number after that. `C` in column 1 is a comment.
+
+    None of that changes what a program unit *is*, so this shares the
+    recogniser and the `end`-keyword bounding with free-form and differs
+    only in how a line becomes a statement — which is the whole reason
+    `scan_bounded` takes a masker. The scanner that reads a `SUBROUTINE`
+    is the scanner that reads a `subroutine`.
+
+    Two limits are worth stating. Indentation carries no meaning in
+    fixed-form, so the fallback for an unclosed unit is weaker here than
+    in free-form — it will usually bound at the next unit rather than
+    sensibly. And a `D` in column 1 is a debug line in several legacy
+    dialects but is not standard, so it is read as code rather than
+    guessed at.
+    """
+    return scan_bounded(
+        lines,
+        _fortran_declaration,
+        descend=("class",),
+        ignore=("interface",),
+        skip_bare=False,
+        find_end=_fortran_end,
+        mask=mask_fixed_form_lines,
     )

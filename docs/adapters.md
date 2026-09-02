@@ -25,9 +25,9 @@ The SARIF file can be uploaded to GitHub code scanning.
 
 ### Native analyzer pool
 
-Fourteen adapters ship in the optional analyzer pool: cohesion, complexipy,
-eslint, flake8, interrogate, jscpd, lizard, multimetric, mypy, pydocstyle,
-pylint, radon, ruff, and vulture. See [analyzer pool](analyzer-pool.md)
+Fifteen adapters ship in the optional analyzer pool: cohesion, complexipy,
+eslint, flake8, fortitude, interrogate, jscpd, lizard, multimetric, mypy,
+pydocstyle, pylint, radon, ruff, and vulture. See [analyzer pool](analyzer-pool.md)
 for selection and coverage.
 
 ## Planned Native Adapters

@@ -53,10 +53,12 @@ def test_every_verified_tier_is_backed_by_a_shipped_adapter() -> None:
         f"tier-only={sorted(verified - adapted)}, adapter-only={sorted(adapted - verified)}"
     )
 
-    # Decisions 3 and 9 keep this hard promise at the current seventeen adapters.
-    # The set itself is derived from the catalog so an eighteenth adapter must
+    # Decisions 3 and 9 keep this hard promise at the current eighteen adapters.
+    # The set itself is derived from the catalog so a nineteenth adapter must
     # update this explicit product count rather than silently changing it.
-    assert len(verified) == len(adapted) == 17
+    # Eighteenth: fortitude (1.5.0), which gave Fortran the analyzer tier it
+    # was the only claimed language without.
+    assert len(verified) == len(adapted) == 18
 
 
 def test_catalog_producer_tiers_are_exactly_the_shipped_adapter_set() -> None:

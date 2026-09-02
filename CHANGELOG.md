@@ -6,6 +6,42 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.5.0 - 2026-09-01
+
+**Fortran gets an analyzer.** 1.4.0 shipped the scanner and noted that
+Fortran was the one claimed language with nothing external beside it —
+lizard does not read it. Fortitude is the answer: Rust-fast,
+`pip install`-able, 100+ rules across correctness, obsolescent features,
+modernisation, portability and style.
+
+### Added
+
+- **A fortitude adapter**, registered in the pool at `baseline` depth —
+  zero project configuration, fast, runs on whatever Fortran is present.
+  Verified the way this project requires before a tool leaves the `all`
+  tier: installed (0.9.2), run, and its output parsed. On a 12-module
+  synthetic tree it contributes 84 findings, each with a rule code, a
+  file and a line.
+
+**It does not claim `types`.** Fortitude's correctness rules are about
+declaring things explicitly — `implicit none`, `intent`, kind parameters
+— and a reader who saw `types` in a coverage record would take it to
+mean the code was type-checked. Nothing type-checks Fortran here. Only
+`C191: unreachable-statement` maps off `style`, to `dead-code`, because
+unreachable code is exactly that.
+
+It is also a **verdict emitter**: it reports findings and cannot supply a
+declaration population. The built-in scanner remains the only path to a
+population for Fortran, which `docs/language-support.md` now says
+precisely rather than saying Fortran has no analyzer at all.
+
+### Notes
+
+The recorded-output test pins the one way fortitude differs from ruff,
+whose JSON is otherwise the same shape: the location key is `line`, not
+`row`. Reading ruff's spelling here would have dropped every line number
+silently, leaving findings that name a file and no place in it.
+
 ## 1.4.0 - 2026-09-01
 
 **Free-form Fortran is a first-class language** — and the first one here

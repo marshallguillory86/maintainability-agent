@@ -47,6 +47,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
             ".cs",
             ".f90", ".f95", ".f03", ".f08",
             ".F90", ".F95", ".F03", ".F08", ".pf",
+            ".f", ".for", ".ftn", ".F", ".FOR", ".FTN",
             ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx",
             ".html", ".css", ".md",
         ],
@@ -127,9 +128,21 @@ DEFAULT_CONFIG: dict[str, Any] = {
     # evidence any of them has and is better than none.
     "risk_patterns": [
         {
+            # A debt marker is a debt marker in every language, and this
+            # list was the web stack only. Every compiled language this
+            # project claims — Java since 1.0, C since 1.1, C++, C#, and
+            # Fortran — could carry `TODO` and `FIXME` in comments that
+            # nothing looked at, so the one risk pattern that ships by
+            # default was silent on exactly the trees where the debt is
+            # oldest.
             "name": "debt-marker",
             "pattern": r"\b(TODO|FIXME|HACK)\b",
-            "extensions": [".py", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx",
+            "extensions": [".py", ".java", ".c", ".h",
+                           ".cpp", ".hpp", ".cc", ".cxx", ".hh", ".cs",
+                           ".f90", ".f95", ".f03", ".f08",
+                           ".F90", ".F95", ".F03", ".F08", ".pf",
+                           ".f", ".for", ".ftn", ".F", ".FOR", ".FTN",
+                           ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx",
                            ".html", ".css", ".md"],
         },
         {

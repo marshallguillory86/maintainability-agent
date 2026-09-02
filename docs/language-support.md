@@ -12,7 +12,8 @@ ends, and — deliberately — where it under-reports.
 | C (`.c`, `.h`) | dedicated scanner: file-scope functions and `struct`/`enum`/`union` types, bounded by their own braces | Bounded. Under-reports — see below. |
 | C++ (`.cpp`, `.hpp`, `.cc`, `.cxx`, `.hh`) | dedicated scanner: functions, class/struct members, namespaces and templates, bounded by their own braces | Bounded. Under-reports — see below. |
 | C# (`.cs`) | dedicated scanner: methods, constructors and types (`class`, `interface`, `struct`, `record`, `enum`), bounded by their own braces | Bounded. Properties are not declarations — see below. |
-| Fortran, free-form (`.f90`, `.f95`, `.f03`, `.f08`, `.F90`, `.F95`, `.F03`, `.F08`, `.pf`) | dedicated scanner: modules, submodules, programs, subroutines, functions and derived types, bounded by their own `end` | Bounded by keyword rather than braces. Fixed-form is excluded — see below. |
+| Fortran, free-form (`.f90`, `.f95`, `.f03`, `.f08`, `.F90`, `.F95`, `.F03`, `.F08`, `.pf`) | dedicated scanner: modules, submodules, programs, subroutines, functions and derived types, bounded by their own `end` | Bounded by keyword rather than braces. |
+| Fortran, fixed-form (`.f`, `.for`, `.ftn`, `.F`, `.FOR`, `.FTN`) | the same scanner, over source laid out for punched cards: label in columns 1-5, continuation in 6, statement in 7-72 | Bounded by keyword. Continuations are joined before reading — see below. |
 | JS / TS / JSX / TSX (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`) | brace/paren depth over a comment- and string-masked copy | Bounded by the declaration's own braces. |
 | HTML (`.html`) | same brace scanner, so inline `<script>` bodies are measured | Bounded. |
 | Anything else | not parsed for declarations | File length, duplication and risk only, and declaration rates **withheld** with the missing parser named. Adding the suffix to `include_extensions` does not produce a declaration population. |
@@ -223,12 +224,33 @@ declaration for every procedure a module merely *describes* — inflating
 the population every declaration rate divides by, with procedures
 defined somewhere else entirely.
 
-**Fixed-form is deliberately not claimed.** `.f`, `.for` and `.ftn` are
-column-sensitive: a comment is `C` in column 1, a continuation is any
-character in column 6. That is a different scanner with different
-failure modes, and reading it with free-form rules would be an
-approximation nobody asked for. Those suffixes stay out of the default
-extensions until they have a scanner and falsifiers of their own.
+**Fixed-form is read as of 1.6.0.** `.f`, `.for`, `.ftn` and their
+uppercase spellings are column-significant, and the columns mean what
+punched cards meant: a label in 1-5, a continuation marker in column 6,
+the statement in 7-72, and sequence numbers after that. A `C`, `c`, `*`
+or `!` in column 1 makes the whole line a comment.
+
+None of that changes what a program unit *is*, so fixed-form shares the
+recogniser and the `end`-keyword bounding with free-form and differs
+only in how a line becomes a statement. **Continuation lines are joined
+onto the statement they continue** before anything is read, which is
+not tidiness: a condition written
+
+```fortran
+      IF (A .GT. B .AND.
+     &    C .LT. D) THEN
+```
+
+has its `THEN` on the second line. Read line by line the first looks
+like a single-line `IF`, no block opens, and the matching `END IF` then
+closes something that was never opened — ending the enclosing procedure
+early and reading the rest of its body as top-level code.
+
+Two limits: indentation carries no meaning in fixed-form, so the
+fallback for a unit whose `end` is missing is weaker here than in
+free-form; and a `D` in column 1 is a debug line in several legacy
+dialects but is not standard, so it is read as code rather than guessed
+at.
 
 `.F90` (capital F) means "run the C preprocessor first" and is read as
 free-form; unexpanded macros are invisible, the same limitation C

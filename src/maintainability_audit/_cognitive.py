@@ -33,7 +33,7 @@ from __future__ import annotations
 import ast
 import re
 
-from ._masking import mask_lines
+from ._masking import mask_fortran_lines, mask_lines
 
 # Constructs that both cost a point and deepen the nesting for whatever
 # they contain.
@@ -96,6 +96,75 @@ def _is_elif_chain(node: ast.If) -> bool:
     """
     orelse = node.orelse
     return len(orelse) == 1 and isinstance(orelse[0], ast.If)
+
+
+# Fortran opens blocks with keywords and closes them with `end`, so the
+# brace reader sees no nesting at all in it: measured before this
+# existed, four sequential `if`s and four *deeply nested* `if`s both
+# scored 8. Cognitive complexity exists to say that nesting is what
+# makes code hard to hold in your head, so on Fortran the metric was
+# reporting the one thing it is for as absent.
+#
+# `if (...) then` opens; a single-line `if (...) x = 1` does not. That
+# `then` is the whole difference, and it is why this reads the statement
+# rather than counting keywords.
+_F_OPENS_RE = re.compile(
+    r"^\s*(?:\w+\s*:\s*)?(?:"
+    # `do <label>` is Fortran 77's loop, closed by the labelled statement
+    # rather than by `end do`. Counting it as an opener here would raise
+    # the nesting depth and never lower it, over-charging every construct
+    # after it — so it is left out, and nesting inside a labelled loop is
+    # under-counted instead.
+    r"if\b.*\bthen\s*$|do\b(?!\s+\d)|select\s+(?:case|type)\b|where\s*\(.*\)\s*$|"
+    r"associate\b|block\s*$|forall\s*\(.*\)\s*$|critical\b|team\b"
+    r")",
+    re.I,
+)
+_F_CLOSES_RE = re.compile(
+    r"^\s*end\s*(?:if|do|where|forall|select|associate|block|critical|team)\b",
+    re.I,
+)
+# `else`, `else if` and `elsewhere` are the continuation of a decision
+# already charged, so they cost one flat — the same rule the brace
+# reader applies to `else`.
+_F_ELSE_RE = re.compile(r"^\s*(?:else\b|elsewhere\b|case\b)", re.I)
+_F_CONTROL_RE = re.compile(
+    r"\b(?:if|do|where|forall)\b|\bselect\s+(?:case|type)\b", re.I
+)
+_F_BOOLEAN_RE = re.compile(r"\.and\.|\.or\.", re.I)
+_F_CLOSER_WORD_RE = re.compile(
+    r"\bend\s*(?:if|do|where|forall|select|associate|block|critical|team)\b", re.I
+)
+
+
+def fortran_cognitive(lines: list[str]) -> int:
+    """Cognitive complexity for a Fortran program unit.
+
+    Nesting is counted from the constructs themselves — `if … then`,
+    `do`, `select case`, `where`, `associate`, `block` — because there
+    are no braces to read it from. A control keyword two constructs deep
+    costs three, exactly as in the brace reader, so the two languages'
+    numbers mean the same thing.
+    """
+    masked = mask_fortran_lines(lines)
+    score = 0
+    depth = 0
+    for line in masked:
+        statement = line.split("!", 1)[0].rstrip()
+        if _F_CLOSES_RE.match(statement):
+            depth = max(0, depth - 1)
+            continue
+        if _F_ELSE_RE.match(statement):
+            score += 1
+            score += len(_F_BOOLEAN_RE.findall(statement))
+            continue
+        body = _F_CLOSER_WORD_RE.sub(" ", statement)
+        for _ in _F_CONTROL_RE.finditer(body):
+            score += 1 + depth
+        score += len(_F_BOOLEAN_RE.findall(body))
+        if _F_OPENS_RE.match(statement):
+            depth += 1
+    return score
 
 
 def brace_cognitive(lines: list[str]) -> int:

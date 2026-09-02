@@ -78,3 +78,18 @@ def test_c_is_never_routed_to_the_last_resort_patterns() -> None:
                 f"{suffix} is declaration-enabled but is not routed to the "
                 "dedicated C range detector"
             )
+
+
+def test_cpp_is_never_routed_to_the_last_resort_patterns() -> None:
+    """And for 1.2.0's. Each language states its own routing so a wrong
+    row — `.cpp` pointed at the C scanner — fails by name rather than
+    passing the generic check that only asks for *some* scanner."""
+    registry = scanner_registry()
+    detectors = range_functions_for("cpp_declaration")
+
+    for suffix in (".cpp", ".hpp", ".cc", ".cxx", ".hh"):
+        if suffix in declaration_suffixes():
+            assert registry.get(suffix) in detectors, (
+                f"{suffix} is declaration-enabled but is not routed to the "
+                "dedicated C range detector"
+            )

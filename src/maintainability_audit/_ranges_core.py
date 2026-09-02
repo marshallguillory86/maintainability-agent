@@ -186,6 +186,8 @@ Recogniser = Callable[[str], "tuple[str, str | None] | None"]
 # Where the declaration starting at a 1-based line ends. Braces by
 # default; Fortran supplies an `end`-keyword finder of its own.
 EndFinder = Callable[[list[str], list[str], int], int] | None
+# Blanks comments and string literals, preserving line length.
+Masker = Callable[[list[str]], list[str]] | None
 
 
 def _bounded_end(masked: list[str], lines: list[str], start: int) -> int:
@@ -211,6 +213,7 @@ def scan_bounded(
     skip_preprocessor: bool = False,
     skip_bare: bool = True,
     find_end: EndFinder = None,
+    mask: Masker = None,
 ) -> tuple[list[DeclRange], list[str]]:
     """Walk a masked source once, bounding each declaration by its body.
 
@@ -244,9 +247,16 @@ def scan_bounded(
       and there is not a brace in the language — the *rule* that a range
       never runs past its own body is what is shared, not the mechanism
       that enforces it.
+    - `mask` blanks comments and string literals before anything is
+      read. It defaults to the C-family masker; Fortran passes its
+      own, because `!` starts a comment there and is negation here.
+      The masked copy is returned and is what complexity is scored
+      over, so a language masked wrongly is a language *measured*
+      wrongly, not merely parsed wrongly.
     """
     resolve_end = find_end or _bounded_end
-    masked = mask_lines(lines)
+    blank = mask or mask_lines
+    masked = blank(lines)
     ranges: list[DeclRange] = []
     number = 1
     while number <= len(masked):

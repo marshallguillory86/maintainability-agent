@@ -6,6 +6,78 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.6.0 - 2026-09-02
+
+**Fortran is measured with Fortran's reading.** 1.4.0 found Fortran
+declarations correctly and then handed them to a C-family measurement,
+which produced numbers that were not approximate but wrong. This release
+fixes the measurement, gives Fortran the analyzer tier it was locked out
+of, and claims fixed-form.
+
+### Fixed
+
+- **`do` — Fortran's primary loop — was not counted at all.** The
+  branch pattern was the C family's, so **six nested loops scored
+  complexity 1**. `.and.`/`.or.` are not `&&`/`||`, so five operators
+  scored 3. `end if` contains the word `if`, so every branch counted
+  twice. Scientific Fortran is mostly nested loops, so a numerical
+  kernel read as trivial — and the ranking that decides which routines a
+  maintainer is told to fix was drawn from those numbers.
+- **Nesting was invisible.** Cognitive complexity was read from brace
+  depth, and Fortran has no braces, so **four flat `if`s and four deeply
+  nested ones both scored 8** — the metric that exists to measure
+  nesting reporting none of it. It now counts nesting from the
+  constructs themselves.
+- **Comments were read as code.** The masker is the C family's, where
+  `!` is negation; in Fortran it starts a comment. `! loop while the
+  residual is large` was three branch points. Fortran now has its own
+  masker.
+- **lizard never ran on Fortran.** It reads Fortran and measures a
+  nested-loop kernel at CCN 5. This project's catalog row for it omitted
+  `fortran`, and selection is gated on that row, so lizard came out
+  `not-applicable` on every Fortran repository — leaving the language
+  with no complexity reading from any analyzer, while the tool that
+  could supply one sat installed in the pool. Corrected through a new
+  `VERIFIED_EXTRA_LANGUAGES` map, for corrections proven by *running*
+  the tool rather than by trusting an upstream inventory.
+- **`TODO`/`FIXME` were invisible outside the web stack.** The one risk
+  pattern that ships by default listed `.py`, `.js` and friends only, so
+  Java, C, C++, C# and Fortran could carry debt markers nothing looked
+  at — silent on exactly the trees where the debt is oldest. All claimed
+  languages are covered now.
+
+### Added
+
+- **Fixed-form Fortran** (`.f`, `.for`, `.ftn` and uppercase). Same
+  scanner, same `end`-keyword bounding; only how a line becomes a
+  statement differs — which is why it is a masker rather than a second
+  scanner. Card columns are honoured (label 1-5, continuation 6,
+  statement 7-72, sequence numbers ignored), and **continuation lines
+  are joined onto the statement they continue**: a condition whose
+  `THEN` sits on the next line otherwise reads as a single-line `IF`,
+  and the matching `END IF` then closes the enclosing *procedure*,
+  ending it early and reading the rest of its body as top-level code.
+- **Fortran 77 labelled `DO` loops** (`DO 20 I = 1, N` … `20 CONTINUE`)
+  are understood. They do not close with `END DO`, so a reader waiting
+  for one never balances — the procedure collapsed to a single line.
+  Terminating labels are now tracked.
+- **A lint that fails the build if any parsed language has no analyzer
+  measuring complexity.** The first version asked whether *some* adapted
+  tool claimed the language and passed with the stale row still in
+  place, because jscpd lists nearly every language and reads duplication
+  only. A language with duplication and no complexity has half the
+  rubric unmeasured.
+
+### Verification
+
+Audited **fortran-lang/stdlib** — 640 Fortran files, 488 scanned. Ranges
+land exactly: `add_log_unit` is reported at lines 260-404, and the source
+has `subroutine add_log_unit` on 260 and `end subroutine add_log_unit` on
+404. Complexity agrees with lizard on 4 of 5 procedures in a real file;
+the fifth is ours at 16 against lizard's 10, and all 15 decisions are
+enumerable in the source — 13 `if`s, two `do`s and one `.or.` — so the
+difference is lizard under-counting single-line `if (…) return`.
+
 ## 1.5.1 - 2026-09-02
 
 Documentation, and two guards so it cannot drift again.

@@ -9619,6 +9619,7 @@
         "c",
         "cpp",
         "csharp",
+        "fortran",
         "go",
         "java",
         "javascript",

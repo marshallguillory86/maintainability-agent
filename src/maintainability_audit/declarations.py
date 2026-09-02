@@ -14,14 +14,23 @@ import ast
 import os
 from pathlib import Path
 
-from ._cognitive import brace_cognitive, python_cognitive
+from ._cognitive import brace_cognitive, fortran_cognitive, python_cognitive
 from ._finding_match import normalized_body_digest
-from ._metrics_types import COMPLEXITY_RE, FUNC_PATTERNS, DeclRange, FunctionMetric
+from ._metrics_types import (
+    FUNC_PATTERNS,
+    DeclRange,
+    FunctionMetric,
+    branch_points,
+    fortran_branch_points,
+)
 from ._ranges_c import c_declaration_ranges
 from ._ranges_core import indent_bounded_end
 from ._ranges_cpp import cpp_declaration_ranges
 from ._ranges_csharp import csharp_declaration_ranges
-from ._ranges_fortran import fortran_declaration_ranges
+from ._ranges_fortran import (
+    fixed_form_declaration_ranges,
+    fortran_declaration_ranges,
+)
 from ._ranges_java import java_declaration_ranges
 from ._ranges_js import js_declaration_ranges
 
@@ -59,6 +68,14 @@ CSHARP_SUFFIXES = {".cs"}
 # asked for, on the trees where our findings are least actionable.
 FORTRAN_SUFFIXES = {".f90", ".f95", ".f03", ".f08",
                     ".F90", ".F95", ".F03", ".F08", ".pf"}
+# Fixed-form Fortran (1.6.0). The same language and the same program
+# units, laid out for punched cards: label in columns 1-5, a
+# continuation marker in 6, the statement in 7-72. It shares the
+# recogniser and the `end` bounding and differs only in how a line
+# becomes a statement — which is why it is a masker rather than a
+# second scanner. Claimed in 1.6.0 because legacy Fortran is where
+# these findings are worth the most, and 1.4.0 left it unread.
+FIXED_FORM_SUFFIXES = {".f", ".for", ".ftn", ".F", ".FOR", ".FTN"}
 # `.mjs` and `.cjs` are the same JavaScript as `.js` — only the module
 # system differs, and that is invisible to a brace-bounded scan. Their
 # absence was not a decision: babel carried 1,503 unread `.mjs`/`.cjs`
@@ -81,13 +98,41 @@ SCANNERS: tuple[tuple[set[str], object], ...] = (
     (CPP_SUFFIXES, cpp_declaration_ranges),
     (CSHARP_SUFFIXES, csharp_declaration_ranges),
     (FORTRAN_SUFFIXES, fortran_declaration_ranges),
+    (FIXED_FORM_SUFFIXES, fixed_form_declaration_ranges),
     (BRACE_SUFFIXES, js_declaration_ranges),
 )
+
+# How a declaration is *measured*, per language — the companion to
+# SCANNERS, which decides how it is *found*. Both default to the C
+# family; a language whose branches or nesting are spelled differently
+# says so here.
+#
+# Fortran is why this table exists. It was measured with the C-family
+# reading until 1.6.0, and the numbers were not approximate but wrong:
+# `do` is not in the C pattern, so six nested loops scored complexity
+# 1; `.and.`/`.or.` are not `&&`/`||`, so five operators scored 3;
+# `end if` contains `if`, so every branch counted twice; and nesting
+# was read from braces, which Fortran does not have, so four flat
+# `if`s and four deeply nested ones both scored 8.
+METRICS: tuple[tuple[set[str], object, object], ...] = (
+    (FORTRAN_SUFFIXES, fortran_branch_points, fortran_cognitive),
+    (FIXED_FORM_SUFFIXES, fortran_branch_points, fortran_cognitive),
+)
+
+
+def metrics_for(suffix: str) -> tuple[object, object]:
+    """``(branch counter, cognitive reader)`` for one suffix."""
+    for suffixes, counter, cognitive in METRICS:
+        if suffix in suffixes:
+            return counter, cognitive
+    return branch_points, brace_cognitive
+
 
 # Every extension we attempt declaration detection on at all.
 DECLARATION_SUFFIXES = (
     PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | CPP_SUFFIXES
-    | CSHARP_SUFFIXES | FORTRAN_SUFFIXES | BRACE_SUFFIXES
+    | CSHARP_SUFFIXES | FORTRAN_SUFFIXES | FIXED_FORM_SUFFIXES
+    | BRACE_SUFFIXES
 )
 
 
@@ -235,14 +280,16 @@ def detect_functions(
     """
     ranges, code = parsed if parsed is not None else declaration_ranges(path, lines)
     rel = str(path.relative_to(root)).replace(os.sep, "/")
+    count_branches, read_cognitive = metrics_for(path.suffix)
     funcs: list[FunctionMetric] = []
     for decl in ranges:
         block = code[decl.start - 1 : decl.end]
-        complexity = 1 + sum(len(COMPLEXITY_RE.findall(line)) for line in block)
+        complexity = 1 + sum(count_branches(line) for line in block)
         count = max(1, len(block))
         # Python declarations arrive with an exact figure from the AST;
-        # everything else is inferred from brace depth over the body.
-        cognitive = decl.cognitive if decl.cognitive is not None else brace_cognitive(block)
+        # everything else is read from the body, by whichever reader the
+        # language's nesting is written in.
+        cognitive = decl.cognitive if decl.cognitive is not None else read_cognitive(block)
         funcs.append(
             FunctionMetric(
                 path=rel,

@@ -386,6 +386,33 @@ def score_evidence(
 
 
 
+def _reference_block() -> dict[str, object]:
+    """What a reported multiple is a multiple *of*.
+
+    The unit and the anchor were always here. The two corpus fields were
+    not, and their absence was the gap: the rubric is uniform across
+    repositories (P2) and the corpus is not uniform across languages. It
+    is 40 repositories of Python, TypeScript and JavaScript, while this
+    project parses seven languages, so Java, C, C++, C# and Fortran are
+    scored against medians measured on none of their code.
+
+    Disclosed rather than corrected. Per-language references would remove
+    the awkwardness by trading a stated limit for a silent breach of the
+    one-rubric promise, and two repositories must stay comparable
+    regardless of what they are written in.
+    """
+    return {
+        "unit": "multiple of the median mature-OSS repo (1.0 = typical real code)",
+        "note": "Calibrated so a repo at the OSS median on every dimension scores 4.0.",
+        "corpus_languages": ["Python", "TypeScript", "JavaScript"],
+        "corpus_note": (
+            "Reference medians are drawn from 40 mature repositories in "
+            "Python, TypeScript and JavaScript. Other languages are scored "
+            "against that anchor; see docs/standard.md#the-reference-corpus."
+        ),
+    }
+
+
 def _score_document(
     aspects: dict[str, float | None],
     rounded_categories: dict[str, float],
@@ -451,8 +478,5 @@ def _score_document(
         # evidence_status.reasons instead — mixing the two is what let an
         # evidence gap read as a quality demotion.
         "verified_grade_blockers": blockers if verified.get("verified_grade") else [],
-        "reference": {
-            "unit": "multiple of the median mature-OSS repo (1.0 = typical real code)",
-            "note": "Calibrated so a repo at the OSS median on every dimension scores 4.0.",
-        },
+        "reference": _reference_block(),
     }

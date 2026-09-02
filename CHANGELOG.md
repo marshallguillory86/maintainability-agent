@@ -6,6 +6,74 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.8.0 - 2026-09-02
+
+A retrospective audit of everything from v0.9.1 through v1.7.0 — 104
+commits, benched against product intent, the architecture and the
+decision register — and the five findings it produced, fixed.
+
+### Fixed
+
+- **The falsifier gate proved nothing about code.** `prove_falsifiers.py`
+  reverts the tree to the base and runs the new tests against it, and the
+  reverted tree was never the tree the tests *imported*: `pip install -e .`
+  puts the checkout's own `src` on the path, so every run imported the
+  package at HEAD. Reverting the files changed what a test could **read**
+  and nothing about what it could **call** — which is why document
+  falsifiers proved correctly for months while every behaviour falsifier
+  passed vacuously. `PYTHONPATH` now names the worktree's own source.
+  Measured on the Fortran work: **0 of 19 tests failed at base before the
+  fix, 18 of 19 after.**
+- **The gate also could not see how work now arrives.** It triggered only
+  on register entries citing closing tests, or added `tests/*_class.py`
+  files. The language increments used neither, so roughly 300 tests
+  merged unproven. It now revert-proves every added test file, with an
+  explicit `Covers existing behaviour:` marker for the legitimate case of
+  a test that documents behaviour which already worked — stated, not
+  assumed.
+- **The decision register contradicted the product.** ADR 006 still read
+  *"we will not write more range detectors"* after five were written; two
+  further passages named v1.0's six languages as current and listed C, C#
+  and Fortran as absent from the default extensions. Amended in place with
+  what overturned each, rather than rewritten — the register's value is
+  that it records both.
+- **Stale known debt.** Declaration extraction was described as gated on
+  "Python, JS/TS/HTML, and Java", and the scanner note said "both suffix
+  sets" where there are now six.
+
+### Changed
+
+- **A report now names the corpus its anchor is drawn from.**
+  `score.reference` gains `corpus_languages` and `corpus_note`, and the
+  bounded prompt says "the median of a mature open-source corpus of
+  Python, TypeScript and JavaScript". The rubric is uniform across
+  repositories, which is the promise; the **corpus is not uniform across
+  languages**, which is a limit that was true and unstated. Java, C, C++,
+  C# and Fortran are scored against medians measured on none of their
+  code: audited against that anchor LAPACK reports declarations at 7.18x
+  and fortran-lang/stdlib at 1.10x, and the first number is a true
+  statement about LAPACK against mature OSS web code rather than a
+  statement about typical Fortran.
+
+  Disclosed rather than corrected. Per-language references would remove
+  the awkwardness by trading a stated limit for a silent breach of P2,
+  and extending the corpus moves `CALIBRATION_C` and re-grades every
+  repository — a deliberate release, not a patch. `docs/standard.md`
+  carries the reasoning under "What the anchor does not cover".
+- **Fixed-form Fortran tests state their strength**, measured by mutation
+  rather than claimed: swapping the card-column masker fails 1 of 9,
+  removing labelled-`DO` tracking fails 3 of 9, and the rest are
+  defensive regressions. A second test was added as a load-bearing case,
+  measured, found not to discriminate, and is documented as defensive —
+  the claim was removed rather than the test.
+
+**What the audit found holding:** layering and acyclicity intact across
+104 commits under 13 property tests; jscpd reporting 0 duplicate blocks
+across six sibling scanner modules; the setup question set unchanged
+through seven releases; and the tool ending its own audit at zero
+failures of every kind, having split four pieces of code that tripped its
+gates rather than shaving them to fit.
+
 ## 1.7.0 - 2026-09-02
 
 **Practice detection speaks the Fortran toolchain.** Every list in

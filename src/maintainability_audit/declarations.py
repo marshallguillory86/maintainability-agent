@@ -20,6 +20,7 @@ from ._metrics_types import COMPLEXITY_RE, FUNC_PATTERNS, DeclRange, FunctionMet
 from ._ranges_c import c_declaration_ranges
 from ._ranges_core import indent_bounded_end
 from ._ranges_cpp import cpp_declaration_ranges
+from ._ranges_csharp import csharp_declaration_ranges
 from ._ranges_java import java_declaration_ranges
 from ._ranges_js import js_declaration_ranges
 
@@ -45,6 +46,10 @@ C_SUFFIXES = {".c", ".h"}
 # overloads and out-of-line definitions — none of which the C scanner
 # knows, which is why it is a sibling module and not a C flag.
 CPP_SUFFIXES = {".cpp", ".hpp", ".cc", ".cxx", ".hh"}
+# C# (1.3.0). Nearest to Java — types holding members, the same
+# generics — and still its own module: namespaces in two forms,
+# `record`, and properties, which are deliberately not declarations.
+CSHARP_SUFFIXES = {".cs"}
 # `.mjs` and `.cjs` are the same JavaScript as `.js` — only the module
 # system differs, and that is invisible to a brace-bounded scan. Their
 # absence was not a decision: babel carried 1,503 unread `.mjs`/`.cjs`
@@ -65,12 +70,14 @@ SCANNERS: tuple[tuple[set[str], object], ...] = (
     (JAVA_SUFFIXES, java_declaration_ranges),
     (C_SUFFIXES, c_declaration_ranges),
     (CPP_SUFFIXES, cpp_declaration_ranges),
+    (CSHARP_SUFFIXES, csharp_declaration_ranges),
     (BRACE_SUFFIXES, js_declaration_ranges),
 )
 
 # Every extension we attempt declaration detection on at all.
 DECLARATION_SUFFIXES = (
-    PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | CPP_SUFFIXES | BRACE_SUFFIXES
+    PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | CPP_SUFFIXES
+    | CSHARP_SUFFIXES | BRACE_SUFFIXES
 )
 
 

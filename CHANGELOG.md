@@ -18,6 +18,49 @@ All notable changes to Maintainability Agent will be documented here.
   installed) and the `mcp` SDK the child needs before it can answer at
   all. The full suite now runs locally with nothing deselected.
 
+## 1.3.0 - 2026-09-01
+
+**C# is a first-class language, and the C family is complete.** Third of
+the three increments — C in 1.1.0, C++ in 1.2.0, C# here. The
+architecture held to the end: a language is a module and a row.
+
+### Added
+
+- **A dedicated C# scanner (`csharp_declaration_ranges`).** Methods,
+  constructors, destructors, and the types — `class`, `interface`,
+  `struct`, `record`, `record struct` and `enum`. `.cs` is parsed and
+  opened by default.
+- Generic parameter lists are blanked before matching, so
+  `public List<T> Sort<T>(List<T> items) where T : IComparable` yields
+  `Sort`; attributes are stripped with their arguments, so
+  `[Obsolete("x")]` is not read as a method called `Obsolete`.
+- Namespaces are handled in both forms: a braced `namespace Geo {` is
+  walked into without being graded, and C# 10's file-scoped `namespace
+  Geo;` declares nothing and is ignored rather than being allowed to
+  swallow the file.
+
+**Properties are deliberately not declarations.** `public int Count {
+get; set; }` has braces and would bound cleanly, and an ordinary C# tree
+holds thousands of them — each one line long, each nobody's maintenance
+burden. Counting them would dilute the population every declaration rate
+divides by. They are excluded by construction rather than by a rule: a
+property has no parameter list, and every pattern requires one. A method
+written `public int Fast() => count_;` **is** counted, because it has
+one.
+
+### Changed
+
+- **`_mask_generics` moved to `_ranges_core`.** Java and C# write
+  generics the same way, and the second consumer got the shared helper
+  rather than a copy — otherwise one of the two grows a fix the other
+  never gets. Java's behaviour is unchanged, proven by its suite passing
+  untouched.
+
+16 C# falsifiers cover properties, both namespace forms, attributes,
+constructor chains and destructors, generics with constraints,
+expression-bodied members, interface members, positional records,
+control flow inside bodies, and both unclosed-body shapes.
+
 ## 1.2.0 - 2026-09-01
 
 **C++ is a first-class language.** Second of the three C-family

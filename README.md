@@ -5,10 +5,11 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **1.5.1**.
+Version **1.6.0**.
 
-**Languages parsed:** Python, Java, C, C++, C#, free-form Fortran, and the
-JS/TS family — each by a scanner written for it, never a shared regex.
+**Languages parsed:** Python, Java, C, C++, C#, Fortran (free-form *and*
+fixed-form), and the JS/TS family — each by a scanner written for it, and
+measured with that language's own reading of what a branch is.
 [What that means per language](#language-support).
 
 ```bash
@@ -261,13 +262,13 @@ these:
 | C (`.c`, `.h`) | dedicated brace-bounded scanner — functions, `struct`/`enum`/`union` | Bounded; prototypes and macros are not declarations |
 | C++ (`.cpp`, `.hpp`, `.cc`, `.cxx`, `.hh`) | dedicated brace-bounded scanner — functions, class members, namespaces, templates | Bounded; bodyless declarations are not definitions |
 | C# (`.cs`) | dedicated brace-bounded scanner — methods, constructors, `class`/`interface`/`struct`/`record`/`enum` | Bounded; properties are not declarations |
-| Fortran, free-form (`.f90`, `.f95`, `.f03`, `.f08`, `.F90`, `.F95`, `.F03`, `.F08`, `.pf`) | dedicated **keyword**-bounded scanner — modules, subroutines, functions, derived types | Bounded by `end`; fixed-form (`.f`, `.for`, `.ftn`) is not parsed |
+| Fortran, free-form (`.f90`, `.f95`, `.f03`, `.f08`, `.F90`, `.F95`, `.F03`, `.F08`, `.pf`) | dedicated **keyword**-bounded scanner — modules, subroutines, functions, derived types | Bounded by `end`; measured with Fortran's own branch and nesting reading |
+| Fortran, fixed-form (`.f`, `.for`, `.ftn`, `.F`, `.FOR`, `.FTN`) | the same scanner over card-column source; continuations joined, labelled `DO` loops understood | Bounded by `end` or by the loop's label |
 | JS / TS / JSX / TSX (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`) | brace/paren depth over a masked copy | Bounded by the declaration's own braces |
 | HTML (`.html`) | same brace scanner (inline `<script>`) | Bounded |
 | TypeScript (semantic) | a recorded analysis or a locally-installed `tsc`, workspace projects included | Type-level facts; `unknown` when no checker is present |
 
 Any language **not** in that table — Go, Rust, Ruby, PHP, Kotlin,
-fixed-form Fortran,
 Swift, and the rest — is **not parsed for declarations by the built-in
 scanner.** Its files still count toward repo size, but the built-ins produce no
 function-size, complexity, duplication or dead-code findings for them, and the
@@ -281,14 +282,14 @@ discloses its evidence tier and can withhold the grade).
 | Python | `ast`, exact | ruff, radon, mypy, vulture, complexipy, interrogate, pydocstyle, pylint, cohesion |
 | Java | dedicated scanner | lizard, PMD, Checkstyle, SpotBugs |
 | C / C++ / C# | dedicated scanners | lizard, multimetric |
-| **Fortran** (free-form) | dedicated scanner | **fortitude** (1.5.0) — 100+ rules |
+| **Fortran** (free- and fixed-form) | dedicated scanner | **fortitude** — 100+ rules; **lizard** — complexity, NLOC, params |
 | JS / TS / JSX / TSX | brace scanner | ESLint, lizard, jscpd |
 
-Fortran's analyzer is fortitude, which reports findings rather than
-measurements, so as of 1.5.1 its declaration population comes from the
-built-in scanner alone. (lizard *can* measure Fortran — this project's
-catalog row for it was stale and said otherwise. Correcting that, and
-giving Fortran the analyzer-primary tier the C family gets, is 1.6.0.)
+Fortran reached parity in 1.6.0. lizard measures it — this project's
+catalog row for lizard was stale and said otherwise, so lizard came out
+`not-applicable` on every Fortran repository and never ran — and
+fortitude adds 100+ lint rules beside it. A lint now fails the build if
+any parsed language has no analyzer that measures complexity.
 
 **External analyzer adapters (opt-in pool)** — this is how coverage extends
 beyond the built-in set. When you enable the analyzer pool, the tool shells out

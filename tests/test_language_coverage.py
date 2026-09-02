@@ -184,3 +184,58 @@ def test_the_language_table_does_not_market_a_detector_that_never_runs(
         "detector for languages outside DECLARATION_SUFFIXES. It runs for "
         "Python that `ast` could not parse, and nothing else:\n" + "\n".join(prose)
     )
+
+
+def test_every_parsed_language_can_reach_a_complexity_analyzer() -> None:
+    """A claimed language must not be cut off from the pool by a stale row.
+
+    Tool selection is gated on the catalog's `languages` list, which comes
+    from an upstream inventory of what each tool's page says. Pages go
+    stale. lizard has read Fortran for years and the tag was never added,
+    so on a Fortran repository lizard came out `not-applicable` and never
+    ran — leaving Fortran with no complexity reading from any analyzer,
+    not because none existed but because of one wrong list, while the
+    tool that could measure it sat installed in the pool.
+
+    The floor is a **complexity** emitter specifically, not any tool at
+    all. The first version of this asked whether *some* adapted tool
+    claimed the language and passed with the stale row still in place,
+    because jscpd lists nearly every language and reads duplication only.
+    A language with duplication and no complexity has half the rubric
+    unmeasured, which is the gap this is here to catch.
+    """
+    import json
+
+    from maintainability_audit._catalog import CATALOG_PATH
+    from maintainability_audit._discovery import CATALOG_LANGUAGE
+    from maintainability_audit._generic import declared_adapter
+    from maintainability_audit._metrics_types import KNOWN_SOURCE_SUFFIXES
+    from maintainability_audit._tool_adapters import adapter_for
+    from maintainability_audit.declarations import DECLARATION_SUFFIXES
+
+    catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))["tools"]
+    measures_complexity = [
+        tool for tool in catalog
+        if "complexity" in tool["measures"]
+        and (
+            adapter_for(tool["slug"]) is not None
+            or declared_adapter(tool["slug"]) is not None
+        )
+    ]
+    covered = {
+        language for tool in measures_complexity for language in tool["languages"]
+    }
+
+    parsed = {
+        CATALOG_LANGUAGE.get(KNOWN_SOURCE_SUFFIXES[suffix], "").lower()
+        for suffix in DECLARATION_SUFFIXES
+        if suffix in KNOWN_SOURCE_SUFFIXES
+    }
+    missing = sorted(name for name in parsed if name and name not in covered)
+    assert not missing, (
+        f"{missing} are parsed by this project and no adapted analyzer that "
+        "measures complexity claims to read them, so half the rubric has no "
+        "external reading there. If a tool does read one, its catalog row is "
+        "stale — correct it in VERIFIED_EXTRA_LANGUAGES with evidence from "
+        "running the tool."
+    )

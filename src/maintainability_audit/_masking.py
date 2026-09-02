@@ -131,6 +131,125 @@ def _mask_line(line: str, in_block: bool, in_template: bool) -> tuple[str, bool,
     return _mask_code(line)
 
 
+def _mask_fortran_line(line: str) -> str:
+    """One free-form Fortran line, with its comment and strings blanked.
+
+    Held apart from the loop because the two jobs read differently: this
+    one is a character walk with a quote state, and the caller is a walk
+    over lines. Together they were nesting deep enough for this project's
+    own gate to flag them, which was fair.
+    """
+    out = list(line)
+    quote: str | None = None
+    index = 0
+    while index < len(line):
+        char = line[index]
+        if quote is None:
+            if char == "!":
+                for position in range(index, len(line)):
+                    out[position] = " "
+                break
+            if char in "'\"":
+                quote = char
+                out[index] = " "
+            index += 1
+            continue
+        out[index] = " "
+        if char == quote:
+            # A doubled quote is an escaped quote, not the end.
+            if line[index + 1 : index + 2] == quote:
+                out[index + 1] = " "
+                index += 1
+            else:
+                quote = None
+        index += 1
+    return "".join(out)
+
+
+def mask_fortran_lines(lines: list[str]) -> list[str]:
+    """``mask_lines`` for free-form Fortran, whose comments are its own.
+
+    The C-family masker cannot serve here: Fortran comments start at an
+    unquoted ``!``, and in C ``!`` is logical negation. Teaching one
+    masker both would blank half of every ``if (!ready)`` in the C
+    family, so Fortran gets its own pass — and needs one, because
+    complexity is counted over the masked copy. Unmasked, the comment
+    ``! loop while the residual is large`` reads as two branch points.
+
+    Strings are single- or double-quoted and escape by doubling the
+    quote. Length is preserved per line, so reported line numbers still
+    match the source.
+    """
+    return [_mask_fortran_line(line) for line in lines]
+
+
+# Fixed-form Fortran is column-significant, and the columns mean what
+# punched cards meant. 1-5: a statement label. 6: any non-blank marks
+# this line as a continuation of the one above. 7-72: the statement.
+# 73-80: sequence numbers, ignored by the compiler and often holding
+# junk. A `C`, `c`, `*` or `!` in column 1 makes the whole line a
+# comment.
+_FIXED_COMMENT_MARKERS = frozenset("Cc*!")
+_FIXED_LABEL_COLUMNS = 5
+_FIXED_CONTINUATION_COLUMN = 5   # 0-based index of column 6
+_FIXED_STATEMENT_START = 6
+_FIXED_STATEMENT_END = 72
+
+
+def _fixed_form_statement(line: str) -> tuple[str, bool]:
+    """``(statement text, is a continuation)`` for one fixed-form line."""
+    if not line.strip() or line[:1] in _FIXED_COMMENT_MARKERS:
+        return "", False
+    marker = line[_FIXED_CONTINUATION_COLUMN : _FIXED_CONTINUATION_COLUMN + 1]
+    continuation = bool(marker.strip()) and marker != "0"
+    # The label in columns 1-5 is kept, blanking only the continuation
+    # column between it and the statement. A Fortran 77 `DO 20 I = 1, N`
+    # is terminated by the statement *labelled* 20, not by an `END DO`,
+    # so a reader that dropped labels could never find where the loop
+    # closes — and then never finds where the procedure closes either.
+    label = line[:_FIXED_CONTINUATION_COLUMN]
+    statement = line[_FIXED_STATEMENT_START:_FIXED_STATEMENT_END]
+    return f"{label} {statement}", continuation
+
+
+def mask_fixed_form_lines(lines: list[str]) -> list[str]:
+    """Fixed-form Fortran, reduced to one statement per line.
+
+    Three things happen here, and all three are needed before a scanner
+    can read a line at all. Comment lines — `C` in column 1, which is how
+    Fortran 77 wrote every comment — are blanked. Columns 1-6 and 73-80
+    are dropped, because a statement label and a sequence number are not
+    code. And a continuation line is **joined onto the statement it
+    continues**, then blanked itself.
+
+    That last one is not tidiness. A condition written
+
+        IF (A .GT. B .AND.
+       &    C .LT. D) THEN
+
+    has its `THEN` on the continuation line. Read line by line, the first
+    line looks like a single-line `IF` — no block opened — and the
+    matching `END IF` then closes something that was never opened,
+    ending the enclosing procedure early and reading the rest of its body
+    as top-level code. Joining first is what makes the statement true.
+
+    The line *count* is preserved so declaration ranges still point at
+    real lines; only the text moves.
+    """
+    masked = ["" for _ in lines]
+    parent: int | None = None
+    for index, line in enumerate(lines):
+        statement, continuation = _fixed_form_statement(line)
+        if not statement.strip():
+            continue
+        if continuation and parent is not None:
+            masked[parent] = f"{masked[parent].rstrip()} {statement.strip()}"
+            continue
+        masked[index] = statement
+        parent = index
+    return mask_fortran_lines(masked)
+
+
 def mask_lines(lines: list[str]) -> list[str]:
     """Return ``lines`` with comments and string literals blanked out.
 

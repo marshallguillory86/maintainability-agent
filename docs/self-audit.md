@@ -1,5 +1,5 @@
 <!--
-Generated from the tree at commit dabdcb84f61447dcc8399eba2c98393fe0d5bca3. This is a **provenance record, not a promise of currency**: it
+Generated from the tree at commit fc2024d8825c88ffc081a15fbeca0dabf1bc2fa5. This is a **provenance record, not a promise of currency**: it
 states the exact source commit it was generated against, and says
 nothing about how far that is from the current HEAD.
 
@@ -16,10 +16,13 @@ care about instead. Regenerate for the current tree with:
         && sed "s|$(pwd)|.|g" /tmp/self-audit.md > docs/self-audit.md
 -->
 
+
 # Maintainability CI Report
 
-Root: `.`
-Branch: `main`
+- Generated: 2026-09-01T23:54:39+00:00
+- Commit: `fc2024d8825c88ffc081a15fbeca0dabf1bc2fa5` · Branch: `main`
+- Root: `.`
+- Standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based
 
 ## Summary
 
@@ -30,16 +33,14 @@ Branch: `main`
 | Range (unmeasured evidence priced 0..5) | 4.0 – 4.2 |
 | Evidence | Evidence complete under profile `default-v1`. |
 | Verified grade | B |
-| Files scanned | 379 |
-| File warnings | 117 |
+| Files scanned | 391 |
+| File warnings | 120 |
 | File failures | 0 |
-| Function warnings | 66 |
+| Function warnings | 65 |
 | Function failures | 0 |
 | Duplicate blocks | 0 |
 | Risk findings | 0 |
 | Hard gate failures | 0 |
-
-Scoring standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based.
 
 ## Trend
 
@@ -97,12 +98,12 @@ Scoring standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based.
 - **Growth:** neither grew nor got worse.
 - **Never cleared in this window:** 0 findings.
 
-**Break before this series:** calibration, analyzers, scope changed, so scans before this point were produced by a different instrument and cannot be joined to those after it.
+**Break before this series:** rubric_version, calibration, analyzers, scope changed, so scans before this point were produced by a different instrument and cannot be joined to those after it.
 
-**Series 7** — 3 scans, 2026-08-31T20:47:54Z to 2026-08-31T20:51:00Z.
+**Series 7** — 4 scans, 2026-09-01T22:50:04Z to 2026-09-01T23:57:58Z.
 
 - **Direction:** indistinguishable — moved, but by less than the evidence can resolve. Change +0.00.
-- **Debt velocity:** 1 introduced, 1 cleared (unchanged).
+- **Debt velocity:** 0 introduced, 3 cleared (clearing faster than adding).
 - **Growth:** neither grew nor got worse.
 - **Never cleared in this window:** 0 findings.
 
@@ -116,40 +117,651 @@ Ordered by what it costs to leave against what it costs to fix (see the standard
 |---:|---|---|---:|---|
 | 1 | quick-win | unpaired file in src/maintainability_audit/_discovery.py (`src/maintainability_audit/_discovery.py`) | — | add a paired test for `_discovery.py` |
 | 2 | quick-win | unpaired file in src/maintainability_audit/_metric_adapters.py (`src/maintainability_audit/_metric_adapters.py`) | — | add a paired test for `_metric_adapters.py` |
-| 3 | quick-win | unpaired file in src/maintainability_audit/_ranges.py (`src/maintainability_audit/_ranges.py`) | — | add a paired test for `_ranges.py` |
-| 4 | quick-win | unpaired file in src/maintainability_audit/config.py (`src/maintainability_audit/config.py`) | — | add a paired test for `config.py` |
-| 5 | quick-win | unpaired file in src/maintainability_audit/evidence.py (`src/maintainability_audit/evidence.py`) | — | add a paired test for `evidence.py` |
-| 6 | quick-win | unpaired file in src/maintainability_audit/report.py (`src/maintainability_audit/report.py`) | — | add a paired test for `report.py` |
-| 7 | quick-win | unpaired file in src/maintainability_audit/_html_view.py (`src/maintainability_audit/_html_view.py`) | — | add a paired test for `_html_view.py` |
-| 8 | quick-win | unpaired file in src/maintainability_audit/_work_order.py (`src/maintainability_audit/_work_order.py`) | — | add a paired test for `_work_order.py` |
-| 9 | quick-win | unpaired file in src/maintainability_audit/prompts.py (`src/maintainability_audit/prompts.py`) | — | add a paired test for `prompts.py` |
-| 10 | quick-win | unpaired file in src/maintainability_audit/_adapters.py (`src/maintainability_audit/_adapters.py`) | — | add a paired test for `_adapters.py` |
-| 11 | quick-win | unpaired file in src/maintainability_audit/_analysis.py (`src/maintainability_audit/_analysis.py`) | — | add a paired test for `_analysis.py` |
-| 12 | quick-win | unpaired file in src/maintainability_audit/_mcp_setup.py (`src/maintainability_audit/_mcp_setup.py`) | — | add a paired test for `_mcp_setup.py` |
-| 13 | quick-win | unpaired file in tools/build_catalog.py (`tools/build_catalog.py`) | — | add a paired test for `build_catalog.py` |
+| 3 | quick-win | unpaired file in src/maintainability_audit/evidence.py (`src/maintainability_audit/evidence.py`) | — | add a paired test for `evidence.py` |
+| 4 | quick-win | unpaired file in src/maintainability_audit/report.py (`src/maintainability_audit/report.py`) | — | add a paired test for `report.py` |
+| 5 | quick-win | unpaired file in src/maintainability_audit/_work_order.py (`src/maintainability_audit/_work_order.py`) | — | add a paired test for `_work_order.py` |
+| 6 | quick-win | unpaired file in src/maintainability_audit/prompts.py (`src/maintainability_audit/prompts.py`) | — | add a paired test for `prompts.py` |
+| 7 | quick-win | unpaired file in src/maintainability_audit/_adapters.py (`src/maintainability_audit/_adapters.py`) | — | add a paired test for `_adapters.py` |
+| 8 | quick-win | unpaired file in src/maintainability_audit/_analysis.py (`src/maintainability_audit/_analysis.py`) | — | add a paired test for `_analysis.py` |
+| 9 | quick-win | unpaired file in tools/build_catalog.py (`tools/build_catalog.py`) | — | add a paired test for `build_catalog.py` |
+| 10 | quick-win | unpaired file in src/maintainability_audit/_mcp_audit.py (`src/maintainability_audit/_mcp_audit.py`) | — | add a paired test for `_mcp_audit.py` |
+| 11 | quick-win | unpaired file in src/maintainability_audit/scoring.py (`src/maintainability_audit/scoring.py`) | — | add a paired test for `scoring.py` |
+| 12 | quick-win | unpaired file in src/maintainability_audit/_scan_history.py (`src/maintainability_audit/_scan_history.py`) | — | add a paired test for `_scan_history.py` |
+| 13 | quick-win | unpaired file in src/maintainability_audit/_runner.py (`src/maintainability_audit/_runner.py`) | — | add a paired test for `_runner.py` |
 | 14 | quick-win | unpaired file in src/maintainability_audit/_scan_view.py (`src/maintainability_audit/_scan_view.py`) | — | add a paired test for `_scan_view.py` |
-| 15 | quick-win | unpaired file in src/maintainability_audit/renderers.py (`src/maintainability_audit/renderers.py`) | — | add a paired test for `renderers.py` |
-| 16 | quick-win | unpaired file in src/maintainability_audit/scoring.py (`src/maintainability_audit/scoring.py`) | — | add a paired test for `scoring.py` |
-| 17 | quick-win | unpaired file in src/maintainability_audit/_mcp_audit.py (`src/maintainability_audit/_mcp_audit.py`) | — | add a paired test for `_mcp_audit.py` |
-| 18 | quick-win | unpaired file in src/maintainability_audit/_scan_history.py (`src/maintainability_audit/_scan_history.py`) | — | add a paired test for `_scan_history.py` |
-| 19 | quick-win | unpaired file in src/maintainability_audit/_runner.py (`src/maintainability_audit/_runner.py`) | — | add a paired test for `_runner.py` |
-| 20 | quick-win | unpaired file in src/maintainability_audit/_formula.py (`src/maintainability_audit/_formula.py`) | — | add a paired test for `_formula.py` |
-
-...and 24 more. A list longer than 20 is a backlog, not a plan.
+| 15 | quick-win | unpaired file in src/maintainability_audit/_formula.py (`src/maintainability_audit/_formula.py`) | — | add a paired test for `_formula.py` |
+| 16 | quick-win | unpaired file in src/maintainability_audit/_pressures.py (`src/maintainability_audit/_pressures.py`) | — | add a paired test for `_pressures.py` |
+| 17 | quick-win | unpaired file in src/maintainability_audit/_jvm_adapters.py (`src/maintainability_audit/_jvm_adapters.py`) | — | add a paired test for `_jvm_adapters.py` |
+| 18 | quick-win | unpaired file in src/maintainability_audit/_html_view.py (`src/maintainability_audit/_html_view.py`) | — | add a paired test for `_html_view.py` |
+| 19 | quick-win | unpaired file in src/maintainability_audit/_mcp_setup.py (`src/maintainability_audit/_mcp_setup.py`) | — | add a paired test for `_mcp_setup.py` |
+| 20 | quick-win | unpaired file in src/maintainability_audit/config.py (`src/maintainability_audit/config.py`) | — | add a paired test for `config.py` |
+| 21 | quick-win | unpaired file in src/maintainability_audit/_verification.py (`src/maintainability_audit/_verification.py`) | — | add a paired test for `_verification.py` |
+| 22 | quick-win | unpaired file in src/maintainability_audit/_evidence_view.py (`src/maintainability_audit/_evidence_view.py`) | — | add a paired test for `_evidence_view.py` |
+| 23 | quick-win | unpaired file in tools/calibration/select_authored.py (`tools/calibration/select_authored.py`) | — | add a paired test for `select_authored.py` |
+| 24 | quick-win | unpaired file in src/maintainability_audit/_practice.py (`src/maintainability_audit/_practice.py`) | — | add a paired test for `_practice.py` |
+| 25 | quick-win | unpaired file in src/maintainability_audit/_html_report_sections.py (`src/maintainability_audit/_html_report_sections.py`) | — | add a paired test for `_html_report_sections.py` |
+| 26 | quick-win | unpaired file in src/maintainability_audit/_finding_match.py (`src/maintainability_audit/_finding_match.py`) | — | add a paired test for `_finding_match.py` |
+| 27 | quick-win | unpaired file in src/maintainability_audit/_skill_install.py (`src/maintainability_audit/_skill_install.py`) | — | add a paired test for `_skill_install.py` |
+| 28 | quick-win | unpaired file in tools/calibration/measure_cohorts.py (`tools/calibration/measure_cohorts.py`) | — | add a paired test for `measure_cohorts.py` |
+| 29 | quick-win | unpaired file in src/maintainability_audit/_verdict_adapters.py (`src/maintainability_audit/_verdict_adapters.py`) | — | add a paired test for `_verdict_adapters.py` |
+| 30 | quick-win | unpaired file in src/maintainability_audit/renderers.py (`src/maintainability_audit/renderers.py`) | — | add a paired test for `renderers.py` |
+| 31 | quick-win | unpaired file in src/maintainability_audit/_aspects.py (`src/maintainability_audit/_aspects.py`) | — | add a paired test for `_aspects.py` |
+| 32 | quick-win | unpaired file in tools/calibration/measure_fix_breadth.py (`tools/calibration/measure_fix_breadth.py`) | — | add a paired test for `measure_fix_breadth.py` |
+| 33 | quick-win | unpaired file in src/maintainability_audit/_charts.py (`src/maintainability_audit/_charts.py`) | — | add a paired test for `_charts.py` |
+| 34 | quick-win | unpaired file in src/maintainability_audit/_documents.py (`src/maintainability_audit/_documents.py`) | — | add a paired test for `_documents.py` |
+| 35 | quick-win | unpaired file in src/maintainability_audit/_generic.py (`src/maintainability_audit/_generic.py`) | — | add a paired test for `_generic.py` |
+| 36 | quick-win | unpaired file in src/maintainability_audit/_derive.py (`src/maintainability_audit/_derive.py`) | — | add a paired test for `_derive.py` |
+| 37 | quick-win | unpaired file in tools/calibration/measure.py (`tools/calibration/measure.py`) | — | add a paired test for `measure.py` |
+| 38 | quick-win | unpaired file in src/maintainability_audit/metrics.py (`src/maintainability_audit/metrics.py`) | — | add a paired test for `metrics.py` |
+| 39 | quick-win | unpaired file in src/maintainability_audit/_trends.py (`src/maintainability_audit/_trends.py`) | — | add a paired test for `_trends.py` |
+| 40 | quick-win | unpaired file in src/maintainability_audit/_catalog.py (`src/maintainability_audit/_catalog.py`) | — | add a paired test for `_catalog.py` |
+| 41 | quick-win | unpaired file in src/maintainability_audit/_recurrence.py (`src/maintainability_audit/_recurrence.py`) | — | add a paired test for `_recurrence.py` |
+| 42 | major-project | near-duplicate declaration in src/maintainability_audit/_pressures.py (`src/maintainability_audit/_pressures.py`:97) | +0.10 for all 2 | remove the near-duplicate declaration |
+| 43 | major-project | near-duplicate declaration in src/maintainability_audit/_semantic_policy.py (`src/maintainability_audit/_semantic_policy.py`:30) | — | remove the near-duplicate declaration |
+| 44 | fill-in | unreferenced declaration in src/maintainability_audit/_pressures.py (`src/maintainability_audit/_pressures.py`:263) | +0.10 for all 2 | remove the unreferenced declaration |
+| 45 | fill-in | unreferenced declaration in src/maintainability_audit/_grant_ledger.py (`src/maintainability_audit/_grant_ledger.py`:44) | — | remove the unreferenced declaration |
 
 Verify with: `python -m maintainability_audit --root . --format json`
 
+### Copy-paste prompts
+
+One self-contained prompt per item — paste any block whole into a coding agent.
+
+#### unpaired file in src/maintainability_audit/_discovery.py
+`src/maintainability_audit/_discovery.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_discovery.py`.
+Location: src/maintainability_audit/_discovery.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_metric_adapters.py
+`src/maintainability_audit/_metric_adapters.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_metric_adapters.py`.
+Location: src/maintainability_audit/_metric_adapters.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/evidence.py
+`src/maintainability_audit/evidence.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `evidence.py`.
+Location: src/maintainability_audit/evidence.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/report.py
+`src/maintainability_audit/report.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `report.py`.
+Location: src/maintainability_audit/report.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_work_order.py
+`src/maintainability_audit/_work_order.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_work_order.py`.
+Location: src/maintainability_audit/_work_order.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/prompts.py
+`src/maintainability_audit/prompts.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `prompts.py`.
+Location: src/maintainability_audit/prompts.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_adapters.py
+`src/maintainability_audit/_adapters.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_adapters.py`.
+Location: src/maintainability_audit/_adapters.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_analysis.py
+`src/maintainability_audit/_analysis.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_analysis.py`.
+Location: src/maintainability_audit/_analysis.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in tools/build_catalog.py
+`tools/build_catalog.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `build_catalog.py`.
+Location: tools/build_catalog.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_mcp_audit.py
+`src/maintainability_audit/_mcp_audit.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_mcp_audit.py`.
+Location: src/maintainability_audit/_mcp_audit.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/scoring.py
+`src/maintainability_audit/scoring.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `scoring.py`.
+Location: src/maintainability_audit/scoring.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_scan_history.py
+`src/maintainability_audit/_scan_history.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_scan_history.py`.
+Location: src/maintainability_audit/_scan_history.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_runner.py
+`src/maintainability_audit/_runner.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_runner.py`.
+Location: src/maintainability_audit/_runner.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_scan_view.py
+`src/maintainability_audit/_scan_view.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_scan_view.py`.
+Location: src/maintainability_audit/_scan_view.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_formula.py
+`src/maintainability_audit/_formula.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_formula.py`.
+Location: src/maintainability_audit/_formula.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_pressures.py
+`src/maintainability_audit/_pressures.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_pressures.py`.
+Location: src/maintainability_audit/_pressures.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_jvm_adapters.py
+`src/maintainability_audit/_jvm_adapters.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_jvm_adapters.py`.
+Location: src/maintainability_audit/_jvm_adapters.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_html_view.py
+`src/maintainability_audit/_html_view.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_html_view.py`.
+Location: src/maintainability_audit/_html_view.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_mcp_setup.py
+`src/maintainability_audit/_mcp_setup.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_mcp_setup.py`.
+Location: src/maintainability_audit/_mcp_setup.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/config.py
+`src/maintainability_audit/config.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `config.py`.
+Location: src/maintainability_audit/config.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_verification.py
+`src/maintainability_audit/_verification.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_verification.py`.
+Location: src/maintainability_audit/_verification.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_evidence_view.py
+`src/maintainability_audit/_evidence_view.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_evidence_view.py`.
+Location: src/maintainability_audit/_evidence_view.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in tools/calibration/select_authored.py
+`tools/calibration/select_authored.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `select_authored.py`.
+Location: tools/calibration/select_authored.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_practice.py
+`src/maintainability_audit/_practice.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_practice.py`.
+Location: src/maintainability_audit/_practice.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_html_report_sections.py
+`src/maintainability_audit/_html_report_sections.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_html_report_sections.py`.
+Location: src/maintainability_audit/_html_report_sections.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_finding_match.py
+`src/maintainability_audit/_finding_match.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_finding_match.py`.
+Location: src/maintainability_audit/_finding_match.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_skill_install.py
+`src/maintainability_audit/_skill_install.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_skill_install.py`.
+Location: src/maintainability_audit/_skill_install.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in tools/calibration/measure_cohorts.py
+`tools/calibration/measure_cohorts.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `measure_cohorts.py`.
+Location: tools/calibration/measure_cohorts.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_verdict_adapters.py
+`src/maintainability_audit/_verdict_adapters.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_verdict_adapters.py`.
+Location: src/maintainability_audit/_verdict_adapters.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/renderers.py
+`src/maintainability_audit/renderers.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `renderers.py`.
+Location: src/maintainability_audit/renderers.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_aspects.py
+`src/maintainability_audit/_aspects.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_aspects.py`.
+Location: src/maintainability_audit/_aspects.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in tools/calibration/measure_fix_breadth.py
+`tools/calibration/measure_fix_breadth.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `measure_fix_breadth.py`.
+Location: tools/calibration/measure_fix_breadth.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_charts.py
+`src/maintainability_audit/_charts.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_charts.py`.
+Location: src/maintainability_audit/_charts.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_documents.py
+`src/maintainability_audit/_documents.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_documents.py`.
+Location: src/maintainability_audit/_documents.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_generic.py
+`src/maintainability_audit/_generic.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_generic.py`.
+Location: src/maintainability_audit/_generic.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_derive.py
+`src/maintainability_audit/_derive.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_derive.py`.
+Location: src/maintainability_audit/_derive.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in tools/calibration/measure.py
+`tools/calibration/measure.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `measure.py`.
+Location: tools/calibration/measure.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/metrics.py
+`src/maintainability_audit/metrics.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `metrics.py`.
+Location: src/maintainability_audit/metrics.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_trends.py
+`src/maintainability_audit/_trends.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_trends.py`.
+Location: src/maintainability_audit/_trends.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_catalog.py
+`src/maintainability_audit/_catalog.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_catalog.py`.
+Location: src/maintainability_audit/_catalog.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unpaired file in src/maintainability_audit/_recurrence.py
+`src/maintainability_audit/_recurrence.py` · quick-win
+
+```text
+Repository: .
+Task: add a paired test for `_recurrence.py`.
+Location: src/maintainability_audit/_recurrence.py
+Why: an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### near-duplicate declaration in src/maintainability_audit/_pressures.py
+`src/maintainability_audit/_pressures.py:97` · major-project
+
+```text
+Repository: .
+Task: remove the near-duplicate declaration.
+Location: src/maintainability_audit/_pressures.py:97
+Why: near-copies drift apart silently, which is worse than exact duplication; reconciling them requires deciding which behaviour was intended
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### near-duplicate declaration in src/maintainability_audit/_semantic_policy.py
+`src/maintainability_audit/_semantic_policy.py:30` · major-project
+
+```text
+Repository: .
+Task: remove the near-duplicate declaration.
+Location: src/maintainability_audit/_semantic_policy.py:30
+Why: near-copies drift apart silently, which is worse than exact duplication; reconciling them requires deciding which behaviour was intended
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unreferenced declaration in src/maintainability_audit/_pressures.py
+`src/maintainability_audit/_pressures.py:263` · fill-in
+
+```text
+Repository: .
+Task: remove the unreferenced declaration.
+Location: src/maintainability_audit/_pressures.py:263
+Why: unreachable code costs reading time and misleads a search, but deleting it is the cheapest change there is
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
+#### unreferenced declaration in src/maintainability_audit/_grant_ledger.py
+`src/maintainability_audit/_grant_ledger.py:44` · fill-in
+
+```text
+Repository: .
+Task: remove the unreferenced declaration.
+Location: src/maintainability_audit/_grant_ledger.py:44
+Why: unreachable code costs reading time and misleads a search, but deleting it is the cheapest change there is
+
+Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
+Verify when done: python -m maintainability_audit --root . --format json
+```
+
 ## TDD-shaped tests
 
-TDD-shaped tests: detected beside 5 of 104 production source files (path pairing). Constructs: pytest in 172 file(s), unittest in 1 file(s), describe_it in 10 file(s), parametrize in 68 file(s), given_when_then in 1 file(s).
+TDD-shaped tests: detected beside 5 of 113 production source files (path pairing). Constructs: pytest in 174 file(s), unittest in 1 file(s), describe_it in 10 file(s), parametrize in 68 file(s), given_when_then in 1 file(s).
 Chronology is not measured. Effectiveness is unscored unless the operator opted into suite execution.
 
 ## Test Suite
 
-- The operator opted in to running the repository's test command; it did not run (exit None).
+- The operator opted in to running the repository's test command; it failed (exit 1).
 - Command: PYTHONPATH=src python3 -m pytest --cov=maintainability_audit --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=92
-- Coverage: no coverage reported by the run
-- Detail: PYTHONPATH=src python3 -m pytest --cov=maintainability_audit --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=92 could not be executed: [Errno 2] No such file or directory: 'PYTHONPATH=src python3 -m pytest --cov=maintainability_audit --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=92'
+- Coverage: 95.8% line coverage
 
 ## Semantic Findings (ADR 003)
 
@@ -178,7 +790,7 @@ Enforcement found: `linter-config`, `recorded-decisions`, `lint-in-ci`, `types-i
 
 ## Source Not Read
 
-1 of 281 source files were not opened by this scan. Their extensions are absent from `paths.include_extensions`, so nothing below describes them.
+1 of 292 source files were not opened by this scan. Their extensions are absent from `paths.include_extensions`, so nothing below describes them.
 
 | Extension | Language | Files |
 |---|---|---|
@@ -206,14 +818,14 @@ Plus 8 built-in detectors, which always run and whose measurements are single-so
 | `vulture` | analyzer | not-installed | — | — | — | vulture is not installed or not on PATH |
 | `jscpd` | analyzer | ran | cpd 5.1.1 | 1 | 122 |  |
 | `pmd` | analyzer | ran | PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z) | 0 | 0 |  |
-| `competing-libraries` | built-in | ran | — | 379 | 0 | two libraries doing one job; no adapter emits idioms |
-| `dead-code` | built-in | ran | — | 2876 | 2 | vulture, ruff and eslint cover this |
-| `declaration-size` | built-in | ran | — | 2876 | 66 | lizard and complexipy cover these; the only source when neither runs |
-| `duplicate-blocks` | built-in | ran | — | 379 | 0 | jscpd covers this; the only source when Node is unavailable |
-| `file-size` | built-in | ran | — | 379 | 117 | per-file line counts; no adapter emits file_lines |
-| `history` | built-in | ran | — | 376 | 32 | git history; no adapter emits churn, coupling or ownership |
-| `near-duplicates` | built-in | ran | — | 2876 | 2 | token-shingle near-matches, which jscpd's exact-block scan misses |
-| `risk-patterns` | built-in | ran | — | 379 | 0 | regex policy from this repository's own config; nothing external can hold a proj |
+| `competing-libraries` | built-in | ran | — | 391 | 0 | two libraries doing one job; no adapter emits idioms |
+| `dead-code` | built-in | ran | — | 2937 | 2 | vulture, ruff and eslint cover this |
+| `declaration-size` | built-in | ran | — | 2937 | 65 | lizard and complexipy cover these; the only source when neither runs |
+| `duplicate-blocks` | built-in | ran | — | 391 | 0 | jscpd covers this; the only source when Node is unavailable |
+| `file-size` | built-in | ran | — | 391 | 120 | per-file line counts; no adapter emits file_lines |
+| `history` | built-in | ran | — | 388 | 31 | git history; no adapter emits churn, coupling or ownership |
+| `near-duplicates` | built-in | ran | — | 2937 | 2 | token-shingle near-matches, which jscpd's exact-block scan misses |
+| `risk-patterns` | built-in | ran | — | 391 | 0 | regex policy from this repository's own config; nothing external can hold a proj |
 
 ### Coverage by language
 
@@ -254,7 +866,7 @@ Selected analyzers that could not run, and what it would take. These commands ar
 
 | Concept | Units | Sources | Tool disagreement | Min | Median | p90 | Max |
 |---|---|---|---|---|---|---|---|
-| duplication | 1 | jscpd | single source | 1.54 | 1.54 | 1.54 | 1.54 |
+| duplication | 1 | jscpd | single source | 1.42 | 1.42 | 1.42 | 1.42 |
 
 *The analyzers ran but measured none of the dimensions the rubric scores, so the estimate comes from the built-in detectors. Treat an analyzer finding as evidence about the code, never as a change to the score.*
 
@@ -266,10 +878,10 @@ Selected analyzers that could not run, and what it would take. These commands ar
 |---|---|---|---|---|---|
 | `.github/workflows/quality-gates.yml` | 52 | duplication | `jscpd` | — | 9 duplicated lines |
 | `.github/workflows/quality-gates.yml` | 275 | duplication | `jscpd` | — | 9 duplicated lines |
-| `README.md` | 168 | duplication | `jscpd` | — | 50 duplicated lines |
-| `README.md` | 168 | duplication | `jscpd` | — | 6 duplicated lines |
-| `README.md` | 168 | duplication | `jscpd` | — | 6 duplicated lines |
-| `README.md` | 170 | duplication | `jscpd` | — | 47 duplicated lines |
+| `README.md` | 194 | duplication | `jscpd` | — | 6 duplicated lines |
+| `README.md` | 194 | duplication | `jscpd` | — | 6 duplicated lines |
+| `README.md` | 194 | duplication | `jscpd` | — | 7 duplicated lines |
+| `docs/cli.md` | 66 | duplication | `jscpd` | — | 11 duplicated lines |
 | `docs/pr-and-baseline-workflows.md` | 38 | duplication | `jscpd` | — | 9 duplicated lines |
 | `docs/standard.md` | 172 | duplication | `jscpd` | — | 7 duplicated lines |
 | `skills/maintainability-agent/SKILL.md` | 92 | duplication | `jscpd` | — | 44 duplicated lines |
@@ -339,7 +951,7 @@ Showing 40 of 122. The complete list is in the JSON report under `analyzer_findi
 | churn hotspots | 4.0 |
 | change coupling | 3.0 |
 | knowledge concentration | 2.0 |
-| test effectiveness | not measurable |
+| test effectiveness | 4.8 |
 
 ## Not Scored — no measurement exists
 
@@ -356,13 +968,10 @@ Showing 40 of 122. The complete list is in the JSON report under `analyzer_findi
 |---|---|---|
 | `src/maintainability_audit/_discovery.py` | 500 | warn |
 | `src/maintainability_audit/_metric_adapters.py` | 500 | warn |
-| `src/maintainability_audit/_ranges.py` | 500 | warn |
-| `src/maintainability_audit/config.py` | 500 | warn |
 | `src/maintainability_audit/evidence.py` | 500 | warn |
 | `src/maintainability_audit/report.py` | 500 | warn |
-| `tests/test_unread_code.py` | 500 | warn |
 | `tests/test_calibration_corpus.py` | 499 | warn |
-| `src/maintainability_audit/_html_view.py` | 497 | warn |
+| `tests/test_architecture.py` | 497 | warn |
 | `src/maintainability_audit/_work_order.py` | 496 | warn |
 | `src/maintainability_audit/prompts.py` | 496 | warn |
 | `tests/test_docs_links.py` | 494 | warn |
@@ -372,13 +981,16 @@ Showing 40 of 122. The complete list is in the JSON report under `analyzer_findi
 | `tests/test_adapters.py` | 491 | warn |
 | `src/maintainability_audit/_analysis.py` | 485 | warn |
 | `tests/test_mcp_history.py` | 482 | warn |
-| `src/maintainability_audit/_mcp_setup.py` | 481 | warn |
 | `tools/build_catalog.py` | 479 | warn |
-| `src/maintainability_audit/_scan_view.py` | 477 | warn |
 | `tests/test_grant_only_user_tier.py` | 475 | warn |
 | `tests/test_consumer_migration.py` | 470 | warn |
 | `tests/test_analyzer_provenance_exclusions.py` | 464 | warn |
-| `src/maintainability_audit/renderers.py` | 463 | warn |
+| `tests/test_first_run_elicitation.py` | 462 | warn |
+| `tests/test_mcp_server.py` | 462 | warn |
+| `tests/test_git_argv.py` | 461 | warn |
+| `src/maintainability_audit/_mcp_audit.py` | 458 | warn |
+| `src/maintainability_audit/scoring.py` | 458 | warn |
+| `README.md` | 457 | warn |
 
 ## Function Hotspots
 
@@ -387,16 +999,17 @@ Showing 40 of 122. The complete list is in the JSON report under `analyzer_findi
 | `tools/calibration/measure_cohorts.py` | `main` | 251 | 67 | 15 | 8 | warn |
 | `tests/test_platform_claim.py` | `test_the_macos_runner_actually_runs_the_suite` | 100 | 53 | 15 | 8 | warn |
 | `tools/build_catalog.py` | `build` | 397 | 36 | 15 | 0 | warn |
+| `tools/calibration/measure.py` | `main` | 199 | 71 | 14 | 14 | warn |
 | `tests/test_verified_grade.py` | `test_not_applicable_rollup_is_the_only_change_to_the_pre_stage_five_anchor` | 245 | 70 | 14 | 0 | warn |
 | `tools/calibration/sampling_error.py` | `main` | 88 | 54 | 14 | 10 | warn |
 | `src/maintainability_audit/prompts.py` | `prompt_work_order` | 175 | 53 | 14 | 11 | warn |
 | `src/maintainability_audit/_discovery.py` | `discover` | 404 | 51 | 14 | 17 | warn |
 | `src/maintainability_audit/history.py` | `history_section` | 288 | 51 | 14 | 3 | warn |
 | `tests/test_written_record.py` | `test_every_closing_citation_names_a_test_that_exists` | 101 | 75 | 13 | 3 | warn |
-| `tests/test_unread_code.py` | `test_the_language_table_does_not_market_a_detector_that_never_runs` | 444 | 57 | 13 | 3 | warn |
+| `tests/test_language_coverage.py` | `test_the_language_table_does_not_market_a_detector_that_never_runs` | 127 | 57 | 13 | 3 | warn |
 | `src/maintainability_audit/idioms.py` | `divergent_idioms` | 152 | 51 | 13 | 15 | warn |
 | `src/maintainability_audit/_html_report_sections.py` | `_pillars_section` | 173 | 49 | 13 | 12 | warn |
-| `src/maintainability_audit/_scan_view.py` | `pillars_markdown` | 329 | 49 | 13 | 12 | warn |
+| `src/maintainability_audit/_scan_view.py` | `pillars_markdown` | 328 | 49 | 13 | 12 | warn |
 | `tools/resolve_pool.py` | `main` | 65 | 46 | 13 | 12 | warn |
 | `tests/test_anticipated_refusals.py` | `test_the_transport_excepts_the_named_tuple_not_a_copy` | 179 | 40 | 13 | 2 | warn |
 | `src/maintainability_audit/duplication.py` | `duplicate_blocks` | 50 | 35 | 13 | 10 | warn |
@@ -407,7 +1020,7 @@ Showing 40 of 122. The complete list is in the JSON report under `analyzer_findi
 | `tests/test_git_argv.py` | `test_every_git_command_disables_gits_own_housekeeping` | 396 | 66 | 11 | 20 | warn |
 | `tools/calibration/measure_fix_breadth.py` | `main` | 243 | 61 | 11 | 5 | warn |
 | `tests/test_finding_identity.py` | `test_no_module_hardcodes_an_ordinal` | 301 | 47 | 11 | 19 | warn |
-| `src/maintainability_audit/_ranges.py` | `js_declaration_ranges` | 323 | 38 | 11 | 24 | warn |
+| `src/maintainability_audit/_ranges_js.py` | `js_declaration_ranges` | 202 | 38 | 11 | 24 | warn |
 | `src/maintainability_audit/_analysis.py` | `analyze` | 274 | 79 | 10 | 5 | warn |
 | `src/maintainability_audit/report.py` | `build_report` | 423 | 78 | 10 | 3 | warn |
 | `src/maintainability_audit/_mcp_audit.py` | `audit_repository` | 157 | 74 | 10 | 11 | warn |
@@ -418,11 +1031,11 @@ Showing 40 of 122. The complete list is in the JSON report under `analyzer_findi
 | `src/maintainability_audit/_masking.py` | `_mask_code` | 68 | 47 | 10 | 20 | warn |
 | `tools/prove_falsifiers.py` | `main` | 226 | 40 | 10 | 16 | warn |
 | `src/maintainability_audit/_selection.py` | `select_runnable` | 58 | 79 | 9 | 20 | warn |
-| `tests/test_determinism.py` | `test_the_history_window_is_disclosed_as_clock_relative` | 225 | 71 | 9 | 4 | warn |
+| `tests/test_determinism.py` | `test_the_history_window_is_disclosed_as_clock_relative` | 230 | 71 | 9 | 4 | warn |
 | `tests/conftest.py` | `_git_ignores_developer_configuration` | 150 | 68 | 9 | 4 | warn |
 | `src/maintainability_audit/_scan_history.py` | `record_of` | 358 | 64 | 9 | 19 | warn |
 | `tests/conftest.py` | `_git_never_maintains_the_fixtures` | 85 | 62 | 9 | 5 | warn |
-| `tests/_ast_reading.py` | `reachable_names` | 204 | 44 | 9 | 17 | warn |
+| `tests/_ast_reading.py` | `reachable_names` | 203 | 44 | 9 | 17 | warn |
 | `src/maintainability_audit/_work_order.py` | `_items_from_semantic` | 308 | 43 | 9 | 19 | warn |
 | `tests/test_authorship_gates.py` | `_step_scripts` | 41 | 42 | 9 | 23 | warn |
 | `tests/test_anticipated_refusals.py` | `_named_exceptions` | 88 | 26 | 9 | 16 | warn |
@@ -433,7 +1046,6 @@ Showing 40 of 122. The complete list is in the JSON report under `analyzer_findi
 | `src/maintainability_audit/_derive.py` | `_corpus_overall` | 172 | 63 | 8 | 6 | warn |
 | `src/maintainability_audit/history.py` | `_commits` | 160 | 34 | 8 | 17 | warn |
 | `src/maintainability_audit/_discovery.py` | `_generated_directories` | 282 | 25 | 8 | 17 | warn |
-| `tests/test_promises.py` | `_paths_the_audit_produced` | 129 | 25 | 8 | 20 | warn |
 
 ## Near-Duplicate Declarations
 
@@ -453,59 +1065,59 @@ Showing 40 of 122. The complete list is in the JSON report under `analyzer_findi
 
 | File | Commits | Lines +/- | Cognitive | Authors | Score |
 |---|---|---|---|---|---|
-| `src/maintainability_audit/config.py` | 33 | 638 | 72 | 2 | 2376 |
+| `src/maintainability_audit/config.py` | 36 | 805 | 72 | 2 | 2592 |
 | `src/maintainability_audit/cli.py` | 25 | 2140 | 52 | 2 | 1300 |
-| `src/maintainability_audit/renderers.py` | 22 | 901 | 38 | 2 | 836 |
-| `src/maintainability_audit/_mcp_audit.py` | 17 | 980 | 48 | 2 | 816 |
-| `src/maintainability_audit/_ranges.py` | 7 | 536 | 114 | 2 | 798 |
-| `tests/test_architecture.py` | 26 | 481 | 28 | 2 | 728 |
+| `src/maintainability_audit/_mcp_audit.py` | 18 | 988 | 48 | 2 | 864 |
+| `tests/test_architecture.py` | 30 | 521 | 28 | 2 | 840 |
 | `src/maintainability_audit/metrics.py` | 10 | 1119 | 67 | 2 | 670 |
-| `src/maintainability_audit/_html_view.py` | 8 | 613 | 79 | 1 | 632 |
+| `src/maintainability_audit/renderers.py` | 24 | 1214 | 26 | 2 | 624 |
+| `src/maintainability_audit/_html_view.py` | 9 | 827 | 66 | 1 | 594 |
 | `src/maintainability_audit/prompts.py` | 12 | 536 | 48 | 2 | 576 |
 | `src/maintainability_audit/_work_order.py` | 5 | 600 | 104 | 1 | 520 |
 | `tests/test_first_run_elicitation.py` | 8 | 810 | 65 | 1 | 520 |
 | `src/maintainability_audit/_analysis.py` | 13 | 855 | 39 | 2 | 507 |
 | `src/maintainability_audit/mcp_server.py` | 24 | 1791 | 21 | 2 | 504 |
 | `tests/test_written_record.py` | 12 | 590 | 42 | 2 | 504 |
-| `src/maintainability_audit/_mcp_setup.py` | 8 | 591 | 54 | 2 | 432 |
+| `src/maintainability_audit/_mcp_setup.py` | 11 | 852 | 40 | 2 | 440 |
 | `tests/test_git_argv.py` | 9 | 683 | 48 | 1 | 432 |
 | `src/maintainability_audit/scoring.py` | 10 | 1084 | 43 | 2 | 430 |
 | `tools/build_catalog.py` | 10 | 531 | 42 | 1 | 420 |
+| `tests/_ast_reading.py` | 6 | 368 | 63 | 1 | 378 |
+| `src/maintainability_audit/declarations.py` | 9 | 351 | 40 | 2 | 360 |
+| `src/maintainability_audit/report.py` | 24 | 718 | 15 | 2 | 360 |
 | `src/maintainability_audit/_metric_adapters.py` | 6 | 544 | 59 | 2 | 354 |
 | `src/maintainability_audit/_skill_install.py` | 6 | 543 | 58 | 1 | 348 |
-| `src/maintainability_audit/_scan_view.py` | 5 | 559 | 69 | 1 | 345 |
-| `src/maintainability_audit/report.py` | 23 | 694 | 15 | 2 | 345 |
 | `src/maintainability_audit/_verdict_adapters.py` | 10 | 776 | 34 | 1 | 340 |
-| `tests/_ast_reading.py` | 5 | 317 | 63 | 1 | 315 |
-| `src/maintainability_audit/declarations.py` | 8 | 255 | 39 | 2 | 312 |
+| `src/maintainability_audit/_scan_view.py` | 6 | 634 | 55 | 1 | 330 |
+| `src/maintainability_audit/_discovery.py` | 3 | 510 | 90 | 1 | 270 |
 
 ## Change Coupling — files that keep changing together
 
 | File | Changes with | Co-changes | Confidence |
 |---|---|---|---|
-| `docs/architecture.md` | `tests/test_architecture.py` | 21 | 96% |
+| `docs/architecture.md` | `tests/test_architecture.py` | 24 | 96% |
 | `docs/architecture.md` | `docs/decisions.md` | 19 | 79% |
 | `docs/architecture.md` | `src/maintainability_audit/cli.py` | 15 | 62% |
+| `src/maintainability_audit/__init__.py` | `src/maintainability_audit/config.py` | 14 | 93% |
 | `docs/architecture.md` | `src/maintainability_audit/mcp_server.py` | 13 | 62% |
-| `src/maintainability_audit/__init__.py` | `src/maintainability_audit/config.py` | 12 | 92% |
-| `docs/architecture.md` | `docs/release-plan.md` | 11 | 55% |
-| `docs/architecture.md` | `src/maintainability_audit/report.py` | 11 | 55% |
+| `docs/architecture.md` | `src/maintainability_audit/report.py` | 12 | 57% |
 | `docs/cli.md` | `src/maintainability_audit/cli.py` | 10 | 77% |
-| `README.md` | `src/maintainability_audit/renderers.py` | 10 | 53% |
 | `README.md` | `docs/ide-agent-integration.md` | 9 | 82% |
+| `docs/architecture.md` | `docs/product-intent.md` | 9 | 75% |
 | `docs/architecture.md` | `docs/cli.md` | 9 | 69% |
 | `docs/config-schema.md` | `maintainability-agent.schema.json` | 8 | 80% |
 | `README.md` | `docs/standard.md` | 8 | 73% |
-| `docs/architecture.md` | `docs/product-intent.md` | 8 | 73% |
+| `README.md` | `src/maintainability_audit/__init__.py` | 8 | 53% |
 | `docs/architecture.md` | `docs/config-schema.md` | 8 | 53% |
-| `src/maintainability_audit/mcp_server.py` | `tests/test_mcp_server.py` | 7 | 78% |
+| `docs/architecture.md` | `tests/test_mcp_server.py` | 7 | 70% |
 | `maintainability-agent.schema.json` | `src/maintainability_audit/config.py` | 7 | 70% |
+| `src/maintainability_audit/mcp_server.py` | `tests/test_mcp_server.py` | 7 | 70% |
 | `src/maintainability_audit/prompts.py` | `src/maintainability_audit/report.py` | 7 | 70% |
 | `docs/standard.md` | `src/maintainability_audit/renderers.py` | 7 | 64% |
-| `README.md` | `src/maintainability_audit/__init__.py` | 7 | 54% |
 | `README.md` | `tests/test_cli.py` | 6 | 100% |
 | `src/maintainability_audit/_skill_install.py` | `tests/test_skill_install.py` | 6 | 100% |
 | `docs/analyzer-pool.md` | `tools/build_catalog.py` | 6 | 86% |
 | `src/maintainability_audit/_mcp_audit.py` | `tests/test_grant_only_user_tier.py` | 6 | 75% |
-| `docs/architecture.md` | `tests/test_mcp_server.py` | 6 | 67% |
+| `README.md` | `maintainability-agent.json` | 6 | 60% |
+| `maintainability-agent.json` | `src/maintainability_audit/cli.py` | 6 | 60% |
 

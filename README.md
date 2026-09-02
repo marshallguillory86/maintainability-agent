@@ -326,10 +326,10 @@ not a claim about HEAD). These figures mirror that stamped report row for row:
 |---|---:|
 | Maintainability estimate | 4.1 / 5 |
 | Verified grade | B |
-| Files scanned | 379 |
-| File warnings | 117 |
+| Files scanned | 391 |
+| File warnings | 120 |
 | File failures | 0 |
-| Function warnings | 66 |
+| Function warnings | 65 |
 | Function failures | 0 |
 | Duplicate blocks | 0 |
 | Risk findings | 0 |

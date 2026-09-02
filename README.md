@@ -5,7 +5,11 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **1.0.0**.
+Version **1.5.1**.
+
+**Languages parsed:** Python, Java, C, C++, C#, free-form Fortran, and the
+JS/TS family — each by a scanner written for it, never a shared regex.
+[What that means per language](#language-support).
 
 ```bash
 pip install maintainability-agent          # CLI + library
@@ -241,6 +245,11 @@ SonarQube, Qlty) rather than replacing them — their SARIF folds in via
 and on an unrecognized language it will quietly under-report rather than fail.**
 Coverage comes from two layers.
 
+Seven languages are parsed as of **1.5.0**: Python (1.0), Java (1.0), C (1.1),
+C++ (1.2), C# (1.3), free-form Fortran (1.4), and the JS/TS family. Each has a
+scanner written for it and a documented list of what it misses — a language is
+claimed here only when both exist.
+
 **Built-in scanner (always on, no dependencies)** — reads function/class
 declarations, sizes and complexity for a fixed set of languages, and **only**
 these:
@@ -252,8 +261,8 @@ these:
 | C (`.c`, `.h`) | dedicated brace-bounded scanner — functions, `struct`/`enum`/`union` | Bounded; prototypes and macros are not declarations |
 | C++ (`.cpp`, `.hpp`, `.cc`, `.cxx`, `.hh`) | dedicated brace-bounded scanner — functions, class members, namespaces, templates | Bounded; bodyless declarations are not definitions |
 | C# (`.cs`) | dedicated brace-bounded scanner — methods, constructors, `class`/`interface`/`struct`/`record`/`enum` | Bounded; properties are not declarations |
-| Fortran, free-form (`.f90`, `.F90`, `.f95`, `.f03`, `.f08`, `.pf`) | dedicated **keyword**-bounded scanner — modules, subroutines, functions, derived types | Bounded by `end`; fixed-form (`.f`, `.for`) is not parsed |
-| JS / TS / JSX / TSX / MJS / CJS | brace/paren depth over a masked copy | Bounded by the declaration's own braces |
+| Fortran, free-form (`.f90`, `.f95`, `.f03`, `.f08`, `.F90`, `.F95`, `.F03`, `.F08`, `.pf`) | dedicated **keyword**-bounded scanner — modules, subroutines, functions, derived types | Bounded by `end`; fixed-form (`.f`, `.for`, `.ftn`) is not parsed |
+| JS / TS / JSX / TSX (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`) | brace/paren depth over a masked copy | Bounded by the declaration's own braces |
 | HTML (`.html`) | same brace scanner (inline `<script>`) | Bounded |
 | TypeScript (semantic) | a recorded analysis or a locally-installed `tsc`, workspace projects included | Type-level facts; `unknown` when no checker is present |
 
@@ -264,6 +273,22 @@ scanner.** Its files still count toward repo size, but the built-ins produce no
 function-size, complexity, duplication or dead-code findings for them, and the
 estimate leans on whatever evidence *is* available (which is why the report
 discloses its evidence tier and can withhold the grade).
+
+**Which analyzer covers which language** (the opt-in pool, when installed):
+
+| Language | Built-in scanner | External analyzer |
+|---|---|---|
+| Python | `ast`, exact | ruff, radon, mypy, vulture, complexipy, interrogate, pydocstyle, pylint, cohesion |
+| Java | dedicated scanner | lizard, PMD, Checkstyle, SpotBugs |
+| C / C++ / C# | dedicated scanners | lizard, multimetric |
+| **Fortran** (free-form) | dedicated scanner | **fortitude** (1.5.0) — 100+ rules |
+| JS / TS / JSX / TSX | brace scanner | ESLint, lizard, jscpd |
+
+Fortran's analyzer is fortitude, which reports findings rather than
+measurements, so as of 1.5.1 its declaration population comes from the
+built-in scanner alone. (lizard *can* measure Fortran — this project's
+catalog row for it was stale and said otherwise. Correcting that, and
+giving Fortran the analyzer-primary tier the C family gets, is 1.6.0.)
 
 **External analyzer adapters (opt-in pool)** — this is how coverage extends
 beyond the built-in set. When you enable the analyzer pool, the tool shells out

@@ -284,10 +284,11 @@ discloses its evidence tier and can withhold the grade).
 | **Fortran** (free-form) | dedicated scanner | **fortitude** (1.5.0) — 100+ rules |
 | JS / TS / JSX / TSX | brace scanner | ESLint, lizard, jscpd |
 
-Fortran is the one language with **no metric emitter**: lizard does not read
-it, and fortitude reports findings rather than measurements. So its
-declaration population comes from the built-in scanner alone — which is why
-that scanner exists rather than being a convenience.
+Fortran's analyzer is fortitude, which reports findings rather than
+measurements, so as of 1.5.1 its declaration population comes from the
+built-in scanner alone. (lizard *can* measure Fortran — this project's
+catalog row for it was stale and said otherwise. Correcting that, and
+giving Fortran the analyzer-primary tier the C family gets, is 1.6.0.)
 
 **External analyzer adapters (opt-in pool)** — this is how coverage extends
 beyond the built-in set. When you enable the analyzer pool, the tool shells out

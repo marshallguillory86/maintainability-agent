@@ -30,6 +30,12 @@ Documentation, and two guards so it cannot drift again.
 
 - **A languages line in the header**, so what the tool reads is visible
   without scrolling to line 238.
+- **A correction.** 1.4.0 and 1.5.0 both said lizard does not read
+  Fortran. It does — verified against lizard 1.24.0, which measures a
+  nested-loop kernel at CCN 5. What is true is that *this project's
+  catalog row for lizard* omits `fortran`, so lizard is marked
+  `not-applicable` on a Fortran repository and never runs. That is a
+  stale data row rather than a missing capability, and 1.6.0 fixes it.
 - **Which analyzer covers which language**, as a table. That is the part
   1.5.0 changed and the page never said: Fortran is the one language with
   no metric emitter — lizard does not read it and fortitude reports

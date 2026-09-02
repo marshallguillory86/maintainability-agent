@@ -4,19 +4,78 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+_Nothing yet._
+
+## 1.4.0 - 2026-09-01
+
+**Free-form Fortran is a first-class language** — and the first one here
+with no braces, which is why this release also generalises the walk that
+every other language shares.
+
+### Added
+
+- **A dedicated Fortran scanner (`fortran_declaration_ranges`).**
+  Modules, submodules, programs, subroutines, functions and derived
+  types, each bounded by its own `end`. `.f90`, `.f95`, `.f03`, `.f08`,
+  their preprocessed `.F90` spellings, and pFUnit's `.pf` are parsed and
+  opened by default.
+- Functions are named correctly with a type prefix
+  (`pure elemental real(dp) function norm(v)`) or a `result` clause
+  (`real function accel(h) result(a)`). Keywords match
+  case-insensitively, because Fortran is and older code SHOUTS.
+- **An `interface` block is stepped over, not descended into.** It holds
+  signatures with no bodies; walking in would mint a one-line
+  declaration for every procedure a module merely *describes*.
+- **Fortran test conventions are recognised, in the same release as the
+  scanner.** fpm puts tests in `test/`; test-drive writes
+  `test_gravity.f90`; pFUnit writes `.pf` and the camelCase
+  `testGravity_mod.F90`; module files are conventionally
+  `gravity_mod.f90`, so `_mod` comes off both sides when pairing.
+  Claiming Fortran without these would have reported untested production
+  code on every Fortran repository there is.
+
+**Fixed-form is deliberately not claimed.** `.f`, `.for` and `.ftn` are
+column-sensitive — a comment is `C` in column 1, a continuation is any
+character in column 6 — which is a different scanner with different
+failure modes. Those suffixes stay out until they have one, and their
+own falsifiers.
+
+There is no analyzer fallback here: lizard does not read Fortran, so the
+built-in scanner is the only path to a declaration population rather
+than a zero-install convenience.
+
+### Changed
+
+- **The shared walk now takes its bounding rule as an argument.**
+  `scan_bounded` gained `find_end` (braces by default) and `ignore`
+  (kinds stepped over without being graded). Fortran supplies an
+  `end`-keyword finder that counts program units, because `if`, `do`,
+  `select`, `associate` and `block` all close with `end` too — a scanner
+  stopping at the first one would end a subroutine at its first `end if`
+  and read the rest of its body as top-level code. Every other language
+  is untouched, proven by their suites passing unchanged.
+- **`.F90` and its siblings are recognised at all.** Suffixes are
+  matched case-sensitively throughout and only lowercase Fortran
+  spellings were in the extension map, so preprocessed Fortran was
+  invisible — not even counted as unread source.
+
 ### Fixed
 
-- **The one test covering the real MCP stdio transport could not run
-  outside CI.** It spawns a child process, and the SDK spawns that child
-  with a scrubbed environment — `HOME`, `LOGNAME`, `PATH`, `SHELL`,
-  `USER` and nothing else — so `PYTHONPATH` did not survive. In a source
-  checkout the child died with `ModuleNotFoundError: No module named
-  'maintainability_audit'`, the client reported only `Connection
-  closed`, and the failure looked environmental rather than like a test
-  that could never pass. It now inherits this process's own import path,
-  which covers both layouts (`src/` in a checkout, site-packages when
-  installed) and the `mcp` SDK the child needs before it can answer at
-  all. The full suite now runs locally with nothing deselected.
+- **Two documentation lints could not read a suffix containing a digit.**
+  Both matched `` `\.[A-Za-z]+` ``, so `.f90` and `.F90` were invisible
+  to them: the language-table contract reported the page as silent about
+  nine suffixes it documents in full, and the "does not market a
+  detector that never runs" lint silently skipped the row it exists to
+  police — a lint that stops linting without failing.
+- **The claimed-languages fixture failed this project's own gate.** It
+  had grown one nested conditional per language and reached complexity
+  24 at the fifth. It is a table now, and the next language is a row.
+
+14 Fortran falsifiers cover keyword bounding against inner
+`if`/`do`/`select` blocks, bare `end`, interface blocks, typed and
+`result`-clause functions, derived types versus variables of them, case
+insensitivity, comments, `contains`, submodules, continuations, and the
+unclosed-unit fallback.
 
 ## 1.3.0 - 2026-09-01
 
@@ -55,6 +114,20 @@ one.
   rather than a copy — otherwise one of the two grows a fix the other
   never gets. Java's behaviour is unchanged, proven by its suite passing
   untouched.
+
+### Fixed
+
+- **The one test covering the real MCP stdio transport could not run
+  outside CI.** It spawns a child process, and the SDK spawns that child
+  with a scrubbed environment — `HOME`, `LOGNAME`, `PATH`, `SHELL`,
+  `USER` and nothing else — so `PYTHONPATH` did not survive. In a source
+  checkout the child died with `ModuleNotFoundError: No module named
+  'maintainability_audit'`, the client reported only `Connection
+  closed`, and the failure looked environmental rather than like a test
+  that could never pass. It now inherits this process's own import path,
+  which covers both layouts (`src/` in a checkout, site-packages when
+  installed) and the `mcp` SDK the child needs before it can answer at
+  all. The full suite now runs locally with nothing deselected.
 
 16 C# falsifiers cover properties, both namespace forms, attributes,
 constructor chains and destructors, generics with constraints,

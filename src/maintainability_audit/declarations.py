@@ -21,6 +21,7 @@ from ._ranges_c import c_declaration_ranges
 from ._ranges_core import indent_bounded_end
 from ._ranges_cpp import cpp_declaration_ranges
 from ._ranges_csharp import csharp_declaration_ranges
+from ._ranges_fortran import fortran_declaration_ranges
 from ._ranges_java import java_declaration_ranges
 from ._ranges_js import js_declaration_ranges
 
@@ -50,6 +51,14 @@ CPP_SUFFIXES = {".cpp", ".hpp", ".cc", ".cxx", ".hh"}
 # generics — and still its own module: namespaces in two forms,
 # `record`, and properties, which are deliberately not declarations.
 CSHARP_SUFFIXES = {".cs"}
+# Fortran (1.4.0), free-form only. `.F90` is the same language with the
+# C preprocessor run over it, and `.pf` is pFUnit test source — both are
+# free-form and both are read. Fixed-form (`.f`, `.for`, `.ftn`) is
+# column-sensitive, a different scanner, and deliberately unclaimed:
+# reading it with free-form rules would be an approximation nobody
+# asked for, on the trees where our findings are least actionable.
+FORTRAN_SUFFIXES = {".f90", ".f95", ".f03", ".f08",
+                    ".F90", ".F95", ".F03", ".F08", ".pf"}
 # `.mjs` and `.cjs` are the same JavaScript as `.js` — only the module
 # system differs, and that is invisible to a brace-bounded scan. Their
 # absence was not a decision: babel carried 1,503 unread `.mjs`/`.cjs`
@@ -71,13 +80,14 @@ SCANNERS: tuple[tuple[set[str], object], ...] = (
     (C_SUFFIXES, c_declaration_ranges),
     (CPP_SUFFIXES, cpp_declaration_ranges),
     (CSHARP_SUFFIXES, csharp_declaration_ranges),
+    (FORTRAN_SUFFIXES, fortran_declaration_ranges),
     (BRACE_SUFFIXES, js_declaration_ranges),
 )
 
 # Every extension we attempt declaration detection on at all.
 DECLARATION_SUFFIXES = (
     PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | CPP_SUFFIXES
-    | CSHARP_SUFFIXES | BRACE_SUFFIXES
+    | CSHARP_SUFFIXES | FORTRAN_SUFFIXES | BRACE_SUFFIXES
 )
 
 

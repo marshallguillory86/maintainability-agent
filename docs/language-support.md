@@ -12,6 +12,7 @@ ends, and — deliberately — where it under-reports.
 | C (`.c`, `.h`) | dedicated scanner: file-scope functions and `struct`/`enum`/`union` types, bounded by their own braces | Bounded. Under-reports — see below. |
 | C++ (`.cpp`, `.hpp`, `.cc`, `.cxx`, `.hh`) | dedicated scanner: functions, class/struct members, namespaces and templates, bounded by their own braces | Bounded. Under-reports — see below. |
 | C# (`.cs`) | dedicated scanner: methods, constructors and types (`class`, `interface`, `struct`, `record`, `enum`), bounded by their own braces | Bounded. Properties are not declarations — see below. |
+| Fortran, free-form (`.f90`, `.f95`, `.f03`, `.f08`, `.F90`, `.F95`, `.F03`, `.F08`, `.pf`) | dedicated scanner: modules, submodules, programs, subroutines, functions and derived types, bounded by their own `end` | Bounded by keyword rather than braces. Fixed-form is excluded — see below. |
 | JS / TS / JSX / TSX (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`) | brace/paren depth over a comment- and string-masked copy | Bounded by the declaration's own braces. |
 | HTML (`.html`) | same brace scanner, so inline `<script>` bodies are measured | Bounded. |
 | Anything else | not parsed for declarations | File length, duplication and risk only, and declaration rates **withheld** with the missing parser named. Adding the suffix to `include_extensions` does not produce a declaration population. |
@@ -193,6 +194,64 @@ Everything it misses, it misses in the safe direction:
 - **Source-generated declarations** are not in the tree and are not seen.
 - **Conditional compilation is not evaluated**, so a member in a
   disabled `#if` arm still counts.
+
+### What the Fortran scanner sees, and what it misses
+
+**The first language here with no braces.** C, C++, C# and Java share
+one walk because a body sits between `{` and `}`. Fortran closes a
+program unit with a keyword — a `subroutine` ends at `end subroutine`, a
+`module` at `end module`, and a bare `end` is legal for several of them.
+The rule is unchanged and the mechanism is not: the shared walk takes a
+`find_end`, and Fortran supplies one that counts program units instead
+of braces.
+
+Counting matters because `if`, `do`, `select`, `associate` and `block`
+all close with `end` too. A scanner that stopped at the first `end`
+would report a subroutine as ending at its first `end if`, and read the
+rest of its body as top-level code.
+
+Modules, submodules, programs and derived types are descended into,
+because that is where procedures live; a procedure body is stepped over.
+A function is named correctly whether it is written with a type prefix
+(`pure elemental real(dp) function norm(v)`) or a `result` clause
+(`real function accel(h) result(a)`). Keywords are matched
+case-insensitively, because Fortran is and older code SHOUTS.
+
+**An `interface` block is stepped over, not descended into.** It holds
+signatures with no bodies, so walking in would mint a one-line
+declaration for every procedure a module merely *describes* — inflating
+the population every declaration rate divides by, with procedures
+defined somewhere else entirely.
+
+**Fixed-form is deliberately not claimed.** `.f`, `.for` and `.ftn` are
+column-sensitive: a comment is `C` in column 1, a continuation is any
+character in column 6. That is a different scanner with different
+failure modes, and reading it with free-form rules would be an
+approximation nobody asked for. Those suffixes stay out of the default
+extensions until they have a scanner and falsifiers of their own.
+
+`.F90` (capital F) means "run the C preprocessor first" and is read as
+free-form; unexpanded macros are invisible, the same limitation C
+documents. `.pf` is pFUnit test source — free-form Fortran plus `@test`
+directives — and is read and treated as a test file.
+
+Everything else it misses, it misses in the safe direction:
+
+- **Statement functions** (a one-line `f(x) = x*2`) are not declarations.
+- **Declarations produced by `#include` or a macro** are invisible.
+- **A procedure whose `end` is missing** falls back to indentation, which
+  is a weak signal in Fortran; it costs that one declaration.
+
+**Testing conventions are recognised, because the claim depends on it.**
+fpm puts tests in `test/`; test-drive writes `test_gravity.f90`; pFUnit
+writes `.pf` files and the camelCase `testGravity_mod.F90`. A module file
+is conventionally `gravity_mod.f90`, so `_mod` comes off both sides when
+pairing. Claiming Fortran without these would report untested production
+code on every Fortran repository there is.
+
+There is no analyzer fallback for Fortran: lizard does not read it, so
+the built-in scanner is the only path to a declaration population rather
+than a zero-install convenience.
 
 ## The rule that matters: a range never runs past its own body
 

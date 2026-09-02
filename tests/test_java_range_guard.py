@@ -95,6 +95,21 @@ def test_cpp_is_never_routed_to_the_last_resort_patterns() -> None:
             )
 
 
+def test_fortran_is_never_routed_to_the_last_resort_patterns() -> None:
+    """1.4.0's language, and the one with no analyzer fallback at all:
+    lizard does not read Fortran, so a wrong row here leaves a Fortran
+    repository with no declaration population from any source."""
+    registry = scanner_registry()
+    detectors = range_functions_for("fortran_declaration")
+
+    for suffix in (".f90", ".F90", ".f95", ".f03", ".f08", ".pf"):
+        if suffix in declaration_suffixes():
+            assert registry.get(suffix) in detectors, (
+                f"{suffix} is declaration-enabled but is not routed to the "
+                "dedicated Fortran range detector"
+            )
+
+
 def test_csharp_is_never_routed_to_the_last_resort_patterns() -> None:
     """And for 1.3.0's, completing the C family."""
     registry = scanner_registry()

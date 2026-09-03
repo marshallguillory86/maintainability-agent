@@ -24,21 +24,22 @@ The cadence is **one language per minor release, never a batch** — five were w
 
 **The price of admission, unchanged since [ADR 006](decisions.md):** a language is claimed only when it has a scanner of its own, a documented list of what it misses, and tests that pin them. The register's original wording said no further range detectors would be written; five were, and the rule that wording protected is what survived. A language does not get onto the table below by having its extension added to a config.
 
-**Planned, in order:**
+**Next:**
 
-| Target | Language | Why this one, and what it costs |
+| Target | Language | What it costs |
 |---|---|---|
-| 1.9.0 | **Go** | Named in [ADR 006](decisions.md) as unwritten *on those terms*, not as refused. Braced, so it reuses the `_ranges_core` walk; the work is receivers and method sets (`func (w *Widget) Draw()` must report `Widget.Draw`, not a second `Draw`), interface bodies that declare without defining, and `struct` tags that carry braces inside string literals. |
-| 1.10.0 | **Rust** | The other name in ADR 006. Braced, but the bounding rule is the least like C of the two: `impl` blocks hold the methods, traits declare bodiless signatures, macros (`macro_rules!`, and any `foo! { }` invocation) generate declarations that are invisible by the same rule C and C++ already document, and lifetimes/generics need blanking the way Java's and C#'s do. |
+| 1.9.0 | **Swift** | Braced, so it reuses the `_ranges_core` walk. Four things make it not-quite-C-family: an `extension` adds methods to a type declared elsewhere, so a name has to stay findable (`extension Widget { func draw() }` reports `Widget.draw`, the way C++ keeps `geo::Widget::draw`); a `protocol` declares bodiless requirements, which mint nothing, as in every other language here; **computed properties** (`var area: Double { w * h }`) have braces and would bound cleanly, and are the C# properties problem again — counting them would dilute the population every rate divides by; and string interpolation (`"\(a + b)"`) puts braces inside literals, so masking has to run before depth counting or a range ends early. |
 
-**What Go and Rust already get today, without a scanner.** Both are classified by discovery, both have practice signals wired (`.golangci.yml`, `rustfmt.toml`, `golangci-lint`, `clippy`), and Go is covered by multimetric in the shipped pool. What they do **not** get is a declaration population: rates are **withheld** with the missing parser named, rather than approximated. That is the P7 boundary and it is the reason these are releases rather than config entries.
+Go and Rust remain named in [ADR 006](decisions.md) as unwritten on exactly these terms. They are not refused and not scheduled.
+
+**What an unwritten language already gets today.** Swift, Go and Rust are all classified by discovery, and all have practice signals wired (`.swiftlint.yml`, `.golangci.yml`, `rustfmt.toml`, `clippy.toml`, and the `swiftlint` / `golangci-lint` / `clippy` command patterns). What none of them gets is a declaration population: rates are **withheld** with the missing parser named, rather than approximated. That is the P7 boundary and it is the reason a language is a release rather than a config entry.
 
 **Two gaps that widen with every language added**, and should be closed alongside rather than after:
 
-- **Test-command detection stops at Python.** `_test_execution` knows `pytest -q`; `fpm test`, `ctest`, `go test` and `cargo test` are unrecognised, so `expected_commands.test` stays hand-configured on every non-Python tree. Fortran's practice detection (1.7.0) reads `fpm.toml` but nothing runs from it.
+- **Test-command detection stops at Python.** `_test_execution` knows `pytest -q`; `swift test`, `xcodebuild test`, `fpm test`, `ctest`, `go test` and `cargo test` are unrecognised, so `expected_commands.test` stays hand-configured on every non-Python tree. Swift lands in 1.9.0 with that gap unless it is closed alongside. Fortran's practice detection (1.7.0) reads `fpm.toml` but nothing runs from it.
 - **The calibration corpus is 40 JS/TS/Python repositories.** Every language above is scored against references derived from code unlike it — measured, not hypothetical: LAPACK read 7.18x the declaration median. [The audit](audit-v091-v170.md#f1--the-calibration-corpus-contains-none-of-four-claimed-languages-high) records this as a disclosure gap, and each new language inherits it. Extending the corpus moves `CALIBRATION_C` and re-grades every repository, so it is a deliberate release of its own, not a patch bundled with a scanner.
 
-**Not planned, and the distinction matters.** Kotlin, Swift, Scala, Ruby, PHP and the rest are classified by discovery and may be measured by adapters, but no scanner is scheduled. They are not refused — they are simply unwritten, on the same terms as Go and Rust were before this section named them.
+**Not scheduled, and the distinction matters.** Go, Rust, Kotlin, Scala, Ruby, PHP and the rest are classified by discovery and may be measured by adapters, but no scanner is scheduled for any of them. They are not refused — they are unwritten, on the terms above. A language moves onto this list when it is decided here, not by being named in an older register entry.
 
 ## A known shape problem: this tool is end-of-loop heavy
 

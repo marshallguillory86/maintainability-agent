@@ -27,6 +27,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
+import _falsifier_scope as scope  # noqa: E402
 import prove_falsifiers as prover  # noqa: E402
 
 
@@ -99,9 +100,9 @@ def test_class_falsifier_files_are_recognised_but_other_tests_are_not() -> None:
     A plain test file, or a `_class.py` outside `tests/`, is not the
     population-derived convention and must not be dragged into the proof.
     """
-    assert prover._is_class_falsifier("tests/test_clone_group_class.py")
-    assert not prover._is_class_falsifier("tests/test_scanning.py")
-    assert not prover._is_class_falsifier("src/maintainability_audit/_class.py")
+    assert scope.is_class_falsifier("tests/test_clone_group_class.py")
+    assert not scope.is_class_falsifier("tests/test_scanning.py")
+    assert not scope.is_class_falsifier("src/maintainability_audit/_class.py")
 
 
 def test_every_test_function_in_a_class_file_becomes_a_node_id() -> None:
@@ -113,7 +114,7 @@ def test_every_test_function_in_a_class_file_becomes_a_node_id() -> None:
         "def test_alpha():\n    assert helper() == 1\n\n"
         "async def test_beta():\n    assert True\n"
     )
-    assert prover._tests_in(source, "test_x_class.py") == [
+    assert scope.tests_in(source, "test_x_class.py") == [
         "tests/test_x_class.py::test_alpha",
         "tests/test_x_class.py::test_beta",
     ]

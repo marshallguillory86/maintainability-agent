@@ -116,40 +116,83 @@ def test_the_readme_language_table_lists_every_parsed_language() -> None:
     )
 
 
-def test_the_readme_language_sentence_is_not_older_than_what_it_lists() -> None:
+WORDS = {"five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+
+
+def _language_groups(table: str) -> set[str]:
+    """Distinct languages in the README table, as the sentence counts them.
+
+    The table has one row per *reading*, the sentence one entry per
+    *language*, so two normalisations are applied and both are visible
+    here rather than hidden in a number:
+
+    - Fortran has two rows, free-form and fixed-form, and is one language.
+      Grouping on the text before the first comma collapses them.
+    - `TypeScript (semantic)` is not a scanner row at all — it is the
+      optional `tsc` analysis — so it is not a parsed language and is
+      excluded.
+
+    The section holds more than one table — the analyzer coverage table
+    follows the scanner one — so only the first contiguous block of rows is
+    read. Taking the whole section counted `C / C++ / C#` as a language.
+    """
+    rows: list[str] = []
+    for line in table.splitlines():
+        if line.startswith("|"):
+            rows.append(line)
+        elif rows:
+            break
+
+    groups = set()
+    for row in rows:
+        if row.startswith("| Language") or set(row) <= set("| -"):
+            continue
+        cell = row.split("|")[1].strip()
+        label = cell.split("(")[0].split(",")[0].strip()
+        if not label or label == "TypeScript":
+            continue
+        groups.add(label)
+    return groups
+
+
+def test_the_readme_language_count_matches_its_own_table() -> None:
     """The prose above the table drifted because only the table was pinned.
 
-    It read "Seven languages are parsed as of **1.5.0**" while listing
-    fixed-form Fortran, which shipped in 1.6.0 — a sentence contradicting
-    itself on the front page for two releases. The table guard above could
-    not catch it: the table was correct the whole time.
+    It read "**Seven** languages are parsed as of 1.5.0" naming free-form
+    Fortran and stopping there, while the table three lines below already
+    carried fixed-form Fortran from 1.6.0 and HTML. The front page
+    under-claimed what shipped for two releases, and the table guard could
+    not catch it because the table was right the whole time.
 
-    So the sentence is held to its own contents. The "as of" version must
-    be at least the newest per-language version the sentence names, which
-    is exactly the inconsistency that shipped.
+    Counting is what catches it. A first attempt checked the sentence for
+    *internal* consistency — that "as of" was not older than the newest
+    version it named — and the falsifier gate correctly rejected it: at the
+    base commit that sentence was self-consistent (1.5.0 ≥ 1.4) and simply
+    incomplete, so the guard passed without the fix and defended nothing.
+    The defect was an omission, and only a count sees an omission.
+
+    Covers existing behaviour: 1.8.2 already corrected the sentence, so this
+    guard cannot fail against a base that is by then correct. It exists to
+    stop the omission returning, and the count is what would have caught the
+    1.8.1 README, which said seven while its table listed eight.
     """
     import re
 
     readme = _read(ROOT / "README.md")
-    sentence = re.search(
-        r"languages are parsed as of \*\*([0-9.]+)\*\*:(.+?)Each has a",
-        readme,
-        re.S,
-    )
+    table = readme.split("## Language support", maxsplit=1)[1].split(
+        "## What it produces", maxsplit=1
+    )[0]
+
+    sentence = re.search(r"(\w+) languages are parsed as of \*\*([0-9.]+)\*\*", readme)
     assert sentence, (
-        "the README no longer carries the 'languages are parsed as of' "
+        "the README no longer carries the 'N languages are parsed as of' "
         "sentence this guard exists to pin"
     )
+    claimed = WORDS.get(sentence.group(1).lower())
+    assert claimed, f"unrecognised count word {sentence.group(1)!r} in the README sentence"
 
-    def _parts(text: str) -> tuple[int, ...]:
-        return tuple(int(piece) for piece in text.split("."))
-
-    as_of = _parts(sentence.group(1))
-    listed = [_parts(v) for v in re.findall(r"\b(\d+\.\d+(?:\.\d+)?)\b", sentence.group(2))]
-    assert listed, "the sentence names no per-language versions to check against"
-
-    newest = max(listed)
-    assert as_of >= newest[: len(as_of)], (
-        f"the README says languages are parsed as of {sentence.group(1)} "
-        f"but names a language introduced in {'.'.join(str(p) for p in newest)}"
+    groups = _language_groups(table)
+    assert claimed == len(groups), (
+        f"the README says {sentence.group(1).lower()} ({claimed}) languages are "
+        f"parsed, but its own table lists {len(groups)}: {sorted(groups)}"
     )

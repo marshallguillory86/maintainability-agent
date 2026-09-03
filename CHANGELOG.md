@@ -6,6 +6,54 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.10.1 - 2026-09-03
+
+Names a hole under the product's central claim, rather than leaving a
+reader to infer it is closed.
+
+### Changed
+
+- **The work order bounds the agent by instruction, and the README now
+  says so.** Step 3 emits a prompt scoped to the findings; nothing
+  verifies that the diff which comes back stayed inside it, and a finding
+  can still be made to disappear by suppressing it rather than fixing it.
+  That limit sits beside the thing that *is* true — the agent authors, no
+  model runs in CI, and the gate holds a fixed oracle, so this gate cannot
+  degrade from "right by construction" to "right most of the time" the way
+  a model-judged one does.
+
+- **Three checks are on the roadmap with the failure each closes**, in the
+  order they are worth building: scope conformance verified against the
+  work order (cheapest — the work order already names its findings and
+  paths, so comparing a diff is mechanical); a suppression counted as a
+  reopen rather than a resolution (`# noqa`, `# type: ignore`,
+  `eslint-disable`, `pragma: no cover`, a skipped test); and a
+  per-dimension regression ratchet (`--fail-on-new` and baseline v3
+  already catch a finding that clears and returns, but a change that
+  improves one dimension while regressing another passes today).
+
+- **`architecture.md` carries the same three under Known debt**, each
+  naming the layer it would live in — conformance in assembly, reading a
+  revspec through `git_tools` and never reaching scoring, because whether
+  a diff was obedient is not evidence about the code's condition.
+
+Prompted by [What is agentic testing?](https://theaiengineer.substack.com/p/what-is-agentic-testing-fa2),
+whose argument for where the model should stop describes the architecture
+this tool already has; its repair-step failure modes are the ones that
+still apply here.
+
+### Fixed
+
+- **`tests/test_architecture.py` was sitting at exactly its own 500-line
+  limit**, with zero headroom — the next module added to a layer set would
+  have failed the gate, and 1.10.0 only fit because a comment was
+  shortened to one line. Split: the layer sets and the reason each module
+  belongs where it does move to `tests/_architecture_layers.py` (220
+  lines), the assertions that read the real import graph stay in
+  `test_architecture.py` (314). The data is the claim; the tests are the
+  enforcement, and a reader wanting one should not have to scroll past the
+  other.
+
 ## 1.10.0 - 2026-09-03
 
 **[ADR 013](docs/adr-013-hostile-audit-prompt.md) ships.** The adversarial

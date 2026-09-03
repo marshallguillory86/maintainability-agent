@@ -59,6 +59,24 @@ Worth stating plainly because it aims several roadmap items. Addy Osmani frames 
 
 He also names the trade-off available once generation outruns verification: scale verification, slow generation, lower standards, or **relax constraints in low-risk areas while tightening them elsewhere**. Only the last is a real engineering answer, and it is what the policy-as-code item below is for. This is a borrowed frame, not evidence — it tells us where to look, not what is true.
 
+## The remediation hole: an agent can satisfy this gate without doing the work
+
+The second known shape problem, and the more serious one, because it sits under the product's central claim. The bounded work order *tells* an agent to fix exactly these findings and refactor nothing else. Nothing checks that it did.
+
+Prompted by [What is agentic testing?](https://theaiengineer.substack.com/p/what-is-agentic-testing-fa2), whose argument for where the model should stop — agent at authoring, model out of CI, frozen oracle in the gate — is the architecture this tool already has. The score is a rate computed by code, not a model's opinion, so the "right by construction becomes right most of the time" failure it warns about does not apply here. Its failure modes for the *repair* step do.
+
+Three checks close it, in the order they are worth building:
+
+**1. Scope conformance, verified against the work order.** The cheapest and highest-value: the work order already names its findings and their paths, so comparing a diff against them is mechanical. Without it, "stay in scope" is an instruction, not a constraint — the analog of Meta's discard-the-PR gate, and the one of their three this tool does not enforce. A remediation diff that touches files the work order never named should be reported as out of scope.
+
+**2. A suppression is a finding, not a fix.** Today a finding can be made to disappear by deleting the code, adding `# noqa`, `# type: ignore`, `eslint-disable` or `pragma: no cover`, or skipping the test. The gate goes green and nothing notices. The rule to encode: a suppression added in the same change that closed a finding is a **reopen**, not a resolution. The structural near-duplicate detector already resists the rename-dodge (identifiers are anonymized before comparison) — the question this raises is whether *every* detector does, and the answer for suppressions is currently no.
+
+**3. Per-dimension score regression fails the run.** `--fail-on-new` plus a version-3 baseline and `_finding_match` already recognise a finding that clears and returns as a reopen rather than a new item — that half is built. What is missing is the ratchet on the *dimensions*: a change that improves one dimension while quietly regressing another passes today.
+
+Each of these becomes real by being enforced, not by being described here, and each needs its own falsifier. Scope conformance likely earns an ADR when it is built; a check that decides whether a diff was obedient is a new kind of claim for this tool to make.
+
+**Related, and named separately because it is a detector rather than a gate:** *tests that assert implementation details instead of behaviour* is listed under Additional detectors below. It is the direct answer to the review problem the same article raises — generated tests that look like yours and slide through review — and it is aspirational today.
+
 ## Then
 
 **Additional analyzer adapters** — Semgrep, pytest/coverage, and SonarQube export. Ingest output, preserve provenance, and do not pretend every analyzer has the same semantics. The fourteen shipped adapters — twelve native plus the declared pylint and mypy integrations — are listed in [analyzer pool](analyzer-pool.md#adapter-status-stated-plainly).

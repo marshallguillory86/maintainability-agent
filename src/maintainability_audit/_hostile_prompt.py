@@ -154,21 +154,27 @@ def _scored(report: dict[str, Any]) -> list[str]:
     return lines
 
 
-def _measured(report: dict[str, Any]) -> list[str]:
-    """The evidence already computed, so the audit starts where it ended.
-
-    An adversary that has to re-derive coverage spends its budget on
-    arithmetic the report performed. Handing it over is most of the value.
-    """
-    coverage = report.get("analyzer_coverage") or {}
-    lines = _scored(report)
-
+def _analyzer_outcomes(coverage: dict[str, Any]) -> list[str]:
+    """Which tools ran, and which did not — one line per outcome."""
     outcomes = coverage.get("by_outcome")
-    if isinstance(outcomes, dict):
-        for outcome, tools in outcomes.items():
-            names = [_label(tool) for tool in tools] if isinstance(tools, list) else [_label(tools)]
-            shown = ", ".join(names[:10]) + (", …" if len(names) > 10 else "")
-            lines.append(f"- Analyzers {outcome}: {len(names)} — {shown}")
+    if not isinstance(outcomes, dict):
+        return []
+    lines = []
+    for outcome, tools in outcomes.items():
+        names = [_label(tool) for tool in tools] if isinstance(tools, list) else [_label(tools)]
+        shown = ", ".join(names[:10]) + (", …" if len(names) > 10 else "")
+        lines.append(f"- Analyzers {outcome}: {len(names)} — {shown}")
+    return lines
+
+
+def _coverage_gaps(coverage: dict[str, Any]) -> list[str]:
+    """Where nothing looked, or only one thing did.
+
+    Kept apart from the rest because it is the section that matters most:
+    an unmeasured concept is where P7 and P8 are easiest to break, and a
+    single-source concept has no second reading to disagree with it.
+    """
+    lines = []
     unexamined = coverage.get("concepts_unexamined")
     if unexamined:
         lines.append(
@@ -185,6 +191,19 @@ def _measured(report: dict[str, Any]) -> list[str]:
     declined = coverage.get("dimensions_declined")
     if declined:
         lines.append(f"- Dimensions declined: {', '.join(_bullets(declined, 8))}")
+    return lines
+
+
+def _measured(report: dict[str, Any]) -> list[str]:
+    """The evidence already computed, so the audit starts where it ended.
+
+    An adversary that has to re-derive coverage spends its budget on
+    arithmetic the report performed. Handing it over is most of the value.
+    """
+    coverage = report.get("analyzer_coverage") or {}
+    lines = _scored(report)
+    lines += _analyzer_outcomes(coverage)
+    lines += _coverage_gaps(coverage)
 
     gates = report.get("hard_gate_failures")
     lines.append(f"- Hard gate failures: {len(gates) if gates else 0}")

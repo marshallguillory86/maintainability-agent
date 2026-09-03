@@ -6,6 +6,50 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.8.2 - 2026-09-02
+
+The roadmap never mentioned the language work — not the five scanners
+shipped between 1.1.0 and 1.6.0, and not the ones still to come. The help
+docs never mentioned languages at all. Both are the front door for
+somebody deciding whether this tool reads their code.
+
+### Added
+
+- **The roadmap states the language plan.** Shipped now records the nine
+  declaration languages with the release each arrived in, the shared
+  `_ranges_core` walk, and Fortran's three follow-on increments. A new
+  **Language adapters** section carries the planned work: Go (1.9.0) and
+  Rust (1.10.0), which are the two [ADR 006](docs/decisions.md) names
+  "unwritten on exactly those terms", with the hard part of each stated —
+  Go's receivers and method sets, Rust's `impl` blocks, bodiless trait
+  signatures and macro-generated declarations. It also records what Go
+  and Rust already get without a scanner (discovery, practice signals,
+  multimetric for Go) and what they do not: a declaration population.
+- **Two gaps that widen with every language added**, named on the roadmap
+  rather than discovered again later: test-command detection stops at
+  `pytest -q`, so `fpm test`, `ctest`, `go test` and `cargo test` leave
+  `expected_commands.test` hand-configured; and the calibration corpus is
+  40 JS/TS/Python repositories, which every added language inherits.
+- **The help docs explain withheld declaration rates.** A repository in an
+  unparsed language shows few declaration findings and may have its grade
+  withheld; that is the disclosure working, not the scan failing, and
+  nothing said so. Adding a suffix to `include_extensions` widens what is
+  scanned, not what can be parsed. The analyzer help now also states that
+  language decides tool eligibility, and that fortitude emits verdicts
+  rather than a population.
+
+### Fixed
+
+- **The README contradicted itself for two releases.** It read "Seven
+  languages are parsed as of **1.5.0**" while listing fixed-form Fortran,
+  which shipped in 1.6.0. The existing guard pins the language *table*,
+  and the table was right the whole time, so nothing caught the sentence
+  above it. Now eight languages as of 1.6.0, and
+  `test_the_readme_language_sentence_is_not_older_than_what_it_lists`
+  holds the sentence to its own contents: the "as of" version must be at
+  least the newest per-language version the sentence names. Restoring the
+  old wording fails it.
+
 ## 1.8.1 - 2026-09-02
 
 1.8.0 fixed the falsifier gate and could not prove it. Running that down

@@ -49,7 +49,17 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+from _falsifier_scope import (  # noqa: E402 - sibling module, script dir on sys.path
+    COVERS_EXISTING,
+    ROOT,
+    added_class_falsifiers,
+    added_test_files,
+    added_tests_in_modified_files,
+    function_source,
+    git,
+    tests_in,
+)
+
 REGISTER = Path("docs/defect-register-chat-surface.md")
 
 #: Entries may opt out with this marker and a reason on the same line.
@@ -65,16 +75,6 @@ EXEMPT = "*Falsifier proof: not applicable"
 #: conventions, and for the same reason: a rule announced today does not
 #: get to be evidence about yesterday.
 PROVE_FROM = 97
-
-
-def _git(*args: str, cwd: Path = ROOT) -> str:
-    result = subprocess.run(  # noqa: S603 - argv list, never a shell
-        ["git", *args], cwd=cwd, text=True, capture_output=True, check=False,
-        timeout=120,
-    )
-    if result.returncode != 0:
-        raise SystemExit(f"git {' '.join(args)} failed: {result.stderr.strip()}")
-    return result.stdout
 
 
 def _entries(text: str) -> dict[str, str]:
@@ -106,7 +106,7 @@ def _node_ids(names: list[str], tree: Path) -> list[str]:
 
 def _new_entries(base: str) -> dict[str, str]:
     """Entries in this commit that the base does not have."""
-    before = _entries(_git("show", f"{base}:{REGISTER.as_posix()}"))
+    before = _entries(git("show", f"{base}:{REGISTER.as_posix()}"))
     after = _entries((ROOT / REGISTER).read_text(encoding="utf-8"))
     return {ident: body for ident, body in after.items() if ident not in before}
 
@@ -126,9 +126,9 @@ def _prove(base: str, node_ids: list[str], tree: Path) -> tuple[list[str], list[
     -- `constraints/analyzers.txt`, say -- survived the revert intact.
     """
     keep = {node.split("::", 1)[0] for node in node_ids}
-    _git("checkout", base, "--", ".", *(f":(exclude){path}" for path in keep), cwd=tree)
+    git("checkout", base, "--", ".", *(f":(exclude){path}" for path in keep), cwd=tree)
     added = [
-        line for line in _git(
+        line for line in git(
             "diff", "--name-only", "--diff-filter=A", base, "HEAD", cwd=tree
         ).splitlines()
         if line and line not in keep
@@ -209,7 +209,7 @@ def _prove_one(ident: str, names: list[str], base: str) -> list[str]:
     """Prove one entry's falsifiers. Returns the ones that did not."""
     tree = Path(tempfile.mkdtemp(prefix="falsifier-"))
     try:
-        _git("worktree", "add", "--detach", "--quiet", str(tree), "HEAD")
+        git("worktree", "add", "--detach", "--quiet", str(tree), "HEAD")
         node_ids = _node_ids(names, tree)
         if not node_ids:
             return [f"{ident} cites {names}, none of which resolve"]
@@ -221,30 +221,12 @@ def _prove_one(ident: str, names: list[str], base: str) -> list[str]:
             for node in passed
         ]
     finally:
-        _git("worktree", "remove", "--force", str(tree))
+        git("worktree", "remove", "--force", str(tree))
         shutil.rmtree(tree, ignore_errors=True)
 
 
-def _added_class_falsifiers(base: str) -> list[str]:
-    """`tests/*_class.py` files this change *adds*, in sorted order.
-
-    The population-derived class falsifiers are a second convention beside
-    the register (``test_falsifier_standard`` enforces their non-empty
-    population; nothing enforced that they fail without their change). This
-    brings them under the same revert proof — but only the ones the change
-    *adds*. A file the change merely *modifies* may defend a fix that
-    predates this base, so reverting to the base leaves a tree where the
-    test legitimately passes; proving it would be a false accusation. An
-    added file arrives with the change it defends, so the base cannot
-    already contain it.
-    """
-    added = _git("diff", "--name-only", "--diff-filter=A", base, "HEAD").splitlines()
-    return sorted(path for path in added if _is_class_falsifier(path))
 
 
-def _is_class_falsifier(path: str) -> bool:
-    """A ``tests/*_class.py`` population-derived falsifier file."""
-    return path.startswith("tests/") and path.endswith("_class.py")
 
 
 # A test file may legitimately cover behaviour that already worked — a
@@ -253,39 +235,50 @@ def _is_class_falsifier(path: str) -> bool:
 # module docstring rather than being assumed, because "this one is fine"
 # is precisely the judgement an agent grading its own homework would make
 # silently.
-COVERS_EXISTING = "Covers existing behaviour:"
 
 
-def _added_test_files(base: str) -> list[str]:
-    """Every ``tests/test_*.py`` this change adds, class falsifiers aside.
 
-    The register and the class-falsifier convention were the only two
-    routes into this proof, and the languages shipped through neither:
-    C, C++, C#, Fortran and fixed-form Fortran arrived as feature
-    increments with roughly 300 tests, none of which CI ever watched
-    fail. The hole was not in the proof but in what reached it, so the
-    selector now follows how work actually arrives.
 
-    Added files only, for the reason the class version gives: a modified
-    file may defend a fix older than this base, and proving it would be a
-    false accusation.
+
+
+def _prove_added_tests_in_place(node_ids: list[str], base: str) -> list[str]:
+    """Revert-prove tests added to files that already existed.
+
+    Per test rather than per file: the file's other tests defend older work
+    and are not this change's to prove. A test that passes at the base
+    defended nothing it shipped with, unless it says it covers pre-existing
+    behaviour — the same stated-not-assumed escape the added-file path uses,
+    read from the function's own source so one regression test does not
+    exempt its neighbours.
     """
-    added = _git("diff", "--name-only", "--diff-filter=A", base, "HEAD").splitlines()
-    return sorted(
-        path for path in added
-        if path.startswith("tests/")
-        and Path(path).name.startswith("test_")
-        and path.endswith(".py")
-        and not _is_class_falsifier(path)
-    )
+    tree = Path(tempfile.mkdtemp(prefix="falsifier-inplace-"))
+    try:
+        git("worktree", "add", "--detach", "--quiet", str(tree), "HEAD")
+        wanted: list[str] = []
+        for node in node_ids:
+            path, name = node.split("::", 1)
+            body = function_source((tree / path).read_text(encoding="utf-8"), name)
+            if COVERS_EXISTING in body:
+                reason = body.split(COVERS_EXISTING, 1)[1].splitlines()[0].strip()
+                print(f"{node}: exempt — covers existing behaviour: {reason}")
+                continue
+            wanted.append(node)
+        if not wanted:
+            return []
+        failed, passed = _prove(base, wanted, tree)
+        for node in failed:
+            print(f"added test: {node} fails without the change — proven")
+        return [
+            f"{node} was added by this change but PASSES without it, so it "
+            f"defends nothing that shipped with it; add "
+            f"`{COVERS_EXISTING} <reason>` to its docstring if that is deliberate"
+            for node in passed
+        ]
+    finally:
+        git("worktree", "remove", "--force", str(tree))
+        shutil.rmtree(tree, ignore_errors=True)
 
 
-def _tests_in(source: str, filename: str) -> list[str]:
-    """Every ``test_`` function a file defines, as pytest node ids."""
-    return [
-        f"tests/{filename}::{match.group(1)}"
-        for match in re.finditer(r"^\s*(?:async\s+)?def (test_\w+)\b", source, re.M)
-    ]
 
 
 def _prove_class_files(paths: list[str], base: str) -> list[str]:
@@ -298,10 +291,10 @@ def _prove_class_files(paths: list[str], base: str) -> list[str]:
     """
     tree = Path(tempfile.mkdtemp(prefix="falsifier-class-"))
     try:
-        _git("worktree", "add", "--detach", "--quiet", str(tree), "HEAD")
+        git("worktree", "add", "--detach", "--quiet", str(tree), "HEAD")
         node_ids: list[str] = []
         for path in paths:
-            node_ids += _tests_in((tree / path).read_text(encoding="utf-8"), Path(path).name)
+            node_ids += tests_in((tree / path).read_text(encoding="utf-8"), Path(path).name)
         if not node_ids:
             return []
         failed, passed = _prove(base, node_ids, tree)
@@ -312,7 +305,7 @@ def _prove_class_files(paths: list[str], base: str) -> list[str]:
             for node in passed
         ]
     finally:
-        _git("worktree", "remove", "--force", str(tree))
+        git("worktree", "remove", "--force", str(tree))
         shutil.rmtree(tree, ignore_errors=True)
 
 
@@ -326,7 +319,7 @@ def _prove_added_tests(paths: list[str], base: str) -> list[str]:
     """
     tree = Path(tempfile.mkdtemp(prefix="falsifier-added-"))
     try:
-        _git("worktree", "add", "--detach", "--quiet", str(tree), "HEAD")
+        git("worktree", "add", "--detach", "--quiet", str(tree), "HEAD")
         node_ids: list[str] = []
         exempt: set[str] = set()
         for path in paths:
@@ -336,7 +329,7 @@ def _prove_added_tests(paths: list[str], base: str) -> list[str]:
                 print(f"{path}: exempt — covers existing behaviour: {reason}")
                 exempt.add(path)
                 continue
-            node_ids += _tests_in(source, Path(path).name)
+            node_ids += tests_in(source, Path(path).name)
         if not node_ids:
             return []
         failed, passed = _prove(base, node_ids, tree)
@@ -351,27 +344,16 @@ def _prove_added_tests(paths: list[str], base: str) -> list[str]:
             "if that is deliberate"
             for path, nodes in sorted(by_file.items())
             if path not in exempt
-            and len(nodes) == len(_tests_in((tree / path).read_text(encoding="utf-8"),
+            and len(nodes) == len(tests_in((tree / path).read_text(encoding="utf-8"),
                                             Path(path).name))
         ]
     finally:
-        _git("worktree", "remove", "--force", str(tree))
+        git("worktree", "remove", "--force", str(tree))
         shutil.rmtree(tree, ignore_errors=True)
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base", required=True, help="commit the fixes land on top of")
-    args = parser.parse_args()
-    base = _git("rev-parse", args.base).strip()
-
-    new = _new_entries(base)
-    class_files = _added_class_falsifiers(base)
-    added_tests = _added_test_files(base)
-    if not new and not class_files and not added_tests:
-        print("no new register entries, class falsifiers or added tests; nothing to prove")
-        return 0
-
+def _prove_register_entries(new: dict[str, str], base: str) -> list[str]:
+    """The original route: register entries added by this change."""
     unproven: list[str] = []
     for ident, body in sorted(new.items(), key=lambda item: int(item[0][1:])):
         if int(ident[1:]) < PROVE_FROM:
@@ -387,6 +369,24 @@ def main() -> int:
             unproven.append(f"{ident} cites no test")
             continue
         unproven += _prove_one(ident, names, base)
+    return unproven
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--base", required=True, help="commit the fixes land on top of")
+    args = parser.parse_args()
+    base = git("rev-parse", args.base).strip()
+
+    new = _new_entries(base)
+    class_files = added_class_falsifiers(base)
+    added_tests = added_test_files(base)
+    added_in_place = added_tests_in_modified_files(base)
+    if not new and not class_files and not added_tests and not added_in_place:
+        print("no new register entries, class falsifiers or added tests; nothing to prove")
+        return 0
+
+    unproven = _prove_register_entries(new, base)
 
     if class_files:
         print(f"\nproving {len(class_files)} added class falsifier(s): "
@@ -397,6 +397,11 @@ def main() -> int:
         print(f"\nproving {len(added_tests)} added test file(s): "
               f"{', '.join(added_tests)}")
         unproven += _prove_added_tests(added_tests, base)
+
+    if added_in_place:
+        print(f"\nproving {len(added_in_place)} test(s) added to existing file(s): "
+              f"{', '.join(added_in_place)}")
+        unproven += _prove_added_tests_in_place(added_in_place, base)
 
     if unproven:
         print("\nfalsifiers that do not falsify:")

@@ -6,6 +6,51 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.8.3 - 2026-09-02
+
+The falsifier gate could not see a test added to a file that already
+existed, 1.8.2 walked through that hole, and closing it immediately
+caught 1.8.2's own guard.
+
+### Fixed
+
+- **The gate reaches tests added to existing files.** `_added_test_files`
+  is added-files-only for a stated reason: a modified file may defend a
+  fix older than the base, so proving its tests would be a false
+  accusation. That covers the tests already in the file — not one the
+  diff *adds* to it, which is exactly as new as one arriving in a new
+  file. 1.8.2 added its guard to an existing
+  `tests/test_readme_claims.py`; CI printed a pass for this gate having
+  proven nothing about it, and the guard was mutation-tested by hand
+  instead, which is the manual step the gate exists to replace. Selection
+  is now per-test and read from the diff, so a function that merely moved
+  does not read as new, with the same stated-not-assumed
+  `Covers existing behaviour:` escape read from the function's own source.
+- **1.8.2's README guard did not falsify, and the repaired gate said so.**
+  It asserted the language sentence was internally consistent — the "as
+  of" version no older than the newest version it named. At the base
+  commit that sentence was self-consistent (1.5.0 ≥ 1.4) and merely
+  *incomplete*: it named free-form Fortran and stopped, while the table
+  below already carried fixed-form Fortran and HTML. The hand mutation
+  that appeared to prove it had spliced together a state that never
+  existed in history. The defect was an omission, and only a count sees an
+  omission, so the guard now holds the sentence's count against the
+  languages its own table lists — which is what would have caught the
+  1.8.1 README, saying seven while its table listed eight.
+
+### Changed
+
+- **Swift is the next language, not Go.** 1.8.2's roadmap named Go
+  (1.9.0) and Rust (1.10.0), read out of [ADR 006](docs/decisions.md)'s
+  "Go and Rust remain unwritten on exactly those terms". That entry
+  records what was decided, not what comes next, and reading a register
+  entry as a plan was the error. Swift takes 1.9.0, with the four shapes
+  that make it not quite C-family stated: an `extension` adds methods to
+  a type declared elsewhere, a `protocol` declares bodiless requirements,
+  computed properties have braces and are the C# properties problem
+  again, and string interpolation puts braces inside literals. Go and
+  Rust stay named and unscheduled.
+
 ## 1.8.2 - 2026-09-02
 
 The roadmap never mentioned the language work — not the five scanners

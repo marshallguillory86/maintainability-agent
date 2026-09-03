@@ -6,6 +6,51 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.9.0 - 2026-09-02
+
+**ADR 001 is finished.** Stage 9 was the last unmigrated stage and the one
+with a shipped false result behind it.
+
+### Added
+
+- **History is pinned, and a drifted cache is refused.**
+  `tools/calibration/history_manifest.py` materializes once — touching the
+  network — and writes down exactly what it fetched: pinned head, the
+  selection rule, the selected commit ids, the parent objects those
+  commits require, and the tool version. `measure_fix_breadth` now reads
+  that manifest and **never touches the network**; a cache that has
+  drifted from the pin is refused with the difference named, rather than
+  measured as if it were pinned.
+
+  The coupling this replaces produced a real false number and took six
+  audits to find. The oldest commit a shallow clone holds has no parent
+  locally, so git diffs it against the empty tree and `--numstat` reports
+  the whole tree as added: one fix commit measured (1 file, 75 lines) in a
+  full clone and (2 files, 39 lines) at the shallow boundary. Each audit
+  repaired the symptom it found because there was nothing to check a cache
+  *against*. Now there is, and
+  `tests/test_history_manifest.py` reproduces the boundary with real git
+  repositories cloned shallow over `file://` rather than mocking it.
+
+- **The checked-in manifest**, `tools/calibration/history_manifest.json`:
+  33 subjects, 6,120 pinned commit ids, 293 required parent objects, and
+  14 subjects whose cache sits on a graft boundary. It also records
+  something the study could not previously see — **five of the original 38
+  subjects no longer exist**, deleted or made private since selection,
+  which is an argument for pinning rather than against it.
+
+### Fixed
+
+- **Documents that called shipped work open.** `release-plan.md` said 1.0
+  "still waits on Marshall's acceptance (8.8), the 7.5 hostile audit
+  (8.9), and the human tag (8.10)" — all three done on 2026-09-01, nine
+  releases earlier — and separately that "8.8–8.10 remain open below".
+  `adr-011` said an ask "remains open under D3" when D3's register
+  heading reads Closed. Phase 7.2's exit condition is that no document
+  calls shipped work open or deferred; these were the fourth, fifth and
+  sixth instances in the paperwork of the project that exists to catch
+  drift.
+
 ## 1.8.3 - 2026-09-02
 
 The falsifier gate could not see a test added to a file that already

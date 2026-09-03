@@ -42,6 +42,7 @@ from statistics import median
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+import history_manifest  # noqa: E402
 from analyze_cohorts import spearman  # noqa: E402
 from measure_cohorts import mann_whitney  # noqa: E402
 
@@ -74,66 +75,9 @@ def _git(path: Path, *args: str) -> str:
     return subprocess.run(["git", *args], cwd=path, capture_output=True, text=True).stdout.strip()
 
 
-def _reachable_commits(path: Path) -> int:
-    count = _git(path, "rev-list", "--count", "HEAD")
-    return int(count) if count.isdigit() else 0
 
 
-def clone(entry: dict, cache_dir: Path) -> Path | None:
-    """A clone at the manifest's pinned commit with the whole window behind it.
 
-    Two audits landed here. The first found the measurement running over
-    whatever history the cache happened to hold, which made the result
-    irreproducible from pinned inputs; the window became a fixed
-    ``git log -n 300``. The second found the deepening step gated on
-    ``HEAD != pinned commit``, so a *shallow cache already at the pin*
-    was accepted untouched: a depth-one clone of ``open-mercato/cezar``
-    at its recorded pin yielded 0 fix commits where the deep cache
-    yielded 96, silently dropping the repo from the population. A window
-    is only deterministic if the history behind it is guaranteed, so
-    depth is now verified and repaired independently of HEAD, and a
-    subject that cannot be deepened is reported rather than quietly
-    measured short.
-    """
-    target = cache_dir / entry["name"]
-    if not (target / ".git").exists():
-        result = subprocess.run(
-            ["git", "clone", "--quiet", "--depth", str(FETCH_DEPTH), entry["url"], str(target)],
-            capture_output=True, text=True,
-        )
-        if result.returncode != 0:
-            print(f"  !! clone failed {entry['full_name']}: {result.stderr.strip()[:90]}", file=sys.stderr)
-            return None
-    if _git(target, "rev-parse", "HEAD") != entry["commit"]:
-        subprocess.run(["git", "fetch", "--quiet", "--depth", str(FETCH_DEPTH), "origin", entry["commit"]],
-                       cwd=target, capture_output=True, text=True)
-        checked = subprocess.run(["git", "checkout", "--quiet", entry["commit"]],
-                                 cwd=target, capture_output=True, text=True)
-        if checked.returncode != 0:
-            print(f"  !! {entry['full_name']}: cannot reach pinned {entry['commit'][:8]}", file=sys.stderr)
-            return None
-    return _deepen_to_window(target, entry)
-
-
-def _deepen_to_window(target: Path, entry: dict) -> Path | None:
-    """Guarantee the window's worth of history, whatever the cache held.
-
-    A repository genuinely shorter than the window is fine — it stops
-    being shallow once its root commit is fetched, and ``history_commits``
-    records what it actually has. A repository that is still shallow and
-    still short after deepening is not measurable reproducibly, so it is
-    refused instead of contributing a truncated window.
-    """
-    for _ in range(2):
-        if _reachable_commits(target) >= FETCH_DEPTH:
-            return target
-        if _git(target, "rev-parse", "--is-shallow-repository") != "true":
-            return target  # short history, fully fetched: the window is the repo
-        subprocess.run(["git", "fetch", "--quiet", f"--depth={FETCH_DEPTH}", "origin", entry["commit"]],
-                       cwd=target, capture_output=True, text=True)
-    print(f"  !! {entry['full_name']}: only {_reachable_commits(target)} commits reachable after "
-          f"deepening to {FETCH_DEPTH}; refusing a truncated window", file=sys.stderr)
-    return None
 
 
 def _numstat_totals(body: str) -> tuple[int, int]:
@@ -188,8 +132,20 @@ def fix_commits(path: Path) -> list[tuple[int, int]]:
 
 
 def measure(entry: dict, cache_dir: Path) -> dict | None:
-    path = clone(entry, cache_dir)
-    if path is None:
+    """Measure one subject from the cache. Reads only; never fetches.
+
+    ADR 001 stage 9 moved materialization out of this function. It used to
+    call `clone`, so measuring a repository could reach the network and
+    change the cache it was about to measure — selection, acquisition and
+    measurement in one step, with the result depending on cache state
+    nobody could inspect. `history_manifest.py` now does the fetching and
+    writes down what it fetched; this side reads the result and refuses a
+    cache the manifest does not describe.
+    """
+    path = cache_dir / entry["name"]
+    if not (path / ".git").exists():
+        print(f"  !! {entry['full_name']}: not materialized; run history_manifest.py --build",
+              file=sys.stderr)
         return None
     fixes = fix_commits(path)
     if len(fixes) < MIN_FIX_COMMITS:
@@ -240,15 +196,46 @@ def _banded_test(metric: str, band_ai: list[dict], band_human: list[dict]) -> di
     }
 
 
+def _cache_matches_the_pin(manifest_path: Path, cache: Path) -> int:
+    """The stage 9 gate: measure only a cache the manifest describes.
+
+    Checked before anything is measured and without touching the network.
+    A drifted cache is refused rather than measured as if it were pinned —
+    the shallow-boundary defect took six audits to find precisely because
+    there was nothing to check the cache against. Returns a process exit
+    code, 0 when the cache is exactly what was pinned.
+    """
+    if not manifest_path.exists():
+        print(f"no manifest at {manifest_path}; run history_manifest.py --build first",
+              file=sys.stderr)
+        return 2
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    problems = history_manifest.verify(manifest, cache)
+    if problems:
+        print("refusing to measure: the cache does not match the pinned manifest",
+              file=sys.stderr)
+        for line in problems:
+            print(f"  {line}", file=sys.stderr)
+        return 1
+    print(f"cache matches the manifest built {manifest['built_on']} "
+          f"({len(manifest['subjects'])} subjects)", file=sys.stderr)
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("cohorts", nargs=2, help="ai.json and human.json from select_authored.py.")
     parser.add_argument("--cache-dir", required=True)
+    parser.add_argument("--manifest", default=str(Path(__file__).with_name("history_manifest.json")),
+                        help="the pinned history this measurement is reproducible against")
     parser.add_argument("--out", default=str(Path(__file__).with_name("fix_breadth.json")))
     args = parser.parse_args()
 
     cache = Path(args.cache_dir)
-    cache.mkdir(parents=True, exist_ok=True)
+    refusal = _cache_matches_the_pin(Path(args.manifest), cache)
+    if refusal:
+        return refusal
+
     results: dict[str, list[dict]] = {}
     for source in args.cohorts:
         data = json.loads(Path(source).read_text(encoding="utf-8"))

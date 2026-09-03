@@ -114,3 +114,42 @@ def test_the_readme_language_table_lists_every_parsed_language() -> None:
         f"the README language table does not name {missing}, which the "
         "parser reads; the front page under-claims what ships"
     )
+
+
+def test_the_readme_language_sentence_is_not_older_than_what_it_lists() -> None:
+    """The prose above the table drifted because only the table was pinned.
+
+    It read "Seven languages are parsed as of **1.5.0**" while listing
+    fixed-form Fortran, which shipped in 1.6.0 — a sentence contradicting
+    itself on the front page for two releases. The table guard above could
+    not catch it: the table was correct the whole time.
+
+    So the sentence is held to its own contents. The "as of" version must
+    be at least the newest per-language version the sentence names, which
+    is exactly the inconsistency that shipped.
+    """
+    import re
+
+    readme = _read(ROOT / "README.md")
+    sentence = re.search(
+        r"languages are parsed as of \*\*([0-9.]+)\*\*:(.+?)Each has a",
+        readme,
+        re.S,
+    )
+    assert sentence, (
+        "the README no longer carries the 'languages are parsed as of' "
+        "sentence this guard exists to pin"
+    )
+
+    def _parts(text: str) -> tuple[int, ...]:
+        return tuple(int(piece) for piece in text.split("."))
+
+    as_of = _parts(sentence.group(1))
+    listed = [_parts(v) for v in re.findall(r"\b(\d+\.\d+(?:\.\d+)?)\b", sentence.group(2))]
+    assert listed, "the sentence names no per-language versions to check against"
+
+    newest = max(listed)
+    assert as_of >= newest[: len(as_of)], (
+        f"the README says languages are parsed as of {sentence.group(1)} "
+        f"but names a language introduced in {'.'.join(str(p) for p in newest)}"
+    )

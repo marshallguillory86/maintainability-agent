@@ -8,6 +8,8 @@ This project should stay a thin orchestration and prompt layer, not a replacemen
 
 Dependency-light native scanner; Markdown, JSON, SARIF and PR-comment output; bounded AI remediation prompt; changed-only mode; baseline gating; agent instruction packs; ISO/IEC 25010-inspired rubric calibrated against a query-selected 40-repo corpus; git-history aspects (churn, hotspots, coupling, ownership); 92% coverage gate; portable invokable skill for Claude Code, Codex and Copilot Chat; optional local MCP server (writes only its five disclosed config/state artifacts, never source or reports) for Codex and its VS Code extension.
 
+**Nine declaration languages**, each shipped as its own minor release: Python and Java, JS/TS/JSX and HTML, then C (1.1.0), C++ (1.2.0), C# (1.3.0), free-form Fortran (1.4.0) and fixed-form Fortran (1.6.0), over one shared walk in `_ranges_core` where a language is a module and a row. Fortran is the first with no braces, so the walk takes its bounding rule as an argument. Fortran also gained an analyzer adapter (fortitude, 1.5.0), its own complexity and cognitive readings rather than the C-family default (1.6.0), and toolchain practice detection (1.7.0). Per-language scope and misses are in [language support](language-support.md).
+
 ## Next: finish ADR 001
 
 The architecture migration outranks new features. Six audit rounds were spent on one bug class that the typed evidence boundary is meant to end; leaving it half-migrated is how the seventh round happens. The open stages and their current status are in the [decision register](decisions.md); the immediate work is:
@@ -15,6 +17,28 @@ The architecture migration outranks new features. Six audit rounds were spent on
 1. Separate history-window materialization from fix-breadth measurement, with checked-in manifests: pinned head, selection rule, selected commit ids, required parent objects and tool version, so analysis reads only the manifest and touches no network.
 
 The evidence model, its property tests, consumer migration and the version-2 contract are done; [ADR 002](adr-002-null-verified-grade-in-ci.md) stays rejected because it assumed `--fail-on-gate` consumes a grade when it only checks hard findings.
+
+## Language adapters
+
+The cadence is **one language per minor release, never a batch** — five were written that way between 1.1.0 and 1.6.0, and the reason is that each one has to earn its claim separately.
+
+**The price of admission, unchanged since [ADR 006](decisions.md):** a language is claimed only when it has a scanner of its own, a documented list of what it misses, and tests that pin them. The register's original wording said no further range detectors would be written; five were, and the rule that wording protected is what survived. A language does not get onto the table below by having its extension added to a config.
+
+**Planned, in order:**
+
+| Target | Language | Why this one, and what it costs |
+|---|---|---|
+| 1.9.0 | **Go** | Named in [ADR 006](decisions.md) as unwritten *on those terms*, not as refused. Braced, so it reuses the `_ranges_core` walk; the work is receivers and method sets (`func (w *Widget) Draw()` must report `Widget.Draw`, not a second `Draw`), interface bodies that declare without defining, and `struct` tags that carry braces inside string literals. |
+| 1.10.0 | **Rust** | The other name in ADR 006. Braced, but the bounding rule is the least like C of the two: `impl` blocks hold the methods, traits declare bodiless signatures, macros (`macro_rules!`, and any `foo! { }` invocation) generate declarations that are invisible by the same rule C and C++ already document, and lifetimes/generics need blanking the way Java's and C#'s do. |
+
+**What Go and Rust already get today, without a scanner.** Both are classified by discovery, both have practice signals wired (`.golangci.yml`, `rustfmt.toml`, `golangci-lint`, `clippy`), and Go is covered by multimetric in the shipped pool. What they do **not** get is a declaration population: rates are **withheld** with the missing parser named, rather than approximated. That is the P7 boundary and it is the reason these are releases rather than config entries.
+
+**Two gaps that widen with every language added**, and should be closed alongside rather than after:
+
+- **Test-command detection stops at Python.** `_test_execution` knows `pytest -q`; `fpm test`, `ctest`, `go test` and `cargo test` are unrecognised, so `expected_commands.test` stays hand-configured on every non-Python tree. Fortran's practice detection (1.7.0) reads `fpm.toml` but nothing runs from it.
+- **The calibration corpus is 40 JS/TS/Python repositories.** Every language above is scored against references derived from code unlike it — measured, not hypothetical: LAPACK read 7.18x the declaration median. [The audit](audit-v091-v170.md#f1--the-calibration-corpus-contains-none-of-four-claimed-languages-high) records this as a disclosure gap, and each new language inherits it. Extending the corpus moves `CALIBRATION_C` and re-grades every repository, so it is a deliberate release of its own, not a patch bundled with a scanner.
+
+**Not planned, and the distinction matters.** Kotlin, Swift, Scala, Ruby, PHP and the rest are classified by discovery and may be measured by adapters, but no scanner is scheduled. They are not refused — they are simply unwritten, on the same terms as Go and Rust were before this section named them.
 
 ## A known shape problem: this tool is end-of-loop heavy
 

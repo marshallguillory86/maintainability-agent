@@ -31,7 +31,7 @@ MCP is a local stdio process and does not run `input()`. It may write exactly fi
 
 3. **TTY:** ask every interactive invoke which of the three to produce. Do not persist the choice. `--format` / `--output` / `--html-output` skip the question and win. Non-TTY and CI never call `input()` (same class as 6.1).
 
-4. **MCP:** first-run setup uses structured elicitation. The `maintainability-agent` prompt still tells the host in prose to ask, then call `audit_repository` with a format argument; that free-text ask remains open under D3. Chat returns Markdown. HTML and Markdown **files** are written by the CLI or saved by the host after a location ask, never by the MCP process.
+4. **MCP:** first-run setup uses structured elicitation. The `maintainability-agent` prompt still tells the host in prose to ask, then call `audit_repository` with a format argument; that free-text ask was closed under D3, which replaced setup and the slash prompt with structured choices. Chat returns Markdown. HTML and Markdown **files** are written by the CLI or saved by the host after a location ask, never by the MCP process.
 
 > **Amended 2026-08-22 (D3 closed).** The free-text ask closed under D3.
 > Presentation now arrives through the `format` argument;

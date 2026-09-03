@@ -10,13 +10,21 @@ Dependency-light native scanner; Markdown, JSON, SARIF and PR-comment output; bo
 
 **Nine declaration languages**, each shipped as its own minor release: Python and Java, JS/TS/JSX and HTML, then C (1.1.0), C++ (1.2.0), C# (1.3.0), free-form Fortran (1.4.0) and fixed-form Fortran (1.6.0), over one shared walk in `_ranges_core` where a language is a module and a row. Fortran is the first with no braces, so the walk takes its bounding rule as an argument. Fortran also gained an analyzer adapter (fortitude, 1.5.0), its own complexity and cognitive readings rather than the C-family default (1.6.0), and toolchain practice detection (1.7.0). Per-language scope and misses are in [language support](language-support.md).
 
-## Next: finish ADR 001
+## ADR 001 is finished
 
-The architecture migration outranks new features. Six audit rounds were spent on one bug class that the typed evidence boundary is meant to end; leaving it half-migrated is how the seventh round happens. The open stages and their current status are in the [decision register](decisions.md); the immediate work is:
+**Stage 9 shipped in 1.9.0, and the migration is complete.** History materialization is separated from measurement: `tools/calibration/history_manifest.py` fetches and writes down what it fetched — pinned head, selection rule, selected commit ids, required parent objects and tool version — and `measure_fix_breadth` reads that manifest and never touches the network. A cache that has drifted from the pin is refused with the difference named, rather than measured as if it were pinned.
 
-1. Separate history-window materialization from fix-breadth measurement, with checked-in manifests: pinned head, selection rule, selected commit ids, required parent objects and tool version, so analysis reads only the manifest and touches no network.
+The checked-in `history_manifest.json` pins 33 subjects, 6,120 commit ids and 293 required parent objects. It also records something the study could not previously see: **five of the original 38 subjects no longer exist** — deleted or made private since selection — which is an argument for pinning rather than against it.
 
-The evidence model, its property tests, consumer migration and the version-2 contract are done; [ADR 002](adr-002-null-verified-grade-in-ci.md) stays rejected because it assumed `--fail-on-gate` consumes a grade when it only checks hard findings.
+That closes the stage this project spent six audit rounds circling. The measurement that produced a false result did so because the oldest commit in a shallow clone has no parent, so git diffs it against the empty tree; each audit repaired the symptom it found because there was nothing to check a cache *against*. Now there is.
+
+The evidence model, its property tests, consumer migration and the version-2 contract were already done; [ADR 002](adr-002-null-verified-grade-in-ci.md) stays rejected because it assumed `--fail-on-gate` consumes a grade when it only checks hard findings.
+
+## Next
+
+**[ADR 013](adr-013-hostile-audit-prompt.md) — the hostile-audit prompt**, still `Proposed`. The adversarial audit is the highest-leverage quality process this project has and the only one with no artifact: it depends on a human hand-writing a fresh prompt into a fresh session, re-deriving context the report already holds, so runs are neither repeatable nor comparable. A third emitter on the prompt seam fixes that with deterministic input, no gate and no score.
+
+Then **Swift (1.9.x/1.10.0)** — see [language adapters](#language-adapters) — and the calibration corpus extension, which is its own release because it re-grades every repository.
 
 ## Language adapters
 

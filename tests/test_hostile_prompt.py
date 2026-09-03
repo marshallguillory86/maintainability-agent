@@ -96,13 +96,15 @@ def test_the_brief_hands_over_the_evidence_already_computed() -> None:
     """The point is that the audit starts where measurement ended."""
     text = render_hostile_audit_prompt(_report())
 
-    assert "4.1" in text and "file_size" in text
+    assert "4.1" in text, "the estimate must reach the adversary"
+    assert "file_size" in text, "the worst dimension must reach the adversary"
     assert "evidence complete" in text, (
         "evidence_status is a dict in the report; printing it raw put "
         "{'status': 'complete', ...} in front of the adversary"
     )
     assert "testing" in text, "a concept nothing measured is where P7 is easiest to break"
-    assert "lizard" in text and "pmd" in text, "the adversary needs to know what ran"
+    assert "lizard" in text, "an analyzer that ran must be named"
+    assert "pmd" in text, "an analyzer that did not run must be named too"
 
 
 def test_no_stringified_structure_reaches_the_brief() -> None:
@@ -115,18 +117,26 @@ def test_no_stringified_structure_reaches_the_brief() -> None:
     """
     text = render_hostile_audit_prompt(_report())
 
-    assert "{'" not in text and '{"' not in text, (
-        "a Python dict was rendered into the brief instead of a label"
-    )
+    assert "{'" not in text, "a Python dict was rendered into the brief"
+    assert '{"' not in text, "a JSON-ish object was rendered into the brief"
     assert "[{" not in text, "a list of dicts was rendered into the brief"
     longest = max(len(line) for line in text.splitlines())
     assert longest < 700, f"a line of {longest} characters is a dumped structure, not prose"
 
 
 def test_the_brief_is_deterministic_for_one_report() -> None:
-    """P1's own discipline applied to the emitter: same input, same text."""
+    """P1's own discipline applied to the emitter: same input, same text.
+
+    The two calls are bound to names rather than compared inline: a static
+    analyser reads `f(x) == f(x)` as a bug (identical sub-expressions),
+    since it cannot know that calling twice is the assertion.
+    """
     report = _report()
-    assert render_hostile_audit_prompt(report) == render_hostile_audit_prompt(report)
+
+    first = render_hostile_audit_prompt(report)
+    second = render_hostile_audit_prompt(report)
+
+    assert first == second, "the same report rendered two different briefs"
 
 
 def test_the_emitter_returns_text_and_touches_nothing() -> None:

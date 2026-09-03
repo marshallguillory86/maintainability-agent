@@ -6,6 +6,57 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 1.10.0 - 2026-09-03
+
+**[ADR 013](docs/adr-013-hostile-audit-prompt.md) ships.** The adversarial
+audit now has an artifact.
+
+### Added
+
+- **`render_hostile_audit_prompt` — a third emitter on the prompt seam**,
+  beside `render_ai_prompt` and `render_agent_instructions`. Surfaced as
+  CLI `--hostile-prompt-output` and the MCP prompt
+  `maintainability-hostile-audit`.
+
+  The hostile audit is the highest-leverage quality process this project
+  has and was the only one with no artifact: it depended on a person
+  hand-writing a fresh prompt into a fresh session, re-deriving context
+  the report already held, with audit quality riding on whoever wrote the
+  prompt that day. Not seeded, not repeatable, not comparable run to run.
+
+  The brief is emitted deterministically from one run and carries the
+  commit under audit (and whether the tree was dirty), the evidence
+  already computed — what ran, what did not, which concepts nothing
+  measured, which have a single source — the eight published promises each
+  with the shape of evidence that falsifies it, and the audit contract:
+  reproduce rather than speculate, verify against the named commit, and
+  turn every accepted finding into a test that fails without its fix.
+
+  The boundary is the one ADR 008 drew: **the deterministic core seeds the
+  hostile audit; it never performs it.** An LLM red-team inside the audit
+  would break P1 outright, so the reasoning happens outside exactly as the
+  fixing does. It returns text — no gate, no score, nothing written,
+  nothing sent — and its findings return to the falsifier-and-fix loop,
+  never to the estimate, range or grade.
+
+- **The promise table lives in code** so the brief renders offline without
+  `docs/` installed beside the package, and
+  `test_every_published_promise_reaches_the_adversary` holds it to
+  `docs/product-intent.md` in both directions. A promise handed over in a
+  stale wording is worse than one not handed over at all: it aims the
+  audit at a claim the project no longer makes.
+
+### Fixed
+
+- **Two defects in the emitter, caught on its first render.** The
+  analyzer outcomes were pasted in as stringified nested dicts — several
+  thousand characters on one line, including every language jscpd claims —
+  and `evidence_status` printed as `{'status': 'complete', ...}` rather
+  than `complete`. A brief that buries its own content is worse than the
+  hand-written prompt it replaces, so `test_no_stringified_structure_reaches_the_brief`
+  now fails on any dict or list-of-dicts in the output and on any line
+  long enough to be a dumped structure.
+
 ## 1.9.0 - 2026-09-02
 
 **ADR 001 is finished.** Stage 9 was the last unmigrated stage and the one

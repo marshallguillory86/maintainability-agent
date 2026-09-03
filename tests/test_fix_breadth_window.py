@@ -22,6 +22,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools" / "calibration"))
 
+import history_manifest as manifest  # noqa: E402
 import measure_fix_breadth as breadth  # noqa: E402
 from _git_path import GIT_PATH
 
@@ -98,15 +99,15 @@ def test_a_shallow_cache_at_the_pinned_commit_is_deepened_not_accepted(tmp_path:
     cache.mkdir()
     subprocess.run(["git", "clone", "-q", "--depth", "1", f"file://{origin}", str(cache / "subject")],
                    check=True, capture_output=True, env={**ENV, "HOME": str(tmp_path)})
-    assert breadth._reachable_commits(cache / "subject") == 1
+    assert manifest.reachable_commits(cache / "subject") == 1
     assert breadth.fix_commits(cache / "subject") == [], "fixture must start with the fix hidden"
 
-    repaired = breadth.clone(
+    repaired = manifest.materialize(
         {"name": "subject", "full_name": "t/subject", "url": f"file://{origin}", "commit": head}, cache
     )
 
     assert repaired is not None
-    assert breadth._reachable_commits(repaired) > 1, "shallow cache at the pin was accepted unchanged"
+    assert manifest.reachable_commits(repaired) > 1, "shallow cache at the pin was accepted unchanged"
     assert breadth.fix_commits(repaired) == breadth.fix_commits(origin)
 
 
@@ -124,7 +125,7 @@ def test_the_window_reads_the_same_fix_at_every_cache_depth(tmp_path: Path, dept
     subprocess.run(["git", "clone", "-q", "--depth", str(depth), f"file://{origin}", str(cache / "subject")],
                    check=True, capture_output=True, env={**ENV, "HOME": str(tmp_path)})
 
-    repaired = breadth.clone(
+    repaired = manifest.materialize(
         {"name": "subject", "full_name": "t/subject", "url": f"file://{origin}", "commit": head}, cache
     )
 

@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **1.10.0**.
+Version **1.10.1**.
 
 **Languages parsed:** Python, Java, C, C++, C#, Fortran (free-form *and*
 fixed-form), and the JS/TS family — each by a scanner written for it, and
@@ -79,6 +79,17 @@ findings can fix them at the rate they appear. The loop this tool closes:
 
 Step 3 is the product; steps 1 and 2 are in service of it. Every other tool in
 this space stops at "here's a list of findings."
+
+**Where the model stops:** the agent authors, no model runs in CI, and the gate
+holds a fixed oracle — a rate computed by code, not a model's opinion. A
+model-judged gate degrades from *right by construction* to *right most of the
+time*; this one cannot, because nothing in the score is inferred.
+
+**And the limit:** step 3 bounds the agent by **instruction**. Nothing verifies
+the returned diff stayed inside the work order, and a finding can still be made
+to disappear by suppressing it. The three checks that would make the bound
+enforced rather than asked for are named, with the failure each closes, in
+[the roadmap](docs/roadmap.md#the-remediation-hole-an-agent-can-satisfy-this-gate-without-doing-the-work).
 
 One pre-registered experiment has tested the bounded prompt.
 Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, under this tool's own finding count.

@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import Any
 
 from . import _evidence_view as view
+from ._hostile_prompt import render_hostile_audit_prompt  # noqa: F401
 from ._hotspots import hotspot_measure, hotspot_name
 from ._tdd_view import tdd_sentences
 from ._work_order import prompt_items

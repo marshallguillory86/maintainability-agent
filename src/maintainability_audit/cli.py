@@ -38,7 +38,7 @@ from .config import (
 )
 from .git_tools import changed_paths
 from .instructions import instruction_path_for_target, write_instruction_pack
-from .prompts import render_agent_instructions, render_ai_prompt
+from .prompts import render_agent_instructions, render_ai_prompt, render_hostile_audit_prompt
 from .renderers import render_html, render_markdown, render_pr_comment
 from .report import build_report
 from .sarif import read_sarif_inputs, report_to_sarif
@@ -57,6 +57,9 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--prompt-output", help="Optional Markdown prompt for AI-assisted remediation.")
     parser.add_argument("--comment-output", help="Optional Markdown body suitable for a PR comment.")
     parser.add_argument("--agent-instructions-output", help="Optional reusable instructions for AI coding agents.")
+    parser.add_argument("--hostile-prompt-output",
+                        help="Optional adversarial audit brief seeded from this run (ADR 013). "
+                             "Text only: it does not gate, score, or send anything.")
     parser.add_argument("--sarif-output", help="Optional SARIF output path for GitHub code scanning.")
     parser.add_argument("--sarif-input", action="append", help="Optional external SARIF file to summarize in reports. Repeatable.")
     parser.add_argument("--changed-only", help="Audit only files changed in a git revspec, for example main...HEAD.")
@@ -175,6 +178,9 @@ def write_outputs(args: argparse.Namespace, report: dict, rendered: str) -> None
         write_artifact(root, Path(args.comment_output), render_pr_comment(report) + "\n")
     if args.agent_instructions_output:
         write_artifact(root, Path(args.agent_instructions_output), render_agent_instructions(report) + "\n")
+    if args.hostile_prompt_output:
+        write_artifact(root, Path(args.hostile_prompt_output),
+                       render_hostile_audit_prompt(report) + "\n")
     if args.write_baseline:
         write_baseline(args.write_baseline, report)
     if args.sarif_output:

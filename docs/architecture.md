@@ -34,6 +34,7 @@ flowchart TB
   subgraph presentation["presentation — reads the report dict"]
     renderers["renderers"]
     prompts["prompts"]
+    _hostile_prompt["_hostile_prompt"]
     sarif["sarif"]
     baseline["baseline"]
     _evidence_view["_evidence_view"]
@@ -159,7 +160,7 @@ flowchart TB
 | **scanners** | Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history, ADR 003 semantic classification (`_semantic`, `_semantic_ts`), and — via `_adapters` — whatever the external analyzers report; `_selection` composes the runnable set from the language inventory (D15) | foundations, parsing, `_runner` |
 | **scoring** | Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (`_verification`) | foundations, parsing (types only), the evidence boundary |
 | **assembly** | Running the scan, running the analyzer pool (`_analysis`) and stating what it found (`_documents`), the environment work order composed from coverage (`_environment`), recording the built-in detectors as their own source tier (`_built_ins`), ordering the work by risk against effort and recomputing each item's worth (`_work_order`, weights in `_work_order_weights`), assembling the report dict, invoking the scorer once | anything below |
-| **presentation** | Markdown/chat, a self-contained HTML report, PR comment, SARIF, baseline, remediation prompt, `_evidence_view` (shared estimate/range/evidence/verified-grade wording), and `_identity` (labels and digests consumed from the report, never source). The renderers consume one report dictionary and do not score | foundations, presentation helpers, the report dict, and `_work_order`'s presentation-facing prompt selection |
+| **presentation** | Markdown/chat, a self-contained HTML report, PR comment, SARIF, baseline, remediation prompt, `_hostile_prompt` (ADR 013's adversarial brief, split from `prompts` at the file-size line), `_evidence_view` (shared estimate/range/evidence/verified-grade wording), and `_identity` (labels and digests consumed from the report, never source). The renderers consume one report dictionary and do not score | foundations, presentation helpers, the report dict, and `_work_order`'s presentation-facing prompt selection |
 | **entry** | Argument parsing, transport, output routing, exit codes, and first-run setup — **one question set**, two transports (`_first_run` on a CLI TTY, `_mcp_setup` over MCP elicitation; chat is MCP, not a third set) — and the MCP audit tool itself (`_mcp_audit`, split from `mcp_server`) and the D10 root-grant machinery (`_mcp_grants`, same split; grants are a server boundary, not setup) and the setup/run gate that answers with questions instead of a report (`_mcp_gate`) and the MCP resources, which answer reads and can never ask (`_mcp_resources`) and the set of refusals the transport may declare (`_mcp_refusals`, shared by both seam-binding modules so neither has to import the other) and the packaged-skill sync (`_skill_install`) — the one layer where the tool may ask a question | anything below |
 
 ## The rules, and why each exists

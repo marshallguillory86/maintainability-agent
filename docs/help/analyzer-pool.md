@@ -17,6 +17,15 @@ names the tool, an install command, and the concepts installation would
 restore. The chat host surfaces that order rather than hiding it inside a JSON
 report body.
 
+**Language decides which tools are eligible**, so the pool a repository gets is
+not the pool the catalog holds. A tool is offered only for languages it
+declares. That cuts both ways: a language the built-in scanner cannot parse may
+still be measured by an adapter, and a language the scanner parses may still
+have no adapter available — Fortran gained one in 1.5.0 (fortitude), but it
+emits verdicts and cannot supply a declaration population, so the built-in
+scanner remains the only path to one there. Where neither layer can measure a
+concept, the report withholds rather than estimates.
+
 Selection filters the catalog by the configured policy. Source-read and
 artifact-read adapters compose in one report without manufacturing
 agreement across unlike findings

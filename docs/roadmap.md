@@ -20,11 +20,15 @@ That closes the stage this project spent six audit rounds circling. The measurem
 
 The evidence model, its property tests, consumer migration and the version-2 contract were already done; [ADR 002](adr-002-null-verified-grade-in-ci.md) stays rejected because it assumed `--fail-on-gate` consumes a grade when it only checks hard findings.
 
+## The hostile audit has an artifact
+
+**[ADR 013](adr-013-hostile-audit-prompt.md) shipped in 1.10.0.** The adversarial loop is the highest-leverage quality process here and was the only one with no artifact: it depended on a person hand-writing a fresh prompt into a fresh session, re-deriving context the report already held, so runs were neither seeded nor comparable.
+
+`render_hostile_audit_prompt` is now the third emitter on the prompt seam beside `render_ai_prompt` and `render_agent_instructions` — CLI `--hostile-prompt-output`, MCP prompt `maintainability-hostile-audit`. It seeds the adversary from one run: the commit under audit, the evidence already computed (what ran, what did not, which concepts nothing measured), P1–P8 with the shape of evidence that falsifies each, and the audit contract this project already holds itself to. The boundary is ADR 008's: **the deterministic core seeds the hostile audit; it never performs it.** No gate, no score, nothing written or sent.
+
 ## Next
 
-**[ADR 013](adr-013-hostile-audit-prompt.md) — the hostile-audit prompt**, still `Proposed`. The adversarial audit is the highest-leverage quality process this project has and the only one with no artifact: it depends on a human hand-writing a fresh prompt into a fresh session, re-deriving context the report already holds, so runs are neither repeatable nor comparable. A third emitter on the prompt seam fixes that with deterministic input, no gate and no score.
-
-Then **Swift (1.9.x/1.10.0)** — see [language adapters](#language-adapters) — and the calibration corpus extension, which is its own release because it re-grades every repository.
+**Swift** — see [language adapters](#language-adapters) — and the **calibration corpus extension**, which is its own release because it re-grades every repository and needs a stated sampling frame before any repository is cloned.
 
 ## Language adapters
 

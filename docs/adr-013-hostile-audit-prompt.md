@@ -1,6 +1,6 @@
 # ADR 013 — The hostile-audit prompt
 
-- Status: Proposed (2026-08-30). Implementation progress belongs in the
+- Status: **Accepted** (2026-08-30). Implementation progress belongs in the
   [decision register](decisions.md), not here.
 - Related: [ADR 003](adr-003-deterministic-semantic-policy.md) (a
   non-gating finding class that never touches the score),

@@ -339,6 +339,24 @@ def _bind_prompts(server: Any) -> None:
             "listed findings, and do not invent or fabricate findings."
         )
 
+    @server.prompt(name="maintainability-hostile-audit")
+    def maintainability_hostile_audit_prompt() -> str:
+        """Seed an adversarial audit of this tool from a real audit run (ADR 013)."""
+        return (
+            "Call audit_repository on this repository first, then ask for its hostile "
+            "audit brief. The brief is emitted deterministically from that run: it "
+            "names the commit under audit, the evidence the run already computed "
+            "(what ran, what did not, which concepts nothing measured), the published "
+            "promises P1-P8 with the shape of evidence that falsifies each, and the "
+            "audit contract. Your job is to make one promise false with a reproducible "
+            "case: a concrete input and the wrong output it produces, plus the test "
+            "that would fail without the fix. Do not speculate, do not report worries, "
+            "and verify against the named commit before reporting — past audits of this "
+            "project contained claims already false at the commit under audit. The tool "
+            "seeds this audit; it never performs it, and nothing you find changes the "
+            "estimate, range or grade."
+        )
+
 
 def create_server(*, roots: tuple[Path, ...] | None = None):
     """Create the SDK server; importing the base package does not require MCP."""

@@ -123,6 +123,8 @@ ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
             "_environment",
             "_work_order_weights", "_backfill"}
 PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
+                # ADR 013's emitter: renders, never scores.
+                "_hostile_prompt",
                 # `_html_view` is the ADR 011 HTML skin: it reads the report
                 # dict and stored records and computes no score.
                 "_html_view",

@@ -17,6 +17,29 @@ chosen Markdown or HTML file.
 Findings remain named evidence. The work order selects a bounded subset for the
 agent and does not authorize a repository-wide rewrite.
 
+## When declaration rates are withheld
+
+Declaration-level findings — function size, complexity, dead code — need a
+parser for the language. Eight are parsed: Python, Java, C, C++, C#, Fortran
+(free-form and fixed-form), the JS/TS family and HTML. Each has a scanner
+written for it and a documented list of what it misses; see
+[language support](../language-support.md).
+
+For any other language the report **withholds** declaration rates and names the
+missing parser as the reason. It does not estimate a population from patterns
+that were written for other languages, because a rate divided by a wrong
+population is a number a reader with the repository open would call absurd.
+Those files are still measured for length, duplication and risk, and still
+count toward repository size.
+
+Adding an extension to `include_extensions` does not create a population. It
+widens what is scanned, not what can be parsed.
+
+Two consequences worth expecting rather than reporting as bugs: a repository
+written mostly in an unparsed language can show few declaration findings while
+being large, and its verified grade may be withheld for want of evidence. Both
+are the disclosure working, not the scan failing.
+
 ## History, recurrence, and baselines
 
 Scan history is an input to the next report. Comparable records form a trend;

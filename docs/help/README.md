@@ -14,7 +14,10 @@ Start with the part of the conversation you need:
 - [What the analyzer pool runs](analyzer-pool.md) — analyzer-primary evidence,
   built-in fallback, selection, and missing-tool remedies.
 - [Reading the report and its history](report-and-history.md) — estimate,
-  range, grade, work order, recurrence, baselines, and economic context.
+  range, grade, work order, recurrence, baselines, economic context, and why
+  declaration rates are withheld for an unparsed language.
+- [Language support](../language-support.md) — the eight parsed languages, how
+  each decides where a declaration ends, and what each one deliberately misses.
 
 For integration details, see [IDE and agent integration](../ide-agent-integration.md).
 For the binding product promises, see [product intent](../product-intent.md).

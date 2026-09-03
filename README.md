@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **1.8.1**.
+Version **1.8.2**.
 
 **Languages parsed:** Python, Java, C, C++, C#, Fortran (free-form *and*
 fixed-form), and the JS/TS family — each by a scanner written for it, and
@@ -246,10 +246,10 @@ SonarQube, Qlty) rather than replacing them — their SARIF folds in via
 and on an unrecognized language it will quietly under-report rather than fail.**
 Coverage comes from two layers.
 
-Seven languages are parsed as of **1.5.0**: Python (1.0), Java (1.0), C (1.1),
-C++ (1.2), C# (1.3), free-form Fortran (1.4), and the JS/TS family. Each has a
-scanner written for it and a documented list of what it misses — a language is
-claimed here only when both exist.
+Eight languages are parsed as of **1.6.0**: Python (1.0), Java (1.0), C (1.1),
+C++ (1.2), C# (1.3), Fortran (free-form 1.4, fixed-form 1.6), the JS/TS family,
+and HTML. Each has a scanner written for it and a documented list of what it
+misses — a language is claimed here only when both exist.
 
 **Built-in scanner (always on, no dependencies)** — reads function/class
 declarations, sizes and complexity for a fixed set of languages, and **only**

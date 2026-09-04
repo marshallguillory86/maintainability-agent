@@ -16,6 +16,7 @@ from pathlib import Path
 
 from ._cognitive import (
     brace_cognitive,
+    cobol_cognitive,
     fortran_cognitive,
     python_cognitive,
     swift_cognitive,
@@ -26,10 +27,12 @@ from ._metrics_types import (
     DeclRange,
     FunctionMetric,
     branch_points,
+    cobol_branch_points,
     fortran_branch_points,
     swift_branch_points,
 )
 from ._ranges_c import c_declaration_ranges
+from ._ranges_cobol import cobol_declaration_ranges
 from ._ranges_core import indent_bounded_end
 from ._ranges_cpp import cpp_declaration_ranges
 from ._ranges_csharp import csharp_declaration_ranges
@@ -68,6 +71,10 @@ CPP_SUFFIXES = {".cpp", ".hpp", ".cc", ".cxx", ".hh"}
 # `record`, and properties, which are deliberately not declarations.
 CSHARP_SUFFIXES = {".cs"}
 SWIFT_SUFFIXES = {".swift"}
+# COBOL, and the copybooks it includes. A `.cpy` carries DATA
+# DIVISION text and no PROCEDURE DIVISION, so it mints nothing and is
+# scanned for size like a C header full of prototypes.
+COBOL_SUFFIXES = {".cbl", ".cob", ".cpy", ".CBL", ".COB", ".CPY"}
 # Fortran (1.4.0), free-form only. `.F90` is the same language with the
 # C preprocessor run over it, and `.pf` is pFUnit test source — both are
 # free-form and both are read. Fixed-form (`.f`, `.for`, `.ftn`) is
@@ -106,6 +113,7 @@ SCANNERS: tuple[tuple[set[str], object], ...] = (
     (CPP_SUFFIXES, cpp_declaration_ranges),
     (CSHARP_SUFFIXES, csharp_declaration_ranges),
     (SWIFT_SUFFIXES, swift_declaration_ranges),
+    (COBOL_SUFFIXES, cobol_declaration_ranges),
     (FORTRAN_SUFFIXES, fortran_declaration_ranges),
     (FIXED_FORM_SUFFIXES, fixed_form_declaration_ranges),
     (BRACE_SUFFIXES, js_declaration_ranges),
@@ -128,6 +136,9 @@ METRICS: tuple[tuple[set[str], object, object], ...] = (
     # keyword vocabulary differs, and `guard` is the difference that
     # matters — without it a guard-heavy function reads as branchless.
     (SWIFT_SUFFIXES, swift_branch_points, swift_cognitive),
+    # COBOL closes scopes with hyphenated `END-` words and with the
+    # period that ends a sentence; neither is in the C-family reading.
+    (COBOL_SUFFIXES, cobol_branch_points, cobol_cognitive),
     (FORTRAN_SUFFIXES, fortran_branch_points, fortran_cognitive),
     (FIXED_FORM_SUFFIXES, fortran_branch_points, fortran_cognitive),
 )
@@ -144,7 +155,8 @@ def metrics_for(suffix: str) -> tuple[object, object]:
 # Every extension we attempt declaration detection on at all.
 DECLARATION_SUFFIXES = (
     PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | CPP_SUFFIXES
-    | CSHARP_SUFFIXES | SWIFT_SUFFIXES | FORTRAN_SUFFIXES | FIXED_FORM_SUFFIXES
+    | CSHARP_SUFFIXES | SWIFT_SUFFIXES | COBOL_SUFFIXES
+    | FORTRAN_SUFFIXES | FIXED_FORM_SUFFIXES
     | BRACE_SUFFIXES
 )
 

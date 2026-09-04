@@ -110,6 +110,37 @@ def fortran_branch_points(line: str) -> int:
     return len(_FORTRAN_BRANCH_RE.findall(text))
 
 
+# COBOL's closers are hyphenated words — `END-IF`, `END-PERFORM` — and a
+# word boundary sits between the hyphen and the keyword, so `\bif\b` finds
+# the `IF` inside `END-IF` and every construct counts twice. Stripped
+# first, exactly as Fortran strips `end if` for the same reason.
+_COBOL_CLOSER_RE = re.compile(r"\bEND-[A-Z]+\b", re.I)
+# `WHEN OTHER` is EVALUATE's default arm: the branch not taken by any
+# other, and not a decision of its own — the same call `case default`
+# gets in Fortran.
+_COBOL_DEFAULT_RE = re.compile(r"\bWHEN\s+OTHER\b", re.I)
+_COBOL_BRANCH_RE = re.compile(
+    # `IF`/`ELSE` and `EVALUATE`'s `WHEN` arms are the conditionals.
+    # `UNTIL`, `VARYING` and `TIMES` are the three ways a `PERFORM`
+    # becomes a loop — a bare `PERFORM SOME-PARA` is a call, not a
+    # branch, which is why `PERFORM` itself is absent.
+    # `AND`/`OR` are the boolean operators, counted like `&&` and `||`.
+    r"\b(?:IF|ELSE|WHEN|UNTIL|VARYING|TIMES|AND|OR)\b",
+    re.I,
+)
+
+
+def cobol_branch_points(line: str) -> int:
+    """Decision points on one COBOL statement.
+
+    Counted after the scope terminators and `WHEN OTHER` are removed, so
+    `END-IF` is not a second `IF` and a default arm is not a decision.
+    """
+    text = _COBOL_CLOSER_RE.sub(" ", line)
+    text = _COBOL_DEFAULT_RE.sub(" ", text)
+    return len(_COBOL_BRANCH_RE.findall(text))
+
+
 class DeclRange(NamedTuple):
     """A detected declaration: 1-based inclusive line span, name, kind.
 
@@ -257,6 +288,10 @@ KNOWN_SOURCE_SUFFIXES: dict[str, str] = {
     # matched case-sensitively everywhere here, so the two spellings
     # are two entries or half of real Fortran is invisible.
     ".F90": "Fortran", ".F95": "Fortran", ".F03": "Fortran", ".F08": "Fortran",
+    # COBOL, in both spellings. `.cpy` is a copybook — DATA DIVISION
+    # text with no PROCEDURE DIVISION — and is still COBOL source.
+    ".cbl": "COBOL", ".cob": "COBOL", ".cpy": "COBOL",
+    ".CBL": "COBOL", ".COB": "COBOL", ".CPY": "COBOL",
     # pFUnit test source: free-form Fortran plus `@test` directives.
     ".pf": "Fortran",
     ".sh": "Shell", ".bash": "Shell", ".zsh": "Shell", ".ps1": "PowerShell",

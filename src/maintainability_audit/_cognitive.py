@@ -35,6 +35,12 @@ import re
 
 from ._masking import mask_fortran_lines, mask_lines
 
+# Both live in `parsing`, and `_ranges_core` reaches nothing here, so this
+# is a sibling import rather than a cycle. COBOL's mask is not in
+# `_masking` with the others because it needs the whole file to know which
+# division a line is in — see `_ranges_cobol.mask_cobol_lines`.
+from ._ranges_cobol import mask_cobol_lines
+
 # Constructs that both cost a point and deepen the nesting for whatever
 # they contain.
 _NESTING_NODES = (ast.If, ast.For, ast.AsyncFor, ast.While, ast.ExceptHandler, ast.IfExp)
@@ -172,6 +178,57 @@ def fortran_cognitive(lines: list[str]) -> int:
         score += len(_F_BOOLEAN_RE.findall(body))
         if _F_OPENS_RE.match(statement):
             depth += 1
+    return score
+
+
+_CB_CLOSES_RE = re.compile(r"\bEND-(?:IF|EVALUATE|PERFORM|SEARCH|READ|STRING)\b", re.I)
+_CB_OPENS_RE = re.compile(
+    r"\bIF\b|\bEVALUATE\b|\bPERFORM\b(?=[^.]*\b(?:UNTIL|VARYING|TIMES)\b)|\bSEARCH\b",
+    re.I,
+)
+_CB_ELSE_RE = re.compile(r"^\s*ELSE\b|\bWHEN\b", re.I)  # noqa: S5850 - alternation is intended
+_CB_BOOLEAN_RE = re.compile(r"\b(?:AND|OR)\b", re.I)
+_CB_CONTROL_RE = re.compile(r"\b(?:IF|EVALUATE|UNTIL|VARYING|TIMES|SEARCH)\b", re.I)
+
+
+def cobol_cognitive(lines: list[str]) -> int:
+    """Cognitive complexity for a COBOL paragraph.
+
+    Nesting is read from the constructs themselves, as in Fortran, since
+    COBOL has no braces either. What COBOL adds is a second way to close
+    every open scope at once: **a period ends the sentence and with it
+    every construct the sentence opened.** Classic COBOL leans on that
+    entirely — `IF X DISPLAY Y.` opens and closes an `IF` with no
+    `END-IF` anywhere — and a reader that only counted `END-` terminators
+    would let depth climb monotonically through a paragraph and charge
+    the last statement for every branch above it.
+
+    The `PERFORM` lookahead is the other judgment. `PERFORM SOME-PARA` is
+    a call and opens nothing; `PERFORM UNTIL DONE` is a loop and does.
+    Counting every `PERFORM` as nesting would make an ordinary
+    call-per-line paragraph read as deeply nested.
+    """
+    masked = mask_cobol_lines(lines)
+    score = 0
+    depth = 0
+    for line in masked:
+        statement = line.rstrip()
+        if not statement.strip():
+            continue
+        if _CB_CLOSES_RE.search(statement):
+            depth = max(0, depth - len(_CB_CLOSES_RE.findall(statement)))
+        body = _CB_CLOSES_RE.sub(" ", statement)
+        if _CB_ELSE_RE.search(body):
+            score += 1
+            score += len(_CB_BOOLEAN_RE.findall(body))
+        else:
+            for _ in _CB_CONTROL_RE.finditer(body):
+                score += 1 + depth
+            score += len(_CB_BOOLEAN_RE.findall(body))
+        depth += len(_CB_OPENS_RE.findall(body))
+        if statement.rstrip().endswith("."):
+            # The sentence ended, and with it every scope it opened.
+            depth = 0
     return score
 
 

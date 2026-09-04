@@ -6,6 +6,71 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.7.0 - 2026-09-04
+
+**COBOL is the tenth parsed language, and the first whose declarations have
+no end marker at all.** C closes a body with `}`; Fortran closes one with
+`end`. A COBOL paragraph ends where the next paragraph begins — the
+boundary is the *start* of the next thing, and nothing in the source
+announces it. `scan_bounded` already took the bounding rule as an
+argument, so this needed no change to the shared walk: what is shared is
+that a range never runs past its own body, not the mechanism enforcing it.
+
+### Added
+
+- **`_ranges_cobol`** reads PROCEDURE DIVISION paragraphs from `.cbl`,
+  `.cob` and `.cpy` in both spellings, in fixed-form and free-form source.
+- **`cobol_branch_points` and `cobol_cognitive`.** COBOL closes scopes two
+  ways — hyphenated `END-` words and the period that ends a sentence — and
+  neither is in the C-family reading. Classic COBOL writes `IF X DISPLAY
+  Y.` with no `END-IF` anywhere, so a reader that only decremented on
+  `END-` terminators would let nesting climb through a whole paragraph.
+- **An exemption that has to be disclosed.** The lint requiring every
+  parsed language to reach a complexity analyzer now has a named
+  `NO_EXTERNAL_COMPLEXITY` list, and a second test fails unless each entry
+  is also named in `docs/language-support.md`. An escape hatch nobody sees
+  is how a language ends up quietly measured by half the rubric.
+
+### The judgments, because each is a defect taken the other way
+
+- **A level number is not a declaration.** `01 CUSTOMER-RECORD.` is shaped
+  *exactly* like a paragraph header, and an ordinary program has hundreds
+  of them. No line-local rule can tell them apart, because the difference
+  is which division they are in — so the mask blanks every division before
+  PROCEDURE and the recogniser never sees one. Counting them would have
+  dominated the declaration population every rate divides by.
+- **Programs and sections are containers**, walked into and not graded, or
+  their paragraphs' lines are counted twice.
+- **Area A is the rule, not a guess about indentation.** Headers live in
+  columns 8-11 and statements in 12-72. The first working version allowed
+  one column too many and reported a masked `DISPLAY "A".` as a
+  declaration named DISPLAY, once per statement in the file.
+- **Reading columns is decided by evidence, in the safe direction.** Both
+  formats share extensions, so the file is read to find out. Free-form
+  indented seven spaces is byte-identical in those columns to card source
+  with a blank sequence field, and stripping seven blanks from it changes
+  nothing; what is excluded is code *in* columns 1-7. Reading fixed-form
+  as free-form loses declarations, while the reverse deletes the front of
+  every line and invents findings from the wreckage.
+
+### Known and disclosed
+
+**No offline analyzer reads COBOL.** lizard does not; jscpd reads
+duplication only, which is the half the complexity floor exists to reject.
+The mainframe tooling that would — IBM Developer for z/OS, ADDI, the
+analysis around Dependency Based Build — is licensed and host-resident.
+So the built-in scanner is the only reading COBOL gets, the analyzer tier
+reports it as unmeasured rather than pretending, and both the README and
+the language-support page say so.
+
+A section whose statements sit outside any paragraph mints nothing, `COPY`
+members are not expanded, and `REPLACE` is not applied.
+
+**Not calibrated.** Under the corpus policy decided with 2.4.1, COBOL
+ships parsed and **unanchored**: its findings are as good as its parser,
+and its grade is provisional until the single recalibration that follows
+the remaining scanners.
+
 ## 2.6.0 - 2026-09-04
 
 **Did run seven of this transformation land better than run six?** The last

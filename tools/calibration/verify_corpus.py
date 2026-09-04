@@ -71,12 +71,47 @@ def head_commit(path: Path) -> str:
     ).stdout.strip()
 
 
+def _refuses_to_clobber(destination: Path, *, replace: bool) -> bool:
+    """True when writing here would destroy a corpus nobody asked to replace.
+
+    The corpus is evidence, not output. This script used to write it
+    unconditionally, and `--out` protected nothing: a run whose stdout was
+    redirected elsewhere still overwrote the checked-in corpus, replacing 40
+    pinned repositories with whatever candidate file happened to be passed.
+    A guard failing on the mismatch is what caught it, which is luck rather
+    than design — the same lesson `measure.py --check` learned when it
+    rewrote the evidence it was supposed to be checking against.
+    """
+    if not destination.exists() or replace:
+        return False
+    try:
+        existing: object = len(json.loads(destination.read_text(encoding="utf-8"))["repos"])
+    except (ValueError, KeyError):
+        existing = "an unreadable number of"
+    print(
+        f"refusing to overwrite {destination} ({existing} pinned repositories).\n"
+        "Pass --replace to recalibrate against a new corpus, or --out PATH to "
+        "write somewhere else.",
+        file=sys.stderr,
+    )
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("candidates")
     parser.add_argument("--cache-dir", required=True)
     parser.add_argument("--out", default=str(Path(__file__).with_name("corpus.json")))
+    parser.add_argument(
+        "--replace", action="store_true",
+        help="Overwrite an existing corpus. Required, because the corpus is a pinned "
+             "artifact and replacing it silently discards the commits every stored "
+             "measurement was taken at.",
+    )
     args = parser.parse_args()
+
+    if _refuses_to_clobber(Path(args.out), replace=args.replace):
+        return 2
 
     data = json.loads(Path(args.candidates).read_text(encoding="utf-8"))
     cache = Path(args.cache_dir)

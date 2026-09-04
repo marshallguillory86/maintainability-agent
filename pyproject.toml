@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "maintainability-agent"
-version = "1.10.1"
+version = "2.0.0"
 description = "Maintainability gate and AI remediation prompt generator for CI."
 readme = "README.md"
 # 3.11, not 3.10. `_discovery`, `_pillars` and `_runner` all import

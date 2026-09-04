@@ -83,11 +83,35 @@ CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "te
 # `test_a_scanner_counting_change_is_caught_before_it_rots_the_calibration`
 # now pins the built-in counting so a change like Class 4 fails a test that
 # names this re-run, rather than drifting silently.
+# **2026-09-03, the corpus gained five languages (2.0.0).** The anchor had
+# been 40 repositories of Python, TypeScript and JavaScript while the scanner
+# parsed eight languages, so Java, C, C++, C# and Fortran were scored against
+# medians measured on none of their code. It is now 112 repositories across
+# every parsed language. The original 40 rows are unchanged and still pinned
+# to the commits they were measured at, so the move below is attributable to
+# the languages added and to nothing else. Old -> new:
+#
+#     file_size      0.0858 -> 0.0952
+#     declarations   0.1005 -> 0.0908
+#     duplication    0.28   -> 0.3222
+#     risk           0.0737 -> 0.0826
+#     gates          0.05   -> 0.05
+#     CALIBRATION_C  5.8843 -> 8.7161
+#
+# **`declarations` fell, which is not what the motivating evidence implied.**
+# LAPACK reading 7.18x the old declaration median said "systems code carries
+# denser declarations than web code". The per-language medians say something
+# more specific: C (2.07x) and Fortran (3.90x) are indeed heavy, while Java
+# (0.41x), C# (0.92x) and C++ (0.93x) are light — and there are 45 of those
+# against 27 of the first, so the aggregate median fell. "Systems code" was
+# the wrong unit of analysis; the languages do not behave as a bloc, and a
+# single dramatic repository predicted the direction of the whole corpus
+# incorrectly. Per-language readings are in `docs/calibration-2.0-study.md`.
 DIMENSION_REFERENCES: dict[str, float] = {
-    "file_size": 0.0858,
-    "declarations": 0.1005,
-    "duplication": 0.28,
-    "risk": 0.0737,
+    "file_size": 0.0952,
+    "declarations": 0.0908,
+    "duplication": 0.3222,
+    "risk": 0.0826,
     # Fixed, not corpus-derived — see ``_derive.FIXED_REFERENCES``, which
     # is the authority for this value and carries the reasoning. Stated
     # again here rather than imported, so the two are independent claims
@@ -151,7 +175,7 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 # 2026-08-14: 2.6279 -> 2.2658, fitted against the analyzer-primary mix.
 # 2026-08-31: 2.2658 -> 5.8843, re-fitted after the corpus re-measure above
 # (three of five references moved at once, `duplication` most of all).
-CALIBRATION_C = 5.8843
+CALIBRATION_C = 8.7161
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3

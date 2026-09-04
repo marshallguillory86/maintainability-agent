@@ -6,6 +6,10 @@ The governing document. When another document, a code comment, or a release note
 
 A deterministic maintainability audit that produces a **bounded work order** for an AI coding agent.
 
+**The role, stated once so the rest follows from it: this is the independent check on a generator's output — the role a generator cannot fill for itself.** A tool that writes code and also grades it is reporting on its own work. This one writes nothing, runs no model, and re-derives the same verdict from the same inputs, which is what makes its answer usable as evidence rather than as an opinion. That is a separation-of-duties property before it is a technical one, and it is why determinism is load-bearing rather than a preference: a checker that cannot reproduce last quarter's verdict cannot attest to anything.
+
+The corollary is a boundary, not a modesty statement. **The better a code-generating agent becomes, the more an independent check on it is worth** — so agents and the platforms around them are the customer for what this produces, not the competition. What this tool does not compete on is listed in the [roadmap](roadmap.md#what-this-tool-does-not-compete-on): generation, security scanning, compliance profiles, comprehension of languages it does not parse, IDE experience, model routing.
+
 Not a linter (those exist and are better at it), not an AI reviewer, not a quality dashboard. The scanner and the score exist to aim the remediation prompt. If the prompt were removed, the rest would be a worse version of tools that already ship.
 
 **The primary surface is an AI chat host** — an IDE assistant or chat

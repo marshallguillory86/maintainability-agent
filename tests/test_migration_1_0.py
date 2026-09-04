@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from maintainability_audit._calibration import CALIBRATION_C
 from maintainability_audit.evidence import REPORT_SCHEMA_VERSION
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,7 +29,13 @@ def test_the_guide_names_the_post_0_7_breaks() -> None:
     assert "--analyzers" in text
     assert "point estimate" in lowered
     assert "2.6279" in text
-    assert f"{CALIBRATION_C}" in text
+    # The constant *this* transition moved to, not the one shipping today.
+    # Asserting the live `CALIBRATION_C` was right while 1.0 was current and
+    # became wrong the moment 2.0 re-fitted it: a guide describing the
+    # 0.7 -> 1.0 step would have had to quote a number from a later release
+    # to stay green, which is making history match the present. The live
+    # constant is held by `migration-2.0.md`, whose job it is.
+    assert "2.2658" in text
     assert str(REPORT_SCHEMA_VERSION) in text
     assert "baseline" in lowered
 

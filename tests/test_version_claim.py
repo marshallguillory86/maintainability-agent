@@ -142,6 +142,14 @@ def _major(version: str) -> int:
     return int(matched.group(1))
 
 
+def _documented_versions() -> set[str]:
+    """Versions that CHANGELOG.md documents as a dated release section."""
+    import re
+
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    return set(re.findall(r"^## (\d+\.\d+\.\d+) - \d{4}-\d{2}-\d{2}", text, re.M))
+
+
 def test_no_copy_claims_a_major_line_above_the_latest_release() -> None:
     """D100: the version cannot outrun the releases.
 
@@ -164,7 +172,20 @@ def test_no_copy_claims_a_major_line_above_the_latest_release() -> None:
     tag = _latest_release_tag()
     released = _major(tag.lstrip("v"))
     ahead = {p: v for p, v in copies.items() if _major(v) > released}
+
+    # Amended for 2.0.0. As written, this refused every major release it was
+    # meant to govern: the packaged version must be bumped *before* the tag
+    # can exist, because `release.yml` refuses to publish when the tag and
+    # the package disagree. The bar is not dropped — a declared major line
+    # still has to be a prepared release rather than an aspiration, and the
+    # evidence for that is its own CHANGELOG section. Writing release notes
+    # is exactly the step D85 skipped when it promoted every copy to
+    # `1.0.0rc1` against a v0.9.1 tag, so the check that replaces "not ahead
+    # of the tag" is "not ahead of what has been written down".
+    documented = _documented_versions()
+    ahead = {p: v for p, v in ahead.items() if v not in documented}
     assert not ahead, (
-        f"the package declares a major line above the newest release {tag}: "
-        f"{ahead}. A release candidate is still that claim."
+        f"the package declares a major line above the newest release {tag} "
+        f"with no CHANGELOG section for it: {ahead}. Write the release notes, "
+        "or do not claim the line — a release candidate is still that claim."
     )

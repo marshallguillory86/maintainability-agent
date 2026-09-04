@@ -6,6 +6,49 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.3.0 - 2026-09-04
+
+**The attestation artifact.** The three remediation-integrity mechanisms
+now compose into the record they were built for. No score changes.
+
+### Added
+
+- **`--attestation-output`** writes an independent, reproducible record of
+  a change: what was measured, what the agent was told to change, what it
+  actually changed, and what moved. The fourth emitter on the prompt seam,
+  beside `render_ai_prompt`, `render_agent_instructions` and
+  `render_hostile_audit_prompt`.
+
+  **Why an independent process has to produce it.** A platform that
+  generates code and then reports on its quality is producing a
+  self-assessment — a property of the arrangement, not a criticism of any
+  particular one, and no amount of engineering removes it. The question a
+  reviewer asks is *who checked this, and can they re-derive the check
+  months from now*, and an author cannot be the answer.
+
+  The value is in what it refuses to overstate, so that is what the tests
+  hold:
+
+  - **A mixed result reads as mixed.** A change that stayed in scope while
+    silencing a finding renders as *yes* on the first question and *no* on
+    the second. It cannot be waved as a pass.
+  - **Not asked is not passed.** A question nobody ran is `None` in the
+    record and *not asked* in the document, never `True`. An incomparable
+    ratchet renders as *not established*, because "no dimension regressed"
+    is a claim the evidence cannot support when the scans sit either side
+    of an instrument change.
+  - **Reproducible, and explicitly not signed.** The digest is over the
+    record's own content, so the same commit measured with the same
+    analyzer versions reproduces it and anyone can recompute it. Nothing
+    here holds a key, and "signed" is the word a reader reaches for with an
+    attestation — which is exactly why the document says the opposite in
+    its own text.
+  - **An uncommitted tree is disclosed.** A verdict about "the commit" that
+    actually depends on unstaged work is unreproducible.
+
+  It never opens the diff to judge it and it touches no score, both stated
+  in the artifact rather than left to inference.
+
 ## 2.2.0 - 2026-09-03
 
 The third remediation-integrity mechanism. No score changes.

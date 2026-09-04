@@ -22,6 +22,8 @@ judgments that decide whether the check is usable at all:
 from __future__ import annotations
 
 import copy
+from pathlib import Path
+from types import SimpleNamespace
 
 from maintainability_audit._conformance import scope_conformance
 
@@ -209,3 +211,89 @@ def test_every_marker_is_a_real_directive_a_tool_obeys() -> None:
     assert suppressions_added(prose, set()) == [], (
         "prose about suppressions was read as a suppression"
     )
+
+
+def test_the_gate_reads_clean_not_conformant(tmp_path: Path) -> None:
+    """A gate on scope alone would pass the diff that silenced the finding.
+
+    `--fail-on-out-of-scope` therefore reads `clean`. Exercised through
+    `audit_exit_code`, because the decision this test is about lives in the
+    gate and not in the record.
+    """
+    from maintainability_audit.cli import audit_exit_code
+
+    args = SimpleNamespace(
+        fail_on_new=False, fail_on_gate=False, fail_on_out_of_scope=True,
+        baseline=None, conformance="main...HEAD",
+    )
+    silenced = {"hard_gate_failures": [], "scope_conformance": {
+        "conformant": True, "clean": False, "out_of_scope": []}}
+    honest = {"hard_gate_failures": [], "scope_conformance": {
+        "conformant": True, "clean": True, "out_of_scope": []}}
+
+    assert audit_exit_code(args, silenced) == 1, (
+        "a diff that stayed in scope by silencing the finding passed the gate"
+    )
+    assert audit_exit_code(args, honest) == 0
+
+
+def test_asking_to_fail_without_asking_to_check_is_refused() -> None:
+    """`--fail-on-out-of-scope` with no `--conformance` has nothing to read.
+
+    Exiting 0 would report a clean conformance run that never happened,
+    which is the "absence read as a pass" shape this project treats as a
+    defect class rather than an inconvenience.
+    """
+    from maintainability_audit.cli import audit_exit_code
+
+    args = SimpleNamespace(
+        fail_on_new=False, fail_on_gate=False, fail_on_out_of_scope=True,
+        baseline=None, conformance=None,
+    )
+
+    assert audit_exit_code(args, {"hard_gate_failures": []}) == 2
+
+
+def test_attach_conformance_does_nothing_unless_asked() -> None:
+    from maintainability_audit.cli import attach_conformance
+
+    report = {"root": ".", "work_order": []}
+    attach_conformance(SimpleNamespace(conformance=None), report)
+
+    assert "scope_conformance" not in report, (
+        "the record was attached to a run that never asked for it"
+    )
+
+
+def test_attach_conformance_records_against_a_real_diff(tmp_path: Path) -> None:
+    """The wiring, end to end: report + revspec in, record on the report.
+
+    A real repository, because the record is built from `changed_paths` and
+    `added_lines`, and both are git talking to git.
+    """
+    import subprocess
+
+    from maintainability_audit.cli import attach_conformance
+
+    def run(*args: str) -> None:
+        subprocess.run(args, cwd=tmp_path, check=True, capture_output=True, timeout=120)  # noqa: S603
+
+    run("git", "init", "--quiet", "-b", "main")
+    run("git", "config", "user.email", "test@example.invalid")
+    run("git", "config", "user.name", "Test")
+    run("git", "config", "commit.gpgsign", "false")
+    (tmp_path / "widget.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    run("git", "add", "-A")
+    run("git", "commit", "--quiet", "-m", "first")
+    (tmp_path / "widget.py").write_text("def f():\n    return 1  # noqa\n", encoding="utf-8")
+    run("git", "add", "-A")
+    run("git", "commit", "--quiet", "-m", "silence it")
+
+    report = {"root": str(tmp_path), "work_order": [{"path": "widget.py"}]}
+    attach_conformance(SimpleNamespace(conformance="HEAD~1...HEAD"), report)
+
+    record = report["scope_conformance"]
+    assert record["in_scope"] == ["widget.py"]
+    assert record["conformant"] is True, "the diff touched only the named file"
+    assert record["clean"] is False, "but it silenced the finding rather than fixing it"
+    assert record["suppressions_on_named_paths"] == 1

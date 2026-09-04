@@ -129,3 +129,26 @@ def test_an_absolute_target_path_is_refused(tmp_path: Path) -> None:
 
     assert result.returncode == 2
     assert "absolute" in result.stderr
+
+
+def test_target_path_pairs_are_parsed_and_bad_ones_refused() -> None:
+    """`TARGET=PATH`, and the two ways it can be wrong.
+
+    An absolute path is refused because `--instructions-output-dir` would
+    be silently ignored — the file would land somewhere the caller did not
+    name, which is the quiet kind of wrong.
+    """
+    import pytest as _pytest
+
+    from maintainability_audit.cli import _target_paths
+
+    assert _target_paths(None) == {}
+    assert _target_paths(["bob=.bob/rules.md"]) == {"bob": ".bob/rules.md"}
+    assert _target_paths([" bob = .bob/rules.md "]) == {"bob": ".bob/rules.md"}
+
+    with _pytest.raises(ValueError, match="TARGET=PATH"):
+        _target_paths(["bob"])
+    with _pytest.raises(ValueError, match="TARGET=PATH"):
+        _target_paths(["=/nothing"])
+    with _pytest.raises(ValueError, match="absolute"):
+        _target_paths(["bob=/etc/rules.md"])

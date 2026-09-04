@@ -6,8 +6,8 @@ Only the latest release line receives security fixes.
 
 | Version | Supported |
 |---------|-----------|
-| `2.2.x` | ✅ |
-| < `2.2` | ❌ |
+| `2.3.x` | ✅ |
+| < `2.3` | ❌ |
 
 The line above is the shipped one, and keeping it that way is a
 maintenance task nobody remembers. An audit found this table still

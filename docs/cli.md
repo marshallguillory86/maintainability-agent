@@ -39,6 +39,7 @@ Repeat `--allow-root` to authorize unrelated repository directories. With no exp
 | `--prompt-output` | AI remediation prompt output path. |
 | `--comment-output` | PR comment body output path. |
 | `--agent-instructions-output` | Audit-specific agent instructions output path. |
+| `--attestation-output` | Write the attestation: an independent, reproducible record of what was measured, what the change was told to do, what it did, and what moved. Populated by `--conformance` and `--fail-on-regression`; a question nobody asked renders as *not asked*, never as a pass. Reproducible and **not signed** — the digest is over the record's own content and nothing here holds a key. |
 | `--hostile-prompt-output` | Adversarial audit brief seeded from this run ([ADR 013](adr-013-hostile-audit-prompt.md)). Text only: it does not gate, score, or send anything. |
 | `--sarif-input` | External SARIF file to summarize in the report. Repeatable. |
 | `--changed-only` | Git revspec for changed-file-only mode, e.g. `main...HEAD`. |

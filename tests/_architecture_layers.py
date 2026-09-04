@@ -143,6 +143,11 @@ ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
             "_environment",
             "_work_order_weights", "_backfill"}
 PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
+                # `_attestation` composes the conformance and ratchet
+                # records into one artifact. Presentation because it
+                # renders what the report already holds, and like every
+                # emitter on this seam it computes no score.
+                "_attestation",
                 # ADR 013's emitter: renders, never scores.
                 "_hostile_prompt",
                 # `_html_view` is the ADR 011 HTML skin: it reads the report

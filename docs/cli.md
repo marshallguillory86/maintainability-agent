@@ -57,7 +57,8 @@ Repeat `--allow-root` to authorize unrelated repository directories. With no exp
 | `--install-skill` | Copy the packaged agent skill into the skills directory and exit. Re-run after every upgrade: an installed skill that drifts from the shipped one teaches agents a dead workflow. What it writes is the `_skill_data` payload inside the distribution; the command reads that payload and compares it against what is already installed, and it does not consult the repository. That the payload matches the reviewed `skills/maintainability-agent/SKILL.md` is held by the suite — `tests/test_wheel_contents.py` asserts it byte-for-byte against a staged build — not by a check at run time. |
 | `--skills-dir` | Where `--install-skill` writes (default `~/.claude/skills`). |
 | `--force-skill` | With `--install-skill`: overwrite a differing installed copy and remove files the package no longer ships. Without it, a differing copy is refused with the list of differences against the packaged payload. |
-| `--target` | Instruction target. Repeatable. |
+| `--target` | Instruction target. Repeatable. Any name is accepted; one this tool has no built-in convention for must bring its own `--target-path`. |
+| `--target-path` | `TARGET=PATH` — where that agent reads its standing instructions, relative to `--instructions-output-dir`. Repeatable. Required for an agent with no built-in convention, and overrides the built-in path for one that has. The built-in list will always trail the market, and guessing a path writes a plausible file the agent never opens — so an unknown target is refused with the flag to use, rather than given a generated filename. |
 | `--instructions-output-dir` | Output directory for generated instruction files. |
 
 ## Examples

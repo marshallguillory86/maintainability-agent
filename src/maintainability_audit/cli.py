@@ -37,7 +37,12 @@ from .config import (
     repository_path,
 )
 from .git_tools import changed_paths
-from .instructions import instruction_path_for_target, write_instruction_pack
+from .instructions import (
+    INSTRUCTION_TARGETS,
+    UnknownTarget,
+    instruction_path_for_target,
+    write_instruction_pack,
+)
 from .prompts import render_agent_instructions, render_ai_prompt, render_hostile_audit_prompt
 from .renderers import render_html, render_markdown, render_pr_comment
 from .report import build_report
@@ -134,9 +139,18 @@ def _add_setup_actions(parser: argparse.ArgumentParser) -> None:
              "differing copy is refused with the list of differences.",
     )
     parser.add_argument(
+        "--target-path",
+        action="append",
+        metavar="TARGET=PATH",
+        help="Where a target's standing instructions go, e.g. "
+             "`--target-path bob=.bob/instructions.md`. Required for any agent "
+             "this tool has no built-in convention for; overrides the built-in "
+             "path for one it does. The target list will always trail the "
+             "market, and guessing a path writes a file the agent never opens.",
+    )
+    parser.add_argument(
         "--target",
         action="append",
-        choices=["generic", "claude-code", "codex", "cursor", "copilot", "windsurf"],
         help="Instruction target. Repeatable. Used with --init-agent-standards.",
     )
     parser.add_argument("--instructions-output-dir", default=".", help="Directory for generated instruction files.")
@@ -258,6 +272,28 @@ def _install_skill_action(args: argparse.Namespace) -> int:
     return 0
 
 
+
+def _target_paths(pairs: list[str] | None) -> dict[str, str]:
+    """`TARGET=PATH` arguments, as a mapping.
+
+    An absolute path is refused: the instruction pack is written relative
+    to `--instructions-output-dir`, so an absolute one would silently
+    ignore the directory the caller named.
+    """
+    overrides: dict[str, str] = {}
+    for pair in pairs or []:
+        target, separator, path = pair.partition("=")
+        if not separator or not target.strip() or not path.strip():
+            raise ValueError(f"--target-path expects TARGET=PATH, got {pair!r}")
+        if Path(path).is_absolute():
+            raise ValueError(
+                f"--target-path {pair!r} is absolute; paths are relative to "
+                "--instructions-output-dir"
+            )
+        overrides[target.strip()] = path.strip()
+    return overrides
+
+
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
@@ -276,8 +312,15 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(args.root).resolve()
     config = _interactive_config(root, args.config)
     if args.init_agent_standards:
-        targets = args.target or ["generic", "claude-code", "codex", "cursor", "copilot", "windsurf"]
-        write_instruction_pack(targets, Path(args.instructions_output_dir).resolve(), config)
+        targets = args.target or list(INSTRUCTION_TARGETS)
+        try:
+            overrides = _target_paths(args.target_path)
+            write_instruction_pack(
+                targets, Path(args.instructions_output_dir).resolve(), config, overrides
+            )
+        except (UnknownTarget, ValueError) as failure:
+            print(str(failure), file=sys.stderr)
+            return 2
         return 0
 
     if args.backfill:

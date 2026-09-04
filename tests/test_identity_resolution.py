@@ -288,7 +288,11 @@ def test_fail_on_new_uses_structured_matching_not_a_label_set_difference() -> No
                 offenders.append(f"{path.name}:{node.lineno}")
     assert not offenders, f"label-set finding comparison remains at {offenders}"
 
-    cli_tree = ast.parse((package / "cli.py").read_text(encoding="utf-8"))
+    # `audit_exit_code` moved to `_gates` in 2.2.0, when `cli.py` crossed
+    # the 500-line file gate. The guard follows the function rather than the
+    # filename: what it pins is that the gate matches findings structurally,
+    # wherever that gate lives.
+    cli_tree = ast.parse((package / "_gates.py").read_text(encoding="utf-8"))
     audit_exit = next(
         node for node in cli_tree.body
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))

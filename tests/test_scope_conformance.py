@@ -220,10 +220,11 @@ def test_the_gate_reads_clean_not_conformant(tmp_path: Path) -> None:
     `audit_exit_code`, because the decision this test is about lives in the
     gate and not in the record.
     """
-    from maintainability_audit.cli import audit_exit_code
+    from maintainability_audit._gates import audit_exit_code
 
     args = SimpleNamespace(
         fail_on_new=False, fail_on_gate=False, fail_on_out_of_scope=True,
+        fail_on_regression=False,
         baseline=None, conformance="main...HEAD",
     )
     silenced = {"hard_gate_failures": [], "scope_conformance": {
@@ -244,10 +245,11 @@ def test_asking_to_fail_without_asking_to_check_is_refused() -> None:
     which is the "absence read as a pass" shape this project treats as a
     defect class rather than an inconvenience.
     """
-    from maintainability_audit.cli import audit_exit_code
+    from maintainability_audit._gates import audit_exit_code
 
     args = SimpleNamespace(
         fail_on_new=False, fail_on_gate=False, fail_on_out_of_scope=True,
+        fail_on_regression=False,
         baseline=None, conformance=None,
     )
 
@@ -255,7 +257,7 @@ def test_asking_to_fail_without_asking_to_check_is_refused() -> None:
 
 
 def test_attach_conformance_does_nothing_unless_asked() -> None:
-    from maintainability_audit.cli import attach_conformance
+    from maintainability_audit._gates import attach_conformance
 
     report = {"root": ".", "work_order": []}
     attach_conformance(SimpleNamespace(conformance=None), report)
@@ -273,7 +275,7 @@ def test_attach_conformance_records_against_a_real_diff(tmp_path: Path) -> None:
     """
     import subprocess
 
-    from maintainability_audit.cli import attach_conformance
+    from maintainability_audit._gates import attach_conformance
 
     def run(*args: str) -> None:
         subprocess.run(args, cwd=tmp_path, check=True, capture_output=True, timeout=120)  # noqa: S603

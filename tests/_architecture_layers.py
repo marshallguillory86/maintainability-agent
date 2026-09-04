@@ -90,6 +90,10 @@ SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "id
             "_test_execution",
             # Path pairing and TDD-shaped constructs. Not chronology.
             "_test_pairing",
+            # Reads build manifests to name the command that runs the tests.
+            # A scanner because it reads the tree; it never runs anything,
+            # and it only ever supplies a setup question's default.
+            "_test_commands",
             "history", "_adapters",
             # `_generic` is the same layer: it turns tool output into
             # findings, differing only in that its parsers are shared

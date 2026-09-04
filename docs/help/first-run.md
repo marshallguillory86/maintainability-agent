@@ -48,6 +48,24 @@ in.** Answer `yes` to running the suite and the next call asks one more:
 
 - the exact test command to run, e.g. `pytest -q` or `npm test`.
 
+**The question arrives pre-filled where the repository answers it.** Since
+2.5.0 the tool reads the tree's build manifests — `Package.swift`,
+`fpm.toml`, `Cargo.toml`, `go.mod`, `CMakeLists.txt`, `pom.xml`,
+`build.gradle`, a `.sln`, `package.json`, or a declared `[tool.pytest]`
+section — and offers the command they imply, naming the file it read.
+Accept it, edit it, or replace it; whatever you submit is what gets stored.
+It is only ever a default. The `require_test_command` hard gate asks
+whether *you* documented a command, so a suggestion the tool made and you
+never answered does not satisfy it.
+
+An Xcode project with no `Package.swift` is left blank on purpose: bare
+`xcodebuild test` needs a `-scheme` and usually a `-destination`, and
+neither can be read off the tree, so there is no command to offer that
+would run.
+
+Clearing the line still cancels the opt-in, exactly as a blank answer
+always did.
+
 This is the one exception to the tool never running the audited tree
 (Decision 9, amended 2026-08-31): it executes only the command you name, only
 because you opted in, and only for this repository. A blank answer cancels the

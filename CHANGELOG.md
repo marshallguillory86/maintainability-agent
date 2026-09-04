@@ -6,6 +6,53 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.5.0 - 2026-09-04
+
+**The repository answers the test-command question.** `expected_commands.test`
+was hand-typed on every tree, and the prompt's example was `pytest`, so the
+question was hardest to answer exactly where this tool had just learned to
+parse the language: a `Package.swift` beside a `Tests/` directory says
+`swift test` as plainly as a manifest says anything.
+
+### Added
+
+- **`_test_commands`** reads build manifests and offers the command they
+  imply as the setup question's default, naming the file it read:
+  `swift test` (`Package.swift`), `fpm test`, `cargo test`,
+  `go test ./...`, `ctest`, `mvn test`, `gradle test`, `dotnet test`,
+  `npm test` and `pytest`. Nothing is executed — whether the suite may
+  run remains the Class 5 opt-in, default off.
+- The default reaches **both surfaces identically**. Chat and MCP carry it
+  in the question's `default` field; the CLI inserts it into the input line
+  through `readline`, so Enter accepts and clearing the line still cancels
+  the opt-in exactly as a blank answer always did. A "press Enter to
+  accept" prompt would have taken that cancellation away.
+
+### What it refuses to guess
+
+A command that cannot run is worse than no suggestion, so three cases are
+deliberately blank:
+
+- **`xcodebuild test`**, which the roadmap named as a target and which is
+  not shipped. Bare `xcodebuild test` needs `-scheme` and usually
+  `-destination`; neither is derivable from the tree, so every suggestion
+  it could make is a command that fails.
+- **A Swift package with no test target**, where `swift test` exits
+  non-zero. `Tests/` or a `.testTarget` is required, not just a manifest.
+- **npm's placeholder `scripts.test`** — the `echo "Error: no test
+  specified" && exit 1` that exists in order not to be a test command.
+  `CMakeLists.txt` without `enable_testing()` is refused for the same
+  reason, and `go test` is offered as `./...` because the bare form tests
+  only the root package and exits zero.
+
+### Unchanged, deliberately
+
+Detection **suggests and never decides.** The `require_test_command` hard
+gate asks whether a *human documented* a command; a value the tool wrote
+into the config unasked would satisfy that gate on evidence it invented
+about itself. A test pins that a detectable command does not silence the
+gate.
+
 ## 2.4.1 - 2026-09-04
 
 **Swift shipped unreachable.** `.swift` was routed to its scanner and

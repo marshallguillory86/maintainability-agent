@@ -226,21 +226,35 @@ def run_tests_pending(root: Path) -> bool:
             and "test_execution" not in stored)
 
 
-def test_command_questions() -> list[dict[str, Any]]:
+def test_command_questions(root: Path | None = None) -> list[dict[str, Any]]:
     """The one command, asked only of someone who opted into running it.
 
     A free-text answer (empty options), the second stage of the opt-in the
     way the labor rates are the second stage of the economic scenario.
+
+    When the tree's manifests name a runner, that command is the question's
+    `default` and the prompt says which file proposed it. It is a default,
+    not a decision: the operator's answer is what gets stored, and blank
+    still cancels the opt-in — a pre-filled field the operator clears is
+    the same cancellation it always was.
     """
+    from ._test_commands import suggested_test_command
+
+    suggested = suggested_test_command(root) if root is not None else None
+    detected = " ".join(suggested.command) if suggested is not None else ""
+    because = (
+        f"Detected `{detected}` from {suggested.evidence}. "
+        if suggested is not None else ""
+    )
     return [{
         "name": "test_command",
         "prompt": (
-            "The command that runs this repository's test suite "
+            f"{because}The command that runs this repository's test suite "
             "(e.g. `pytest`, `npm test`). It runs in the repository root, "
             "and leaving it blank cancels the opt-in."
         ),
         "options": [],
-        "default": "",
+        "default": detected,
     }]
 
 
@@ -334,7 +348,7 @@ def setup_schema(root: Path | None = None):
     if root is not None and economics_bounds_pending(root):
         return _schema_for(economics_bound_questions())
     if root is not None and test_command_pending(root):
-        return _schema_for(test_command_questions())
+        return _schema_for(test_command_questions(root))
     return _schema_for(setup_questions(load_config(None)))
 
 

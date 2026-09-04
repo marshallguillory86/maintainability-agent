@@ -22,6 +22,7 @@ sat in ``DEFAULTS``, documented as reserved, read by nothing, from
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import sys
 from pathlib import Path
@@ -190,11 +191,53 @@ def maybe_prompt_economics(root: Path, config: dict) -> None:
     print(f"Wrote {written}")
 
 
+def _input_with_default(prompt: str, default: str) -> str:
+    """`input()` with the line pre-filled, where the terminal allows it.
+
+    `readline` is what makes the default *editable* rather than merely
+    described: the text is inserted into the line buffer, so Enter submits
+    it, backspace edits it, and clearing it returns the empty string that
+    has always meant "cancel". Without that, a pre-filled default and a
+    blank-means-cancel rule cannot both be true on one keystroke.
+
+    Absent or unusable `readline` — Windows without pyreadline, a terminal
+    that refuses the hook — falls back to a plain `input()`. The default is
+    still named in the prompt text, so the operator loses the keystroke and
+    not the information. Never let this be the thing that fails a setup.
+    """
+    if not default:
+        return input(prompt)
+    try:
+        import readline
+    except ImportError:
+        return input(prompt)
+
+    def _prefill() -> None:
+        readline.insert_text(default)
+        readline.redisplay()
+
+    try:
+        readline.set_startup_hook(_prefill)
+        return input(prompt)
+    except Exception:  # noqa: BLE001 - a cosmetic hook must not fail setup
+        return input(prompt)
+    finally:
+        # Global state: a hook left installed would pre-type this command
+        # into whatever the session asks next.
+        with contextlib.suppress(Exception):
+            readline.set_startup_hook()
+
+
 def maybe_prompt_test_command(root: Path, config: dict) -> None:
     """Ask the opted-in operator for the test command, once -- the CLI half
     of the Class 5 second stage, mirroring the labor-rate ask. Fires only at
     a TTY, only when the suite was opted into and no command is stored, and
     a blank answer cancels the opt-in. Nothing runs until a command exists.
+
+    Where the tree's manifests name a runner, the line is **pre-filled**
+    with that command rather than merely mentioning it, so this surface and
+    the MCP one carry the same default in the same field: Enter accepts,
+    editing replaces, and clearing the line cancels exactly as before.
     """
     import shlex
 
@@ -209,10 +252,19 @@ def maybe_prompt_test_command(root: Path, config: dict) -> None:
     if (config.get("expected_commands") or {}).get("test"):
         return
 
-    answer = input(
+    from ._test_commands import suggested_test_command
+
+    suggested = suggested_test_command(root)
+    detected = " ".join(suggested.command) if suggested is not None else ""
+    prompt = (
+        f"Detected `{detected}` from {suggested.evidence}. The command that "
+        "runs this repository's test suite (Enter to accept, clear the line "
+        "to cancel running it): "
+        if suggested is not None else
         "The command that runs this repository's test suite, e.g. `pytest` "
         "(Enter to cancel running it): "
-    ).strip()
+    )
+    answer = _input_with_default(prompt, detected).strip()
 
     from ._safe_write import write_bounded
 

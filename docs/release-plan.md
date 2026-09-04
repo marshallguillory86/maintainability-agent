@@ -4,13 +4,13 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 ## Where this actually stands
 
-*Measured 2026-09-01. Regenerate the counts before quoting them: the previous version of this table survived fifty-five commits past the point it stopped being true, and then did it again — an audit on 2026-08-26 found it still naming 0.7.0 as the last tag while v0.9.1 was shipped and 26 further commits sat on the branch, and a v1.0 readiness audit on 2026-08-31 found the counts stale a third time. Three times now, in the paperwork of the project that exists to catch drift.*
+*Measured 2026-09-04. Regenerate the counts before quoting them: the previous version of this table survived fifty-five commits past the point it stopped being true, and then did it again — an audit on 2026-08-26 found it still naming 0.7.0 as the last tag while v0.9.1 was shipped and 26 further commits sat on the branch, and a v1.0 readiness audit on 2026-08-31 found the counts stale a third time. Three times now, in the paperwork of the project that exists to catch drift.*
 
 | Fact | Value |
 |---|---|
-| Last tagged version | v2.4.0 |
-| Production code | 24,267 lines across 101 modules |
-| Tests | 2,040 collected across 179 files |
+| Last tagged version | v2.4.1 |
+| Production code | 25,601 lines across 107 modules |
+| Tests | 2,130 collected across 189 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
 | Known open exit conditions in Phases 0–5 | Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) **shipped**. |
 | Later phases outstanding | **None.** 6.1–6.4, 7.1–7.5 and 8.1–8.10 are all shipped; v1.0.0 was tagged 2026-09-01. This row claimed 1.0 was still waiting on acceptance, the hostile audit and the tag for nine releases after all three were done — the fourth time this table has outlived its own truth, and the reason 7.2 forbids exactly this. |

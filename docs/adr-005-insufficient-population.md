@@ -21,7 +21,7 @@ Two consequences, both bad:
 - A new repository earns A+ on its first commit and gets *worse* as real code arrives. The scale rewards emptiness.
 - The verified grade — the field stage 5 introduced specifically so that a grade means something — is issued in exactly the case where it cannot.
 
-The scale is calibrated against 40 mature repositories. The smallest carries **32 source files and 139 declarations** (lodash). Below that, the tool is extrapolating outside the range it was calibrated on, and saying so is cheaper than pretending otherwise.
+The scale is calibrated against 112 mature repositories (40 until 2.0.0). The smallest carries **32 source files and 139 declarations** (lodash). Below that, the tool is extrapolating outside the range it was calibrated on, and saying so is cheaper than pretending otherwise.
 
 ## Options
 
@@ -89,7 +89,7 @@ Withholding a score is not the end of the conversation, and a reader who lands t
 
 **2. Take the findings without a score.** For a genuinely small repository, the population does not exist and no rescan will conjure it. That is not a failure state: **findings are never suppressed**, so a twelve-file service still gets every located, verifiable work item — a 300-line function, a duplicated block, a risk pattern — each with its line, its target and its verification command. Everything in the work order survives; only the rates are withheld. A user in this situation should be told they have a complete audit and no score, not shown an error.
 
-**3. Calibrate a scale that fits.** For an organization whose whole estate is small services, a scale fitted to 40 mature repositories is the wrong instrument, and lowering its floor would not make it the right one — it would only resume extrapolating. The honest path is a **calibration profile**: a named bundle of a reference corpus, the constant fitted to it, the population floors derived from its minima, and the band boundaries drawn from its percentiles.
+**3. Calibrate a scale that fits.** For an organization whose whole estate is small services, a scale fitted to mature open-source repositories is the wrong instrument, and lowering its floor would not make it the right one — it would only resume extrapolating. The honest path is a **calibration profile**: a named bundle of a reference corpus, the constant fitted to it, the population floors derived from its minima, and the band boundaries drawn from its percentiles.
 
 That requires separating two things this codebase currently calls by one word:
 

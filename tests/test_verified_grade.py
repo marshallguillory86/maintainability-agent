@@ -51,6 +51,15 @@ SCORE_V2_FIELDS = (
 )
 
 
+#: The corpus the shipped reference block names. 2.0.0 extended it from
+#: three languages to eight; `test_readme_claims` holds the report to
+#: `corpus.json` itself, and this contract only asserts the block did not
+#: change in any other way.
+CORPUS_LANGUAGES = [
+    "Python", "TypeScript", "JavaScript", "Java", "C", "C++", "C#", "Fortran",
+]
+
+
 def _complete(tmp_path: Path) -> dict:
     _tested_repo(tmp_path)
     _commit(tmp_path, "start")
@@ -289,7 +298,7 @@ def test_not_applicable_rollup_is_the_only_change_to_the_pre_stage_five_anchor(
     # unchanged; the report now says what it is a multiple of.
     assert shipped["reference"] == {
         **expected["reference"],
-        "corpus_languages": ["Python", "TypeScript", "JavaScript"],
+        "corpus_languages": CORPUS_LANGUAGES,
         "corpus_note": shipped["reference"]["corpus_note"],
     }
     assert shipped["categories"] == {

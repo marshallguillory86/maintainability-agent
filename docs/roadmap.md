@@ -6,7 +6,7 @@ This project should stay a thin orchestration and prompt layer, not a replacemen
 
 ## Shipped
 
-Dependency-light native scanner; Markdown, JSON, SARIF and PR-comment output; bounded AI remediation prompt; changed-only mode; baseline gating; agent instruction packs; ISO/IEC 25010-inspired rubric calibrated against a query-selected 40-repo corpus; git-history aspects (churn, hotspots, coupling, ownership); 92% coverage gate; portable invokable skill for Claude Code, Codex and Copilot Chat; optional local MCP server (writes only its five disclosed config/state artifacts, never source or reports) for Codex and its VS Code extension.
+Dependency-light native scanner; Markdown, JSON, SARIF and PR-comment output; bounded AI remediation prompt; changed-only mode; baseline gating; agent instruction packs; ISO/IEC 25010-inspired rubric calibrated against a query-selected corpus (40 repositories of Python/TypeScript/JavaScript through 1.10.x; 112 across all eight parsed languages from 2.0.0); git-history aspects (churn, hotspots, coupling, ownership); 92% coverage gate; portable invokable skill for Claude Code, Codex and Copilot Chat; optional local MCP server (writes only its five disclosed config/state artifacts, never source or reports) for Codex and its VS Code extension.
 
 **Nine declaration languages**, each shipped as its own minor release: Python and Java, JS/TS/JSX and HTML, then C (1.1.0), C++ (1.2.0), C# (1.3.0), free-form Fortran (1.4.0) and fixed-form Fortran (1.6.0), over one shared walk in `_ranges_core` where a language is a module and a row. Fortran is the first with no braces, so the walk takes its bounding rule as an argument. Fortran also gained an analyzer adapter (fortitude, 1.5.0), its own complexity and cognitive readings rather than the C-family default (1.6.0), and toolchain practice detection (1.7.0). Per-language scope and misses are in [language support](language-support.md).
 
@@ -28,7 +28,7 @@ The evidence model, its property tests, consumer migration and the version-2 con
 
 ## Next
 
-**Swift** — see [language adapters](#language-adapters) — and the **calibration corpus extension**, which is its own release because it re-grades every repository and needs a stated sampling frame before any repository is cloned.
+**Swift** — see [language adapters](#language-adapters). The remediation-integrity checks below are the other near-term block.
 
 ## Language adapters
 
@@ -49,7 +49,7 @@ Go and Rust remain named in [ADR 006](decisions.md) as unwritten on exactly thes
 **Two gaps that widen with every language added**, and should be closed alongside rather than after:
 
 - **Test-command detection stops at Python.** `_test_execution` knows `pytest -q`; `swift test`, `xcodebuild test`, `fpm test`, `ctest`, `go test` and `cargo test` are unrecognised, so `expected_commands.test` stays hand-configured on every non-Python tree. Swift lands in 1.9.0 with that gap unless it is closed alongside. Fortran's practice detection (1.7.0) reads `fpm.toml` but nothing runs from it.
-- **The calibration corpus is 40 JS/TS/Python repositories.** Every language above is scored against references derived from code unlike it — measured, not hypothetical: LAPACK read 7.18x the declaration median. [The audit](audit-v091-v170.md#f1--the-calibration-corpus-contains-none-of-four-claimed-languages-high) records this as a disclosure gap, and each new language inherits it. Extending the corpus moves `CALIBRATION_C` and re-grades every repository, so it is a deliberate release of its own, not a patch bundled with a scanner.
+- **A new language inherits whatever the corpus does not hold.** This was the sharper of the two gaps until 2.0.0: the corpus was 40 JS/TS/Python repositories and LAPACK read 7.18x the declaration median against an anchor containing no Fortran. It is now 112 repositories across all eight parsed languages, so the gap closes for what ships today — and reopens for every language added after, since a scanner without corpus members is scored against code unlike it again. Extending the corpus moves `CALIBRATION_C` and re-grades every repository, so it stays a release of its own rather than a patch bundled with a scanner.
 
 **Not scheduled, and the distinction matters.** Go, Rust, Kotlin, Scala, Ruby, PHP and the rest are classified by discovery and may be measured by adapters, but no scanner is scheduled for any of them. They are not refused — they are unwritten, on the terms above. A language moves onto this list when it is decided here, not by being named in an older register entry.
 
@@ -75,6 +75,24 @@ Three checks close it, in the order they are worth building:
 
 Each of these becomes real by being enforced, not by being described here, and each needs its own falsifier. Scope conformance likely earns an ADR when it is built; a check that decides whether a diff was obedient is a new kind of claim for this tool to make.
 
+### The umbrella: an attestation artifact
+
+The three checks above are mechanisms. What they add up to is one thing worth naming: **a per-change record that an independent process can produce and a generator cannot produce about itself.**
+
+Signed, reproducible, and derived from one run: what was measured, what the agent was *told* to change, what it *actually* changed, whether it stayed inside the work order, and what moved on each dimension. A code-generating agent has an audit trail of its own actions; that is a self-report. This is the second opinion, and it is the shape a regulated reviewer asks for — the question there is never "is the tool good", it is "who checked the vendor's output, and can they re-derive the check months later".
+
+This is the one place where determinism stops being an engineering preference and becomes the product. A tool that routes across models cannot re-derive last quarter's verdict; this one can, byte for byte, which is why the attestation can be evidence rather than a log line.
+
+### Two features that only a deterministic, unmetered checker can offer
+
+**Run-over-run comparison of generated output.** Where an agent performs the same class of work repeatedly — a migration, a framework upgrade, a codemod applied across services — nobody measures whether run seven produced better code than run six. The generator cannot answer it: its output is not reproducible and it has no memory across runs. This tool already has pinned references, structured finding identity and scan history; comparing two runs of the same transformation against a fixed anchor is a report, not new machinery. The value is highest exactly where volume is highest and review capacity is lowest.
+
+**The work not sent.** Every finding this tool resolves deterministically, and every diff it keeps bounded, is work that never reaches a metered agent. Under per-action pricing that is a number with a currency attached, and the tool that produces it is the one with no incentive to inflate it. Report it as an observation, not a saving — the honest form is "these findings were resolved without an agent, and the work order named N items rather than an open-ended rewrite", which is measurable, rather than a modelled cost avoidance, which is not. Anything stronger would be the economic-ladder claim [ADR 004](adr-004-economic-context.md) has not earned.
+
+### What this tool does not compete on
+
+Named because the failure mode for a one-maintainer project is competing everywhere and winning nowhere. **Code generation. Security scanning and compliance profiles. Comprehension of languages it does not parse. IDE experience. Model routing.** Tools that do those things are the customer for what this produces, not the competition — and the better a generator gets, the more an independent check on its output is worth.
+
 **Related, and named separately because it is a detector rather than a gate:** *tests that assert implementation details instead of behaviour* is listed under Additional detectors below. It is the direct answer to the review problem the same article raises — generated tests that look like yours and slide through review — and it is aspirational today.
 
 ## Then
@@ -91,7 +109,7 @@ Each of these becomes real by being enforced, not by being described here, and e
 
 **Per-repository rubric overrides.** Currently refused: the rubric is a standard, and a standard everyone edits stops being one. Any override mechanism must label its output a **house variant** so it cannot be compared to a standard score.
 
-**Delivery** — a GitHub Action wrapper that posts and updates PR comments; GitLab and Azure DevOps adapters; historical trend reporting.
+**Delivery** — GitLab and Azure DevOps adapters. The GitHub Action (`action.yml`), the PR-comment body (`--comment-output`) and historical trend reporting all **ship**; this line listed them as future work long after they landed, and an external evaluation of the tool got the CI story right by reading the README *despite* this roadmap. A document that under-claims is the same defect as one that over-claims — it just fails in the direction that costs adoption instead of credibility.
 
 ## Distant future
 

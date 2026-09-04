@@ -49,12 +49,20 @@ temptation runs the other way.
   refused** rather than dropping them silently — a reader who cannot see a
   refusal concludes there was no history.
 
-### Still open
+### Scope
 
-The cross-repository shape: one codemod applied to forty services is where
-this is worth the most, and it needs history from forty repositories joined
-on the label. What ships is one repository's series. Nothing about the
-record shape blocks the wider version.
+One repository's history. The comparison joins the runs recorded in the
+tree being audited, which is the case the audiences in
+`product-intent.md` actually have: the same agent doing the same kind of
+work in one repository, over and over — a framework upgrade done in six
+passes, a migration re-run.
+
+*Corrected after release rather than quietly rewritten: this section
+originally announced a cross-repository version, over a fleet of
+services, as the case "where this is worth the most". No audience in
+`product-intent.md` is a platform team with a service fleet, and no such
+direction had been decided. It was an invented roadmap commitment and it
+is withdrawn.*
 
 ## 2.5.0 - 2026-09-04
 

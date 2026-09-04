@@ -49,6 +49,29 @@ from .report import build_report
 from .sarif import read_sarif_inputs, report_to_sarif
 
 
+def _add_gate_arguments(parser: argparse.ArgumentParser) -> None:
+    """What can make a run fail, and the conformance record behind one.
+
+    Split from `add_arguments` when the conformance flags took it past this
+    project's own function-length gate — which is the gate doing its job on
+    the change that added a gate.
+    """
+    parser.add_argument("--fail-on-gate", action="store_true", help="Exit 1 when hard gates fail.")
+    parser.add_argument(
+        "--conformance",
+        metavar="REVSPEC",
+        help="Report how a diff relates to the work order, e.g. `main...HEAD`. "
+             "The bounded work order says 'fix exactly these and refactor nothing "
+             "else'; without this the bound is an instruction nothing checks. "
+             "Reports only unless --fail-on-out-of-scope is passed.",
+    )
+    parser.add_argument(
+        "--fail-on-out-of-scope", action="store_true",
+        help="With --conformance, exit 1 when the diff touched files the work "
+             "order did not name and that do not pair to one as its test.",
+    )
+
+
 def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--version", action="version", version=f"maintainability-agent {VERSION}")
     parser.add_argument("--root", default=".", help="Repository root to scan.")
@@ -115,7 +138,7 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
              "The shape of a series is what a trend reads, and a thousand "
              "commits is hours of work nobody asked for.",
     )
-    parser.add_argument("--fail-on-gate", action="store_true", help="Exit 1 when hard gates fail.")
+    _add_gate_arguments(parser)
     _add_setup_actions(parser)
 
 
@@ -202,6 +225,22 @@ def write_outputs(args: argparse.Namespace, report: dict, rendered: str) -> None
                        json.dumps(report_to_sarif(report), indent=2) + "\n", json_artifact=True)
 
 
+def attach_conformance(args: argparse.Namespace, report: dict) -> None:
+    """Record how the diff relates to the work order, when asked.
+
+    Assembly, not scoring: the record is attached to the report and reaches
+    no dimension, because whether a diff was obedient is a fact about an
+    agent's behaviour and not evidence about the code's condition.
+    """
+    if not args.conformance:
+        return
+    from ._conformance import scope_conformance
+
+    root = Path(report["root"])
+    changed = changed_paths(root, args.conformance)
+    report["scope_conformance"] = scope_conformance(report, changed, args.conformance)
+
+
 def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
     if args.fail_on_new:
         # Structured matching, never a label-set difference: a label
@@ -212,6 +251,13 @@ def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
             return 1
     if args.fail_on_gate and report["hard_gate_failures"]:
         return 1
+    if args.fail_on_out_of_scope:
+        record = report.get("scope_conformance")
+        if record is None:
+            print("--fail-on-out-of-scope needs --conformance REVSPEC", file=sys.stderr)
+            return 2
+        if record["out_of_scope"]:
+            return 1
     return 0
 
 
@@ -294,6 +340,13 @@ def _target_paths(pairs: list[str] | None) -> dict[str, str]:
     return overrides
 
 
+def _parse(argv: list[str]) -> tuple[argparse.ArgumentParser, argparse.Namespace]:
+    """The parser comes back too: `main` still needs it for `parser.error`."""
+    parser = argparse.ArgumentParser()
+    add_arguments(parser)
+    return parser, parser.parse_args(argv)
+
+
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
@@ -302,10 +355,7 @@ def main(argv: list[str] | None = None) -> int:
 
         return mcp_server.main(argv[1:])
 
-    parser = argparse.ArgumentParser()
-    add_arguments(parser)
-    args = parser.parse_args(argv)
-
+    parser, args = _parse(argv)
     if args.install_skill:
         return _install_skill_action(args)
 
@@ -370,6 +420,9 @@ def main(argv: list[str] | None = None) -> int:
     # escalated, and only delivered advice is recorded as targeted.
     record_scan_and_attach(report, config, history_path, Path(report["root"]),
                            record=bool(record), want_targets=bool(args.prompt_output))
+    # Before rendering, so the record is in the report every presentation
+    # and every consumer reads, rather than only in the exit code.
+    attach_conformance(args, report)
     rendered = _render_presentation(args, report, history_path)
     write_outputs(args, report, rendered)
     mark_repo_seen(root)  # completed audit: not a first run now, whatever the gate says (D13)

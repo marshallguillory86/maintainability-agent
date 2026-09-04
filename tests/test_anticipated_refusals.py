@@ -38,6 +38,13 @@ TRANSPORT_MODULES = (MCP_SERVER, PACKAGE / "_mcp_resources.py")
 # Exception subclasses that must not be translated. A reason is the
 # proof; an empty string is not a classification.
 EXCLUSIONS: dict[str, str] = {
+    "UnknownTarget": (
+        "CLI-only. `--init-agent-standards` is a generator command that "
+        "returns before any audit runs and has no MCP door, so this refusal "
+        "cannot reach the transport. It exists because an agent nobody has a "
+        "convention for must supply its own instructions path rather than be "
+        "given a generated filename it will never open"
+    ),
     "StaleStandingGrant": (
         "never reaches the transport: `_stored_grants` raises it where a "
         "grant is used, and `authorize_repository` re-raises it as "

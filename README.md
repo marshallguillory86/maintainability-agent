@@ -39,9 +39,11 @@ What 1.0 guarantees:
 - **Deterministic and local.** Same tree, config, pinned analyzer versions and
   history in → same evidence, findings and score out. The analysis performs no
   network access and invokes no LLM, and **this agent does not transmit your
-  source.** Third-party analyzers it may spawn (eslint, jscpd, lizard) are
-  **not network-sandboxed** — this process does not police whether *they* phone
-  home; install them yourself for an air-gapped run.
+  source.** Every report states what it examined and produced — files,
+  declarations, findings, bounded work items — **all computed with no model
+  call**: work a metered agent never has to do. Third-party analyzers it may
+  spawn (eslint, jscpd, lizard) are **not network-sandboxed** — this process does
+  not police whether *they* phone home; install them for an air-gapped run.
 - **One uniform rubric**, readable in source, applied to every repository —
   so "better" and "worse" are not an argument. Calibrated against a
   query-selected corpus of mature open-source projects; the corpus median
@@ -144,9 +146,8 @@ policy, history consent, economics, test-suite execution, and presentation, and
 no report. A configured repository returns `choice_needed` (`run` or
 `reconfigure`), also without a report. Answering setup does not start an audit.
 `action="run"` returns the report and its bounded remediation prompt to the
-conversation. `record_history=None` follows the persisted first-run history
-consent and always appends to an existing history, while an explicit `true`
-or `false` wins.
+conversation. `record_history=None` follows the persisted first-run consent and
+always appends to an existing history; an explicit `true` or `false` wins.
 
 ```bash
 python3 -m pip install "maintainability-agent[mcp]"
@@ -154,10 +155,10 @@ maintainability-agent mcp --allow-root /absolute/path/to/repository
 ```
 
 Presentation is exactly three choices — **chat**, a **Markdown** file, or a
-single-file **HTML** report — and where to save a file is asked only after a
-file format is chosen. No report file is written without that choice. See
-[chat workflow help](docs/help/README.md) and
-[IDE and agent integration](docs/ide-agent-integration.md).
+single-file **HTML** report. Where to save is asked only after a file format is
+chosen, and no report file is written without that choice. See
+[chat workflow help](docs/help/README.md) and [IDE and agent
+integration](docs/ide-agent-integration.md).
 
 ## Automation / CI: CLI
 
@@ -278,12 +279,12 @@ these:
 | HTML (`.html`) | same brace scanner (inline `<script>`) | Bounded |
 | TypeScript (semantic) | a recorded analysis or a locally-installed `tsc`, workspace projects included | Type-level facts; `unknown` when no checker is present |
 
-Any language **not** in that table — Go, Rust, Ruby, PHP, Kotlin,
-Swift, and the rest — is **not parsed for declarations by the built-in
-scanner.** Its files still count toward repo size, but the built-ins produce no
-function-size, complexity, duplication or dead-code findings for them, and the
-estimate leans on whatever evidence *is* available (which is why the report
-discloses its evidence tier and can withhold the grade).
+Any language **not** in that table — Go, Rust, Ruby, PHP, Kotlin, and the rest —
+is **not parsed for declarations by the built-in scanner.** Its files still count
+toward repo size, but the built-ins produce no function-size, complexity,
+duplication or dead-code findings for them, and the estimate leans on whatever
+evidence *is* available (which is why the report discloses its evidence tier and
+can withhold the grade).
 
 **Which analyzer covers which language** (the opt-in pool, when installed):
 
@@ -384,10 +385,9 @@ defaults. The grade is gated (A+ needs every dimension clean; a
 repo with production code and zero test files cannot earn an A-grade) and banded
 from the evidence floor, so withholding evidence never buys a better letter.
 Every threshold gate — file, function, duplication — is opted **on** for this
-repo's own CI, against thresholds stricter than the shipped defaults, so
-drifting below the bar fails the build rather than the README. (CI note:
-`actions/checkout` defaults to `fetch-depth: 1`, which hides history and costs
-roughly a grade — use `fetch-depth: 0`.)
+repo's own CI, so drifting below the bar fails the build rather than the README.
+(CI note: `actions/checkout` defaults to `fetch-depth: 1`, which hides history
+and costs roughly a grade — use `fetch-depth: 0`.)
 
 ## Platform support
 
@@ -478,14 +478,14 @@ gate, and the self-audit — is in
 
 ## Support this work
 
-This is a single-maintainer, MIT-licensed project — free to use, and built on
-a lot of unpaid hours. If it saves you or your team time, please consider
+This is a single-maintainer, MIT-licensed project — free to use, and built on a
+lot of unpaid hours. If it saves you or your team time, please consider
 sponsoring its continued development:
 
 **❤️ [Sponsor on GitHub](https://github.com/sponsors/marshallguillory86)**
 
-Sponsorship is entirely optional and never gates a feature, a fix, or support —
-the whole tool stays free and open. It just helps keep the work going.
+Sponsorship is optional and never gates a feature, a fix, or support — the whole
+tool stays free and open. It just helps keep the work going.
 
 ## Acknowledgements
 

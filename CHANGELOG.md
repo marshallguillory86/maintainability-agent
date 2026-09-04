@@ -6,6 +6,56 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.6.0 - 2026-09-04
+
+**Did run seven of this transformation land better than run six?** The last
+of the five remediation-integrity items, and the only one that is a report
+rather than a gate. Where an agent performs one class of work repeatedly — a
+framework upgrade, a migration, a codemod across services — nobody measures
+whether the seventh run produced better code than the sixth. The generator
+cannot: its output is not reproducible and it keeps no memory across runs.
+
+### Added
+
+- **`--transformation NAME`** records the operator's name for the class of
+  work a scan followed and reports how this run of it compares with earlier
+  ones — each run's movement in estimate since the previous recorded scan,
+  and how the newest run's movement compares with the one before it.
+  `_run_comparison` joins; `_history_view` renders. It changes no score and
+  cannot fail a build.
+- **History schema 4** carries the `transformation` label. Schema-3 lines
+  load with it empty and belong to no series, which is the truth about them:
+  nothing recorded what they followed. The field is deliberately **outside**
+  `COMPARABILITY_FIELDS`, so a series is never broken for saying its own name.
+
+### What it refuses to claim
+
+The value here is entirely in what it declines to say, because every
+temptation runs the other way.
+
+- **Never "better".** Two runs of one codemod land on different code, so a
+  larger movement can come from the tree it was applied to as easily as from
+  the run. The report says *moved further*, *moved less*, or *within
+  tolerance* — which is what the numbers support.
+- **An interval, not an effect.** Nothing in a tree says which transformation
+  produced it, so the label is a claim the operator makes and this tool
+  records without verifying. Everything else that happened in that interval
+  is inside the number, and the rendered section says so.
+- **A withheld estimate is not a zero.** P7 withholds a number because the
+  evidence did not support one; subtracting from it would manufacture exactly
+  the number the scoring model refused to publish.
+- **It refuses across an instrument change**, reusing the `segments` rule
+  `--fail-on-regression` already answers to, and **names how many runs it
+  refused** rather than dropping them silently — a reader who cannot see a
+  refusal concludes there was no history.
+
+### Still open
+
+The cross-repository shape: one codemod applied to forty services is where
+this is worth the most, and it needs history from forty repositories joined
+on the label. What ships is one repository's series. Nothing about the
+record shape blocks the wider version.
+
 ## 2.5.0 - 2026-09-04
 
 **The repository answers the test-command question.** `expected_commands.test`

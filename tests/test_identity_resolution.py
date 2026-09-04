@@ -266,7 +266,10 @@ def test_new_history_records_store_schema_three_identities(tmp_path: Path) -> No
     record = _record(report)
     payload = json.loads(record.as_line())
 
-    assert payload["history_schema_version"] == 3
+    # A floor, not a version: this test is about identities, and schema 4
+    # added an unrelated field. The current number is pinned in
+    # `test_run_comparison`, where the field that moved it lives.
+    assert payload["history_schema_version"] >= 3
     assert payload["identities"] == [asdict(i) for i in sorted(
         identities_from_report(report), key=lambda item: item.fingerprint
     )]

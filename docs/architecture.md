@@ -16,6 +16,7 @@ Dependencies point downward only. No cycles. Every module in a box is a file und
 flowchart TB
   subgraph entry["entry"]
     cli["cli"]
+    _arguments["_arguments"]
     _first_run["_first_run"]
     _mcp_setup["_mcp_setup"]
     _setup_persist["_setup_persist"]
@@ -63,6 +64,7 @@ flowchart TB
     _gates["_gates"]
     _conformance["_conformance"]
     _ratchet["_ratchet"]
+    _run_comparison["_run_comparison"]
     _attestation["_attestation"]
     _work_order_weights["_work_order_weights"]
     _backfill["_backfill"]
@@ -269,7 +271,7 @@ Stated rather than hidden, because an architecture document that only describes 
 - ~~A suppression closes a finding~~ — **resolved (2.1.0).** `SUPPRESSION_MARKERS` reads `# noqa`, `# type: ignore`, `eslint-disable`, `pragma: no cover` and skipped tests out of the diff, on the paths the report named. It is deliberately a **second, separate verdict**: `conformant` answers "did it stay in scope", `clean` answers "and did it silence nothing". Merging them would let a change that obeyed the work order and gagged a finding inside it read as a pass. Detection is diff-scoped by construction — a marker already in the tree is somebody's earlier decision, not this change's dodge.
 - ~~There is no attestation artifact~~ — **resolved (2.3.0).** `_attestation.py` composes the record in **assembly** from the finished report, renders in **presentation** beside the other emitters, and reaches scoring not at all — it carries the estimate the audit produced and computes no verdict of its own. Its digest is over its own content, so it is reproducible; it states in its own text that it is **not signed**, because nothing here holds a key. A question nobody ran renders as *not asked*, and an incomparable ratchet as *not established*; neither is allowed to render as passed.
 - ~~Regression is gated per finding, not per dimension~~ — **resolved (2.2.0).** `_ratchet.py` reads dimension scores across the persisted history (ADR 009) with a `TOLERANCE` of 0.05, and returns three outcomes rather than two: held, regressed, and **not comparable**. The third exists because two scans taken under different calibration cannot be differenced, and it reuses the same rule as `segments()` — a comparison across an instrument change is not a comparison. `--fail-on-regression` gates on it.
-- **Nothing compares two runs of the same transformation.** Where an agent performs one class of work repeatedly — a migration, an upgrade, a codemod across services — whether run seven beat run six is unanswerable by the generator (non-reproducible output, no cross-run memory) and currently unanswered here. The parts exist: pinned references (`_calibration`), structured identity (`_finding_match`), scan history (ADR 009). What is missing is the comparison and its presentation, both of which sit above scoring and change no score. This is the last of the remediation-integrity items still open, and unlike the other four it is a report rather than a gate.
+- ~~Nothing compares two runs of the same transformation~~ — **resolved (2.6.0).** `_run_comparison` joins scan history into one transformation's series, in **assembly** for the same reason as `_conformance` and `_ratchet`; `_history_view` renders it, so joining and presenting stay split. It is the only one of the five integrity records that **cannot fail a build** — "run seven moved further than run six" is worth knowing and is not a thing to block a merge on. Two constraints shape it. History schema 4 carries a `transformation` label the operator supplies, deliberately outside `COMPARABILITY_FIELDS` so a series is never broken for saying its own name. And it reports the **movement across an interval**, never the transformation's *effect*: nothing in a tree says which transformation produced it, so the label is a claim this tool records without verifying, and everything else that happened in that interval is inside the number. The rendered section says so.
 - **The integrity checks read a diff's shape, never its correctness.** Named because the four resolutions above are easy to over-read: they establish that a change stayed where it was told, silenced nothing, and moved no dimension backwards. They establish nothing about whether the change *works*. The attestation says so in its own rendered text rather than leaving a reader to infer it, and no future item here should quietly widen that.
 
 - ~~Scoring consumes raw dictionaries~~ — **resolved (ADR 001 stage 4).** `score_report` normalizes at its entry and every layer below it takes typed evidence. The `.get(name, 0)` fallbacks and the `unmeasured_dimensions` companion list are deleted: a pressure is now computed only from `Measured` inputs, so there is no default left to forget to guard.

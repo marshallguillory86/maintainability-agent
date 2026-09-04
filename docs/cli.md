@@ -41,6 +41,7 @@ Repeat `--allow-root` to authorize unrelated repository directories. With no exp
 | `--agent-instructions-output` | Audit-specific agent instructions output path. |
 | `--attestation-output` | Write the attestation: an independent, reproducible record of what was measured, what the change was told to do, what it did, and what moved. Populated by `--conformance` and `--fail-on-regression`; a question nobody asked renders as *not asked*, never as a pass. Reproducible and **not signed** — the digest is over the record's own content and nothing here holds a key. |
 | `--hostile-prompt-output` | Adversarial audit brief seeded from this run ([ADR 013](adr-013-hostile-audit-prompt.md)). Text only: it does not gate, score, or send anything. |
+| `--transformation` | Name the class of work this scan followed, e.g. `react-18`. Records the name on the scan and reports how this run of it compares with earlier ones — the movement in estimate between the previous recorded scan and this one, per run. **A report, never a gate**, and it changes no score. What it measures is the *interval*, not the transformation's effect: nothing in a tree says which transformation produced it, so the name is your claim and anything else that happened in the same interval is inside the number. It refuses across an instrument change and says how many runs it refused. |
 | `--sarif-input` | External SARIF file to summarize in the report. Repeatable. |
 | `--changed-only` | Git revspec for changed-file-only mode, e.g. `main...HEAD`. |
 | `--baseline` | Existing baseline JSON file. |

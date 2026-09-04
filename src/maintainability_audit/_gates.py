@@ -93,10 +93,26 @@ def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
             return 2
         # A run that could not compare does not pass this gate quietly.
         # Exiting 0 where the question was never asked is the "absence read
-        # as a pass" shape, and the reason is printed so the operator can
-        # see whether it was a first scan or an instrument change.
+        # as a pass" shape this project treats as a defect class.
+        #
+        # The *reason* is not interpolated here. It is derived from recorded
+        # scan history, and code scanning is right that history fields have
+        # no business flowing into a log line by default — a repository's
+        # branch and commit metadata are not this gate's to print. The
+        # detail stays in `report["dimension_ratchet"]["reason"]`, which is
+        # data a caller reads deliberately rather than output that appears
+        # in whatever CI log the build happens to write to.
+        #
+        # Suppressing the alert was the alternative and was refused: this
+        # release ships the check that treats a suppression as a finding,
+        # and adding one here to quiet a scanner would be the exact move it
+        # exists to catch.
         if not ratchet["comparable"]:
-            print(f"no comparable scan: {ratchet['reason']}", file=sys.stderr)
+            print(
+                "no comparable scan for --fail-on-regression; see "
+                "dimension_ratchet.reason in the report",
+                file=sys.stderr,
+            )
             return 2
         if ratchet["regressed"]:
             return 1

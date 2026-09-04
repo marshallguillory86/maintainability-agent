@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **2.4.0**.
+Version **2.4.1**.
 
 **Languages parsed:** Python, Java, C, C++, C#, Swift, Fortran (free-form
 *and* fixed-form), and the JS/TS family — each by a scanner written for it, and
@@ -85,9 +85,12 @@ the independent check on their own work, so a platform that generates code and
 grades it is producing a self-assessment — a property of the arrangement, not a
 criticism of any one of them. This writes nothing and runs no model, which is
 what lets its verdict be evidence ([the principle](docs/philosophy.md#principles)).
-The limit, stated in the same breath: step 3 bounds the agent by **instruction**,
-and nothing yet verifies the returned diff stayed inside the work order
-([the three checks that would](docs/roadmap.md#the-remediation-hole-an-agent-can-satisfy-this-gate-without-doing-the-work)).
+Since 2.1.0 the work order is also **checked**: `--conformance` compares the
+returned diff against the paths the report named, `--fail-on-regression`
+ratchets the dimension scores, and `--attestation-output` composes them into one
+record ([how that hole was closed](docs/roadmap.md#the-remediation-hole-closed-in-210-through-230)).
+The limit, stated in the same breath: those checks read the diff's **shape**,
+never its correctness — whether the change works is not a claim this tool makes.
 
 One pre-registered experiment has tested the bounded prompt.
 Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, under this tool's own finding count.
@@ -177,6 +180,41 @@ test command, a breached threshold) — never on a letter grade, and never on a
 withheld estimate. For PR work, add `--changed-only main...HEAD` to audit the
 diff; on a change too small to support a rate, the estimate and grade are
 withheld and the scope is named as the reason.
+
+### Checking that the agent did the work
+
+The work order tells an agent to fix exactly these findings and refactor nothing
+else. These flags check that the diff that came back obeyed it — read the
+diff's _shape_, not its correctness:
+
+```bash
+maintainability-agent \
+  --config maintainability-agent.json \
+  --conformance main...HEAD \
+  --fail-on-out-of-scope \
+  --fail-on-regression \
+  --attestation-output maintainability-attestation.md
+```
+
+- **`--conformance <revspec>`** compares the diff against the paths the report
+  named, and answers two questions separately: did it **stay in scope**, and did
+  it **silence nothing**. They stay separate because a change can obey the work
+  order and still add a `# noqa` to a finding inside it. A test added for a fix
+  stays in scope even though the work order never named the test file.
+- **`--fail-on-out-of-scope`** turns that into a CI failure.
+- **`--fail-on-regression`** ratchets the _dimension_ scores against scan
+  history, catching a change that improves one dimension while silently
+  regressing another. It has three outcomes, not two — held, regressed, and
+  **not comparable**, because two scans taken under different calibration cannot
+  be differenced.
+- **`--attestation-output`** writes the three into one per-change record: what
+  was measured, what the agent was told to change, whether it stayed inside the
+  work order, and what moved. It is reproducible and **not signed** — nothing
+  here holds a key, and the document says so in its own text. A check nobody ran
+  renders as _not asked_, never as passed.
+
+The [roadmap](docs/roadmap.md#the-remediation-hole-closed-in-210-through-230)
+has the history of why this was the hole under the product's central claim.
 
 ## What it analyzes
 

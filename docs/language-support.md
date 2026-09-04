@@ -330,6 +330,13 @@ Everything it misses, it misses in the safe direction:
 - **Conditional compilation is not evaluated**, so a declaration in a
   disabled `#if` arm still counts.
 
+**Swift has analyzer coverage, unlike Fortran.** `lizard` reads it for
+complexity and `jscpd` for duplication, both in the shipped pool, and
+`swiftlint`, `swiftformat` and `tailor` are catalogued as verdict emitters.
+So a Swift repository gets analyzer-primary evidence rather than depending
+on the built-in scanner alone — the position Fortran is still in, where
+`fortitude` reports findings but cannot supply a declaration population.
+
 **Swift is measured with its own reading of a branch.** `guard` is the
 language's primary early exit and is absent from the C-family pattern, so a
 guard-heavy function would have read as branchless — the defect Fortran

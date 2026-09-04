@@ -39,8 +39,13 @@ The loop this product closes:
 2. Apply one uniform standard, so "better" and "worse" are not an argument.
 3. Emit a prompt scoped to *those findings only*, with explicit instructions not to refactor beyond them.
 4. Hand it to the agent. Review a scoped diff instead of a speculative rewrite.
+5. **Check the diff against the work order that produced it** — did it stay inside the named paths, did it silence anything, did any dimension move backwards.
 
-Step 3 is the product. Steps 1 and 2 are in service of it.
+Step 3 is the product. Steps 1 and 2 are in service of it. Step 5 is what makes step 3 a constraint rather than a request.
+
+For most of this project's life the loop ended at step 4, and the honest statement of that limit was: **the work order bounds the agent by instruction, and nothing verifies the diff came back inside it.** That is no longer true. `--conformance` compares the diff against the paths the report named and answers two separate questions — stayed in scope, and silenced nothing — while `--fail-on-regression` ratchets the dimension scores across scan history. `--attestation-output` composes the three into one record. See [the remediation hole](roadmap.md#the-remediation-hole-closed-in-210-through-230).
+
+What the loop still does not do, and is not going to: **step 5 reads the diff's shape, never its correctness.** It establishes that a change went where it was told and hid nothing. Whether the change is right is a claim this tool does not make, and the attestation says so in its own text rather than leaving a reader to assume otherwise.
 
 ### Semantic judgment and economic priority
 

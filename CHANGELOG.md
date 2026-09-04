@@ -6,6 +6,33 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.4.1 - 2026-09-04
+
+**Swift shipped unreachable.** `.swift` was routed to its scanner and
+absent from the default `include_extensions`, so no Swift file was ever
+opened and the language 2.4.0 announced did nothing. The guard that was
+supposed to catch this checked one direction only — that every included
+extension has a parser — and a language parsed but not included passed it
+silently. It now checks both, and the failure message says why the
+one-directional version was worthless: _the language is claimed and
+unreachable._
+
+Measured on `vapor/vapor`: 3 files and 0 declarations before, 253 files
+and 1,924 declarations after. Across the Swift candidates, 4 of 16
+repositories met the qualification floor before the fix and 16 of 16 after
+— which is the shape of the bug, not a tuning change.
+
+**Documentation caught up with 2.2.0 and 2.3.0.** The remediation-integrity
+flags (`--conformance`, `--fail-on-out-of-scope`, `--fail-on-regression`,
+`--attestation-output`) shipped two releases ago and appeared in no
+user-facing document. The README now has them; the roadmap's "remediation
+hole" section and four entries under architecture's Known debt are closed
+rather than still listed as future work; and `product-intent.md` grows the
+loop's fifth step, because "the work order bounds the agent by instruction
+and nothing verifies it" had become false. What is still true, and is now
+stated in all three places, is that these checks read a diff's shape and
+never its correctness.
+
 ## 2.4.0 - 2026-09-04
 
 **Swift is the ninth parsed language**, and the first added since the

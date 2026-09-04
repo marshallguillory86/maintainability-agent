@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -159,12 +158,15 @@ def test_a_client_sees_the_two_tools_and_can_call_one(tmp_path: Path) -> None:
 def _child_import_path() -> str:
     """This process's own import path, for the child to inherit.
 
-    Derived from `sys.path` rather than assumed, so the subprocess
-    imports exactly what the test process is exercising: the package
-    under test (from `src/` in a checkout, site-packages when installed)
-    *and* the `mcp` SDK it needs to answer at all.
+    The MCP SDK spawns with a scrubbed environment rather than an
+    inherited one, so this seam needs the value passed explicitly even
+    though `conftest` now puts it in `os.environ` for every other child.
+    It is the same value, from the same place, for the same reason —
+    `conftest.child_import_path` carries the full account.
     """
-    return os.pathsep.join(entry for entry in sys.path if entry)
+    from conftest import child_import_path
+
+    return child_import_path()
 
 
 def test_real_stdio_process_initializes_and_reports_its_boundary(tmp_path: Path) -> None:

@@ -14,6 +14,10 @@ from ._first_run import (
     maybe_prompt_first_run,
     maybe_prompt_test_command,
 )
+from ._gates import (
+    _attach_post_audit_records,
+    audit_exit_code,
+)
 from ._mcp_audit import record_scan_and_attach
 from ._safe_write import write_artifact
 from ._scan_history import (
@@ -24,7 +28,6 @@ from ._user_config import mark_repo_seen
 from ._work_order import SELECTABLE, combined_delta, select
 from .baseline import (
     finding_fingerprints,
-    findings_not_in_baseline,
     load_baseline,
     write_baseline,
 )
@@ -36,7 +39,7 @@ from .config import (
     load_config,
     repository_path,
 )
-from .git_tools import added_lines, changed_paths
+from .git_tools import changed_paths
 from .instructions import (
     INSTRUCTION_TARGETS,
     UnknownTarget,
@@ -64,6 +67,14 @@ def _add_gate_arguments(parser: argparse.ArgumentParser) -> None:
              "The bounded work order says 'fix exactly these and refactor nothing "
              "else'; without this the bound is an instruction nothing checks. "
              "Reports only unless --fail-on-out-of-scope is passed.",
+    )
+    parser.add_argument(
+        "--fail-on-regression", action="store_true",
+        help="Exit 1 when any scoring category is lower than the previous "
+             "comparable scan. Reads the recorded history, and refuses to "
+             "compare across an instrument change rather than reporting a "
+             "false regression: two scans taken under different calibration "
+             "cannot be subtracted.",
     )
     parser.add_argument(
         "--fail-on-out-of-scope", action="store_true",
@@ -226,48 +237,6 @@ def write_outputs(args: argparse.Namespace, report: dict, rendered: str) -> None
                        json.dumps(report_to_sarif(report), indent=2) + "\n", json_artifact=True)
 
 
-def attach_conformance(args: argparse.Namespace, report: dict) -> None:
-    """Record how the diff relates to the work order, when asked.
-
-    Assembly, not scoring: the record is attached to the report and reaches
-    no dimension, because whether a diff was obedient is a fact about an
-    agent's behaviour and not evidence about the code's condition.
-    """
-    if not args.conformance:
-        return
-    from ._conformance import scope_conformance
-
-    root = Path(report["root"])
-    changed = changed_paths(root, args.conformance)
-    added = added_lines(root, args.conformance)
-    report["scope_conformance"] = scope_conformance(
-        report, changed, args.conformance, added
-    )
-
-
-def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
-    if args.fail_on_new:
-        # Structured matching, never a label-set difference: a label
-        # changes under `git mv` and same-name reorder, and failing a
-        # build over either is a false report about the change.
-        root = Path(report["root"])
-        if findings_not_in_baseline(report, args.baseline, root):
-            return 1
-    if args.fail_on_gate and report["hard_gate_failures"]:
-        return 1
-    if args.fail_on_out_of_scope:
-        record = report.get("scope_conformance")
-        if record is None:
-            print("--fail-on-out-of-scope needs --conformance REVSPEC", file=sys.stderr)
-            return 2
-        # `clean`, not `conformant`: staying in scope while silencing the
-        # finding is the evasion the pairing exists to catch, and a gate
-        # that accepted it would be satisfied by the thing it guards against.
-        if not record["clean"]:
-            return 1
-    return 0
-
-
 def _analyzers_resolved(args: argparse.Namespace, config: dict) -> bool:
     """Whether the pool runs: flags beat config, config beats nothing.
 
@@ -323,7 +292,6 @@ def _install_skill_action(args: argparse.Namespace) -> int:
         print(refusal)
         return 1
     return 0
-
 
 
 def _target_paths(pairs: list[str] | None) -> dict[str, str]:
@@ -429,7 +397,7 @@ def main(argv: list[str] | None = None) -> int:
                            record=bool(record), want_targets=bool(args.prompt_output))
     # Before rendering, so the record is in the report every presentation
     # and every consumer reads, rather than only in the exit code.
-    attach_conformance(args, report)
+    _attach_post_audit_records(args, report, history_path)
     rendered = _render_presentation(args, report, history_path)
     write_outputs(args, report, rendered)
     mark_repo_seen(root)  # completed audit: not a first run now, whatever the gate says (D13)

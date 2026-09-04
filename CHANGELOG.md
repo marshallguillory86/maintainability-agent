@@ -6,6 +6,45 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.2.0 - 2026-09-03
+
+The third remediation-integrity mechanism. No score changes.
+
+### Added
+
+- **`--fail-on-regression`** exits 1 when any scoring category is lower
+  than the previous **comparable** scan. `--fail-on-new` already caught a
+  finding that clears and returns; nothing caught the slower failure — a
+  change that improves one dimension while quietly regressing another,
+  green by every existing gate, with the thing that got worse never named.
+
+  **The judgment that matters is when subtracting is allowed at all.** Two
+  scans taken with different instruments cannot be differenced, and
+  `_scan_history.segments` already owns that rule for the trend charts, so
+  the ratchet refuses rather than reaching across a break. Without it, the
+  day 2.0.0 moved `CALIBRATION_C` from 5.8843 to 8.7161 this gate would
+  have reported every repository on earth as catastrophically regressed —
+  and the gate would have been the thing that was wrong.
+
+  So there are three outcomes, not two: held, regressed, and **not
+  comparable**. The third exits 2 and prints why, because a run that could
+  not ask the question must not be read as one that asked and found
+  nothing.
+
+  Two further limits, both tested: an aspect that becomes *unmeasurable* is
+  not a drop — withheld evidence reading as a failure is the inversion P3
+  forbids — and aspects are reported beside the verdict but do not decide
+  it, since failing on every aspect wobble makes a gate that gets switched
+  off.
+
+### Changed
+
+- **`cli.py` crossed the 500-line file gate**, so everything that composes
+  from a *finished report* and turns it into an exit code moved to
+  `_gates`: conformance, the ratchet, and `audit_exit_code`. The guard in
+  `test_identity_resolution` that pins structural finding-matching follows
+  the function rather than the filename.
+
 ## 2.1.0 - 2026-09-03
 
 **The bounded work order becomes checkable.** *Fix exactly these findings

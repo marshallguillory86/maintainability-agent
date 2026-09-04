@@ -126,6 +126,12 @@ ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
             # never reach scoring: whether a diff was obedient is a fact
             # about an agent, not evidence about the code.
             "_conformance",
+            # `_ratchet` compares the newest scan with the previous
+            # comparable one. Assembly for the same reason as
+            # `_conformance`: it composes from recorded history rather
+            # than measuring a tree, and a difference between two scans
+            # is not evidence about the code's condition.
+            "_ratchet",
             # `_economics` composes the ADR 004 scenario from the finished
             # report and configured context; it measures nothing, asks
             # nothing, and may never be imported by scoring.
@@ -209,6 +215,12 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
 # `SetupRequired` exception, on its own leaf so the persist helpers and the
 # ask surface both use it without a cycle.
 ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup", "_mcp_audit",
+         # `_gates` is the post-audit half of the CLI, split at the
+         # 500-line file gate: it composes from a finished report and
+         # decides the exit code. Entry rather than assembly because
+         # it exists to serve one door, and because deciding a process
+         # exit code is the CLI's job and nobody else's.
+         "_gates",
          "_grant_ledger", "_setup_persist", "_setup_errors",
          "_skill_install", "_mcp_gate", "_mcp_resources",
          "_mcp_grants", "_mcp_refusals"}

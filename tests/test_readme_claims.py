@@ -45,21 +45,27 @@ def test_the_readme_names_the_shipped_version() -> None:
 
 
 def test_the_report_names_the_corpus_its_anchor_is_drawn_from() -> None:
-    """Every multiple is against a corpus of three languages; say which.
+    """Every multiple is against a corpus; the report must say which one.
 
     `score.reference` tells a reader that 1.0x is "the median mature-OSS
-    repo". The corpus behind that median is 40 repositories of Python,
-    TypeScript and JavaScript, and this project parses seven languages —
-    so Java, C, C++, C# and Fortran are scored against medians measured
-    on none of their code. LAPACK reports declarations at 7.18x that
-    anchor and fortran-lang/stdlib at 1.10x; the first number is true of
-    LAPACK against mature OSS web code and is not a statement about
-    typical Fortran, because no typical Fortran is in the comparison set.
+    repo". For five releases the corpus behind that median was 40
+    repositories of Python, TypeScript and JavaScript while the scanner
+    parsed eight languages, so Java, C, C++, C# and Fortran were scored
+    against medians measured on none of their code — LAPACK reported
+    declarations at 7.18x that anchor, a true statement about LAPACK
+    against mature OSS web code and not a statement about typical Fortran,
+    because no typical Fortran was in the comparison set.
 
-    The rubric stays uniform, which is the promise (P2). The corpus is
-    not uniform across languages, which is a limit, and a limit that
-    travels only in `docs/standard.md` does not reach the person reading
-    the number.
+    2.0.0 extended the corpus instead of the caveat. The assertion below is
+    deliberately *derived* rather than named: a hardcoded language list
+    fails the moment the corpus changes and says nothing about what should
+    replace it, whereas holding the shipped disclosure to the corpus file
+    catches drift in both directions — a language named but not held, or
+    held but not named.
+
+    The rubric stays uniform, which is the promise (P2). What limits remain
+    are stated in `docs/standard.md`, and the note travels in every report
+    so they reach the person reading the number.
     """
     import json
     from pathlib import Path as _Path
@@ -71,14 +77,28 @@ def test_the_report_names_the_corpus_its_anchor_is_drawn_from() -> None:
         (ROOT / "tools" / "calibration" / "corpus.json").read_text(encoding="utf-8")
     )
     languages = {(repo.get("language") or "").lower() for repo in corpus["repos"]}
-    assert languages <= {"python", "typescript", "javascript"}, (
-        f"the corpus now spans {sorted(languages)}; the disclosure in "
-        "score.reference and docs/standard.md must name what it actually holds"
-    )
 
     report = build_report(_Path("."), load_config("maintainability-agent.json"))
     reference = report["score"]["reference"]
-    assert reference["corpus_languages"] == ["Python", "TypeScript", "JavaScript"]
+
+    # Derived from the corpus rather than hardcoded. The previous version
+    # asserted the three original languages by name, so it failed the moment
+    # the corpus was extended and told nobody *what* to say instead. Holding
+    # the disclosure to the file it describes means the report cannot name a
+    # language the corpus lacks, or omit one it holds, in either direction.
+    spelled = {"cpp": "c++", "csharp": "c#"}
+    disclosed = {spelled.get(name, name) for name in
+                 (value.lower() for value in reference["corpus_languages"])}
+    held = {spelled.get(name, name) for name in languages}
+    assert disclosed == held, (
+        f"score.reference names {sorted(disclosed)} but the corpus holds "
+        f"{sorted(held)}; the disclosure travels with every number and must "
+        "match the anchor it describes"
+    )
+    assert str(len(corpus["repos"])) in reference["corpus_note"], (
+        f"the corpus holds {len(corpus['repos'])} repositories and the note "
+        "shipped in every report does not say so"
+    )
     assert "docs/standard.md" in reference["corpus_note"]
 
     standard = _read(ROOT / "docs" / "standard.md")

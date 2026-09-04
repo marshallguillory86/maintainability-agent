@@ -8,6 +8,16 @@ It is a deterministic audit and prompt-generation layer for teams using AI-assis
 
 ## Principles
 
+- **No author is the independent check on their own work.** A platform that
+  generates code and then reports on its quality is producing a
+  self-assessment. That is not a criticism of any particular one — it is a
+  property of the arrangement, and no amount of engineering removes it. The
+  question a reviewer actually asks is *who checked this, and can they
+  re-derive the check months from now*; the author cannot be the answer, and a
+  checker that routes across models cannot re-derive anything. This tool writes
+  nothing and runs no model, which is the only reason its verdict can be
+  evidence rather than an opinion — and the better the generator gets, the more
+  a second, reproducible reading is worth.
 - Deterministic first, AI optional. **A gate that returns three answers is not a gate** — Addy Osmani reports asking an agent to review the same code twice, getting disagreement, then a third answer on re-run ([Agentic Code Quality](https://addyo.substack.com/p/agentic-code-quality)). Judgment can be probabilistic; the thing that blocks a merge cannot be.
 - Human stays in control.
 - CI produces evidence, not vibes.

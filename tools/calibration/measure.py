@@ -46,7 +46,7 @@ from maintainability_audit._pressures import (  # noqa: E402
     analyzer_production_pressures,
     production_pressures,
 )
-from maintainability_audit.config import load_config  # noqa: E402
+from maintainability_audit.config import VERSION, load_config  # noqa: E402
 from maintainability_audit.evidence import normalize_report_evidence  # noqa: E402
 from maintainability_audit.report import build_report  # noqa: E402
 from maintainability_audit.scoring import dimension_pressures  # noqa: E402
@@ -99,7 +99,7 @@ EVIDENCE_KEYS = (
 )
 
 
-def measure(path: Path, name: str, *, with_analyzers: bool = False) -> dict:
+def measure(path: Path, repo: dict, *, with_analyzers: bool = False) -> dict:
     """One repository, under the built-in detectors and optionally the analyzers.
 
     Both sources are recorded side by side rather than one replacing the
@@ -131,7 +131,17 @@ def measure(path: Path, name: str, *, with_analyzers: bool = False) -> dict:
     # nothing noticed because no test runs this file.
     evidence = normalize_report_evidence(report)
     row = {
-        "repo": name,
+        "repo": repo["name"],
+        # Provenance, so a stored row can be checked rather than trusted.
+        # Rows used to carry the repository name alone: nothing said which
+        # commit produced them or which tool version, so no run could tell a
+        # stale measurement from a fresh one and every recalibration had to
+        # re-measure the whole corpus. That is the same weakness ADR 001
+        # stage 9 removed from the history corpus, in the other set of
+        # numbers this project derives everything from.
+        "pinned_commit": repo.get("commit"),
+        "tool_version": VERSION,
+        "scanner_fingerprint": scanner_fingerprint(),
         "files": summary["files_scanned"],
         "declarations": summary["declarations_scanned"],
         "dimensions": dimension_pressures(evidence.summary),
@@ -167,6 +177,15 @@ def _analyzer_row(path: Path, config: dict) -> tuple[dict | None, dict | None, d
         analyzer_production_pressures(analysis.measurements, thresholds),
         {
             "tools": sorted(item.slug for item in analysis.coverage if item.contributed),
+            # Which version of each tool produced this row. Determinism is
+            # only promised against pinned analyzer versions, so a corpus
+            # measured half on lizard 1.23 and half on 1.24 is not one
+            # corpus — and without this field nobody could tell.
+            "versions": {
+                item.slug: item.version
+                for item in analysis.coverage
+                if item.contributed and item.version
+            },
             "unexamined": analysis.gaps(),
             "single_source": analysis.single_source_concerns(),
         },
@@ -196,7 +215,150 @@ def report_drift(references: dict[str, float], curve: float) -> bool:
     return stale
 
 
-def main() -> int:
+def _would_downgrade_stored_evidence(with_analyzers: bool) -> bool:
+    """True when this run measured less than what is already stored."""
+    if with_analyzers:
+        return False
+    return any(entry.get("analyzer_dimensions") for entry in stored_measurements())
+
+
+def _refuses_downgrade(args: argparse.Namespace) -> bool:
+    """True when this run would replace stronger evidence with weaker.
+
+    Refused before doing the work, not after. Stored measurements fitted
+    `--with-analyzers` are the analyzer-primary readings the shipped
+    constants derive from; a run without that flag measures the built-ins
+    only, and overwriting the first with the second silently replaces the
+    corpus those constants were fitted to. The original WARNING said so
+    *after* the file was already gone, and a first attempt at this check
+    placed at the write site still cloned 112 repositories before refusing —
+    an hour of network to reach a decision available at argument-parse time.
+    """
+    if args.check or args.replace_measurements:
+        return False
+    if not _would_downgrade_stored_evidence(args.with_analyzers):
+        return False
+    print(
+        f"refusing to overwrite {MEASUREMENTS.relative_to(ROOT)}: it holds "
+        "analyzer-primary measurements and this run would measure the built-ins "
+        "only.\nRe-run with --with-analyzers, or pass --replace-measurements if "
+        "a built-in-only corpus is genuinely what should be stored.",
+        file=sys.stderr,
+    )
+    return True
+
+
+#: The modules whose behaviour can change a measurement. A stored row stays
+#: reusable across releases that do not touch these, and is invalidated the
+#: moment one changes — which is the question reuse actually needs answered.
+#: Keying on the release version instead was the first attempt and it was
+#: wrong in both directions: it re-measured 112 repositories for a
+#: documentation release, and it would have said nothing if the scanner
+#: changed within one version. A module added to the measurement path
+#: belongs in this list; scoring, rendering and reporting deliberately do
+#: not, because they read measurements rather than produce them.
+MEASUREMENT_PATH = (
+    "source", "declarations", "metrics", "_metrics_types", "_cognitive", "_masking",
+    "_ranges_core", "_ranges_js", "_ranges_java", "_ranges_c", "_ranges_cpp",
+    "_ranges_csharp", "_ranges_fortran", "_tokens",
+    "duplication", "deadcode", "idioms", "similarity", "history",
+    "_discovery", "_practice", "_analysis", "_adapters", "_generic",
+    "_metric_adapters", "_verdict_adapters", "_jvm_adapters", "_tool_adapters",
+    "_selection", "_pressures", "_built_ins",
+)
+
+
+def scanner_fingerprint() -> str:
+    """A digest of the code that produces measurements, not of the release."""
+    import hashlib
+
+    package = ROOT / "src" / "maintainability_audit"
+    digest = hashlib.sha256()
+    for name in sorted(MEASUREMENT_PATH):
+        path = package / f"{name}.py"
+        if path.exists():
+            digest.update(path.read_bytes())
+    return digest.hexdigest()[:16]
+
+
+def _reusable(repo: dict, with_analyzers: bool) -> dict | None:
+    """A stored row that provably measured this exact repository state.
+
+    Reuse is what makes adding a language cost its own repositories rather
+    than the whole corpus — 16 instead of 112 — but it is only safe because
+    rows now carry what produced them. A row is reusable when it pinned the
+    same commit under the same tool version and holds the analyzer readings
+    this run would produce. Anything else is measured again; the cost of a
+    wrong reuse is a constant fitted to a corpus that never existed.
+    """
+    for entry in stored_measurements():
+        if entry.get("repo") != repo["name"]:
+            continue
+        if entry.get("pinned_commit") != repo.get("commit"):
+            return None
+        if entry.get("scanner_fingerprint") != scanner_fingerprint():
+            return None
+        if with_analyzers and not entry.get("analyzer_dimensions"):
+            return None
+        return entry
+    return None
+
+
+def _mixed_analyzer_versions(rows: list[dict]) -> dict[str, set[str]]:
+    """Tools that did not read the same version across the corpus.
+
+    Determinism is promised against *pinned* analyzer versions, so a corpus
+    measured partly on one version of a tool and partly on another is not a
+    corpus — the medians would mix two instruments. Reuse makes that
+    reachable for the first time, so it is checked before anything is
+    written rather than trusted.
+    """
+    seen: dict[str, set[str]] = {}
+    for row in rows:
+        for slug, version in ((row.get("analyzer_coverage") or {}).get("versions") or {}).items():
+            seen.setdefault(slug, set()).add(version)
+    return {slug: versions for slug, versions in seen.items() if len(versions) > 1}
+
+
+def _collect(manifest: dict, cache_dir: Path, args: argparse.Namespace) -> tuple[list[dict], int]:
+    """Every repository's row, reusing what provably still applies."""
+    measurements: list[dict] = []
+    reused = 0
+    for repo in manifest["repos"]:
+        if args.reuse and (stored := _reusable(repo, args.with_analyzers)) is not None:
+            measurements.append(stored)
+            reused += 1
+            continue
+        path = clone(repo, cache_dir)
+        if path is None:
+            continue
+        entry = measure(path, repo, with_analyzers=args.with_analyzers)
+        measurements.append(entry)
+        print(f"  {entry['repo']:<12} files={entry['files']:<6} " + " ".join(
+            f"{k}={v:.4f}" for k, v in entry["dimensions"].items()), flush=True)
+    return measurements, reused
+
+
+def _refuses_mixed_versions(measurements: list[dict], reused: int) -> bool:
+    """True when the corpus was not measured on one analyzer pool."""
+    if reused:
+        print(f"\nreused {reused} stored rows; measured {len(measurements) - reused}")
+    mixed = _mixed_analyzer_versions(measurements)
+    if not mixed:
+        return False
+    print(
+        "\nrefusing to fit constants to a corpus measured on more than one "
+        "version of a tool:",
+        file=sys.stderr,
+    )
+    for slug, versions in sorted(mixed.items()):
+        print(f"  {slug}: {', '.join(sorted(versions))}", file=sys.stderr)
+    print("Re-run without --reuse to measure the whole corpus on one pool.",
+          file=sys.stderr)
+    return True
+
+
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cache-dir", help="Directory to clone into. Defaults to a temp dir.")
     parser.add_argument(
@@ -206,26 +368,40 @@ def main() -> int:
              "the input the Phase 3.6 recalibration needs.",
     )
     parser.add_argument("--check", action="store_true", help="Exit 1 if stored constants differ from measured.")
-    args = parser.parse_args()
+    parser.add_argument(
+        "--reuse", action="store_true",
+        help="Reuse stored rows whose pinned commit, tool version and analyzer "
+             "population match, and measure only the rest. Adding a language "
+             "then costs its own repositories instead of the whole corpus.",
+    )
+    parser.add_argument(
+        "--replace-measurements", action="store_true",
+        help="Allow a built-in-only run to overwrite stored analyzer-primary "
+             "measurements. Needed only when a built-in-only corpus is the "
+             "intended evidence.",
+    )
+    return parser
+
+
+def main() -> int:
+    args = _parser().parse_args()
+
+    if _refuses_downgrade(args):
+        return 2
 
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     cache_dir = Path(args.cache_dir) if args.cache_dir else Path(tempfile.mkdtemp(prefix="ma-corpus-"))
     cache_dir.mkdir(parents=True, exist_ok=True)
     print(f"corpus: {len(manifest['repos'])} repos -> {cache_dir}")
 
-    measurements = []
-    for repo in manifest["repos"]:
-        path = clone(repo, cache_dir)
-        if path is None:
-            continue
-        entry = measure(path, repo["name"], with_analyzers=args.with_analyzers)
-        measurements.append(entry)
-        print(f"  {entry['repo']:<12} files={entry['files']:<6} " + " ".join(
-            f"{k}={v:.4f}" for k, v in entry["dimensions"].items()))
+    measurements, reused = _collect(manifest, cache_dir, args)
 
     if not measurements:
         print("no repos could be measured (network unavailable?)")
         return 1
+
+    if _refuses_mixed_versions(measurements, reused):
+        return 2
 
     references = derive_references(measurements)
     curve = derive_curve_constant(measurements, references, DIMENSION_WEIGHTS)

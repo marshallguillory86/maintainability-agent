@@ -122,30 +122,48 @@ Calibration is reproducible, not a snapshot someone took once. The corpus is def
 
 > angular · ansible · ant-design · anime · axios · Chart.js · code-server · django · echarts · excalidraw · express · fastapi · flask · freeCodeCamp · github-readme-stats · hackingtool · hoppscotch · jquery · keras · localstack · lodash · manim · material-ui · mermaid · models · n8n · nest · playwright · reveal.js · scrapy · strapi · svelte · tabby · tailwindcss · transformers · uBlock · vite · webpack · youtube-dl · yt-dlp
 
-**What the anchor does not cover.** The corpus is Python, TypeScript
-and JavaScript. This project parses seven languages, and five of them —
-Java, C, C++, C# and Fortran — are scored against medians measured on
-none of their code. The rubric is uniform across repositories, which is
-the promise ([P2](product-intent.md#what-it-promises)); the *corpus* is
-not uniform across languages, which is a limit.
+**What the anchor does not cover.** For five releases this section named a
+real defect: the corpus was 40 repositories of Python, TypeScript and
+JavaScript while the scanner parsed eight languages, so Java, C, C++, C#
+and Fortran were scored against medians measured on none of their code.
+Audited against that anchor, LAPACK reported declarations at **7.18x** the
+median and fortran-lang/stdlib at **1.10x** — the first a true statement
+about LAPACK relative to mature OSS *web* code, and not a statement about
+typical Fortran, because no typical Fortran was in the comparison set.
 
-It is a real one. Long, deeply-looped numerical subroutines are idiomatic
-in dense linear algebra and absent from a corpus of web frameworks and
-libraries: audited against this anchor, LAPACK reports declarations at
-**7.18x** the median while fortran-lang/stdlib reports **1.10x**. The
-first number is a true statement about LAPACK relative to mature OSS web
-code, and it is not a statement about typical Fortran, because no typical
-Fortran is in the comparison set.
+**2.0.0 extended the corpus rather than the caveat.** It is now 112
+repositories spanning every language this scanner parses: Python,
+TypeScript, JavaScript, Java, C, C++, C# and Fortran. The original 40 rows
+are unchanged and still pinned to the commits they were measured at, so
+what moved the constants is the languages added and nothing else.
 
-Two things follow. `score.reference` names the corpus languages in every
-report, so the limit travels with the number rather than living only
-here. And extending the corpus beyond these three languages is a
-deliberate release rather than a patch: new members move `CALIBRATION_C`,
-which re-grades every repository that has ever been scored.
+Three limits remain, and they are narrower than the one they replace:
 
-Per-language references would remove the awkwardness and break the
-promise, so they are refused: two repositories must be comparable
+- **Fortran entered at a lower star threshold.** Selection is otherwise
+  identical — created before 2021, pushed since 2026, under the size cap —
+  but Fortran has **zero** repositories above the 3,000-star bar the other
+  seven use, and its most-starred serious projects sit near 1,000–1,900
+  (LAPACK, WRF, Elmer, stdlib, CP2K). Holding one number across ecosystems
+  would have measured popularity rather than maturity and excluded the
+  language entirely. The per-language thresholds are recorded in
+  `tools/calibration/corpus.json` under `selection.min_stars`.
+- **Languages the scanner does not parse are still scored against this
+  anchor**, and there is no corpus that could fix that, because the tool
+  produces no declaration population for them at all — their rates are
+  withheld rather than approximated.
+- **Mature open source is not enterprise-internal code.** The frame is
+  deliberate and unchanged: the corpus stands for "what good looks like"
+  in public, maintained projects. A private codebase with different
+  constraints is measured against that, and the reference names it.
+
+Per-language references would remove the remaining awkwardness and break
+the promise, so they are refused: two repositories must be comparable
 regardless of what they are written in.
+
+`score.reference` names the corpus languages and its size in every report,
+so these limits travel with the number rather than living only here — and
+a guard holds that disclosure to `corpus.json` in both directions, so the
+report cannot name a language the corpus lacks or omit one it holds.
 
 **The list is produced by a query, not by preference.** The first corpus was fourteen repositories chosen because the author knew them — selection bias sitting directly underneath a scale used to grade other people's code. [`tools/calibration/select_corpus.py`](../tools/calibration/select_corpus.py) now issues a GitHub search anyone can re-run:
 

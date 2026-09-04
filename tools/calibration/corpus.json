@@ -4,14 +4,28 @@
   "languages": [
    "python",
    "typescript",
-   "javascript"
+   "javascript",
+   "java",
+   "c",
+   "cpp",
+   "csharp",
+   "fortran"
   ],
   "created_before": "2021-01-01",
   "pushed_after": "2026-01-01",
-  "min_stars": 3000,
+  "min_stars": {
+   "python": 3000,
+   "typescript": 3000,
+   "javascript": 3000,
+   "java": 3000,
+   "c": 3000,
+   "cpp": 3000,
+   "csharp": 3000,
+   "fortran": 500
+  },
   "max_size_kb": 800000
  },
- "selection_note": "created:<2021-01-01 is load-bearing. The corpus is the human-written baseline against which AI-assisted code is compared, and today's most-starred repositories include projects begun well into the LLM era \u2014 using those would answer the question before measuring it.",
+ "selection_note": "created:<2021-01-01 is load-bearing. The corpus is the human-written baseline against which AI-assisted code is compared, and today's most-starred repositories include projects begun well into the LLM era \u2014 using those would answer the question before measuring it. The star bar is per language because 3,000 stars is not the same statement in every ecosystem: Fortran has zero repositories above it, so a single threshold would have excluded the language rather than measured it. The existing 40 rows are unchanged and still pinned to the commits they were measured at, so this change adds languages without re-rolling the original three. One C++ member was replaced after selection: CPlusPlusThings is a teaching repository, and the marker list gained \"things\" to exclude that category mechanically rather than by veto. It was found by its measurements (declarations 0.0078 against a 0.1005 reference) rather than by its name, which is the outcome-triggered discovery a mechanical corpus exists to prevent, so it is recorded here. Re-running selection with the new marker changed exactly one member: googletest took its place.",
  "verification": {
   "min_source_files": 20,
   "min_declarations": 100,
@@ -446,6 +460,726 @@
    "created": "2020-10-26",
    "source_files": 1126,
    "declarations": 9440
+  },
+  {
+   "name": "Avalonia",
+   "url": "https://github.com/AvaloniaUI/Avalonia.git",
+   "commit": "9d5c2fa81d9c374379ae3ee286c778047a6a5a7e",
+   "language": "csharp",
+   "stars": 31440,
+   "created": "2013-12-05",
+   "source_files": 4239,
+   "declarations": 34884
+  },
+  {
+   "name": "Bulk-Crap-Uninstaller",
+   "url": "https://github.com/BCUninstaller/Bulk-Crap-Uninstaller.git",
+   "commit": "608321de98e92297377b1eb69029af55c25504a1",
+   "language": "csharp",
+   "stars": 21086,
+   "created": "2016-08-01",
+   "source_files": 568,
+   "declarations": 4441
+  },
+  {
+   "name": "FFmpeg",
+   "url": "https://github.com/FFmpeg/FFmpeg.git",
+   "commit": "9fc8c785e2747c87121ec28f8f10ceab0562384b",
+   "language": "c",
+   "stars": 63924,
+   "created": "2011-04-14",
+   "source_files": 4693,
+   "declarations": 36474
+  },
+  {
+   "name": "Files",
+   "url": "https://github.com/files-community/Files.git",
+   "commit": "c3c3fc22e1acc546ace1016460552091d71613e5",
+   "language": "csharp",
+   "stars": 44871,
+   "created": "2019-01-04",
+   "source_files": 1169,
+   "declarations": 7319
+  },
+  {
+   "name": "ILSpy",
+   "url": "https://github.com/icsharpcode/ILSpy.git",
+   "commit": "3ef547ca2cb1bb293034c2a309b6514fa0f7124f",
+   "language": "csharp",
+   "stars": 26004,
+   "created": "2011-02-04",
+   "source_files": 1841,
+   "declarations": 21525
+  },
+  {
+   "name": "ImHex",
+   "url": "https://github.com/WerWolv/ImHex.git",
+   "commit": "53dbd48a0ede08885e8ca8ebee2198bc45946610",
+   "language": "cpp",
+   "stars": 54668,
+   "created": "2020-11-10",
+   "source_files": 504,
+   "declarations": 5375
+  },
+  {
+   "name": "JeecgBoot",
+   "url": "https://github.com/jeecgboot/JeecgBoot.git",
+   "commit": "74364054449efd5852e46d0c10325a1d38c1006a",
+   "language": "java",
+   "stars": 47618,
+   "created": "2018-11-26",
+   "source_files": 1791,
+   "declarations": 13489
+  },
+  {
+   "name": "Lean",
+   "url": "https://github.com/QuantConnect/Lean.git",
+   "commit": "f24fc0d3df03d6bdbe0e6fc7b8522445f1d900d2",
+   "language": "csharp",
+   "stars": 21468,
+   "created": "2014-11-28",
+   "source_files": 4847,
+   "declarations": 30476
+  },
+  {
+   "name": "NewPipe",
+   "url": "https://github.com/TeamNewPipe/NewPipe.git",
+   "commit": "bbbac9b223f21a1a5a714044353cf0412de57b98",
+   "language": "java",
+   "stars": 39575,
+   "created": "2015-09-03",
+   "source_files": 296,
+   "declarations": 4069
+  },
+  {
+   "name": "PowerShell",
+   "url": "https://github.com/PowerShell/PowerShell.git",
+   "commit": "6ca24ccf024140ca061580c43751db27605c4815",
+   "language": "csharp",
+   "stars": 55241,
+   "created": "2016-01-13",
+   "source_files": 1276,
+   "declarations": 23819
+  },
+  {
+   "name": "PowerToys",
+   "url": "https://github.com/microsoft/PowerToys.git",
+   "commit": "479924d699a6ca6c53c0bbe68c234e276d8dad9c",
+   "language": "c",
+   "stars": 138341,
+   "created": "2019-05-01",
+   "source_files": 5518,
+   "declarations": 32087
+  },
+  {
+   "name": "QuickLook",
+   "url": "https://github.com/QL-Win/QuickLook.git",
+   "commit": "60eea46ae2efaf29c9c3a80c61a618ad774bea20",
+   "language": "csharp",
+   "stars": 24588,
+   "created": "2017-04-12",
+   "source_files": 448,
+   "declarations": 2478
+  },
+  {
+   "name": "RevokeMsgPatcher",
+   "url": "https://github.com/huiyadanli/RevokeMsgPatcher.git",
+   "commit": "8360fe2af70ef908dfe514eb78ca75129eacc5cc",
+   "language": "csharp",
+   "stars": 38671,
+   "created": "2019-07-21",
+   "source_files": 64,
+   "declarations": 265
+  },
+  {
+   "name": "RxJava",
+   "url": "https://github.com/ReactiveX/RxJava.git",
+   "commit": "947e681bca8aa5526a52a51e3953c82148ccb36b",
+   "language": "java",
+   "stars": 48208,
+   "created": "2013-01-08",
+   "source_files": 2073,
+   "declarations": 28645
+  },
+  {
+   "name": "ScreenToGif",
+   "url": "https://github.com/NickeManarin/ScreenToGif.git",
+   "commit": "a4d0a67c2131cd048ceec86cd40afc2f1a06f2fd",
+   "language": "csharp",
+   "stars": 27591,
+   "created": "2016-08-02",
+   "source_files": 648,
+   "declarations": 3587
+  },
+  {
+   "name": "ShareX",
+   "url": "https://github.com/ShareX/ShareX.git",
+   "commit": "96adbf0c12d54deb6e8778a9287b59bb1f6240fa",
+   "language": "csharp",
+   "stars": 39435,
+   "created": "2013-10-08",
+   "source_files": 1119,
+   "declarations": 9353
+  },
+  {
+   "name": "SteamTools",
+   "url": "https://github.com/BeyondDimension/SteamTools.git",
+   "commit": "d04213147e77a8d73277fa8b86eeecfa444df071",
+   "language": "csharp",
+   "stars": 26717,
+   "created": "2020-12-15",
+   "source_files": 933,
+   "declarations": 4137
+  },
+  {
+   "name": "TrafficMonitor",
+   "url": "https://github.com/zhongyang219/TrafficMonitor.git",
+   "commit": "188b8773b959733bfc0e4f506c762d9a255883d4",
+   "language": "cpp",
+   "stars": 46008,
+   "created": "2017-07-30",
+   "source_files": 222,
+   "declarations": 2151
+  },
+  {
+   "name": "Ventoy",
+   "url": "https://github.com/ventoy/Ventoy.git",
+   "commit": "6568972abca37e33e031e1f2651a68a86491082b",
+   "language": "c",
+   "stars": 79112,
+   "created": "2020-03-10",
+   "source_files": 755,
+   "declarations": 5750
+  },
+  {
+   "name": "WRF",
+   "url": "https://github.com/wrf-model/WRF.git",
+   "commit": "06d4240ae989cc3e50af412bb472df3d9048783c",
+   "language": "fortran",
+   "stars": 1747,
+   "created": "2016-08-16",
+   "source_files": 2133,
+   "declarations": 9312
+  },
+  {
+   "name": "aria2",
+   "url": "https://github.com/aria2/aria2.git",
+   "commit": "9e7273583f83e881e3ec067b523ba88724088d2f",
+   "language": "cpp",
+   "stars": 41903,
+   "created": "2010-11-27",
+   "source_files": 1202,
+   "declarations": 7330
+  },
+  {
+   "name": "aspnetcore",
+   "url": "https://github.com/dotnet/aspnetcore.git",
+   "commit": "797634df2f3d3e7f16aedf9f81f7d878510ccdf1",
+   "language": "csharp",
+   "stars": 38417,
+   "created": "2014-03-11",
+   "source_files": 11509,
+   "declarations": 91089
+  },
+  {
+   "name": "bitcoin",
+   "url": "https://github.com/bitcoin/bitcoin.git",
+   "commit": "4519933391dd23dbf1a4eceec6dd53d2e9e71cc3",
+   "language": "cpp",
+   "stars": 90089,
+   "created": "2010-12-19",
+   "source_files": 2023,
+   "declarations": 17571
+  },
+  {
+   "name": "calculator",
+   "url": "https://github.com/microsoft/calculator.git",
+   "commit": "4fd3fc53bade573ea2ac1e1ebad9bf603713f85e",
+   "language": "csharp",
+   "stars": 31030,
+   "created": "2019-01-28",
+   "source_files": 298,
+   "declarations": 2985
+  },
+  {
+   "name": "cp2k",
+   "url": "https://github.com/cp2k/cp2k.git",
+   "commit": "375a5ce9d028a60d4c3291b2b3eb10053932e6a3",
+   "language": "fortran",
+   "stars": 1198,
+   "created": "2018-10-02",
+   "source_files": 1664,
+   "declarations": 2432
+  },
+  {
+   "name": "curl",
+   "url": "https://github.com/curl/curl.git",
+   "commit": "e26f6e408a80dc0adcb704b0e2c408e240f482cc",
+   "language": "c",
+   "stars": 42744,
+   "created": "2010-03-18",
+   "source_files": 1079,
+   "declarations": 7309
+  },
+  {
+   "name": "dbeaver",
+   "url": "https://github.com/dbeaver/dbeaver.git",
+   "commit": "65c782e56bc4a48f0154d65dea9ed79d990609d4",
+   "language": "java",
+   "stars": 51643,
+   "created": "2015-10-21",
+   "source_files": 6556,
+   "declarations": 59130
+  },
+  {
+   "name": "dubbo",
+   "url": "https://github.com/apache/dubbo.git",
+   "commit": "5553cb77bd26b717c8cbaf83079765ac05d7d164",
+   "language": "java",
+   "stars": 41566,
+   "created": "2012-06-19",
+   "source_files": 4052,
+   "declarations": 35281
+  },
+  {
+   "name": "duckdb",
+   "url": "https://github.com/duckdb/duckdb.git",
+   "commit": "9c21294d984dfe9a1da5d055b5fce3e8a0d634b2",
+   "language": "cpp",
+   "stars": 40968,
+   "created": "2018-06-26",
+   "source_files": 4169,
+   "declarations": 53149
+  },
+  {
+   "name": "electron",
+   "url": "https://github.com/electron/electron.git",
+   "commit": "4cf22168dc6c2161ce6ff6a7917099dd27eda5d3",
+   "language": "cpp",
+   "stars": 122853,
+   "created": "2013-04-12",
+   "source_files": 1867,
+   "declarations": 8971
+  },
+  {
+   "name": "elmerfem",
+   "url": "https://github.com/ElmerCSC/elmerfem.git",
+   "commit": "a70ee422cbb75b9b9a45070f9328c695ca625f55",
+   "language": "fortran",
+   "stars": 1688,
+   "created": "2014-02-12",
+   "source_files": 3287,
+   "declarations": 15877
+  },
+  {
+   "name": "fds",
+   "url": "https://github.com/firemodels/fds.git",
+   "commit": "4d9aa5502c65f0df46268bed1e5d788c21f59d83",
+   "language": "fortran",
+   "stars": 866,
+   "created": "2015-06-09",
+   "source_files": 223,
+   "declarations": 1426
+  },
+  {
+   "name": "fpm",
+   "url": "https://github.com/fortran-lang/fpm.git",
+   "commit": "9a4433dd19183b548cd67afbd32992f53dc2b987",
+   "language": "fortran",
+   "stars": 1069,
+   "created": "2020-01-14",
+   "source_files": 241,
+   "declarations": 1337
+  },
+  {
+   "name": "ghidra",
+   "url": "https://github.com/NationalSecurityAgency/ghidra.git",
+   "commit": "2035b8153afaf7ce2edde24a2c80b62bbcf5127f",
+   "language": "java",
+   "stars": 74309,
+   "created": "2019-03-01",
+   "source_files": 16521,
+   "declarations": 221933
+  },
+  {
+   "name": "git",
+   "url": "https://github.com/git/git.git",
+   "commit": "3cb9185f65410273787f74333cc027d2ea5daada",
+   "language": "c",
+   "stars": 62966,
+   "created": "2008-07-23",
+   "source_files": 995,
+   "declarations": 13994
+  },
+  {
+   "name": "grpc",
+   "url": "https://github.com/grpc/grpc.git",
+   "commit": "f0358aedb97f0f1a564c6af1410a9699bc85589c",
+   "language": "cpp",
+   "stars": 45289,
+   "created": "2014-12-08",
+   "source_files": 6846,
+   "declarations": 62881
+  },
+  {
+   "name": "halo",
+   "url": "https://github.com/halo-dev/halo.git",
+   "commit": "4e7e5850b01640515323dcd4f08a1b42ff033147",
+   "language": "java",
+   "stars": 39665,
+   "created": "2018-03-21",
+   "source_files": 2268,
+   "declarations": 12420
+  },
+  {
+   "name": "imgui",
+   "url": "https://github.com/ocornut/imgui.git",
+   "commit": "5316e7061425524682cafbafe8e0b86494a70470",
+   "language": "cpp",
+   "stars": 76041,
+   "created": "2014-07-21",
+   "source_files": 98,
+   "declarations": 2898
+  },
+  {
+   "name": "jadx",
+   "url": "https://github.com/skylot/jadx.git",
+   "commit": "8f7ea4e2c4bb82ca935aaeee98d9e8d3f3f3fba8",
+   "language": "java",
+   "stars": 50327,
+   "created": "2013-03-18",
+   "source_files": 1934,
+   "declarations": 17674
+  },
+  {
+   "name": "java-design-patterns",
+   "url": "https://github.com/iluwatar/java-design-patterns.git",
+   "commit": "41625d8d354cdf6b6f10a82e29c2392b3efd5d20",
+   "language": "java",
+   "stars": 94637,
+   "created": "2014-08-09",
+   "source_files": 2029,
+   "declarations": 7580
+  },
+  {
+   "name": "jellyfin",
+   "url": "https://github.com/jellyfin/jellyfin.git",
+   "commit": "1ccec11b918ebeaac7db0f785548e41b484adb87",
+   "language": "csharp",
+   "stars": 56501,
+   "created": "2018-12-09",
+   "source_files": 2172,
+   "declarations": 9839
+  },
+  {
+   "name": "jq",
+   "url": "https://github.com/jqlang/jq.git",
+   "commit": "9d241e277204b83c4a7ddc7d733e5c72f99ef500",
+   "language": "c",
+   "stars": 35541,
+   "created": "2012-07-18",
+   "source_files": 55,
+   "declarations": 697
+  },
+  {
+   "name": "json",
+   "url": "https://github.com/nlohmann/json.git",
+   "commit": "19386dd14af178fecd4a4a65549b07e240e092a9",
+   "language": "cpp",
+   "stars": 50521,
+   "created": "2013-07-04",
+   "source_files": 507,
+   "declarations": 4467
+  },
+  {
+   "name": "lapack",
+   "url": "https://github.com/Reference-LAPACK/lapack.git",
+   "commit": "cee01836dc867f79d8fbbb1d9bc00bcdda6c0585",
+   "language": "fortran",
+   "stars": 1896,
+   "created": "2016-04-29",
+   "source_files": 6521,
+   "declarations": 7064
+  },
+  {
+   "name": "lede",
+   "url": "https://github.com/coolsnowwolf/lede.git",
+   "commit": "9262b55e09d9dc74024a8effb2b26512b100ef96",
+   "language": "c",
+   "stars": 31589,
+   "created": "2017-09-06",
+   "source_files": 2787,
+   "declarations": 38464
+  },
+  {
+   "name": "mall",
+   "url": "https://github.com/macrozheng/mall.git",
+   "commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+   "language": "java",
+   "stars": 84703,
+   "created": "2018-04-04",
+   "source_files": 524,
+   "declarations": 14904
+  },
+  {
+   "name": "mpv",
+   "url": "https://github.com/mpv-player/mpv.git",
+   "commit": "f5bcfb195412e0ca733eac2e850879cd3b1ded18",
+   "language": "c",
+   "stars": 36828,
+   "created": "2012-10-13",
+   "source_files": 613,
+   "declarations": 7530
+  },
+  {
+   "name": "nwchem",
+   "url": "https://github.com/nwchemgit/nwchem.git",
+   "commit": "76d77c1e7c9c06779932133a845bcd94d936772d",
+   "language": "fortran",
+   "stars": 622,
+   "created": "2017-11-19",
+   "source_files": 18338,
+   "declarations": 43662
+  },
+  {
+   "name": "obs-studio",
+   "url": "https://github.com/obsproject/obs-studio.git",
+   "commit": "ecebe28a1ea87c30f652b5d06fcaf893c787108d",
+   "language": "c",
+   "stars": 75777,
+   "created": "2013-10-01",
+   "source_files": 1653,
+   "declarations": 15486
+  },
+  {
+   "name": "opencv",
+   "url": "https://github.com/opencv/opencv.git",
+   "commit": "3a718750a4d4bcde78bc93bcaf18b0303e956e55",
+   "language": "cpp",
+   "stars": 90705,
+   "created": "2012-07-19",
+   "source_files": 4651,
+   "declarations": 61798
+  },
+  {
+   "name": "openfast",
+   "url": "https://github.com/OpenFAST/openfast.git",
+   "commit": "2895884d2be01862173c88d70f86b358d2f1a50a",
+   "language": "fortran",
+   "stars": 960,
+   "created": "2016-08-31",
+   "source_files": 469,
+   "declarations": 9093
+  },
+  {
+   "name": "php-src",
+   "url": "https://github.com/php/php-src.git",
+   "commit": "0bf872bebf511f0c69f15bf5d9b86eb7176fd0eb",
+   "language": "c",
+   "stars": 40357,
+   "created": "2011-06-16",
+   "source_files": 2328,
+   "declarations": 20677
+  },
+  {
+   "name": "protobuf",
+   "url": "https://github.com/protocolbuffers/protobuf.git",
+   "commit": "065d6fabf7345bd469844f5ed472664602570bc5",
+   "language": "cpp",
+   "stars": 71988,
+   "created": "2014-08-26",
+   "source_files": 1878,
+   "declarations": 62789
+  },
+  {
+   "name": "qBittorrent",
+   "url": "https://github.com/qbittorrent/qBittorrent.git",
+   "commit": "af5a6b6cb301f1dae707b351621fef3f2d6cccf3",
+   "language": "cpp",
+   "stars": 39885,
+   "created": "2012-02-04",
+   "source_files": 883,
+   "declarations": 7786
+  },
+  {
+   "name": "raylib",
+   "url": "https://github.com/raysan5/raylib.git",
+   "commit": "9b2efc45522bdce8cb9462ccaf3b1f5a25888e54",
+   "language": "c",
+   "stars": 34569,
+   "created": "2013-10-24",
+   "source_files": 368,
+   "declarations": 10358
+  },
+  {
+   "name": "redis",
+   "url": "https://github.com/redis/redis.git",
+   "commit": "ceadaab2be6770d6c5faab1e0b4f57f0d5130cc4",
+   "language": "c",
+   "stars": 76184,
+   "created": "2009-03-21",
+   "source_files": 848,
+   "declarations": 9356
+  },
+  {
+   "name": "retrofit",
+   "url": "https://github.com/lysine-dev/retrofit.git",
+   "commit": "e27d855b7b029e7f907dfc52205fdb3e9c603c16",
+   "language": "java",
+   "stars": 43936,
+   "created": "2010-09-06",
+   "source_files": 876,
+   "declarations": 2874
+  },
+  {
+   "name": "rufus",
+   "url": "https://github.com/pbatard/rufus.git",
+   "commit": "2368e49a82e854d3e702f824648cc723953dbb53",
+   "language": "c",
+   "stars": 37525,
+   "created": "2011-11-19",
+   "source_files": 480,
+   "declarations": 2852
+  },
+  {
+   "name": "scrcpy",
+   "url": "https://github.com/Genymobile/scrcpy.git",
+   "commit": "2926c06c5dc3064ae6d8db706f1a98a37cfcf3f0",
+   "language": "c",
+   "stars": 148801,
+   "created": "2017-11-21",
+   "source_files": 278,
+   "declarations": 1306
+  },
+  {
+   "name": "specfem3d",
+   "url": "https://github.com/SPECFEM/specfem3d.git",
+   "commit": "7a1c76454396f8dd2f5a67ea524ca372e2c91993",
+   "language": "fortran",
+   "stars": 511,
+   "created": "2013-11-11",
+   "source_files": 1595,
+   "declarations": 5448
+  },
+  {
+   "name": "spring-boot",
+   "url": "https://github.com/spring-projects/spring-boot.git",
+   "commit": "87cacdaabd38be0b8c0bc4a9809fbea35c9e48f8",
+   "language": "java",
+   "stars": 81400,
+   "created": "2012-10-19",
+   "source_files": 8441,
+   "declarations": 64678
+  },
+  {
+   "name": "spring-framework",
+   "url": "https://github.com/spring-projects/spring-framework.git",
+   "commit": "136dddb67d1de65f91fabcde6d92799797feed89",
+   "language": "java",
+   "stars": 60219,
+   "created": "2010-12-08",
+   "source_files": 9244,
+   "declarations": 106633
+  },
+  {
+   "name": "stb",
+   "url": "https://github.com/nothings/stb.git",
+   "commit": "2c980bb59875b0d32144a71867fbdebb2f77cd20",
+   "language": "c",
+   "stars": 34582,
+   "created": "2014-05-25",
+   "source_files": 91,
+   "declarations": 2594
+  },
+  {
+   "name": "stdlib",
+   "url": "https://github.com/fortran-lang/stdlib.git",
+   "commit": "9a15c7772f1a76a6c497b9f3abb793841fc81f74",
+   "language": "fortran",
+   "stars": 1345,
+   "created": "2019-12-14",
+   "source_files": 429,
+   "declarations": 1415
+  },
+  {
+   "name": "terminal",
+   "url": "https://github.com/microsoft/terminal.git",
+   "commit": "62711fd73ef9733fa83108bfa7cea22528d2dbb9",
+   "language": "cpp",
+   "stars": 104790,
+   "created": "2017-08-11",
+   "source_files": 1248,
+   "declarations": 10455
+  },
+  {
+   "name": "termux-app",
+   "url": "https://github.com/termux/termux-app.git",
+   "commit": "3b66f8799635a4dba4a206563048ff0e6792c487",
+   "language": "java",
+   "stars": 60250,
+   "created": "2015-10-23",
+   "source_files": 200,
+   "declarations": 2648
+  },
+  {
+   "name": "tesseract",
+   "url": "https://github.com/tesseract-ocr/tesseract.git",
+   "commit": "fb87a84b6e3384b424b2169c76de9031046861e9",
+   "language": "cpp",
+   "stars": 76321,
+   "created": "2014-08-12",
+   "source_files": 601,
+   "declarations": 6708
+  },
+  {
+   "name": "tmux",
+   "url": "https://github.com/tmux/tmux.git",
+   "commit": "9fa390aee696f7c3886bc9146e4051cbbe9593cb",
+   "language": "c",
+   "stars": 49033,
+   "created": "2015-06-03",
+   "source_files": 207,
+   "declarations": 524
+  },
+  {
+   "name": "v2rayN",
+   "url": "https://github.com/2dust/v2rayN.git",
+   "commit": "fed59a7313239479e81425164638050be0b4752d",
+   "language": "csharp",
+   "stars": 115341,
+   "created": "2019-07-30",
+   "source_files": 278,
+   "declarations": 1851
+  },
+  {
+   "name": "x64dbg",
+   "url": "https://github.com/x64dbg/x64dbg.git",
+   "commit": "3ff04481f6a9b8efdefcd66a4996a7e7891dc854",
+   "language": "cpp",
+   "stars": 49387,
+   "created": "2015-04-11",
+   "source_files": 749,
+   "declarations": 7910
+  },
+  {
+   "name": "xtb",
+   "url": "https://github.com/grimme-lab/xtb.git",
+   "commit": "a45f05d397268fd683b5f9f824ed59912c5490b5",
+   "language": "fortran",
+   "stars": 840,
+   "created": "2019-09-30",
+   "source_files": 386,
+   "declarations": 2851
+  },
+  {
+   "name": "googletest",
+   "url": "https://github.com/google/googletest.git",
+   "commit": "283c17563fe7a1111cd7f581aa5d541e8baeff2f",
+   "language": "cpp",
+   "stars": 39486,
+   "created": "2015-07-28",
+   "source_files": 190,
+   "declarations": 6443
   }
  ]
 }

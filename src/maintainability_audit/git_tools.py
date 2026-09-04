@@ -229,6 +229,44 @@ def changed_paths(root: Path, revspec: str) -> set[str]:
     return {line.strip().replace(os.sep, "/") for line in output.splitlines() if line.strip()}
 
 
+def added_lines(root: Path, revspec: str) -> dict[str, list[tuple[int, str]]]:
+    """Lines a revspec *adds*, per path, as (line number, text).
+
+    Added lines only. A suppression that was already in the tree is not
+    evidence about this change, and reading whole files instead of the diff
+    would report a decade of accumulated `# noqa` as though this agent had
+    just written them.
+
+    `--unified=0` keeps context lines out, so every `+` is genuinely new.
+    The revspec is validated and `--` terminates the revision list, as in
+    `changed_paths`: nothing after it can be read as a path or an option.
+    """
+    # `--no-ext-diff` is load-bearing, not defensive. The read-only config
+    # this module runs under neutralises `diff.external`, which costs
+    # nothing for `--name-only` because no diff is produced — and kills a
+    # content diff outright, because git then tries to execute the empty
+    # string: "cannot run : No such file or directory".
+    output = run_git(
+        ["diff", "--no-ext-diff", "--unified=0", validate_revspec(revspec), "--"], root
+    )
+    added: dict[str, list[tuple[int, str]]] = {}
+    path = ""
+    line_number = 0
+    for line in output.splitlines():
+        if line.startswith("+++ b/"):
+            path = line[6:].strip().replace(os.sep, "/")
+        elif line.startswith("@@"):
+            # @@ -old,count +new,count @@
+            marker = line.split("+", 1)[1].split("@@", 1)[0].strip()
+            start = marker.split(",", 1)[0]
+            line_number = int(start) if start.lstrip("-").isdigit() else 0
+        elif line.startswith("+") and not line.startswith("+++"):
+            if path:
+                added.setdefault(path, []).append((line_number, line[1:]))
+            line_number += 1
+    return added
+
+
 def worktree_status(root: Path) -> str | None:
     """Porcelain status, or `None` when git cannot answer.
 

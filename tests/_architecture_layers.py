@@ -120,6 +120,12 @@ SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_de
 # adapters and hands `report` a coverage document. That makes it assembly,
 # not a scanner — it composes rather than measures.
 ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
+            # `_conformance` compares a diff against the work order the
+            # report already produced. Assembly because it composes from a
+            # finished report rather than measuring a tree — and it may
+            # never reach scoring: whether a diff was obedient is a fact
+            # about an agent, not evidence about the code.
+            "_conformance",
             # `_economics` composes the ADR 004 scenario from the finished
             # report and configured context; it measures nothing, asks
             # nothing, and may never be imported by scoring.

@@ -81,19 +81,64 @@ def instruction_body(target: str, config: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def instruction_path_for_target(target: str, output_dir: Path) -> Path:
-    mapping = {
-        "generic": "AI-MAINTAINABILITY.md",
-        "claude-code": "CLAUDE.md",
-        "codex": "AGENTS.md",
-        "cursor": ".cursor/rules/maintainability.mdc",
-        "copilot": ".github/copilot-instructions.md",
-        "windsurf": ".windsurf/rules/maintainability.md",
-    }
-    return output_dir / mapping.get(target, f"{target}-maintainability.md")
+#: Each agent and the file it actually reads for repo standing
+#: instructions. One declaration, because this list was written out three
+#: times — here, and twice in `cli.py` as `choices` and as the default —
+#: so adding a target meant remembering all three or shipping one the CLI
+#: refused to accept.
+#:
+#: A target belongs here only when the path it writes is the path that
+#: agent genuinely reads. Emitting a plausible-looking file an agent never
+#: opens is worse than having no target: it looks configured and does
+#: nothing.
+INSTRUCTION_TARGETS: dict[str, str] = {
+    "generic": "AI-MAINTAINABILITY.md",
+    "claude-code": "CLAUDE.md",
+    "codex": "AGENTS.md",
+    "cursor": ".cursor/rules/maintainability.mdc",
+    "copilot": ".github/copilot-instructions.md",
+    "windsurf": ".windsurf/rules/maintainability.md",
+}
 
 
-def write_instruction_pack(targets: list[str], output_dir: Path, config: dict[str, Any]) -> list[str]:
+class UnknownTarget(ValueError):
+    """A target with no built-in convention and no path supplied."""
+
+
+def instruction_path_for_target(
+    target: str, output_dir: Path, overrides: dict[str, str] | None = None
+) -> Path:
+    """Where this agent's standing instructions go.
+
+    An override wins over the built-in table, because a convention can
+    change or be site-specific, and the person running the command knows
+    their agent better than this table does.
+
+    A target nobody has a convention for is **refused** rather than given a
+    generated filename. The fallback that used to sit here —
+    ``{target}-maintainability.md`` — was unreachable anyway, because the
+    CLI's `choices` rejected unknown targets first; and had it been
+    reachable it would have written a plausible-looking file the agent
+    never opens, which is worse than no target at all. It looks configured
+    and does nothing.
+    """
+    if overrides and target in overrides:
+        return output_dir / overrides[target]
+    if target in INSTRUCTION_TARGETS:
+        return output_dir / INSTRUCTION_TARGETS[target]
+    raise UnknownTarget(
+        f"no known instructions path for {target!r}. Pass "
+        f"--target-path {target}=PATH to say where that agent reads its "
+        f"standing instructions. Known targets: {', '.join(INSTRUCTION_TARGETS)}"
+    )
+
+
+def write_instruction_pack(
+    targets: list[str],
+    output_dir: Path,
+    config: dict[str, Any],
+    overrides: dict[str, str] | None = None,
+) -> list[str]:
     # Each instruction file is a product-artifact write: `output_dir`
     # comes from a person (`--instructions-output-dir`), so the write is
     # bound to that directory and refuses a symlinked route the audited
@@ -102,7 +147,7 @@ def write_instruction_pack(targets: list[str], output_dir: Path, config: dict[st
 
     written: list[str] = []
     for target in targets:
-        path = instruction_path_for_target(target, output_dir)
+        path = instruction_path_for_target(target, output_dir, overrides)
         write_artifact(output_dir, path, instruction_body(target, config) + "\n")
         written.append(str(path))
     return written

@@ -89,6 +89,24 @@ def test_every_scanned_source_suffix_can_be_read_by_something() -> None:
         "population would be a number nobody measured"
     )
 
+    # The other direction, which was missing and cost 2.4.0 its language.
+    # Swift shipped in `DECLARATION_SUFFIXES`, in `SCANNERS`, in the README
+    # table and in `language-support.md` — and not in the default
+    # `include_extensions`, so no `.swift` file was ever opened. The scanner
+    # was correct, tested, documented, and unreachable: an audit of a Swift
+    # repository found zero Swift files and withheld its rates, which is
+    # indistinguishable from not supporting the language at all.
+    #
+    # Caught by a corpus run reporting `vapor/vapor` as three files, not by
+    # any test, because every test that could have caught it exercised the
+    # scanner directly rather than through the configuration a user gets.
+    unopened = sorted(DECLARATION_SUFFIXES - included)
+    assert not unopened, (
+        f"{unopened} are parsed but absent from the default "
+        "include_extensions, so no such file is ever opened; the language "
+        "is claimed and unreachable"
+    )
+
 
 # One sample of real source per claimed language, by suffix. This was a
 # chain of nested conditionals until 1.4.0, when the fifth language took

@@ -116,6 +116,37 @@ def _trend(runs: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _segment_holding(records: list[ScanRecord], wanted: ScanRecord) -> Any:
+    """The instrument-segment containing one record.
+
+    Membership is by **identity**, not equality: two scans of an unchanged
+    tree differ only in their timestamp, and an equality test would find
+    the wrong one — silently attributing a run to the wrong instrument.
+    """
+    return next(
+        segment for segment in segments(records)
+        if any(item is wanted for item in segment.records)
+    )
+
+
+def _entries_within(segment: Any, labelled: list[ScanRecord]) -> list[dict[str, Any]]:
+    """The labelled runs inside this segment, each with its predecessor.
+
+    A run's predecessor is the scan immediately before it *in the
+    segment*, whatever that scan was labelled — the movement being
+    measured is across the interval, not between two runs of the same
+    name.
+    """
+    order = {id(record): index for index, record in enumerate(segment.records)}
+    return [
+        _run_entry(
+            record,
+            segment.records[order[id(record)] - 1] if order[id(record)] else None,
+        )
+        for record in labelled if id(record) in order
+    ]
+
+
 def compare_runs(records: list[ScanRecord], label: str) -> dict[str, Any]:
     """Every recorded run of one transformation, and how the last two differ.
 
@@ -135,25 +166,9 @@ def compare_runs(records: list[ScanRecord], label: str) -> dict[str, Any]:
             },
         }
 
-    found = segments(records)
-    newest = labelled[-1]
-    # Identity, not equality: two scans of one commit can be equal records.
-    current = next(
-        segment for segment in found
-        if any(item is newest for item in segment.records)
-    )
-    in_segment = [record for record in labelled
-                  if any(item is record for item in current.records)]
-    excluded = len(labelled) - len(in_segment)
-
-    order = {id(record): index for index, record in enumerate(current.records)}
-    runs = [
-        _run_entry(
-            record,
-            current.records[order[id(record)] - 1] if order[id(record)] else None,
-        )
-        for record in in_segment
-    ]
+    current = _segment_holding(records, labelled[-1])
+    runs = _entries_within(current, labelled)
+    excluded = len(labelled) - len(runs)
 
     comparison = {
         "label": label,

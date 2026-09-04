@@ -44,6 +44,36 @@ pytestmark = pytest.mark.usefixtures("real_population_floors")
 CORPUS = Path(__file__).resolve().parent.parent / "tools" / "calibration" / "corpus.json"
 
 
+def test_the_shipped_floors_are_the_corpus_minima() -> None:
+    """The suite lifts the floors; this pins what it lifted.
+
+    Without it, a floor could be raised above a calibration member's
+    population and no test would notice, because every other test runs
+    with the floors disabled.
+
+    It lived in `conftest.py` and was therefore never collected — pytest
+    loads a conftest as a plugin, not as a test module — so for as long as
+    it existed it asserted nothing. It is compared against
+    `conftest.SHIPPED_FLOORS`, captured at import before any fixture
+    touches the table, rather than against the live module attribute this
+    file's own `real_population_floors` fixture restores.
+
+    Covers existing behaviour: the floors and the corpus it checks them
+    against are both older than this change, which only moves the
+    assertion somewhere pytest will run it. It cannot fail at the base
+    for the plainest possible reason — at the base it is not collected,
+    so there is nothing there to fail.
+    """
+    from conftest import SHIPPED_FLOORS
+
+    repos = json.loads(CORPUS.read_text(encoding="utf-8"))["repos"]
+    assert SHIPPED_FLOORS["files_scanned"] <= min(r["source_files"] for r in repos)
+    assert SHIPPED_FLOORS["declarations_scanned"] <= min(r["declarations"] for r in repos)
+    assert all(value > 0 for value in SHIPPED_FLOORS.values()), (
+        "a zero floor ships nothing; the hello-world A+ comes straight back"
+    )
+
+
 def _repo(tmp_path: Path, files: int, decls_per_file: int = 1) -> Path:
     root = tmp_path / "r"
     root.mkdir(parents=True)

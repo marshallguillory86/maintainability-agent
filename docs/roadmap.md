@@ -50,8 +50,20 @@ Go and Rust remain named in [ADR 006](decisions.md) as unwritten on exactly thes
 
 **Two gaps that widen with every language added**, and should be closed alongside rather than after:
 
-- **Test-command detection stops at Python.** `_test_execution` knows `pytest -q`; `swift test`, `xcodebuild test`, `fpm test`, `ctest`, `go test` and `cargo test` are unrecognised, so `expected_commands.test` stays hand-configured on every non-Python tree. Swift lands in 1.9.0 with that gap unless it is closed alongside. Fortran's practice detection (1.7.0) reads `fpm.toml` but nothing runs from it.
+- **Test-command detection stops at Python.** `_test_execution` knows `pytest -q`; `swift test`, `xcodebuild test`, `fpm test`, `ctest`, `go test` and `cargo test` are unrecognised, so `expected_commands.test` stays hand-configured on every non-Python tree. Swift shipped in 2.4.0 with that gap still open. Fortran's practice detection (1.7.0) reads `fpm.toml` but nothing runs from it.
 - **A new language inherits whatever the corpus does not hold.** This was the sharper of the two gaps until 2.0.0: the corpus was 40 JS/TS/Python repositories and LAPACK read 7.18x the declaration median against an anchor containing no Fortran. It is now 112 repositories across all eight parsed languages, so the gap closes for what ships today — and reopens for every language added after, since a scanner without corpus members is scored against code unlike it again. Extending the corpus moves `CALIBRATION_C` and re-grades every repository, so it stays a release of its own rather than a patch bundled with a scanner.
+
+### Corpus policy: recalibrate once, after the remaining scanners land
+
+**Decided 2026-09-04.** A language ships parsed and **unanchored**: its scanner lands, and the reference corpus is *not* extended to hold it in the same release. The corpus is re-measured and `CALIBRATION_C` re-derived **once**, after the remaining planned scanners are written — not once per language.
+
+Swift (2.4.0) is the first language to ship under this policy and is unanchored today. It is measured by a parser and scored against a 112-repository anchor containing no Swift.
+
+The reason is cost, and it is worth stating exactly rather than as "it's slow". Reuse (`--reuse`) makes a *corpus* change cheap: adding one repository re-measures one and reuses 111. It does nothing for a *language* change, because adding a scanner changes the measurement code, which moves `scanner_fingerprint`, which invalidates every stored row. So every new language costs a full re-measure of the whole corpus — and each one also re-grades every repository this tool has ever scored, since `CALIBRATION_C` moves. Paying that per language means paying it in full, repeatedly, for an anchor that is obsolete again at the next scanner.
+
+**What this policy costs, stated so nobody has to discover it:** an unanchored language is scored against code unlike it, and its grades are therefore less trustworthy than an anchored language's. That is the same defect as LAPACK's 7.18x reading, accepted deliberately and for a bounded time rather than encountered by surprise. The honest framing is that Swift's *findings* are as good as its parser, and Swift's *grade* is provisional until the recalibration.
+
+**What must happen at that recalibration**, so it is a checklist and not a memory: re-measure the full corpus with the then-current scanners, re-derive `CALIBRATION_C` by bisection, re-run the calibration corpus tests, publish the study, and ship it as a **major** release — it re-grades every repository, which is a breaking change to every published number.
 
 **Not scheduled, and the distinction matters.** Go, Rust, Kotlin, Scala, Ruby, PHP and the rest are classified by discovery and may be measured by adapters, but no scanner is scheduled for any of them. They are not refused — they are unwritten, on the terms above. A language moves onto this list when it is decided here, not by being named in an older register entry.
 

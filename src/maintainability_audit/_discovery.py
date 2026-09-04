@@ -59,7 +59,7 @@ CATALOG_LANGUAGE: dict[str, str] = {
     "Go": "go", "Rust": "rust", "Swift": "swift", "Objective-C": "objectivec",
     "Ruby": "ruby", "PHP": "php", "Perl": "perl", "Lua": "lua", "R": "r",
     "Julia": "julia", "Dart": "dart", "Elixir": "elixir", "Erlang": "erlang",
-    "Haskell": "haskell", "OCaml": "ocaml", "Clojure": "clojure", "Fortran": "fortran",
+    "Haskell": "haskell", "OCaml": "ocaml", "Clojure": "clojure", "Fortran": "fortran", "COBOL": "cobol",
     "Shell": "shell", "PowerShell": "powershell", "SQL": "sql", "Groovy": "groovy",
     "Vue": "vue", "Svelte": "svelte", "Zig": "zig", "Nim": "nim", "Crystal": "crystal",
     "D": "d", "Ada": "ada",

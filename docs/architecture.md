@@ -125,6 +125,7 @@ flowchart TB
     _ranges_csharp["_ranges_csharp"]
     _ranges_fortran["_ranges_fortran"]
     _ranges_swift["_ranges_swift"]
+    _ranges_cobol["_ranges_cobol"]
     _tokens["_tokens"]
     _xml["_xml"]
   end

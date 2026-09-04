@@ -73,7 +73,14 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
 # layer.
 PARSING = {"source", "declarations", "_cognitive", "_tokens", "_xml",
            "_ranges_core", "_ranges_js", "_ranges_java", "_ranges_c",
-           "_ranges_cpp", "_ranges_csharp", "_ranges_fortran", "_ranges_swift"}
+           "_ranges_cpp", "_ranges_csharp", "_ranges_fortran", "_ranges_swift",
+           # COBOL: the first language here whose declarations have no end
+           # marker, so it supplies a finder that looks for the next
+           # beginning rather than for a terminator. Its mask lives with it
+           # rather than in `_masking`, because deciding whether a line is a
+           # declaration needs to know which division it is in — which only
+           # a whole-file pass can answer.
+           "_ranges_cobol"}
 # ADR 003: `_semantic` normalizes and classifies; `_semantic_ts` reads
 # TypeScript facts (recordings, an already-installed tsc through
 # `_runner`, and source text). Both observe and neither scores —

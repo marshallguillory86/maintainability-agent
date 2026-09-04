@@ -26,6 +26,29 @@ from test_unread_code import JAVA, _repo
 from maintainability_audit.config import load_config
 from maintainability_audit.report import build_report
 
+DOCS = Path(__file__).resolve().parents[1] / "docs"
+
+#: Parsed languages that no adapted analyzer measures for complexity.
+#:
+#: A **disclosure, not a dispensation.** Each entry means the built-in
+#: scanner is the only reading that language gets, so the analyzer tier
+#: reports it as unmeasured rather than pretending otherwise — and
+#: `test_every_exemption_is_disclosed_where_users_read_it` fails unless
+#: the language-support page says so where a user will find it.
+#:
+#: Adding a row here is a claim about the world, and it should be checked
+#: before it is made: Fortran sat in exactly this position until someone
+#: noticed lizard had read it for years behind a stale catalog row.
+NO_EXTERNAL_COMPLEXITY = {
+    # No offline analyzer in the catalog reads COBOL. The mainframe
+    # tooling that does — IBM Developer for z/OS, ADDI, the analysis
+    # around Dependency Based Build — is licensed, host-resident, and
+    # outside anything this project can invoke without a network or a
+    # mainframe. lizard does not read it; jscpd reads duplication only,
+    # which is the half this floor exists to reject.
+    "cobol",
+}
+
 
 def test_every_default_extension_is_parseable_or_has_a_stated_reason() -> None:
     """Each suffix the tool opens by default either yields declarations
@@ -231,11 +254,38 @@ def test_every_parsed_language_can_reach_a_complexity_analyzer() -> None:
         for suffix in DECLARATION_SUFFIXES
         if suffix in KNOWN_SOURCE_SUFFIXES
     }
-    missing = sorted(name for name in parsed if name and name not in covered)
+    missing = sorted(
+        name for name in parsed
+        if name and name not in covered and name not in NO_EXTERNAL_COMPLEXITY
+    )
     assert not missing, (
         f"{missing} are parsed by this project and no adapted analyzer that "
         "measures complexity claims to read them, so half the rubric has no "
         "external reading there. If a tool does read one, its catalog row is "
         "stale — correct it in VERIFIED_EXTRA_LANGUAGES with evidence from "
-        "running the tool."
+        "running the tool. If genuinely nothing reads it, add it to "
+        "NO_EXTERNAL_COMPLEXITY with the reason — and expect that entry to be "
+        "disclosed to users, not merely recorded here."
+    )
+
+
+def test_every_exemption_is_disclosed_where_users_read_it() -> None:
+    """An exemption must cost a disclosure, or it is a silent downgrade.
+
+    `NO_EXTERNAL_COMPLEXITY` is the escape hatch on the lint above, and an
+    escape hatch nobody sees is how a language ends up quietly measured by
+    half the rubric. So each entry has to be named in the language-support
+    page as well — the same document a user consults before trusting a
+    grade.
+    """
+    page = (DOCS / "language-support.md").read_text(encoding="utf-8").lower()
+
+    undisclosed = sorted(
+        name for name in NO_EXTERNAL_COMPLEXITY if name not in page
+    )
+
+    assert not undisclosed, (
+        f"{undisclosed} are exempt from the complexity-analyzer floor and "
+        "docs/language-support.md never mentions them, so a reader has no "
+        "way to learn that the external tier is empty there"
     )

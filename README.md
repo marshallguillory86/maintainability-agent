@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **2.6.0**.
+Version **2.7.0**.
 
 **Languages parsed:** Python, Java, C, C++, C#, Swift, Fortran (free-form
 *and* fixed-form), and the JS/TS family — each by a scanner written for it, and
@@ -252,14 +252,13 @@ SonarQube, Qlty) rather than replacing them — their SARIF folds in via
 
 ## Language support
 
-**Be clear-eyed about this: the tool does not support every language equally,
-and on an unrecognized language it will quietly under-report rather than fail.**
-Coverage comes from two layers.
+**Be clear-eyed: the tool does not support every language equally, and on an
+unrecognized language it under-reports rather than fails.** Coverage has two layers.
 
-Nine languages are parsed as of **2.4.0**: Python (1.0), Java (1.0), C (1.1),
-C++ (1.2), C# (1.3), Fortran (free-form 1.4, fixed-form 1.6), Swift (2.4), the
-JS/TS family, and HTML. Each has a scanner written for it and a documented list of what it
-misses — a language is claimed here only when both exist.
+Ten languages are parsed as of **2.7.0**: Python (1.0), Java (1.0), C (1.1),
+C++ (1.2), C# (1.3), Fortran (free-form 1.4, fixed-form 1.6), Swift (2.4),
+COBOL (2.7), the JS/TS family, and HTML. Each has a scanner written for it and a
+documented list of what it misses — a language is claimed only when both exist.
 
 **Built-in scanner (always on, no dependencies)** — reads function/class
 declarations, sizes and complexity for a fixed set of languages, and **only**
@@ -273,6 +272,7 @@ these:
 | C++ (`.cpp`, `.hpp`, `.cc`, `.cxx`, `.hh`) | dedicated brace-bounded scanner — functions, class members, namespaces, templates | Bounded; bodyless declarations are not definitions |
 | C# (`.cs`) | dedicated brace-bounded scanner — methods, constructors, `class`/`interface`/`struct`/`record`/`enum` | Bounded; properties are not declarations |
 | Swift (`.swift`) | dedicated brace-bounded scanner — functions, initialisers, subscripts, `class`/`struct`/`enum`/`protocol`/`actor` | Bounded; extension members carry their type, protocol requirements and computed properties are not declarations |
+| COBOL (`.cbl`, `.cob`, `.cpy`, and `.CBL`/`.COB`/`.CPY`) | dedicated scanner — PROCEDURE DIVISION paragraphs, bounded by the start of whatever follows; fixed-form card columns read where the layout carries them | Bounded by the next header; level numbers and container programs/sections are not declarations |
 | Fortran, free-form (`.f90`, `.f95`, `.f03`, `.f08`, `.F90`, `.F95`, `.F03`, `.F08`, `.pf`) | dedicated **keyword**-bounded scanner — modules, subroutines, functions, derived types | Bounded by `end`; measured with Fortran's own branch and nesting reading |
 | Fortran, fixed-form (`.f`, `.for`, `.ftn`, `.F`, `.FOR`, `.FTN`) | the same scanner over card-column source; continuations joined, labelled `DO` loops understood | Bounded by `end` or by the loop's label |
 | JS / TS / JSX / TSX (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`) | brace/paren depth over a masked copy | Bounded by the declaration's own braces |
@@ -294,13 +294,14 @@ can withhold the grade).
 | Java | dedicated scanner | lizard, PMD, Checkstyle, SpotBugs |
 | C / C++ / C# | dedicated scanners | lizard, multimetric |
 | **Fortran** (free- and fixed-form) | dedicated scanner | **fortitude** — 100+ rules; **lizard** — complexity, NLOC, params |
+| **COBOL** | dedicated scanner | **none** — no offline analyzer in the catalog reads it |
 | JS / TS / JSX / TSX | brace scanner | ESLint, lizard, jscpd |
 
-Fortran reached parity in 1.6.0. lizard measures it — this project's
-catalog row for lizard was stale and said otherwise, so lizard came out
-`not-applicable` on every Fortran repository and never ran — and
-fortitude adds 100+ lint rules beside it. A lint now fails the build if
-any parsed language has no analyzer that measures complexity.
+Fortran reached parity in 1.6.0: lizard had read it for years behind a
+stale catalog row, so it came out `not-applicable` and never ran. A lint fails
+the build if a parsed language has no analyzer measuring complexity — **COBOL is
+the one disclosed exemption**, because the tooling that reads it is licensed and
+host-resident, so its external tier is empty and the report says so.
 
 **External analyzer adapters (opt-in pool)** — this is how coverage extends
 beyond the built-in set. When you enable the analyzer pool, the tool shells out
@@ -312,12 +313,11 @@ selected *and* installed (acquisition is opt-in and off by default), and where
 they measured a full concept set they become the *primary* evidence, with the
 built-ins as the fallback.
 
-So: **first-class today is Python** (and TypeScript for semantics); Java, C, C++,
-C#, free-form Fortran and the JS/TS family are bounded-but-real; every other language is only as covered as
-the external analyzer you point at it — and with no analyzer, it is
-under-reported by design. The per-language accuracy, the exact parsed set, and
-the known limitations are documented in
-[docs/language-support.md](docs/language-support.md); the adapter catalog is in
+So: **first-class today is Python** (and TypeScript for semantics); every other
+parsed language is bounded-but-real; anything outside the table is only as
+covered as the analyzer you point at it, and with none it is under-reported by
+design. Per-language accuracy and limits:
+[docs/language-support.md](docs/language-support.md); the adapter catalog:
 [docs/adapters.md](docs/adapters.md).
 
 ## What it produces

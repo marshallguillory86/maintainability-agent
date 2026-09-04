@@ -36,12 +36,41 @@ from .config import (
     load_config,
     repository_path,
 )
-from .git_tools import changed_paths
-from .instructions import instruction_path_for_target, write_instruction_pack
+from .git_tools import added_lines, changed_paths
+from .instructions import (
+    INSTRUCTION_TARGETS,
+    UnknownTarget,
+    instruction_path_for_target,
+    write_instruction_pack,
+)
 from .prompts import render_agent_instructions, render_ai_prompt, render_hostile_audit_prompt
 from .renderers import render_html, render_markdown, render_pr_comment
 from .report import build_report
 from .sarif import read_sarif_inputs, report_to_sarif
+
+
+def _add_gate_arguments(parser: argparse.ArgumentParser) -> None:
+    """What can make a run fail, and the conformance record behind one.
+
+    Split from `add_arguments` when the conformance flags took it past this
+    project's own function-length gate — which is the gate doing its job on
+    the change that added a gate.
+    """
+    parser.add_argument("--fail-on-gate", action="store_true", help="Exit 1 when hard gates fail.")
+    parser.add_argument(
+        "--conformance",
+        metavar="REVSPEC",
+        help="Report how a diff relates to the work order, e.g. `main...HEAD`. "
+             "The bounded work order says 'fix exactly these and refactor nothing "
+             "else'; without this the bound is an instruction nothing checks. "
+             "Reports only unless --fail-on-out-of-scope is passed.",
+    )
+    parser.add_argument(
+        "--fail-on-out-of-scope", action="store_true",
+        help="With --conformance, exit 1 when the diff touched files the work "
+             "order did not name and that do not pair to one as its test, or "
+             "when it added a suppression to a file the work order flagged.",
+    )
 
 
 def add_arguments(parser: argparse.ArgumentParser) -> None:
@@ -110,7 +139,7 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
              "The shape of a series is what a trend reads, and a thousand "
              "commits is hours of work nobody asked for.",
     )
-    parser.add_argument("--fail-on-gate", action="store_true", help="Exit 1 when hard gates fail.")
+    _add_gate_arguments(parser)
     _add_setup_actions(parser)
 
 
@@ -134,9 +163,18 @@ def _add_setup_actions(parser: argparse.ArgumentParser) -> None:
              "differing copy is refused with the list of differences.",
     )
     parser.add_argument(
+        "--target-path",
+        action="append",
+        metavar="TARGET=PATH",
+        help="Where a target's standing instructions go, e.g. "
+             "`--target-path bob=.bob/instructions.md`. Required for any agent "
+             "this tool has no built-in convention for; overrides the built-in "
+             "path for one it does. The target list will always trail the "
+             "market, and guessing a path writes a file the agent never opens.",
+    )
+    parser.add_argument(
         "--target",
         action="append",
-        choices=["generic", "claude-code", "codex", "cursor", "copilot", "windsurf"],
         help="Instruction target. Repeatable. Used with --init-agent-standards.",
     )
     parser.add_argument("--instructions-output-dir", default=".", help="Directory for generated instruction files.")
@@ -188,6 +226,25 @@ def write_outputs(args: argparse.Namespace, report: dict, rendered: str) -> None
                        json.dumps(report_to_sarif(report), indent=2) + "\n", json_artifact=True)
 
 
+def attach_conformance(args: argparse.Namespace, report: dict) -> None:
+    """Record how the diff relates to the work order, when asked.
+
+    Assembly, not scoring: the record is attached to the report and reaches
+    no dimension, because whether a diff was obedient is a fact about an
+    agent's behaviour and not evidence about the code's condition.
+    """
+    if not args.conformance:
+        return
+    from ._conformance import scope_conformance
+
+    root = Path(report["root"])
+    changed = changed_paths(root, args.conformance)
+    added = added_lines(root, args.conformance)
+    report["scope_conformance"] = scope_conformance(
+        report, changed, args.conformance, added
+    )
+
+
 def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
     if args.fail_on_new:
         # Structured matching, never a label-set difference: a label
@@ -198,6 +255,16 @@ def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
             return 1
     if args.fail_on_gate and report["hard_gate_failures"]:
         return 1
+    if args.fail_on_out_of_scope:
+        record = report.get("scope_conformance")
+        if record is None:
+            print("--fail-on-out-of-scope needs --conformance REVSPEC", file=sys.stderr)
+            return 2
+        # `clean`, not `conformant`: staying in scope while silencing the
+        # finding is the evasion the pairing exists to catch, and a gate
+        # that accepted it would be satisfied by the thing it guards against.
+        if not record["clean"]:
+            return 1
     return 0
 
 
@@ -258,6 +325,35 @@ def _install_skill_action(args: argparse.Namespace) -> int:
     return 0
 
 
+
+def _target_paths(pairs: list[str] | None) -> dict[str, str]:
+    """`TARGET=PATH` arguments, as a mapping.
+
+    An absolute path is refused: the instruction pack is written relative
+    to `--instructions-output-dir`, so an absolute one would silently
+    ignore the directory the caller named.
+    """
+    overrides: dict[str, str] = {}
+    for pair in pairs or []:
+        target, separator, path = pair.partition("=")
+        if not separator or not target.strip() or not path.strip():
+            raise ValueError(f"--target-path expects TARGET=PATH, got {pair!r}")
+        if Path(path).is_absolute():
+            raise ValueError(
+                f"--target-path {pair!r} is absolute; paths are relative to "
+                "--instructions-output-dir"
+            )
+        overrides[target.strip()] = path.strip()
+    return overrides
+
+
+def _parse(argv: list[str]) -> tuple[argparse.ArgumentParser, argparse.Namespace]:
+    """The parser comes back too: `main` still needs it for `parser.error`."""
+    parser = argparse.ArgumentParser()
+    add_arguments(parser)
+    return parser, parser.parse_args(argv)
+
+
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
@@ -266,18 +362,22 @@ def main(argv: list[str] | None = None) -> int:
 
         return mcp_server.main(argv[1:])
 
-    parser = argparse.ArgumentParser()
-    add_arguments(parser)
-    args = parser.parse_args(argv)
-
+    parser, args = _parse(argv)
     if args.install_skill:
         return _install_skill_action(args)
 
     root = Path(args.root).resolve()
     config = _interactive_config(root, args.config)
     if args.init_agent_standards:
-        targets = args.target or ["generic", "claude-code", "codex", "cursor", "copilot", "windsurf"]
-        write_instruction_pack(targets, Path(args.instructions_output_dir).resolve(), config)
+        targets = args.target or list(INSTRUCTION_TARGETS)
+        try:
+            overrides = _target_paths(args.target_path)
+            write_instruction_pack(
+                targets, Path(args.instructions_output_dir).resolve(), config, overrides
+            )
+        except (UnknownTarget, ValueError) as failure:
+            print(str(failure), file=sys.stderr)
+            return 2
         return 0
 
     if args.backfill:
@@ -327,6 +427,9 @@ def main(argv: list[str] | None = None) -> int:
     # escalated, and only delivered advice is recorded as targeted.
     record_scan_and_attach(report, config, history_path, Path(report["root"]),
                            record=bool(record), want_targets=bool(args.prompt_output))
+    # Before rendering, so the record is in the report every presentation
+    # and every consumer reads, rather than only in the exit code.
+    attach_conformance(args, report)
     rendered = _render_presentation(args, report, history_path)
     write_outputs(args, report, rendered)
     mark_repo_seen(root)  # completed audit: not a first run now, whatever the gate says (D13)

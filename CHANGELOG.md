@@ -6,6 +6,91 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.0.0 - 2026-09-03
+
+**Every score changes.** The reference corpus every number is a multiple of
+now spans all eight parsed languages instead of three, so `CALIBRATION_C`
+and the per-dimension references move and every repository re-grades.
+Read [the migration note](docs/migration-2.0.md) before comparing a 2.0
+score to a 1.x one.
+
+### Changed
+
+- **The calibration corpus is 112 repositories across eight languages**,
+  up from 40 across three. Java, C, C++, C# and Fortran were parsed for
+  five releases while being scored against medians measured on none of
+  their code — LAPACK read **7.18x** the declaration median against an
+  anchor holding no Fortran at all. The gap is closed by extending the
+  anchor rather than by softening the disclosure.
+
+  The original 40 rows are **unchanged and still pinned** to the commits
+  they were measured at, so what moved the constants is the languages
+  added and nothing else. Selection is the same mechanical query —
+  created before 2021, pushed since 2026, under the size cap — with one
+  deliberate exception: **Fortran entered at a 500-star threshold rather
+  than 3,000**, because the entire Fortran ecosystem has zero repositories
+  above the bar the other seven use. Holding one number across ecosystems
+  would have measured popularity rather than maturity and excluded the
+  language outright. The per-language thresholds are recorded in
+  `corpus.json` under `selection.min_stars`.
+
+- **`score.reference` names the corpus it is drawn from**, and a guard now
+  derives that disclosure from `corpus.json` in both directions — the
+  report cannot name a language the corpus lacks, or omit one it holds.
+  The previous guard asserted three language names by hand, which is why
+  it broke the moment the corpus grew and said nothing about what should
+  replace it.
+
+- **`CPlusPlusThings` left the corpus and `googletest` took its place.**
+  It is a C++ teaching repository; the marker list gained `"things"` so
+  that category is excluded mechanically rather than by veto. Recorded
+  plainly because it was found by its measurements — `declarations`
+  0.0078 against a 0.1005 reference — and not by its name, which is the
+  outcome-triggered discovery a mechanical corpus exists to prevent. The
+  same disclosure `33-js-concepts` received. Re-running selection with the
+  new marker changed exactly one member.
+
+### Added
+
+- **Measurement rows carry what produced them**: the pinned commit, the
+  tool version, and the version of every analyzer that contributed. Rows
+  used to hold the repository name alone, so nothing could tell a stale
+  measurement from a fresh one and every recalibration had to re-measure
+  the whole corpus. This is the discipline ADR 001 stage 9 put on the
+  history corpus, applied to the other set of numbers everything derives
+  from.
+
+- **`measure.py --reuse`**, which reuses a stored row only when its pinned
+  commit, tool version and analyzer population still match, and measures
+  the rest. Adding a language now costs its own repositories rather than
+  all 112. It arrives with the refusal it makes necessary: a corpus
+  measured on two different versions of one tool is not a corpus, so the
+  run refuses to fit constants to it and names the tool.
+
+### Fixed
+
+- **`verify_corpus.py` could destroy the pinned corpus.** It defaulted
+  `--out` to `corpus.json` and wrote there unconditionally, so a run whose
+  stdout was redirected elsewhere still replaced 40 pinned repositories
+  with whatever candidate file was passed. It now refuses unless
+  `--replace` says that is the intent. Found the hard way: it happened
+  during this release and an unrelated guard caught it, which is luck
+  rather than design.
+
+- **`measure.py` could downgrade the stored evidence.** A run without
+  `--with-analyzers` overwrote analyzer-primary measurements with
+  built-in-only ones and warned *after* the file was gone. It now refuses
+  before doing any work — a first attempt at the same check sat at the
+  write site and cloned 112 repositories before saying no.
+
+- **The major-line guard refused every major release it governed.** D100
+  holds that no copy may claim a major line above the newest tag, but the
+  packaged version must be bumped *before* the tag exists, because
+  `release.yml` refuses to publish when the two disagree. The bar is not
+  dropped: a declared major line must now have its own dated CHANGELOG
+  section, which is exactly the step D85 skipped when it promoted every
+  copy to `1.0.0rc1` against a v0.9.1 tag.
+
 ## 1.10.1 - 2026-09-03
 
 Names a hole under the product's central claim, rather than leaving a

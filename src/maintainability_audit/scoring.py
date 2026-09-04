@@ -391,12 +391,20 @@ def _reference_block() -> dict[str, object]:
 
     The unit and the anchor were always here. The two corpus fields were
     not, and their absence was the gap: the rubric is uniform across
-    repositories (P2) and the corpus is not uniform across languages. It
-    is 40 repositories of Python, TypeScript and JavaScript, while this
-    project parses seven languages, so Java, C, C++, C# and Fortran are
-    scored against medians measured on none of their code.
+    repositories (P2), and for five releases the corpus was not uniform
+    across languages. It held 40 repositories of Python, TypeScript and
+    JavaScript while the scanner parsed eight languages, so Java, C, C++,
+    C# and Fortran were scored against medians measured on none of their
+    code — LAPACK read 7.18x the declaration median against an anchor
+    containing no Fortran at all.
 
-    Disclosed rather than corrected. Per-language references would remove
+    2.0.0 extended the corpus rather than the disclosure: 112 repositories
+    across every parsed language. What remains disclosed is narrower and
+    still real — Fortran was admitted at a lower star threshold because
+    the ecosystem has none above the one the others use, and the anchor is
+    still mature open source rather than enterprise-internal code.
+
+    Still not corrected with per-language references. Those would remove
     the awkwardness by trading a stated limit for a silent breach of the
     one-rubric promise, and two repositories must stay comparable
     regardless of what they are written in.
@@ -404,11 +412,14 @@ def _reference_block() -> dict[str, object]:
     return {
         "unit": "multiple of the median mature-OSS repo (1.0 = typical real code)",
         "note": "Calibrated so a repo at the OSS median on every dimension scores 4.0.",
-        "corpus_languages": ["Python", "TypeScript", "JavaScript"],
+        "corpus_languages": [
+            "Python", "TypeScript", "JavaScript", "Java", "C", "C++", "C#", "Fortran",
+        ],
         "corpus_note": (
-            "Reference medians are drawn from 40 mature repositories in "
-            "Python, TypeScript and JavaScript. Other languages are scored "
-            "against that anchor; see docs/standard.md#the-reference-corpus."
+            "Reference medians are drawn from 112 mature repositories across "
+            "every language this scanner parses. Fortran entered at a lower "
+            "star threshold than the rest, because its ecosystem has none "
+            "above theirs; see docs/standard.md#the-reference-corpus."
         ),
     }
 

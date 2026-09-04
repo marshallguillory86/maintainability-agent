@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **1.10.1**.
+Version **2.0.0**.
 
 **Languages parsed:** Python, Java, C, C++, C#, Fortran (free-form *and*
 fixed-form), and the JS/TS family — each by a scanner written for it, and
@@ -80,16 +80,14 @@ findings can fix them at the rate they appear. The loop this tool closes:
 Step 3 is the product; steps 1 and 2 are in service of it. Every other tool in
 this space stops at "here's a list of findings."
 
-**Where the model stops:** the agent authors, no model runs in CI, and the gate
-holds a fixed oracle — a rate computed by code, not a model's opinion. A
-model-judged gate degrades from *right by construction* to *right most of the
-time*; this one cannot, because nothing in the score is inferred.
-
-**And the limit:** step 3 bounds the agent by **instruction**. Nothing verifies
-the returned diff stayed inside the work order, and a finding can still be made
-to disappear by suppressing it. The three checks that would make the bound
-enforced rather than asked for are named, with the failure each closes, in
-[the roadmap](docs/roadmap.md#the-remediation-hole-an-agent-can-satisfy-this-gate-without-doing-the-work).
+**Who does the checking matters as much as what it checks.** An author is never
+the independent check on their own work, so a platform that generates code and
+grades it is producing a self-assessment — a property of the arrangement, not a
+criticism of any one of them. This writes nothing and runs no model, which is
+what lets its verdict be evidence ([the principle](docs/philosophy.md#principles)).
+The limit, stated in the same breath: step 3 bounds the agent by **instruction**,
+and nothing yet verifies the returned diff stayed inside the work order
+([the three checks that would](docs/roadmap.md#the-remediation-hole-an-agent-can-satisfy-this-gate-without-doing-the-work)).
 
 One pre-registered experiment has tested the bounded prompt.
 Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, under this tool's own finding count.
@@ -108,55 +106,13 @@ registered verdict stands at **INCONCLUSIVE**. Method, limits and raw data:
 
 ## The road to 1.0
 
-1.0 is not a rewrite. It is the line drawn under a long arc of **subtraction** —
-what remained after every claim the project could not stand behind was removed.
-The arc is the credibility:
-
-> **0.5.0 — the scoring engine was rebuilt.** The old model counted findings
-> absolutely, so it graded repo *size*, not maintainability: it scored
-> **Django, pytest, black, tornado, httpx, lodash, svelte, fastapi all at
-> 0.0 / F** while a 53-file toy repo scored 4.6 / A. Scores became **rates**,
-> normalized per dimension against what real code carries and calibrated so
-> the corpus median earns a B. See
-> [docs/standard.md](docs/standard.md#how-the-scale-was-calibrated-050).
-
-> **0.6.0 — a near-duplication finding that pairs the copies**, naming the
-> declaration to reuse (*`toAtomicAmount` at `TradeTicket.tsx:862` already does
-> this*), so renaming can't hide clone-instead-of-reuse. Useful on its own
-> terms — and explicitly **not** evidence about who wrote the code.
-
-> **Retracted: that near-duplication distinguishes AI-written code.** 0.6.0 had
-> called it "the first signal that separates AI-written applications from mature
-> human-written OSS."
-> Re-run against a control matched on age, popularity and language, the near-duplication gap is not significant (p = 0.546), and no other metric earns the claim either.
-> The honest summary is *this design could not measure a difference*, not *there
-> is no difference*. See [docs/studies.md](docs/studies.md#does-this-detect-ai-written-code).
-
-> **0.7.0 — the evidence model.** The score is **withheld** when the evidence
-> cannot support one; a diff is not a repository grade. External analyzers
-> became the **primary** evidence where they measured a full concept set, with
-> the built-in detectors as the fallback and disagreement **widening the range**
-> rather than being averaged. The grade is *gated* and *banded from the evidence
-> floor*, so withholding evidence can never buy a better letter.
-
-> **0.8–0.9 — one setup, chat-first.** Chat / MCP became the primary surface,
-> the CLI the automation door, and the three transports converged on a single
-> question set. A run of chat-surface wiring defects — and their closing tests —
-> is recorded in
-> [docs/defect-register-chat-surface.md](docs/defect-register-chat-surface.md).
-
-> **1.0.0 — acceptance and the complete work order.** A real-repo acceptance
-> round on a mixed Python/TypeScript codebase hardened the last edges: the
-> report now carries the entire backlog with a per-item copy-paste prompt,
-> charts were rebuilt for legibility, reconfigure stopped destroying hand-tuned
-> config, and TypeScript semantic coverage learned to find workspace projects
-> and a locally-installed compiler. See the [changelog](CHANGELOG.md#100---2026-09-01).
-
-The through-line: this repository runs the tool against **itself** in CI and
-checks the report in ([docs/self-audit.md](docs/self-audit.md)). An earlier
-revision of the self-audit table advertised 5.0/A+ after the codebase had
-drifted to a B; a hostile audit caught the stale claim — precisely the failure
-mode this tool exists to catch.
+1.0 was the line drawn under a long arc of **subtraction** — what remained after
+every claim the project could not stand behind was removed. A scoring engine
+rebuilt after it was found to grade repo *size*; a headline claim about AI
+authorship retracted against a matched control; a score that is withheld rather
+than guessed. That arc is the credibility, and it is recorded in full — with the
+figures quoted from their approved summaries — in
+[the track record](docs/track-record.md).
 
 ## Install
 
@@ -343,8 +299,11 @@ report — so a payload cap can never truncate the prompt.
 Based on ISO/IEC 25010 maintainability — modularity, reusability,
 analyzability, modifiability, testability. Scores are **rates calibrated
 against real code**, not counts: every pressure is normalized against the
-median a pinned 40-repo corpus of mature projects (django, angular,
-transformers, webpack, vite, playwright, …) actually carries, so `2.5x` means
+median a pinned 112-repo corpus of mature projects actually carries —
+spanning every language the scanner parses (django, angular, spring-framework,
+ghidra, LAPACK, …). How that corpus was selected, what each language actually
+reads, and what the numbers do *not* establish:
+[the calibration study](docs/calibration-2.0-study.md), so `2.5x` means
 "two and a half times what well-maintained real code shows." The corpus median
 earns a **B**; **A+ is gated**, requiring every dimension clean.
 

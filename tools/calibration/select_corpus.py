@@ -41,7 +41,23 @@ import json
 import subprocess
 import sys
 
-LANGUAGES = ["python", "typescript", "javascript"]
+# Every language the scanner claims. The corpus anchors what a score is a
+# multiple of, so a language scored against it should be represented in
+# it — LAPACK read 7.18x the declaration median while no Fortran was in
+# the comparison set at all.
+LANGUAGES = ["python", "typescript", "javascript", "java", "c", "cpp",
+             "csharp", "fortran"]
+
+#: The star bar is per language because 3,000 stars is not the same
+#: statement in every ecosystem. Fortran has **zero** repositories above
+#: 3,000 — its most-starred serious projects are LAPACK (1.9k), WRF
+#: (1.7k), Elmer (1.7k), stdlib (1.3k) and CP2K (1.2k) — so holding one
+#: number across ecosystems would measure popularity rather than maturity
+#: and would exclude the language entirely. Stated here and in the corpus
+#: file rather than buried, because a non-uniform frame has to be visible
+#: to be honest.
+MIN_STARS = {"fortran": 500}
+DEFAULT_MIN_STARS = 3000
 
 # Substrings that mark a repository as documentation, curriculum or a
 # link collection rather than a codebase. Deliberately conservative: a
@@ -68,6 +84,19 @@ _LIST_MARKERS = (
     # hand-picking this script replaced. For scale: including the outlier
     # moves CALIBRATION_C 3.5466 -> 3.5724 — medians barely notice.
     "concepts",
+    # "things" was added for `CPlusPlusThings`, and the same honesty applies
+    # as above: it was found by its measurements, not by its name. It cleared
+    # verification comfortably (446 files, 1,919 declarations) and then read
+    # `declarations=0.0078` against a 0.1005 reference — a thirteenth of the
+    # median, which is the shape of a repository full of small standalone
+    # examples rather than a codebase. The *justification* is the category
+    # the marker list already encodes: it is a C++ teaching repository, the
+    # same class as "tutorial", "learn" and "examples". The discovery being
+    # outcome-triggered is the failure mode a mechanical corpus exists to
+    # prevent, so it is recorded rather than tidied away, and the rule added
+    # is a category rule — any repository whose name says "things" — not a
+    # veto on one repository.
+    "things",
 )
 
 # GitHub reports full repository size including history; a shallow clone
@@ -125,9 +154,12 @@ def main() -> int:
     args = parser.parse_args()
 
     candidates: list[dict] = []
+    thresholds = {}
     for language in LANGUAGES:
-        found = search(language, args.per_language, args.created_before, args.pushed_after, args.min_stars)
-        print(f"{language}: {len(found)} candidates", file=sys.stderr)
+        min_stars = MIN_STARS.get(language, args.min_stars)
+        thresholds[language] = min_stars
+        found = search(language, args.per_language, args.created_before, args.pushed_after, min_stars)
+        print(f"{language}: {len(found)} candidates (stars>{min_stars})", file=sys.stderr)
         candidates.extend(found)
 
     json.dump(
@@ -136,7 +168,7 @@ def main() -> int:
                 "languages": LANGUAGES,
                 "created_before": args.created_before,
                 "pushed_after": args.pushed_after,
-                "min_stars": args.min_stars,
+                "min_stars": thresholds,
                 "max_size_kb": MAX_SIZE_KB,
             },
             "candidates": candidates,

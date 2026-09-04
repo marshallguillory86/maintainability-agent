@@ -154,7 +154,9 @@ def test_renaming_moved_no_value(name: str, tmp_path: Path) -> None:
     # frozen anchor, the way Class 5's aspect and rubric changes are.
     assert score["reference"] == {
         **anchor["reference"],
-        "corpus_languages": ["Python", "TypeScript", "JavaScript"],
+        "corpus_languages": [
+            "Python", "TypeScript", "JavaScript", "Java", "C", "C++", "C#", "Fortran",
+        ],
         "corpus_note": score["reference"]["corpus_note"],
     }, "reference gained only the corpus disclosure"
     assert "docs/standard.md" in score["reference"]["corpus_note"]

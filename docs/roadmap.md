@@ -36,11 +36,13 @@ The cadence is **one language per minor release, never a batch** — five were w
 
 **The price of admission, unchanged since [ADR 006](decisions.md):** a language is claimed only when it has a scanner of its own, a documented list of what it misses, and tests that pin them. The register's original wording said no further range detectors would be written; five were, and the rule that wording protected is what survived. A language does not get onto the table below by having its extension added to a config.
 
-**Next:**
+**Swift shipped in 2.4.0.** Braced, so it reuses the `_ranges_core` walk; what needed its own answer was narrower than this section predicted, and one of the four predictions was wrong.
 
-| Target | Language | What it costs |
-|---|---|---|
-| 1.9.0 | **Swift** | Braced, so it reuses the `_ranges_core` walk. Four things make it not-quite-C-family: an `extension` adds methods to a type declared elsewhere, so a name has to stay findable (`extension Widget { func draw() }` reports `Widget.draw`, the way C++ keeps `geo::Widget::draw`); a `protocol` declares bodiless requirements, which mint nothing, as in every other language here; **computed properties** (`var area: Double { w * h }`) have braces and would bound cleanly, and are the C# properties problem again — counting them would dilute the population every rate divides by; and string interpolation (`"\(a + b)"`) puts braces inside literals, so masking has to run before depth counting or a range ends early. |
+Right: an `extension` adds methods to a type declared elsewhere, so a member is reported as `Widget.draw` rather than a bare `draw`; a `protocol` declares bodiless requirements that mint nothing; **computed properties** are the C# properties problem again and are not declarations.
+
+**Wrong: "string interpolation puts braces inside literals".** Swift interpolates with `\(expr)` — parentheses, not braces — and string contents are masked before any counting regardless. The real hazards were different and neither was predicted here: Swift has **no statement terminator**, so the shared bare-signature rule could not see where a protocol requirement ended and reported it as two lines of body; and **`class` is both a keyword and a modifier** (`class Widget` versus `class func make()`), so stripping it with the other modifiers cost every `final class Store` its type. Both are pinned by tests.
+
+Swift also needed its own reading of a branch: `guard` is the language's primary early exit and is absent from the C-family pattern, so a guard-heavy function would have read as branchless — the defect Fortran shipped with.
 
 Go and Rust remain named in [ADR 006](decisions.md) as unwritten on exactly these terms. They are not refused and not scheduled.
 

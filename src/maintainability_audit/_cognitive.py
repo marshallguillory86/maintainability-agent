@@ -45,6 +45,14 @@ _NESTING_NODES = (ast.If, ast.For, ast.AsyncFor, ast.While, ast.ExceptHandler, a
 _NESTING_ONLY = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)
 
 _CONTROL_RE = re.compile(r"\b(if|for|while|catch|switch|case|elif|except)\b")
+#: Swift adds `guard` — an early exit that is its primary branching idiom —
+#: and `repeat`, its do-while. Without them a function built from guards
+#: reads as having no branches at all, which is the Fortran `do` defect in
+#: another language: six nested loops once scored complexity 1 because the
+#: pattern did not know the keyword.
+_SWIFT_CONTROL_RE = re.compile(
+    r"\b(if|for|while|catch|switch|case|guard|repeat)\b"
+)
 _ELSE_RE = re.compile(r"\belse\b")
 _BOOLEAN_RE = re.compile(r"&&|\|\|")
 
@@ -167,7 +175,7 @@ def fortran_cognitive(lines: list[str]) -> int:
     return score
 
 
-def brace_cognitive(lines: list[str]) -> int:
+def brace_cognitive(lines: list[str], control: re.Pattern[str] | None = None) -> int:
     """Approximate cognitive complexity for a C-family declaration body.
 
     Nesting is read from brace depth relative to the declaration's own
@@ -191,16 +199,25 @@ def brace_cognitive(lines: list[str]) -> int:
         if base is None and opens:
             base = depth
         nesting = max(0, depth - (base if base is not None else 0))
-        score += _score_brace_line(line, nesting)
+        score += _score_brace_line(line, nesting, control or _CONTROL_RE)
         depth = max(0, depth + opens - closes)
     return score
 
 
-def _score_brace_line(line: str, nesting: int) -> int:
+def _score_brace_line(line: str, nesting: int, control: re.Pattern[str]) -> int:
     score = 0
-    for _ in _CONTROL_RE.finditer(line):
+    for _ in control.finditer(line):
         score += 1 + nesting
     if _ELSE_RE.search(line):
         score += 1
     score += len(_BOOLEAN_RE.findall(line))
     return score
+
+
+def swift_cognitive(lines: list[str]) -> int:
+    """`brace_cognitive` reading Swift's control keywords.
+
+    Swift is braced, so nesting is read the same way; only the vocabulary
+    differs, and `guard` is the difference that matters.
+    """
+    return brace_cognitive(lines, _SWIFT_CONTROL_RE)

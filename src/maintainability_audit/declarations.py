@@ -14,7 +14,12 @@ import ast
 import os
 from pathlib import Path
 
-from ._cognitive import brace_cognitive, fortran_cognitive, python_cognitive
+from ._cognitive import (
+    brace_cognitive,
+    fortran_cognitive,
+    python_cognitive,
+    swift_cognitive,
+)
 from ._finding_match import normalized_body_digest
 from ._metrics_types import (
     FUNC_PATTERNS,
@@ -22,6 +27,7 @@ from ._metrics_types import (
     FunctionMetric,
     branch_points,
     fortran_branch_points,
+    swift_branch_points,
 )
 from ._ranges_c import c_declaration_ranges
 from ._ranges_core import indent_bounded_end
@@ -33,6 +39,7 @@ from ._ranges_fortran import (
 )
 from ._ranges_java import java_declaration_ranges
 from ._ranges_js import js_declaration_ranges
+from ._ranges_swift import swift_declaration_ranges
 
 # One set per language, then one table binding each to its scanner.
 #
@@ -60,6 +67,7 @@ CPP_SUFFIXES = {".cpp", ".hpp", ".cc", ".cxx", ".hh"}
 # generics — and still its own module: namespaces in two forms,
 # `record`, and properties, which are deliberately not declarations.
 CSHARP_SUFFIXES = {".cs"}
+SWIFT_SUFFIXES = {".swift"}
 # Fortran (1.4.0), free-form only. `.F90` is the same language with the
 # C preprocessor run over it, and `.pf` is pFUnit test source — both are
 # free-form and both are read. Fixed-form (`.f`, `.for`, `.ftn`) is
@@ -97,6 +105,7 @@ SCANNERS: tuple[tuple[set[str], object], ...] = (
     (C_SUFFIXES, c_declaration_ranges),
     (CPP_SUFFIXES, cpp_declaration_ranges),
     (CSHARP_SUFFIXES, csharp_declaration_ranges),
+    (SWIFT_SUFFIXES, swift_declaration_ranges),
     (FORTRAN_SUFFIXES, fortran_declaration_ranges),
     (FIXED_FORM_SUFFIXES, fixed_form_declaration_ranges),
     (BRACE_SUFFIXES, js_declaration_ranges),
@@ -115,6 +124,10 @@ SCANNERS: tuple[tuple[set[str], object], ...] = (
 # was read from braces, which Fortran does not have, so four flat
 # `if`s and four deeply nested ones both scored 8.
 METRICS: tuple[tuple[set[str], object, object], ...] = (
+    # Swift is braced and reads its nesting the C-family way; only the
+    # keyword vocabulary differs, and `guard` is the difference that
+    # matters — without it a guard-heavy function reads as branchless.
+    (SWIFT_SUFFIXES, swift_branch_points, swift_cognitive),
     (FORTRAN_SUFFIXES, fortran_branch_points, fortran_cognitive),
     (FIXED_FORM_SUFFIXES, fortran_branch_points, fortran_cognitive),
 )
@@ -131,7 +144,7 @@ def metrics_for(suffix: str) -> tuple[object, object]:
 # Every extension we attempt declaration detection on at all.
 DECLARATION_SUFFIXES = (
     PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | CPP_SUFFIXES
-    | CSHARP_SUFFIXES | FORTRAN_SUFFIXES | FIXED_FORM_SUFFIXES
+    | CSHARP_SUFFIXES | SWIFT_SUFFIXES | FORTRAN_SUFFIXES | FIXED_FORM_SUFFIXES
     | BRACE_SUFFIXES
 )
 

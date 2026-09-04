@@ -97,6 +97,14 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--prompt-output", help="Optional Markdown prompt for AI-assisted remediation.")
     parser.add_argument("--comment-output", help="Optional Markdown body suitable for a PR comment.")
     parser.add_argument("--agent-instructions-output", help="Optional reusable instructions for AI coding agents.")
+    parser.add_argument(
+        "--attestation-output",
+        help="Write the attestation: an independent, reproducible record of "
+             "what was measured, what the change was told to do, what it did, "
+             "and what moved. Populated by --conformance and "
+             "--fail-on-regression; a generator cannot produce this about its "
+             "own output.",
+    )
     parser.add_argument("--hostile-prompt-output",
                         help="Optional adversarial audit brief seeded from this run (ADR 013). "
                              "Text only: it does not gate, score, or send anything.")
@@ -227,6 +235,10 @@ def write_outputs(args: argparse.Namespace, report: dict, rendered: str) -> None
         write_artifact(root, Path(args.comment_output), render_pr_comment(report) + "\n")
     if args.agent_instructions_output:
         write_artifact(root, Path(args.agent_instructions_output), render_agent_instructions(report) + "\n")
+    if args.attestation_output:
+        from ._attestation import render_attestation
+
+        write_artifact(root, Path(args.attestation_output), render_attestation(report))
     if args.hostile_prompt_output:
         write_artifact(root, Path(args.hostile_prompt_output),
                        render_hostile_audit_prompt(report) + "\n")

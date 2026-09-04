@@ -136,6 +136,13 @@ ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
             # than measuring a tree, and a difference between two scans
             # is not evidence about the code's condition.
             "_ratchet",
+            # `_run_comparison` joins history into one transformation's
+            # series. Assembly for the same reason again, and the only one
+            # of the four integrity records that cannot fail a build: it is
+            # a report. Its rendering lives in `_history_view`, so the
+            # split between joining and presenting is the same one
+            # `_ratchet` and the views already make.
+            "_run_comparison",
             # `_economics` composes the ADR 004 scenario from the finished
             # report and configured context; it measures nothing, asks
             # nothing, and may never be imported by scoring.
@@ -224,6 +231,9 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
 # `SetupRequired` exception, on its own leaf so the persist helpers and the
 # ask surface both use it without a cycle.
 ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup", "_mcp_audit",
+         # What the command line accepts, split from what the command does
+         # when `cli` crossed this project's own max_file_lines gate.
+         "_arguments",
          # `_gates` is the post-audit half of the CLI, split at the
          # 500-line file gate: it composes from a finished report and
          # decides the exit code. Entry rather than assembly because

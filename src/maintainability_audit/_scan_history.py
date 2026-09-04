@@ -51,7 +51,13 @@ from .config import PathNotAllowed
 # reorders while charts keep their strings. Schema-1/2 lines still
 # load with empty identities, and recurrence between two such records
 # stays label equality.
-HISTORY_SCHEMA_VERSION = 3
+# Schema 4 adds `transformation`, the operator's name for the class of work
+# a scan followed. Older lines load with it empty and are simply not part of
+# any series, which is the truth about them: nothing recorded what they
+# followed. A schema-4 line read by an older build fails that one line's
+# parse and costs that scan, which is the tolerance `read_history` was
+# built with rather than a new risk.
+HISTORY_SCHEMA_VERSION = 4
 
 DEFAULT_HISTORY_PATH = ".maintainability/history.jsonl"
 
@@ -132,6 +138,14 @@ class ScanRecord:
     # while "the thing we told you to fix came back" says the advice did
     # not hold. Only something that remembers what it advised can say it.
     targeted: tuple[str, ...] = ()
+    # Schema 4: the operator's name for the class of work this scan
+    # followed -- `--transformation react-18`. Nothing in a tree says which
+    # transformation produced it, so this is a claim the operator makes and
+    # this tool records without verifying. Deliberately absent from
+    # `COMPARABILITY_FIELDS`: two runs of different transformations on one
+    # instrument are still comparable measurements of code condition, and
+    # segmenting on a label would break a series for saying its own name.
+    transformation: str = ""
 
     def as_line(self) -> str:
         payload: dict[str, Any] = {
@@ -389,6 +403,10 @@ def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
         thresholds_digest=thresholds_digest(config.get("thresholds") or {}),
         analyzers=contributed,
         scored_languages=tuple(sorted(coverage.get("scored_languages") or ())),
+        # Read off the report like `mode` and `git_commit`, so a surface
+        # opts in by setting one field rather than by threading a new
+        # argument through every caller of this function.
+        transformation=str(report.get("transformation") or ""),
         estimate=score.get("maintainability_estimate"),
         range_low=(score.get("maintainability_range") or [None, None])[0],
         range_high=(score.get("maintainability_range") or [None, None])[-1],

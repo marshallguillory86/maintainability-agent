@@ -4,7 +4,11 @@ from typing import Any
 
 from . import _evidence_view as view
 from ._economics_view import economic_impact_markdown
-from ._history_view import escalations_markdown, scan_history_markdown
+from ._history_view import (
+    escalations_markdown,
+    run_comparison_markdown,
+    scan_history_markdown,
+)
 from ._hotspots import hotspot_cognitive, hotspot_complexity, hotspot_measure, hotspot_name
 from ._markdown_sections import (
     markdown_table,
@@ -195,6 +199,7 @@ def _complete_markdown(report: dict[str, Any], score: dict[str, Any],
     summary = report["summary"]
     lines.extend(escalations_markdown(report.get("design_review_candidates")))
     lines.extend(scan_history_markdown(report.get("scan_history")))
+    lines.extend(run_comparison_markdown(report.get("run_comparison")))
     selection = report.get("work_order_selection")
     if selection:
         lines.extend(work_order_selection_markdown(selection))

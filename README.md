@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **2.5.0**.
+Version **2.6.0**.
 
 **Languages parsed:** Python, Java, C, C++, C#, Swift, Fortran (free-form
 *and* fixed-form), and the JS/TS family — each by a scanner written for it, and
@@ -113,9 +113,8 @@ registered verdict stands at **INCONCLUSIVE**. Method, limits and raw data:
 every claim the project could not stand behind was removed. A scoring engine
 rebuilt after it was found to grade repo *size*; a headline claim about AI
 authorship retracted against a matched control; a score that is withheld rather
-than guessed. That arc is the credibility, and it is recorded in full — with the
-figures quoted from their approved summaries — in
-[the track record](docs/track-record.md).
+than guessed. That arc is the credibility, and it is recorded in full, with the
+figures quoted from their approved summaries, in [the track record](docs/track-record.md).
 
 ## Install
 
@@ -184,8 +183,8 @@ withheld and the scope is named as the reason.
 ### Checking that the agent did the work
 
 The work order tells an agent to fix exactly these findings and refactor nothing
-else. These flags check that the diff that came back obeyed it — read the
-diff's _shape_, not its correctness:
+else. These flags check that the diff obeyed it — they read its _shape_, not its
+correctness:
 
 ```bash
 maintainability-agent \
@@ -212,6 +211,11 @@ maintainability-agent \
   work order, and what moved. It is reproducible and **not signed** — nothing
   here holds a key, and the document says so in its own text. A check nobody ran
   renders as _not asked_, never as passed.
+- **`--transformation NAME`** names the class of work a scan followed and
+  reports how this run of it compares with earlier ones. **A report, never a
+  gate.** It says one run "moved further" than another, never that it was
+  _better_ — two runs of one codemod land on different code — and it measures
+  the interval, not the transformation.
 
 The [roadmap](docs/roadmap.md#the-remediation-hole-closed-in-210-through-230)
 has the history of why this was the hole under the product's central claim.

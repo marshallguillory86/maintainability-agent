@@ -13,32 +13,30 @@ becoming a hole big enough to hide a regression in:
 
 * `test_population_floors.py` and `test_scan_scope.py` opt back in via the
   `real_population_floors` fixture and exercise the shipped values;
-* `test_the_shipped_floors_are_the_corpus_minima` asserts the production
-  defaults are what the corpus says, so lifting them in tests cannot drift
-  the values that ship.
+* `test_the_shipped_floors_are_the_corpus_minima`, in
+  `test_population_floors.py`, asserts the production defaults are what the
+  corpus says, so lifting them in tests cannot drift the values that ship.
+
+Nothing in this file is a test. Three `test_`-prefixed functions used to
+live here and none of them ever ran: pytest loads a conftest as a plugin,
+and `python_files` matches `test_*.py`, which this is not. They are in
+`test_suite_isolation.py` and `test_population_floors.py` now, and
+`test_the_isolation_guards_are_collected` fails if one comes back.
 """
 
 from __future__ import annotations
 
-import json
 import os
-import subprocess
+import sys
 from collections.abc import Iterator
-from pathlib import Path
 
 import pytest
 
 from maintainability_audit import _formula
 
-CORPUS = Path(__file__).resolve().parent.parent / "tools" / "calibration" / "corpus.json"
-
-# The real one, captured at import before `_git_ignores_developer_configuration`
-# replaces `HOME`. Read afterwards it would return the empty session home, and
-# the guard below would assert nothing while appearing to pass.
-DEVELOPER_HOME = Path(os.path.expanduser("~")).resolve()
-
-# Captured at import, before any fixture touches the table, so the assertions
-# below compare against what the package actually ships.
+# Captured at import, before any fixture touches the table, so the tests that
+# read it compare against what the package actually ships.
+# `test_population_floors.test_the_shipped_floors_are_the_corpus_minima`.
 SHIPPED_FLOORS = dict(_formula.POPULATION_FLOORS)
 
 
@@ -64,21 +62,6 @@ def real_population_floors(monkeypatch):
     """Restore the shipped floors for tests that are about the floors."""
     monkeypatch.setattr(_formula, "POPULATION_FLOORS", dict(SHIPPED_FLOORS), raising=True)
     return SHIPPED_FLOORS
-
-
-def test_the_shipped_floors_are_the_corpus_minima() -> None:
-    """The suite lifts the floors; this pins what it lifted.
-
-    Without it, a floor could be raised above a calibration member's
-    population and no test would notice, because every other test runs
-    with the floors disabled.
-    """
-    repos = json.loads(CORPUS.read_text(encoding="utf-8"))["repos"]
-    assert SHIPPED_FLOORS["files_scanned"] <= min(r["source_files"] for r in repos)
-    assert SHIPPED_FLOORS["declarations_scanned"] <= min(r["declarations"] for r in repos)
-    assert all(value > 0 for value in SHIPPED_FLOORS.values()), (
-        "a zero floor ships nothing; the hello-world A+ comes straight back"
-    )
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -146,6 +129,42 @@ def _git_never_maintains_the_fixtures() -> Iterator[None]:
                 os.environ[name] = value
 
 
+def child_import_path() -> str:
+    """This process's own import path, for a spawned child to inherit.
+
+    Derived from `sys.path` rather than assumed, so a subprocess imports
+    exactly what the test process is exercising — `src/` in a checkout,
+    site-packages when installed — plus whatever else the parent needed
+    to run at all.
+
+    **Why the suite has to set this.** `_git_ignores_developer_configuration`
+    below moves `HOME` to isolate git. Python computes *user*
+    site-packages from `HOME`, so on a machine where this package is
+    installed with `pip install --user`, moving `HOME` deletes the child's
+    only route to the package under test. The failure is
+    `No module named maintainability_audit` from a test whose subject is
+    not imports, and it appears on a developer's laptop while CI — which
+    installs into a virtualenv, where site-packages is not `HOME`-derived
+    — stays green.
+
+    The deeper reason to fix it here rather than in a shell is that
+    parent and child were free to disagree about *which* installed copy is
+    under test. A stale wheel elsewhere on the path would be exercised by
+    every subprocess assertion while the in-process tests measured the
+    working tree, and nothing in the suite would say so.
+    `test_a_spawned_child_imports_the_same_package_this_process_did`, in
+    `test_suite_isolation.py`, fails if that ever comes apart again.
+
+    Tests that deliberately exercise an *installed artifact* must scrub
+    this, or a wheel missing a module would import from `src/` and pass.
+    `test_installed_wheel_runtime` does both halves already: `_clean_env`
+    pops `PYTHONPATH`, and `_INSTALLED_PROBE` then asserts inside the venv
+    child that no checkout path reached `sys.path` at all — so setting this
+    variable session-wide cannot quietly weaken the one suite it would hurt.
+    """
+    return os.pathsep.join(entry for entry in sys.path if entry)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _git_ignores_developer_configuration(tmp_path_factory) -> Iterator[None]:
     """No git in this suite reads the developer's own configuration.
@@ -195,18 +214,20 @@ def _git_ignores_developer_configuration(tmp_path_factory) -> Iterator[None]:
     for the same reason: either one arriving from an outer environment would
     outrank `HOME` and silently defeat all of this.
 
-    `test_no_git_in_this_suite_reads_developer_configuration` below fails
-    if this stops holding.
+    `test_no_git_in_this_suite_reads_developer_configuration`, in
+    `test_suite_isolation.py`, fails if this stops holding.
     """
     home = tmp_path_factory.mktemp("git-isolation-home")
     names = ("HOME", "USERPROFILE", "GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM",
-             "GIT_CONFIG_NOSYSTEM")
+             "GIT_CONFIG_NOSYSTEM", "PYTHONPATH")
     previous = {name: os.environ.get(name) for name in names}
     os.environ["HOME"] = str(home)
     os.environ["USERPROFILE"] = str(home)
     os.environ["GIT_CONFIG_NOSYSTEM"] = "1"
     os.environ.pop("GIT_CONFIG_GLOBAL", None)
     os.environ.pop("GIT_CONFIG_SYSTEM", None)
+    # Repaired here because it is broken here: see `child_import_path`.
+    os.environ["PYTHONPATH"] = child_import_path()
     try:
         yield
     finally:
@@ -217,39 +238,9 @@ def _git_ignores_developer_configuration(tmp_path_factory) -> Iterator[None]:
                 os.environ[name] = value
 
 
-def test_no_git_in_this_suite_reads_developer_configuration(tmp_path: Path) -> None:
-    """The isolation above holds, for any setting rather than a listed few.
-
-    Asserting on the *origin* of every setting is what makes this a guard
-    against the class. A test that only checked `commit.gpgsign` would pass
-    while `init.templateDir` was still installing hooks — which is precisely
-    how the first attempt at this fix was wrong.
-    """
-    repo = tmp_path / "probe"
-    repo.mkdir()
-    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
-
-    origins = subprocess.run(
-        ["git", "config", "--list", "--show-origin"],
-        cwd=repo, text=True, capture_output=True, check=True,
-    ).stdout
-    leaked = [line for line in origins.splitlines() if str(DEVELOPER_HOME) in line]
-    assert not leaked, f"developer configuration reached a fixture git: {leaked}"
-
-    hooks = repo / ".git" / "hooks"
-    installed = [entry.name for entry in hooks.iterdir() if entry.suffix != ".sample"]
-    assert not installed, (
-        f"init.templateDir installed hooks into a fixture repository: {installed}"
-    )
-
-    # Not "unset": `_git_never_maintains_the_fixtures` sets these to false
-    # unconditionally. The requirement is that a fixture never *tries* to
-    # sign, whichever layer delivers that.
-    for setting in ("commit.gpgsign", "tag.gpgsign"):
-        value = subprocess.run(
-            ["git", "config", "--get", setting],
-            cwd=repo, text=True, capture_output=True, check=False,
-        ).stdout.strip()
-        assert value in ("", "false"), (
-            f"a fixture repository would attempt to sign: {setting}={value}"
-        )
+# The guards for everything in this file live in `test_suite_isolation.py`,
+# not here. Two of them used to sit at the bottom of this module and were
+# never collected once: pytest loads a conftest as a plugin, and
+# `python_files` matches `test_*.py`, which `conftest.py` is not. A test
+# written in the convenient place is a test that cannot go red.
+# `test_the_isolation_guards_are_collected` now fails if one comes back.

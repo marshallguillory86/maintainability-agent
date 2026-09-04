@@ -125,13 +125,87 @@ def test_the_report_is_not_mutated_by_the_check() -> None:
     assert before == REPORT, "the conformance check mutated the report it read"
 
 
-def test_the_record_states_that_it_compared_paths_only() -> None:
+def test_the_record_states_the_limits_of_what_it_checked() -> None:
     """A file in scope means the work order named it, nothing more.
 
-    Without this said out loud, a green conformance record reads as "the
-    change was correct", which it cannot establish — the check never opens
-    the diff.
+    Without this said out loud, a green record reads as "the change was
+    correct", which it cannot establish: the check compares paths and reads
+    added lines for suppression markers. It never judges whether the edits
+    inside a named file were the right ones.
     """
     record = _record({"src/pkg/widget.py"})
 
-    assert "Paths only" in record["note"]
+    assert "named it, not" in record["note"], (
+        "the record must disclaim what it did not check"
+    )
+
+
+def test_scope_alone_is_satisfied_by_silencing_the_finding() -> None:
+    """The evasion that makes scope conformance insufficient on its own.
+
+    Touch only the file the work order named, add `# noqa` to the flagged
+    line, change nothing else. Every path is in scope, so a scope-only check
+    reports a conformant diff over code nobody repaired — which is why the
+    two mechanisms ship together rather than one at a time.
+    """
+    added = {"src/pkg/widget.py": [(42, "def f(x):  # noqa: C901")]}
+
+    record = scope_conformance(REPORT, {"src/pkg/widget.py"}, "main...HEAD", added)
+
+    assert record["conformant"] is True, "scope alone cannot see this"
+    assert record["clean"] is False, "the pairing must catch what scope cannot"
+    assert record["suppressions_on_named_paths"] == 1
+
+
+def test_an_honest_fix_is_clean() -> None:
+    added = {"src/pkg/widget.py": [(42, "def f(x):"), (43, "    return x")]}
+
+    record = scope_conformance(REPORT, {"src/pkg/widget.py"}, "main...HEAD", added)
+
+    assert record["conformant"] is True
+    assert record["clean"] is True
+    assert record["suppressions_added"] == []
+
+
+def test_a_suppression_away_from_the_work_order_is_reported_not_conflated() -> None:
+    """Ordinary engineering, still visible, but not the silencing signal."""
+    added = {"src/pkg/elsewhere.py": [(7, "import typing  # type: ignore[attr-defined]")]}
+
+    record = scope_conformance(
+        REPORT, {"src/pkg/widget.py", "src/pkg/elsewhere.py"}, "main...HEAD", added
+    )
+
+    assert len(record["suppressions_added"]) == 1
+    assert record["suppressions_added"][0]["on_named_path"] is False
+    assert record["suppressions_on_named_paths"] == 0
+
+
+def test_only_added_lines_count_as_this_change_suppressing_something() -> None:
+    """A decade of accumulated directives is not this agent's doing.
+
+    `added_lines` reads the diff rather than the file, so a `# noqa` that
+    was already there is invisible here. Passing no added lines is the
+    same situation: nothing was introduced, so nothing is reported.
+    """
+    record = scope_conformance(REPORT, {"src/pkg/widget.py"}, "main...HEAD", {})
+
+    assert record["suppressions_added"] == []
+    assert record["clean"] is True
+
+
+def test_every_marker_is_a_real_directive_a_tool_obeys() -> None:
+    """The list must stay narrow enough not to flag prose.
+
+    A regex loose enough to match this sentence would report ordinary
+    comments as evasion, and a check that cries wolf gets switched off.
+    """
+    from maintainability_audit._conformance import suppressions_added
+
+    prose = {"docs/notes.py": [
+        (1, "# this module explains why we do not ignore type errors"),
+        (2, "# the reviewer asked about skipping tests; we do not"),
+    ]}
+
+    assert suppressions_added(prose, set()) == [], (
+        "prose about suppressions was read as a suppression"
+    )

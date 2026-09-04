@@ -6,6 +6,71 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.1.0 - 2026-09-03
+
+**The bounded work order becomes checkable.** *Fix exactly these findings
+and refactor nothing else* was the product's central claim and was enforced
+socially: the prompt said it, and nothing compared the diff that came back.
+No score changes in this release.
+
+### Added
+
+- **`--conformance REVSPEC`** reports how a diff relates to the work order
+  it was given: which changed files the work order named, which are tests
+  pairing to a named file, which are neither, and any suppression the diff
+  *added*. **`--fail-on-out-of-scope`** turns that into a gate; both are
+  opt-in, because a finding can legitimately require touching a caller
+  nobody flagged, and a check that cannot be argued with becomes a check
+  that is bypassed.
+
+  **The two halves ship together because either alone is bypassable.**
+  Scope conformance answers "did it change only what it was asked to" — and
+  is satisfied by touching the named file, adding `# noqa` to the flagged
+  line, and changing nothing else. Suppression detection answers "and
+  without switching a checker off in a file that was flagged". The record
+  reports `conformant` for the first and `clean` for both; the gate reads
+  `clean`.
+
+  Two judgments make it usable rather than noisy. A **test pairing to a
+  named file is in scope**, by the convention `_test_pairing` already uses
+  for coverage — a correct remediation nearly always touches the test that
+  proves the fix, and flagging that would make every good remediation look
+  disobedient. And **only added lines are read**, so a decade of
+  accumulated directives already in the tree is not attributed to this
+  change.
+
+  It never scores. Whether a diff was obedient is a fact about an agent's
+  behaviour, not evidence about the code's condition, so `_conformance` is
+  assembly and may not reach scoring — declared in `architecture.md` and
+  held by `test_architecture`. The record carries a `note` saying it
+  compared paths and added lines, so a green result cannot be read as "the
+  change was correct".
+
+- **`git_tools.added_lines`**, the diff-content reader behind it.
+  `--no-ext-diff` is load-bearing there rather than defensive: this
+  module's read-only config neutralises `diff.external`, which costs
+  nothing for `--name-only` and kills a content diff outright, because git
+  then tries to execute the empty string.
+
+- **`--target-path TARGET=PATH`** for `--init-agent-standards`. The table
+  of agent conventions will always trail the market, and the first agent it
+  trailed was real: an evaluation of this tool against IBM Bob fell back to
+  `--target generic` because no Bob convention exists here and nobody knew
+  where Bob reads from. Guessing the filename is the wrong fix — a
+  generated `bob-maintainability.md` looks configured and is never opened —
+  so an unknown target is now **refused**, naming the flag that resolves
+  it. A supplied path also overrides a built-in convention.
+
+### Fixed
+
+- **The instruction-target list was declared three times** — the mapping,
+  and `cli.py` twice as `choices` and as the default — so adding a target
+  meant remembering all three or shipping one the CLI refused to accept. It
+  is declared once, with a guard asserting `cli.py` never names a target
+  literally. The dead fallback that generated `{target}-maintainability.md`
+  is gone; `choices` had made it unreachable, and removing `choices`
+  without the refusal would have turned a latent bug live.
+
 ## 2.0.0 - 2026-09-03
 
 **Every score changes.** The reference corpus every number is a multiple of

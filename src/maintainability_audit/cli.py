@@ -36,7 +36,7 @@ from .config import (
     load_config,
     repository_path,
 )
-from .git_tools import changed_paths
+from .git_tools import added_lines, changed_paths
 from .instructions import (
     INSTRUCTION_TARGETS,
     UnknownTarget,
@@ -68,7 +68,8 @@ def _add_gate_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--fail-on-out-of-scope", action="store_true",
         help="With --conformance, exit 1 when the diff touched files the work "
-             "order did not name and that do not pair to one as its test.",
+             "order did not name and that do not pair to one as its test, or "
+             "when it added a suppression to a file the work order flagged.",
     )
 
 
@@ -238,7 +239,10 @@ def attach_conformance(args: argparse.Namespace, report: dict) -> None:
 
     root = Path(report["root"])
     changed = changed_paths(root, args.conformance)
-    report["scope_conformance"] = scope_conformance(report, changed, args.conformance)
+    added = added_lines(root, args.conformance)
+    report["scope_conformance"] = scope_conformance(
+        report, changed, args.conformance, added
+    )
 
 
 def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
@@ -256,7 +260,10 @@ def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
         if record is None:
             print("--fail-on-out-of-scope needs --conformance REVSPEC", file=sys.stderr)
             return 2
-        if record["out_of_scope"]:
+        # `clean`, not `conformant`: staying in scope while silencing the
+        # finding is the evasion the pairing exists to catch, and a gate
+        # that accepted it would be satisfied by the thing it guards against.
+        if not record["clean"]:
             return 1
     return 0
 

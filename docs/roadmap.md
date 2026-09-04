@@ -50,8 +50,20 @@ Go and Rust remain named in [ADR 006](decisions.md) as unwritten on exactly thes
 
 **Two gaps that widen with every language added**, and should be closed alongside rather than after:
 
-- **Test-command detection stops at Python.** `_test_execution` knows `pytest -q`; `swift test`, `xcodebuild test`, `fpm test`, `ctest`, `go test` and `cargo test` are unrecognised, so `expected_commands.test` stays hand-configured on every non-Python tree. Swift lands in 1.9.0 with that gap unless it is closed alongside. Fortran's practice detection (1.7.0) reads `fpm.toml` but nothing runs from it.
+- **Test-command detection stops at Python.** `_test_execution` knows `pytest -q`; `swift test`, `xcodebuild test`, `fpm test`, `ctest`, `go test` and `cargo test` are unrecognised, so `expected_commands.test` stays hand-configured on every non-Python tree. Swift shipped in 2.4.0 with that gap still open. Fortran's practice detection (1.7.0) reads `fpm.toml` but nothing runs from it.
 - **A new language inherits whatever the corpus does not hold.** This was the sharper of the two gaps until 2.0.0: the corpus was 40 JS/TS/Python repositories and LAPACK read 7.18x the declaration median against an anchor containing no Fortran. It is now 112 repositories across all eight parsed languages, so the gap closes for what ships today — and reopens for every language added after, since a scanner without corpus members is scored against code unlike it again. Extending the corpus moves `CALIBRATION_C` and re-grades every repository, so it stays a release of its own rather than a patch bundled with a scanner.
+
+### Corpus policy: recalibrate once, after the remaining scanners land
+
+**Decided 2026-09-04.** A language ships parsed and **unanchored**: its scanner lands, and the reference corpus is *not* extended to hold it in the same release. The corpus is re-measured and `CALIBRATION_C` re-derived **once**, after the remaining planned scanners are written — not once per language.
+
+Swift (2.4.0) is the first language to ship under this policy and is unanchored today. It is measured by a parser and scored against a 112-repository anchor containing no Swift.
+
+The reason is cost, and it is worth stating exactly rather than as "it's slow". Reuse (`--reuse`) makes a *corpus* change cheap: adding one repository re-measures one and reuses 111. It does nothing for a *language* change, because adding a scanner changes the measurement code, which moves `scanner_fingerprint`, which invalidates every stored row. So every new language costs a full re-measure of the whole corpus — and each one also re-grades every repository this tool has ever scored, since `CALIBRATION_C` moves. Paying that per language means paying it in full, repeatedly, for an anchor that is obsolete again at the next scanner.
+
+**What this policy costs, stated so nobody has to discover it:** an unanchored language is scored against code unlike it, and its grades are therefore less trustworthy than an anchored language's. That is the same defect as LAPACK's 7.18x reading, accepted deliberately and for a bounded time rather than encountered by surprise. The honest framing is that Swift's *findings* are as good as its parser, and Swift's *grade* is provisional until the recalibration.
+
+**What must happen at that recalibration**, so it is a checklist and not a memory: re-measure the full corpus with the then-current scanners, re-derive `CALIBRATION_C` by bisection, re-run the calibration corpus tests, publish the study, and ship it as a **major** release — it re-grades every repository, which is a breaking change to every published number.
 
 **Not scheduled, and the distinction matters.** Go, Rust, Kotlin, Scala, Ruby, PHP and the rest are classified by discovery and may be measured by adapters, but no scanner is scheduled for any of them. They are not refused — they are unwritten, on the terms above. A language moves onto this list when it is decided here, not by being named in an older register entry.
 
@@ -61,29 +73,31 @@ Worth stating plainly because it aims several roadmap items. Addy Osmani frames 
 
 He also names the trade-off available once generation outruns verification: scale verification, slow generation, lower standards, or **relax constraints in low-risk areas while tightening them elsewhere**. Only the last is a real engineering answer, and it is what the policy-as-code item below is for. This is a borrowed frame, not evidence — it tells us where to look, not what is true.
 
-## The remediation hole: an agent can satisfy this gate without doing the work
+## The remediation hole: closed in 2.1.0 through 2.3.0
 
-The second known shape problem, and the more serious one, because it sits under the product's central claim. The bounded work order *tells* an agent to fix exactly these findings and refactor nothing else. Nothing checks that it did.
+The second known shape problem, and for most of this project's life the more serious one, because it sat under the product's central claim. The bounded work order *told* an agent to fix exactly these findings and refactor nothing else, and nothing checked that it did. It is now checked.
 
-Prompted by [What is agentic testing?](https://theaiengineer.substack.com/p/what-is-agentic-testing-fa2), whose argument for where the model should stop — agent at authoring, model out of CI, frozen oracle in the gate — is the architecture this tool already has. The score is a rate computed by code, not a model's opinion, so the "right by construction becomes right most of the time" failure it warns about does not apply here. Its failure modes for the *repair* step do.
+Prompted by [What is agentic testing?](https://theaiengineer.substack.com/p/what-is-agentic-testing-fa2), whose argument for where the model should stop — agent at authoring, model out of CI, frozen oracle in the gate — is the architecture this tool already has. The score is a rate computed by code, not a model's opinion, so the "right by construction becomes right most of the time" failure it warns about does not apply here. Its failure modes for the *repair* step did.
 
-Three checks close it, in the order they are worth building:
+Three checks closed it, and they shipped in the order they were worth building — the first two in 2.1.0, the third in 2.2.0:
 
-**1. Scope conformance, verified against the work order.** The cheapest and highest-value: the work order already names its findings and their paths, so comparing a diff against them is mechanical. Without it, "stay in scope" is an instruction, not a constraint — the analog of Meta's discard-the-PR gate, and the one of their three this tool does not enforce. A remediation diff that touches files the work order never named should be reported as out of scope.
+**1. Scope conformance, verified against the work order** — `--conformance <revspec>`, `--fail-on-out-of-scope`. The work order names its findings and their paths, so comparing a diff against them is mechanical. A remediation diff that touches files the work order never named is reported as out of scope. One rule is not mechanical and is worth knowing: a test added for a fix stays in scope even though the work order never named the test file, because demanding otherwise would make the check punish the behaviour the product asks for. `_conformance.py`.
 
-**2. A suppression is a finding, not a fix.** Today a finding can be made to disappear by deleting the code, adding `# noqa`, `# type: ignore`, `eslint-disable` or `pragma: no cover`, or skipping the test. The gate goes green and nothing notices. The rule to encode: a suppression added in the same change that closed a finding is a **reopen**, not a resolution. The structural near-duplicate detector already resists the rename-dodge (identifiers are anonymized before comparison) — the question this raises is whether *every* detector does, and the answer for suppressions is currently no.
+**2. A suppression is a finding, not a fix** — the same check's second, separate verdict. A finding could be made to disappear by deleting the code, adding `# noqa`, `# type: ignore`, `eslint-disable` or `pragma: no cover`, or skipping the test; the gate went green and nothing noticed. Encoded now: a suppression added on a path the work order named is reported whether or not the diff stayed in scope. `conformant` and `clean` are two answers, never merged into one, because a change can obey the work order and still silence a finding inside it.
 
-**3. Per-dimension score regression fails the run.** `--fail-on-new` plus a version-3 baseline and `_finding_match` already recognise a finding that clears and returns as a reopen rather than a new item — that half is built. What is missing is the ratchet on the *dimensions*: a change that improves one dimension while quietly regressing another passes today.
+**3. Per-dimension score regression fails the run** (2.2.0) — `--fail-on-regression`. `--fail-on-new` plus a version-3 baseline and `_finding_match` already recognised a finding that cleared and returned. The ratchet on the *dimensions* is what was missing: a change that improved one dimension while quietly regressing another passed. It has three outcomes rather than two — held, regressed, and **not comparable** — because two scans taken under different calibration cannot be differenced, and reporting that as "held" would be the overclaim the check exists to prevent. `_ratchet.py`.
 
-Each of these becomes real by being enforced, not by being described here, and each needs its own falsifier. Scope conformance likely earns an ADR when it is built; a check that decides whether a diff was obedient is a new kind of claim for this tool to make.
+### The umbrella: an attestation artifact — shipped in 2.3.0
 
-### The umbrella: an attestation artifact
+The three checks are mechanisms. What they add up to is one thing worth naming: **a per-change record that an independent process can produce and a generator cannot produce about itself.** `--attestation-output`, `_attestation.py`.
 
-The three checks above are mechanisms. What they add up to is one thing worth naming: **a per-change record that an independent process can produce and a generator cannot produce about itself.**
+Reproducible and derived from one run: what was measured, what the agent was *told* to change, whether it stayed inside the work order, whether it silenced anything, and what moved on each dimension. A code-generating agent has an audit trail of its own actions; that is a self-report. This is the second opinion, and it is the shape a regulated reviewer asks for — the question there is never "is the tool good", it is "who checked the vendor's output, and can they re-derive the check months later".
 
-Signed, reproducible, and derived from one run: what was measured, what the agent was *told* to change, what it *actually* changed, whether it stayed inside the work order, and what moved on each dimension. A code-generating agent has an audit trail of its own actions; that is a self-report. This is the second opinion, and it is the shape a regulated reviewer asks for — the question there is never "is the tool good", it is "who checked the vendor's output, and can they re-derive the check months later".
+Two words it refuses. It is **not signed** — nothing here holds a key, and "signed" is exactly the word a reader reaches for with an attestation, so the document says the opposite in its own text. And a question nobody ran renders as *not asked*, never as passed; an incomparable ratchet renders as *not established*. The artifact's whole value is in what it declines to claim.
 
 This is the one place where determinism stops being an engineering preference and becomes the product. A tool that routes across models cannot re-derive last quarter's verdict; this one can, byte for byte, which is why the attestation can be evidence rather than a log line.
+
+**What is still open here:** the checks read the diff's *shape* — which paths it touched, what it silenced, which dimensions moved. Nothing reads whether the change was correct, and nothing will; that is a claim this tool does not make and the attestation says so in its own text.
 
 ### Two features that only a deterministic, unmetered checker can offer
 

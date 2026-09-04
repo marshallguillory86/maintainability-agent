@@ -65,6 +65,44 @@ def _attach_post_audit_records(
     attach_ratchet(report, history_path)
 
 
+def _conformance_exit(args: argparse.Namespace, report: dict) -> int:
+    """0 to continue; otherwise the exit code the conformance gate demands."""
+    if not args.fail_on_out_of_scope:
+        return 0
+    record = report.get("scope_conformance")
+    if record is None:
+        print("--fail-on-out-of-scope needs --conformance REVSPEC", file=sys.stderr)
+        return 2
+    # `clean`, not `conformant`: staying in scope while silencing the finding
+    # is the evasion the pairing exists to catch, and a gate that accepted it
+    # would be satisfied by the thing it guards against.
+    return 0 if record["clean"] else 1
+
+
+def _regression_exit(args: argparse.Namespace, report: dict) -> int:
+    """0 to continue; otherwise the exit code the ratchet demands."""
+    if not args.fail_on_regression:
+        return 0
+    ratchet = report.get("dimension_ratchet")
+    if ratchet is None:
+        print("--fail-on-regression needs a recorded history (--record-history)",
+              file=sys.stderr)
+        return 2
+    # A run that could not compare does not pass quietly: exiting 0 where the
+    # question was never asked is the "absence read as a pass" shape.
+    #
+    # The reason is not interpolated — it derives from recorded scan history,
+    # and code scanning is right that history fields have no business in a log
+    # line. It stays in the report, which a caller reads deliberately.
+    # Suppressing that alert was refused: this release ships the check that
+    # treats a suppression as a finding rather than a fix.
+    if not ratchet["comparable"]:
+        print("no comparable scan for --fail-on-regression; see "
+              "dimension_ratchet.reason in the report", file=sys.stderr)
+        return 2
+    return 1 if ratchet["regressed"] else 0
+
+
 def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
     if args.fail_on_new:
         # Structured matching, never a label-set difference: a label
@@ -75,45 +113,10 @@ def audit_exit_code(args: argparse.Namespace, report: dict) -> int:
             return 1
     if args.fail_on_gate and report["hard_gate_failures"]:
         return 1
-    if args.fail_on_out_of_scope:
-        record = report.get("scope_conformance")
-        if record is None:
-            print("--fail-on-out-of-scope needs --conformance REVSPEC", file=sys.stderr)
-            return 2
-        # `clean`, not `conformant`: staying in scope while silencing the
-        # finding is the evasion the pairing exists to catch, and a gate
-        # that accepted it would be satisfied by the thing it guards against.
-        if not record["clean"]:
-            return 1
-    if args.fail_on_regression:
-        ratchet = report.get("dimension_ratchet")
-        if ratchet is None:
-            print("--fail-on-regression needs a recorded history "
-                  "(--record-history)", file=sys.stderr)
-            return 2
-        # A run that could not compare does not pass this gate quietly.
-        # Exiting 0 where the question was never asked is the "absence read
-        # as a pass" shape this project treats as a defect class.
-        #
-        # The *reason* is not interpolated here. It is derived from recorded
-        # scan history, and code scanning is right that history fields have
-        # no business flowing into a log line by default — a repository's
-        # branch and commit metadata are not this gate's to print. The
-        # detail stays in `report["dimension_ratchet"]["reason"]`, which is
-        # data a caller reads deliberately rather than output that appears
-        # in whatever CI log the build happens to write to.
-        #
-        # Suppressing the alert was the alternative and was refused: this
-        # release ships the check that treats a suppression as a finding,
-        # and adding one here to quiet a scanner would be the exact move it
-        # exists to catch.
-        if not ratchet["comparable"]:
-            print(
-                "no comparable scan for --fail-on-regression; see "
-                "dimension_ratchet.reason in the report",
-                file=sys.stderr,
-            )
-            return 2
-        if ratchet["regressed"]:
-            return 1
+    conformance = _conformance_exit(args, report)
+    if conformance:
+        return conformance
+    regression = _regression_exit(args, report)
+    if regression:
+        return regression
     return 0

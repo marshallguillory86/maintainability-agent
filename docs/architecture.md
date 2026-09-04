@@ -121,6 +121,7 @@ flowchart TB
     _ranges_cpp["_ranges_cpp"]
     _ranges_csharp["_ranges_csharp"]
     _ranges_fortran["_ranges_fortran"]
+    _ranges_swift["_ranges_swift"]
     _tokens["_tokens"]
     _xml["_xml"]
   end

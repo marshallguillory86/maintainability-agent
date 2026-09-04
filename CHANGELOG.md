@@ -6,6 +6,59 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.4.0 - 2026-09-04
+
+**Swift is the ninth parsed language**, and the first added since the
+corpus was extended — so it is scored against an anchor that does not hold
+it, which the roadmap already names as the cost every new language
+re-incurs.
+
+### Added
+
+- **A Swift declaration scanner.** Functions, initialisers,
+  deinitialisers, subscripts, and the types (`class`, `struct`, `enum`,
+  `protocol`, `actor`), each bounded by its own braces over the walk shared
+  with C, C++, C# and Java. Every Swift declaration is keyword-led, which
+  makes recognition easier here than in C++, where a bare `name(` is
+  equally a call, a macro and a constructor.
+
+- **Extension members carry the type they extend.** `extension Widget {
+  func draw() }` reports `Widget.draw`, not a bare `draw`
+  indistinguishable from every other type's. C++ gets this free because
+  the source writes `void geo::Widget::draw()`; Swift does not, so the
+  scanner carries it. A work order saying "shorten `draw`" against a tree
+  with eleven of them is not a bounded instruction.
+
+- **Swift's own reading of a branch.** `guard` is the language's primary
+  early exit and is absent from the C-family pattern, so a guard-heavy
+  function would have read as branchless — the defect Fortran shipped
+  with, where six nested `do` loops scored complexity 1 because the
+  pattern did not know the keyword.
+
+### Fixed
+
+- **Two hazards the roadmap did not predict**, both found by the tests and
+  both now pinned:
+
+  Swift has **no statement terminator**, so the shared bare-signature rule
+  — a signature that closes without opening a brace, which in C is a `;` —
+  could not see where a protocol requirement ended. It walked on and
+  adopted the next line's brace, reporting `func describe() -> String` as
+  two lines of body. A protocol of forty requirements is not forty
+  declarations.
+
+  **`class` is both a keyword and a modifier**: `class Widget` declares a
+  type, `class func make()` declares a type-level method. Stripping it with
+  the other modifiers cost every `final class Store` its keyword — the type
+  vanished and only its members were reported, which makes a declaration
+  *rate* wrong rather than merely incomplete.
+
+- **A roadmap claim was wrong and is corrected rather than built against.**
+  It said Swift's string interpolation "puts braces inside literals, so
+  masking has to run before depth counting". Swift interpolates with
+  `\(expr)` — parentheses, not braces — and string contents are masked
+  before any counting regardless.
+
 ## 2.3.0 - 2026-09-04
 
 **The attestation artifact.** The three remediation-integrity mechanisms

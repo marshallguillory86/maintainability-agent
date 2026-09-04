@@ -12,6 +12,7 @@ ends, and — deliberately — where it under-reports.
 | C (`.c`, `.h`) | dedicated scanner: file-scope functions and `struct`/`enum`/`union` types, bounded by their own braces | Bounded. Under-reports — see below. |
 | C++ (`.cpp`, `.hpp`, `.cc`, `.cxx`, `.hh`) | dedicated scanner: functions, class/struct members, namespaces and templates, bounded by their own braces | Bounded. Under-reports — see below. |
 | C# (`.cs`) | dedicated scanner: methods, constructors and types (`class`, `interface`, `struct`, `record`, `enum`), bounded by their own braces | Bounded. Properties are not declarations — see below. |
+| Swift (`.swift`) | dedicated scanner: functions, initialisers, subscripts and types (`class`, `struct`, `enum`, `protocol`, `actor`), bounded by their own braces | Bounded. Extension members carry the type they extend; protocol requirements and computed properties are not declarations — see below. |
 | Fortran, free-form (`.f90`, `.f95`, `.f03`, `.f08`, `.F90`, `.F95`, `.F03`, `.F08`, `.pf`) | dedicated scanner: modules, submodules, programs, subroutines, functions and derived types, bounded by their own `end` | Bounded by keyword rather than braces. |
 | Fortran, fixed-form (`.f`, `.for`, `.ftn`, `.F`, `.FOR`, `.FTN`) | the same scanner, over source laid out for punched cards: label in columns 1-5, continuation in 6, statement in 7-72 | Bounded by keyword. Continuations are joined before reading — see below. |
 | JS / TS / JSX / TSX (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`) | brace/paren depth over a comment- and string-masked copy | Bounded by the declaration's own braces. |
@@ -276,6 +277,64 @@ but it is a verdict emitter: it reports findings and cannot supply a
 declaration population. lizard, which could, does not read Fortran. So
 the built-in scanner remains the only path to a population here, rather
 than the zero-install convenience it is for C and C++.
+
+
+### What the Swift scanner sees, and what it misses
+
+Functions, initialisers, deinitialisers, subscripts, and the types —
+`class`, `struct`, `enum`, `protocol` and `actor`. Types and extensions are
+descended into, because that is where members live; a function body is
+stepped over.
+
+**Every Swift declaration is keyword-led**, which makes recognition easier
+here than in C++: a bare `name(` there is equally a call, a macro and a
+constructor, and a wrong guess once let a macro swallow the next
+declaration's braces. Nothing in Swift has to be guessed.
+
+**An `extension` member is reported under the type it extends.**
+`extension Widget { func draw() }` is `Widget.draw`, not a second bare
+`draw` indistinguishable from every other type's. C++ gets this for free
+because the source writes `void geo::Widget::draw()`; Swift does not write
+it, so the scanner carries it. A work order saying "shorten `draw`" against
+a tree with eleven of them is not a bounded instruction.
+
+**`class` is read as a keyword or a modifier as the line requires.** Swift
+spells two things with it: `class Widget` declares a type, `class func
+make()` declares a type-level method. Stripping it with the other modifiers
+cost every `final class Store` its keyword — the type vanished and only its
+members were reported, which makes a declaration *rate* wrong rather than
+merely incomplete.
+
+**A protocol requirement mints nothing.** Swift has no statement
+terminator, so the shared bare-signature rule — a signature that closes
+without opening a brace, which in C is a `;` — cannot see where a
+requirement ends. The first version walked on and adopted the next line's
+brace, reporting `func describe() -> String` as two lines of body. The rule
+that replaces it: parentheses balancing on the line with no `{` following
+means no body. A wrapped signature leaves them unbalanced and is kept.
+
+Everything it misses, it misses in the safe direction:
+
+- **Computed properties** (`var area: Double { w * h }`) are not
+  declarations — the C# properties call, for the C# reason: an ordinary
+  type has many, each a line or two, and counting them dilutes the
+  population every rate divides by.
+- **A body written Allman** — `func f()` with `{` alone on the next line —
+  is read as a requirement and mints nothing. Legal Swift, vanishingly rare
+  in it, and missing one declaration is cheaper than counting every
+  protocol requirement in the tree.
+- **A closure assigned to a property** is a body with no declaration
+  keyword and is not counted.
+- **Declarations produced by a macro** are not in the source and are not
+  seen, as in C and C++.
+- **Conditional compilation is not evaluated**, so a declaration in a
+  disabled `#if` arm still counts.
+
+**Swift is measured with its own reading of a branch.** `guard` is the
+language's primary early exit and is absent from the C-family pattern, so a
+guard-heavy function would have read as branchless — the defect Fortran
+shipped with, where six nested `do` loops scored complexity 1 because the
+pattern did not know the keyword.
 
 ## The rule that matters: a range never runs past its own body
 

@@ -36,8 +36,47 @@ def test_the_package_claims_the_platform_it_is_tested_on() -> None:
     )
 
 
+def _jobs(path: Path) -> list[tuple[str, list[str]]]:
+    """Each job in a workflow, as ``(name, body lines)``.
+
+    Read by indentation rather than with a YAML parser, because the suite
+    is forbidden to import `yaml` — that dependency is for catalog regen,
+    and keeping it off the test extra keeps a test install light. The same
+    indentation walk `test_the_macos_runner_actually_runs_the_suite` uses
+    below, which is also why it stays consistent with this file.
+
+    A job is a key one level under `jobs:`; its body runs until the next
+    line at or above its own indentation.
+    """
+    lines = path.read_text(encoding="utf-8").splitlines()
+    try:
+        start = next(i for i, line in enumerate(lines) if line.rstrip() == "jobs:")
+    except StopIteration:
+        return []
+
+    found: list[tuple[str, list[str]]] = []
+    depth: int | None = None
+    for index in range(start + 1, len(lines)):
+        line = lines[index]
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        indent = len(line) - len(line.lstrip())
+        if depth is None and line.rstrip().endswith(":"):
+            depth = indent
+        if depth is None:
+            continue
+        if indent < depth:
+            break  # out of `jobs:` entirely
+        if indent == depth and line.rstrip().endswith(":"):
+            found.append((line.strip().rstrip(":"), []))
+        elif found:
+            found[-1][1].append(line)
+    return found
+
+
 def test_ci_runs_only_platforms_the_package_claims() -> None:
-    """If a Windows runner appears, the claim has to move with it."""
+    """If a Windows runner appears, the claim has to move with it —
+    unless the job claims nothing at all. See the comment inside."""
     workflows = list((ROOT / ".github" / "workflows").glob("*.yml"))
     assert workflows, "no workflows found; this check has nothing to read"
     runners = {
@@ -46,10 +85,29 @@ def test_ci_runs_only_platforms_the_package_claims() -> None:
         for line in path.read_text(encoding="utf-8").splitlines()
         if "runs-on:" in line
     }
-    non_posix = sorted(r for r in runners if "windows" in r.lower())
-    assert not non_posix, (
-        f"CI runs {non_posix} while the package claims only "
-        f"{CLAIMED_PLATFORM}. Either the classifier grows or the runner goes"
+    # A runner outside the claimed platforms is allowed in exactly one
+    # shape: a job that cannot pass or fail anything. `continue-on-error`
+    # means the result gates no merge and stands behind nothing, so
+    # running it is a *question* — which is the only way to replace an
+    # unknown with a list without claiming the platform first. A job that
+    # gates something is an answer, and an answer needs the classifier to
+    # move with it. Without this distinction the rule forbade the one
+    # experiment that could ever justify widening the claim.
+    gating = sorted(
+        f"{path.name}:{job}"
+        for path in workflows
+        for job, body in _jobs(path)
+        if any("windows" in line.lower() for line in body if "runs-on:" in line)
+        and not any(
+            line.split(":", 1)[1].strip() == "true"
+            for line in body if line.strip().startswith("continue-on-error:")
+        )
+    )
+    assert not gating, (
+        f"{gating} run a platform outside {CLAIMED_PLATFORM} in a job that "
+        "gates something. Either the classifier grows with the evidence "
+        "behind it, or the job becomes `continue-on-error: true` — a probe, "
+        "which claims nothing"
     )
 
     # The half this test was missing. Forbidding a Windows runner is not

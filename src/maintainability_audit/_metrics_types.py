@@ -53,6 +53,20 @@ COMPLEXITY_RE = re.compile(
 )
 
 
+#: Swift's `guard` is an early exit and its primary branching idiom, and
+#: `repeat` is its do-while. Neither is in the C-family pattern, so a
+#: guard-heavy function would read as branchless — the same defect Fortran
+#: had with `do`.
+SWIFT_COMPLEXITY_RE = re.compile(
+    r"\b(if|for|while|case|catch|guard|repeat)\b|&&|\|\||\?\?|\?(?![.?])"
+)
+
+
+def swift_branch_points(line: str) -> int:
+    """Decision points on one line of Swift."""
+    return len(SWIFT_COMPLEXITY_RE.findall(line))
+
+
 def branch_points(line: str) -> int:
     """Decision points on one line, for the C family and Python."""
     return len(COMPLEXITY_RE.findall(line))

@@ -5,10 +5,10 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **2.3.0**.
+Version **2.4.0**.
 
-**Languages parsed:** Python, Java, C, C++, C#, Fortran (free-form *and*
-fixed-form), and the JS/TS family — each by a scanner written for it, and
+**Languages parsed:** Python, Java, C, C++, C#, Swift, Fortran (free-form
+*and* fixed-form), and the JS/TS family — each by a scanner written for it, and
 measured with that language's own reading of what a branch is.
 [What that means per language](#language-support).
 
@@ -213,9 +213,9 @@ SonarQube, Qlty) rather than replacing them — their SARIF folds in via
 and on an unrecognized language it will quietly under-report rather than fail.**
 Coverage comes from two layers.
 
-Eight languages are parsed as of **1.6.0**: Python (1.0), Java (1.0), C (1.1),
-C++ (1.2), C# (1.3), Fortran (free-form 1.4, fixed-form 1.6), the JS/TS family,
-and HTML. Each has a scanner written for it and a documented list of what it
+Nine languages are parsed as of **2.4.0**: Python (1.0), Java (1.0), C (1.1),
+C++ (1.2), C# (1.3), Fortran (free-form 1.4, fixed-form 1.6), Swift (2.4), the
+JS/TS family, and HTML. Each has a scanner written for it and a documented list of what it
 misses — a language is claimed here only when both exist.
 
 **Built-in scanner (always on, no dependencies)** — reads function/class
@@ -229,6 +229,7 @@ these:
 | C (`.c`, `.h`) | dedicated brace-bounded scanner — functions, `struct`/`enum`/`union` | Bounded; prototypes and macros are not declarations |
 | C++ (`.cpp`, `.hpp`, `.cc`, `.cxx`, `.hh`) | dedicated brace-bounded scanner — functions, class members, namespaces, templates | Bounded; bodyless declarations are not definitions |
 | C# (`.cs`) | dedicated brace-bounded scanner — methods, constructors, `class`/`interface`/`struct`/`record`/`enum` | Bounded; properties are not declarations |
+| Swift (`.swift`) | dedicated brace-bounded scanner — functions, initialisers, subscripts, `class`/`struct`/`enum`/`protocol`/`actor` | Bounded; extension members carry their type, protocol requirements and computed properties are not declarations |
 | Fortran, free-form (`.f90`, `.f95`, `.f03`, `.f08`, `.F90`, `.F95`, `.F03`, `.F08`, `.pf`) | dedicated **keyword**-bounded scanner — modules, subroutines, functions, derived types | Bounded by `end`; measured with Fortran's own branch and nesting reading |
 | Fortran, fixed-form (`.f`, `.for`, `.ftn`, `.F`, `.FOR`, `.FTN`) | the same scanner over card-column source; continuations joined, labelled `DO` loops understood | Bounded by `end` or by the loop's label |
 | JS / TS / JSX / TSX (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`) | brace/paren depth over a masked copy | Bounded by the declaration's own braces |

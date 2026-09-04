@@ -120,3 +120,49 @@ def escalations_markdown(escalated: list[dict[str, Any]] | None) -> list[str]:
         ])
     lines.append("")
     return lines
+
+
+def run_comparison_markdown(comparison: dict[str, Any] | None) -> list[str]:
+    """The markdown section. Presentation only — it computes no score.
+
+    Empty for a run nobody named, which is most of them.
+    """
+    if not comparison:
+        return []
+    label = comparison["label"]
+    lines = [f"## Runs of `{label}`", ""]
+    runs = comparison["runs"]
+    if not runs:
+        return [*lines, comparison["trend"].get("reason", "No runs recorded."), ""]
+
+    lines += ["| Recorded | Commit | Estimate | Moved | Files | Declarations |",
+              "|---|---|---|---|---|---|"]
+    for run in runs:
+        estimate = "withheld" if run["estimate"] is None else f"{run['estimate']:.2f}"
+        moved = "—" if run["moved"] is None else f"{run['moved']:+.2f}"
+        populations = run["populations"]
+        lines.append(
+            f"| {run['recorded_at']} | `{(run['commit'] or '')[:8]}` | {estimate} | "
+            f"{moved} | {populations.get('files_scanned', '—')} | "
+            f"{populations.get('declarations_scanned', '—')} |"
+        )
+    lines.append("")
+
+    trend = comparison["trend"]
+    lines.append(
+        f"**{trend['summary']}.**" if trend.get("comparable")
+        else f"**Not established:** {trend['reason']}."
+    )
+    if comparison.get("excluded_earlier_runs"):
+        lines += ["", (
+            f"{comparison['excluded_earlier_runs']} earlier run(s) under this "
+            f"name are excluded: {comparison['exclusion_reason']}."
+        )]
+    lines += ["", (
+        "*`Moved` is the change in estimate between the previous recorded "
+        "scan and this one — the movement across that interval, not the "
+        "effect of the transformation. Anything else that happened in the "
+        "same interval is inside the number, and two runs of one "
+        "transformation land on different code.*"
+    ), ""]
+    return lines

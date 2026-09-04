@@ -51,18 +51,42 @@ def attach_ratchet(report: dict, history_path: Path) -> None:
     report["dimension_ratchet"] = dimension_ratchet(read_history(history_path))
 
 
+def attach_run_comparison(
+    args: argparse.Namespace, report: dict, history_path: Path
+) -> None:
+    """Compare this run of a named transformation with earlier ones.
+
+    Only when the operator named one: an unnamed run belongs to no series,
+    and inventing a series for it would be the tool answering a question
+    nobody asked.
+    """
+    label = getattr(args, "transformation", None)
+    if not label or not history_path.exists():
+        return
+    from ._run_comparison import compare_runs
+    from ._scan_history import read_history
+
+    report["run_comparison"] = compare_runs(read_history(history_path), label)
+
+
 def _attach_post_audit_records(
     args: argparse.Namespace, report: dict, history_path: Path
 ) -> None:
     """Records composed from the finished report, before it is rendered.
 
-    Both read the report rather than the tree, and neither reaches scoring:
-    whether a diff obeyed its work order, and whether a dimension slipped
-    since the last comparable scan, are facts about a change and its
-    history — not evidence about the code's condition.
+    All three read the report or the history rather than the tree, and none
+    reaches scoring: whether a diff obeyed its work order, whether a
+    dimension slipped since the last comparable scan, and how this run of a
+    transformation compares with earlier ones are facts about a change and
+    its history — not evidence about the code's condition.
+
+    The third is the only one that cannot fail a build. It is a report, by
+    design: "run seven moved further than run six" is worth knowing and is
+    not a thing to block a merge on.
     """
     attach_conformance(args, report)
     attach_ratchet(report, history_path)
+    attach_run_comparison(args, report, history_path)
 
 
 def _conformance_exit(args: argparse.Namespace, report: dict) -> int:

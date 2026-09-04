@@ -67,8 +67,23 @@ def _record(tmp_path: Path) -> ScanRecord:
     return record_of(report, config, VERSION, 2.2658, ())
 
 
-def test_new_writes_are_schema_three() -> None:
-    assert HISTORY_SCHEMA_VERSION == 3, (
+def test_new_writes_carry_structured_identities() -> None:
+    """Schema 3 or later, which is a floor rather than a version.
+
+    This asserted `== 3` and broke when schema 4 added the transformation
+    label — a test whose subject is the identity contract failing over a
+    field it does not care about. What it defends is that new lines are
+    never the label-only schema 1 or 2 records; a later schema keeps that
+    property by construction, and the current number is pinned where it
+    belongs, in `test_run_comparison.test_the_label_round_trips_through_
+    the_written_line`.
+
+    Covers existing behaviour: the identity contract shipped with schema 3
+    and is untouched here. This change only renames the guard and loosens
+    an assertion that was pinning an unrelated number, so it cannot fail
+    against a base where the same property already held.
+    """
+    assert HISTORY_SCHEMA_VERSION >= 3, (
         "new lines must distinguish structured finding identities from the "
         "label-only schema 1 and 2 records"
     )
@@ -83,7 +98,7 @@ def test_a_new_record_stores_what_the_charts_need(tmp_path: Path) -> None:
     record = _record(tmp_path)
     payload = json.loads(record.as_line())
 
-    assert payload["history_schema_version"] == 3
+    assert payload["history_schema_version"] >= 3
     assert payload["identities"], "schema 3 must retain matcher inputs beside labels"
     assert set(payload["identities"][0]) == {
         "kind", "path", "name", "ordinal", "body_digest", "fingerprint",

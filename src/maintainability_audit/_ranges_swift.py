@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import re
 
+from ._masking import mask_swift_lines
 from ._metrics_types import DeclRange
 from ._ranges_core import _mask_generics, scan_bounded
 
@@ -160,7 +161,11 @@ def swift_declaration_ranges(lines: list[str]) -> tuple[list[DeclRange], list[st
       disabled `#if` arm still counts.
     """
     ranges, masked = scan_bounded(
-        lines, _swift_declaration, descend=("class",), skip_preprocessor=True
+        lines, _swift_declaration, descend=("class",), skip_preprocessor=True,
+        # Multiline literals are blanked before anything reads a line. The
+        # default line-local mask left a `func` inside a `"""` block
+        # looking like a declaration — see `mask_swift_lines`.
+        mask=mask_swift_lines,
     )
     return _qualify_extension_members(ranges, masked), masked
 

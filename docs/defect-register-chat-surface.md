@@ -3452,6 +3452,24 @@ Deliberately *not* a symlink refusal: the operator named the path and
 controls it, and the audited tree's own default is a different question
 that `discovered_config` already answers.
 
+**The residual was resolved as a false positive, by Marshall, on
+2026-09-05, and is recorded here rather than only in the dashboard.**
+After the fix one `S8707` remained on `config.py`, because the rule's
+remedy is to bound the path to a directory and `--config` legitimately
+points outside the audited tree. The grounds, as entered on the issue:
+the path is an operator-supplied CLI argument rather than tree content;
+every tree-derived path here already goes through `repository_path`; the
+call is validated through a single handle; and the exploitable behaviour
+— the hang — is fixed and covered. Residual disclosure is bounded to
+files that parse as this tool's own JSON schema.
+
+That is a suppression, and this project counts suppressions as findings
+when other people make them (`_conformance.SUPPRESSION_MARKERS` reads
+`NOSONAR`). Writing it down is the difference between a judgement and a
+silence: a reader of the code sees nothing, so the register carries it.
+The other four SonarCloud vulnerabilities in this family closed as
+**FIXED** rather than dismissed — three `S2612` and one `S8707`.
+
 *Closing test:* `test_an_operator_named_path_must_be_a_regular_file` —
 a FIFO and a device are refused at both doors rather than read.
 

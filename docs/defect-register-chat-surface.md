@@ -3353,7 +3353,7 @@ against the fix regressing.
 *Mutation:* none yet — the finding came from running the whole suite on a
 platform nobody had run it on, not from breaking a member.
 
-### D102 — Open (Grok): two audit-test functions exceed the repo's own budgets (Low)
+### D102 — Closed: two audit-test functions exceed the repo's own budgets (Low)
 
 `tests/test_tree_chosen_spawn.py` — `_argv0` (17 lines, complexity 9,
 cognitive 17) and `_tree_bin_modules` (25 lines, complexity 9, cognitive
@@ -3368,12 +3368,22 @@ constraint is visible and the work is assignable to whoever owns tests.
 **Assigned to Grok.** Codex is out of budget, and the rule recorded on
 2026-09-05 moves the test-writer role to Grok rather than vacating it or
 letting Claude cross into tests to clear a ledger.
-**Falsifier: pending** — the thresholds already fire; what is missing is
-the decision to act or to record an accepted exception.
 
-*Roles:* found=ci prompt=marshall fix=unknown test=unknown run=none
-*Mutation:* none — the project's own thresholds produced these, so the
-detector already exists and no member had to be broken to expose them.
+**Closed.** `_argv0` is a dispatcher: Invocation argv lives in
+`_invocation_argv0`, `subprocess.run` argv in `_subprocess_run_argv0`.
+`_tree_bin_modules` walks files; `_tree_chosen_invocations` decides
+whether an Invocation is tree-chosen. Both original functions read `ok`
+under `detect_functions` (cognitive 17 → 2 and 18 → 3).
+
+*Closing test:* `test_the_spawn_helpers_stay_inside_the_repo_budgets` in
+`tests/test_tree_chosen_spawn.py`. It runs `detect_functions` on the
+file and fails if any helper is warn or fail — the same detector that
+produced the finding, on a member the test does not name.
+
+*Roles:* found=ci prompt=marshall fix=grok test=grok run=local
+*Mutation:* fold `_invocation_argv0` back into `_argv0`, or
+`_tree_chosen_invocations` back into `_tree_bin_modules`. The cited
+test fails without naming either original function.
 
 ### D103 — Closed: `_jobs` is over the cognitive warn line (Low)
 
@@ -3411,11 +3421,11 @@ the thread, which is the D99 shape rather than a defect in a detector.
 
 ## Disposition
 
-**One entry is open: D102**, and it is assigned to Grok under the
-role-failover rule. D101 and D103 closed the day they were filed — D103
-by splitting the function, D101 by Marshall's decision that an
-unsupported platform is a stated limit and never a reason to weaken the
-supported ones. All three were filed 2026-09-05 after
+**Every entry is closed.** D102 closed by splitting the two helpers that
+were over the cognitive warn line; D101 and D103 closed the day they
+were filed — D103 by splitting `_jobs`, D101 by Marshall's decision that
+an unsupported platform is a stated limit and never a reason to weaken
+the supported ones. All three were filed 2026-09-05 after
 Marshall asked "what is my rule" and the answer was the one being broken.
 A Windows probe had produced a High finding about the write-safety path,
 and two warn-level findings had been resolved in PR threads without being

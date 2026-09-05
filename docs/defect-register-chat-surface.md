@@ -3419,6 +3419,75 @@ changed behaviour would be a different entry.
 code judged his own work against the published threshold and resolved
 the thread, which is the D99 shape rather than a defect in a detector.
 
+### D104 — Closed: two operator-named reads had no validation at all (High)
+
+SonarCloud `pythonsecurity:S8707`, two instances, both MAJOR, and the
+rule's own wording names this product's setting: *"LLMs running this code
+with faulty CLI arguments can escape file system restrictions."*
+
+- `config.py` — `--config` was read straight into `json.loads`.
+- `baseline.py` — `--baseline` likewise.
+
+They were the only two path-taking entry points that never went through
+any validation. Every other path in this project is bounded by
+`repository_path`; these two legitimately point *outside* the audited
+tree, so bounding is the wrong control — and no control was the shipped
+answer.
+
+**The concrete harm was a hang, not a traversal.** `read_text` on a FIFO
+blocks forever, and on `/dev/zero` consumes memory until the process
+dies. Measured before the fix: a bare `read_text` on a FIFO had to be
+killed at four seconds. "Denial-of-service via crafted config files" is
+in this project's own published in-scope list, so the tool was vulnerable
+to something it invites people to report.
+
+`read_operator_file` now requires a regular file and bounds its size.
+Deliberately *not* a symlink refusal: the operator named the path and
+controls it, and the audited tree's own default is a different question
+that `discovered_config` already answers.
+
+*Closing test:* `test_an_operator_named_path_must_be_a_regular_file` —
+a FIFO and a device are refused at both doors rather than read.
+
+*Roles:* found=ci prompt=marshall fix=claude test=claude run=none
+*Mutation:* drop the `S_ISREG` check and the FIFO case hangs the suite
+rather than failing it, which is why the test asserts the refusal type
+rather than a timeout.
+
+### D105 — Closed: "Update branch" cannot be used on this repository (Medium)
+
+The `Every commit declares who wrote it` gate failed on PR #175 with no
+agent at fault. The failing commit was the **merge that
+`gh pr update-branch` created** — GitHub's own — and `%G?` reported `E`,
+signature unverifiable, because GitHub's web-flow key is not in
+`.github/allowed_signers`.
+
+**The obvious fix was wrong and nearly shipped.** The trailer step uses
+`--no-merges`; the signature step deliberately does not, and says why in
+its own comment: *"a merge carries the conflict resolution its author
+wrote, so an unsigned merge is unattested content, and skipping it let
+exactly that through (found by audit)."* Adding `--no-merges` there to
+make CI convenient would have undone an audit-driven control — the same
+temptation as swapping `os.fchmod` for a path-based `chmod` earlier the
+same day, and the same answer.
+
+So this closes as a **process rule rather than a code change**: bring a
+branch up to date by rebasing, never with the "Update branch" button or
+`gh pr update-branch`. Recorded in `RULES.md`. The alternative — trusting
+GitHub's signing key in `allowed_signers` — is a real option and is
+deliberately not taken here, because it widens what the gate accepts to
+buy a button.
+
+*Closing test:* `test_the_signature_gate_still_checks_merge_commits` — it
+pins the absence of `--no-merges` in the signature step, so the
+convenient "fix" for the button fails loudly instead of landing.
+
+*Falsifier proof: not applicable — nothing in the product changed; the guard pins a control against a future edit rather than defending one made here.*
+
+*Roles:* found=claude prompt=marshall fix=none test=none run=ci
+*Mutation:* none — nothing was edited. The evidence is PR #175's failing
+run and the rebase that cleared it.
+
 ## Disposition
 
 **Every entry is closed.** D102 closed by splitting the two helpers that

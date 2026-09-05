@@ -178,6 +178,29 @@ def _refuse_symlinked_parents(root: Path, target: Path) -> None:
         current = current.parent
 
 
+def _mode_for(target: Path) -> int:
+    """The mode a replacement should carry: the file's own, or the umask's.
+
+    Replacing a file must not change who can read it. `mkstemp` creates
+    the staging file 0600, so without this the mode is whatever the
+    staging call chose rather than what the target had — and the previous
+    fixed 0o644 silently *widened* every config a user had restricted.
+
+    For a file that does not exist yet, the honest default is what
+    `open()` would have produced: 0666 masked by the process umask, so a
+    user who runs with a restrictive umask gets a restrictive file rather
+    than one this tool decided on. Reading the umask means setting it and
+    putting it back, which is the standard idiom and momentary.
+    """
+    try:
+        return os.stat(target).st_mode & 0o777
+    except OSError:
+        pass
+    umask = os.umask(0)
+    os.umask(umask)
+    return 0o666 & ~umask
+
+
 def _stage_and_replace(target: Path, body: str) -> Path:
     """A fresh file, then an atomic rename over the name.
 
@@ -206,12 +229,21 @@ def _stage_and_replace(target: Path, body: str) -> Path:
         # module exists to close, so the portable-looking swap would buy
         # Windows by weakening POSIX.
         #
+        # **The mode is inherited, not asserted.** This hardcoded 0o644,
+        # which is fine for a new file and wrong for an existing one: a
+        # config someone had deliberately restricted to 0600 was widened
+        # to world-readable by the next write, silently, every time. The
+        # comment claimed to "match the old mode" while doing nothing of
+        # the sort. Found through SonarCloud's S2612 hotspot on the
+        # literal, which was pointing at a real defect rather than a
+        # style preference.
+        #
         # `os.fchmod` is POSIX-only. Where it is absent the mode is left
         # as mkstemp set it, which is *stricter* rather than looser, and
         # POSIX mode bits are not what governs the file there anyway —
         # the directory's inherited ACL is. D101.
         if hasattr(os, "fchmod"):
-            os.fchmod(handle, 0o644)
+            os.fchmod(handle, _mode_for(target))
         written = 0
         while written < len(encoded):
             # A short write reported as success leaves a truncated

@@ -74,9 +74,28 @@ def _jobs(path: Path) -> list[tuple[str, list[str]]]:
     return found
 
 
+def _gates_on_windows(body: list[str]) -> bool:
+    """Whether this job runs Windows *and* something depends on the result.
+
+    `continue-on-error` is the whole distinction. A job carrying it gates
+    no merge and stands behind nothing, so running an unclaimed platform
+    there is a question — the only way to replace an unknown with a list
+    without claiming the platform first. A job that gates something is an
+    answer, and an answer needs the classifier to move with it.
+    """
+    runs_windows = any(
+        "windows" in line.lower() for line in body if "runs-on:" in line
+    )
+    non_blocking = any(
+        line.split(":", 1)[1].strip() == "true"
+        for line in body if line.strip().startswith("continue-on-error:")
+    )
+    return runs_windows and not non_blocking
+
+
 def test_ci_runs_only_platforms_the_package_claims() -> None:
     """If a Windows runner appears, the claim has to move with it —
-    unless the job claims nothing at all. See the comment inside."""
+    unless the job claims nothing at all. See `_gates_on_windows`."""
     workflows = list((ROOT / ".github" / "workflows").glob("*.yml"))
     assert workflows, "no workflows found; this check has nothing to read"
     runners = {
@@ -85,23 +104,11 @@ def test_ci_runs_only_platforms_the_package_claims() -> None:
         for line in path.read_text(encoding="utf-8").splitlines()
         if "runs-on:" in line
     }
-    # A runner outside the claimed platforms is allowed in exactly one
-    # shape: a job that cannot pass or fail anything. `continue-on-error`
-    # means the result gates no merge and stands behind nothing, so
-    # running it is a *question* — which is the only way to replace an
-    # unknown with a list without claiming the platform first. A job that
-    # gates something is an answer, and an answer needs the classifier to
-    # move with it. Without this distinction the rule forbade the one
-    # experiment that could ever justify widening the claim.
     gating = sorted(
         f"{path.name}:{job}"
         for path in workflows
         for job, body in _jobs(path)
-        if any("windows" in line.lower() for line in body if "runs-on:" in line)
-        and not any(
-            line.split(":", 1)[1].strip() == "true"
-            for line in body if line.strip().startswith("continue-on-error:")
-        )
+        if _gates_on_windows(body)
     )
     assert not gating, (
         f"{gating} run a platform outside {CLAIMED_PLATFORM} in a job that "

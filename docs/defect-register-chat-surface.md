@@ -3334,12 +3334,20 @@ Symlink failures were not among the top causes; 94 of 165 were these two
 attributes. The stated reason was wrong even though the conclusion was
 right.
 
-*Closing test:* none, and deliberately — the closure is a decision to
-leave a platform unsupported, which no test can assert. What *is*
-asserted is that nothing quietly widened:
-`test_the_package_claims_the_platform_it_is_tested_on` holds the
+*Closing test:* `test_the_package_claims_the_platform_it_is_tested_on`
+and `test_ci_runs_only_platforms_the_package_claims` — they guard the
+closure continuously, holding the classifier at POSIX and refusing a
+Windows runner in any job that gates something.
+
+*Falsifier proof: not applicable — closed by a decision to leave a platform unsupported, with no code change to revert.* The
+`os.fchmod` guard is a portability edit whose absence changes nothing on
+any platform the project claims, so a revert proof cannot fail for the
+right reason on POSIX. What is asserted instead, continuously rather than
+once: `test_the_package_claims_the_platform_it_is_tested_on` holds the
 classifier at POSIX, and `test_ci_runs_only_platforms_the_package_claims`
-refuses a Windows runner in any job that gates something.
+refuses a Windows runner in any job that gates something. Those guard
+against the closure being quietly widened, which is the risk here — not
+against the fix regressing.
 
 *Roles:* found=claude prompt=marshall fix=claude test=none run=ci
 *Mutation:* none yet — the finding came from running the whole suite on a
@@ -3386,10 +3394,15 @@ and all three helpers in the file read `ok`. The reasoning offered in the
 PR thread — that splitting helps no reader — was wrong, and the
 thresholds were right.
 
-*Closing test:* `test_ci_runs_only_platforms_the_package_claims` — the
-guard still passes over the split helpers, and this project's own
-`detect_functions` reports `_jobs`, `_under_jobs` and `_gates_on_windows`
-all `ok`.
+*Closing test:* `test_ci_runs_only_platforms_the_package_claims` — it
+passes over the split helpers, so the guard's behaviour is unchanged by
+the refactor, which is the property a refactor must have.
+
+*Falsifier proof: not applicable — the closing evidence is a measurement, and the behaviour is deliberately identical before and after.* `_jobs` went from cognitive 16 to 6 and
+all three helpers read `ok` under this project's own `detect_functions`;
+the behaviour the guard tests is deliberately identical before and after,
+so no test can fail at the base for the right reason. A refactor that
+changed behaviour would be a different entry.
 
 *Roles:* found=ci prompt=marshall fix=unknown test=unknown run=none
 *Mutation:* none, as D102. The entry exists because the author of the

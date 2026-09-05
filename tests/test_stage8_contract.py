@@ -145,18 +145,26 @@ def test_renaming_moved_no_value(name: str, tmp_path: Path) -> None:
     for unchanged in ("standard", "categories", "dimensions",
                       "worst_dimension", "evidence_status", "verified_grade"):
         assert score[unchanged] == anchor[unchanged], unchanged
-    # `reference` gained exactly two fields after a6b3c0f, and gained them
-    # as a disclosure rather than a change of meaning: the corpus behind
-    # "1.0x = the median mature-OSS repo" is 40 repositories of Python,
-    # TypeScript and JavaScript, and this project now parses seven
-    # languages. The multiple a report prints is unchanged; what is new is
-    # that it says what it is a multiple *of*. Stated as a delta on the
-    # frozen anchor, the way Class 5's aspect and rubric changes are.
+    # `reference` has gained three fields since a6b3c0f, every one a
+    # disclosure rather than a change of meaning. The multiple a report
+    # prints is unchanged; what is new is that it says what it is a
+    # multiple *of*, and now also what it is *not* a multiple of.
+    #
+    # `corpus_languages` and `corpus_note` came first: the corpus behind
+    # "1.0x = the median mature-OSS repo" was 40 repositories of Python,
+    # TypeScript and JavaScript while the scanner read seven languages.
+    # `unanchored_languages` followed for the same reason one release
+    # later — Swift and COBOL ship parsed and outside the corpus, and the
+    # note claimed "every language this scanner parses" for three
+    # releases after that stopped being true (Grok, 2026-09-04).
+    # Stated as a delta on the frozen anchor, the way Class 5's aspect and
+    # rubric changes are.
     assert score["reference"] == {
         **anchor["reference"],
         "corpus_languages": [
             "Python", "TypeScript", "JavaScript", "Java", "C", "C++", "C#", "Fortran",
         ],
+        "unanchored_languages": score["reference"]["unanchored_languages"],
         "corpus_note": score["reference"]["corpus_note"],
     }, "reference gained only the corpus disclosure"
     assert "docs/standard.md" in score["reference"]["corpus_note"]

@@ -63,6 +63,7 @@ def summary_table(summary: dict[str, int], score: dict[str, Any],
         f"| Duplicate blocks | {summary['duplicate_blocks']} |",
         f"| Risk findings | {summary['risk_findings']} |",
         f"| Hard gate failures | {summary['hard_gate_failures']} |",
+        *view.unanchored_caveat(score),
     ]
 
 

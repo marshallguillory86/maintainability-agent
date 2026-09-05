@@ -35,11 +35,11 @@ import re
 
 from ._masking import mask_fortran_lines, mask_lines
 
-# Both live in `parsing`, and `_ranges_core` reaches nothing here, so this
-# is a sibling import rather than a cycle. COBOL's mask is not in
-# `_masking` with the others because it needs the whole file to know which
-# division a line is in — see `_ranges_cobol.mask_cobol_lines`.
-from ._ranges_cobol import mask_cobol_lines
+# No COBOL masker is imported here, deliberately: `cobol_cognitive` takes
+# lines that are already masked. COBOL's mask is the only file-level one —
+# what a line means depends on which division it sits in — so re-masking
+# the paragraph slice `detect_functions` hands over blanked it entirely
+# and scored every COBOL paragraph 0. See `cobol_cognitive`.
 
 # Constructs that both cost a point and deepen the nesting for whatever
 # they contain.
@@ -207,8 +207,18 @@ def cobol_cognitive(lines: list[str]) -> int:
     a call and opens nothing; `PERFORM UNTIL DONE` is a loop and does.
     Counting every `PERFORM` as nesting would make an ordinary
     call-per-line paragraph read as deeply nested.
+
+    **Takes lines that are already masked, and does not mask them again.**
+    Every other reader here may re-mask freely because its masker is
+    line-local; COBOL's is the only file-level one, since deciding what a
+    line means requires knowing which division it sits in. `detect_functions`
+    hands this a *slice* of the masked file, and a paragraph slice contains
+    no `PROCEDURE DIVISION` — so re-masking blanked the whole thing and
+    every COBOL paragraph in production scored exactly 0, including deeply
+    nested ones. The souvenir test passed throughout because it called this
+    with a whole file. Found by a Grok audit on 2026-09-04.
     """
-    masked = mask_cobol_lines(lines)
+    masked = lines
     score = 0
     depth = 0
     for line in masked:

@@ -132,10 +132,22 @@ about LAPACK relative to mature OSS *web* code, and not a statement about
 typical Fortran, because no typical Fortran was in the comparison set.
 
 **2.0.0 extended the corpus rather than the caveat.** It is now 112
-repositories spanning every language this scanner parses: Python,
-TypeScript, JavaScript, Java, C, C++, C# and Fortran. The original 40 rows
-are unchanged and still pinned to the commits they were measured at, so
-what moved the constants is the languages added and nothing else.
+repositories spanning eight languages: Python, TypeScript, JavaScript,
+Java, C, C++, C# and Fortran. The original 40 rows are unchanged and still
+pinned to the commits they were measured at, so what moved the constants
+is the languages added and nothing else.
+
+**Two parsed languages are not in it.** Swift (2.4.0) and COBOL (2.7.0)
+shipped after that measurement and are **unanchored**: a scanner reads
+them, and the medians their rates are compared against were measured on
+other languages. This is the corpus policy decided with 2.4.1 — a
+language ships parsed, and the corpus is re-measured once after the
+remaining scanners land, because a new scanner moves
+`scanner_fingerprint` and invalidates every stored row. The cost is
+disclosed rather than absorbed: findings in those languages are as good
+as their parser, their grade is provisional, and every surface that
+prints a grade says so. This sentence read "every language this scanner
+parses" for three releases after it stopped being true.
 
 Three limits remain, and they are narrower than the one they replace:
 

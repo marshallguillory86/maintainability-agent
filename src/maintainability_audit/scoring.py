@@ -37,6 +37,7 @@ from __future__ import annotations
 from math import inf
 from typing import Any
 
+from ._anchor import UNANCHORED_LANGUAGES, unanchored_sentence
 from ._aspects import (
     aspect_scores,
     evidence_aspect_scores,
@@ -415,9 +416,12 @@ def _reference_block() -> dict[str, object]:
         "corpus_languages": [
             "Python", "TypeScript", "JavaScript", "Java", "C", "C++", "C#", "Fortran",
         ],
+        # Parsed by a scanner, absent from the anchor — see `_anchor`.
+        "unanchored_languages": UNANCHORED_LANGUAGES,
         "corpus_note": (
             "Reference medians are drawn from 112 mature repositories across "
-            "every language this scanner parses. Fortran entered at a lower "
+            "eight of the ten languages this scanner parses. "
+            f"{unanchored_sentence()} Fortran entered at a lower "
             "star threshold than the rest, because its ecosystem has none "
             "above theirs; see docs/standard.md#the-reference-corpus."
         ),

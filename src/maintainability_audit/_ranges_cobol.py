@@ -72,11 +72,21 @@ _SECTION_RE = re.compile(r"^\s{0,3}([A-Za-z0-9][A-Za-z0-9-]*)\s+SECTION\s*\.", r
 #: paragraph headers in columns 8-11 (Area A) and statements in 12-72
 #: (Area B); after the sequence and indicator columns are stripped, Area A
 #: is offset 0-3 and Area B begins at offset 4 — which is why the bound is
-#: three spaces and not four. A statement is therefore indented past this
-#: pattern and cannot be read as a paragraph. Written `{0,4}` first, and a
-#: masked `DISPLAY "A".` sitting at column 12 came straight back as a
-#: declaration named DISPLAY — one per statement in the file.
-_PARAGRAPH_RE = re.compile(r"^\s{0,3}([A-Za-z0-9][A-Za-z0-9-]*)\s*\.\s*$")
+#: three spaces and not four. Written `{0,4}` first, and a masked
+#: `DISPLAY "A".` sitting at column 12 came straight back as a declaration
+#: named DISPLAY — one per statement in the file.
+#:
+#: **The period abuts the name**, and that is the load-bearing half. Area A
+#: only separates a header from an *indented* statement; free-form COBOL
+#: writes statements in column 1 too, and once `"A"` is blanked to spaces
+#: `DISPLAY "A".` is a word, a gap, and a period — the exact shape of a
+#: header. The gap is what gives it away, because a real header has
+#: nothing between its name and its period. That rejects the whole class
+#: of operand-bearing statements (`CALL "SUB".`, `MOVE 1 TO X.`) rather
+#: than a list of verbs, which would need a new entry per verb forever.
+#: `_STATEMENT_WORDS` still covers the operand-*less* ones, where no gap
+#: exists to see.
+_PARAGRAPH_RE = re.compile(r"^\s{0,3}([A-Za-z0-9][A-Za-z0-9-]*)\.\s*$")
 _DIVISION_RE = re.compile(r"^\s*[A-Za-z0-9-]+\s+DIVISION\s*\.", re.I)
 _PROCEDURE_RE = re.compile(r"^\s*PROCEDURE\s+DIVISION\b", re.I)
 _END_PROGRAM_RE = re.compile(r"^\s*END\s+PROGRAM\b", re.I)

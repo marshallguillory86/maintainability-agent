@@ -292,13 +292,14 @@ def test_not_applicable_rollup_is_the_only_change_to_the_pre_stage_five_anchor(
     assert {key: value for key, value in shipped.items() if key not in changed} == {
         key: value for key, value in expected.items() if key not in changed | {"grade"}
     }
-    # `reference` gained a disclosure, not a meaning: the corpus behind
-    # "1.0x = the median mature-OSS repo" holds Python, TypeScript and
-    # JavaScript, and this project parses seven languages. The multiple is
-    # unchanged; the report now says what it is a multiple of.
+    # `reference` gained disclosures, not a meaning: the corpus holds
+    # eight languages while the scanner reads ten, so the report says what
+    # the multiple is of and which parsed languages it is not. Number
+    # unchanged.
     assert shipped["reference"] == {
         **expected["reference"],
         "corpus_languages": CORPUS_LANGUAGES,
+        "unanchored_languages": shipped["reference"]["unanchored_languages"],
         "corpus_note": shipped["reference"]["corpus_note"],
     }
     assert shipped["categories"] == {

@@ -115,7 +115,7 @@ SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "id
             "_tool_adapters", "_selection"}
 # `_bands` joins the rubric-data leaves: it is the band matrix, a table
 # of judgments like `_formula`, and imports nothing internal.
-SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_calibration", "_derive",
+SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_anchor", "_calibration", "_derive",
            "_pillars", "_trends", "_recurrence",
            "_verification", "_bands",
            # `_second_source` decides how analyzer readings reach the point

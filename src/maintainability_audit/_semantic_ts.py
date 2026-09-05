@@ -66,10 +66,11 @@ def local_tsc_analysis(root: Path) -> dict[str, Any] | None:
     Runs across the repository root *and* any workspace beneath it that
     carries a `tsconfig.json` — TS monorepos keep the config in `web/` or
     `packages/*`, not the root, and a root-only check went blind on exactly
-    the repos this is for. Uses a `tsc` that is already present: the
-    workspace's own `node_modules/.bin/tsc`, the root's, or one on the PATH.
-    Never installs, never runs `npx --yes`, never touches the network — a
-    project-local compiler is the standard install, not an acquisition.
+    the repos this is for. Uses a `tsc` **this machine** already provides,
+    found on PATH. Never installs, never runs `npx --yes`, never touches
+    the network — and never the audited tree's own
+    `node_modules/.bin/tsc`, which would let the repository choose the
+    binary this process runs (Decision 9; see `_tsc_on_path`).
 
     An absent checker, or a `tsc` that cannot run usably, leaves coverage
     *unknown*, not clean: a config error (FAILED, exit 3+) or a findings
@@ -81,13 +82,14 @@ def local_tsc_analysis(root: Path) -> dict[str, Any] | None:
     """
     diagnostics: list[dict[str, Any]] = []
     ran = False
+    if not _tsc_on_path():
+        return None
     for project in _tsconfig_project_dirs(root):
-        tsc = _resolve_tsc(root, project)
-        if tsc is None:
-            continue
         result = run(
             "typescript",
-            Invocation(argv=(tsc, "--noEmit", "--pretty", "false"),
+            # A constant, resolved by PATH. Never a path built from the
+            # audited tree — see `_tsc_on_path`.
+            Invocation(argv=("tsc", "--noEmit", "--pretty", "false"),
                        findings_exit_codes=(0, 1, 2)),
             cwd=project,
         )
@@ -125,14 +127,28 @@ def _tsconfig_project_dirs(root: Path) -> list[Path]:
     return sorted(dirs)
 
 
-def _resolve_tsc(root: Path, project: Path) -> str | None:
-    """An already-installed `tsc`: the workspace's own, then the root's,
-    then one on the PATH. Never installs and never fetches."""
-    for base in (project, root):
-        local = base / "node_modules" / ".bin" / "tsc"
-        if local.is_file():
-            return str(local)
-    return "tsc" if locate("tsc") else None
+def _tsc_on_path() -> bool:
+    """Whether a `tsc` **this machine** provides is available.
+
+    PATH only, and that is the whole point. This preferred the audited
+    tree's own `node_modules/.bin/tsc` and fell back to PATH, which let
+    the repository under audit choose the binary this process executes —
+    a `tsconfig.json` and a writable `node_modules/.bin/tsc` are all a
+    hostile tree needs, and it does not even have to contain TypeScript.
+
+    SECURITY.md says the sole path by which this agent executes code from
+    the tree is the operator's opt-in test command (Decision 9). That was
+    false while this function existed, so the resolution is deleted
+    rather than guarded: there is no safe way to run a binary whose
+    identity the audited repository controls.
+
+    The cost is disclosed and small. A project whose only compiler is
+    project-local now leaves type coverage **unknown** rather than clean,
+    which is the honest fallback the evidence model already has a word
+    for — and reading an absent checker as a clean one is the
+    absence-as-a-pass this module's own docstring forbids.
+    """
+    return locate("tsc") is not None
 
 
 def _parse_diagnostics(stdout: str, prefix: Path) -> list[dict[str, Any]]:

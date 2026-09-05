@@ -3280,10 +3280,153 @@ version restored, both verified.
 
 *Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
 
+### D101 — Closed: the write-safety primitives are POSIX by decision (High)
+
+`_safe_write.py:203` calls `os.fchmod`; `_skill_install.py:34` builds
+`os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW`. Neither exists on
+Windows. A `windows-latest` probe on 2026-09-05 produced **165 failed,
+1972 passed, 33 errors**, and 94 of those failures are those two
+attributes — 81 `fchmod`, 13 `O_DIRECTORY`.
+
+**What makes it High rather than a portability note.** These are the
+security-relevant paths: the bounded, symlink-refusing write that the
+D34/D36/D96 family exists to enforce, and the handle-based root the skill
+installer opens once so every read is relative to it. The mechanism that
+keeps an audited tree from redirecting where this agent writes is
+implemented on file descriptors that Windows does not have. That is a
+statement about the product's architecture, not about its tests.
+
+**It also falsifies the reason the README gives.** The platform section
+says Windows is unclaimed because "the test suite creates symlinks with
+no platform guard". Symlink failures are not among the top causes at all.
+The stated reason has been the wrong reason.
+
+Open. `Operating System :: POSIX` remains the claim and the probe remains
+`continue-on-error`, so nothing shipped is untrue — but the finding is
+recorded rather than left in a wrap-up, and a release does not cut while
+it is open. **Falsifier: pending** — it belongs to whoever decides
+whether the answer is portable primitives or a stated architectural
+limit, and naming a test before that decision would prejudge it.
+
+**Half closed.** `_safe_write` no longer calls `os.fchmod` where it does
+not exist; the call stays handle-based on POSIX, because `os.chmod` on
+the staging path is the very time-of-check/time-of-use hole this module
+closes, and the portable-looking swap would buy Windows by weakening
+POSIX. Where the call is skipped the mode stays as `mkstemp` set it —
+0600, stricter rather than looser.
+
+**The rest is closed by decision, not by code.** Marshall, 2026-09-05:
+*"do not break this tool to fix windows support."* `_skill_install` opens
+its root with `O_DIRECTORY|O_NOFOLLOW` and works relative to that
+descriptor, which is what makes a symlink swap between check and write
+impossible (D18). Windows has no equivalent, and the portable rewrite —
+validate a pathname, then write to it — is the hole itself.
+
+So the limit is **stated rather than removed**: the write-safety
+mechanism is POSIX by construction, `Operating System :: POSIX` stands,
+and the probe stays `continue-on-error`. The rule is now in `RULES.md`:
+an unsupported platform never buys green by weakening a guarantee the
+supported platforms rely on.
+
+What this entry corrects for the record is the *reason*. The README said
+Windows was unclaimed because the suite creates unguarded symlinks.
+Symlink failures were not among the top causes; 94 of 165 were these two
+attributes. The stated reason was wrong even though the conclusion was
+right.
+
+*Closing test:* `test_the_package_claims_the_platform_it_is_tested_on`
+and `test_ci_runs_only_platforms_the_package_claims` — they guard the
+closure continuously, holding the classifier at POSIX and refusing a
+Windows runner in any job that gates something.
+
+*Falsifier proof: not applicable — closed by a decision to leave a platform unsupported, with no code change to revert.* The
+`os.fchmod` guard is a portability edit whose absence changes nothing on
+any platform the project claims, so a revert proof cannot fail for the
+right reason on POSIX. What is asserted instead, continuously rather than
+once: `test_the_package_claims_the_platform_it_is_tested_on` holds the
+classifier at POSIX, and `test_ci_runs_only_platforms_the_package_claims`
+refuses a Windows runner in any job that gates something. Those guard
+against the closure being quietly widened, which is the risk here — not
+against the fix regressing.
+
+*Roles:* found=claude prompt=marshall fix=claude test=none run=ci
+*Mutation:* none yet — the finding came from running the whole suite on a
+platform nobody had run it on, not from breaking a member.
+
+### D102 — Open (Grok): two audit-test functions exceed the repo's own budgets (Low)
+
+`tests/test_tree_chosen_spawn.py` — `_argv0` (17 lines, complexity 9,
+cognitive 17) and `_tree_bin_modules` (25 lines, complexity 9, cognitive
+18), both warn. Raised by this project's own code scanning on PR #171 and
+resolved there without being acted on, because the cycle that produced
+that file forbids Claude editing tests.
+
+That was the correct action for the cycle and the wrong end state for the
+ledger: a finding nobody may act on is still a finding. Filed so the
+constraint is visible and the work is assignable to whoever owns tests.
+
+**Assigned to Grok.** Codex is out of budget, and the rule recorded on
+2026-09-05 moves the test-writer role to Grok rather than vacating it or
+letting Claude cross into tests to clear a ledger.
+**Falsifier: pending** — the thresholds already fire; what is missing is
+the decision to act or to record an accepted exception.
+
+*Roles:* found=ci prompt=marshall fix=unknown test=unknown run=none
+*Mutation:* none — the project's own thresholds produced these, so the
+detector already exists and no member had to be broken to expose them.
+
+### D103 — Closed: `_jobs` is over the cognitive warn line (Low)
+
+`tests/test_platform_claim.py` — `_jobs` (36 lines, complexity 12,
+cognitive 16), warn. Mine, on PR #169, resolved without being acted on
+with the reasoning that splitting a 36-line indentation walk spreads one
+algorithm across two functions for no reader benefit.
+
+That reasoning may well be right. It is still a judgement made by the
+author of the code against the project's own published thresholds, which
+is the shape D99 is about. Filed so the call is reviewable rather than
+resolved away in a PR thread.
+
+**Closed.** Finding the section, skipping blanks and comments, and
+grouping by indentation were three concerns in one function.
+`_under_jobs` takes the first two: `_jobs` goes from cognitive 16 to 6,
+and all three helpers in the file read `ok`. The reasoning offered in the
+PR thread — that splitting helps no reader — was wrong, and the
+thresholds were right.
+
+*Closing test:* `test_ci_runs_only_platforms_the_package_claims` — it
+passes over the split helpers, so the guard's behaviour is unchanged by
+the refactor, which is the property a refactor must have.
+
+*Falsifier proof: not applicable — the closing evidence is a measurement, and the behaviour is deliberately identical before and after.* `_jobs` went from cognitive 16 to 6 and
+all three helpers read `ok` under this project's own `detect_functions`;
+the behaviour the guard tests is deliberately identical before and after,
+so no test can fail at the base for the right reason. A refactor that
+changed behaviour would be a different entry.
+
+*Roles:* found=ci prompt=marshall fix=unknown test=unknown run=none
+*Mutation:* none, as D102. The entry exists because the author of the
+code judged his own work against the published threshold and resolved
+the thread, which is the D99 shape rather than a defect in a detector.
+
 ## Disposition
 
-**Every entry is closed and none is open.** D100 was the last, filed and
-closed on 2026-08-28: the artifact had promoted itself to a 1.0 release
+**One entry is open: D102**, and it is assigned to Grok under the
+role-failover rule. D101 and D103 closed the day they were filed — D103
+by splitting the function, D101 by Marshall's decision that an
+unsupported platform is a stated limit and never a reason to weaken the
+supported ones. All three were filed 2026-09-05 after
+Marshall asked "what is my rule" and the answer was the one being broken.
+A Windows probe had produced a High finding about the write-safety path,
+and two warn-level findings had been resolved in PR threads without being
+acted on — and all three were reported in a wrap-up as "still open"
+rather than filed, which is the exact inversion of the rule at
+RULES.md:426. **2.8.0 was then tagged and released with them open**,
+against "no release until the known-defect ledger is empty". The release
+is not withdrawn; the entries are filed and the ledger gates the next one.
+
+Until 2026-09-05 the ledger was empty. D100 was the last to close,
+on 2026-08-28: the artifact had promoted itself to a 1.0 release
 candidate with no recorded authorization, and the entry that did it was
 the entry written to stop exactly that. It is the fifth round running in
 which the defect was in a fix rather than in the code the fix repaired,

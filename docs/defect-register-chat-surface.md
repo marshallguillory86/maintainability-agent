@@ -3582,9 +3582,47 @@ which is the guard for precisely that.
 *Roles:* found=ci prompt=marshall fix=marshall test=none run=none
 *Mutation:* none.
 
+### D108 — Open: the suppression scan reports markers it only reads about (Medium)
+
+`SUPPRESSION_MARKERS` carries a comment promising exactly the thing it
+did not do:
+
+> Per language, because the vocabulary differs and a single regex over
+> all of them matches prose: a `type: ignore` in a docstring explaining
+> the convention is not a suppression, and neither is this comment.
+
+Splitting the regexes per language was the *whole* mitigation, and it
+does not mitigate this at all: `#\s*noqa\b` matches the marker wherever
+it appears, docstring included. Four versions shipped with the promise
+in the file and nothing enforcing it.
+
+It surfaced the first time the rule ran where a false positive costs
+something. `--staged` blocked a commit of `git_tools.py` whose only
+offence was a docstring reading "would report a decade of accumulated
+`# noqa` as though this commit had just written them" — a sentence
+*about* suppressions, in the module that reads them. The conformance
+record has carried the same exposure since 1.4.0, where it is quieter:
+a spurious line in a report nobody is blocked by.
+
+Both callers now go through one function, `_conformance.markers_in`,
+which refuses a match that is quoted — immediately preceded by a
+backtick or quote character, or inside an open backtick span. One rule,
+asked twice, because a hook stricter than the gate it belongs to blocks
+commits CI would pass.
+
+The narrowing is deliberate and stated: a marker written into prose with
+no quoting at all is still reported. Quoting is the reliable signal;
+widening past it is guessing at English.
+
+*Roles:* found=claude prompt=marshall fix=claude test=codex run=none
+*Mutation:* pending with the test. The falsifier is a docstring line
+containing a quoted marker, which must not be reported, paired with a
+real trailing directive on a code line, which must be — reverting
+`markers_in` to the bare `pattern.search` fails the first.
+
 ## Disposition
 
-**Every entry is closed.** D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+**D108 is open**, and it is the only one: the fix has landed and its closing test is with Codex, who holds the test-writer role. Every other entry is closed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they

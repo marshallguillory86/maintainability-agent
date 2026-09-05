@@ -295,6 +295,29 @@ Security properties are part of the contract:
 
 This is a local integration. It needs no VPS and opens no listening socket.
 
+## Invokable skill / slash command
+
+This repo ships a portable skill under
+[`skills/maintainability-agent/`](skills/maintainability-agent/) so
+`/maintainability-agent` is one keystroke away. Keep the installed copy in sync
+— a drifted skill teaches agents a dead workflow:
+
+```bash
+maintainability-agent --install-skill        # writes ~/.claude/skills
+```
+
+Re-run after every upgrade; a differing installed copy is refused with the
+list of differences (`--force-skill` to overwrite).
+
+| Host | Install destination | Invocation |
+|---|---|---|
+| Codex / OpenAI | via `skills/maintainability-agent/agents/openai.yaml` | per Codex's skills convention |
+| Claude Code | `skills/maintainability-agent/` → `~/.claude/skills/maintainability-agent/` (or repo `.claude/skills/`) | `/maintainability-agent` |
+| GitHub Copilot (VS Code) | `skills/maintainability-agent/copilot/maintainability-agent.prompt.md` → `<repo>/.github/prompts/` | `/maintainability-agent` in Copilot Chat |
+
+For always-on guidance instead of an invokable skill, use
+`--init-agent-standards` (see [--init-agent-standards](#generate-agent-standards)).
+
 ## Per-Agent Quick Start
 
 Every agent uses the same shape: pick a `--target`, run `--init-agent-standards`, then prompt the agent to follow the generated instruction file and use `maintainability-remediation-prompt.md` as the bounded task.

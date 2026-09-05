@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **2.8.1**.
+Version **2.9.0**.
 
 **Languages parsed:** Python, Java, C, C++, C#, Swift, Fortran (free-form
 *and* fixed-form), and the JS/TS family — each by a scanner written for it, and
@@ -221,6 +221,30 @@ maintainability-agent \
 The [roadmap](docs/roadmap.md#the-remediation-hole-closed-in-210-through-230)
 has the history of why this was the hole under the product's central claim.
 
+### Before the commit
+
+The gate above runs after the work is done. `--staged` runs while it is still in
+the author's hands:
+
+```bash
+maintainability-agent --install-precommit-hook   # writes .git/hooks/pre-commit
+```
+
+It scans **the index, not the working tree** — stage half a file with `git add
+-p` and keep typing, and what gets measured is what the commit will actually
+contain. Clean, it prints nothing and exits 0. Breaching, it names each path,
+line and remedy and exits 1; `--format json` gives an agent the same findings.
+
+It is not a small audit. It produces **no score**, because a diff has no
+population to draw a rate from — only threshold breaches, including a `# noqa`
+this change added. It applies no repository gates: a missing README is a
+property of the repository, not of your diff. And it runs nothing and writes
+nothing, so it costs 0.17s here against the full audit's 266 — a hook slower
+than the author's patience is one they uninstall.
+
+`--install-precommit-hook` refuses to replace a hook it did not write, printing
+the line to add to yours instead, and honours `core.hooksPath`.
+
 ## What it analyzes
 
 The deterministic scanner reads code from your repo (no LLM calls) and produces
@@ -283,42 +307,16 @@ Any language **not** in that table — Go, Rust, Ruby, PHP, Kotlin, and the rest
 is **not parsed for declarations by the built-in scanner.** Its files still count
 toward repo size, but the built-ins produce no function-size, complexity,
 duplication or dead-code findings for them, and the estimate leans on whatever
-evidence *is* available (which is why the report discloses its evidence tier and
-can withhold the grade).
-
-**Which analyzer covers which language** (the opt-in pool, when installed):
-
-| Language | Built-in scanner | External analyzer |
-|---|---|---|
-| Python | `ast`, exact | ruff, radon, mypy, vulture, complexipy, interrogate, pydocstyle, pylint, cohesion |
-| Java | dedicated scanner | lizard, PMD, Checkstyle, SpotBugs |
-| C / C++ / C# | dedicated scanners | lizard, multimetric |
-| **Fortran** (free- and fixed-form) | dedicated scanner | **fortitude** — 100+ rules; **lizard** — complexity, NLOC, params |
-| **COBOL** | dedicated scanner | **none** — no offline analyzer in the catalog reads it |
-| JS / TS / JSX / TSX | brace scanner | ESLint, lizard, jscpd |
-
-Fortran reached parity in 1.6.0: lizard had read it for years behind a
-stale catalog row, so it came out `not-applicable` and never ran. A lint fails
-the build if a parsed language has no analyzer measuring complexity — **COBOL is
-the one disclosed exemption**, because the tooling that reads it is licensed and
-host-resident, so its external tier is empty and the report says so.
-
-**External analyzer adapters (opt-in pool)** — this is how coverage extends
-beyond the built-in set. When you enable the analyzer pool, the tool shells out
-to mature analyzers and folds their output in through per-tool
-[adapters](docs/adapters.md): **lizard** (cyclomatic complexity across ~a dozen
-languages), **jscpd** (cross-language duplication), **ESLint** (JS/TS),
-**PMD** / **SpotBugs** (JVM), and others in the catalog. These run only when
-selected *and* installed (acquisition is opt-in and off by default), and where
-they measured a full concept set they become the *primary* evidence, with the
-built-ins as the fallback.
+evidence *is* available — which is why the report discloses its evidence tier
+and can withhold the grade.
 
 So: **first-class today is Python** (and TypeScript for semantics); every other
 parsed language is bounded-but-real; anything outside the table is only as
-covered as the analyzer you point at it, and with none it is under-reported by
-design. Per-language accuracy and limits:
-[docs/language-support.md](docs/language-support.md); the adapter catalog:
-[docs/adapters.md](docs/adapters.md).
+covered as the analyzer you point at it. Per-language accuracy and limits:
+[docs/language-support.md](docs/language-support.md). Which analyzer covers
+which language, how the opt-in pool extends coverage past the built-in set, and
+why COBOL's external tier is empty:
+[docs/adapters.md](docs/adapters.md#which-analyzer-covers-which-language).
 
 ## What it produces
 
@@ -401,25 +399,19 @@ buys green by weakening the supported ones.**
 ## Invokable skill / slash command
 
 This repo ships a portable skill under
-[`skills/maintainability-agent/`](skills/maintainability-agent/) so
-`/maintainability-agent` is one keystroke away. Keep the installed copy in sync
-— a drifted skill teaches agents a dead workflow:
+[`skills/maintainability-agent/`](skills/maintainability-agent/), so
+`/maintainability-agent` is one keystroke away in Claude Code, Codex and
+Copilot Chat:
 
 ```bash
 maintainability-agent --install-skill        # writes ~/.claude/skills
 ```
 
-Re-run after every upgrade; a differing installed copy is refused with the
-list of differences (`--force-skill` to overwrite).
-
-| Host | Install destination | Invocation |
-|---|---|---|
-| Codex / OpenAI | via `skills/maintainability-agent/agents/openai.yaml` | per Codex's skills convention |
-| Claude Code | `skills/maintainability-agent/` → `~/.claude/skills/maintainability-agent/` (or repo `.claude/skills/`) | `/maintainability-agent` |
-| GitHub Copilot (VS Code) | `skills/maintainability-agent/copilot/maintainability-agent.prompt.md` → `<repo>/.github/prompts/` | `/maintainability-agent` in Copilot Chat |
-
-For always-on guidance instead of an invokable skill, use
-`--init-agent-standards` (see [docs/ide-agent-integration.md](docs/ide-agent-integration.md)).
+Re-run it after every upgrade — a drifted skill teaches agents a dead workflow,
+so a differing installed copy is refused with the list of differences. Per-host
+install destinations, and `--init-agent-standards` for always-on guidance
+instead of an invokable skill:
+[docs/ide-agent-integration.md](docs/ide-agent-integration.md#invokable-skill--slash-command).
 
 ## GitHub Action
 

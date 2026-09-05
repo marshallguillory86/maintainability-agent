@@ -27,6 +27,7 @@ flowchart TB
     _mcp_grants["_mcp_grants"]
     _mcp_refusals["_mcp_refusals"]
     _skill_install["_skill_install"]
+    _precommit_install["_precommit_install"]
     dunder_main["__main__"]
     mcp_server["mcp_server"]
     _grant_ledger["_grant_ledger"]
@@ -51,6 +52,7 @@ flowchart TB
     _history_view["_history_view"]
     _identity["_identity"]
     _tdd_view["_tdd_view"]
+    _precommit_view["_precommit_view"]
   end
 
   subgraph assembly["assembly — builds the report, calls the scorer once"]
@@ -65,6 +67,7 @@ flowchart TB
     _conformance["_conformance"]
     _ratchet["_ratchet"]
     _run_comparison["_run_comparison"]
+    _precommit["_precommit"]
     _attestation["_attestation"]
     _work_order_weights["_work_order_weights"]
     _backfill["_backfill"]

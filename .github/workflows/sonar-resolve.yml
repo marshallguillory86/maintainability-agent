@@ -1,0 +1,54 @@
+# Resolving a SonarCloud finding, on the record.
+#
+# Two findings have been dismissed by hand so far, and both times the
+# decision lived only in a dashboard — invisible to anyone reading the
+# code, which is the shape this project calls a defect when other people
+# do it (`_conformance` counts `NOSONAR` as silencing a finding).
+#
+# Dispatching it here makes the justification mandatory, posts it before
+# the transition so an issue is never resolved with no reason attached,
+# and leaves the whole act in a run log with the name of whoever asked
+# for it. The token stays a repository secret.
+name: Resolve a SonarCloud finding
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: SonarCloud issue key (from the dashboard or the API)
+        required: true
+      transition:
+        description: falsepositive denies the finding; accept keeps it true and declines to act
+        required: true
+        default: falsepositive
+        type: choice
+        options: [falsepositive, accept, wontfix]
+      comment:
+        description: Why. Required, and at least a sentence.
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    name: Resolve (${{ inputs.transition }})
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      # Arguments are passed through the environment, never interpolated
+      # into the shell: `${{ inputs.comment }}` inside a `run:` would put
+      # operator text into the script source, which is the injection D43
+      # closed elsewhere in this repository.
+      - name: Resolve
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          ISSUE: ${{ inputs.issue }}
+          TRANSITION: ${{ inputs.transition }}
+          COMMENT: ${{ inputs.comment }}
+        run: |
+          python3 tools/sonar_resolve.py \
+            --issue "$ISSUE" --transition "$TRANSITION" --comment "$COMMENT"

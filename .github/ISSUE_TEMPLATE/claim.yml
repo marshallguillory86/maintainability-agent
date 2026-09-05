@@ -1,0 +1,52 @@
+name: Incorrect grade, claim, or docs
+description: A published number or sentence does not match the code, the corpus, or the tree in front of you.
+labels: ["docs"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when the tool ran, but what it *said* is the bug — a grade, a README sentence, a `score.reference` note, a prompt, or a page that disagrees with `docs/product-intent.md`.
+
+        Feature ideas that are not already in product-intent, architecture, or the release plan belong in discussion with Marshall, not as a ticket. Do not invent product intent here.
+
+        Do not paste customer names, emails, or other client material.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Package version or commit that printed the claim.
+      placeholder: "2.7.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where it is written
+      options:
+        - Report (grade, estimate, reference, coverage)
+        - Remediation prompt
+        - README
+        - docs/standard.md or the packaged standard
+        - Other docs
+        - Chat / MCP reply
+    validations:
+      required: true
+  - type: textarea
+    id: quote
+    attributes:
+      label: What it says
+      description: Paste the sentence or field. One claim per issue.
+    validations:
+      required: true
+  - type: textarea
+    id: truth
+    attributes:
+      label: What is actually true
+      description: Code path, corpus member, or tree fact that contradicts it.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: How to re-derive (optional)
+      description: Command or test that should fail if the claim is false.

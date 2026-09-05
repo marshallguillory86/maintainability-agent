@@ -339,3 +339,33 @@ def test_suite_lines(block: dict[str, Any] | None) -> list[str]:
     if detail and not block.get("passed"):
         lines.append(f"Detail: {detail}")
     return lines
+
+
+def unanchored_languages(score: dict[str, Any]) -> tuple[str, ...]:
+    """Parsed languages the reference corpus does not hold, from the report.
+
+    Read off `score.reference` rather than imported from `_anchor`, so a
+    report rendered from stored JSON discloses what *that* run's anchor
+    omitted rather than what today's build omits.
+    """
+    return tuple((score.get("reference") or {}).get("unanchored_languages") or ())
+
+
+def unanchored_caveat(score: dict[str, Any]) -> list[str]:
+    """The anchor's gap, in one sentence, for any skin that prints a grade.
+
+    Lives here because all three skins were about to carry their own copy
+    of the same lookup and the same sentence. `score.reference` rides on
+    the JSON report, and the JSON is not what most people read — a limit
+    disclosed only there is disclosed nowhere that matters, which is the
+    shape this project already shipped once as F1.
+    """
+    names = unanchored_languages(score)
+    if not names:
+        return []
+    return ["", (
+        f"*{' and '.join(names)} are parsed but are not in the reference "
+        "corpus, so a grade or multiple reported for code in them is "
+        "provisional: the findings are as good as the parser, the rate "
+        "they are compared against was measured on other languages.*"
+    ), ""]

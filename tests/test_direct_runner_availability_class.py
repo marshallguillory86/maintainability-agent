@@ -154,16 +154,24 @@ def _workspace_repo(tmp_path: Path, *, with_local_tsc: bool) -> Path:
 def test_a_workspace_tsconfig_and_local_tsc_are_found_and_paths_re_rooted(
     tmp_path: Path, monkeypatch,
 ) -> None:
-    """The bighound defect: TS config in `web/` and `tsc` in
-    `web/node_modules/.bin` went `unknown` because the old gate only looked
-    at the root tsconfig and the global PATH. Now the workspace is
-    discovered, its local compiler is used, and a diagnostic tsc reports as
-    `src/app.ts` from that workspace is re-rooted to `web/src/app.ts`.
+    """The bighound defect, minus the half that was a security hole.
+
+    What is still required: a TS config in `web/` rather than at the root
+    is discovered, and a diagnostic tsc reports as `src/app.ts` from that
+    workspace is re-rooted to `web/src/app.ts`. The old gate looked only
+    at the root tsconfig and went `unknown` on this layout.
+
+    What this used to also require — that `web/node_modules/.bin/tsc` be
+    *used* when nothing is on PATH — was Decision 9 inverted into a test:
+    it made "the audited tree chooses the binary we exec" a passing
+    condition. A Grok audit on 2026-09-04 found the production path, and
+    `test_tree_chosen_spawn` now plants a `tsc` and asserts it never runs.
+    So the compiler here comes from PATH, and a tree whose only compiler
+    is project-local leaves coverage unknown — the honest fallback.
     """
     root = _workspace_repo(tmp_path, with_local_tsc=True)
-    # No root tsconfig and nothing on PATH: the old code would return None.
     assert not (root / "tsconfig.json").exists()
-    monkeypatch.setattr(_semantic_ts, "locate", lambda _name: None)
+    _patch_tsc_present(monkeypatch)
     monkeypatch.setattr(_semantic_ts, "run", lambda *a, **k: ToolResult(
         slug="typescript", outcome=Outcome.RAN, exit_code=1,
         stdout="src/app.ts(3,5): error TS2345: nope", stderr="", detail=""))

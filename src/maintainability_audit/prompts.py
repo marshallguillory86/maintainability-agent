@@ -258,13 +258,14 @@ def prompt_pressure_section(score: dict[str, Any]) -> list[str]:
          if value is not None and value > 1.0),
         key=lambda item: -item[1],
     )
-    lines: list[str] = []
+    # Unanchored languages are provisional here too, elevated or not.
+    lines: list[str] = view.unanchored_caveat(score)
     if elevated:
         lines.extend(
             [
                 "Where this repo is worse than typical real-world code",
-                "(1.0x = the median of a mature open-source corpus of Python, TypeScript "
-                "and JavaScript; only elevated dimensions are listed):",
+                "(1.0x = the median of a mature open-source corpus of eight "
+                "of the ten parsed languages; elevated dimensions only):",
                 "",
             ]
         )

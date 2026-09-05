@@ -254,3 +254,47 @@ def mask_lines(lines: list[str]) -> list[str]:
         text, in_block, in_template = _mask_line(line, in_block, in_template)
         masked.append(text)
     return masked
+
+
+#: Swift's multiline literal, in both spellings: `"""` and the raw form
+#: `#"""` … `"""#` (any number of `#`). Matched loosely on purpose — the
+#: delimiter is what matters, not how many hashes surround it.
+_SWIFT_MULTILINE_RE = re.compile(r'#*"""#*')
+
+
+def mask_swift_lines(lines: list[str]) -> list[str]:
+    """Swift, with multiline string literals blanked before anything reads it.
+
+    `mask_lines` is line-local: it blanks `"a"` on the line it appears on
+    and knows nothing about a literal that spans lines. Swift's
+    triple-quoted block therefore survived it, and every line between the
+    delimiters was read as code — so a `func` written inside a
+    documentation string came back as a declaration, with a name, a length
+    and a complexity nobody wrote.
+
+    `_ranges_java` discloses exactly this hole for Java text blocks. It is
+    disclosed there and closed here rather than copied: Swift's multiline
+    strings carry sample code far more often than Java's, and a
+    declaration invented out of documentation is the P7 failure — a number
+    a reader with the file in front of them would call absurd.
+
+    The delimiter lines keep their own text up to and after the marker, so
+    `let a = \"\"\"` still reads as an assignment. Length is preserved per
+    line, as everywhere else here, or every range after the literal would
+    shift.
+    """
+    masked: list[str] = []
+    inside = False
+    for line in lines:
+        out = []
+        position = 0
+        for match in _SWIFT_MULTILINE_RE.finditer(line):
+            segment = line[position:match.start()]
+            out.append(" " * len(segment) if inside else segment)
+            out.append(match.group(0))
+            inside = not inside
+            position = match.end()
+        rest = line[position:]
+        out.append(" " * len(rest) if inside else rest)
+        masked.append("".join(out))
+    return mask_lines(masked)

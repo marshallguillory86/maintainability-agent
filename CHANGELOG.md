@@ -6,6 +6,76 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.8.0 - 2026-09-04
+
+**A Grok audit on f51fbbc found three classes, all shipped in the previous
+two days.** Two of them were mine from 2.4.0 and 2.7.0.
+
+### Security — the audited tree chose what this process executed
+
+`_semantic_ts` resolved `tsc` from the tree's own
+`node_modules/.bin/tsc` before falling back to `PATH`. A `tsconfig.json`
+beside a writable `node_modules/.bin/tsc` was therefore enough to make
+this agent execute the repository under audit — and the tree did not have
+to contain any TypeScript. SECURITY.md's claim that the opt-in test
+command is "the sole path by which anything from the audited tree runs"
+was false for as long as that resolution existed.
+
+**Deleted rather than guarded.** There is no safe way to run a binary
+whose identity the audited tree controls. `tsc` is now invoked as a
+constant program name resolved on `PATH`.
+
+- **Behaviour change:** a project whose only TypeScript compiler is
+  project-local now leaves type coverage **unknown** rather than clean.
+  That is the honest fallback the evidence model already has a word for,
+  and it is the reason this is a minor rather than a patch.
+- SECURITY.md now states the rule that keeps the claim true: every binary
+  this process runs is named by this machine — a constant on `PATH` or a
+  catalog path — never by a path built out of the audited repository.
+
+### Fixed — two scanners missed in the unsafe direction
+
+- **COBOL cognitive complexity was identically 0 in production.**
+  `detect_functions` hands the reader a *slice* of the already-masked
+  file, and `cobol_cognitive` masked it again. COBOL's is the only
+  file-level masker — what a line means depends on which division it sits
+  in — so a paragraph slice, which contains no `PROCEDURE DIVISION`,
+  blanked to nothing. Every COBOL paragraph scored zero nesting cost,
+  including deeply nested ones. The language's own test passed throughout
+  because it called the function with a whole file.
+- **A column-1 `DISPLAY "A".` was read as a COBOL paragraph.** Once the
+  literal is blanked it is a word, a gap and a period — a header's exact
+  shape. Fixed structurally: a header's period **abuts** its name, and the
+  gap is what gives a statement away. That rejects the whole class of
+  operand-bearing statements rather than a list of verbs.
+- **A `func` inside a Swift triple-quoted string was reported as a
+  declaration**, because `mask_lines` is line-local. `mask_swift_lines`
+  blanks multiline literals, raw and ordinary, before anything reads a
+  line. `_ranges_java` discloses the same hole for Java text blocks; it is
+  closed here rather than copied, because Swift documentation strings
+  carry sample code far more often.
+
+### Added — the grade says which languages the anchor omits
+
+`score.reference.corpus_note` claimed the corpus spans "every language
+this scanner parses". True when written, false from 2.4.0, and it stayed
+that way for three releases across the report, `docs/standard.md`, the
+packaged standard and the README — while the remediation prompt still
+described a Python/TypeScript/JavaScript corpus.
+
+Unanchored remains policy. What changes is that every surface printing a
+grade now names what the anchor does not hold:
+
+- `score.reference` gains **`unanchored_languages`** (`Swift`, `COBOL`).
+- The markdown summary, the HTML executive strip and the remediation
+  prompt each print it, through one shared `_evidence_view` helper rather
+  than three copies of the same sentence.
+- `_anchor` holds the fact beside the calibration constant it qualifies,
+  so the two go stale together.
+
+A limit disclosed only in the JSON is disclosed nowhere that matters —
+the shape this project already shipped once as F1.
+
 ## 2.7.0 - 2026-09-04
 
 **COBOL is the tenth parsed language, and the first whose declarations have

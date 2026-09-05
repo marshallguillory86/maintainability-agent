@@ -48,30 +48,40 @@ def _jobs(path: Path) -> list[tuple[str, list[str]]]:
     A job is a key one level under `jobs:`; its body runs until the next
     line at or above its own indentation.
     """
-    lines = path.read_text(encoding="utf-8").splitlines()
-    try:
-        start = next(i for i, line in enumerate(lines) if line.rstrip() == "jobs:")
-    except StopIteration:
+    body = _under_jobs(path.read_text(encoding="utf-8").splitlines())
+    if not body:
         return []
+    depth = len(body[0]) - len(body[0].lstrip())
 
     found: list[tuple[str, list[str]]] = []
-    depth: int | None = None
-    for index in range(start + 1, len(lines)):
-        line = lines[index]
-        if not line.strip() or line.lstrip().startswith("#"):
-            continue
+    for line in body:
         indent = len(line) - len(line.lstrip())
-        if depth is None and line.rstrip().endswith(":"):
-            depth = indent
-        if depth is None:
-            continue
-        if indent < depth:
-            break  # out of `jobs:` entirely
         if indent == depth and line.rstrip().endswith(":"):
             found.append((line.strip().rstrip(":"), []))
         elif found:
             found[-1][1].append(line)
     return found
+
+
+def _under_jobs(lines: list[str]) -> list[str]:
+    """The significant lines beneath `jobs:`, blanks and comments dropped.
+
+    Split out so `_jobs` reads as one loop: finding the section, skipping
+    noise and grouping by indentation were three concerns in one function,
+    which put it over this project's own cognitive threshold (D103).
+    """
+    try:
+        start = next(i for i, line in enumerate(lines) if line.rstrip() == "jobs:")
+    except StopIteration:
+        return []
+    kept: list[str] = []
+    for line in lines[start + 1:]:
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if kept and (len(line) - len(line.lstrip())) < (len(kept[0]) - len(kept[0].lstrip())):
+            break  # out of `jobs:` entirely
+        kept.append(line)
+    return kept
 
 
 def _gates_on_windows(body: list[str]) -> bool:

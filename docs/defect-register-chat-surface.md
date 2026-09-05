@@ -3280,7 +3280,7 @@ version restored, both verified.
 
 *Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
 
-### D101 — Open: the write-safety path is POSIX-only by construction (High)
+### D101 — Open: the skill installer's root is POSIX-only by construction (High)
 
 `_safe_write.py:203` calls `os.fchmod`; `_skill_install.py:34` builds
 `os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW`. Neither exists on
@@ -3308,11 +3308,24 @@ it is open. **Falsifier: pending** — it belongs to whoever decides
 whether the answer is portable primitives or a stated architectural
 limit, and naming a test before that decision would prejudge it.
 
-*Roles:* found=claude prompt=marshall fix=unknown test=unknown run=ci
+**Half closed.** `_safe_write` no longer calls `os.fchmod` where it does
+not exist; the call stays handle-based on POSIX, because `os.chmod` on
+the staging path is the very time-of-check/time-of-use hole this module
+closes, and the portable-looking swap would buy Windows by weakening
+POSIX. Where the call is skipped the mode stays as `mkstemp` set it —
+0600, stricter rather than looser.
+
+**Still open, and it is a decision rather than a bug.** `_skill_install`
+opens its root with `O_DIRECTORY|O_NOFOLLOW` and works relative to that
+descriptor, which is what makes an audit's symlink swap between check and
+write impossible (D18). Windows has no equivalent. The choice is a
+portable re-implementation of that guarantee, or a stated architectural
+limit — and silently dropping the flags to make a platform pass is the
+one option that is not available.
+
+*Roles:* found=claude prompt=marshall fix=claude test=unknown run=ci
 *Mutation:* none yet — the finding came from running the whole suite on a
-platform nobody had run it on, not from breaking a member. What a
-falsifier must eventually break is the assumption that a bounded write
-can be built on `os.fchmod`.
+platform nobody had run it on, not from breaking a member.
 
 ### D102 — Open: two audit-test functions exceed the repo's own budgets (Low)
 
@@ -3332,7 +3345,7 @@ the decision to act or to record an accepted exception.
 *Mutation:* none — the project's own thresholds produced these, so the
 detector already exists and no member had to be broken to expose them.
 
-### D103 — Open: `_jobs` is over the cognitive warn line (Low)
+### D103 — Closed: `_jobs` is over the cognitive warn line (Low)
 
 `tests/test_platform_claim.py` — `_jobs` (36 lines, complexity 12,
 cognitive 16), warn. Mine, on PR #169, resolved without being acted on
@@ -3342,8 +3355,19 @@ algorithm across two functions for no reader benefit.
 That reasoning may well be right. It is still a judgement made by the
 author of the code against the project's own published thresholds, which
 is the shape D99 is about. Filed so the call is reviewable rather than
-resolved away in a PR thread. **Falsifier: pending**, for the same
-reason as D102.
+resolved away in a PR thread.
+
+**Closed.** Finding the section, skipping blanks and comments, and
+grouping by indentation were three concerns in one function.
+`_under_jobs` takes the first two: `_jobs` goes from cognitive 16 to 6,
+and all three helpers in the file read `ok`. The reasoning offered in the
+PR thread — that splitting helps no reader — was wrong, and the
+thresholds were right.
+
+*Closing test:* `test_ci_runs_only_platforms_the_package_claims` — the
+guard still passes over the split helpers, and this project's own
+`detect_functions` reports `_jobs`, `_under_jobs` and `_gates_on_windows`
+all `ok`.
 
 *Roles:* found=ci prompt=marshall fix=unknown test=unknown run=none
 *Mutation:* none, as D102. The entry exists because the author of the
@@ -3352,7 +3376,8 @@ the thread, which is the D99 shape rather than a defect in a detector.
 
 ## Disposition
 
-**Three entries are open: D101, D102 and D103**, filed 2026-09-05 after
+**Two entries are open: D101 (half closed) and D102.** D103 closed the
+same day it was filed. All three were filed 2026-09-05 after
 Marshall asked "what is my rule" and the answer was the one being broken.
 A Windows probe had produced a High finding about the write-safety path,
 and two warn-level findings had been resolved in PR threads without being

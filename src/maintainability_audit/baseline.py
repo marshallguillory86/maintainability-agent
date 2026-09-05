@@ -7,6 +7,7 @@ from typing import Any
 
 from ._finding_match import Identity, identities_from_report, rename_map, unmatched
 from ._identity import finding_fingerprints
+from .config import read_operator_file
 
 __all__ = [
     "finding_fingerprints",
@@ -38,7 +39,10 @@ def _read(path: str | None) -> dict[str, Any] | None:
     baseline_path = Path(path)
     if not baseline_path.exists():
         return None
-    data = json.loads(baseline_path.read_text(encoding="utf-8"))
+    # Same validation the config door uses: `--baseline` is a path from
+    # the command line, and a FIFO or `/dev/zero` named here would block
+    # or exhaust memory rather than parse (SonarCloud S8707).
+    data = json.loads(read_operator_file(baseline_path))
     version = data.get("version", 1)
     if version != BASELINE_VERSION:
         # Failing closed matters more than convenience here. Loading an old

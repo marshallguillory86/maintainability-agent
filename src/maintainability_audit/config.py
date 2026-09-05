@@ -322,23 +322,35 @@ def read_operator_file(path: Path) -> str:
     """
     import stat as stat_module
 
+    # Opened once, then checked and read **through that handle** — the
+    # same discipline `_safe_write` uses for writes, and for the same
+    # reason. Checking `os.stat(path)` and then calling `path.read_text()`
+    # resolves the name twice, so what was measured and what is read can
+    # differ: the classic time-of-check/time-of-use gap.
+    #
+    # `O_NONBLOCK` is what makes the check possible at all. Opening a FIFO
+    # for reading otherwise blocks until a writer appears, so the process
+    # would hang *before* reaching any validation — the very failure this
+    # function exists to prevent.
+    handle = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
     try:
-        info = os.stat(path)
-    except OSError:
-        raise
-    if not stat_module.S_ISREG(info.st_mode):
-        raise PathNotAllowed(
-            f"{path} is not a regular file. This reads configuration and "
-            "baselines; a device, socket or FIFO named here would block "
-            "or exhaust memory rather than parse."
-        )
-    if info.st_size > MAX_OPERATOR_FILE_BYTES:
-        raise PathNotAllowed(
-            f"{path} is {info.st_size} bytes, over the "
-            f"{MAX_OPERATOR_FILE_BYTES}-byte limit for a file named on "
-            "the command line."
-        )
-    return path.read_text(encoding="utf-8")
+        info = os.fstat(handle)
+        if not stat_module.S_ISREG(info.st_mode):
+            raise PathNotAllowed(
+                f"{path} is not a regular file. This reads configuration "
+                "and baselines; a device, socket or FIFO named here would "
+                "block or exhaust memory rather than parse."
+            )
+        if info.st_size > MAX_OPERATOR_FILE_BYTES:
+            raise PathNotAllowed(
+                f"{path} is {info.st_size} bytes, over the "
+                f"{MAX_OPERATOR_FILE_BYTES}-byte limit for a file named on "
+                "the command line."
+            )
+        with os.fdopen(handle, "r", encoding="utf-8", closefd=False) as opened:
+            return opened.read(MAX_OPERATOR_FILE_BYTES + 1)
+    finally:
+        os.close(handle)
 
 
 def _configured(path: Path) -> dict[str, Any]:

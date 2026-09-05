@@ -3441,7 +3441,13 @@ killed at four seconds. "Denial-of-service via crafted config files" is
 in this project's own published in-scope list, so the tool was vulnerable
 to something it invites people to report.
 
-`read_operator_file` now requires a regular file and bounds its size.
+`read_operator_file` opens the path **once** and checks and reads through
+that handle — the discipline `_safe_write` already uses for writes.
+`os.stat(path)` followed by `path.read_text()` resolves the name twice,
+so what was measured and what is read can differ; `O_NONBLOCK` is what
+makes the check reachable at all, since opening a FIFO for reading
+otherwise blocks before any validation runs. It requires a regular file
+and bounds the size.
 Deliberately *not* a symlink refusal: the operator named the path and
 controls it, and the audited tree's own default is a different question
 that `discovered_config` already answers.

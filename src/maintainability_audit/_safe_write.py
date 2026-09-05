@@ -178,27 +178,28 @@ def _refuse_symlinked_parents(root: Path, target: Path) -> None:
         current = current.parent
 
 
-def _mode_for(target: Path) -> int:
-    """The mode a replacement should carry: the file's own, or the umask's.
+def _mode_for(target: Path) -> int | None:
+    """The mode a replacement must carry, or `None` to leave it alone.
 
     Replacing a file must not change who can read it. `mkstemp` creates
-    the staging file 0600, so without this the mode is whatever the
-    staging call chose rather than what the target had — and the previous
-    fixed 0o644 silently *widened* every config a user had restricted.
+    the staging file 0600, and the code here previously chmod'ed it to a
+    fixed 0o644 under a comment claiming to "match the old mode" — so a
+    config a user had deliberately restricted came back world-readable
+    after the next write, silently, every time.
 
-    For a file that does not exist yet, the honest default is what
-    `open()` would have produced: 0666 masked by the process umask, so a
-    user who runs with a restrictive umask gets a restrictive file rather
-    than one this tool decided on. Reading the umask means setting it and
-    putting it back, which is the standard idiom and momentary.
+    **A file that does not exist yet keeps `mkstemp`'s 0600**, and that is
+    the whole of the new-file policy. The first attempt at this read the
+    process umask — `os.umask(0)` then put it back — to reproduce what
+    `open()` would have done. That is a widely-copied idiom and it is a
+    race: every file any other thread creates inside that window is born
+    world-writable. Trading a real race for a cosmetic default is a bad
+    bargain, and 0600 is the safer direction anyway. A user who wants the
+    file wider sets it once, and this function then preserves that.
     """
     try:
         return os.stat(target).st_mode & 0o777
     except OSError:
-        pass
-    umask = os.umask(0)
-    os.umask(umask)
-    return 0o666 & ~umask
+        return None
 
 
 def _stage_and_replace(target: Path, body: str) -> Path:
@@ -242,8 +243,9 @@ def _stage_and_replace(target: Path, body: str) -> Path:
         # as mkstemp set it, which is *stricter* rather than looser, and
         # POSIX mode bits are not what governs the file there anyway —
         # the directory's inherited ACL is. D101.
-        if hasattr(os, "fchmod"):
-            os.fchmod(handle, _mode_for(target))
+        mode = _mode_for(target)
+        if mode is not None and hasattr(os, "fchmod"):
+            os.fchmod(handle, mode)
         written = 0
         while written < len(encoded):
             # A short write reported as success leaves a truncated

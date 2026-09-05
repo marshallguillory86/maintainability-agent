@@ -16,7 +16,6 @@ world-readable by the next write, silently, every time.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from maintainability_audit import _evidence_view as view
@@ -109,19 +108,23 @@ def test_replacing_a_restricted_file_does_not_widen_it(tmp_path: Path) -> None:
     )
 
 
-def test_a_new_file_follows_the_umask_rather_than_a_number_we_chose(
+def test_a_new_file_is_owner_only_rather_than_a_mode_we_chose(
     tmp_path: Path,
 ) -> None:
-    """What `open()` would have produced, so a restrictive umask is honoured."""
+    """`mkstemp`'s 0600 stands, and nothing reads the umask to widen it.
+
+    The first version of this reproduced `open()`'s default by setting
+    the umask to 0 and putting it back — a race in which any file another
+    thread creates is born world-writable. A cosmetic default is not
+    worth that, and stricter is the safe direction.
+    """
     root = tmp_path / "repo"
     root.mkdir()
     target = root / "fresh.json"
 
     write_bounded(root, target, "{}")
 
-    umask = os.umask(0)
-    os.umask(umask)
-    assert target.stat().st_mode & 0o777 == 0o666 & ~umask
+    assert target.stat().st_mode & 0o777 == 0o600
 
 
 def test_the_mode_helper_reads_an_existing_file_and_falls_back(tmp_path: Path) -> None:
@@ -130,7 +133,7 @@ def test_the_mode_helper_reads_an_existing_file_and_falls_back(tmp_path: Path) -
     existing.chmod(0o640)
 
     assert _mode_for(existing) == 0o640
-
-    umask = os.umask(0)
-    os.umask(umask)
-    assert _mode_for(tmp_path / "absent.json") == 0o666 & ~umask
+    assert _mode_for(tmp_path / "absent.json") is None, (
+        "an absent file must yield None so the caller leaves mkstemp's "
+        "0600 alone, rather than a mode this tool picked"
+    )

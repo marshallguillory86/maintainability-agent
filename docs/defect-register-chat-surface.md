@@ -3280,7 +3280,7 @@ version restored, both verified.
 
 *Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
 
-### D101 — Open: the skill installer's root is POSIX-only by construction (High)
+### D101 — Closed: the write-safety primitives are POSIX by decision (High)
 
 `_safe_write.py:203` calls `os.fchmod`; `_skill_install.py:34` builds
 `os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW`. Neither exists on
@@ -3315,19 +3315,37 @@ closes, and the portable-looking swap would buy Windows by weakening
 POSIX. Where the call is skipped the mode stays as `mkstemp` set it —
 0600, stricter rather than looser.
 
-**Still open, and it is a decision rather than a bug.** `_skill_install`
-opens its root with `O_DIRECTORY|O_NOFOLLOW` and works relative to that
-descriptor, which is what makes an audit's symlink swap between check and
-write impossible (D18). Windows has no equivalent. The choice is a
-portable re-implementation of that guarantee, or a stated architectural
-limit — and silently dropping the flags to make a platform pass is the
-one option that is not available.
+**The rest is closed by decision, not by code.** Marshall, 2026-09-05:
+*"do not break this tool to fix windows support."* `_skill_install` opens
+its root with `O_DIRECTORY|O_NOFOLLOW` and works relative to that
+descriptor, which is what makes a symlink swap between check and write
+impossible (D18). Windows has no equivalent, and the portable rewrite —
+validate a pathname, then write to it — is the hole itself.
 
-*Roles:* found=claude prompt=marshall fix=claude test=unknown run=ci
+So the limit is **stated rather than removed**: the write-safety
+mechanism is POSIX by construction, `Operating System :: POSIX` stands,
+and the probe stays `continue-on-error`. The rule is now in `RULES.md`:
+an unsupported platform never buys green by weakening a guarantee the
+supported platforms rely on.
+
+What this entry corrects for the record is the *reason*. The README said
+Windows was unclaimed because the suite creates unguarded symlinks.
+Symlink failures were not among the top causes; 94 of 165 were these two
+attributes. The stated reason was wrong even though the conclusion was
+right.
+
+*Closing test:* none, and deliberately — the closure is a decision to
+leave a platform unsupported, which no test can assert. What *is*
+asserted is that nothing quietly widened:
+`test_the_package_claims_the_platform_it_is_tested_on` holds the
+classifier at POSIX, and `test_ci_runs_only_platforms_the_package_claims`
+refuses a Windows runner in any job that gates something.
+
+*Roles:* found=claude prompt=marshall fix=claude test=none run=ci
 *Mutation:* none yet — the finding came from running the whole suite on a
 platform nobody had run it on, not from breaking a member.
 
-### D102 — Open: two audit-test functions exceed the repo's own budgets (Low)
+### D102 — Open (Grok): two audit-test functions exceed the repo's own budgets (Low)
 
 `tests/test_tree_chosen_spawn.py` — `_argv0` (17 lines, complexity 9,
 cognitive 17) and `_tree_bin_modules` (25 lines, complexity 9, cognitive
@@ -3338,6 +3356,10 @@ that file forbids Claude editing tests.
 That was the correct action for the cycle and the wrong end state for the
 ledger: a finding nobody may act on is still a finding. Filed so the
 constraint is visible and the work is assignable to whoever owns tests.
+
+**Assigned to Grok.** Codex is out of budget, and the rule recorded on
+2026-09-05 moves the test-writer role to Grok rather than vacating it or
+letting Claude cross into tests to clear a ledger.
 **Falsifier: pending** — the thresholds already fire; what is missing is
 the decision to act or to record an accepted exception.
 
@@ -3376,8 +3398,11 @@ the thread, which is the D99 shape rather than a defect in a detector.
 
 ## Disposition
 
-**Two entries are open: D101 (half closed) and D102.** D103 closed the
-same day it was filed. All three were filed 2026-09-05 after
+**One entry is open: D102**, and it is assigned to Grok under the
+role-failover rule. D101 and D103 closed the day they were filed — D103
+by splitting the function, D101 by Marshall's decision that an
+unsupported platform is a stated limit and never a reason to weaken the
+supported ones. All three were filed 2026-09-05 after
 Marshall asked "what is my rule" and the answer was the one being broken.
 A Windows probe had produced a High finding about the write-safety path,
 and two warn-level findings had been resolved in PR threads without being

@@ -202,6 +202,12 @@ def test_the_spawn_helpers_stay_inside_the_repo_budgets() -> None:
     ``_tree_chosen_invocations`` back into ``_tree_bin_modules``. The
     detector is ``detect_functions`` on this file; it does not name the
     two functions that were over the line.
+
+    Covers existing behaviour: the subject is this file's own helpers, and
+    the falsifier harness keeps ``tests/`` at the new revision while
+    reverting everything else — so no revert of production code can make
+    it fail. The mutation above is the real proof and it is a source edit,
+    not a revert.
     """
     from maintainability_audit.config import load_config
     from maintainability_audit.declarations import detect_functions

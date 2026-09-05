@@ -303,3 +303,39 @@ def test_unsigned_merge_commit_fails_the_signature_gate(
         "in that commit was never attested\n"
         f"{result.stdout}\n{result.stderr}"
     )
+
+
+def test_the_signature_gate_still_checks_merge_commits() -> None:
+    """D105. The control someone will be tempted to remove.
+
+    The trailer step uses `--no-merges`; the signature step deliberately
+    does not, because a merge carries the conflict resolution its author
+    wrote — an unsigned merge is unattested content, and skipping it let
+    exactly that through once already.
+
+    The temptation is concrete. `gh pr update-branch` and GitHub's green
+    "Update branch" button create a merge signed with GitHub's key, which
+    is not in `.github/allowed_signers`, so the gate fails on a commit no
+    agent wrote. The convenient fix is to add `--no-merges` here, and it
+    would undo the control to buy a button. The answer is to rebase
+    instead, and this pins the control so the shortcut fails loudly.
+
+    Covers existing behaviour: the control it pins is older than this
+    change and nothing here edited the workflow, so no revert can make it
+    fail. It defends a future edit rather than one made now — which is
+    the point of it.
+    """
+    text = WORKFLOW.read_text(encoding="utf-8")
+    step = text.split("Each commit is signed", 1)
+    assert len(step) > 1, "the signature step is no longer named that way"
+    body = step[1]
+    enumerated = [
+        line for line in body.splitlines()
+        if "git rev-list" in line and "if [" not in line
+    ]
+    assert enumerated, "the signature step no longer enumerates commits"
+    assert not any("--no-merges" in line for line in enumerated), (
+        "the signature step skips merge commits again. A merge carries "
+        "the conflict resolution its author wrote; rebase a stale branch "
+        "rather than weakening this to make 'Update branch' pass (D105)."
+    )

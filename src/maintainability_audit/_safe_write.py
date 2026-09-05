@@ -200,7 +200,18 @@ def _stage_and_replace(target: Path, body: str) -> Path:
     )
     staging = Path(staging_name)
     try:
-        os.fchmod(handle, 0o644)  # mkstemp makes 0600; match the old mode
+        # mkstemp makes 0600; match the old mode. Through the *handle*,
+        # never `os.chmod(staging)`: a path-based chmod between mkstemp
+        # and the write is the time-of-check/time-of-use hole this whole
+        # module exists to close, so the portable-looking swap would buy
+        # Windows by weakening POSIX.
+        #
+        # `os.fchmod` is POSIX-only. Where it is absent the mode is left
+        # as mkstemp set it, which is *stricter* rather than looser, and
+        # POSIX mode bits are not what governs the file there anyway —
+        # the directory's inherited ACL is. D101.
+        if hasattr(os, "fchmod"):
+            os.fchmod(handle, 0o644)
         written = 0
         while written < len(encoded):
             # A short write reported as success leaves a truncated

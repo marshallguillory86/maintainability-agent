@@ -391,12 +391,12 @@ and costs roughly a grade — use `fetch-depth: 0`.)
 
 ## Platform support
 
-**POSIX. Linux and macOS are what this has run on; Windows is untested and not
-claimed.** That is a statement about evidence, not a refusal: CI runs Linux,
-development runs macOS, and the test suite creates symlinks with no platform
-guard (needing Developer Mode on Windows), so it never reaches the point of
-telling anyone whether the product works there. Adding `windows-latest` to CI
-and fixing what falls out is how that changes.
+**POSIX. Windows is not claimed, for a measured reason.** A `windows-latest` probe
+found most failures in two POSIX-only calls, `os.fchmod` and `os.O_DIRECTORY`. The
+bounded, symlink-refusing write works through a *file descriptor*, so a validated
+path cannot be swapped for a symlink before the write lands — Windows has no
+equivalent and the portable rewrite is the hole. **An unsupported platform never
+buys green by weakening the supported ones.**
 
 ## Invokable skill / slash command
 

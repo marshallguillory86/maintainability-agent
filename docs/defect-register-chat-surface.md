@@ -3280,10 +3280,90 @@ version restored, both verified.
 
 *Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
 
+### D101 — Open: the write-safety path is POSIX-only by construction (High)
+
+`_safe_write.py:203` calls `os.fchmod`; `_skill_install.py:34` builds
+`os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW`. Neither exists on
+Windows. A `windows-latest` probe on 2026-09-05 produced **165 failed,
+1972 passed, 33 errors**, and 94 of those failures are those two
+attributes — 81 `fchmod`, 13 `O_DIRECTORY`.
+
+**What makes it High rather than a portability note.** These are the
+security-relevant paths: the bounded, symlink-refusing write that the
+D34/D36/D96 family exists to enforce, and the handle-based root the skill
+installer opens once so every read is relative to it. The mechanism that
+keeps an audited tree from redirecting where this agent writes is
+implemented on file descriptors that Windows does not have. That is a
+statement about the product's architecture, not about its tests.
+
+**It also falsifies the reason the README gives.** The platform section
+says Windows is unclaimed because "the test suite creates symlinks with
+no platform guard". Symlink failures are not among the top causes at all.
+The stated reason has been the wrong reason.
+
+Open. `Operating System :: POSIX` remains the claim and the probe remains
+`continue-on-error`, so nothing shipped is untrue — but the finding is
+recorded rather than left in a wrap-up, and a release does not cut while
+it is open. **Falsifier: pending** — it belongs to whoever decides
+whether the answer is portable primitives or a stated architectural
+limit, and naming a test before that decision would prejudge it.
+
+*Roles:* found=claude prompt=marshall fix=unknown test=unknown run=ci
+*Mutation:* none yet — the finding came from running the whole suite on a
+platform nobody had run it on, not from breaking a member. What a
+falsifier must eventually break is the assumption that a bounded write
+can be built on `os.fchmod`.
+
+### D102 — Open: two audit-test functions exceed the repo's own budgets (Low)
+
+`tests/test_tree_chosen_spawn.py` — `_argv0` (17 lines, complexity 9,
+cognitive 17) and `_tree_bin_modules` (25 lines, complexity 9, cognitive
+18), both warn. Raised by this project's own code scanning on PR #171 and
+resolved there without being acted on, because the cycle that produced
+that file forbids Claude editing tests.
+
+That was the correct action for the cycle and the wrong end state for the
+ledger: a finding nobody may act on is still a finding. Filed so the
+constraint is visible and the work is assignable to whoever owns tests.
+**Falsifier: pending** — the thresholds already fire; what is missing is
+the decision to act or to record an accepted exception.
+
+*Roles:* found=ci prompt=marshall fix=unknown test=unknown run=none
+*Mutation:* none — the project's own thresholds produced these, so the
+detector already exists and no member had to be broken to expose them.
+
+### D103 — Open: `_jobs` is over the cognitive warn line (Low)
+
+`tests/test_platform_claim.py` — `_jobs` (36 lines, complexity 12,
+cognitive 16), warn. Mine, on PR #169, resolved without being acted on
+with the reasoning that splitting a 36-line indentation walk spreads one
+algorithm across two functions for no reader benefit.
+
+That reasoning may well be right. It is still a judgement made by the
+author of the code against the project's own published thresholds, which
+is the shape D99 is about. Filed so the call is reviewable rather than
+resolved away in a PR thread. **Falsifier: pending**, for the same
+reason as D102.
+
+*Roles:* found=ci prompt=marshall fix=unknown test=unknown run=none
+*Mutation:* none, as D102. The entry exists because the author of the
+code judged his own work against the published threshold and resolved
+the thread, which is the D99 shape rather than a defect in a detector.
+
 ## Disposition
 
-**Every entry is closed and none is open.** D100 was the last, filed and
-closed on 2026-08-28: the artifact had promoted itself to a 1.0 release
+**Three entries are open: D101, D102 and D103**, filed 2026-09-05 after
+Marshall asked "what is my rule" and the answer was the one being broken.
+A Windows probe had produced a High finding about the write-safety path,
+and two warn-level findings had been resolved in PR threads without being
+acted on — and all three were reported in a wrap-up as "still open"
+rather than filed, which is the exact inversion of the rule at
+RULES.md:426. **2.8.0 was then tagged and released with them open**,
+against "no release until the known-defect ledger is empty". The release
+is not withdrawn; the entries are filed and the ledger gates the next one.
+
+Until 2026-09-05 the ledger was empty. D100 was the last to close,
+on 2026-08-28: the artifact had promoted itself to a 1.0 release
 candidate with no recorded authorization, and the entry that did it was
 the entry written to stop exactly that. It is the fifth round running in
 which the defect was in a fix rather than in the code the fix repaired,

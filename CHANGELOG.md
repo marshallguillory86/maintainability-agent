@@ -6,6 +6,63 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.8.1 - 2026-09-05
+
+**Everything SonarCloud had to say, once the project was made public.**
+The gate had only ever blocked on *new* code, so five findings in older
+code had never surfaced. Four closed by changing the code; two were
+resolved as false positives with the grounds recorded in the register
+rather than only in a dashboard.
+
+### Fixed — a file kept its own permissions, and a read stopped hanging
+
+- **`S2612`, `_safe_write`.** The staging file was chmod'ed to a fixed
+  `0o644` under a comment claiming to "match the old mode". It did not:
+  `mkstemp` creates 0600 and the hardcoded mode then **widened** it, so a
+  config a user had restricted to 0600 came back world-readable after
+  every write. The mode is now inherited — the target's own where it
+  exists, and `mkstemp`'s 0600 for a new file.
+- **The fix's own first attempt** read the process umask (`os.umask(0)`,
+  then put it back) to reproduce `open()`'s default. That is a race: any
+  file another thread creates inside that window is born world-writable.
+  Removed; a cosmetic default is not worth it.
+- **`S8707`, `config.py` and `baseline.py`.** `--config` and `--baseline`
+  were read straight into `json.loads` — the only two path-taking entry
+  points with no validation at all. The harm was not traversal but a
+  **hang**: `read_text` on a FIFO blocks forever, and on `/dev/zero`
+  consumes memory until the process dies. Measured before the fix, a bare
+  read had to be killed at four seconds. `read_operator_file` now opens
+  the path **once** and checks and reads through that single handle —
+  regular files only, size-bounded, `O_NONBLOCK` so a FIFO cannot block
+  ahead of validation.
+- **`S5863` ×2.** Two determinism checks compared an expression with
+  itself. The intent was right; the shape was indistinguishable from the
+  typo the rule exists to catch. The calls are bound to names and each
+  assertion now says what a failure would mean.
+
+### Added
+
+- **`tools/sonar_resolve.py` and a dispatch workflow.** Two findings had
+  been dismissed by hand and both decisions lived only in a dashboard,
+  invisible to a reader of the code — the shape this project calls a
+  defect when other people do it. The script posts the justification
+  *before* the transition, refuses a comment too short to reconstruct the
+  decision from, and refuses an issue already resolved. The token stays a
+  repository secret.
+
+### Unchanged, deliberately
+
+A **symlinked** config is still allowed: the operator named the path and
+controls it, and the audited tree's own default is a different question
+`discovered_config` already answers. Pinned by a test so it is not added
+by reflex.
+
+The authorship gate still checks signatures over merge commits. Making
+GitHub's "Update branch" button pass would have meant skipping them, and
+that control exists because skipping them let unattested content through
+once already. Stale branches get rebased instead — recorded in
+`RULES.md`.
+
 ## 2.8.0 - 2026-09-04
 
 **A Grok audit on f51fbbc found three classes, all shipped in the previous

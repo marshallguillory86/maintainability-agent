@@ -42,22 +42,33 @@ def _call_kwarg(call: ast.Call, name: str) -> ast.expr | None:
     return None
 
 
+def _invocation_argv0(call: ast.Call) -> ast.expr | None:
+    argv = call.args[0] if call.args else _call_kwarg(call, "argv")
+    if isinstance(argv, ast.Tuple) and argv.elts:
+        return argv.elts[0]
+    return None
+
+
+def _subprocess_run_argv0(call: ast.Call) -> ast.expr | None:
+    """First argv of ``subprocess.run([...])``, not ``_runner.run``."""
+    if not isinstance(call.func, ast.Attribute):
+        return None
+    if not (isinstance(call.func.value, ast.Name) and call.func.value.id == "subprocess"):
+        return None
+    if not call.args:
+        return None
+    first = call.args[0]
+    if isinstance(first, ast.List) and first.elts:
+        return first.elts[0]
+    return None
+
+
 def _argv0(call: ast.Call) -> ast.expr | None:
     """First argv element of an Invocation or subprocess.run, if visible."""
     if _is_name(call.func, "Invocation"):
-        argv = call.args[0] if call.args else _call_kwarg(call, "argv")
-        if isinstance(argv, ast.Tuple) and argv.elts:
-            return argv.elts[0]
-        return None
-    if _is_name(call.func, "run") and isinstance(call.func, ast.Attribute):
-        # subprocess.run([...]) — not _runner.run.
-        if not (isinstance(call.func.value, ast.Name) and call.func.value.id == "subprocess"):
-            return None
-        if not call.args:
-            return None
-        first = call.args[0]
-        if isinstance(first, ast.List) and first.elts:
-            return first.elts[0]
+        return _invocation_argv0(call)
+    if _is_name(call.func, "run"):
+        return _subprocess_run_argv0(call)
     return None
 
 
@@ -95,6 +106,30 @@ def _spawns() -> list[tuple[str, int]]:
     return found
 
 
+def _mentions_node_modules(tree: ast.AST) -> bool:
+    return any(isinstance(n, ast.Constant) and n.value == "node_modules" for n in ast.walk(tree))
+
+
+def _is_catalog_or_literal_argv(argv0: ast.expr) -> bool:
+    return isinstance(argv0, (ast.Constant, ast.Attribute, ast.Starred))
+
+
+def _tree_chosen_invocations(path: Path, tree: ast.AST) -> list[str]:
+    """``Invocation`` calls whose argv[0] is a Name the tree could plant."""
+    found: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not _is_name(node.func, "Invocation"):
+            continue
+        argv0 = _argv0(node)
+        if argv0 is None or _is_catalog_or_literal_argv(argv0):
+            continue
+        fn = _enclosing_function(tree, node)
+        if fn is not None and _calls_suite_opted_in(fn):
+            continue
+        found.append(f"{path.name}:{node.lineno}")
+    return found
+
+
 def _tree_bin_modules() -> list[str]:
     """Modules that build a node_modules path and pass it to Invocation.
 
@@ -104,21 +139,10 @@ def _tree_bin_modules() -> list[str]:
     """
     offenders: list[str] = []
     for path in sorted(SRC.rglob("*.py")):
-        source = path.read_text(encoding="utf-8")
-        tree = ast.parse(source, filename=str(path))
-        has_node_modules_component = any(isinstance(n, ast.Constant) and n.value == "node_modules" for n in ast.walk(tree))
-        if not has_node_modules_component:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        if not _mentions_node_modules(tree):
             continue
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call) or not _is_name(node.func, "Invocation"):
-                continue
-            argv0 = _argv0(node)
-            if argv0 is None or isinstance(argv0, (ast.Constant, ast.Attribute, ast.Starred)):
-                continue
-            fn = _enclosing_function(tree, node)
-            if fn is not None and _calls_suite_opted_in(fn):
-                continue
-            offenders.append(f"{path.name}:{node.lineno}")
+        offenders.extend(_tree_chosen_invocations(path, tree))
     return offenders
 
 
@@ -169,3 +193,22 @@ def test_a_planted_tsc_in_the_tree_is_not_executed(tmp_path: Path) -> None:
         "the audited tree executed code. Decision 9 / SECURITY.md say "
         "the sole tree-execution path is the opt-in test command."
     )
+
+
+def test_the_spawn_helpers_stay_inside_the_repo_budgets() -> None:
+    """D102. The project's own thresholds produced the finding.
+
+    *Mutation:* fold ``_invocation_argv0`` back into ``_argv0``, or
+    ``_tree_chosen_invocations`` back into ``_tree_bin_modules``. The
+    detector is ``detect_functions`` on this file; it does not name the
+    two functions that were over the line.
+    """
+    from maintainability_audit.config import load_config
+    from maintainability_audit.declarations import detect_functions
+    from maintainability_audit.metrics import read_lines
+
+    path = Path(__file__)
+    root = path.resolve().parents[1]
+    funcs = detect_functions(root, path, read_lines(path), load_config("maintainability-agent.json")["thresholds"])
+    offenders = [f"{item.name} {item.status} cog={item.cognitive}" for item in funcs if item.status != "ok"]
+    assert not offenders, "helpers in this file exceed the repo's own budgets: " + "; ".join(offenders)

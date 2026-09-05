@@ -3512,9 +3512,74 @@ convenient "fix" for the button fails loudly instead of landing.
 *Mutation:* none — nothing was edited. The evidence is PR #175's failing
 run and the rebase that cleared it.
 
+### D106 — Open (Codex): two determinism assertions compare an expression with itself (Low)
+
+`python:S5863`, twice, both MAJOR to SonarCloud and both real as written:
+
+- `tests/test_three_presentations.py:116` — `assert render_html(report, records) == render_html(report, records)`
+- `tests/test_evidence_properties.py:476` — `assert sweep() == sweep()`
+
+The *intent* is sound and worth keeping: each calls a function twice and
+asserts the results match, which is how determinism is tested here. The
+*shape* is indistinguishable from the mistake the rule exists to catch —
+a reader cannot tell a deliberate double invocation from a typo, and
+neither can the analyser. Binding the two calls to named variables says
+which one it is:
+
+    first = render_html(report, records)
+    second = render_html(report, records)
+    assert first == second
+
+These sit in test files. Codex holds the test-writer role, and the
+role-failover rule recorded 2026-09-05 moves it to Grok only while Codex
+is down — Codex is back, so this is his. Claude does not cross into
+tests to clear a ledger.
+
+**Falsifier: pending** — the change is a clarity refactor with identical
+behaviour, so the closing evidence will be the analyser's own reading
+rather than a test that fails at the base.
+
+*Roles:* found=ci prompt=marshall fix=unknown test=unknown run=none
+*Mutation:* none — this project's own thresholds did not produce it;
+SonarCloud's `S5863` did, on code that predates the finding.
+
+### D107 — Closed: two SonarCloud findings resolved as false positives (Low)
+
+Recorded for the same reason D104 records its own: a resolution taken in
+a dashboard is invisible to a reader of the code.
+
+**`pythonsecurity:S8707`, `config.py`.** The same finding D104 closed. It
+reopened under a new key because the one-handle rewrite moved the code
+*after* the first resolution was applied, and SonarCloud tracked the
+result as a new issue rather than the same one. Nothing about the code or
+the reasoning changed. The lesson is sequencing: resolve a finding after
+the code that produces it has settled, or the resolution is spent on a
+line that is about to move.
+
+**`pythonbugs:S2583`, `_evidence_view.py:197`.** The analyser reports
+`if is_complete(score)` as always false. It is not: `status` has three
+values — `insufficient`, `complete`, `incomplete` — and the two equality
+checks above it are not exhaustive. Verified by calling
+`status_sentence` with a complete score and getting the complete
+sentence back. A genuine analyser error rather than a judgement call.
+
+*Closing test:* `test_a_withheld_score_names_the_path_out` — it asserts
+`"complete" in status_sentence(tiny)`, which is the exact branch the
+analyser calls unreachable. The claim was checkable against a test that
+already existed, and the first draft of this entry cited a test that did
+not — caught by `test_every_closing_citation_names_a_test_that_exists`,
+which is the guard for precisely that.
+
+*Falsifier proof: not applicable — no code changed; two external findings were resolved and the grounds recorded.*
+
+*Roles:* found=ci prompt=marshall fix=marshall test=none run=none
+*Mutation:* none.
+
 ## Disposition
 
-**Every entry is closed.** D102 closed by splitting the two helpers that
+**One entry is open: D106**, assigned to Codex, who is back online and holds the test-writer role again. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+
+Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they
 were filed — D103 by splitting `_jobs`, D101 by Marshall's decision that
 an unsupported platform is a stated limit and never a reason to weaken

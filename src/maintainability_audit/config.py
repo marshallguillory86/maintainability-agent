@@ -288,6 +288,59 @@ def _shaped_inside(
                 )
 
 
+#: An operator-named file is still read into memory, so its size is
+#: bounded. Generous by two orders of magnitude for a config or a
+#: baseline; the point is that *some* number exists.
+MAX_OPERATOR_FILE_BYTES = 8 * 1024 * 1024
+
+
+def read_operator_file(path: Path) -> str:
+    """Read a file the operator named, after checking it is one.
+
+    `--config` and `--baseline` take a path from the command line and
+    read it. Every other path in this project goes through
+    `repository_path`, which bounds it to the audited tree — but these
+    two legitimately point outside it, so bounding is the wrong control
+    and *no* control was the shipped answer (SonarCloud S8707, found
+    2026-09-05: "LLMs running this code with faulty CLI arguments can
+    escape file system restrictions").
+
+    What is checked is what a path cannot promise on its own:
+
+    - **It is a regular file.** `read_text` on a FIFO blocks forever and
+      on `/dev/zero` consumes memory until the process dies. An agent
+      driving this CLI with an attacker-influenced argument is the case
+      the rule names, and "denial-of-service via crafted config files" is
+      in this project's own published scope.
+    - **It is not larger than `MAX_OPERATOR_FILE_BYTES`.** A regular file
+      can still be enormous.
+
+    Deliberately *not* checked: whether the path is a symlink. The
+    operator named it and controls it, and a symlinked config is an
+    ordinary setup. The audited tree's own default path is a different
+    question and `discovered_config` already refuses a symlink there.
+    """
+    import stat as stat_module
+
+    try:
+        info = os.stat(path)
+    except OSError:
+        raise
+    if not stat_module.S_ISREG(info.st_mode):
+        raise PathNotAllowed(
+            f"{path} is not a regular file. This reads configuration and "
+            "baselines; a device, socket or FIFO named here would block "
+            "or exhaust memory rather than parse."
+        )
+    if info.st_size > MAX_OPERATOR_FILE_BYTES:
+        raise PathNotAllowed(
+            f"{path} is {info.st_size} bytes, over the "
+            f"{MAX_OPERATOR_FILE_BYTES}-byte limit for a file named on "
+            "the command line."
+        )
+    return path.read_text(encoding="utf-8")
+
+
 def _configured(path: Path) -> dict[str, Any]:
     """The repository's own file, or a refusal that names it.
 
@@ -299,7 +352,7 @@ def _configured(path: Path) -> dict[str, Any]:
     a caller says the question is already answered (D32).
     """
     try:
-        content = json.loads(path.read_text(encoding="utf-8"))
+        content = json.loads(read_operator_file(path))
     except (OSError, ValueError) as unreadable:
         # `strerror` for an OSError, never `str(unreadable)`: the latter
         # appends the OS filename, and when `read_text` followed a

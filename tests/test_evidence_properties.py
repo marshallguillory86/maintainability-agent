@@ -473,7 +473,9 @@ def test_the_whole_sweep_is_deterministic(settled_evidence: NormalizedEvidence) 
         results["__baseline__"] = score_evidence(settled_evidence)
         return json.dumps(results, sort_keys=True, default=str)
 
-    assert sweep() == sweep()
+    first = sweep()
+    second = sweep()
+    assert first == second, "the evidence sweep does not reproduce for the same evidence"
 
 
 def test_the_sweep_covers_both_summary_and_nested_history(

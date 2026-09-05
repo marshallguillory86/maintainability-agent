@@ -3512,7 +3512,7 @@ convenient "fix" for the button fails loudly instead of landing.
 *Mutation:* none — nothing was edited. The evidence is PR #175's failing
 run and the rebase that cleared it.
 
-### D106 — Open (Codex): two determinism assertions compare an expression with itself (Low)
+### D106 — Closed: two determinism assertions compare an expression with itself (Low)
 
 `python:S5863`, twice, both MAJOR to SonarCloud and both real as written:
 
@@ -3535,13 +3535,20 @@ role-failover rule recorded 2026-09-05 moves it to Grok only while Codex
 is down — Codex is back, so this is his. Claude does not cross into
 tests to clear a ledger.
 
-**Falsifier: pending** — the change is a clarity refactor with identical
-behaviour, so the closing evidence will be the analyser's own reading
-rather than a test that fails at the base.
+Both tests now bind separate calls to `first` and `second`, then compare
+the results with a message naming the determinism failure. Neither call
+was removed and no suppression marker was added.
 
-*Roles:* found=ci prompt=marshall fix=unknown test=unknown run=none
-*Mutation:* none — this project's own thresholds did not produce it;
-SonarCloud's `S5863` did, on code that predates the finding.
+*Closing test:* `tests/test_three_presentations.py`:
+`test_html_is_deterministic`; `tests/test_evidence_properties.py`:
+`test_the_whole_sweep_is_deterministic`. These preserve the determinism
+checks; they also pass before this clarity refactor and do not prove
+SonarCloud issue resolution. The analyser's confirmation awaits CI.
+
+*Roles:* found=ci prompt=marshall fix=codex test=codex run=codex
+*Mutation:* none — this changes assertion clarity, not the tested
+behaviour. Both independent invocations remain; no production mutation
+or claim of a new population falsifier is made.
 
 ### D107 — Closed: two SonarCloud findings resolved as false positives (Low)
 
@@ -3577,7 +3584,7 @@ which is the guard for precisely that.
 
 ## Disposition
 
-**One entry is open: D106**, assigned to Codex, who is back online and holds the test-writer role again. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+**Every entry is closed.** D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they

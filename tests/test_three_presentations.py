@@ -113,7 +113,9 @@ def test_html_is_one_self_contained_file(audited) -> None:
 def test_html_is_deterministic(audited) -> None:
     """Same report, same records — byte-identical output, twice."""
     _root, report, records = audited
-    assert render_html(report, records) == render_html(report, records)
+    first = render_html(report, records)
+    second = render_html(report, records)
+    assert first == second, "non-deterministic HTML for the same report and records"
 
 
 def test_the_executive_summary_leads(audited) -> None:

@@ -344,8 +344,8 @@ Based on ISO/IEC 25010 maintainability — modularity, reusability,
 analyzability, modifiability, testability. Scores are **rates calibrated
 against real code**, not counts: every pressure is normalized against the
 median a pinned 112-repo corpus of mature projects actually carries —
-spanning every language the scanner parses (django, angular, spring-framework,
-ghidra, LAPACK, …). How that corpus was selected, what each language actually
+eight of the ten parsed languages (django, angular, spring-framework,
+ghidra, LAPACK, …); Swift and COBOL are parsed but unanchored. How that corpus was selected, what each language actually
 reads, and what the numbers do *not* establish:
 [the calibration study](docs/calibration-2.0-study.md), so `2.5x` means
 "two and a half times what well-maintained real code shows." The corpus median

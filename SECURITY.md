@@ -60,6 +60,19 @@ the one command they named — not the tree's configuration, plugins, or
 build. With no opt-in the guarantee above is unchanged and total
 (Decision 9, amended 2026-08-31).
 
+**Every other binary this process runs is named by this machine, never by
+the tree.** An analyzer is invoked by a constant program name resolved on
+`PATH`, or by a path from the checked-in catalog — never by a path built
+out of the repository being audited. The rule is written down because it
+was broken once: the TypeScript checker preferred the tree's own
+`node_modules/.bin/tsc` over the machine's, so a `tsconfig.json` beside a
+writable `node_modules/.bin/tsc` was enough to make this agent execute
+the audited repository, with no TypeScript in it anywhere. A Grok audit
+on 2026-09-04 found it. The resolution was deleted rather than guarded —
+there is no safe way to run a binary whose identity the audited tree
+controls — and a project whose only compiler is project-local now leaves
+type coverage **unknown**, which is the honest reading.
+
 **This section has now been wrong in both directions, and both are
 recorded rather than quietly rewritten.** It first said the agent does
 not execute scanned code, which was untrue and audit-proven so (Codex,

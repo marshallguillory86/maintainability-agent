@@ -89,6 +89,16 @@ def render_html(report: dict[str, Any], records: list[Any]) -> str:
     return "\n".join(parts)
 
 
+def _unanchored_html(score: dict[str, Any]) -> list[str]:
+    """The anchor's gap, beside the letter rather than only in the JSON."""
+    names = view.unanchored_languages(score)
+    if not names:
+        return []
+    return [f"<div class='caveat'>{escape(' and '.join(names))} are parsed but "
+            "are not in the reference corpus, so a grade for code in them is "
+            "provisional.</div>"]
+
+
 def _executive_strip(report: dict[str, Any], score: dict[str, Any],
                      records: list[Any]) -> list[str]:
     """The result, the gate, the finding counts, the direction. First."""
@@ -110,6 +120,7 @@ def _executive_strip(report: dict[str, Any], score: dict[str, Any],
         f"Source: {escape(view.estimate_source(score))}</div>",
         f"<div>{escape(view.status_sentence(score, report.get('analyzer_coverage') is not None))}</div>",
         f"<div>{gate}</div>",
+        *_unanchored_html(score),
         f"<div>{escape(_direction_sentence(records))}</div>",
         "<table><tr><th>Severity</th><th>Findings</th></tr>",
         *count_rows,

@@ -1,0 +1,69 @@
+name: Bug
+description: The tool did the wrong thing, crashed, or a gate fired when it should not have.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is a local CLI / MCP audit, not a website. Browser and phone fields do not help.
+
+        Do not paste customer names, emails, or other client material. Scrub the tree and the report first.
+
+        A security issue belongs in a [private advisory](https://github.com/marshallguillory86/maintainability-agent/security/advisories/new), not here.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `maintainability-agent --version` (or the Action ref you used).
+      placeholder: "2.7.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - Chat / MCP
+        - Interactive CLI
+        - CI / GitHub Action
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+      description: What you saw. Quote the grade, finding, exit code, or refusal if there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should have happened
+      description: Point at the document if you can (`docs/product-intent.md`, `docs/help/first-run.md`, the report itself).
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: Commands, MCP tool call, or Action inputs. A small public tree is better than a private one.
+      placeholder: |
+        maintainability-agent --config maintainability-agent.json --fail-on-gate
+    validations:
+      required: true
+  - type: dropdown
+    id: twice
+    attributes:
+      label: Did two runs on the same tree disagree?
+      description: Same config, same pinned analyzer versions, same scan history, seconds apart.
+      options:
+        - "No / not tried"
+        - "Yes — the evidence, findings, or score moved"
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Config and coverage (optional)
+      description: Relevant `maintainability-agent.json` keys and which analyzers ran. No secrets, no customer trees.

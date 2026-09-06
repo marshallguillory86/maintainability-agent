@@ -19,6 +19,11 @@ is what Rust spells differently, and it is not the `fn` keyword:
 Generics are angle-bracketed like Java's rather than square like Go's, so
 `_mask_generics` already handles them — and lifetimes (`<'a>`) ride along
 in the same syntax.
+
+Three of this file's assertions about *measurement* were wrong and are
+corrected below: `?` is a decision, `loop` is not, and a wildcard match
+arm is not. All three were found by checking every construct in the
+reference against an independent implementation.
 """
 
 from __future__ import annotations
@@ -150,18 +155,48 @@ def test_a_macro_invocation_is_not_a_declaration() -> None:
     assert _names(source) == ["emit"]
 
 
-def test_question_mark_is_not_a_ternary() -> None:
-    """Rust's `?` propagates an error; it decides nothing.
+def test_the_error_operator_is_a_decision() -> None:
+    """`?` decides, and this test previously asserted it does not.
 
-    The C-family pattern counts `?` as a ternary, and Rust code is full
-    of `?`. Counting them would make ordinary error propagation read as
-    branching — the JavaScript optional-chaining defect (D78) in a
-    different language.
+    The claim was that `?` "propagates an error and decides nothing",
+    reasoning by analogy with JavaScript's optional chaining (D78). The
+    analogy is false. `let x = f()?` has two paths — continue, or return
+    early — and the operator expands to a `match` with two arms. That
+    idiomatic Rust is full of them is a fact about Rust, not a reason to
+    under-count it.
+
+    Found by comparing every construct in the reference against an
+    independent implementation, which disagreed here and was right.
     """
     from maintainability_audit.declarations import metrics_for
 
     branch_points, _cognitive = metrics_for(".rs")
-    assert branch_points("    let value = read(path)?;") == 0, (
-        "the error-propagation operator was counted as a decision"
-    )
+    assert branch_points("    let value = read(path)?;") == 1
     assert branch_points("    if value > 0 && other {") == 2
+
+
+def test_an_unconditional_loop_is_not_a_decision() -> None:
+    """`loop` has no condition; the `if … break` inside it decides.
+
+    Counted at the head as well, an ordinary `loop { … if x { break } }`
+    scored one higher than its paths — the same double-count as reading
+    a `switch` header beside its cases.
+    """
+    from maintainability_audit.declarations import metrics_for
+
+    branch_points, _cognitive = metrics_for(".rs")
+    assert branch_points("    loop {") == 0
+    assert branch_points("        if n < 0 {") == 1
+
+
+def test_a_wildcard_match_arm_is_not_a_decision() -> None:
+    """`_ =>` is the default, and a default is not a test.
+
+    Two real arms and a wildcard is three paths, which is exactly what
+    two `case`s and a `default` score in Go.
+    """
+    from maintainability_audit.declarations import metrics_for
+
+    branch_points, _cognitive = metrics_for(".rs")
+    assert branch_points('        1 => "one",') == 1
+    assert branch_points('        _ => "many",') == 0

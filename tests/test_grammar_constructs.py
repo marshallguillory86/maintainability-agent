@@ -46,6 +46,24 @@ FIXTURES = Path(__file__).parent / "fixtures" / "grammar"
 THRESHOLDS = DEFAULT_CONFIG["thresholds"]
 
 
+#: Places this project deliberately counts differently, each with the
+#: grammar reasoning that settles it. A divergence has to be *declared*
+#: to be tolerated, which is what keeps this a check against the grammar
+#: rather than a check against lizard — chasing a second implementation
+#: is the same error as trusting the first, with an extra step.
+DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
+    ".rs": {
+        "match_arms": (
+            "lizard reads a whole `match` as one decision. Two real arms "
+            "and a wildcard is three paths, which is the same shape as two "
+            "`case`s and a `default` — and lizard already agrees with this "
+            "project that Go's version of that is 3. The wildcard is not "
+            "counted, as `default:` is not."
+        ),
+    },
+}
+
+
 def _ours(path: Path) -> dict[str, int]:
     lines = path.read_text(encoding="utf-8").splitlines()
     return {
@@ -86,10 +104,11 @@ def test_every_construct_agrees_with_an_independent_implementation(
     ours, theirs = _ours(fixture), _lizard(fixture)
     assert theirs, f"lizard read no functions from {fixture.name}"
 
+    declared = DECLARED_DIVERGENCES.get(fixture.suffix, {})
     differing = {
         name: (ours.get(name), theirs[name])
         for name in theirs
-        if ours.get(name) != theirs[name]
+        if ours.get(name) != theirs[name] and name not in declared
     }
     assert not differing, (
         f"{fixture.name}: these constructs are counted differently.\n"
@@ -111,3 +130,21 @@ def test_the_fixture_covers_more_than_one_construct(fixture: Path) -> None:
     assert len(_ours(fixture)) >= 5, (
         f"{fixture.name} exercises too few constructs to be evidence"
     )
+
+@pytest.mark.parametrize("fixture", _fixtures(), ids=lambda p: p.suffix)
+def test_every_declared_divergence_is_still_real(fixture: Path) -> None:
+    """A declaration that no longer diverges is a stale excuse.
+
+    Left in place it would quietly permit a future disagreement on the
+    same construct, which is the failure mode of every allowlist.
+    """
+    ours, theirs = _ours(fixture), _lizard(fixture)
+    for name in DECLARED_DIVERGENCES.get(fixture.suffix, {}):
+        assert name in theirs, (
+            f"{fixture.name} declares a divergence for {name}, which "
+            "lizard no longer reports"
+        )
+        assert ours.get(name) != theirs[name], (
+            f"{fixture.name} declares a divergence for {name}, but the "
+            "two now agree — remove the declaration"
+        )

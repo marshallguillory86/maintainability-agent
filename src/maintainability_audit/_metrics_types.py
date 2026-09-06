@@ -88,15 +88,27 @@ GO_COMPLEXITY_RE = re.compile(
 )
 
 
-#: Rust branches on `match` arms rather than on the `match` keyword, the
-#: way Fortran branches on its cases rather than on `select case` — count
-#: both and the construct and its first arm each score. And `?` is *not*
-#: a ternary here: it propagates an error and decides nothing, while
-#: idiomatic Rust is full of it. Counting it would make ordinary error
-#: handling read as branching, which is D78's optional-chaining defect in
-#: another language.
+#: Rust, corrected construct-by-construct against the reference after
+#: three disagreements, all of them this project's.
+#:
+#: `loop` is **not** counted: it is unconditional, and the `if … break`
+#: inside it is what decides. Counting the head as well double-counts,
+#: exactly as `goto` did in Go.
+#:
+#: `?` **is** counted, reversing an earlier claim that it "propagates an
+#: error and decides nothing". It decides: `let x = f()?` continues or
+#: returns early, and it expands to a `match` with two arms. Idiomatic
+#: Rust being full of them is a fact about idiomatic Rust, not a reason
+#: to under-count it.
+#:
+#: `match` arms are counted except the wildcard. Two real arms and a `_`
+#: is three paths, the same shape as two `case`s and a `default`, which
+#: is what Go already scores. lizard reads a whole `match` as one
+#: decision and this project does not follow it there — see
+#: `tests/test_grammar_constructs.py`, where that divergence is declared
+#: with its reason rather than silently absorbed.
 RUST_COMPLEXITY_RE = re.compile(
-    r"\b(if|for|while|loop)\b|&&|\|\||=>"
+    r"\b(if|for|while)\b|&&|\|\||\?|(?<!_\s)(?<!_)=>"
 )
 
 

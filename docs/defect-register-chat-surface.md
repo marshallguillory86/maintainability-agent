@@ -4015,9 +4015,70 @@ wildcard arm as a decision; deleting the Python fixture, or removing a
 reader from the declared-gap map while it has no fixture, fails the
 coverage guard.
 
+### D121 — Closed: an empty parameter set was reported as a pass (Medium)
+
+The grammar checks are parametrized over the fixture directory. Delete
+every fixture and pytest marks those tests skipped rather than failing
+them — and a skip exits 0, which every gate reads as green. So the
+checks D115, D119 and D120 cite defended nothing once the evidence they
+read was removed, which is the precise failure `test_the_fixture_covers_
+more_than_one_construct` was written to prevent: *"the cheapest way to
+make the check above pass is to shrink what it looks at."* Shrinking it
+to zero was cheaper still, and invisible.
+
+**It passed locally and failed in CI, and the difference is the point.**
+pytest 8.3.4 treats a node id whose parameter set is empty as a usage
+error and exits non-zero; pytest 9.1.1 creates a skipped placeholder and
+exits 0. The local interpreter said the falsifiers were proven. The gate
+on the pull request said four of them were not. The gate was right.
+
+`empty_parameter_set_mark = "fail_at_collect"` now fails collection
+instead, on either version. Absence read as a pass is the defect this
+project keeps finding in itself, and this is the same sentence one layer
+down: the report says so for an unparsed language, `--check` says so for
+a language with no scanner, and the test suite said nothing at all.
+
+*Closing test:* the grammar checks themselves — with
+`tests/fixtures/grammar/` emptied, collection now errors rather than
+reporting a pass. Verified both ways before and after the setting.
+
+*Roles:* found=ci prompt=marshall fix=claude test=claude run=claude
+*Mutation:* setting `empty_parameter_set_mark` back to `skip` makes an
+emptied fixture directory report green on pytest 9.
+
+### D122 — Closed: f-strings were not masked at all on Python 3.12 and later (High)
+
+D112 again, in the one place the fix for it did not reach, and on the
+versions most people run.
+
+PEP 701 changed how an f-string is tokenised. Through 3.11 the whole
+literal is a single `STRING` token whose braces have to be walked by
+hand, which is what D114 built. From 3.12 the tokeniser does that walk
+itself: the prose arrives as `FSTRING_MIDDLE` tokens and the code
+between the braces as ordinary ones. The masker recognised only the 3.11
+shape, so on 3.12+ an f-string matched neither branch and passed through
+**entirely unmasked**.
+
+`f"check for errors and warnings: {value}"` scored 3 — its `for` and its
+`and` counted as decisions in a branchless function.
+
+**This project's development interpreter is 3.11 and its CI runs 3.12**,
+so the whole suite was green locally while the shipped behaviour was
+wrong for every user on a current Python. The macOS job caught it. The
+Linux job would have, had the lint step not failed first and stopped it.
+
+*Closing test:* `tests/test_python_complexity.py`:
+`test_an_f_string_is_masked_on_every_supported_python`, which asserts
+both halves — prose not counted, braces counted — because a fix for
+either alone has already broken the other (D114).
+
+*Roles:* found=ci prompt=marshall fix=claude test=claude run=claude
+*Mutation:* removing `FSTRING_MIDDLE` from the blanked token types
+scores the prose sample 3 instead of 1 on any Python 3.12 or later.
+
 ## Disposition
 
-**Every entry is closed.** D112 through D120 record a complexity audit that found this project measuring Python against its own comments, missing its boolean operators, and reading a `?` in type position as a ternary in five languages — nine entries, of which D119 is the method failure behind the other eight, and D120 was found by the check D119 built. D110 closed once 2.9.0 put the images on `main` and both absolute URLs returned 200. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+**Every entry is closed.** D121 and D122 were found by CI on the pull request that shipped the rest, after a green local suite — an empty parameter set reported as a pass, and f-strings unmasked on every Python from 3.12. Both are the same shape as the audit that found them: a check that could not fail, and a fix that reached one interpreter. D112 through D120 record a complexity audit that found this project measuring Python against its own comments, missing its boolean operators, and reading a `?` in type position as a ternary in five languages — nine entries, of which D119 is the method failure behind the other eight, and D120 was found by the check D119 built. D110 closed once 2.9.0 put the images on `main` and both absolute URLs returned 200. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they

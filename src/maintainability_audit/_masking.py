@@ -421,15 +421,33 @@ def mask_python_lines(lines: list[str]) -> list[str]:
     import io
     import tokenize
 
+    # PEP 701 changed how an f-string is tokenised, and the two shapes
+    # need opposite handling. Through 3.11 the whole f-string is one
+    # STRING token and its braces have to be walked by hand. From 3.12 the
+    # tokeniser does that walk itself: the prose arrives as FSTRING_MIDDLE
+    # tokens and the code between the braces as ordinary NAME/OP tokens,
+    # so blanking the middles is the whole job.
+    #
+    # Handling only the 3.11 shape left f-strings **entirely unmasked** on
+    # 3.12 and later — the versions most people run — so `f"check for
+    # errors and warnings: {v}"` scored its `for` and its `and` as
+    # branches. D112 again, in the one place the fix for it did not
+    # reach, and it survived because this project's own development
+    # interpreter is 3.11 (D122).
+    middle = getattr(tokenize, "FSTRING_MIDDLE", None)
+    blanked = {tokenize.COMMENT, tokenize.STRING}
+    if middle is not None:
+        blanked.add(middle)
+
     rows = [list(line) for line in lines]
     try:
         tokens = list(tokenize.generate_tokens(io.StringIO("\n".join(lines)).readline))
     except (tokenize.TokenError, IndentationError, SyntaxError):
         return mask_lines(lines)
     for token in tokens:
-        if token.type not in (tokenize.COMMENT, tokenize.STRING):
+        if token.type not in blanked:
             continue
-        if _is_fstring(token.string):
+        if token.type == tokenize.STRING and _is_fstring(token.string):
             _blank_fstring_literals(rows, token)
             continue
         (first, start), (last, end) = token.start, token.end

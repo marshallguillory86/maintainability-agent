@@ -73,6 +73,13 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# An empty parameter set is skipped by default, and a skip reports green.
+# That let the grammar checks go vacuous: delete every fixture and the
+# tests parametrized over them collect nothing, skip, and pass — the
+# falsifier gate caught it on the PR after they passed locally. Absence
+# read as a pass is the defect this project keeps finding in itself, so
+# it fails at collection instead (D121).
+empty_parameter_set_mark = "fail_at_collect"
 # addopts intentionally empty so the sandbox-friendly invocation
 # (`PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest -p no:cacheprovider`) does
 # not choke on `--cov` flags whose plugin couldn't load. Coverage is
@@ -99,6 +106,13 @@ output = "coverage.xml"
 [tool.ruff]
 line-length = 140
 target-version = "py311"
+# Grammar fixtures are specimens, not code. Each function in them exists
+# to exercise one construct that language's specification defines, and
+# the linter's advice is the opposite of the point: `SIM116` asks for a
+# dictionary in place of the `elif` chain whose branch count is the thing
+# under test. Every other fixture is in a language ruff cannot read, so
+# Python's was the first to collide.
+exclude = ["tests/fixtures/grammar"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]

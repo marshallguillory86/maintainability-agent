@@ -196,3 +196,32 @@ def test_the_wildcard_case_is_a_default_and_not_a_decision() -> None:
     assert branch_points("        case _name:") == 1
     # A wildcard *inside* a pattern still leaves a real pattern to match.
     assert branch_points("        case [_, second]:") == 1
+
+
+def test_an_f_string_is_masked_on_every_supported_python(tmp_path: Path) -> None:
+    """The masking must not depend on which interpreter is running it.
+
+    PEP 701 changed f-string tokenisation in 3.12: through 3.11 the whole
+    literal is one STRING token, from 3.12 the prose arrives as
+    FSTRING_MIDDLE tokens and the braces' contents as ordinary ones. The
+    first fix handled only the 3.11 shape, so on 3.12 and later — the
+    versions most people run — f-strings were **not masked at all**, and
+    this project's own development interpreter being 3.11 is why that
+    shipped (D122).
+
+    Both halves are asserted together, because a fix for either one alone
+    has already broken the other: blanking the token whole was D114.
+    """
+    prose = (
+        "def label(value):\n"
+        '    return f"check for errors and warnings: {value}"\n'
+    )
+    # `for` and `and` sit in the prose; neither is a decision.
+    assert _complexity(tmp_path, prose) == 1
+
+    code = (
+        "def pick(value, scored):\n"
+        '    return f"{value if value in scored else 0}"\n'
+    )
+    # The ternary is inside the braces, so it is code and it counts.
+    assert _complexity(tmp_path, code) == 2

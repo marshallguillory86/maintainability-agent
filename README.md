@@ -64,50 +64,22 @@ differ.
 
 ## Why this exists
 
-The ratio of code-written to code-reviewed has collapsed. Unmaintainable code
-that used to accumulate over years can now accumulate in an afternoon:
-duplicated helpers, oversized files, speculative abstractions — the same slop
-hand-written codebases always accrued, now at machine speed.
-
-The same speed is the way out. An agent pointed at specific, deterministic
-findings can fix them at the rate they appear. The loop this tool closes:
-
-1. **Measure** pressure points deterministically, with no LLM involved.
-2. **Score** with one uniform standard, so the verdict is not a debate.
-3. **Emit** a prompt scoped to *those findings only*, with explicit
-   instructions not to refactor beyond them.
-4. **Hand it to the agent.** Review a scoped diff instead of a speculative
-   rewrite.
-
-Step 3 is the product; steps 1 and 2 are in service of it. Every other tool in
-this space stops at "here's a list of findings."
+The ratio of code-written to code-reviewed has collapsed, and the same speed is
+the way out: an agent pointed at specific, deterministic findings can fix them
+at the rate they appear. The loop is **measure** with no model involved,
+**score** against one uniform standard, **emit a prompt scoped to those findings
+only**, and hand it over. Step three is the product.
 
 **Who does the checking matters as much as what it checks.** An author is never
 the independent check on their own work, so a platform that generates code and
-grades it is producing a self-assessment — a property of the arrangement, not a
-criticism of any one of them. This writes nothing and runs no model, which is
-what lets its verdict be evidence ([the principle](docs/philosophy.md#principles)).
-Since 2.1.0 the work order is also **checked**: `--conformance` compares the
-returned diff against the paths the report named, `--fail-on-regression`
-ratchets the dimension scores, and `--attestation-output` composes them into one
-record ([how that hole was closed](docs/roadmap.md#the-remediation-hole-closed-in-210-through-230)).
-The limit, stated in the same breath: those checks read the diff's **shape**,
-never its correctness — whether the change works is not a claim this tool makes.
+grades it is producing a self-assessment. This writes nothing and runs no model,
+which is what lets its verdict count as evidence. Since 2.1.0 the work order is
+itself checked — scope conformance, a dimension ratchet, and an attestation
+record — and those checks read a diff's **shape**, never whether it works.
 
-One pre-registered experiment has tested the bounded prompt.
-Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, under this tool's own finding count.
-The *registered* hypothesis was narrower diffs, which did not hold, so the
-registered verdict stands at **INCONCLUSIVE**. Method, limits and raw data:
-[docs/studies.md](docs/studies.md#does-the-bounded-prompt-work-controlled-experiment-pre-registered).
-
-### Who it's for
-
-- Teams running AI agents in the dev loop, tired of unbounded cleanup PRs, who
-  want a CI gate that actively constrains follow-up scope.
-- Repos that want a maintainability gate without a SaaS analyzer or shipping
-  code to a third party.
-- Solo devs who want a single deterministic audit to pin in a Makefile,
-  pre-commit, or local CI script.
+The full argument, including what this deliberately does not compete on:
+[why this exists](docs/why-this-exists.md) and
+[philosophy](docs/philosophy.md).
 
 ## The road to 1.0
 
@@ -186,8 +158,8 @@ withheld and the scope is named as the reason.
 ### Checking that the agent did the work
 
 The work order tells an agent to fix exactly these findings and refactor nothing
-else. These flags check that the diff obeyed it — they read its _shape_, not its
-correctness:
+else. Four flags check that the diff obeyed it — reading its _shape_, never
+whether it works:
 
 ```bash
 maintainability-agent \
@@ -198,30 +170,19 @@ maintainability-agent \
   --attestation-output maintainability-attestation.md
 ```
 
-- **`--conformance <revspec>`** compares the diff against the paths the report
-  named, and answers two questions separately: did it **stay in scope**, and did
-  it **silence nothing**. They stay separate because a change can obey the work
-  order and still add a `# noqa` to a finding inside it. A test added for a fix
-  stays in scope even though the work order never named the test file.
-- **`--fail-on-out-of-scope`** turns that into a CI failure.
-- **`--fail-on-regression`** ratchets the _dimension_ scores against scan
-  history, catching a change that improves one dimension while silently
-  regressing another. It has three outcomes, not two — held, regressed, and
-  **not comparable**, because two scans taken under different calibration cannot
-  be differenced.
-- **`--attestation-output`** writes the three into one per-change record: what
-  was measured, what the agent was told to change, whether it stayed inside the
-  work order, and what moved. It is reproducible and **not signed** — nothing
-  here holds a key, and the document says so in its own text. A check nobody ran
-  renders as _not asked_, never as passed.
-- **`--transformation NAME`** names the class of work a scan followed and
-  reports how this run of it compares with earlier ones. **A report, never a
-  gate.** It says one run "moved further" than another, never that it was
-  _better_ — two runs of one codemod land on different code — and it measures
-  the interval, not the transformation.
+`--conformance` answers two questions separately — did the diff **stay in
+scope**, and did it **silence nothing** — because a change can obey the work
+order and still add a `# noqa` to a finding inside it. `--fail-on-out-of-scope`
+turns that into a CI failure. `--fail-on-regression` ratchets the _dimension_
+scores against history, with three outcomes rather than two: held, regressed,
+and **not comparable**, because two scans taken under different calibration
+cannot be differenced. `--attestation-output` composes them into one per-change
+record, reproducible and **not signed** — a check nobody ran renders as _not
+asked_, never as passed.
 
-The [roadmap](docs/roadmap.md#the-remediation-hole-closed-in-210-through-230)
-has the history of why this was the hole under the product's central claim.
+Each flag in full, including `--transformation`:
+[docs/cli.md](docs/cli.md). Why this was the hole under the product's central
+claim: [the roadmap](docs/roadmap.md#the-remediation-hole-closed-in-210-through-230).
 
 ### During the loop, not only after it
 
@@ -345,54 +306,30 @@ report — so a payload cap can never truncate the prompt.
 
 ## Scoring standard
 
-Based on ISO/IEC 25010 maintainability — modularity, reusability,
-analyzability, modifiability, testability. Scores are **rates calibrated
-against real code**, not counts: every pressure is normalized against the
-median a pinned 112-repo corpus of mature projects actually carries —
-eight of the ten parsed languages (django, angular, spring-framework,
-ghidra, LAPACK, …); Swift and COBOL are parsed but unanchored. How that corpus was selected, what each language actually
-reads, and what the numbers do *not* establish:
-[the calibration study](docs/calibration-2.0-study.md), so `2.5x` means
-"two and a half times what well-maintained real code shows." The corpus median
-earns a **B**; **A+ is gated**, requiring every dimension clean.
-
-The corpus is **selected by query, not taste** — `stars:>3000
-created:<2021-01-01 pushed:>2026-01-01` across Python, TypeScript and
-JavaScript, then filtered to repositories that contain code. The calibration is
-reproducible, not asserted: `python3 tools/calibration/measure.py --check`
-re-measures and fails on drift, and `tests/test_calibration_corpus.py`
-re-derives the constants offline from checked-in measurements. See
-[docs/standard.md](docs/standard.md).
+One rubric, applied uniformly, published in full at
+[docs/standard.md](docs/standard.md): the aspects, their weights, the
+calibration method, and the reference corpus. A score is withheld rather than
+guessed when the evidence does not support one, and the report says which tier
+the evidence came from.
 
 ## Self-audit
 
-This repo eats its own dogfood — the tool runs against this codebase in CI, and
-a report is checked in at [docs/self-audit.md](docs/self-audit.md), **stamped
-with the exact source commit it was generated against** (a provenance record,
-not a claim about HEAD). These figures mirror that stamped report row for row:
+The tool runs against this codebase in CI, and the report is checked in at
+[docs/self-audit.md](docs/self-audit.md), stamped with the exact source commit
+it was generated against — a provenance record, not a claim about HEAD.
 
 | Metric | Value |
 |---|---:|
 | Maintainability estimate | 4.1 / 5 |
 | Verified grade | B |
 | Files scanned | 391 |
-| File warnings | 120 |
-| File failures | 0 |
-| Function warnings | 65 |
-| Function failures | 0 |
-| Duplicate blocks | 0 |
-| Risk findings | 0 |
 | Hard gate failures | 0 |
 
-Yes, a **B** — demoted from the A band because warning rates exceed the
-A-grade ceilings, against thresholds this repo sets stricter than the shipped
-defaults. The grade is gated (A+ needs every dimension clean; a
-repo with production code and zero test files cannot earn an A-grade) and banded
-from the evidence floor, so withholding evidence never buys a better letter.
-Every threshold gate — file, function, duplication — is opted **on** for this
-repo's own CI, so drifting below the bar fails the build rather than the README.
-(CI note: `actions/checkout` defaults to `fetch-depth: 1`, which hides history
-and costs roughly a grade — use `fetch-depth: 0`.)
+A **B**, demoted from the A band because warning rates exceed the A-grade
+ceilings, against thresholds this repo sets stricter than the shipped defaults.
+Every threshold gate is opted **on** for its own CI, so drifting below the bar
+fails the build rather than the README. The full stamped table — warnings,
+duplication, risk findings — is in the report itself.
 
 ## Platform support
 

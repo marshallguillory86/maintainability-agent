@@ -121,7 +121,8 @@ def test_it_never_scores() -> None:
     result = _check("widget.py", _function("enormous", 40))
     assert result["scored"] is False
     assert result["scored_reason"]
-    for forbidden in ("score", "estimate", "grade", "verified_grade"):
+    for forbidden in ("score", "estimate", "grade", "verified_grade",
+                      "maintainability_estimate"):
         assert forbidden not in result, f"the in-loop check produced a {forbidden}"
 
 
@@ -157,7 +158,7 @@ def test_the_rendering_names_the_breach_and_the_room_left() -> None:
     printed = "\n".join(render_check(result))
     assert "enormous" in printed
     assert "nearly" in printed, "a declaration with headroom was not shown"
-    assert "1" in printed, "the remaining budget was not printed"
+    assert "1 line left" in printed, "the remaining budget was not printed"
 
 
 def test_the_json_is_parseable_and_declares_that_nothing_was_scored() -> None:
@@ -214,3 +215,76 @@ def test_the_cli_refuses_the_flags_it_would_have_to_ignore(
         main(["--root", str(tmp_path), "--check", "widget.py", "--staged"])
     assert exit.value.code == 2
     assert "--check does not take" in capsys.readouterr().err
+
+
+def test_it_runs_in_a_directory_that_is_not_a_repository(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Covers existing behaviour: check_content does not consult git.
+
+    The original test ran inside this repository. A git spawn would
+    still have succeeded. This one chdirs to a directory with no .git.
+    """
+    monkeypatch.chdir(tmp_path)
+    assert not (tmp_path / ".git").exists()
+    result = _check("widget.py", _function("small", 2))
+    assert result["path"] == "widget.py"
+    assert result["scored"] is False
+
+
+def test_check_json_carries_the_result_scored_flag_not_a_hardcoded_false() -> None:
+    """JSON must report what the result said, not a constant.
+
+    check_json currently writes `"scored": False` regardless of the
+    result. A planted True must survive, or the field is theatre.
+    """
+    from maintainability_audit._in_loop_view import check_json
+
+    payload = json.loads(check_json({
+        "path": "widget.py",
+        "findings": [{"finding_class": "oversized-declaration"}],
+        "headroom": [],
+        "file": {"lines": 1, "limit": 40, "remaining": 39, "band": "ok"},
+        "declarations_read": True,
+        "note": "",
+        "scored": True,
+        "scored_reason": "planted",
+    }))
+    assert payload["scored"] is True, (
+        "check_json hardcoded scored false and ignored the result"
+    )
+
+
+def test_a_complexity_fail_is_not_reported_as_a_negative_line_overage() -> None:
+    """The printed figure is about the budget that actually failed.
+
+    A nine-line function over max_complexity and under max_function_lines
+    currently renders `— -71 over` because over_by is always
+    lines - max_function_lines.
+    """
+    from maintainability_audit._in_loop_view import render_check
+
+    source = (
+        "def branchy(value):\n"
+        "    if value == 0:\n"
+        "        return 1\n"
+        "    elif value == 1:\n"
+        "        return 2\n"
+        "    elif value == 2:\n"
+        "        return 3\n"
+        "    else:\n"
+        "        return 0\n"
+    )
+    result = _check("widget.py", source, _config(max_complexity=3, warn_complexity=2,
+                                                 max_function_lines=80))
+    breaches = [item for item in result["findings"]
+                if item["finding_class"] == "oversized-declaration"]
+    assert breaches, "a complexity fail was not reported"
+    assert breaches[0]["over_by"] > 0, (
+        f"a complexity fail was reported as a negative line remainder: "
+        f"over_by={breaches[0]['over_by']}"
+    )
+    printed = "\n".join(render_check(result))
+    assert "— -" not in printed, (
+        "the renderer printed a negative line overage for a complexity fail"
+    )

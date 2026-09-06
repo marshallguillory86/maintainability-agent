@@ -33,7 +33,7 @@ def _complexity(tmp_path: Path, source: str) -> int:
     return found[0].complexity
 
 
-def test_a_comment_is_not_a_branch(tmp_path: Path) -> None:
+def test_a_python_comment_is_not_a_branch(tmp_path: Path) -> None:
     """`declaration_ranges` returned Python's lines unmasked.
 
     Every other language scores against a comment- and string-masked
@@ -100,6 +100,11 @@ def test_boolean_operators_are_decisions(tmp_path: Path) -> None:
 
 
 def test_a_comprehension_condition_is_a_decision(tmp_path: Path) -> None:
+    """Covers existing behaviour: the shared C-family pattern already
+    counted a comprehension's `if`, so this pins behaviour that predates
+    Python's own pattern rather than defending a fix. It is here so the
+    new pattern cannot lose it.
+    """
     source = (
         "def evens(items):\n"
         "    return [x for x in items if x % 2 == 0]\n"
@@ -121,7 +126,12 @@ def test_the_c_family_operators_are_not_counted_in_python(tmp_path: Path) -> Non
 
 
 def test_match_arms_count_and_the_header_does_not() -> None:
-    """The rule shared with Go, PHP, Ruby and Fortran: arms, not header."""
+    """Covers existing behaviour: the shared C-family pattern already
+    counted `case` and not `match`, by accident of `match` not being one
+    of its keywords. The rule — arms, not header, shared with Go, PHP,
+    Ruby and Fortran — is now deliberate rather than accidental, and this
+    pins it.
+    """
     branch_points, _cognitive = metrics_for(".py")
     assert branch_points("    match command:") == 0
     assert branch_points("        case 'go':") == 1
@@ -159,3 +169,30 @@ def test_the_literal_text_of_an_f_string_is_still_not_counted(
     )
 
     assert _complexity(tmp_path, source) == 1
+
+
+def test_the_wildcard_case_is_a_default_and_not_a_decision() -> None:
+    """`case _` is Python's `default`, and a default is not a test.
+
+    This project already refuses to count Go's `default:`, Rust's
+    `_ =>`, and the C family's `default:` — a wildcard always matches, so
+    it adds a path without adding a decision to reach it (D117). Python's
+    wildcard pattern is the same construct and was counted, which made
+    the same `switch` score differently depending on which language it
+    was written in.
+
+    lizard counts it. The divergence is declared in
+    `tests/test_grammar_constructs.py` with this reasoning, because the
+    authority here is the grammar and this project's own rule, not a
+    second implementation.
+    """
+    branch_points, _cognitive = metrics_for(".py")
+
+    assert branch_points("        case _:") == 0
+    # A *guarded* wildcard does decide — but the guard is the decision,
+    # and `if` is already counted, so the arm must not be counted twice.
+    assert branch_points("        case _ if retries:") == 1
+    # `_name` is an ordinary capture pattern, not the wildcard.
+    assert branch_points("        case _name:") == 1
+    # A wildcard *inside* a pattern still leaves a real pattern to match.
+    assert branch_points("        case [_, second]:") == 1

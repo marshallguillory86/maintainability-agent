@@ -116,6 +116,17 @@ DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
             "spelling a codebase prefers."
         ),
     },
+    ".py": {
+        "match_statement": (
+            "lizard counts the wildcard `case _` arm. It is Python's "
+            "`default`: it always matches, so it adds a path without a "
+            "decision to reach it. lizard already agrees with this "
+            "project that Go's `default:` and the C family's `default:` "
+            "are not counted, so counting Python's would make the same "
+            "dispatch score differently depending on the language it "
+            "happens to be written in."
+        ),
+    },
     ".rb": {
         "unless_statement": (
             "lizard does not count `unless`, though it counts the "
@@ -188,6 +199,71 @@ def test_there_is_a_grammar_fixture_to_check() -> None:
     """An empty fixture directory would make every check below vacuous."""
     found = _fixtures()
     assert found, "no grammar fixture exists, so nothing is being compared"
+
+
+#: Branch readers with no independent implementation available to check
+#: against. Named here rather than quietly skipped, because "checked only
+#: against itself" is a limit of the evidence and belongs in the open —
+#: the same reason the report says a language is outside the corpus.
+NO_INDEPENDENT_IMPLEMENTATION: dict[str, str] = {
+    "cobol_branch_points": (
+        "lizard has no COBOL reader, and no other implementation this "
+        "project can depend on offline reads fixed-format COBOL. The "
+        "reader is checked against the standard's own list of scope "
+        "terminators in `tests/test_cobol_declarations.py` and against "
+        "nothing else."
+    ),
+}
+
+
+def test_every_branch_reader_is_checked_against_a_second_opinion() -> None:
+    """A fixture per *reader*, not per fixture directory.
+
+    `test_there_is_a_grammar_fixture_to_check` only asks that the
+    directory is non-empty, which twelve fixtures satisfy while a
+    thirteenth language goes unchecked. That is precisely how Python —
+    the language this project is written in, and the one that carried
+    three of the eight defects 2.11.0 fixed — sat outside the grammar
+    check while eleven other languages were being added to it.
+
+    The reader is the thing that can be wrong, so the reader is the unit
+    the coverage is counted in. A language with no second implementation
+    available has to say so by name.
+    """
+    from maintainability_audit.declarations import (
+        DECLARATION_SUFFIXES,
+        metrics_for,
+    )
+
+    def reader(suffix: str) -> str:
+        return metrics_for(suffix)[0].__name__       # type: ignore[attr-defined]
+
+    used = {reader(suffix) for suffix in DECLARATION_SUFFIXES}
+    checked = {reader(fixture.suffix) for fixture in _fixtures()}
+    unchecked = used - checked - set(NO_INDEPENDENT_IMPLEMENTATION)
+    assert not unchecked, (
+        "these branch readers decide complexity for a supported language "
+        f"and nothing independent checks them: {sorted(unchecked)}. Add a "
+        "fixture under tests/fixtures/grammar/, or declare the reader in "
+        "NO_INDEPENDENT_IMPLEMENTATION with the reason no second opinion "
+        "exists."
+    )
+
+
+def test_no_declared_gap_actually_has_a_fixture() -> None:
+    """A reader named as unchecked, that is in fact checked, is a stale excuse."""
+    from maintainability_audit.declarations import metrics_for
+
+    checked = {
+        metrics_for(fixture.suffix)[0].__name__      # type: ignore[attr-defined]
+        for fixture in _fixtures()
+    }
+    stale = checked & set(NO_INDEPENDENT_IMPLEMENTATION)
+    assert not stale, (
+        f"{sorted(stale)} are declared to have no independent "
+        "implementation, but a grammar fixture checks them. Remove the "
+        "declaration rather than leaving it to excuse a future gap."
+    )
 
 
 @pytest.mark.parametrize("fixture", _fixtures(), ids=lambda p: p.suffix)

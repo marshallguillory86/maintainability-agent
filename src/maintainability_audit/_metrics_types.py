@@ -210,8 +210,16 @@ def go_branch_points(line: str) -> int:
 #: decisions. `case` counts and `match` does not, by the arms-not-header
 #: rule shared with Go, PHP, Ruby and Fortran. `not` decides nothing, and
 #: neither does `else`.
+# `case` carries the branch and `match` does not — the arms-not-header
+# rule shared with Go, PHP, Ruby and Fortran. The wildcard `case _` is
+# excluded because it is Python's `default`: it always matches, so it
+# adds a path without a decision to reach it, exactly as Go's `default:`
+# and Rust's `_ =>` do. `case _ if guard:` is excluded here too and
+# counted by its `if`, which is the decision; `case _name:` and
+# `case [_, x]:` are ordinary patterns and still count.
 PYTHON_COMPLEXITY_RE = re.compile(
-    r"\b(if|elif|for|while|except|case|and|or)\b"
+    r"\b(?:if|elif|for|while|except|and|or)\b"
+    r"|\bcase\b(?!\s+_\s*(?::|if\b))"
 )
 
 

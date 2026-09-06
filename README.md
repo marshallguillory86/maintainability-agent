@@ -247,9 +247,9 @@ SonarQube, Qlty) rather than replacing them — their SARIF folds in via
 **Be clear-eyed: the tool does not support every language equally, and on an
 unrecognized language it under-reports rather than fails.** Coverage has two layers.
 
-Ten languages are parsed as of **2.7.0**: Python (1.0), Java (1.0), C (1.1),
+Eleven languages are parsed as of **2.11.0**: Python (1.0), Java (1.0), C (1.1),
 C++ (1.2), C# (1.3), Fortran (free-form 1.4, fixed-form 1.6), Swift (2.4),
-COBOL (2.7), the JS/TS family, and HTML. Each has a scanner written for it and a
+COBOL (2.7), Go (2.11), the JS/TS family, and HTML. Each has a scanner written for it and a
 documented list of what it misses — a language is claimed only when both exist.
 
 **Built-in scanner (always on, no dependencies)** — reads function/class
@@ -264,6 +264,7 @@ these:
 | C++ (`.cpp`, `.hpp`, `.cc`, `.cxx`, `.hh`) | dedicated brace-bounded scanner — functions, class members, namespaces, templates | Bounded; bodyless declarations are not definitions |
 | C# (`.cs`) | dedicated brace-bounded scanner — methods, constructors, `class`/`interface`/`struct`/`record`/`enum` | Bounded; properties are not declarations |
 | Swift (`.swift`) | dedicated brace-bounded scanner — functions, initialisers, subscripts, `class`/`struct`/`enum`/`protocol`/`actor` | Bounded; extension members carry their type, protocol requirements and computed properties are not declarations |
+| Go (`.go`) | dedicated brace-bounded scanner — functions, methods, `type`/`struct`/`interface` | Bounded; methods carry their receiver type, interface methods are requirements, function literals inside a body are not seen |
 | COBOL (`.cbl`, `.cob`, `.cpy`, and `.CBL`/`.COB`/`.CPY`) | dedicated scanner — PROCEDURE DIVISION paragraphs, bounded by the start of whatever follows; fixed-form card columns read where the layout carries them | Bounded by the next header; level numbers and container programs/sections are not declarations |
 | Fortran, free-form (`.f90`, `.f95`, `.f03`, `.f08`, `.F90`, `.F95`, `.F03`, `.F08`, `.pf`) | dedicated **keyword**-bounded scanner — modules, subroutines, functions, derived types | Bounded by `end`; measured with Fortran's own branch and nesting reading |
 | Fortran, fixed-form (`.f`, `.for`, `.ftn`, `.F`, `.FOR`, `.FTN`) | the same scanner over card-column source; continuations joined, labelled `DO` loops understood | Bounded by `end` or by the loop's label |

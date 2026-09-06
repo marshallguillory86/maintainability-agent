@@ -67,6 +67,24 @@ def swift_branch_points(line: str) -> int:
     return len(SWIFT_COMPLEXITY_RE.findall(line))
 
 
+#: Go's vocabulary is *smaller* than C's, not larger, and that is the
+#: point. It has no `while` (`for` covers looping), no ternary, no
+#: `catch` — `if err != nil` carries what other languages put in a catch
+#: block, and it is already counted as an `if`. What the C pattern misses
+#: is `select`, the concurrency branch: a dispatch loop built from
+#: `select` and its cases scored only its cases, so the construct that
+#: decides which case runs decided nothing. That is the Fortran defect in
+#: miniature, and the reason this table exists at all.
+GO_COMPLEXITY_RE = re.compile(
+    r"\b(if|for|case|select|goto)\b|&&|\|\|"
+)
+
+
+def go_branch_points(line: str) -> int:
+    """Decision points on one line of Go."""
+    return len(GO_COMPLEXITY_RE.findall(line))
+
+
 def branch_points(line: str) -> int:
     """Decision points on one line, for the C family and Python."""
     return len(COMPLEXITY_RE.findall(line))

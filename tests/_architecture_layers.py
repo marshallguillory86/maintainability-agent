@@ -80,6 +80,11 @@ PARSING = {"source", "declarations", "_cognitive", "_tokens", "_xml",
            # rather than in `_masking`, because deciding whether a line is a
            # declaration needs to know which division it is in — which only
            # a whole-file pass can answer.
+           # Go: brace-bounded, so it rides the shared core. Its own
+           # module because the receiver form — `func (s *Store) Get` —
+           # is a parameter list that is not the parameters, and no
+           # sibling's patterns survive contact with it.
+           "_ranges_go",
            "_ranges_cobol"}
 # ADR 003: `_semantic` normalizes and classifies; `_semantic_ts` reads
 # TypeScript facts (recordings, an already-installed tsc through

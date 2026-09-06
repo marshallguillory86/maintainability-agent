@@ -101,7 +101,7 @@ def test_a_repository_of_unread_source_gets_no_score(tmp_path: Path) -> None:
     a detector. The property belongs to any unrecognized language.
     """
     root = _repo(tmp_path / "go", {
-        f"src/thing{n}.go": SOURCE_BY_SUFFIX[".go"] % {"n": n} for n in range(40)
+        f"src/thing{n}.kt": SOURCE_BY_SUFFIX[".kt"] % {"n": n} for n in range(40)
     })
 
     report = build_report(root, load_config(None))
@@ -115,10 +115,10 @@ def test_a_repository_of_unread_source_gets_no_score(tmp_path: Path) -> None:
     # disagree with it, which the evidence model forbids after
     # `history_present` did exactly that.
     assert report["summary"]["unread_source"] == [
-        {"suffix": ".go", "language": "Go", "files": 40}
+        {"suffix": ".kt", "language": "Kotlin", "files": 40}
     ]
     rendered = render_markdown(report)
-    assert ".go" in rendered and "include_extensions" in rendered, (
+    assert ".kt" in rendered and "include_extensions" in rendered, (
         "a reader must be told which extensions went unread and how to fix it"
     )
 
@@ -155,7 +155,7 @@ def test_the_report_names_every_unread_source_language(tmp_path: Path) -> None:
     root = _repo(tmp_path / "poly", {
         # Read by default now, so it must be absent from the unread list.
         **{f"src/Thing{n}.java": JAVA % {"n": n} for n in range(5)},
-        **{f"cmd/main{n}.go": f"func f{n}() int {{ return {n} }}\n" for n in range(3)},
+        **{f"cmd/main{n}.kt": f"fun f{n}(): Int {{ return {n} }}\n" for n in range(3)},
         **{f"lib/mod{n}.rs": f"pub fn f{n}() -> i32 {{ {n} }}\n" for n in range(4)},
         **{f"lib/mod{n}.py": PYTHON % {"n": n} for n in range(200)},
     })
@@ -163,8 +163,8 @@ def test_the_report_names_every_unread_source_language(tmp_path: Path) -> None:
     report = build_report(root, load_config(None))
     unread = report["summary"]["unread_source"]
 
-    assert {entry["suffix"] for entry in unread} == {".go", ".rs"}
-    assert {entry["suffix"]: entry["files"] for entry in unread} == {".go": 3, ".rs": 4}
+    assert {entry["suffix"] for entry in unread} == {".kt", ".rs"}
+    assert {entry["suffix"]: entry["files"] for entry in unread} == {".kt": 3, ".rs": 4}
     assert report["summary"]["declarations_scanned"] > 0, (
         "the Java and Python in this tree are read, so they must count"
     )
@@ -186,11 +186,15 @@ def test_a_fully_read_repository_is_not_penalised(tmp_path: Path) -> None:
     assert report["score"]["maintainability_estimate"] is not None
 
 
-# `.java` and `.c` are deliberately absent: each has a detector now (`.c`
-# as of 1.1.0), so adding either to `include_extensions` produces a real
-# population rather than the false "too small" sentence. Still in the gap:
+# `.java`, `.c` and now `.go` are deliberately absent: each has a detector
+# (`.c` as of 1.1.0, `.go` as of 2.11.0), so adding any of them to
+# `include_extensions` produces a real population rather than the false
+# "too small" sentence. Kotlin replaced Go here for that reason, and is a
+# durable stand-in: no tool in the analyzer catalog measures its
+# complexity, which is why it was ruled out for scanner support. Still in
+# the gap:
 SOURCE_BY_SUFFIX: dict[str, str] = {
-    ".go": "package a\n\nfunc Compute%(n)d(v int) int {\n\tif v > 0 {\n\t\treturn v\n\t}\n\treturn -v\n}\n",
+    ".kt": "package a\n\nfun compute%(n)d(v: Int): Int {\n    if (v > 0) {\n        return v\n    }\n    return -v\n}\n",
     ".rs": "pub fn compute_%(n)d(v: i32) -> i32 {\n    if v > 0 { v } else { -v }\n}\n",
 }
 
@@ -201,8 +205,8 @@ def test_following_the_remedy_does_not_produce_a_smaller_lie(
 ) -> None:
     """The named remedy has to be true after it is followed.
 
-    Default Go is honest: the files are unread, `unread_source` names
-    `.go`, and the remedy says add it to `include_extensions`. Doing
+    Default Kotlin is honest: the files are unread, `unread_source`
+    names `.kt`, and the remedy says add it to `include_extensions`. Doing
     exactly that produced a *different* false statement — the files are
     now read for length, duplication and risk, but nothing extracts
     declarations from them, so `declarations_scanned` is 0, the

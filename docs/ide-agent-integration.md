@@ -298,7 +298,7 @@ This is a local integration. It needs no VPS and opens no listening socket.
 ## Invokable skill / slash command
 
 This repo ships a portable skill under
-[`skills/maintainability-agent/`](skills/maintainability-agent/) so
+[`skills/maintainability-agent/`](../skills/maintainability-agent/) so
 `/maintainability-agent` is one keystroke away. Keep the installed copy in sync
 — a drifted skill teaches agents a dead workflow:
 

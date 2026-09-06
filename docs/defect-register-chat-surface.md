@@ -3623,9 +3623,85 @@ widening past it is guessing at English.
 fail: `suppressions_added({"m.py": [(1, "…`# noqa`…")]}, set())` reports
 a backtick-quoted mention. The trailing-directive half stays green.
 
+### D109 — Closed: a hollow test rode in because its neighbours were new (Medium)
+
+Two defects, one cause, and the second is the one that matters.
+
+**The instance.** `test_staged_refuses_flags_it_would_have_to_ignore`
+asserted that the refused flag was named on stderr — `"--changed-only" in
+err` — and passed on a tree where `--staged` did not exist as a flag at
+all. argparse prints its usage banner on any error, and that banner lists
+every flag the test names, `{json,markdown,html}` included. Exit 2 and a
+matching substring were both satisfied by the parser rejecting `--staged`
+itself. The test defended nothing.
+
+Codex had already caught this shape one level down, before running out of
+tokens: a bare `--changed-only` fails on argparse's `nargs`, not on the
+refusal, so each case had to carry its argument. It did. The trap simply
+existed again one level above, where the flag under test is the one that
+does not exist at the base.
+
+**The class.** `tools/prove_falsifiers.py` saw it and passed anyway. Its
+added-file check asked whether *every* test in a new file passed at the
+base; with fourteen real falsifiers beside it, the hollow one rode in. It
+printed the evidence — `14 of 15 fail without the change` — and exited 0.
+On the same run, the added-in-place check held each new test in
+`test_scope_conformance.py` individually and named both.
+
+So a test's obligation to falsify something depended on how new its
+neighbours happened to be. That is the gate this project relies on to
+keep its own tests honest, and 1 in 15 walked through it on the first
+serious use.
+
+Both callers now report every individual test that passes at the base.
+The file-level `Covers existing behaviour:` escape is unchanged: a whole
+file that is deliberately about pre-existing behaviour is still exempt,
+stated rather than assumed. The refusal test now asserts the sentence
+only this tool writes — `--staged does not take` — which no usage banner
+contains.
+
+*Closing test:* `tests/test_prove_falsifiers.py`:
+`test_one_hollow_test_in_an_added_file_is_still_reported`. It stubs
+`_prove` to report one pass among many failures against a real added
+file and asserts the pass is named. Written before the fix and red
+against it, reproducing the `14 of 15` line verbatim.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
+*Mutation:* restoring the `len(nodes) == len(tests_in(...))` condition —
+the whole-file rule — makes the closing test fail, because the single
+passing node is no longer reported. Both test agents were unavailable
+(Codex out of tokens, Grok finished and offline) and Marshall directed
+the pre-commit work to be wrapped up, which is why test= names claude
+here rather than a test agent.
+
+### D110 — Open: the README's images are invisible on PyPI (Low)
+
+`pyproject.toml` sets `readme = "README.md"`, so the README *is* the PyPI
+long_description. GitHub resolves repository-relative image paths; PyPI
+does not, and drops them. Checked against the live page: the rendered
+HTML at `pypi.org/project/maintainability-agent/` contains no `.png` and
+no reference to `docs/cover.png` at all.
+
+The cover image has therefore never been seen by anyone who found this
+package on PyPI, which is its primary distribution page. 2.9.0 adds a
+second image on the same terms.
+
+Not fixed in this release, and the reason is ordering rather than
+reluctance. The fix is an absolute `raw.githubusercontent.com/.../main/`
+URL for both images, and that URL cannot resolve until the files are on
+`main` — which is this release. Fixing it before the merge replaces two
+images that render on GitHub with two that render nowhere, which is
+worse for the reader who is actually looking. It is scheduled as the
+first change after this merge, and it is one line each.
+
+*Roles:* found=claude prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the fix — nothing is repaired yet. The
+falsifier, when it lands, is a check that no image reference in
+`README.md` is repository-relative, which fails against this release.
+
 ## Disposition
 
-**Every entry is closed.** D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+**D110 is open**, and it is the only one: the README's images do not render on PyPI, and the fix needs the files to be on `main` first, which is this release. D109 closed the hollow test and the gate hole that let it through. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they

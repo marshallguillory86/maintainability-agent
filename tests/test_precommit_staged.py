@@ -22,6 +22,12 @@ from maintainability_audit.config import DEFAULT_CONFIG
 
 NOQA = "#" + " noqa"
 
+#: The opening words of the CLI's own refusal. Nothing argparse prints on
+#: its own contains this, which is the whole point: a test that only
+#: looked for the flag name passed on a tree where `--staged` did not
+#: exist, because the usage banner lists every flag.
+REFUSAL = "--staged does not take"
+
 
 def _git(root: Path, *args: str) -> None:
     subprocess.check_output(["git", *args], cwd=root, text=True)
@@ -241,21 +247,38 @@ def test_staged_json_is_unscored_and_emitted_when_clean(tmp_path: Path, capsys: 
 def test_staged_refuses_flags_it_would_have_to_ignore(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], extra: list[str], named: str,
 ) -> None:
-    """Each refused flag carries its argument; a bare ``--changed-only`` is argparse."""
+    """Each refused flag carries its argument; a bare ``--changed-only`` is argparse.
+
+    The refusal *sentence* is asserted, not just the flag name. The first
+    version of this test checked `named in err` and passed on a tree
+    where `--staged` did not exist at all: argparse prints its usage
+    banner on any error, and that banner lists every flag this test
+    names — `--changed-only`, `--record-history`, `--output`, and
+    `{json,markdown,html}`. Exit 2 and a matching substring were both
+    satisfied by the parser rejecting `--staged` itself, so the test
+    defended nothing. Codex caught the same shape one level down (a bare
+    `--changed-only` failing on argparse's `nargs` rather than on the
+    refusal); this is that trap at the level above it.
+    """
     root = _repo(tmp_path)
     _stage(root, "widget.py", "def small():\n    return 1\n")
 
     code = _invoke(root, *extra)
     err = capsys.readouterr().err
     assert code == 2
+    # Only this tool writes these words. The usage banner never does.
+    assert REFUSAL in err or "there is no HTML for a hook" in err, (
+        f"stderr carries no refusal from --staged, only argparse: {err!r}"
+    )
     assert named in err, f"{named!r} was not named on stderr: {err!r}"
     assert "expected one argument" not in err
+    assert "unrecognized arguments" not in err
 
 
 def test_staged_never_prompts_on_an_unconfigured_tty(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from maintainability_audit import cli, _first_run
+    from maintainability_audit import _first_run, cli
 
     root = _repo(tmp_path)
     _stage(root, "widget.py", "def small():\n    return 1\n")
@@ -274,7 +297,10 @@ def test_staged_never_prompts_on_an_unconfigured_tty(
 
 def test_fresh_hook_install_is_executable_and_marked(tmp_path: Path) -> None:
     from maintainability_audit._precommit_install import (
-        HOOK_NAME, MARKER, hooks_directory, install_precommit_hook,
+        HOOK_NAME,
+        MARKER,
+        hooks_directory,
+        install_precommit_hook,
     )
 
     root = _repo(tmp_path)
@@ -297,7 +323,9 @@ def test_reinstall_over_our_hook_reports_updated(tmp_path: Path) -> None:
 
 def test_a_foreign_hook_is_refused_unchanged(tmp_path: Path) -> None:
     from maintainability_audit._precommit_install import (
-        HOOK_NAME, hooks_directory, install_precommit_hook,
+        HOOK_NAME,
+        hooks_directory,
+        install_precommit_hook,
     )
 
     root = _repo(tmp_path)
@@ -312,7 +340,9 @@ def test_a_foreign_hook_is_refused_unchanged(tmp_path: Path) -> None:
 
 def test_a_symlink_at_the_hook_path_is_refused(tmp_path: Path) -> None:
     from maintainability_audit._precommit_install import (
-        HOOK_NAME, hooks_directory, install_precommit_hook,
+        HOOK_NAME,
+        hooks_directory,
+        install_precommit_hook,
     )
 
     root = _repo(tmp_path / "repo")
@@ -327,7 +357,9 @@ def test_a_symlink_at_the_hook_path_is_refused(tmp_path: Path) -> None:
 def test_core_hooks_path_is_read_from_config_files(tmp_path: Path) -> None:
     """hooks_directory reads the config files, not the git process (D92)."""
     from maintainability_audit._precommit_install import (
-        HOOK_NAME, hooks_directory, install_precommit_hook,
+        HOOK_NAME,
+        hooks_directory,
+        install_precommit_hook,
     )
 
     root = _repo(tmp_path)

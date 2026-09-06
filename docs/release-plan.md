@@ -4,13 +4,13 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 ## Where this actually stands
 
-*Measured 2026-09-05. Regenerate the counts before quoting them: the previous version of this table survived fifty-five commits past the point it stopped being true, and then did it again — an audit on 2026-08-26 found it still naming 0.7.0 as the last tag while v0.9.1 was shipped and 26 further commits sat on the branch, and a v1.0 readiness audit on 2026-08-31 found the counts stale a third time. Three times now, in the paperwork of the project that exists to catch drift.*
+*Measured 2026-09-06. Regenerate the counts before quoting them: the previous version of this table survived fifty-five commits past the point it stopped being true, and then did it again — an audit on 2026-08-26 found it still naming 0.7.0 as the last tag while v0.9.1 was shipped and 26 further commits sat on the branch, and a v1.0 readiness audit on 2026-08-31 found the counts stale a third time. Three times now, in the paperwork of the project that exists to catch drift.*
 
 | Fact | Value |
 |---|---|
-| Last tagged version | v2.10.0 |
-| Production code | 28,187 lines across 117 modules |
-| Tests | 2,262 collected across 199 files |
+| Last tagged version | v2.11.0 |
+| Production code | 29,392 lines across 122 modules |
+| Tests | 2,359 collected across 205 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
 | Known open exit conditions in Phases 0–5 | Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) **shipped**. |
 | Later phases outstanding | **None.** 6.1–6.4, 7.1–7.5 and 8.1–8.10 are all shipped; v1.0.0 was tagged 2026-09-01. This row claimed 1.0 was still waiting on acceptance, the hostile audit and the tag for nine releases after all three were done — the fourth time this table has outlived its own truth, and the reason 7.2 forbids exactly this. |

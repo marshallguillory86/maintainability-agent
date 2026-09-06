@@ -4140,9 +4140,41 @@ than silently checking nothing.
 the four languages named — verified against the README's original text
 before committing.
 
+### D124 — Closed: the release checklist omitted a step its own gate requires (Low)
+
+The `v2.11.0` tag was pushed and the release build failed on
+`test_the_release_plan_table_is_measured_not_remembered`: the plan still
+named `v2.10.0` as the last tagged version.
+
+The guard worked exactly as designed and caught it **before** anything
+reached PyPI — the publish and GitHub-Release jobs were skipped, so no
+artifact was distributed and the version number stayed reusable.
+
+The cause is a checklist that does not name the step. `release.yml`
+documented three: bump the version, add the changelog entry and merge,
+then tag. Nothing said to re-measure `docs/release-plan.md` in that same
+commit, and the row cannot be updated afterwards — the test compares it
+against `git tag`, and the tag is cut from the commit that carries the
+row. So the omission is invisible on `main` and only appears once the tag
+exists, which is the most expensive moment to find it.
+
+The checklist now names it as step 3, with the reason, so the next person
+reading the procedure does not have to rediscover the ordering the way
+this release did. The counts in the same table were re-measured while
+there: 29,392 lines across 122 modules, 2,359 tests across 205 files.
+
+*Closing test:* `tests/test_release_plan.py`:
+`test_the_release_plan_table_is_measured_not_remembered`, which already
+existed and already failed correctly. The fix here is the procedure, not
+the guard.
+
+*Roles:* found=ci prompt=marshall fix=claude test=claude run=claude
+*Mutation:* reverting the "Last tagged version" row to `v2.10.0` fails
+the guard whenever a `v2.11.0` tag exists.
+
 ## Disposition
 
-**Every entry is closed.** D123 is the shipped README contradicting its own table, found by Marshall reading the page rather than by any check. D121 and D122 were found by CI on the pull request that shipped the rest, after a green local suite — an empty parameter set reported as a pass, and f-strings unmasked on every Python from 3.12. Both are the same shape as the audit that found them: a check that could not fail, and a fix that reached one interpreter. D112 through D120 record a complexity audit that found this project measuring Python against its own comments, missing its boolean operators, and reading a `?` in type position as a ternary in five languages — nine entries, of which D119 is the method failure behind the other eight, and D120 was found by the check D119 built. D110 closed once 2.9.0 put the images on `main` and both absolute URLs returned 200. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+**Every entry is closed.** D124 is a release-checklist omission that cost a build and no artifact: the gate held, the tag was re-pointed. D123 is the shipped README contradicting its own table, found by Marshall reading the page rather than by any check. D121 and D122 were found by CI on the pull request that shipped the rest, after a green local suite — an empty parameter set reported as a pass, and f-strings unmasked on every Python from 3.12. Both are the same shape as the audit that found them: a check that could not fail, and a fix that reached one interpreter. D112 through D120 record a complexity audit that found this project measuring Python against its own comments, missing its boolean operators, and reading a `?` in type position as a ternary in five languages — nine entries, of which D119 is the method failure behind the other eight, and D120 was found by the check D119 built. D110 closed once 2.9.0 put the images on `main` and both absolute URLs returned 200. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they

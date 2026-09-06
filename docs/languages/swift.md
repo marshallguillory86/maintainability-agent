@@ -62,3 +62,17 @@ guard-heavy function would have read as branchless — the defect Fortran
 shipped with, where six nested `do` loops scored complexity 1 because the
 pattern did not know the keyword.
 
+Three constructs are deliberately **not** counted, each of which was
+counted until 2.11.0:
+
+- **`Int?` is an optional type, not a ternary.** A `?` was read as a
+  conditional wherever it appeared, so every optional in the file scored
+  a branch. A ternary needs both halves, so a following `:` is now
+  required (D115). The cost is a ternary split across lines, which is
+  not counted — under-reporting, the direction this project errs in.
+- **`repeat` is not counted.** `repeat { … } while cond` is one loop with
+  one condition, and the `while` carries it. Counting both scored the
+  construct and its own test (D117).
+- **`switch` is counted at its cases, not at its header**, the rule
+  shared with Go, PHP, Ruby, Python and Fortran.
+

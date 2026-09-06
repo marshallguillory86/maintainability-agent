@@ -192,8 +192,8 @@ def _risk_items(report: dict[str, Any]) -> list[dict[str, Any]]:
     """Risk-pattern matches the diff added, as blocking findings.
 
     Gathered by `staged_report` and, until Gemini's field check, never
-    read by anything: a commit adding `eval("bad()")` passed the hook in
-    silence while the same line is a risk finding in a full audit.
+    read by anything: a commit adding a dynamic-execution call passed the
+    hook in silence while the same line is a risk finding in a full audit.
     Computing evidence and discarding it is worse than not gathering it —
     the cost was paid, the answer thrown away, and the author told
     nothing was wrong.

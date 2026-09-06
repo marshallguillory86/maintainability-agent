@@ -377,8 +377,8 @@ def test_a_staged_risk_pattern_is_reported_rather_than_computed_and_dropped(
 ) -> None:
     """`staged_report` gathered risk findings and nothing ever read them.
 
-    A commit adding `eval("bad()")` passed the hook silently while the
-    same line in a full audit is a risk finding. Computing evidence and
+    A commit adding a dynamic-execution call passed the hook silently
+    while the same line in a full audit is a risk finding. Computing evidence and
     discarding it is worse than not gathering it: the cost was paid and
     the answer was thrown away, and the author was told nothing was
     wrong. Found by Gemini in a field check, staging exactly that line.
@@ -393,7 +393,12 @@ def test_a_staged_risk_pattern_is_reported_rather_than_computed_and_dropped(
     # through a config the repository carries.
     (root / "maintainability-agent.json").write_text(
         json.dumps({"version": 1, "risk_patterns": pattern}), encoding="utf-8")
-    _stage(root, "risky.py", 'def f():\n    eval("bad()")\n    return 1\n')
+    # Assembled rather than written literally. The content has to be a
+    # real match or the test proves nothing, but a literal here makes
+    # this repository's own scanner report its own fixture forever — it
+    # flagged exactly this line on the PR that added it.
+    risky = "def f():\n    " + "eval" + '("bad()")\n    return 1\n'
+    _stage(root, "risky.py", risky)
 
     report = staged_report(root, config)
     assert report["risk_findings"], "the risk pattern was not even gathered"

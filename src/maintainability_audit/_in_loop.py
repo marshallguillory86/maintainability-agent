@@ -205,6 +205,43 @@ def _parses(path: str, text: str) -> bool:
     return True
 
 
+def _note_for(suffix: str, parsed: bool, readable: bool) -> str:
+    """What was not looked at, said plainly, or "" when everything was.
+
+    Two different silences need two different sentences. A language with
+    no scanner was never going to be read; content that refused to parse
+    was supposed to be and was not. Both are reported because absence
+    read as a pass is the defect this whole door exists to refuse.
+    """
+    if not parsed:
+        return (f"{suffix or 'this file'} has no declaration scanner, so "
+                "nothing was read about its declarations — that is not the "
+                "same as finding nothing")
+    if not readable:
+        return (f"this content did not parse as {suffix}, so nothing was read "
+                "about its declarations — check you passed file content rather "
+                "than a diff or a fragment")
+    return ""
+
+
+def _file_finding(path: str, room: dict[str, Any]) -> list[dict[str, Any]]:
+    """The file-length breach, in the shape the declaration breaches use."""
+    if room["band"] != "fail":
+        return []
+    return [{
+        "finding_class": "oversized-file",
+        "name": path, "path": path, "line": None,
+        "lines": room["lines"], "over_by": -room["remaining"],
+        "breached": "lines",
+        "breaches": [{"budget": "lines", "value": room["lines"],
+                      "limit": room["limit"], "over_by": -room["remaining"]}],
+        "target": (
+            f"split below the configured file-length limit (currently "
+            f"{room['lines']} lines against {room['limit']})"
+        ),
+    }]
+
+
 def check_content(path: str, text: str, config: dict[str, Any]) -> dict[str, Any]:
     """Whether this content fits its budgets, and how much room is left.
 
@@ -216,8 +253,8 @@ def check_content(path: str, text: str, config: dict[str, Any]) -> dict[str, Any
     suffix = Path(path).suffix
     lines = text.splitlines()
     parsed = suffix in DECLARATION_SUFFIXES
-
     readable = _parses(path, text) if parsed else False
+
     metrics: list[Any] = []
     if parsed and readable:
         # `Path(path)` is passed for its suffix and its name only; the
@@ -225,43 +262,14 @@ def check_content(path: str, text: str, config: dict[str, Any]) -> dict[str, Any
         # touches the filesystem, so a path that does not exist is fine.
         metrics = detect_functions(Path(path).parent, Path(path), lines, thresholds)
 
-    if not parsed:
-        note = (f"{suffix or 'this file'} has no declaration scanner, so nothing "
-                "was read about its declarations — that is not the same as "
-                "finding nothing")
-    elif not readable:
-        note = (f"this content did not parse as {suffix}, so nothing was read "
-                "about its declarations — check you passed file content rather "
-                "than a diff or a fragment")
-    else:
-        note = ""
-
     file_room = _file_headroom(len(lines), thresholds)
-    findings = _declaration_findings(path, metrics, thresholds)
-    if file_room["band"] == "fail":
-        findings.append({
-            "finding_class": "oversized-file",
-            "name": path,
-            "path": path,
-            "line": None,
-            "lines": len(lines),
-            "over_by": -file_room["remaining"],
-            "target": (
-                f"split below the configured file-length limit "
-                f"(currently {len(lines)} lines against {file_room['limit']})"
-            ),
-        })
-
     return {
         "path": path,
         "declarations_read": parsed and readable,
-        "note": note,
+        "note": _note_for(suffix, parsed, readable),
         "file": file_room,
-        "findings": findings,
-        # Every declaration that is *not* a breach, with what is left of
-        # its budget. The breaches are in `findings`; this is the half a
-        # gate cannot give you, because a gate only speaks when it is
-        # already too late.
+        "findings": (_declaration_findings(path, metrics, thresholds)
+                     + _file_finding(path, file_room)),
         # Only declarations inside their budget. A breach is a finding,
         # never a headroom entry with a negative number in it.
         "headroom": [

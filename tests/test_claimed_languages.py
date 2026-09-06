@@ -299,3 +299,58 @@ def test_the_readme_names_every_language_the_page_claims() -> None:
         f"the README's languages line does not name {missing}, which "
         "docs/language-support.md says this tool parses"
     )
+
+
+#: Prose that asserts a language is *not* read by the built-in scanner.
+#: Each is a sentence a reader acts on, so naming a parsed language in one
+#: is worse than saying nothing.
+UNPARSED_CLAIMS = (
+    (Path("README.md"), "not parsed for declarations by the built-in scanner"),
+    (Path("docs/roadmap.md"), "no scanner is scheduled for any of them"),
+)
+
+
+def test_no_parsed_language_is_named_as_unparsed() -> None:
+    """A language cannot be both in the table and in the "not parsed" list.
+
+    The README shipped exactly that: three lines under a table listing Go,
+    Rust, PHP and Ruby as parsed, a paragraph told the reader that those
+    same four produce "no function-size, complexity, duplication or
+    dead-code findings". The roadmap said no scanner was scheduled for
+    them in the release that shipped their scanners.
+
+    Nothing checked, because the prose and the table are far apart and
+    both read fine alone. This reads the sentence that makes the negative
+    claim and holds it against the languages the tool actually parses.
+    """
+    page = (DOCS / "language-support.md").read_text(encoding="utf-8")
+    section = page.split("## How each language is measured", 1)[1]
+    section = section.split("**This table is the claim", 1)[0]
+
+    parsed = set()
+    for line in section.splitlines():
+        cells = re.split(r"(?<!\\)\|", line.strip().strip("|"))
+        if len(cells) != 3:
+            continue
+        name = cells[0].split("(")[0].split(",")[0].split("/")[0].strip()
+        if name[:1].isalpha() and name not in {"Language", "Anything else"}:
+            parsed.add(name)
+
+    root = DOCS.parent
+    wrong = []
+    for relative, marker in UNPARSED_CLAIMS:
+        text = (root / relative).read_text(encoding="utf-8")
+        assert marker in text, (
+            f"{relative} no longer contains {marker!r}; this guard is "
+            "reading for a sentence that moved, so it is checking nothing"
+        )
+        # The claim and the list of languages sit in one paragraph.
+        start = text.rindex("\n\n", 0, text.index(marker)) + 2
+        end = text.index("\n\n", text.index(marker))
+        paragraph = text[start:end]
+        wrong += [
+            f"{relative}: `{name}` is parsed, and this says it is not — {marker!r}"
+            for name in sorted(parsed)
+            if re.search(rf"(?<!\w){re.escape(name)}(?!\w)", paragraph)
+        ]
+    assert not wrong, "\n".join(wrong)

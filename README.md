@@ -277,7 +277,7 @@ these:
 | HTML (`.html`) | same brace scanner (inline `<script>`) | Bounded |
 | TypeScript (semantic) | a recorded analysis or a locally-installed `tsc`, workspace projects included | Type-level facts; `unknown` when no checker is present |
 
-Any language **not** in that table — Go, Rust, Ruby, PHP, Kotlin, and the rest —
+Any language **not** in that table — Kotlin, Scala, Elixir, Zig, and the rest —
 is **not parsed for declarations by the built-in scanner.** Its files still count
 toward repo size, but the built-ins produce no function-size, complexity,
 duplication or dead-code findings for them, and the estimate leans on whatever

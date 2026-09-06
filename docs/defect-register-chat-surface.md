@@ -4090,9 +4090,51 @@ either alone has already broken the other (D114).
 *Mutation:* removing `FSTRING_MIDDLE` from the blanked token types
 scores the prose sample 3 instead of 1 on any Python 3.12 or later.
 
+### D123 — Closed: the README told readers that four parsed languages were not parsed (Medium)
+
+Found by Marshall reading the shipped page, three lines below the table
+that contradicts it.
+
+The language-support section lists Go, Rust, PHP and Ruby as parsed, with
+a scanner and a fidelity note for each. The paragraph immediately after
+the table read:
+
+> Any language **not** in that table — Go, Rust, Ruby, PHP, Kotlin, and
+> the rest — is **not parsed for declarations by the built-in scanner.**
+> Its files still count toward repo size, but the built-ins produce no
+> function-size, complexity, duplication or dead-code findings for them.
+
+Four of the languages named are in the table. A reader deciding whether
+this tool was worth pointing at a Go repository would have been told,
+by the release that shipped Go support, that it does nothing for Go.
+
+`docs/roadmap.md` carried the same sentence in the other direction —
+"no scanner is scheduled for any of them", naming Go, Rust, Ruby and PHP
+in the release that wrote all four scanners.
+
+Both survived because the claim and its contradiction are far apart and
+each reads correctly alone. The lead paragraph of the README *was*
+guarded (D120's sibling check) and this paragraph was not: the guard
+asked whether every parsed language is **named**, and the failure here is
+a language named in the wrong sentence.
+
+`test_no_parsed_language_is_named_as_unparsed` now reads the paragraph
+that makes the negative claim, in both files, and holds it against the
+languages the scanner actually reads. It asserts the marker sentence
+still exists first, so the guard fails loudly if the prose moves rather
+than silently checking nothing.
+
+*Closing test:* `tests/test_claimed_languages.py`:
+`test_no_parsed_language_is_named_as_unparsed`.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=claude
+*Mutation:* restoring either sentence's original language list fails with
+the four languages named — verified against the README's original text
+before committing.
+
 ## Disposition
 
-**Every entry is closed.** D121 and D122 were found by CI on the pull request that shipped the rest, after a green local suite — an empty parameter set reported as a pass, and f-strings unmasked on every Python from 3.12. Both are the same shape as the audit that found them: a check that could not fail, and a fix that reached one interpreter. D112 through D120 record a complexity audit that found this project measuring Python against its own comments, missing its boolean operators, and reading a `?` in type position as a ternary in five languages — nine entries, of which D119 is the method failure behind the other eight, and D120 was found by the check D119 built. D110 closed once 2.9.0 put the images on `main` and both absolute URLs returned 200. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+**Every entry is closed.** D123 is the shipped README contradicting its own table, found by Marshall reading the page rather than by any check. D121 and D122 were found by CI on the pull request that shipped the rest, after a green local suite — an empty parameter set reported as a pass, and f-strings unmasked on every Python from 3.12. Both are the same shape as the audit that found them: a check that could not fail, and a fix that reached one interpreter. D112 through D120 record a complexity audit that found this project measuring Python against its own comments, missing its boolean operators, and reading a `?` in type position as a ternary in five languages — nine entries, of which D119 is the method failure behind the other eight, and D120 was found by the check D119 built. D110 closed once 2.9.0 put the images on `main` and both absolute URLs returned 200. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they

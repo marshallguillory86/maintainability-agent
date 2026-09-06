@@ -41,8 +41,21 @@ argument named `T` and lose the real list entirely.
 **Measured with Go's own keywords, not C's.** Go has no `while` (`for`
 covers looping), no ternary, and no `catch` — `if err != nil` carries
 what other languages put in a catch block and is already counted as an
-`if`. What the C-family pattern misses is `select`: a dispatch loop built
-from `select` and its cases scored only the cases, so the construct
-choosing between them decided nothing. That is the Fortran defect in
-miniature.
+`if`.
+
+**`select` is counted at its cases, not at its header**, exactly as
+`switch` is. A `select` with two cases has two paths; the header chooses
+between cases that are already counted, and `select {}` with no cases
+simply blocks and decides nothing.
+
+That is worth stating plainly because this project got it wrong in the
+other direction first, and the record is instructive: the shared
+C-family pattern already counted `case`, so Go's dispatch was **measured
+correctly before anyone touched it**. A test written from a wrong
+intuition failed, and the code was changed to satisfy the test rather
+than the grammar (D117).
+
+**`goto` is not counted.** It transfers control unconditionally — an
+edge without a decision. C never counted it, and Go should not have
+either (D116).
 

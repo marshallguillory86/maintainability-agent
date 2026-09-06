@@ -42,7 +42,17 @@ annotations forced the same treatment.
 **Measured with Rust's own keywords.** Branches are counted on `match`
 *arms* rather than on the `match` keyword — counting both would score the
 construct and its first arm, which is the `select case` lesson Fortran
-taught. And `?` is not a ternary: it propagates an error and decides
-nothing, while idiomatic Rust is full of it. Counting it would make
-ordinary error handling read as branching.
+taught. The wildcard `_ =>` is a default and is not counted: it always
+matches, so it adds a path without a decision to reach it.
+
+`loop` is not counted either. It has no condition; the `if … break`
+inside it is what decides.
+
+**`?` is counted.** It was excluded at first on the reasoning that it
+"propagates an error and decides nothing", by analogy with JavaScript's
+optional chaining. The analogy is false, and the grammar settles it:
+`let x = f()?` either continues or returns early, and the operator
+expands to a `match` with two arms. Two paths, one decision. That
+idiomatic Rust is full of them is a fact about Rust, not a reason to
+under-count it (D118).
 

@@ -59,36 +59,87 @@ growing this one: [Java](languages/java.md), [C](languages/c.md), [C++](language
 
 ## What counts as a decision, per language
 
-Each language's branch set is derived from **its own grammar**, not from
-the C-family pattern and not from recollection. That distinction is not
-pedantry: every language added in 2.11.0 had a construct the C set does
-not know, and in each case the result was a wrong number rather than an
-approximate one — Go's `select` dispatch scored branchless, PHP's
-`elseif` chains scored zero, Ruby's `unless` guards scored zero, and
-Rust's `?` made ordinary error propagation read as branching.
+Each language's branch set is derived from **its own grammar**, and every
+one of them is checked construct-by-construct against an independent
+implementation — see [How this is verified](#how-this-is-verified) below.
+That check is not decoration: it found nine defects in 2.11.0, including
+this project measuring Python against its own comments.
+
+The distinction from the C-family pattern is not pedantry either. PHP's
+`elseif` chains scored zero, because the C pattern looks for `elif` and
+`elseif` has no word boundary inside it. Ruby's `unless` guards scored
+zero. Fortran's `do` loops scored 1.
 
 **One rule is shared and is stated here once.** A multi-way construct is
-counted at its **arms, not its header**. `switch`, `select` and `case`
-headers score nothing; their `case`, `when` and `=>` arms score one each.
-Counting both would score the construct *and* its first arm, which is
-the mistake Fortran's `select case` made before 1.6.0. Go's `select` is
-the single exception, because it decides *between* ready channels rather
-than on a value, and a `select` with no arms still blocks.
+counted at its **arms, not its header**, and a *default* arm is not
+counted at all. `switch`, `select`, `match` and `case` headers score
+nothing; their `case`, `when` and `=>` arms score one each; `default:`,
+`_ =>` and `case _` score nothing, because a branch that always matches
+adds a path without a decision to reach it.
+
+Counting a header *and* its arms scores the construct and its first arm
+together, which is the mistake Fortran's `select case` made before 1.6.0.
+It was made again in 2.11.0 for Go's `select`, PHP's `do … while` and
+Swift's `repeat … while`, and the wildcard half of the rule was missed
+for Rust and Python — five languages, one rule, written down and then not
+applied.
 
 | Language | Counted | Deliberately not counted |
 |---|---|---|
-| Go | `if`, `for`, `case`, `select`, `goto`, `&&`, `\|\|` | `switch` (its cases carry it); no `while`, ternary or `catch` exist |
-| Rust | `if`, `for`, `while`, `loop`, `=>`, `&&`, `\|\|` | `match` (its arms carry it); `?`, which propagates an error and decides nothing |
-| PHP | `if`, `elseif`, `for`, `foreach`, `while`, `do`, `match`, `case`, `catch`, `goto`, `and`, `or`, `xor`, `&&`, `\|\|`, `??`, `?:` | `switch` (its cases carry it) |
-| Ruby | `if`, `elsif`, `unless`, `while`, `until`, `for`, `when`, `rescue`, `and`, `or`, `&&`, `\|\|`, `?:` | `case` (its `when`s carry it); `&.`, which is navigation rather than a decision |
+| Python | `if`, `elif`, `for`, `while`, `except`, `case`, `and`, `or` | `match` (its cases carry it); `case _`, the wildcard, which is Python's `default` |
+| Go | `if`, `for`, `case`, `&&`, `\|\|` | `switch` and `select` headers (their cases carry them); `goto`, which transfers control without deciding; no `while`, ternary or `catch` exists |
+| Rust | `if`, `for`, `while`, `?`, `=>` arms, `&&`, `\|\|` | `match` (its arms carry it); `loop`, which has no condition; the wildcard `_ =>` |
+| PHP | `elseif`, `if`, `for`, `foreach`, `while`, `match`, `case`, `catch`, `and`, `or`, `xor`, `&&`, `\|\|`, `??`, ternary `?` | `switch` (its cases carry it); `do`, whose `while` carries the loop; `goto`; `?int`, a nullable type hint |
+| Ruby | `if`, `elsif`, `unless`, `while`, `until`, `for`, `when`, `rescue`, `and`, `or`, `&&`, `\|\|`, ternary `?` | `case` (its `when`s carry it); `&.`, which is navigation rather than a decision |
+| Swift | `if`, `for`, `while`, `case`, `catch`, `guard`, `&&`, `\|\|`, `??`, ternary `?` | `switch` (its cases carry it); `repeat`, whose `while` carries the loop; `Int?`, an optional type |
+| C, C++, C#, Java, JS, TS, HTML | `if`, `else if`, `for`, `while`, `case`, `catch`, `&&`, `\|\|`, `??`, ternary `?` | `switch` (its cases carry it); `default`; a `?` in type position — `int?`, `List<?>`, `v?:` |
 
-**Three of these were found by reading the grammar after the fact**, and
-they are recorded because the method mattered more than the fixes: PHP's
-`do` and `match` and Ruby's ternary were absent from sets assembled from
-memory. Ruby's ternary was missing for a specific and instructive reason
-— `?` had been excluded wholesale because Rust's `?` is not a decision,
-and that exclusion was carried across without checking that Ruby spells
-its conditional operator the same way.
+### Where this deliberately under-reports
+
+Both of these under-report, which is the direction this project errs in
+when it has to choose, and both are consequences of counting keywords on
+a line rather than building a control-flow graph.
+
+- **A many-armed PHP `match` scores 1.** The arms rule is not applied
+  here, and this is the one place it is not: PHP spells array keys with
+  `=>` as well (`['a' => 1]`), so counting arms would count every array
+  literal in the file. The `match` keyword is counted once instead, which
+  under-counts a wide dispatch. `lizard` reads it the same way.
+- **A ternary split across lines is not counted.** Both halves have to be
+  visible on one line, because that is what distinguishes `?` the
+  conditional operator from `?` the nullable-type marker — the defect
+  (D115) that made every `int?`, `List<?>` and `title?:` in five
+  languages read as a branch.
+
+### How this is verified
+
+Until 2.11.0 every branch set here was **asserted rather than tested**: a
+list written from somebody's knowledge of a language, checked against
+examples written by the same person from the same knowledge. That reads
+as evidence because the prose around it is confident, which is worse than
+reading as a guess. Measured against an independent implementation on
+this project's own source, it agreed on **45%** of declarations.
+
+Now `tests/fixtures/grammar/` holds one fixture per language exercising
+the control-flow constructs that language's specification defines, and CI
+compares each construct against [`lizard`](https://github.com/terryyin/lizard)
+— a separate codebase, by separate authors, with its own reading of each
+grammar. **Thirteen languages** are covered.
+
+Coverage is counted in *branch readers* rather than fixtures, because the
+reader is the thing that can be wrong: counting fixtures is what let
+Python go unchecked while twelve other languages were added (D120). A
+reader with no second implementation available has to be named with the
+reason, and **COBOL is the only one**.
+
+A disagreement does not say who is right — two implementations can share
+a misconception, and PHP's `match` above is one they share. What it does
+is make the question unavoidable and send a reader to the grammar, which
+is the only authority either tool answers to. Divergences are therefore
+**declared with the reasoning that settles them**, and a further test
+fails when a declared divergence stops being real. `lizard`'s own
+TypeScript reader carries D115, so a harness built to chase agreement
+would have re-introduced the bug to match the oracle.
 
 ## The rule that matters: a range never runs past its own body
 

@@ -221,9 +221,12 @@ The deterministic scanner reads code from your repo (no LLM calls) and produces
 signals on:
 
 - largest files (configurable warn/fail thresholds)
-- function size and complexity — exact ranges for Python via `ast`,
-  brace-bounded for JS/TS/JSX/TSX/HTML — plus **cognitive complexity**
-  (nesting-weighted reading cost)
+- function size and complexity — exact ranges for Python via `ast`, and
+  bounded ranges for every other parsed language, each measured with that
+  language's own reading of what a branch is ([Language
+  support](#language-support) is the list, so this sentence cannot drift
+  out of step with it) — plus **cognitive complexity** (nesting-weighted
+  reading cost)
 - class size, against its own budget (`max_class_lines`)
 - duplicate blocks, and **near-duplicate declarations** compared structurally so
   renaming can't hide a copy, each paired with the original to reuse
@@ -277,7 +280,7 @@ these:
 | HTML (`.html`) | same brace scanner (inline `<script>`) | Bounded |
 | TypeScript (semantic) | a recorded analysis or a locally-installed `tsc`, workspace projects included | Type-level facts; `unknown` when no checker is present |
 
-Any language **not** in that table — Go, Rust, Ruby, PHP, Kotlin, and the rest —
+Any language **not** in that table — Kotlin, Scala, Elixir, Zig, and the rest —
 is **not parsed for declarations by the built-in scanner.** Its files still count
 toward repo size, but the built-ins produce no function-size, complexity,
 duplication or dead-code findings for them, and the estimate leans on whatever

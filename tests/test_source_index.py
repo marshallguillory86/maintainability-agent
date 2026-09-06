@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from maintainability_audit.config import load_config
 from maintainability_audit.deadcode import dead_declarations
 from maintainability_audit.duplication import duplicate_blocks, risk_findings
@@ -64,12 +66,47 @@ def test_a_file_is_parsed_only_once(tmp_path: Path) -> None:
     assert [d.name for d in first[0]] == ["_helper"]
 
 
-def test_lines_and_declarations_share_one_read(tmp_path: Path) -> None:
+def test_lines_and_declarations_share_one_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One read of the file, however many callers ask about it.
+
+    Covers existing behaviour: one read per file is the property this
+    test has always asserted, and it held at the base too. What changed
+    is how it is asserted.
+
+    It asserted object identity until 2.11.0 — that `declarations`
+    returned the very list `lines` did. That only ever held for Python,
+    because every other language returns a *masked* copy to score
+    against, and Python was handed its raw source. Fixing that (comments
+    and string literals were being counted as branches) made the identity
+    false while the property it stood for stayed true.
+
+    So the read is counted directly, which is what the name claims.
+    """
     path = tmp_path / "app.py"
     write(path, SOURCE)
     index = SourceIndex()
 
-    assert index.declarations(path)[1] is index.lines(path)
+    reads = []
+    original = Path.read_text
+
+    def counted(self, *args, **kwargs):        # noqa: ANN001, ANN002, ANN003
+        if self == path:
+            reads.append(self)
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", counted)
+
+    ranges, masked = index.declarations(path)
+    raw = index.lines(path)
+
+    assert len(reads) == 1, f"the file was read {len(reads)} times"
+    assert ranges, "no declaration was found in the fixture"
+    assert len(masked) == len(raw), (
+        "the scored copy is derived from the same read and must line up "
+        "with it, or every reported line number is off"
+    )
 
 
 def test_extensions_without_a_detector_return_no_declarations(tmp_path: Path) -> None:

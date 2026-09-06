@@ -129,14 +129,20 @@ def test_it_never_scores() -> None:
 def test_an_unparsed_language_says_so_rather_than_passing_quietly() -> None:
     """Absence read as a pass is the defect this project keeps finding.
 
-    A `.rb` file has no declaration scanner. Reporting no findings for it
+    A `.kt` file has no declaration scanner. Reporting no findings for it
     is true and useless; a caller must be able to tell "nothing wrong"
     from "nothing looked at".
+
+    The exemplar was `.rb` until 2.11.0 read Ruby — the fifth fixture to
+    move as this project learned another language. Kotlin is the durable
+    choice: no tool in the analyzer catalog measures its complexity,
+    which is why it was ruled out for a scanner rather than merely
+    unscheduled.
     """
-    result = _check("widget.rb", "def thing\n  1\nend\n")
+    result = _check("widget.kt", "fun thing(): Int {\n    return 1\n}\n")
     assert result["declarations_read"] is False
     assert result["findings"] == []
-    assert "rb" in result["note"] or "not parsed" in result["note"].lower()
+    assert "kt" in result["note"] or "not parsed" in result["note"].lower()
 
 
 def test_a_parsed_language_says_that_too() -> None:

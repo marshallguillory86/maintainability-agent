@@ -11,7 +11,16 @@ eleven of them, which is the same judgment Swift's extension members
 forced; the difference is that Go writes the qualification into the
 signature already, so it is kept rather than reconstructed. A generic
 receiver (`func (s *Store[T]) Get`) reports through its base name,
-`Store`, because that is the name a reader searches for.
+`Store`, because that is the name a reader searches for — the type
+parameter list is stepped over.
+
+That sentence was written before the behaviour existed. Until 2.11.0 the
+receiver pattern required `)` immediately after the type name, so `[T]`
+between them meant **every method on every generic type was invisible**,
+and the only thing asserting otherwise was this paragraph. The suite
+covered the generic *function* form and not the receiver (D125). lizard
+does not find these methods either, so the grammar fixture checks a
+construct its oracle cannot see.
 
 **Containers are walked into, not graded.** `type Store struct` and
 `type Reader interface` hold members, and measuring the container as well

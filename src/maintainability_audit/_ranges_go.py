@@ -47,8 +47,23 @@ _GO_PLAIN_TYPE_RE = re.compile(rf"^type\s+{_NAME}\s+")
 _GO_FUNC_RE = re.compile(rf"^func\s+({_NAME})\s*(\[|\()")
 # `func (s *Store) Get(` — receiver first, then the real name. The
 # receiver name is optional: `func (*Store) Get(...)` is legal.
+#
+# `(?:\[[^\]]*\])?` is the receiver's type-parameter list. A method on a
+# generic type writes `func (s *Store[T]) Get`, and Go has required that
+# since 1.18. Without it the pattern demanded `)` immediately after the
+# type name, so every method on every generic type was invisible — while
+# `docs/languages/go.md` said such a method "reports through its base
+# name". The suite exercised the generic *function* form and not the
+# receiver, so the page was the only thing asserting it (D125).
+#
+# The receiver's parameters are plain identifiers (`[K, V]`), never
+# nested brackets, so a non-greedy character class is enough. A qualified
+# receiver (`func (s *pkg.Store)`) is deliberately absent: Go requires a
+# method's receiver base type to be defined in the same package, so that
+# form does not compile and is not a gap.
 _GO_METHOD_RE = re.compile(
-    rf"^func\s*\(\s*(?:{_NAME}\s+)?\*?({_NAME})\s*\)\s*({_NAME})\s*(\[|\()"
+    rf"^func\s*\(\s*(?:{_NAME}\s+)?\*?({_NAME})(?:\[[^\]]*\])?"
+    rf"\s*\)\s*({_NAME})\s*(\[|\()"
 )
 
 

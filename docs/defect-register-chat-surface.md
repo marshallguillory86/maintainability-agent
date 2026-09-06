@@ -4140,9 +4140,425 @@ than silently checking nothing.
 the four languages named — verified against the README's original text
 before committing.
 
+### D124 — Closed: the release checklist omitted a step its own gate requires (Low)
+
+The `v2.11.0` tag was pushed and the release build failed on
+`test_the_release_plan_table_is_measured_not_remembered`: the plan still
+named `v2.10.0` as the last tagged version.
+
+The guard worked exactly as designed and caught it **before** anything
+reached PyPI — the publish and GitHub-Release jobs were skipped, so no
+artifact was distributed and the version number stayed reusable.
+
+The cause is a checklist that does not name the step. `release.yml`
+documented three: bump the version, add the changelog entry and merge,
+then tag. Nothing said to re-measure `docs/release-plan.md` in that same
+commit, and the row cannot be updated afterwards — the test compares it
+against `git tag`, and the tag is cut from the commit that carries the
+row. So the omission is invisible on `main` and only appears once the tag
+exists, which is the most expensive moment to find it.
+
+The checklist now names it as step 3, with the reason, so the next person
+reading the procedure does not have to rediscover the ordering the way
+this release did. The counts in the same table were re-measured while
+there: 29,392 lines across 122 modules, 2,359 tests across 205 files.
+
+*Closing test:* `tests/test_release_plan.py`:
+`test_the_release_plan_table_is_measured_not_remembered`, which already
+existed and already failed correctly. The fix here is the procedure, not
+the guard.
+
+*Roles:* found=ci prompt=marshall fix=claude test=claude run=claude
+*Mutation:* reverting the "Last tagged version" row to `v2.10.0` fails
+the guard whenever a `v2.11.0` tag exists.
+
+### D125 — Closed: every method on every generic Go type was invisible (High)
+
+Go 1.18 added generic types, and `docs/languages/go.md` said a generic
+receiver "reports through its base name, `Store`". It reported nothing.
+
+The receiver pattern required `)` immediately after the type name, and
+`func (s *Store[T]) Get` puts `[T]` between them, so no method on any
+generic type was ever found. `_mask_generics` did not help — it blanks
+`<…>`, which Go does not use.
+
+The suite covered the generic *function* form,
+`test_a_generic_function_is_read_through_its_type_parameters`, and never
+the receiver. So the page was the only thing asserting the behaviour,
+and the page was wrong — D123's shape, in code rather than prose.
+
+**The oracle could not have caught this.** lizard does not find these
+methods either: on the fixture it returns nothing for
+`genericMethod`. A construct both implementations miss is invisible to a
+check built on their agreement, which is the limit stated for PHP `match`
+(D119) meeting a real defect rather than a hypothetical one.
+
+A qualified receiver (`func (s *pkg.Store)`) is deliberately still not
+matched: Go requires a method's receiver base type to live in the same
+package, so that form does not compile and is not a gap.
+
+*Closing test:* `tests/test_go_declarations.py`:
+`test_a_generic_method_is_found_through_its_base_type`,
+`test_a_generic_method_with_two_parameters_is_found`,
+`test_a_value_receiver_generic_method_is_found`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* removing `(?:\[[^\]]*\])?` from `_GO_METHOD_RE` returns
+only the non-generic method from the fixture.
+
+### D126 — Closed: an assigned `if` closed the Ruby method at the wrong line (High)
+
+Not an under-count. It reported **a different function than the one in
+the file**.
+
+An opener counted only when its keyword led the stripped line, which
+correctly ignores the modifier form `return 0 if x`. It also ignored
+`x = if cond`, which is an *expression* in Ruby and does need its own
+`end`. The inner `end` therefore dropped depth to zero and the method was
+reported as finishing there:
+
+    def assign_if(cond)      # 8 lines
+      x = if cond
+            1
+          else
+            2
+          end                # reported as the end of the method
+      x + 1                  # outside the reported range
+    end
+
+`assign_if` came back as 6 lines instead of 8, with its last two lines
+attributed to nothing. The Ruby page's own warning applies: a miscounted
+`end` shifts every range after it.
+
+`x = case v`, `x = begin` and the `@memo ||= begin` memoisation idiom are
+the same shape and were equally wrong. The keyword must sit immediately
+after the assignment operator, which is what keeps the genuine modifier
+`x = 1 if cond` opening nothing — asserted beside the fix.
+
+A guard ships beside the fix and is deliberately **not** cited as a
+closing test: the modifier form `x = 1 if cond` must keep opening
+nothing, and that behaviour was always right, so a test for it passes at
+the base. A closing test has to be one that fails without the fix, and
+naming a guard in that block would make the entry look better defended
+than it is.
+
+lizard agrees at 2 once the construct is in the fixture, so this one the
+oracle *would* have caught. It was not in the fixture, because the
+fixture was written from the same knowledge as the scanner.
+
+*Closing test:* `tests/test_ruby_declarations.py`:
+`test_an_assigned_if_does_not_close_the_method_early`,
+`test_an_assigned_case_does_not_close_the_method_early`,
+`test_an_or_assigned_begin_does_not_close_the_method_early`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* removing `_RB_ASSIGNED_OPENER_RE` from `_opens` reports
+`assign_if` as 6 lines of 8.
+
+### D127 — Closed: PHP's Elvis operator fell through the hole the nullable fix opened (Medium)
+
+`$x ?: $y` is PHP's short ternary and scored 0.
+
+D115 made a ternary require a following `:` so that `?int` nullable type
+hints stop counting. PHP spells its Elvis operator with exactly the two
+characters that rule excludes, so fixing one defect created another in
+the same expression. The fixture had `$v > 0 ? 1 : 2` and `??` and not
+`?:`.
+
+Counting the long form and not the short one would make a score depend on
+which spelling a codebase prefers — the same argument already written
+down for PHP's word operators.
+
+lizard does not count it either, so it is a **declared divergence** with
+the grammar reasoning, not a silent one.
+
+*Closing test:* `tests/test_php_declarations.py`:
+`test_the_elvis_operator_is_a_decision`, which asserts the neighbours
+that must keep working — the long ternary, `??`, and `?int` — because
+one rule covers all four.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* removing `\?:` from `PHP_COMPLEXITY_RE` scores the fixture's
+`elvisOperator` 1 instead of 2.
+
+### D128 — Closed: Rust's `let … else` decided nothing (Medium)
+
+Stable since Rust 1.65 and the idiomatic early return for a refutable
+pattern: the binding succeeds, or the `else` block diverges. Two paths,
+one decision — and no `if` token anywhere in it, so nothing in a keyword
+set was ever going to see it. The fixture had `if let`, `while let` and
+`?`, but not `let … else`.
+
+The fix carries its own trap, and the test pins it: `if let … else` and
+`while let … else` contain both a `let` and an `else` on one line, and
+their decision is already counted by the `if`/`while`. Counting the
+`let … else` shape there too would score them twice, so the pattern
+excludes it by lookbehind.
+
+lizard does not count `let … else`, so this is a declared divergence.
+
+*Closing test:* `tests/test_rust_declarations.py`:
+`test_a_let_else_is_a_decision`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* removing the `let … else` alternative from
+`RUST_COMPLEXITY_RE` scores the fixture's `let_else` 1 instead of 2;
+removing the lookbehinds scores `if let … else` 2 instead of 1.
+
+### D129 — Closed: the grammar fixtures were a sample, and the page called them the specification (Medium)
+
+`docs/language-support.md` said each fixture "exercises the control-flow
+constructs that language's specification defines". They exercise the
+constructs *I already knew about*, written from the same knowledge as the
+scanners they check — which is the exact failure D119 was opened to end,
+surviving one layer up.
+
+The evidence is D125–D128: four defects, and **none of their constructs
+were in the fixtures**. A generic Go receiver, an assigned Ruby `if`,
+PHP's Elvis operator, Rust's `let … else`. Agreement with an independent
+implementation on a sample of my own choosing is not coverage of a
+grammar, and the page claimed otherwise.
+
+All four constructs are now in the fixtures. The claim on the page is
+narrowed to what is true: the fixtures exercise a *set* of constructs
+from each specification, the set grows when a gap is found, and the
+comparison says nothing about the constructs it does not contain.
+
+D125 also fixes the ceiling on this method rather than the floor: lizard
+finds no generic Go method either, so no amount of fixture coverage would
+have surfaced that one through agreement alone.
+
+*Closing test:* `tests/test_grammar_constructs.py`:
+`test_the_python_fixture_covers_every_branching_node_in_the_grammar`,
+which asks `ast` for the checklist instead of accepting one written from
+memory. The agreement test was cited here first and does not close this:
+with the code and the fixtures both reverted it passes, because a sample
+compared against itself always agrees — which is the defect.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* deleting the four added fixture functions restores a suite
+that passes while D125–D128 are all present.
+
+### D130 — Open: `--sarif-input` is the third operator-named read D104 claimed did not exist (High)
+
+D104 closed on the claim that `--config` and `--baseline` were *the
+only two* path-taking entry points that never went through any
+validation. They were not. `--sarif-input` is the same kind of
+operator-named path — repeatable, allowed outside `--root`, ingested
+into the published report — and it is still:
+
+    json.loads(Path(path).read_text(encoding="utf-8"))
+
+in `sarif.read_sarif_inputs`, called from `cli.py` on `args.sarif_input`
+before `build_report`. No regular-file check, no size cap, no one
+handle, no `O_NONBLOCK`. A FIFO hangs. `/dev/zero` reads until memory
+dies. A directory or a missing file is an uncaught `IsADirectoryError`
+or `FileNotFoundError`. A symlink is followed.
+
+That is the hang D104 measured on `--config` and then listed as closed.
+`SECURITY.md` names this flag. `tests/test_sarif.py` only parses a
+well-formed fixture. Sonar will not reopen D104: the rule keyed the two
+call sites that were patched.
+
+The class, not the instance: every CLI argument that *reads* a file the
+operator named. Writes (`--output`, `--write-baseline`) go through
+`write_artifact` and are a different population. `--conformance` is a
+revspec, not a file.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. The falsifier is a FIFO (or
+`/dev/zero`) passed as `--sarif-input`; it must refuse rather than
+hang, the way `--config` now does. A test that hangs cannot fail
+cleanly, so the proof is the exception type, as D104's own tests
+already say.
+
+### D131 — Open: `read_operator_file` was not made the read primitive (Medium)
+
+D104 built a one-handle reader and applied it to the two Sonar hits.
+Every other read is still `exists` / `is_file` / `is_symlink` and then
+`read_text` on the name — the sequence `_safe_write` and
+`read_operator_file` exist to forbid.
+
+The always-on case is history. Every successful CLI or MCP audit
+reaches `read_history`:
+
+    mkdir -p .maintainability
+    mkfifo .maintainability/history.jsonl
+    maintainability-agent --root . --format json
+
+`history_path.exists()` is true, so the run records; `attach_history_views`
+then `read_text`s the FIFO and blocks. Git cannot store a FIFO, so this
+is a local or agent-written tree, not a merged blob. D19 already treated
+a FIFO as a hang that must not be opened.
+
+The same name-then-open sequence, same hang:
+
+- `_first_run` labour / test-command persist: `is_symlink` then
+  `exists` then `read_text` on `maintainability-agent.json`
+- `_user_config._read_json_object`: no check at all on the XDG config
+- `_mcp_audit._refuse_clobbering_non_baseline`: `repository_path`
+  accepts an in-tree FIFO, then `read_text` hangs on MCP
+  `write_baseline=True`
+- `write_bounded` append and `_refuse_nonjson_clobber`: `is_file` then
+  `read_text`, so a swap to a FIFO between the check and the open is
+  the TOCTOU those helpers were written to close
+
+A committed multi-gigabyte `history.jsonl` is the git-shippable half:
+`read_operator_file` would refuse at 8 MiB; this path never calls it.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. The population is every
+`read_text` / `open` of a path that is not `read_operator_file` and
+not a handle already bound by `_safe_write`. Mutate a member the
+closing test does not name — history is the always-on one; first-run
+or user-config is the one outside the sample.
+
+### D132 — Open: a cognitive-only `--check` fail still prints a negative line overage (Medium)
+
+Grok's audit of `--check` found a short complex function rendering
+as `-71 over` because `over_by` was always `lines - max_function_lines`.
+The merge fixed the complexity-versus-length case and stopped
+hardcoding JSON `scored: false`. It did not name cognitive complexity
+as a budget.
+
+`_DECLARATION_BUDGETS` is length and cyclomatic only. A function that
+fails `max_cognitive_complexity` while remaining under both of those
+produces an empty breach list, then the fallback:
+
+    over_by = metric.lines - fallback   # the length budget it is inside
+
+Reproduction, current main / this branch: `max_cognitive_complexity=1`,
+a seven-line nest of `if`s, `max_function_lines=80`, `max_complexity=50`.
+Result: `over_by: -73`, render `✗ nested:1 — -73 over`. The finding is
+real; the figure is about a budget that did not fail.
+
+The comment on `_breaches_for` says a figure has to be about the thing
+that failed or it is worse than no figure. The fallback reintroduces
+the thing the comment says was removed.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. A function over the cognitive
+budget and under the length and cyclomatic budgets must not report a
+negative line `over_by`. Restoring the length fallback as the only
+breach, or omitting cognitive from `_DECLARATION_BUDGETS`, is the
+mutation.
+
+### D133 — Open: "a piped diff will say it could not parse" is a Python-only sentence (High)
+
+Gemini found a unified diff piped to `--check` reading as clean. The
+fix taught `_parses` to refuse content `ast.parse` rejects. Brace
+languages never refuse: `_parses` returns `True` for every suffix
+except `.py`. Docs and the changelog still speak as if the class
+closed:
+
+> A diff piped into `--check` is not file content. **It will say it
+> could not parse**; do not read that as clean.
+
+`.js`, `.java`, `.ts`, `.c` are in `DECLARATION_SUFFIXES`, so
+`declarations_read` is true, `note` is empty, the scanner finds
+nothing or scores a fragment, and the process exits 0.
+
+    printf '%s' '--- a/x.js
+    +++ b/x.js
+    @@ -1,3 +1,4 @@
+     function hello() {
+    +    console.log(1)
+         return 1
+     }
+    ' | maintainability-agent --check src/thing.js --format json
+
+Expect `declarations_read: false` and a parse note. On this tree:
+`true`, empty note, exit 0. Same shape Gemini found; only the language
+that uses `ast.parse` was taught to refuse.
+
+The class is every suffix `--check` claims to parse, not `ast.parse`.
+Do not mark valid brace source "unparsed" because it minted zero
+declarations.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. A unified diff named with a
+suffix the closing test does not hardcode — `.java` if the test used
+`.js` — must set `declarations_read` false and a non-empty note.
+
+### D134 — Open: `--check` accepts flags it would have to ignore (Medium)
+
+`--staged` named the class: a flag accepted and ignored teaches the
+caller it was honoured. `_STAGED_REFUSES` includes `--comment-output`,
+`--attestation-output`, `--agent-instructions-output`,
+`--hostile-prompt-output`, `--transformation`. `_CHECK_REFUSES` does
+not. `_check_action` returns before `write_outputs`, so
+`--check --comment-output x.md` exits 0 or 1 and writes nothing. The
+`--staged` sibling is tested; this door is not.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. A flag the closing test does not
+name — `--comment-output` if the test used `--attestation-output` —
+must `parser.error` with `--check does not take`.
+
+### D135 — Open: `--check` headroom is the line budget only (Medium)
+
+The product claim is remaining budget, not only a verdict. `_headroom`
+and `_band` use the line limit. A 20-line function at cyclomatic 12
+(`warn_complexity` 10) is `status=warn`, `band=ok`, silent in text,
+and JSON headroom looks fine. Cognitive warn is the same. Complexity
+is a budget they fail on (D132) and never show remaining for.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. A function under the line budget
+and over the cyclomatic warn line must not report `band=ok` with
+nothing to say.
+
+### D136 — Open: `--check` exists only on the CLI (Medium)
+
+Product intent: chat is the primary surface; a capability that exists
+only behind a terminal prompt does not exist for most users. 2.10.0
+closed "the in-loop half" and the same page says `--check` is
+CLI-only. MCP still has `audit_repository` and `get_agent_info`. The
+skill shells out to the CLI. An agent that cannot spawn a process
+cannot ask the question this release exists for.
+
+The red contract for an MCP `check_content` tool is on
+`test/mcp-check`. This entry is the ledger for that gap, not a second
+implementation queue.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. `tests/test_mcp_check.py` already
+fails at `origin/main` because the tool is absent.
+
 ## Disposition
 
-**Every entry is closed.** D123 is the shipped README contradicting its own table, found by Marshall reading the page rather than by any check. D121 and D122 were found by CI on the pull request that shipped the rest, after a green local suite — an empty parameter set reported as a pass, and f-strings unmasked on every Python from 3.12. Both are the same shape as the audit that found them: a check that could not fail, and a fix that reached one interpreter. D112 through D120 record a complexity audit that found this project measuring Python against its own comments, missing its boolean operators, and reading a `?` in type position as a ternary in five languages — nine entries, of which D119 is the method failure behind the other eight, and D120 was found by the check D119 built. D110 closed once 2.9.0 put the images on `main` and both absolute URLs returned 200. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+**D130, D131, D132, D133, D134, D135 and D136 are open.** They are the
+remainder of Grok's audit of the twenty commits on `main` after 2.8.0.
+D125–D129 (the 2.11.0 language findings from that same audit) are
+already closed on this branch. D130 is the class D104 claimed to
+close: `--sarif-input` is still a bare operator-named read. D131 is
+the same class one layer down: `read_operator_file` was not made the
+read primitive. D132 and D133 are `--check` residuals: a
+cognitive-only fail still prints a negative line overage, and "a piped
+diff will say it could not parse" is true only of Python. D134 is the
+flag-refusal class `--staged` already named, unapplied to `--check`.
+D135 is headroom that only watches lines. D136 is the chat-primary
+gap: `--check` is CLI-only. D124 is a release-checklist omission that cost a build
+and no artifact: the gate held, the tag was re-pointed. D123 is the
+shipped README contradicting its own table, found by Marshall reading
+the page rather than by any check. D121 and D122 were found by CI on
+the pull request that shipped the rest, after a green local suite — an
+empty parameter set reported as a pass, and f-strings unmasked on
+every Python from 3.12. Both are the same shape as the audit that found
+them: a check that could not fail, and a fix that reached one
+interpreter. D112 through D120 record a complexity audit that found
+this project measuring Python against its own comments, missing its
+boolean operators, and reading a `?` in type position as a ternary in
+five languages — nine entries, of which D119 is the method failure
+behind the other eight, and D120 was found by the check D119 built.
+D110 closed once 2.9.0 put the images on `main` and both absolute URLs
+returned 200. D109 closed the hollow test and the gate hole that let
+it through, and D111 closed the escape phrase that the gate matched
+inside prose about itself. D108's closing test has landed. D106
+preserves both determinism checks with explicit double invocations
+and failure messages. SonarCloud confirmation awaits CI. D107 records
+two SonarCloud false-positive resolutions in the same turn they were
+taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they

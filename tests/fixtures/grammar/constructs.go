@@ -78,3 +78,10 @@ retry:
 	}
 	return n
 }
+
+func (b *box[T]) genericMethod(v T) T {
+	if b.empty {
+		return v
+	}
+	return b.item
+}

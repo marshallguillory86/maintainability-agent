@@ -8,6 +8,51 @@ The layer model above is what the code does today. [ADR 006](adr-006-analyzer-ev
 
 The current design inverts its own stated principle. The README says *"pair this tool with mature analyzers … don't replace them"*, and `src/` contains six homegrown reimplementations of exactly those analyzers, with external tools relegated to optional SARIF ingest. ADR 006 turns that the right way up.
 
+## Planned companion boundary
+
+**Planned; not implemented.** The [product intent](product-intent.md#planned-product-split-and-companion-workflow)
+separates the existing deterministic audit, to be named `maintainability-audit`,
+from the new `maintainability-agent` companion. The companion operates inside
+human-controlled agent chat and uses the host's reasoning and coding tools.
+It does not add a model to the audit pipeline.
+
+```text
+Human direction in agent chat
+  -> companion requests audit -> audit report and work orders
+  -> human selects scope and limits
+  -> companion retains original task contract
+  -> host performs authorized work
+  -> authorized tests + independent audit verification
+  -> continue within limits / request direction / present for review
+```
+
+The task contract must retain repository identity, starting revision and
+relevant working-tree state, the original report and selected finding
+identities, allowed paths, verification commands and attempt limits. Task
+state records attempts, inspected revisions, evidence and remaining work.
+A rescan must not overwrite the original selection; a scope change requires
+an explicit human amendment. Resume must validate repository and revision
+context, and stale evidence must not close a newer attempt.
+
+The companion consumes the audit's public interfaces rather than importing
+scoring internals or changing thresholds to obtain a pass. Existing work
+orders, finding identity, recurrence, conformance and regression checks are
+building blocks; they do not constitute a shipped task lifecycle. The
+original-selection verification contract and chat access to the required
+checks must be implemented and tested before claiming the loop works.
+
+The host owns execution permissions and edits. Task state is separate from
+audit scan history and does not grant additional access. The verifier's
+inputs and configuration must be recorded, with changes made visible rather
+than silently accepted. Separate processes alone do not establish an
+independent verification boundary.
+
+A host skill plus durable state is the first candidate. The supported hosts,
+state schema and storage location, public operation names, and installation
+and compatibility plan remain design decisions. No standalone runtime,
+background scheduler, fleet orchestration or model-routing system is included
+in this increment. The remaining sections describe audit-pipeline design.
+
 ### The pipeline, plainly
 
 This is not complicated, and the rest of this section is detail on top of it. End to end:

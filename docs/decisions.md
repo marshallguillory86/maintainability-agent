@@ -22,6 +22,21 @@ A decision recorded only as a sentence inside a design document is a decision th
 | [012](adr-012-spotbugs-build-boundary.md) | The agent never builds: SpotBugs analyzes bytecode that already exists, absence becomes a build-then-rerun work-order remedy, and every run records staleness evidence (source mtime vs class mtime) | **Accepted** (2026-08-19, decision 11) — implemented in slice 3 behind `tests/test_spotbugs_adapter.py`; D15 composition of source-read and artifact-read shapes is `tests/test_d15_composition.py` | Analyzer pool, environment work order, JVM adapters |
 | [013](adr-013-hostile-audit-prompt.md) | Emit a deterministic, report-seeded hostile-audit prompt so the adversarial audit that builds this tool becomes a repeatable step; the LLM does the reasoning outside, the core never performs it | **Accepted** — implemented in 1.10.0: `render_hostile_audit_prompt` is the third emitter on the prompt seam, surfaced as CLI `--hostile-prompt-output` and the MCP `maintainability-hostile-audit` prompt. It seeds the audit from one run — commit, evidence already computed, P1-P8 with each stated falsifier, and the audit contract — and does not gate or score (`tests/test_hostile_prompt.py`). The promise table lives in code so the brief works offline, held to `product-intent.md` in both directions. A third emitter on the prompt seam beside `render_ai_prompt` / `render_agent_instructions`; non-gating, non-scoring. The deterministic adversarial-properties *detection* dimension (auditing a target for the same hardening classes) is deferred to a future release ([roadmap](roadmap.md)) and its own ADR | Prompt seam, CLI, MCP prompt, QA methodology |
 
+## Planned product split
+
+**Agreed direction; unimplemented.** The current audit becomes
+`maintainability-audit`; a new `maintainability-agent` companion runs it and
+coordinates human-selected remediation in the user's agent chat. The audit
+retains its deterministic, no-model boundary. The companion owns execution
+coordination, task state and bounded retries through the host.
+
+[Product intent](product-intent.md#planned-product-split-and-companion-workflow)
+is the behavioral contract. [Target architecture](target-architecture.md#planned-companion-boundary)
+and the [roadmap](roadmap.md#planned-audit-and-agent-split) describe design and
+completion criteria. Package/CLI/MCP/skill migration, compatibility duration,
+state storage, host support and release versions are undecided. A host skill
+with durable state is a candidate, not an accepted runtime design.
+
 ## Recorded operating decisions
 
 These choices settle cross-cutting behavior discovered while closing the chat

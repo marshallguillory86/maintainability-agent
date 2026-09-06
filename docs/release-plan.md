@@ -4,13 +4,13 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 ## Where this actually stands
 
-*Measured 2026-09-05. Regenerate the counts before quoting them: the previous version of this table survived fifty-five commits past the point it stopped being true, and then did it again — an audit on 2026-08-26 found it still naming 0.7.0 as the last tag while v0.9.1 was shipped and 26 further commits sat on the branch, and a v1.0 readiness audit on 2026-08-31 found the counts stale a third time. Three times now, in the paperwork of the project that exists to catch drift.*
+*Measured 2026-09-06. Regenerate the counts before quoting them: the previous version of this table survived fifty-five commits past the point it stopped being true, and then did it again — an audit on 2026-08-26 found it still naming 0.7.0 as the last tag while v0.9.1 was shipped and 26 further commits sat on the branch, and a v1.0 readiness audit on 2026-08-31 found the counts stale a third time. Three times now, in the paperwork of the project that exists to catch drift.*
 
 | Fact | Value |
 |---|---|
-| Last tagged version | v2.10.0 |
-| Production code | 28,187 lines across 117 modules |
-| Tests | 2,262 collected across 199 files |
+| Last tagged version | v2.11.1 |
+| Production code | 29,436 lines across 122 modules |
+| Tests | 2,359 collected across 205 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
 | Known open exit conditions in Phases 0–5 | Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) **shipped**. |
 | Later phases outstanding | **None.** 6.1–6.4, 7.1–7.5 and 8.1–8.10 are all shipped; v1.0.0 was tagged 2026-09-01. This row claimed 1.0 was still waiting on acceptance, the hostile audit and the tag for nine releases after all three were done — the fourth time this table has outlived its own truth, and the reason 7.2 forbids exactly this. |
@@ -23,6 +23,16 @@ Two things are deliberately open rather than done:
 
 - **The calibration constant is 5.8843** (2.6279 → 2.2658 on 2026-08-14, then 2.2658 → 5.8843 on 2026-08-31). The 08-31 re-fit followed a corpus re-measure: the stored measurements had gone stale, and plan-81dc6870 Class 4's clone-grouping had dropped the built-in duplication reading roughly fourteenfold, so every report scored duplication against a reference ~14x too high. All 40 pinned repos were re-measured `--with-analyzers`; the duplication reference moved 3.8644 → 0.28 and declarations 0.0860 → 0.1005. Corpus median still rolls up to 4.0 (a well-run codebase earns a B). Old and new values are recorded in `_calibration.py`, and a scanner-counting guard now fails if a change like Class 4 silently invalidates the reference again.
 - **ADR 007 §4's rename is refused**, and the deviation is recorded there and in `standard.md`: the ownership aspect measures the share of settled files one person owns, which is not the bus factor, and adopting the name would claim a measurement the tool never makes.
+
+## Planned naming and companion release
+
+The [audit/agent split](roadmap.md#planned-audit-and-agent-split) is planned
+post-1.0 work, not a shipped capability or a new historical phase. Current
+installation names and versions remain in effect. Before release, decide
+package, CLI, MCP and skill migration, compatibility policy, companion
+delivery and version scope; then document and test the migration alongside
+the complete human-directed remediation loop. No release date or version
+has been selected. The existing known-defect release gate still applies.
 
 ## Phase 0 — Land what exists, fix what is broken
 

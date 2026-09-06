@@ -198,3 +198,23 @@ def test_the_switch_header_is_not_counted_beside_its_cases() -> None:
     branch_points, _cognitive = metrics_for(".php")
     assert branch_points("    switch ($value) {") == 0
     assert branch_points("        case 1:") == 1
+
+
+def test_the_elvis_operator_is_a_decision() -> None:
+    """`$x ?: $y` chooses between two paths and scored nothing.
+
+    The ternary rule requires a `?` *not* followed by `:`, which is what
+    keeps `?int` nullable type hints from counting (D115). PHP spells its
+    short ternary `?:` — the two characters that rule excludes — so the
+    Elvis operator fell through the hole the nullable fix opened. The
+    grammar fixture had `? :` and `??` and not `?:` (D127).
+    """
+    from maintainability_audit.declarations import metrics_for
+
+    branch_points, _cognitive = metrics_for(".php")
+
+    assert branch_points("    return $x ?: $y;") == 1
+    # The neighbours that must keep working, since one rule covers all three.
+    assert branch_points("    return $x ? $y : $z;") == 1
+    assert branch_points("    return $x ?? $y;") == 1
+    assert branch_points("    public function f(?int $v) {") == 0

@@ -200,3 +200,24 @@ def test_a_wildcard_match_arm_is_not_a_decision() -> None:
     branch_points, _cognitive = metrics_for(".rs")
     assert branch_points('        1 => "one",') == 1
     assert branch_points('        _ => "many",') == 0
+
+
+def test_a_let_else_is_a_decision() -> None:
+    """`let Some(x) = opt else { … }` continues or diverges, and scored 0.
+
+    Stable since Rust 1.65 and the idiomatic early return for a
+    refutable pattern. There is no `if` token in it, so nothing in the
+    keyword set saw it: the fixture had `if let`, `while let` and `?`,
+    but not `let … else` (D128).
+    """
+    from maintainability_audit.declarations import metrics_for
+
+    branch_points, _cognitive = metrics_for(".rs")
+
+    assert branch_points("    let Some(x) = opt else { return; };") == 1
+    # `if let … else` is one decision carried by its `if`. Counting the
+    # `let … else` shape here too would score it twice.
+    assert branch_points("    if let Some(x) = opt { } else { }") == 1
+    assert branch_points("    while let Some(x) = it.next() { }") == 1
+    # An ordinary binding decides nothing.
+    assert branch_points("    let x = compute();") == 0

@@ -320,6 +320,18 @@ Stated rather than hidden, because an architecture document that only describes 
 
 What has not landed is listed under [Known debt](#known-debt). Remaining direction of travel lives in [target architecture](target-architecture.md). Status of each decision lives in the [register](decisions.md). This file does not carry a second copy of either.
 
+### Planned companion boundary — not implemented
+
+The [product split](product-intent.md#planned-product-split-and-companion-workflow)
+renames this audit tool to `maintainability-audit` and introduces a separate
+`maintainability-agent` companion in the user's agent chat. No companion
+module is part of the current layer graph. The audit remains independently
+callable; the companion will consume its report and work orders, retain the
+human's selection, direct host execution, and request verification against
+that original selection. Reasoning, task state and retries belong outside
+the audit's scoring pipeline. The proposed data flow and unresolved delivery
+decisions are in [target architecture](target-architecture.md#planned-companion-boundary).
+
 ## Decisions embodied in this document
 
 Every design point above traces to a record. Nothing here is a preference someone remembered.

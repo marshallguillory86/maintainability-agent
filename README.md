@@ -5,7 +5,12 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **2.11.0**.
+Version **2.11.1**.
+
+**Planned, not shipped:** the audit tool will become `maintainability-audit`;
+a new `maintainability-agent` companion will run it and automate human-selected
+work orders within the user's agent chat. The installation commands below
+still describe the current product. See the [planned split](docs/product-intent.md#planned-product-split-and-companion-workflow).
 
 **Languages parsed:** Python, Java, C, C++, C#, Go, Rust, PHP, Ruby, Swift,
 COBOL, Fortran (free-form *and* fixed-form), and the JS/TS/HTML family — each

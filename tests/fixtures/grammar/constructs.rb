@@ -76,3 +76,12 @@ end
 def safe_navigation(v)
   v&.name
 end
+
+def assigned_if(cond)
+  x = if cond
+        1
+      else
+        2
+      end
+  x
+end

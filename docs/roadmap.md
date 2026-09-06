@@ -30,6 +30,30 @@ The evidence model, its property tests, consumer migration and the version-2 con
 
 **Swift** — see [language adapters](#language-adapters). The remediation-integrity checks below are the other near-term block.
 
+## Planned audit and agent split
+
+**Planned; not shipped or assigned a release.** Rename the existing tool to
+`maintainability-audit` and introduce `maintainability-agent`, a companion
+that runs the audit and automates human-selected work orders inside the
+user's agent chat. The [product intent](product-intent.md#planned-product-split-and-companion-workflow)
+defines the behavior; [target architecture](target-architecture.md#planned-companion-boundary)
+defines the proposed boundary. Existing commands remain current until migration.
+
+| Feature | Completion evidence required before claiming it ships |
+|---|---|
+| Audit/agent naming split | A decided migration policy covers packages, CLI, MCP, skills and documentation; existing users have a tested migration path |
+| Human-selected remediation | All or part of a report can be selected; execution respects the selected scope and host/repository permissions |
+| Durable work-order task | Original selection, starting context, attempts and pending evidence survive interruption; resume refuses stale or mismatched context |
+| Host-directed execution | The companion carries authorized work through the host, respecting repository role and testing instructions |
+| Verification loop | Tests and audit checks refer to the inspected changes and original selection; missing evidence or an incomparable result cannot become success |
+| Bounded continuation and review | Scope expansion requires human direction; stalled progress and exhausted limits stop; the human receives changes and separate verification results |
+
+First decide delivery and migration details, then prove one complete resumable
+chat task. Write behavioral tests before implementation. A host skill backed
+by durable state is the initial candidate; a separate runtime is not decided.
+No automatic publication or merge is included. This work does not reopen the
+audit's no-model boundary or replace its existing roadmap.
+
 ## Language adapters
 
 The cadence is **one language per minor release, never a batch** — five were written that way between 1.1.0 and 1.6.0, and the reason is that each one has to earn its claim separately.

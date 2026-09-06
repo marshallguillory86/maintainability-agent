@@ -63,11 +63,26 @@ COMPLEXITY_RE = re.compile(
 
 
 #: Swift's `guard` is an early exit and its primary branching idiom, and
-#: `repeat` is its do-while. Neither is in the C-family pattern, so a
-#: guard-heavy function would read as branchless — the same defect Fortran
-#: had with `do`.
+#: is not in the C-family pattern, so a guard-heavy function read as
+#: branchless — the same defect Fortran had with `do`.
+#:
+#: Two corrections from checking every construct in the language guide
+#: against an independent implementation:
+#:
+#: `repeat` is **not** counted. `repeat { … } while cond` is one loop
+#: with one condition and the `while` carries it, exactly as PHP's
+#: `do … while` does.
+#:
+#: A `?` needs a following `:` to be a ternary. Swift spells optionals
+#: `Int?`, so every optional parameter and property in the language was
+#: scoring as a decision — the same defect found in C#, TypeScript, PHP
+#: and Java, in a fifth spelling.
 SWIFT_COMPLEXITY_RE = re.compile(
-    r"\b(if|for|while|case|catch|guard|repeat)\b|&&|\|\||\?\?|\?(?![.?])"
+    r"\b(if|for|while|case|catch|guard)\b|&&|\|\||\?\?"
+    # Same rule as the C family: a ternary needs both halves. Swift
+    # writes optionals as `Int?`, so without the `:` every optional
+    # parameter and property in the language scored as a decision.
+    r"|\?(?![.?:])(?=[^?]*:)"
 )
 
 

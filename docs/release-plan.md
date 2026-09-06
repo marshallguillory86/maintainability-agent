@@ -8,8 +8,8 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 | Fact | Value |
 |---|---|
-| Last tagged version | v2.11.0 |
-| Production code | 29,392 lines across 122 modules |
+| Last tagged version | v2.11.1 |
+| Production code | 29,436 lines across 122 modules |
 | Tests | 2,359 collected across 205 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
 | Known open exit conditions in Phases 0–5 | Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) **shipped**. |

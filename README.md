@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **2.11.0**.
+Version **2.11.1**.
 
 **Planned, not shipped:** the audit tool will become `maintainability-audit`;
 a new `maintainability-agent` companion will run it and automate human-selected

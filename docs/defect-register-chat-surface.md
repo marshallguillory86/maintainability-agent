@@ -4112,8 +4112,16 @@ by the release that shipped Go support, that it does nothing for Go.
 "no scanner is scheduled for any of them", naming Go, Rust, Ruby and PHP
 in the release that wrote all four scanners.
 
-Both survived because the claim and its contradiction are far apart and
-each reads correctly alone. The lead paragraph of the README *was*
+A third instance sat in "What it analyzes": *"function size and
+complexity — exact ranges for Python via `ast`, brace-bounded for
+JS/TS/JSX/TSX/HTML"*, which silently omits the eleven other languages
+with dedicated scanners. Not a contradiction, but the same understatement
+of the product, and it had drifted twice already. That bullet no longer
+enumerates languages at all — it points at the table, so there is one
+list to keep true rather than three.
+
+All three survived because the claim and its contradiction are far apart
+and each reads correctly alone. The lead paragraph of the README *was*
 guarded (D120's sibling check) and this paragraph was not: the guard
 asked whether every parsed language is **named**, and the failure here is
 a language named in the wrong sentence.

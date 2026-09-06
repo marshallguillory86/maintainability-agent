@@ -291,11 +291,13 @@ def test_an_or_assigned_begin_does_not_close_the_method_early() -> None:
 
 
 def test_a_modifier_if_after_an_assignment_still_opens_nothing() -> None:
-    """`x = y if cond` is a modifier and needs no `end`.
+    """Covers existing behaviour: the modifier form was always read
+    correctly, and this pins it so the D126 fix cannot take it away.
 
-    The guard against the fix: requiring the keyword to sit immediately
-    after the assignment operator is what separates `x = if cond` from
-    `x = y if cond`.
+    `x = y if cond` needs no `end`. Requiring the keyword to sit
+    immediately after the assignment operator is what separates it from
+    `x = if cond`, so this is the guard on that fix rather than a
+    falsifier for it — it passes at the base, deliberately.
     """
     source = (
         "def modifier(cond)\n"

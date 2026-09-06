@@ -442,7 +442,13 @@ def test_the_python_fixture_covers_every_branching_node_in_the_grammar() -> None
 
 
 def test_no_python_node_is_declared_unexercised_while_the_fixture_has_it() -> None:
-    """A stale exemption quietly permits a future gap, as every allowlist does."""
+    """Covers existing behaviour: `PYTHON_NODES_NOT_EXERCISED` is empty
+    today, so this passes at the base and is a guard rather than a
+    falsifier.
+
+    It is here for the day something is declared unexercised: a stale
+    exemption quietly permits a future gap, as every allowlist does.
+    """
     import ast
 
     fixture = FIXTURES / "constructs.py"

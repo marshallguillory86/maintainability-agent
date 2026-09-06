@@ -4235,6 +4235,13 @@ the same shape and were equally wrong. The keyword must sit immediately
 after the assignment operator, which is what keeps the genuine modifier
 `x = 1 if cond` opening nothing — asserted beside the fix.
 
+A guard ships beside the fix and is deliberately **not** cited as a
+closing test: the modifier form `x = 1 if cond` must keep opening
+nothing, and that behaviour was always right, so a test for it passes at
+the base. A closing test has to be one that fails without the fix, and
+naming a guard in that block would make the entry look better defended
+than it is.
+
 lizard agrees at 2 once the construct is in the fixture, so this one the
 oracle *would* have caught. It was not in the fixture, because the
 fixture was written from the same knowledge as the scanner.
@@ -4242,9 +4249,7 @@ fixture was written from the same knowledge as the scanner.
 *Closing test:* `tests/test_ruby_declarations.py`:
 `test_an_assigned_if_does_not_close_the_method_early`,
 `test_an_assigned_case_does_not_close_the_method_early`,
-`test_an_or_assigned_begin_does_not_close_the_method_early`, and
-`test_a_modifier_if_after_an_assignment_still_opens_nothing` as the
-guard against over-correcting.
+`test_an_or_assigned_begin_does_not_close_the_method_early`.
 
 *Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
 *Mutation:* removing `_RB_ASSIGNED_OPENER_RE` from `_opens` reports
@@ -4324,9 +4329,11 @@ finds no generic Go method either, so no amount of fixture coverage would
 have surfaced that one through agreement alone.
 
 *Closing test:* `tests/test_grammar_constructs.py`:
-`test_every_construct_agrees_with_an_independent_implementation` over the
-four added constructs, and `test_every_declared_divergence_is_still_real`
-over the two divergences they introduced.
+`test_the_python_fixture_covers_every_branching_node_in_the_grammar`,
+which asks `ast` for the checklist instead of accepting one written from
+memory. The agreement test was cited here first and does not close this:
+with the code and the fixtures both reverted it passes, because a sample
+compared against itself always agrees — which is the defect.
 
 *Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
 *Mutation:* deleting the four added fixture functions restores a suite

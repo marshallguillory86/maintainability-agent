@@ -4032,19 +4032,33 @@ error and exits non-zero; pytest 9.1.1 creates a skipped placeholder and
 exits 0. The local interpreter said the falsifiers were proven. The gate
 on the pull request said four of them were not. The gate was right.
 
-`empty_parameter_set_mark = "fail_at_collect"` now fails collection
-instead, on either version. Absence read as a pass is the defect this
-project keeps finding in itself, and this is the same sentence one layer
-down: the report says so for an unparsed language, `--check` says so for
-a language with no scanner, and the test suite said nothing at all.
+`empty_parameter_set_mark = "fail_at_collect"` in `pyproject.toml` says
+this suite-wide, and **it was not enough**, which is the part worth
+keeping. The first fix set only that, CI came back failing in exactly
+the same way, and the reason is that the falsifier gate reverts every
+file except the ones defining the cited tests — `pyproject.toml`
+included. *A gate that reverts your configuration cannot be satisfied by
+configuration.* The guard has to live in the file under test, so
+`_fixtures()` now raises when the directory is empty, and the setting
+stays as the suite-wide backstop.
 
-*Closing test:* the grammar checks themselves — with
-`tests/fixtures/grammar/` emptied, collection now errors rather than
-reporting a pass. Verified both ways before and after the setting.
+Absence read as a pass is the defect this project keeps finding in
+itself, and this is the same sentence one layer down: the report says so
+for an unparsed language, `--check` says so for a language with no
+scanner, and the test suite said nothing at all.
+
+*Closing test:* `tests/test_grammar_constructs.py`:
+`test_there_is_a_grammar_fixture_to_check`, and the parametrized
+`test_every_construct_agrees_with_an_independent_implementation` — with
+`tests/fixtures/grammar/` emptied, `_fixtures()` raises and collection
+errors, where before the parametrized checks skipped and reported a
+pass. Verified under pytest 9 with `empty_parameter_set_mark` forced
+back to `skip`, which is the state the falsifier gate reverts to.
 
 *Roles:* found=ci prompt=marshall fix=claude test=claude run=claude
-*Mutation:* setting `empty_parameter_set_mark` back to `skip` makes an
-emptied fixture directory report green on pytest 9.
+*Mutation:* returning `[]` from `_fixtures()` instead of raising makes
+an emptied fixture directory report green on pytest 9, with or without
+the `pyproject.toml` setting.
 
 ### D122 — Closed: f-strings were not masked at all on Python 3.12 and later (High)
 

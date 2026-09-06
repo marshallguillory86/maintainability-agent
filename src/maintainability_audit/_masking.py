@@ -396,6 +396,44 @@ def _blank_fstring_literals(rows: list[list[str]], token: object) -> None:
         index += step
 
 
+def _blanked_token_types(tokenize: object) -> set[int]:
+    """The token types whose text is prose rather than code.
+
+    PEP 701 changed how an f-string is tokenised, and the two shapes need
+    opposite handling. Through 3.11 the whole f-string is one `STRING`
+    token whose braces have to be walked by hand, which is what
+    `_blank_fstring_literals` does. From 3.12 the tokeniser performs that
+    walk itself: the prose arrives as `FSTRING_MIDDLE` tokens and the
+    code between the braces as ordinary `NAME`/`OP` tokens, so blanking
+    the middles is the whole job.
+
+    Recognising only the 3.11 shape left f-strings **entirely unmasked**
+    on 3.12 and later — the versions most people run — so `f"check for
+    errors and warnings: {v}"` scored its `for` and its `and` as
+    branches. D112 again, in the one place its fix did not reach, and it
+    survived review because this project's own development interpreter is
+    3.11 while its CI runs 3.12 (D122).
+    """
+    types = {tokenize.COMMENT, tokenize.STRING}       # type: ignore[attr-defined]
+    middle = getattr(tokenize, "FSTRING_MIDDLE", None)
+    if middle is not None:
+        types.add(middle)
+    return types
+
+
+def _blank_token_span(rows: list[list[str]], token: object) -> None:
+    """Blank one token's own span, leaving every line its original length."""
+    (first, start), (last, end) = token.start, token.end   # type: ignore[attr-defined]
+    for number in range(first, last + 1):
+        if number - 1 >= len(rows):
+            return
+        row = rows[number - 1]
+        begin = start if number == first else 0
+        finish = end if number == last else len(row)
+        for index in range(begin, min(finish, len(row))):
+            row[index] = " "
+
+
 def mask_python_lines(lines: list[str]) -> list[str]:
     """Python, with comments and string literals blanked by its own lexer.
 
@@ -421,42 +459,18 @@ def mask_python_lines(lines: list[str]) -> list[str]:
     import io
     import tokenize
 
-    # PEP 701 changed how an f-string is tokenised, and the two shapes
-    # need opposite handling. Through 3.11 the whole f-string is one
-    # STRING token and its braces have to be walked by hand. From 3.12 the
-    # tokeniser does that walk itself: the prose arrives as FSTRING_MIDDLE
-    # tokens and the code between the braces as ordinary NAME/OP tokens,
-    # so blanking the middles is the whole job.
-    #
-    # Handling only the 3.11 shape left f-strings **entirely unmasked** on
-    # 3.12 and later — the versions most people run — so `f"check for
-    # errors and warnings: {v}"` scored its `for` and its `and` as
-    # branches. D112 again, in the one place the fix for it did not
-    # reach, and it survived because this project's own development
-    # interpreter is 3.11 (D122).
-    middle = getattr(tokenize, "FSTRING_MIDDLE", None)
-    blanked = {tokenize.COMMENT, tokenize.STRING}
-    if middle is not None:
-        blanked.add(middle)
-
     rows = [list(line) for line in lines]
     try:
         tokens = list(tokenize.generate_tokens(io.StringIO("\n".join(lines)).readline))
     except (tokenize.TokenError, IndentationError, SyntaxError):
         return mask_lines(lines)
+
+    blanked = _blanked_token_types(tokenize)
     for token in tokens:
         if token.type not in blanked:
             continue
         if token.type == tokenize.STRING and _is_fstring(token.string):
             _blank_fstring_literals(rows, token)
-            continue
-        (first, start), (last, end) = token.start, token.end
-        for number in range(first, last + 1):
-            if number - 1 >= len(rows):
-                break
-            row = rows[number - 1]
-            begin = start if number == first else 0
-            finish = end if number == last else len(row)
-            for index in range(begin, min(finish, len(row))):
-                row[index] = " "
+        else:
+            _blank_token_span(rows, token)
     return ["".join(row) for row in rows]

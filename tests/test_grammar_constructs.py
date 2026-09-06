@@ -192,7 +192,30 @@ def _lizard(path: Path) -> dict[str, int]:
 
 
 def _fixtures() -> list[Path]:
-    return sorted(FIXTURES.glob("constructs.*"))
+    """Every fixture, and a hard stop if there are none.
+
+    Raising here rather than returning `[]` is deliberate. These checks
+    are parametrized over this list, and pytest marks an empty parameter
+    set *skipped* — which exits 0, so every gate reads it as green. The
+    falsifier gate caught exactly that: with the fixtures removed, the
+    four checks D115, D119 and D120 cite reported a pass and defended
+    nothing (D121).
+
+    The `empty_parameter_set_mark` setting in `pyproject.toml` says the
+    same thing suite-wide, and is not enough on its own **here**: the
+    falsifier gate reverts every file except the ones defining the cited
+    tests, so it reverts that setting too. A gate that reverts your
+    configuration cannot be satisfied by configuration. The guard has to
+    live in the file under test.
+    """
+    found = sorted(FIXTURES.glob("constructs.*"))
+    if not found:
+        raise RuntimeError(
+            f"no grammar fixture exists in {FIXTURES}, so every construct "
+            "check below would be parametrized over nothing and report a "
+            "pass. Restore the fixtures rather than the checks."
+        )
+    return found
 
 
 def test_there_is_a_grammar_fixture_to_check() -> None:

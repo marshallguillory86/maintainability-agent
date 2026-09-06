@@ -71,7 +71,11 @@ def test_lines_and_declarations_share_one_read(
 ) -> None:
     """One read of the file, however many callers ask about it.
 
-    This asserted object identity until 2.11.0 — that `declarations`
+    Covers existing behaviour: one read per file is the property this
+    test has always asserted, and it held at the base too. What changed
+    is how it is asserted.
+
+    It asserted object identity until 2.11.0 — that `declarations`
     returned the very list `lines` did. That only ever held for Python,
     because every other language returns a *masked* copy to score
     against, and Python was handed its raw source. Fixing that (comments

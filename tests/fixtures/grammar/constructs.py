@@ -80,3 +80,22 @@ def match_statement(value):
 def with_statement(handle):
     with handle as opened:
         return opened.read()
+
+
+def assert_statement(value):
+    assert value > 0, "must be positive"
+    return value
+
+
+async def async_for_loop(items):
+    total = 0
+    async for item in items:
+        total += item
+    return total
+
+
+def try_star(source):
+    try:
+        return source()
+    except* ValueError:
+        return "value"

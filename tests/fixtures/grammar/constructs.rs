@@ -67,3 +67,8 @@ pub fn question_mark(text: &str) -> Result<i32, std::num::ParseIntError> {
     let value = text.parse::<i32>()?;
     Ok(value + 1)
 }
+
+fn let_else(opt: Option<i32>) -> i32 {
+    let Some(x) = opt else { return 0; };
+    x
+}

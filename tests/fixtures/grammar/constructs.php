@@ -80,3 +80,7 @@ function ternaryAndCoalesce(?int $v): int {
     $x = $v > 0 ? 1 : 2;
     return $v ?? $x;
 }
+
+function elvisOperator($v) {
+    return $v ?: 0;
+}

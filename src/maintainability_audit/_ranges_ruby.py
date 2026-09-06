@@ -63,6 +63,22 @@ _RB_OPENER_RE = re.compile(rf"^({'|'.join(_RB_OPENERS)})\b")
 #: is closed by `}` on the same or a later line and never by `end`.
 _RB_DO_RE = re.compile(r"\bdo\b(\s*\|[^|]*\|)?\s*$")
 _RB_END_RE = re.compile(r"^end\b")
+#: An opener on the right-hand side of an assignment. `x = if cond … end`
+#: is an *expression* in Ruby and needs its own `end`, and so do
+#: `x = case v`, `x = begin` and the `@memo ||= begin` idiom. Requiring
+#: the keyword to *lead* the line correctly ignores the modifier form
+#: (`return 0 if x`) and wrongly ignored these, so the inner `end`
+#: dropped depth to zero and the method was reported as ending there —
+#: not under-reporting but reporting a different function than the one in
+#: the file (D126).
+#:
+#: The keyword must sit immediately after the operator, which is what
+#: separates `x = if cond` from the modifier `x = 1 if cond`. The
+#: lookbehind rejects `==`, `!=`, `<=` and `>=` while allowing the
+#: compound forms `||=`, `&&=` and `+=`.
+_RB_ASSIGNED_OPENER_RE = re.compile(
+    r"(?<![=!<>])=\s*(?:if|unless|case|begin)\b"
+)
 #: Ruby 3.0's endless method: `def square(x) = x * x`. It has no body and
 #: no `end`, so counting its `def` as an opener leaves depth never
 #: returning to zero — and the declaration swallows whatever follows it.
@@ -117,6 +133,8 @@ def _opens(text: str) -> int:
     if _RB_ENDLESS_RE.match(stripped):
         return 0
     count = 1 if _RB_OPENER_RE.match(stripped) else 0
+    if not count and _RB_ASSIGNED_OPENER_RE.search(stripped):
+        count = 1
     if _RB_DO_RE.search(stripped):
         count += 1
     return count

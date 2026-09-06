@@ -16,8 +16,15 @@ name: Release
 #
 # Release process after that — tagging is the only manual step:
 #   1. bump the version in pyproject.toml + __init__.py + config.py
-#   2. add the CHANGELOG entry (## X.Y.Z), merge to main
-#   3. git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z
+#   2. add the CHANGELOG entry (## X.Y.Z)
+#   3. re-measure the `docs/release-plan.md` table in the SAME commit:
+#      the "Last tagged version" row must already say vX.Y.Z, because
+#      `test_the_release_plan_table_is_measured_not_remembered` compares
+#      it against `git tag` and the tag is cut from this commit. Skipping
+#      this passes on main and fails the release build, after the tag
+#      exists — which is where v2.11.0 lost a build (D124).
+#   4. merge to main
+#   5. git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z
 #
 # Pushing the tag runs three jobs: build+verify the artifact, publish it
 # to PyPI, and cut the GitHub Release with notes read from the CHANGELOG

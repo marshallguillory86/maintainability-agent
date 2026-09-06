@@ -6,6 +6,82 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.11.1 - 2026-09-06
+
+**2.11.0 was tagged and never published.** Its release build failed on a
+stale row in `docs/release-plan.md`, before the publish job ran, so
+nothing reached PyPI and the version is skipped rather than yanked. This
+is the first release of that line, and it carries 2.11.0's whole
+contents plus the fixes below.
+
+### Fixed — four constructs no fixture contained, two of them High
+
+An audit of the 2.11.0 tree found four defects, and none of their
+constructs were in any grammar fixture. Filed as D125–D129.
+
+- **Every method on every generic Go type was invisible** (D125). The
+  receiver pattern required `)` immediately after the type name, and
+  `func (s *Store[T]) Get` puts `[T]` between them. Go has had generic
+  types since 1.18, and `docs/languages/go.md` claimed the behaviour
+  worked — the page was the only thing asserting it. lizard does not
+  find these methods either, so no amount of agreement would have
+  surfaced it.
+- **An assigned `if` closed a Ruby method at the wrong line** (D126).
+  Not an under-count: it reported *a different function than the one in
+  the file*. `x = if cond … end` is an expression and needs its own
+  `end`; an 8-line method came back as 6, its last two lines attributed
+  to nothing. `x = case`, `x = begin` and `@memo ||= begin` were the same
+  shape.
+- **PHP's Elvis operator scored nothing** (D127). Making a ternary
+  require a following `:` — so `?int` stops counting — excluded `?:`,
+  which is spelled with exactly those two characters.
+- **Rust's `let … else` decided nothing** (D128). Stable since 1.65,
+  and no `if` token anywhere in it.
+- **The fixtures were a sample and the page called them the
+  specification** (D129). They exercised the constructs their author
+  already knew about, written from the same knowledge as the scanners
+  they check.
+
+### Added — Python's fixture coverage is derived from the grammar
+
+`ast` is the module that implements the Python grammar, so the checklist
+is asked of it: every node whose fields carry `test`, `orelse`,
+`handlers`, `ifs`, `cases` or `finalbody`, plus `BoolOp`. No node names
+are written down, so a construct added to a future Python arrives in the
+checklist on its own rather than when somebody remembers it.
+
+Run against the existing fixture it immediately named three constructs
+that had never been exercised: `Assert`, `AsyncFor` and `TryStar`.
+
+Every other language's fixture is still a hand-written set, and the
+documentation now says so instead of implying coverage it does not have.
+Ruby's `Ripper`, Go's `go/ast` and Rust's `syn` can each do the same and
+are unwritten rather than refused.
+
+### Changed — documentation that contradicted itself
+
+- The README told readers Go, Rust, PHP and Ruby are **not parsed**,
+  three lines under the table listing them as parsed, and
+  `docs/roadmap.md` said no scanner was scheduled for them in the release
+  that wrote their scanners (D123). Both are corrected and both are now
+  enforced by a test that reads the sentence making the negative claim
+  and holds it against the languages the scanner actually reads.
+- The README kept three independent copies of the language list and two
+  had rotted. It now keeps one.
+- The planned split into `maintainability-audit` plus a
+  `maintainability-agent` companion is recorded across product intent,
+  target architecture, the decision register, the roadmap and the release
+  plan — every entry marked planned and unimplemented, with the naming
+  migration explicitly undecided.
+
+### Known open defects
+
+Seven, filed as D130–D136, two of them High: `--sarif-input` reads an
+operator-named path with no validation, and a unified diff piped to
+`--check` reads as clean for every brace language. **Both are in surfaces
+already released in 2.9.0 and 2.10.0** — this release does not introduce
+them and fixes two High defects that would otherwise stay live.
+
 ## 2.11.0 - 2026-09-06
 
 ### Fixed — every branch keyword now answers to a second implementation, and nine defects fell out

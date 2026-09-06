@@ -169,17 +169,22 @@ def test_elseif_is_one_branch_not_two() -> None:
 def test_do_while_and_match_are_branches() -> None:
     """Derived from the PHP grammar rather than from recollection.
 
-    `do { … } while (x)` is a loop and `match` (PHP 8) is a multi-way
-    expression; neither was in the first keyword set, which was assembled
-    from memory. Both under-count, the same direction as the `elseif`
-    defect — a `do` loop scored zero.
+    `match` (PHP 8) was absent from the first keyword set, which was
+    assembled from memory. `do` and `goto` were then added and both were
+    wrong: a `do … while` has one condition, carried by its `while`, and
+    `goto` is unconditional. Corrected against the reference.
     """
     from maintainability_audit.declarations import metrics_for
 
     branch_points, _cognitive = metrics_for(".php")
-    assert branch_points("    do {") == 1
+    # `do` is *not* counted: `do { … } while (cond)` is one loop with one
+    # condition, and the `while` clause carries it. Counting both scored
+    # every do-while one high — corrected against the reference.
+    assert branch_points("    do {") == 0
+    assert branch_points("    } while ($n > 0);") == 1
     assert branch_points("    $r = match($x) {") == 1
-    assert branch_points("    goto retry;") == 1
+    # `goto` transfers control unconditionally: an edge, not a decision.
+    assert branch_points("    goto retry;") == 0
 
 
 def test_the_switch_header_is_not_counted_beside_its_cases() -> None:

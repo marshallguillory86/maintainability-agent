@@ -112,15 +112,33 @@ RUST_COMPLEXITY_RE = re.compile(
 )
 
 
-#: PHP spells its multi-way branch `elseif`, one word, and there is no
-#: word boundary inside it — so the C-family pattern matches neither `if`
-#: nor `elif` there and a dispatch chain scores *zero*. It also spells
-#: `foreach` for its primary loop and offers `and`/`or`/`xor` as word
-#: operators. Measured with C's keywords, ordinary PHP reads as
-#: branchless: Fortran's defect, in a language nobody expected it in.
+#: PHP spells its multi-way branch `elseif`, one word with no boundary
+#: inside it, so the C-family pattern matched neither `if` nor `elif`
+#: there and a dispatch chain scored *zero*. `foreach` is its primary
+#: loop and `and`/`or`/`xor` are word operators.
+#:
+#: Three corrections after checking every construct in the reference
+#: against an independent implementation:
+#:
+#: `do` is not counted. `do { … } while (cond)` is one loop with one
+#: condition, and the `while` clause already carries it.
+#:
+#: `goto` is not counted. It transfers control unconditionally — the
+#: same reasoning that removed it from Go.
+#:
+#: A `?` immediately followed by an identifier character is a **nullable
+#: type hint**, not a ternary. `?int $v` decides nothing, and counting it
+#: made every nullable parameter in the language a branch. This is D78's
+#: optional-chaining defect wearing different syntax.
 PHP_COMPLEXITY_RE = re.compile(
-    r"\b(elseif|if|for|foreach|while|do|match|case|catch|goto"
-    r"|and|or|xor)\b|&&|\|\||\?\?|\?(?![.?:])"
+    r"\b(elseif|if|for|foreach|while|match|case|catch|and|or|xor)\b"
+    r"|&&|\|\||\?\?"
+    # A ternary, but not a nullable type hint. `?int $v` is a type
+    # declaration and decides nothing; counted, every nullable parameter
+    # in the language read as a branch. `?` followed immediately by an
+    # identifier character is a type, and a ternary is written with the
+    # expression separated: `$x ? 1 : 2`.
+    r"|\?(?![.?:\w])"
 )
 
 

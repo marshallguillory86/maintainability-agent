@@ -44,3 +44,23 @@ the ordinary way PHP writes a multi-way branch, reading as branchless.
 That is Fortran's defect in a language nobody expected it in. `foreach`
 is the primary loop, and `and`/`or`/`xor` are word operators alongside
 `&&` and `||`.
+
+Three further corrections, from checking every construct in the
+reference against an independent implementation:
+
+- **`do` is not counted.** `do { … } while (cond)` is one loop with one
+  condition, and the `while` clause already carries it. Counting both
+  scored every do-while one high.
+- **`goto` is not counted.** It transfers control unconditionally — an
+  edge without a decision, the same reasoning that removed it from Go.
+- **`?int` is a nullable type hint, not a ternary.** Counting it made
+  every nullable parameter in the language read as a branch, which is
+  D78's optional-chaining defect wearing different syntax. A `?`
+  followed immediately by an identifier character is a type; a ternary
+  is written with its expression separated.
+
+On the word operators this project counts what lizard does not. That
+divergence is declared with its reasoning in
+`tests/test_grammar_constructs.py`: `$a and $b` has the same two paths as
+`$a && $b`, and scoring one but not the other would make a repository's
+complexity depend on which spelling it prefers.

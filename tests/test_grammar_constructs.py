@@ -52,6 +52,16 @@ THRESHOLDS = DEFAULT_CONFIG["thresholds"]
 #: rather than a check against lizard — chasing a second implementation
 #: is the same error as trusting the first, with an extra step.
 DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
+    ".php": {
+        "wordOperators": (
+            "lizard counts `&&` and `||` but not PHP's word forms. "
+            "`and`, `or` and `xor` are short-circuit boolean operators "
+            "that differ from the symbol forms only in precedence, so "
+            "`$a and $b` has the same two paths as `$a && $b`. Counting "
+            "one and not the other would make the score depend on which "
+            "spelling a codebase prefers."
+        ),
+    },
     ".rs": {
         "match_arms": (
             "lizard reads a whole `match` as one decision. Two real arms "

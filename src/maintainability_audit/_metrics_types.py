@@ -99,8 +99,8 @@ RUST_COMPLEXITY_RE = re.compile(
 #: operators. Measured with C's keywords, ordinary PHP reads as
 #: branchless: Fortran's defect, in a language nobody expected it in.
 PHP_COMPLEXITY_RE = re.compile(
-    r"\b(elseif|if|for|foreach|while|case|catch|and|or|xor)\b"
-    r"|&&|\|\||\?\?|\?(?![.?:])"
+    r"\b(elseif|if|for|foreach|while|do|match|case|catch|goto"
+    r"|and|or|xor)\b|&&|\|\||\?\?|\?(?![.?:])"
 )
 
 
@@ -110,7 +110,12 @@ PHP_COMPLEXITY_RE = re.compile(
 #: `elsif` is spelled with one `e`, so `elif` misses it too. Measured with
 #: C's keywords, a guard-heavy Ruby method reads as branchless.
 RUBY_COMPLEXITY_RE = re.compile(
-    r"\b(if|elsif|unless|while|until|for|when|rescue)\b|&&|\|\||\band\b|\bor\b"
+    r"\b(if|elsif|unless|while|until|for|when|rescue)\b"
+    r"|&&|\|\||\band\b|\bor\b"
+    # The ternary. Not `&.` (safe navigation decides nothing, as `?.`
+    # does not in JavaScript — D78), and not a method name ending in
+    # `?`, which is why a word character may not precede it.
+    r"|(?<![\w&.])\?(?![.?])"
 )
 
 

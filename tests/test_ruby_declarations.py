@@ -205,3 +205,34 @@ def test_a_nested_class_owns_its_own_methods() -> None:
     )
 
     assert _names(source) == ["Outer", "Inner", "Inner#deep"]
+
+
+def test_a_ternary_is_a_branch() -> None:
+    """Ruby has `? :` and the first keyword set excluded `?` wholesale.
+
+    Rust's `?` propagates an error and decides nothing, so it was
+    excluded there — and that exclusion was carried to Ruby without
+    checking the grammar, where `?` *is* a conditional operator.
+    """
+    from maintainability_audit.declarations import metrics_for
+
+    branch_points, _cognitive = metrics_for(".rb")
+    assert branch_points("  value > 0 ? 1 : 2") == 1
+    assert branch_points("  value&.name") == 0, (
+        "safe navigation is not a decision"
+    )
+    assert branch_points("  ready? ? 1 : 2") == 1, (
+        "a method name ending in ? is not a branch"
+    )
+
+
+def test_the_case_header_is_not_counted_beside_its_whens() -> None:
+    """Covers existing behaviour: `case` is deliberately absent.
+
+    `when` carries the branch, as `case` does in Go and PHP.
+    """
+    from maintainability_audit.declarations import metrics_for
+
+    branch_points, _cognitive = metrics_for(".rb")
+    assert branch_points("  case value") == 0
+    assert branch_points("  when 1 then 'a'") == 1

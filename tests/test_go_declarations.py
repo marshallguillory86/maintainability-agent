@@ -146,3 +146,18 @@ def test_select_counts_as_a_branch() -> None:
     assert sum(branch_points(line) for line in body) >= 3, (
         "select and its cases scored as branchless"
     )
+
+
+def test_the_switch_header_is_not_counted_beside_its_cases() -> None:
+    """Covers existing behaviour: `switch` is deliberately absent.
+
+    The cases are the branches. Counting the header too scores the
+    construct *and* its first arm, which is the `select case` mistake
+    Fortran made — stated here because an undocumented omission is
+    indistinguishable from an oversight.
+    """
+    from maintainability_audit.declarations import metrics_for
+
+    branch_points, _cognitive = metrics_for(".go")
+    assert branch_points("    switch value {") == 0
+    assert branch_points("    case 1:") == 1

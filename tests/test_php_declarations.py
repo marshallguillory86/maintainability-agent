@@ -164,3 +164,32 @@ def test_elseif_is_one_branch_not_two() -> None:
         "elseif decided nothing; a chain of them reads as branchless"
     )
     assert branch_points("    if ($x > 1 && $y) {") == 2
+
+
+def test_do_while_and_match_are_branches() -> None:
+    """Derived from the PHP grammar rather than from recollection.
+
+    `do { … } while (x)` is a loop and `match` (PHP 8) is a multi-way
+    expression; neither was in the first keyword set, which was assembled
+    from memory. Both under-count, the same direction as the `elseif`
+    defect — a `do` loop scored zero.
+    """
+    from maintainability_audit.declarations import metrics_for
+
+    branch_points, _cognitive = metrics_for(".php")
+    assert branch_points("    do {") == 1
+    assert branch_points("    $r = match($x) {") == 1
+    assert branch_points("    goto retry;") == 1
+
+
+def test_the_switch_header_is_not_counted_beside_its_cases() -> None:
+    """Covers existing behaviour: `switch` is deliberately absent.
+
+    Its cases carry the branch, as in Go and Fortran. `match` is counted
+    because its arms are `=>` expressions, not `case` labels.
+    """
+    from maintainability_audit.declarations import metrics_for
+
+    branch_points, _cognitive = metrics_for(".php")
+    assert branch_points("    switch ($value) {") == 0
+    assert branch_points("        case 1:") == 1

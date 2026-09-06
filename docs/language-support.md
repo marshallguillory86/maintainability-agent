@@ -57,6 +57,39 @@ approximate population.
 one page per language, so adding a language adds a file rather than
 growing this one: [Java](languages/java.md), [C](languages/c.md), [C++](languages/cpp.md), [C#](languages/csharp.md), [Fortran](languages/fortran.md), [Rust](languages/rust.md), [Go](languages/go.md), [PHP](languages/php.md), [Ruby](languages/ruby.md), [Swift](languages/swift.md), [COBOL](languages/cobol.md).
 
+## What counts as a decision, per language
+
+Each language's branch set is derived from **its own grammar**, not from
+the C-family pattern and not from recollection. That distinction is not
+pedantry: every language added in 2.11.0 had a construct the C set does
+not know, and in each case the result was a wrong number rather than an
+approximate one — Go's `select` dispatch scored branchless, PHP's
+`elseif` chains scored zero, Ruby's `unless` guards scored zero, and
+Rust's `?` made ordinary error propagation read as branching.
+
+**One rule is shared and is stated here once.** A multi-way construct is
+counted at its **arms, not its header**. `switch`, `select` and `case`
+headers score nothing; their `case`, `when` and `=>` arms score one each.
+Counting both would score the construct *and* its first arm, which is
+the mistake Fortran's `select case` made before 1.6.0. Go's `select` is
+the single exception, because it decides *between* ready channels rather
+than on a value, and a `select` with no arms still blocks.
+
+| Language | Counted | Deliberately not counted |
+|---|---|---|
+| Go | `if`, `for`, `case`, `select`, `goto`, `&&`, `\|\|` | `switch` (its cases carry it); no `while`, ternary or `catch` exist |
+| Rust | `if`, `for`, `while`, `loop`, `=>`, `&&`, `\|\|` | `match` (its arms carry it); `?`, which propagates an error and decides nothing |
+| PHP | `if`, `elseif`, `for`, `foreach`, `while`, `do`, `match`, `case`, `catch`, `goto`, `and`, `or`, `xor`, `&&`, `\|\|`, `??`, `?:` | `switch` (its cases carry it) |
+| Ruby | `if`, `elsif`, `unless`, `while`, `until`, `for`, `when`, `rescue`, `and`, `or`, `&&`, `\|\|`, `?:` | `case` (its `when`s carry it); `&.`, which is navigation rather than a decision |
+
+**Three of these were found by reading the grammar after the fact**, and
+they are recorded because the method mattered more than the fixes: PHP's
+`do` and `match` and Ruby's ternary were absent from sets assembled from
+memory. Ruby's ternary was missing for a specific and instructive reason
+— `?` had been excluded wholesale because Rust's `?` is not a decision,
+and that exclusion was carried across without checking that Ruby spells
+its conditional operator the same way.
+
 ## The rule that matters: a range never runs past its own body
 
 Before v0.4.0, a declaration ended where the *next* pattern match began.

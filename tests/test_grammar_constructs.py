@@ -26,6 +26,13 @@ this project:
   `switch` header does not. `select {}` with no cases simply blocks.
 - Go counted `goto`, which transfers control unconditionally — an edge
   without a decision.
+- Rust refused to count `?`, counted `loop`, and counted a wildcard
+  match arm. PHP counted `?int` nullable type hints as ternaries and
+  double-counted `do … while`.
+
+Ruby is the one language whose keyword set survived this check unchanged,
+and the only disagreement there runs the other way: lizard does not count
+`unless`.
 
 Both were added by a test written from the wrong intuition: it failed,
 and the code was changed to satisfy the test rather than the grammar. The
@@ -60,6 +67,16 @@ DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
             "`$a and $b` has the same two paths as `$a && $b`. Counting "
             "one and not the other would make the score depend on which "
             "spelling a codebase prefers."
+        ),
+    },
+    ".rb": {
+        "unless_statement": (
+            "lizard does not count `unless`, though it counts the "
+            "modifier `if` in the fixture beside it — so this is not a "
+            "parsing gap in its Ruby reader but a missing keyword. "
+            "`unless cond` is `if !cond`: two paths, one decision. Ruby "
+            "programmers reach for it constantly, and not counting it "
+            "would make a guard-heavy method read as branchless."
         ),
     },
     ".rs": {

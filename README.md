@@ -235,11 +235,11 @@ maintainability-agent --install-precommit-hook             # before committing
 ```
 
 **`--check PATH`** answers about content on stdin. No repository, no git, no
-scan; `PATH` names the content and is never opened, so what you pass is what
-gets measured. It reports breaches *and* how much room is left — nine lines of an
-eighty-line budget — because a gate only speaks once it is too late to be cheap.
-A language with no declaration scanner says so, rather than reporting nothing
-and reading as clean.
+scan; `PATH` names the content and is never opened. Pass file content, not a
+diff — content that does not parse says so rather than reading as clean, as
+does a language with no scanner. In text it is **silent while you have room**
+and speaks once a declaration nears its limit; `--format json` carries the
+remaining budget for every declaration whether or not it is close.
 
 **`--staged`** scans the git index. Stage half a file with `git add -p`, keep
 typing, and what gets measured is what the commit will actually contain —
@@ -247,7 +247,8 @@ reading the working tree is the classic pre-commit bug. It applies no
 repository gates, runs nothing, writes nothing, and costs 0.17s here against
 the full audit's 266; a hook slower than the author's patience is one they
 uninstall. `--install-precommit-hook` refuses to replace a hook it did not
-write and honours `core.hooksPath`.
+write and honours `core.hooksPath`. It pins the interpreter that installed it by
+absolute path, so re-run it if that virtualenv moves.
 
 Both exit 1 on a breach and 0 silently, and both take `--format json`.
 

@@ -225,6 +225,33 @@ def staged_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
                       "band": band_of(weight.risk, weight.effort).value,
                       "risk": weight.risk, "effort": weight.effort,
                       "verification": weight.verification})
+    # Gathered by `staged_report` and, until Gemini's field check, never
+    # read by anything: a commit adding `eval("bad()")` passed the hook in
+    # silence while the same line is a risk finding in a full audit.
+    # Computing evidence and discarding it is worse than not gathering it
+    # — the cost was paid, the answer thrown away, and the author told
+    # nothing was wrong.
+    for entry in report["risk_findings"]:
+        items.append({
+            "finding_class": "risk-pattern",
+            "title": f"{entry['pattern']} added in {entry['path']}",
+            "path": entry["path"], "line": entry["line"],
+            "target": (
+                f"remove or justify this {entry['pattern']} match; it is a "
+                "pattern this repository's own configuration asked to be told "
+                "about"
+            ),
+            "rationale": (
+                "the repository declared this pattern as risky, and this "
+                "change is adding a line that matches it"
+            ),
+            # Above a threshold breach and below an added suppression. A
+            # risk pattern is what the repository asked to see; silencing
+            # the instrument is still the worse act.
+            "band": "quick-win", "risk": 4, "effort": 2,
+            "verification": "git diff --cached",
+            "severity": 200.0,
+        })
     for entry in report["added_suppressions"]:
         items.append({
             "finding_class": SUPPRESSION_CLASS,

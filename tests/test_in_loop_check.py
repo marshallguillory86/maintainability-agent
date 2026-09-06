@@ -288,3 +288,96 @@ def test_a_complexity_fail_is_not_reported_as_a_negative_line_overage() -> None:
     assert "— -" not in printed, (
         "the renderer printed a negative line overage for a complexity fail"
     )
+
+
+def _class(name: str, methods: int, body: int) -> str:
+    lines = [f"class {name}:"]
+    for index in range(methods):
+        lines.append(f"    def method_{index}(self):")
+        lines += [f"        x_{step} = {step}" for step in range(body)]
+        lines.append("        return x_0")
+    return "\n".join(lines) + "\n"
+
+
+def test_a_class_is_measured_against_the_class_budget_not_the_function_one() -> None:
+    """`max_class_lines` has shipped since before this feature existed.
+
+    A class is a container: the per-function budget is the wrong yardstick
+    for it, which `config-schema.md` has said all along (300 default
+    against 80). The first version of this check used
+    `max_function_lines` for every declaration, so an ordinary 111-line
+    class reported `-31 lines left` against a budget it was nowhere near.
+    Found in a field check by Gemini, using nothing but the CLI.
+    """
+    # Methods deliberately small and the file budget deliberately wide:
+    # the only budget under test is the class's own, and a fixture that
+    # breaches two others tells you nothing about which one answered.
+    config = _config(max_file_lines=1000, warn_file_lines=900)
+    config["thresholds"].update({"max_class_lines": 300, "warn_class_lines": 200})
+    result = _check("widget.py", _class("BigService", 20, 2), config)
+
+    room = {entry["name"]: entry for entry in result["headroom"]}
+    assert "BigService" in room, "the class reported no headroom at all"
+    assert room["BigService"]["limit"] == 300, (
+        f"a class was measured against {room['BigService']['limit']}, "
+        "which is the function budget, not the class budget"
+    )
+    assert room["BigService"]["band"] == "ok"
+    declarations = [item for item in result["findings"]
+                    if item["finding_class"] == "oversized-declaration"]
+    assert declarations == [], "a class well inside its budget was reported"
+
+
+def test_no_headroom_entry_ever_reports_a_negative_remainder() -> None:
+    """Headroom is what is left. A negative is a breach, and breaches are findings.
+
+    `! BigService — 111 of 80 lines, -31 lines left` was printed beside an
+    exit code of 0. A warning that shows a negative remaining count while
+    passing is not a warning, it is a contradiction the reader has to
+    resolve themselves.
+    """
+    config = _config()
+    config["thresholds"].update({"max_class_lines": 300, "warn_class_lines": 200})
+    for text in (_class("BigService", 5, 20), _function("enormous", 40),
+                 _function("nearly", 7), "x = 1\n" * 30):
+        result = _check("widget.py", text, config)
+        for entry in result["headroom"]:
+            assert entry["remaining"] >= 0, (
+                f"{entry['name']} sits in headroom with {entry['remaining']} "
+                "remaining; a negative remainder belongs in findings"
+            )
+
+
+def test_content_that_does_not_parse_says_so_instead_of_reading_as_clean() -> None:
+    """A diff piped in place of a file exited 0 and claimed it had read it.
+
+    Python's parser refuses a unified diff, so nothing was found, and
+    `declarations_read: true` then told the caller the file had been read
+    and was clean. That is absence read as a pass — the defect this
+    feature's own docstring says it exists to avoid — arriving through
+    the most likely mistake an agent can make.
+    """
+    diff = (
+        "--- a/src/foo.py\n"
+        "+++ b/src/foo.py\n"
+        "@@ -1,3 +1,4 @@\n"
+        " def hello():\n"
+        '+    print("world")\n'
+        "     return 1\n"
+    )
+    result = _check("src/foo.py", diff)
+    assert result["declarations_read"] is False, (
+        "content that does not parse was reported as read"
+    )
+    assert result["note"], "nothing said that the content could not be parsed"
+    assert "parse" in result["note"].lower()
+
+
+def test_content_that_parses_is_still_reported_as_read() -> None:
+    """Covers existing behaviour: valid content already reported True.
+
+    Paired with the test above so a fix cannot satisfy it by reporting
+    every file as unparsed.
+    """
+    result = _check("widget.py", _function("small", 1))
+    assert result["declarations_read"] is True

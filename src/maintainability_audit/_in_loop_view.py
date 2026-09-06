@@ -77,7 +77,11 @@ def check_json(result: dict[str, Any]) -> str:
             "file": result["file"],
             "declarations_read": result["declarations_read"],
             "note": result["note"],
-            "scored": False,
+            # Read from the result, never written as a constant. A
+            # literal `False` here says "not scored" whatever the check
+            # actually did, so the field would keep reassuring a caller
+            # through the exact bug it exists to disclose (Grok's audit).
+            "scored": result["scored"],
             "scored_reason": result["scored_reason"],
         },
         indent=2,

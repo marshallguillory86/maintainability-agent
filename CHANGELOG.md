@@ -6,6 +6,123 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.11.0 - 2026-09-06
+
+### Fixed — every branch keyword now answers to a second implementation, and nine defects fell out
+
+This leads, ahead of the four new languages, because it is the larger
+fact about every number this tool has ever printed.
+
+Until this release every branch keyword set here was **asserted rather
+than tested**: a list written from somebody's knowledge of a language,
+checked against examples written by the same person from the same
+knowledge. That reads as evidence because the prose around it is
+confident, which is worse than reading as a guess.
+
+`lizard` computes cyclomatic complexity from a separate codebase, by
+separate authors, with its own reading of each grammar. Measured against
+it on this repository's own source, this project agreed on **448 of 985
+declarations — 45%**. It is now 968 of 1000.
+
+Nine defects, filed as D112–D120 with the mutation that reproduces each:
+
+- **Python was scored against its own comments and strings** (D112). The
+  flagship language, and the one most of the calibration corpus is
+  measured through, was the one language handed *raw* lines while every
+  other received a masked copy. A branchless four-line function scored
+  4. Masking now uses `tokenize`, CPython's own lexer, so the language
+  decides what a string is rather than a pattern written from memory.
+- **Python's boolean operators were never counted** (D113). The pattern
+  looked for `&&` and `||`, in a language that spells them `and` and
+  `or` — 3,199 invisible operators in this repository alone.
+- **The fix for D112 blanked the code inside f-strings** (D114), found
+  by the same method that found the original, which is the point of
+  having one.
+- **A `?` in type position was counted as a ternary, in five languages**
+  (D115): C# `int?`, TypeScript `title?:`, Java `List<?>`, PHP `?int`,
+  Swift `Int?`. A ternary needs both halves, so a following `:` is now
+  required.
+- **Unconditional constructs were counted as decisions** (D116): `goto`
+  in Go and PHP, `loop` in Rust. C had it right all along.
+- **A multi-way header was counted beside its own arms** (D117): Go's
+  `select`, PHP's `do … while`, Swift's `repeat … while`, Rust's `_ =>`.
+  The arms-not-header rule was already written down for Fortran and was
+  not applied when four more languages arrived.
+- **Rust refused to count `?`** (D118), on a false analogy with
+  JavaScript's optional chaining. `f()?` continues or returns early —
+  two paths, one decision.
+- **No measurement was ever checked against a second implementation**
+  (D119): the defect behind the seven above, and the only one about
+  method rather than code.
+- **Python counted the wildcard `case _`** (D120), which is its
+  `default` — and Go's, Rust's and the C family's defaults are correctly
+  not counted, so the same dispatch scored differently depending on the
+  language it happened to be written in. Found by the check D119 built,
+  in the language that check had missed.
+
+Correcting the measurement immediately exposed **five real gate breaches
+in this repository's own source** that the broken reading had been
+hiding, the worst a function at complexity 29 against a limit of 15. All
+five are decomposed rather than waived.
+
+### Added — the check that makes the above hard to repeat
+
+- **`tools/complexity_oracle.py`** compares complexity per declaration
+  against an independent implementation across a whole tree. It answers
+  one question and refuses the neighbouring one: it does not say which
+  implementation is right. A divergence sends a reader to the grammar,
+  which is the only authority either tool answers to.
+- **`tests/fixtures/grammar/`** holds one fixture per language,
+  exercising the control-flow constructs that language's specification
+  defines, checked construct-by-construct in CI. Thirteen languages.
+- **Coverage is counted in branch readers, not fixtures.** The reader is
+  the thing that can be wrong, and counting fixtures is what let Python
+  go unchecked while twelve other languages were added (D120). A reader
+  with no second implementation available must be named with the reason:
+  **COBOL is the only one**, and it says so in the test rather than
+  going quiet.
+- **Divergences are declared with the grammar reasoning that settles
+  them**, never silently absorbed, and a second test fails when a
+  declared divergence stops being real. The check exists to hold this
+  project to the specification, not to `lizard`: chasing a second
+  implementation is the same error as trusting the first, with an extra
+  step — and `lizard`'s own TypeScript reader carries D115.
+
+### Added — Go, Rust, PHP and Ruby are parsed
+
+Four languages with declaration scanning, per-declaration complexity and
+budget enforcement, each with branch keywords derived from its own
+specification and checked against the oracle above.
+
+- **Go** — functions and methods, the receiver written onto the method
+  so no qualifying pass is needed. `select` counted at its cases.
+- **Rust** — `fn`, with an `impl` pass qualifying methods as
+  `Store::get`. Match arms are the branches; the wildcard is a default,
+  not a test.
+- **PHP** — markup first and keywords second: everything outside
+  `<?php … ?>` is blanked before a keyword is looked for, because a
+  keyword in HTML text is not code. Methods qualify as `Store::get`.
+- **Ruby** — bounded by counting openers rather than braces, since the
+  language ends blocks with `end`. Methods qualify as `Store#get` for
+  instance and `Store.build` for singleton, which is how Ruby writes
+  them.
+
+**None of the four is in the reference corpus**, so a grade for code in
+them is provisional and the report says so on every run: the findings
+are as good as the parser, but the rate they are compared against was
+measured on other languages.
+
+### Changed — documentation split at the gates this tool enforces
+
+- `docs/language-support.md` was 584 lines and is now 153, with a page
+  per language under `docs/languages/`. The README was split the same
+  way — at the gate, rather than by shaving lines to stay under it.
+- `_discovery.py` crossed the 500-line file gate as helpers were
+  extracted from it, so `_banner.py` was split out verbatim: one file's
+  leading comment block, with the banner vocabulary passed in so the
+  import runs one way. The gate doing its job on the tool itself, as it
+  did for `cli` and `_arguments` before it.
+
 ## 2.10.0 - 2026-09-05
 
 ### Added — `--check`, the in-loop door

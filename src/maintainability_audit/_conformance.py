@@ -98,6 +98,49 @@ _SUPPRESSION = tuple(
 )
 
 
+def _is_quoted(text: str, start: int) -> bool:
+    """Whether the marker at `start` is being *mentioned* rather than used.
+
+    A directive is never immediately preceded by a quote or a backtick,
+    and never sits inside an open backtick span. Prose about directives
+    does both constantly — this file's own comments do it, and so does
+    the docstring that says a marker in a docstring is not a suppression.
+    """
+    prefix = text[:start]
+    if prefix[-1:] in {"`", "'", '"'}:
+        return True
+    return prefix.count("`") % 2 == 1
+
+
+def markers_in(text: str) -> str | None:
+    """The suppression this line declares, or None if it only mentions one.
+
+    The one place that question is answered, because it is asked twice —
+    by the conformance record after a change, and by the pre-commit scan
+    before one — and a rule that disagrees with itself between the hook
+    and the gate blocks commits CI would pass.
+
+    D108: the marker set's own comment promised that "`# type: ignore` in
+    a docstring explaining the convention is not a suppression", and for
+    four versions nothing enforced it. The `--staged` scan found it
+    immediately, by blocking the commit of a docstring containing the
+    words `# noqa` — the first time the rule ran somewhere a false
+    positive cost something.
+
+    Still narrow, and deliberately: a marker written into ordinary prose
+    with no quoting around it is still reported. Quoting is the signal
+    that is actually reliable, and widening past it starts guessing at
+    English. This paragraph cannot give the example it would like to,
+    because writing one unquoted would report this line — which is the
+    rule demonstrating itself, and the reason the sentence stays abstract.
+    """
+    for pattern, label in _SUPPRESSION:
+        match = pattern.search(text)
+        if match and not _is_quoted(text, match.start()):
+            return label
+    return None
+
+
 def suppressions_added(
     added: dict[str, list[tuple[int, str]]], named: set[str]
 ) -> list[dict[str, Any]]:
@@ -120,15 +163,14 @@ def suppressions_added(
     found: list[dict[str, Any]] = []
     for path in sorted(added):
         for line_number, text in added[path]:
-            for pattern, label in _SUPPRESSION:
-                if pattern.search(text):
-                    found.append({
-                        "path": path,
-                        "line": line_number,
-                        "marker": label,
-                        "on_named_path": path in named,
-                    })
-                    break
+            label = markers_in(text)
+            if label:
+                found.append({
+                    "path": path,
+                    "line": line_number,
+                    "marker": label,
+                    "on_named_path": path in named,
+                })
     return found
 
 

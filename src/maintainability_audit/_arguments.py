@@ -23,8 +23,23 @@ def _add_gate_arguments(parser: argparse.ArgumentParser) -> None:
     Split from `add_arguments` when the conformance flags took it past this
     project's own function-length gate — which is the gate doing its job on
     the change that added a gate.
+
+    `--staged` belongs here rather than with the artifact flags: it
+    produces no artifact and decides whether work proceeds, which is what
+    every other flag in this group does. It differs only in *when* — a
+    commit rather than a build — and that is the point of it.
     """
     parser.add_argument("--fail-on-gate", action="store_true", help="Exit 1 when hard gates fail.")
+    parser.add_argument(
+        "--staged", action="store_true",
+        help="Scan what the git index will commit, for a pre-commit hook. "
+             "Reads the index rather than the working tree, so half-staged "
+             "edits are measured as they will land. Reports threshold "
+             "breaches only and never a score — a diff has no population to "
+             "draw a rate from. Applies no repository gates, writes nothing, "
+             "and never runs the opt-in test suite. Exits 1 when something "
+             "blocks, silently 0 when nothing does.",
+    )
     parser.add_argument(
         "--conformance",
         metavar="REVSPEC",
@@ -157,6 +172,14 @@ def _add_setup_actions(parser: argparse.ArgumentParser) -> None:
         help="Copy the packaged agent skill into the skills directory and "
              "exit. Re-run after every upgrade: an installed skill that "
              "drifts from the shipped one teaches agents a dead workflow.",
+    )
+    parser.add_argument(
+        "--install-precommit-hook", action="store_true",
+        help="Write a git pre-commit hook that runs --staged, and exit. "
+             "Refuses to replace a hook this tool did not write, and "
+             "prints the line to add to that hook instead; replaces its "
+             "own without asking, because that is an upgrade. Honours "
+             "core.hooksPath.",
     )
     parser.add_argument(
         "--skills-dir", default=None, metavar="DIR",

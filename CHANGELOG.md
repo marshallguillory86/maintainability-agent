@@ -6,6 +6,95 @@ All notable changes to Maintainability Agent will be documented here.
 
 _Nothing yet._
 
+## 2.9.0 - 2026-09-05
+
+**The other end of the loop.** This project has said in its own roadmap
+that it is end-of-loop heavy — strong where it is cheapest to be strong,
+a CI gate after the work is done, and thin during the loop where a
+constraint prevents rather than rejects. `--staged` is the pre-commit
+half of that gap.
+
+### Added — `--staged`, and the hook that runs it
+
+- **`--staged`** scans what the git index will commit. It reads the
+  **index, not the working tree**: stage half a file with `git add -p`,
+  keep typing, and what gets measured is what the commit will actually
+  contain. Reading the tree is the classic pre-commit bug and passes
+  content nobody measured.
+- **It never scores, and says so.** A diff has no population, and this
+  project's own rubric already refuses a rate below the calibration
+  floor. What survives without a population is the absolute half — this
+  declaration is over its budget, this file crossed `max_file_lines`,
+  this line added a suppression. Thresholds need no denominator.
+- **It applies no repository gates and writes nothing.** A missing README
+  or a dirty worktree is a property of a repository, not of a diff. No
+  history append, no report file, and emphatically not the opt-in test
+  suite: on this repository that suite is 255 of the 266 seconds a full
+  audit takes, and a four-minute commit is a hook that gets uninstalled
+  the same afternoon. The scan costs 0.17 seconds.
+- **The remedy text is not a second copy.** Findings are built by the
+  same `_work_order` builders the full audit uses, so a blocked commit
+  quotes the wording a report would. What is skipped is everything
+  `work_order` does *around* them: it recomputes the score twice per
+  class, and the evidence boundary refuses that outright on a diff. The
+  refusal is correct, and this honours it rather than routing around it.
+- **`--install-precommit-hook`** writes the hook. It refuses to replace a
+  hook this tool did not write — printing the one line to add to that
+  hook instead — and replaces its own without asking, because that is an
+  upgrade. It honours `core.hooksPath` and works in a linked worktree,
+  asking the config files rather than the git process, because every
+  command this tool runs is deliberately neutralised with
+  `core.hooksPath=/dev/null` so an audit can never execute the audited
+  tree's hooks (D92).
+- **It refuses the flags it would have to ignore.** `--changed-only`,
+  `--record-history`, `--fail-on-gate`, every output path: a hook that
+  accepts a flag and does nothing with it teaches the author it was
+  honoured.
+
+### Fixed — the falsifier gate could be talked out of proving things
+
+- **D109.** The gate's added-file check asked whether *every* test in a
+  new file passed at the base, so one hollow test rode in beside
+  fourteen real ones. It printed `14 of 15 fail without the change` and
+  exited 0, while on the same run its per-test check held two new tests
+  in an existing file individually. A test's obligation to falsify
+  something depended on how new its neighbours happened to be. Both
+  paths now report every individual test that passes at the base. The
+  hollow test it let through asserted a flag name that argparse's usage
+  banner already contains, so it passed on a tree where `--staged` did
+  not exist.
+- **D111.** The `Covers existing behaviour:` escape was matched anywhere
+  in the source, so a docstring explaining the escape exempted the test
+  doing the explaining — D109's own falsifier was excused by a sentence
+  describing the mechanism. This is D108's defect one layer up, and it
+  has D108's fix: a quoted occurrence is a mention, not a declaration.
+
+### Changed — `run_git` decodes what it cannot read instead of raising
+
+- Every git command now decodes with `errors="replace"`, matching what
+  `source.read_lines` has always done for files on disk. A Latin-1
+  source file was measured by the repository scan and would have crashed
+  the pre-commit one, and a hook that crashes on somebody's encoding is
+  a hook that blocks their commit for a reason they cannot act on.
+  Everywhere else this reads git's own ASCII output, so nothing else
+  changes. `run_git` also grew a `strip=False` for the single caller
+  that reads file content rather than an answer: stripping a blob
+  deletes its leading blank lines, and every line number computed from
+  it is then wrong by however many were removed.
+
+### Fixed — a suppression scan that reported markers it only read about
+
+- **D108.** `SUPPRESSION_MARKERS` carried a comment promising that a
+  marker inside a docstring explaining the convention is not a
+  suppression. Splitting the regexes per language was the whole
+  mitigation, and it does not mitigate this: the pattern matched the
+  marker wherever it appeared. `--staged` found it in the first hour by
+  blocking a commit whose only offence was a docstring *about*
+  suppressions. Both callers now go through one function,
+  `_conformance.markers_in`, which refuses a quoted match — one rule,
+  asked twice, because a hook stricter than the gate it belongs to
+  blocks commits CI would pass.
+
 ## 2.8.1 - 2026-09-05
 
 **Everything SonarCloud had to say, once the project was made public.**

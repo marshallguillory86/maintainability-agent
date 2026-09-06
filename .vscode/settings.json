@@ -1,0 +1,11 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "marshallguillory86",
+        "projectKey": "marshallguillory86_maintainability-agent"
+    },
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}

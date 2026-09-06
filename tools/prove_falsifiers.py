@@ -241,6 +241,37 @@ def _prove_one(ident: str, names: list[str], base: str) -> list[str]:
 
 
 
+def declares_exemption(text: str) -> str | None:
+    """The stated reason a file or test covers existing behaviour, or None.
+
+    An occurrence that is quoted — wrapped in backticks or quote
+    characters — is a *mention*, not a declaration. Prose explaining the
+    escape exempted the very test explaining it: this project's own
+    falsifier for the added-file rule was reported exempt, with a reason
+    sliced out of a sentence about the mechanism.
+
+    That is the defect D108 closed one layer over, where a suppression
+    marker quoted in a docstring was read as a directive. The rule is the
+    same and so is the reason: a gate that cannot tell a mention from a
+    declaration lets anything hide behind a sentence about it.
+    """
+    for line in text.splitlines():
+        index = line.find(COVERS_EXISTING)
+        if index < 0:
+            continue
+        before = line[:index].lstrip()
+        # A docstring's own opening delimiter is not quoting anything —
+        # the overwhelmingly common declaration is the phrase opening the
+        # docstring. Only a triple quote counts as that opener; a single
+        # one before the phrase is somebody quoting it mid-sentence.
+        if before in {'"""', "'''", ""}:
+            return line[index + len(COVERS_EXISTING):].strip()
+        if before[-1:] in {"`", "'", '"'} or before.count("`") % 2:
+            continue
+        return line[index + len(COVERS_EXISTING):].strip()
+    return None
+
+
 def _prove_added_tests_in_place(node_ids: list[str], base: str) -> list[str]:
     """Revert-prove tests added to files that already existed.
 
@@ -258,8 +289,8 @@ def _prove_added_tests_in_place(node_ids: list[str], base: str) -> list[str]:
         for node in node_ids:
             path, name = node.split("::", 1)
             body = function_source((tree / path).read_text(encoding="utf-8"), name)
-            if COVERS_EXISTING in body:
-                reason = body.split(COVERS_EXISTING, 1)[1].splitlines()[0].strip()
+            reason = declares_exemption(body)
+            if reason is not None:
                 print(f"{node}: exempt — covers existing behaviour: {reason}")
                 continue
             wanted.append(node)
@@ -312,10 +343,16 @@ def _prove_class_files(paths: list[str], base: str) -> list[str]:
 def _prove_added_tests(paths: list[str], base: str) -> list[str]:
     """Revert-prove the tests an added file brings, one worktree for all.
 
-    A file whose every test passes at the base defended nothing that
-    shipped with it. That is reported unless the file declares itself as
-    covering pre-existing behaviour, which is a real and common case and
-    so is allowed — stated, not assumed.
+    Every test that passes at the base is reported, not only a file where
+    all of them do. The looser file-level rule let one hollow test ride
+    in beside fourteen real ones — it printed "14 of 15 fail without the
+    change" and exited 0 — while the added-in-place check, on the same
+    run, held each new test individually. A test's obligation to falsify
+    something cannot depend on how new its neighbours are.
+
+    The escape stays file-level and stays explicit: a file that declares
+    itself as covering pre-existing behaviour is exempt entirely, which
+    is a real and common case, stated rather than assumed.
     """
     tree = Path(tempfile.mkdtemp(prefix="falsifier-added-"))
     try:
@@ -324,8 +361,8 @@ def _prove_added_tests(paths: list[str], base: str) -> list[str]:
         exempt: set[str] = set()
         for path in paths:
             source = (tree / path).read_text(encoding="utf-8")
-            if COVERS_EXISTING in source:
-                reason = source.split(COVERS_EXISTING, 1)[1].splitlines()[0].strip()
+            reason = declares_exemption(source)
+            if reason is not None:
                 print(f"{path}: exempt — covers existing behaviour: {reason}")
                 exempt.add(path)
                 continue
@@ -334,18 +371,13 @@ def _prove_added_tests(paths: list[str], base: str) -> list[str]:
             return []
         failed, passed = _prove(base, node_ids, tree)
         print(f"  {len(failed)} of {len(node_ids)} fail without the change")
-        by_file: dict[str, list[str]] = {}
-        for node in passed:
-            by_file.setdefault(node.split("::", 1)[0], []).append(node)
         return [
-            f"{path}: every test passes without the change "
-            f"({len(nodes)} of {len(nodes)}), so the file defends nothing it "
-            f"shipped with; add `{COVERS_EXISTING} <reason>` to its docstring "
-            "if that is deliberate"
-            for path, nodes in sorted(by_file.items())
-            if path not in exempt
-            and len(nodes) == len(tests_in((tree / path).read_text(encoding="utf-8"),
-                                            Path(path).name))
+            f"{node} PASSES without the change, so it defends nothing it "
+            f"shipped with; make it fail at the base, or add "
+            f"`{COVERS_EXISTING} <reason>` to the file's docstring if the "
+            "whole file is deliberately about behaviour that already existed"
+            for node in sorted(passed)
+            if node.split("::", 1)[0] not in exempt
         ]
     finally:
         git("worktree", "remove", "--force", str(tree))

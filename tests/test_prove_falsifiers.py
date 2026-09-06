@@ -281,3 +281,64 @@ def test_the_tool_is_wired_into_the_pipeline() -> None:
             f"the proving job is neutered with {neutered!r}, so a falsifier "
             "that does not falsify reports green"
         )
+
+
+def test_one_hollow_test_in_an_added_file_is_still_reported(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A test's obligation cannot depend on how new its neighbours are.
+
+    The added-file check asked whether *every* test in the file passed at
+    the base, so a single test that defends nothing rode in beside
+    fourteen that do. The added-in-place check, on the same run, held
+    each new test individually and named both of them.
+
+    That inconsistency shipped a real hollow test: a `--staged` refusal
+    case asserted `"--changed-only" in stderr`, which argparse's usage
+    banner satisfies whether or not the feature exists, so it passed on a
+    tree where `--staged` was not a flag at all. The gate saw it — it
+    printed "14 of 15 fail without the change" — and exited 0.
+
+    One passing member is enough to report. The file-level
+    ``Covers existing behaviour:`` escape still exempts a whole file that
+    is deliberately about pre-existing behaviour.
+    """
+    added = "tests/test_precommit_staged.py"
+    real = (ROOT / added).read_text(encoding="utf-8")
+    nodes = prover.tests_in(real, Path(added).name)
+    assert len(nodes) > 2, "fixture file must carry several tests"
+
+    hollow, defended = nodes[0], nodes[1:]
+    monkeypatch.setattr(prover, "_prove", lambda base, ids, tree: (defended, [hollow]))
+
+    complaints = prover._prove_added_tests([added], "HEAD")
+    assert complaints, (
+        "a test that passes without the change went unreported because its "
+        "neighbours were new"
+    )
+    assert any(hollow in line for line in complaints), (
+        f"the hollow test was not named: {complaints}"
+    )
+
+
+def test_a_quoted_escape_phrase_does_not_exempt_anything() -> None:
+    """Writing *about* the escape must not trigger it — D108's shape, here.
+
+    The escape is matched as a substring of the source, so a docstring
+    that names it in backticks while explaining it exempts the very test
+    doing the explaining. That happened on this file: the falsifier for
+    the added-file rule was reported as
+    ``exempt - covers existing behaviour: `` escape still exempts a whole
+    file that`` — a reason cut out of a sentence about the mechanism.
+
+    It is the same defect D108 closed for suppression markers: a marker
+    mentioned in prose is not a directive. A gate that cannot tell the
+    two apart lets any test hide behind a sentence.
+    """
+    phrase = prover.COVERS_EXISTING
+    assert not prover.declares_exemption(f"the ``{phrase}`` escape exempts a file")
+    assert not prover.declares_exemption(f'"{phrase}" is how a file opts out')
+    assert prover.declares_exemption(f"{phrase} this file measures what shipped")
+    # The declaration almost always opens a docstring, and the triple
+    # quote in front of it is the delimiter, not somebody quoting it.
+    assert prover.declares_exemption(f'    """{phrase} already reported.')

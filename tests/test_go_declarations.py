@@ -170,3 +170,50 @@ def test_the_switch_header_is_not_counted_beside_its_cases() -> None:
     branch_points, _cognitive = metrics_for(".go")
     assert branch_points("    switch value {") == 0
     assert branch_points("    case 1:") == 1
+
+
+def test_a_generic_method_is_found_through_its_base_type() -> None:
+    """`func (s *Store[T]) Get` — the form the Go page says works.
+
+    Generic receivers are Go 1.18, and `docs/languages/go.md` states that
+    one "reports through its base name, `Store`". It did not report at
+    all: the receiver pattern required `)` immediately after the type
+    name, and `[T]` sits between them, so every method on every generic
+    type was invisible. The suite covered the generic *function* form
+    (`func Map[T any]`) and not the receiver, so the sentence on the page
+    was the only thing asserting it (D125).
+    """
+    source = (
+        "package p\n"
+        "func (s *Store[T]) Get(i int) T {\n"
+        "\treturn s.items[i]\n"
+        "}\n"
+        "func (s *Store) Plain(i int) int {\n"
+        "\treturn i\n"
+        "}\n"
+    )
+    assert [name for _s, _e, name, _k in _ranges(source)] == [
+        "Store.Get", "Store.Plain",
+    ]
+
+
+def test_a_generic_method_with_two_parameters_is_found() -> None:
+    """`func (m *Map[K, V]) Put` — more than one parameter, same rule."""
+    source = (
+        "package p\n"
+        "func (m *Map[K, V]) Put(k K, v V) {\n"
+        "\tm.items[k] = v\n"
+        "}\n"
+    )
+    assert [name for _s, _e, name, _k in _ranges(source)] == ["Map.Put"]
+
+
+def test_a_value_receiver_generic_method_is_found() -> None:
+    """No pointer star, still a generic receiver."""
+    source = (
+        "package p\n"
+        "func (s Store[T]) Len() int {\n"
+        "\treturn len(s.items)\n"
+        "}\n"
+    )
+    assert [name for _s, _e, name, _k in _ranges(source)] == ["Store.Len"]

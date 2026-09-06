@@ -236,3 +236,71 @@ def test_the_case_header_is_not_counted_beside_its_whens() -> None:
     branch_points, _cognitive = metrics_for(".rb")
     assert branch_points("  case value") == 0
     assert branch_points("  when 1 then 'a'") == 1
+
+
+def test_an_assigned_if_does_not_close_the_method_early() -> None:
+    """`x = if cond … end` is an expression and needs its own `end`.
+
+    Openers are counted only when the keyword *leads* the stripped line,
+    which correctly ignores the modifier form `return 0 if x`. It also
+    ignored `x = if cond`, which does need an `end` — so the inner `end`
+    dropped depth to zero and the method was reported as ending there.
+
+    This does not under-report. It reports a **different function than
+    the one in the file**: the body stops mid-method, and this page's own
+    rule says a miscounted `end` shifts every range after it (D126).
+    """
+    source = (
+        "def assign_if(cond)\n"
+        "  x = if cond\n"
+        "        1\n"
+        "      else\n"
+        "        2\n"
+        "      end\n"
+        "  x + 1\n"
+        "end\n"
+    )
+    assert _ranges(source) == [(1, 8, "assign_if", "function")]
+
+
+def test_an_assigned_case_does_not_close_the_method_early() -> None:
+    """Same rule, `case` instead of `if`."""
+    source = (
+        "def assign_case(v)\n"
+        "  x = case v\n"
+        "      when 1 then 'one'\n"
+        "      else 'many'\n"
+        "      end\n"
+        "  x\n"
+        "end\n"
+    )
+    assert _ranges(source) == [(1, 7, "assign_case", "function")]
+
+
+def test_an_or_assigned_begin_does_not_close_the_method_early() -> None:
+    """`@memo ||= begin … end`, the memoisation idiom."""
+    source = (
+        "def memo\n"
+        "  @memo ||= begin\n"
+        "    compute\n"
+        "  end\n"
+        "  @memo\n"
+        "end\n"
+    )
+    assert _ranges(source) == [(1, 6, "memo", "function")]
+
+
+def test_a_modifier_if_after_an_assignment_still_opens_nothing() -> None:
+    """`x = y if cond` is a modifier and needs no `end`.
+
+    The guard against the fix: requiring the keyword to sit immediately
+    after the assignment operator is what separates `x = if cond` from
+    `x = y if cond`.
+    """
+    source = (
+        "def modifier(cond)\n"
+        "  x = 1 if cond\n"
+        "  x\n"
+        "end\n"
+    )
+    assert _ranges(source) == [(1, 4, "modifier", "function")]

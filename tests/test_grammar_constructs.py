@@ -107,6 +107,15 @@ DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
         ),
     },
     ".php": {
+        "elvisOperator": (
+            "lizard does not count `?:`. PHP's short ternary chooses "
+            "between two paths exactly as the long form does; the only "
+            "difference is that the first operand is reused as the "
+            "consequent. Counting `$a ? $b : $c` and not `$a ?: $c` "
+            "would make the score depend on which spelling a codebase "
+            "prefers, which is the same argument as the word operators "
+            "below (D127)."
+        ),
         "wordOperators": (
             "lizard counts `&&` and `||` but not PHP's word forms. "
             "`and`, `or` and `xor` are short-circuit boolean operators "
@@ -138,6 +147,14 @@ DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
         ),
     },
     ".rs": {
+        "let_else": (
+            "lizard does not count `let … else`. Stable since Rust 1.65, "
+            "it is the idiomatic early return for a refutable pattern: "
+            "the binding succeeds, or the `else` block diverges. Two "
+            "paths, one decision, and no `if` token anywhere in it — "
+            "which is exactly why nothing saw it until it was looked "
+            "for (D128)."
+        ),
         "match_arms": (
             "lizard reads a whole `match` as one decision. Two real arms "
             "and a wildcard is three paths, which is the same shape as two "

@@ -121,10 +121,25 @@ reading as a guess. Measured against an independent implementation on
 this project's own source, it agreed on **45%** of declarations.
 
 Now `tests/fixtures/grammar/` holds one fixture per language exercising
-the control-flow constructs that language's specification defines, and CI
-compares each construct against [`lizard`](https://github.com/terryyin/lizard)
-— a separate codebase, by separate authors, with its own reading of each
-grammar. **Thirteen languages** are covered.
+a set of control-flow constructs from that language's specification, and
+CI compares each construct against
+[`lizard`](https://github.com/terryyin/lizard) — a separate codebase, by
+separate authors, with its own reading of each grammar. **Thirteen
+languages** are covered.
+
+**A set, not the specification.** This page said "the constructs that
+language's specification defines" and that was not true: the fixtures
+exercise the constructs their author already knew about, written from the
+same knowledge as the scanners they check. An audit found four defects
+whose constructs were all absent from them — a generic Go receiver, an
+assigned Ruby `if`, PHP's Elvis operator, Rust's `let … else` (D125–D129).
+The set grows whenever a gap is found, and the comparison says nothing
+about the constructs it does not contain.
+
+**Agreement has a ceiling as well as a floor.** lizard finds no method on
+a generic Go type either, so that defect was invisible to a check built on
+two implementations agreeing — the same limit already noted for PHP's
+`match`, met by a real defect rather than a hypothetical one.
 
 Coverage is counted in *branch readers* rather than fixtures, because the
 reader is the thing that can be wrong: counting fixtures is what let

@@ -4172,9 +4172,169 @@ the guard.
 *Mutation:* reverting the "Last tagged version" row to `v2.10.0` fails
 the guard whenever a `v2.11.0` tag exists.
 
+### D125 — Closed: every method on every generic Go type was invisible (High)
+
+Go 1.18 added generic types, and `docs/languages/go.md` said a generic
+receiver "reports through its base name, `Store`". It reported nothing.
+
+The receiver pattern required `)` immediately after the type name, and
+`func (s *Store[T]) Get` puts `[T]` between them, so no method on any
+generic type was ever found. `_mask_generics` did not help — it blanks
+`<…>`, which Go does not use.
+
+The suite covered the generic *function* form,
+`test_a_generic_function_is_read_through_its_type_parameters`, and never
+the receiver. So the page was the only thing asserting the behaviour,
+and the page was wrong — D123's shape, in code rather than prose.
+
+**The oracle could not have caught this.** lizard does not find these
+methods either: on the fixture it returns nothing for
+`genericMethod`. A construct both implementations miss is invisible to a
+check built on their agreement, which is the limit stated for PHP `match`
+(D119) meeting a real defect rather than a hypothetical one.
+
+A qualified receiver (`func (s *pkg.Store)`) is deliberately still not
+matched: Go requires a method's receiver base type to live in the same
+package, so that form does not compile and is not a gap.
+
+*Closing test:* `tests/test_go_declarations.py`:
+`test_a_generic_method_is_found_through_its_base_type`,
+`test_a_generic_method_with_two_parameters_is_found`,
+`test_a_value_receiver_generic_method_is_found`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* removing `(?:\[[^\]]*\])?` from `_GO_METHOD_RE` returns
+only the non-generic method from the fixture.
+
+### D126 — Closed: an assigned `if` closed the Ruby method at the wrong line (High)
+
+Not an under-count. It reported **a different function than the one in
+the file**.
+
+An opener counted only when its keyword led the stripped line, which
+correctly ignores the modifier form `return 0 if x`. It also ignored
+`x = if cond`, which is an *expression* in Ruby and does need its own
+`end`. The inner `end` therefore dropped depth to zero and the method was
+reported as finishing there:
+
+    def assign_if(cond)      # 8 lines
+      x = if cond
+            1
+          else
+            2
+          end                # reported as the end of the method
+      x + 1                  # outside the reported range
+    end
+
+`assign_if` came back as 6 lines instead of 8, with its last two lines
+attributed to nothing. The Ruby page's own warning applies: a miscounted
+`end` shifts every range after it.
+
+`x = case v`, `x = begin` and the `@memo ||= begin` memoisation idiom are
+the same shape and were equally wrong. The keyword must sit immediately
+after the assignment operator, which is what keeps the genuine modifier
+`x = 1 if cond` opening nothing — asserted beside the fix.
+
+lizard agrees at 2 once the construct is in the fixture, so this one the
+oracle *would* have caught. It was not in the fixture, because the
+fixture was written from the same knowledge as the scanner.
+
+*Closing test:* `tests/test_ruby_declarations.py`:
+`test_an_assigned_if_does_not_close_the_method_early`,
+`test_an_assigned_case_does_not_close_the_method_early`,
+`test_an_or_assigned_begin_does_not_close_the_method_early`, and
+`test_a_modifier_if_after_an_assignment_still_opens_nothing` as the
+guard against over-correcting.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* removing `_RB_ASSIGNED_OPENER_RE` from `_opens` reports
+`assign_if` as 6 lines of 8.
+
+### D127 — Closed: PHP's Elvis operator fell through the hole the nullable fix opened (Medium)
+
+`$x ?: $y` is PHP's short ternary and scored 0.
+
+D115 made a ternary require a following `:` so that `?int` nullable type
+hints stop counting. PHP spells its Elvis operator with exactly the two
+characters that rule excludes, so fixing one defect created another in
+the same expression. The fixture had `$v > 0 ? 1 : 2` and `??` and not
+`?:`.
+
+Counting the long form and not the short one would make a score depend on
+which spelling a codebase prefers — the same argument already written
+down for PHP's word operators.
+
+lizard does not count it either, so it is a **declared divergence** with
+the grammar reasoning, not a silent one.
+
+*Closing test:* `tests/test_php_declarations.py`:
+`test_the_elvis_operator_is_a_decision`, which asserts the neighbours
+that must keep working — the long ternary, `??`, and `?int` — because
+one rule covers all four.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* removing `\?:` from `PHP_COMPLEXITY_RE` scores the fixture's
+`elvisOperator` 1 instead of 2.
+
+### D128 — Closed: Rust's `let … else` decided nothing (Medium)
+
+Stable since Rust 1.65 and the idiomatic early return for a refutable
+pattern: the binding succeeds, or the `else` block diverges. Two paths,
+one decision — and no `if` token anywhere in it, so nothing in a keyword
+set was ever going to see it. The fixture had `if let`, `while let` and
+`?`, but not `let … else`.
+
+The fix carries its own trap, and the test pins it: `if let … else` and
+`while let … else` contain both a `let` and an `else` on one line, and
+their decision is already counted by the `if`/`while`. Counting the
+`let … else` shape there too would score them twice, so the pattern
+excludes it by lookbehind.
+
+lizard does not count `let … else`, so this is a declared divergence.
+
+*Closing test:* `tests/test_rust_declarations.py`:
+`test_a_let_else_is_a_decision`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* removing the `let … else` alternative from
+`RUST_COMPLEXITY_RE` scores the fixture's `let_else` 1 instead of 2;
+removing the lookbehinds scores `if let … else` 2 instead of 1.
+
+### D129 — Closed: the grammar fixtures were a sample, and the page called them the specification (Medium)
+
+`docs/language-support.md` said each fixture "exercises the control-flow
+constructs that language's specification defines". They exercise the
+constructs *I already knew about*, written from the same knowledge as the
+scanners they check — which is the exact failure D119 was opened to end,
+surviving one layer up.
+
+The evidence is D125–D128: four defects, and **none of their constructs
+were in the fixtures**. A generic Go receiver, an assigned Ruby `if`,
+PHP's Elvis operator, Rust's `let … else`. Agreement with an independent
+implementation on a sample of my own choosing is not coverage of a
+grammar, and the page claimed otherwise.
+
+All four constructs are now in the fixtures. The claim on the page is
+narrowed to what is true: the fixtures exercise a *set* of constructs
+from each specification, the set grows when a gap is found, and the
+comparison says nothing about the constructs it does not contain.
+
+D125 also fixes the ceiling on this method rather than the floor: lizard
+finds no generic Go method either, so no amount of fixture coverage would
+have surfaced that one through agreement alone.
+
+*Closing test:* `tests/test_grammar_constructs.py`:
+`test_every_construct_agrees_with_an_independent_implementation` over the
+four added constructs, and `test_every_declared_divergence_is_still_real`
+over the two divergences they introduced.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* deleting the four added fixture functions restores a suite
+that passes while D125–D128 are all present.
+
 ## Disposition
 
-**Every entry is closed.** D124 is a release-checklist omission that cost a build and no artifact: the gate held, the tag was re-pointed. D123 is the shipped README contradicting its own table, found by Marshall reading the page rather than by any check. D121 and D122 were found by CI on the pull request that shipped the rest, after a green local suite — an empty parameter set reported as a pass, and f-strings unmasked on every Python from 3.12. Both are the same shape as the audit that found them: a check that could not fail, and a fix that reached one interpreter. D112 through D120 record a complexity audit that found this project measuring Python against its own comments, missing its boolean operators, and reading a `?` in type position as a ternary in five languages — nine entries, of which D119 is the method failure behind the other eight, and D120 was found by the check D119 built. D110 closed once 2.9.0 put the images on `main` and both absolute URLs returned 200. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+**Every entry is closed.** D125–D129 came from Grok's audit of the 2.11.0 tree, held the release, and are the reason nothing was published: two of them are High, and D126 reports a different function than the one in the file rather than under-reporting. D129 is the method entry — the grammar fixtures were a sample the page called a specification, and none of the four constructs behind D125–D128 were in them. D124 is a release-checklist omission that cost a build and no artifact: the gate held, the tag was re-pointed. D123 is the shipped README contradicting its own table, found by Marshall reading the page rather than by any check. D121 and D122 were found by CI on the pull request that shipped the rest, after a green local suite — an empty parameter set reported as a pass, and f-strings unmasked on every Python from 3.12. Both are the same shape as the audit that found them: a check that could not fail, and a fix that reached one interpreter. D112 through D120 record a complexity audit that found this project measuring Python against its own comments, missing its boolean operators, and reading a `?` in type position as a ternary in five languages — nine entries, of which D119 is the method failure behind the other eight, and D120 was found by the check D119 built. D110 closed once 2.9.0 put the images on `main` and both absolute URLs returned 200. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they

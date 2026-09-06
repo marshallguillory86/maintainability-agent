@@ -131,8 +131,14 @@ GO_COMPLEXITY_RE = re.compile(
 #: decision and this project does not follow it there — see
 #: `tests/test_grammar_constructs.py`, where that divergence is declared
 #: with its reason rather than silently absorbed.
+# `let … else` (stable since 1.65) is the idiomatic early return for a
+# refutable pattern: the binding succeeds or the `else` block diverges.
+# It contains no `if`, so nothing in the keyword set saw it (D128). The
+# lookbehinds keep `if let … else` and `while let … else` from counting
+# twice — there the `if`/`while` already carries the decision.
 RUST_COMPLEXITY_RE = re.compile(
     r"\b(if|for|while)\b|&&|\|\||\?|(?<!_\s)(?<!_)=>"
+    r"|(?<!\bif )(?<!\bwhile )\blet\b[^;]*\belse\b"
 )
 
 
@@ -162,6 +168,11 @@ PHP_COMPLEXITY_RE = re.compile(
     # in the language read as a branch. `?` followed immediately by an
     # identifier character is a type, and a ternary is written with the
     # expression separated: `$x ? 1 : 2`.
+    # `?:` is PHP's short ternary — the Elvis operator — and chooses
+    # between two paths. It is spelled with the exact two characters the
+    # rule below excludes, so it fell through the hole the nullable-type
+    # fix opened: `?int` must not count (D115) and `?:` must (D127).
+    r"|\?:"
     r"|\?(?![.?:\w])"
 )
 

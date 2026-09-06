@@ -3674,7 +3674,7 @@ passing node is no longer reported. Both test agents were unavailable
 the pre-commit work to be wrapped up, which is why test= names claude
 here rather than a test agent.
 
-### D110 — Open: the README's images are invisible on PyPI (Low)
+### D110 — Closed: the README's images are invisible on PyPI (Low)
 
 `pyproject.toml` sets `readme = "README.md"`, so the README *is* the PyPI
 long_description. GitHub resolves repository-relative image paths; PyPI
@@ -3686,18 +3686,27 @@ The cover image has therefore never been seen by anyone who found this
 package on PyPI, which is its primary distribution page. 2.9.0 adds a
 second image on the same terms.
 
-Not fixed in this release, and the reason is ordering rather than
-reluctance. The fix is an absolute `raw.githubusercontent.com/.../main/`
-URL for both images, and that URL cannot resolve until the files are on
-`main` — which is this release. Fixing it before the merge replaces two
-images that render on GitHub with two that render nowhere, which is
-worse for the reader who is actually looking. It is scheduled as the
-first change after this merge, and it is one line each.
+The ordering is why this was filed open rather than fixed in the same
+change. The fix is an absolute `raw.githubusercontent.com/.../main/` URL
+for both images, and that URL cannot resolve until the files are on
+`main`. Fixing it before the merge would have replaced two images that
+render on GitHub with two that render nowhere, which is worse for the
+reader actually looking — Marshall hit exactly that when the workflow
+image was first added with an absolute URL and showed as broken.
 
-*Roles:* found=claude prompt=marshall fix=none test=none run=none
-*Mutation:* pending with the fix — nothing is repaired yet. The
-falsifier, when it lands, is a check that no image reference in
-`README.md` is repository-relative, which fails against this release.
+Closed as the first change after 2.9.0 merged, once both URLs returned
+200. Both are now absolute.
+
+*Closing test:* `tests/test_readme_claims.py`:
+`test_no_readme_image_is_repository_relative`. It fails against 2.9.0 as
+shipped, which is the point: the defect was invisible from inside the
+repository, where every image looks right on GitHub while none of them
+reach PyPI.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
+*Mutation:* restoring either image to its `docs/...` path fails the
+closing test by name. The check is a property of the file rather than of
+a render, so it holds without reaching the network.
 
 ### D111 — Closed: writing about the escape phrase triggered it (Medium)
 
@@ -3742,7 +3751,7 @@ fail on its last, and re-breaks the exemption in
 
 ## Disposition
 
-**D110 is open**, and it is the only one: the README's images do not render on PyPI, and the fix needs the files to be on `main` first, which is this release. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+**Every entry is closed.** D110 closed once 2.9.0 put the images on `main` and both absolute URLs returned 200. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they

@@ -30,6 +30,7 @@ from ._metrics_types import (
     cobol_branch_points,
     fortran_branch_points,
     go_branch_points,
+    rust_branch_points,
     swift_branch_points,
 )
 from ._ranges_c import c_declaration_ranges
@@ -44,6 +45,7 @@ from ._ranges_fortran import (
 from ._ranges_go import go_declaration_ranges
 from ._ranges_java import java_declaration_ranges
 from ._ranges_js import js_declaration_ranges
+from ._ranges_rust import rust_declaration_ranges
 from ._ranges_swift import swift_declaration_ranges
 
 # One set per language, then one table binding each to its scanner.
@@ -75,6 +77,7 @@ CSHARP_SUFFIXES = {".cs"}
 SWIFT_SUFFIXES = {".swift"}
 # Go: one extension, and no header/source split to worry about.
 GO_SUFFIXES = {".go"}
+RUST_SUFFIXES = {".rs"}
 # COBOL, and the copybooks it includes. A `.cpy` carries DATA
 # DIVISION text and no PROCEDURE DIVISION, so it mints nothing and is
 # scanned for size like a C header full of prototypes.
@@ -118,6 +121,7 @@ SCANNERS: tuple[tuple[set[str], object], ...] = (
     (CSHARP_SUFFIXES, csharp_declaration_ranges),
     (SWIFT_SUFFIXES, swift_declaration_ranges),
     (GO_SUFFIXES, go_declaration_ranges),
+    (RUST_SUFFIXES, rust_declaration_ranges),
     (COBOL_SUFFIXES, cobol_declaration_ranges),
     (FORTRAN_SUFFIXES, fortran_declaration_ranges),
     (FIXED_FORM_SUFFIXES, fixed_form_declaration_ranges),
@@ -146,6 +150,10 @@ METRICS: tuple[tuple[set[str], object, object], ...] = (
     # loop counted only its cases, so the construct choosing between them
     # decided nothing.
     (GO_SUFFIXES, go_branch_points, brace_cognitive),
+    # Rust branches on `match` arms, not on the `match` keyword — the
+    # Fortran `select case` lesson — and `?` propagates an error rather
+    # than deciding anything, while idiomatic Rust is full of it.
+    (RUST_SUFFIXES, rust_branch_points, brace_cognitive),
     # COBOL closes scopes with hyphenated `END-` words and with the
     # period that ends a sentence; neither is in the C-family reading.
     (COBOL_SUFFIXES, cobol_branch_points, cobol_cognitive),
@@ -165,7 +173,8 @@ def metrics_for(suffix: str) -> tuple[object, object]:
 # Every extension we attempt declaration detection on at all.
 DECLARATION_SUFFIXES = (
     PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | CPP_SUFFIXES
-    | CSHARP_SUFFIXES | SWIFT_SUFFIXES | GO_SUFFIXES | COBOL_SUFFIXES
+    | CSHARP_SUFFIXES | SWIFT_SUFFIXES | GO_SUFFIXES | RUST_SUFFIXES
+    | COBOL_SUFFIXES
     | FORTRAN_SUFFIXES | FIXED_FORM_SUFFIXES
     | BRACE_SUFFIXES
 )

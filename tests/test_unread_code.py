@@ -129,10 +129,15 @@ def test_a_score_is_never_computed_from_a_minority_of_the_source(tmp_path: Path)
     Ninety unread source files beside readable Python ones. The scan sees
     the Python, clears the population floor on it, and reports a score
     for the repository. It is a score for a fraction of the repository,
-    and nothing in the output says so. (Curl's unread files were C, which
-    1.1.0 reads; the rule is about any unread majority, so these are Rust.)
+    and nothing in the output says so.
+
+    The unread language has moved twice as this project learned to read
+    more of them — Curl's files were C, which 1.1.0 reads, then Rust,
+    which 2.11.0 reads. The rule was never about a language: it is about
+    any unread majority, so these are Scala.
     """
-    files = {f"lib/mod{n}.rs": f"pub fn f{n}(x: i32) -> i32 {{ x + {n} }}\n" for n in range(90)}
+    files = {f"lib/mod{n}.scala": f"object M{n} {{ def f(x: Int): Int = x + {n} }}\n"
+             for n in range(90)}
     files.update({f"tools/help{n}.py": PYTHON % {"n": n} for n in range(150)})
     root = _repo(tmp_path / "mixed", files)
 
@@ -156,15 +161,16 @@ def test_the_report_names_every_unread_source_language(tmp_path: Path) -> None:
         # Read by default now, so it must be absent from the unread list.
         **{f"src/Thing{n}.java": JAVA % {"n": n} for n in range(5)},
         **{f"cmd/main{n}.kt": f"fun f{n}(): Int {{ return {n} }}\n" for n in range(3)},
-        **{f"lib/mod{n}.rs": f"pub fn f{n}() -> i32 {{ {n} }}\n" for n in range(4)},
+        **{f"lib/mod{n}.scala": f"object M{n} {{ def f(): Int = {n} }}\n"
+           for n in range(4)},
         **{f"lib/mod{n}.py": PYTHON % {"n": n} for n in range(200)},
     })
 
     report = build_report(root, load_config(None))
     unread = report["summary"]["unread_source"]
 
-    assert {entry["suffix"] for entry in unread} == {".kt", ".rs"}
-    assert {entry["suffix"]: entry["files"] for entry in unread} == {".kt": 3, ".rs": 4}
+    assert {entry["suffix"] for entry in unread} == {".kt", ".scala"}
+    assert {entry["suffix"]: entry["files"] for entry in unread} == {".kt": 3, ".scala": 4}
     assert report["summary"]["declarations_scanned"] > 0, (
         "the Java and Python in this tree are read, so they must count"
     )
@@ -195,7 +201,7 @@ def test_a_fully_read_repository_is_not_penalised(tmp_path: Path) -> None:
 # the gap:
 SOURCE_BY_SUFFIX: dict[str, str] = {
     ".kt": "package a\n\nfun compute%(n)d(v: Int): Int {\n    if (v > 0) {\n        return v\n    }\n    return -v\n}\n",
-    ".rs": "pub fn compute_%(n)d(v: i32) -> i32 {\n    if v > 0 { v } else { -v }\n}\n",
+    ".scala": "object A%(n)d {\n  def compute(v: Int): Int =\n    if (v > 0) v else -v\n}\n",
 }
 
 

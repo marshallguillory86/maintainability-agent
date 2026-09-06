@@ -80,6 +80,23 @@ GO_COMPLEXITY_RE = re.compile(
 )
 
 
+#: Rust branches on `match` arms rather than on the `match` keyword, the
+#: way Fortran branches on its cases rather than on `select case` — count
+#: both and the construct and its first arm each score. And `?` is *not*
+#: a ternary here: it propagates an error and decides nothing, while
+#: idiomatic Rust is full of it. Counting it would make ordinary error
+#: handling read as branching, which is D78's optional-chaining defect in
+#: another language.
+RUST_COMPLEXITY_RE = re.compile(
+    r"\b(if|for|while|loop)\b|&&|\|\||=>"
+)
+
+
+def rust_branch_points(line: str) -> int:
+    """Decision points on one line of Rust."""
+    return len(RUST_COMPLEXITY_RE.findall(line))
+
+
 def go_branch_points(line: str) -> int:
     """Decision points on one line of Go."""
     return len(GO_COMPLEXITY_RE.findall(line))

@@ -31,6 +31,15 @@ def _add_gate_arguments(parser: argparse.ArgumentParser) -> None:
     """
     parser.add_argument("--fail-on-gate", action="store_true", help="Exit 1 when hard gates fail.")
     parser.add_argument(
+        "--check", metavar="PATH",
+        help="Read proposed content on stdin and report what its budgets "
+             "say, for an agent mid-edit. Needs no repository and no git: "
+             "PATH names the content and is never opened. Reports breaches "
+             "and, for what still fits, how much room is left — a gate says "
+             "no once it is too late to be cheap. Never scores: one file has "
+             "no population. Exits 1 on a breach, silently 0 when clear.",
+    )
+    parser.add_argument(
         "--staged", action="store_true",
         help="Scan what the git index will commit, for a pre-commit hook. "
              "Reads the index rather than the working tree, so half-staged "

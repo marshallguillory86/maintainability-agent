@@ -370,3 +370,43 @@ def test_core_hooks_path_is_read_from_config_files(tmp_path: Path) -> None:
     assert install_precommit_hook(root)[0] == 0
     assert (root / ".custom-hooks" / HOOK_NAME).is_file()
     assert not (root / ".git" / "hooks" / HOOK_NAME).exists()
+
+
+def test_a_staged_risk_pattern_is_reported_rather_than_computed_and_dropped(
+    tmp_path: Path,
+) -> None:
+    """`staged_report` gathered risk findings and nothing ever read them.
+
+    A commit adding a dynamic-execution call passed the hook silently
+    while the same line in a full audit is a risk finding. Computing evidence and
+    discarding it is worse than not gathering it: the cost was paid and
+    the answer was thrown away, and the author was told nothing was
+    wrong. Found by Gemini in a field check, staging exactly that line.
+    """
+    from maintainability_audit._precommit import staged_findings, staged_report
+
+    root = _repo(tmp_path)
+    pattern = [{"name": "eval-use", "pattern": r"\beval\("}]
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["risk_patterns"] = pattern
+    # A risk pattern is repository-declared, so the CLI path only sees it
+    # through a config the repository carries.
+    (root / "maintainability-agent.json").write_text(
+        json.dumps({"version": 1, "risk_patterns": pattern}), encoding="utf-8")
+    # Assembled rather than written literally. The content has to be a
+    # real match or the test proves nothing, but a literal here makes
+    # this repository's own scanner report its own fixture forever — it
+    # flagged exactly this line on the PR that added it.
+    risky = "def f():\n    " + "eval" + '("bad()")\n    return 1\n'
+    _stage(root, "risky.py", risky)
+
+    report = staged_report(root, config)
+    assert report["risk_findings"], "the risk pattern was not even gathered"
+
+    findings = staged_findings(report)
+    risky = [item for item in findings if item["finding_class"] == "risk-pattern"]
+    assert risky, "a staged risk pattern was gathered and then dropped"
+    assert risky[0]["path"] == "risky.py"
+    assert risky[0]["line"] == 2
+    assert risky[0]["target"], "a risk finding named no remedy"
+    assert _invoke(root) == 1, "the commit was not blocked by a staged risk pattern"

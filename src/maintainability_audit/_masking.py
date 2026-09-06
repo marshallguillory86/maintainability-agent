@@ -298,3 +298,48 @@ def mask_swift_lines(lines: list[str]) -> list[str]:
         out.append(" " * len(rest) if inside else rest)
         masked.append("".join(out))
     return mask_lines(masked)
+
+#: PHP's open and close tags, including the short echo form `<?=`. A
+#: `.php` file is a template that happens to contain code: it is HTML
+#: until an opening tag says otherwise, and HTML again after `?>`.
+_PHP_OPEN_RE = re.compile(r"<\?(?:php\b|=)?")
+_PHP_CLOSE_RE = re.compile(r"\?>")
+
+
+def mask_php_lines(lines: list[str]) -> list[str]:
+    """PHP, with everything outside `<?php … ?>` blanked before it is read.
+
+    This is not a refinement, it is the first thing that has to happen.
+    Text outside the tags is markup, and markup is full of braces — a
+    CSS rule, an inline script, a snippet of sample code in a `<p>`.
+    Counted, they move depth, and a desynced depth mis-bounds every
+    declaration after it rather than just the one it appeared in.
+
+    A file with no opening tag at all is entirely markup and reads as
+    empty, which is correct: a `.php` file that never enters PHP declares
+    nothing.
+
+    Length is preserved per line, as in every masker here, so reported
+    line numbers still match the original source.
+    """
+    masked: list[str] = []
+    inside = False
+    for line in lines:
+        out = []
+        position = 0
+        while position < len(line):
+            pattern = _PHP_CLOSE_RE if inside else _PHP_OPEN_RE
+            match = pattern.search(line, position)
+            if match is None:
+                rest = line[position:]
+                out.append(rest if inside else " " * len(rest))
+                position = len(line)
+                break
+            segment = line[position:match.start()]
+            out.append(segment if inside else " " * len(segment))
+            # The tag itself is never code.
+            out.append(" " * len(match.group(0)))
+            inside = not inside
+            position = match.end()
+        masked.append("".join(out))
+    return mask_lines(masked)

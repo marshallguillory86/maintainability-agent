@@ -92,6 +92,23 @@ RUST_COMPLEXITY_RE = re.compile(
 )
 
 
+#: PHP spells its multi-way branch `elseif`, one word, and there is no
+#: word boundary inside it — so the C-family pattern matches neither `if`
+#: nor `elif` there and a dispatch chain scores *zero*. It also spells
+#: `foreach` for its primary loop and offers `and`/`or`/`xor` as word
+#: operators. Measured with C's keywords, ordinary PHP reads as
+#: branchless: Fortran's defect, in a language nobody expected it in.
+PHP_COMPLEXITY_RE = re.compile(
+    r"\b(elseif|if|for|foreach|while|case|catch|and|or|xor)\b"
+    r"|&&|\|\||\?\?|\?(?![.?:])"
+)
+
+
+def php_branch_points(line: str) -> int:
+    """Decision points on one line of PHP."""
+    return len(PHP_COMPLEXITY_RE.findall(line))
+
+
 def rust_branch_points(line: str) -> int:
     """Decision points on one line of Rust."""
     return len(RUST_COMPLEXITY_RE.findall(line))

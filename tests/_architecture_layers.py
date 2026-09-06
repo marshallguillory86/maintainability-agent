@@ -84,7 +84,7 @@ PARSING = {"source", "declarations", "_cognitive", "_tokens", "_xml",
            # module because the receiver form — `func (s *Store) Get` —
            # is a parameter list that is not the parameters, and no
            # sibling's patterns survive contact with it.
-           "_ranges_go", "_ranges_rust",
+           "_ranges_go", "_ranges_rust", "_ranges_php",
            "_ranges_cobol"}
 # ADR 003: `_semantic` normalizes and classifies; `_semantic_ts` reads
 # TypeScript facts (recordings, an already-installed tsc through

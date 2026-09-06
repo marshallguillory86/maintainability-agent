@@ -49,7 +49,16 @@ FUNC_PATTERNS = [
 # fires hardest on exactly the modern JavaScript this project claims to
 # score.
 COMPLEXITY_RE = re.compile(
-    r"\b(if|elif|for|while|except|case|catch)\b|&&|\|\||\?\?|\?(?![.?])"
+    r"\b(if|elif|for|while|except|case|catch)\b|&&|\|\||\?\?"
+    # A ternary needs both halves, so the `:` is required. Without it a
+    # `?` in *type* position counted as a decision: C#'s `int? v`,
+    # TypeScript's `v?: number`, Java's `List<?>`. Each is a nullable or
+    # optional marker that decides nothing, and each was scoring one —
+    # D78's optional-chaining defect again, in three more spellings.
+    #
+    # The cost is a ternary split across lines, which is not counted.
+    # That under-reports, which is the direction this project errs in.
+    r"|\?(?![.?:])(?=[^?]*:)"
 )
 
 

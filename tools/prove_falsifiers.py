@@ -41,6 +41,7 @@ reported so a reader knows which kind of proof they have.
 from __future__ import annotations
 
 import argparse
+import ast
 import os
 import re
 import shutil
@@ -241,6 +242,19 @@ def _prove_one(ident: str, names: list[str], base: str) -> list[str]:
 
 
 
+def _module_docstring(source: str) -> str:
+    """The file's own docstring, or "" — never a function's.
+
+    The escape has to be attributable. Scanning the whole source made any
+    test's docstring a claim about every test in the file.
+    """
+    try:
+        module = ast.parse(source)
+    except SyntaxError:
+        return ""
+    return ast.get_docstring(module) or ""
+
+
 def declares_exemption(text: str) -> str | None:
     """The stated reason a file or test covers existing behaviour, or None.
 
@@ -361,12 +375,22 @@ def _prove_added_tests(paths: list[str], base: str) -> list[str]:
         exempt: set[str] = set()
         for path in paths:
             source = (tree / path).read_text(encoding="utf-8")
-            reason = declares_exemption(source)
+            # A file-level claim is one the *module* docstring makes.
+            # Reading the whole file exempted every test in it because a
+            # single test declared the escape for itself — D109 made the
+            # reporting per-test and left this half file-level, so one
+            # legitimate exemption silenced nineteen falsifiers beside it.
+            reason = declares_exemption(_module_docstring(source))
             if reason is not None:
                 print(f"{path}: exempt — covers existing behaviour: {reason}")
                 exempt.add(path)
                 continue
-            node_ids += tests_in(source, Path(path).name)
+            for node in tests_in(source, Path(path).name):
+                own = declares_exemption(function_source(source, node.split("::", 1)[1]))
+                if own is not None:
+                    print(f"{node}: exempt — covers existing behaviour: {own}")
+                    continue
+                node_ids.append(node)
         if not node_ids:
             return []
         failed, passed = _prove(base, node_ids, tree)

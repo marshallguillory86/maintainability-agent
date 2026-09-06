@@ -53,6 +53,7 @@ flowchart TB
     _identity["_identity"]
     _tdd_view["_tdd_view"]
     _precommit_view["_precommit_view"]
+    _in_loop_view["_in_loop_view"]
   end
 
   subgraph assembly["assembly — builds the report, calls the scorer once"]
@@ -68,6 +69,7 @@ flowchart TB
     _ratchet["_ratchet"]
     _run_comparison["_run_comparison"]
     _precommit["_precommit"]
+    _in_loop["_in_loop"]
     _attestation["_attestation"]
     _work_order_weights["_work_order_weights"]
     _backfill["_backfill"]

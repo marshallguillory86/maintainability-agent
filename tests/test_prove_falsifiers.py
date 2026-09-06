@@ -342,3 +342,44 @@ def test_a_quoted_escape_phrase_does_not_exempt_anything() -> None:
     # The declaration almost always opens a docstring, and the triple
     # quote in front of it is the delimiter, not somebody quoting it.
     assert prover.declares_exemption(f'    """{phrase} already reported.')
+
+
+def test_one_test_declaring_the_escape_does_not_exempt_the_whole_file(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A per-test exemption must not silence the file it sits in.
+
+    D109 made *reporting* per-test for an added file and left the
+    *exemption* file-level. So a single test that legitimately covers
+    pre-existing behaviour — Grok wrote one in this very branch — exempted
+    all twenty tests beside it, and four falsifiers written to close a
+    field check went unproven with the gate reporting green.
+
+    The escape is a file-level claim only when the *module* docstring
+    makes it. A test's own docstring exempts that test and nothing else,
+    which is exactly how the in-place rule already behaves.
+    """
+    added = "tests/test_in_loop_check.py"
+    source = (ROOT / added).read_text(encoding="utf-8")
+    nodes = prover.tests_in(source, Path(added).name)
+    assert len(nodes) > 2, "fixture file must carry several tests"
+
+    exempting = [node for node in nodes
+                 if prover.declares_exemption(
+                     prover.function_source(source, node.split("::", 1)[1]))]
+    assert exempting, (
+        "fixture file must contain a test that declares the escape"
+    )
+
+    seen: list[str] = []
+    monkeypatch.setattr(prover, "_prove",
+                        lambda base, ids, tree: (seen.extend(ids) or (list(ids), [])))
+    prover._prove_added_tests([added], "HEAD")
+
+    assert seen, "the file was exempted whole by one test's declaration"
+    assert all(node not in seen for node in exempting), (
+        "a test that declares the escape was still proven"
+    )
+    assert len(seen) == len(nodes) - len(exempting), (
+        f"proved {len(seen)} of {len(nodes) - len(exempting)} unexempted tests"
+    )

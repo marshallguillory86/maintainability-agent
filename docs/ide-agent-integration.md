@@ -84,6 +84,52 @@ maintainability-agent --config maintainability-agent.json \
   --baseline maintainability-baseline.json --fail-on-new
 ```
 
+### Check Content Before Writing It
+
+The in-loop door, and the cheapest call this tool offers. Content arrives
+on stdin; `PATH` names it and is never opened, so what you pass is what
+gets measured rather than whatever is already on disk.
+
+```bash
+printf '%s' "$PROPOSED" | maintainability-agent --check src/thing.py --format json
+```
+
+No repository, no git, no scan — an agent mid-edit is not at a commit
+boundary and should not have to reach one to get an answer. It reports
+breaches **and headroom** — the lines left in each budget — so a function can
+be sized before it is written rather than after being refused. Exit 1 on
+a breach, 0 when clear.
+
+It never scores, and says so: one file has no population to draw a rate
+from. A language with no declaration scanner reports that it read
+nothing, which is deliberately distinguishable from finding nothing.
+
+### Check What a Commit Will Contain
+
+```bash
+maintainability-agent --staged --format json
+```
+
+Reads the git **index**, not the working tree, so a half-staged file is
+measured as it will land. Reports threshold breaches and any suppression
+marker the change *added*. `--install-precommit-hook` installs it as a
+git hook; it refuses to replace a hook it did not write and honours
+`core.hooksPath`.
+
+Neither of these is a substitute for an audit, and neither is an audit.
+Four ways an agent gets that wrong, named because each produces a
+confident green:
+
+- **`--staged` before `git add`** reads the index, which still holds the
+  old content. Stage first, then check.
+- **A diff piped into `--check`** is not file content. It will say it
+  could not parse; do not read that as clean.
+- **`--check` proves a budget, not a fix.** Duplication, dead code and
+  unpaired tests are population properties — one file cannot show them,
+  and a full audit is what answers for them.
+- **Re-running a full audit after every edit** is the opposite mistake.
+  Use these while working and the audit when the work is done.
+
 ### Generate Agent Standards
 
 ```bash

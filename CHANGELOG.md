@@ -2,7 +2,7 @@
 
 All notable changes to Maintainability Agent will be documented here.
 
-## Unreleased
+## 2.10.0 - 2026-09-05
 
 ### Added — `--check`, the in-loop door
 
@@ -27,6 +27,41 @@ All notable changes to Maintainability Agent will be documented here.
   README, `docs/cli.md`, `docs/ide-agent-integration.md`, and the
   packaged skill, which teaches agents to reach for this instead of a
   full audit when the question is "does this fit".
+
+
+### Fixed — six defects, none of them found by the author
+
+Every one came from somewhere other than the person who wrote the code:
+a field check that read no source, an adversarial audit, and the gate
+turning on itself.
+
+- **Classes were measured against the function budget.** `max_class_lines`
+  (300) has shipped for versions — the config schema documents it and the
+  declaration scanner honours it — and only the in-loop check did not, so
+  an ordinary 111-line class reported `-31 lines left` against a budget it
+  was nowhere near.
+- **Negative headroom printed beside exit 0.** Headroom means what is
+  left; a breach is a finding, not a warning carrying a minus sign.
+- **A diff piped into `--check` read as clean.** The parser refused it,
+  nothing was found, and `declarations_read: true` reported the file as
+  read and fine — absence as a pass, through the feature whose docstring
+  promises to refuse it, by way of the likeliest mistake at that door.
+- **`--staged` gathered risk findings and dropped them.** A staged
+  `eval("bad()")` passed in silence while the same line is a finding in a
+  full audit.
+- **`check_json` wrote `scored: false` as a literal** rather than reading
+  the result, so the field would have kept reassuring a caller through
+  the exact bug it exists to disclose.
+- **`over_by` always measured lines against the function budget**, so a
+  short, complex function rendered as `-71 over`.
+
+### Fixed — the falsifier gate had stopped proving an entire file
+
+- One test declaring `Covers existing behaviour:` exempted every test
+  beside it, because 2.9.0 made the added-file check report per test and
+  left the exemption file-level. Nineteen falsifiers went unproven with
+  the gate reporting green. A file-level claim now has to come from the
+  **module** docstring; a test's own docstring exempts that test alone.
 
 ## 2.9.0 - 2026-09-05
 

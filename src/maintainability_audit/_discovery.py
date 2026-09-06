@@ -401,6 +401,47 @@ def _is_test(relative: str) -> bool:
     return any(segment in TEST_DIRECTORY_NAMES for segment in segments)
 
 
+def _directory_provenance(
+    vendored: dict[str, Any], generated: dict[str, Any], assets: dict[str, Any]
+) -> dict[str, str]:
+    """One provenance per directory, vendored winning over generated."""
+    return {
+        **{name: Provenance.VENDORED.value for name in vendored},
+        **{name: Provenance.GENERATED.value for name in generated
+           if name not in vendored},
+        **{name: Provenance.ASSET.value for name in assets},
+    }
+
+
+def _record_file(
+    inventory: Inventory, relative: str, verdict: Any, evidence: Any,
+    owner: str | None, suffix: str, seen: set[tuple[str, str]],
+) -> None:
+    """Add one classified file to the inventory.
+
+    Split out of `discover`, which reached complexity 19 against this
+    project's own limit of 15 once the measurement was corrected — it had
+    been reported as 7 while comments and string literals were being
+    counted as branches and `and`/`or` were not.
+
+    One classification entry per *directory* rather than per file: 10,759
+    identical rows for material-ui's icons would bury everything else.
+    """
+    if verdict is Provenance.FIRST_PARTY:
+        language = KNOWN_SOURCE_SUFFIXES[suffix]
+        inventory.languages[language] = inventory.languages.get(language, 0) + 1
+    inventory.provenance[relative] = verdict
+    if verdict is Provenance.FIRST_PARTY or evidence is None:
+        return
+    key = (owner or relative, verdict.value)
+    if key in seen:
+        return
+    seen.add(key)
+    inventory.classifications.append(
+        {"path": owner or relative, "provenance": verdict.value,
+         "evidence": evidence})
+
+
 def discover(root: Path, config: dict[str, Any]) -> Inventory:
     """One pass over the tree: what languages, and whose code.
 
@@ -420,12 +461,8 @@ def discover(root: Path, config: dict[str, Any]) -> Inventory:
     }
 
     inventory = Inventory()
-    inventory.directories = {
-        **{name: Provenance.VENDORED.value for name in vendored_dirs},
-        **{name: Provenance.GENERATED.value for name in generated_dirs
-           if name not in vendored_dirs},
-        **{name: Provenance.ASSET.value for name in asset_dirs},
-    }
+    inventory.directories = _directory_provenance(
+        vendored_dirs, generated_dirs, asset_dirs)
     seen_directories: set[tuple[str, str]] = set()
     for path in sorted(root.rglob("*")):
         if not path.is_file() or path.suffix not in KNOWN_SOURCE_SUFFIXES:
@@ -433,23 +470,10 @@ def discover(root: Path, config: dict[str, Any]) -> Inventory:
         relative = path.relative_to(root).as_posix()
         if is_excluded(relative, list(excludes)):
             continue
-
         verdict, evidence, owner = _classify(
             path, relative, generated_dirs, vendored_dirs, asset_dirs)
-        if verdict is Provenance.FIRST_PARTY:
-            language = KNOWN_SOURCE_SUFFIXES[path.suffix]
-            inventory.languages[language] = inventory.languages.get(language, 0) + 1
-        inventory.provenance[relative] = verdict
-        if verdict is Provenance.FIRST_PARTY or evidence is None:
-            continue
-        # One entry per directory rather than per file: 10,759 identical
-        # rows for material-ui's icons would bury everything else.
-        key = (owner or relative, verdict.value)
-        if key in seen_directories:
-            continue
-        seen_directories.add(key)
-        inventory.classifications.append(
-            {"path": owner or relative, "provenance": verdict.value, "evidence": evidence})
+        _record_file(inventory, relative, verdict, evidence, owner,
+                     path.suffix, seen_directories)
     _record_asset_dirs(inventory, asset_dirs, seen_directories)
     return inventory
 

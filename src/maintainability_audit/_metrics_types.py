@@ -139,6 +139,25 @@ def go_branch_points(line: str) -> int:
     return len(GO_COMPLEXITY_RE.findall(line))
 
 
+#: Python's decision points, from the language reference rather than
+#: from the C family it was borrowed from. `and` and `or` are the boolean
+#: operators — the shared pattern looked for `&&` and `||`, which Python
+#: does not have, so every one of them was invisible: 3,199 in this
+#: repository alone. `if` covers the statement, the ternary
+#: (`a if b else c`) and the comprehension condition, all of which are
+#: decisions. `case` counts and `match` does not, by the arms-not-header
+#: rule shared with Go, PHP, Ruby and Fortran. `not` decides nothing, and
+#: neither does `else`.
+PYTHON_COMPLEXITY_RE = re.compile(
+    r"\b(if|elif|for|while|except|case|and|or)\b"
+)
+
+
+def python_branch_points(line: str) -> int:
+    """Decision points on one line of Python."""
+    return len(PYTHON_COMPLEXITY_RE.findall(line))
+
+
 def branch_points(line: str) -> int:
     """Decision points on one line, for the C family and Python."""
     return len(COMPLEXITY_RE.findall(line))

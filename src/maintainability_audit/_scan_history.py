@@ -369,6 +369,70 @@ def thresholds_digest(thresholds: dict[str, Any]) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
+def _contributed_tools(coverage: dict[str, Any]) -> tuple[str, ...]:
+    """The analyzers that actually produced measurements.
+
+    Never the pool that was *selected*: a tool that failed to run changes
+    the coverage exactly as much as one that was never chosen, and
+    comparability is about what the run did.
+    """
+    return tuple(sorted(
+        entry["tool"]
+        for entries in (coverage.get("by_outcome") or {}).values()
+        for entry in entries
+        if entry.get("tier") == "analyzer" and entry.get("measurements") is not None
+    ))
+
+
+def _populations(summary: dict[str, Any]) -> dict[str, int]:
+    """The counts a later reader needs to tell a bigger tree from a worse one."""
+    return {
+        key: int(summary[key])
+        for key in ("files_scanned", "declarations_scanned",
+                    "production_files_scanned", "production_declarations_scanned")
+        if isinstance(summary.get(key), int)
+    }
+
+
+def _pillar_conditions(report: dict[str, Any]) -> dict[str, Any]:
+    return {
+        entry["pillar"]: entry.get("condition")
+        for entry in (report.get("pillars") or [])
+        if isinstance(entry, dict) and entry.get("pillar")
+    }
+
+
+def _recorded_identities(report: dict[str, Any]) -> tuple[dict[str, Any], ...]:
+    from ._finding_match import identities_from_report
+
+    return tuple(
+        asdict(identity)
+        for identity in sorted(identities_from_report(report),
+                               key=lambda i: i.fingerprint)
+    )
+
+
+def _score_fields(score: dict[str, Any]) -> dict[str, Any]:
+    """The published numbers, straight off the score document.
+
+    `or` defaults rather than KeyError throughout: a withheld score has
+    no categories and no range, and a record of that scan is still a
+    record. Extracted because a dozen such defaults are a dozen decision
+    points, and `record_of` reached complexity 29 carrying them all.
+    """
+    span = score.get("maintainability_range") or [None, None]
+    return {
+        "estimate": score.get("maintainability_estimate"),
+        "range_low": span[0],
+        "range_high": span[-1],
+        "categories": dict(score.get("categories") or {}),
+        "aspects": dict(score.get("aspects") or {}),
+        "evidence_status": str(
+            (score.get("evidence_status") or {}).get("status") or ""
+        ),
+    }
+
+
 def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
               calibration: float, fingerprints: tuple[str, ...],
               targeted: tuple[str, ...] = (), backfilled: bool = False) -> ScanRecord:
@@ -382,17 +446,10 @@ def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
     """
     from datetime import UTC, datetime
 
-    from ._finding_match import identities_from_report
-
     coverage = report.get("analyzer_coverage") or {}
-    contributed = tuple(sorted(
-        entry["tool"]
-        for entries in (coverage.get("by_outcome") or {}).values()
-        for entry in entries
-        if entry.get("tier") == "analyzer" and entry.get("measurements") is not None
-    ))
+    contributed = _contributed_tools(coverage)
     summary = report.get("summary") or {}
-    score = report.get("score") or {}
+    published = _score_fields(report.get("score") or {})
     return ScanRecord(
         recorded_at=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         commit=report.get("git_commit") or "",
@@ -407,33 +464,17 @@ def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
         # opts in by setting one field rather than by threading a new
         # argument through every caller of this function.
         transformation=str(report.get("transformation") or ""),
-        estimate=score.get("maintainability_estimate"),
-        range_low=(score.get("maintainability_range") or [None, None])[0],
-        range_high=(score.get("maintainability_range") or [None, None])[-1],
-        populations={
-            key: int(summary[key])
-            for key in ("files_scanned", "declarations_scanned",
-                        "production_files_scanned", "production_declarations_scanned")
-            if isinstance(summary.get(key), int)
-        },
+        estimate=published["estimate"],
+        range_low=published["range_low"],
+        range_high=published["range_high"],
+        populations=_populations(summary),
         fingerprints=fingerprints,
-        identities=tuple(
-            asdict(identity)
-            for identity in sorted(identities_from_report(report),
-                                   key=lambda i: i.fingerprint)
-        ),
-        # Published values, straight off the score document. `or {}`
-        # rather than KeyError: a withheld score has no categories, and
-        # a record of that scan is still a record.
-        categories=dict(score.get("categories") or {}),
-        aspects=dict(score.get("aspects") or {}),
-        pillars={
-            entry["pillar"]: entry.get("condition")
-            for entry in (report.get("pillars") or [])
-            if isinstance(entry, dict) and entry.get("pillar")
-        },
+        identities=_recorded_identities(report),
+        categories=published["categories"],
+        aspects=published["aspects"],
+        pillars=_pillar_conditions(report),
         practice_level=(report.get("practice") or {}).get("level"),
-        evidence_status=str((score.get("evidence_status") or {}).get("status") or ""),
+        evidence_status=published["evidence_status"],
         targeted=targeted,
         backfilled=backfilled,
     )

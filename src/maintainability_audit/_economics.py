@@ -35,6 +35,39 @@ FORMULA = (
 )
 
 
+def _labor_range(block: dict[str, Any]) -> dict[str, float] | None:
+    """The three-point cost range, or None when it is not fully stated.
+
+    Environment values override the file for this run only. `None` is a
+    real answer: defaulting a cost rate nobody stated would put invented
+    money in a report.
+    """
+    labor = dict(block.get("loaded_engineering_cost_per_hour") or {})
+    for bound, variable in _ENV_LABOR.items():
+        value = os.environ.get(variable)
+        if value is not None:
+            labor[bound] = float(value)
+    if not all(bound in labor for bound in ("low", "base", "high")):
+        return None
+    ordered = {bound: float(labor[bound]) for bound in ("low", "base", "high")}
+    if not 0 < ordered["low"] <= ordered["base"] <= ordered["high"]:
+        raise ValueError(
+            "loaded_engineering_cost_per_hour must satisfy "
+            f"0 < low <= base <= high, got {ordered}"
+        )
+    return ordered
+
+
+def _optional_context(block: dict[str, Any]) -> dict[str, Any]:
+    """Fields carried through only when the operator stated them."""
+    return {
+        name: block[name]
+        for name in ("reliability_tier", "typical_review_minutes_per_change",
+                     "representative_incident_cost")
+        if block.get(name) is not None
+    }
+
+
 def economic_context_from(config: dict[str, Any]) -> dict[str, Any] | None:
     """The configured context, with one-run environment overrides applied.
 
@@ -44,19 +77,9 @@ def economic_context_from(config: dict[str, Any]) -> dict[str, Any] | None:
     only; nothing here persists them (the TTY ask is what writes).
     """
     block = dict(config.get("economic_context") or {})
-    labor = dict(block.get("loaded_engineering_cost_per_hour") or {})
-    for bound, variable in _ENV_LABOR.items():
-        value = os.environ.get(variable)
-        if value is not None:
-            labor[bound] = float(value)
-    if not all(bound in labor for bound in ("low", "base", "high")):
+    labor = _labor_range(block)
+    if labor is None:
         return None
-
-    labor = {bound: float(labor[bound]) for bound in ("low", "base", "high")}
-    if not 0 < labor["low"] <= labor["base"] <= labor["high"]:
-        raise ValueError(
-            f"loaded_engineering_cost_per_hour must satisfy 0 < low <= base <= high, got {labor}"
-        )
 
     currency = os.environ.get("MAINTAINABILITY_CURRENCY") or block.get("currency") or "USD"
     horizon = os.environ.get("MAINTAINABILITY_HORIZON_MONTHS") or block.get(
@@ -73,10 +96,7 @@ def economic_context_from(config: dict[str, Any]) -> dict[str, Any] | None:
                                  or DEFAULT_INCREMENTAL_HOURS).items()
         },
     }
-    for optional in ("reliability_tier", "typical_review_minutes_per_change",
-                     "representative_incident_cost"):
-        if block.get(optional) is not None:
-            context[optional] = block[optional]
+    context.update(_optional_context(block))
     return context
 
 

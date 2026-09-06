@@ -22,6 +22,7 @@ from ._cognitive import (
     swift_cognitive,
 )
 from ._finding_match import normalized_body_digest
+from ._masking import mask_python_lines
 from ._metrics_types import (
     FUNC_PATTERNS,
     DeclRange,
@@ -31,6 +32,7 @@ from ._metrics_types import (
     fortran_branch_points,
     go_branch_points,
     php_branch_points,
+    python_branch_points,
     ruby_branch_points,
     rust_branch_points,
     swift_branch_points,
@@ -151,6 +153,15 @@ SCANNERS: tuple[tuple[set[str], object], ...] = (
 # was read from braces, which Fortran does not have, so four flat
 # `if`s and four deeply nested ones both scored 8.
 METRICS: tuple[tuple[set[str], object, object], ...] = (
+    # Python's own operators. The shared pattern carried C's `&&` and
+    # `||` into a language that spells them `and` and `or`, so every
+    # boolean operator went uncounted (2.11.0).
+    # `brace_cognitive`, not `python_cognitive`: this reader is only
+    # reached when the AST did not supply a cognitive score, which for
+    # Python means the file did not parse. `python_cognitive` walks a
+    # tree and there is no tree in that case — it was handed the raw
+    # lines and raised.
+    (PYTHON_SUFFIXES, python_branch_points, brace_cognitive),
     # Swift is braced and reads its nesting the C-family way; only the
     # keyword vocabulary differs, and `guard` is the difference that
     # matters — without it a guard-heavy function reads as branchless.
@@ -312,10 +323,14 @@ def declaration_ranges(path: Path, lines: list[str]) -> tuple[list[DeclRange], l
     if path.suffix in PYTHON_SUFFIXES:
         parsed = _python_function_ranges("\n".join(lines))
         if parsed is not None:
-            return parsed, lines
+            # Masked, like every other language. Returning the raw lines
+            # here meant Python scored its comments and string literals
+            # as branches: a branchless four-line function came back at
+            # complexity 4 (2.11.0).
+            return parsed, mask_python_lines(lines)
         # Only a syntax error reaches the patterns below, and only for
         # Python — which is the one language they were written for.
-        return _regex_function_ranges(lines), lines
+        return _regex_function_ranges(lines), mask_python_lines(lines)
     for suffixes, scanner in SCANNERS:
         if path.suffix in suffixes:
             # Always the language's own scanner, never the last-resort

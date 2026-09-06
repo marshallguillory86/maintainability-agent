@@ -343,3 +343,102 @@ def mask_php_lines(lines: list[str]) -> list[str]:
             position = match.end()
         masked.append("".join(out))
     return mask_lines(masked)
+
+def _is_fstring(text: str) -> bool:
+    """Whether a STRING token is an f-string, by its prefix."""
+    prefix = text[:3].lower()
+    return "f" in prefix.split('"')[0].split("'")[0]
+
+
+def _blank_fstring_literals(rows: list[list[str]], token: object) -> None:
+    """Blank an f-string's prose and keep the code inside its braces.
+
+    On Python 3.11 an f-string is a single STRING token, so blanking the
+    token whole removes the expressions written inside `{…}` — which are
+    code, and frequently the only place a ternary or a comprehension
+    appears. Found by hand-counting a function the oracle still disagreed
+    on after the first fix: we said 7, the grammar says 11.
+
+    `{{` and `}}` are escaped braces and hold nothing.
+    """
+    (first, start), (_last, _end) = token.start, token.end
+    text = token.string
+    line, column = first, start
+    depth = 0
+    index = 0
+    while index < len(text):
+        char = text[index]
+        pair = text[index:index + 2]
+        if pair in ("{{", "}}"):
+            keep = False
+            step = 2
+        elif char == "{":
+            depth += 1
+            keep = False
+            step = 1
+        elif char == "}":
+            depth = max(0, depth - 1)
+            keep = False
+            step = 1
+        else:
+            keep = depth > 0
+            step = 1
+        for offset in range(step):
+            if char == "\n":
+                line += 1
+                column = 0
+                continue
+            if not keep and line - 1 < len(rows) and column < len(rows[line - 1]):
+                rows[line - 1][column] = " "
+            column += 1
+            if offset + 1 < step:
+                char = text[index + offset + 1]
+        index += step
+
+
+def mask_python_lines(lines: list[str]) -> list[str]:
+    """Python, with comments and string literals blanked by its own lexer.
+
+    Not a regex. `tokenize` is the tokeniser CPython itself uses, so what
+    counts as a comment or a string is decided by the language rather
+    than by a pattern somebody wrote from memory — which is exactly how
+    the defect this fixes arrived.
+
+    Until 2.11.0 Python was handed its **raw** source to score complexity
+    against, while every other language got a masked copy. A branchless
+    four-line function scored 4, its every point supplied by one comment
+    and one string literal, and 384 branch points on this repository's
+    own 121 files came from prose inside docstrings. The line-local
+    masker would not have been enough on its own: a triple-quoted string
+    spans lines and survives it.
+
+    Length is preserved per line, as in every masker here, so reported
+    line numbers still match the original source. A file the tokeniser
+    refuses — a syntax error, a partial file — falls back to the
+    line-local masker rather than going unmasked, because unmasked is
+    the state this function exists to end.
+    """
+    import io
+    import tokenize
+
+    rows = [list(line) for line in lines]
+    try:
+        tokens = list(tokenize.generate_tokens(io.StringIO("\n".join(lines)).readline))
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        return mask_lines(lines)
+    for token in tokens:
+        if token.type not in (tokenize.COMMENT, tokenize.STRING):
+            continue
+        if _is_fstring(token.string):
+            _blank_fstring_literals(rows, token)
+            continue
+        (first, start), (last, end) = token.start, token.end
+        for number in range(first, last + 1):
+            if number - 1 >= len(rows):
+                break
+            row = rows[number - 1]
+            begin = start if number == first else 0
+            finish = end if number == last else len(row)
+            for index in range(begin, min(finish, len(row))):
+                row[index] = " "
+    return ["".join(row) for row in rows]

@@ -91,20 +91,45 @@ DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
 }
 
 
+def _bare(name: str) -> str:
+    """The construct's own name, without whoever qualified it.
+
+    The two tools qualify differently — lizard writes Java's methods as
+    `Constructs::forLoop` and Rust's as plain `for_loop`, while this
+    project writes `Store::get` for Rust and a bare name for Java. Both
+    conventions are defensible and neither is what this test is about, so
+    the comparison is on the trailing segment. `_no_two_constructs_share`
+    keeps that from silently pairing the wrong functions.
+    """
+    for separator in ("::", "#", "."):
+        name = name.rsplit(separator, 1)[-1]
+    return name
+
+
+def _no_two_constructs_share(names: list[str], where: str) -> None:
+    bare = [_bare(name) for name in names]
+    duplicates = {name for name in bare if bare.count(name) > 1}
+    assert not duplicates, (
+        f"{where} has constructs whose short names collide {sorted(duplicates)}; "
+        "the comparison would pair the wrong functions"
+    )
+
+
 def _ours(path: Path) -> dict[str, int]:
     lines = path.read_text(encoding="utf-8").splitlines()
-    return {
-        metric.name: metric.complexity
-        for metric in detect_functions(path.parent, path, lines, THRESHOLDS)
-    }
+    found = detect_functions(path.parent, path, lines, THRESHOLDS)
+    _no_two_constructs_share([m.name for m in found], f"{path.name} (ours)")
+    return {_bare(metric.name): metric.complexity for metric in found}
 
 
 def _lizard(path: Path) -> dict[str, int]:
     import lizard
 
+    functions = lizard.analyze_file(str(path)).function_list
+    _no_two_constructs_share([f.name for f in functions], f"{path.name} (lizard)")
     return {
-        function.name: function.cyclomatic_complexity
-        for function in lizard.analyze_file(str(path)).function_list
+        _bare(function.name): function.cyclomatic_complexity
+        for function in functions
     }
 
 

@@ -145,6 +145,67 @@ def _interactive_config(root: Path, config_arg: str | None) -> dict:
     return config
 
 
+#: Flags `--staged` will not silently ignore. Each one asks for
+#: something a pre-commit scan refuses by design — a revspec other than
+#: the index, a write, a comparison against history, a repository gate —
+#: and a hook that accepts the flag and does nothing with it teaches the
+#: author it was honoured.
+_STAGED_REFUSES = {
+    "changed_only": "--changed-only", "backfill": "--backfill",
+    "conformance": "--conformance", "record_history": "--record-history",
+    "fail_on_regression": "--fail-on-regression", "fail_on_gate": "--fail-on-gate",
+    "write_baseline": "--write-baseline", "output": "--output",
+    "prompt_output": "--prompt-output", "comment_output": "--comment-output",
+    "attestation_output": "--attestation-output", "html_output": "--html-output",
+    "sarif_output": "--sarif-output", "transformation": "--transformation",
+    "agent_instructions_output": "--agent-instructions-output",
+    "hostile_prompt_output": "--hostile-prompt-output",
+}
+
+
+def _staged_action(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
+    """Scan the index and decide whether this commit may proceed.
+
+    An action, not a mode of the audit, and it returns before
+    `_interactive_config` on purpose: that function asks first-run
+    questions at a TTY, and a hook that opens a setup wizard while
+    somebody is committing is a hook they remove. An unconfigured
+    repository gets the shipped thresholds and no questions.
+
+    Exit 1 blocks the commit, 0 lets it through, 2 means the scan could
+    not be taken — which also blocks, because a hook that cannot measure
+    has not found nothing.
+    """
+    from ._precommit import staged_findings, staged_report
+    from ._precommit_view import render_staged, staged_json
+    from .git_tools import GitCommandFailed
+
+    refused = [flag for attribute, flag in _STAGED_REFUSES.items() if getattr(args, attribute, None)]
+    if refused:
+        parser.error(f"--staged does not take {', '.join(sorted(refused))}")
+    if args.format == "html":
+        parser.error("--staged renders text or --format json; there is no HTML for a hook")
+
+    root = Path(args.root).resolve()
+    config = load_config(args.config or discovered_config(root))
+    try:
+        report = staged_report(root, config)
+    except GitCommandFailed as unreadable:
+        print(f"maintainability-agent: cannot read the index ({unreadable})", file=sys.stderr)
+        return 2
+    findings = staged_findings(report)
+    if args.format == "json":
+        print(staged_json(report, findings))
+    else:
+        # stdout, not stderr, and both renderings on the same stream: a
+        # clean commit prints nothing at all, so there is no case where
+        # silence on one stream hides a refusal on the other.
+        lines = render_staged(findings, len(report["scanned"]))
+        if lines:
+            print("\n".join(lines))
+    return 1 if findings else 0
+
+
 def _install_skill_action(args: argparse.Namespace) -> int:
     """Sync the packaged skill, or report the refusal that stopped it."""
     from ._skill_install import SkillDrift, install_skill
@@ -234,6 +295,15 @@ def main(argv: list[str] | None = None) -> int:
     parser, args = _parse(argv)
     if args.install_skill:
         return _install_skill_action(args)
+    if args.install_precommit_hook:
+        from ._precommit_install import install_precommit_hook
+
+        code, message = install_precommit_hook(Path(args.root).resolve())
+        print(message, file=sys.stderr if code else sys.stdout)
+        return code
+    # Before the config prompt, deliberately: see `_staged_action`.
+    if args.staged:
+        return _staged_action(parser, args)
 
     root = Path(args.root).resolve()
     config = _interactive_config(root, args.config)

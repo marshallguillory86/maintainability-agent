@@ -159,6 +159,13 @@ ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
             # nothing, and `test_the_agent_never_runs_the_install_command`
             # holds the second half of that.
             "_environment",
+            # `_precommit` reads the git index and reports which
+            # thresholds the staged content breaches. Assembly for the
+            # same reason as `_conformance`: it composes from git and the
+            # existing work-order builders rather than measuring a tree,
+            # and it may never reach scoring — a diff has no population,
+            # so there is no rate to draw and no grade to give.
+            "_precommit",
             "_work_order_weights", "_backfill"}
 PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # `_attestation` composes the conformance and ratchet
@@ -205,7 +212,12 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # looked at). It reads the report dict and computes no score.
                 "_work_order_view",
                 # TDD-structure sentences shared by chat, Markdown, HTML.
-                "_tdd_view"}
+                "_tdd_view",
+                # What a blocked commit prints, and the JSON an agent
+                # reads instead. Split from `_precommit` on the same seam
+                # `_work_order_view` splits from `_work_order`: one module
+                # decides what blocks, the other how it reads.
+                "_precommit_view"}
 # `_first_run` is terminal interaction — it prompts, which no layer
 # below entry may ever do, and writes the config file the entry then
 # loads through ordinary discovery.
@@ -249,6 +261,11 @@ ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup", "_mcp_audi
          "_gates",
          "_grant_ledger", "_setup_persist", "_setup_errors",
          "_skill_install", "_mcp_gate", "_mcp_resources",
+         # Writes the git pre-commit hook and exits. Entry beside
+         # `_skill_install` for the same reason: it performs a setup
+         # action against the user's machine, which no layer below
+         # entry may do.
+         "_precommit_install",
          "_mcp_grants", "_mcp_refusals"}
 BOUNDARY = {"evidence"}
 

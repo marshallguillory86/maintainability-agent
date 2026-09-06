@@ -2,6 +2,10 @@
 
 All notable changes to Maintainability Agent will be documented here.
 
+## Unreleased
+
+_Nothing yet._
+
 ## 2.10.0 - 2026-09-05
 
 ### Added — `--check`, the in-loop door

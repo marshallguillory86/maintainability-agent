@@ -37,12 +37,21 @@ _EXTRA_IMPORTS: dict[str, frozenset[str]] = {
     "pip-audit": frozenset({"pip_audit"}),
     "mcp": frozenset({"mcp"}),
     "PyYAML": frozenset({"yaml"}),
+    # The independent complexity implementation `tools/complexity_oracle.py`
+    # diffs this project against. Development only: nothing the product
+    # ships imports it, and `test_the_shipped_package_does_not_import_yaml`
+    # has the equivalent guard for the package itself.
+    "lizard": frozenset({"lizard"}),
 }
 
 # Every declared extra. Tests may import these (mcp tests need `mcp`).
 # They may not import yaml: that parser is for catalog regen, not the suite.
 _DECLARED_EXTRAS = frozenset({
     "pytest", "pytest-cov", "jsonschema", "ruff", "pip-audit", "mcp", "PyYAML",
+    # `lizard` is the independent complexity implementation the oracle in
+    # `tools/` diffs this project against. Development only — nothing the
+    # product ships imports it, and this guard is what keeps that true.
+    "lizard",
 })
 _TEST_FORBIDDEN = frozenset({"yaml"})
 

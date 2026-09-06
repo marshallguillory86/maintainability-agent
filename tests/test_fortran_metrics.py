@@ -205,14 +205,28 @@ def test_the_built_in_reading_agrees_with_lizard() -> None:
 
 
 def test_only_fortran_gets_the_fortran_reading() -> None:
-    """The table is per language, and the C family must be untouched."""
+    """The table is per language, and Fortran's reading must not leak.
+
+    Python was in the C-family list here until 2.11.0, which is the
+    assumption this whole table exists to prevent: it does not spell its
+    operators `&&` and `||`, and counting them there meant every `and`
+    and `or` in every Python file was invisible. The guard's intent is
+    unchanged — Fortran's reading reaches Fortran and nothing else — and
+    the example of "a language with its own reading" is now correct.
+    """
     from maintainability_audit._cognitive import brace_cognitive
-    from maintainability_audit._metrics_types import branch_points
+    from maintainability_audit._metrics_types import (
+        branch_points,
+        python_branch_points,
+    )
 
     assert metrics_for(".f90") == (fortran_branch_points, fortran_cognitive)
     assert metrics_for(".F90") == (fortran_branch_points, fortran_cognitive)
     assert metrics_for(".pf") == (fortran_branch_points, fortran_cognitive)
-    for suffix in (".c", ".cpp", ".cs", ".java", ".ts", ".py"):
+    for suffix in (".c", ".cpp", ".cs", ".java", ".ts"):
         assert metrics_for(suffix) == (branch_points, brace_cognitive), (
             f"{suffix} must keep the C-family reading"
         )
+    assert metrics_for(".py") == (python_branch_points, brace_cognitive), (
+        "Python has its own operators and must not read as C"
+    )

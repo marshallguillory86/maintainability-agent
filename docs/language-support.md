@@ -13,6 +13,10 @@ ends, and — deliberately — where it under-reports.
 | C++ (`.cpp`, `.hpp`, `.cc`, `.cxx`, `.hh`) | dedicated scanner: functions, class/struct members, namespaces and templates, bounded by their own braces | Bounded. Under-reports — see below. |
 | C# (`.cs`) | dedicated scanner: methods, constructors and types (`class`, `interface`, `struct`, `record`, `enum`), bounded by their own braces | Bounded. Properties are not declarations — see below. |
 | Swift (`.swift`) | dedicated scanner: functions, initialisers, subscripts and types (`class`, `struct`, `enum`, `protocol`, `actor`), bounded by their own braces | Bounded. Extension members carry the type they extend; protocol requirements and computed properties are not declarations — see below. |
+| Go (`.go`) | dedicated scanner: functions, methods and container types (`struct`, `interface`), bounded by their own braces | Bounded. Methods carry their receiver type; interface methods are requirements rather than declarations; function literals inside a body are not seen — see below. |
+| Rust (`.rs`) | dedicated scanner: functions, `impl` and `trait` members, and types (`struct`, `enum`, `trait`, `union`), bounded by their own braces | Bounded. Methods carry the type their `impl` block names; trait requirements without a body mint nothing; closures and macro bodies are not read — see below. |
+| PHP (`.php`, `.phtml`) | dedicated scanner: functions, methods and types (`class`, `interface`, `trait`, `enum`), with everything outside `<?php … ?>` blanked first | Bounded. Methods carry their class; interface and abstract methods mint nothing; closures and heredoc bodies are not read — see below. |
+| Ruby (`.rb`, `.rake`, `.gemspec`) | dedicated scanner: methods, classes and modules bounded by their own `end`, counted by openers because one `end` closes everything | Bounded by depth. Methods carry their class (`Store#get`); blocks, modifier forms, heredocs and `=begin` blocks are discounted first; metaprogrammed methods are not seen — see below. |
 | COBOL (`.cbl`, `.cob`, `.cpy`, `.CBL`, `.COB`, `.CPY`) | dedicated scanner: PROCEDURE DIVISION paragraphs, bounded by the start of whatever follows them. Fixed-form card columns are read where the layout carries them | Bounded by the next header. Programs and sections are containers and are not graded; level numbers are not declarations; a section whose statements sit outside any paragraph mints nothing — see below. |
 | Fortran, free-form (`.f90`, `.f95`, `.f03`, `.f08`, `.F90`, `.F95`, `.F03`, `.F08`, `.pf`) | dedicated scanner: modules, submodules, programs, subroutines, functions and derived types, bounded by their own `end` | Bounded by keyword rather than braces. |
 | Fortran, fixed-form (`.f`, `.for`, `.ftn`, `.F`, `.FOR`, `.FTN`) | the same scanner, over source laid out for punched cards: label in columns 1-5, continuation in 6, statement in 7-72 | Bounded by keyword. Continuations are joined before reading — see below. |
@@ -49,300 +53,93 @@ whose code is mostly outside those extensions has its declaration rates
 **withheld**, naming the missing parser as the reason; it does not get an
 approximate population.
 
-### What the Java scanner sees, and what it misses
+**Per-language accuracy — what each scanner sees and what it misses** is
+one page per language, so adding a language adds a file rather than
+growing this one: [Java](languages/java.md), [C](languages/c.md), [C++](languages/cpp.md), [C#](languages/csharp.md), [Fortran](languages/fortran.md), [Rust](languages/rust.md), [Go](languages/go.md), [PHP](languages/php.md), [Ruby](languages/ruby.md), [Swift](languages/swift.md), [COBOL](languages/cobol.md).
 
-Methods, constructors, and types — classes, interfaces, enums, records
-and `@interface` declarations. Generic parameter lists are blanked
-before matching, so `<T extends Comparable<T>>` neither ends a signature
-early nor supplies the name; leading annotations are stripped with their
-values, so `@Deprecated(since = "1.2")` is not read as a method called
-`Deprecated`.
+## What counts as a decision, per language
 
-It walks member context only. A type's body is descended into, because
-that is where its members live; a method's body is stepped over once its
-end is known, so no statement inside it can be read as a declaration.
-That single rule is why a nested class and its methods stay visible
-while `doThing(x);` never becomes a declaration named `doThing`.
+Each language's branch set is derived from **its own grammar**, and every
+one of them is checked construct-by-construct against an independent
+implementation — see [How this is verified](#how-this-is-verified) below.
+That check is not decoration: it found nine defects in 2.11.0, including
+this project measuring Python against its own comments.
 
-Everything it misses, it misses in the safe direction:
+The distinction from the C-family pattern is not pedantry either. PHP's
+`elseif` chains scored zero, because the C pattern looks for `elif` and
+`elseif` has no word boundary inside it. Ruby's `unless` guards scored
+zero. Fortran's `do` loops scored 1.
 
-- **Declarations inside anonymous classes and lambdas** are not counted,
-  because they sit inside a method body.
-- **Text blocks** (`"""`) are not masked, so a brace inside one can
-  desync depth. The indentation fallback bounds that to one declaration.
-- **A field initialised with a method reference or an inline array** is
-  not a declaration and is not reported as one.
+**One rule is shared and is stated here once.** A multi-way construct is
+counted at its **arms, not its header**, and a *default* arm is not
+counted at all. `switch`, `select`, `match` and `case` headers score
+nothing; their `case`, `when` and `=>` arms score one each; `default:`,
+`_ =>` and `case _` score nothing, because a branch that always matches
+adds a path without a decision to reach it.
 
-Complexity for Java is the same keyword count used everywhere else here,
-not a control-flow graph. Pair it with an external analyzer when the
-number has to be exact.
+Counting a header *and* its arms scores the construct and its first arm
+together, which is the mistake Fortran's `select case` made before 1.6.0.
+It was made again in 2.11.0 for Go's `select`, PHP's `do … while` and
+Swift's `repeat … while`, and the wildcard half of the rule was missed
+for Rust and Python — five languages, one rule, written down and then not
+applied.
 
-### What the C scanner sees, and what it misses
+| Language | Counted | Deliberately not counted |
+|---|---|---|
+| Python | `if`, `elif`, `for`, `while`, `except`, `case`, `and`, `or` | `match` (its cases carry it); `case _`, the wildcard, which is Python's `default` |
+| Go | `if`, `for`, `case`, `&&`, `\|\|` | `switch` and `select` headers (their cases carry them); `goto`, which transfers control without deciding; no `while`, ternary or `catch` exists |
+| Rust | `if`, `for`, `while`, `?`, `=>` arms, `&&`, `\|\|` | `match` (its arms carry it); `loop`, which has no condition; the wildcard `_ =>` |
+| PHP | `elseif`, `if`, `for`, `foreach`, `while`, `match`, `case`, `catch`, `and`, `or`, `xor`, `&&`, `\|\|`, `??`, ternary `?` | `switch` (its cases carry it); `do`, whose `while` carries the loop; `goto`; `?int`, a nullable type hint |
+| Ruby | `if`, `elsif`, `unless`, `while`, `until`, `for`, `when`, `rescue`, `and`, `or`, `&&`, `\|\|`, ternary `?` | `case` (its `when`s carry it); `&.`, which is navigation rather than a decision |
+| Swift | `if`, `for`, `while`, `case`, `catch`, `guard`, `&&`, `\|\|`, `??`, ternary `?` | `switch` (its cases carry it); `repeat`, whose `while` carries the loop; `Int?`, an optional type |
+| C, C++, C#, Java, JS, TS, HTML | `if`, `else if`, `for`, `while`, `case`, `catch`, `&&`, `\|\|`, `??`, ternary `?` | `switch` (its cases carry it); `default`; a `?` in type position — `int?`, `List<?>`, `v?:` |
 
-File-scope function definitions and `struct`, `enum` and `union` types,
-each bounded by its own braces. Storage-class and inline keywords
-(`static`, `extern`, `inline`, `_Noreturn`, …) are stripped before
-matching, so `static inline int clamp(` is a function named `clamp`; a
-pointer return type is stripped with them, so `const char *greeting(`
-names `greeting` and not its type. The brace may sit on the signature
-line or on its own line below it, and the signature may span several
-lines — all three are ordinary C style and all three are bounded
-correctly.
+### Where this deliberately under-reports
 
-Two things are deliberately not declarations. A **prototype** has no
-body, so it mints no population — a header of 40 prototypes is not 40
-declarations. A **preprocessor line** is skipped whole, so
-`#define MAX(a, b) ((a) > (b) ? (a) : (b))` is not read as a function
-called `MAX`; macros are text substitution, and measuring one as a
-declaration would report a length and a complexity nobody wrote.
+Both of these under-report, which is the direction this project errs in
+when it has to choose, and both are consequences of counting keywords on
+a line rather than building a control-flow graph.
 
-Function bodies are stepped over once their end is known, so nothing
-inside one — `if (`, `for (`, a call — can be read as a declaration.
-Unlike Java, type bodies are not descended into either: C types hold
-fields, not methods, so there is nothing inside them to grade.
+- **A many-armed PHP `match` scores 1.** The arms rule is not applied
+  here, and this is the one place it is not: PHP spells array keys with
+  `=>` as well (`['a' => 1]`), so counting arms would count every array
+  literal in the file. The `match` keyword is counted once instead, which
+  under-counts a wide dispatch. `lizard` reads it the same way.
+- **A ternary split across lines is not counted.** Both halves have to be
+  visible on one line, because that is what distinguishes `?` the
+  conditional operator from `?` the nullable-type marker — the defect
+  (D115) that made every `int?`, `List<?>` and `title?:` in five
+  languages read as a branch.
 
-Everything it misses, it misses in the safe direction:
+### How this is verified
 
-- **K&R-style definitions** (`int add(a, b)` with the parameter
-  declarations on following lines) are not recognised. Cost: that one
-  function, not the file.
-- **Declarations produced by macros** — a function defined inside a
-  `#define`, or a body wrapped in `BEGIN_/END_` macros — are invisible.
-- **`.h` is treated as C.** A C++ header using `.h` gets the C scanner,
-  which reads its free functions and `struct`s and misses its classes
-  and methods. The C++ increment disambiguates this.
-- **Conditional compilation is not evaluated.** Both arms of an
-  `#if`/`#else` are read as ordinary source, so a declaration in a
-  disabled arm still counts.
+Until 2.11.0 every branch set here was **asserted rather than tested**: a
+list written from somebody's knowledge of a language, checked against
+examples written by the same person from the same knowledge. That reads
+as evidence because the prose around it is confident, which is worse than
+reading as a guess. Measured against an independent implementation on
+this project's own source, it agreed on **45%** of declarations.
 
-Complexity for C is the same keyword count used everywhere else here,
-not a control-flow graph. Pair it with an external analyzer — lizard
-covers C and is in the shipped pool — when the number has to be exact.
+Now `tests/fixtures/grammar/` holds one fixture per language exercising
+the control-flow constructs that language's specification defines, and CI
+compares each construct against [`lizard`](https://github.com/terryyin/lizard)
+— a separate codebase, by separate authors, with its own reading of each
+grammar. **Thirteen languages** are covered.
 
-### What the C++ scanner sees, and what it misses
+Coverage is counted in *branch readers* rather than fixtures, because the
+reader is the thing that can be wrong: counting fixtures is what let
+Python go unchecked while twelve other languages were added (D120). A
+reader with no second implementation available has to be named with the
+reason, and **COBOL is the only one**.
 
-Free functions, class and struct members, constructors, destructors,
-operator overloads, and the types themselves — `class`, `struct`,
-`union`, `enum` and `enum class`. A type is descended into, because that
-is where its methods live; a function body is stepped over once its end
-is known, so nothing inside one is read as a declaration.
-
-Names are reported the way a reader searches for them. An out-of-line
-definition keeps its qualification — `void geo::Widget::draw()` is
-`geo::Widget::draw`, not a second `draw` indistinguishable from every
-other class's. An operator overload is `operator==`. A `template <...>`
-header is stripped, so the declaration under it is measured rather than
-the template line.
-
-A **bodyless declaration is not a definition**, as in C: a prototype, a
-pure virtual (`virtual int area() const = 0;`) and `= default` / `=
-delete` all mint nothing. A header of forty declarations is not forty
-declarations.
-
-Everything it misses, it misses in the safe direction:
-
-- **A constructor braced Allman inside its class** (`W()` with `{` on
-  the next line, no return type and no qualification) is not counted.
-  That shape is indistinguishable from a bodyless macro invocation
-  written `MY_MACRO(x)`, and accepting it let the macro absorb the next
-  declaration's braces — an invented function hiding a real one. Missing
-  one constructor is the cheaper error.
-- **Declarations produced by macros** are invisible, as in C.
-- **A template header spanning several lines** leaves its declaration
-  unrecognised — one missed declaration, never a cascade.
-- **Methods of a local class or inside a lambda** sit within a function
-  body and are not counted.
-- **Conditional compilation is not evaluated**, so a declaration in a
-  disabled `#if` arm still counts.
-
-`.h` remains **C**, not C++: it is the one extension both languages
-write, and the C reading under-reports a C++ header (finding its free
-functions and structs, missing its classes) where the reverse would
-invent nothing but read nothing either.
-
-Complexity for C++ is the same keyword count used everywhere else here.
-lizard covers C++ and is in the shipped pool when the number has to be
-exact.
-
-### What the C# scanner sees, and what it misses
-
-Methods, constructors, destructors, and the types — `class`,
-`interface`, `struct`, `record`, `record struct` and `enum`. Types are
-descended into, because that is where members live; a method body is
-stepped over. Generic parameter lists are blanked before matching, so
-`public List<T> Sort<T>(List<T> items) where T : IComparable` yields
-`Sort`, and attributes are stripped with their arguments, so
-`[Obsolete("x")]` is not read as a method called `Obsolete`.
-
-Namespaces are handled in both forms: a braced `namespace Geo {` is
-walked into without being graded, and C# 10's file-scoped `namespace
-Geo;` declares nothing and is ignored rather than being allowed to
-swallow the file.
-
-**Properties are deliberately not declarations.** `public int Count {
-get; set; }` has braces and would bound cleanly, and an ordinary C# tree
-holds thousands of them — each one line long, each nobody's maintenance
-burden. Counting them would dilute the population that every
-declaration rate divides by. They are excluded by construction: a
-property has no parameter list, and every pattern here requires one. The
-same applies to a parameterless expression-bodied member
-(`public int Area => w * h;`). A method written `public int Fast() =>
-count_;` **is** counted — it has a parameter list.
-
-Everything it misses, it misses in the safe direction:
-
-- **Interface and abstract members** have no body, so they mint nothing.
-  A positional `record Point(int X, int Y);` likewise.
-- **Local functions** live inside a method body and are not counted.
-- **Source-generated declarations** are not in the tree and are not seen.
-- **Conditional compilation is not evaluated**, so a member in a
-  disabled `#if` arm still counts.
-
-### What the Fortran scanner sees, and what it misses
-
-**The first language here with no braces.** C, C++, C# and Java share
-one walk because a body sits between `{` and `}`. Fortran closes a
-program unit with a keyword — a `subroutine` ends at `end subroutine`, a
-`module` at `end module`, and a bare `end` is legal for several of them.
-The rule is unchanged and the mechanism is not: the shared walk takes a
-`find_end`, and Fortran supplies one that counts program units instead
-of braces.
-
-Counting matters because `if`, `do`, `select`, `associate` and `block`
-all close with `end` too. A scanner that stopped at the first `end`
-would report a subroutine as ending at its first `end if`, and read the
-rest of its body as top-level code.
-
-Modules, submodules, programs and derived types are descended into,
-because that is where procedures live; a procedure body is stepped over.
-A function is named correctly whether it is written with a type prefix
-(`pure elemental real(dp) function norm(v)`) or a `result` clause
-(`real function accel(h) result(a)`). Keywords are matched
-case-insensitively, because Fortran is and older code SHOUTS.
-
-**An `interface` block is stepped over, not descended into.** It holds
-signatures with no bodies, so walking in would mint a one-line
-declaration for every procedure a module merely *describes* — inflating
-the population every declaration rate divides by, with procedures
-defined somewhere else entirely.
-
-**Fixed-form is read as of 1.6.0.** `.f`, `.for`, `.ftn` and their
-uppercase spellings are column-significant, and the columns mean what
-punched cards meant: a label in 1-5, a continuation marker in column 6,
-the statement in 7-72, and sequence numbers after that. A `C`, `c`, `*`
-or `!` in column 1 makes the whole line a comment.
-
-None of that changes what a program unit *is*, so fixed-form shares the
-recogniser and the `end`-keyword bounding with free-form and differs
-only in how a line becomes a statement. **Continuation lines are joined
-onto the statement they continue** before anything is read, which is
-not tidiness: a condition written
-
-```fortran
-      IF (A .GT. B .AND.
-     &    C .LT. D) THEN
-```
-
-has its `THEN` on the second line. Read line by line the first looks
-like a single-line `IF`, no block opens, and the matching `END IF` then
-closes something that was never opened — ending the enclosing procedure
-early and reading the rest of its body as top-level code.
-
-Two limits: indentation carries no meaning in fixed-form, so the
-fallback for a unit whose `end` is missing is weaker here than in
-free-form; and a `D` in column 1 is a debug line in several legacy
-dialects but is not standard, so it is read as code rather than guessed
-at.
-
-`.F90` (capital F) means "run the C preprocessor first" and is read as
-free-form; unexpanded macros are invisible, the same limitation C
-documents. `.pf` is pFUnit test source — free-form Fortran plus `@test`
-directives — and is read and treated as a test file.
-
-Everything else it misses, it misses in the safe direction:
-
-- **Statement functions** (a one-line `f(x) = x*2`) are not declarations.
-- **Declarations produced by `#include` or a macro** are invisible.
-- **A procedure whose `end` is missing** falls back to indentation, which
-  is a weak signal in Fortran; it costs that one declaration.
-
-**Testing conventions are recognised, because the claim depends on it.**
-fpm puts tests in `test/`; test-drive writes `test_gravity.f90`; pFUnit
-writes `.pf` files and the camelCase `testGravity_mod.F90`. A module file
-is conventionally `gravity_mod.f90`, so `_mod` comes off both sides when
-pairing. Claiming Fortran without these would report untested production
-code on every Fortran repository there is.
-
-Fortran gained an analyzer in 1.5.0 — **fortitude**, 100+ lint rules —
-but it is a verdict emitter: it reports findings and cannot supply a
-declaration population. lizard, which could, does not read Fortran. So
-the built-in scanner remains the only path to a population here, rather
-than the zero-install convenience it is for C and C++.
-
-
-### What the Swift scanner sees, and what it misses
-
-Functions, initialisers, deinitialisers, subscripts, and the types —
-`class`, `struct`, `enum`, `protocol` and `actor`. Types and extensions are
-descended into, because that is where members live; a function body is
-stepped over.
-
-**Every Swift declaration is keyword-led**, which makes recognition easier
-here than in C++: a bare `name(` there is equally a call, a macro and a
-constructor, and a wrong guess once let a macro swallow the next
-declaration's braces. Nothing in Swift has to be guessed.
-
-**An `extension` member is reported under the type it extends.**
-`extension Widget { func draw() }` is `Widget.draw`, not a second bare
-`draw` indistinguishable from every other type's. C++ gets this for free
-because the source writes `void geo::Widget::draw()`; Swift does not write
-it, so the scanner carries it. A work order saying "shorten `draw`" against
-a tree with eleven of them is not a bounded instruction.
-
-**`class` is read as a keyword or a modifier as the line requires.** Swift
-spells two things with it: `class Widget` declares a type, `class func
-make()` declares a type-level method. Stripping it with the other modifiers
-cost every `final class Store` its keyword — the type vanished and only its
-members were reported, which makes a declaration *rate* wrong rather than
-merely incomplete.
-
-**A protocol requirement mints nothing.** Swift has no statement
-terminator, so the shared bare-signature rule — a signature that closes
-without opening a brace, which in C is a `;` — cannot see where a
-requirement ends. The first version walked on and adopted the next line's
-brace, reporting `func describe() -> String` as two lines of body. The rule
-that replaces it: parentheses balancing on the line with no `{` following
-means no body. A wrapped signature leaves them unbalanced and is kept.
-
-Everything it misses, it misses in the safe direction:
-
-- **Computed properties** (`var area: Double { w * h }`) are not
-  declarations — the C# properties call, for the C# reason: an ordinary
-  type has many, each a line or two, and counting them dilutes the
-  population every rate divides by.
-- **A body written Allman** — `func f()` with `{` alone on the next line —
-  is read as a requirement and mints nothing. Legal Swift, vanishingly rare
-  in it, and missing one declaration is cheaper than counting every
-  protocol requirement in the tree.
-- **A closure assigned to a property** is a body with no declaration
-  keyword and is not counted.
-- **Declarations produced by a macro** are not in the source and are not
-  seen, as in C and C++.
-- **Conditional compilation is not evaluated**, so a declaration in a
-  disabled `#if` arm still counts.
-
-**Swift has analyzer coverage, unlike Fortran.** `lizard` reads it for
-complexity and `jscpd` for duplication, both in the shipped pool, and
-`swiftlint`, `swiftformat` and `tailor` are catalogued as verdict emitters.
-So a Swift repository gets analyzer-primary evidence rather than depending
-on the built-in scanner alone — the position Fortran is still in, where
-`fortitude` reports findings but cannot supply a declaration population.
-
-**Swift is measured with its own reading of a branch.** `guard` is the
-language's primary early exit and is absent from the C-family pattern, so a
-guard-heavy function would have read as branchless — the defect Fortran
-shipped with, where six nested `do` loops scored complexity 1 because the
-pattern did not know the keyword.
+A disagreement does not say who is right — two implementations can share
+a misconception, and PHP's `match` above is one they share. What it does
+is make the question unavoidable and send a reader to the grammar, which
+is the only authority either tool answers to. Divergences are therefore
+**declared with the reasoning that settles them**, and a further test
+fails when a declared divergence stops being real. `lizard`'s own
+TypeScript reader carries D115, so a harness built to chase agreement
+would have re-introduced the bug to match the oracle.
 
 ## The rule that matters: a range never runs past its own body
 
@@ -398,85 +195,6 @@ charged to those methods — acting on it would mean double-counting.
 
 In the report, prompt, PR comment, and SARIF output a class is labelled
 as one: `` `ScanWorker` (class) ``.
-
-### What the COBOL scanner sees, and what it misses
-
-**The paragraph is the unit of work.** A COBOL program has four divisions
-— IDENTIFICATION, ENVIRONMENT, DATA and PROCEDURE — and only the last
-holds executable code. Inside it, work is organised into sections and
-paragraphs, and `PERFORM SOME-PARAGRAPH` is how one is called. A paragraph
-is therefore what a function is elsewhere: the named, callable,
-measurable piece.
-
-**COBOL is the first language here whose declarations have no end.** C
-closes a body with `}`; Fortran closes one with `end`. A paragraph ends
-where the next paragraph, the next section, `END PROGRAM` or the file
-begins — the boundary is the *start* of the next thing, and nothing in
-the source announces it. `scan_bounded` already took the bounding rule as
-an argument, so this needed no change to the shared walk: what is shared
-is that a range never runs past its own body, not the mechanism that
-enforces it.
-
-**Level numbers are not declarations.** A DATA DIVISION is a wall of `01`,
-`05`, `77` and `88` items, and an ordinary program has hundreds. `01
-CUSTOMER-RECORD.` is shaped *exactly* like a paragraph header, and no
-line-local rule can tell them apart, because the difference is which
-division they are in. So the mask blanks every division before PROCEDURE,
-and a level number is never offered to the recogniser at all. Counting
-them would not merely add noise — it would dominate the declaration
-population every rate divides by, and every COBOL repository would read as
-though it were nothing but tiny declarations.
-
-**Programs and sections are walked into and not graded.** Both are
-containers, and grading them would count their paragraphs' lines a second
-time — the same call the Swift scanner makes about an `extension`.
-
-**Area A is the rule, not a guess about indentation.** Fixed-form COBOL
-puts division, section and paragraph headers in columns 8-11 and
-statements in 12-72, and free-form convention keeps the same shape. That
-is why a paragraph header is recognised only within the first four columns
-of the stripped statement. Allowing one more column, which the first
-working version did, matched a masked `DISPLAY "A".` sitting at column 12
-and reported a declaration named DISPLAY once per statement in the file.
-
-**Both source formats, and the default is the safe one.** Fixed-form is
-punched-card source: a sequence number in columns 1-6, an indicator in
-column 7, code in 8-72. Both formats use the same extensions, so the
-extension cannot decide and the file is read to find out. The test is
-narrower than it looks: free-form indented seven spaces is byte-identical
-in those columns to card source with a blank sequence field, and stripping
-seven blanks from it changes nothing. What is excluded is source with
-*code* in columns 1-7 — the only case where the two readings disagree.
-The direction matters: reading fixed-form as free-form loses declarations,
-while reading free-form as fixed-form deletes the front of every line and
-invents findings from the wreckage.
-
-**A period closes every open scope.** Classic COBOL writes `IF X DISPLAY
-Y.` with no `END-IF` anywhere, so a reader that only decremented on `END-`
-terminators would let nesting climb through a whole paragraph and charge
-the last statement for every branch above it.
-
-What it misses, it misses in the safe direction:
-
-- **A section whose statements sit outside any paragraph** mints nothing.
-- **`COPY` members are not expanded**, so a paragraph arriving from a
-  copybook is invisible, exactly as an `#include`d function is in C. The
-  copybook is scanned on its own if it is in the tree — and a `.cpy` of
-  DATA DIVISION text produces no declarations, like a C header of
-  prototypes.
-- **`REPLACE` and `COPY ... REPLACING`** are not applied; source is read
-  as written.
-- **A continuation line** (`-` in column 7) is read as its own line rather
-  than joined. It continues a literal, and literals are masked first.
-
-**Analyzer coverage is thin, and this is where COBOL differs most from
-the other nine.** lizard does not read COBOL; neither does jscpd usefully.
-The mainframe world's tooling — IBM Developer for z/OS, Application
-Discovery and Delivery Intelligence, and the build tooling around IBM
-Dependency Based Build — lives outside anything this project can invoke
-offline. So the built-in scanner is the only path to a declaration
-population here, as it is for Fortran, and the analyzer tier will report
-COBOL as unmeasured rather than pretending otherwise.
 
 ## Migrations are excluded by default
 

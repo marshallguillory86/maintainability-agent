@@ -31,6 +31,12 @@ PACKAGE = ROOT / "src" / "maintainability_audit"
 # Keeping the foundation spawners in one layer is what makes the
 # analyzer half of that rule checkable.
 FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "config",
+               # `_banner` reads one file's leading comment block and says
+               # whether it declares itself generated. A foundation beside
+               # `_discovery`, which owns the vocabulary and passes it in —
+               # so the import runs one way and this module knows nothing
+               # about classification.
+               "_banner",
                # `_config_defaults` is the shipped default configuration,
                # split from `config` in 1.1.0: data with no internal
                # imports, which `config` re-exports.
@@ -80,6 +86,11 @@ PARSING = {"source", "declarations", "_cognitive", "_tokens", "_xml",
            # rather than in `_masking`, because deciding whether a line is a
            # declaration needs to know which division it is in — which only
            # a whole-file pass can answer.
+           # Go: brace-bounded, so it rides the shared core. Its own
+           # module because the receiver form — `func (s *Store) Get` —
+           # is a parameter list that is not the parameters, and no
+           # sibling's patterns survive contact with it.
+           "_ranges_go", "_ranges_rust", "_ranges_php", "_ranges_ruby",
            "_ranges_cobol"}
 # ADR 003: `_semantic` normalizes and classifies; `_semantic_ts` reads
 # TypeScript facts (recordings, an already-installed tsc through

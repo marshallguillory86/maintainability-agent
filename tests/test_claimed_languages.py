@@ -167,3 +167,135 @@ def test_a_claimed_language_produces_the_population_it_claims(
         f"{suffix} is claimed in language-support.md and produced no "
         "declaration population"
     )
+
+
+# ---------------------------------------------------------------------------
+# The per-language decision table is a claim about the readers, and readers
+# change. It drifted badly in 2.11.0: the page listed Go's `select` and
+# `goto`, Rust's `loop`, and PHP's `do` as counted, and Rust's `?` as not,
+# after every one of those had been reversed in the code — and it had no
+# Python row at all while Python's own pattern was being written.
+# ---------------------------------------------------------------------------
+
+#: Which reader each row of the table speaks for.
+ROW_SUFFIX = {
+    "Python": ".py",
+    "Go": ".go",
+    "Rust": ".rs",
+    "PHP": ".php",
+    "Ruby": ".rb",
+    "Swift": ".swift",
+    "C, C++, C#, Java, JS, TS, HTML": ".java",
+}
+
+
+def _decision_table() -> list[tuple[str, str, str]]:
+    """(row label, counted cell, not-counted cell) for each language row."""
+    page = (DOCS / "language-support.md").read_text(encoding="utf-8")
+    section = page.split("## What counts as a decision, per language", 1)[1]
+    rows = []
+    for line in section.splitlines():
+        # `\|\|` is an escaped pipe inside a cell, not a column break —
+        # every row but Python's carries one, so a naive split found one
+        # row and the guard would have passed on a table it never read.
+        cells = re.split(r"(?<!\\)\|", line.strip().strip("|"))
+        parts = [cell.strip() for cell in cells]
+        if len(parts) == 3 and parts[0] in ROW_SUFFIX:
+            rows.append((parts[0], parts[1], parts[2]))
+    return rows
+
+
+def _keywords(cell: str) -> list[str]:
+    """Backticked tokens that are a single plain word.
+
+    Symbols (`&&`, `??`, `=>`) and multi-word forms (`case _`, `else if`)
+    are probed by the grammar fixtures, which have real syntax around
+    them. A lone keyword needs no context: every reader matches keywords
+    with `\\b`, so a bare word matches exactly when it is in the set.
+    """
+    return [
+        token for token in re.findall(r"`([^`]+)`", cell)
+        if token.isalpha()
+    ]
+
+
+def test_every_keyword_the_page_claims_is_counted_actually_is() -> None:
+    """The `Counted` column, probed against the reader it names."""
+    from maintainability_audit.declarations import metrics_for
+
+    rows = _decision_table()
+    assert len(rows) == len(ROW_SUFFIX), (
+        f"the decision table lost a row: found {[r[0] for r in rows]}"
+    )
+
+    wrong = []
+    for label, counted, _ in rows:
+        branch_points, _cognitive = metrics_for(ROW_SUFFIX[label])
+        wrong += [
+            f"{label}: the page says `{word}` is counted, and it is not"
+            for word in _keywords(counted)
+            if branch_points(word) == 0
+        ]
+    assert not wrong, "\n".join(wrong)
+
+
+def test_every_keyword_the_page_claims_is_not_counted_is_not() -> None:
+    """The `Deliberately not counted` column, same probe.
+
+    Only the *leading* keyword of each clause is a claim. The clauses
+    explain themselves — "`do`, whose `while` carries the loop" — and the
+    keyword doing the explaining is often one that is counted, which is
+    the whole point of the sentence.
+    """
+    from maintainability_audit.declarations import metrics_for
+
+    wrong = []
+    for label, _, excluded in _decision_table():
+        branch_points, _cognitive = metrics_for(ROW_SUFFIX[label])
+        for clause in excluded.split(";"):
+            words = _keywords(clause)
+            if words and branch_points(words[0]) != 0:
+                wrong.append(
+                    f"{label}: the page says `{words[0]}` is deliberately "
+                    "not counted, and it is counted"
+                )
+    assert not wrong, "\n".join(wrong)
+
+
+def test_the_readme_names_every_language_the_page_claims() -> None:
+    """The front page is a claim too, and it is the one users read first.
+
+    It went stale in 2.11.0: four languages were added, the page and the
+    parser were updated together — the tests above see to that — and the
+    README's own list kept advertising eight of fourteen. It ships to
+    PyPI, so it is the version most people see and the least likely to
+    be checked.
+    """
+    page = (DOCS / "language-support.md").read_text(encoding="utf-8")
+    section = page.split("## How each language is measured", 1)[1]
+    section = section.split("**This table is the claim", 1)[0]
+
+    claimed = set()
+    for line in section.splitlines():
+        cells = re.split(r"(?<!\\)\|", line.strip().strip("|"))
+        if len(cells) != 3:
+            continue
+        # Trim the suffix list, the free/fixed-form qualifier, and a
+        # family cell down to its lead name: `JS / TS / JSX / TSX` is one
+        # scanner and the README names it `JS/TS/HTML family`.
+        name = cells[0].split("(")[0].split(",")[0].split("/")[0].strip()
+        if name[:1].isalpha() and name not in {"Language", "Anything else"}:
+            claimed.add(name)
+    assert len(claimed) >= 10, f"the measurement table did not parse: {claimed}"
+
+    readme = (DOCS.parent / "README.md").read_text(encoding="utf-8")
+    lead = readme.split("**Languages parsed:**", 1)[1].split("\n\n", 1)[0]
+
+    missing = sorted(
+        name for name in claimed
+        if not re.search(rf"(?<!\w){re.escape(name)}(?!\w)", lead)
+    )
+    assert not missing, (
+        f"the README's languages line does not name {missing}, which "
+        "docs/language-support.md says this tool parses"
+    )

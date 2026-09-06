@@ -116,7 +116,14 @@ def test_a_defaulting_expression_does_not_warn(tmp_path: Path) -> None:
 def test_python_complexity_is_unchanged_by_the_javascript_fix(
     tmp_path: Path,
 ) -> None:
-    """`?` is not a Python operator; the shared regex must not have moved."""
+    """`?` is not a Python operator; the shared regex must not have moved.
+
+    The pinned number was 4 and is 5. It was wrong: `if a and b` is two
+    decisions, and Python's `and` was invisible because the pattern
+    looked for C's `&&`. Verified two ways before changing it — by hand
+    against the grammar (1 base + if + and + for + if) and against
+    lizard, which also says 5.
+    """
     path = tmp_path / "sample.py"
     source = (
         "def branchy(a, b, c):\n"
@@ -130,4 +137,4 @@ def test_python_complexity_is_unchanged_by_the_javascript_fix(
     found = declarations.detect_functions(
         tmp_path, path, source.splitlines(), THRESHOLDS)
     assert len(found) == 1
-    assert found[0].complexity == 4, found[0].complexity
+    assert found[0].complexity == 5, found[0].complexity

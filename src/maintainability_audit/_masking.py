@@ -298,3 +298,179 @@ def mask_swift_lines(lines: list[str]) -> list[str]:
         out.append(" " * len(rest) if inside else rest)
         masked.append("".join(out))
     return mask_lines(masked)
+
+#: PHP's open and close tags, including the short echo form `<?=`. A
+#: `.php` file is a template that happens to contain code: it is HTML
+#: until an opening tag says otherwise, and HTML again after `?>`.
+_PHP_OPEN_RE = re.compile(r"<\?(?:php\b|=)?")
+_PHP_CLOSE_RE = re.compile(r"\?>")
+
+
+def mask_php_lines(lines: list[str]) -> list[str]:
+    """PHP, with everything outside `<?php … ?>` blanked before it is read.
+
+    This is not a refinement, it is the first thing that has to happen.
+    Text outside the tags is markup, and markup is full of braces — a
+    CSS rule, an inline script, a snippet of sample code in a `<p>`.
+    Counted, they move depth, and a desynced depth mis-bounds every
+    declaration after it rather than just the one it appeared in.
+
+    A file with no opening tag at all is entirely markup and reads as
+    empty, which is correct: a `.php` file that never enters PHP declares
+    nothing.
+
+    Length is preserved per line, as in every masker here, so reported
+    line numbers still match the original source.
+    """
+    masked: list[str] = []
+    inside = False
+    for line in lines:
+        out = []
+        position = 0
+        while position < len(line):
+            pattern = _PHP_CLOSE_RE if inside else _PHP_OPEN_RE
+            match = pattern.search(line, position)
+            if match is None:
+                rest = line[position:]
+                out.append(rest if inside else " " * len(rest))
+                position = len(line)
+                break
+            segment = line[position:match.start()]
+            out.append(segment if inside else " " * len(segment))
+            # The tag itself is never code.
+            out.append(" " * len(match.group(0)))
+            inside = not inside
+            position = match.end()
+        masked.append("".join(out))
+    return mask_lines(masked)
+
+def _is_fstring(text: str) -> bool:
+    """Whether a STRING token is an f-string, by its prefix."""
+    prefix = text[:3].lower()
+    return "f" in prefix.split('"')[0].split("'")[0]
+
+
+def _blank_fstring_literals(rows: list[list[str]], token: object) -> None:
+    """Blank an f-string's prose and keep the code inside its braces.
+
+    On Python 3.11 an f-string is a single STRING token, so blanking the
+    token whole removes the expressions written inside `{…}` — which are
+    code, and frequently the only place a ternary or a comprehension
+    appears. Found by hand-counting a function the oracle still disagreed
+    on after the first fix: we said 7, the grammar says 11.
+
+    `{{` and `}}` are escaped braces and hold nothing.
+    """
+    (first, start), (_last, _end) = token.start, token.end
+    text = token.string
+    line, column = first, start
+    depth = 0
+    index = 0
+    while index < len(text):
+        char = text[index]
+        pair = text[index:index + 2]
+        if pair in ("{{", "}}"):
+            keep = False
+            step = 2
+        elif char == "{":
+            depth += 1
+            keep = False
+            step = 1
+        elif char == "}":
+            depth = max(0, depth - 1)
+            keep = False
+            step = 1
+        else:
+            keep = depth > 0
+            step = 1
+        for offset in range(step):
+            if char == "\n":
+                line += 1
+                column = 0
+                continue
+            if not keep and line - 1 < len(rows) and column < len(rows[line - 1]):
+                rows[line - 1][column] = " "
+            column += 1
+            if offset + 1 < step:
+                char = text[index + offset + 1]
+        index += step
+
+
+def _blanked_token_types(tokenize: object) -> set[int]:
+    """The token types whose text is prose rather than code.
+
+    PEP 701 changed how an f-string is tokenised, and the two shapes need
+    opposite handling. Through 3.11 the whole f-string is one `STRING`
+    token whose braces have to be walked by hand, which is what
+    `_blank_fstring_literals` does. From 3.12 the tokeniser performs that
+    walk itself: the prose arrives as `FSTRING_MIDDLE` tokens and the
+    code between the braces as ordinary `NAME`/`OP` tokens, so blanking
+    the middles is the whole job.
+
+    Recognising only the 3.11 shape left f-strings **entirely unmasked**
+    on 3.12 and later — the versions most people run — so `f"check for
+    errors and warnings: {v}"` scored its `for` and its `and` as
+    branches. D112 again, in the one place its fix did not reach, and it
+    survived review because this project's own development interpreter is
+    3.11 while its CI runs 3.12 (D122).
+    """
+    types = {tokenize.COMMENT, tokenize.STRING}       # type: ignore[attr-defined]
+    middle = getattr(tokenize, "FSTRING_MIDDLE", None)
+    if middle is not None:
+        types.add(middle)
+    return types
+
+
+def _blank_token_span(rows: list[list[str]], token: object) -> None:
+    """Blank one token's own span, leaving every line its original length."""
+    (first, start), (last, end) = token.start, token.end   # type: ignore[attr-defined]
+    for number in range(first, last + 1):
+        if number - 1 >= len(rows):
+            return
+        row = rows[number - 1]
+        begin = start if number == first else 0
+        finish = end if number == last else len(row)
+        for index in range(begin, min(finish, len(row))):
+            row[index] = " "
+
+
+def mask_python_lines(lines: list[str]) -> list[str]:
+    """Python, with comments and string literals blanked by its own lexer.
+
+    Not a regex. `tokenize` is the tokeniser CPython itself uses, so what
+    counts as a comment or a string is decided by the language rather
+    than by a pattern somebody wrote from memory — which is exactly how
+    the defect this fixes arrived.
+
+    Until 2.11.0 Python was handed its **raw** source to score complexity
+    against, while every other language got a masked copy. A branchless
+    four-line function scored 4, its every point supplied by one comment
+    and one string literal, and 384 branch points on this repository's
+    own 121 files came from prose inside docstrings. The line-local
+    masker would not have been enough on its own: a triple-quoted string
+    spans lines and survives it.
+
+    Length is preserved per line, as in every masker here, so reported
+    line numbers still match the original source. A file the tokeniser
+    refuses — a syntax error, a partial file — falls back to the
+    line-local masker rather than going unmasked, because unmasked is
+    the state this function exists to end.
+    """
+    import io
+    import tokenize
+
+    rows = [list(line) for line in lines]
+    try:
+        tokens = list(tokenize.generate_tokens(io.StringIO("\n".join(lines)).readline))
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        return mask_lines(lines)
+
+    blanked = _blanked_token_types(tokenize)
+    for token in tokens:
+        if token.type not in blanked:
+            continue
+        if token.type == tokenize.STRING and _is_fstring(token.string):
+            _blank_fstring_literals(rows, token)
+        else:
+            _blank_token_span(rows, token)
+    return ["".join(row) for row in rows]

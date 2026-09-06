@@ -137,7 +137,12 @@ def test_the_readme_language_table_lists_every_parsed_language() -> None:
     )
 
 
-WORDS = {"five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+# Extended through fifteen when Go took the count past ten. A word
+# missing from here reads as "unrecognised count", which is the guard
+# refusing to check rather than the sentence being wrong.
+WORDS = {"five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9,
+         "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13,
+         "fourteen": 14, "fifteen": 15}
 
 
 def _language_groups(table: str) -> set[str]:

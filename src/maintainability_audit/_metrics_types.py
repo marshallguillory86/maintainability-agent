@@ -49,22 +49,183 @@ FUNC_PATTERNS = [
 # fires hardest on exactly the modern JavaScript this project claims to
 # score.
 COMPLEXITY_RE = re.compile(
-    r"\b(if|elif|for|while|except|case|catch)\b|&&|\|\||\?\?|\?(?![.?])"
+    r"\b(if|elif|for|while|except|case|catch)\b|&&|\|\||\?\?"
+    # A ternary needs both halves, so the `:` is required. Without it a
+    # `?` in *type* position counted as a decision: C#'s `int? v`,
+    # TypeScript's `v?: number`, Java's `List<?>`. Each is a nullable or
+    # optional marker that decides nothing, and each was scoring one —
+    # D78's optional-chaining defect again, in three more spellings.
+    #
+    # The cost is a ternary split across lines, which is not counted.
+    # That under-reports, which is the direction this project errs in.
+    r"|\?(?![.?:])(?=[^?]*:)"
 )
 
 
 #: Swift's `guard` is an early exit and its primary branching idiom, and
-#: `repeat` is its do-while. Neither is in the C-family pattern, so a
-#: guard-heavy function would read as branchless — the same defect Fortran
-#: had with `do`.
+#: is not in the C-family pattern, so a guard-heavy function read as
+#: branchless — the same defect Fortran had with `do`.
+#:
+#: Two corrections from checking every construct in the language guide
+#: against an independent implementation:
+#:
+#: `repeat` is **not** counted. `repeat { … } while cond` is one loop
+#: with one condition and the `while` carries it, exactly as PHP's
+#: `do … while` does.
+#:
+#: A `?` needs a following `:` to be a ternary. Swift spells optionals
+#: `Int?`, so every optional parameter and property in the language was
+#: scoring as a decision — the same defect found in C#, TypeScript, PHP
+#: and Java, in a fifth spelling.
 SWIFT_COMPLEXITY_RE = re.compile(
-    r"\b(if|for|while|case|catch|guard|repeat)\b|&&|\|\||\?\?|\?(?![.?])"
+    r"\b(if|for|while|case|catch|guard)\b|&&|\|\||\?\?"
+    # Same rule as the C family: a ternary needs both halves. Swift
+    # writes optionals as `Int?`, so without the `:` every optional
+    # parameter and property in the language scored as a decision.
+    r"|\?(?![.?:])(?=[^?]*:)"
 )
 
 
 def swift_branch_points(line: str) -> int:
     """Decision points on one line of Swift."""
     return len(SWIFT_COMPLEXITY_RE.findall(line))
+
+
+#: Go's vocabulary is *smaller* than C's, not larger. It has no `while`
+#: (`for` covers looping), no ternary, and no `catch` — `if err != nil`
+#: is already an `if`.
+#:
+#: This pattern first added `select` and `goto` and both were wrong,
+#: which is worth keeping written down. A `select` with two cases has two
+#: paths: its **cases** are the branches and the header decides nothing,
+#: exactly as a `switch` header does not — `select {}` with no cases
+#: simply blocks. And `goto` transfers control unconditionally, so it
+#: adds an edge without adding a decision.
+#:
+#: The C-family pattern already counted `case`, so Go's select dispatch
+#: was measured correctly before either was added. A test written from
+#: the wrong intuition failed, and the code was changed to satisfy the
+#: test rather than the grammar. Caught by comparing construct-by-
+#: construct against an independent implementation.
+GO_COMPLEXITY_RE = re.compile(
+    r"\b(if|for|case)\b|&&|\|\|"
+)
+
+
+#: Rust, corrected construct-by-construct against the reference after
+#: three disagreements, all of them this project's.
+#:
+#: `loop` is **not** counted: it is unconditional, and the `if … break`
+#: inside it is what decides. Counting the head as well double-counts,
+#: exactly as `goto` did in Go.
+#:
+#: `?` **is** counted, reversing an earlier claim that it "propagates an
+#: error and decides nothing". It decides: `let x = f()?` continues or
+#: returns early, and it expands to a `match` with two arms. Idiomatic
+#: Rust being full of them is a fact about idiomatic Rust, not a reason
+#: to under-count it.
+#:
+#: `match` arms are counted except the wildcard. Two real arms and a `_`
+#: is three paths, the same shape as two `case`s and a `default`, which
+#: is what Go already scores. lizard reads a whole `match` as one
+#: decision and this project does not follow it there — see
+#: `tests/test_grammar_constructs.py`, where that divergence is declared
+#: with its reason rather than silently absorbed.
+RUST_COMPLEXITY_RE = re.compile(
+    r"\b(if|for|while)\b|&&|\|\||\?|(?<!_\s)(?<!_)=>"
+)
+
+
+#: PHP spells its multi-way branch `elseif`, one word with no boundary
+#: inside it, so the C-family pattern matched neither `if` nor `elif`
+#: there and a dispatch chain scored *zero*. `foreach` is its primary
+#: loop and `and`/`or`/`xor` are word operators.
+#:
+#: Three corrections after checking every construct in the reference
+#: against an independent implementation:
+#:
+#: `do` is not counted. `do { … } while (cond)` is one loop with one
+#: condition, and the `while` clause already carries it.
+#:
+#: `goto` is not counted. It transfers control unconditionally — the
+#: same reasoning that removed it from Go.
+#:
+#: A `?` immediately followed by an identifier character is a **nullable
+#: type hint**, not a ternary. `?int $v` decides nothing, and counting it
+#: made every nullable parameter in the language a branch. This is D78's
+#: optional-chaining defect wearing different syntax.
+PHP_COMPLEXITY_RE = re.compile(
+    r"\b(elseif|if|for|foreach|while|match|case|catch|and|or|xor)\b"
+    r"|&&|\|\||\?\?"
+    # A ternary, but not a nullable type hint. `?int $v` is a type
+    # declaration and decides nothing; counted, every nullable parameter
+    # in the language read as a branch. `?` followed immediately by an
+    # identifier character is a type, and a ternary is written with the
+    # expression separated: `$x ? 1 : 2`.
+    r"|\?(?![.?:\w])"
+)
+
+
+#: Ruby writes its negated conditional and loop as words the C pattern
+#: never looks for — `unless` and `until` — and both are ordinary rather
+#: than exotic: `return 0 unless value` is the idiomatic guard clause.
+#: `elsif` is spelled with one `e`, so `elif` misses it too. Measured with
+#: C's keywords, a guard-heavy Ruby method reads as branchless.
+RUBY_COMPLEXITY_RE = re.compile(
+    r"\b(if|elsif|unless|while|until|for|when|rescue)\b"
+    r"|&&|\|\||\band\b|\bor\b"
+    # The ternary. Not `&.` (safe navigation decides nothing, as `?.`
+    # does not in JavaScript — D78), and not a method name ending in
+    # `?`, which is why a word character may not precede it.
+    r"|(?<![\w&.])\?(?![.?])"
+)
+
+
+def ruby_branch_points(line: str) -> int:
+    """Decision points on one line of Ruby."""
+    return len(RUBY_COMPLEXITY_RE.findall(line))
+
+
+def php_branch_points(line: str) -> int:
+    """Decision points on one line of PHP."""
+    return len(PHP_COMPLEXITY_RE.findall(line))
+
+
+def rust_branch_points(line: str) -> int:
+    """Decision points on one line of Rust."""
+    return len(RUST_COMPLEXITY_RE.findall(line))
+
+
+def go_branch_points(line: str) -> int:
+    """Decision points on one line of Go."""
+    return len(GO_COMPLEXITY_RE.findall(line))
+
+
+#: Python's decision points, from the language reference rather than
+#: from the C family it was borrowed from. `and` and `or` are the boolean
+#: operators — the shared pattern looked for `&&` and `||`, which Python
+#: does not have, so every one of them was invisible: 3,199 in this
+#: repository alone. `if` covers the statement, the ternary
+#: (`a if b else c`) and the comprehension condition, all of which are
+#: decisions. `case` counts and `match` does not, by the arms-not-header
+#: rule shared with Go, PHP, Ruby and Fortran. `not` decides nothing, and
+#: neither does `else`.
+# `case` carries the branch and `match` does not — the arms-not-header
+# rule shared with Go, PHP, Ruby and Fortran. The wildcard `case _` is
+# excluded because it is Python's `default`: it always matches, so it
+# adds a path without a decision to reach it, exactly as Go's `default:`
+# and Rust's `_ =>` do. `case _ if guard:` is excluded here too and
+# counted by its `if`, which is the decision; `case _name:` and
+# `case [_, x]:` are ordinary patterns and still count.
+PYTHON_COMPLEXITY_RE = re.compile(
+    r"\b(?:if|elif|for|while|except|and|or)\b"
+    r"|\bcase\b(?!\s+_\s*(?::|if\b))"
+)
+
+
+def python_branch_points(line: str) -> int:
+    """Decision points on one line of Python."""
+    return len(PYTHON_COMPLEXITY_RE.findall(line))
 
 
 def branch_points(line: str) -> int:

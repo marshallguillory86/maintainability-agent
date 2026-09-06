@@ -223,29 +223,33 @@ maintainability-agent \
 The [roadmap](docs/roadmap.md#the-remediation-hole-closed-in-210-through-230)
 has the history of why this was the hole under the product's central claim.
 
-### Before the commit
+### During the loop, not only after it
 
-The gate above runs after the work is done. `--staged` runs while it is still in
-the author's hands:
+The gate above runs once the work is done. Two flags run while it is still in
+the author's hands, and neither produces a score — a diff and a single file
+both lack the population a rate needs.
 
 ```bash
-maintainability-agent --install-precommit-hook   # writes .git/hooks/pre-commit
+maintainability-agent --check src/thing.py < proposed.py   # while writing
+maintainability-agent --install-precommit-hook             # before committing
 ```
 
-It scans **the index, not the working tree** — stage half a file with `git add
--p` and keep typing, and what gets measured is what the commit will actually
-contain. Clean, it prints nothing and exits 0. Breaching, it names each path,
-line and remedy and exits 1; `--format json` gives an agent the same findings.
+**`--check PATH`** answers about content on stdin. No repository, no git, no
+scan; `PATH` names the content and is never opened, so what you pass is what
+gets measured. It reports breaches *and* how much room is left — nine lines of an
+eighty-line budget — because a gate only speaks once it is too late to be cheap.
+A language with no declaration scanner says so, rather than reporting nothing
+and reading as clean.
 
-It is not a small audit. It produces **no score**, because a diff has no
-population to draw a rate from — only threshold breaches, including a `# noqa`
-this change added. It applies no repository gates: a missing README is a
-property of the repository, not of your diff. And it runs nothing and writes
-nothing, so it costs 0.17s here against the full audit's 266 — a hook slower
-than the author's patience is one they uninstall.
+**`--staged`** scans the git index. Stage half a file with `git add -p`, keep
+typing, and what gets measured is what the commit will actually contain —
+reading the working tree is the classic pre-commit bug. It applies no
+repository gates, runs nothing, writes nothing, and costs 0.17s here against
+the full audit's 266; a hook slower than the author's patience is one they
+uninstall. `--install-precommit-hook` refuses to replace a hook it did not
+write and honours `core.hooksPath`.
 
-`--install-precommit-hook` refuses to replace a hook it did not write, printing
-the line to add to yours instead, and honours `core.hooksPath`.
+Both exit 1 on a breach and 0 silently, and both take `--format json`.
 
 ## What it analyzes
 

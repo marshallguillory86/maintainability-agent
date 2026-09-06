@@ -4,7 +4,29 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
-_Nothing yet._
+### Added — `--check`, the in-loop door
+
+- **`--check PATH`** reads proposed content on stdin and reports what its
+  budgets allow, for an agent mid-edit. No repository, no git, no scan:
+  `PATH` names the content and is **never opened**, so what you pass is
+  what gets measured rather than whatever is on disk. Reading the path
+  would answer about the previous version, which is the pre-commit bug
+  one step earlier in the loop.
+- **Headroom, not only verdicts.** A gate speaks once it is already too
+  late to be cheap; the lines left in a budget are usable while the
+  author is still writing. That difference is why this sits beside
+  `--staged` rather than inside it, and it is what the roadmap meant by
+  a constraint that "prevents rather than rejects".
+- **It never scores** — one file has no population — and says so in the
+  result rather than leaving a missing key to be read as a good grade.
+- **A language with no declaration scanner says so.** Reporting nothing
+  for a `.rb` file is true, useless, and indistinguishable from clean
+  unless stated. Absence read as a pass is the defect this project keeps
+  finding in itself.
+- Documented where the people and agents who need it will meet it:
+  README, `docs/cli.md`, `docs/ide-agent-integration.md`, and the
+  packaged skill, which teaches agents to reach for this instead of a
+  full audit when the question is "does this fit".
 
 ## 2.9.0 - 2026-09-05
 

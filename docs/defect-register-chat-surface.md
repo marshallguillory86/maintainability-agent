@@ -3758,9 +3758,266 @@ fail on its first assertion. Removing the triple-quote clause makes it
 fail on its last, and re-breaks the exemption in
 `test_a_real_trailing_directive_is_still_a_suppression`.
 
+### D112 — Closed: Python was scored against its own comments and strings (High)
+
+The flagship language, the one this project is written in, and the one
+most of the calibration corpus is measured through.
+
+`declaration_ranges` returned Python's **raw lines** to score complexity
+against, while every other language received a comment- and
+string-masked copy. The function's own docstring said as much — "JS/TS/
+HTML score against a comment- and string-masked copy" — and Python was
+simply not in that list. So every keyword in every comment and every
+string literal counted as a decision.
+
+A branchless four-line function scored **4**, its every point supplied by
+one comment and one string. 384 branch points on this repository's own
+121 files came from prose inside docstrings, which a line-local masker
+would not have caught either: a triple-quoted string spans lines and
+survives it.
+
+Masking now uses `tokenize`, CPython's own lexer, so what counts as a
+comment or a string is decided by the language rather than by a pattern
+written from memory — which is how this arrived.
+
+*Closing test:* `tests/test_python_complexity.py`:
+`test_a_python_comment_is_not_a_branch`,
+`test_a_string_literal_is_not_a_branch`,
+`test_a_docstring_is_not_a_branch`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
+*Mutation:* returning `lines` instead of `mask_python_lines(lines)` in
+`declaration_ranges` restores complexity 4 for the branchless function
+and fails all three.
+
+### D113 — Closed: Python's boolean operators were never counted (High)
+
+The Python branch pattern looked for `&&` and `||` — C's operators, in a
+language that spells them `and` and `or`. Every boolean operator in every
+Python file this tool has ever measured was invisible: **3,199** of them
+in this repository alone, and `if a and b or c` scored 1 where standard
+cyclomatic complexity is 3.
+
+Python now has its own branch set, derived from the language reference
+rather than inherited from the C family. `case` counts and `match` does
+not, by the arms-not-header rule shared with Go, PHP, Ruby and Fortran.
+
+*Closing test:* `tests/test_python_complexity.py`:
+`test_boolean_operators_are_decisions`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
+*Mutation:* removing `and|or` from `PYTHON_COMPLEXITY_RE` scores the
+sample 2 instead of 4.
+
+### D114 — Closed: the fix for D112 blanked the code inside f-strings (Medium)
+
+Introduced by the repair, found by the same method that found the
+original.
+
+On Python 3.11 an f-string is a single `STRING` token, so blanking the
+token whole removed the expressions written inside `{…}` — which are
+code, and frequently the only place a ternary or a comprehension
+appears. Found by hand-counting a function the oracle still disagreed on
+after D112 and D113 were fixed: this project said 7 and the grammar says
+11.
+
+Only the literal text is blanked now; `{{` and `}}` are escaped braces
+and hold nothing.
+
+*Closing test:* `tests/test_python_complexity.py`:
+`test_expressions_inside_an_f_string_are_counted` and
+`test_the_literal_text_of_an_f_string_is_still_not_counted`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
+*Mutation:* blanking the whole token again scores the sample 1 instead
+of 5.
+
+### D115 — Closed: a `?` in type position was counted as a ternary, in five languages (High)
+
+One defect, five spellings, and the third appearance of D78's shape.
+
+- C# `int? v` — a nullable type
+- TypeScript `title?: string` — an optional parameter
+- Java `List<?>` — a generic wildcard
+- PHP `?int $v` — a nullable type hint
+- Swift `Int?` — an optional
+
+Each decides nothing and each scored one. The first three share the
+C-family pattern, so a single fix closed them; PHP and Swift carry their
+own and were fixed beside it.
+
+A ternary needs both halves, so a following `:` is now required. The cost
+is a ternary split across lines, which is not counted — under-reporting,
+which is the direction this project errs in, and it is stated beside the
+pattern.
+
+**lizard has this same defect in its TypeScript reader**, which is why
+the divergence is declared rather than followed. A harness built to chase
+agreement would have re-introduced the bug to match the oracle.
+
+*Closing test:* `tests/test_grammar_constructs.py`:
+`test_every_construct_agrees_with_an_independent_implementation` over the
+C#, TypeScript, PHP and Swift fixtures.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
+*Mutation:* dropping the lookahead requiring a following colon scores
+every optional parameter and nullable type in those fixtures as a
+decision.
+
+### D116 — Closed: unconditional constructs were counted as decisions (Medium)
+
+`goto` in Go and PHP, and `loop` in Rust. All three transfer control
+without deciding anything: a `goto` is an edge, and Rust's `loop` has no
+condition — the `if … break` inside it is what decides.
+
+All three were added in the twenty-four hours before the audit, each with
+a confident justification written beside it. C had it right all along and
+never counted `goto`, which is what the C fixture demonstrated.
+
+*Closing test:* `tests/test_go_declarations.py`:
+`test_goto_is_not_a_decision`; `tests/test_rust_declarations.py`:
+`test_an_unconditional_loop_is_not_a_decision`;
+`tests/test_php_declarations.py`: `test_do_while_and_match_are_branches`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
+*Mutation:* restoring `goto` or `loop` to their patterns scores each
+fixture one high.
+
+### D117 — Closed: a multi-way header was counted beside its own arms (Medium)
+
+Go's `select`, PHP's `do … while`, Swift's `repeat … while`, and Rust's
+wildcard `_ =>` arm.
+
+The rule was already written down for Fortran — `select case` is a header
+whose *cases* are the branches, and counting both scores the construct
+and its first arm — and it was not applied when four more languages were
+added. A `select` with two cases has two paths; `select {}` with no cases
+blocks and decides nothing. A `do { … } while (cond)` is one loop with
+one condition, carried by its `while`. A wildcard arm is a default, and a
+default is not a test.
+
+The Go case is the sharpest: the C-family pattern already counted `case`,
+so Go's select dispatch was **measured correctly before it was touched**.
+A test written from a wrong intuition failed, and the code was changed to
+satisfy the test rather than the grammar.
+
+*Closing test:* `tests/test_go_declarations.py`:
+`test_select_is_counted_at_its_cases_not_its_header`;
+`tests/test_rust_declarations.py`:
+`test_a_wildcard_match_arm_is_not_a_decision`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
+*Mutation:* restoring `select`, `do` or `repeat` to their patterns, or
+counting a wildcard arm, scores those fixtures one high.
+
+### D118 — Closed: Rust refused to count the operator that returns early (Medium)
+
+`?` was excluded on the stated reasoning that it "propagates an error and
+decides nothing", by analogy with JavaScript's optional chaining (D78).
+The analogy is false. `let x = f()?` continues or returns early, and the
+operator expands to a `match` with two arms — two paths, one decision.
+That idiomatic Rust is full of them is a fact about Rust, not a reason to
+under-count it.
+
+*Closing test:* `tests/test_rust_declarations.py`:
+`test_the_error_operator_is_a_decision`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
+*Mutation:* excluding the operator from `RUST_COMPLEXITY_RE` scores the
+fixture 1 instead of 2.
+
+### D119 — Closed: no measurement was ever checked against a second implementation (High)
+
+The defect behind the eight above, and the only one about method rather
+than code.
+
+Every branch keyword set in this project was written from somebody's
+knowledge of a language and checked against examples written from the
+same knowledge. That is not evidence; it reads as evidence because the
+prose around it is confident, which is worse than reading as a guess.
+
+The measurable consequence: on this repository's own source, this project
+agreed with an independent implementation on **448 of 985 declarations —
+45%**. It is now 968 of 1000.
+
+The instinct existed and stayed a one-off.
+`test_the_built_in_reading_agrees_with_lizard` cross-checked *one*
+Fortran function and pinned the number rather than running the tool —
+"so the suite stays offline", though lizard is a local library. One
+function, one language, frozen. This class of defect survived in nine
+others.
+
+`tools/complexity_oracle.py` compares per declaration across a tree, and
+`tests/fixtures/grammar/` holds one fixture per language exercising the
+constructs its specification defines, checked construct-by-construct in
+CI. Thirteen languages are covered, and the coverage is counted in
+*readers* rather than fixtures — see D120, which is the language a count
+of fixtures missed. Only COBOL has no independent implementation
+available; it is named in the test as checked against itself alone, which
+is stated rather than implied. HTML and fixed-form Fortran share their
+branch readers with languages that are checked.
+
+Divergences are **declared with the grammar reasoning that settles
+them**, never silently absorbed: the check exists to hold this project to
+the specification, not to lizard. Chasing a second implementation is the
+same error as trusting the first, with an extra step — and lizard's own
+TypeScript reader carries D115.
+
+*Closing test:* `tests/test_grammar_constructs.py`:
+`test_every_construct_agrees_with_an_independent_implementation`,
+`test_the_fixture_covers_more_than_one_construct`, and
+`test_every_declared_divergence_is_still_real`.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=claude
+*Mutation:* deleting a fixture, or shrinking one below five constructs,
+fails the coverage guard; a divergence that stops being real fails the
+staleness guard.
+
+### D120 — Closed: Python counted the wildcard `case _`, which five other languages correctly do not (Medium)
+
+Found by the check D119 built, one language after it was believed
+finished — which is the argument for the check.
+
+**Python had no grammar fixture.** Twelve languages were added to
+`tests/fixtures/grammar/` and the flagship language — the one this
+project is written in, and the one carrying D112, D113 and D114 — was
+not among them. The guard that should have caught that,
+`test_there_is_a_grammar_fixture_to_check`, only asserts the directory is
+non-empty, which twelve fixtures satisfy while a thirteenth language goes
+unchecked. Coverage is now counted in **branch readers**, since the
+reader is the thing that can be wrong, and a reader with no second
+implementation has to be named.
+
+With the fixture in place, eleven of twelve constructs agreed exactly.
+The twelfth: `case _` was counted as a decision. It is Python's
+`default` — a wildcard always matches, so it adds a path without a
+decision to reach it. This project already refuses to count Go's
+`default:`, Rust's `_ =>` and the C family's `default:` (D117), so the
+same dispatch scored differently depending on which language it happened
+to be written in.
+
+lizard counts it, so this is a **declared divergence** rather than a
+silent one, and the reasoning is the grammar plus this project's own
+rule — not the second implementation. `case _ if guard:` is excluded here
+and counted by its `if`, which is the decision; `case _name:` is an
+ordinary capture pattern and `case [_, x]:` still has a pattern to match,
+and both still count.
+
+*Closing test:* `tests/test_python_complexity.py`:
+`test_the_wildcard_case_is_a_default_and_not_a_decision`;
+`tests/test_grammar_constructs.py`:
+`test_every_branch_reader_is_checked_against_a_second_opinion` and
+`test_no_declared_gap_actually_has_a_fixture`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
+*Mutation:* restoring a bare `case` to `PYTHON_COMPLEXITY_RE` scores the
+wildcard arm as a decision; deleting the Python fixture, or removing a
+reader from the declared-gap map while it has no fixture, fails the
+coverage guard.
+
 ## Disposition
 
-**Every entry is closed.** D110 closed once 2.9.0 put the images on `main` and both absolute URLs returned 200. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+**Every entry is closed.** D112 through D120 record a complexity audit that found this project measuring Python against its own comments, missing its boolean operators, and reading a `?` in type position as a ternary in five languages — nine entries, of which D119 is the method failure behind the other eight, and D120 was found by the check D119 built. D110 closed once 2.9.0 put the images on `main` and both absolute URLs returned 200. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they

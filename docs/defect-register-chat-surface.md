@@ -3677,14 +3677,22 @@ here rather than a test agent.
 ### D110 — Closed: the README's images are invisible on PyPI (Low)
 
 `pyproject.toml` sets `readme = "README.md"`, so the README *is* the PyPI
-long_description. GitHub resolves repository-relative image paths; PyPI
-does not, and drops them. Checked against the live page: the rendered
-HTML at `pypi.org/project/maintainability-agent/` contains no `.png` and
-no reference to `docs/cover.png` at all.
+long_description. A repository-relative path has no repository to resolve
+against there: `docs/cover.png` resolves against `pypi.org` and 404s, so
+the image does not display. GitHub resolves the same path correctly,
+which is why this is invisible from inside the repository.
 
-The cover image has therefore never been seen by anyone who found this
-package on PyPI, which is its primary distribution page. 2.9.0 adds a
-second image on the same terms.
+**Correction to this entry's original evidence.** It first claimed the
+live page had been checked and "contains no `.png` at all". That check
+was not valid: `curl` against `pypi.org/project/maintainability-agent/`
+returns a 3 KB challenge page with no description body in it — zero
+occurrences of the word "maintainability", let alone an image. The
+conclusion was drawn from a page that was never the project page. The
+defect is real on the mechanism above, and the fix is the standard one,
+but the verification claimed here did not happen and the entry should
+not have said it did.
+
+2.9.0 added a second image on the same terms.
 
 The ordering is why this was filed open rather than fixed in the same
 change. The fix is an absolute `raw.githubusercontent.com/.../main/` URL
@@ -3698,10 +3706,11 @@ Closed as the first change after 2.9.0 merged, once both URLs returned
 200. Both are now absolute.
 
 *Closing test:* `tests/test_readme_claims.py`:
-`test_no_readme_image_is_repository_relative`. It fails against 2.9.0 as
-shipped, which is the point: the defect was invisible from inside the
-repository, where every image looks right on GitHub while none of them
-reach PyPI.
+`test_no_readme_image_is_repository_relative`. It asserts the property —
+no image reference in the README is repository-relative — rather than
+scraping a rendered page, which is what made the original evidence
+worthless. A test that depends on fetching a third-party page proves
+whatever that page felt like returning.
 
 *Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
 *Mutation:* restoring either image to its `docs/...` path fails the

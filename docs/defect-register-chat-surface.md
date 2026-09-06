@@ -4332,9 +4332,140 @@ over the two divergences they introduced.
 *Mutation:* deleting the four added fixture functions restores a suite
 that passes while D125–D128 are all present.
 
+### D130 — Open: `--sarif-input` is the third operator-named read D104 claimed did not exist (High)
+
+D104 closed on the claim that `--config` and `--baseline` were *the
+only two* path-taking entry points that never went through any
+validation. They were not. `--sarif-input` is the same kind of
+operator-named path — repeatable, allowed outside `--root`, ingested
+into the published report — and it is still:
+
+    json.loads(Path(path).read_text(encoding="utf-8"))
+
+in `sarif.read_sarif_inputs`, called from `cli.py` on `args.sarif_input`
+before `build_report`. No regular-file check, no size cap, no one
+handle, no `O_NONBLOCK`. A FIFO hangs. `/dev/zero` reads until memory
+dies. A directory or a missing file is an uncaught `IsADirectoryError`
+or `FileNotFoundError`. A symlink is followed.
+
+That is the hang D104 measured on `--config` and then listed as closed.
+`SECURITY.md` names this flag. `tests/test_sarif.py` only parses a
+well-formed fixture. Sonar will not reopen D104: the rule keyed the two
+call sites that were patched.
+
+The class, not the instance: every CLI argument that *reads* a file the
+operator named. Writes (`--output`, `--write-baseline`) go through
+`write_artifact` and are a different population. `--conformance` is a
+revspec, not a file.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. The falsifier is a FIFO (or
+`/dev/zero`) passed as `--sarif-input`; it must refuse rather than
+hang, the way `--config` now does. A test that hangs cannot fail
+cleanly, so the proof is the exception type, as D104's own tests
+already say.
+
+### D131 — Open: `read_operator_file` was not made the read primitive (Medium)
+
+D104 built a one-handle reader and applied it to the two Sonar hits.
+Every other read is still `exists` / `is_file` / `is_symlink` and then
+`read_text` on the name — the sequence `_safe_write` and
+`read_operator_file` exist to forbid.
+
+The always-on case is history. Every successful CLI or MCP audit
+reaches `read_history`:
+
+    mkdir -p .maintainability
+    mkfifo .maintainability/history.jsonl
+    maintainability-agent --root . --format json
+
+`history_path.exists()` is true, so the run records; `attach_history_views`
+then `read_text`s the FIFO and blocks. Git cannot store a FIFO, so this
+is a local or agent-written tree, not a merged blob. D19 already treated
+a FIFO as a hang that must not be opened.
+
+The same name-then-open sequence, same hang:
+
+- `_first_run` labour / test-command persist: `is_symlink` then
+  `exists` then `read_text` on `maintainability-agent.json`
+- `_user_config._read_json_object`: no check at all on the XDG config
+- `_mcp_audit._refuse_clobbering_non_baseline`: `repository_path`
+  accepts an in-tree FIFO, then `read_text` hangs on MCP
+  `write_baseline=True`
+- `write_bounded` append and `_refuse_nonjson_clobber`: `is_file` then
+  `read_text`, so a swap to a FIFO between the check and the open is
+  the TOCTOU those helpers were written to close
+
+A committed multi-gigabyte `history.jsonl` is the git-shippable half:
+`read_operator_file` would refuse at 8 MiB; this path never calls it.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. The population is every
+`read_text` / `open` of a path that is not `read_operator_file` and
+not a handle already bound by `_safe_write`. Mutate a member the
+closing test does not name — history is the always-on one; first-run
+or user-config is the one outside the sample.
+
+### D132 — Open: a cognitive-only `--check` fail still prints a negative line overage (Medium)
+
+Grok's audit of `--check` found a short complex function rendering
+as `-71 over` because `over_by` was always `lines - max_function_lines`.
+The merge fixed the complexity-versus-length case and stopped
+hardcoding JSON `scored: false`. It did not name cognitive complexity
+as a budget.
+
+`_DECLARATION_BUDGETS` is length and cyclomatic only. A function that
+fails `max_cognitive_complexity` while remaining under both of those
+produces an empty breach list, then the fallback:
+
+    over_by = metric.lines - fallback   # the length budget it is inside
+
+Reproduction, current main / this branch: `max_cognitive_complexity=1`,
+a seven-line nest of `if`s, `max_function_lines=80`, `max_complexity=50`.
+Result: `over_by: -73`, render `✗ nested:1 — -73 over`. The finding is
+real; the figure is about a budget that did not fail.
+
+The comment on `_breaches_for` says a figure has to be about the thing
+that failed or it is worse than no figure. The fallback reintroduces
+the thing the comment says was removed.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. A function over the cognitive
+budget and under the length and cyclomatic budgets must not report a
+negative line `over_by`. Restoring the length fallback as the only
+breach, or omitting cognitive from `_DECLARATION_BUDGETS`, is the
+mutation.
+
 ## Disposition
 
-**Every entry is closed.** D125–D129 came from Grok's audit of the 2.11.0 tree, held the release, and are the reason nothing was published: two of them are High, and D126 reports a different function than the one in the file rather than under-reporting. D129 is the method entry — the grammar fixtures were a sample the page called a specification, and none of the four constructs behind D125–D128 were in them. D124 is a release-checklist omission that cost a build and no artifact: the gate held, the tag was re-pointed. D123 is the shipped README contradicting its own table, found by Marshall reading the page rather than by any check. D121 and D122 were found by CI on the pull request that shipped the rest, after a green local suite — an empty parameter set reported as a pass, and f-strings unmasked on every Python from 3.12. Both are the same shape as the audit that found them: a check that could not fail, and a fix that reached one interpreter. D112 through D120 record a complexity audit that found this project measuring Python against its own comments, missing its boolean operators, and reading a `?` in type position as a ternary in five languages — nine entries, of which D119 is the method failure behind the other eight, and D120 was found by the check D119 built. D110 closed once 2.9.0 put the images on `main` and both absolute URLs returned 200. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+**D130, D131 and D132 are open.** They are the remainder of Grok's
+audit of the twenty commits on `main` after 2.8.0. D125–D129 (the
+2.11.0 language findings from that same audit) are already closed on
+this branch. D130 is the class D104 claimed to close: `--sarif-input`
+is still a bare operator-named read. D131 is the same class one layer
+down: `read_operator_file` was not made the read primitive. D132 is
+the `--check` residual: a cognitive-only fail still prints a negative
+line overage. D124 is a release-checklist omission that cost a build
+and no artifact: the gate held, the tag was re-pointed. D123 is the
+shipped README contradicting its own table, found by Marshall reading
+the page rather than by any check. D121 and D122 were found by CI on
+the pull request that shipped the rest, after a green local suite — an
+empty parameter set reported as a pass, and f-strings unmasked on
+every Python from 3.12. Both are the same shape as the audit that found
+them: a check that could not fail, and a fix that reached one
+interpreter. D112 through D120 record a complexity audit that found
+this project measuring Python against its own comments, missing its
+boolean operators, and reading a `?` in type position as a ternary in
+five languages — nine entries, of which D119 is the method failure
+behind the other eight, and D120 was found by the check D119 built.
+D110 closed once 2.9.0 put the images on `main` and both absolute URLs
+returned 200. D109 closed the hollow test and the gate hole that let
+it through, and D111 closed the escape phrase that the gate matched
+inside prose about itself. D108's closing test has landed. D106
+preserves both determinism checks with explicit double invocations
+and failure messages. SonarCloud confirmation awaits CI. D107 records
+two SonarCloud false-positive resolutions in the same turn they were
+taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they

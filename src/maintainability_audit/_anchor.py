@@ -30,7 +30,7 @@ from __future__ import annotations
 #: be unavailable exactly where a user reads a grade.
 #: `test_anchor_disclosure` recomputes `parsed - corpus` from both sources
 #: and fails if this stops matching, so the list cannot quietly go stale.
-UNANCHORED_LANGUAGES: tuple[str, ...] = ("Swift", "COBOL", "Go", "Rust", "PHP")
+UNANCHORED_LANGUAGES: tuple[str, ...] = ("Swift", "COBOL", "Go", "Rust", "PHP", "Ruby")
 
 
 def unanchored_names() -> str:

@@ -16,6 +16,7 @@ ends, and — deliberately — where it under-reports.
 | Go (`.go`) | dedicated scanner: functions, methods and container types (`struct`, `interface`), bounded by their own braces | Bounded. Methods carry their receiver type; interface methods are requirements rather than declarations; function literals inside a body are not seen — see below. |
 | Rust (`.rs`) | dedicated scanner: functions, `impl` and `trait` members, and types (`struct`, `enum`, `trait`, `union`), bounded by their own braces | Bounded. Methods carry the type their `impl` block names; trait requirements without a body mint nothing; closures and macro bodies are not read — see below. |
 | PHP (`.php`, `.phtml`) | dedicated scanner: functions, methods and types (`class`, `interface`, `trait`, `enum`), with everything outside `<?php … ?>` blanked first | Bounded. Methods carry their class; interface and abstract methods mint nothing; closures and heredoc bodies are not read — see below. |
+| Ruby (`.rb`, `.rake`, `.gemspec`) | dedicated scanner: methods, classes and modules bounded by their own `end`, counted by openers because one `end` closes everything | Bounded by depth. Methods carry their class (`Store#get`); blocks, modifier forms, heredocs and `=begin` blocks are discounted first; metaprogrammed methods are not seen — see below. |
 | COBOL (`.cbl`, `.cob`, `.cpy`, `.CBL`, `.COB`, `.CPY`) | dedicated scanner: PROCEDURE DIVISION paragraphs, bounded by the start of whatever follows them. Fixed-form card columns are read where the layout carries them | Bounded by the next header. Programs and sections are containers and are not graded; level numbers are not declarations; a section whose statements sit outside any paragraph mints nothing — see below. |
 | Fortran, free-form (`.f90`, `.f95`, `.f03`, `.f08`, `.F90`, `.F95`, `.F03`, `.F08`, `.pf`) | dedicated scanner: modules, submodules, programs, subroutines, functions and derived types, bounded by their own `end` | Bounded by keyword rather than braces. |
 | Fortran, fixed-form (`.f`, `.for`, `.ftn`, `.F`, `.FOR`, `.FTN`) | the same scanner, over source laid out for punched cards: label in columns 1-5, continuation in 6, statement in 7-72 | Bounded by keyword. Continuations are joined before reading — see below. |
@@ -54,7 +55,7 @@ approximate population.
 
 **Per-language accuracy — what each scanner sees and what it misses** is
 one page per language, so adding a language adds a file rather than
-growing this one: [Java](languages/java.md), [C](languages/c.md), [C++](languages/cpp.md), [C#](languages/csharp.md), [Fortran](languages/fortran.md), [Rust](languages/rust.md), [Go](languages/go.md), [PHP](languages/php.md), [Swift](languages/swift.md), [COBOL](languages/cobol.md).
+growing this one: [Java](languages/java.md), [C](languages/c.md), [C++](languages/cpp.md), [C#](languages/csharp.md), [Fortran](languages/fortran.md), [Rust](languages/rust.md), [Go](languages/go.md), [PHP](languages/php.md), [Ruby](languages/ruby.md), [Swift](languages/swift.md), [COBOL](languages/cobol.md).
 
 ## The rule that matters: a range never runs past its own body
 

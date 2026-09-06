@@ -31,6 +31,7 @@ from ._metrics_types import (
     fortran_branch_points,
     go_branch_points,
     php_branch_points,
+    ruby_branch_points,
     rust_branch_points,
     swift_branch_points,
 )
@@ -47,6 +48,7 @@ from ._ranges_go import go_declaration_ranges
 from ._ranges_java import java_declaration_ranges
 from ._ranges_js import js_declaration_ranges
 from ._ranges_php import php_declaration_ranges
+from ._ranges_ruby import ruby_declaration_ranges
 from ._ranges_rust import rust_declaration_ranges
 from ._ranges_swift import swift_declaration_ranges
 
@@ -82,6 +84,8 @@ GO_SUFFIXES = {".go"}
 RUST_SUFFIXES = {".rs"}
 # PHP: `.phtml` is the same language with a template-first convention.
 PHP_SUFFIXES = {".php", ".phtml"}
+# Ruby: `.rake` and `.gemspec` are Ruby with a different job.
+RUBY_SUFFIXES = {".rb", ".rake", ".gemspec"}
 # COBOL, and the copybooks it includes. A `.cpy` carries DATA
 # DIVISION text and no PROCEDURE DIVISION, so it mints nothing and is
 # scanned for size like a C header full of prototypes.
@@ -127,6 +131,7 @@ SCANNERS: tuple[tuple[set[str], object], ...] = (
     (GO_SUFFIXES, go_declaration_ranges),
     (RUST_SUFFIXES, rust_declaration_ranges),
     (PHP_SUFFIXES, php_declaration_ranges),
+    (RUBY_SUFFIXES, ruby_declaration_ranges),
     (COBOL_SUFFIXES, cobol_declaration_ranges),
     (FORTRAN_SUFFIXES, fortran_declaration_ranges),
     (FIXED_FORM_SUFFIXES, fixed_form_declaration_ranges),
@@ -164,6 +169,10 @@ METRICS: tuple[tuple[set[str], object, object], ...] = (
     # dispatch chain scored zero. `foreach` is its primary loop and
     # `and`/`or`/`xor` are word operators.
     (PHP_SUFFIXES, php_branch_points, brace_cognitive),
+    # Ruby's guard clause is `unless` and its negated loop is `until`,
+    # neither of which the C pattern looks for, and `elsif` has one `e`
+    # so `elif` misses it. A guard-heavy method read as branchless.
+    (RUBY_SUFFIXES, ruby_branch_points, brace_cognitive),
     # COBOL closes scopes with hyphenated `END-` words and with the
     # period that ends a sentence; neither is in the C-family reading.
     (COBOL_SUFFIXES, cobol_branch_points, cobol_cognitive),
@@ -184,7 +193,7 @@ def metrics_for(suffix: str) -> tuple[object, object]:
 DECLARATION_SUFFIXES = (
     PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | CPP_SUFFIXES
     | CSHARP_SUFFIXES | SWIFT_SUFFIXES | GO_SUFFIXES | RUST_SUFFIXES
-    | PHP_SUFFIXES
+    | PHP_SUFFIXES | RUBY_SUFFIXES
     | COBOL_SUFFIXES
     | FORTRAN_SUFFIXES | FIXED_FORM_SUFFIXES
     | BRACE_SUFFIXES

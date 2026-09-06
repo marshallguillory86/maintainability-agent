@@ -104,6 +104,21 @@ PHP_COMPLEXITY_RE = re.compile(
 )
 
 
+#: Ruby writes its negated conditional and loop as words the C pattern
+#: never looks for — `unless` and `until` — and both are ordinary rather
+#: than exotic: `return 0 unless value` is the idiomatic guard clause.
+#: `elsif` is spelled with one `e`, so `elif` misses it too. Measured with
+#: C's keywords, a guard-heavy Ruby method reads as branchless.
+RUBY_COMPLEXITY_RE = re.compile(
+    r"\b(if|elsif|unless|while|until|for|when|rescue)\b|&&|\|\||\band\b|\bor\b"
+)
+
+
+def ruby_branch_points(line: str) -> int:
+    """Decision points on one line of Ruby."""
+    return len(RUBY_COMPLEXITY_RE.findall(line))
+
+
 def php_branch_points(line: str) -> int:
     """Decision points on one line of PHP."""
     return len(PHP_COMPLEXITY_RE.findall(line))

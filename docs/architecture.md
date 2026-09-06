@@ -134,6 +134,7 @@ flowchart TB
     _ranges_go["_ranges_go"]
     _ranges_rust["_ranges_rust"]
     _ranges_php["_ranges_php"]
+    _ranges_ruby["_ranges_ruby"]
     _ranges_cobol["_ranges_cobol"]
     _tokens["_tokens"]
     _xml["_xml"]

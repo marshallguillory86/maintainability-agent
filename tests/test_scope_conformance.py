@@ -213,6 +213,58 @@ def test_every_marker_is_a_real_directive_a_tool_obeys() -> None:
     )
 
 
+def test_a_quoted_marker_mention_is_not_a_suppression() -> None:
+    """D108: a line that only talks about a marker is not a suppression.
+
+    Call ``suppressions_added`` with a literal dict. A git helper is not
+    the subject, and on main it would fail the import instead of the
+    defect. The same call is the falsifier on both sides of the rebase;
+    only the verdict flips.
+
+    After the fix, the mention-half is the same question asked of
+    ``markers_in``, which returns the label or None.
+    """
+    from maintainability_audit._conformance import suppressions_added
+
+    noqa = "#" + " noqa"
+    backtick = "would report a decade of accumulated `" + noqa + "` as though"
+    quoted = "a docstring explaining '" + noqa + "' is not a suppression"
+
+    assert suppressions_added({"m.py": [(1, backtick)]}, set()) == [], (
+        "a marker mentioned inside backticks was reported as a suppression"
+    )
+    assert suppressions_added({"m.py": [(1, quoted)]}, set()) == [], (
+        "a marker mentioned inside a string was reported as a suppression"
+    )
+
+    from maintainability_audit._conformance import markers_in
+
+    assert markers_in(backtick) is None
+    assert markers_in(quoted) is None
+
+
+def test_a_real_trailing_directive_is_still_a_suppression() -> None:
+    """Covers existing behaviour: a real trailing directive was already reported.
+
+    Two languages, because the per-language set exists so the vocabularies
+    can differ; a fix that stopped seeing one of them must fail here.
+    """
+    from maintainability_audit._conformance import suppressions_added
+
+    python_line = "value = 1  " + "#" + " noqa"
+    js_line = "const value = 1;  " + "//" + " eslint-disable"
+
+    python = suppressions_added({"m.py": [(1, python_line)]}, set())
+    js = suppressions_added({"m.js": [(1, js_line)]}, set())
+
+    assert python and python[0]["path"] == "m.py" and python[0]["line"] == 1, (
+        "a trailing Python directive was not reported"
+    )
+    assert js and js[0]["path"] == "m.js" and js[0]["line"] == 1, (
+        "a trailing JavaScript directive was not reported"
+    )
+
+
 def test_the_gate_reads_clean_not_conformant(tmp_path: Path) -> None:
     """A gate on scope alone would pass the diff that silenced the finding.
 

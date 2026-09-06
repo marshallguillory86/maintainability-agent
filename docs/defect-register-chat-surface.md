@@ -4436,16 +4436,102 @@ negative line `over_by`. Restoring the length fallback as the only
 breach, or omitting cognitive from `_DECLARATION_BUDGETS`, is the
 mutation.
 
+### D133 — Open: "a piped diff will say it could not parse" is a Python-only sentence (High)
+
+Gemini found a unified diff piped to `--check` reading as clean. The
+fix taught `_parses` to refuse content `ast.parse` rejects. Brace
+languages never refuse: `_parses` returns `True` for every suffix
+except `.py`. Docs and the changelog still speak as if the class
+closed:
+
+> A diff piped into `--check` is not file content. **It will say it
+> could not parse**; do not read that as clean.
+
+`.js`, `.java`, `.ts`, `.c` are in `DECLARATION_SUFFIXES`, so
+`declarations_read` is true, `note` is empty, the scanner finds
+nothing or scores a fragment, and the process exits 0.
+
+    printf '%s' '--- a/x.js
+    +++ b/x.js
+    @@ -1,3 +1,4 @@
+     function hello() {
+    +    console.log(1)
+         return 1
+     }
+    ' | maintainability-agent --check src/thing.js --format json
+
+Expect `declarations_read: false` and a parse note. On this tree:
+`true`, empty note, exit 0. Same shape Gemini found; only the language
+that uses `ast.parse` was taught to refuse.
+
+The class is every suffix `--check` claims to parse, not `ast.parse`.
+Do not mark valid brace source "unparsed" because it minted zero
+declarations.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. A unified diff named with a
+suffix the closing test does not hardcode — `.java` if the test used
+`.js` — must set `declarations_read` false and a non-empty note.
+
+### D134 — Open: `--check` accepts flags it would have to ignore (Medium)
+
+`--staged` named the class: a flag accepted and ignored teaches the
+caller it was honoured. `_STAGED_REFUSES` includes `--comment-output`,
+`--attestation-output`, `--agent-instructions-output`,
+`--hostile-prompt-output`, `--transformation`. `_CHECK_REFUSES` does
+not. `_check_action` returns before `write_outputs`, so
+`--check --comment-output x.md` exits 0 or 1 and writes nothing. The
+`--staged` sibling is tested; this door is not.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. A flag the closing test does not
+name — `--comment-output` if the test used `--attestation-output` —
+must `parser.error` with `--check does not take`.
+
+### D135 — Open: `--check` headroom is the line budget only (Medium)
+
+The product claim is remaining budget, not only a verdict. `_headroom`
+and `_band` use the line limit. A 20-line function at cyclomatic 12
+(`warn_complexity` 10) is `status=warn`, `band=ok`, silent in text,
+and JSON headroom looks fine. Cognitive warn is the same. Complexity
+is a budget they fail on (D132) and never show remaining for.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. A function under the line budget
+and over the cyclomatic warn line must not report `band=ok` with
+nothing to say.
+
+### D136 — Open: `--check` exists only on the CLI (Medium)
+
+Product intent: chat is the primary surface; a capability that exists
+only behind a terminal prompt does not exist for most users. 2.10.0
+closed "the in-loop half" and the same page says `--check` is
+CLI-only. MCP still has `audit_repository` and `get_agent_info`. The
+skill shells out to the CLI. An agent that cannot spawn a process
+cannot ask the question this release exists for.
+
+The red contract for an MCP `check_content` tool is on
+`test/mcp-check`. This entry is the ledger for that gap, not a second
+implementation queue.
+
+*Roles:* found=grok prompt=marshall fix=none test=none run=none
+*Mutation:* pending with the test. `tests/test_mcp_check.py` already
+fails at `origin/main` because the tool is absent.
+
 ## Disposition
 
-**D130, D131 and D132 are open.** They are the remainder of Grok's
-audit of the twenty commits on `main` after 2.8.0. D125–D129 (the
-2.11.0 language findings from that same audit) are already closed on
-this branch. D130 is the class D104 claimed to close: `--sarif-input`
-is still a bare operator-named read. D131 is the same class one layer
-down: `read_operator_file` was not made the read primitive. D132 is
-the `--check` residual: a cognitive-only fail still prints a negative
-line overage. D124 is a release-checklist omission that cost a build
+**D130, D131, D132, D133, D134, D135 and D136 are open.** They are the
+remainder of Grok's audit of the twenty commits on `main` after 2.8.0.
+D125–D129 (the 2.11.0 language findings from that same audit) are
+already closed on this branch. D130 is the class D104 claimed to
+close: `--sarif-input` is still a bare operator-named read. D131 is
+the same class one layer down: `read_operator_file` was not made the
+read primitive. D132 and D133 are `--check` residuals: a
+cognitive-only fail still prints a negative line overage, and "a piped
+diff will say it could not parse" is true only of Python. D134 is the
+flag-refusal class `--staged` already named, unapplied to `--check`.
+D135 is headroom that only watches lines. D136 is the chat-primary
+gap: `--check` is CLI-only. D124 is a release-checklist omission that cost a build
 and no artifact: the gate held, the tag was re-pointed. D123 is the
 shipped README contradicting its own table, found by Marshall reading
 the page rather than by any check. D121 and D122 were found by CI on

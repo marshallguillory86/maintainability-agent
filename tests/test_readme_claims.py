@@ -14,6 +14,7 @@ suffixes nor half of Fortran's.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -242,4 +243,110 @@ def test_no_readme_image_is_repository_relative() -> None:
     assert not relative, (
         "these README images are repository-relative and will not render on "
         f"PyPI: {relative}. Use the absolute raw.githubusercontent.com URL."
+    )
+
+
+#: The fleet reading: that this tool joins several repositories'
+#: histories to report how one transformation fared across an org. It is
+#: a roadmap item and it is not built. It was also invented twice before
+#: it was ever decided, so what these patterns defend is not the idea —
+#: Marshall has since accepted it as a future item — but the difference
+#: between an idea and a shipped feature.
+#: Every gap is `\s+`, never a literal space. Prose wraps: at the base
+#: this guard is proven against, the seed phrase reads "across\nservices",
+#: and a pattern written with a space matched nothing there — so the test
+#: passed without the fix and defended nothing. The falsifier gate caught
+#: exactly that, which is the second thing it has caught this week.
+_FLEET = (
+    re.compile(r"codemod[^.]{0,40}\bacross\s+services\b", re.I),
+    re.compile(r"\b(forty|many|dozens\s+of)\s+services\b", re.I),
+    re.compile(r"cross-repositor\w+\s+(transformation|comparison|history)", re.I),
+    re.compile(r"transformation[^.]{0,60}\bacross\s+repositories\b", re.I),
+)
+
+#: Surfaces a reader draws *current capability* from. The roadmap is
+#: deliberately absent: it is the one place the unbuilt version belongs,
+#: and it is checked separately for saying so.
+_CAPABILITY_SURFACES = (
+    "README.md", "docs/product-intent.md", "docs/architecture.md",
+    "docs/target-architecture.md", "docs/cli.md",
+    "src/maintainability_audit/_run_comparison.py",
+)
+
+#: The roadmap entry must keep saying it has not shipped. An unbuilt item
+#: that stops marking itself unbuilt is how a plan becomes a claim.
+_UNBUILT_MARKERS = ("not built", "not scheduled")
+
+
+def _is_quoted(text: str, start: int) -> bool:
+    """Whether the match at `start` is being *mentioned* rather than made.
+
+    The fourth time this project has needed this rule. D108: a
+    suppression marker quoted in a docstring was read as a directive.
+    D111: the falsifier gate's escape phrase, quoted in prose explaining
+    it, exempted the test doing the explaining. And a guard over intent
+    has the same problem twice over — a non-goal must name the claim to
+    reject it, and the docstring that corrects the old wording must quote
+    the old wording.
+
+    Worth noticing as a class: every rule this project writes over English
+    eventually meets a sentence *about* the thing it forbids. The rule is
+    always the same, so it is written the same way each time — quoted
+    means mentioned.
+    """
+    line_start = text.rfind("\n", 0, start) + 1
+    before = text[line_start:start]
+    return before[-1:] in {"`", "'", '"'} or before.count('"') % 2 == 1
+
+
+def test_no_surface_presents_cross_repository_comparison_as_shipped() -> None:
+    """A roadmap item must not read as a capability.
+
+    `--transformation` compares runs within one repository. The fleet
+    version is wanted and unbuilt, so the only surface entitled to
+    describe it is the roadmap, which says so.
+
+    This exists because the fleet version was written into the roadmap as
+    though decided, rejected, deleted, and then re-derived hours later
+    into a summary that was saved as a work list. The deletion left
+    nothing behind while the text that seeded it stayed: this module's
+    own feature described its use case as "a codemod applied across
+    services", which reads as a fleet.
+    """
+    offenders = []
+    for name in _CAPABILITY_SURFACES:
+        text = (ROOT / name).read_text(encoding="utf-8")
+        for pattern in _FLEET:
+            for match in pattern.finditer(text):
+                if _is_quoted(text, match.start()):
+                    continue
+                offenders.append(f"{name}: {match.group(0)!r}")
+    assert not offenders, (
+        "cross-repository transformation comparison is a roadmap item and is "
+        "not built; these surfaces describe it where a reader takes current "
+        "capability:\n  " + "\n  ".join(offenders)
+    )
+
+
+def test_the_roadmap_keeps_the_fleet_item_marked_unbuilt() -> None:
+    """The guard above needs its reason kept, and the reason is the roadmap.
+
+    Without an entry that says what this is and why it is not built, a
+    later reader deletes the check as unexplained — or re-derives the
+    feature from the single-repository one, which has now happened twice.
+    """
+    roadmap = (ROOT / "docs" / "roadmap.md").read_text(encoding="utf-8")
+    heading = "Cross-repository transformation comparison"
+    assert heading in roadmap, (
+        "the roadmap no longer carries the fleet item the guard explains"
+    )
+    entry = roadmap.split(heading, 1)[1].split("\n## ", 1)[0].lower()
+    assert any(marker in entry for marker in _UNBUILT_MARKERS), (
+        f"the fleet roadmap entry no longer marks itself unbuilt "
+        f"(one of {_UNBUILT_MARKERS}), so a plan now reads as a claim"
+    )
+    assert "comparability_fields" in entry, (
+        "the entry no longer names what makes the fleet version hard — "
+        "that scans from different repositories come from different "
+        "instruments — so the next reader will price it as a join"
     )

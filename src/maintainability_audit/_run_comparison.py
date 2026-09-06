@@ -2,12 +2,18 @@
 
 The last of the remediation-integrity items, and the only one that is a
 **report rather than a gate**. Where an agent performs one class of work
-repeatedly — a framework upgrade, a migration, a codemod applied across
-services — nobody measures whether the seventh run produced better code
-than the sixth. The generator cannot answer it: its output is not
+repeatedly in one repository — a framework upgrade, a migration, a codemod
+run again and again as it is refined — nobody measures whether the seventh
+run produced better code than the sixth. The generator cannot answer it: its output is not
 reproducible and it keeps no memory across runs. This tool has pinned
 references, structured finding identity and scan history, so the
 comparison is a join, not new machinery.
+
+One repository, deliberately. Joining several repositories' histories on a
+shared label — how one codemod fared across a fleet — is a roadmap item and
+is **not built**; what it needs is in `docs/roadmap.md`, and it is not this
+join. This docstring is where the opposite reading came from twice: it used
+to say "a codemod applied across services", which reads as a fleet.
 
 **What names a run.** Nothing in a tree says "this scan followed the React
 18 upgrade", so the operator says it: `--transformation react-18`. The

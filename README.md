@@ -1,6 +1,6 @@
 # Maintainability Agent
 
-![maintainability-agent — a deterministic audit whose output is a bounded work order for your AI coding agent: fix exactly these findings, refactor nothing else](docs/cover.png)
+![maintainability-agent — a deterministic audit whose output is a bounded work order for your AI coding agent: fix exactly these findings, refactor nothing else](https://raw.githubusercontent.com/marshallguillory86/maintainability-agent/main/docs/cover.png)
 
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
@@ -162,7 +162,7 @@ integration](docs/ide-agent-integration.md).
 
 ## Automation / CI: CLI
 
-![The loop, end to end: staged content meets a fast gate that blocks or passes it, the full audit measures what landed, the work order names exactly what to fix, and the repair is checked back against it](docs/MA_workflow.jpg)
+![The loop, end to end: staged content meets a fast gate that blocks or passes it, the full audit measures what landed, the work order names exactly what to fix, and the repair is checked back against it](https://raw.githubusercontent.com/marshallguillory86/maintainability-agent/main/docs/MA_workflow.jpg)
 
 Use the CLI for scripts, repeatable automation, and CI gates. Copy the example
 config to your repo root as `maintainability-agent.json`, then:

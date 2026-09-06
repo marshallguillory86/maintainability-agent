@@ -77,6 +77,41 @@ For what the setup questions mean and how to read the report, see
 `docs/help/` in the repository (first-run, analyzer pool, report and
 history).
 
+## While you are writing (the in-loop check)
+
+Neither of these audits a repository, and neither produces a score: a
+single file and a diff both lack the population a rate needs. Use them
+instead of a full audit whenever the question is "does this fit", not
+"how is this repository".
+
+**Before you write a file**, ask what its budgets allow. Content on
+stdin, and the path is never opened — what you pass is what is measured:
+
+```bash
+printf '%s' "$PROPOSED" | maintainability-agent --check src/thing.py --format json
+```
+
+It answers with breaches *and* the headroom left in each budget, so
+you can size a function before writing it rather than after being
+refused. Exit 1 means a breach, 0 means clear. A language with no
+declaration scanner says so; that is not the same as finding nothing,
+and you should not report it as clean.
+
+**Before a commit**, check what the index will actually contain:
+
+```bash
+maintainability-agent --staged --format json
+```
+
+It reads the index rather than the working tree, so half-staged edits
+are measured as they will land. It also reports a suppression marker
+your change *added* — `# noqa`, `eslint-disable`, a skipped test — which
+this project treats as a finding rather than a fix.
+
+Do not reach for a full audit to answer either question. It runs the
+analyzer pool and, where enabled, the repository's own test suite; on
+this project that is minutes against a fifth of a second.
+
 ## Automation / CI (CLI)
 
 The CLI in a pipeline is already-configured and never asks. An

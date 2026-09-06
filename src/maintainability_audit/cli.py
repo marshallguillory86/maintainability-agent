@@ -206,6 +206,54 @@ def _staged_action(parser: argparse.ArgumentParser, args: argparse.Namespace) ->
     return 1 if findings else 0
 
 
+#: Flags `--check` will not silently ignore. It answers about content it
+#: is handed, so anything naming a revspec, a repository scan, a write or
+#: another mode is a request it cannot honour — and a flag accepted and
+#: ignored teaches the caller it was honoured.
+_CHECK_REFUSES = {
+    "staged": "--staged", "changed_only": "--changed-only",
+    "backfill": "--backfill", "conformance": "--conformance",
+    "record_history": "--record-history", "fail_on_gate": "--fail-on-gate",
+    "fail_on_regression": "--fail-on-regression", "output": "--output",
+    "write_baseline": "--write-baseline", "prompt_output": "--prompt-output",
+    "html_output": "--html-output", "sarif_output": "--sarif-output",
+}
+
+
+def _check_action(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
+    """Answer about the content on stdin, then exit.
+
+    Returns before `_interactive_config` for the same reason
+    `_staged_action` does: that function asks first-run questions at a
+    TTY, and an agent piping content into a check is not a person who
+    wants a setup wizard. An unconfigured tree gets the shipped
+    thresholds.
+
+    Exit 1 when something breaches, 0 when nothing does. A repository is
+    never required — the point of this door is that it works before one
+    is relevant.
+    """
+    from ._in_loop import check_content
+    from ._in_loop_view import check_json, render_check
+
+    refused = [flag for attribute, flag in _CHECK_REFUSES.items() if getattr(args, attribute, None)]
+    if refused:
+        parser.error(f"--check does not take {', '.join(sorted(refused))}")
+    if args.format == "html":
+        parser.error("--check does not take html; it renders text or --format json")
+
+    root = Path(args.root).resolve()
+    config = load_config(args.config or discovered_config(root))
+    result = check_content(args.check, sys.stdin.read(), config)
+    if args.format == "json":
+        print(check_json(result))
+    else:
+        lines = render_check(result)
+        if lines:
+            print("\n".join(lines))
+    return 1 if result["findings"] else 0
+
+
 def _install_skill_action(args: argparse.Namespace) -> int:
     """Sync the packaged skill, or report the refusal that stopped it."""
     from ._skill_install import SkillDrift, install_skill
@@ -301,6 +349,8 @@ def main(argv: list[str] | None = None) -> int:
         code, message = install_precommit_hook(Path(args.root).resolve())
         print(message, file=sys.stderr if code else sys.stdout)
         return code
+    if args.check:
+        return _check_action(parser, args)
     # Before the config prompt, deliberately: see `_staged_action`.
     if args.staged:
         return _staged_action(parser, args)

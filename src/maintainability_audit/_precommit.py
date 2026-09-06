@@ -188,6 +188,77 @@ def staged_report(root: Path, config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _risk_items(report: dict[str, Any]) -> list[dict[str, Any]]:
+    """Risk-pattern matches the diff added, as blocking findings.
+
+    Gathered by `staged_report` and, until Gemini's field check, never
+    read by anything: a commit adding a dynamic-execution call passed the
+    hook in silence while the same line is a risk finding in a full audit.
+    Computing evidence and discarding it is worse than not gathering it —
+    the cost was paid, the answer thrown away, and the author told
+    nothing was wrong.
+    """
+    return [
+        {
+            "finding_class": "risk-pattern",
+            "title": f"{entry['pattern']} added in {entry['path']}",
+            "path": entry["path"], "line": entry["line"],
+            "target": (
+                f"remove or justify this {entry['pattern']} match; it is a "
+                "pattern this repository's own configuration asked to be "
+                "told about"
+            ),
+            "rationale": (
+                "the repository declared this pattern as risky, and this "
+                "change is adding a line that matches it"
+            ),
+            # Above a threshold breach and below an added suppression. A
+            # risk pattern is what the repository asked to see; switching
+            # the instrument off is still the worse act.
+            "band": "quick-win", "risk": 4, "effort": 2,
+            "verification": "git diff --cached",
+            "severity": 200.0,
+        }
+        for entry in report["risk_findings"]
+    ]
+
+
+def _suppression_items(report: dict[str, Any]) -> list[dict[str, Any]]:
+    """Markers this change added, which no repository-wide builder can see.
+
+    The audit reads whole files, and a marker in a whole file is history
+    rather than this change's doing. Only a diff can tell them apart.
+    """
+    return [
+        {
+            "finding_class": SUPPRESSION_CLASS,
+            "title": f"{entry['marker']} added in {entry['path']}",
+            "path": entry["path"], "line": entry["line"],
+            "target": (
+                "remove the suppression, or fix the finding it silences; a "
+                "marker added alongside a change is not a resolved finding"
+            ),
+            "rationale": (
+                "this project treats a suppression as a finding rather than a "
+                "fix, and only a diff can tell a new one from a decision "
+                "somebody already made"
+            ),
+            # Stated here rather than drawn from `CLASS_RISK_EFFORT`,
+            # because that table is the audit's class registry and the
+            # audit can never emit this class: it reads whole files, and
+            # only a diff separates a marker somebody just wrote from one
+            # that has been there for years.
+            "band": "quick-win", "risk": 4, "effort": 1,
+            "verification": "git diff --cached | grep -n <marker>",
+            # Above every threshold breach on purpose. A file is 40 lines
+            # over its budget; a suppression is the measurement being
+            # switched off, and nothing is learned from the run after it.
+            "severity": 250.0,
+        }
+        for entry in report["added_suppressions"]
+    ]
+
+
 def staged_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
     """Every blocking finding in a staged report, worst first.
 
@@ -225,35 +296,6 @@ def staged_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
                       "band": band_of(weight.risk, weight.effort).value,
                       "risk": weight.risk, "effort": weight.effort,
                       "verification": weight.verification})
-    for entry in report["added_suppressions"]:
-        items.append({
-            "finding_class": SUPPRESSION_CLASS,
-            "title": f"{entry['marker']} added in {entry['path']}",
-            "path": entry["path"], "line": entry["line"],
-            "target": (
-                "remove the suppression, or fix the finding it silences; a "
-                "marker added alongside a change is not a resolved finding"
-            ),
-            "rationale": (
-                "this project treats a suppression as a finding rather than a "
-                "fix, and only a diff can tell a new one from a decision "
-                "somebody already made"
-            ),
-            # Stated here rather than drawn from `CLASS_RISK_EFFORT`,
-            # because that table is the *audit's* class registry and the
-            # audit can never emit this class: it reads whole files, and
-            # only a diff separates a marker somebody just wrote from one
-            # that has been there for years. A weight in a table nothing
-            # else in the product can produce would be a claim the rubric
-            # does not make. The fields are still present, because an
-            # agent parsing `findings` must not have to special-case one
-            # entry's shape.
-            "band": "quick-win", "risk": 4, "effort": 1,
-            "verification": "git diff --cached | grep -n <marker>",
-            # Above every threshold breach on purpose. A file is 40 lines
-            # over its budget; a suppression is the measurement being
-            # switched off, and nothing is learned from the run that
-            # follows it.
-            "severity": 250.0,
-        })
+    items.extend(_risk_items(report))
+    items.extend(_suppression_items(report))
     return sorted(items, key=lambda item: -float(item.get("severity") or 0))

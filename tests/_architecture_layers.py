@@ -166,6 +166,12 @@ ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
             # and it may never reach scoring — a diff has no population,
             # so there is no rate to draw and no grade to give.
             "_precommit",
+            # `_in_loop` answers what budgets say about content it is
+            # handed — no repository, no git, no scan. Assembly beside
+            # `_precommit` for the same reason: it composes from the
+            # parsers and thresholds rather than measuring a tree, and it
+            # may never reach scoring, because one file has no population.
+            "_in_loop",
             "_work_order_weights", "_backfill"}
 PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # `_attestation` composes the conformance and ratchet
@@ -217,7 +223,10 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # reads instead. Split from `_precommit` on the same seam
                 # `_work_order_view` splits from `_work_order`: one module
                 # decides what blocks, the other how it reads.
-                "_precommit_view"}
+                "_precommit_view",
+                # What the in-loop check prints, and the JSON an agent
+                # reads instead. Same seam as `_precommit_view`.
+                "_in_loop_view"}
 # `_first_run` is terminal interaction — it prompts, which no layer
 # below entry may ever do, and writes the config file the entry then
 # loads through ordinary discovery.

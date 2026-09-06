@@ -173,16 +173,31 @@ def _attr_tree_config(cwd: Path) -> tuple[str, ...]:
     return ("-c", f"attr.tree={empty}") if empty else ()
 
 
-def run_git(args: list[str], cwd: Path) -> str:
+def run_git(args: list[str], cwd: Path, *, strip: bool = True) -> str:
     """Run git and return its stdout. Raises if it does not succeed.
 
     The strict default is the point: see the module docstring.
+
+    `strip=False` is for the one caller that reads *content* rather than
+    an answer. Every other command here returns a path, a hash or a
+    status word, where surrounding whitespace is noise — but stripping a
+    file blob deletes its leading blank lines, and every line number
+    computed from it is then wrong by however many were removed. A hook
+    that reports the right finding at the wrong line sends its reader to
+    the wrong place.
+
+    Decoding replaces what it cannot read rather than raising, matching
+    what `source.read_lines` already does for files on disk: a Latin-1
+    source file is measured by the repository scan, so it must not crash
+    the pre-commit scan. Everywhere else this reads git's own output,
+    which is ASCII, so nothing else is affected.
     """
     try:
         completed = subprocess.run(  # noqa: S603 - argv list, never a shell
             ["git", *READ_ONLY_GIT_CONFIG, *_attr_tree_config(cwd), *args],
             cwd=cwd,
             text=True,
+            errors="replace",
             capture_output=True,
             timeout=GIT_TIMEOUT_SECONDS,
             env=git_env(),
@@ -200,7 +215,7 @@ def run_git(args: list[str], cwd: Path) -> str:
         raise GitCommandFailed(
             f"git {args[0] if args else ''} exited {completed.returncode}"
         )
-    return completed.stdout.strip()
+    return completed.stdout.strip() if strip else completed.stdout
 
 
 def probe_git(args: list[str], cwd: Path) -> str:
@@ -249,6 +264,17 @@ def added_lines(root: Path, revspec: str) -> dict[str, list[tuple[int, str]]]:
     output = run_git(
         ["diff", "--no-ext-diff", "--unified=0", validate_revspec(revspec), "--"], root
     )
+    return _added_from_diff(output)
+
+
+def _added_from_diff(output: str) -> dict[str, list[tuple[int, str]]]:
+    """Parse `--unified=0` diff text into added lines per path.
+
+    Shared by the revspec and staged readers so the two cannot drift: a
+    hunk-header bug fixed in one copy and not the other is how a
+    suppression check starts reporting the wrong line numbers on one door
+    only.
+    """
     added: dict[str, list[tuple[int, str]]] = {}
     path = ""
     line_number = 0
@@ -265,6 +291,66 @@ def added_lines(root: Path, revspec: str) -> dict[str, list[tuple[int, str]]]:
                 added.setdefault(path, []).append((line_number, line[1:]))
             line_number += 1
     return added
+
+
+def staged_paths(root: Path) -> set[str]:
+    """Paths the index will commit, as forward-slash relative strings.
+
+    `--cached` is the whole point: a pre-commit check must measure what
+    is *about to be committed*, which is not what is on disk. A developer
+    who stages half a file with `git add -p` and keeps editing has a
+    working tree the commit will not contain, and a hook that reads the
+    tree passes content it never saw.
+
+    `--diff-filter=ACMR` drops deletions — there is nothing to measure in
+    a file that will not exist — and keeps additions, copies,
+    modifications and renames. A rename reports its *new* path, which is
+    the one the commit will carry.
+    """
+    output = run_git(
+        ["diff", "--cached", "--name-only", "--diff-filter=ACMR", "--"], root
+    )
+    return {
+        line.strip().replace(os.sep, "/")
+        for line in output.splitlines() if line.strip()
+    }
+
+
+def staged_blob(root: Path, rel: str) -> str:
+    """The content the index holds for one path.
+
+    Read from the object database rather than the filesystem, for the
+    reason `staged_paths` exists at all. `:<path>` is git's syntax for
+    "this path, as staged"; the leading colon also keeps a path that
+    begins with a dash from being read as an option.
+
+    Undecodable bytes come back replaced rather than raising: a binary
+    file staged with a source extension is somebody's mistake, not a
+    reason for the hook to crash on their commit.
+
+    Unstripped, and that is not a detail. This is the only caller here
+    reading content rather than an answer, and stripping would delete a
+    file's leading blank lines — after which every declaration in it is
+    reported one line too high for each one removed.
+    """
+    return run_git(["show", f":{rel}"], root, strip=False)
+
+
+def staged_added_lines(root: Path) -> dict[str, list[tuple[int, str]]]:
+    """Lines the index *adds*, per path, as (line number, text).
+
+    The staged twin of `added_lines`, and it exists for the same reason:
+    a suppression already in the tree is not evidence about this change.
+    Reading whole files would report a decade of accumulated `# noqa` as
+    though this commit had just written them.
+
+    `--unified=0` keeps context lines out, so every `+` is genuinely new,
+    and `--no-ext-diff` is load-bearing exactly as it is in `added_lines`.
+    """
+    output = run_git(
+        ["diff", "--cached", "--no-ext-diff", "--unified=0", "--"], root
+    )
+    return _added_from_diff(output)
 
 
 def worktree_status(root: Path) -> str | None:

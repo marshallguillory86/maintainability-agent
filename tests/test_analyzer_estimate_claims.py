@@ -52,6 +52,11 @@ LIVE_SURFACES = (
     ROOT / "docs" / "architecture.md",
     ROOT / "docs" / "decisions.md",
     ROOT / "docs" / "cli.md",
+    # Added in 2.9.0 with the analyzer-coverage tables that moved here
+    # out of the README for file-gate headroom. A guard that does not
+    # follow the text it guards is how moving a paragraph launders a
+    # stale claim past the check that existed for it.
+    ROOT / "docs" / "adapters.md",
     ROOT / "docs" / "release-plan.md",
     PACKAGE / "cli.py",
     PACKAGE / "report.py",

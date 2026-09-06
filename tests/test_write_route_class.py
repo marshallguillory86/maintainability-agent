@@ -9,7 +9,12 @@ grant write goes through ``_safe_write.write_bounded`` (which applies the
 lexical refusal), and the only modules allowed to perform a raw staged
 ``os.replace`` are the hardened low-level writers themselves.
 
-Unnamed member: **the packaged-skill installer** (`_skill_install`). The
+Unnamed members: **the packaged-skill installer** (`_skill_install`) and
+**the pre-commit hook installer** (`_precommit_install`), both safe by
+the descriptor mechanism described below rather than by the functional
+cases.
+
+The first of those: The
 functional cases below drive config, history and baseline; the skill
 installer is not exercised there, and it is safe by a *different*
 mechanism — it replaces through directory file descriptors
@@ -38,7 +43,15 @@ SRC = Path(__file__).resolve().parents[1] / "src" / "maintainability_audit"
 # directory fds; _user_config writes the user's own XDG home, never the
 # audited tree. A raw os.replace anywhere else is an unbounded write into
 # the grant and must go through write_bounded instead.
-_RAW_REPLACE_ALLOWED = {"_safe_write.py", "_skill_install.py", "_user_config.py"}
+# `_precommit_install` joins them on the same terms as `_skill_install`,
+# not as an exemption: it binds the hooks directory once with
+# O_NOFOLLOW|O_DIRECTORY and both ends of its replace are dir_fd-bound,
+# so a symlink swapped in afterwards cannot redirect the write. It is
+# here because it writes into `.git`, which `write_bounded` refuses and
+# should — that writer bounds report artifacts to the audited tree, and
+# a git hook is neither an artifact nor safe to write by name.
+_RAW_REPLACE_ALLOWED = {"_safe_write.py", "_skill_install.py", "_user_config.py",
+                        "_precommit_install.py"}
 
 
 def _os_replace_sites() -> dict[str, list[int]]:

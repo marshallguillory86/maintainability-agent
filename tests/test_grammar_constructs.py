@@ -30,9 +30,12 @@ this project:
   match arm. PHP counted `?int` nullable type hints as ternaries and
   double-counted `do … while`.
 
-Ruby is the one language whose keyword set survived this check unchanged,
-and the only disagreement there runs the other way: lizard does not count
-`unless`.
+Ruby, Java, C, C++, Fortran and TypeScript survived the check unchanged.
+Several disagreements run the other way, and one is worth naming: lizard
+counts TypeScript's `title?: string` optional parameter as a decision —
+the very defect this project fixed in its own pattern the same morning.
+That is the argument for declaring divergences rather than chasing
+them.
 
 Both were added by a test written from the wrong intuition: it failed,
 and the code was changed to satisfy the test rather than the grammar. The
@@ -59,6 +62,50 @@ THRESHOLDS = DEFAULT_CONFIG["thresholds"]
 #: rather than a check against lizard — chasing a second implementation
 #: is the same error as trusting the first, with an extra step.
 DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
+    ".f90": {
+        "if_else": (
+            "lizard counts one condition in `if … else if … end if`; "
+            "there are two. Fortran's own reading strips `end if` before "
+            "counting, which is why this project does not double it."
+        ),
+        "select_case": (
+            "lizard counts the `select case` header and all three arms "
+            "including `case default`. The arms carry the branch and a "
+            "default is not a test, which is the same rule this project "
+            "and lizard already agree on for Go and C."
+        ),
+        "where_construct": (
+            "`where (mask) … end where` is a conditional construct in the "
+            "standard — it assigns per element under a condition. lizard "
+            "does not count it."
+        ),
+    },
+    ".ts": {
+        "optionalParameter": (
+            "lizard counts `title?: string` as a decision. An optional "
+            "parameter is a type-level marker and decides nothing — the "
+            "exact defect this project fixed in its own C-family pattern, "
+            "found here in the tool being checked against. Useful as a "
+            "reminder that lizard is a second opinion and not an oracle."
+        ),
+    },
+    ".swift": {
+        "ternaryAndCoalesce": (
+            "`(v ?? 0) > 0 ? 1 : 2` is two decisions: nil-coalescing "
+            "short-circuits, and the ternary chooses. lizard scores one. "
+            "`??` is counted here for the same reason `and` is counted in "
+            "PHP — it is a real branch, whatever it is spelled."
+        ),
+    },
+    ".js": {
+        "ternaryAndCoalesce": (
+            "A ternary and a `??` are two decisions; lizard scores three. "
+            "D78 is the standing lesson on this line: `?.`, `??` and `?` "
+            "are three different operators and counting them loosely made "
+            "a complexity-1 function score 12. This project counts each "
+            "once and optional chaining not at all."
+        ),
+    },
     ".php": {
         "wordOperators": (
             "lizard counts `&&` and `||` but not PHP's word forms. "

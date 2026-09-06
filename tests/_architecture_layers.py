@@ -31,6 +31,12 @@ PACKAGE = ROOT / "src" / "maintainability_audit"
 # Keeping the foundation spawners in one layer is what makes the
 # analyzer half of that rule checkable.
 FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "config",
+               # `_banner` reads one file's leading comment block and says
+               # whether it declares itself generated. A foundation beside
+               # `_discovery`, which owns the vocabulary and passes it in —
+               # so the import runs one way and this module knows nothing
+               # about classification.
+               "_banner",
                # `_config_defaults` is the shipped default configuration,
                # split from `config` in 1.1.0: data with no internal
                # imports, which `config` re-exports.

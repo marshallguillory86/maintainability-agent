@@ -78,6 +78,7 @@ flowchart TB
   subgraph scanners["scanners"]
     metrics["metrics"]
     _discovery["_discovery"]
+    _banner["_banner"]
     _practice["_practice"]
     duplication["duplication"]
     deadcode["deadcode"]

@@ -3582,7 +3582,7 @@ which is the guard for precisely that.
 *Roles:* found=ci prompt=marshall fix=marshall test=none run=none
 *Mutation:* none.
 
-### D108 — Open: the suppression scan reports markers it only reads about (Medium)
+### D108 — Closed: the suppression scan reports markers it only reads about (Medium)
 
 `SUPPRESSION_MARKERS` carries a comment promising exactly the thing it
 did not do:
@@ -3614,15 +3614,18 @@ The narrowing is deliberate and stated: a marker written into prose with
 no quoting at all is still reported. Quoting is the reliable signal;
 widening past it is guessing at English.
 
-*Roles:* found=claude prompt=marshall fix=claude test=codex run=none
-*Mutation:* pending with the test. The falsifier is a docstring line
-containing a quoted marker, which must not be reported, paired with a
-real trailing directive on a code line, which must be — reverting
-`markers_in` to the bare `pattern.search` fails the first.
+*Closing test:* `test_a_quoted_marker_mention_is_not_a_suppression` in
+`tests/test_scope_conformance.py`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=grok run=grok
+*Mutation:* reverting `_conformance.markers_in` to a bare
+`pattern.search` makes `test_a_quoted_marker_mention_is_not_a_suppression`
+fail: `suppressions_added({"m.py": [(1, "…`# noqa`…")]}, set())` reports
+a backtick-quoted mention. The trailing-directive half stays green.
 
 ## Disposition
 
-**D108 is open**, and it is the only one: the fix has landed and its closing test is with Codex, who holds the test-writer role. Every other entry is closed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+**Every entry is closed.** D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they

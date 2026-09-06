@@ -29,6 +29,7 @@ def _git(root: Path, *args: str) -> None:
 
 def _repo(tmp_path: Path) -> Path:
     """The fixture idiom at tests/test_scope_conformance.py:276."""
+    tmp_path.mkdir(parents=True, exist_ok=True)
     _git(tmp_path, "init", "--quiet", "-b", "main")
     _git(tmp_path, "config", "user.email", "test@example.invalid")
     _git(tmp_path, "config", "user.name", "Test")
@@ -119,13 +120,16 @@ def test_a_breaching_index_names_path_line_and_remedy(tmp_path: Path, capsys: py
 
     report, findings = _report_and_findings(root)
     assert findings, "a breaching index produced no findings"
-    rendered = "\n".join(render_staged(findings, report["scanned"]))
+    scanned = report["scanned"]
+    count = scanned if isinstance(scanned, int) else len(scanned)
+    rendered = "\n".join(render_staged(findings, count))
     for item in findings:
         assert item["path"], "a finding named no path"
         assert item["line"], "a finding named no line"
-        assert item["remedy"], "a finding named no remedy"
+        # JSON names this `target`; the text rendering prints it as the remedy.
+        assert item["target"], "a finding named no remedy"
         assert item["path"] in printed and item["path"] in rendered
-        assert item["remedy"] in printed or item["remedy"] in rendered
+        assert item["target"] in printed or item["target"] in rendered
     assert any(item["path"] == "widget.py" and item["line"] == start_line for item in findings), (
         "an oversized declaration reported line 1 instead of its start_line"
     )

@@ -51,6 +51,24 @@ half of that gap.
   accepts a flag and does nothing with it teaches the author it was
   honoured.
 
+### Fixed — the falsifier gate could be talked out of proving things
+
+- **D109.** The gate's added-file check asked whether *every* test in a
+  new file passed at the base, so one hollow test rode in beside
+  fourteen real ones. It printed `14 of 15 fail without the change` and
+  exited 0, while on the same run its per-test check held two new tests
+  in an existing file individually. A test's obligation to falsify
+  something depended on how new its neighbours happened to be. Both
+  paths now report every individual test that passes at the base. The
+  hollow test it let through asserted a flag name that argparse's usage
+  banner already contains, so it passed on a tree where `--staged` did
+  not exist.
+- **D111.** The `Covers existing behaviour:` escape was matched anywhere
+  in the source, so a docstring explaining the escape exempted the test
+  doing the explaining — D109's own falsifier was excused by a sentence
+  describing the mechanism. This is D108's defect one layer up, and it
+  has D108's fix: a quoted occurrence is a mention, not a declaration.
+
 ### Changed — `run_git` decodes what it cannot read instead of raising
 
 - Every git command now decodes with `errors="replace"`, matching what

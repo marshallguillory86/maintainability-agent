@@ -319,3 +319,26 @@ def test_one_hollow_test_in_an_added_file_is_still_reported(
     assert any(hollow in line for line in complaints), (
         f"the hollow test was not named: {complaints}"
     )
+
+
+def test_a_quoted_escape_phrase_does_not_exempt_anything() -> None:
+    """Writing *about* the escape must not trigger it — D108's shape, here.
+
+    The escape is matched as a substring of the source, so a docstring
+    that names it in backticks while explaining it exempts the very test
+    doing the explaining. That happened on this file: the falsifier for
+    the added-file rule was reported as
+    ``exempt - covers existing behaviour: `` escape still exempts a whole
+    file that`` — a reason cut out of a sentence about the mechanism.
+
+    It is the same defect D108 closed for suppression markers: a marker
+    mentioned in prose is not a directive. A gate that cannot tell the
+    two apart lets any test hide behind a sentence.
+    """
+    phrase = prover.COVERS_EXISTING
+    assert not prover.declares_exemption(f"the ``{phrase}`` escape exempts a file")
+    assert not prover.declares_exemption(f'"{phrase}" is how a file opts out')
+    assert prover.declares_exemption(f"{phrase} this file measures what shipped")
+    # The declaration almost always opens a docstring, and the triple
+    # quote in front of it is the delimiter, not somebody quoting it.
+    assert prover.declares_exemption(f'    """{phrase} already reported.')

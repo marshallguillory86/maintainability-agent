@@ -3699,9 +3699,50 @@ first change after this merge, and it is one line each.
 falsifier, when it lands, is a check that no image reference in
 `README.md` is repository-relative, which fails against this release.
 
+### D111 — Closed: writing about the escape phrase triggered it (Medium)
+
+D108's defect, one layer up, found within the hour by fixing D109.
+
+`prove_falsifiers` lets a test opt out of the revert proof by declaring
+`Covers existing behaviour:` in its docstring. The phrase was matched as
+a substring of the source, so a docstring *explaining* the escape
+exempted the very test doing the explaining. D109's own falsifier —
+written to prove the gate reports a hollow test — was reported as
+
+    exempt — covers existing behaviour: `` escape still exempts a whole file that
+
+a "reason" sliced out of a sentence about the mechanism. The gate
+printed that line and passed, so the test written to close a hole in the
+gate was excused by the same gate, on the strength of a sentence
+describing it.
+
+This is the same rule as D108 and the fix is the same shape:
+`declares_exemption` refuses an occurrence that is quoted — preceded by
+a backtick or quote character, or inside an open backtick span — and
+both call sites go through it, so the file rule and the per-test rule
+cannot disagree.
+
+One correction during the fix, worth recording because it went the
+wrong way first: the rule initially counted a docstring's own opening
+`"""` as a quote and rejected a *legitimate* exemption Grok had written.
+A guard that refuses real declarations is not stricter, it is broken.
+Only a triple quote before the phrase reads as a delimiter now; a single
+one reads as somebody quoting it mid-sentence.
+
+*Closing test:* `tests/test_prove_falsifiers.py`:
+`test_a_quoted_escape_phrase_does_not_exempt_anything`. It asserts a
+backticked mention and a double-quoted mention exempt nothing, that a
+bare declaration does, and that a docstring opener does not block one.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
+*Mutation:* restoring `COVERS_EXISTING in text` makes the closing test
+fail on its first assertion. Removing the triple-quote clause makes it
+fail on its last, and re-breaks the exemption in
+`test_a_real_trailing_directive_is_still_a_suppression`.
+
 ## Disposition
 
-**D110 is open**, and it is the only one: the README's images do not render on PyPI, and the fix needs the files to be on `main` first, which is this release. D109 closed the hollow test and the gate hole that let it through. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
+**D110 is open**, and it is the only one: the README's images do not render on PyPI, and the fix needs the files to be on `main` first, which is this release. D109 closed the hollow test and the gate hole that let it through, and D111 closed the escape phrase that the gate matched inside prose about itself. D108's closing test has landed. D106 preserves both determinism checks with explicit double invocations and failure messages. SonarCloud confirmation awaits CI. D107 records two SonarCloud false-positive resolutions in the same turn they were taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they

@@ -241,6 +241,37 @@ def _prove_one(ident: str, names: list[str], base: str) -> list[str]:
 
 
 
+def declares_exemption(text: str) -> str | None:
+    """The stated reason a file or test covers existing behaviour, or None.
+
+    An occurrence that is quoted — wrapped in backticks or quote
+    characters — is a *mention*, not a declaration. Prose explaining the
+    escape exempted the very test explaining it: this project's own
+    falsifier for the added-file rule was reported exempt, with a reason
+    sliced out of a sentence about the mechanism.
+
+    That is the defect D108 closed one layer over, where a suppression
+    marker quoted in a docstring was read as a directive. The rule is the
+    same and so is the reason: a gate that cannot tell a mention from a
+    declaration lets anything hide behind a sentence about it.
+    """
+    for line in text.splitlines():
+        index = line.find(COVERS_EXISTING)
+        if index < 0:
+            continue
+        before = line[:index].lstrip()
+        # A docstring's own opening delimiter is not quoting anything —
+        # the overwhelmingly common declaration is the phrase opening the
+        # docstring. Only a triple quote counts as that opener; a single
+        # one before the phrase is somebody quoting it mid-sentence.
+        if before in {'"""', "'''", ""}:
+            return line[index + len(COVERS_EXISTING):].strip()
+        if before[-1:] in {"`", "'", '"'} or before.count("`") % 2:
+            continue
+        return line[index + len(COVERS_EXISTING):].strip()
+    return None
+
+
 def _prove_added_tests_in_place(node_ids: list[str], base: str) -> list[str]:
     """Revert-prove tests added to files that already existed.
 
@@ -258,8 +289,8 @@ def _prove_added_tests_in_place(node_ids: list[str], base: str) -> list[str]:
         for node in node_ids:
             path, name = node.split("::", 1)
             body = function_source((tree / path).read_text(encoding="utf-8"), name)
-            if COVERS_EXISTING in body:
-                reason = body.split(COVERS_EXISTING, 1)[1].splitlines()[0].strip()
+            reason = declares_exemption(body)
+            if reason is not None:
                 print(f"{node}: exempt — covers existing behaviour: {reason}")
                 continue
             wanted.append(node)
@@ -330,8 +361,8 @@ def _prove_added_tests(paths: list[str], base: str) -> list[str]:
         exempt: set[str] = set()
         for path in paths:
             source = (tree / path).read_text(encoding="utf-8")
-            if COVERS_EXISTING in source:
-                reason = source.split(COVERS_EXISTING, 1)[1].splitlines()[0].strip()
+            reason = declares_exemption(source)
+            if reason is not None:
                 print(f"{path}: exempt — covers existing behaviour: {reason}")
                 exempt.add(path)
                 continue

@@ -1,0 +1,113 @@
+"""Every control-flow construct in each grammar, against a second opinion.
+
+This is the test that should have existed before any language shipped.
+
+Until 2.11.0 each language's branch keywords were written from somebody's
+knowledge of that language and checked against examples written from the
+same knowledge. That is not evidence: it reads as evidence because the
+prose around it is confident, which is worse than reading as a guess. The
+measurable consequence was that Python — the language this project is
+written in — agreed with an independent implementation on 45% of its own
+declarations.
+
+So each fixture here exercises the control-flow constructs its language's
+specification defines, one function per construct, and the count is
+compared against `lizard`: a separate implementation, by separate
+authors, reading the same grammar.
+
+**A disagreement does not say who is right.** Two implementations can
+share a misconception. What it does is make the question unavoidable, and
+send a reader to the grammar — which is the only authority either answers
+to. Every disagreement found this way so far has been resolved *against*
+this project:
+
+- Go counted `select` as a decision beside its own cases. A `select` with
+  two cases has two paths; the header decides nothing, exactly as a
+  `switch` header does not. `select {}` with no cases simply blocks.
+- Go counted `goto`, which transfers control unconditionally — an edge
+  without a decision.
+
+Both were added by a test written from the wrong intuition: it failed,
+and the code was changed to satisfy the test rather than the grammar. The
+C-family pattern had been measuring Go's select dispatch correctly all
+along.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from maintainability_audit.config import DEFAULT_CONFIG
+from maintainability_audit.declarations import detect_functions
+
+FIXTURES = Path(__file__).parent / "fixtures" / "grammar"
+THRESHOLDS = DEFAULT_CONFIG["thresholds"]
+
+
+def _ours(path: Path) -> dict[str, int]:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    return {
+        metric.name: metric.complexity
+        for metric in detect_functions(path.parent, path, lines, THRESHOLDS)
+    }
+
+
+def _lizard(path: Path) -> dict[str, int]:
+    import lizard
+
+    return {
+        function.name: function.cyclomatic_complexity
+        for function in lizard.analyze_file(str(path)).function_list
+    }
+
+
+def _fixtures() -> list[Path]:
+    return sorted(FIXTURES.glob("constructs.*"))
+
+
+def test_there_is_a_grammar_fixture_to_check() -> None:
+    """An empty fixture directory would make every check below vacuous."""
+    found = _fixtures()
+    assert found, "no grammar fixture exists, so nothing is being compared"
+
+
+@pytest.mark.parametrize("fixture", _fixtures(), ids=lambda p: p.suffix)
+def test_every_construct_agrees_with_an_independent_implementation(
+    fixture: Path,
+) -> None:
+    """Construct by construct, so a disagreement names the construct.
+
+    One function per construct is the point: a whole-file total can be
+    right by two errors cancelling, and a reader given "the file differs
+    by 3" has nowhere to go.
+    """
+    ours, theirs = _ours(fixture), _lizard(fixture)
+    assert theirs, f"lizard read no functions from {fixture.name}"
+
+    differing = {
+        name: (ours.get(name), theirs[name])
+        for name in theirs
+        if ours.get(name) != theirs[name]
+    }
+    assert not differing, (
+        f"{fixture.name}: these constructs are counted differently.\n"
+        + "\n".join(
+            f"  {name}: ours={mine} lizard={other}"
+            for name, (mine, other) in sorted(differing.items())
+        )
+        + "\nNeither number is authoritative. Take each to the grammar."
+    )
+
+
+@pytest.mark.parametrize("fixture", _fixtures(), ids=lambda p: p.suffix)
+def test_the_fixture_covers_more_than_one_construct(fixture: Path) -> None:
+    """A fixture with one function proves almost nothing.
+
+    Stated because the cheapest way to make the check above pass is to
+    shrink what it looks at.
+    """
+    assert len(_ours(fixture)) >= 5, (
+        f"{fixture.name} exercises too few constructs to be evidence"
+    )

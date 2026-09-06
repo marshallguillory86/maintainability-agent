@@ -67,16 +67,24 @@ def swift_branch_points(line: str) -> int:
     return len(SWIFT_COMPLEXITY_RE.findall(line))
 
 
-#: Go's vocabulary is *smaller* than C's, not larger, and that is the
-#: point. It has no `while` (`for` covers looping), no ternary, no
-#: `catch` — `if err != nil` carries what other languages put in a catch
-#: block, and it is already counted as an `if`. What the C pattern misses
-#: is `select`, the concurrency branch: a dispatch loop built from
-#: `select` and its cases scored only its cases, so the construct that
-#: decides which case runs decided nothing. That is the Fortran defect in
-#: miniature, and the reason this table exists at all.
+#: Go's vocabulary is *smaller* than C's, not larger. It has no `while`
+#: (`for` covers looping), no ternary, and no `catch` — `if err != nil`
+#: is already an `if`.
+#:
+#: This pattern first added `select` and `goto` and both were wrong,
+#: which is worth keeping written down. A `select` with two cases has two
+#: paths: its **cases** are the branches and the header decides nothing,
+#: exactly as a `switch` header does not — `select {}` with no cases
+#: simply blocks. And `goto` transfers control unconditionally, so it
+#: adds an edge without adding a decision.
+#:
+#: The C-family pattern already counted `case`, so Go's select dispatch
+#: was measured correctly before either was added. A test written from
+#: the wrong intuition failed, and the code was changed to satisfy the
+#: test rather than the grammar. Caught by comparing construct-by-
+#: construct against an independent implementation.
 GO_COMPLEXITY_RE = re.compile(
-    r"\b(if|for|case|select|goto)\b|&&|\|\|"
+    r"\b(if|for|case)\b|&&|\|\|"
 )
 
 

@@ -10,9 +10,11 @@ spells differently is what is worth testing, and it is not the regexes:
   and grading the container as well as its members counts them twice;
 - an **interface method** has no body, so it is a requirement rather than
   a declaration, exactly as a Swift protocol requirement is;
-- `select` is a branch. The C-family reading does not know the word, and
-  Fortran is the standing lesson that a language measured with another
-  language's keywords is not approximately wrong but wrong.
+- `select` is counted at its **cases**, not its header, and `goto` is
+  not counted at all. Both were briefly counted and both were wrong —
+  found by comparing every construct in the Go specification against an
+  independent implementation, which is what `tests/fixtures/grammar/`
+  now exists to keep doing.
 
 Go has no `while`, no ternary, and no exceptions; `for` covers looping and
 `if err != nil` carries what other languages put in `catch`.
@@ -124,28 +126,35 @@ def test_a_struct_literal_inside_a_body_is_not_a_declaration() -> None:
     assert _names(source) == ["build"]
 
 
-def test_select_counts_as_a_branch() -> None:
-    """Go's concurrency branch, absent from the C-family keyword set.
+def test_select_is_counted_at_its_cases_not_its_header() -> None:
+    """Corrected against the grammar after disagreeing with lizard.
 
-    A dispatch loop built from `select` and its cases scores 1 under the C
-    reading — branchless — which is the Fortran defect repeated: the
-    number is not approximate, it is wrong.
+    This test originally asserted that `select` itself is a branch, on
+    the reasoning that a dispatch loop "scored branchless" without it.
+    That reasoning was wrong twice over. The C-family pattern already
+    counted `case`, so the dispatch was measured correctly; and a
+    `select` with two cases has two paths, so counting the header as
+    well scores the construct *and* its first arm — the mistake Fortran
+    made with `select case`. A `select {}` with no cases blocks and
+    decides nothing.
+
+    The code was changed to satisfy this test rather than the grammar,
+    which is the failure the grammar fixtures now exist to catch.
     """
     from maintainability_audit.declarations import metrics_for
 
     branch_points, _cognitive = metrics_for(".go")
-    body = [
-        "    select {",
-        "    case a := <-ch1:",
-        "        _ = a",
-        "    case b := <-ch2:",
-        "        _ = b",
-        "    default:",
-        "    }",
-    ]
-    assert sum(branch_points(line) for line in body) >= 3, (
-        "select and its cases scored as branchless"
-    )
+    assert branch_points("    select {") == 0
+    assert branch_points("    case a := <-ch1:") == 1
+    assert branch_points("    default:") == 0
+
+
+def test_goto_is_not_a_decision() -> None:
+    """It transfers control unconditionally: an edge without a branch."""
+    from maintainability_audit.declarations import metrics_for
+
+    branch_points, _cognitive = metrics_for(".go")
+    assert branch_points("        goto retry") == 0
 
 
 def test_the_switch_header_is_not_counted_beside_its_cases() -> None:

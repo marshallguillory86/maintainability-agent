@@ -216,3 +216,30 @@ def test_the_readme_language_count_matches_its_own_table() -> None:
         f"the README says {sentence.group(1).lower()} ({claimed}) languages are "
         f"parsed, but its own table lists {len(groups)}: {sorted(groups)}"
     )
+
+
+def test_no_readme_image_is_repository_relative() -> None:
+    """D110: PyPI renders this file, and drops relative image paths.
+
+    `pyproject.toml` sets ``readme = "README.md"``, so the README *is*
+    the PyPI long_description. GitHub resolves a repository-relative
+    image path; PyPI does not, and silently drops the tag. The live page
+    was checked and contained no image at all — the cover had never been
+    seen by anyone who found the package on its own distribution page.
+
+    An absolute raw URL renders on both. This is asserted rather than
+    remembered, because the failure is invisible from inside the
+    repository: every image looks right on GitHub while none of them
+    reach PyPI.
+    """
+    import re
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    relative = [
+        target for target in re.findall(r"!\[[^\]]*\]\(([^)]+)\)", readme)
+        if not target.startswith(("http://", "https://", "data:"))
+    ]
+    assert not relative, (
+        "these README images are repository-relative and will not render on "
+        f"PyPI: {relative}. Use the absolute raw.githubusercontent.com URL."
+    )

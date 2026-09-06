@@ -376,8 +376,8 @@ def test_a_repository_of_only_tests_has_no_production_pressure(
 @pytest.mark.parametrize(
     ("suffix", "body"),
     [
-        (".go", "package main\nfunc Real() int { return 1 }\nfunction decoy() {}\n"),
-        (".rs", "fn real() -> i32 { 1 }\nfunction decoy() {}\n"),
+        (".kt", "package main\nfun Real(): Int { return 1 }\nfunction decoy() {}\n"),
+        (".scala", "object A { def real(): Int = 1 }\nfunction decoy() {}\n"),
     ],
 )
 def test_analyzer_declarations_do_not_enable_func_patterns_for_unparsed_languages(

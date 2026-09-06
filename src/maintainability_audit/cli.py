@@ -332,15 +332,20 @@ def _record_this_scan(
     return history_path
 
 
-def main(argv: list[str] | None = None) -> int:
-    if argv is None:
-        argv = sys.argv[1:]
-    if argv and argv[0] == "mcp":
-        from . import mcp_server
+def _action_before_config(
+    parser: argparse.ArgumentParser, args: argparse.Namespace
+) -> int | None:
+    """Whichever action runs *without* loading configuration, or None.
 
-        return mcp_server.main(argv[1:])
+    Each of these returns before `_interactive_config`, which asks
+    first-run questions at a TTY. A hook, an agent piping content, and a
+    skill install are none of them a person who wants a setup wizard.
 
-    parser, args = _parse(argv)
+    Extracted when `main` reached complexity 16 against this project's
+    own limit of 15 — a dispatch branch per action, each reasonable
+    alone. It had been reported as 8 while Python's comments and string
+    literals were counted as branches and its `and`/`or` were not.
+    """
     if args.install_skill:
         return _install_skill_action(args)
     if args.install_precommit_hook:
@@ -351,23 +356,43 @@ def main(argv: list[str] | None = None) -> int:
         return code
     if args.check:
         return _check_action(parser, args)
-    # Before the config prompt, deliberately: see `_staged_action`.
     if args.staged:
         return _staged_action(parser, args)
+    return None
+
+
+def _instruction_pack_action(args: argparse.Namespace, config: dict) -> int:
+    """Write the agent instruction files and exit."""
+    targets = args.target or list(INSTRUCTION_TARGETS)
+    try:
+        overrides = _target_paths(args.target_path)
+        write_instruction_pack(
+            targets, Path(args.instructions_output_dir).resolve(), config, overrides
+        )
+    except (UnknownTarget, ValueError) as failure:
+        print(str(failure), file=sys.stderr)
+        return 2
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
+    if argv and argv[0] == "mcp":
+        from . import mcp_server
+
+        return mcp_server.main(argv[1:])
+
+    parser, args = _parse(argv)
+    # Every action that must not trigger the first-run questions.
+    early = _action_before_config(parser, args)
+    if early is not None:
+        return early
 
     root = Path(args.root).resolve()
     config = _interactive_config(root, args.config)
     if args.init_agent_standards:
-        targets = args.target or list(INSTRUCTION_TARGETS)
-        try:
-            overrides = _target_paths(args.target_path)
-            write_instruction_pack(
-                targets, Path(args.instructions_output_dir).resolve(), config, overrides
-            )
-        except (UnknownTarget, ValueError) as failure:
-            print(str(failure), file=sys.stderr)
-            return 2
-        return 0
+        return _instruction_pack_action(args, config)
 
     if args.backfill:
         history_path = repository_path(

@@ -22,6 +22,7 @@ from ._cognitive import (
     swift_cognitive,
 )
 from ._finding_match import normalized_body_digest
+from ._masking import mask_python_lines
 from ._metrics_types import (
     FUNC_PATTERNS,
     DeclRange,
@@ -29,6 +30,11 @@ from ._metrics_types import (
     branch_points,
     cobol_branch_points,
     fortran_branch_points,
+    go_branch_points,
+    php_branch_points,
+    python_branch_points,
+    ruby_branch_points,
+    rust_branch_points,
     swift_branch_points,
 )
 from ._ranges_c import c_declaration_ranges
@@ -40,8 +46,12 @@ from ._ranges_fortran import (
     fixed_form_declaration_ranges,
     fortran_declaration_ranges,
 )
+from ._ranges_go import go_declaration_ranges
 from ._ranges_java import java_declaration_ranges
 from ._ranges_js import js_declaration_ranges
+from ._ranges_php import php_declaration_ranges
+from ._ranges_ruby import ruby_declaration_ranges
+from ._ranges_rust import rust_declaration_ranges
 from ._ranges_swift import swift_declaration_ranges
 
 # One set per language, then one table binding each to its scanner.
@@ -71,6 +81,13 @@ CPP_SUFFIXES = {".cpp", ".hpp", ".cc", ".cxx", ".hh"}
 # `record`, and properties, which are deliberately not declarations.
 CSHARP_SUFFIXES = {".cs"}
 SWIFT_SUFFIXES = {".swift"}
+# Go: one extension, and no header/source split to worry about.
+GO_SUFFIXES = {".go"}
+RUST_SUFFIXES = {".rs"}
+# PHP: `.phtml` is the same language with a template-first convention.
+PHP_SUFFIXES = {".php", ".phtml"}
+# Ruby: `.rake` and `.gemspec` are Ruby with a different job.
+RUBY_SUFFIXES = {".rb", ".rake", ".gemspec"}
 # COBOL, and the copybooks it includes. A `.cpy` carries DATA
 # DIVISION text and no PROCEDURE DIVISION, so it mints nothing and is
 # scanned for size like a C header full of prototypes.
@@ -113,6 +130,10 @@ SCANNERS: tuple[tuple[set[str], object], ...] = (
     (CPP_SUFFIXES, cpp_declaration_ranges),
     (CSHARP_SUFFIXES, csharp_declaration_ranges),
     (SWIFT_SUFFIXES, swift_declaration_ranges),
+    (GO_SUFFIXES, go_declaration_ranges),
+    (RUST_SUFFIXES, rust_declaration_ranges),
+    (PHP_SUFFIXES, php_declaration_ranges),
+    (RUBY_SUFFIXES, ruby_declaration_ranges),
     (COBOL_SUFFIXES, cobol_declaration_ranges),
     (FORTRAN_SUFFIXES, fortran_declaration_ranges),
     (FIXED_FORM_SUFFIXES, fixed_form_declaration_ranges),
@@ -132,10 +153,37 @@ SCANNERS: tuple[tuple[set[str], object], ...] = (
 # was read from braces, which Fortran does not have, so four flat
 # `if`s and four deeply nested ones both scored 8.
 METRICS: tuple[tuple[set[str], object, object], ...] = (
+    # Python's own operators. The shared pattern carried C's `&&` and
+    # `||` into a language that spells them `and` and `or`, so every
+    # boolean operator went uncounted (2.11.0).
+    # `brace_cognitive`, not `python_cognitive`: this reader is only
+    # reached when the AST did not supply a cognitive score, which for
+    # Python means the file did not parse. `python_cognitive` walks a
+    # tree and there is no tree in that case — it was handed the raw
+    # lines and raised.
+    (PYTHON_SUFFIXES, python_branch_points, brace_cognitive),
     # Swift is braced and reads its nesting the C-family way; only the
     # keyword vocabulary differs, and `guard` is the difference that
     # matters — without it a guard-heavy function reads as branchless.
     (SWIFT_SUFFIXES, swift_branch_points, swift_cognitive),
+    # Go has no `while`, no ternary and no `catch`, and it has `select` —
+    # the concurrency branch the C pattern never looks for. A dispatch
+    # loop counted only its cases, so the construct choosing between them
+    # decided nothing.
+    (GO_SUFFIXES, go_branch_points, brace_cognitive),
+    # Rust branches on `match` arms, not on the `match` keyword — the
+    # Fortran `select case` lesson — and `?` propagates an error rather
+    # than deciding anything, while idiomatic Rust is full of it.
+    (RUST_SUFFIXES, rust_branch_points, brace_cognitive),
+    # PHP spells its multi-way branch `elseif`, one word with no boundary
+    # inside it, so the C pattern matched neither `if` nor `elif` and a
+    # dispatch chain scored zero. `foreach` is its primary loop and
+    # `and`/`or`/`xor` are word operators.
+    (PHP_SUFFIXES, php_branch_points, brace_cognitive),
+    # Ruby's guard clause is `unless` and its negated loop is `until`,
+    # neither of which the C pattern looks for, and `elsif` has one `e`
+    # so `elif` misses it. A guard-heavy method read as branchless.
+    (RUBY_SUFFIXES, ruby_branch_points, brace_cognitive),
     # COBOL closes scopes with hyphenated `END-` words and with the
     # period that ends a sentence; neither is in the C-family reading.
     (COBOL_SUFFIXES, cobol_branch_points, cobol_cognitive),
@@ -155,7 +203,9 @@ def metrics_for(suffix: str) -> tuple[object, object]:
 # Every extension we attempt declaration detection on at all.
 DECLARATION_SUFFIXES = (
     PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | CPP_SUFFIXES
-    | CSHARP_SUFFIXES | SWIFT_SUFFIXES | COBOL_SUFFIXES
+    | CSHARP_SUFFIXES | SWIFT_SUFFIXES | GO_SUFFIXES | RUST_SUFFIXES
+    | PHP_SUFFIXES | RUBY_SUFFIXES
+    | COBOL_SUFFIXES
     | FORTRAN_SUFFIXES | FIXED_FORM_SUFFIXES
     | BRACE_SUFFIXES
 )
@@ -273,10 +323,14 @@ def declaration_ranges(path: Path, lines: list[str]) -> tuple[list[DeclRange], l
     if path.suffix in PYTHON_SUFFIXES:
         parsed = _python_function_ranges("\n".join(lines))
         if parsed is not None:
-            return parsed, lines
+            # Masked, like every other language. Returning the raw lines
+            # here meant Python scored its comments and string literals
+            # as branches: a branchless four-line function came back at
+            # complexity 4 (2.11.0).
+            return parsed, mask_python_lines(lines)
         # Only a syntax error reaches the patterns below, and only for
         # Python — which is the one language they were written for.
-        return _regex_function_ranges(lines), lines
+        return _regex_function_ranges(lines), mask_python_lines(lines)
     for suffixes, scanner in SCANNERS:
         if path.suffix in suffixes:
             # Always the language's own scanner, never the last-resort

@@ -31,7 +31,7 @@ def _config(run: bool) -> dict:
             "deny_concerns": [],
             "timeout_seconds": 5,
         },
-        "paths": {"include_extensions": [".go"]},
+        "paths": {"include_extensions": [".kt"]},
     }
 
 
@@ -40,7 +40,7 @@ def _repo(tmp_path: Path, config: dict | None) -> Path:
     (root / "src").mkdir(parents=True)
     (root / "README.md").write_text("# fixture\n", encoding="utf-8")
     for number in range(40):
-        (root / "src" / f"thing{number}.go").write_text(
+        (root / "src" / f"thing{number}.kt").write_text(
             "package fixture\n\n"
             f"func Compute{number}(value int) int {{\n"
             "\tif value > 0 { return value }\n"
@@ -68,7 +68,7 @@ def _build_case(tmp_path: Path, config: dict | None) -> dict:
     root = _repo(tmp_path, config)
     if config is None:
         loaded = load_config(None)
-        loaded["paths"]["include_extensions"].append(".go")
+        loaded["paths"]["include_extensions"].append(".kt")
     else:
         loaded = load_config(discovered_config(root))
     report = build_report(root, loaded)

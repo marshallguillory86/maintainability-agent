@@ -127,14 +127,26 @@ CI compares each construct against
 separate authors, with its own reading of each grammar. **Thirteen
 languages** are covered.
 
-**A set, not the specification.** This page said "the constructs that
-language's specification defines" and that was not true: the fixtures
+**Python's coverage is derived from the grammar; the rest is a set.**
+For Python the specification ships with the interpreter: `ast` is the
+module that *implements* the grammar, so CI enumerates every branching
+construct from it — nodes carrying a `test`, `orelse`, `handlers`, `ifs`,
+`cases` or `finalbody` field, plus `BoolOp` — and fails if the fixture
+exercises none of one. The checklist is the grammar's, so a construct
+added to a future Python arrives on its own rather than when somebody
+remembers it. Anything deliberately not exercised must be named with its
+reason.
+
+For every other language the fixture is still a **set**, and this page
+used to call it the specification. That was not true: those fixtures
 exercise the constructs their author already knew about, written from the
 same knowledge as the scanners they check. An audit found four defects
 whose constructs were all absent from them — a generic Go receiver, an
-assigned Ruby `if`, PHP's Elvis operator, Rust's `let … else` (D125–D129).
-The set grows whenever a gap is found, and the comparison says nothing
-about the constructs it does not contain.
+assigned Ruby `if`, PHP's Elvis operator, Rust's `let … else`
+(D125–D129). The set grows whenever a gap is found, and the comparison
+says nothing about the constructs it does not contain. The same treatment
+is available for the others — Ruby's `Ripper`, Go's `go/ast`, Rust's
+`syn` each enumerate their own grammar — and is unwritten, not refused.
 
 **Agreement has a ceiling as well as a floor.** lizard finds no method on
 a generic Go type either, so that defect was invisible to a check built on

@@ -363,3 +363,96 @@ def test_every_declared_divergence_is_still_real(fixture: Path) -> None:
             f"{fixture.name} declares a divergence for {name}, but the "
             "two now agree — remove the declaration"
         )
+
+
+# ---------------------------------------------------------------------------
+# Coverage derived from the specification, not from the author's memory.
+#
+# Every fixture above is a *sample*: it holds the constructs its author
+# already knew about, written from the same knowledge as the scanner it
+# checks. That is what D129 recorded, and it is what let four defects
+# through — a generic Go receiver, an assigned Ruby `if`, PHP's Elvis
+# operator, Rust's `let … else` — none of whose constructs were in any
+# fixture (D125–D128).
+#
+# For Python the specification ships with the interpreter. `ast` is the
+# module that *implements* the grammar, so the set of branching
+# constructs can be enumerated from it rather than recalled.
+# ---------------------------------------------------------------------------
+
+#: Field names the Python grammar uses for a branch. Deriving the node set
+#: from these rather than listing node names keeps the enumeration the
+#: grammar's, not the author's: a construct added to a future Python
+#: arrives here on its own.
+_BRANCHING_FIELDS = {"test", "orelse", "handlers", "ifs", "cases", "finalbody"}
+
+#: Branching nodes the fixture deliberately does not exercise, each with
+#: the reason. A node may be exempt because it is not a decision point —
+#: that judgment is this project's and belongs in the open, which is the
+#: whole argument of D119.
+PYTHON_NODES_NOT_EXERCISED: dict[str, str] = {}
+
+
+def _python_branching_nodes() -> set[str]:
+    """Every branching construct in the grammar, asked of the grammar."""
+    import ast
+
+    found = {
+        name
+        for name in dir(ast)
+        if isinstance(getattr(ast, name), type)
+        and issubclass(getattr(ast, name), ast.AST)
+        and set(getattr(getattr(ast, name), "_fields", ())) & _BRANCHING_FIELDS
+    }
+    # `BoolOp` branches through its operator rather than a named field:
+    # `a and b` is two paths and carries `and`/`or` in `op`.
+    found.add("BoolOp")
+    return found
+
+
+def test_the_python_fixture_covers_every_branching_node_in_the_grammar() -> None:
+    """The checklist comes from `ast`, so it cannot be a list I remembered.
+
+    This is the check the page always claimed to be making. It was not:
+    `docs/language-support.md` said each fixture exercises "the
+    control-flow constructs that language's specification defines" while
+    the fixtures held whatever their author thought of that day.
+
+    Grammar coverage is not semantic correctness — that a construct
+    exists does not settle whether it is a decision point, and that
+    judgment stays this project's. What this ends is testing only what
+    was remembered.
+    """
+    import ast
+
+    fixture = FIXTURES / "constructs.py"
+    exercised = {
+        type(node).__name__
+        for node in ast.walk(ast.parse(fixture.read_text(encoding="utf-8")))
+    }
+    missing = sorted(
+        _python_branching_nodes() - exercised - set(PYTHON_NODES_NOT_EXERCISED)
+    )
+    assert not missing, (
+        f"the Python grammar defines these branching constructs and the "
+        f"fixture exercises none of them: {missing}. Add each to "
+        f"{fixture.name}, or declare it in PYTHON_NODES_NOT_EXERCISED with "
+        "the reason it is not a decision point."
+    )
+
+
+def test_no_python_node_is_declared_unexercised_while_the_fixture_has_it() -> None:
+    """A stale exemption quietly permits a future gap, as every allowlist does."""
+    import ast
+
+    fixture = FIXTURES / "constructs.py"
+    exercised = {
+        type(node).__name__
+        for node in ast.walk(ast.parse(fixture.read_text(encoding="utf-8")))
+    }
+    stale = sorted(exercised & set(PYTHON_NODES_NOT_EXERCISED))
+    assert not stale, (
+        f"{stale} are declared as not exercised, and the fixture exercises "
+        "them. Remove the declaration rather than leaving it to excuse a "
+        "future gap."
+    )

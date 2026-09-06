@@ -260,3 +260,42 @@ def test_every_keyword_the_page_claims_is_not_counted_is_not() -> None:
                     "not counted, and it is counted"
                 )
     assert not wrong, "\n".join(wrong)
+
+
+def test_the_readme_names_every_language_the_page_claims() -> None:
+    """The front page is a claim too, and it is the one users read first.
+
+    It went stale in 2.11.0: four languages were added, the page and the
+    parser were updated together — the tests above see to that — and the
+    README's own list kept advertising eight of fourteen. It ships to
+    PyPI, so it is the version most people see and the least likely to
+    be checked.
+    """
+    page = (DOCS / "language-support.md").read_text(encoding="utf-8")
+    section = page.split("## How each language is measured", 1)[1]
+    section = section.split("**This table is the claim", 1)[0]
+
+    claimed = set()
+    for line in section.splitlines():
+        cells = re.split(r"(?<!\\)\|", line.strip().strip("|"))
+        if len(cells) != 3:
+            continue
+        # Trim the suffix list, the free/fixed-form qualifier, and a
+        # family cell down to its lead name: `JS / TS / JSX / TSX` is one
+        # scanner and the README names it `JS/TS/HTML family`.
+        name = cells[0].split("(")[0].split(",")[0].split("/")[0].strip()
+        if name[:1].isalpha() and name not in {"Language", "Anything else"}:
+            claimed.add(name)
+    assert len(claimed) >= 10, f"the measurement table did not parse: {claimed}"
+
+    readme = (DOCS.parent / "README.md").read_text(encoding="utf-8")
+    lead = readme.split("**Languages parsed:**", 1)[1].split("\n\n", 1)[0]
+
+    missing = sorted(
+        name for name in claimed
+        if not re.search(rf"(?<!\w){re.escape(name)}(?!\w)", lead)
+    )
+    assert not missing, (
+        f"the README's languages line does not name {missing}, which "
+        "docs/language-support.md says this tool parses"
+    )

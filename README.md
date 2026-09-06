@@ -5,11 +5,13 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **2.10.0**.
+Version **2.11.0**.
 
-**Languages parsed:** Python, Java, C, C++, C#, Swift, Fortran (free-form
-*and* fixed-form), and the JS/TS family — each by a scanner written for it, and
-measured with that language's own reading of what a branch is.
+**Languages parsed:** Python, Java, C, C++, C#, Go, Rust, PHP, Ruby, Swift,
+COBOL, Fortran (free-form *and* fixed-form), and the JS/TS/HTML family — each
+by a scanner written for it, and measured with that language's own reading of
+what a branch is, checked construct-by-construct against an independent
+implementation.
 [What that means per language](#language-support).
 
 ```bash
@@ -324,16 +326,19 @@ it was generated against — a provenance record, not a claim about HEAD.
 
 | Metric | Value |
 |---|---:|
-| Maintainability estimate | 4.1 / 5 |
+| Maintainability estimate | 4.2 / 5 |
 | Verified grade | B |
-| Files scanned | 391 |
+| Files scanned | 476 |
 | Hard gate failures | 0 |
 
-A **B**, demoted from the A band because warning rates exceed the A-grade
-ceilings, against thresholds this repo sets stricter than the shipped defaults.
-Every threshold gate is opted **on** for its own CI, so drifting below the bar
-fails the build rather than the README. The full stamped table — warnings,
-duplication, risk findings — is in the report itself.
+A **B**, and the report says why: the grade is verified against the evidence
+*floor* of 4.1 rather than the 4.2 point estimate, because an unmeasured aspect
+prices at 0 when a grade has to be defended; and testability is capped at 4.0 by
+an unpaired production unit in the fail band. Those are measured against
+thresholds this repo sets stricter than the shipped defaults, and every threshold
+gate is opted **on** for its own CI, so drifting below the bar fails the build
+rather than the README. The full stamped table — warnings, duplication, risk
+findings — is in the report itself.
 
 ## Platform support
 

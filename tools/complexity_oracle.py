@@ -90,22 +90,20 @@ def _walk(roots: list[str]) -> list[Path]:
     return files
 
 
-def main(argv: list[str]) -> int:
-    if not argv:
-        print(__doc__)
-        return 2
+def _tally(files: list[Path]) -> tuple[dict, dict]:
+    """Per-suffix comparisons, and how many files contributed each."""
     by_suffix: dict[str, list[tuple[int, int, int]]] = defaultdict(list)
     matched: dict[str, int] = defaultdict(int)
-    for path in _walk(argv):
+    for path in files:
         rows = compare(path)
         if rows:
             by_suffix[path.suffix] += rows
             matched[path.suffix] += 1
+    return by_suffix, matched
 
-    if not by_suffix:
-        print("no declaration was located by both tools")
-        return 1
 
+def _report(by_suffix: dict, matched: dict) -> list[tuple[int, str, int, int]]:
+    """Print the per-language table and return the disagreements."""
     print(f"{'suffix':8} {'files':>6} {'decls':>6} {'agree':>6} "
           f"{'we are lower':>13} {'we are higher':>14}")
     worst: list[tuple[int, str, int, int]] = []
@@ -117,7 +115,19 @@ def main(argv: list[str]) -> int:
         print(f"{suffix:8} {matched[suffix]:6} {len(rows):6} {agree:6} "
               f"{lower:13} {higher:14}")
         worst += [(b - a, suffix, a, b) for _l, a, b in rows if a != b]
+    return worst
 
+
+def main(argv: list[str]) -> int:
+    if not argv:
+        print(__doc__)
+        return 2
+    by_suffix, matched = _tally(_walk(argv))
+    if not by_suffix:
+        print("no declaration was located by both tools")
+        return 1
+
+    worst = _report(by_suffix, matched)
     if worst:
         worst.sort(key=lambda row: -abs(row[0]))
         print("\nlargest disagreements (difference, suffix, ours, theirs):")

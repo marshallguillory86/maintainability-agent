@@ -210,8 +210,10 @@ language with no scanner. Beyond that, only Python's content is parsed:
 a brace language's invalid source is not detected, because zero
 declarations is not evidence of a parse failure and marking valid files
 unparsed would be worse than the silence. In text it is **silent while you have room**
-and speaks once a declaration nears its limit; `--format json` carries the
-remaining budget for every declaration whether or not it is close.
+and speaks once a declaration nears its limit — on *any* budget it can be
+failed on, length or cyclomatic or cognitive, not length alone.
+`--format json` carries the remaining budget for every declaration whether
+or not it is close, per budget rather than as one number.
 
 **`--staged`** scans the git index. Stage half a file with `git add -p`, keep
 typing, and what gets measured is what the commit will actually contain —

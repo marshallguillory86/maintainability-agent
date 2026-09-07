@@ -4642,7 +4642,7 @@ remainder kept its meaning.
 *Mutation:* banding on `metric.lines` alone again reports `band: ok` for
 a function on the cyclomatic warn line.
 
-### D136 — Open: `--check` exists only on the CLI (Medium)
+### D136 — Closed by decision: `--check` stays on the CLI for now (Medium)
 
 Product intent: chat is the primary surface; a capability that exists
 only behind a terminal prompt does not exist for most users. 2.10.0
@@ -4655,13 +4655,37 @@ The red contract for an MCP `check_content` tool is on
 `test/mcp-check`. This entry is the ledger for that gap, not a second
 implementation queue.
 
-*Roles:* found=grok prompt=marshall fix=none test=none run=none
-*Mutation:* pending with the test. `tests/test_mcp_check.py` already
-fails at `origin/main` because the tool is absent.
+**Marshall's decision, 2026-09-06: keep it in the CLI. Not worth MCP
+for now.** Recorded as a **non-goal** rather than left open, because an
+open entry naming a gap is an instruction to close it, and the next
+audit would re-derive this one from the same product-intent sentence
+that raised it.
+
+The gap the entry describes is real and is not disputed: chat is the
+primary surface, `--check` is the in-loop feature, and an agent that
+cannot spawn a process cannot ask the question. What was weighed against
+it is that an MCP tool is not a port of a flag — it is a tool name, an
+argument contract, a decision about whether it joins the setup and
+consent flow every other MCP call goes through, and a payload shape to
+support afterwards. That is a product increment, not a defect fix, and
+it is not the increment this release is for.
+
+This does not close the *question*. It closes the entry, so the ledger
+says what was decided instead of implying nobody looked. If chat users
+ask for it, this is reopened as a feature with its own contract — not
+resumed as an unfinished bug.
+
+The red contract on `test/mcp-check` stands as the starting point for
+that work if it is taken up.
+
+*Roles:* found=grok prompt=marshall decision=marshall fix=none test=none run=none
+*Mutation:* none — there is no behaviour to defend. A test asserting the
+MCP tool is absent would pin a decision rather than a property, and
+would have to be deleted by the change that implements it.
 
 ## Disposition
 
-**D136 is open.** They are the
+**Every entry is closed.** D136 is closed by decision rather than by code — `--check` stays on the CLI for now, recorded as a non-goal so it is not re-derived as an unfinished bug. They are the
 remainder of Grok's audit of the twenty commits on `main` after 2.8.0.
 D125–D129 (the 2.11.0 language findings from that same audit) closed in
 2.11.1. D130 closed with it: `--sarif-input` now reads through
@@ -4682,8 +4706,9 @@ sentence promising it had been true of Python alone. D134 closed: the two doors 
 refusal list now, so the flag-refusal class `--staged` named cannot
 drift out of `--check` again.
 D135 closed: headroom reports every budget a
-declaration can fail on, and bands on the worst of them. D136 is the chat-primary
-gap: `--check` is CLI-only. D124 is a release-checklist omission that cost a build
+declaration can fail on, and bands on the worst of them. D136 is the chat-primary gap:
+`--check` is CLI-only, and Marshall decided on 2026-09-06 that it stays
+there for now. D124 is a release-checklist omission that cost a build
 and no artifact: the gate held, the tag was re-pointed. D123 is the
 shipped README contradicting its own table, found by Marshall reading
 the page rather than by any check. D121 and D122 were found by CI on

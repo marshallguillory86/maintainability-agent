@@ -26,6 +26,43 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+#: An entry can close because somebody decided not to build the thing,
+#: and that closure has no falsifier by construction — there is no
+#: behaviour to defend. Recording it as *open* would be worse: an open
+#: entry naming a gap reads as an instruction to close it, and the next
+#: audit re-derives it. Recording it as closed-with-a-test would mean
+#: writing a test that pins a decision rather than a property, and that
+#: test would have to be deleted by the change that implements it.
+#:
+#: So the category is declared, and it carries its own obligation: a
+#: decision names who made it. A defect closure names a falsifier; a
+#: decision closure names a decider.
+_DECISION = "Closed by decision"
+
+
+def _decision_entries(headings: list[tuple[str, str]]) -> set[str]:
+    return {ident for ident, title in headings if _DECISION in title}
+
+
+def test_a_decision_closure_names_who_decided() -> None:
+    """The obligation a decision carries instead of a falsifier.
+
+    "We chose not to" is only accountable if the entry says who chose
+    and when. Without that it is indistinguishable from "nobody got to
+    it", which is the state this register exists to make impossible.
+    """
+    register = _read(REGISTER)
+    headings = re.findall(r"^### (D\d+) — (.+)$", register, re.MULTILINE)
+    for ident in sorted(_decision_entries(headings)):
+        section = _entry(register.split("## Disposition", maxsplit=1)[0], ident)
+        assert re.search(r"decision=\w+", section), (
+            f"{ident} closes by decision and names no decider in its roles"
+        )
+        assert re.search(r"\b20\d\d-\d\d-\d\d\b", section), (
+            f"{ident} closes by decision and gives no date"
+        )
+
+
 def test_the_register_states_a_falsifier_for_every_entry() -> None:
     """Closure is a named test, and the count is read, never asserted.
 
@@ -60,7 +97,13 @@ def test_the_register_states_a_falsifier_for_every_entry() -> None:
     # renamed out of existence — D3 and D14, both broken by renames in
     # this very branch, both passing this test. A citation nobody
     # resolves is not a falsifier; it is a claim about one.
+    decided = _decision_entries(headings)
     for ident, _title in headings:
+        if ident in decided:
+            # A decision has no behaviour to defend;
+            # `test_a_decision_closure_names_who_decided` holds it to the
+            # obligation it does carry.
+            continue
         section = _entry(entries, ident)
         # Substance, not phrasing: some entries write "Closing test",
         # some "Closing suite", some name the tests inline. What every
@@ -151,6 +194,16 @@ def test_every_closing_citation_names_a_test_that_exists() -> None:
             assert "pending" in section.lower(), (
                 f"{ident} is open but does not say its falsifier is pending; "
                 "an open entry may name no test, and must claim none"
+            )
+            continue
+        if _DECISION in title:
+            # Closed because somebody decided not to build it. There is
+            # no falsifier to cite and inventing one would pin a decision
+            # rather than a property — the test would have to be deleted
+            # by the change that implements the thing.
+            assert "*Closing test:*" not in section, (
+                f"{ident} closes by decision and still cites a closing test; "
+                "a decision has no behaviour to defend"
             )
             continue
         citation = _cited_region(section, ident)

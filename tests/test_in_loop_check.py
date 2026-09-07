@@ -564,3 +564,50 @@ def test_the_two_doors_refuse_the_same_flags() -> None:
         "and ignored teaches the caller it was honoured"
     )
     assert "staged" in _CHECK_REFUSES, "--check must still refuse --staged"
+
+
+def test_headroom_covers_complexity_not_only_lines() -> None:
+    """The product claim is remaining budget, not only a verdict.
+
+    `_headroom` and `_band` used the line limit alone, so a short but
+    complex function reported `band: ok` with comfortable headroom while
+    sitting over the cyclomatic warn line. In text that is silence; in
+    JSON it is a budget that looks fine. Complexity is a budget these
+    declarations *fail* on (D132) and never showed a remainder for
+    (D135).
+    """
+    body = "".join(f"    if a{n}:\n        return {n}\n" for n in range(11))
+    source = f"def branchy({', '.join(f'a{n}' for n in range(11))}):\n{body}    return 0\n"
+
+    result = _check(
+        "src/branchy.py",
+        source,
+        _config(max_function_lines=80, warn_function_lines=60,
+                max_complexity=50, warn_complexity=10),
+    )
+
+    room = next(item for item in result["headroom"] if item["name"] == "branchy")
+    assert room["band"] != "ok", (
+        "a function over the cyclomatic warn line reported band=ok, so text "
+        "stays silent and JSON headroom looks fine"
+    )
+    budgets = {b["budget"]: b for b in room.get("budgets", [])}
+    assert "complexity" in budgets, (
+        f"headroom names {sorted(budgets)}; the budget it is near is missing"
+    )
+    assert budgets["complexity"]["remaining"] == 50 - budgets["complexity"]["value"]
+
+
+def test_headroom_still_reports_the_line_budget() -> None:
+    """Covers existing behaviour: the line remainder was always reported
+    and this pins it against the D135 change.
+
+    Passes at the base deliberately — a guard, not a falsifier.
+    """
+    source = "def small(a):\n    return a\n"
+    result = _check("src/small.py", source,
+                    _config(max_function_lines=80, warn_function_lines=60))
+
+    room = next(item for item in result["headroom"] if item["name"] == "small")
+    assert room["band"] == "ok"
+    assert room["remaining"] == 78

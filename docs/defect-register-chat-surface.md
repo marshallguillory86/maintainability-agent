@@ -4608,7 +4608,7 @@ the relationship itself.
 any one entry — `--comment-output`, say — fails the structural test
 naming `comment_output`.
 
-### D135 — Open: `--check` headroom is the line budget only (Medium)
+### D135 — Closed: `--check` headroom is the line budget only (Medium)
 
 The product claim is remaining budget, not only a verdict. `_headroom`
 and `_band` use the line limit. A 20-line function at cyclomatic 12
@@ -4616,10 +4616,31 @@ and `_band` use the line limit. A 20-line function at cyclomatic 12
 and JSON headroom looks fine. Cognitive warn is the same. Complexity
 is a budget they fail on (D132) and never show remaining for.
 
-*Roles:* found=grok prompt=marshall fix=none test=none run=none
-*Mutation:* pending with the test. A function under the line budget
-and over the cyclomatic warn line must not report `band=ok` with
-nothing to say.
+**Headroom is driven off `_DECLARATION_BUDGETS`**, the same list
+`_breaches_for` uses, so the budgets a declaration can *fail* on are
+exactly the budgets it can show a remainder for. They were two different
+sets, which is how complexity could fail a function while never showing
+how close it was. D132 completed that list by adding cognitive, and both
+paths read from it now — the next budget added lands in both at once.
+
+Two decisions worth stating:
+
+- `band` is the **worst** across budgets rather than the line band. That
+  is what makes text speak, and JSON honest, for a short complex
+  function.
+- `limit` and `remaining` still mean the **line** budget. They shipped
+  meaning that, and redefining them as "the worst budget" would change
+  an existing field's meaning under consumers already reading it. The
+  per-budget detail is a new `budgets` list beside them.
+
+*Closing test:* `tests/test_in_loop_check.py`:
+`test_headroom_covers_complexity_not_only_lines`, with
+`test_headroom_still_reports_the_line_budget` as the guard that the line
+remainder kept its meaning.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* banding on `metric.lines` alone again reports `band: ok` for
+a function on the cyclomatic warn line.
 
 ### D136 — Open: `--check` exists only on the CLI (Medium)
 
@@ -4640,7 +4661,7 @@ fails at `origin/main` because the tool is absent.
 
 ## Disposition
 
-**D135 and D136 are open.** They are the
+**D136 is open.** They are the
 remainder of Grok's audit of the twenty commits on `main` after 2.8.0.
 D125–D129 (the 2.11.0 language findings from that same audit) closed in
 2.11.1. D130 closed with it: `--sarif-input` now reads through
@@ -4660,7 +4681,8 @@ a piped diff is now refused by its format in every language, where the
 sentence promising it had been true of Python alone. D134 closed: the two doors share one
 refusal list now, so the flag-refusal class `--staged` named cannot
 drift out of `--check` again.
-D135 is headroom that only watches lines. D136 is the chat-primary
+D135 closed: headroom reports every budget a
+declaration can fail on, and bands on the worst of them. D136 is the chat-primary
 gap: `--check` is CLI-only. D124 is a release-checklist omission that cost a build
 and no artifact: the gate held, the tag was re-pointed. D123 is the
 shipped README contradicting its own table, found by Marshall reading

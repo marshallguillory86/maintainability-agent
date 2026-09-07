@@ -84,15 +84,61 @@ def _headroom(metric: Any, thresholds: dict[str, int]) -> dict[str, Any]:
     means a breach, and breaches are findings.
     """
     limit, warn = _budget_for(metric.kind, thresholds)
+    budgets = _budget_headroom(metric, thresholds, limit, warn)
+    # The worst band across every budget, not the line band. A short
+    # function sitting on the cyclomatic warn line was `ok` — silent in
+    # text, comfortable in JSON — because only its length was consulted
+    # (D135).
+    order = {"ok": 0, "warn": 1, "fail": 2}
+    band = max((entry["band"] for entry in budgets),
+               key=lambda name: order[name], default="ok")
     return {
         "name": metric.name,
         "kind": metric.kind,
         "line": metric.start_line,
         "lines": metric.lines,
+        # `limit` and `remaining` stay the *line* budget: they shipped
+        # meaning that, and a consumer reading them as the worst budget
+        # would silently change meaning under it.
         "limit": limit,
         "remaining": limit - metric.lines,
-        "band": _band(metric.lines, warn, limit),
+        "budgets": budgets,
+        "band": band,
     }
+
+
+def _budget_headroom(
+    metric: Any, thresholds: dict[str, int], lines_limit: int, lines_warn: int
+) -> list[dict[str, Any]]:
+    """What is left of every budget this declaration is graded on.
+
+    Driven off `_DECLARATION_BUDGETS`, the same list `_breaches_for`
+    uses, so the budgets a declaration can *fail* on are exactly the
+    budgets it can show a remainder for. They were two different sets:
+    complexity could fail a function and never showed how close it was.
+    """
+    found: list[dict[str, Any]] = []
+    for label, attribute, key in _DECLARATION_BUDGETS:
+        if key is None:
+            limit, warn = lines_limit, lines_warn
+        elif key not in thresholds:
+            continue
+        else:
+            limit = thresholds[key]
+            # A config may set a limit and no warn line; the limit then
+            # stands as both, which bands it `ok` until it fails.
+            warn = thresholds.get(key.replace("max_", "warn_", 1), limit)
+        value = getattr(metric, attribute, None)
+        if value is None:
+            continue
+        found.append({
+            "budget": label,
+            "value": value,
+            "limit": limit,
+            "remaining": limit - value,
+            "band": _band(value, warn, limit),
+        })
+    return found
 
 
 def _file_headroom(lines: int, thresholds: dict[str, int]) -> dict[str, Any]:

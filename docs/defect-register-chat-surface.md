@@ -1412,7 +1412,7 @@ cries wolf is a check somebody turns off, so it reads import and
 decorator lines only.
 
 *Closing test:* `test_the_declared_python_floor_supports_the_features_in_use`
-in `tests/test_written_record.py`, verified by lowering the floor back
+in `tests/test_policy_claims.py`, verified by lowering the floor back
 to 3.10 and watching it name `_discovery.py` and `StrEnum`. A CI matrix
 entry on the floor version is still worth having and stays recorded as
 follow-up in `docs/security-queue.md`.
@@ -1507,7 +1507,7 @@ decision is pending.
 
 *Closing tests:* `test_the_security_policy_supports_the_shipped_release_line`
 and `test_the_security_policy_states_the_guarantee_the_code_keeps`
-in `tests/test_written_record.py`. The second checks only what the
+in `tests/test_policy_claims.py`. The second checks only what the
 document *asserts*, not what it recounts — a check that could not tell
 an assertion from its own correction would forbid explaining the fix.
 
@@ -2018,7 +2018,7 @@ test that asserts a phrase protects the phrase, not the property —
 which is the third time that shape has come up today.
 
 *Closing test:* `test_the_security_policy_states_the_guarantee_the_code_keeps`
-in `tests/test_written_record.py`.
+in `tests/test_policy_claims.py`.
 
 ### D61 — Closed: P1 names the fields that are not compared (Low)
 
@@ -4380,7 +4380,7 @@ in a child process with a deadline, because a hanging test cannot fail
 cleanly — in-process it stops the suite and the falsifier gate instead
 of reporting anything.
 
-*Closing test:* `tests/test_operator_named_paths.py`:
+*Closing test:* `tests/test_operator_named_reads.py`:
 `test_a_directory_named_as_sarif_input_is_refused_by_name`,
 `test_a_missing_sarif_input_is_refused_by_name`,
 `test_a_fifo_named_as_sarif_input_returns_rather_than_hanging`, and
@@ -4457,7 +4457,7 @@ handle and never calls it, so the fixture stopped denying anything and
 the test passed against a file it was supposed to be unable to read. It
 now denies by permission and skips as root.
 
-*Closing test:* `tests/test_operator_named_paths.py`:
+*Closing test:* `tests/test_operator_named_reads.py`:
 `test_a_fifo_where_the_history_goes_does_not_hang_the_read`,
 `test_an_ordinary_history_is_still_read`, and
 `test_no_door_reads_a_named_path_outside_the_primitive`, which now parses
@@ -4507,7 +4507,7 @@ cognitive alone would have been incomplete:
   failed it and a reader needs to know — without a number it cannot
   justify.
 
-*Closing test:* `tests/test_in_loop_check.py`:
+*Closing test:* `tests/test_in_loop_budgets.py`:
 `test_a_cognitive_only_failure_does_not_report_a_negative_line_overage`,
 which asserts both halves: no negative overage, and `cognitive` named in
 the breach list. Asserting only the first would pass on a fix that
@@ -4569,7 +4569,7 @@ failure — plenty of valid files mint none — so nothing beyond the diff
 format is claimed for languages with no parser, and the README now says
 that instead of implying content validation it does not do.
 
-*Closing test:* `tests/test_in_loop_check.py`:
+*Closing test:* `tests/test_in_loop_budgets.py`:
 `test_a_piped_diff_is_refused_for_every_language_not_only_python`,
 parametrized over the nine suffixes the Python-only fix missed;
 `test_ordinary_source_is_not_called_a_diff` over the same nine; and
@@ -4598,7 +4598,7 @@ would have left two lists to keep in step, which is what produced the
 drift. A flag added to `_STAGED_REFUSES` tomorrow covers `--check` on the
 same commit: the drift is impossible rather than merely detected.
 
-*Closing test:* `tests/test_in_loop_check.py`:
+*Closing test:* `tests/test_in_loop_budgets.py`:
 `test_check_refuses_every_flag_staged_refuses`, parametrized over the
 five that drifted, and `test_the_two_doors_refuse_the_same_flags` for
 the relationship itself.
@@ -4633,7 +4633,7 @@ Two decisions worth stating:
   an existing field's meaning under consumers already reading it. The
   per-budget detail is a new `budgets` list beside them.
 
-*Closing test:* `tests/test_in_loop_check.py`:
+*Closing test:* `tests/test_in_loop_budgets.py`:
 `test_headroom_covers_complexity_not_only_lines`, with
 `test_headroom_still_reports_the_line_budget` as the guard that the line
 remainder kept its meaning.

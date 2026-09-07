@@ -45,11 +45,14 @@ def _decision_entries(headings: list[tuple[str, str]]) -> set[str]:
 
 
 def test_a_decision_closure_names_who_decided() -> None:
-    """The obligation a decision carries instead of a falsifier.
+    """Covers existing behaviour: no entry used this category before
+    D136, so the loop below has nothing to walk at the base and passes
+    vacuously. It defends the next decision, not this one.
 
-    "We chose not to" is only accountable if the entry says who chose
-    and when. Without that it is indistinguishable from "nobody got to
-    it", which is the state this register exists to make impossible.
+    The obligation a decision carries instead of a falsifier: "we chose
+    not to" is only accountable if the entry says who chose and when.
+    Without that it is indistinguishable from "nobody got to it", which
+    is the state this register exists to make impossible.
     """
     register = _read(REGISTER)
     headings = re.findall(r"^### (D\d+) — (.+)$", register, re.MULTILINE)
@@ -141,6 +144,39 @@ def _entry(entries: str, ident: str) -> str:
     return entries.split(f"### {ident} — ", maxsplit=1)[1].split("\n### ", maxsplit=1)[0]
 
 
+def _owes_a_citation(ident: str, title: str, section: str) -> bool:
+    """Whether this entry has to name a test, and what it owes instead.
+
+    Three states, and only one of them owes a falsifier.
+
+    An **open** entry has none yet — that is what open means — and
+    demanding one would push a writer to cite something adjacent just to
+    satisfy the check. What it must not do is *claim* one, so `pending`
+    is the only accepted placeholder.
+
+    A **decision** closure has no behaviour to defend: somebody chose not
+    to build the thing. Inventing a falsifier would pin a decision rather
+    than a property, and the change that implements the thing would have
+    to delete it. `test_a_decision_closure_names_who_decided` holds it to
+    what it does owe — a decider and a date.
+
+    Everything else closed on code, and owes a test a reader can run.
+    """
+    if "Closed" not in title:
+        assert "pending" in section.lower(), (
+            f"{ident} is open but does not say its falsifier is pending; "
+            "an open entry may name no test, and must claim none"
+        )
+        return False
+    if _DECISION in title:
+        assert "*Closing test:*" not in section, (
+            f"{ident} closes by decision and still cites a closing test; "
+            "a decision has no behaviour to defend"
+        )
+        return False
+    return True
+
+
 def test_every_closing_citation_names_a_test_that_exists() -> None:
     """A citation nobody resolves is a claim about a falsifier, not one.
 
@@ -185,26 +221,7 @@ def test_every_closing_citation_names_a_test_that_exists() -> None:
     problems = []
     for ident, title in re.findall(r"^### (D\d+) — (.+)$", entries, re.MULTILINE):
         section = _entry(entries, ident)
-        # An open entry has no falsifier yet — that is what open means —
-        # and demanding one would push a writer to cite something
-        # adjacent just to satisfy the check. What it must not do is
-        # *claim* one, so `pending` is the only accepted placeholder and
-        # it is checked below.
-        if "Closed" not in title:
-            assert "pending" in section.lower(), (
-                f"{ident} is open but does not say its falsifier is pending; "
-                "an open entry may name no test, and must claim none"
-            )
-            continue
-        if _DECISION in title:
-            # Closed because somebody decided not to build it. There is
-            # no falsifier to cite and inventing one would pin a decision
-            # rather than a property — the test would have to be deleted
-            # by the change that implements the thing.
-            assert "*Closing test:*" not in section, (
-                f"{ident} closes by decision and still cites a closing test; "
-                "a decision has no behaviour to defend"
-            )
+        if not _owes_a_citation(ident, title, section):
             continue
         citation = _cited_region(section, ident)
         # A file name is not a falsifier. An audit closed an entry with
@@ -370,136 +387,6 @@ def test_no_document_says_a_register_entry_is_open_that_the_register_closed() ->
         "documents assert a register entry is open that the register records "
         "as closed; correct the claim or stamp it: " + "; ".join(stale)
     )
-
-
-def test_the_security_policy_supports_the_shipped_release_line() -> None:
-    """D45: a policy naming a dead version line supports nothing.
-
-    `SECURITY.md` still said `0.1.x` at version 0.9.1 — eight release
-    lines of drift, which read literally meant the shipped release
-    received no security fixes. Nobody noticed because nothing looked.
-
-    Checked against `config.VERSION` rather than a written-in number,
-    so the next release either updates the table or fails here.
-    """
-    from maintainability_audit.config import VERSION
-
-    line = ".".join(VERSION.split(".")[:2])
-    policy = _read(ROOT / "SECURITY.md")
-    assert f"`{line}.x`" in policy, (
-        f"SECURITY.md does not name the shipped release line {line}.x; "
-        "its supported-versions table has drifted from the package"
-    )
-
-
-def test_the_security_policy_states_the_guarantee_the_code_keeps() -> None:
-    """This claim has now been wrong in both directions.
-
-    `SECURITY.md` first asserted the agent "does not execute scanned
-    code" while eslint was being invoked in a mode that *requires* the
-    audited repository's configuration and then runs it. That was
-    corrected to say the agent does execute it, with the question left
-    open as D39 and D44.
-
-    Decision 9 then settled it and the code caught up — eslint refused,
-    pylint and mypy isolated, the child's environment scrubbed — and
-    this file kept describing the defect for another day. A promise
-    that has become true while its own documentation denies it is the
-    same defect class as the reverse, and neither direction is caught
-    by a check that only forbids one sentence.
-
-    So this reads the file against the code rather than against a
-    phrase: whatever the policy says, the adapter that cannot run
-    without the tree's configuration must be refused, and the two
-    isolated tools must carry their flags.
-    """
-    from maintainability_audit._generic import DECLARED, declared_adapter
-    from maintainability_audit._tool_adapters import ADAPTERS, adapter_for
-
-    policy = " ".join(_read(ROOT / "SECURITY.md").lower().split())
-    denies = "does not execute code from the repository" in policy
-    claims_it_does = "it does execute code from the repository" in policy
-
-    refused = {
-        slug for slug in ADAPTERS
-        if getattr(adapter_for(slug), "executes_audited_configuration", False)
-    }
-    isolated = {
-        slug for slug in DECLARED
-        if any(
-            item.startswith(("--rcfile=", "--config-file="))
-            for item in declared_adapter(slug).invocation(ROOT, excludes=()).argv
-        )
-    }
-    honoured = bool(refused) and isolated == set(DECLARED)
-
-    assert denies or claims_it_does, (
-        "SECURITY.md says nothing either way about executing repository "
-        "code, which is the one thing a reader comes to this file for"
-    )
-    assert denies == honoured, (
-        "SECURITY.md and the code disagree about executing repository "
-        f"code. policy denies it: {denies}. refused adapters: "
-        f"{sorted(refused)}, isolated declared tools: {sorted(isolated)} "
-        f"of {sorted(DECLARED)}"
-    )
-    assert not claims_it_does or not honoured, (
-        "SECURITY.md still describes the defect Decision 9 closed"
-    )
-
-
-def test_the_declared_python_floor_supports_the_features_in_use() -> None:
-    """D42: metadata that promises a Python the code cannot run on.
-
-    `requires-python` said `>=3.10` while three runtime modules import
-    `enum.StrEnum`, which is 3.11. Pip installed happily on 3.10 and
-    the import then failed — and nothing caught it, because CI runs
-    3.12 and the composite action pins 3.11, so no machine in the
-    pipeline ever stood where the metadata said a user could stand.
-
-    I first recorded that no honest test was possible here, on the
-    grounds that any such check restates a constant. That was wrong.
-    This does not restate the floor; it ties the floor to the language
-    features actually imported, which is the relationship that broke.
-    A CI matrix entry on the floor version is still worth having, and
-    is still recorded as follow-up — but it is not the only check
-    available.
-    """
-    import re as _re
-
-    features = {
-        # feature -> (minimum minor version, why)
-        "StrEnum": (11, "enum.StrEnum landed in 3.11"),
-        "ExceptionGroup": (11, "ExceptionGroup landed in 3.11"),
-        "tomllib": (11, "tomllib landed in 3.11"),
-        "override": (12, "typing.override landed in 3.12"),
-    }
-
-    declared = _re.search(
-        r'requires-python\s*=\s*">=3\.(\d+)"',
-        _read(ROOT / "pyproject.toml"),
-    )
-    assert declared, "pyproject.toml no longer declares a requires-python floor"
-    floor = int(declared.group(1))
-
-    package = ROOT / "src" / "maintainability_audit"
-    for module in sorted(package.rglob("*.py")):
-        # Imports and decorators only. A first version matched the bare
-        # word anywhere and flagged `_economics.py` for the English
-        # "override" in a docstring — a check that cries wolf is a check
-        # somebody turns off.
-        lines = [
-            line for line in _read(module).splitlines()
-            if line.startswith(("import ", "from ")) or line.lstrip().startswith("@")
-        ]
-        text = "\n".join(lines)
-        for feature, (needs, why) in features.items():
-            if _re.search(rf"\b{feature}\b", text) and needs > floor:
-                raise AssertionError(
-                    f"{module.relative_to(ROOT)} uses {feature} ({why}) but "
-                    f"pyproject declares >=3.{floor}; pip would install on "
-                    f"3.{floor} and the import would fail"
-                )
 
 
 def test_the_disposition_names_the_entries_that_are_open() -> None:

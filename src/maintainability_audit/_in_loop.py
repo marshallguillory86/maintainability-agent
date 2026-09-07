@@ -33,6 +33,7 @@ finding in itself.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -83,15 +84,61 @@ def _headroom(metric: Any, thresholds: dict[str, int]) -> dict[str, Any]:
     means a breach, and breaches are findings.
     """
     limit, warn = _budget_for(metric.kind, thresholds)
+    budgets = _budget_headroom(metric, thresholds, limit, warn)
+    # The worst band across every budget, not the line band. A short
+    # function sitting on the cyclomatic warn line was `ok` — silent in
+    # text, comfortable in JSON — because only its length was consulted
+    # (D135).
+    order = {"ok": 0, "warn": 1, "fail": 2}
+    band = max((entry["band"] for entry in budgets),
+               key=lambda name: order[name], default="ok")
     return {
         "name": metric.name,
         "kind": metric.kind,
         "line": metric.start_line,
         "lines": metric.lines,
+        # `limit` and `remaining` stay the *line* budget: they shipped
+        # meaning that, and a consumer reading them as the worst budget
+        # would silently change meaning under it.
         "limit": limit,
         "remaining": limit - metric.lines,
-        "band": _band(metric.lines, warn, limit),
+        "budgets": budgets,
+        "band": band,
     }
+
+
+def _budget_headroom(
+    metric: Any, thresholds: dict[str, int], lines_limit: int, lines_warn: int
+) -> list[dict[str, Any]]:
+    """What is left of every budget this declaration is graded on.
+
+    Driven off `_DECLARATION_BUDGETS`, the same list `_breaches_for`
+    uses, so the budgets a declaration can *fail* on are exactly the
+    budgets it can show a remainder for. They were two different sets:
+    complexity could fail a function and never showed how close it was.
+    """
+    found: list[dict[str, Any]] = []
+    for label, attribute, key in _DECLARATION_BUDGETS:
+        if key is None:
+            limit, warn = lines_limit, lines_warn
+        elif key not in thresholds:
+            continue
+        else:
+            limit = thresholds[key]
+            # A config may set a limit and no warn line; the limit then
+            # stands as both, which bands it `ok` until it fails.
+            warn = thresholds.get(key.replace("max_", "warn_", 1), limit)
+        value = getattr(metric, attribute, None)
+        if value is None:
+            continue
+        found.append({
+            "budget": label,
+            "value": value,
+            "limit": limit,
+            "remaining": limit - value,
+            "band": _band(value, warn, limit),
+        })
+    return found
 
 
 def _file_headroom(lines: int, thresholds: dict[str, int]) -> dict[str, Any]:
@@ -107,9 +154,15 @@ def _file_headroom(lines: int, thresholds: dict[str, int]) -> dict[str, Any]:
 #: The budgets a declaration can breach, in the order a reader wants to
 #: hear about them. Length first because it is the one an author can act
 #: on without rereading the function.
+#: Every budget `function_status` can fail a declaration on, so a breach
+#: can always name the thing that failed. Cognitive complexity was
+#: missing, which left a real failure with an empty breach list and sent
+#: it to the fallback below — printing a negative overage of the length
+#: budget the function was inside (D132).
 _DECLARATION_BUDGETS = (
     ("lines", "lines", None),
     ("complexity", "complexity", "max_complexity"),
+    ("cognitive", "cognitive", "max_cognitive_complexity"),
 )
 
 
@@ -128,9 +181,16 @@ def _breaches_for(metric: Any, thresholds: dict[str, int]) -> list[dict[str, Any
     for label, attribute, key in _DECLARATION_BUDGETS:
         # `None` means "the length budget for this kind", which is the
         # class budget for a class and the function budget otherwise.
-        limit = lines_limit if key is None else thresholds[key]
-        value = getattr(metric, attribute)
-        if value > limit:
+        if key is None:
+            limit = lines_limit
+        elif key not in thresholds:
+            # A configuration that does not set a budget is not a
+            # configuration that sets it to zero.
+            continue
+        else:
+            limit = thresholds[key]
+        value = getattr(metric, attribute, None)
+        if value is not None and value > limit:
             breaches.append({"budget": label, "value": value, "limit": limit,
                              "over_by": value - limit})
     return breaches
@@ -156,10 +216,16 @@ def _declaration_findings(
         # with nothing to act on, so the length budget stands as the
         # stated one and the figure remains about it.
         if not breaches:
+            # Nothing above matched, so no budget can be named with a
+            # figure. Saying "over by -73" of a budget this declaration
+            # is inside is worse than saying nothing, which is the whole
+            # point of `_breaches_for`'s comment — and the fallback used
+            # to do exactly that (D132). The finding still reports,
+            # because `function_status` failed it and a reader needs to
+            # know; it reports without a number it cannot justify.
             fallback, _ = _budget_for(metric.kind, thresholds)
-            breaches = [{"budget": "lines", "value": metric.lines,
-                         "limit": fallback,
-                         "over_by": metric.lines - fallback}]
+            breaches = [{"budget": "unnamed", "value": metric.lines,
+                         "limit": fallback, "over_by": None}]
         findings.append({
             "finding_class": "oversized-declaration",
             "name": metric.name,
@@ -184,6 +250,42 @@ def _declaration_findings(
 #: Languages whose parser can refuse content outright, and the check
 #: that asks. Only Python today: the brace scanners do not fail, they
 #: find nothing, and reporting "unparsed" for them would be a guess.
+#: A unified-diff hunk header, as `diff -u` and git emit it. The counts
+#: are optional — a single-line hunk is written `@@ -1 +1 @@`.
+_HUNK_HEADER = re.compile(r"^@@ -\d+(,\d+)? \+\d+(,\d+)? @@")
+
+
+def _is_unified_diff(text: str) -> bool:
+    """Whether this is a diff rather than the content of a file.
+
+    Piping a diff instead of file content is the most likely mistake at
+    this door, and it was the quietest: the content refused to parse,
+    nothing was found, and `declarations_read` still said the file had
+    been read. Exit 0, no output, "clean".
+
+    Gemini found that on Python and the fix taught `_parses` to use
+    `ast.parse`, which refuses a diff — so the sentence in the docs
+    ("it will say it could not parse") was true of Python and of nothing
+    else. Every other suffix returned `True` before reaching any check
+    (D133).
+
+    Detected by **shape**, not by a substring: the `---`/`+++` header
+    pair and a hunk header. A string literal containing `@@ -1,3 +1,4 @@`
+    is somebody writing about a diff, which is the mention-versus-
+    assertion distinction this project has already met in suppression
+    markers, escape phrases and risk patterns.
+
+    The format is specified rather than guessed, so this holds for every
+    language equally instead of for the one with a parser in the standard
+    library.
+    """
+    lines = text.splitlines()
+    has_old = any(line.startswith("--- ") for line in lines)
+    has_new = any(line.startswith("+++ ") for line in lines)
+    has_hunk = any(_HUNK_HEADER.match(line) for line in lines)
+    return has_hunk and has_old and has_new
+
+
 def _parses(path: str, text: str) -> bool:
     """Whether the content is what its extension claims to be.
 
@@ -194,7 +296,14 @@ def _parses(path: str, text: str) -> bool:
     is absence read as a pass, arriving through the exact feature whose
     docstring promises to refuse it (Gemini's field check).
     """
+    if _is_unified_diff(text):
+        return False
     if Path(path).suffix != ".py":
+        # No parser for the brace languages, and zero declarations is not
+        # evidence of one being needed: plenty of valid files mint none,
+        # and marking those "unparsed" would trade a quiet pass for a
+        # loud wrong answer. What is checked for every language is the
+        # diff above, which is the mistake that actually happens.
         return True
     import ast
 

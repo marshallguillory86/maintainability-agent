@@ -4,7 +4,64 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
-_Nothing yet._
+### Fixed — Grok's audit of the surfaces, six defects and a decision
+
+Three High, three Medium, filed as D130–D136. Each was reproduced before
+it was fixed and each is closed as a **class** rather than as the
+instance reported.
+
+- **`--sarif-input` read an operator-named path with no validation**
+  (D130, High). A FIFO blocked forever, `/dev/zero` read until memory
+  died, a directory or missing file escaped as a traceback. D104 built
+  the one-handle reader for `--config` and `--baseline` and recorded the
+  class as closed on the claim that those were *the only two* — a claim
+  written into the reader's own docstring, which is why the third door
+  stayed invisible. Every CLI option is now classified by what it does
+  with a path, read from the parser, so a fourth cannot be added
+  unclassified.
+- **The reader was not the read primitive** (D131, High). Eight sites
+  across five modules still resolved a name and then read it: history,
+  first-run persistence, the XDG user tier, the MCP baseline check, and
+  `_safe_write`'s own append and clobber reads — a
+  time-of-check/time-of-use gap in the helper written to close them. The
+  always-on case was worse than D130: `mkfifo
+  .maintainability/history.jsonl` hung **every** audit. `repository_path`
+  is why it hid — it bounds a path's *location* and says nothing about
+  what kind of file is there.
+- **A piped diff read as clean in every language but Python** (D133,
+  High). The fix that closed it for Python used `ast.parse`, and the line
+  above returned `True` for every other suffix. Refused by the unified
+  diff *format* now, so it holds for all thirteen; a string literal
+  mentioning a hunk header is still not a diff.
+- **A cognitive-only failure reported a negative line overage** (D132).
+  `-72 over` of a budget the function was inside. Cognitive complexity is
+  a named budget now, and a failure no budget names reports no figure
+  rather than a wrong one.
+- **`--check` accepted five flags it would only ignore** (D134):
+  `--comment-output`, `--attestation-output`,
+  `--agent-instructions-output`, `--hostile-prompt-output`,
+  `--transformation`. It shares one refusal list with `--staged` now, so
+  the two cannot drift again.
+- **Headroom reported the line budget and called that the answer**
+  (D135). A 20-line function at cyclomatic 12 against a warn line of 10
+  read `band: ok` — silent in text, comfortable in JSON. Headroom now
+  covers every budget a declaration can be failed on and bands on the
+  worst; `limit` and `remaining` keep meaning the *line* budget, because
+  they shipped meaning that.
+
+### Changed — `--check` stays on the CLI
+
+**Decided 2026-09-06.** D136 recorded chat as the primary surface and
+`--check` as CLI-only. It is closed as a **non-goal**, not left open: an
+open entry naming a gap reads as an instruction to close it. An MCP tool
+is not a port of a flag — it is a name, an argument contract, and a
+decision about the setup and consent flow every other MCP call goes
+through. If chat users ask for it, it reopens as a feature with its own
+contract rather than resuming as an unfinished bug.
+
+The register's guards learned the category rather than being satisfied
+with a fake test: a defect closure names a falsifier, a **decision
+closure names a decider and a date**.
 
 ## 2.11.1 - 2026-09-06
 

@@ -34,7 +34,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from .config import PathNotAllowed, repository_path
+from .config import PathNotAllowed, read_operator_file, repository_path
 
 
 def bounded_target(root: Path, configured: str | None, default: str) -> Path:
@@ -76,7 +76,7 @@ def write_bounded(root: Path, target: Path, body: str, *, append: bool = False) 
 
     existing = ""
     if append and resolved.is_file():
-        existing = resolved.read_text(encoding="utf-8")
+        existing = read_operator_file(resolved)
     return _stage_and_replace(resolved, existing + body)
 
 
@@ -147,7 +147,7 @@ def _refuse_nonjson_clobber(root: Path, target: Path) -> None:
     if not resolved.is_file():
         return
     try:
-        json.loads(resolved.read_text(encoding="utf-8"))
+        json.loads(read_operator_file(resolved))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as reason:
         raise PathNotAllowed(
             f"{target} already exists and is not a JSON artifact; this "

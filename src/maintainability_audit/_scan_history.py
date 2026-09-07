@@ -34,7 +34,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .config import PathNotAllowed
+from .config import PathNotAllowed, read_operator_file
 
 # Versioned separately from the report contract. The two change for
 # different reasons — a report field is a consumer-facing break, a
@@ -289,7 +289,7 @@ def _refuse_clobbering_non_history(target: Path) -> None:
         # history should go -- the `paths.history: README.md` attack.
         return
     try:
-        lines = [ln for ln in target.read_text(encoding="utf-8").splitlines() if ln.strip()]
+        lines = [ln for ln in read_operator_file(target).splitlines() if ln.strip()]
     except (OSError, ValueError) as unreadable:
         raise PathNotAllowed(
             f"{target} exists and cannot be read as a scan history "
@@ -335,7 +335,7 @@ def read_history(path: Path) -> list[ScanRecord]:
     if not path.exists():
         return []
     records: list[ScanRecord] = []
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+    for line in read_operator_file(path).splitlines():
         if not line.strip():
             continue
         try:

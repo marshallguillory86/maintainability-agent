@@ -36,6 +36,8 @@ from maintainability_audit.config import (
     read_operator_file,
 )
 
+ROOT = Path(__file__).resolve().parents[1]
+
 
 def test_an_operator_named_path_must_be_a_regular_file(tmp_path: Path) -> None:
     """A FIFO named as config would block the process forever."""

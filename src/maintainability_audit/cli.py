@@ -210,14 +210,21 @@ def _staged_action(parser: argparse.ArgumentParser, args: argparse.Namespace) ->
 #: is handed, so anything naming a revspec, a repository scan, a write or
 #: another mode is a request it cannot honour — and a flag accepted and
 #: ignored teaches the caller it was honoured.
-_CHECK_REFUSES = {
-    "staged": "--staged", "changed_only": "--changed-only",
-    "backfill": "--backfill", "conformance": "--conformance",
-    "record_history": "--record-history", "fail_on_gate": "--fail-on-gate",
-    "fail_on_regression": "--fail-on-regression", "output": "--output",
-    "write_baseline": "--write-baseline", "prompt_output": "--prompt-output",
-    "html_output": "--html-output", "sarif_output": "--sarif-output",
-}
+#: Derived from `--staged`'s list rather than kept beside it. Both doors
+#: write nothing, run nothing and apply no repository gates, so a flag
+#: one of them would have to ignore the other would too.
+#:
+#: They were two hand-maintained dictionaries and they drifted by five
+#: entries — `--comment-output`, `--attestation-output`,
+#: `--agent-instructions-output`, `--hostile-prompt-output` and
+#: `--transformation` were refused by `--staged` and accepted, then
+#: silently ignored, by `--check`. `_check_action` returns before
+#: `write_outputs`, so the caller was told the check ran and the file was
+#: written, and one of those was false (D134).
+#:
+#: Deriving makes the drift impossible rather than merely detectable: a
+#: flag added to `_STAGED_REFUSES` covers `--check` on the same commit.
+_CHECK_REFUSES = {**_STAGED_REFUSES, "staged": "--staged"}
 
 
 def _check_action(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:

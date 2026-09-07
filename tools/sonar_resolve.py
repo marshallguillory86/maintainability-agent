@@ -28,6 +28,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
 
 HOST = "https://sonarcloud.io"
 
@@ -57,8 +58,49 @@ def _call(path: str, token: str, payload: dict[str, str]) -> dict:
     return json.loads(body) if body.strip() else {}
 
 
-def _current(issue: str, token: str) -> dict:
-    query = urllib.parse.urlencode({"issues": issue, "ps": "1"})
+def _project_key() -> str:
+    """The project this repository publishes under.
+
+    Read from `sonar-project.properties`, which is the file the scanner
+    itself reads, rather than repeated here — a second copy is a second
+    thing to keep true.
+    """
+    properties = Path(__file__).resolve().parents[1] / "sonar-project.properties"
+    for line in properties.read_text(encoding="utf-8").splitlines():
+        name, _, value = line.partition("=")
+        if name.strip() == "sonar.projectKey":
+            return value.strip()
+    raise SystemExit(f"no sonar.projectKey in {properties}")
+
+
+def _current(issue: str, token: str, pull_request: str = "") -> dict:
+    """The issue as SonarCloud currently holds it.
+
+    `pull_request` is not optional in practice, only in the signature. A
+    finding raised on a pull request lives in that pull request's
+    analysis, and `api/issues/search` without the parameter searches the
+    branch — so a PR-scoped issue comes back empty and this exits with
+    "no issue", which reads as a wrong key.
+
+    That mattered the moment it was load-bearing: the quality gate blocks
+    the merge on the finding, and the finding cannot be reached to
+    resolve it before merging. Dismiss-then-merge was impossible, which
+    is the wrong way round for a control whose entire purpose is
+    reviewing a finding *before* it lands.
+    """
+    fields = {"issues": issue, "ps": "1"}
+    if pull_request:
+        # `pullRequest` alone returns nothing. SonarCloud requires the
+        # project alongside it, and answers an unqualified key with an
+        # empty list rather than an error — which is why the first two
+        # attempts read as a wrong key. Measured, not assumed:
+        #
+        #   issues=KEY&pullRequest=192                      -> 0
+        #   issues=KEY&pullRequest=192&componentKeys=PROJ   -> 1
+        #   issues=KEY                                      -> 0
+        fields["pullRequest"] = pull_request
+        fields["componentKeys"] = _project_key()
+    query = urllib.parse.urlencode(fields)
     request = urllib.request.Request(f"{HOST}/api/issues/search?{query}")
     import base64
 
@@ -74,6 +116,14 @@ def _current(issue: str, token: str) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--issue", required=True, help="SonarCloud issue key.")
+    parser.add_argument(
+        "--pull-request", default="",
+        help=(
+            "Pull request number, when the finding was raised on a PR. "
+            "Without it the search looks at the branch and reports the "
+            "key as unknown."
+        ),
+    )
     parser.add_argument("--transition", required=True, choices=TRANSITIONS)
     parser.add_argument(
         "--comment", required=True,
@@ -91,7 +141,7 @@ def main(argv: list[str] | None = None) -> int:
             "script exists to prevent."
         )
 
-    issue = _current(args.issue, token)
+    issue = _current(args.issue, token, args.pull_request)
     if issue.get("resolution"):
         print(f"{args.issue} is already {issue['resolution']}; nothing sent.")
         return 0

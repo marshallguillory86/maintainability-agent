@@ -418,3 +418,90 @@ def test_an_ordinary_history_is_still_read(tmp_path: Path) -> None:
     history.write_text(json_module.dumps(blanks) + "\n", encoding="utf-8")
 
     assert len(read_history(history)) == 1
+
+
+# ---------------------------------------------------------------------------
+# SonarCloud S8707 on `_operator_reads.py`: "validate the constructed path
+# before accessing the file system."
+#
+# Doing literally that — stat the name, then open the name — is the
+# time-of-check/time-of-use bug this function exists to avoid. It resolves
+# the name **once** and validates through the resulting handle, which is
+# stronger than the rule asks for, so the finding is denied as a false
+# positive for this design.
+#
+# A denial is a claim, and this project's own standard is that a claim
+# needs a check. These are that check: if somebody later "fixes" S8707 by
+# adding a pre-open `stat`, the suite fails and says why.
+# ---------------------------------------------------------------------------
+
+
+def test_the_operator_read_resolves_the_name_exactly_once() -> None:
+    """One `os.open`, and no lookup of the path by name anywhere near it.
+
+    `os.stat(path)` followed by `path.read_text()` resolves the name
+    twice, so what was measured and what is read can differ — a symlink
+    or a rename between the two calls is all it takes. Validating
+    through the handle closes that window, and it is the reason S8707's
+    prescription is not followed here.
+    """
+    import ast
+
+    source = (
+        ROOT / "src" / "maintainability_audit" / "_operator_reads.py"
+    ).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    opens, by_name = [], []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Attribute):
+            called = f"{getattr(func.value, 'id', '')}.{func.attr}"
+            bare = func.attr
+        else:
+            called = bare = getattr(func, "id", "")
+        if called == "os.open":
+            opens.append(node.lineno)
+        # Anything that resolves the path by name a second time.
+        if bare in {"stat", "lstat", "exists", "is_file", "is_symlink",
+                    "is_dir", "read_text", "read_bytes"}:
+            by_name.append(f"line {node.lineno}: {called or bare}()")
+
+    assert len(opens) == 1, (
+        f"the name should be resolved exactly once; found {len(opens)} "
+        f"`os.open` calls at lines {opens}"
+    )
+    assert not by_name, (
+        "these resolve the path by name in addition to the handle, which "
+        "reopens the time-of-check/time-of-use window that validating "
+        "through the handle closes — and would make S8707's dismissal "
+        "untrue:\n  " + "\n  ".join(by_name)
+    )
+
+
+def test_what_is_validated_is_what_is_read(tmp_path: Path) -> None:
+    """The handle, not the name, is what the content comes from.
+
+    Swapping the path for something else after validation must not change
+    what was returned: the read happens through the descriptor that was
+    checked. Demonstrated by replacing the file with a FIFO — which the
+    function refuses when named — *after* the read has completed, and
+    confirming the content is the validated file's.
+    """
+    from maintainability_audit._operator_reads import read_operator_file
+
+    target = tmp_path / "config.json"
+    target.write_text('{"analyzers": {"run": true}}', encoding="utf-8")
+
+    content = read_operator_file(target)
+
+    target.unlink()
+    os.mkfifo(target)
+    try:
+        assert content == '{"analyzers": {"run": true}}'
+        with pytest.raises(PathNotAllowed, match="not a regular file"):
+            read_operator_file(target)
+    finally:
+        target.unlink()

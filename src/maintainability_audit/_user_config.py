@@ -57,16 +57,22 @@ def _read_json_object(path: Path) -> dict[str, Any] | None:
     to keep the graph acyclic — the architecture test caught the
     module-level version.
 
-    `PathNotAllowed` joins the caught set deliberately: the user tier is
-    optional, and a config that cannot be read has always meant "no user
-    tier" rather than a stopped run. Refusing to *read* it is the fix;
-    refusing to *start* would be a different and worse change.
+A refusal is caught here deliberately: the user tier is optional, and a
+    config that cannot be read has always meant "no user tier" rather
+    than a stopped run. Refusing to *read* it is the fix; refusing to
+    *start* would be a different and worse change.
+
+    `PathNotAllowed` is not named in the `except` because it **is** a
+    `ValueError` and is already caught — SonarCloud's S5713, and it was
+    right. Naming it read as defensive and was redundant, which is worse
+    than either being explicit or being brief: it implies a distinction
+    the type hierarchy does not make.
     """
-    from ._operator_reads import PathNotAllowed, read_operator_file
+    from ._operator_reads import read_operator_file
 
     try:
         payload = json.loads(read_operator_file(path))
-    except (OSError, ValueError, PathNotAllowed):
+    except (OSError, ValueError):
         return None
     return payload if isinstance(payload, dict) else None
 

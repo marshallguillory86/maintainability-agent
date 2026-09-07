@@ -4683,9 +4683,164 @@ that work if it is taken up.
 MCP tool is absent would pin a decision rather than a property, and
 would have to be deleted by the change that implements it.
 
+### D137 — Closed: one Python file let a C repository skip a whole criterion (High)
+
+The `declarations` dimension may be driven by analyzer readings only
+when the criterion set is complete — cyclomatic complexity, declaration
+lines **and** cognitive complexity. `_declaration_pressure` checks it:
+
+    covered = {concept for values in per_unit.values() for concept in values}
+    if declaration_concepts_missing(covered):
+        return dict.fromkeys(ANALYZER_DIMENSIONS)
+
+`per_unit` spans **every declaration in the repository**, so `covered`
+is a union across all languages and all tools. The check is written at
+repository scope and applied to units that are scored individually.
+
+The reason it matters is which tools supply which concept. Enumerated
+from the adapters rather than from prose:
+
+| adapter | emits | languages |
+|---|---|---|
+| `lizard` | cyclomatic_complexity, declaration_lines | 16 of the parsed set |
+| `pmd` | cyclomatic_complexity, cognitive_complexity | apex, java, javascript, scala, xml |
+| `complexipy` | cognitive_complexity | python |
+
+So for C, C++, C#, Fortran, Go, Rust, PHP, Ruby, Swift and TypeScript
+there is no cognitive source at all. A repository in any of them should
+fall back to the built-in tier. It does not, if it contains any Python
+that `complexipy` can read — a `setup.py`, a build script, one test
+helper.
+
+**Reproduced**, 50 C declarations lizard measured for cyclomatic
+complexity and lines, thresholds warn/max 8/15 and 40/60:
+
+    A) the C declarations alone           -> {'declarations': None}
+    B) the same C, plus one setup.py with
+       a single function, cognitive 0     -> {'declarations': 0.2451}
+
+Nothing about the C changed. One trivial Python function flipped the
+whole repository from "unmeasured, use the built-ins" to a confident
+analyzer rate, computed over 50 declarations whose cognitive complexity
+was never read. The 0.2451 is the C units sitting in the MILD cyclomatic
+band, averaged with the one clean Python unit: (50 × 0.25 + 0) / 51.
+
+This is the failure the code's own comment describes, at a scope it does
+not check:
+
+> a reading that only ever saw complexity cannot produce a rate
+> comparable to it, because every long-but-simple function passes by
+> not having been measured
+
+**It is not a corner case.** 47 of the 112 corpus repositories satisfied
+the gate in the 2026-09-07 re-measure, and the list includes FFmpeg,
+git, bitcoin, jq, redis and imgui (C/C++), cp2k, elmerfem, fds,
+specfem3d and xtb (Fortran), and PowerToys, aspnetcore and terminal
+(C#) — none of which has a cognitive source for its primary language,
+and every one of which carries `complexipy` in its tool list.
+
+**Consequences for the anchor.** `declarations` is one of five scored
+dimensions at weight 1.0, so this moves grades. It also means the
+corpus median for `declarations` is partly built from readings this
+entry says are not comparable, which puts the fix inside the
+recalibration release rather than after it: correcting the scope
+changes which repositories use analyzer readings, which moves the
+reference, which is exactly what that release is for.
+
+**Relationship to the planned per-concept merge.** The roadmap schedules
+"merge analyzer evidence per concept rather than per dimension" and
+justifies it with the claim that `lizard` "can never satisfy the gate
+for Go, Rust, PHP, Ruby, Swift, C, C++, C#, Fortran, COBOL or Python".
+That list is wrong about Python — `complexipy` supplies cognitive
+complexity for it, which is why the Python corpus members legitimately
+satisfy the gate, as `_calibration.py` already recorded. It also omits
+TypeScript, which genuinely has no cognitive source. The item stands;
+its stated reason needs correcting before it is built against.
+
+**Fixed by checking the criterion set per language.** `_declaration_pressure`
+buckets units by the language of the file they were read from and requires each
+bucket to carry all three criteria. `declined_dimensions` was corrected the same
+way and now names the languages that forced the fallback, which is the half a
+reader sees.
+
+Two things the fix deliberately does **not** do, stated so neither is mistaken
+for an oversight:
+
+- **It is not a per-language blend.** The value returned replaces the built-in
+  `declarations` pressure for the whole repository, and there is no seam to hand
+  back a mixture — the built-in path carries one aggregate
+  `declaration_band_pressure`, not a per-language one. A real blend needs
+  per-language aggregates plumbed through the summary evidence, which is its own
+  change. The honest intermediate is to fall back for the repository when any
+  language it would speak for is incomplete: strictly more correct than today,
+  and it invents no number.
+- **Unmapped suffixes gate nothing.** A language that was never established
+  cannot be missing a criterion. Pooling every unmapped suffix into one bucket
+  and demanding all three of it is the obvious wrong fix: `pmd` reports
+  complexity for `beans.xml` and no declaration lines, so that bucket is
+  permanently incomplete and every Java repository with a Spring config would
+  fall back.
+
+**This is the fifth fix to this bridge, so the fifth fix is not the deliverable.**
+`test_analyzer_bridge` records the previous four — a ratio from a sample of one,
+a Python-only concept mixed with a multi-language one, two formulas wearing one
+name, and complexity counted against three criteria — and its docstring says its
+tests exist "so the fifth number means something". The fifth arrived anyway.
+D137 is a repeat of the second, in a different costume.
+
+The reason those tests missed it is structural, not careless: every fixture in
+that file builds measurements for a **single language**, and this defect only
+appears when two languages are present and a tool covers one of them. The shape
+was never in the sample — which is this register's own diagnosis of thirty of
+its entries, applied to the tests written to prevent them.
+
+So the class is closed with sweeps rather than another scenario, and the two
+sweeps do different jobs — a distinction the falsifier gate had to point out.
+
+`test_no_other_language_can_supply_a_missing_criterion` **falsifies**. It sweeps
+the lending mechanism across every language pair and every withheld criterion,
+and fails at the base, because the defect needs two languages to appear at all.
+
+`test_every_language_is_scored_only_on_a_complete_criterion_set` **guards**. It
+enumerates every language in `DECLARATION_SUFFIXES` against every subset of the
+three criteria — generated, not written — and asserts the sentence the bridge
+exists to keep true: a declaration may be scored only when *its own* language
+carries all three. It passes at the base, and that is correct rather than a
+weakness: for a repository of one language the union check and the per-language
+check agree. It is therefore declared as covering existing behaviour and is not
+cited below.
+
+What the guard defends is the *next* variant, demonstrated rather than asserted:
+injecting a single-language exemption (`language != 'Swift'`) into the
+completeness check passes **all three** instance tests cited below and fails six
+cases in the sweep. A sixth variant of this defect cannot arrive by being a
+language or tool split nobody wrote a fixture for.
+
+*Closing test:* `test_one_python_file_does_not_buy_the_criterion_for_c`,
+`test_the_fallback_note_names_the_language_that_caused_it`,
+`test_an_incomplete_language_is_named_even_beside_a_complete_one`,
+`test_no_other_language_can_supply_a_missing_criterion` in
+`tests/test_declaration_criteria_scope.py`.
+
+*Roles:* found=claude prompt=marshall decision=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is a **C** declaration — `_unit_languages` made to
+return `Python` for `decode.c` — not the `setup.py` unit the reproduction names.
+That sits outside what the closing tests enumerate for a reason worth stating:
+the reproduction's Python helper is the member the entry was written around, so
+breaking it confirms the sample and says nothing about the claim. The claim is
+about the *C* declarations, and only mutating one of those asks whether the
+per-language bucket is real. It fails
+`test_one_python_file_does_not_buy_the_criterion_for_c`, which is the test that
+would otherwise pass for the wrong reason.
+
 ## Disposition
 
-**Every entry is closed.** D136 is closed by decision rather than by code — `--check` stays on the CLI for now, recorded as a non-goal so it is not re-derived as an unfinished bug. They are the
+**Every entry is closed.** The most recent closed on 2026-09-07: the declarations
+criterion-set check was written at repository scope and applied to units, so one
+Python file let a C repository be scored on two of three criteria. It is now
+checked per language. That fix changes which repositories use analyzer readings,
+so it moves the corpus `declarations` reference and rides the recalibration
+release rather than shipping alone. D136 is closed by decision rather than by code — `--check` stays on the CLI for now, recorded as a non-goal so it is not re-derived as an unfinished bug. They are the
 remainder of Grok's audit of the twenty commits on `main` after 2.8.0.
 D125–D129 (the 2.11.0 language findings from that same audit) closed in
 2.11.1. D130 closed with it: `--sarif-input` now reads through

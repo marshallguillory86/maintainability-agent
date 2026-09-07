@@ -4499,7 +4499,7 @@ negative line `over_by`. Restoring the length fallback as the only
 breach, or omitting cognitive from `_DECLARATION_BUDGETS`, is the
 mutation.
 
-### D133 — Open: "a piped diff will say it could not parse" is a Python-only sentence (High)
+### D133 — Closed: "a piped diff will say it could not parse" is a Python-only sentence (High)
 
 Gemini found a unified diff piped to `--check` reading as clean. The
 fix taught `_parses` to refuse content `ast.parse` rejects. Brace
@@ -4531,10 +4531,35 @@ The class is every suffix `--check` claims to parse, not `ast.parse`.
 Do not mark valid brace source "unparsed" because it minted zero
 declarations.
 
-*Roles:* found=grok prompt=marshall fix=none test=none run=none
-*Mutation:* pending with the test. A unified diff named with a
-suffix the closing test does not hardcode — `.java` if the test used
-`.js` — must set `declarations_read` false and a non-empty note.
+**Fixed by detecting the mistake, not by parsing twelve languages.**
+Unified diff is a specified format, so `_is_unified_diff` reads its
+shape — the `---`/`+++` header pair and a hunk header matching
+`@@ -n[,m] +n[,m] @@` — before any per-language branch. That holds for
+every suffix equally instead of for the one with a parser in the
+standard library.
+
+By **shape**, not by substring: a string literal containing
+`@@ -1,3 +1,4 @@` is somebody writing about a diff. Mention versus
+assertion, which this project has now met in suppression markers
+(D108), the falsifier escape phrase (D111), the cross-repository guard
+and the risk patterns. Asserted by its own test.
+
+Grok's warning is honoured rather than traded away: **valid brace source
+is not marked unparsed**. Zero declarations is not evidence of a parse
+failure — plenty of valid files mint none — so nothing beyond the diff
+format is claimed for languages with no parser, and the README now says
+that instead of implying content validation it does not do.
+
+*Closing test:* `tests/test_in_loop_check.py`:
+`test_a_piped_diff_is_refused_for_every_language_not_only_python`,
+parametrized over the nine suffixes the Python-only fix missed;
+`test_ordinary_source_is_not_called_a_diff` over the same nine; and
+`test_a_line_that_merely_mentions_a_hunk_header_is_not_a_diff`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* restoring `if Path(path).suffix != ".py": return True` above
+the diff check reports `declarations_read: true` and an empty note for a
+diff named `.js`, `.java`, `.go` or any of the other seven.
 
 ### D134 — Open: `--check` accepts flags it would have to ignore (Medium)
 
@@ -4583,7 +4608,7 @@ fails at `origin/main` because the tool is absent.
 
 ## Disposition
 
-**D132, D133, D134, D135 and D136 are open.** They are the
+**D132, D134, D135 and D136 are open.** They are the
 remainder of Grok's audit of the twenty commits on `main` after 2.8.0.
 D125–D129 (the 2.11.0 language findings from that same audit) closed in
 2.11.1. D130 closed with it: `--sarif-input` now reads through
@@ -4596,9 +4621,10 @@ the primitive, and the guard now parses every state-file module rather
 than the two `--sarif-input` needed. It was briefly marked closed on the
 strength of the `--sarif-input` fix alone and reopened — the same
 mistake D104 made, closing a class from one instance, caught this time
-before it shipped. D132 and D133 are `--check` residuals: a
-cognitive-only fail still prints a negative line overage, and "a piped
-diff will say it could not parse" is true only of Python. D134 is the
+before it shipped. D132 is a `--check` residual: a
+cognitive-only fail still prints a negative line overage. D133 closed —
+a piped diff is now refused by its format in every language, where the
+sentence promising it had been true of Python alone. D134 is the
 flag-refusal class `--staged` already named, unapplied to `--check`.
 D135 is headroom that only watches lines. D136 is the chat-primary
 gap: `--check` is CLI-only. D124 is a release-checklist omission that cost a build

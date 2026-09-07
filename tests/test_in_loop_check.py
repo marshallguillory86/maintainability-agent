@@ -387,3 +387,79 @@ def test_content_that_parses_is_still_reported_as_read() -> None:
     """
     result = _check("widget.py", _function("small", 1))
     assert result["declarations_read"] is True
+
+
+#: One diff, named with each suffix `--check` claims to parse. The Python
+#: case closed when Gemini found it; the class did not. `_parses` returned
+#: `True` for every suffix except `.py`, so the same diff read as clean in
+#: every brace language (D133).
+DIFF_SUFFIXES = (".js", ".ts", ".java", ".c", ".go", ".rb", ".php", ".rs", ".swift")
+
+
+@pytest.mark.parametrize("suffix", DIFF_SUFFIXES)
+def test_a_piped_diff_is_refused_for_every_language_not_only_python(
+    suffix: str,
+) -> None:
+    """The sentence in the docs was true of Python and of nothing else.
+
+    > A diff piped into `--check` is not file content. **It will say it
+    > could not parse**; do not read that as clean.
+
+    It said that because `ast.parse` refuses a diff. Every other suffix
+    took the `return True` above it, so `declarations_read` was true, the
+    note was empty and the process exited 0 — the same shape Gemini
+    found, in the twelve languages the fix did not reach.
+    """
+    diff = (
+        f"--- a/src/thing{suffix}\n"
+        f"+++ b/src/thing{suffix}\n"
+        "@@ -1,3 +1,4 @@\n"
+        " function hello() {\n"
+        "+    log(1)\n"
+        "     return 1\n"
+        " }\n"
+    )
+    result = _check(f"src/thing{suffix}", diff)
+
+    assert result["declarations_read"] is False, (
+        f"a unified diff named {suffix} was reported as read"
+    )
+    assert "parse" in result["note"].lower(), (
+        f"nothing said the {suffix} content could not be parsed"
+    )
+
+
+@pytest.mark.parametrize("suffix", DIFF_SUFFIXES)
+def test_ordinary_source_is_not_called_a_diff(suffix: str) -> None:
+    """Covers existing behaviour: ordinary brace source already read as
+    read, and this pins it so the D133 refusal cannot take it away.
+
+    It is the guard Grok named — do not mark valid brace source unparsed
+    because it minted zero declarations — so it passes at the base by
+    construction. Only the unified-diff *format* is refused.
+    """
+    source = "function hello() {\n    return 1;\n}\n"
+    result = _check(f"src/thing{suffix}", source)
+
+    assert result["declarations_read"] is True, (
+        f"ordinary {suffix} source was reported as unparsed"
+    )
+
+
+def test_a_line_that_merely_mentions_a_hunk_header_is_not_a_diff() -> None:
+    """Covers existing behaviour: a string mentioning a hunk header was
+    never a diff, and this pins it against the D133 refusal.
+
+    It passes at the base — nothing was refused there — so it guards the
+    fix rather than proving it. Mention versus assertion, which this
+    project has now met in suppression markers, escape phrases and risk
+    patterns: the refusal needs the diff's *shape*, the `---`/`+++`
+    header pair and a hunk header, not a substring anybody can write in
+    a literal.
+    """
+    source = 'const help = "paste a hunk like @@ -1,3 +1,4 @@ here";\n'
+    result = _check("src/thing.js", source)
+
+    assert result["declarations_read"] is True, (
+        "a string mentioning a hunk header was mistaken for a diff"
+    )

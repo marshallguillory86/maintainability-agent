@@ -204,8 +204,12 @@ maintainability-agent --install-precommit-hook             # before committing
 
 **`--check PATH`** answers about content on stdin. No repository, no git, no
 scan; `PATH` names the content and is never opened. Pass file content, not a
-diff — content that does not parse says so rather than reading as clean, as
-does a language with no scanner. In text it is **silent while you have room**
+diff — **a piped diff is refused in every language**, by its format rather
+than by a parser, and says so rather than reading as clean; so does a
+language with no scanner. Beyond that, only Python's content is parsed:
+a brace language's invalid source is not detected, because zero
+declarations is not evidence of a parse failure and marking valid files
+unparsed would be worse than the silence. In text it is **silent while you have room**
 and speaks once a declaration nears its limit; `--format json` carries the
 remaining budget for every declaration whether or not it is close.
 

@@ -57,8 +57,25 @@ def _call(path: str, token: str, payload: dict[str, str]) -> dict:
     return json.loads(body) if body.strip() else {}
 
 
-def _current(issue: str, token: str) -> dict:
-    query = urllib.parse.urlencode({"issues": issue, "ps": "1"})
+def _current(issue: str, token: str, pull_request: str = "") -> dict:
+    """The issue as SonarCloud currently holds it.
+
+    `pull_request` is not optional in practice, only in the signature. A
+    finding raised on a pull request lives in that pull request's
+    analysis, and `api/issues/search` without the parameter searches the
+    branch — so a PR-scoped issue comes back empty and this exits with
+    "no issue", which reads as a wrong key.
+
+    That mattered the moment it was load-bearing: the quality gate blocks
+    the merge on the finding, and the finding cannot be reached to
+    resolve it before merging. Dismiss-then-merge was impossible, which
+    is the wrong way round for a control whose entire purpose is
+    reviewing a finding *before* it lands.
+    """
+    fields = {"issues": issue, "ps": "1"}
+    if pull_request:
+        fields["pullRequest"] = pull_request
+    query = urllib.parse.urlencode(fields)
     request = urllib.request.Request(f"{HOST}/api/issues/search?{query}")
     import base64
 
@@ -74,6 +91,14 @@ def _current(issue: str, token: str) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--issue", required=True, help="SonarCloud issue key.")
+    parser.add_argument(
+        "--pull-request", default="",
+        help=(
+            "Pull request number, when the finding was raised on a PR. "
+            "Without it the search looks at the branch and reports the "
+            "key as unknown."
+        ),
+    )
     parser.add_argument("--transition", required=True, choices=TRANSITIONS)
     parser.add_argument(
         "--comment", required=True,
@@ -91,7 +116,7 @@ def main(argv: list[str] | None = None) -> int:
             "script exists to prevent."
         )
 
-    issue = _current(args.issue, token)
+    issue = _current(args.issue, token, args.pull_request)
     if issue.get("resolution"):
         print(f"{args.issue} is already {issue['resolution']}; nothing sent.")
         return 0

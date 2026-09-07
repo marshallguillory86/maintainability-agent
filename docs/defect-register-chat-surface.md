@@ -4580,7 +4580,7 @@ parametrized over the nine suffixes the Python-only fix missed;
 the diff check reports `declarations_read: true` and an empty note for a
 diff named `.js`, `.java`, `.go` or any of the other seven.
 
-### D134 — Open: `--check` accepts flags it would have to ignore (Medium)
+### D134 — Closed: `--check` accepts flags it would have to ignore (Medium)
 
 `--staged` named the class: a flag accepted and ignored teaches the
 caller it was honoured. `_STAGED_REFUSES` includes `--comment-output`,
@@ -4590,10 +4590,23 @@ not. `_check_action` returns before `write_outputs`, so
 `--check --comment-output x.md` exits 0 or 1 and writes nothing. The
 `--staged` sibling is tested; this door is not.
 
-*Roles:* found=grok prompt=marshall fix=none test=none run=none
-*Mutation:* pending with the test. A flag the closing test does not
-name — `--comment-output` if the test used `--attestation-output` —
-must `parser.error` with `--check does not take`.
+**Derived, not extended.** `_CHECK_REFUSES` is now
+`{**_STAGED_REFUSES, "staged": "--staged"}`. Both doors write nothing,
+run nothing and apply no repository gates, so a flag one would have to
+ignore the other would too — and adding the five missing entries by hand
+would have left two lists to keep in step, which is what produced the
+drift. A flag added to `_STAGED_REFUSES` tomorrow covers `--check` on the
+same commit: the drift is impossible rather than merely detected.
+
+*Closing test:* `tests/test_in_loop_check.py`:
+`test_check_refuses_every_flag_staged_refuses`, parametrized over the
+five that drifted, and `test_the_two_doors_refuse_the_same_flags` for
+the relationship itself.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* rebuilding `_CHECK_REFUSES` as its own dictionary missing
+any one entry — `--comment-output`, say — fails the structural test
+naming `comment_output`.
 
 ### D135 — Open: `--check` headroom is the line budget only (Medium)
 
@@ -4627,7 +4640,7 @@ fails at `origin/main` because the tool is absent.
 
 ## Disposition
 
-**D134, D135 and D136 are open.** They are the
+**D135 and D136 are open.** They are the
 remainder of Grok's audit of the twenty commits on `main` after 2.8.0.
 D125–D129 (the 2.11.0 language findings from that same audit) closed in
 2.11.1. D130 closed with it: `--sarif-input` now reads through
@@ -4644,8 +4657,9 @@ before it shipped. D132 closed: cognitive complexity is a named
 budget now, and a fail no budget names reports no figure rather than a
 negative one. D133 closed —
 a piped diff is now refused by its format in every language, where the
-sentence promising it had been true of Python alone. D134 is the
-flag-refusal class `--staged` already named, unapplied to `--check`.
+sentence promising it had been true of Python alone. D134 closed: the two doors share one
+refusal list now, so the flag-refusal class `--staged` named cannot
+drift out of `--check` again.
 D135 is headroom that only watches lines. D136 is the chat-primary
 gap: `--check` is CLI-only. D124 is a release-checklist omission that cost a build
 and no artifact: the gate held, the tag was re-pointed. D123 is the

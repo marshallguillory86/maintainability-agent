@@ -509,3 +509,58 @@ def test_a_cognitive_only_failure_does_not_report_a_negative_line_overage() -> N
         f"the breach list names {budgets}, none of which is the budget that "
         "actually failed"
     )
+
+
+#: Flags `--staged` refuses that `--check` did not. Both doors write
+#: nothing, run nothing and apply no repository gates, so a flag one has
+#: to ignore the other has to ignore. Two hand-kept lists drifted by
+#: exactly these five (D134).
+DRIFTED_REFUSALS = (
+    "--comment-output", "--attestation-output", "--agent-instructions-output",
+    "--hostile-prompt-output", "--transformation",
+)
+
+
+@pytest.mark.parametrize("flag", DRIFTED_REFUSALS)
+def test_check_refuses_every_flag_staged_refuses(
+    flag: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`--staged` named this class and `--check` did not apply it.
+
+    A flag accepted and ignored teaches the caller it was honoured.
+    `_check_action` returns before `write_outputs`, so
+    `--check --comment-output x.md` exited 0 or 1 and wrote nothing at
+    all — the caller was told the check ran and the comment was written,
+    and one of those was false.
+    """
+    import io
+
+    from maintainability_audit.cli import main
+
+    monkeypatch.setattr("sys.stdin", io.StringIO("x = 1\n"))
+    with pytest.raises(SystemExit) as exit:
+        main(["--root", str(tmp_path), "--check", "widget.py",
+              flag, str(tmp_path / "out.md")])
+
+    assert exit.value.code == 2, f"{flag} was accepted by --check"
+    assert "--check does not take" in capsys.readouterr().err
+
+
+def test_the_two_doors_refuse_the_same_flags() -> None:
+    """The structural half: one list, not two kept in step by hand.
+
+    `--check` and `--staged` write nothing, run nothing and apply no
+    repository gates. Any flag one of them would have to ignore, the
+    other would too — so deriving the second set from the first makes
+    drift impossible rather than merely detected. A flag added to
+    `_STAGED_REFUSES` tomorrow covers `--check` on the same commit.
+    """
+    from maintainability_audit.cli import _CHECK_REFUSES, _STAGED_REFUSES
+
+    missing = sorted(set(_STAGED_REFUSES) - set(_CHECK_REFUSES))
+    assert not missing, (
+        f"--staged refuses {missing} and --check does not; a flag accepted "
+        "and ignored teaches the caller it was honoured"
+    )
+    assert "staged" in _CHECK_REFUSES, "--check must still refuse --staged"

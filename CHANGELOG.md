@@ -4,6 +4,49 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+### Changed — the reference corpus was re-measured, and the anchor held
+
+No behaviour changes and no constant changes. The measurements file is
+repository evidence under `tools/` and is not packaged, so no published
+number moves.
+
+The stored corpus had gone stale without anyone noticing: its rows were
+measured at tool versions **1.10.1 and 2.0.0** under scanner fingerprint
+`3b5e063e95316342`, while HEAD is 2.11.2 under `1a902618a0600746` —
+eleven minor releases later, including four new language scanners and the
+D112–D136 fixes. All 112 repositories were re-measured `--with-analyzers`
+at the same pinned commits, so every move is attributable to the scanners
+and to nothing else.
+
+**92 of 112 declaration readings moved and the anchor did not.**
+
+| | stored | measured |
+|---|---|---|
+| file_size | 0.0952 | 0.0952 |
+| declarations | 0.0908 | 0.0903 |
+| duplication | 0.3222 | 0.3222 |
+| risk | 0.0826 | 0.0811 |
+| gates | 0.05 | 0.05 |
+| CALIBRATION_C | 8.7161 | 8.7161 |
+
+`CALIBRATION_C` re-bisected to the same value to four decimals. The two
+references that moved did so by 0.55% and 1.8%, against the 10% the suite
+tolerates, so they are left as they stand rather than edited by a margin
+smaller than the sampling error in them. **No repository changes grade** —
+A=5, B=52, C=55, median exactly 4.0000, before and after; two repositories
+move at the published decimal, by 0.1 each.
+
+This is the first of the recalibration's four steps, and it falsified the
+reason the roadmap gave for shipping that work as a **major** release:
+that it "re-grades every repository, which is a breaking change to every
+published number". For scanner drift that is now measured and false. The
+prediction has been struck where it appeared and replaced with what was
+measured. It says nothing about *extending* the corpus to hold the six
+unanchored languages, which moves the population the medians are drawn
+from rather than the instrument reading it; that half is still untested,
+and the major still rests on it and on the two built-in changes.
+
+
 ## 2.11.2 - 2026-09-07
 
 ### Changed — the documents caught up with the code

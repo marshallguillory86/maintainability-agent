@@ -150,17 +150,27 @@ def test_unreadable_user_config_reads_as_absent(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     path = _write_json(user_config_path(), {"version": 1})
-    original = Path.read_text
 
-    def unreadable(candidate: Path, *args, **kwargs):
-        if candidate == path:
-            raise PermissionError("fixture denies this file")
-        return original(candidate, *args, **kwargs)
+    # Denied by permission, not by patching the call the reader happens
+    # to make. The previous version monkeypatched `Path.read_text`, so
+    # when D131 routed this read through `read_operator_file` — which
+    # opens a handle rather than calling `read_text` — the fixture
+    # stopped denying anything and the test passed against a file it was
+    # supposed to be unable to read. A test that patches the mechanism
+    # tests the mechanism.
+    path.chmod(0o000)
+    try:
+        readable = path.read_text(encoding="utf-8") is not None
+    except OSError:
+        readable = False
+    if readable:  # pragma: no cover - only when running as root
+        pytest.skip("permissions do not deny this process; likely running as root")
 
-    monkeypatch.setattr(Path, "read_text", unreadable)
-
-    assert load_user_config() is None
-    assert load_config(None)["analyzers"]["run"] is False
+    try:
+        assert load_user_config() is None
+        assert load_config(None)["analyzers"]["run"] is False
+    finally:
+        path.chmod(0o600)
 
 
 def test_seen_state_round_trips_with_an_absolute_root_and_iso_date(

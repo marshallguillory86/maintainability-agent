@@ -195,7 +195,12 @@ def test_a_fifo_named_as_sarif_input_returns_rather_than_hanging(
 
 
 def test_a_well_formed_sarif_input_is_still_read(tmp_path: Path) -> None:
-    """The guard must not cost the feature."""
+    """Covers existing behaviour: reading a well-formed SARIF file always
+    worked, and this pins it so the D130 refusal cannot take it away.
+
+    It passes at the base deliberately — a guard on the fix rather than a
+    falsifier for it.
+    """
     from maintainability_audit.sarif import read_sarif_inputs
 
     report = tmp_path / "ok.sarif"
@@ -258,13 +263,17 @@ def _options() -> set[str]:
 
 
 def test_every_cli_option_is_classified_by_what_it_does_with_a_path() -> None:
-    """A new option cannot be added without saying which kind it is.
+    """Covers existing behaviour: today's 39 options are all classified,
+    so this passes at the base. It defends the *next* one.
 
     D104 closed this class on a count — "the only two" — and the count
-    was wrong, because nothing enforced it. The option list is read from
+    was wrong because nothing enforced it. The option list is read from
     the parser rather than written here, so `--whatever-input` added
     tomorrow fails this until somebody decides whether it reads a file
     the operator named, and therefore whether it goes through the door.
+    A guard against a future gap cannot fail at the base by
+    construction, which is exactly why it has to say so rather than look
+    like proof.
     """
     classified = READS_AN_OPERATOR_FILE | WRITES_A_FILE | NOT_AN_OPERATOR_PATH
     unclassified = sorted(_options() - classified)
@@ -279,6 +288,26 @@ def test_every_cli_option_is_classified_by_what_it_does_with_a_path() -> None:
     assert not stale, f"these are classified and no longer exist: {stale}"
 
 
+#: Modules that read this tool's **own state** — the files it is told to
+#: read or that it maintains — as opposed to the source files it audits.
+#: Every one of these must read through `read_operator_file`, because
+#: `repository_path` bounds a path's *location* and says nothing about
+#: what kind of file is there: an in-tree FIFO passes the bound and then
+#: blocks forever.
+#:
+#: `config` is excluded because it re-exports the primitive rather than
+#: reading; `_operator_reads` is the primitive itself.
+STATE_FILE_MODULES = (
+    "sarif.py",          # --sarif-input                       (D130)
+    "baseline.py",       # --baseline
+    "_scan_history.py",  # .maintainability/history.jsonl      (always on)
+    "_first_run.py",     # the repository's own config, read back
+    "_user_config.py",   # the XDG user tier
+    "_mcp_audit.py",     # the MCP baseline clobber check
+    "_safe_write.py",    # its own append and JSON-clobber reads
+)
+
+
 def test_no_door_reads_a_named_path_outside_the_primitive() -> None:
     """The doors themselves, checked by parsing them rather than by eye.
 
@@ -290,7 +319,7 @@ def test_no_door_reads_a_named_path_outside_the_primitive() -> None:
 
     package = ROOT / "src" / "maintainability_audit"
     offenders = []
-    for name in ("sarif.py", "baseline.py"):
+    for name in STATE_FILE_MODULES:
         tree = ast.parse((package / name).read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
@@ -307,3 +336,85 @@ def test_no_door_reads_a_named_path_outside_the_primitive() -> None:
         "`read_operator_file`, which is how a FIFO hangs and a directory "
         "escapes as a traceback:\n" + "\n".join(offenders)
     )
+
+
+# ---------------------------------------------------------------------------
+# D131: the primitive was built and then not made the primitive.
+#
+# `repository_path` bounds a path to the audited tree. It says nothing
+# about what kind of file is there, so an in-tree FIFO passes the bound
+# and then hangs the read. History is the always-on case: every
+# successful audit, CLI or MCP, reaches `read_history`.
+# ---------------------------------------------------------------------------
+
+
+def test_a_fifo_where_the_history_goes_does_not_hang_the_read(
+    tmp_path: Path,
+) -> None:
+    """The always-on case, in a child process because the defect hangs.
+
+    `mkfifo .maintainability/history.jsonl` in any repository was enough
+    to make every audit block forever — the path is inside the tree, so
+    `repository_path` allows it, and nothing then asked whether it was a
+    regular file.
+    """
+    history = tmp_path / "history.jsonl"
+    os.mkfifo(history)
+
+    probe = (
+        "import sys;"
+        "sys.path.insert(0, %r);"
+        "from pathlib import Path;"
+        "from maintainability_audit._scan_history import read_history;"
+        "from maintainability_audit.config import PathNotAllowed;"
+        "\ntry:\n"
+        "    read_history(Path(%r))\n"
+        "    print('returned')\n"
+        "except PathNotAllowed:\n"
+        "    print('refused')\n"
+    ) % (str(ROOT / "src"), str(history))
+
+    finished = subprocess.run(  # noqa: S603
+        [sys.executable, "-c", probe],
+        capture_output=True, text=True, timeout=20, check=False,
+    )
+    assert ("refused" in finished.stdout or "returned" in finished.stdout), (
+        "reading the history blocked; on the unfixed tree this never "
+        f"returns. stderr: {finished.stderr[-400:]}"
+    )
+
+
+def test_an_ordinary_history_is_still_read(tmp_path: Path) -> None:
+    """Covers existing behaviour: an ordinary history always read, and
+    this pins it so the D131 refusal cannot take it away.
+
+    It passes at the base deliberately — a guard on the fix, not a
+    falsifier for it. The record is built from `ScanRecord`'s own fields
+    rather than hand-written JSON, so a field added later cannot make it
+    quietly stop exercising a real record.
+    """
+    import dataclasses
+    import json as json_module
+
+    from maintainability_audit._scan_history import ScanRecord, read_history
+
+    def blank(annotation: str) -> object:
+        name = str(annotation)
+        if name.startswith("tuple"):
+            return []
+        if name.startswith(("int", "float")):
+            return 0
+        if name.startswith("bool"):
+            return False
+        return "x"
+
+    blanks = {
+        field.name: blank(field.type)
+        for field in dataclasses.fields(ScanRecord)
+        if field.default is dataclasses.MISSING
+    }
+
+    history = tmp_path / "history.jsonl"
+    history.write_text(json_module.dumps(blanks) + "\n", encoding="utf-8")
+
+    assert len(read_history(history)) == 1

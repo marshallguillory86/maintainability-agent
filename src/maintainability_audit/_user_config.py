@@ -49,10 +49,24 @@ def user_state_path() -> Path:
 
 
 def _read_json_object(path: Path) -> dict[str, Any] | None:
-    """The file's JSON object, or None for absent, corrupt, or unreadable."""
+    """The file's JSON object, or None for absent, corrupt, or unreadable.
+
+    Read through `read_operator_file`, so a FIFO or device left at the
+    XDG path refuses instead of blocking the process (D131). `config`
+    imports this module lazily, so the import runs inside the function
+    to keep the graph acyclic — the architecture test caught the
+    module-level version.
+
+    `PathNotAllowed` joins the caught set deliberately: the user tier is
+    optional, and a config that cannot be read has always meant "no user
+    tier" rather than a stopped run. Refusing to *read* it is the fix;
+    refusing to *start* would be a different and worse change.
+    """
+    from ._operator_reads import PathNotAllowed, read_operator_file
+
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+        payload = json.loads(read_operator_file(path))
+    except (OSError, ValueError, PathNotAllowed):
         return None
     return payload if isinstance(payload, dict) else None
 

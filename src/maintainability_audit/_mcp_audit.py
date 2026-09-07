@@ -18,6 +18,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .config import read_operator_file
 from ._calibration import CALIBRATION_C
 from ._grant_ledger import (
     ALLOWED_ROOTS_ENV as ALLOWED_ROOTS_ENV,  # noqa: PLC0414 - re-export
@@ -315,7 +316,7 @@ def _refuse_clobbering_non_baseline(target: Path) -> None:
     if not target.exists():
         return
     try:
-        existing = json.loads(target.read_text(encoding="utf-8"))
+        existing = json.loads(read_operator_file(target))
     except (OSError, ValueError) as unreadable:
         raise PathNotAllowed(
             f"{target} exists and is not a readable baseline "

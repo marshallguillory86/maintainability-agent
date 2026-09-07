@@ -27,6 +27,7 @@ import json
 import sys
 from pathlib import Path
 
+from .config import read_operator_file
 from ._catalog import DEFAULTS, DEPTH_ORDER, LICENSE_POLICIES
 from .config import CONFIG_FILENAME, PathNotAllowed, discovered_config
 
@@ -181,7 +182,7 @@ def maybe_prompt_economics(root: Path, config: dict) -> None:
             f"{target} is a symlink; the audited tree cannot redirect "
             "where first-run configuration is read or written."
         )
-    existing = json.loads(target.read_text(encoding="utf-8")) if target.exists() else {}
+    existing = json.loads(read_operator_file(target)) if target.exists() else {}
     existing["economic_context"] = {
         "version": 1,
         "loaded_engineering_cost_per_hour": labor,
@@ -274,7 +275,7 @@ def maybe_prompt_test_command(root: Path, config: dict) -> None:
             f"{target} is a symlink; the audited tree cannot redirect "
             "where first-run configuration is read or written."
         )
-    existing = json.loads(target.read_text(encoding="utf-8")) if target.exists() else {}
+    existing = json.loads(read_operator_file(target)) if target.exists() else {}
     if answer:
         commands = dict(existing.get("expected_commands") or {})
         commands["test"] = shlex.split(answer)

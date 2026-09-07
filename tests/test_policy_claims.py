@@ -1,5 +1,11 @@
 """The policy documents, held against the code they describe.
 
+Covers existing behaviour: every test here was written for an earlier
+defect — D42, D45 and D60 — and this commit only moved them. The file is
+new; the tests are not, so none of them falsifies anything that shipped
+beside them, and the file-level escape is the honest declaration rather
+than a per-test one.
+
 Split from `test_written_record` at this project's 500-line file gate.
 
 The seam is the subject. `test_written_record` is about the defect

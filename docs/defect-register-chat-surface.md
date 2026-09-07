@@ -4683,9 +4683,100 @@ that work if it is taken up.
 MCP tool is absent would pin a decision rather than a property, and
 would have to be deleted by the change that implements it.
 
+### D137 — Open: one Python file lets a C repository skip a whole criterion (High)
+
+The `declarations` dimension may be driven by analyzer readings only
+when the criterion set is complete — cyclomatic complexity, declaration
+lines **and** cognitive complexity. `_declaration_pressure` checks it:
+
+    covered = {concept for values in per_unit.values() for concept in values}
+    if declaration_concepts_missing(covered):
+        return dict.fromkeys(ANALYZER_DIMENSIONS)
+
+`per_unit` spans **every declaration in the repository**, so `covered`
+is a union across all languages and all tools. The check is written at
+repository scope and applied to units that are scored individually.
+
+The reason it matters is which tools supply which concept. Enumerated
+from the adapters rather than from prose:
+
+| adapter | emits | languages |
+|---|---|---|
+| `lizard` | cyclomatic_complexity, declaration_lines | 16 of the parsed set |
+| `pmd` | cyclomatic_complexity, cognitive_complexity | apex, java, javascript, scala, xml |
+| `complexipy` | cognitive_complexity | python |
+
+So for C, C++, C#, Fortran, Go, Rust, PHP, Ruby, Swift and TypeScript
+there is no cognitive source at all. A repository in any of them should
+fall back to the built-in tier. It does not, if it contains any Python
+that `complexipy` can read — a `setup.py`, a build script, one test
+helper.
+
+**Reproduced**, 50 C declarations lizard measured for cyclomatic
+complexity and lines, thresholds warn/max 8/15 and 40/60:
+
+    A) the C declarations alone           -> {'declarations': None}
+    B) the same C, plus one setup.py with
+       a single function, cognitive 0     -> {'declarations': 0.2451}
+
+Nothing about the C changed. One trivial Python function flipped the
+whole repository from "unmeasured, use the built-ins" to a confident
+analyzer rate, computed over 50 declarations whose cognitive complexity
+was never read. The 0.2451 is the C units sitting in the MILD cyclomatic
+band, averaged with the one clean Python unit: (50 × 0.25 + 0) / 51.
+
+This is the failure the code's own comment describes, at a scope it does
+not check:
+
+> a reading that only ever saw complexity cannot produce a rate
+> comparable to it, because every long-but-simple function passes by
+> not having been measured
+
+**It is not a corner case.** 47 of the 112 corpus repositories satisfied
+the gate in the 2026-09-07 re-measure, and the list includes FFmpeg,
+git, bitcoin, jq, redis and imgui (C/C++), cp2k, elmerfem, fds,
+specfem3d and xtb (Fortran), and PowerToys, aspnetcore and terminal
+(C#) — none of which has a cognitive source for its primary language,
+and every one of which carries `complexipy` in its tool list.
+
+**Consequences for the anchor.** `declarations` is one of five scored
+dimensions at weight 1.0, so this moves grades. It also means the
+corpus median for `declarations` is partly built from readings this
+entry says are not comparable, which puts the fix inside the
+recalibration release rather than after it: correcting the scope
+changes which repositories use analyzer readings, which moves the
+reference, which is exactly what that release is for.
+
+**Relationship to the planned per-concept merge.** The roadmap schedules
+"merge analyzer evidence per concept rather than per dimension" and
+justifies it with the claim that `lizard` "can never satisfy the gate
+for Go, Rust, PHP, Ruby, Swift, C, C++, C#, Fortran, COBOL or Python".
+That list is wrong about Python — `complexipy` supplies cognitive
+complexity for it, which is why the Python corpus members legitimately
+satisfy the gate, as `_calibration.py` already recorded. It also omits
+TypeScript, which genuinely has no cognitive source. The item stands;
+its stated reason needs correcting before it is built against.
+
+*Falsifier:* **pending** — the entry is open, so no closing test exists yet.
+The reproduction above is a script, not a test, and is deliberately not cited
+as one.
+*Roles:* found=claude prompt=marshall decision=none fix=none test=none run=none
+*Mutation:* none yet — the entry is open and has no closing test, so there is
+nothing to defend against a mutation. Stated in advance because the shape is
+already visible: when this closes, the member to break is a declaration in a
+language with **no** cognitive source — a C or Fortran unit — not the Python
+unit the reproduction above uses. The Python unit is the member the
+reproduction names, so breaking it would confirm the sample and say nothing
+about the claim, which is the substitution this register exists to stop.
+
 ## Disposition
 
-**Every entry is closed.** D136 is closed by decision rather than by code — `--check` stays on the CLI for now, recorded as a non-goal so it is not re-derived as an unfinished bug. They are the
+**One entry is open: D137**, filed 2026-09-07 — the declarations criterion-set
+check is written at repository scope and applied to units, so one Python file
+lets a C repository be scored on two of three criteria. It is queued into the
+recalibration release because the fix moves the corpus reference.
+
+**Every earlier entry is closed.** D136 is closed by decision rather than by code — `--check` stays on the CLI for now, recorded as a non-goal so it is not re-derived as an unfinished bug. They are the
 remainder of Grok's audit of the twenty commits on `main` after 2.8.0.
 D125–D129 (the 2.11.0 language findings from that same audit) closed in
 2.11.1. D130 closed with it: `--sarif-input` now reads through

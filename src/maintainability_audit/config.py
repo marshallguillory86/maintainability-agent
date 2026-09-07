@@ -297,13 +297,24 @@ MAX_OPERATOR_FILE_BYTES = 8 * 1024 * 1024
 def read_operator_file(path: Path) -> str:
     """Read a file the operator named, after checking it is one.
 
-    `--config` and `--baseline` take a path from the command line and
-    read it. Every other path in this project goes through
-    `repository_path`, which bounds it to the audited tree — but these
-    two legitimately point outside it, so bounding is the wrong control
-    and *no* control was the shipped answer (SonarCloud S8707, found
+    `--config`, `--baseline` and `--sarif-input` take a path from the
+    command line and read it. Most other paths go through
+    `repository_path`, which bounds them to the audited tree — but these
+    legitimately point outside it, so bounding is the wrong control and
+    *no* control was the shipped answer (SonarCloud S8707, found
     2026-09-05: "LLMs running this code with faulty CLI arguments can
     escape file system restrictions").
+
+    This paragraph used to say `--config` and `--baseline` were the only
+    two, and that every other path was bounded. That was false when it
+    was written: `--sarif-input` is the same kind of argument and read
+    its name directly for two more releases. The sentence is why nobody
+    looked — a count in prose standing in for a check (D130).
+
+    So the count is no longer the control.
+    `tests/test_operator_named_paths.py` classifies **every** CLI option
+    by what it does with a path and fails on one it has not been told
+    about, which is a thing that cannot quietly go stale.
 
     What is checked is what a path cannot promise on its own:
 

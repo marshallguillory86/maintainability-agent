@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+
+from .config import PathNotAllowed, read_operator_file
 from typing import Any
 
 from ._hotspots import hotspot_measure, hotspot_name
@@ -164,9 +166,37 @@ def _evidence_run_properties(report: dict[str, Any]) -> dict[str, Any]:
 
 
 def read_sarif_inputs(paths: list[str] | None) -> list[dict[str, Any]]:
+    """Findings from every SARIF file the operator named.
+
+    Read through `read_operator_file`, like `--config` and `--baseline`,
+    because this is the same kind of argument: a path from the command
+    line, deliberately allowed to point outside `--root`, whose content
+    is ingested into the published report.
+
+    It read the name directly until 2.11.2. A FIFO blocked the process
+    forever, `/dev/zero` read until memory died, and a directory or a
+    missing file escaped as an uncaught traceback. D104 measured exactly
+    that on `--config`, built this primitive for it, and recorded the
+    class as closed on the claim that `--config` and `--baseline` were
+    the only two such arguments — a claim written into the primitive's
+    own docstring, which is why the third one stayed invisible (D130).
+    """
     findings: list[dict[str, Any]] = []
     for path in paths or []:
-        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        # `OSError` covers the directory, the missing file and the
+        # unreadable one; it is re-raised as the door's own refusal so a
+        # caller sees a named error rather than a traceback, and so the
+        # test can assert the contract rather than "something raised" —
+        # `IsADirectoryError` is an `OSError` too, and a test that
+        # accepted one would have passed against the defect.
+        try:
+            text = read_operator_file(Path(path))
+        except PathNotAllowed:
+            raise
+        except OSError as unreadable:
+            detail = unreadable.strerror or unreadable.__class__.__name__
+            raise PathNotAllowed(f"{path} could not be read: {detail}") from None
+        data = json.loads(text)
         for run in data.get("runs", []):
             tool = run.get("tool", {}).get("driver", {}).get("name", "sarif")
             for result in run.get("results", []):

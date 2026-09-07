@@ -4339,7 +4339,7 @@ compared against itself always agrees — which is the defect.
 *Mutation:* deleting the four added fixture functions restores a suite
 that passes while D125–D128 are all present.
 
-### D130 — Open: `--sarif-input` is the third operator-named read D104 claimed did not exist (High)
+### D130 — Closed: `--sarif-input` is the third operator-named read D104 claimed did not exist (High)
 
 D104 closed on the claim that `--config` and `--baseline` were *the
 only two* path-taking entry points that never went through any
@@ -4365,12 +4365,32 @@ operator named. Writes (`--output`, `--write-baseline`) go through
 `write_artifact` and are a different population. `--conformance` is a
 revspec, not a file.
 
-*Roles:* found=grok prompt=marshall fix=none test=none run=none
-*Mutation:* pending with the test. The falsifier is a FIFO (or
-`/dev/zero`) passed as `--sarif-input`; it must refuse rather than
-hang, the way `--config` now does. A test that hangs cannot fail
-cleanly, so the proof is the exception type, as D104's own tests
-already say.
+**Fixed by routing, not by new machinery.** `read_sarif_inputs` calls
+`read_operator_file`, so `--sarif-input` gets the one handle, the
+`O_NONBLOCK` open, the regular-file check through that handle and the
+size cap that `--config` has had since D104. An `OSError` is re-raised as
+the door's own named refusal.
+
+The test design is the part worth keeping. A directory already raised
+*an* exception on the shipped tree — an uncaught `IsADirectoryError` —
+so a test asserting "something was raised" passes against the defect;
+`IsADirectoryError` is an `OSError`. The assertion is the refusal
+**contract**: `PathNotAllowed`, naming the file. And the FIFO case runs
+in a child process with a deadline, because a hanging test cannot fail
+cleanly — in-process it stops the suite and the falsifier gate instead
+of reporting anything.
+
+*Closing test:* `tests/test_operator_named_paths.py`:
+`test_a_directory_named_as_sarif_input_is_refused_by_name`,
+`test_a_missing_sarif_input_is_refused_by_name`,
+`test_a_fifo_named_as_sarif_input_returns_rather_than_hanging`, and
+`test_a_well_formed_sarif_input_is_still_read` so the guard does not cost
+the feature.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* restoring `json.loads(Path(path).read_text(...))` in
+`read_sarif_inputs` makes the directory case an uncaught
+`IsADirectoryError` again and the FIFO case time out.
 
 ### D131 — Open: `read_operator_file` was not made the read primitive (Medium)
 
@@ -4527,13 +4547,21 @@ fails at `origin/main` because the tool is absent.
 
 ## Disposition
 
-**D130, D131, D132, D133, D134, D135 and D136 are open.** They are the
+**D131, D132, D133, D134, D135 and D136 are open.** They are the
 remainder of Grok's audit of the twenty commits on `main` after 2.8.0.
-D125–D129 (the 2.11.0 language findings from that same audit) are
-already closed on this branch. D130 is the class D104 claimed to
-close: `--sarif-input` is still a bare operator-named read. D131 is
-the same class one layer down: `read_operator_file` was not made the
-read primitive. D132 and D133 are `--check` residuals: a
+D125–D129 (the 2.11.0 language findings from that same audit) closed in
+2.11.1. D130 closed with it: `--sarif-input` now reads through
+`read_operator_file`, and every CLI option is classified by what it does
+with a path so a fourth one cannot be added unclassified — the count in
+prose that D104 relied on is no longer the control.
+
+D131 is the same class one layer down and is **not** closed by that:
+`read_operator_file` is still not the read primitive. Eight sites across
+five modules remain, and the always-on one is worse in practice than
+D130 was — an in-tree FIFO at `.maintainability/history.jsonl` hangs
+every audit, CLI or MCP. It was briefly marked closed here on the
+strength of the `--sarif-input` fix, which is the same mistake D104
+made: closing a class from one instance. D132 and D133 are `--check` residuals: a
 cognitive-only fail still prints a negative line overage, and "a piped
 diff will say it could not parse" is true only of Python. D134 is the
 flag-refusal class `--staged` already named, unapplied to `--check`.

@@ -29,8 +29,6 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
-
 from maintainability_audit.baseline import load_baseline
 from maintainability_audit.config import (
     MAX_OPERATOR_FILE_BYTES,
@@ -39,6 +37,8 @@ from maintainability_audit.config import (
     load_config,
     read_operator_file,
 )
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_an_operator_named_path_must_be_a_regular_file(tmp_path: Path) -> None:
@@ -175,14 +175,14 @@ def test_a_fifo_named_as_sarif_input_returns_rather_than_hanging(
 
     probe = (
         "import sys;"
-        "sys.path.insert(0, %r);"
+        "sys.path.insert(0, {src!r});"
         "from maintainability_audit.sarif import read_sarif_inputs;"
         "from maintainability_audit.config import PathNotAllowed;"
         "\ntry:\n"
-        "    read_sarif_inputs([%r])\n"
+        "    read_sarif_inputs([{target!r}])\n"
         "except PathNotAllowed:\n"
         "    print('refused')\n"
-    ) % (str(ROOT / "src"), str(fifo))
+    ).format(src=str(ROOT / "src"), target=str(fifo))
 
     finished = subprocess.run(  # noqa: S603
         [sys.executable, "-c", probe],
@@ -363,16 +363,16 @@ def test_a_fifo_where_the_history_goes_does_not_hang_the_read(
 
     probe = (
         "import sys;"
-        "sys.path.insert(0, %r);"
+        "sys.path.insert(0, {src!r});"
         "from pathlib import Path;"
         "from maintainability_audit._scan_history import read_history;"
         "from maintainability_audit.config import PathNotAllowed;"
         "\ntry:\n"
-        "    read_history(Path(%r))\n"
+        "    read_history(Path({target!r}))\n"
         "    print('returned')\n"
         "except PathNotAllowed:\n"
         "    print('refused')\n"
-    ) % (str(ROOT / "src"), str(history))
+    ).format(src=str(ROOT / "src"), target=str(history))
 
     finished = subprocess.run(  # noqa: S603
         [sys.executable, "-c", probe],

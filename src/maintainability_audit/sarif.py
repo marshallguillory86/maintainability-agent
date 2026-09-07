@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-
-from .config import PathNotAllowed, read_operator_file
 from typing import Any
 
 from ._hotspots import hotspot_measure, hotspot_name
-from .config import PROJECT_URL
+from .config import PROJECT_URL, PathNotAllowed, read_operator_file
 
 SARIF_RULES: dict[str, dict[str, str]] = {
     "maintainability.file_size": {

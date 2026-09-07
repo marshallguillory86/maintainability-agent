@@ -6,10 +6,14 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from ._config_defaults import DEFAULT_CONFIG, DEFAULT_IDIOM_GROUPS
-from ._operator_reads import (  # re-exported: this was their home
-    MAX_OPERATOR_FILE_BYTES,
-    PathNotAllowed,
-    read_operator_file,
+from ._operator_reads import (
+    MAX_OPERATOR_FILE_BYTES as MAX_OPERATOR_FILE_BYTES,
+)
+from ._operator_reads import (
+    PathNotAllowed as PathNotAllowed,
+)
+from ._operator_reads import (
+    read_operator_file as read_operator_file,
 )
 
 # Re-exported: the defaults live in `_config_defaults`, this module is

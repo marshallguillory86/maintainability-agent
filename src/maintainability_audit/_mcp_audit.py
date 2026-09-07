@@ -18,7 +18,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .config import read_operator_file
 from ._calibration import CALIBRATION_C
 from ._grant_ledger import (
     ALLOWED_ROOTS_ENV as ALLOWED_ROOTS_ENV,  # noqa: PLC0414 - re-export
@@ -51,6 +50,7 @@ from .config import (
     analyzers_run_default,
     discovered_config,
     load_config,
+    read_operator_file,
     repository_path,
 )
 from .config import PathNotAllowed as PathNotAllowed  # noqa: PLC0414 - re-export

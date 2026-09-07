@@ -27,9 +27,8 @@ import json
 import sys
 from pathlib import Path
 
-from .config import read_operator_file
 from ._catalog import DEFAULTS, DEPTH_ORDER, LICENSE_POLICIES
-from .config import CONFIG_FILENAME, PathNotAllowed, discovered_config
+from .config import CONFIG_FILENAME, PathNotAllowed, discovered_config, read_operator_file
 
 # One retry per question, then the default. An audit must never be able
 # to loop forever on a held-down return key.

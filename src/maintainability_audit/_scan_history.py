@@ -34,8 +34,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .config import read_operator_file
-from .config import PathNotAllowed
+from .config import PathNotAllowed, read_operator_file
 
 # Versioned separately from the report contract. The two change for
 # different reasons — a report field is a consumer-facing break, a

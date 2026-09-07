@@ -4339,7 +4339,7 @@ compared against itself always agrees — which is the defect.
 *Mutation:* deleting the four added fixture functions restores a suite
 that passes while D125–D128 are all present.
 
-### D130 — Open: `--sarif-input` is the third operator-named read D104 claimed did not exist (High)
+### D130 — Closed: `--sarif-input` is the third operator-named read D104 claimed did not exist (High)
 
 D104 closed on the claim that `--config` and `--baseline` were *the
 only two* path-taking entry points that never went through any
@@ -4365,14 +4365,34 @@ operator named. Writes (`--output`, `--write-baseline`) go through
 `write_artifact` and are a different population. `--conformance` is a
 revspec, not a file.
 
-*Roles:* found=grok prompt=marshall fix=none test=none run=none
-*Mutation:* pending with the test. The falsifier is a FIFO (or
-`/dev/zero`) passed as `--sarif-input`; it must refuse rather than
-hang, the way `--config` now does. A test that hangs cannot fail
-cleanly, so the proof is the exception type, as D104's own tests
-already say.
+**Fixed by routing, not by new machinery.** `read_sarif_inputs` calls
+`read_operator_file`, so `--sarif-input` gets the one handle, the
+`O_NONBLOCK` open, the regular-file check through that handle and the
+size cap that `--config` has had since D104. An `OSError` is re-raised as
+the door's own named refusal.
 
-### D131 — Open: `read_operator_file` was not made the read primitive (Medium)
+The test design is the part worth keeping. A directory already raised
+*an* exception on the shipped tree — an uncaught `IsADirectoryError` —
+so a test asserting "something was raised" passes against the defect;
+`IsADirectoryError` is an `OSError`. The assertion is the refusal
+**contract**: `PathNotAllowed`, naming the file. And the FIFO case runs
+in a child process with a deadline, because a hanging test cannot fail
+cleanly — in-process it stops the suite and the falsifier gate instead
+of reporting anything.
+
+*Closing test:* `tests/test_operator_named_paths.py`:
+`test_a_directory_named_as_sarif_input_is_refused_by_name`,
+`test_a_missing_sarif_input_is_refused_by_name`,
+`test_a_fifo_named_as_sarif_input_returns_rather_than_hanging`, and
+`test_a_well_formed_sarif_input_is_still_read` so the guard does not cost
+the feature.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* restoring `json.loads(Path(path).read_text(...))` in
+`read_sarif_inputs` makes the directory case an uncaught
+`IsADirectoryError` again and the FIFO case time out.
+
+### D131 — Closed: `read_operator_file` was not made the read primitive (Medium)
 
 D104 built a one-handle reader and applied it to the two Sonar hits.
 Every other read is still `exists` / `is_file` / `is_symlink` and then
@@ -4406,12 +4426,48 @@ The same name-then-open sequence, same hang:
 A committed multi-gigabyte `history.jsonl` is the git-shippable half:
 `read_operator_file` would refuse at 8 MiB; this path never calls it.
 
-*Roles:* found=grok prompt=marshall fix=none test=none run=none
-*Mutation:* pending with the test. The population is every
-`read_text` / `open` of a path that is not `read_operator_file` and
-not a handle already bound by `_safe_write`. Mutate a member the
-closing test does not name — history is the always-on one; first-run
-or user-config is the one outside the sample.
+**Eight sites, five modules, all routed.** History (both the always-on
+read and the pre-write guard), first-run persistence, the XDG user tier,
+the MCP baseline clobber check, and `_safe_write`'s own append and
+JSON-clobber reads — the last being a time-of-check/time-of-use gap in
+the helper written to close them.
+
+**`repository_path` is why the class hid.** It bounds a path's
+*location* to the audited tree, which reads as "this path is safe". It
+says nothing about what kind of file is there, so an in-tree FIFO passes
+the bound and then blocks forever. Location and kind are different
+controls and the prose conflated them.
+
+**The primitive moved out of `config`.** Routing the user tier through it
+made `config -> _user_config -> config`, which the acyclic test caught.
+The cycle was the symptom: a reader that everything reads through cannot
+live in a module that reads through it. `_operator_reads` is now its own
+foundation module and `config` re-exports both names, so all twelve
+existing importers are untouched.
+
+**One deliberate judgment, stated rather than silent:** an unreadable
+user config still reads as *absent*. That tier is optional and always
+has meant "no user tier"; refusing to read a FIFO there is the fix,
+refusing to *start* would be a worse change, so `PathNotAllowed` joins
+the caught set at that one call site.
+
+**A test was patching the mechanism.** `test_unreadable_user_config_
+reads_as_absent` monkeypatched `Path.read_text`. The fixed code opens a
+handle and never calls it, so the fixture stopped denying anything and
+the test passed against a file it was supposed to be unable to read. It
+now denies by permission and skips as root.
+
+*Closing test:* `tests/test_operator_named_paths.py`:
+`test_a_fifo_where_the_history_goes_does_not_hang_the_read`,
+`test_an_ordinary_history_is_still_read`, and
+`test_no_door_reads_a_named_path_outside_the_primitive`, which now parses
+all seven state-file modules rather than the two D130 needed — the class,
+not the instances.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* restoring `path.read_text(...)` in `read_history` — the
+always-on site, and not one the closing tests name individually — is
+reported by the AST guard as `_scan_history.py:339: read_text()`.
 
 ### D132 — Open: a cognitive-only `--check` fail still prints a negative line overage (Medium)
 
@@ -4443,7 +4499,7 @@ negative line `over_by`. Restoring the length fallback as the only
 breach, or omitting cognitive from `_DECLARATION_BUDGETS`, is the
 mutation.
 
-### D133 — Open: "a piped diff will say it could not parse" is a Python-only sentence (High)
+### D133 — Closed: "a piped diff will say it could not parse" is a Python-only sentence (High)
 
 Gemini found a unified diff piped to `--check` reading as clean. The
 fix taught `_parses` to refuse content `ast.parse` rejects. Brace
@@ -4475,10 +4531,35 @@ The class is every suffix `--check` claims to parse, not `ast.parse`.
 Do not mark valid brace source "unparsed" because it minted zero
 declarations.
 
-*Roles:* found=grok prompt=marshall fix=none test=none run=none
-*Mutation:* pending with the test. A unified diff named with a
-suffix the closing test does not hardcode — `.java` if the test used
-`.js` — must set `declarations_read` false and a non-empty note.
+**Fixed by detecting the mistake, not by parsing twelve languages.**
+Unified diff is a specified format, so `_is_unified_diff` reads its
+shape — the `---`/`+++` header pair and a hunk header matching
+`@@ -n[,m] +n[,m] @@` — before any per-language branch. That holds for
+every suffix equally instead of for the one with a parser in the
+standard library.
+
+By **shape**, not by substring: a string literal containing
+`@@ -1,3 +1,4 @@` is somebody writing about a diff. Mention versus
+assertion, which this project has now met in suppression markers
+(D108), the falsifier escape phrase (D111), the cross-repository guard
+and the risk patterns. Asserted by its own test.
+
+Grok's warning is honoured rather than traded away: **valid brace source
+is not marked unparsed**. Zero declarations is not evidence of a parse
+failure — plenty of valid files mint none — so nothing beyond the diff
+format is claimed for languages with no parser, and the README now says
+that instead of implying content validation it does not do.
+
+*Closing test:* `tests/test_in_loop_check.py`:
+`test_a_piped_diff_is_refused_for_every_language_not_only_python`,
+parametrized over the nine suffixes the Python-only fix missed;
+`test_ordinary_source_is_not_called_a_diff` over the same nine; and
+`test_a_line_that_merely_mentions_a_hunk_header_is_not_a_diff`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* restoring `if Path(path).suffix != ".py": return True` above
+the diff check reports `declarations_read: true` and an empty note for a
+diff named `.js`, `.java`, `.go` or any of the other seven.
 
 ### D134 — Open: `--check` accepts flags it would have to ignore (Medium)
 
@@ -4527,15 +4608,23 @@ fails at `origin/main` because the tool is absent.
 
 ## Disposition
 
-**D130, D131, D132, D133, D134, D135 and D136 are open.** They are the
+**D132, D134, D135 and D136 are open.** They are the
 remainder of Grok's audit of the twenty commits on `main` after 2.8.0.
-D125–D129 (the 2.11.0 language findings from that same audit) are
-already closed on this branch. D130 is the class D104 claimed to
-close: `--sarif-input` is still a bare operator-named read. D131 is
-the same class one layer down: `read_operator_file` was not made the
-read primitive. D132 and D133 are `--check` residuals: a
-cognitive-only fail still prints a negative line overage, and "a piped
-diff will say it could not parse" is true only of Python. D134 is the
+D125–D129 (the 2.11.0 language findings from that same audit) closed in
+2.11.1. D130 closed with it: `--sarif-input` now reads through
+`read_operator_file`, and every CLI option is classified by what it does
+with a path so a fourth one cannot be added unclassified — the count in
+prose that D104 relied on is no longer the control.
+
+D131 closed after it: all eight sites across five modules read through
+the primitive, and the guard now parses every state-file module rather
+than the two `--sarif-input` needed. It was briefly marked closed on the
+strength of the `--sarif-input` fix alone and reopened — the same
+mistake D104 made, closing a class from one instance, caught this time
+before it shipped. D132 is a `--check` residual: a
+cognitive-only fail still prints a negative line overage. D133 closed —
+a piped diff is now refused by its format in every language, where the
+sentence promising it had been true of Python alone. D134 is the
 flag-refusal class `--staged` already named, unapplied to `--check`.
 D135 is headroom that only watches lines. D136 is the chat-primary
 gap: `--check` is CLI-only. D124 is a release-checklist omission that cost a build

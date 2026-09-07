@@ -79,6 +79,7 @@ flowchart TB
     metrics["metrics"]
     _discovery["_discovery"]
     _banner["_banner"]
+    _operator_reads["_operator_reads"]
     _practice["_practice"]
     duplication["duplication"]
     deadcode["deadcode"]

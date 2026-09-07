@@ -6,6 +6,15 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from ._config_defaults import DEFAULT_CONFIG, DEFAULT_IDIOM_GROUPS
+from ._operator_reads import (
+    MAX_OPERATOR_FILE_BYTES as MAX_OPERATOR_FILE_BYTES,
+)
+from ._operator_reads import (
+    PathNotAllowed as PathNotAllowed,
+)
+from ._operator_reads import (
+    read_operator_file as read_operator_file,
+)
 
 # Re-exported: the defaults live in `_config_defaults`, this module is
 # still the door every caller comes through.
@@ -24,17 +33,6 @@ class ConfigUnreadable(ValueError):
     questions", unreadable means "a person has to look at this file".
     Conflating them would either re-ask someone who has already
     answered, or silently audit against defaults they did not choose.
-    """
-
-
-class PathNotAllowed(ValueError):
-    """A configured path escaped the repository it belongs to.
-
-    The boundary is not advisory: `paths.history` and its siblings come
-    from a file inside the repository under audit, so a traversal, an
-    absolute path, or a symlink pointing outward is a repository asking
-    this tool to write somewhere it was never authorized to touch. An
-    audit reproduced exactly that through the MCP seam (D20).
     """
 
 
@@ -291,68 +289,6 @@ def _shaped_inside(
 #: An operator-named file is still read into memory, so its size is
 #: bounded. Generous by two orders of magnitude for a config or a
 #: baseline; the point is that *some* number exists.
-MAX_OPERATOR_FILE_BYTES = 8 * 1024 * 1024
-
-
-def read_operator_file(path: Path) -> str:
-    """Read a file the operator named, after checking it is one.
-
-    `--config` and `--baseline` take a path from the command line and
-    read it. Every other path in this project goes through
-    `repository_path`, which bounds it to the audited tree — but these
-    two legitimately point outside it, so bounding is the wrong control
-    and *no* control was the shipped answer (SonarCloud S8707, found
-    2026-09-05: "LLMs running this code with faulty CLI arguments can
-    escape file system restrictions").
-
-    What is checked is what a path cannot promise on its own:
-
-    - **It is a regular file.** `read_text` on a FIFO blocks forever and
-      on `/dev/zero` consumes memory until the process dies. An agent
-      driving this CLI with an attacker-influenced argument is the case
-      the rule names, and "denial-of-service via crafted config files" is
-      in this project's own published scope.
-    - **It is not larger than `MAX_OPERATOR_FILE_BYTES`.** A regular file
-      can still be enormous.
-
-    Deliberately *not* checked: whether the path is a symlink. The
-    operator named it and controls it, and a symlinked config is an
-    ordinary setup. The audited tree's own default path is a different
-    question and `discovered_config` already refuses a symlink there.
-    """
-    import stat as stat_module
-
-    # Opened once, then checked and read **through that handle** — the
-    # same discipline `_safe_write` uses for writes, and for the same
-    # reason. Checking `os.stat(path)` and then calling `path.read_text()`
-    # resolves the name twice, so what was measured and what is read can
-    # differ: the classic time-of-check/time-of-use gap.
-    #
-    # `O_NONBLOCK` is what makes the check possible at all. Opening a FIFO
-    # for reading otherwise blocks until a writer appears, so the process
-    # would hang *before* reaching any validation — the very failure this
-    # function exists to prevent.
-    handle = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
-    try:
-        info = os.fstat(handle)
-        if not stat_module.S_ISREG(info.st_mode):
-            raise PathNotAllowed(
-                f"{path} is not a regular file. This reads configuration "
-                "and baselines; a device, socket or FIFO named here would "
-                "block or exhaust memory rather than parse."
-            )
-        if info.st_size > MAX_OPERATOR_FILE_BYTES:
-            raise PathNotAllowed(
-                f"{path} is {info.st_size} bytes, over the "
-                f"{MAX_OPERATOR_FILE_BYTES}-byte limit for a file named on "
-                "the command line."
-            )
-        with os.fdopen(handle, "r", encoding="utf-8", closefd=False) as opened:
-            return opened.read(MAX_OPERATOR_FILE_BYTES + 1)
-    finally:
-        os.close(handle)
-
-
 def _configured(path: Path) -> dict[str, Any]:
     """The repository's own file, or a refusal that names it.
 

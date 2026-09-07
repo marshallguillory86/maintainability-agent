@@ -50,6 +50,7 @@ from .config import (
     analyzers_run_default,
     discovered_config,
     load_config,
+    read_operator_file,
     repository_path,
 )
 from .config import PathNotAllowed as PathNotAllowed  # noqa: PLC0414 - re-export
@@ -315,7 +316,7 @@ def _refuse_clobbering_non_baseline(target: Path) -> None:
     if not target.exists():
         return
     try:
-        existing = json.loads(target.read_text(encoding="utf-8"))
+        existing = json.loads(read_operator_file(target))
     except (OSError, ValueError) as unreadable:
         raise PathNotAllowed(
             f"{target} exists and is not a readable baseline "

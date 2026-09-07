@@ -31,6 +31,13 @@ PACKAGE = ROOT / "src" / "maintainability_audit"
 # Keeping the foundation spawners in one layer is what makes the
 # analyzer half of that rule checkable.
 FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "config",
+               # `_operator_reads` is the one door for reading a file this
+               # tool was told to read. It sits below `config` rather than
+               # inside it: the user tier reads a file, `config` loads the
+               # user tier, so a reader living in `config` makes a cycle —
+               # which the acyclic test caught the moment D131 routed the
+               # fifth site through it.
+               "_operator_reads",
                # `_banner` reads one file's leading comment block and says
                # whether it declares itself generated. A foundation beside
                # `_discovery`, which owns the vocabulary and passes it in —

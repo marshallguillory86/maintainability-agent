@@ -33,6 +33,7 @@ finding in itself.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -184,6 +185,42 @@ def _declaration_findings(
 #: Languages whose parser can refuse content outright, and the check
 #: that asks. Only Python today: the brace scanners do not fail, they
 #: find nothing, and reporting "unparsed" for them would be a guess.
+#: A unified-diff hunk header, as `diff -u` and git emit it. The counts
+#: are optional — a single-line hunk is written `@@ -1 +1 @@`.
+_HUNK_HEADER = re.compile(r"^@@ -\d+(,\d+)? \+\d+(,\d+)? @@")
+
+
+def _is_unified_diff(text: str) -> bool:
+    """Whether this is a diff rather than the content of a file.
+
+    Piping a diff instead of file content is the most likely mistake at
+    this door, and it was the quietest: the content refused to parse,
+    nothing was found, and `declarations_read` still said the file had
+    been read. Exit 0, no output, "clean".
+
+    Gemini found that on Python and the fix taught `_parses` to use
+    `ast.parse`, which refuses a diff — so the sentence in the docs
+    ("it will say it could not parse") was true of Python and of nothing
+    else. Every other suffix returned `True` before reaching any check
+    (D133).
+
+    Detected by **shape**, not by a substring: the `---`/`+++` header
+    pair and a hunk header. A string literal containing `@@ -1,3 +1,4 @@`
+    is somebody writing about a diff, which is the mention-versus-
+    assertion distinction this project has already met in suppression
+    markers, escape phrases and risk patterns.
+
+    The format is specified rather than guessed, so this holds for every
+    language equally instead of for the one with a parser in the standard
+    library.
+    """
+    lines = text.splitlines()
+    has_old = any(line.startswith("--- ") for line in lines)
+    has_new = any(line.startswith("+++ ") for line in lines)
+    has_hunk = any(_HUNK_HEADER.match(line) for line in lines)
+    return has_hunk and has_old and has_new
+
+
 def _parses(path: str, text: str) -> bool:
     """Whether the content is what its extension claims to be.
 
@@ -194,7 +231,14 @@ def _parses(path: str, text: str) -> bool:
     is absence read as a pass, arriving through the exact feature whose
     docstring promises to refuse it (Gemini's field check).
     """
+    if _is_unified_diff(text):
+        return False
     if Path(path).suffix != ".py":
+        # No parser for the brace languages, and zero declarations is not
+        # evidence of one being needed: plenty of valid files mint none,
+        # and marking those "unparsed" would trade a quiet pass for a
+        # loud wrong answer. What is checked for every language is the
+        # diff above, which is the mistake that actually happens.
         return True
     import ast
 

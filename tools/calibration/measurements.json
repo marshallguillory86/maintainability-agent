@@ -1,16 +1,17 @@
 {
- "measured_on": "2026-09-03",
+ "measured_on": "2026-09-07",
  "corpus_size": 112,
  "measurements": [
   {
    "repo": "Chart.js",
    "pinned_commit": "cb02e1d207bd4c4c40b20c259017f85f26f1e30a",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 888,
    "declarations": 1719,
    "dimensions": {
     "file_size": 0.03800675675675676,
-    "declarations": 0.04506957047791894,
+    "declarations": 0.043859649122807015,
     "duplication": 0.2849099099099099,
     "risk": 0.00563063063063063,
     "gates": 0.0
@@ -21,7 +22,7 @@
     "production_files_scanned": 250,
     "production_file_warnings": 15,
     "production_file_failures": 5,
-    "production_function_warnings": 57,
+    "production_function_warnings": 56,
     "production_function_failures": 29,
     "production_hard_gate_failures": 0,
     "dead_code_count": 1,
@@ -53,7 +54,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -68,20 +69,20 @@
    },
    "production_dimensions": {
     "file_size": 0.062,
-    "declarations": 0.06124581939799331,
+    "declarations": 0.05957357859531773,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "angular",
    "pinned_commit": "565dbb2fe5406f2a86d43a5b3c6993434b7124a7",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 8254,
    "declarations": 43503,
    "dimensions": {
     "file_size": 0.06472619336079477,
-    "declarations": 0.062321949847008756,
+    "declarations": 0.06145148243238491,
     "duplication": 0.4035619093772716,
     "risk": 0.16670705112672643,
     "gates": 0.0
@@ -92,8 +93,8 @@
     "production_files_scanned": 4914,
     "production_file_warnings": 209,
     "production_file_failures": 104,
-    "production_function_warnings": 988,
-    "production_function_failures": 1029,
+    "production_function_warnings": 979,
+    "production_function_failures": 1018,
     "production_hard_gate_failures": 0,
     "dead_code_count": 25,
     "near_duplicate_count": 132,
@@ -124,7 +125,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -139,20 +140,20 @@
    },
    "production_dimensions": {
     "file_size": 0.05504680504680505,
-    "declarations": 0.08732107407794379,
+    "declarations": 0.08623707031658134,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "anime",
    "pinned_commit": "2c9cf8ea00329f6768c7d7902252ed977d75ce42",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 268,
    "declarations": 1517,
    "dimensions": {
     "file_size": 0.08675373134328358,
-    "declarations": 0.06879648411088574,
+    "declarations": 0.0676132521974307,
     "duplication": 0.8022388059701493,
     "risk": 0.14925373134328357,
     "gates": 0.0
@@ -164,7 +165,7 @@
     "production_file_warnings": 6,
     "production_file_failures": 4,
     "production_function_warnings": 22,
-    "production_function_failures": 55,
+    "production_function_failures": 54,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 3,
@@ -195,7 +196,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -209,32 +210,32 @@
    },
    "production_dimensions": {
     "file_size": 0.06833333333333333,
-    "declarations": 0.10022522522522523,
+    "declarations": 0.09834834834834835,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "ansible",
    "pinned_commit": "c5ecb46c3f8c135a76ee86584f4b77b50184e5a6",
-   "tool_version": "1.10.1",
-   "files": 1879,
-   "declarations": 13162,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 1880,
+   "declarations": 13168,
    "dimensions": {
-    "file_size": 0.07277807344332092,
-    "declarations": 0.07490431930016403,
-    "duplication": 0.15327301756253325,
-    "risk": 0.2607770090473656,
+    "file_size": 0.07273936170212766,
+    "declarations": 0.07209874294042631,
+    "duplication": 0.15319148936170213,
+    "risk": 0.26063829787234044,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 1217,
+    "test_file_count": 1218,
     "production_declarations_scanned": 6286,
     "production_files_scanned": 653,
     "production_file_warnings": 67,
     "production_file_failures": 41,
-    "production_function_warnings": 335,
-    "production_function_failures": 409,
+    "production_function_warnings": 324,
+    "production_function_failures": 390,
     "production_hard_gate_failures": 0,
     "dead_code_count": 35,
     "near_duplicate_count": 16,
@@ -244,10 +245,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.06460968836778772
+    "declarations": 0.06353433231028464
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.09051428571428571
+    "declarations": 0.09054285714285715
    },
    "analyzer_coverage": {
     "tools": [
@@ -270,14 +271,14 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -292,20 +293,20 @@
    },
    "production_dimensions": {
     "file_size": 0.12672281776416539,
-    "declarations": 0.11376673040152964,
+    "declarations": 0.10807839388145316,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "ant-design",
    "pinned_commit": "ef787d0b8eed12aa5dd3f89233a36d1ce214179c",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 4523,
    "declarations": 5782,
    "dimensions": {
     "file_size": 0.025812513818262214,
-    "declarations": 0.09837201246969172,
+    "declarations": 0.09720297887080014,
     "duplication": 0.19080256466946716,
     "risk": 0.014370992703957551,
     "gates": 0.0
@@ -316,8 +317,8 @@
     "production_files_scanned": 3769,
     "production_file_warnings": 63,
     "production_file_failures": 7,
-    "production_function_warnings": 244,
-    "production_function_failures": 339,
+    "production_function_warnings": 243,
+    "production_function_failures": 336,
     "production_hard_gate_failures": 0,
     "dead_code_count": 7,
     "near_duplicate_count": 17,
@@ -348,7 +349,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -363,20 +364,20 @@
    },
    "production_dimensions": {
     "file_size": 0.019700185725656672,
-    "declarations": 0.12076460098082925,
+    "declarations": 0.11931564868479715,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "axios",
    "pinned_commit": "f5e83e49ee32b1004db82dad2b14d1e273a99e07",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 407,
    "declarations": 1002,
    "dimensions": {
     "file_size": 0.056511056511056514,
-    "declarations": 0.05625,
+    "declarations": 0.05572916666666667,
     "duplication": 0.7272727272727273,
     "risk": 0.014742014742014743,
     "gates": 0.0
@@ -387,7 +388,7 @@
     "production_files_scanned": 259,
     "production_file_warnings": 14,
     "production_file_failures": 5,
-    "production_function_warnings": 25,
+    "production_function_warnings": 24,
     "production_function_failures": 22,
     "production_hard_gate_failures": 0,
     "dead_code_count": 2,
@@ -419,7 +420,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -434,20 +435,20 @@
    },
    "production_dimensions": {
     "file_size": 0.05308880308880309,
-    "declarations": 0.1265923566878981,
+    "declarations": 0.12579617834394904,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "code-server",
    "pinned_commit": "313bf0359b4d391ba18f1fa131aad8a583bc2919",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 111,
    "declarations": 277,
    "dimensions": {
     "file_size": 0.06981981981981981,
-    "declarations": 0.06201550387596899,
+    "declarations": 0.060077519379844964,
     "duplication": 0.08108108108108109,
     "risk": 0.13513513513513514,
     "gates": 0.05
@@ -458,7 +459,7 @@
     "production_files_scanned": 61,
     "production_file_warnings": 4,
     "production_file_failures": 2,
-    "production_function_warnings": 6,
+    "production_function_warnings": 5,
     "production_function_failures": 4,
     "production_hard_gate_failures": 1,
     "dead_code_count": 2,
@@ -490,7 +491,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -505,20 +506,20 @@
    },
    "production_dimensions": {
     "file_size": 0.08196721311475409,
-    "declarations": 0.0804093567251462,
+    "declarations": 0.07748538011695906,
     "gates": 0.05
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "django",
    "pinned_commit": "c9eb16a87e60c305fb3651459639f647cce498db",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 3082,
    "declarations": 41730,
    "dimensions": {
     "file_size": 0.08492861778066191,
-    "declarations": 0.032804198937463995,
+    "declarations": 0.032444152851565,
     "duplication": 0.2673588578844906,
     "risk": 0.018494484101232965,
     "gates": 0.0
@@ -529,8 +530,8 @@
     "production_files_scanned": 1078,
     "production_file_warnings": 93,
     "production_file_failures": 28,
-    "production_function_warnings": 369,
-    "production_function_failures": 302,
+    "production_function_warnings": 367,
+    "production_function_failures": 303,
     "production_hard_gate_failures": 0,
     "dead_code_count": 8,
     "near_duplicate_count": 21,
@@ -540,7 +541,7 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.02998570562245517
+    "declarations": 0.02951644183023251
    },
    "analyzer_production_dimensions": {
     "declarations": 0.04769338021338506
@@ -566,14 +567,14 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -587,20 +588,20 @@
    },
    "production_dimensions": {
     "file_size": 0.08696660482374768,
-    "declarations": 0.05737383909589348,
+    "declarations": 0.057122076759538995,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "echarts",
    "pinned_commit": "30076aedcd7b7f65d8dd8e8d9ece46ce778133a3",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1451,
    "declarations": 4364,
    "dimensions": {
     "file_size": 0.15213645761543762,
-    "declarations": 0.12932091198823242,
+    "declarations": 0.12601127727384162,
     "duplication": 0.05651274982770503,
     "risk": 0.30668504479669195,
     "gates": 0.0
@@ -611,8 +612,8 @@
     "production_files_scanned": 710,
     "production_file_warnings": 77,
     "production_file_failures": 27,
-    "production_function_warnings": 355,
-    "production_function_failures": 320,
+    "production_function_warnings": 344,
+    "production_function_failures": 314,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 5,
@@ -643,7 +644,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -658,20 +659,20 @@
    },
    "production_dimensions": {
     "file_size": 0.11795774647887323,
-    "declarations": 0.12932091198823242,
+    "declarations": 0.12601127727384162,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "excalidraw",
    "pinned_commit": "4872083c044491b6d5c96ae134a75464f96d6831",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 682,
    "declarations": 3927,
    "dimensions": {
     "file_size": 0.14846041055718476,
-    "declarations": 0.12535835287985406,
+    "declarations": 0.12359916601511597,
     "duplication": 0.6964809384164223,
     "risk": 0.19501466275659823,
     "gates": 0.0
@@ -683,7 +684,7 @@
     "production_file_warnings": 43,
     "production_file_failures": 39,
     "production_function_warnings": 245,
-    "production_function_failures": 295,
+    "production_function_failures": 290,
     "production_hard_gate_failures": 0,
     "dead_code_count": 3,
     "near_duplicate_count": 3,
@@ -714,7 +715,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -729,15 +730,15 @@
    },
    "production_dimensions": {
     "file_size": 0.12522768670309653,
-    "declarations": 0.14009518143961927,
+    "declarations": 0.13816180844735276,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "express",
    "pinned_commit": "a3714473feb3d2908add734d340e7755fd85e0a3",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 157,
    "declarations": 185,
    "dimensions": {
@@ -785,7 +786,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -801,18 +802,18 @@
     "file_size": 0.05241935483870968,
     "declarations": 0.046296296296296294,
     "gates": 0.05
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "fastapi",
    "pinned_commit": "4ea76759a615754a070b08eb218c66e1ee1b12c6",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 2839,
    "declarations": 5681,
    "dimensions": {
     "file_size": 0.05671010919337795,
-    "declarations": 0.0572373696872494,
+    "declarations": 0.05788893344025661,
     "duplication": 0.11201127157449806,
     "risk": 0.07044734061289186,
     "gates": 0.0
@@ -823,8 +824,8 @@
     "production_files_scanned": 2202,
     "production_file_warnings": 129,
     "production_file_failures": 18,
-    "production_function_warnings": 44,
-    "production_function_failures": 62,
+    "production_function_warnings": 48,
+    "production_function_failures": 61,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 6,
@@ -861,15 +862,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -883,20 +884,20 @@
    },
    "production_dimensions": {
     "file_size": 0.060286103542234334,
-    "declarations": 0.07666098807495741,
+    "declarations": 0.07900340715502556,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "flask",
    "pinned_commit": "6a2f545bfd8ed31e19066a299296917e034aca58",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 111,
    "declarations": 1628,
    "dimensions": {
     "file_size": 0.0945945945945946,
-    "declarations": 0.03167574931880109,
+    "declarations": 0.030143051771117167,
     "duplication": 0.11711711711711711,
     "risk": 0.0,
     "gates": 0.0
@@ -908,7 +909,7 @@
     "production_file_warnings": 4,
     "production_file_failures": 3,
     "production_function_warnings": 24,
-    "production_function_failures": 15,
+    "production_function_failures": 14,
     "production_hard_gate_failures": 0,
     "dead_code_count": 1,
     "near_duplicate_count": 1,
@@ -945,15 +946,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -963,20 +964,20 @@
    },
    "production_dimensions": {
     "file_size": 0.10849056603773585,
-    "declarations": 0.07674418604651163,
+    "declarations": 0.07151162790697674,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "freeCodeCamp",
    "pinned_commit": "f67426be7505cdb3072c72b3d254888e2bbaacd6",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 18035,
    "declarations": 2566,
    "dimensions": {
     "file_size": 0.043498752425838644,
-    "declarations": 0.10603960396039604,
+    "declarations": 0.10485148514851485,
     "duplication": 0.1095647352370391,
     "risk": 0.06321042417521486,
     "gates": 0.0
@@ -987,8 +988,8 @@
     "production_files_scanned": 17695,
     "production_file_warnings": 624,
     "production_file_failures": 71,
-    "production_function_warnings": 139,
-    "production_function_failures": 156,
+    "production_function_warnings": 138,
+    "production_function_failures": 155,
     "production_hard_gate_failures": 0,
     "dead_code_count": 11,
     "near_duplicate_count": 5,
@@ -1019,7 +1020,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -1034,15 +1035,15 @@
    },
    "production_dimensions": {
     "file_size": 0.04299237072619384,
-    "declarations": 0.1201701931922723,
+    "declarations": 0.11890524379024839,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "github-readme-stats",
    "pinned_commit": "54a7985aeefda00d5eadb55b80c17c7f976c37d2",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 90,
    "declarations": 164,
    "dimensions": {
@@ -1095,14 +1096,14 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -1119,18 +1120,18 @@
     "file_size": 0.08333333333333333,
     "declarations": 0.13541666666666666,
     "gates": 0.05
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "hackingtool",
    "pinned_commit": "9b92b6156ddc5ff87bf0fa592d81c333a88d1c78",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 91,
    "declarations": 898,
    "dimensions": {
     "file_size": 0.06043956043956044,
-    "declarations": 0.04223744292237443,
+    "declarations": 0.04832572298325723,
     "duplication": 0.03296703296703297,
     "risk": 0.07692307692307693,
     "gates": 0.0
@@ -1141,8 +1142,8 @@
     "production_files_scanned": 73,
     "production_file_warnings": 4,
     "production_file_failures": 1,
-    "production_function_warnings": 18,
-    "production_function_failures": 13,
+    "production_function_warnings": 21,
+    "production_function_failures": 14,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 0,
@@ -1152,10 +1153,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.04253365973072215
+    "declarations": 0.043451652386780906
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07128099173553719
+    "declarations": 0.07283057851239669
    },
    "analyzer_coverage": {
     "tools": [
@@ -1179,15 +1180,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -1197,35 +1198,35 @@
    },
    "production_dimensions": {
     "file_size": 0.06506849315068493,
-    "declarations": 0.07928571428571428,
+    "declarations": 0.09,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "hoppscotch",
    "pinned_commit": "1acb8a3a7581e4db32ba0d529170c4669a2e1053",
-   "tool_version": "1.10.1",
-   "files": 1135,
-   "declarations": 5133,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 1245,
+   "declarations": 5694,
    "dimensions": {
-    "file_size": 0.10418502202643172,
-    "declarations": 0.10160788381742739,
-    "duplication": 0.6969162995594713,
-    "risk": 0.08105726872246696,
+    "file_size": 0.09939759036144578,
+    "declarations": 0.09933269780743566,
+    "duplication": 0.6497991967871486,
+    "risk": 0.07389558232931727,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 198,
-    "production_declarations_scanned": 4922,
-    "production_files_scanned": 937,
-    "production_file_warnings": 43,
+    "production_declarations_scanned": 5483,
+    "production_files_scanned": 1047,
+    "production_file_warnings": 48,
     "production_file_failures": 27,
-    "production_function_warnings": 275,
-    "production_function_failures": 299,
+    "production_function_warnings": 299,
+    "production_function_failures": 317,
     "production_hard_gate_failures": 0,
     "dead_code_count": 20,
-    "near_duplicate_count": 91,
+    "near_duplicate_count": 95,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
@@ -1253,7 +1254,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -1267,27 +1268,27 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.07043756670224119,
-    "declarations": 0.10510071474983755,
+    "file_size": 0.06829035339063992,
+    "declarations": 0.10248909163030544,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "jquery",
    "pinned_commit": "1183ba16fe38ebac23db3b885080e864f494954e",
-   "tool_version": "1.10.1",
-   "files": 290,
-   "declarations": 1416,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 292,
+   "declarations": 1452,
    "dimensions": {
-    "file_size": 0.07327586206896551,
-    "declarations": 0.09692796610169492,
-    "duplication": 0.7793103448275862,
-    "risk": 0.05172413793103448,
+    "file_size": 0.07363013698630137,
+    "declarations": 0.09355616815988974,
+    "duplication": 0.773972602739726,
+    "risk": 0.05136986301369863,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 139,
+    "test_file_count": 141,
     "production_declarations_scanned": 365,
     "production_files_scanned": 149,
     "production_file_warnings": 3,
@@ -1324,7 +1325,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -1338,20 +1339,20 @@
    },
    "production_dimensions": {
     "file_size": 0.03523489932885906,
-    "declarations": 0.17191780821917807,
+    "declarations": 0.16917808219178082,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "keras",
    "pinned_commit": "5f5bf6f3ebfdbd3cc08c72f4ed16591263cbc9bd",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 858,
    "declarations": 16982,
    "dimensions": {
     "file_size": 0.20862470862470864,
-    "declarations": 0.07157450734857972,
+    "declarations": 0.07187108679891913,
     "duplication": 1.1993006993006994,
     "risk": 0.15384615384615385,
     "gates": 0.0
@@ -1400,15 +1401,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -1422,32 +1423,32 @@
    },
    "production_dimensions": {
     "file_size": 0.20908273381294964,
-    "declarations": 0.09118900994789199,
+    "declarations": 0.0916331122690668,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "localstack",
    "pinned_commit": "8b9a79f05846835cf4dff63ab7eefdde9df83783",
-   "tool_version": "1.10.1",
-   "files": 2007,
-   "declarations": 34392,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 2016,
+   "declarations": 34407,
    "dimensions": {
-    "file_size": 0.1088689586447434,
-    "declarations": 0.0709024617041061,
-    "duplication": 0.5764823119083209,
-    "risk": 1.0657698056801195,
+    "file_size": 0.10838293650793651,
+    "declarations": 0.06971341940532082,
+    "duplication": 0.5739087301587301,
+    "risk": 1.0610119047619047,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 782,
+    "test_file_count": 791,
     "production_declarations_scanned": 27236,
     "production_files_scanned": 1220,
     "production_file_warnings": 71,
     "production_file_failures": 76,
-    "production_function_warnings": 433,
-    "production_function_failures": 342,
+    "production_function_warnings": 438,
+    "production_function_failures": 325,
     "production_hard_gate_failures": 0,
     "dead_code_count": 19,
     "near_duplicate_count": 102,
@@ -1457,10 +1458,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.05694082942911678
+    "declarations": 0.05681195175438596
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.03696498054474708
+    "declarations": 0.037123812038014785
    },
    "analyzer_coverage": {
     "tools": [
@@ -1483,14 +1484,14 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)",
      "pydocstyle": "6.3.0",
-     "ruff": "ruff 0.15.14",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -1500,20 +1501,20 @@
    },
    "production_dimensions": {
     "file_size": 0.10594262295081967,
-    "declarations": 0.045758051846032995,
+    "declarations": 0.0442405198885953,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "lodash",
    "pinned_commit": "a666ba591064c8011988275790ad7d625279f09c",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 39,
    "declarations": 849,
    "dimensions": {
     "file_size": 0.16666666666666666,
-    "declarations": 0.052414605418138985,
+    "declarations": 0.05182567726737338,
     "duplication": 1.641025641025641,
     "risk": 0.0,
     "gates": 0.0
@@ -1556,7 +1557,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -1570,15 +1571,15 @@
    },
    "production_dimensions": {
     "file_size": 0.12931034482758622,
-    "declarations": 0.07267950963222417,
+    "declarations": 0.07180385288966724,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "manim",
    "pinned_commit": "01030ac5d23bc294ccb93cbfcda260f2d20dda62",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 112,
    "declarations": 2224,
    "dimensions": {
@@ -1594,8 +1595,8 @@
     "production_files_scanned": 108,
     "production_file_warnings": 15,
     "production_file_failures": 4,
-    "production_function_warnings": 49,
-    "production_function_failures": 14,
+    "production_function_warnings": 50,
+    "production_function_failures": 15,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 1,
@@ -1632,15 +1633,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -1652,18 +1653,18 @@
     "file_size": 0.1388888888888889,
     "declarations": 0.029082177161152616,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "material-ui",
    "pinned_commit": "81e94061ca393d4eaf238e6f77c283b2edd9ef7e",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 6627,
    "declarations": 9553,
    "dimensions": {
     "file_size": 0.02557718424626528,
-    "declarations": 0.09119067618647628,
+    "declarations": 0.09084943301133977,
     "duplication": 0.31416930737890447,
     "risk": 0.03591368643428399,
     "gates": 0.0
@@ -1674,7 +1675,7 @@
     "production_files_scanned": 5788,
     "production_file_warnings": 87,
     "production_file_failures": 31,
-    "production_function_warnings": 405,
+    "production_function_warnings": 404,
     "production_function_failures": 511,
     "production_hard_gate_failures": 0,
     "dead_code_count": 5,
@@ -1706,7 +1707,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -1721,20 +1722,20 @@
    },
    "production_dimensions": {
     "file_size": 0.020818935729094677,
-    "declarations": 0.10966358839050132,
+    "declarations": 0.10926781002638522,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "mermaid",
    "pinned_commit": "3d521b1ee5fc9079fe0659e776a1b2cdc37174b1",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1309,
    "declarations": 3585,
    "dimensions": {
     "file_size": 0.10962566844919786,
-    "declarations": 0.13868771726535342,
+    "declarations": 0.1351390498261877,
     "duplication": 0.5767761650114591,
     "risk": 0.13445378151260504,
     "gates": 0.0
@@ -1745,8 +1746,8 @@
     "production_files_scanned": 1005,
     "production_file_warnings": 86,
     "production_file_failures": 33,
-    "production_function_warnings": 262,
-    "production_function_failures": 310,
+    "production_function_warnings": 266,
+    "production_function_failures": 298,
     "production_hard_gate_failures": 0,
     "dead_code_count": 33,
     "near_duplicate_count": 37,
@@ -1777,7 +1778,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -1792,20 +1793,20 @@
    },
    "production_dimensions": {
     "file_size": 0.0962686567164179,
-    "declarations": 0.15179738562091502,
+    "declarations": 0.14795751633986928,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "models",
    "pinned_commit": "4d7bdd8c170ee90850f2f9ccef0f6d19b817de35",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 3026,
    "declarations": 23910,
    "dimensions": {
     "file_size": 0.11731658955717118,
-    "declarations": 0.11685687695924765,
+    "declarations": 0.11516702586206896,
     "duplication": 0.7779246530072703,
     "risk": 0.14441506939854593,
     "gates": 0.0
@@ -1816,8 +1817,8 @@
     "production_files_scanned": 2261,
     "production_file_warnings": 259,
     "production_file_failures": 76,
-    "production_function_warnings": 1425,
-    "production_function_failures": 1114,
+    "production_function_warnings": 1411,
+    "production_function_failures": 1084,
     "production_hard_gate_failures": 0,
     "dead_code_count": 68,
     "near_duplicate_count": 265,
@@ -1827,10 +1828,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.08095827776719375
+    "declarations": 0.0802684741154703
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.10420061560745972
+    "declarations": 0.10304205189382643
    },
    "analyzer_coverage": {
     "tools": [
@@ -1853,14 +1854,14 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -1874,20 +1875,20 @@
    },
    "production_dimensions": {
     "file_size": 0.12339672711189739,
-    "declarations": 0.1520312017299969,
+    "declarations": 0.1494632375656472,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "n8n",
    "pinned_commit": "9d9e9bf97e8ae5382a930cd662637a9cf7046ef9",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 19627,
    "declarations": 62787,
    "dimensions": {
     "file_size": 0.09576094156009579,
-    "declarations": 0.08698875300475498,
+    "declarations": 0.08453231098555963,
     "duplication": 0.5096550669995414,
     "risk": 0.04468334437254802,
     "gates": 0.0
@@ -1898,8 +1899,8 @@
     "production_files_scanned": 11609,
     "production_file_warnings": 792,
     "production_file_failures": 276,
-    "production_function_warnings": 2867,
-    "production_function_failures": 3051,
+    "production_function_warnings": 2794,
+    "production_function_failures": 3001,
     "production_hard_gate_failures": 0,
     "dead_code_count": 283,
     "near_duplicate_count": 480,
@@ -1909,10 +1910,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.11122626679817532
+    "declarations": 0.11116630469941315
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07687683381499702
+    "declarations": 0.07683276375261823
    },
    "analyzer_coverage": {
     "tools": [
@@ -1935,14 +1936,14 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -1957,20 +1958,20 @@
    },
    "production_dimensions": {
     "file_size": 0.07728917219398743,
-    "declarations": 0.11149282069538388,
+    "declarations": 0.10875756496974012,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "nest",
    "pinned_commit": "c3bc75c973813969aa676793e20a7cba12a9daf5",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1774,
    "declarations": 5538,
    "dimensions": {
     "file_size": 0.025084554678692222,
-    "declarations": 0.024069884364002012,
+    "declarations": 0.02287581699346405,
     "duplication": 0.2519729425028185,
     "risk": 0.0016910935738444193,
     "gates": 0.05
@@ -1981,7 +1982,7 @@
     "production_files_scanned": 1359,
     "production_file_warnings": 16,
     "production_file_failures": 4,
-    "production_function_warnings": 81,
+    "production_function_warnings": 78,
     "production_function_failures": 52,
     "production_hard_gate_failures": 1,
     "dead_code_count": 1,
@@ -2013,7 +2014,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -2028,20 +2029,20 @@
    },
    "production_dimensions": {
     "file_size": 0.013245033112582781,
-    "declarations": 0.03051948051948052,
+    "declarations": 0.029058441558441558,
     "gates": 0.05
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "playwright",
    "pinned_commit": "c973356ee9e3906260f60da5e3e04442e069a0d4",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 2239,
    "declarations": 11202,
    "dimensions": {
     "file_size": 0.11623492630638678,
-    "declarations": 0.07328117591275486,
+    "declarations": 0.07079184447605501,
     "duplication": 0.698079499776686,
     "risk": 0.4126842340330505,
     "gates": 0.0
@@ -2052,8 +2053,8 @@
     "production_files_scanned": 1194,
     "production_file_warnings": 109,
     "production_file_failures": 68,
-    "production_function_warnings": 426,
-    "production_function_failures": 459,
+    "production_function_warnings": 416,
+    "production_function_failures": 448,
     "production_hard_gate_failures": 0,
     "dead_code_count": 51,
     "near_duplicate_count": 60,
@@ -2063,10 +2064,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.07340150845960454
+    "declarations": 0.07355534454693434
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.05861547762998791
+    "declarations": 0.05886075949367089
    },
    "analyzer_coverage": {
     "tools": [
@@ -2091,16 +2092,16 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -2115,15 +2116,15 @@
    },
    "production_dimensions": {
     "file_size": 0.12562814070351758,
-    "declarations": 0.07754886423666138,
+    "declarations": 0.07490755414685685,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "reveal.js",
    "pinned_commit": "a3b940695648aa1c5b0680bc9a5b905cf43020e5",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 132,
    "declarations": 566,
    "dimensions": {
@@ -2171,7 +2172,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -2188,18 +2189,18 @@
     "file_size": 0.12009803921568628,
     "declarations": 0.1366171003717472,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "scrapy",
    "pinned_commit": "1bd839b57ddb614664a179b6213f49579bdfd3da",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 494,
    "declarations": 7038,
    "dimensions": {
     "file_size": 0.09615384615384616,
-    "declarations": 0.021059661620658948,
+    "declarations": 0.02163846838824577,
     "duplication": 0.3360323886639676,
     "risk": 0.03441295546558704,
     "gates": 0.0
@@ -2210,7 +2211,7 @@
     "production_files_scanned": 194,
     "production_file_warnings": 18,
     "production_file_failures": 1,
-    "production_function_warnings": 50,
+    "production_function_warnings": 54,
     "production_function_failures": 18,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
@@ -2248,15 +2249,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -2266,20 +2267,20 @@
    },
    "production_dimensions": {
     "file_size": 0.07989690721649484,
-    "declarations": 0.033129175946547886,
+    "declarations": 0.034242761692650336,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "strapi",
    "pinned_commit": "0a8a9b40d0642b221c1841ae72295f830352e8ce",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 5159,
    "declarations": 13026,
    "dimensions": {
     "file_size": 0.05679395231634038,
-    "declarations": 0.09525107045543013,
+    "declarations": 0.09412222654729467,
     "duplication": 0.37468501647606123,
     "risk": 0.1477030432254313,
     "gates": 0.0
@@ -2290,8 +2291,8 @@
     "production_files_scanned": 3613,
     "production_file_warnings": 130,
     "production_file_failures": 25,
-    "production_function_warnings": 577,
-    "production_function_failures": 706,
+    "production_function_warnings": 567,
+    "production_function_failures": 700,
     "production_hard_gate_failures": 0,
     "dead_code_count": 29,
     "near_duplicate_count": 75,
@@ -2322,7 +2323,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -2337,20 +2338,20 @@
    },
    "production_dimensions": {
     "file_size": 0.03764184887904788,
-    "declarations": 0.11704602933737987,
+    "declarations": 0.11565503287809813,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "svelte",
    "pinned_commit": "26786e92985842a6d563c67049a43bc5857bf792",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 4035,
    "declarations": 5632,
    "dimensions": {
     "file_size": 0.014312267657992565,
-    "declarations": 0.08364813815434431,
+    "declarations": 0.08319841698147148,
     "duplication": 0.1335811648079306,
     "risk": 0.05675340768277571,
     "gates": 0.0
@@ -2361,8 +2362,8 @@
     "production_files_scanned": 585,
     "production_file_warnings": 36,
     "production_file_failures": 23,
-    "production_function_warnings": 153,
-    "production_function_failures": 209,
+    "production_function_warnings": 155,
+    "production_function_failures": 206,
     "production_hard_gate_failures": 0,
     "dead_code_count": 44,
     "near_duplicate_count": 5,
@@ -2393,7 +2394,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -2408,20 +2409,20 @@
    },
    "production_dimensions": {
     "file_size": 0.0876068376068376,
-    "declarations": 0.128989898989899,
+    "declarations": 0.12808080808080807,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "tabby",
    "pinned_commit": "14e2d60b9b6dee84a53c37f05eefeb803787de04",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 347,
    "declarations": 2157,
    "dimensions": {
     "file_size": 0.040345821325648415,
-    "declarations": 0.057096247960848286,
+    "declarations": 0.05600870038064165,
     "duplication": 0.07492795389048991,
     "risk": 0.03170028818443804,
     "gates": 0.0
@@ -2432,7 +2433,7 @@
     "production_files_scanned": 347,
     "production_file_warnings": 8,
     "production_file_failures": 4,
-    "production_function_warnings": 70,
+    "production_function_warnings": 67,
     "production_function_failures": 66,
     "production_hard_gate_failures": 0,
     "dead_code_count": 20,
@@ -2464,7 +2465,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -2479,35 +2480,35 @@
    },
    "production_dimensions": {
     "file_size": 0.040345821325648415,
-    "declarations": 0.057096247960848286,
+    "declarations": 0.05600870038064165,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "tailwindcss",
    "pinned_commit": "46df7ee2fc4ae822d414d35bbd48be024e5cb1c0",
-   "tool_version": "1.10.1",
-   "files": 372,
-   "declarations": 453,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 432,
+   "declarations": 1218,
    "dimensions": {
-    "file_size": 0.1350806451612903,
-    "declarations": 0.18736017897091722,
-    "duplication": 0.24731182795698925,
-    "risk": 0.01881720430107527,
+    "file_size": 0.14641203703703703,
+    "declarations": 0.12928759894459102,
+    "duplication": 0.3125,
+    "risk": 0.016203703703703703,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 123,
-    "production_declarations_scanned": 423,
-    "production_files_scanned": 248,
-    "production_file_warnings": 12,
-    "production_file_failures": 9,
-    "production_function_warnings": 32,
-    "production_function_failures": 60,
+    "test_file_count": 126,
+    "production_declarations_scanned": 1105,
+    "production_files_scanned": 305,
+    "production_file_warnings": 23,
+    "production_file_failures": 15,
+    "production_function_warnings": 55,
+    "production_function_failures": 90,
     "production_hard_gate_failures": 0,
     "dead_code_count": 1,
-    "near_duplicate_count": 6,
+    "near_duplicate_count": 9,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": true,
@@ -2535,7 +2536,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -2549,21 +2550,21 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.0846774193548387,
-    "declarations": 0.19724220623501199,
+    "file_size": 0.10737704918032787,
+    "declarations": 0.12926829268292683,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "transformers",
    "pinned_commit": "e8ea728a3eeeb903e77c7d1bd29267c80a1be71f",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 5525,
    "declarations": 60641,
    "dimensions": {
     "file_size": 0.17683257918552037,
-    "declarations": 0.10182120928296388,
+    "declarations": 0.1006868560724321,
     "duplication": 0.8526696832579186,
     "risk": 0.20705882352941177,
     "gates": 0.0
@@ -2574,8 +2575,8 @@
     "production_files_scanned": 3929,
     "production_file_warnings": 434,
     "production_file_failures": 321,
-    "production_function_warnings": 2393,
-    "production_function_failures": 2000,
+    "production_function_warnings": 2371,
+    "production_function_failures": 1999,
     "production_hard_gate_failures": 0,
     "dead_code_count": 41,
     "near_duplicate_count": 1331,
@@ -2585,10 +2586,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.08337890387653421
+    "declarations": 0.08313603531300161
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.10066587267215245
+    "declarations": 0.09994143536594023
    },
    "analyzer_coverage": {
     "tools": [
@@ -2612,15 +2613,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -2630,20 +2631,20 @@
    },
    "production_dimensions": {
     "file_size": 0.17027233392720795,
-    "declarations": 0.1354041130505773,
+    "declarations": 0.13415037126307197,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "uBlock",
    "pinned_commit": "a873fd2b290461cb6efffe6e67ac7dc1fbde21e2",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 400,
    "declarations": 4238,
    "dimensions": {
     "file_size": 0.15625,
-    "declarations": 0.13988022488389146,
+    "declarations": 0.13963578587142508,
     "duplication": 0.275,
     "risk": 0.13,
     "gates": 0.0
@@ -2692,15 +2693,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -2714,20 +2715,20 @@
    },
    "production_dimensions": {
     "file_size": 0.15714285714285714,
-    "declarations": 0.13998287671232876,
+    "declarations": 0.13973825831702544,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "vite",
    "pinned_commit": "57fea001d154e7dd8d5d74d3082731f1dcfd31be",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1989,
    "declarations": 3048,
    "dimensions": {
     "file_size": 0.032679738562091505,
-    "declarations": 0.11775544388609716,
+    "declarations": 0.11549413735343383,
     "duplication": 0.10457516339869281,
     "risk": 0.026143790849673203,
     "gates": 0.0
@@ -2739,7 +2740,7 @@
     "production_file_warnings": 36,
     "production_file_failures": 21,
     "production_function_warnings": 165,
-    "production_function_failures": 221,
+    "production_function_failures": 217,
     "production_hard_gate_failures": 0,
     "dead_code_count": 12,
     "near_duplicate_count": 7,
@@ -2770,7 +2771,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -2785,20 +2786,20 @@
    },
    "production_dimensions": {
     "file_size": 0.030293367346938774,
-    "declarations": 0.1338748495788207,
+    "declarations": 0.1313678299237866,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "webpack",
    "pinned_commit": "788ffe08cc0bff1ee42071e00475d545a952d9e6",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 12816,
    "declarations": 12111,
    "dimensions": {
     "file_size": 0.013284176029962546,
-    "declarations": 0.10128159487362051,
+    "declarations": 0.10074759700961196,
     "duplication": 0.09215043695380774,
     "risk": 0.014903245942571785,
     "gates": 0.0
@@ -2809,8 +2810,8 @@
     "production_files_scanned": 1409,
     "production_file_warnings": 97,
     "production_file_failures": 60,
-    "production_function_warnings": 443,
-    "production_function_failures": 811,
+    "production_function_warnings": 440,
+    "production_function_failures": 810,
     "production_hard_gate_failures": 0,
     "dead_code_count": 300,
     "near_duplicate_count": 22,
@@ -2841,7 +2842,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -2856,20 +2857,20 @@
    },
    "production_dimensions": {
     "file_size": 0.08960255500354862,
-    "declarations": 0.15128434886499403,
+    "declarations": 0.15050029868578255,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "youtube-dl",
    "pinned_commit": "956b8c585591b401a543e409accb163eeaaa1193",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 917,
    "declarations": 5786,
    "dimensions": {
     "file_size": 0.07251908396946564,
-    "declarations": 0.14991482112436116,
+    "declarations": 0.1322706254563154,
     "duplication": 0.15921483097055616,
     "risk": 0.12213740458015267,
     "gates": 0.0
@@ -2880,8 +2881,8 @@
     "production_files_scanned": 885,
     "production_file_warnings": 43,
     "production_file_failures": 20,
-    "production_function_warnings": 368,
-    "production_function_failures": 365,
+    "production_function_warnings": 344,
+    "production_function_failures": 310,
     "production_hard_gate_failures": 0,
     "dead_code_count": 6,
     "near_duplicate_count": 3,
@@ -2918,15 +2919,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -2936,20 +2937,20 @@
    },
    "production_dimensions": {
     "file_size": 0.06864406779661017,
-    "declarations": 0.16390590200445435,
+    "declarations": 0.14413975501113585,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "yt-dlp",
    "pinned_commit": "5d6b8c8cd19785c3086ae3a9ec618c45e25eb3bc",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1135,
    "declarations": 9440,
    "dimensions": {
     "file_size": 0.10484581497797357,
-    "declarations": 0.11113951789627466,
+    "declarations": 0.10588020452885318,
     "duplication": 0.12334801762114538,
     "risk": 0.18766519823788547,
     "gates": 0.0
@@ -2960,8 +2961,8 @@
     "production_files_scanned": 1078,
     "production_file_warnings": 85,
     "production_file_failures": 40,
-    "production_function_warnings": 475,
-    "production_function_failures": 434,
+    "production_function_warnings": 451,
+    "production_function_failures": 406,
     "production_hard_gate_failures": 0,
     "dead_code_count": 18,
     "near_duplicate_count": 1,
@@ -2971,10 +2972,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.07254274369986224
+    "declarations": 0.07266428976582125
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.08305712614544745
+    "declarations": 0.08320335348021057
    },
    "analyzer_coverage": {
     "tools": [
@@ -2998,15 +2999,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -3016,20 +3017,20 @@
    },
    "production_dimensions": {
     "file_size": 0.10111317254174397,
-    "declarations": 0.1275672804532578,
+    "declarations": 0.12163597733711048,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "Avalonia",
    "pinned_commit": "9d5c2fa81d9c374379ae3ee286c778047a6a5a7e",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 4256,
    "declarations": 34873,
    "dimensions": {
     "file_size": 0.0700187969924812,
-    "declarations": 0.05604651162790698,
+    "declarations": 0.05363148479427549,
     "duplication": 0.33153195488721804,
     "risk": 0.03994360902255639,
     "gates": 0.05
@@ -3040,8 +3041,8 @@
     "production_files_scanned": 3433,
     "production_file_warnings": 158,
     "production_file_failures": 72,
-    "production_function_warnings": 852,
-    "production_function_failures": 950,
+    "production_function_warnings": 833,
+    "production_function_failures": 932,
     "production_hard_gate_failures": 1,
     "dead_code_count": 151,
     "near_duplicate_count": 80,
@@ -3072,7 +3073,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -3087,20 +3088,20 @@
    },
    "production_dimensions": {
     "file_size": 0.057020099038741626,
-    "declarations": 0.06561372327247267,
+    "declarations": 0.06234178919588517,
     "gates": 0.05
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "Bulk-Crap-Uninstaller",
    "pinned_commit": "608321de98e92297377b1eb69029af55c25504a1",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 497,
    "declarations": 4237,
    "dimensions": {
     "file_size": 0.08249496981891348,
-    "declarations": 0.07232297063903281,
+    "declarations": 0.07210708117443869,
     "duplication": 0.22535211267605634,
     "risk": 0.11066398390342053,
     "gates": 0.0
@@ -3111,7 +3112,7 @@
     "production_files_scanned": 497,
     "production_file_warnings": 29,
     "production_file_failures": 15,
-    "production_function_warnings": 210,
+    "production_function_warnings": 209,
     "production_function_failures": 176,
     "production_hard_gate_failures": 0,
     "dead_code_count": 2,
@@ -3143,7 +3144,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -3158,32 +3159,32 @@
    },
    "production_dimensions": {
     "file_size": 0.08249496981891348,
-    "declarations": 0.07232297063903281,
+    "declarations": 0.07210708117443869,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "FFmpeg",
    "pinned_commit": "9fc8c785e2747c87121ec28f8f10ceab0562384b",
-   "tool_version": "1.10.1",
-   "files": 4700,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 4701,
    "declarations": 36474,
    "dimensions": {
-    "file_size": 0.21117021276595746,
-    "declarations": 0.2702853812958705,
-    "duplication": 0.6210638297872341,
-    "risk": 0.22446808510638297,
+    "file_size": 0.21112529249095938,
+    "declarations": 0.27012788609947397,
+    "duplication": 0.6209317166560306,
+    "risk": 0.2244203360987024,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 291,
     "production_declarations_scanned": 35295,
-    "production_files_scanned": 4408,
+    "production_files_scanned": 4409,
     "production_file_warnings": 647,
     "production_file_failures": 540,
-    "production_function_warnings": 3488,
-    "production_function_failures": 5977,
+    "production_function_warnings": 3485,
+    "production_function_failures": 5975,
     "production_hard_gate_failures": 0,
     "dead_code_count": 396,
     "near_duplicate_count": 505,
@@ -3193,10 +3194,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.21996492910883966
+    "declarations": 0.21994404715597976
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.2210577758470895
+    "declarations": 0.2210341303270565
    },
    "analyzer_coverage": {
     "tools": [
@@ -3220,15 +3221,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -3241,21 +3242,21 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.21977087114337568,
-    "declarations": 0.27150695669214187,
+    "file_size": 0.21972102517577682,
+    "declarations": 0.2713599843229473,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "Files",
    "pinned_commit": "c3c3fc22e1acc546ace1016460552091d71613e5",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1179,
    "declarations": 7319,
    "dimensions": {
     "file_size": 0.05597964376590331,
-    "declarations": 0.0752557437531444,
+    "declarations": 0.07181787690759685,
     "duplication": 0.2697201017811705,
     "risk": 0.043256997455470736,
     "gates": 0.05
@@ -3266,8 +3267,8 @@
     "production_files_scanned": 1157,
     "production_file_warnings": 50,
     "production_file_failures": 24,
-    "production_function_warnings": 321,
-    "production_function_failures": 334,
+    "production_function_warnings": 316,
+    "production_function_failures": 322,
     "production_hard_gate_failures": 1,
     "dead_code_count": 28,
     "near_duplicate_count": 36,
@@ -3298,7 +3299,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -3313,32 +3314,32 @@
    },
    "production_dimensions": {
     "file_size": 0.056179775280898875,
-    "declarations": 0.07604984636394674,
+    "declarations": 0.07255035848412428,
     "gates": 0.05
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "ILSpy",
    "pinned_commit": "3ef547ca2cb1bb293034c2a309b6514fa0f7124f",
-   "tool_version": "1.10.1",
-   "files": 1868,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 1869,
    "declarations": 21519,
    "dimensions": {
-    "file_size": 0.09301391862955032,
-    "declarations": 0.07020016915703411,
-    "duplication": 0.27944325481798715,
-    "risk": 0.05406852248394004,
+    "file_size": 0.09296415195291599,
+    "declarations": 0.0683958274598252,
+    "duplication": 0.27929373996789725,
+    "risk": 0.05403959336543606,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 0,
     "production_declarations_scanned": 21519,
-    "production_files_scanned": 1868,
+    "production_files_scanned": 1869,
     "production_file_warnings": 109,
     "production_file_failures": 82,
-    "production_function_warnings": 742,
-    "production_function_failures": 983,
+    "production_function_warnings": 738,
+    "production_function_failures": 972,
     "production_hard_gate_failures": 0,
     "dead_code_count": 20,
     "near_duplicate_count": 71,
@@ -3369,7 +3370,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -3383,16 +3384,16 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.09301391862955032,
-    "declarations": 0.07020016915703411,
+    "file_size": 0.09296415195291599,
+    "declarations": 0.0683958274598252,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "ImHex",
    "pinned_commit": "53dbd48a0ede08885e8ca8ebee2198bc45946610",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 513,
    "declarations": 5375,
    "dimensions": {
@@ -3440,7 +3441,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -3455,20 +3456,20 @@
    },
    "production_dimensions": {
     "file_size": 0.1179718875502008,
-    "declarations": 0.11334492501630081,
+    "declarations": 0.11329058900239078,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "JeecgBoot",
    "pinned_commit": "74364054449efd5852e46d0c10325a1d38c1006a",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1870,
    "declarations": 13489,
    "dimensions": {
     "file_size": 0.06216577540106952,
-    "declarations": 0.09280119509043927,
+    "declarations": 0.09245801033591731,
     "duplication": 0.26684491978609626,
     "risk": 0.09893048128342247,
     "gates": 0.0
@@ -3479,8 +3480,8 @@
     "production_files_scanned": 1738,
     "production_file_warnings": 83,
     "production_file_failures": 56,
-    "production_function_warnings": 656,
-    "production_function_failures": 763,
+    "production_function_warnings": 652,
+    "production_function_failures": 761,
     "production_hard_gate_failures": 0,
     "dead_code_count": 185,
     "near_duplicate_count": 123,
@@ -3490,10 +3491,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.07219776297001428
+    "declarations": 0.07280975073313783
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07360112154089968
+    "declarations": 0.07378553212664055
    },
    "analyzer_coverage": {
     "tools": [
@@ -3518,16 +3519,16 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -3542,20 +3543,20 @@
    },
    "production_dimensions": {
     "file_size": 0.06573647871116226,
-    "declarations": 0.0947161210111894,
+    "declarations": 0.09436386241193535,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "Lean",
    "pinned_commit": "f24fc0d3df03d6bdbe0e6fc7b8522445f1d900d2",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 4877,
    "declarations": 30476,
    "dimensions": {
     "file_size": 0.04746770555669469,
-    "declarations": 0.056527164130256914,
+    "declarations": 0.056230567828505974,
     "duplication": 0.28521632150912446,
     "risk": 0.01886405577199098,
     "gates": 0.05
@@ -3566,8 +3567,8 @@
     "production_files_scanned": 4054,
     "production_file_warnings": 84,
     "production_file_failures": 47,
-    "production_function_warnings": 731,
-    "production_function_failures": 503,
+    "production_function_warnings": 719,
+    "production_function_failures": 507,
     "production_hard_gate_failures": 1,
     "dead_code_count": 0,
     "near_duplicate_count": 169,
@@ -3603,14 +3604,14 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -3625,28 +3626,28 @@
    },
    "production_dimensions": {
     "file_size": 0.032622101628021705,
-    "declarations": 0.05095024493891283,
+    "declarations": 0.05061087174644396,
     "gates": 0.05
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "NewPipe",
    "pinned_commit": "bbbac9b223f21a1a5a714044353cf0412de57b98",
-   "tool_version": "1.10.1",
-   "files": 320,
-   "declarations": 4069,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 322,
+   "declarations": 4074,
    "dimensions": {
-    "file_size": 0.10703125,
-    "declarations": 0.054249174917491746,
-    "duplication": 0.15625,
-    "risk": 0.1,
+    "file_size": 0.1063664596273292,
+    "declarations": 0.054219351291918634,
+    "duplication": 0.15527950310559005,
+    "risk": 0.09937888198757763,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 10,
-    "production_declarations_scanned": 3971,
-    "production_files_scanned": 309,
+    "production_declarations_scanned": 3976,
+    "production_files_scanned": 311,
     "production_file_warnings": 28,
     "production_file_failures": 15,
     "production_function_warnings": 139,
@@ -3682,11 +3683,12 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
     },
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -3696,21 +3698,21 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.10841423948220065,
-    "declarations": 0.05463249788791889,
+    "file_size": 0.10771704180064309,
+    "declarations": 0.05460174500422178,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "PowerShell",
    "pinned_commit": "6ca24ccf024140ca061580c43751db27605c4815",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1369,
    "declarations": 23740,
    "dimensions": {
     "file_size": 0.2697224251278305,
-    "declarations": 0.11504580690627202,
+    "declarations": 0.1147689519782543,
     "duplication": 0.9569028487947406,
     "risk": 0.15777940102264426,
     "gates": 0.0
@@ -3721,7 +3723,7 @@
     "production_files_scanned": 1268,
     "production_file_warnings": 191,
     "production_file_failures": 244,
-    "production_function_warnings": 1416,
+    "production_function_warnings": 1413,
     "production_function_failures": 1897,
     "production_hard_gate_failures": 0,
     "dead_code_count": 5,
@@ -3752,7 +3754,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0"
+     "lizard": "1.24.0"
     },
     "unexamined": [
      "documentation",
@@ -3766,20 +3768,20 @@
    },
    "production_dimensions": {
     "file_size": 0.28746056782334384,
-    "declarations": 0.11655840808330756,
+    "declarations": 0.11627487369831942,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "PowerToys",
    "pinned_commit": "479924d699a6ca6c53c0bbe68c234e276d8dad9c",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 5734,
    "declarations": 31868,
    "dimensions": {
     "file_size": 0.06095221485873736,
-    "declarations": 0.07836300411989265,
+    "declarations": 0.07751256756245985,
     "duplication": 0.34077432856644574,
     "risk": 0.05214509940704569,
     "gates": 0.0
@@ -3790,8 +3792,8 @@
     "production_files_scanned": 5482,
     "production_file_warnings": 261,
     "production_file_failures": 116,
-    "production_function_warnings": 1375,
-    "production_function_failures": 1378,
+    "production_function_warnings": 1372,
+    "production_function_failures": 1367,
     "production_hard_gate_failures": 0,
     "dead_code_count": 751,
     "near_duplicate_count": 238,
@@ -3801,10 +3803,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.0709753628079649
+    "declarations": 0.07088810246039771
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07341537117267995
+    "declarations": 0.07331770094884939
    },
    "analyzer_coverage": {
     "tools": [
@@ -3828,15 +3830,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -3851,20 +3853,20 @@
    },
    "production_dimensions": {
     "file_size": 0.05933053630062021,
-    "declarations": 0.08266642042189937,
+    "declarations": 0.08184560453090371,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "QuickLook",
    "pinned_commit": "60eea46ae2efaf29c9c3a80c61a618ad774bea20",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 456,
    "declarations": 2309,
    "dimensions": {
     "file_size": 0.05646929824561404,
-    "declarations": 0.11312351543942993,
+    "declarations": 0.11282660332541568,
     "duplication": 0.2850877192982456,
     "risk": 0.039473684210526314,
     "gates": 0.0
@@ -3907,7 +3909,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -3922,15 +3924,15 @@
    },
    "production_dimensions": {
     "file_size": 0.05646929824561404,
-    "declarations": 0.11312351543942993,
+    "declarations": 0.11282660332541568,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "RevokeMsgPatcher",
    "pinned_commit": "8360fe2af70ef908dfe514eb78ca75129eacc5cc",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 52,
    "declarations": 235,
    "dimensions": {
@@ -3977,7 +3979,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0"
+     "lizard": "1.24.0"
     },
     "unexamined": [
      "documentation",
@@ -3993,18 +3995,18 @@
     "file_size": 0.052884615384615384,
     "declarations": 0.12568306010928962,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "RxJava",
    "pinned_commit": "947e681bca8aa5526a52a51e3953c82148ccb36b",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 2121,
    "declarations": 28645,
    "dimensions": {
     "file_size": 0.10372465818010372,
-    "declarations": 0.02953261427837699,
+    "declarations": 0.027813993915688832,
     "duplication": 1.024045261669024,
     "risk": 0.07685054219707685,
     "gates": 0.0
@@ -4015,8 +4017,8 @@
     "production_files_scanned": 1056,
     "production_file_warnings": 61,
     "production_file_failures": 14,
-    "production_function_warnings": 335,
-    "production_function_failures": 287,
+    "production_function_warnings": 320,
+    "production_function_failures": 269,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 193,
@@ -4026,10 +4028,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.02016145186490926
+    "declarations": 0.018348029045643154
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.01682211858760826
+    "declarations": 0.014634146341463415
    },
    "analyzer_coverage": {
     "tools": [
@@ -4052,14 +4054,14 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -4073,20 +4075,20 @@
    },
    "production_dimensions": {
     "file_size": 0.06486742424242424,
-    "declarations": 0.03457596840917638,
+    "declarations": 0.030674125611132006,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "ScreenToGif",
    "pinned_commit": "a4d0a67c2131cd048ceec86cd40afc2f1a06f2fd",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 657,
    "declarations": 3587,
    "dimensions": {
     "file_size": 0.06468797564687975,
-    "declarations": 0.10322069693769799,
+    "declarations": 0.10198873636043647,
     "duplication": 0.3302891933028919,
     "risk": 0.15220700152207,
     "gates": 0.0
@@ -4097,8 +4099,8 @@
     "production_files_scanned": 657,
     "production_file_warnings": 39,
     "production_file_failures": 15,
-    "production_function_warnings": 180,
-    "production_function_failures": 247,
+    "production_function_warnings": 183,
+    "production_function_failures": 241,
     "production_hard_gate_failures": 0,
     "dead_code_count": 10,
     "near_duplicate_count": 47,
@@ -4128,7 +4130,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0"
+     "lizard": "1.24.0"
     },
     "unexamined": [
      "documentation",
@@ -4142,20 +4144,20 @@
    },
    "production_dimensions": {
     "file_size": 0.06468797564687975,
-    "declarations": 0.10322069693769799,
+    "declarations": 0.10198873636043647,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "ShareX",
    "pinned_commit": "96adbf0c12d54deb6e8778a9287b59bb1f6240fa",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1119,
    "declarations": 9329,
    "dimensions": {
     "file_size": 0.07506702412868632,
-    "declarations": 0.08313648293963255,
+    "declarations": 0.08001968503937008,
     "duplication": 0.2779267202859696,
     "risk": 0.004468275245755138,
     "gates": 0.0
@@ -4166,8 +4168,8 @@
     "production_files_scanned": 1119,
     "production_file_warnings": 64,
     "production_file_failures": 27,
-    "production_function_warnings": 437,
-    "production_function_failures": 434,
+    "production_function_warnings": 434,
+    "production_function_failures": 430,
     "production_hard_gate_failures": 0,
     "dead_code_count": 160,
     "near_duplicate_count": 73,
@@ -4197,7 +4199,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0"
+     "lizard": "1.24.0"
     },
     "unexamined": [
      "documentation",
@@ -4211,20 +4213,20 @@
    },
    "production_dimensions": {
     "file_size": 0.07506702412868632,
-    "declarations": 0.08313648293963255,
+    "declarations": 0.08001968503937008,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "SteamTools",
    "pinned_commit": "d04213147e77a8d73277fa8b86eeecfa444df071",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 936,
    "declarations": 4109,
    "dimensions": {
     "file_size": 0.0405982905982906,
-    "declarations": 0.09107203823830659,
+    "declarations": 0.08842608398770911,
     "duplication": 0.12179487179487179,
     "risk": 0.0405982905982906,
     "gates": 0.0
@@ -4235,8 +4237,8 @@
     "production_files_scanned": 936,
     "production_file_warnings": 39,
     "production_file_failures": 9,
-    "production_function_warnings": 211,
-    "production_function_failures": 197,
+    "production_function_warnings": 206,
+    "production_function_failures": 195,
     "production_hard_gate_failures": 0,
     "dead_code_count": 84,
     "near_duplicate_count": 11,
@@ -4266,7 +4268,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0"
+     "lizard": "1.24.0"
     },
     "unexamined": [
      "documentation",
@@ -4280,15 +4282,15 @@
    },
    "production_dimensions": {
     "file_size": 0.0405982905982906,
-    "declarations": 0.09107203823830659,
+    "declarations": 0.08842608398770911,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "TrafficMonitor",
    "pinned_commit": "188b8773b959733bfc0e4f506c762d9a255883d4",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 230,
    "declarations": 2151,
    "dimensions": {
@@ -4336,7 +4338,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -4352,13 +4354,13 @@
     "file_size": 0.08552631578947369,
     "declarations": 0.06338028169014084,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "Ventoy",
    "pinned_commit": "6568972abca37e33e031e1f2651a68a86491082b",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 773,
    "declarations": 5476,
    "dimensions": {
@@ -4412,15 +4414,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -4436,18 +4438,18 @@
     "file_size": 0.23990885416666666,
     "declarations": 0.2340610270404366,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "WRF",
    "pinned_commit": "06d4240ae989cc3e50af412bb472df3d9048783c",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 2139,
    "declarations": 9312,
    "dimensions": {
     "file_size": 0.3158017765310893,
-    "declarations": 0.37262787482719617,
+    "declarations": 0.3725336181978132,
     "duplication": 2.9869097709209913,
     "risk": 0.15287517531556802,
     "gates": 0.0
@@ -4458,8 +4460,8 @@
     "production_files_scanned": 2111,
     "production_file_warnings": 266,
     "production_file_failures": 513,
-    "production_function_warnings": 1111,
-    "production_function_failures": 2664,
+    "production_function_warnings": 1107,
+    "production_function_failures": 2665,
     "production_hard_gate_failures": 0,
     "dead_code_count": 2,
     "near_duplicate_count": 589,
@@ -4482,6 +4484,7 @@
      "declaration-size",
      "duplicate-blocks",
      "file-size",
+     "fortitude",
      "history",
      "interrogate",
      "jscpd",
@@ -4495,14 +4498,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
+     "fortitude": "fortitude 0.9.2",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -4520,15 +4524,15 @@
    },
    "production_dimensions": {
     "file_size": 0.31987209853150167,
-    "declarations": 0.37279818822345245,
+    "declarations": 0.3727038248616004,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "aria2",
    "pinned_commit": "9e7273583f83e881e3ec067b523ba88724088d2f",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1204,
    "declarations": 7325,
    "dimensions": {
@@ -4582,15 +4586,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -4606,18 +4610,18 @@
     "file_size": 0.06001021450459653,
     "declarations": 0.056697674418604654,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "aspnetcore",
    "pinned_commit": "797634df2f3d3e7f16aedf9f81f7d878510ccdf1",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 11771,
    "declarations": 87255,
    "dimensions": {
     "file_size": 0.06881318494605386,
-    "declarations": 0.055885356823694624,
+    "declarations": 0.05463707675503922,
     "duplication": 0.5113414323337014,
     "risk": 0.10347464106702914,
     "gates": 0.0
@@ -4628,8 +4632,8 @@
     "production_files_scanned": 7580,
     "production_file_warnings": 268,
     "production_file_failures": 89,
-    "production_function_warnings": 1369,
-    "production_function_failures": 1405,
+    "production_function_warnings": 1328,
+    "production_function_failures": 1388,
     "production_hard_gate_failures": 0,
     "dead_code_count": 107,
     "near_duplicate_count": 279,
@@ -4639,7 +4643,7 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.06044444138386955
+    "declarations": 0.060443648387985674
    },
    "analyzer_production_dimensions": {
     "declarations": 0.06686900506140941
@@ -4667,16 +4671,16 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -4691,32 +4695,32 @@
    },
    "production_dimensions": {
     "file_size": 0.04112796833773087,
-    "declarations": 0.0676182992840929,
+    "declarations": 0.06490309062336301,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "bitcoin",
    "pinned_commit": "4519933391dd23dbf1a4eceec6dd53d2e9e71cc3",
-   "tool_version": "1.10.1",
-   "files": 2301,
-   "declarations": 17552,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 2310,
+   "declarations": 17589,
    "dimensions": {
-    "file_size": 0.16297262059973924,
-    "declarations": 0.09859464207290294,
-    "duplication": 0.38939591481964364,
-    "risk": 0.1295089091699261,
+    "file_size": 0.16244588744588745,
+    "declarations": 0.09838810641627543,
+    "duplication": 0.39090909090909093,
+    "risk": 0.129004329004329,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 763,
-    "production_declarations_scanned": 11088,
-    "production_files_scanned": 1530,
+    "test_file_count": 770,
+    "production_declarations_scanned": 11099,
+    "production_files_scanned": 1532,
     "production_file_warnings": 113,
     "production_file_failures": 188,
-    "production_function_warnings": 565,
-    "production_function_failures": 695,
+    "production_function_warnings": 564,
+    "production_function_failures": 698,
     "production_hard_gate_failures": 0,
     "dead_code_count": 1847,
     "near_duplicate_count": 54,
@@ -4726,10 +4730,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.08523651947488337
+    "declarations": 0.08558254002596279
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.08263004138602613
+    "declarations": 0.08319160997732426
    },
    "analyzer_coverage": {
     "tools": [
@@ -4753,15 +4757,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -4775,21 +4779,21 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.1730392156862745,
-    "declarations": 0.10535141440653252,
+    "file_size": 0.17297650130548303,
+    "declarations": 0.10550592348028744,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "calculator",
    "pinned_commit": "4fd3fc53bade573ea2ac1e1ebad9bf603713f85e",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 310,
    "declarations": 2985,
    "dimensions": {
     "file_size": 0.12419354838709677,
-    "declarations": 0.05850277264325324,
+    "declarations": 0.05841035120147874,
     "duplication": 0.2709677419354839,
     "risk": 0.02903225806451613,
     "gates": 0.0
@@ -4832,7 +4836,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -4847,20 +4851,20 @@
    },
    "production_dimensions": {
     "file_size": 0.12419354838709677,
-    "declarations": 0.05850277264325324,
+    "declarations": 0.05841035120147874,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "cp2k",
    "pinned_commit": "375a5ce9d028a60d4c3291b2b3eb10053932e6a3",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1824,
    "declarations": 2432,
    "dimensions": {
     "file_size": 0.40720942982456143,
-    "declarations": 0.1640134529147982,
+    "declarations": 0.16367713004484305,
     "duplication": 1.9731359649122806,
     "risk": 0.18475877192982457,
     "gates": 0.0
@@ -4872,7 +4876,7 @@
     "production_file_warnings": 365,
     "production_file_failures": 535,
     "production_function_warnings": 166,
-    "production_function_failures": 232,
+    "production_function_failures": 231,
     "production_hard_gate_failures": 0,
     "dead_code_count": 33,
     "near_duplicate_count": 45,
@@ -4895,6 +4899,7 @@
      "declaration-size",
      "duplicate-blocks",
      "file-size",
+     "fortitude",
      "history",
      "interrogate",
      "jscpd",
@@ -4909,15 +4914,16 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
+     "fortitude": "fortitude 0.9.2",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -4932,20 +4938,20 @@
    },
    "production_dimensions": {
     "file_size": 0.40822259136212624,
-    "declarations": 0.16434310018903592,
+    "declarations": 0.16446124763705103,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "curl",
    "pinned_commit": "e26f6e408a80dc0adcb704b0e2c408e240f482cc",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1998,
    "declarations": 7298,
    "dimensions": {
     "file_size": 0.08283283283283284,
-    "declarations": 0.230384788817075,
+    "declarations": 0.2301969036524876,
     "duplication": 0.28128128128128127,
     "risk": 0.012512512512512513,
     "gates": 0.0
@@ -4956,8 +4962,8 @@
     "production_files_scanned": 1542,
     "production_file_warnings": 74,
     "production_file_failures": 80,
-    "production_function_warnings": 506,
-    "production_function_failures": 851,
+    "production_function_warnings": 508,
+    "production_function_failures": 849,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 64,
@@ -4988,7 +4994,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -5002,20 +5008,20 @@
    },
    "production_dimensions": {
     "file_size": 0.08527885862516213,
-    "declarations": 0.2542372881355932,
+    "declarations": 0.25402542372881354,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "dbeaver",
    "pinned_commit": "65c782e56bc4a48f0154d65dea9ed79d990609d4",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 6588,
    "declarations": 59130,
    "dimensions": {
     "file_size": 0.055631451123254405,
-    "declarations": 0.05230201672405312,
+    "declarations": 0.05204623708804722,
     "duplication": 0.21903460837887068,
     "risk": 0.05919854280510018,
     "gates": 0.0
@@ -5027,7 +5033,7 @@
     "production_file_warnings": 288,
     "production_file_failures": 96,
     "production_function_warnings": 1753,
-    "production_function_failures": 2039,
+    "production_function_failures": 2032,
     "production_hard_gate_failures": 0,
     "dead_code_count": 7,
     "near_duplicate_count": 172,
@@ -5059,7 +5065,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
     },
@@ -5074,20 +5080,20 @@
    },
    "production_dimensions": {
     "file_size": 0.055087366630586054,
-    "declarations": 0.0527578782146738,
+    "declarations": 0.05251136958184087,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "dubbo",
    "pinned_commit": "5553cb77bd26b717c8cbaf83079765ac05d7d164",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 4068,
    "declarations": 35281,
    "dimensions": {
     "file_size": 0.04221976401179941,
-    "declarations": 0.03274336283185841,
+    "declarations": 0.03221894460832514,
     "duplication": 0.27335299901671584,
     "risk": 0.035889872173058016,
     "gates": 0.0
@@ -5098,8 +5104,8 @@
     "production_files_scanned": 2445,
     "production_file_warnings": 102,
     "production_file_failures": 31,
-    "production_function_warnings": 607,
-    "production_function_failures": 519,
+    "production_function_warnings": 593,
+    "production_function_failures": 517,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 119,
@@ -5131,7 +5137,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
     },
@@ -5146,45 +5152,45 @@
    },
    "production_dimensions": {
     "file_size": 0.0483640081799591,
-    "declarations": 0.03515248021617448,
+    "declarations": 0.034428681721675354,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "duckdb",
    "pinned_commit": "9c21294d984dfe9a1da5d055b5fce3e8a0d634b2",
-   "tool_version": "1.10.1",
-   "files": 4177,
-   "declarations": 49045,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 4222,
+   "declarations": 49645,
    "dimensions": {
-    "file_size": 0.10312425185539861,
-    "declarations": 0.08070015366884364,
-    "duplication": 0.23078764663634188,
-    "risk": 0.15465645199904238,
+    "file_size": 0.10326859308384652,
+    "declarations": 0.07992245488391947,
+    "duplication": 0.2318806252960682,
+    "risk": 0.15300805305542398,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 318,
-    "production_declarations_scanned": 45043,
-    "production_files_scanned": 3855,
-    "production_file_warnings": 289,
-    "production_file_failures": 168,
-    "production_function_warnings": 1558,
-    "production_function_failures": 1938,
+    "test_file_count": 327,
+    "production_declarations_scanned": 45490,
+    "production_files_scanned": 3891,
+    "production_file_warnings": 293,
+    "production_file_failures": 169,
+    "production_function_warnings": 1568,
+    "production_function_failures": 1940,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 7868,
-    "near_duplicate_count": 208,
+    "dead_code_count": 7867,
+    "near_duplicate_count": 210,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.06651249628718123
+    "declarations": 0.06656033404692765
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.06774602026049203
+    "declarations": 0.06779574871806456
    },
    "analyzer_coverage": {
     "tools": [
@@ -5208,18 +5214,19 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -5229,21 +5236,21 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.0980544747081712,
-    "declarations": 0.07945675105485232,
+    "file_size": 0.09811102544333077,
+    "declarations": 0.07890786141354011,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "electron",
    "pinned_commit": "4cf22168dc6c2161ce6ff6a7917099dd27eda5d3",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 2202,
    "declarations": 8970,
    "dimensions": {
     "file_size": 0.0607402361489555,
-    "declarations": 0.05373536837273353,
+    "declarations": 0.05353454211613495,
     "duplication": 0.24159854677565848,
     "risk": 0.17529518619436876,
     "gates": 0.0
@@ -5254,7 +5261,7 @@
     "production_files_scanned": 1502,
     "production_file_warnings": 66,
     "production_file_failures": 41,
-    "production_function_warnings": 259,
+    "production_function_warnings": 258,
     "production_function_failures": 212,
     "production_hard_gate_failures": 0,
     "dead_code_count": 938,
@@ -5265,10 +5272,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.04678511783262201
+    "declarations": 0.046896743668243805
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.04251756697408871
+    "declarations": 0.042572463768115944
    },
    "analyzer_coverage": {
     "tools": [
@@ -5292,15 +5299,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -5315,20 +5322,20 @@
    },
    "production_dimensions": {
     "file_size": 0.0659121171770972,
-    "declarations": 0.058485302123026675,
+    "declarations": 0.05828116494284159,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "elmerfem",
    "pinned_commit": "a70ee422cbb75b9b9a45070f9328c695ca625f55",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 3438,
    "declarations": 15877,
    "dimensions": {
     "file_size": 0.22854857475276324,
-    "declarations": 0.32121986851716583,
+    "declarations": 0.3211534630453549,
     "duplication": 1.3865619546247818,
     "risk": 0.08551483420593368,
     "gates": 0.0
@@ -5339,8 +5346,8 @@
     "production_files_scanned": 3232,
     "production_file_warnings": 493,
     "production_file_failures": 389,
-    "production_function_warnings": 998,
-    "production_function_failures": 4166,
+    "production_function_warnings": 999,
+    "production_function_failures": 4165,
     "production_hard_gate_failures": 0,
     "dead_code_count": 1208,
     "near_duplicate_count": 451,
@@ -5350,10 +5357,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.26267522142408817
+    "declarations": 0.2626725700739088
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.2606022358456545
+    "declarations": 0.26059994231323913
    },
    "analyzer_coverage": {
     "tools": [
@@ -5363,6 +5370,7 @@
      "declaration-size",
      "duplicate-blocks",
      "file-size",
+     "fortitude",
      "history",
      "jscpd",
      "lizard",
@@ -5375,14 +5383,15 @@
      "ruff"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
+     "fortitude": "fortitude 0.9.2",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14"
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5"
     },
     "unexamined": [
      "documentation",
@@ -5396,20 +5405,20 @@
    },
    "production_dimensions": {
     "file_size": 0.23654084158415842,
-    "declarations": 0.31865214431586114,
+    "declarations": 0.3185840707964602,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "fds",
    "pinned_commit": "4d9aa5502c65f0df46268bed1e5d788c21f59d83",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 266,
    "declarations": 1426,
    "dimensions": {
     "file_size": 0.1588345864661654,
-    "declarations": 0.47155448717948717,
+    "declarations": 0.4713541666666667,
     "duplication": 2.0488721804511276,
     "risk": 0.0037593984962406013,
     "gates": 0.0
@@ -5421,7 +5430,7 @@
     "production_file_warnings": 11,
     "production_file_failures": 34,
     "production_function_warnings": 168,
-    "production_function_failures": 529,
+    "production_function_failures": 528,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 3,
@@ -5444,6 +5453,7 @@
      "declaration-size",
      "duplicate-blocks",
      "file-size",
+     "fortitude",
      "history",
      "jscpd",
      "lizard",
@@ -5457,37 +5467,35 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
+     "fortitude": "fortitude 0.9.2",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
      "documentation",
-     "style",
      "testing",
      "types"
     ],
-    "single_source": [
-     "dead-code"
-    ]
+    "single_source": []
    },
    "production_dimensions": {
     "file_size": 0.16064638783269963,
-    "declarations": 0.47173215717722533,
+    "declarations": 0.4715316760224539,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "fpm",
    "pinned_commit": "9a4433dd19183b548cd67afbd32992f53dc2b987",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 266,
    "declarations": 1337,
    "dimensions": {
@@ -5526,6 +5534,7 @@
      "declaration-size",
      "duplicate-blocks",
      "file-size",
+     "fortitude",
      "history",
      "jscpd",
      "lizard",
@@ -5534,8 +5543,9 @@
      "risk-patterns"
     ],
     "versions": {
+     "fortitude": "fortitude 0.9.2",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -5552,18 +5562,18 @@
     "file_size": 0.08991228070175439,
     "declarations": 0.21529745042492918,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "ghidra",
    "pinned_commit": "2035b8153afaf7ce2edde24a2c80b62bbcf5127f",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 16692,
    "declarations": 221619,
    "dimensions": {
     "file_size": 0.10395698538221902,
-    "declarations": 0.04326377720528553,
+    "declarations": 0.0429902749139161,
     "duplication": 0.4462616822429907,
     "risk": 0.22957105200095854,
     "gates": 0.0
@@ -5574,8 +5584,8 @@
     "production_files_scanned": 15239,
     "production_file_warnings": 1196,
     "production_file_failures": 617,
-    "production_function_warnings": 5906,
-    "production_function_failures": 5567,
+    "production_function_warnings": 5868,
+    "production_function_failures": 5564,
     "production_hard_gate_failures": 0,
     "dead_code_count": 2923,
     "near_duplicate_count": 1289,
@@ -5585,10 +5595,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.03796497837710558
+    "declarations": 0.03792226863715613
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.038864588118587756
+    "declarations": 0.03883082775472631
    },
    "analyzer_coverage": {
     "tools": [
@@ -5611,14 +5621,14 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -5632,34 +5642,34 @@
    },
    "production_dimensions": {
     "file_size": 0.09949799855633572,
-    "declarations": 0.04510936927186076,
+    "declarations": 0.0448169614021612,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "git",
    "pinned_commit": "3cb9185f65410273787f74333cc027d2ea5daada",
-   "tool_version": "1.10.1",
-   "files": 1011,
-   "declarations": 13994,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 1022,
+   "declarations": 14101,
    "dimensions": {
-    "file_size": 0.22551928783382788,
-    "declarations": 0.18356839490343776,
-    "duplication": 0.2354104846686449,
-    "risk": 0.19980217606330367,
+    "file_size": 0.2243150684931507,
+    "declarations": 0.18220507517301726,
+    "duplication": 0.2328767123287671,
+    "risk": 0.19765166340508805,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 8,
-    "production_declarations_scanned": 13951,
-    "production_files_scanned": 1003,
-    "production_file_warnings": 122,
-    "production_file_failures": 151,
-    "production_function_warnings": 1196,
-    "production_function_failures": 1413,
+    "production_declarations_scanned": 14058,
+    "production_files_scanned": 1014,
+    "production_file_warnings": 123,
+    "production_file_failures": 152,
+    "production_function_warnings": 1192,
+    "production_function_failures": 1414,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 20,
+    "dead_code_count": 24,
     "near_duplicate_count": 36,
     "idiom_concern_count": 0,
     "has_readme": true,
@@ -5667,10 +5677,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.14841595361007
+    "declarations": 0.14842313675576296
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.1488999290276792
+    "declarations": 0.1489071038251366
    },
    "analyzer_coverage": {
     "tools": [
@@ -5693,17 +5703,18 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -5713,46 +5724,46 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.22706879361914256,
-    "declarations": 0.18408250241235125,
+    "file_size": 0.22583826429980275,
+    "declarations": 0.18271072796934865,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "grpc",
    "pinned_commit": "f0358aedb97f0f1a564c6af1410a9699bc85589c",
-   "tool_version": "1.10.1",
-   "files": 6197,
-   "declarations": 62165,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 6582,
+   "declarations": 64659,
    "dimensions": {
-    "file_size": 0.09036630627723091,
-    "declarations": 0.039469322959370584,
-    "duplication": 0.40551879941907376,
-    "risk": 0.2417298692915927,
+    "file_size": 0.08796718322698267,
+    "declarations": 0.038656842105263156,
+    "duplication": 0.406563354603464,
+    "risk": 0.22759039805530235,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 1443,
-    "production_declarations_scanned": 43025,
-    "production_files_scanned": 4741,
-    "production_file_warnings": 234,
-    "production_file_failures": 171,
-    "production_function_warnings": 665,
-    "production_function_failures": 638,
+    "test_file_count": 1688,
+    "production_declarations_scanned": 43844,
+    "production_files_scanned": 4881,
+    "production_file_warnings": 239,
+    "production_file_failures": 174,
+    "production_function_warnings": 675,
+    "production_function_failures": 648,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 8133,
-    "near_duplicate_count": 309,
+    "dead_code_count": 8288,
+    "near_duplicate_count": 316,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.024418185984092174
+    "declarations": 0.0244189852700491
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.021119098918446145
+    "declarations": 0.02112
    },
    "analyzer_coverage": {
     "tools": [
@@ -5777,16 +5788,16 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -5800,21 +5811,21 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.07308584686774942,
-    "declarations": 0.02979074064825451,
+    "file_size": 0.07232124564638394,
+    "declarations": 0.0295267843966747,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "halo",
    "pinned_commit": "4e7e5850b01640515323dcd4f08a1b42ff033147",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 2492,
    "declarations": 12415,
    "dimensions": {
     "file_size": 0.039727126805778494,
-    "declarations": 0.05350835322195704,
+    "declarations": 0.044486873508353224,
     "duplication": 0.1869983948635634,
     "risk": 0.02969502407704655,
     "gates": 0.0
@@ -5825,8 +5836,8 @@
     "production_files_scanned": 1990,
     "production_file_warnings": 84,
     "production_file_failures": 10,
-    "production_function_warnings": 287,
-    "production_function_failures": 288,
+    "production_function_warnings": 222,
+    "production_function_failures": 271,
     "production_hard_gate_failures": 0,
     "dead_code_count": 21,
     "near_duplicate_count": 76,
@@ -5857,7 +5868,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -5872,20 +5883,20 @@
    },
    "production_dimensions": {
     "file_size": 0.036180904522613064,
-    "declarations": 0.06465237166991553,
+    "declarations": 0.05240415854450942,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "imgui",
    "pinned_commit": "5316e7061425524682cafbafe8e0b86494a70470",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 119,
    "declarations": 2898,
    "dimensions": {
     "file_size": 0.27941176470588236,
-    "declarations": 0.17722868217054263,
+    "declarations": 0.17713178294573642,
     "duplication": 0.7142857142857143,
     "risk": 4.336134453781512,
     "gates": 0.05
@@ -5896,7 +5907,7 @@
     "production_files_scanned": 119,
     "production_file_warnings": 23,
     "production_file_failures": 20,
-    "production_function_warnings": 191,
+    "production_function_warnings": 190,
     "production_function_failures": 325,
     "production_hard_gate_failures": 1,
     "dead_code_count": 439,
@@ -5907,10 +5918,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.14131560773480664
+    "declarations": 0.14173567977915805
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.14131560773480664
+    "declarations": 0.14173567977915805
    },
    "analyzer_coverage": {
     "tools": [
@@ -5934,15 +5945,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -5956,20 +5967,20 @@
    },
    "production_dimensions": {
     "file_size": 0.27941176470588236,
-    "declarations": 0.17722868217054263,
+    "declarations": 0.17713178294573642,
     "gates": 0.05
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "jadx",
    "pinned_commit": "8f7ea4e2c4bb82ca935aaeee98d9e8d3f3f3fba8",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1945,
    "declarations": 17674,
    "dimensions": {
     "file_size": 0.032776349614395885,
-    "declarations": 0.04032804663142199,
+    "declarations": 0.040277212959197506,
     "duplication": 0.10077120822622108,
     "risk": 0.06683804627249357,
     "gates": 0.0
@@ -6013,7 +6024,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
     },
@@ -6030,18 +6041,18 @@
     "file_size": 0.050681089743589744,
     "declarations": 0.04534751542708672,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "java-design-patterns",
    "pinned_commit": "41625d8d354cdf6b6f10a82e29c2392b3efd5d20",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 2564,
    "declarations": 7580,
    "dimensions": {
     "file_size": 0.00828783151326053,
-    "declarations": 0.01048951048951049,
+    "declarations": 0.010443503864556496,
     "duplication": 0.24960998439937598,
     "risk": 0.0070202808112324495,
     "gates": 0.0
@@ -6085,7 +6096,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
     },
@@ -6100,20 +6111,20 @@
    },
    "production_dimensions": {
     "file_size": 0.009133611691022964,
-    "declarations": 0.013310529446757882,
+    "declarations": 0.013236168947055324,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "jellyfin",
    "pinned_commit": "1ccec11b918ebeaac7db0f785548e41b484adb87",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 2127,
    "declarations": 9727,
    "dimensions": {
     "file_size": 0.050540667606958155,
-    "declarations": 0.09303403522712224,
+    "declarations": 0.08952456628261157,
     "duplication": 0.23601316408086506,
     "risk": 0.07334273624823695,
     "gates": 0.0
@@ -6125,7 +6136,7 @@
     "production_file_warnings": 68,
     "production_file_failures": 43,
     "production_function_warnings": 426,
-    "production_function_failures": 511,
+    "production_function_failures": 496,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 32,
@@ -6155,7 +6166,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0"
+     "lizard": "1.24.0"
     },
     "unexamined": [
      "documentation",
@@ -6169,15 +6180,15 @@
    },
    "production_dimensions": {
     "file_size": 0.0498145204027557,
-    "declarations": 0.10875187719005507,
+    "declarations": 0.10478892040714166,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "jq",
    "pinned_commit": "9d241e277204b83c4a7ddc7d733e5c72f99ef500",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 61,
    "declarations": 697,
    "dimensions": {
@@ -6204,10 +6215,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.14072164948453608
+    "declarations": 0.1419753086419753
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.14164004259850904
+    "declarations": 0.14293304994686504
    },
    "analyzer_coverage": {
     "tools": [
@@ -6231,15 +6242,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -6255,29 +6266,29 @@
     "file_size": 0.24056603773584906,
     "declarations": 0.11454983922829581,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "json",
    "pinned_commit": "19386dd14af178fecd4a4a65549b07e240e092a9",
-   "tool_version": "1.10.1",
-   "files": 779,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 780,
    "declarations": 4467,
    "dimensions": {
-    "file_size": 0.07284980744544288,
-    "declarations": 0.08850294796206101,
-    "duplication": 0.4980744544287548,
-    "risk": 0.05391527599486521,
+    "file_size": 0.07275641025641026,
+    "declarations": 0.08831068956677775,
+    "duplication": 0.49743589743589745,
+    "risk": 0.05384615384615385,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 205,
     "production_declarations_scanned": 2321,
-    "production_files_scanned": 571,
+    "production_files_scanned": 572,
     "production_file_warnings": 9,
     "production_file_failures": 16,
-    "production_function_warnings": 43,
+    "production_function_warnings": 42,
     "production_function_failures": 190,
     "production_hard_gate_failures": 0,
     "dead_code_count": 138,
@@ -6315,18 +6326,19 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -6336,21 +6348,21 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.03765323992994746,
-    "declarations": 0.09552644587246663,
+    "file_size": 0.037587412587412584,
+    "declarations": 0.09515570934256055,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "lapack",
    "pinned_commit": "cee01836dc867f79d8fbbb1d9bc00bcdda6c0585",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 6528,
    "declarations": 7064,
    "dimensions": {
     "file_size": 0.17597273284313725,
-    "declarations": 0.721103014716388,
+    "declarations": 0.721067295327904,
     "duplication": 0.7938112745098039,
     "risk": 0.0024509803921568627,
     "gates": 0.0
@@ -6361,8 +6373,8 @@
     "production_files_scanned": 6522,
     "production_file_warnings": 1037,
     "production_file_failures": 371,
-    "production_function_warnings": 1292,
-    "production_function_failures": 4531,
+    "production_function_warnings": 1293,
+    "production_function_failures": 4530,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 1882,
@@ -6385,6 +6397,7 @@
      "declaration-size",
      "duplicate-blocks",
      "file-size",
+     "fortitude",
      "history",
      "interrogate",
      "jscpd",
@@ -6399,15 +6412,16 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
+     "fortitude": "fortitude 0.9.2",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -6422,20 +6436,20 @@
    },
    "production_dimensions": {
     "file_size": 0.17598129408157007,
-    "declarations": 0.721103014716388,
+    "declarations": 0.721067295327904,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "lede",
    "pinned_commit": "9262b55e09d9dc74024a8effb2b26512b100ef96",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 2793,
    "declarations": 37387,
    "dimensions": {
     "file_size": 0.32277121374865736,
-    "declarations": 0.23001182537857637,
+    "declarations": 0.22992970469401833,
     "duplication": 2.4403866809881847,
     "risk": 0.5538847117794486,
     "gates": 0.0
@@ -6446,8 +6460,8 @@
     "production_files_scanned": 2791,
     "production_file_warnings": 396,
     "production_file_failures": 659,
-    "production_function_warnings": 3193,
-    "production_function_failures": 4670,
+    "production_function_warnings": 3196,
+    "production_function_failures": 4664,
     "production_hard_gate_failures": 0,
     "dead_code_count": 19,
     "near_duplicate_count": 2542,
@@ -6483,14 +6497,14 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -6504,15 +6518,15 @@
    },
    "production_dimensions": {
     "file_size": 0.3226442135435328,
-    "declarations": 0.22992340817198645,
+    "declarations": 0.22984122809901056,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "mall",
    "pinned_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 533,
    "declarations": 14904,
    "dimensions": {
@@ -6561,7 +6575,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
     },
@@ -6578,30 +6592,30 @@
     "file_size": 0.08854166666666667,
     "declarations": 0.0010254596888260256,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "mpv",
    "pinned_commit": "f5bcfb195412e0ca733eac2e850879cd3b1ded18",
-   "tool_version": "1.10.1",
-   "files": 620,
-   "declarations": 7530,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 645,
+   "declarations": 7913,
    "dimensions": {
-    "file_size": 0.21451612903225806,
-    "declarations": 0.1676903245374583,
-    "duplication": 0.17258064516129032,
-    "risk": 0.09516129032258064,
+    "file_size": 0.21007751937984495,
+    "declarations": 0.16194900605012966,
+    "duplication": 0.16589147286821707,
+    "risk": 0.09147286821705426,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 28,
-    "production_declarations_scanned": 7427,
-    "production_files_scanned": 592,
-    "production_file_warnings": 103,
+    "production_declarations_scanned": 7810,
+    "production_files_scanned": 617,
+    "production_file_warnings": 105,
     "production_file_failures": 66,
-    "production_function_warnings": 522,
-    "production_function_failures": 686,
+    "production_function_warnings": 537,
+    "production_function_failures": 700,
     "production_hard_gate_failures": 0,
     "dead_code_count": 1,
     "near_duplicate_count": 18,
@@ -6611,10 +6625,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.13050754625121713
+    "declarations": 0.13067283124467696
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.1304992585269402
+    "declarations": 0.13066707844348363
    },
    "analyzer_coverage": {
     "tools": [
@@ -6638,18 +6652,19 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -6659,21 +6674,21 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.22297297297297297,
-    "declarations": 0.16735918744228995,
+    "file_size": 0.2179902755267423,
+    "declarations": 0.16155419222903886,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "nwchem",
    "pinned_commit": "76d77c1e7c9c06779932133a845bcd94d936772d",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 18361,
    "declarations": 43658,
    "dimensions": {
     "file_size": 0.1165241544578182,
-    "declarations": 0.6658568955568378,
+    "declarations": 0.6657645701096365,
     "duplication": 0.8248461412777082,
     "risk": 0.007189150917706008,
     "gates": 0.0
@@ -6684,8 +6699,8 @@
     "production_files_scanned": 18244,
     "production_file_warnings": 1385,
     "production_file_failures": 988,
-    "production_function_warnings": 3357,
-    "production_function_failures": 27013,
+    "production_function_warnings": 3355,
+    "production_function_failures": 27012,
     "production_hard_gate_failures": 0,
     "dead_code_count": 35,
     "near_duplicate_count": 2650,
@@ -6707,6 +6722,7 @@
      "declaration-size",
      "duplicate-blocks",
      "file-size",
+     "fortitude",
      "history",
      "interrogate",
      "jscpd",
@@ -6721,14 +6737,15 @@
      "vulture"
     ],
     "versions": {
+     "fortitude": "fortitude 0.9.2",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -6746,35 +6763,35 @@
    },
    "production_dimensions": {
     "file_size": 0.11687404078053058,
-    "declarations": 0.6675570130712896,
+    "declarations": 0.6674643088903309,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "obs-studio",
    "pinned_commit": "ecebe28a1ea87c30f652b5d06fcaf893c787108d",
-   "tool_version": "1.10.1",
-   "files": 1659,
-   "declarations": 15486,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 1698,
+   "declarations": 15787,
    "dimensions": {
-    "file_size": 0.12793851717902352,
-    "declarations": 0.10784596524122016,
-    "duplication": 0.3845690174804099,
-    "risk": 0.10849909584086799,
+    "file_size": 0.12838633686690223,
+    "declarations": 0.10779491897247187,
+    "duplication": 0.3828032979976443,
+    "risk": 0.10600706713780919,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 158,
-    "production_declarations_scanned": 15319,
-    "production_files_scanned": 1501,
-    "production_file_warnings": 137,
-    "production_file_failures": 113,
-    "production_function_warnings": 883,
-    "production_function_failures": 806,
+    "production_declarations_scanned": 15620,
+    "production_files_scanned": 1540,
+    "production_file_warnings": 143,
+    "production_file_failures": 115,
+    "production_function_warnings": 897,
+    "production_function_failures": 828,
     "production_hard_gate_failures": 0,
     "dead_code_count": 796,
-    "near_duplicate_count": 253,
+    "near_duplicate_count": 254,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
@@ -6807,17 +6824,18 @@
      "ruff"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14"
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5"
     },
     "unexamined": [
+     "documentation",
      "style",
      "testing",
      "types"
@@ -6827,46 +6845,46 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.1394070619586942,
-    "declarations": 0.1084837019790454,
+    "file_size": 0.1396103896103896,
+    "declarations": 0.10842018846373501,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "opencv",
    "pinned_commit": "3a718750a4d4bcde78bc93bcaf18b0303e956e55",
-   "tool_version": "1.10.1",
-   "files": 4660,
-   "declarations": 58896,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 4694,
+   "declarations": 59659,
    "dimensions": {
-    "file_size": 0.2067596566523605,
-    "declarations": 0.11038685540170479,
-    "duplication": 0.940343347639485,
-    "risk": 0.3263948497854077,
+    "file_size": 0.20606092884533447,
+    "declarations": 0.10895838880225173,
+    "duplication": 0.9365146996165318,
+    "risk": 0.324030677460588,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 484,
-    "production_declarations_scanned": 53675,
-    "production_files_scanned": 4176,
-    "production_file_warnings": 548,
+    "test_file_count": 506,
+    "production_declarations_scanned": 53831,
+    "production_files_scanned": 4188,
+    "production_file_warnings": 549,
     "production_file_failures": 520,
-    "production_function_warnings": 2520,
-    "production_function_failures": 3758,
+    "production_function_warnings": 2526,
+    "production_function_failures": 3759,
     "production_hard_gate_failures": 0,
     "dead_code_count": 5136,
-    "near_duplicate_count": 755,
+    "near_duplicate_count": 765,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.11003688840244842
+    "declarations": 0.11010097943985754
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.11530929227444625
+    "declarations": 0.11533615336153362
    },
    "analyzer_coverage": {
     "tools": [
@@ -6891,16 +6909,16 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -6914,21 +6932,21 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.20953065134099616,
-    "declarations": 0.11430369571195871,
+    "file_size": 0.20904966571155684,
+    "declarations": 0.1140303701360329,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "openfast",
    "pinned_commit": "2895884d2be01862173c88d70f86b358d2f1a50a",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 477,
    "declarations": 4642,
    "dimensions": {
     "file_size": 0.3642557651991614,
-    "declarations": 0.36401946818613484,
+    "declarations": 0.36259496676163344,
     "duplication": 1.7421383647798743,
     "risk": 1.3563941299790356,
     "gates": 0.0
@@ -6939,8 +6957,8 @@
     "production_files_scanned": 431,
     "production_file_warnings": 64,
     "production_file_failures": 136,
-    "production_function_warnings": 631,
-    "production_function_failures": 1246,
+    "production_function_warnings": 627,
+    "production_function_failures": 1241,
     "production_hard_gate_failures": 0,
     "dead_code_count": 13,
     "near_duplicate_count": 199,
@@ -6963,6 +6981,7 @@
      "declaration-size",
      "duplicate-blocks",
      "file-size",
+     "fortitude",
      "history",
      "jscpd",
      "multimetric",
@@ -6975,13 +6994,14 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
+     "fortitude": "fortitude 0.9.2",
      "jscpd": "cpd 5.1.1",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -6999,35 +7019,35 @@
    },
    "production_dimensions": {
     "file_size": 0.39269141531322505,
-    "declarations": 0.36917098445595853,
+    "declarations": 0.3676905995558845,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "php-src",
    "pinned_commit": "0bf872bebf511f0c69f15bf5d9b86eb7176fd0eb",
-   "tool_version": "1.10.1",
-   "files": 2352,
-   "declarations": 20676,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 2549,
+   "declarations": 26150,
    "dimensions": {
-    "file_size": 0.2233205782312925,
-    "declarations": 0.2435581069146449,
-    "duplication": 1.5225340136054422,
-    "risk": 0.3460884353741497,
+    "file_size": 0.21665358964299725,
+    "declarations": 0.1950564157469939,
+    "duplication": 1.4146724205570813,
+    "risk": 0.3193409180070616,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 41,
-    "production_declarations_scanned": 20513,
-    "production_files_scanned": 2305,
-    "production_file_warnings": 244,
-    "production_file_failures": 362,
-    "production_function_warnings": 1609,
-    "production_function_failures": 3575,
+    "test_file_count": 47,
+    "production_declarations_scanned": 25819,
+    "production_files_scanned": 2496,
+    "production_file_warnings": 259,
+    "production_file_failures": 379,
+    "production_function_warnings": 1640,
+    "production_function_failures": 3610,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 63,
-    "near_duplicate_count": 1011,
+    "dead_code_count": 2398,
+    "near_duplicate_count": 1012,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
@@ -7061,15 +7081,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -7082,46 +7102,46 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.2262472885032538,
-    "declarations": 0.24520892240025133,
+    "file_size": 0.21955128205128205,
+    "declarations": 0.19717047964328874,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "protobuf",
    "pinned_commit": "065d6fabf7345bd469844f5ed472664602570bc5",
-   "tool_version": "1.10.1",
-   "files": 1865,
-   "declarations": 36924,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 2193,
+   "declarations": 40312,
    "dimensions": {
-    "file_size": 0.1871313672922252,
-    "declarations": 0.059876667433302666,
-    "duplication": 0.8278820375335121,
-    "risk": 0.446112600536193,
+    "file_size": 0.17350661194710443,
+    "declarations": 0.05780840416236397,
+    "duplication": 0.7546739626082991,
+    "risk": 0.3793889648882809,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 298,
-    "production_declarations_scanned": 30484,
-    "production_files_scanned": 1567,
-    "production_file_warnings": 170,
-    "production_file_failures": 164,
-    "production_function_warnings": 896,
-    "production_function_failures": 1113,
+    "test_file_count": 379,
+    "production_declarations_scanned": 32908,
+    "production_files_scanned": 1814,
+    "production_file_warnings": 190,
+    "production_file_failures": 166,
+    "production_function_warnings": 936,
+    "production_function_failures": 1178,
     "production_hard_gate_failures": 0,
-    "dead_code_count": 1339,
-    "near_duplicate_count": 1088,
+    "dead_code_count": 2602,
+    "near_duplicate_count": 1089,
     "idiom_concern_count": 0,
     "has_readme": true,
     "has_changelog": false,
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.045941744395352646
+    "declarations": 0.04635092092507963
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.04260790813711083
+    "declarations": 0.04300524433021915
    },
    "analyzer_coverage": {
     "tools": [
@@ -7146,16 +7166,16 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -7169,21 +7189,21 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.17453733248245054,
-    "declarations": 0.059729513611236656,
+    "file_size": 0.16138368246968027,
+    "declarations": 0.05719404630650496,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "qBittorrent",
    "pinned_commit": "af5a6b6cb301f1dae707b351621fef3f2d6cccf3",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 911,
    "declarations": 7786,
    "dimensions": {
     "file_size": 0.23929747530186607,
-    "declarations": 0.07887447642210513,
+    "declarations": 0.07894203486015404,
     "duplication": 2.70801317233809,
     "risk": 0.15367727771679474,
     "gates": 0.0
@@ -7205,10 +7225,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.07092678525393142
+    "declarations": 0.07110180412371134
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07091643853474124
+    "declarations": 0.07109344454580999
    },
    "analyzer_coverage": {
     "tools": [
@@ -7232,15 +7252,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -7255,20 +7275,20 @@
    },
    "production_dimensions": {
     "file_size": 0.24437570303712036,
-    "declarations": 0.07871064467766117,
+    "declarations": 0.07877879242197083,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "raylib",
    "pinned_commit": "9b2efc45522bdce8cb9462ccaf3b1f5a25888e54",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 405,
    "declarations": 10358,
    "dimensions": {
     "file_size": 0.2351851851851852,
-    "declarations": 0.1939825610868904,
+    "declarations": 0.1939318665720369,
     "duplication": 2.106172839506173,
     "risk": 1.0074074074074073,
     "gates": 0.0
@@ -7311,7 +7331,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -7325,32 +7345,32 @@
    },
    "production_dimensions": {
     "file_size": 0.23576732673267325,
-    "declarations": 0.19395153112958832,
+    "declarations": 0.19390083147434597,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "redis",
    "pinned_commit": "ceadaab2be6770d6c5faab1e0b4f57f0d5130cc4",
-   "tool_version": "1.10.1",
-   "files": 876,
-   "declarations": 9336,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 885,
+   "declarations": 9346,
    "dimensions": {
-    "file_size": 0.18864155251141554,
-    "declarations": 0.15998031723978234,
-    "duplication": 0.3801369863013699,
-    "risk": 0.05707762557077625,
+    "file_size": 0.1867231638418079,
+    "declarations": 0.16013185287994447,
+    "duplication": 0.37740112994350283,
+    "risk": 0.05649717514124294,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 258,
-    "production_declarations_scanned": 8305,
-    "production_files_scanned": 617,
+    "production_declarations_scanned": 8315,
+    "production_files_scanned": 626,
     "production_file_warnings": 76,
     "production_file_failures": 85,
-    "production_function_warnings": 619,
-    "production_function_failures": 829,
+    "production_function_warnings": 622,
+    "production_function_failures": 831,
     "production_hard_gate_failures": 0,
     "dead_code_count": 82,
     "near_duplicate_count": 41,
@@ -7360,10 +7380,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.10986953370379318
+    "declarations": 0.10991223125855544
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.11694800155219247
+    "declarations": 0.11699806013579049
    },
    "analyzer_coverage": {
     "tools": [
@@ -7387,15 +7407,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -7408,21 +7428,21 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.21839546191247974,
-    "declarations": 0.16573508384245417,
+    "file_size": 0.2152555910543131,
+    "declarations": 0.16596338613347184,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "retrofit",
    "pinned_commit": "e27d855b7b029e7f907dfc52205fdb3e9c603c16",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 941,
    "declarations": 2814,
    "dimensions": {
     "file_size": 0.061902231668437835,
-    "declarations": 0.03420589529256489,
+    "declarations": 0.03409590849098108,
     "duplication": 0.22422954303931988,
     "risk": 0.01487778958554729,
     "gates": 0.0
@@ -7433,7 +7453,7 @@
     "production_files_scanned": 812,
     "production_file_warnings": 42,
     "production_file_failures": 3,
-    "production_function_warnings": 21,
+    "production_function_warnings": 20,
     "production_function_failures": 42,
     "production_hard_gate_failures": 0,
     "dead_code_count": 1,
@@ -7466,7 +7486,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
     },
@@ -7482,15 +7502,15 @@
    },
    "production_dimensions": {
     "file_size": 0.062192118226600986,
-    "declarations": 0.0583232077764277,
+    "declarations": 0.05801944106925881,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "rufus",
    "pinned_commit": "2368e49a82e854d3e702f824648cc723953dbb53",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 482,
    "declarations": 2852,
    "dimensions": {
@@ -7544,15 +7564,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -7569,13 +7589,13 @@
     "file_size": 0.22972972972972974,
     "declarations": 0.195391000436872,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "scrcpy",
    "pinned_commit": "2926c06c5dc3064ae6d8db706f1a98a37cfcf3f0",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 305,
    "declarations": 1306,
    "dimensions": {
@@ -7624,7 +7644,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
     },
@@ -7641,18 +7661,18 @@
     "file_size": 0.06993006993006994,
     "declarations": 0.0504278728606357,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "specfem3d",
    "pinned_commit": "7a1c76454396f8dd2f5a67ea524ca372e2c91993",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1608,
    "declarations": 5448,
    "dimensions": {
     "file_size": 0.2248134328358209,
-    "declarations": 0.35435435435435436,
+    "declarations": 0.35478335478335477,
     "duplication": 0.9844527363184079,
     "risk": 0.10323383084577115,
     "gates": 0.0
@@ -7663,8 +7683,8 @@
     "production_files_scanned": 1596,
     "production_file_warnings": 233,
     "production_file_failures": 209,
-    "production_function_warnings": 743,
-    "production_function_failures": 1347,
+    "production_function_warnings": 739,
+    "production_function_failures": 1351,
     "production_hard_gate_failures": 0,
     "dead_code_count": 27,
     "near_duplicate_count": 482,
@@ -7674,10 +7694,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.26888392857142857
+    "declarations": 0.2688325598000714
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.269124218051832
+    "declarations": 0.26907271752724676
    },
    "analyzer_coverage": {
     "tools": [
@@ -7687,6 +7707,7 @@
      "declaration-size",
      "duplicate-blocks",
      "file-size",
+     "fortitude",
      "history",
      "jscpd",
      "lizard",
@@ -7700,14 +7721,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
+     "fortitude": "fortitude 0.9.2",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -7722,32 +7744,32 @@
    },
    "production_dimensions": {
     "file_size": 0.22587719298245615,
-    "declarations": 0.35440386680988184,
+    "declarations": 0.35483351235230937,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "spring-boot",
    "pinned_commit": "87cacdaabd38be0b8c0bc4a9809fbea35c9e48f8",
-   "tool_version": "1.10.1",
-   "files": 8447,
-   "declarations": 64678,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 8448,
+   "declarations": 64680,
    "dimensions": {
-    "file_size": 0.02758375754705813,
-    "declarations": 0.005692253006575959,
-    "duplication": 0.20421451402864924,
-    "risk": 0.001302237480762401,
+    "file_size": 0.027580492424242424,
+    "declarations": 0.00543542654028436,
+    "duplication": 0.2041903409090909,
+    "risk": 0.0013020833333333333,
     "gates": 0.0
    },
    "evidence": {
     "test_file_count": 3585,
-    "production_declarations_scanned": 29692,
-    "production_files_scanned": 4860,
+    "production_declarations_scanned": 29694,
+    "production_files_scanned": 4861,
     "production_file_warnings": 90,
     "production_file_failures": 21,
-    "production_function_warnings": 261,
-    "production_function_failures": 224,
+    "production_function_warnings": 260,
+    "production_function_failures": 222,
     "production_hard_gate_failures": 0,
     "dead_code_count": 19,
     "near_duplicate_count": 95,
@@ -7779,7 +7801,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
     },
@@ -7793,33 +7815,33 @@
     ]
    },
    "production_dimensions": {
-    "file_size": 0.021450617283950618,
-    "declarations": 0.010712298274902615,
+    "file_size": 0.021446204484673936,
+    "declarations": 0.010251690779898981,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "spring-framework",
    "pinned_commit": "136dddb67d1de65f91fabcde6d92799797feed89",
-   "tool_version": "1.10.1",
-   "files": 9257,
-   "declarations": 106242,
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
+   "files": 9259,
+   "declarations": 106244,
    "dimensions": {
-    "file_size": 0.06962298800907421,
-    "declarations": 0.016895091807506646,
-    "duplication": 0.35238198120341363,
-    "risk": 0.010262504050988441,
+    "file_size": 0.06960794902257263,
+    "declarations": 0.016406865150460453,
+    "duplication": 0.35241386758829246,
+    "risk": 0.010260287288044066,
     "gates": 0.0
    },
    "evidence": {
-    "test_file_count": 3932,
+    "test_file_count": 3934,
     "production_declarations_scanned": 48716,
     "production_files_scanned": 5305,
     "production_file_warnings": 291,
     "production_file_failures": 92,
-    "production_function_warnings": 1003,
-    "production_function_failures": 1010,
+    "production_function_warnings": 981,
+    "production_function_failures": 1004,
     "production_hard_gate_failures": 0,
     "dead_code_count": 0,
     "near_duplicate_count": 219,
@@ -7851,7 +7873,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
     },
@@ -7866,15 +7888,15 @@
    },
    "production_dimensions": {
     "file_size": 0.06418473138548539,
-    "declarations": 0.026453765490943755,
+    "declarations": 0.025607721639656817,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "stb",
    "pinned_commit": "2c980bb59875b0d32144a71867fbdebb2f77cd20",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 106,
    "declarations": 2594,
    "dimensions": {
@@ -7922,7 +7944,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -7938,13 +7960,13 @@
     "file_size": 0.45918367346938777,
     "declarations": 0.19709388971684053,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "stdlib",
    "pinned_commit": "9a15c7772f1a76a6c497b9f3abb793841fc81f74",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 488,
    "declarations": 1415,
    "dimensions": {
@@ -7984,6 +8006,7 @@
      "declaration-size",
      "duplicate-blocks",
      "file-size",
+     "fortitude",
      "history",
      "interrogate",
      "jscpd",
@@ -7998,15 +8021,16 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
+     "fortitude": "fortitude 0.9.2",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -8023,18 +8047,18 @@
     "file_size": 0.023717948717948717,
     "declarations": 0.12367491166077739,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "terminal",
    "pinned_commit": "62711fd73ef9733fa83108bfa7cea22528d2dbb9",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1368,
    "declarations": 10450,
    "dimensions": {
     "file_size": 0.13633040935672514,
-    "declarations": 0.10697860962566845,
+    "declarations": 0.10689839572192514,
     "duplication": 0.4641812865497076,
     "risk": 0.16228070175438597,
     "gates": 0.0
@@ -8045,8 +8069,8 @@
     "production_files_scanned": 1306,
     "production_file_warnings": 107,
     "production_file_failures": 108,
-    "production_function_warnings": 586,
-    "production_function_failures": 593,
+    "production_function_warnings": 588,
+    "production_function_failures": 591,
     "production_hard_gate_failures": 0,
     "dead_code_count": 3698,
     "near_duplicate_count": 56,
@@ -8083,15 +8107,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -8106,15 +8130,15 @@
    },
    "production_dimensions": {
     "file_size": 0.13303981623277183,
-    "declarations": 0.10707395498392283,
+    "declarations": 0.10699356913183279,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "termux-app",
    "pinned_commit": "3b66f8799635a4dba4a206563048ff0e6792c487",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 205,
    "declarations": 2648,
    "dimensions": {
@@ -8163,7 +8187,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
     },
@@ -8180,13 +8204,13 @@
     "file_size": 0.13387978142076504,
     "declarations": 0.0688539741219963,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "tesseract",
    "pinned_commit": "fb87a84b6e3384b424b2169c76de9031046861e9",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 607,
    "declarations": 6708,
    "dimensions": {
@@ -8213,10 +8237,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.10466823253082795
+    "declarations": 0.1046528695141641
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.10825303077401306
+    "declarations": 0.10823620823620823
    },
    "analyzer_coverage": {
     "tools": [
@@ -8241,16 +8265,16 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -8266,13 +8290,13 @@
     "file_size": 0.20646067415730338,
     "declarations": 0.15142367994233194,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "tmux",
    "pinned_commit": "9fa390aee696f7c3886bc9146e4051cbbe9593cb",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 213,
    "declarations": 524,
    "dimensions": {
@@ -8320,7 +8344,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [
@@ -8336,18 +8360,18 @@
     "file_size": 0.2605633802816901,
     "declarations": 0.03125,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "v2rayN",
    "pinned_commit": "fed59a7313239479e81425164638050be0b4752d",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 276,
    "declarations": 1845,
    "dimensions": {
     "file_size": 0.07880434782608696,
-    "declarations": 0.12939958592132506,
+    "declarations": 0.12629399585921325,
     "duplication": 0.5688405797101449,
     "risk": 0.025362318840579712,
     "gates": 0.0
@@ -8358,7 +8382,7 @@
     "production_files_scanned": 276,
     "production_file_warnings": 22,
     "production_file_failures": 5,
-    "production_function_warnings": 104,
+    "production_function_warnings": 98,
     "production_function_failures": 139,
     "production_hard_gate_failures": 0,
     "dead_code_count": 3,
@@ -8389,7 +8413,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0"
+     "lizard": "1.24.0"
     },
     "unexamined": [
      "documentation",
@@ -8403,20 +8427,20 @@
    },
    "production_dimensions": {
     "file_size": 0.07880434782608696,
-    "declarations": 0.12939958592132506,
+    "declarations": 0.12629399585921325,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "x64dbg",
    "pinned_commit": "3ff04481f6a9b8efdefcd66a4996a7e7891dc854",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 1301,
    "declarations": 7578,
    "dimensions": {
     "file_size": 0.07878554957724827,
-    "declarations": 0.11489107729036109,
+    "declarations": 0.11515219337511191,
     "duplication": 0.30822444273635663,
     "risk": 0.30361260568793236,
     "gates": 0.0
@@ -8465,15 +8489,15 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -8489,13 +8513,13 @@
     "file_size": 0.07902182700080841,
     "declarations": 0.11411271541686073,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "xtb",
    "pinned_commit": "a45f05d397268fd683b5f9f824ed59912c5490b5",
-   "tool_version": "1.10.1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 392,
    "declarations": 2851,
    "dimensions": {
@@ -8535,6 +8559,7 @@
      "declaration-size",
      "duplicate-blocks",
      "file-size",
+     "fortitude",
      "history",
      "interrogate",
      "jscpd",
@@ -8549,15 +8574,16 @@
      "vulture"
     ],
     "versions": {
-     "complexipy": "7.0.0",
+     "complexipy": "7.0.1",
+     "fortitude": "fortitude 0.9.2",
      "interrogate": "interrogate, version 1.7.0",
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4",
-     "mypy": "mypy 2.3.0 (compiled: yes)",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
      "pydocstyle": "6.3.0",
-     "radon": "5.1.0",
-     "ruff": "ruff 0.15.14",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
      "vulture": "vulture 2.16"
     },
     "unexamined": [
@@ -8574,19 +8600,18 @@
     "file_size": 0.25974930362116994,
     "declarations": 0.2942876965772433,
     "gates": 0.0
-   },
-   "scanner_fingerprint": "3b5e063e95316342"
+   }
   },
   {
    "repo": "googletest",
    "pinned_commit": "283c17563fe7a1111cd7f581aa5d541e8baeff2f",
-   "tool_version": "2.0.0",
-   "scanner_fingerprint": "3b5e063e95316342",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "1a902618a0600746",
    "files": 217,
    "declarations": 6443,
    "dimensions": {
     "file_size": 0.22119815668202766,
-    "declarations": 0.017699115044247787,
+    "declarations": 0.017525594308519868,
     "duplication": 0.30414746543778803,
     "risk": 0.08755760368663594,
     "gates": 0.0
@@ -8629,7 +8654,7 @@
     ],
     "versions": {
      "jscpd": "cpd 5.1.1",
-     "lizard": "1.23.0",
+     "lizard": "1.24.0",
      "multimetric": "multimetric 2.4.4"
     },
     "unexamined": [

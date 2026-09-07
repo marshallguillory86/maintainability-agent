@@ -29,6 +29,20 @@ from typing import Any
 
 from ._bands import SEVERE
 from ._calibration import DIMENSION_REFERENCES, WARN_WEIGHT
+from ._criteria_scope import (
+    ANALYZER_DIMENSIONS as ANALYZER_DIMENSIONS,
+)
+from ._criteria_scope import (
+    DECLARATION_CRITERIA as DECLARATION_CRITERIA,
+)
+from ._criteria_scope import (
+    _languages_missing_a_criterion,
+    _scored_units,
+    _unit_languages,
+)
+from ._criteria_scope import (
+    declaration_concepts_missing as declaration_concepts_missing,
+)
 from ._metrics_types import Measurement, is_test_path
 from .evidence import Measured, SummaryEvidence, Unknown
 
@@ -196,42 +210,6 @@ def _relative(value: float, reference: float) -> float:
     return value / reference
 
 
-# The concepts the `declarations` dimension needs, and the rubric
-# thresholds that decide a breach. All three, because `function_status`
-# fails a declaration on **lines OR complexity OR cognitive complexity**
-# — a bridge counting only complexity measures something narrower and
-# cannot be compared against it. Three ratios were quoted from that
-# mistake before a test comparing every criterion caught it.
-DECLARATION_CRITERIA: tuple[tuple[str, str, str], ...] = (
-    ("cyclomatic_complexity", "warn_complexity", "max_complexity"),
-    ("declaration_lines", "warn_function_lines", "max_function_lines"),
-    ("cognitive_complexity", "warn_cognitive_complexity", "max_cognitive_complexity"),
-)
-
-# Dimensions an analyzer can supply at all. `file_size` needs per-file
-# line counts no permissively-licensed tool in the pool reports, and
-# `risk` and `gates` are configured policy with no external equivalent.
-ANALYZER_DIMENSIONS: tuple[str, ...] = ("declarations",)
-
-
-def declaration_concepts_missing(covered: set[str]) -> tuple[str, ...]:
-    """Criteria the analyzers did not supply, in rubric order.
-
-    The fallback this decides is correct and used to be silent, which P8
-    forbids: the reader saw a declarations rate with nothing saying what
-    produced it. It is not a rare path either. lizard reports cyclomatic
-    complexity and declaration lines and no cognitive complexity, so a
-    JavaScript repository with lizard installed and nothing else takes
-    this branch on *every* run -- by construction, and an audit had to
-    point out that the page justifying JavaScript support credited the
-    analyzer pool for work the built-in scanner was doing.
-    """
-    return tuple(
-        concept for concept, _warn, _fail in DECLARATION_CRITERIA
-        if concept not in covered
-    )
-
-
 def declined_dimensions(
     measurements: list[Measurement], production_only: bool = False
 ) -> tuple[dict[str, Any], ...]:
@@ -239,23 +217,38 @@ def declined_dimensions(
 
     Reported so the built-in fallback is attributable rather than
     inferred from a missing number (P8).
+
+    Per language, and it must be: this is the sentence the reader is
+    given for why a built-in number is standing in, and the union across
+    the repository could not produce a true one. It said nothing at all
+    whenever *some* language supplied the missing criterion, which is the
+    reporting half of D137 — a C repository with one `setup.py` both
+    scored its C on two criteria and printed no note saying so.
     """
-    covered = {
-        measurement.concept for measurement in measurements
-        if not (production_only and is_test_path(measurement.path or measurement.unit))
-    }
-    missing = declaration_concepts_missing(covered)
-    if not missing:
+    per_unit: dict[str, dict[str, float]] = defaultdict(dict)
+    for measurement in measurements:
+        if production_only and is_test_path(measurement.path or measurement.unit):
+            continue
+        per_unit[measurement.unit][measurement.concept] = measurement.value
+
+    incomplete = _languages_missing_a_criterion(
+        per_unit, _unit_languages(measurements))
+    if not incomplete:
         return ()
+
+    missing = sorted({concept for _language, concepts in incomplete
+                      for concept in concepts})
+    languages = [language for language, _concepts in incomplete]
     return ({
         "dimension": "declarations",
-        "missing_concepts": list(missing),
+        "missing_concepts": missing,
+        "languages": languages,
         "measured_by": "built-in detectors",
         "reason": (
-            "no analyzer supplied " + ", ".join(missing) + ", and a "
-            "declaration rate built from a narrower criterion set is not "
-            "comparable to the rubric's, which fails a declaration on any "
-            "of the three"
+            "no analyzer supplied " + ", ".join(missing) + " for "
+            + ", ".join(languages) + ", and a declaration rate built from "
+            "a narrower criterion set is not comparable to the rubric's, "
+            "which fails a declaration on any of the three"
         ),
     },)
 
@@ -322,16 +315,37 @@ def _declaration_pressure(
             continue
         per_unit[measurement.unit][measurement.concept] = measurement.value
 
-    # The *set* must carry all three criteria, though an individual unit
-    # need not. The built-in path fails a declaration on lines or
-    # complexity or cognitive complexity; a reading that only ever saw
-    # complexity cannot produce a rate comparable to it, because every
-    # long-but-simple function passes by not having been measured. That
-    # is a dimension composed from a partial concept set, and it now
-    # drives the estimate, so it is `None` — unmeasured, falling back to
+    # The criterion set must be complete **for each language**, though an
+    # individual unit need not carry all three. The built-in path fails a
+    # declaration on lines or complexity or cognitive complexity; a
+    # reading that only ever saw complexity cannot produce a rate
+    # comparable to it, because every long-but-simple function passes by
+    # not having been measured. That is a dimension composed from a
+    # partial concept set, so it is `None` — unmeasured, falling back to
     # the built-in tier — rather than a confident number about nothing.
-    covered = {concept for values in per_unit.values() for concept in values}
-    if declaration_concepts_missing(covered):
+    #
+    # **Per language, because the tools are per language (D137).** The
+    # union across the whole repository was the original check, and it
+    # let one file buy the criterion for code in another language
+    # entirely: `complexipy` reads Python and nothing else, `pmd` reads
+    # five languages that do not include C, and `lizard` never reports
+    # cognitive complexity at all. So a C repository holding one
+    # `setup.py` passed a check meant to guarantee its C declarations
+    # could fail on all three, and had them scored on two. Reproduced at
+    # 50 C declarations reading `None` alone and `0.2451` with one
+    # trivial Python function added.
+    #
+    # The check and the population are **one computation**, deliberately.
+    # This bridge has now been fixed five times, and the previous four
+    # each moved a formula while leaving the eligibility question
+    # somewhere else — a sample of one, a Python-only concept mixed with
+    # a multi-language one, two formulas wearing one name, and counting
+    # complexity against three criteria. `_scored_units` answers "which
+    # declarations may be scored" and nothing else answers it, so a sixth
+    # variant cannot arrive by scoping the check differently from the
+    # population it gates.
+    scored = _scored_units(per_unit, _unit_languages(measurements))
+    if scored is None:
         return dict.fromkeys(ANALYZER_DIMENSIONS)
 
     # Banded, not counted (ADR 008, 3.2): each unit takes the worst band
@@ -342,7 +356,7 @@ def _declaration_pressure(
 
     pressures = [
         value for value in (
-            unit_pressure(values, thresholds) for values in per_unit.values()
+            unit_pressure(values, thresholds) for values in scored.values()
         )
         if value is not None
     ]

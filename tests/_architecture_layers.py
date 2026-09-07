@@ -136,6 +136,11 @@ SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "id
 SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_anchor", "_calibration", "_derive",
            "_pillars", "_trends", "_recurrence",
            "_verification", "_bands",
+           # `_criteria_scope` is the one place the analyzer tier's
+           # eligibility is decided — split from `_pressures` at the
+           # 500-line gate. It reads measurement *types* and the suffix
+           # table to name a unit's language; it runs no scanner.
+           "_criteria_scope",
            # `_second_source` decides how analyzer readings reach the point
            # and the interval; it reads pressures and corroboration and,
            # like the rest of this layer, may not see a scanner.

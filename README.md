@@ -357,7 +357,9 @@ findings — is in the report itself.
 ## Platform support
 
 **POSIX. Windows is not claimed, for a measured reason.** A `windows-latest` probe
-found most failures in two POSIX-only calls, `os.fchmod` and `os.O_DIRECTORY`. The
+found most failures in three POSIX-only calls: `os.fchmod`, `os.O_DIRECTORY` and
+`os.O_NONBLOCK`. The third arrived with the one-handle operator read (D130/D131)
+and is now the dominant failure in the probe, which is why the count moved. The
 bounded, symlink-refusing write works through a *file descriptor*, so a validated
 path cannot be swapped for a symlink before the write lands — Windows has no
 equivalent and the portable rewrite is the hole. **An unsupported platform never

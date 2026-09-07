@@ -57,3 +57,27 @@ subroutine where_construct(a)
      a = a * 2.0
   end where
 end subroutine where_construct
+
+! Fortran is case-insensitive and fixed-form legacy code is routinely
+! upper case. The reader matches both spellings; nothing exercised the
+! upper one until lizard's token set was asked what it counts.
+SUBROUTINE UPPER_CASE_FORMS(V, N, R)
+  INTEGER, INTENT(IN) :: V, N
+  INTEGER, INTENT(OUT) :: R
+  INTEGER :: I
+  R = 0
+  IF (V > 0 .AND. N > 0) THEN
+     R = 1
+  ELSE IF (V < 0 .OR. N < 0) THEN
+     R = -1
+  END IF
+  DO I = 1, N
+     R = R + I
+  END DO
+  SELECT CASE (V)
+  CASE (1)
+     R = R + 1
+  CASE (2)
+     R = R + 2
+  END SELECT
+END SUBROUTINE UPPER_CASE_FORMS

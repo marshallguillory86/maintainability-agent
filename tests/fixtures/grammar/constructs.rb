@@ -85,3 +85,7 @@ def assigned_if(cond)
       end
   x
 end
+
+def word_or(a, b)
+  a or b
+end

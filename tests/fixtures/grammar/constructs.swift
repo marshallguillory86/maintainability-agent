@@ -60,3 +60,11 @@ func ternaryAndCoalesce(_ v: Int?) -> Int {
     let x = (v ?? 0) > 0 ? 1 : 2
     return x
 }
+
+func doCatch(_ v: Int) throws -> Int {
+    do {
+        return try risky(v)
+    } catch {
+        return 0
+    }
+}

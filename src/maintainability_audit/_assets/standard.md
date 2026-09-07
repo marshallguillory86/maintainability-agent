@@ -137,10 +137,10 @@ Java, C, C++, C# and Fortran. The original 40 rows are unchanged and still
 pinned to the commits they were measured at, so what moved the constants
 is the languages added and nothing else.
 
-**Two parsed languages are not in it.** Swift (2.4.0) and COBOL (2.7.0)
-shipped after that measurement and are **unanchored**: a scanner reads
-them, and the medians their rates are compared against were measured on
-other languages. This is the corpus policy decided with 2.4.1 — a
+**Six parsed languages are not in it.** Swift (2.4.0), COBOL (2.7.0)
+and Go, Rust, PHP and Ruby (2.11.0) shipped after that measurement and
+are **unanchored**: a scanner reads them, and the medians their rates are
+compared against were measured on other languages. This is the corpus policy decided with 2.4.1 — a
 language ships parsed, and the corpus is re-measured once after the
 remaining scanners land, because a new scanner moves
 `scanner_fingerprint` and invalidates every stored row. The cost is

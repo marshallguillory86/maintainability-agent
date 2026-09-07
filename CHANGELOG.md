@@ -4,6 +4,50 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+## 2.11.2 - 2026-09-07
+
+### Changed — the documents caught up with the code
+
+No behaviour changes. What ships is the packaged copy of the scoring
+standard, which had drifted from the document it is generated from.
+
+**The roadmap was the worst of it**, and it is the one document a reader
+uses to decide what is coming. It said `## Next: Swift` for seven minor
+releases after Swift shipped in 2.4.0, and named the
+remediation-integrity checks as the other near-term block after they
+closed in 2.1.0 through 2.3.0. It counted "nine declaration languages"
+when there were fourteen. It described Swift, Go and Rust as examples of
+*unwritten* languages, in the releases that wrote them.
+
+`## Next` now names the recalibration, which is the only scheduled work:
+six unanchored languages, plus deleting the per-language cyclomatic
+regexes and merging analyzer evidence per concept rather than per
+dimension. Everything that touches measurement queues behind it.
+
+One of these was a false claim rather than a stale count. The corpus
+entry said the anchoring gap "closes for what ships today" — it does not.
+Swift, COBOL, Go, Rust, PHP and Ruby all ship parsed and unanchored,
+scored against an anchor holding none of them. That is the corpus policy
+working as decided, and it is the debt the recalibration pays; saying it
+had closed was the error.
+
+Five more, found by sweeping for the same shape rather than waiting to
+trip over them:
+
+- `docs/standard.md` said **two** parsed languages are outside the
+  corpus. Six are.
+- `docs/architecture.md` listed eight languages in
+  `DECLARATION_SUFFIXES`. There are fourteen.
+- `docs/decisions.md` had ADR 006 still reading "Go and Rust remain
+  unwritten on exactly those terms".
+- `docs/help/README.md` offered "the eight parsed languages" to a reader.
+- The roadmap's Shipped line credited the corpus with covering "all eight
+  parsed languages" rather than the eight parsed when it was measured.
+
+Each correction states what it used to claim rather than being silently
+overwritten, because "Next: Swift" surviving seven releases is the part
+worth remembering.
+
 ### Fixed — Grok's audit of the surfaces, six defects and a decision
 
 Three High, three Medium, filed as D130–D136. Each was reproduced before

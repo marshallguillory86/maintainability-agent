@@ -6,9 +6,9 @@ This project should stay a thin orchestration and prompt layer, not a replacemen
 
 ## Shipped
 
-Dependency-light native scanner; Markdown, JSON, SARIF and PR-comment output; bounded AI remediation prompt; changed-only mode; baseline gating; agent instruction packs; ISO/IEC 25010-inspired rubric calibrated against a query-selected corpus (40 repositories of Python/TypeScript/JavaScript through 1.10.x; 112 across all eight parsed languages from 2.0.0); git-history aspects (churn, hotspots, coupling, ownership); 92% coverage gate; portable invokable skill for Claude Code, Codex and Copilot Chat; optional local MCP server (writes only its five disclosed config/state artifacts, never source or reports) for Codex and its VS Code extension.
+Dependency-light native scanner; Markdown, JSON, SARIF and PR-comment output; bounded AI remediation prompt; changed-only mode; baseline gating; agent instruction packs; ISO/IEC 25010-inspired rubric calibrated against a query-selected corpus (40 repositories of Python/TypeScript/JavaScript through 1.10.x; 112 from 2.0.0, across the eight languages parsed at that time); git-history aspects (churn, hotspots, coupling, ownership); 92% coverage gate; portable invokable skill for Claude Code, Codex and Copilot Chat; optional local MCP server (writes only its five disclosed config/state artifacts, never source or reports) for Codex and its VS Code extension.
 
-**Nine declaration languages**, each shipped as its own minor release: Python and Java, JS/TS/JSX and HTML, then C (1.1.0), C++ (1.2.0), C# (1.3.0), free-form Fortran (1.4.0) and fixed-form Fortran (1.6.0), over one shared walk in `_ranges_core` where a language is a module and a row. Fortran is the first with no braces, so the walk takes its bounding rule as an argument. Fortran also gained an analyzer adapter (fortitude, 1.5.0), its own complexity and cognitive readings rather than the C-family default (1.6.0), and toolchain practice detection (1.7.0). Per-language scope and misses are in [language support](language-support.md).
+**Fourteen declaration languages**, each shipped as its own minor release: Python and Java, JS/TS/JSX and HTML, then C (1.1.0), C++ (1.2.0), C# (1.3.0), free-form Fortran (1.4.0), fixed-form Fortran (1.6.0), Swift (2.4.0), COBOL (2.7.0), and Go, Rust, PHP and Ruby (2.11.0), over one shared walk in `_ranges_core` where a language is a module and a row. Fortran is the first with no braces, so the walk takes its bounding rule as an argument. Fortran also gained an analyzer adapter (fortitude, 1.5.0), its own complexity and cognitive readings rather than the C-family default (1.6.0), and toolchain practice detection (1.7.0). Per-language scope and misses are in [language support](language-support.md).
 
 ## ADR 001 is finished
 
@@ -28,7 +28,9 @@ The evidence model, its property tests, consumer migration and the version-2 con
 
 ## Next
 
-**Swift** — see [language adapters](#language-adapters). The remediation-integrity checks below are the other near-term block.
+**The recalibration.** It is the only scheduled work, and everything that touches measurement queues behind it — six unanchored languages (Swift, COBOL, Go, Rust, PHP, Ruby), plus the two built-in changes recorded in [corpus policy](#corpus-policy-recalibrate-once-after-the-remaining-scanners-land): deleting the per-language cyclomatic regexes, and merging analyzer evidence per concept rather than per dimension.
+
+This line said "Swift" for seven minor releases after Swift shipped in 2.4.0, and named the remediation-integrity checks as the other near-term block after they closed in 2.1.0 through 2.3.0. A roadmap whose "Next" is already done tells a reader nothing about what is coming, which is the failure the delivery entry below describes in the other direction.
 
 ## Planned audit and agent split
 
@@ -68,14 +70,16 @@ Right: an `extension` adds methods to a type declared elsewhere, so a member is 
 
 Swift also needed its own reading of a branch: `guard` is the language's primary early exit and is absent from the C-family pattern, so a guard-heavy function would have read as branchless — the defect Fortran shipped with.
 
-Go and Rust remain named in [ADR 006](decisions.md) as unwritten on exactly these terms. They are not refused and not scheduled.
+**Go, Rust, PHP and Ruby shipped in 2.11.0**, on those terms and at the cost of learning them: an audit of that release found four defects whose constructs were in no fixture, two of them High (D125–D129). [ADR 006](decisions.md) named Go and Rust as unwritten for as long as they were, and the register entry carries the correction rather than being edited to look prescient.
 
-**What an unwritten language already gets today.** Swift, Go and Rust are all classified by discovery, and all have practice signals wired (`.swiftlint.yml`, `.golangci.yml`, `rustfmt.toml`, `clippy.toml`, and the `swiftlint` / `golangci-lint` / `clippy` command patterns). What none of them gets is a declaration population: rates are **withheld** with the missing parser named, rather than approximated. That is the P7 boundary and it is the reason a language is a release rather than a config entry.
+**What an unwritten language already gets today.** Kotlin and Scala are classified by discovery and have practice signals wired (`detekt.yml`, `.scalafmt.conf`, and the `detekt` command pattern). What neither gets is a declaration population: rates are **withheld** with the missing parser named, rather than approximated. That is the P7 boundary and it is the reason a language is a release rather than a config entry.
+
+This paragraph named Swift, Go and Rust until 2.11.0 — all three are parsed now, and it went on describing them as unwritten for the releases that wrote them.
 
 **Two gaps that widen with every language added**, and should be closed alongside rather than after:
 
 - ~~**Test-command detection stops at Python.**~~ **Closed in 2.5.0.** `_test_commands` reads the tree's build manifests and offers the command as the setup question's default, on every surface: `swift test`, `fpm test`, `cargo test`, `go test ./...`, `ctest`, `mvn test`, `gradle test` (the wrapper when one is checked in), `dotnet test`, `npm test` and `pytest`. Two properties are the whole design. It **suggests, never decides** — the `require_test_command` hard gate asks whether a *human documented* a command, and a value the tool wrote unasked would satisfy that gate on evidence it invented. And `xcodebuild test`, named in the original entry, is **deliberately not shipped**: bare `xcodebuild test` needs `-scheme` and usually `-destination`, so every suggestion it could make is a command that fails, and a suggestion that always fails teaches the operator to ignore suggestions.
-- **A new language inherits whatever the corpus does not hold.** This was the sharper of the two gaps until 2.0.0: the corpus was 40 JS/TS/Python repositories and LAPACK read 7.18x the declaration median against an anchor containing no Fortran. It is now 112 repositories across all eight parsed languages, so the gap closes for what ships today — and reopens for every language added after, since a scanner without corpus members is scored against code unlike it again. Extending the corpus moves `CALIBRATION_C` and re-grades every repository, so it stays a release of its own rather than a patch bundled with a scanner.
+- **A new language inherits whatever the corpus does not hold.** This was the sharper of the two gaps until 2.0.0: the corpus was 40 JS/TS/Python repositories and LAPACK read 7.18x the declaration median against an anchor containing no Fortran. It is now 112 repositories — across the eight languages parsed when it was measured. **The gap is open again**, and this sentence claimed it closed "for what ships today" through six releases that reopened it: Swift, COBOL, Go, Rust, PHP and Ruby all ship parsed and unanchored, scored against an anchor holding none of them. That is the corpus policy working as decided rather than a defect, and it is the debt the recalibration pays. Extending the corpus moves `CALIBRATION_C` and re-grades every repository, so it stays a release of its own rather than a patch bundled with a scanner.
 
 ### Corpus policy: recalibrate once, after the remaining scanners land
 

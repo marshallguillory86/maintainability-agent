@@ -60,6 +60,29 @@ def test_a_pull_request_finding_is_searched_in_its_pull_request(
     assert any("pullRequest=192" in url for url in asked), (
         f"the search did not name the pull request: {asked}"
     )
+    # `pullRequest` alone returns an empty list rather than an error, so
+    # the project has to accompany it or the key reads as unknown.
+    # Measured against the live API before this was written:
+    #   issues=KEY&pullRequest=192                    -> 0
+    #   issues=KEY&pullRequest=192&componentKeys=PROJ -> 1
+    assert any("componentKeys=" in url for url in asked), (
+        "the search named the pull request and not the project, which "
+        f"SonarCloud answers with an empty list: {asked}"
+    )
+
+
+def test_the_project_key_comes_from_the_scanner_s_own_file() -> None:
+    """Covers existing behaviour: one declaration of the project key.
+
+    Read from `sonar-project.properties` rather than repeated in the
+    script — a second copy is a second thing to keep true, which is the
+    failure mode this repository spent the day closing in prose.
+    """
+    properties = (
+        Path(__file__).resolve().parents[1] / "sonar-project.properties"
+    ).read_text(encoding="utf-8")
+
+    assert f"sonar.projectKey={sonar_resolve._project_key()}" in properties
 
 
 def test_a_branch_finding_is_searched_without_one(

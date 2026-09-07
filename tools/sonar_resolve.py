@@ -28,6 +28,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
 
 HOST = "https://sonarcloud.io"
 
@@ -57,6 +58,21 @@ def _call(path: str, token: str, payload: dict[str, str]) -> dict:
     return json.loads(body) if body.strip() else {}
 
 
+def _project_key() -> str:
+    """The project this repository publishes under.
+
+    Read from `sonar-project.properties`, which is the file the scanner
+    itself reads, rather than repeated here — a second copy is a second
+    thing to keep true.
+    """
+    properties = Path(__file__).resolve().parents[1] / "sonar-project.properties"
+    for line in properties.read_text(encoding="utf-8").splitlines():
+        name, _, value = line.partition("=")
+        if name.strip() == "sonar.projectKey":
+            return value.strip()
+    raise SystemExit(f"no sonar.projectKey in {properties}")
+
+
 def _current(issue: str, token: str, pull_request: str = "") -> dict:
     """The issue as SonarCloud currently holds it.
 
@@ -74,7 +90,16 @@ def _current(issue: str, token: str, pull_request: str = "") -> dict:
     """
     fields = {"issues": issue, "ps": "1"}
     if pull_request:
+        # `pullRequest` alone returns nothing. SonarCloud requires the
+        # project alongside it, and answers an unqualified key with an
+        # empty list rather than an error — which is why the first two
+        # attempts read as a wrong key. Measured, not assumed:
+        #
+        #   issues=KEY&pullRequest=192                      -> 0
+        #   issues=KEY&pullRequest=192&componentKeys=PROJ   -> 1
+        #   issues=KEY                                      -> 0
         fields["pullRequest"] = pull_request
+        fields["componentKeys"] = _project_key()
     query = urllib.parse.urlencode(fields)
     request = urllib.request.Request(f"{HOST}/api/issues/search?{query}")
     import base64

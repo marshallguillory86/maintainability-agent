@@ -16,7 +16,7 @@ Start with the part of the conversation you need:
 - [Reading the report and its history](report-and-history.md) — estimate,
   range, grade, work order, recurrence, baselines, economic context, and why
   declaration rates are withheld for an unparsed language.
-- [Language support](../language-support.md) — the eight parsed languages, how
+- [Language support](../language-support.md) — the fourteen parsed languages, how
   each decides where a declaration ends, and what each one deliberately misses.
 
 For integration details, see [IDE and agent integration](../ide-agent-integration.md).

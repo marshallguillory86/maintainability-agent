@@ -107,6 +107,41 @@ CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "te
 # the wrong unit of analysis; the languages do not behave as a bloc, and a
 # single dramatic repository predicted the direction of the whole corpus
 # incorrectly. Per-language readings are in `docs/calibration-2.0-study.md`.
+#
+# **2026-09-07, re-measured; the constants held.** The stored rows had been
+# measured at tool versions 1.10.1 and 2.0.0 under scanner fingerprint
+# 3b5e063e95316342. HEAD is 2.11.2 under 1a902618a0600746 — eleven minor
+# releases of scanner work later, including four new language scanners and
+# the D112-D136 fixes. All 112 repositories were re-measured
+# `--with-analyzers` at the same pinned commits, so every move below is
+# attributable to the scanners and to nothing else:
+#
+#     file_size      0.0952 -> 0.0952   unchanged
+#     declarations   0.0908 -> 0.0903   92 of 112 rows moved
+#     duplication    0.3222 -> 0.3222   unchanged
+#     risk           0.0826 -> 0.0811   21 rows moved
+#     gates          0.05   -> 0.05     fixed, not measured
+#     CALIBRATION_C  8.7161 -> 8.7161   re-bisected to the same value
+#
+# The constants are deliberately left as they stand. Both movers sit well
+# inside the 10% the suite tolerates (0.55% and 1.8%), and the curve
+# re-fitted to four identical decimals, so editing them would change the
+# published numbers by less than the sampling error in the numbers
+# themselves - the argument `test_the_curve_constant_still_does_its_job`
+# already makes for c.
+#
+# **No repository changes grade.** Old corpus and new, under the shipped
+# constants and under the re-derived ones, all give A=5, B=52, C=55 with a
+# median of exactly 4.0000. Two repositories move at the published decimal
+# at all: hoppscotch 3.6 -> 3.7 and googletest 4.1 -> 4.0.
+#
+# This is worth recording because the roadmap predicted the opposite - that
+# the recalibration "re-grades every repository, which is a breaking change
+# to every published number". For *scanner* drift that is now measured, and
+# it is false: 92 of 112 declaration readings moved underneath an anchor
+# that did not. It says nothing about extending the corpus to hold the six
+# unanchored languages, which moves the population the medians are drawn
+# from rather than the instrument reading it. That half remains untested.
 DIMENSION_REFERENCES: dict[str, float] = {
     "file_size": 0.0952,
     "declarations": 0.0908,

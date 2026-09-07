@@ -26,6 +26,12 @@ on:
       comment:
         description: Why. Required, and at least a sentence.
         required: true
+      pull_request:
+        description: >
+          PR number, when the finding was raised on a pull request. Without
+          it the search looks at the branch and reports the key as unknown.
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -49,6 +55,8 @@ jobs:
           ISSUE: ${{ inputs.issue }}
           TRANSITION: ${{ inputs.transition }}
           COMMENT: ${{ inputs.comment }}
+          PULL_REQUEST: ${{ inputs.pull_request }}
         run: |
           python3 tools/sonar_resolve.py \
-            --issue "$ISSUE" --transition "$TRANSITION" --comment "$COMMENT"
+            --issue "$ISSUE" --transition "$TRANSITION" --comment "$COMMENT" \
+            --pull-request "$PULL_REQUEST"

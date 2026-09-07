@@ -19,6 +19,7 @@ launder exactly the substitution it exists to catch.
 
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 
@@ -360,7 +361,16 @@ def test_one_test_declaring_the_escape_does_not_exempt_the_whole_file(
     which is exactly how the in-place rule already behaves.
     """
     added = "tests/test_in_loop_check.py"
-    source = (ROOT / added).read_text(encoding="utf-8")
+    # Read the revision the prover reads. `_prove_added_tests` builds a
+    # worktree at HEAD and reads the file as committed; reading the
+    # working copy here made the two sides disagree the moment that file
+    # gained an uncommitted test, and the failure looked like a defect in
+    # the prover rather than in this fixture. It cost three diagnostic
+    # detours before it was worth fixing.
+    source = subprocess.run(  # noqa: S603
+        ["git", "-C", str(ROOT), "show", f"HEAD:{added}"],
+        capture_output=True, text=True, check=True,
+    ).stdout
     nodes = prover.tests_in(source, Path(added).name)
     assert len(nodes) > 2, "fixture file must carry several tests"
 

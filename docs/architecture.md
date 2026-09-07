@@ -104,6 +104,7 @@ flowchart TB
     scoring_mod["scoring"]
     _aspects["_aspects"]
     _pressures["_pressures"]
+    _criteria_scope["_criteria_scope"]
     _pillars["_pillars"]
     _trends["_trends"]
     _recurrence["_recurrence"]

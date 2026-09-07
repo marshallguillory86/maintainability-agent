@@ -463,3 +463,49 @@ def test_a_line_that_merely_mentions_a_hunk_header_is_not_a_diff() -> None:
     assert result["declarations_read"] is True, (
         "a string mentioning a hunk header was mistaken for a diff"
     )
+
+
+def test_a_cognitive_only_failure_does_not_report_a_negative_line_overage() -> None:
+    """The figure must be about the budget that failed.
+
+    `_DECLARATION_BUDGETS` named length and cyclomatic complexity only.
+    A function over `max_cognitive_complexity` but inside both of those
+    produced an empty breach list, and the fallback then subtracted the
+    *length* limit from the line count — printing `-73 over`, a negative
+    overage of a budget the function was comfortably inside, for a breach
+    that was real.
+
+    `_breaches_for`'s own comment says a figure has to be about the thing
+    that failed or it is worse than no figure. The fallback reintroduced
+    exactly what that comment says was removed (D132).
+    """
+    nested = (
+        "def nested(a, b, c, d, e):\n"
+        "    if a:\n"
+        "        if b:\n"
+        "            if c:\n"
+        "                if d:\n"
+        "                    if e:\n"
+        "                        return 1\n"
+        "    return 0\n"
+    )
+    result = _check(
+        "src/nested.py",
+        nested,
+        _config(max_cognitive_complexity=1, max_function_lines=80,
+                max_complexity=50),
+    )
+
+    findings = result["findings"]
+    assert findings, "a function over the cognitive budget reported nothing"
+    finding = findings[0]
+
+    assert finding["over_by"] is None or finding["over_by"] > 0, (
+        f"reported {finding['over_by']} over — a negative overage names a "
+        "budget that did not fail"
+    )
+    budgets = {breach["budget"] for breach in finding["breaches"]}
+    assert "cognitive" in budgets, (
+        f"the breach list names {budgets}, none of which is the budget that "
+        "actually failed"
+    )

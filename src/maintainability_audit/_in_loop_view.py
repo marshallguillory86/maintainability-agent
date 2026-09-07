@@ -47,7 +47,12 @@ def render_check(result: dict[str, Any]) -> list[str]:
         lines.append(f"  ? {result['note']}")
     for item in findings:
         where = f":{item['line']}" if item.get("line") else ""
-        lines.append(f"  ✗ {item['name']}{where} — {item['over_by']} over")
+        over = item["over_by"]
+        # `None` means the declaration failed on a rule no budget names,
+        # so there is no figure to give. "over by None" would be worse
+        # than the sentence without it (D132).
+        detail = f" — {over} over" if over is not None else " — over its budget"
+        lines.append(f"  ✗ {item['name']}{where}{detail}")
         lines.append(f"    → {item['target']}")
     lines.extend(_room_line(entry) for entry in tight)
     if file_room["band"] != "ok" and not any(

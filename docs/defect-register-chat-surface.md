@@ -4469,7 +4469,7 @@ not the instances.
 always-on site, and not one the closing tests name individually — is
 reported by the AST guard as `_scan_history.py:339: read_text()`.
 
-### D132 — Open: a cognitive-only `--check` fail still prints a negative line overage (Medium)
+### D132 — Closed: a cognitive-only `--check` fail still prints a negative line overage (Medium)
 
 Grok's audit of `--check` found a short complex function rendering
 as `-71 over` because `over_by` was always `lines - max_function_lines`.
@@ -4492,12 +4492,31 @@ The comment on `_breaches_for` says a figure has to be about the thing
 that failed or it is worse than no figure. The fallback reintroduces
 the thing the comment says was removed.
 
-*Roles:* found=grok prompt=marshall fix=none test=none run=none
-*Mutation:* pending with the test. A function over the cognitive
-budget and under the length and cyclomatic budgets must not report a
-negative line `over_by`. Restoring the length fallback as the only
-breach, or omitting cognitive from `_DECLARATION_BUDGETS`, is the
-mutation.
+Reproduced at **-72 over** before fixing. Three parts, because naming
+cognitive alone would have been incomplete:
+
+- `cognitive` joins `_DECLARATION_BUDGETS`, so the budget that failed
+  can be named.
+- A threshold a configuration does not set is **no budget**, not a
+  budget of zero. Indexing `max_cognitive_complexity` unconditionally
+  would have turned this fix into a `KeyError` for anyone running a
+  trimmed config.
+- The fallback stops inventing a figure. When no budget matches it
+  reports `over_by: None`, and the renderer says "over its budget"
+  rather than "None over". The finding still reports — `function_status`
+  failed it and a reader needs to know — without a number it cannot
+  justify.
+
+*Closing test:* `tests/test_in_loop_check.py`:
+`test_a_cognitive_only_failure_does_not_report_a_negative_line_overage`,
+which asserts both halves: no negative overage, and `cognitive` named in
+the breach list. Asserting only the first would pass on a fix that
+silently dropped the finding.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
+*Mutation:* removing `("cognitive", "cognitive",
+"max_cognitive_complexity")` from `_DECLARATION_BUDGETS` sends the
+declaration back to the fallback and reports -72.
 
 ### D133 — Closed: "a piped diff will say it could not parse" is a Python-only sentence (High)
 
@@ -4608,7 +4627,7 @@ fails at `origin/main` because the tool is absent.
 
 ## Disposition
 
-**D132, D134, D135 and D136 are open.** They are the
+**D134, D135 and D136 are open.** They are the
 remainder of Grok's audit of the twenty commits on `main` after 2.8.0.
 D125–D129 (the 2.11.0 language findings from that same audit) closed in
 2.11.1. D130 closed with it: `--sarif-input` now reads through
@@ -4621,8 +4640,9 @@ the primitive, and the guard now parses every state-file module rather
 than the two `--sarif-input` needed. It was briefly marked closed on the
 strength of the `--sarif-input` fix alone and reopened — the same
 mistake D104 made, closing a class from one instance, caught this time
-before it shipped. D132 is a `--check` residual: a
-cognitive-only fail still prints a negative line overage. D133 closed —
+before it shipped. D132 closed: cognitive complexity is a named
+budget now, and a fail no budget names reports no figure rather than a
+negative one. D133 closed —
 a piped diff is now refused by its format in every language, where the
 sentence promising it had been true of Python alone. D134 is the
 flag-refusal class `--staged` already named, unapplied to `--check`.

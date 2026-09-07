@@ -108,9 +108,15 @@ def _file_headroom(lines: int, thresholds: dict[str, int]) -> dict[str, Any]:
 #: The budgets a declaration can breach, in the order a reader wants to
 #: hear about them. Length first because it is the one an author can act
 #: on without rereading the function.
+#: Every budget `function_status` can fail a declaration on, so a breach
+#: can always name the thing that failed. Cognitive complexity was
+#: missing, which left a real failure with an empty breach list and sent
+#: it to the fallback below — printing a negative overage of the length
+#: budget the function was inside (D132).
 _DECLARATION_BUDGETS = (
     ("lines", "lines", None),
     ("complexity", "complexity", "max_complexity"),
+    ("cognitive", "cognitive", "max_cognitive_complexity"),
 )
 
 
@@ -129,9 +135,16 @@ def _breaches_for(metric: Any, thresholds: dict[str, int]) -> list[dict[str, Any
     for label, attribute, key in _DECLARATION_BUDGETS:
         # `None` means "the length budget for this kind", which is the
         # class budget for a class and the function budget otherwise.
-        limit = lines_limit if key is None else thresholds[key]
-        value = getattr(metric, attribute)
-        if value > limit:
+        if key is None:
+            limit = lines_limit
+        elif key not in thresholds:
+            # A configuration that does not set a budget is not a
+            # configuration that sets it to zero.
+            continue
+        else:
+            limit = thresholds[key]
+        value = getattr(metric, attribute, None)
+        if value is not None and value > limit:
             breaches.append({"budget": label, "value": value, "limit": limit,
                              "over_by": value - limit})
     return breaches
@@ -157,10 +170,16 @@ def _declaration_findings(
         # with nothing to act on, so the length budget stands as the
         # stated one and the figure remains about it.
         if not breaches:
+            # Nothing above matched, so no budget can be named with a
+            # figure. Saying "over by -73" of a budget this declaration
+            # is inside is worse than saying nothing, which is the whole
+            # point of `_breaches_for`'s comment — and the fallback used
+            # to do exactly that (D132). The finding still reports,
+            # because `function_status` failed it and a reader needs to
+            # know; it reports without a number it cannot justify.
             fallback, _ = _budget_for(metric.kind, thresholds)
-            breaches = [{"budget": "lines", "value": metric.lines,
-                         "limit": fallback,
-                         "over_by": metric.lines - fallback}]
+            breaches = [{"budget": "unnamed", "value": metric.lines,
+                         "limit": fallback, "over_by": None}]
         findings.append({
             "finding_class": "oversized-declaration",
             "name": metric.name,

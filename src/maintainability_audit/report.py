@@ -14,26 +14,13 @@ from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from ._analysis import analyze
+from ._analyzer_sections import analyzer_sections
 from ._built_ins import record_built_in_counts
 from ._discovery import Provenance, discover
-from ._documents import (
-    coverage_document,
-    findings_document,
-    measurement_document,
-    unidentified_source_paths,
-)
 from ._economics import economic_context_from, economic_impact, reorder_by_exposure
-from ._environment import environment_work_order
 from ._metrics_types import FileMetric, FunctionMetric
 from ._pillars import pillar_report
 from ._practice import practice_level
-from ._pressures import (
-    ExternalPressures,
-    analyzer_pressures,
-    analyzer_production_pressures,
-    declined_dimensions,
-)
 from ._semantic import semantic_findings
 from ._semantic_policy import load_semantic_policy
 from ._semantic_ts import discover_type_analysis
@@ -202,52 +189,6 @@ def _function_hotspots(function_metrics: list[FunctionMetric]) -> list[dict[str,
     flagged = [metric for metric in function_metrics if metric.status in {"warn", "fail"}]
     flagged.sort(key=lambda metric: (metric.status != "fail", -metric.complexity, -metric.lines))
     return [asdict(metric) for metric in flagged[:50]]
-
-
-def _analyzer_sections(
-    root: Path, config: dict[str, Any], run_analyzers: bool
-) -> dict[str, Any]:
-    """The three analyzer sections, or their empty forms.
-
-    Extracted because `build_report` reached complexity 15 against this
-    project's own limit. Four conditionals all asking the same question
-    belong behind one, and the empty forms are stated here rather than
-    repeated at each call site.
-    """
-    if not run_analyzers:
-        return {"coverage": None, "findings": [], "measurements": {},
-                "pressures": None, "environment": []}
-    analysis = analyze(root, config)
-    coverage = coverage_document(analysis)
-    # P8: where the analyzer tier could not drive a dimension, say so on
-    # the coverage document rather than leaving the built-in fallback to
-    # be inferred from an absent number. Attached here because only this
-    # layer holds both the measurements and the rubric's thresholds.
-    coverage["dimensions_declined"] = list(declined_dimensions(analysis.measurements))
-    return {
-        "coverage": coverage,
-        # ADR 006 §2c: what did not run and what it would take, for the
-        # user to act on. Emitted here because only the analysis knows
-        # which tools were *selected*; the agent never runs the commands.
-        "environment": environment_work_order(analysis.coverage),
-        "findings": findings_document(analysis, root),
-        # Path spellings normalization refused (zero or several matches)
-        # — visible, so a refusal is never mistaken for an identification.
-        "unidentified_source_paths": unidentified_source_paths(analysis, root),
-        "measurements": measurement_document(analysis, root),
-        # The analyzers' reading of the scorer's dimensions, primary for
-        # each it covers (ADR 006 §1); where None the built-in stands, so
-        # an unmeasured dimension is unmeasured, not clean. Both
-        # populations, since the production aspects read this.
-        "pressures": ExternalPressures(
-            all_code=analyzer_pressures(analysis.measurements, config["thresholds"]),
-            production=analyzer_production_pressures(
-                analysis.measurements, config["thresholds"]),
-            # The raw readings ride along so the scorer can price
-            # per-concept tool disagreement into the range (3.4).
-            measurements=tuple(analysis.measurements),
-        ),
-    }
 
 
 def _add_full_counts(
@@ -440,7 +381,6 @@ def build_report(
     """
     if run_analyzers is None:
         run_analyzers = analyzers_run_default(config)
-    analyzer = _analyzer_sections(root, config, run_analyzers)
     # Before anything is measured: what languages are here, and whose
     # code is it. Everything downstream reads this rather than guessing
     # from directory names, which is what let a vendored tree and 10,759
@@ -453,6 +393,9 @@ def build_report(
     source = SourceIndex()
     files, file_metrics, function_metrics = collect_metrics(
         root, config, only_paths, source, excluded=not_ours, asset_dirs=asset_dirs)
+    # After `collect_metrics`: the analyzer tier completes its criterion
+    # set from these readings (see `_analyzer_sections`).
+    analyzer = analyzer_sections(root, config, run_analyzers, function_metrics)
     thresholds = config["thresholds"]
     source_files = [p for p in files  # assets keep file length, leave corpus scans (Class 4)
                     if not _in_asset_dir(p.relative_to(root).as_posix(), asset_dirs)]

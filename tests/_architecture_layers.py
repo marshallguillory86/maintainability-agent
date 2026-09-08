@@ -154,6 +154,10 @@ SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_anchor", "_calibra
 # adapters and hands `report` a coverage document. That makes it assembly,
 # not a scanner — it composes rather than measures.
 ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
+            # The analyzer half of a report, split from `report` at the
+            # 500-line gate; it assembles sections and joins the two
+            # measurement tiers, so it sits where `report` does.
+            "_analyzer_sections",
             # `_conformance` compares a diff against the work order the
             # report already produced. Assembly because it composes from a
             # finished report rather than measuring a tree — and it may

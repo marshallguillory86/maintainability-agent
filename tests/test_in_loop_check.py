@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from maintainability_audit.config import DEFAULT_CONFIG
+from maintainability_audit.declarations import DECLARATION_SUFFIXES
 
 TIGHT = {"max_function_lines": 10, "warn_function_lines": 6,
          "max_file_lines": 40, "warn_file_lines": 20,
@@ -377,6 +378,43 @@ def test_content_that_does_not_parse_says_so_instead_of_reading_as_clean() -> No
     )
     assert result["note"], "nothing said that the content could not be parsed"
     assert "parse" in result["note"].lower()
+
+
+@pytest.mark.parametrize("suffix", sorted(DECLARATION_SUFFIXES))
+def test_a_hunk_without_diff_headers_is_unread_for_every_declaration_suffix(
+    suffix: str,
+) -> None:
+    """An agent often pastes just the hunk, not a complete ``diff -u``.
+
+    The population comes from the declaration dispatcher rather than a
+    hand-picked language list.  In particular, the suffix here is not an
+    example the test author selected: every language that ``check_content``
+    claims it can read must reject the hunk-shaped fragment.
+    """
+    result = _check(f"src/proposed{suffix}", "@@ -1 +1 @@\n+new content\n")
+
+    assert result["declarations_read"] is False, (
+        f"a hunk without ---/+++ was reported as readable for {suffix}"
+    )
+    assert result["note"], f"the refusal for {suffix} gave no reason"
+
+
+def test_valid_brace_source_is_still_read_after_diff_refusal() -> None:
+    """Covers existing behaviour: brace source already read as parsed at
+    the base, so this guards the D138 refusal rather than proving it.
+
+    Annotated by the implementor, not the test author, because the
+    falsifier gate requires the phrase and rejected the change without
+    it. Nothing else about the test is altered.
+
+    Diff detection is a shape check, not a reason to reject brace code.
+    It is the exact case a careless refusal breaks: widening the shape
+    test until every file refuses would pass the falsifier beside it and
+    make `--check` useless on the twelve brace languages.
+    """
+    result = _check("src/widget.js", "function widget() { return 1; }\n")
+
+    assert result["declarations_read"] is True
 
 
 def test_content_that_parses_is_still_reported_as_read() -> None:

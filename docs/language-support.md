@@ -59,11 +59,24 @@ growing this one: [Java](languages/java.md), [C](languages/c.md), [C++](language
 
 ## What counts as a decision, per language
 
-Each language's branch set is derived from **its own grammar**, and every
-one of them is checked construct-by-construct against an independent
-implementation — see [How this is verified](#how-this-is-verified) below.
-That check is not decoration: it found nine defects in 2.11.0, including
-this project measuring Python against its own comments.
+**Python's branch set is derived from its own grammar. Every other
+language's is a set somebody wrote down**, checked construct-by-construct
+against an independent implementation — see [How this is
+verified](#how-this-is-verified) below, which says the same thing at
+length rather than contradicting this.
+
+That distinction is the whole of what the verification can promise, and
+the lead said the opposite for two releases: that every language's set
+was derived from its grammar. It is not. `ast` ships with the
+interpreter and enumerates Python's branching constructs, so a construct
+added to a future Python arrives on its own; no comparable enumeration
+exists for the other thirteen, and `2.11.1` added a sweep against
+`lizard`'s decision tokens, which is a **second implementation's keyword
+list** rather than a grammar — the test's own docstring says so.
+
+The checks are not decoration either way: they found nine defects in
+2.11.0, including this project measuring Python against its own
+comments, and three more in 2.11.1 that no fixture exercised.
 
 The distinction from the C-family pattern is not pedantry either. PHP's
 `elseif` chains scored zero, because the C pattern looks for `elif` and

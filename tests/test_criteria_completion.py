@@ -29,7 +29,13 @@ import pytest
 
 from maintainability_audit._criteria_scope import canonical_path
 from maintainability_audit._metrics_types import Measurement
-from maintainability_audit._pressures import analyzer_pressures, declined_dimensions
+from maintainability_audit._pressures import (
+    ExternalPressures,
+    analyzer_pressures,
+    analyzer_production_pressures,
+    declined_dimensions,
+)
+from maintainability_audit._second_source import analyzer_scored
 
 ROOT = "/repo/"
 
@@ -167,6 +173,30 @@ def test_the_note_states_the_composition_rather_than_crediting_one_tier(
     assert entry["languages"] == ["Go"]
     assert entry["missing_concepts"] == ["cognitive_complexity"]
     assert "built-in scanner supplied" in entry["reason"]
+
+
+def test_a_completed_go_pressure_names_its_builtin_fill_when_published(
+    limits: dict,
+) -> None:
+    """The score's source label must not credit lizard for scanner evidence.
+
+    The two sides deliberately use different spellings: lizard's ``./``
+    path and the scanner's repository-relative path.  Building both from
+    one path string is the inert-merge hole #198 already had.  Go is a
+    non-Python population where lizard supplies cyclomatic complexity and
+    lines while the built-in scanner supplies cognitive complexity.
+    """
+    go = _lizard_go(3)
+    completed = _built_in_go(3)
+    published = ExternalPressures(
+        all_code=analyzer_pressures(go, limits, completed, ROOT),
+        production=analyzer_production_pressures(go, limits, completed, ROOT),
+        measurements=tuple(go),
+    )
+
+    assert analyzer_scored(published) == [
+        "declarations (completed by built-in detectors)"
+    ], "a mixed-tier pressure is published as an analyzer-only reading"
 
 
 def test_a_still_incomplete_language_is_still_reported_as_a_fallback(

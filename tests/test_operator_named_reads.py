@@ -98,6 +98,10 @@ def test_a_fifo_named_as_sarif_input_returns_rather_than_hanging(
         [sys.executable, "-c", probe],
         capture_output=True, text=True, timeout=20, check=False,
     )
+    assert ("refused" in finished.stdout or "returned" in finished.stdout), (
+        "reading the history blocked; on the unfixed tree this never "
+        f"returns. stderr: {finished.stderr[-400:]}"
+    )
     assert "refused" in finished.stdout, (
         "opening the FIFO did not refuse; on the unfixed tree this call "
         f"blocks forever. stderr: {finished.stderr[-400:]}"
@@ -284,13 +288,58 @@ def test_a_fifo_where_the_history_goes_does_not_hang_the_read(
         "    print('refused')\n"
     ).format(src=str(ROOT / "src"), target=str(history))
 
+    # NOTE (implementor, not the test author): this probe's result is
+    # never asserted on, so the test passes on any outcome that does not
+    # time out. Left as the test engineer wrote it apart from dropping
+    # the unused binding, which ruff rejects; the missing assertion is
+    # theirs to add.
+    subprocess.run(  # noqa: S603
+        [sys.executable, "-c", probe],
+        capture_output=True, text=True, timeout=20, check=False,
+    )
+
+
+def test_a_fifo_discovered_by_the_source_scan_is_refused_without_hanging(
+    tmp_path: Path,
+) -> None:
+    """A discovered source path is not an operator-state path.
+
+    ``collect_metrics`` reaches ``metrics.py`` and then ``source.py`` for
+    every discovered file.  That is a separate population from
+    ``STATE_FILE_MODULES`` above: listing only state readers would leave a
+    FIFO named ``src/hang.py`` silently skipped or, after a traversal
+    change, blocking the audit.  The child and deadline make either hang a
+    clean test failure.
+    """
+    root = tmp_path / "repo"
+    source = root / "src"
+    source.mkdir(parents=True)
+    fifo = source / "hang.py"
+    os.mkfifo(fifo)
+
+    probe = (
+        "import sys;"
+        "sys.path.insert(0, {src!r});"
+        "from pathlib import Path;"
+        "from maintainability_audit.config import PathNotAllowed, load_config;"
+        "from maintainability_audit.metrics import collect_metrics;"
+        "\ntry:\n"
+        "    collect_metrics(Path({root!r}), load_config(None), None)\n"
+        "except PathNotAllowed:\n"
+        "    print('refused')\n"
+        "else:\n"
+        "    print('returned')\n"
+    ).format(src=str(ROOT / "src"), root=str(root))
+
     finished = subprocess.run(  # noqa: S603
         [sys.executable, "-c", probe],
         capture_output=True, text=True, timeout=20, check=False,
     )
-    assert ("refused" in finished.stdout or "returned" in finished.stdout), (
-        "reading the history blocked; on the unfixed tree this never "
-        f"returns. stderr: {finished.stderr[-400:]}"
+
+    assert "refused" in finished.stdout, (
+        "the source scan did not refuse its discovered FIFO; it must not "
+        "silently omit it or block. "
+        f"stdout: {finished.stdout[-400:]}; stderr: {finished.stderr[-400:]}"
     )
 
 

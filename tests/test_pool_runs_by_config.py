@@ -101,7 +101,11 @@ def _assert_pool_ran(report: dict) -> None:
     # way and is the self-contradiction the completion work had to fix.
     scored = report["score"].get("analyzer_scored_dimensions") or []
     source = evidence_view.estimate_source(report["score"])
-    if "declarations" in scored:
+    # Prefix, not equality: a reading the built-in tier completed is
+    # published as "declarations (completed by built-in detectors)" so the
+    # label does not credit lizard for the scanner's cognitive complexity
+    # (D140). Exact membership read that as nothing having been scored.
+    if any(name.startswith("declarations") for name in scored):
         assert source.startswith("Analyzer readings"), (
             f"declarations were analyzer-scored but the label says {source!r}"
         )

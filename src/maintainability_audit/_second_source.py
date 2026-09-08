@@ -37,10 +37,42 @@ def analyzer_scored(external: ExternalPressures | None) -> list[str]:
     """
     if external is None:
         return []
-    return sorted({
-        name for population in (external.all_code, external.production)
-        for name, value in population.items() if value is not None
-    })
+    filled = _completed_from_the_built_in_tier(external)
+    return sorted(
+        f"{name} (completed by built-in detectors)" if name in filled else name
+        for name in {
+            name for population in (external.all_code, external.production)
+            for name, value in population.items() if value is not None
+        }
+    )
+
+
+def _completed_from_the_built_in_tier(external: ExternalPressures) -> set[str]:
+    """Dimensions whose criterion set the analyzers did not cover alone.
+
+    A published rate that mixes two counting conventions must say so
+    (D140). `declarations` is scored on cyclomatic complexity, declaration
+    lines and cognitive complexity, and no analyzer in the pool supplies
+    all three for any language but Python — `lizard` reports no cognitive
+    complexity at all — so on thirteen of the fourteen parsed languages
+    the built-in scanner fills that criterion per declaration.
+
+    Naming it is ADR 006 working rather than an exception to it: the
+    analyzer tier stays primary for what it measures, and the label stops
+    crediting `lizard` for the scanner's reading. Derived from the raw
+    measurements the pressures were reduced from, so it cannot disagree
+    with what was actually published.
+    """
+    from ._criteria_scope import _languages_missing_a_criterion, _unit_languages
+    from ._pressures import _units_by_concept
+
+    if not external.measurements:
+        return set()
+    measurements = list(external.measurements)
+    per_unit = _units_by_concept(measurements, production_only=False)
+    if not _languages_missing_a_criterion(per_unit, _unit_languages(measurements)):
+        return set()
+    return {"declarations"}
 
 
 def widen_for_disagreement(

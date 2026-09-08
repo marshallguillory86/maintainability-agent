@@ -19,6 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ._metrics_types import DeclRange
+from ._operator_reads import read_source_file
 from .declarations import DECLARATION_SUFFIXES, declaration_ranges
 
 
@@ -51,10 +52,13 @@ class SourceIndex:
 
 
 def _read(path: Path) -> list[str]:
-    try:
-        return path.read_text(encoding="utf-8").splitlines()
-    except UnicodeDecodeError:
-        return path.read_text(encoding="utf-8", errors="replace").splitlines()
+    """Every scan read goes through the regular-file primitive (D141).
+
+    `read_text` on a FIFO discovered in the tree waits for a writer that
+    never comes, so a file named `src/hang.py` stopped the audit rather
+    than being measured or refused.
+    """
+    return read_source_file(path)
 
 
 def index_or_new(index: SourceIndex | None) -> SourceIndex:

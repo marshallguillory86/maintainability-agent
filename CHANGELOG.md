@@ -4,6 +4,47 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+## 3.0.1 - 2026-09-08
+
+### Fixed — Grok's post-2.11.0 audit, closed in full
+
+Four defects. No scoring constants move, so no grade changes; one label
+in every report does.
+
+**A hunk-only diff read as clean (D138, High).** `--check` refused a
+complete `diff -u` and nothing else, so the fragment an agent actually
+pastes — the hunk alone, because that is what a chat window shows — read
+as file content and every one of the 46 parsed suffixes reported
+`declarations_read: true` on it. D133 closed "a piped diff" on a detector
+that required the `---`/`+++` headers too. Either half of the shape now
+refuses. A hunk header quoted inside a string still parses: the check is
+anchored at line start, so writing *about* a diff is unaffected.
+
+**A published declarations rate mixed two counting conventions silently
+(D140, High).** 3.0.0 completes an analyzer criterion set from the
+built-in tier per declaration, and published the result as an analyzer
+reading with no provenance. `lizard` reports cognitive complexity for no
+language at all, so on thirteen of the fourteen parsed languages that
+rate is two conventions wearing one label. Reports now say
+`declarations (completed by built-in detectors)`. **This changes the
+"Estimate source" line in every report where the fill applies** — the
+number is unchanged, the attribution is not.
+
+**Scan reads hung on a FIFO, and skipped it silently (D141, Medium).**
+The regular-file guard operator-named reads use is now shared with scan
+reads rather than reimplemented. That alone changed nothing, because the
+FIFO never reached a read: the walk tested `is_file()` first, which is
+false for a FIFO, so `src/hang.py` was dropped and the audit measured one
+file short without saying so. It refuses now, rather than hanging or
+quietly under-reporting.
+
+**The language-support lead out-claimed its own verification (D139,
+Medium).** The page said every language's branch set is derived from its
+own grammar. Only Python's is — `ast` implements the grammar and CI
+enumerates from it. D129 corrected the verification section seventy lines
+down, where a reader of the table never reaches it.
+
+
 ## 3.0.0 - 2026-09-08
 
 ### Changed — the recalibration, and the first release that re-grades

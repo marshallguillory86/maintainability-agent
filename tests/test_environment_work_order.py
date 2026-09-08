@@ -23,7 +23,7 @@ import pytest
 # duplicate-block gate.
 from test_first_run_prompt import _repo
 
-from maintainability_audit import report as report_module
+from maintainability_audit import _analyzer_sections as report_module
 from maintainability_audit._analysis import Analysis, ToolCoverage
 from maintainability_audit.config import load_config
 from maintainability_audit.renderers import render_markdown

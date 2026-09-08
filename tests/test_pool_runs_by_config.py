@@ -84,11 +84,31 @@ def _assert_pool_ran(report: dict) -> None:
     assert analyzer_rows[0][0]
     assert analyzer_rows[0][1]["tool"] == "lizard"
 
-    # Running the pool and using its readings for the estimate are separate
-    # claims. Lizard lacks the complete declaration concept set, so this
-    # fixture must still label the number as the built-in fallback.
+    # Running the pool and using its readings for the estimate are
+    # separate claims, and the label must agree with which dimensions the
+    # analyzers actually scored — not with a literal string.
+    #
+    # The literal was `"Built-in detectors (fallback tier)"`, on the
+    # reasoning that lizard lacks the complete declaration concept set.
+    # It does, but the built-in tier now completes it per concept, so a
+    # lizard-only run legitimately drives `declarations`. The literal also
+    # made this test read differently on two machines: `conftest` moves
+    # `HOME` to isolate git, user site-packages is derived from `HOME`, so
+    # the lizard subprocess cannot import itself locally and silently
+    # measures nothing — while CI, where it works, took the other branch.
+    # A test that passes because a tool quietly failed is worse than no
+    # test, so this asserts the *agreement* instead, which holds either
+    # way and is the self-contradiction the completion work had to fix.
+    scored = report["score"].get("analyzer_scored_dimensions") or []
     source = evidence_view.estimate_source(report["score"])
-    assert source == "Built-in detectors (fallback tier)"
+    if "declarations" in scored:
+        assert source.startswith("Analyzer readings"), (
+            f"declarations were analyzer-scored but the label says {source!r}"
+        )
+    else:
+        assert source == "Built-in detectors (fallback tier)", (
+            f"nothing was analyzer-scored but the label says {source!r}"
+        )
     assert f"| Estimate source | {source} |" in render_markdown(report)
 
 
@@ -277,7 +297,17 @@ def test_mcp_report_resource_uses_the_repository_pool_decision(
     enabled = _report_resource_markdown(enabled_root)
     assert "## Analyzer Coverage" in enabled
     assert "| `lizard` | analyzer |" in enabled
-    assert "| Estimate source | Built-in detectors (fallback tier) |" in enabled
+    # Either label is legitimate here and which one appears depends on
+    # whether the lizard subprocess could import itself — see
+    # `_assert_pool_ran`, where the same literal made this file read
+    # differently under CI and under a local `HOME`-isolated run. What
+    # this resource has to show is that the row is rendered at all; the
+    # agreement between the label and `analyzer_scored_dimensions` is
+    # asserted there, against the report rather than its markdown.
+    assert any(
+        f"| Estimate source | {label}" in enabled
+        for label in ("Built-in detectors (fallback tier)", "Analyzer readings")
+    ), "the MCP report resource rendered no estimate-source row"
 
     disabled = _report_resource_markdown(disabled_root)
     assert "## Analyzer Coverage" not in disabled

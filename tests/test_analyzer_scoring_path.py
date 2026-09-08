@@ -28,7 +28,7 @@ def test_complete_analyzer_declaration_pressure_sets_the_point_estimate(
     thresholds: dict,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from maintainability_audit import report as report_module
+    from maintainability_audit import _analyzer_sections as report_module
     from maintainability_audit._analysis import Analysis
     from maintainability_audit._pressures import (
         ExternalPressures,
@@ -66,7 +66,7 @@ def test_missing_or_incomplete_analyzer_pressure_keeps_the_built_in_dimension(
     thresholds: dict,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from maintainability_audit import report as report_module
+    from maintainability_audit import _analyzer_sections as report_module
     from maintainability_audit._analysis import Analysis
     from maintainability_audit._metrics_types import Measurement
     from maintainability_audit._pressures import (

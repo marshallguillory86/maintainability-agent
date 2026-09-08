@@ -173,9 +173,19 @@ CATEGORY_ASPECTS: dict[str, dict[str, float]] = {
 ROOT_POPULATIONS: tuple[str, ...] = ("files_scanned", "declarations_scanned")
 
 POPULATION_FLOORS: dict[str, int] = {
-    "files_scanned": 32,
+    # The 180-repo corpus minima (3.0.0), taken from `corpus.json`'s own
+    # `source_files` and `declarations` — the columns the floor test
+    # compares against — rather than from the measurement evidence,
+    # which counts a different population and gave 26 / 164.
+    #
+    # Were 32 / 139 / 36 against the 112-repo corpus. The added languages
+    # brought smaller repositories: SwiftyJSON and fd at 24 source files,
+    # express at 139 declarations. A floor above the corpus minimum is
+    # not a floor, it is a repository the scale cannot score while
+    # claiming to be calibrated by it.
+    "files_scanned": 24,
     "declarations_scanned": 139,
-    "production_declarations_scanned": 36,
+    "production_declarations_scanned": 53,
 }
 
 # Which population each aspect's rate divides by. An aspect absent from

@@ -1,12 +1,12 @@
 {
- "measured_on": "2026-09-07",
- "corpus_size": 112,
+ "measured_on": "2026-09-08",
+ "corpus_size": 180,
  "measurements": [
   {
    "repo": "Chart.js",
    "pinned_commit": "cb02e1d207bd4c4c40b20c259017f85f26f1e30a",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 888,
    "declarations": 1719,
    "dimensions": {
@@ -33,10 +33,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.05066771406127259
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.06201550387596899
    },
    "analyzer_coverage": {
     "tools": [
@@ -77,7 +77,7 @@
    "repo": "angular",
    "pinned_commit": "565dbb2fe5406f2a86d43a5b3c6993434b7124a7",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 8254,
    "declarations": 43503,
    "dimensions": {
@@ -104,10 +104,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.07473493664339281
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.0950453655933108
    },
    "analyzer_coverage": {
     "tools": [
@@ -148,7 +148,7 @@
    "repo": "anime",
    "pinned_commit": "2c9cf8ea00329f6768c7d7902252ed977d75ce42",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 268,
    "declarations": 1517,
    "dimensions": {
@@ -175,10 +175,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.06894243641231593
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.10356347438752785
    },
    "analyzer_coverage": {
     "tools": [
@@ -218,7 +218,7 @@
    "repo": "ansible",
    "pinned_commit": "c5ecb46c3f8c135a76ee86584f4b77b50184e5a6",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1880,
    "declarations": 13168,
    "dimensions": {
@@ -245,10 +245,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.06353433231028464
+    "declarations": 0.07691310659477395
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.09054285714285715
+    "declarations": 0.11608129003755246
    },
    "analyzer_coverage": {
     "tools": [
@@ -301,7 +301,7 @@
    "repo": "ant-design",
    "pinned_commit": "ef787d0b8eed12aa5dd3f89233a36d1ce214179c",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 4523,
    "declarations": 5782,
    "dimensions": {
@@ -328,10 +328,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.12062214487709376
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.13412477898459207
    },
    "analyzer_coverage": {
     "tools": [
@@ -372,7 +372,7 @@
    "repo": "axios",
    "pinned_commit": "f5e83e49ee32b1004db82dad2b14d1e273a99e07",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 407,
    "declarations": 1002,
    "dimensions": {
@@ -399,10 +399,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.060511756569847856
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.12162162162162163
    },
    "analyzer_coverage": {
     "tools": [
@@ -443,7 +443,7 @@
    "repo": "code-server",
    "pinned_commit": "313bf0359b4d391ba18f1fa131aad8a583bc2919",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 111,
    "declarations": 277,
    "dimensions": {
@@ -470,10 +470,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.05510752688172043
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.07352941176470588
    },
    "analyzer_coverage": {
     "tools": [
@@ -514,7 +514,7 @@
    "repo": "django",
    "pinned_commit": "c9eb16a87e60c305fb3651459639f647cce498db",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 3082,
    "declarations": 41730,
    "dimensions": {
@@ -541,10 +541,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.02951644183023251
+    "declarations": 0.03389384704687273
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.04769338021338506
+    "declarations": 0.06439235384400725
    },
    "analyzer_coverage": {
     "tools": [
@@ -596,7 +596,7 @@
    "repo": "echarts",
    "pinned_commit": "30076aedcd7b7f65d8dd8e8d9ece46ce778133a3",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1451,
    "declarations": 4364,
    "dimensions": {
@@ -623,10 +623,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.12936132465996453
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.12936132465996453
    },
    "analyzer_coverage": {
     "tools": [
@@ -667,7 +667,7 @@
    "repo": "excalidraw",
    "pinned_commit": "4872083c044491b6d5c96ae134a75464f96d6831",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 682,
    "declarations": 3927,
    "dimensions": {
@@ -694,10 +694,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.13310546875
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.1512767897856817
    },
    "analyzer_coverage": {
     "tools": [
@@ -738,7 +738,7 @@
    "repo": "express",
    "pinned_commit": "a3714473feb3d2908add734d340e7755fd85e0a3",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 157,
    "declarations": 185,
    "dimensions": {
@@ -765,10 +765,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.026785714285714284
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.049019607843137254
    },
    "analyzer_coverage": {
     "tools": [
@@ -808,7 +808,7 @@
    "repo": "fastapi",
    "pinned_commit": "4ea76759a615754a070b08eb218c66e1ee1b12c6",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 2839,
    "declarations": 5681,
    "dimensions": {
@@ -835,10 +835,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.04474554907830471
+    "declarations": 0.05673686362707013
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.04549071618037135
+    "declarations": 0.07302867383512544
    },
    "analyzer_coverage": {
     "tools": [
@@ -892,7 +892,7 @@
    "repo": "flask",
    "pinned_commit": "6a2f545bfd8ed31e19066a299296917e034aca58",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 111,
    "declarations": 1628,
    "dimensions": {
@@ -919,10 +919,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.02759009009009009
+    "declarations": 0.03104575163398693
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.05184331797235023
+    "declarations": 0.08333333333333333
    },
    "analyzer_coverage": {
     "tools": [
@@ -972,7 +972,7 @@
    "repo": "freeCodeCamp",
    "pinned_commit": "f67426be7505cdb3072c72b3d254888e2bbaacd6",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 18035,
    "declarations": 2566,
    "dimensions": {
@@ -999,10 +999,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.11550187617260788
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.1255324813631523
    },
    "analyzer_coverage": {
     "tools": [
@@ -1043,7 +1043,7 @@
    "repo": "github-readme-stats",
    "pinned_commit": "54a7985aeefda00d5eadb55b80c17c7f976c37d2",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 90,
    "declarations": 164,
    "dimensions": {
@@ -1070,10 +1070,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.11466165413533834
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.125
    },
    "analyzer_coverage": {
     "tools": [
@@ -1126,7 +1126,7 @@
    "repo": "hackingtool",
    "pinned_commit": "9b92b6156ddc5ff87bf0fa592d81c333a88d1c78",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 91,
    "declarations": 898,
    "dimensions": {
@@ -1153,10 +1153,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.043451652386780906
+    "declarations": 0.049166666666666664
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07283057851239669
+    "declarations": 0.09848484848484848
    },
    "analyzer_coverage": {
     "tools": [
@@ -1206,7 +1206,7 @@
    "repo": "hoppscotch",
    "pinned_commit": "1acb8a3a7581e4db32ba0d529170c4669a2e1053",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1245,
    "declarations": 5694,
    "dimensions": {
@@ -1233,10 +1233,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.11901877649909146
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.12129253824539495
    },
    "analyzer_coverage": {
     "tools": [
@@ -1277,7 +1277,7 @@
    "repo": "jquery",
    "pinned_commit": "1183ba16fe38ebac23db3b885080e864f494954e",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 292,
    "declarations": 1452,
    "dimensions": {
@@ -1304,10 +1304,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.13003452243958574
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.17868589743589744
    },
    "analyzer_coverage": {
     "tools": [
@@ -1347,7 +1347,7 @@
    "repo": "keras",
    "pinned_commit": "5f5bf6f3ebfdbd3cc08c72f4ed16591263cbc9bd",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 858,
    "declarations": 16982,
    "dimensions": {
@@ -1374,10 +1374,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.05231693989071038
+    "declarations": 0.08419869174161897
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07532244196044711
+    "declarations": 0.10601719197707736
    },
    "analyzer_coverage": {
     "tools": [
@@ -1431,7 +1431,7 @@
    "repo": "localstack",
    "pinned_commit": "8b9a79f05846835cf4dff63ab7eefdde9df83783",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 2016,
    "declarations": 34407,
    "dimensions": {
@@ -1458,10 +1458,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.05681195175438596
+    "declarations": 0.07821104744951883
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.037123812038014785
+    "declarations": 0.05116971685082873
    },
    "analyzer_coverage": {
     "tools": [
@@ -1509,7 +1509,7 @@
    "repo": "lodash",
    "pinned_commit": "a666ba591064c8011988275790ad7d625279f09c",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 39,
    "declarations": 849,
    "dimensions": {
@@ -1536,10 +1536,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.036057692307692304
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.049107142857142856
    },
    "analyzer_coverage": {
     "tools": [
@@ -1579,7 +1579,7 @@
    "repo": "manim",
    "pinned_commit": "01030ac5d23bc294ccb93cbfcda260f2d20dda62",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 112,
    "declarations": 2224,
    "dimensions": {
@@ -1606,10 +1606,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.018257575757575757
+    "declarations": 0.026472431077694234
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.017813267813267815
+    "declarations": 0.025364616360177554
    },
    "analyzer_coverage": {
     "tools": [
@@ -1659,7 +1659,7 @@
    "repo": "material-ui",
    "pinned_commit": "81e94061ca393d4eaf238e6f77c283b2edd9ef7e",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 6627,
    "declarations": 9553,
    "dimensions": {
@@ -1686,10 +1686,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.09873004354136429
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.11309420163677521
    },
    "analyzer_coverage": {
     "tools": [
@@ -1730,7 +1730,7 @@
    "repo": "mermaid",
    "pinned_commit": "3d521b1ee5fc9079fe0659e776a1b2cdc37174b1",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1309,
    "declarations": 3585,
    "dimensions": {
@@ -1757,10 +1757,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.14105587808417996
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.15172413793103448
    },
    "analyzer_coverage": {
     "tools": [
@@ -1801,7 +1801,7 @@
    "repo": "models",
    "pinned_commit": "4d7bdd8c170ee90850f2f9ccef0f6d19b817de35",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 3026,
    "declarations": 23910,
    "dimensions": {
@@ -1828,10 +1828,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.0802684741154703
+    "declarations": 0.11328319416026102
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.10304205189382643
+    "declarations": 0.14955256259604086
    },
    "analyzer_coverage": {
     "tools": [
@@ -1883,7 +1883,7 @@
    "repo": "n8n",
    "pinned_commit": "9d9e9bf97e8ae5382a930cd662637a9cf7046ef9",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 19627,
    "declarations": 62787,
    "dimensions": {
@@ -1910,10 +1910,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.11116630469941315
+    "declarations": 0.08869154420949829
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07683276375261823
+    "declarations": 0.11042483362202571
    },
    "analyzer_coverage": {
     "tools": [
@@ -1966,7 +1966,7 @@
    "repo": "nest",
    "pinned_commit": "c3bc75c973813969aa676793e20a7cba12a9daf5",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1774,
    "declarations": 5538,
    "dimensions": {
@@ -1993,10 +1993,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.021232876712328767
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.02536873156342183
    },
    "analyzer_coverage": {
     "tools": [
@@ -2037,7 +2037,7 @@
    "repo": "playwright",
    "pinned_commit": "c973356ee9e3906260f60da5e3e04442e069a0d4",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 2239,
    "declarations": 11202,
    "dimensions": {
@@ -2064,10 +2064,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.07355534454693434
+    "declarations": 0.08450654152445962
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.05886075949367089
+    "declarations": 0.08935726879307582
    },
    "analyzer_coverage": {
     "tools": [
@@ -2124,7 +2124,7 @@
    "repo": "reveal.js",
    "pinned_commit": "a3b940695648aa1c5b0680bc9a5b905cf43020e5",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 132,
    "declarations": 566,
    "dimensions": {
@@ -2151,10 +2151,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.1494047619047619
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.1513317191283293
    },
    "analyzer_coverage": {
     "tools": [
@@ -2195,7 +2195,7 @@
    "repo": "scrapy",
    "pinned_commit": "1bd839b57ddb614664a179b6213f49579bdfd3da",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 494,
    "declarations": 7038,
    "dimensions": {
@@ -2222,10 +2222,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.014701378254211332
+    "declarations": 0.023706025070764254
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.022823261858349576
+    "declarations": 0.03832116788321168
    },
    "analyzer_coverage": {
     "tools": [
@@ -2275,7 +2275,7 @@
    "repo": "strapi",
    "pinned_commit": "0a8a9b40d0642b221c1841ae72295f830352e8ce",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 5159,
    "declarations": 13026,
    "dimensions": {
@@ -2302,10 +2302,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.10566750629722922
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.12221867007672635
    },
    "analyzer_coverage": {
     "tools": [
@@ -2346,7 +2346,7 @@
    "repo": "svelte",
    "pinned_commit": "26786e92985842a6d563c67049a43bc5857bf792",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 4035,
    "declarations": 5632,
    "dimensions": {
@@ -2373,10 +2373,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.08756262252232629
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.15025041736227046
    },
    "analyzer_coverage": {
     "tools": [
@@ -2417,7 +2417,7 @@
    "repo": "tabby",
    "pinned_commit": "14e2d60b9b6dee84a53c37f05eefeb803787de04",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 347,
    "declarations": 2157,
    "dimensions": {
@@ -2444,10 +2444,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.05907604251839738
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.05907604251839738
    },
    "analyzer_coverage": {
     "tools": [
@@ -2488,7 +2488,7 @@
    "repo": "tailwindcss",
    "pinned_commit": "46df7ee2fc4ae822d414d35bbd48be024e5cb1c0",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 432,
    "declarations": 1218,
    "dimensions": {
@@ -2515,10 +2515,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.13135593220338984
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.12917737789203085
    },
    "analyzer_coverage": {
     "tools": [
@@ -2559,7 +2559,7 @@
    "repo": "transformers",
    "pinned_commit": "e8ea728a3eeeb903e77c7d1bd29267c80a1be71f",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 5525,
    "declarations": 60641,
    "dimensions": {
@@ -2586,10 +2586,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.08313603531300161
+    "declarations": 0.10393495112908661
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.09994143536594023
+    "declarations": 0.15325381004437014
    },
    "analyzer_coverage": {
     "tools": [
@@ -2639,7 +2639,7 @@
    "repo": "uBlock",
    "pinned_commit": "a873fd2b290461cb6efffe6e67ac7dc1fbde21e2",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 400,
    "declarations": 4238,
    "dimensions": {
@@ -2666,10 +2666,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.16289348857266062
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.16310449050086356
    },
    "analyzer_coverage": {
     "tools": [
@@ -2723,7 +2723,7 @@
    "repo": "vite",
    "pinned_commit": "57fea001d154e7dd8d5d74d3082731f1dcfd31be",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1989,
    "declarations": 3048,
    "dimensions": {
@@ -2750,10 +2750,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.14141705069124424
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.15956340956340956
    },
    "analyzer_coverage": {
     "tools": [
@@ -2794,7 +2794,7 @@
    "repo": "webpack",
    "pinned_commit": "788ffe08cc0bff1ee42071e00475d545a952d9e6",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 12816,
    "declarations": 12111,
    "dimensions": {
@@ -2821,10 +2821,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.10424822386544874
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.152181907330228
    },
    "analyzer_coverage": {
     "tools": [
@@ -2865,7 +2865,7 @@
    "repo": "youtube-dl",
    "pinned_commit": "956b8c585591b401a543e409accb163eeaaa1193",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 917,
    "declarations": 5786,
    "dimensions": {
@@ -2892,10 +2892,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.09377480815030431
+    "declarations": 0.12560835957629546
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.10300348010289
+    "declarations": 0.13759561024276687
    },
    "analyzer_coverage": {
     "tools": [
@@ -2945,7 +2945,7 @@
    "repo": "yt-dlp",
    "pinned_commit": "5d6b8c8cd19785c3086ae3a9ec618c45e25eb3bc",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1135,
    "declarations": 9440,
    "dimensions": {
@@ -2972,10 +2972,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.07266428976582125
+    "declarations": 0.0974139437358029
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.08320335348021057
+    "declarations": 0.11249729963275006
    },
    "analyzer_coverage": {
     "tools": [
@@ -3025,7 +3025,7 @@
    "repo": "Avalonia",
    "pinned_commit": "9d5c2fa81d9c374379ae3ee286c778047a6a5a7e",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 4256,
    "declarations": 34873,
    "dimensions": {
@@ -3052,10 +3052,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.056794737046985094
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.06747666949460672
    },
    "analyzer_coverage": {
     "tools": [
@@ -3096,7 +3096,7 @@
    "repo": "Bulk-Crap-Uninstaller",
    "pinned_commit": "608321de98e92297377b1eb69029af55c25504a1",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 497,
    "declarations": 4237,
    "dimensions": {
@@ -3123,10 +3123,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.07727415801070192
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.07727415801070192
    },
    "analyzer_coverage": {
     "tools": [
@@ -3167,7 +3167,7 @@
    "repo": "FFmpeg",
    "pinned_commit": "9fc8c785e2747c87121ec28f8f10ceab0562384b",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 4701,
    "declarations": 36474,
    "dimensions": {
@@ -3194,10 +3194,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.21994404715597976
+    "declarations": 0.2710793519432155
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.2210341303270565
+    "declarations": 0.27213425696849747
    },
    "analyzer_coverage": {
     "tools": [
@@ -3251,7 +3251,7 @@
    "repo": "Files",
    "pinned_commit": "c3c3fc22e1acc546ace1016460552091d71613e5",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1179,
    "declarations": 7319,
    "dimensions": {
@@ -3278,10 +3278,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.0785127822354917
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.07944814462416747
    },
    "analyzer_coverage": {
     "tools": [
@@ -3322,7 +3322,7 @@
    "repo": "ILSpy",
    "pinned_commit": "3ef547ca2cb1bb293034c2a309b6514fa0f7124f",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1869,
    "declarations": 21519,
    "dimensions": {
@@ -3349,10 +3349,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.07583248277621843
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.07583248277621843
    },
    "analyzer_coverage": {
     "tools": [
@@ -3393,7 +3393,7 @@
    "repo": "ImHex",
    "pinned_commit": "53dbd48a0ede08885e8ca8ebee2198bc45946610",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 513,
    "declarations": 5375,
    "dimensions": {
@@ -3420,10 +3420,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.11852151781582601
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.11905319896883056
    },
    "analyzer_coverage": {
     "tools": [
@@ -3464,7 +3464,7 @@
    "repo": "JeecgBoot",
    "pinned_commit": "74364054449efd5852e46d0c10325a1d38c1006a",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1870,
    "declarations": 13489,
    "dimensions": {
@@ -3491,10 +3491,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.07280975073313783
+    "declarations": 0.09649588531988319
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07378553212664055
+    "declarations": 0.0979633401221996
    },
    "analyzer_coverage": {
     "tools": [
@@ -3551,7 +3551,7 @@
    "repo": "Lean",
    "pinned_commit": "f24fc0d3df03d6bdbe0e6fc7b8522445f1d900d2",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 4877,
    "declarations": 30476,
    "dimensions": {
@@ -3578,10 +3578,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.047405872463541464
+    "declarations": 0.06214235043745566
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.03942593203563181
+    "declarations": 0.057340759782919165
    },
    "analyzer_coverage": {
     "tools": [
@@ -3634,7 +3634,7 @@
    "repo": "NewPipe",
    "pinned_commit": "bbbac9b223f21a1a5a714044353cf0412de57b98",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 322,
    "declarations": 4074,
    "dimensions": {
@@ -3661,10 +3661,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.05890982087708462
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.059429477020602216
    },
    "analyzer_coverage": {
     "tools": [
@@ -3707,7 +3707,7 @@
    "repo": "PowerShell",
    "pinned_commit": "6ca24ccf024140ca061580c43751db27605c4815",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1369,
    "declarations": 23740,
    "dimensions": {
@@ -3734,10 +3734,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.124946747002617
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.12691537932328475
    },
    "analyzer_coverage": {
     "tools": [
@@ -3776,7 +3776,7 @@
    "repo": "PowerToys",
    "pinned_commit": "479924d699a6ca6c53c0bbe68c234e276d8dad9c",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 5734,
    "declarations": 31868,
    "dimensions": {
@@ -3803,10 +3803,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.07088810246039771
+    "declarations": 0.08168337083248108
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07331770094884939
+    "declarations": 0.08628298858773181
    },
    "analyzer_coverage": {
     "tools": [
@@ -3861,7 +3861,7 @@
    "repo": "QuickLook",
    "pinned_commit": "60eea46ae2efaf29c9c3a80c61a618ad774bea20",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 456,
    "declarations": 2309,
    "dimensions": {
@@ -3888,10 +3888,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.11949898442789438
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.11949898442789438
    },
    "analyzer_coverage": {
     "tools": [
@@ -3932,7 +3932,7 @@
    "repo": "RevokeMsgPatcher",
    "pinned_commit": "8360fe2af70ef908dfe514eb78ca75129eacc5cc",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 52,
    "declarations": 235,
    "dimensions": {
@@ -3959,10 +3959,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.1270949720670391
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.1270949720670391
    },
    "analyzer_coverage": {
     "tools": [
@@ -4001,7 +4001,7 @@
    "repo": "RxJava",
    "pinned_commit": "947e681bca8aa5526a52a51e3953c82148ccb36b",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 2121,
    "declarations": 28645,
    "dimensions": {
@@ -4028,10 +4028,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.018348029045643154
+    "declarations": 0.02730830172372401
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.014634146341463415
+    "declarations": 0.030238064763855113
    },
    "analyzer_coverage": {
     "tools": [
@@ -4083,7 +4083,7 @@
    "repo": "ScreenToGif",
    "pinned_commit": "a4d0a67c2131cd048ceec86cd40afc2f1a06f2fd",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 657,
    "declarations": 3587,
    "dimensions": {
@@ -4110,10 +4110,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.10434120335110435
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.10434120335110435
    },
    "analyzer_coverage": {
     "tools": [
@@ -4152,7 +4152,7 @@
    "repo": "ShareX",
    "pinned_commit": "96adbf0c12d54deb6e8778a9287b59bb1f6240fa",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1119,
    "declarations": 9329,
    "dimensions": {
@@ -4179,10 +4179,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.0888960666092449
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.0888960666092449
    },
    "analyzer_coverage": {
     "tools": [
@@ -4221,7 +4221,7 @@
    "repo": "SteamTools",
    "pinned_commit": "d04213147e77a8d73277fa8b86eeecfa444df071",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 936,
    "declarations": 4109,
    "dimensions": {
@@ -4248,10 +4248,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.09587332053742802
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.09587332053742802
    },
    "analyzer_coverage": {
     "tools": [
@@ -4290,7 +4290,7 @@
    "repo": "TrafficMonitor",
    "pinned_commit": "188b8773b959733bfc0e4f506c762d9a255883d4",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 230,
    "declarations": 2151,
    "dimensions": {
@@ -4317,10 +4317,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.0664754953076121
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.06689401888772298
    },
    "analyzer_coverage": {
     "tools": [
@@ -4360,7 +4360,7 @@
    "repo": "Ventoy",
    "pinned_commit": "6568972abca37e33e031e1f2651a68a86491082b",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 773,
    "declarations": 5476,
    "dimensions": {
@@ -4387,10 +4387,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.1833541439051038
+    "declarations": 0.2323697585768742
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.18347941774925652
+    "declarations": 0.23242125357938276
    },
    "analyzer_coverage": {
     "tools": [
@@ -4444,7 +4444,7 @@
    "repo": "WRF",
    "pinned_commit": "06d4240ae989cc3e50af412bb472df3d9048783c",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 2139,
    "declarations": 9312,
    "dimensions": {
@@ -4532,7 +4532,7 @@
    "repo": "aria2",
    "pinned_commit": "9e7273583f83e881e3ec067b523ba88724088d2f",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1204,
    "declarations": 7325,
    "dimensions": {
@@ -4559,10 +4559,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.04130080280983442
+    "declarations": 0.060983981693363845
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.03564638783269962
+    "declarations": 0.05843515963736697
    },
    "analyzer_coverage": {
     "tools": [
@@ -4616,7 +4616,7 @@
    "repo": "aspnetcore",
    "pinned_commit": "797634df2f3d3e7f16aedf9f81f7d878510ccdf1",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 11771,
    "declarations": 87255,
    "dimensions": {
@@ -4643,10 +4643,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.060443648387985674
+    "declarations": 0.10039083598391646
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.06686900506140941
+    "declarations": 0.07361380707232677
    },
    "analyzer_coverage": {
     "tools": [
@@ -4703,7 +4703,7 @@
    "repo": "bitcoin",
    "pinned_commit": "4519933391dd23dbf1a4eceec6dd53d2e9e71cc3",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 2310,
    "declarations": 17589,
    "dimensions": {
@@ -4730,10 +4730,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.08558254002596279
+    "declarations": 0.10314721512871834
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.08319160997732426
+    "declarations": 0.10997402597402597
    },
    "analyzer_coverage": {
     "tools": [
@@ -4788,7 +4788,7 @@
    "repo": "calculator",
    "pinned_commit": "4fd3fc53bade573ea2ac1e1ebad9bf603713f85e",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 310,
    "declarations": 2985,
    "dimensions": {
@@ -4815,10 +4815,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.05855498213576816
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.05855498213576816
    },
    "analyzer_coverage": {
     "tools": [
@@ -4859,7 +4859,7 @@
    "repo": "cp2k",
    "pinned_commit": "375a5ce9d028a60d4c3291b2b3eb10053932e6a3",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1824,
    "declarations": 2432,
    "dimensions": {
@@ -4886,10 +4886,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.379948258869908
+    "declarations": 0.171274354923644
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.3841106653293213
+    "declarations": 0.17302338530066816
    },
    "analyzer_coverage": {
     "tools": [
@@ -4946,7 +4946,7 @@
    "repo": "curl",
    "pinned_commit": "e26f6e408a80dc0adcb704b0e2c408e240f482cc",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1998,
    "declarations": 7298,
    "dimensions": {
@@ -4973,10 +4973,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.23347723704866563
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.2593494135870768
    },
    "analyzer_coverage": {
     "tools": [
@@ -5016,7 +5016,7 @@
    "repo": "dbeaver",
    "pinned_commit": "65c782e56bc4a48f0154d65dea9ed79d990609d4",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 6588,
    "declarations": 59130,
    "dimensions": {
@@ -5043,10 +5043,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.05946450809464508
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.06006453670985473
    },
    "analyzer_coverage": {
     "tools": [
@@ -5088,7 +5088,7 @@
    "repo": "dubbo",
    "pinned_commit": "5553cb77bd26b717c8cbaf83079765ac05d7d164",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 4068,
    "declarations": 35281,
    "dimensions": {
@@ -5115,10 +5115,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.03666343551839735
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.03969731547654796
    },
    "analyzer_coverage": {
     "tools": [
@@ -5160,7 +5160,7 @@
    "repo": "duckdb",
    "pinned_commit": "9c21294d984dfe9a1da5d055b5fce3e8a0d634b2",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 4222,
    "declarations": 49645,
    "dimensions": {
@@ -5187,10 +5187,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.06656033404692765
+    "declarations": 0.08477327833672417
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.06779574871806456
+    "declarations": 0.08689368620720803
    },
    "analyzer_coverage": {
     "tools": [
@@ -5245,7 +5245,7 @@
    "repo": "electron",
    "pinned_commit": "4cf22168dc6c2161ce6ff6a7917099dd27eda5d3",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 2202,
    "declarations": 8970,
    "dimensions": {
@@ -5272,10 +5272,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.046896743668243805
+    "declarations": 0.0581781914893617
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.042572463768115944
+    "declarations": 0.05771495877502945
    },
    "analyzer_coverage": {
     "tools": [
@@ -5330,7 +5330,7 @@
    "repo": "elmerfem",
    "pinned_commit": "a70ee422cbb75b9b9a45070f9328c695ca625f55",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 3438,
    "declarations": 15877,
    "dimensions": {
@@ -5357,10 +5357,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.2626725700739088
+    "declarations": 0.2970974103927285
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.26059994231323913
+    "declarations": 0.2952671286954996
    },
    "analyzer_coverage": {
     "tools": [
@@ -5413,7 +5413,7 @@
    "repo": "fds",
    "pinned_commit": "4d9aa5502c65f0df46268bed1e5d788c21f59d83",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 266,
    "declarations": 1426,
    "dimensions": {
@@ -5440,10 +5440,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.38385315139701104
+    "declarations": 0.4463302752293578
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.3844401041666667
+    "declarations": 0.4465105601469238
    },
    "analyzer_coverage": {
     "tools": [
@@ -5495,7 +5495,7 @@
    "repo": "fpm",
    "pinned_commit": "9a4433dd19183b548cd67afbd32992f53dc2b987",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 266,
    "declarations": 1337,
    "dimensions": {
@@ -5522,10 +5522,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.17302452316076294
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.1584051724137931
    },
    "analyzer_coverage": {
     "tools": [
@@ -5568,7 +5568,7 @@
    "repo": "ghidra",
    "pinned_commit": "2035b8153afaf7ce2edde24a2c80b62bbcf5127f",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 16692,
    "declarations": 221619,
    "dimensions": {
@@ -5595,10 +5595,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.03792226863715613
+    "declarations": 0.04993472584856397
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.03883082775472631
+    "declarations": 0.05242207698937087
    },
    "analyzer_coverage": {
     "tools": [
@@ -5650,7 +5650,7 @@
    "repo": "git",
    "pinned_commit": "3cb9185f65410273787f74333cc027d2ea5daada",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1022,
    "declarations": 14101,
    "dimensions": {
@@ -5677,10 +5677,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.14842313675576296
+    "declarations": 0.18280648267008986
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.1489071038251366
+    "declarations": 0.18329041602961293
    },
    "analyzer_coverage": {
     "tools": [
@@ -5733,7 +5733,7 @@
    "repo": "grpc",
    "pinned_commit": "f0358aedb97f0f1a564c6af1410a9699bc85589c",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 6582,
    "declarations": 64659,
    "dimensions": {
@@ -5760,10 +5760,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.0244189852700491
+    "declarations": 0.0327333561768085
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.02112
+    "declarations": 0.02863198250492724
    },
    "analyzer_coverage": {
     "tools": [
@@ -5820,7 +5820,7 @@
    "repo": "halo",
    "pinned_commit": "4e7e5850b01640515323dcd4f08a1b42ff033147",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 2492,
    "declarations": 12415,
    "dimensions": {
@@ -5847,10 +5847,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.05501428942582489
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.06813562453806356
    },
    "analyzer_coverage": {
     "tools": [
@@ -5891,7 +5891,7 @@
    "repo": "imgui",
    "pinned_commit": "5316e7061425524682cafbafe8e0b86494a70470",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 119,
    "declarations": 2898,
    "dimensions": {
@@ -5918,10 +5918,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.14173567977915805
+    "declarations": 0.1789049235993209
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.14173567977915805
+    "declarations": 0.1789049235993209
    },
    "analyzer_coverage": {
     "tools": [
@@ -5975,7 +5975,7 @@
    "repo": "jadx",
    "pinned_commit": "8f7ea4e2c4bb82ca935aaeee98d9e8d3f3f3fba8",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1945,
    "declarations": 17674,
    "dimensions": {
@@ -6002,10 +6002,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.04455779612575421
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.051886346444780636
    },
    "analyzer_coverage": {
     "tools": [
@@ -6047,7 +6047,7 @@
    "repo": "java-design-patterns",
    "pinned_commit": "41625d8d354cdf6b6f10a82e29c2392b3efd5d20",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 2564,
    "declarations": 7580,
    "dimensions": {
@@ -6074,10 +6074,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.01094185797039262
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.015079941860465117
    },
    "analyzer_coverage": {
     "tools": [
@@ -6119,7 +6119,7 @@
    "repo": "jellyfin",
    "pinned_commit": "1ccec11b918ebeaac7db0f785548e41b484adb87",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 2127,
    "declarations": 9727,
    "dimensions": {
@@ -6146,10 +6146,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.09204334806787395
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.10896148932286914
    },
    "analyzer_coverage": {
     "tools": [
@@ -6188,7 +6188,7 @@
    "repo": "jq",
    "pinned_commit": "9d241e277204b83c4a7ddc7d733e5c72f99ef500",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 61,
    "declarations": 697,
    "dimensions": {
@@ -6215,10 +6215,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.1419753086419753
+    "declarations": 0.11226114649681529
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.14293304994686504
+    "declarations": 0.11115702479338843
    },
    "analyzer_coverage": {
     "tools": [
@@ -6272,7 +6272,7 @@
    "repo": "json",
    "pinned_commit": "19386dd14af178fecd4a4a65549b07e240e092a9",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 780,
    "declarations": 4467,
    "dimensions": {
@@ -6299,10 +6299,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.09597572660491856
+    "declarations": 0.1184863523573201
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.0869215938303342
+    "declarations": 0.13677685950413224
    },
    "analyzer_coverage": {
     "tools": [
@@ -6357,7 +6357,7 @@
    "repo": "lapack",
    "pinned_commit": "cee01836dc867f79d8fbbb1d9bc00bcdda6c0585",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 6528,
    "declarations": 7064,
    "dimensions": {
@@ -6384,10 +6384,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.7052334337349397
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.7052334337349397
    },
    "analyzer_coverage": {
     "tools": [
@@ -6444,7 +6444,7 @@
    "repo": "lede",
    "pinned_commit": "9262b55e09d9dc74024a8effb2b26512b100ef96",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 2793,
    "declarations": 37387,
    "dimensions": {
@@ -6471,10 +6471,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.23152739895859162
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.23146999397398177
    },
    "analyzer_coverage": {
     "tools": [
@@ -6526,7 +6526,7 @@
    "repo": "mall",
    "pinned_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 533,
    "declarations": 14904,
    "dimensions": {
@@ -6553,10 +6553,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.0011536593264248704
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.0011545005266142753
    },
    "analyzer_coverage": {
     "tools": [
@@ -6598,7 +6598,7 @@
    "repo": "mpv",
    "pinned_commit": "f5bcfb195412e0ca733eac2e850879cd3b1ded18",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 645,
    "declarations": 7913,
    "dimensions": {
@@ -6625,10 +6625,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.13067283124467696
+    "declarations": 0.1643420476120929
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.13066707844348363
+    "declarations": 0.16395142180094788
    },
    "analyzer_coverage": {
     "tools": [
@@ -6683,7 +6683,7 @@
    "repo": "nwchem",
    "pinned_commit": "76d77c1e7c9c06779932133a845bcd94d936772d",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 18361,
    "declarations": 43658,
    "dimensions": {
@@ -6771,7 +6771,7 @@
    "repo": "obs-studio",
    "pinned_commit": "ecebe28a1ea87c30f652b5d06fcaf893c787108d",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1698,
    "declarations": 15787,
    "dimensions": {
@@ -6798,10 +6798,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.08956899131996408
+    "declarations": 0.1083850483475249
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.08996165264720435
+    "declarations": 0.10902803057881325
    },
    "analyzer_coverage": {
     "tools": [
@@ -6854,7 +6854,7 @@
    "repo": "opencv",
    "pinned_commit": "3a718750a4d4bcde78bc93bcaf18b0303e956e55",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 4694,
    "declarations": 59659,
    "dimensions": {
@@ -6881,10 +6881,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.11010097943985754
+    "declarations": 0.13217560360455036
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.11533615336153362
+    "declarations": 0.1401735813348316
    },
    "analyzer_coverage": {
     "tools": [
@@ -6941,7 +6941,7 @@
    "repo": "openfast",
    "pinned_commit": "2895884d2be01862173c88d70f86b358d2f1a50a",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 477,
    "declarations": 4642,
    "dimensions": {
@@ -7027,7 +7027,7 @@
    "repo": "php-src",
    "pinned_commit": "0bf872bebf511f0c69f15bf5d9b86eb7176fd0eb",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 2549,
    "declarations": 26150,
    "dimensions": {
@@ -7054,10 +7054,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.2166472755477991
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.21806743220131933
    },
    "analyzer_coverage": {
     "tools": [
@@ -7111,7 +7111,7 @@
    "repo": "protobuf",
    "pinned_commit": "065d6fabf7345bd469844f5ed472664602570bc5",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 2193,
    "declarations": 40312,
    "dimensions": {
@@ -7138,10 +7138,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.04635092092507963
+    "declarations": 0.05795344325897187
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.04300524433021915
+    "declarations": 0.05746813149949681
    },
    "analyzer_coverage": {
     "tools": [
@@ -7198,7 +7198,7 @@
    "repo": "qBittorrent",
    "pinned_commit": "af5a6b6cb301f1dae707b351621fef3f2d6cccf3",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 911,
    "declarations": 7786,
    "dimensions": {
@@ -7225,10 +7225,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.07110180412371134
+    "declarations": 0.08435407479993468
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.07109344454580999
+    "declarations": 0.08421356659514771
    },
    "analyzer_coverage": {
     "tools": [
@@ -7283,7 +7283,7 @@
    "repo": "raylib",
    "pinned_commit": "9b2efc45522bdce8cb9462ccaf3b1f5a25888e54",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 405,
    "declarations": 10358,
    "dimensions": {
@@ -7310,10 +7310,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.18817485196795541
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.18813864375290293
    },
    "analyzer_coverage": {
     "tools": [
@@ -7353,7 +7353,7 @@
    "repo": "redis",
    "pinned_commit": "ceadaab2be6770d6c5faab1e0b4f57f0d5130cc4",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 885,
    "declarations": 9346,
    "dimensions": {
@@ -7380,10 +7380,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.10991223125855544
+    "declarations": 0.16193114831407687
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.11699806013579049
+    "declarations": 0.1677349015461874
    },
    "analyzer_coverage": {
     "tools": [
@@ -7437,7 +7437,7 @@
    "repo": "retrofit",
    "pinned_commit": "e27d855b7b029e7f907dfc52205fdb3e9c603c16",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 941,
    "declarations": 2814,
    "dimensions": {
@@ -7464,10 +7464,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.027442528735632184
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.0359375
    },
    "analyzer_coverage": {
     "tools": [
@@ -7510,7 +7510,7 @@
    "repo": "rufus",
    "pinned_commit": "2368e49a82e854d3e702f824648cc723953dbb53",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 482,
    "declarations": 2852,
    "dimensions": {
@@ -7537,10 +7537,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.19675174013921112
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.19675174013921112
    },
    "analyzer_coverage": {
     "tools": [
@@ -7595,7 +7595,7 @@
    "repo": "scrcpy",
    "pinned_commit": "2926c06c5dc3064ae6d8db706f1a98a37cfcf3f0",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 305,
    "declarations": 1306,
    "dimensions": {
@@ -7622,10 +7622,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.05116796440489433
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.04918588873812754
    },
    "analyzer_coverage": {
     "tools": [
@@ -7667,7 +7667,7 @@
    "repo": "specfem3d",
    "pinned_commit": "7a1c76454396f8dd2f5a67ea524ca372e2c91993",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1608,
    "declarations": 5448,
    "dimensions": {
@@ -7694,10 +7694,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.2688325598000714
+    "declarations": 0.34602406103286387
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.26907271752724676
+    "declarations": 0.3463289280469897
    },
    "analyzer_coverage": {
     "tools": [
@@ -7752,7 +7752,7 @@
    "repo": "spring-boot",
    "pinned_commit": "87cacdaabd38be0b8c0bc4a9809fbea35c9e48f8",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 8448,
    "declarations": 64680,
    "dimensions": {
@@ -7779,10 +7779,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.004929691288184904
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.009227412731006161
    },
    "analyzer_coverage": {
     "tools": [
@@ -7824,7 +7824,7 @@
    "repo": "spring-framework",
    "pinned_commit": "136dddb67d1de65f91fabcde6d92799797feed89",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 9259,
    "declarations": 106244,
    "dimensions": {
@@ -7851,10 +7851,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.018997478114673314
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.03157075216880104
    },
    "analyzer_coverage": {
     "tools": [
@@ -7896,7 +7896,7 @@
    "repo": "stb",
    "pinned_commit": "2c980bb59875b0d32144a71867fbdebb2f77cd20",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 106,
    "declarations": 2594,
    "dimensions": {
@@ -7923,10 +7923,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.18954918032786885
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.19788650839606253
    },
    "analyzer_coverage": {
     "tools": [
@@ -7966,7 +7966,7 @@
    "repo": "stdlib",
    "pinned_commit": "9a15c7772f1a76a6c497b9f3abb793841fc81f74",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 488,
    "declarations": 1415,
    "dimensions": {
@@ -7993,10 +7993,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.09716035634743875
+    "declarations": 0.11050257731958762
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.11069277108433735
+    "declarations": 0.15376569037656904
    },
    "analyzer_coverage": {
     "tools": [
@@ -8053,7 +8053,7 @@
    "repo": "terminal",
    "pinned_commit": "62711fd73ef9733fa83108bfa7cea22528d2dbb9",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1368,
    "declarations": 10450,
    "dimensions": {
@@ -8080,10 +8080,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.09591482361542679
+    "declarations": 0.11371170553269319
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.09601117420773035
+    "declarations": 0.11382905591200733
    },
    "analyzer_coverage": {
     "tools": [
@@ -8138,7 +8138,7 @@
    "repo": "termux-app",
    "pinned_commit": "3b66f8799635a4dba4a206563048ff0e6792c487",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 205,
    "declarations": 2648,
    "dimensions": {
@@ -8165,10 +8165,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.07709194214876033
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.08169745958429561
    },
    "analyzer_coverage": {
     "tools": [
@@ -8210,7 +8210,7 @@
    "repo": "tesseract",
    "pinned_commit": "fb87a84b6e3384b424b2169c76de9031046861e9",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 607,
    "declarations": 6708,
    "dimensions": {
@@ -8237,10 +8237,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.1046528695141641
+    "declarations": 0.14993815161689344
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.10823620823620823
+    "declarations": 0.15632086167800455
    },
    "analyzer_coverage": {
     "tools": [
@@ -8296,7 +8296,7 @@
    "repo": "tmux",
    "pinned_commit": "9fa390aee696f7c3886bc9146e4051cbbe9593cb",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 213,
    "declarations": 524,
    "dimensions": {
@@ -8366,7 +8366,7 @@
    "repo": "v2rayN",
    "pinned_commit": "fed59a7313239479e81425164638050be0b4752d",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 276,
    "declarations": 1845,
    "dimensions": {
@@ -8393,10 +8393,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.13397988505747127
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.13397988505747127
    },
    "analyzer_coverage": {
     "tools": [
@@ -8435,7 +8435,7 @@
    "repo": "x64dbg",
    "pinned_commit": "3ff04481f6a9b8efdefcd66a4996a7e7891dc854",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 1301,
    "declarations": 7578,
    "dimensions": {
@@ -8462,10 +8462,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": 0.09063601932871881
+    "declarations": 0.11679145219154578
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.09013465237702666
+    "declarations": 0.11579331602855289
    },
    "analyzer_coverage": {
     "tools": [
@@ -8519,7 +8519,7 @@
    "repo": "xtb",
    "pinned_commit": "a45f05d397268fd683b5f9f824ed59912c5490b5",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 392,
    "declarations": 2851,
    "dimensions": {
@@ -8546,10 +8546,10 @@
     "has_docs_dir": false
    },
    "analyzer_dimensions": {
-    "declarations": 0.24839935974389757
+    "declarations": 0.29468541468064824
    },
    "analyzer_production_dimensions": {
-    "declarations": 0.23152173913043478
+    "declarations": 0.2793421052631579
    },
    "analyzer_coverage": {
     "tools": [
@@ -8606,7 +8606,7 @@
    "repo": "googletest",
    "pinned_commit": "283c17563fe7a1111cd7f581aa5d541e8baeff2f",
    "tool_version": "2.11.2",
-   "scanner_fingerprint": "1a902618a0600746",
+   "scanner_fingerprint": "76b2846a76781aa0",
    "files": 217,
    "declarations": 6443,
    "dimensions": {
@@ -8633,10 +8633,10 @@
     "has_docs_dir": true
    },
    "analyzer_dimensions": {
-    "declarations": null
+    "declarations": 0.027490774907749076
    },
    "analyzer_production_dimensions": {
-    "declarations": null
+    "declarations": 0.041848617176128096
    },
    "analyzer_coverage": {
     "tools": [
@@ -8669,6 +8669,4955 @@
    "production_dimensions": {
     "file_size": 0.24514563106796117,
     "declarations": 0.03688760806916427,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "Alamofire",
+   "pinned_commit": "0455bfb650893e86ad07ace16e5f2d36dadf46f4",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 452,
+   "declarations": 2307,
+   "dimensions": {
+    "file_size": 0.5387168141592921,
+    "declarations": 0.05922077922077922,
+    "duplication": 0.3495575221238938,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 44,
+    "production_declarations_scanned": 1042,
+    "production_files_scanned": 408,
+    "production_file_warnings": 228,
+    "production_file_failures": 130,
+    "production_function_warnings": 28,
+    "production_function_failures": 25,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 3,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.08098039215686274
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07334183673469388
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.5545343137254902,
+    "declarations": 0.045,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "Charts",
+   "pinned_commit": "1bad5469f57628782110b05996d4fa00473abf06",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 242,
+   "declarations": 626,
+   "dimensions": {
+    "file_size": 0.06508264462809918,
+    "declarations": 0.07481296758104738,
+    "duplication": 0.2892561983471074,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 9,
+    "production_declarations_scanned": 508,
+    "production_files_scanned": 233,
+    "production_file_warnings": 13,
+    "production_file_failures": 7,
+    "production_function_warnings": 31,
+    "production_function_failures": 33,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 4,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.06484375
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.09389671361502347
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.06545064377682404,
+    "declarations": 0.10068259385665529,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "Kingfisher",
+   "pinned_commit": "0b5a9e490d68fb08728fb1bb9187d40439a9d52d",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 246,
+   "declarations": 1870,
+   "dimensions": {
+    "file_size": 0.09654471544715447,
+    "declarations": 0.05752508361204013,
+    "duplication": 0.45934959349593496,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 59,
+    "production_declarations_scanned": 1179,
+    "production_files_scanned": 186,
+    "production_file_warnings": 11,
+    "production_file_failures": 7,
+    "production_function_warnings": 33,
+    "production_function_failures": 36,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 13,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.06933152664859982
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07399665551839466
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.08602150537634409,
+    "declarations": 0.06024774774774775,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "Maccy",
+   "pinned_commit": "c376789c5d377b7c520b6f6e91f3f3a1aa28640b",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 124,
+   "declarations": 550,
+   "dimensions": {
+    "file_size": 0.02620967741935484,
+    "declarations": 0.05868544600938967,
+    "duplication": 0.10483870967741936,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 0,
+    "production_declarations_scanned": 550,
+    "production_files_scanned": 124,
+    "production_file_warnings": 2,
+    "production_file_failures": 0,
+    "production_function_warnings": 21,
+    "production_function_failures": 21,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.06407035175879397
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.06407035175879397
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.02620967741935484,
+    "declarations": 0.05868544600938967,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "MonitorControl",
+   "pinned_commit": "f16d90f29cefbd9fff47e26fc8f99fe7a5280deb",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 31,
+   "declarations": 332,
+   "dimensions": {
+    "file_size": 0.10483870967741936,
+    "declarations": 0.17235494880546076,
+    "duplication": 0.03225806451612903,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 0,
+    "production_declarations_scanned": 332,
+    "production_files_scanned": 31,
+    "production_file_warnings": 3,
+    "production_file_failures": 0,
+    "production_function_warnings": 39,
+    "production_function_failures": 38,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.2074898785425101
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.2074898785425101
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.10483870967741936,
+    "declarations": 0.17235494880546076,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "Mos",
+   "pinned_commit": "8a2fd112e2af444c37ca5f65f42e9bd19c08a5c2",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 385,
+   "declarations": 2500,
+   "dimensions": {
+    "file_size": 0.1038961038961039,
+    "declarations": 0.06498401096391046,
+    "duplication": 0.6155844155844156,
+    "risk": 0.012987012987012988,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 4,
+    "production_declarations_scanned": 2499,
+    "production_files_scanned": 371,
+    "production_file_warnings": 24,
+    "production_file_failures": 16,
+    "production_function_warnings": 109,
+    "production_function_failures": 83,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 2,
+    "near_duplicate_count": 15,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.06753246753246753
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.06756756756756757
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.0977088948787062,
+    "declarations": 0.06501371115173675,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "PHPMailer",
+   "pinned_commit": "f2fd6537c8b98fd192c7ca68aa4672bd6f18113f",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 140,
+   "declarations": 423,
+   "dimensions": {
+    "file_size": 0.055357142857142855,
+    "declarations": 0.09059945504087194,
+    "duplication": 0.18571428571428572,
+    "risk": 0.007142857142857143,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 64,
+    "production_declarations_scanned": 95,
+    "production_files_scanned": 76,
+    "production_file_warnings": 1,
+    "production_file_failures": 3,
+    "production_function_warnings": 11,
+    "production_function_failures": 7,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 68,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.09059945504087194
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.1348314606741573
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.046052631578947366,
+    "declarations": 0.1348314606741573,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "Rectangle",
+   "pinned_commit": "919fb7861a9f729fbbb9f893f2105a143f4f8540",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 192,
+   "declarations": 1768,
+   "dimensions": {
+    "file_size": 0.052083333333333336,
+    "declarations": 0.06875,
+    "duplication": 0.19791666666666666,
+    "risk": 0.020833333333333332,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 0,
+    "production_declarations_scanned": 1768,
+    "production_files_scanned": 192,
+    "production_file_warnings": 7,
+    "production_file_failures": 5,
+    "production_function_warnings": 72,
+    "production_function_failures": 64,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 26,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.08539944903581267
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.08539944903581267
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.052083333333333336,
+    "declarations": 0.06875,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "RxSwift",
+   "pinned_commit": "3e33f90c1bcd3cdea25bdb49bd4a594a50c3ab84",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 1122,
+   "declarations": 7999,
+   "dimensions": {
+    "file_size": 0.09692513368983957,
+    "declarations": 0.06552449654343252,
+    "duplication": 0.32620320855614976,
+    "risk": 0.00089126559714795,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 187,
+    "production_declarations_scanned": 5670,
+    "production_files_scanned": 935,
+    "production_file_warnings": 103,
+    "production_file_failures": 16,
+    "production_function_warnings": 206,
+    "production_function_failures": 74,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 2,
+    "near_duplicate_count": 209,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.0682200538358008
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.052558139534883724
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.08716577540106951,
+    "declarations": 0.05949284785435631,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "SwiftyJSON",
+   "pinned_commit": "3d2544101a03f22b2217d464dc7d359eeb86e159",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 26,
+   "declarations": 229,
+   "dimensions": {
+    "file_size": 0.14423076923076922,
+    "declarations": 0.05125,
+    "duplication": 0.19230769230769232,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 18,
+    "production_declarations_scanned": 53,
+    "production_files_scanned": 8,
+    "production_file_warnings": 3,
+    "production_file_failures": 1,
+    "production_function_warnings": 5,
+    "production_function_failures": 3,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.03343023255813953
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.14705882352941177
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.3125,
+    "declarations": 0.1590909090909091,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "UTM",
+   "pinned_commit": "b6f7475be54f9cb542c46b131319454b83489ced",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 302,
+   "declarations": 2549,
+   "dimensions": {
+    "file_size": 0.07036423841059603,
+    "declarations": 0.08104066985645933,
+    "duplication": 0.3576158940397351,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 0,
+    "production_declarations_scanned": 2549,
+    "production_files_scanned": 302,
+    "production_file_warnings": 21,
+    "production_file_failures": 6,
+    "production_function_warnings": 103,
+    "production_function_failures": 77,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 7,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.0928627760252366
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.0928627760252366
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "versions": {
+     "complexipy": "7.0.1",
+     "interrogate": "interrogate, version 1.7.0",
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
+     "pydocstyle": "6.3.0",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
+     "vulture": "vulture 2.16"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.07036423841059603,
+    "declarations": 0.08104066985645933,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "WordPress",
+   "pinned_commit": "de8fe30e2feaead024c2a52ffe01743c07c52044",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 2660,
+   "declarations": 19776,
+   "dimensions": {
+    "file_size": 0.18421052631578946,
+    "declarations": 0.1539362822538178,
+    "duplication": 1.0011278195488722,
+    "risk": 0.06766917293233082,
+    "gates": 0.05
+   },
+   "evidence": {
+    "test_file_count": 0,
+    "production_declarations_scanned": 19776,
+    "production_files_scanned": 2660,
+    "production_file_warnings": 269,
+    "production_file_failures": 335,
+    "production_function_warnings": 1515,
+    "production_function_failures": 2104,
+    "production_hard_gate_failures": 1,
+    "dead_code_count": 7287,
+    "near_duplicate_count": 420,
+    "idiom_concern_count": 0,
+    "has_readme": false,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.16151595060457938
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.16151595060457938
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.18421052631578946,
+    "declarations": 0.1539362822538178,
+    "gates": 0.05
+   }
+  },
+  {
+   "repo": "act",
+   "pinned_commit": "4f411281417e88660bea1c1a1749aa71ae0bd60f",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 157,
+   "declarations": 1341,
+   "dimensions": {
+    "file_size": 0.10987261146496816,
+    "declarations": 0.16024555461473328,
+    "duplication": 0.5414012738853503,
+    "risk": 0.025477707006369428,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 42,
+    "production_declarations_scanned": 1039,
+    "production_files_scanned": 115,
+    "production_file_warnings": 9,
+    "production_file_failures": 5,
+    "production_function_warnings": 75,
+    "production_function_failures": 86,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 17,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.1819526627218935
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.17755443886097153
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.09130434782608696,
+    "declarations": 0.15455049944506105,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "alacritty",
+   "pinned_commit": "d692748d3f61253ebe9f5094320120d22f6a046f",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 98,
+   "declarations": 1727,
+   "dimensions": {
+    "file_size": 0.2372448979591837,
+    "declarations": 0.07267441860465117,
+    "duplication": 0.29591836734693877,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 2,
+    "production_declarations_scanned": 1707,
+    "production_files_scanned": 96,
+    "production_file_warnings": 18,
+    "production_file_failures": 10,
+    "production_function_warnings": 61,
+    "production_function_failures": 50,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 2,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.07454890788224122
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07468780019212296
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.23958333333333334,
+    "declarations": 0.07285911602209945,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "bagisto",
+   "pinned_commit": "aa544167182b3503c08a3b27981288d1921fbf4d",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 2996,
+   "declarations": 7966,
+   "dimensions": {
+    "file_size": 0.07001001335113485,
+    "declarations": 0.04543385922330097,
+    "duplication": 0.3220961281708945,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 399,
+    "production_declarations_scanned": 5806,
+    "production_files_scanned": 2597,
+    "production_file_warnings": 86,
+    "production_file_failures": 102,
+    "production_function_warnings": 196,
+    "production_function_failures": 160,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 4090,
+    "near_duplicate_count": 62,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.0630497361266592
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.0762954796030871
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.06459376203311513,
+    "declarations": 0.054328718962865306,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "bat",
+   "pinned_commit": "7323a7514f7601737640e7172be115127d6db08c",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 178,
+   "declarations": 2145,
+   "dimensions": {
+    "file_size": 0.0997191011235955,
+    "declarations": 0.06483402489626557,
+    "duplication": 0.3146067415730337,
+    "risk": 0.056179775280898875,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 61,
+    "production_declarations_scanned": 578,
+    "production_files_scanned": 65,
+    "production_file_warnings": 11,
+    "production_file_failures": 7,
+    "production_function_warnings": 18,
+    "production_function_failures": 15,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.0597793679189028
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.06666666666666667
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.19230769230769232,
+    "declarations": 0.06336633663366337,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "bevy",
+   "pinned_commit": "62d1ab3ac4a6fc64a85afcfffae216e5a9fb3db7",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 2079,
+   "declarations": 25936,
+   "dimensions": {
+    "file_size": 0.1816979316979317,
+    "declarations": 0.0659570596797671,
+    "duplication": 0.7359307359307359,
+    "risk": 0.002405002405002405,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 99,
+    "production_declarations_scanned": 25634,
+    "production_files_scanned": 1980,
+    "production_file_warnings": 273,
+    "production_file_failures": 195,
+    "production_function_warnings": 914,
+    "production_function_failures": 664,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 697,
+    "near_duplicate_count": 90,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.07327909526282385
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07341026986069826
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "pmd",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4",
+     "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.19015151515151515,
+    "declarations": 0.06602128830978161,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "brew",
+   "pinned_commit": "71f6877d19f2179cf47caea84565083cdc950cc2",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 2034,
+   "declarations": 8768,
+   "dimensions": {
+    "file_size": 0.0752212389380531,
+    "declarations": 0.07726443264764432,
+    "duplication": 0.22517207472959685,
+    "risk": 0.0014749262536873156,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 940,
+    "production_declarations_scanned": 8244,
+    "production_files_scanned": 1094,
+    "production_file_warnings": 60,
+    "production_file_failures": 36,
+    "production_function_warnings": 373,
+    "production_function_failures": 517,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 5,
+    "near_duplicate_count": 8,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.07996754417598269
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.08365739840559984
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "versions": {
+     "complexipy": "7.0.1",
+     "interrogate": "interrogate, version 1.7.0",
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
+     "pydocstyle": "6.3.0",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
+     "vulture": "vulture 2.16"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.07358318098720293,
+    "declarations": 0.08068405072334345,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "caddy",
+   "pinned_commit": "e05f57dc7a324f7ecd6e8e8b72b944672920d495",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 362,
+   "declarations": 3310,
+   "dimensions": {
+    "file_size": 0.19613259668508287,
+    "declarations": 0.18662219101123595,
+    "duplication": 0.569060773480663,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 127,
+    "production_declarations_scanned": 2410,
+    "production_files_scanned": 235,
+    "production_file_warnings": 35,
+    "production_file_failures": 26,
+    "production_function_warnings": 149,
+    "production_function_failures": 254,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 26,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.19039002814636108
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.18141993957703928
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.20212765957446807,
+    "declarations": 0.17696348174087043,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "chatwoot",
+   "pinned_commit": "c9f1867369ea87580adac3df9f2058bc63da1ef2",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 3735,
+   "declarations": 13999,
+   "dimensions": {
+    "file_size": 0.03072289156626506,
+    "declarations": 0.014678300578977411,
+    "duplication": 0.19089692101740294,
+    "risk": 0.001606425702811245,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1471,
+    "production_declarations_scanned": 13166,
+    "production_files_scanned": 2261,
+    "production_file_warnings": 21,
+    "production_file_failures": 8,
+    "production_function_warnings": 140,
+    "production_function_failures": 88,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 61,
+    "near_duplicate_count": 18,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.012587898255056863
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.01313602364022532
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "versions": {
+     "complexipy": "7.0.1",
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
+     "pydocstyle": "6.3.0",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
+     "vulture": "vulture 2.16"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.011941618752764263,
+    "declarations": 0.015496769687445434,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "composer",
+   "pinned_commit": "85ae0251528d5f155548868e637ef6c68ed5be6b",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 631,
+   "declarations": 4845,
+   "dimensions": {
+    "file_size": 0.12559429477020603,
+    "declarations": 0.09907192575406032,
+    "duplication": 0.37717908082408874,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 278,
+    "production_declarations_scanned": 2696,
+    "production_files_scanned": 353,
+    "production_file_warnings": 48,
+    "production_file_failures": 18,
+    "production_function_warnings": 179,
+    "production_function_failures": 248,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 2373,
+    "near_duplicate_count": 6,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.1
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.11928934010152284
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.14518413597733712,
+    "declarations": 0.12254286909242995,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "deno",
+   "pinned_commit": "60e01b1dabc1fce03ccd819a01796b52496671a4",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 6180,
+   "declarations": 54755,
+   "dimensions": {
+    "file_size": 0.08770226537216828,
+    "declarations": 0.104148763964108,
+    "duplication": 0.47135922330097085,
+    "risk": 0.0762135922330097,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 4333,
+    "production_declarations_scanned": 47448,
+    "production_files_scanned": 1793,
+    "production_file_warnings": 277,
+    "production_file_failures": 290,
+    "production_function_warnings": 2173,
+    "production_function_failures": 2958,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 118,
+    "near_duplicate_count": 195,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.11506764645285351
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.11680743929180541
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.2488845510317903,
+    "declarations": 0.10832289201355051,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "devdocs",
+   "pinned_commit": "0f9111bcde14522af5bbc3372ed6d4a96392fe77",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 962,
+   "declarations": 4834,
+   "dimensions": {
+    "file_size": 0.009095634095634096,
+    "declarations": 0.051361867704280154,
+    "duplication": 0.07172557172557173,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 38,
+    "production_declarations_scanned": 4754,
+    "production_files_scanned": 924,
+    "production_file_warnings": 5,
+    "production_file_failures": 0,
+    "production_function_warnings": 110,
+    "production_function_failures": 57,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 12,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.044745484400656815
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.04541666666666667
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.006222943722943723,
+    "declarations": 0.05211212001579155,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "devise",
+   "pinned_commit": "372b295fe6f63b4af3269f5dcd51a18c0bc2016c",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 206,
+   "declarations": 1010,
+   "dimensions": {
+    "file_size": 0.03033980582524272,
+    "declarations": 0.01339969372128637,
+    "duplication": 0.06310679611650485,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 123,
+    "production_declarations_scanned": 633,
+    "production_files_scanned": 83,
+    "production_file_warnings": 3,
+    "production_file_failures": 0,
+    "production_function_warnings": 12,
+    "production_function_failures": 9,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.008038585209003215
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.009725400457665904
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.03313253012048193,
+    "declarations": 0.013528138528138528,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "fastlane",
+   "pinned_commit": "3a4fc36716dec206b3f5441f19f0a5193733c828",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 1544,
+   "declarations": 8986,
+   "dimensions": {
+    "file_size": 0.04582253886010363,
+    "declarations": 0.05332974469394033,
+    "duplication": 0.24611398963730569,
+    "risk": 0.0012953367875647669,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 542,
+    "production_declarations_scanned": 8158,
+    "production_files_scanned": 998,
+    "production_file_warnings": 32,
+    "production_file_failures": 8,
+    "production_function_warnings": 321,
+    "production_function_failures": 315,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 13,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.04360418342719228
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.045612937812723374
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "pmd",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4",
+     "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.04008016032064128,
+    "declarations": 0.05595359945411123,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "fd",
+   "pinned_commit": "bb80489efb9fe2bdeabe1844feb5ee0af6fc9b1c",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 32,
+   "declarations": 373,
+   "dimensions": {
+    "file_size": 0.15625,
+    "declarations": 0.07122093023255814,
+    "duplication": 0.1875,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 2,
+    "production_declarations_scanned": 240,
+    "production_files_scanned": 30,
+    "production_file_warnings": 4,
+    "production_file_failures": 2,
+    "production_function_warnings": 9,
+    "production_function_failures": 8,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.08070175438596491
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07994186046511628
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.125,
+    "declarations": 0.0695754716981132,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "filament",
+   "pinned_commit": "46600114fd4089605605530a8b9171dfdfd6dab1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 6180,
+   "declarations": 15474,
+   "dimensions": {
+    "file_size": 0.04105987055016181,
+    "declarations": 0.0372369769091339,
+    "duplication": 0.17572815533980582,
+    "risk": 0.0004854368932038835,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 702,
+    "production_declarations_scanned": 11332,
+    "production_files_scanned": 5478,
+    "production_file_warnings": 208,
+    "production_file_failures": 50,
+    "production_function_warnings": 304,
+    "production_function_failures": 362,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 9017,
+    "near_duplicate_count": 145,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.054854843970860066
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07260614272809394
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.035596933187294635,
+    "declarations": 0.04524332966923154,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "firefly-iii",
+   "pinned_commit": "9e9d6f493218bc7a0652210735febe713b22df87",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 1664,
+   "declarations": 9892,
+   "dimensions": {
+    "file_size": 0.05078125,
+    "declarations": 0.07866179201485608,
+    "duplication": 0.35216346153846156,
+    "risk": 0.11778846153846154,
+    "gates": 0.05
+   },
+   "evidence": {
+    "test_file_count": 57,
+    "production_declarations_scanned": 9652,
+    "production_files_scanned": 1607,
+    "production_file_warnings": 68,
+    "production_file_failures": 29,
+    "production_function_warnings": 514,
+    "production_function_failures": 364,
+    "production_hard_gate_failures": 1,
+    "dead_code_count": 4829,
+    "near_duplicate_count": 373,
+    "idiom_concern_count": 1,
+    "has_readme": false,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.08744394618834081
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.08924447377103266
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.05242688238954574,
+    "declarations": 0.07977588046958378,
+    "gates": 0.05
+   }
+  },
+  {
+   "repo": "framework",
+   "pinned_commit": "0aa8d7ecd7e5d887e1603d5f8608cab667b4a3be",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 3113,
+   "declarations": 33740,
+   "dimensions": {
+    "file_size": 0.08352071956312239,
+    "declarations": 0.019514695830485304,
+    "duplication": 0.36042402826855124,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1287,
+    "production_declarations_scanned": 14595,
+    "production_files_scanned": 1826,
+    "production_file_warnings": 92,
+    "production_file_failures": 61,
+    "production_function_warnings": 249,
+    "production_function_failures": 255,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 12798,
+    "near_duplicate_count": 52,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.021651810278419722
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.02281692666308051
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.07174151150054764,
+    "declarations": 0.018134115286673354,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "frp",
+   "pinned_commit": "832df8dff66d1b0caa0d776c450418f982756df1",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 415,
+   "declarations": 2654,
+   "dimensions": {
+    "file_size": 0.06867469879518072,
+    "declarations": 0.08955739972337483,
+    "duplication": 0.3783132530120482,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 147,
+    "production_declarations_scanned": 1913,
+    "production_files_scanned": 268,
+    "production_file_warnings": 12,
+    "production_file_failures": 3,
+    "production_function_warnings": 79,
+    "production_function_failures": 60,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 18,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.09472208057113718
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.09085603112840467
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.05783582089552239,
+    "declarations": 0.08305199189736664,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "fzf",
+   "pinned_commit": "ad151d84154632a6abec67b40fe326c1ea2c9481",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 107,
+   "declarations": 1369,
+   "dimensions": {
+    "file_size": 0.2102803738317757,
+    "declarations": 0.14277297721916732,
+    "duplication": 0.4766355140186916,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 40,
+    "production_declarations_scanned": 729,
+    "production_files_scanned": 67,
+    "production_file_warnings": 9,
+    "production_file_failures": 8,
+    "production_function_warnings": 34,
+    "production_function_failures": 82,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.16118102613746368
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.16220735785953178
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.20149253731343283,
+    "declarations": 0.1596153846153846,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "gin",
+   "pinned_commit": "dcaa4296d111981ffb31ac3eba90bb63e1eb5ab9",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 107,
+   "declarations": 1437,
+   "dimensions": {
+    "file_size": 0.12850467289719625,
+    "declarations": 0.04815100154083205,
+    "duplication": 0.5233644859813084,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 41,
+    "production_declarations_scanned": 572,
+    "production_files_scanned": 66,
+    "production_file_warnings": 2,
+    "production_file_failures": 4,
+    "production_function_warnings": 11,
+    "production_function_failures": 18,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.04774167987321712
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.05364583333333333
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.07954545454545454,
+    "declarations": 0.05321285140562249,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "go",
+   "pinned_commit": "38d1265e1a015add1d0b8651f5c2ea3f06199765",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 10404,
+   "declarations": 87470,
+   "dimensions": {
+    "file_size": 0.09683775470972703,
+    "declarations": 0.1093411287648874,
+    "duplication": 0.3633217993079585,
+    "risk": 0.0013456362937331796,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 5474,
+    "production_declarations_scanned": 50351,
+    "production_files_scanned": 4928,
+    "production_file_warnings": 434,
+    "production_file_failures": 334,
+    "production_function_warnings": 2193,
+    "production_function_failures": 3379,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 45,
+    "near_duplicate_count": 871,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": null
+   },
+   "analyzer_production_dimensions": {
+    "declarations": null
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "fortitude",
+     "history",
+     "interrogate",
+     "jscpd",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "versions": {
+     "complexipy": "7.0.1",
+     "fortitude": "fortitude 0.9.2",
+     "interrogate": "interrogate, version 1.7.0",
+     "jscpd": "cpd 5.1.1",
+     "multimetric": "multimetric 2.4.4",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
+     "pydocstyle": "6.3.0",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
+     "vulture": "vulture 2.16"
+    },
+    "unexamined": [
+     "documentation",
+     "structure",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "complexity",
+     "dead-code",
+     "metrics"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.1286018668831169,
+    "declarations": 0.1108967639777872,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "guzzle",
+   "pinned_commit": "93939470950a9b11e2e84204166ef5e048c55fe4",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 157,
+   "declarations": 3027,
+   "dimensions": {
+    "file_size": 0.21019108280254778,
+    "declarations": 0.04961632368329264,
+    "duplication": 1.2101910828025477,
+    "risk": 0.006369426751592357,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 66,
+    "production_declarations_scanned": 713,
+    "production_files_scanned": 91,
+    "production_file_warnings": 12,
+    "production_file_failures": 9,
+    "production_function_warnings": 50,
+    "production_function_failures": 53,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 643,
+    "near_duplicate_count": 2,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.05007039774727209
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.1257936507936508
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.19505494505494506,
+    "declarations": 0.12441679626749612,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "helix",
+   "pinned_commit": "079a789e8cb08ead67f19e1971a1b7438b37354b",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 353,
+   "declarations": 4724,
+   "dimensions": {
+    "file_size": 0.1848441926345609,
+    "declarations": 0.09634414513468939,
+    "duplication": 0.4985835694050991,
+    "risk": 0.025495750708215296,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 81,
+    "production_declarations_scanned": 4281,
+    "production_files_scanned": 271,
+    "production_file_warnings": 43,
+    "production_file_failures": 31,
+    "production_function_warnings": 170,
+    "production_function_failures": 178,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 28,
+    "near_duplicate_count": 28,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.09138037759207676
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.09126569037656904
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "pmd",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4",
+     "pmd": "PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.2177121771217712,
+    "declarations": 0.09554287476866132,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "huginn",
+   "pinned_commit": "83e75d5796fd8c735bdf0ca44aa4b5e1f72c5081",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 494,
+   "declarations": 2180,
+   "dimensions": {
+    "file_size": 0.035931174089068825,
+    "declarations": 0.03625509609784508,
+    "duplication": 0.1720647773279352,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 165,
+    "production_declarations_scanned": 2067,
+    "production_files_scanned": 328,
+    "production_file_warnings": 8,
+    "production_file_failures": 1,
+    "production_function_warnings": 56,
+    "production_function_failures": 39,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 3,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.026029962546816478
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.02711323763955343
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.023628048780487805,
+    "declarations": 0.03602084610668302,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "hugo",
+   "pinned_commit": "857120b72b01745d94bcc16fe08dfa859e161f55",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 2082,
+   "declarations": 9598,
+   "dimensions": {
+    "file_size": 0.07132564841498559,
+    "declarations": 0.13215568862275448,
+    "duplication": 0.25600384245917385,
+    "risk": 0.007684918347742555,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 388,
+    "production_declarations_scanned": 6900,
+    "production_files_scanned": 1694,
+    "production_file_warnings": 75,
+    "production_file_failures": 34,
+    "production_function_warnings": 321,
+    "production_function_failures": 436,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 2,
+    "near_duplicate_count": 41,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.13298630918425555
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.11388888888888889
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.05357142857142857,
+    "declarations": 0.11586530116299254,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "iina",
+   "pinned_commit": "bb978b9ba10e8c4a1684e312f9c27609af2883ed",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 282,
+   "declarations": 3865,
+   "dimensions": {
+    "file_size": 0.16843971631205673,
+    "declarations": 0.08502415458937199,
+    "duplication": 0.21631205673758866,
+    "risk": 0.02127659574468085,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 0,
+    "production_declarations_scanned": 3865,
+    "production_files_scanned": 282,
+    "production_file_warnings": 41,
+    "production_file_failures": 22,
+    "production_function_warnings": 159,
+    "production_function_failures": 185,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 3,
+    "near_duplicate_count": 13,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.09870617696160267
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.09870617696160267
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.16843971631205673,
+    "declarations": 0.08502415458937199,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "jQuery-File-Upload",
+   "pinned_commit": "0e92a4d4613d4ed5231ee0d8513519f2e04f99ba",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 34,
+   "declarations": 330,
+   "dimensions": {
+    "file_size": 0.11029411764705882,
+    "declarations": 0.09307692307692307,
+    "duplication": 0.20588235294117646,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 4,
+    "production_declarations_scanned": 237,
+    "production_files_scanned": 30,
+    "production_file_warnings": 1,
+    "production_file_failures": 2,
+    "production_function_warnings": 14,
+    "production_function_failures": 19,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 79,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.10386473429951691
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.125
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "versions": {
+     "complexipy": "7.0.1",
+     "interrogate": "interrogate, version 1.7.0",
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
+     "pydocstyle": "6.3.0",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
+     "vulture": "vulture 2.16"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.1,
+    "declarations": 0.1298283261802575,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "jekyll",
+   "pinned_commit": "74d751339d3e534aa51d5d7b0640e9bd743509e4",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 422,
+   "declarations": 1334,
+   "dimensions": {
+    "file_size": 0.03139810426540284,
+    "declarations": 0.014399205561072492,
+    "duplication": 0.0995260663507109,
+    "risk": 0.0071090047393364926,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 102,
+    "production_declarations_scanned": 1174,
+    "production_files_scanned": 274,
+    "production_file_warnings": 6,
+    "production_file_failures": 2,
+    "production_function_warnings": 22,
+    "production_function_failures": 20,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 3,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.009221311475409836
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.010078387458006719
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.029197080291970802,
+    "declarations": 0.014689880304679,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "lazygit",
+   "pinned_commit": "c07f4d381b90419583b7ce04f87379654d983ebc",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 1167,
+   "declarations": 5398,
+   "dimensions": {
+    "file_size": 0.059554413024850046,
+    "declarations": 0.08566652737150021,
+    "duplication": 0.3033419023136247,
+    "risk": 0.003427592116538132,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 680,
+    "production_declarations_scanned": 4803,
+    "production_files_scanned": 485,
+    "production_file_warnings": 53,
+    "production_file_failures": 13,
+    "production_function_warnings": 163,
+    "production_function_failures": 149,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 3,
+    "near_duplicate_count": 23,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": null
+   },
+   "analyzer_production_dimensions": {
+    "declarations": null
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "structure",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.11030927835051546,
+    "declarations": 0.0655893536121673,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "livewire",
+   "pinned_commit": "76c76760242aa690abd0db451cd7a32b4c360adb",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 1045,
+   "declarations": 6281,
+   "dimensions": {
+    "file_size": 0.06028708133971292,
+    "declarations": 0.05482965543941154,
+    "duplication": 0.3923444976076555,
+    "risk": 0.13492822966507176,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 166,
+    "production_declarations_scanned": 5287,
+    "production_files_scanned": 878,
+    "production_file_warnings": 37,
+    "production_file_failures": 29,
+    "production_function_warnings": 193,
+    "production_function_failures": 105,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 3534,
+    "near_duplicate_count": 33,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.05682768716018402
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.06025798525798526
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.06548974943052392,
+    "declarations": 0.05742786293958521,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "lottie-ios",
+   "pinned_commit": "8384dfbc429a5b3748e51d2744cbaad9ecb7a6fe",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 332,
+   "declarations": 1969,
+   "dimensions": {
+    "file_size": 0.04969879518072289,
+    "declarations": 0.07364864864864865,
+    "duplication": 0.20783132530120482,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 20,
+    "production_declarations_scanned": 1837,
+    "production_files_scanned": 310,
+    "production_file_warnings": 15,
+    "production_file_failures": 2,
+    "production_function_warnings": 83,
+    "production_function_failures": 58,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 7,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.09070576540755468
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.09662236987818383
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.05161290322580645,
+    "declarations": 0.07622173595915391,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "mastodon",
+   "pinned_commit": "a6d857ad28fdd66ff38fdeb7e98a2382753ac21c",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 4260,
+   "declarations": 14060,
+   "dimensions": {
+    "file_size": 0.018603286384976526,
+    "declarations": 0.03315132605304212,
+    "duplication": 0.12394366197183099,
+    "risk": 0.009624413145539907,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1274,
+    "production_declarations_scanned": 13307,
+    "production_files_scanned": 2986,
+    "production_file_warnings": 48,
+    "production_file_failures": 6,
+    "production_function_warnings": 235,
+    "production_function_failures": 250,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 4,
+    "near_duplicate_count": 29,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.02728169940783908
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.02899458700882117
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.01707970529135968,
+    "declarations": 0.0352979274611399,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "matomo",
+   "pinned_commit": "dba9340eb17bceae7858fe638a5d096cb48bbb2f",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 4291,
+   "declarations": 35690,
+   "dimensions": {
+    "file_size": 0.07876951759496621,
+    "declarations": 0.05767019855203057,
+    "duplication": 0.3537636914472151,
+    "risk": 0.09601491493824284,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1435,
+    "production_declarations_scanned": 18032,
+    "production_files_scanned": 2831,
+    "production_file_warnings": 155,
+    "production_file_failures": 76,
+    "production_function_warnings": 730,
+    "production_function_failures": 654,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 13862,
+    "near_duplicate_count": 47,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.05308744451261323
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.06005577318903127
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.06578947368421052,
+    "declarations": 0.06108027054619704,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "meilisearch",
+   "pinned_commit": "a088ecc354a0002d551acbc41bd87e4e72e7a8d8",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 730,
+   "declarations": 8148,
+   "dimensions": {
+    "file_size": 0.21712328767123287,
+    "declarations": 0.1584058421379739,
+    "duplication": 0.9794520547945206,
+    "risk": 0.0013698630136986301,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 139,
+    "production_declarations_scanned": 6566,
+    "production_files_scanned": 591,
+    "production_file_warnings": 91,
+    "production_file_failures": 44,
+    "production_function_warnings": 278,
+    "production_function_failures": 342,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 32,
+    "near_duplicate_count": 41,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.1379414125200642
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.11177706376668314
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.17893401015228427,
+    "declarations": 0.1140781665643544,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "minio",
+   "pinned_commit": "7aac2a2c5b7c882e68c1ce017d8256be2feea27f",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 903,
+   "declarations": 8846,
+   "dimensions": {
+    "file_size": 0.17331118493909192,
+    "declarations": 0.19871137325298116,
+    "duplication": 0.8792912513842747,
+    "risk": 0.0022148394241417496,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 213,
+    "production_declarations_scanned": 7248,
+    "production_files_scanned": 690,
+    "production_file_warnings": 88,
+    "production_file_failures": 55,
+    "production_function_warnings": 518,
+    "production_function_failures": 741,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 112,
+    "idiom_concern_count": 1,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.20232880712512777
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.180407053085725
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "versions": {
+     "complexipy": "7.0.1",
+     "interrogate": "interrogate, version 1.7.0",
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
+     "pydocstyle": "6.3.0",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
+     "vulture": "vulture 2.16"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.16702898550724637,
+    "declarations": 0.17863439653790672,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "moby",
+   "pinned_commit": "275015b0e7d1e17941df3dad1503263d653588e5",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 2330,
+   "declarations": 15322,
+   "dimensions": {
+    "file_size": 0.09087982832618026,
+    "declarations": 0.13486297244390905,
+    "duplication": 0.3317596566523605,
+    "risk": 0.019313304721030045,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 827,
+    "production_declarations_scanned": 9751,
+    "production_files_scanned": 1501,
+    "production_file_warnings": 86,
+    "production_file_failures": 58,
+    "production_function_warnings": 519,
+    "production_function_failures": 603,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 117,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": null
+   },
+   "analyzer_production_dimensions": {
+    "declarations": null
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff"
+    ],
+    "versions": {
+     "complexipy": "7.0.1",
+     "jscpd": "cpd 5.1.1",
+     "multimetric": "multimetric 2.4.4",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
+     "pydocstyle": "6.3.0",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5"
+    },
+    "unexamined": [
+     "structure",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.08311125916055963,
+    "declarations": 0.12628963261197784,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "monica",
+   "pinned_commit": "e08e91734170b6bbd582cb578532c3948196124e",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 1592,
+   "declarations": 6332,
+   "dimensions": {
+    "file_size": 0.01460427135678392,
+    "declarations": 0.027222777222777224,
+    "duplication": 0.26067839195979897,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 516,
+    "production_declarations_scanned": 3479,
+    "production_files_scanned": 1076,
+    "production_file_warnings": 7,
+    "production_file_failures": 2,
+    "production_function_warnings": 43,
+    "production_function_failures": 25,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 2616,
+    "near_duplicate_count": 10,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.028091018928715263
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.02382308276385725
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.016031598513011152,
+    "declarations": 0.022599399849962492,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "monolog",
+   "pinned_commit": "147f303310f06334f03f409e49d7ad1e275ff05a",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 241,
+   "declarations": 1787,
+   "dimensions": {
+    "file_size": 0.04979253112033195,
+    "declarations": 0.02504911591355599,
+    "duplication": 0.22406639004149378,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 103,
+    "production_declarations_scanned": 810,
+    "production_files_scanned": 138,
+    "production_file_warnings": 2,
+    "production_file_failures": 1,
+    "production_function_warnings": 23,
+    "production_function_failures": 20,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 687,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.025649566955363093
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.03863298662704309
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.03985507246376811,
+    "declarations": 0.03675400291120815,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "netdata",
+   "pinned_commit": "c5ac56f6602253185a2feca50ba650e37126eb9b",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 8647,
+   "declarations": 58401,
+   "dimensions": {
+    "file_size": 0.13819821903550364,
+    "declarations": 0.14987690985111954,
+    "duplication": 0.38556724875679427,
+    "risk": 0.017578350873135192,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1315,
+    "production_declarations_scanned": 44271,
+    "production_files_scanned": 7326,
+    "production_file_warnings": 763,
+    "production_file_failures": 366,
+    "production_function_warnings": 2831,
+    "production_function_failures": 3192,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 37,
+    "near_duplicate_count": 736,
+    "idiom_concern_count": 1,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.148721061665341
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.14669828581079178
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "versions": {
+     "complexipy": "7.0.1",
+     "interrogate": "interrogate, version 1.7.0",
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
+     "pydocstyle": "6.3.0",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
+     "vulture": "vulture 2.16"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.1269110019110019,
+    "declarations": 0.1441383601175505,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "postal",
+   "pinned_commit": "d038eaa8c763d3cafa797ccd6f773d53470bd336",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 284,
+   "declarations": 1128,
+   "dimensions": {
+    "file_size": 0.02464788732394366,
+    "declarations": 0.022435897435897436,
+    "duplication": 0.07042253521126761,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 77,
+    "production_declarations_scanned": 1084,
+    "production_files_scanned": 207,
+    "production_file_warnings": 4,
+    "production_file_failures": 0,
+    "production_function_warnings": 18,
+    "production_function_failures": 20,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 0,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.02042079207920792
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.020833333333333332
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.018115942028985508,
+    "declarations": 0.022916666666666665,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "prometheus",
+   "pinned_commit": "7f48230f675e7c459398bf1d0f055f6f55caf90a",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 1067,
+   "declarations": 10982,
+   "dimensions": {
+    "file_size": 0.19470477975632614,
+    "declarations": 0.19064673518114814,
+    "duplication": 1.2352389878163075,
+    "risk": 0.031865042174320526,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 334,
+    "production_declarations_scanned": 7126,
+    "production_files_scanned": 733,
+    "production_file_warnings": 82,
+    "production_file_failures": 55,
+    "production_function_warnings": 422,
+    "production_function_failures": 543,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 85,
+    "idiom_concern_count": 1,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.19982698961937717
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.14536959260814783
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.14870395634379263,
+    "declarations": 0.14185814185814186,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "rails",
+   "pinned_commit": "e970c80fd668f3f4ee08201bbbbcadfb2f29b1df",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 3699,
+   "declarations": 43131,
+   "dimensions": {
+    "file_size": 0.08995674506623412,
+    "declarations": 0.013304585612116112,
+    "duplication": 0.22303325223033252,
+    "risk": 0.005136523384698567,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 1954,
+    "production_declarations_scanned": 18287,
+    "production_files_scanned": 1714,
+    "production_file_warnings": 93,
+    "production_file_failures": 80,
+    "production_function_warnings": 408,
+    "production_function_failures": 434,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 2,
+    "near_duplicate_count": 55,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.011101140027254297
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.017791819088792817
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.08561843640606767,
+    "declarations": 0.019848596750369277,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "ripgrep",
+   "pinned_commit": "3fce3b5bb0236da2df6d99672afb8a719642eca7",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 134,
+   "declarations": 2620,
+   "dimensions": {
+    "file_size": 0.24440298507462688,
+    "declarations": 0.04625366262034324,
+    "duplication": 0.7313432835820896,
+    "risk": 0.007462686567164179,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 18,
+    "production_declarations_scanned": 2528,
+    "production_files_scanned": 116,
+    "production_file_warnings": 15,
+    "production_file_failures": 21,
+    "production_function_warnings": 57,
+    "production_function_failures": 51,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 3,
+    "near_duplicate_count": 11,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.052224969097651425
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.053432642487046635
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.24568965517241378,
+    "declarations": 0.04696969696969697,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "ruby",
+   "pinned_commit": "3f2e039ca7290940e03e6b4e09f68481f98fef55",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 8604,
+   "declarations": 100126,
+   "dimensions": {
+    "file_size": 0.07586587633658763,
+    "declarations": 0.012979228933278861,
+    "duplication": 0.28649465364946536,
+    "risk": 0.03079962807996281,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 6032,
+    "production_declarations_scanned": 17558,
+    "production_files_scanned": 2568,
+    "production_file_warnings": 193,
+    "production_file_failures": 221,
+    "production_function_warnings": 490,
+    "production_function_failures": 591,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 106,
+    "near_duplicate_count": 99,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.03324889716018748
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.047764227642276426
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "versions": {
+     "complexipy": "7.0.1",
+     "interrogate": "interrogate, version 1.7.0",
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
+     "pydocstyle": "6.3.0",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
+     "vulture": "vulture 2.16"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.1377531152647975,
+    "declarations": 0.05129263913824057,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "rustdesk",
+   "pinned_commit": "e8eead571516dac0669e64b186208979d79282eb",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 395,
+   "declarations": 5667,
+   "dimensions": {
+    "file_size": 0.2518987341772152,
+    "declarations": 0.10788001543209877,
+    "duplication": 0.5645569620253165,
+    "risk": 0.05569620253164557,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 0,
+    "production_declarations_scanned": 5667,
+    "production_files_scanned": 395,
+    "production_file_warnings": 97,
+    "production_file_failures": 46,
+    "production_function_warnings": 249,
+    "production_function_failures": 351,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 14,
+    "near_duplicate_count": 18,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.10669765476442003
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.10669765476442003
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "versions": {
+     "complexipy": "7.0.1",
+     "interrogate": "interrogate, version 1.7.0",
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
+     "pydocstyle": "6.3.0",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
+     "vulture": "vulture 2.16"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.2518987341772152,
+    "declarations": 0.10788001543209877,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "rustlings",
+   "pinned_commit": "a650509c789da1656f813392b16aa1fa043b7f3e",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 264,
+   "declarations": 936,
+   "dimensions": {
+    "file_size": 0.01231060606060606,
+    "declarations": 0.03216019417475728,
+    "duplication": 0.2916666666666667,
+    "risk": 0.03787878787878788,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 6,
+    "production_declarations_scanned": 916,
+    "production_files_scanned": 258,
+    "production_file_warnings": 3,
+    "production_file_failures": 1,
+    "production_function_warnings": 15,
+    "production_function_failures": 17,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.02746566791510612
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.0280970625798212
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.012596899224806201,
+    "declarations": 0.03291925465838509,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "starship",
+   "pinned_commit": "864500b26904cd3cc01fc2a19d3ad068bd1517a2",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 707,
+   "declarations": 2244,
+   "dimensions": {
+    "file_size": 0.11350777934936351,
+    "declarations": 0.04844124700239808,
+    "duplication": 0.26732673267326734,
+    "risk": 0.007072135785007072,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 2,
+    "production_declarations_scanned": 2218,
+    "production_files_scanned": 705,
+    "production_file_warnings": 63,
+    "production_file_failures": 37,
+    "production_function_warnings": 55,
+    "production_function_failures": 29,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 4,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.04779411764705882
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.047848869277440705
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.11347517730496454,
+    "declarations": 0.04849660523763336,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "stats",
+   "pinned_commit": "60e65d1454c647d9592550447757e509b01d5ebb",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 145,
+   "declarations": 2426,
+   "dimensions": {
+    "file_size": 0.2103448275862069,
+    "declarations": 0.10813148788927336,
+    "duplication": 0.7103448275862069,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 2,
+    "production_declarations_scanned": 2415,
+    "production_files_scanned": 143,
+    "production_file_warnings": 31,
+    "production_file_failures": 11,
+    "production_function_warnings": 163,
+    "production_function_failures": 141,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 5,
+    "near_duplicate_count": 25,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.13278816199376947
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.13352941176470587
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "versions": {
+     "complexipy": "7.0.1",
+     "interrogate": "interrogate, version 1.7.0",
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
+     "pydocstyle": "6.3.0",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
+     "vulture": "vulture 2.16"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.21328671328671328,
+    "declarations": 0.10849056603773585,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "symfony",
+   "pinned_commit": "8ab8bf67ccf6bf103f1260dbc401308b4e57d7d7",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 11964,
+   "declarations": 64758,
+   "dimensions": {
+    "file_size": 0.07541374122367102,
+    "declarations": 0.03886929041267041,
+    "duplication": 0.2017719826145102,
+    "risk": 8.358408559010364e-05,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 5418,
+    "production_declarations_scanned": 24533,
+    "production_files_scanned": 6453,
+    "production_file_warnings": 541,
+    "production_file_failures": 281,
+    "production_function_warnings": 1010,
+    "production_function_failures": 988,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 19795,
+    "near_duplicate_count": 124,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.03852189074002325
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07405077447855506
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.09766775143344181,
+    "declarations": 0.07207565953210553,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "syncthing",
+   "pinned_commit": "ed8d87f251bbb2e3551c6c14e3c308e6aaf86a14",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 624,
+   "declarations": 4633,
+   "dimensions": {
+    "file_size": 0.09174679487179487,
+    "declarations": 0.1405096011816839,
+    "duplication": 0.2644230769230769,
+    "risk": 0.003205128205128205,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 140,
+    "production_declarations_scanned": 3598,
+    "production_files_scanned": 484,
+    "production_file_warnings": 34,
+    "production_file_failures": 12,
+    "production_function_warnings": 201,
+    "production_function_failures": 195,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 1,
+    "near_duplicate_count": 14,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.1425306868634108
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.11260945709281961
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.07799586776859505,
+    "declarations": 0.1126749105109014,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "tauri",
+   "pinned_commit": "406feea75283545496ef7398c5e2f0fb9b306b64",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 579,
+   "declarations": 4555,
+   "dimensions": {
+    "file_size": 0.1196027633851468,
+    "declarations": 0.0771076523994812,
+    "duplication": 0.48013816925734026,
+    "risk": 0.010362694300518135,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 24,
+    "production_declarations_scanned": 4323,
+    "production_files_scanned": 554,
+    "production_file_warnings": 47,
+    "production_file_failures": 34,
+    "production_function_warnings": 140,
+    "production_function_failures": 178,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 4,
+    "near_duplicate_count": 22,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.11294656971229845
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.11946680080482898
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.12274368231046931,
+    "declarations": 0.08145449546329392,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "traefik",
+   "pinned_commit": "d48621ce0b6fd221b20bdb6c22e652e7498e5db6",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 1151,
+   "declarations": 6212,
+   "dimensions": {
+    "file_size": 0.10860121633362294,
+    "declarations": 0.17148155377708374,
+    "duplication": 0.6594265855777585,
+    "risk": 0.006081668114682885,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 308,
+    "production_declarations_scanned": 4314,
+    "production_files_scanned": 843,
+    "production_file_warnings": 55,
+    "production_file_failures": 17,
+    "production_function_warnings": 221,
+    "production_function_failures": 217,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 133,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.17520173805090006
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.12026813880126183
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.07265717674970344,
+    "declarations": 0.11752958579881657,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "typst",
+   "pinned_commit": "26e924d311367d69e819a62bfd505ed6787b4537",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 423,
+   "declarations": 7258,
+   "dimensions": {
+    "file_size": 0.2624113475177305,
+    "declarations": 0.0698464025869038,
+    "duplication": 0.29550827423167847,
+    "risk": 0.004728132387706856,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 21,
+    "production_declarations_scanned": 6826,
+    "production_files_scanned": 400,
+    "production_file_warnings": 84,
+    "production_file_failures": 49,
+    "production_function_warnings": 215,
+    "production_function_failures": 226,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 141,
+    "near_duplicate_count": 16,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": true
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.06484390339681917
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.0631255212677231
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.26,
+    "declarations": 0.06879511859745617,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "vagrant",
+   "pinned_commit": "dc55920a284544919340b975098b4ac9005b08b0",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 1486,
+   "declarations": 6626,
+   "dimensions": {
+    "file_size": 0.034993270524899055,
+    "declarations": 0.07203114860480207,
+    "duplication": 0.24764468371467024,
+    "risk": 0.0006729475100942127,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 517,
+    "production_declarations_scanned": 6422,
+    "production_files_scanned": 968,
+    "production_file_warnings": 18,
+    "production_file_failures": 7,
+    "production_function_warnings": 216,
+    "production_function_failures": 238,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 44,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": true,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.06443994601889338
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.0674955595026643
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4"
+    },
+    "unexamined": [
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.025826446280991736,
+    "declarations": 0.0760944501895898,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "vapor",
+   "pinned_commit": "630763c5e0de50b2ac8c7e9a20d6c3ec5709a4c8",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 260,
+   "declarations": 1910,
+   "dimensions": {
+    "file_size": 0.06153846153846154,
+    "declarations": 0.054523970290344365,
+    "duplication": 0.19615384615384615,
+    "risk": 0.0,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 52,
+    "production_declarations_scanned": 1232,
+    "production_files_scanned": 208,
+    "production_file_warnings": 4,
+    "production_file_failures": 1,
+    "production_function_warnings": 30,
+    "production_function_failures": 27,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 0,
+    "near_duplicate_count": 1,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.06919374247894103
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.07099514563106796
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "jscpd",
+     "lizard",
+     "near-duplicates",
+     "risk-patterns"
+    ],
+    "versions": {
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.027644230769230768,
+    "declarations": 0.052130044843049325,
+    "gates": 0.0
+   }
+  },
+  {
+   "repo": "vaultwarden",
+   "pinned_commit": "a6c3bd6d1826fb527822df4a2655f34fd440d7d4",
+   "tool_version": "2.11.2",
+   "scanner_fingerprint": "76b2846a76781aa0",
+   "files": 103,
+   "declarations": 2119,
+   "dimensions": {
+    "file_size": 0.26941747572815533,
+    "declarations": 0.11339092872570194,
+    "duplication": 0.8252427184466019,
+    "risk": 0.1262135922330097,
+    "gates": 0.0
+   },
+   "evidence": {
+    "test_file_count": 22,
+    "production_declarations_scanned": 2102,
+    "production_files_scanned": 81,
+    "production_file_warnings": 18,
+    "production_file_failures": 16,
+    "production_function_warnings": 111,
+    "production_function_failures": 123,
+    "production_hard_gate_failures": 0,
+    "dead_code_count": 9,
+    "near_duplicate_count": 12,
+    "idiom_concern_count": 0,
+    "has_readme": true,
+    "has_changelog": false,
+    "has_docs_dir": false
+   },
+   "analyzer_dimensions": {
+    "declarations": 0.09415094339622641
+   },
+   "analyzer_production_dimensions": {
+    "declarations": 0.09444021325209444
+   },
+   "analyzer_coverage": {
+    "tools": [
+     "competing-libraries",
+     "complexipy",
+     "dead-code",
+     "declaration-size",
+     "duplicate-blocks",
+     "file-size",
+     "history",
+     "interrogate",
+     "jscpd",
+     "lizard",
+     "multimetric",
+     "mypy",
+     "near-duplicates",
+     "pydocstyle",
+     "radon",
+     "risk-patterns",
+     "ruff",
+     "vulture"
+    ],
+    "versions": {
+     "complexipy": "7.0.1",
+     "interrogate": "interrogate, version 1.7.0",
+     "jscpd": "cpd 5.1.1",
+     "lizard": "1.24.0",
+     "multimetric": "multimetric 2.4.4",
+     "mypy": "mypy 2.3.1 (compiled: yes)",
+     "pydocstyle": "6.3.0",
+     "radon": "6.0.1",
+     "ruff": "ruff 0.16.5",
+     "vulture": "vulture 2.16"
+    },
+    "unexamined": [
+     "documentation",
+     "style",
+     "testing",
+     "types"
+    ],
+    "single_source": [
+     "dead-code"
+    ]
+   },
+   "production_dimensions": {
+    "file_size": 0.3425925925925926,
+    "declarations": 0.11389645776566758,
     "gates": 0.0
    }
   }

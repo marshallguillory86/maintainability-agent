@@ -415,12 +415,13 @@ def _reference_block() -> dict[str, object]:
         "note": "Calibrated so a repo at the OSS median on every dimension scores 4.0.",
         "corpus_languages": [
             "Python", "TypeScript", "JavaScript", "Java", "C", "C++", "C#", "Fortran",
+            "Swift", "Go", "Rust", "PHP", "Ruby",
         ],
         # Parsed by a scanner, absent from the anchor — see `_anchor`.
         "unanchored_languages": UNANCHORED_LANGUAGES,
         "corpus_note": (
-            "Reference medians are drawn from 112 mature repositories across "
-            "eight of the ten languages this scanner parses. "
+            "Reference medians are drawn from 180 mature repositories across "
+            "thirteen of the fourteen languages this scanner parses. "
             f"{unanchored_sentence()} Fortran entered at a lower "
             "star threshold than the rest, because its ecosystem has none "
             "above theirs; see docs/standard.md#the-reference-corpus."

@@ -142,11 +142,59 @@ CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "te
 # that did not. It says nothing about extending the corpus to hold the six
 # unanchored languages, which moves the population the medians are drawn
 # from rather than the instrument reading it. That half remains untested.
+#
+# **2026-09-08, the recalibration (3.0.0).** The one this corpus policy
+# scheduled, and the first that re-grades repositories. Three things
+# changed at once and the release exists because they cannot be
+# separated — each moves `scanner_fingerprint` and invalidates every
+# stored row.
+#
+# *The corpus grew to 180.* Swift, Go, Rust, PHP and Ruby are anchored,
+# fourteen repositories each but for Ruby's twelve. COBOL is not, and
+# will not be: one public repository clears 500 stars and what exists is
+# curriculum, Java parsers and JavaScript wrappers rather than COBOL
+# codebases. The 112 existing rows keep their pinned commits.
+#
+# *The analyzer tier now drives declarations almost everywhere.* Under
+# 2.11.2 the criterion set could only be completed for Python, so 6 rows
+# of 180 carried an analyzer reading. Completing it from the built-in
+# tier per concept — `lizard` for cyclomatic complexity and declaration
+# lines, the scanner for the cognitive complexity no FOSS tool supplies
+# — takes that to **173 of 180**.
+#
+# *D137 fixed the criterion check's scope*, so one Python file can no
+# longer buy the criterion for a repository's C.
+#
+#     file_size      0.0952 -> 0.0938
+#     declarations   0.0908 -> 0.0962
+#     duplication    0.3222 -> 0.3144
+#     risk           0.0826 -> 0.0341
+#     gates          0.05   -> 0.05
+#     CALIBRATION_C  8.7161 -> 4.2565
+#
+# **`risk` more than halved, and the languages explain it.** Risk
+# patterns are configured policy and this project's defaults were written
+# against Python and C. Measured as a multiple of the new reference, the
+# five added languages read swift 0.00x, php 0.01x, ruby 0.04x, go 0.10x
+# and rust 0.26x, against c 5.82x, cpp 4.95x and python 4.24x. The median
+# fell because the corpus stopped being dominated by the two ecosystems
+# the default patterns were written for. That is the anchor working: the
+# old reference was measuring the pattern set, not the code.
+#
+# **This release re-grades repositories, which the previous one did not.**
+# 33 of the 112 repositories in both corpora change grade — 15 B->C,
+# 7 C->B, 5 A->B, 4 C->D and 2 B->A — and the corpus gains its first D
+# grades. The 2026-09-07 re-measure moved nothing and said so; this one
+# moves a third of them. Both statements are measured, which is why only
+# this one is a major version.
+#
+# The median still rolls up to exactly 4.0000, which is the anchor's
+# whole job and the one thing that must not move.
 DIMENSION_REFERENCES: dict[str, float] = {
-    "file_size": 0.0952,
-    "declarations": 0.0908,
-    "duplication": 0.3222,
-    "risk": 0.0826,
+    "file_size": 0.0938,
+    "declarations": 0.0962,
+    "duplication": 0.3144,
+    "risk": 0.0341,
     # Fixed, not corpus-derived — see ``_derive.FIXED_REFERENCES``, which
     # is the authority for this value and carries the reasoning. Stated
     # again here rather than imported, so the two are independent claims
@@ -210,7 +258,8 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 # 2026-08-14: 2.6279 -> 2.2658, fitted against the analyzer-primary mix.
 # 2026-08-31: 2.2658 -> 5.8843, re-fitted after the corpus re-measure above
 # (three of five references moved at once, `duplication` most of all).
-CALIBRATION_C = 8.7161
+# 2026-09-08: 8.7161 -> 4.2565, the 3.0.0 recalibration above.
+CALIBRATION_C = 4.2565
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3

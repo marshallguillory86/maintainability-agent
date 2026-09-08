@@ -20,7 +20,7 @@ from ._operator_reads import (
 # still the door every caller comes through.
 __all__ = ["DEFAULT_CONFIG", "DEFAULT_IDIOM_GROUPS", "PROJECT_URL", "VERSION"]
 
-VERSION = "2.11.2"
+VERSION = "3.0.0"
 
 PROJECT_URL = "https://github.com/marshallguillory86/maintainability-agent"
 

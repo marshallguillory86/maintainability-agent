@@ -78,14 +78,34 @@ The constants below are derived by `tools/calibration/measure.py` from the
 pinned corpus and are reproducible from it.
 
 <!-- constants:begin -->
-| Dimension | 1.x | 2.0 |
-|---|---|---|
-| `file_size` | 0.0858 | 0.0952 |
-| `declarations` | 0.1005 | 0.0908 |
-| `duplication` | 0.28 | 0.3222 |
-| `risk` | 0.0737 | 0.0826 |
-| `gates` | 0.05 | 0.05 |
-| **`CALIBRATION_C`** | **5.8843** | **8.7161** |
+| Dimension | 1.x | 2.0 | 3.0 |
+|---|---|---|---|
+| `file_size` | 0.0858 | 0.0952 | 0.0938 |
+| `declarations` | 0.1005 | 0.0908 | 0.0962 |
+| `duplication` | 0.28 | 0.3222 | 0.3144 |
+| `risk` | 0.0737 | 0.0826 | 0.0341 |
+| `gates` | 0.05 | 0.05 | 0.05 |
+| **`CALIBRATION_C`** | **5.8843** | **8.7161** | **4.2565** |
+
+**3.0 is the first of these that re-grades repositories.** 33 of the 112
+repositories present in both the 2.0 and 3.0 corpora change grade — 15 B→C,
+7 C→B, 5 A→B, 4 C→D and 2 B→A. The corpus gains its first D grades. A
+2.11.x re-measure taken a day earlier moved nothing at all, which is why
+only this one is a major version.
+
+Three changes land together and cannot be separated, because each moves
+`scanner_fingerprint` and invalidates every stored measurement: the corpus
+grew from 112 repositories to 180 and from eight anchored languages to
+thirteen; the analyzer tier's criterion set is now completed from the
+built-in tier per concept, taking analyzer-driven declarations from 6 rows
+of 180 to 173; and D137 fixed the criterion check's scope.
+
+`risk` more than halving is the largest single move and the languages
+explain it. Risk patterns are configured policy and the defaults were
+written against Python and C. As a multiple of the new reference the added
+languages read Swift 0.00×, PHP 0.01×, Ruby 0.04×, Go 0.10× and Rust 0.26×,
+against C 5.82×, C++ 4.95× and Python 4.24×. The old reference was
+measuring the pattern set rather than the code.
 
 `CALIBRATION_C` is fitted by bisection so the corpus median rolls up to 4.0
 through the full rubric. The direction a given repository moves depends on

@@ -283,7 +283,20 @@ def _is_unified_diff(text: str) -> bool:
     has_old = any(line.startswith("--- ") for line in lines)
     has_new = any(line.startswith("+++ ") for line in lines)
     has_hunk = any(_HUNK_HEADER.match(line) for line in lines)
-    return has_hunk and has_old and has_new
+    # Either half of the shape is enough, because an agent pastes either
+    # half (D138). Requiring all three read a hunk-only fragment — the
+    # commonest paste of the two, since a chat window shows the hunk and
+    # not the file headers — as file content, and every suffix `--check`
+    # claims to parse reported `declarations_read: true` on it. That is
+    # absence read as a pass arriving through the same door D133 closed
+    # for the complete diff, one fragment shape to the left.
+    #
+    # The mention-versus-assertion guard is unaffected and is why this
+    # can be loosened safely: `_HUNK_HEADER` is anchored with `match`,
+    # so a hunk header quoted inside a string — `"paste a hunk like
+    # @@ -1,3 +1,4 @@ here"` — is not at the start of its line and does
+    # not count. Somebody writing *about* a diff still parses.
+    return has_hunk or (has_old and has_new)
 
 
 def _parses(path: str, text: str) -> bool:

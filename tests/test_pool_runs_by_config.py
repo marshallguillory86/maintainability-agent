@@ -297,7 +297,17 @@ def test_mcp_report_resource_uses_the_repository_pool_decision(
     enabled = _report_resource_markdown(enabled_root)
     assert "## Analyzer Coverage" in enabled
     assert "| `lizard` | analyzer |" in enabled
-    assert "| Estimate source | Built-in detectors (fallback tier) |" in enabled
+    # Either label is legitimate here and which one appears depends on
+    # whether the lizard subprocess could import itself — see
+    # `_assert_pool_ran`, where the same literal made this file read
+    # differently under CI and under a local `HOME`-isolated run. What
+    # this resource has to show is that the row is rendered at all; the
+    # agreement between the label and `analyzer_scored_dimensions` is
+    # asserted there, against the report rather than its markdown.
+    assert any(
+        f"| Estimate source | {label}" in enabled
+        for label in ("Built-in detectors (fallback tier)", "Analyzer readings")
+    ), "the MCP report resource rendered no estimate-source row"
 
     disabled = _report_resource_markdown(disabled_root)
     assert "## Analyzer Coverage" not in disabled

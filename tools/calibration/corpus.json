@@ -2,14 +2,19 @@
  "description": "Reference corpus for scoring calibration. Selected mechanically by tools/calibration/select_corpus.py and filtered by this script; pinned to exact commits so a recalibration is reproducible.",
  "selection": {
   "languages": [
-   "python",
-   "typescript",
-   "javascript",
-   "java",
    "c",
    "cpp",
    "csharp",
-   "fortran"
+   "fortran",
+   "go",
+   "java",
+   "javascript",
+   "php",
+   "python",
+   "ruby",
+   "rust",
+   "swift",
+   "typescript"
   ],
   "created_before": "2021-01-01",
   "pushed_after": "2026-01-01",
@@ -21,11 +26,16 @@
    "c": 3000,
    "cpp": 3000,
    "csharp": 3000,
-   "fortran": 500
+   "fortran": 500,
+   "swift": 3000,
+   "go": 3000,
+   "rust": 3000,
+   "php": 3000,
+   "ruby": 3000
   },
   "max_size_kb": 800000
  },
- "selection_note": "created:<2021-01-01 is load-bearing. The corpus is the human-written baseline against which AI-assisted code is compared, and today's most-starred repositories include projects begun well into the LLM era \u2014 using those would answer the question before measuring it. The star bar is per language because 3,000 stars is not the same statement in every ecosystem: Fortran has zero repositories above it, so a single threshold would have excluded the language rather than measured it. The existing 40 rows are unchanged and still pinned to the commits they were measured at, so this change adds languages without re-rolling the original three. One C++ member was replaced after selection: CPlusPlusThings is a teaching repository, and the marker list gained \"things\" to exclude that category mechanically rather than by veto. It was found by its measurements (declarations 0.0078 against a 0.1005 reference) rather than by its name, which is the outcome-triggered discovery a mechanical corpus exists to prevent, so it is recorded here. Re-running selection with the new marker changed exactly one member: googletest took its place.",
+ "selection_note": "created:<2021-01-01 is load-bearing. The corpus is the human-written baseline against which AI-assisted code is compared, and today's most-starred repositories include projects begun well into the LLM era \u2014 using those would answer the question before measuring it. The star bar is per language because 3,000 stars is not the same statement in every ecosystem: Fortran has zero repositories above it, so a single threshold would have excluded the language rather than measured it. The existing 40 rows are unchanged and still pinned to the commits they were measured at, so this change adds languages without re-rolling the original three. One C++ member was replaced after selection: CPlusPlusThings is a teaching repository, and the marker list gained \"things\" to exclude that category mechanically rather than by veto. It was found by its measurements (declarations 0.0078 against a 0.1005 reference) rather than by its name, which is the outcome-triggered discovery a mechanical corpus exists to prevent, so it is recorded here. Re-running selection with the new marker changed exactly one member: googletest took its place. Extended 2026-09-07 with swift, go, rust, php and ruby at the standard 3,000-star bar \u2014 each has ample candidates above it, unlike Fortran. The 112 existing rows are unchanged and still pinned to the commits their measurements were taken at, so the move is attributable to the languages added. COBOL is parsed and deliberately not selected: one public repository clears 500 stars and what exists is curriculum, Java parsers and JavaScript wrappers rather than COBOL codebases, so it stays unanchored and disclosed.",
  "verification": {
   "min_source_files": 20,
   "min_declarations": 100,
@@ -1180,6 +1190,686 @@
    "created": "2015-07-28",
    "source_files": 190,
    "declarations": 6443
+  },
+  {
+   "name": "Alamofire",
+   "url": "https://github.com/Alamofire/Alamofire.git",
+   "commit": "0455bfb650893e86ad07ace16e5f2d36dadf46f4",
+   "language": "swift",
+   "stars": 42424,
+   "created": "2014-07-31",
+   "source_files": 436,
+   "declarations": 2505
+  },
+  {
+   "name": "Charts",
+   "url": "https://github.com/ChartsOrg/Charts.git",
+   "commit": "1bad5469f57628782110b05996d4fa00473abf06",
+   "language": "swift",
+   "stars": 28009,
+   "created": "2015-03-20",
+   "source_files": 236,
+   "declarations": 626
+  },
+  {
+   "name": "Kingfisher",
+   "url": "https://github.com/onevcat/Kingfisher.git",
+   "commit": "0b5a9e490d68fb08728fb1bb9187d40439a9d52d",
+   "language": "swift",
+   "stars": 24389,
+   "created": "2015-04-06",
+   "source_files": 211,
+   "declarations": 1870
+  },
+  {
+   "name": "Maccy",
+   "url": "https://github.com/p0deje/Maccy.git",
+   "commit": "c376789c5d377b7c520b6f6e91f3f3a1aa28640b",
+   "language": "swift",
+   "stars": 21510,
+   "created": "2018-01-31",
+   "source_files": 122,
+   "declarations": 550
+  },
+  {
+   "name": "MonitorControl",
+   "url": "https://github.com/MonitorControl/MonitorControl.git",
+   "commit": "f16d90f29cefbd9fff47e26fc8f99fe7a5280deb",
+   "language": "swift",
+   "stars": 34125,
+   "created": "2017-09-16",
+   "source_files": 30,
+   "declarations": 332
+  },
+  {
+   "name": "Mos",
+   "url": "https://github.com/Caldis/Mos.git",
+   "commit": "8a2fd112e2af444c37ca5f65f42e9bd19c08a5c2",
+   "language": "swift",
+   "stars": 21343,
+   "created": "2017-01-27",
+   "source_files": 274,
+   "declarations": 2504
+  },
+  {
+   "name": "PHPMailer",
+   "url": "https://github.com/PHPMailer/PHPMailer.git",
+   "commit": "f2fd6537c8b98fd192c7ca68aa4672bd6f18113f",
+   "language": "php",
+   "stars": 22293,
+   "created": "2011-08-23",
+   "source_files": 132,
+   "declarations": 423
+  },
+  {
+   "name": "Rectangle",
+   "url": "https://github.com/rxhanson/Rectangle.git",
+   "commit": "919fb7861a9f729fbbb9f893f2105a143f4f8540",
+   "language": "swift",
+   "stars": 29848,
+   "created": "2019-06-21",
+   "source_files": 185,
+   "declarations": 1768
+  },
+  {
+   "name": "RxSwift",
+   "url": "https://github.com/ReactiveX/RxSwift.git",
+   "commit": "3e33f90c1bcd3cdea25bdb49bd4a594a50c3ab84",
+   "language": "swift",
+   "stars": 24646,
+   "created": "2015-04-07",
+   "source_files": 1114,
+   "declarations": 8691
+  },
+  {
+   "name": "SwiftyJSON",
+   "url": "https://github.com/SwiftyJSON/SwiftyJSON.git",
+   "commit": "3d2544101a03f22b2217d464dc7d359eeb86e159",
+   "language": "swift",
+   "stars": 22948,
+   "created": "2014-06-18",
+   "source_files": 24,
+   "declarations": 229
+  },
+  {
+   "name": "UTM",
+   "url": "https://github.com/utmapp/UTM.git",
+   "commit": "b6f7475be54f9cb542c46b131319454b83489ced",
+   "language": "swift",
+   "stars": 35389,
+   "created": "2019-04-12",
+   "source_files": 266,
+   "declarations": 2549
+  },
+  {
+   "name": "WordPress",
+   "url": "https://github.com/WordPress/WordPress.git",
+   "commit": "de8fe30e2feaead024c2a52ffe01743c07c52044",
+   "language": "php",
+   "stars": 21393,
+   "created": "2011-12-01",
+   "source_files": 2134,
+   "declarations": 19778
+  },
+  {
+   "name": "act",
+   "url": "https://github.com/nektos/act.git",
+   "commit": "4f411281417e88660bea1c1a1749aa71ae0bd60f",
+   "language": "go",
+   "stars": 71843,
+   "created": "2019-01-02",
+   "source_files": 151,
+   "declarations": 1444
+  },
+  {
+   "name": "alacritty",
+   "url": "https://github.com/alacritty/alacritty.git",
+   "commit": "d692748d3f61253ebe9f5094320120d22f6a046f",
+   "language": "rust",
+   "stars": 65650,
+   "created": "2016-02-18",
+   "source_files": 88,
+   "declarations": 1727
+  },
+  {
+   "name": "bagisto",
+   "url": "https://github.com/bagisto/bagisto.git",
+   "commit": "aa544167182b3503c08a3b27981288d1921fbf4d",
+   "language": "php",
+   "stars": 28098,
+   "created": "2018-09-10",
+   "source_files": 2978,
+   "declarations": 7966
+  },
+  {
+   "name": "bat",
+   "url": "https://github.com/sharkdp/bat.git",
+   "commit": "7323a7514f7601737640e7172be115127d6db08c",
+   "language": "rust",
+   "stars": 60387,
+   "created": "2018-04-21",
+   "source_files": 109,
+   "declarations": 2145
+  },
+  {
+   "name": "bevy",
+   "url": "https://github.com/bevyengine/bevy.git",
+   "commit": "62d1ab3ac4a6fc64a85afcfffae216e5a9fb3db7",
+   "language": "rust",
+   "stars": 48085,
+   "created": "2020-01-18",
+   "source_files": 1891,
+   "declarations": 25936
+  },
+  {
+   "name": "brew",
+   "url": "https://github.com/Homebrew/brew.git",
+   "commit": "71f6877d19f2179cf47caea84565083cdc950cc2",
+   "language": "ruby",
+   "stars": 49466,
+   "created": "2016-03-06",
+   "source_files": 1937,
+   "declarations": 8768
+  },
+  {
+   "name": "caddy",
+   "url": "https://github.com/caddyserver/caddy.git",
+   "commit": "e05f57dc7a324f7ecd6e8e8b72b944672920d495",
+   "language": "go",
+   "stars": 75558,
+   "created": "2015-01-13",
+   "source_files": 355,
+   "declarations": 3312
+  },
+  {
+   "name": "chatwoot",
+   "url": "https://github.com/chatwoot/chatwoot.git",
+   "commit": "c9f1867369ea87580adac3df9f2058bc63da1ef2",
+   "language": "ruby",
+   "stars": 36583,
+   "created": "2019-08-14",
+   "source_files": 3722,
+   "declarations": 13999
+  },
+  {
+   "name": "composer",
+   "url": "https://github.com/composer/composer.git",
+   "commit": "85ae0251528d5f155548868e637ef6c68ed5be6b",
+   "language": "php",
+   "stars": 29514,
+   "created": "2011-06-08",
+   "source_files": 589,
+   "declarations": 4845
+  },
+  {
+   "name": "deno",
+   "url": "https://github.com/denoland/deno.git",
+   "commit": "60e01b1dabc1fce03ccd819a01796b52496671a4",
+   "language": "rust",
+   "stars": 108391,
+   "created": "2018-05-15",
+   "source_files": 6029,
+   "declarations": 54756
+  },
+  {
+   "name": "devdocs",
+   "url": "https://github.com/freeCodeCamp/devdocs.git",
+   "commit": "0f9111bcde14522af5bbc3372ed6d4a96392fe77",
+   "language": "ruby",
+   "stars": 39423,
+   "created": "2013-10-24",
+   "source_files": 949,
+   "declarations": 4834
+  },
+  {
+   "name": "devise",
+   "url": "https://github.com/heartcombo/devise.git",
+   "commit": "372b295fe6f63b4af3269f5dcd51a18c0bc2016c",
+   "language": "ruby",
+   "stars": 24355,
+   "created": "2009-09-16",
+   "source_files": 201,
+   "declarations": 1010
+  },
+  {
+   "name": "fastlane",
+   "url": "https://github.com/fastlane/fastlane.git",
+   "commit": "3a4fc36716dec206b3f5441f19f0a5193733c828",
+   "language": "ruby",
+   "stars": 42075,
+   "created": "2014-12-02",
+   "source_files": 1447,
+   "declarations": 8986
+  },
+  {
+   "name": "fd",
+   "url": "https://github.com/sharkdp/fd.git",
+   "commit": "bb80489efb9fe2bdeabe1844feb5ee0af6fc9b1c",
+   "language": "rust",
+   "stars": 44332,
+   "created": "2017-05-09",
+   "source_files": 24,
+   "declarations": 373
+  },
+  {
+   "name": "filament",
+   "url": "https://github.com/filamentphp/filament.git",
+   "commit": "46600114fd4089605605530a8b9171dfdfd6dab1",
+   "language": "php",
+   "stars": 32007,
+   "created": "2020-03-19",
+   "source_files": 5878,
+   "declarations": 15474
+  },
+  {
+   "name": "firefly-iii",
+   "url": "https://github.com/firefly-iii/firefly-iii.git",
+   "commit": "9e9d6f493218bc7a0652210735febe713b22df87",
+   "language": "php",
+   "stars": 24541,
+   "created": "2014-06-28",
+   "source_files": 1626,
+   "declarations": 9892
+  },
+  {
+   "name": "framework",
+   "url": "https://github.com/laravel/framework.git",
+   "commit": "0aa8d7ecd7e5d887e1603d5f8608cab667b4a3be",
+   "language": "php",
+   "stars": 34900,
+   "created": "2013-01-10",
+   "source_files": 3063,
+   "declarations": 33740
+  },
+  {
+   "name": "frp",
+   "url": "https://github.com/fatedier/frp.git",
+   "commit": "832df8dff66d1b0caa0d776c450418f982756df1",
+   "language": "go",
+   "stars": 109261,
+   "created": "2015-12-21",
+   "source_files": 397,
+   "declarations": 2654
+  },
+  {
+   "name": "fzf",
+   "url": "https://github.com/junegunn/fzf.git",
+   "commit": "ad151d84154632a6abec67b40fe326c1ea2c9481",
+   "language": "go",
+   "stars": 82864,
+   "created": "2013-10-23",
+   "source_files": 100,
+   "declarations": 1373
+  },
+  {
+   "name": "gin",
+   "url": "https://github.com/gin-gonic/gin.git",
+   "commit": "dcaa4296d111981ffb31ac3eba90bb63e1eb5ab9",
+   "language": "go",
+   "stars": 89186,
+   "created": "2014-06-16",
+   "source_files": 99,
+   "declarations": 1464
+  },
+  {
+   "name": "go",
+   "url": "https://github.com/golang/go.git",
+   "commit": "38d1265e1a015add1d0b8651f5c2ea3f06199765",
+   "language": "go",
+   "stars": 138022,
+   "created": "2014-08-19",
+   "source_files": 10781,
+   "declarations": 103527
+  },
+  {
+   "name": "guzzle",
+   "url": "https://github.com/guzzle/guzzle.git",
+   "commit": "93939470950a9b11e2e84204166ef5e048c55fe4",
+   "language": "php",
+   "stars": 23458,
+   "created": "2011-02-28",
+   "source_files": 137,
+   "declarations": 3027
+  },
+  {
+   "name": "helix",
+   "url": "https://github.com/helix-editor/helix.git",
+   "commit": "079a789e8cb08ead67f19e1971a1b7438b37354b",
+   "language": "rust",
+   "stars": 46125,
+   "created": "2020-06-01",
+   "source_files": 301,
+   "declarations": 4724
+  },
+  {
+   "name": "huginn",
+   "url": "https://github.com/huginn/huginn.git",
+   "commit": "83e75d5796fd8c735bdf0ca44aa4b5e1f72c5081",
+   "language": "ruby",
+   "stars": 49920,
+   "created": "2013-03-10",
+   "source_files": 479,
+   "declarations": 2180
+  },
+  {
+   "name": "hugo",
+   "url": "https://github.com/gohugoio/hugo.git",
+   "commit": "857120b72b01745d94bcc16fe08dfa859e161f55",
+   "language": "go",
+   "stars": 89738,
+   "created": "2013-07-04",
+   "source_files": 1057,
+   "declarations": 9622
+  },
+  {
+   "name": "iina",
+   "url": "https://github.com/iina/iina.git",
+   "commit": "bb978b9ba10e8c4a1684e312f9c27609af2883ed",
+   "language": "swift",
+   "stars": 46257,
+   "created": "2016-12-19",
+   "source_files": 277,
+   "declarations": 3865
+  },
+  {
+   "name": "jQuery-File-Upload",
+   "url": "https://github.com/blueimp/jQuery-File-Upload.git",
+   "commit": "0e92a4d4613d4ed5231ee0d8513519f2e04f99ba",
+   "language": "php",
+   "stars": 30710,
+   "created": "2010-12-01",
+   "source_files": 27,
+   "declarations": 330
+  },
+  {
+   "name": "jekyll",
+   "url": "https://github.com/jekyll/jekyll.git",
+   "commit": "74d751339d3e534aa51d5d7b0640e9bd743509e4",
+   "language": "ruby",
+   "stars": 51659,
+   "created": "2008-10-20",
+   "source_files": 257,
+   "declarations": 1340
+  },
+  {
+   "name": "lazygit",
+   "url": "https://github.com/jesseduffield/lazygit.git",
+   "commit": "c07f4d381b90419583b7ce04f87379654d983ebc",
+   "language": "go",
+   "stars": 82114,
+   "created": "2018-05-19",
+   "source_files": 1096,
+   "declarations": 5398
+  },
+  {
+   "name": "livewire",
+   "url": "https://github.com/livewire/livewire.git",
+   "commit": "76c76760242aa690abd0db451cd7a32b4c360adb",
+   "language": "php",
+   "stars": 23567,
+   "created": "2019-02-12",
+   "source_files": 925,
+   "declarations": 6281
+  },
+  {
+   "name": "lottie-ios",
+   "url": "https://github.com/airbnb/lottie-ios.git",
+   "commit": "8384dfbc429a5b3748e51d2744cbaad9ecb7a6fe",
+   "language": "swift",
+   "stars": 26865,
+   "created": "2016-10-06",
+   "source_files": 323,
+   "declarations": 1969
+  },
+  {
+   "name": "mastodon",
+   "url": "https://github.com/mastodon/mastodon.git",
+   "commit": "a6d857ad28fdd66ff38fdeb7e98a2382753ac21c",
+   "language": "ruby",
+   "stars": 50281,
+   "created": "2016-02-22",
+   "source_files": 4237,
+   "declarations": 14060
+  },
+  {
+   "name": "matomo",
+   "url": "https://github.com/matomo-org/matomo.git",
+   "commit": "dba9340eb17bceae7858fe638a5d096cb48bbb2f",
+   "language": "php",
+   "stars": 21847,
+   "created": "2011-03-30",
+   "source_files": 4220,
+   "declarations": 35690
+  },
+  {
+   "name": "meilisearch",
+   "url": "https://github.com/meilisearch/meilisearch.git",
+   "commit": "a088ecc354a0002d551acbc41bd87e4e72e7a8d8",
+   "language": "rust",
+   "stars": 59209,
+   "created": "2018-04-23",
+   "source_files": 707,
+   "declarations": 8148
+  },
+  {
+   "name": "minio",
+   "url": "https://github.com/minio/minio.git",
+   "commit": "7aac2a2c5b7c882e68c1ce017d8256be2feea27f",
+   "language": "go",
+   "stars": 61372,
+   "created": "2015-01-14",
+   "source_files": 909,
+   "declarations": 10909
+  },
+  {
+   "name": "moby",
+   "url": "https://github.com/moby/moby.git",
+   "commit": "275015b0e7d1e17941df3dad1503263d653588e5",
+   "language": "go",
+   "stars": 72089,
+   "created": "2013-01-18",
+   "source_files": 2263,
+   "declarations": 15897
+  },
+  {
+   "name": "monica",
+   "url": "https://github.com/monicahq/monica.git",
+   "commit": "e08e91734170b6bbd582cb578532c3948196124e",
+   "language": "php",
+   "stars": 25249,
+   "created": "2017-02-17",
+   "source_files": 1583,
+   "declarations": 6332
+  },
+  {
+   "name": "monolog",
+   "url": "https://github.com/Seldaek/monolog.git",
+   "commit": "147f303310f06334f03f409e49d7ad1e275ff05a",
+   "language": "php",
+   "stars": 21404,
+   "created": "2011-02-17",
+   "source_files": 228,
+   "declarations": 1787
+  },
+  {
+   "name": "netdata",
+   "url": "https://github.com/netdata/netdata.git",
+   "commit": "c5ac56f6602253185a2feca50ba650e37126eb9b",
+   "language": "go",
+   "stars": 80462,
+   "created": "2013-06-17",
+   "source_files": 5906,
+   "declarations": 60064
+  },
+  {
+   "name": "postal",
+   "url": "https://github.com/postalserver/postal.git",
+   "commit": "d038eaa8c763d3cafa797ccd6f773d53470bd336",
+   "language": "ruby",
+   "stars": 16796,
+   "created": "2017-04-19",
+   "source_files": 278,
+   "declarations": 1128
+  },
+  {
+   "name": "prometheus",
+   "url": "https://github.com/prometheus/prometheus.git",
+   "commit": "7f48230f675e7c459398bf1d0f055f6f55caf90a",
+   "language": "go",
+   "stars": 66001,
+   "created": "2012-11-24",
+   "source_files": 986,
+   "declarations": 11815
+  },
+  {
+   "name": "rails",
+   "url": "https://github.com/rails/rails.git",
+   "commit": "e970c80fd668f3f4ee08201bbbbcadfb2f29b1df",
+   "language": "ruby",
+   "stars": 58757,
+   "created": "2008-04-11",
+   "source_files": 3560,
+   "declarations": 43131
+  },
+  {
+   "name": "ripgrep",
+   "url": "https://github.com/BurntSushi/ripgrep.git",
+   "commit": "3fce3b5bb0236da2df6d99672afb8a719642eca7",
+   "language": "rust",
+   "stars": 68062,
+   "created": "2016-03-11",
+   "source_files": 111,
+   "declarations": 2620
+  },
+  {
+   "name": "ruby",
+   "url": "https://github.com/ruby/ruby.git",
+   "commit": "3f2e039ca7290940e03e6b4e09f68481f98fef55",
+   "language": "ruby",
+   "stars": 23705,
+   "created": "2010-02-27",
+   "source_files": 8533,
+   "declarations": 100355
+  },
+  {
+   "name": "rustdesk",
+   "url": "https://github.com/rustdesk/rustdesk.git",
+   "commit": "e8eead571516dac0669e64b186208979d79282eb",
+   "language": "rust",
+   "stars": 122859,
+   "created": "2020-09-28",
+   "source_files": 311,
+   "declarations": 5799
+  },
+  {
+   "name": "rustlings",
+   "url": "https://github.com/rust-lang/rustlings.git",
+   "commit": "a650509c789da1656f813392b16aa1fa043b7f3e",
+   "language": "rust",
+   "stars": 64074,
+   "created": "2015-09-15",
+   "source_files": 228,
+   "declarations": 936
+  },
+  {
+   "name": "starship",
+   "url": "https://github.com/starship/starship.git",
+   "commit": "864500b26904cd3cc01fc2a19d3ad068bd1517a2",
+   "language": "rust",
+   "stars": 59810,
+   "created": "2019-04-02",
+   "source_files": 256,
+   "declarations": 2244
+  },
+  {
+   "name": "stats",
+   "url": "https://github.com/exelban/stats.git",
+   "commit": "60e65d1454c647d9592550447757e509b01d5ebb",
+   "language": "swift",
+   "stars": 41655,
+   "created": "2019-05-29",
+   "source_files": 143,
+   "declarations": 2426
+  },
+  {
+   "name": "symfony",
+   "url": "https://github.com/symfony/symfony.git",
+   "commit": "8ab8bf67ccf6bf103f1260dbc401308b4e57d7d7",
+   "language": "php",
+   "stars": 31146,
+   "created": "2010-01-04",
+   "source_files": 11442,
+   "declarations": 64758
+  },
+  {
+   "name": "syncthing",
+   "url": "https://github.com/syncthing/syncthing.git",
+   "commit": "ed8d87f251bbb2e3551c6c14e3c308e6aaf86a14",
+   "language": "go",
+   "stars": 88373,
+   "created": "2013-11-26",
+   "source_files": 604,
+   "declarations": 5855
+  },
+  {
+   "name": "tauri",
+   "url": "https://github.com/tauri-apps/tauri.git",
+   "commit": "406feea75283545496ef7398c5e2f0fb9b306b64",
+   "language": "rust",
+   "stars": 110898,
+   "created": "2019-07-13",
+   "source_files": 418,
+   "declarations": 4555
+  },
+  {
+   "name": "traefik",
+   "url": "https://github.com/traefik/traefik.git",
+   "commit": "d48621ce0b6fd221b20bdb6c22e652e7498e5db6",
+   "language": "go",
+   "stars": 64781,
+   "created": "2015-09-13",
+   "source_files": 960,
+   "declarations": 6659
+  },
+  {
+   "name": "typst",
+   "url": "https://github.com/typst/typst.git",
+   "commit": "26e924d311367d69e819a62bfd505ed6787b4537",
+   "language": "rust",
+   "stars": 55903,
+   "created": "2019-09-24",
+   "source_files": 411,
+   "declarations": 7303
+  },
+  {
+   "name": "vagrant",
+   "url": "https://github.com/hashicorp/vagrant.git",
+   "commit": "dc55920a284544919340b975098b4ac9005b08b0",
+   "language": "ruby",
+   "stars": 27206,
+   "created": "2010-01-21",
+   "source_files": 1475,
+   "declarations": 6645
+  },
+  {
+   "name": "vapor",
+   "url": "https://github.com/vapor/vapor.git",
+   "commit": "630763c5e0de50b2ac8c7e9a20d6c3ec5709a4c8",
+   "language": "swift",
+   "stars": 26192,
+   "created": "2016-01-18",
+   "source_files": 253,
+   "declarations": 1910
+  },
+  {
+   "name": "vaultwarden",
+   "url": "https://github.com/dani-garcia/vaultwarden.git",
+   "commit": "a6c3bd6d1826fb527822df4a2655f34fd440d7d4",
+   "language": "rust",
+   "stars": 66987,
+   "created": "2018-02-17",
+   "source_files": 95,
+   "declarations": 2119
   }
  ]
 }

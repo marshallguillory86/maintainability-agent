@@ -252,6 +252,14 @@ def declined_dimensions(
         completed = complete_from_built_ins(
             raw, unit_locations(measurements, root), built_in)
     after = _languages_missing_a_criterion(completed, _unit_languages(measurements))
+    # An empty population is a fallback too. Completion drops units the
+    # scanner never read, so "no language is missing a criterion" can
+    # mean every unit was dropped — and `_declaration_pressure` returns
+    # `None` for that, which is the fallback. Reporting it as completed
+    # would put the two out of step again, which is the whole reason
+    # this function shares `_units_by_concept` with the scorer.
+    if not completed:
+        after = before
 
     # The same computation the score runs, deliberately. Reporting a
     # fallback the scorer did not take — or staying silent about one it

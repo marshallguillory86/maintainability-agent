@@ -156,9 +156,16 @@ def measure(path: Path, repo: dict, *, with_analyzers: bool = False) -> dict:
     row["analyzer_production_dimensions"] = None
     row["analyzer_coverage"] = None
     if with_analyzers:
-        analyzer, production, coverage = _analyzer_row(path, config)
-        row["analyzer_dimensions"] = analyzer
-        row["analyzer_production_dimensions"] = production
+        _unused_a, _unused_p, coverage = _analyzer_row(path, config)
+        # Taken from the report rather than recomputed. This script used
+        # to call `analyzer_pressures` itself, without the built-in
+        # readings that complete a criterion set no single tool covers —
+        # so the corpus recorded 6 of 180 rows as analyzer-driven while a
+        # live audit of the same tree recorded far more, and the constant
+        # was being fitted to a pipeline that had stopped shipping.
+        published = report.get("analyzer_pressures") or {}
+        row["analyzer_dimensions"] = published.get("all_code")
+        row["analyzer_production_dimensions"] = published.get("production")
         row["analyzer_coverage"] = coverage
         # The built-in production reading, so the production comparison
         # has a denominator measured the same way on both sides.

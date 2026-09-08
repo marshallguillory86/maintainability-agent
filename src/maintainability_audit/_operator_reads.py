@@ -30,6 +30,61 @@ class PathNotAllowed(ValueError):
 MAX_OPERATOR_FILE_BYTES = 8 * 1024 * 1024
 
 
+def open_regular_file(path: Path, why: str) -> int:
+    """Open a path only if it is a regular file, and hand back the handle.
+
+    The one regular-file control, so there is never a second
+    implementation of it to drift. `read_operator_file` reads what an
+    operator named; `read_source_file` reads what discovery found. Those
+    are different populations with different decoding and different size
+    rules, and exactly one thing in common — neither may block on a FIFO
+    or drain memory from a device.
+
+    Splitting it out is D141. The operator-named door was hardened after
+    S8707 and the scan door was not, so a FIFO named `src/hang.py` still
+    stopped an audit dead: `read_text` on it waits for a writer that
+    never comes. Listing the state modules was never going to catch that,
+    because a discovered source path is a different population from a
+    configured one.
+
+    `O_NONBLOCK` is what makes the check possible at all — without it the
+    open itself blocks before any validation can run — and the handle is
+    returned rather than the path, so the caller reads *through what was
+    checked*. Re-opening by name would reintroduce the
+    time-of-check/time-of-use gap this exists to close.
+    """
+    import stat as stat_module
+
+    handle = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+    if not stat_module.S_ISREG(os.fstat(handle).st_mode):
+        os.close(handle)
+        raise PathNotAllowed(f"{path} is not a regular file. {why}")
+    return handle
+
+
+def read_source_file(path: Path) -> list[str]:
+    """Read a discovered source file, tolerating undecodable bytes.
+
+    Same regular-file guard as `read_operator_file`, deliberately
+    different in the two places a scan differs from a configured read:
+    it does not cap the size, because a large file in the tree is a
+    finding rather than a refusal, and it replaces undecodable bytes
+    instead of raising, because a scan must not abort on one file's
+    encoding.
+    """
+    handle = open_regular_file(
+        path,
+        "The scan reads files discovery found; a device, socket or FIFO "
+        "in the tree would block the audit rather than be measured.",
+    )
+    try:
+        with os.fdopen(handle, "rb", closefd=False) as opened:
+            raw = opened.read()
+    finally:
+        os.close(handle)
+    return raw.decode("utf-8", errors="replace").splitlines()
+
+
 def read_operator_file(path: Path) -> str:
     """Read a file the operator named, after checking it is one.
 
@@ -67,8 +122,6 @@ def read_operator_file(path: Path) -> str:
     ordinary setup. The audited tree's own default path is a different
     question and `discovered_config` already refuses a symlink there.
     """
-    import stat as stat_module
-
     # Opened once, then checked and read **through that handle** — the
     # same discipline `_safe_write` uses for writes, and for the same
     # reason. Checking `os.stat(path)` and then calling `path.read_text()`
@@ -79,15 +132,13 @@ def read_operator_file(path: Path) -> str:
     # for reading otherwise blocks until a writer appears, so the process
     # would hang *before* reaching any validation — the very failure this
     # function exists to prevent.
-    handle = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+    handle = open_regular_file(
+        path,
+        "This reads configuration and baselines; a device, socket or FIFO "
+        "named here would block or exhaust memory rather than parse.",
+    )
     try:
         info = os.fstat(handle)
-        if not stat_module.S_ISREG(info.st_mode):
-            raise PathNotAllowed(
-                f"{path} is not a regular file. This reads configuration "
-                "and baselines; a device, socket or FIFO named here would "
-                "block or exhaust memory rather than parse."
-            )
         if info.st_size > MAX_OPERATOR_FILE_BYTES:
             raise PathNotAllowed(
                 f"{path} is {info.st_size} bytes, over the "

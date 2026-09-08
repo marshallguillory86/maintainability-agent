@@ -4833,10 +4833,223 @@ per-language bucket is real. It fails
 `test_one_python_file_does_not_buy_the_criterion_for_c`, which is the test that
 would otherwise pass for the wrong reason.
 
+### D138 — Closed: a hunk-only diff read as clean (High)
+
+D133 closed on the claim that a piped diff is refused by its format in
+every language. The detector requires three things: a `--- ` line, a
+`+++ ` line, and a hunk header. That is a full unified diff, as `diff -u`
+and `git` emit it.
+
+An agent at this door does not always paste that. The ordinary paste is
+the hunk:
+
+    @@ -1,3 +1,4 @@
+     function hello() {
+    +    console.log(1)
+         return 1
+     }
+
+On `a918e2b`, `_is_unified_diff` is false, `_parses('x.js', …)` is true,
+`check_content` returns `declarations_read: true` and an empty `note`.
+Exit 0, nothing to say, "clean". Same shape Gemini found; D133 taught
+the door to recognise the envelope and not the letter.
+
+Python still refuses this via `ast.parse`. Brace languages do not. The
+class D133 named was "a piped diff", not "a piped diff that still has
+its `---`/`+++` headers".
+
+**Fixed by refusing either half of the shape.** `_is_unified_diff` returned
+`has_hunk and has_old and has_new`; it returns `has_hunk or (has_old and
+has_new)`. Either fragment is a diff, and the hunk-only one is the commoner
+paste because a chat window shows the hunk and not the file headers.
+
+The mention-versus-assertion guard needed nothing, which is why this could be
+loosened at all: `_HUNK_HEADER` is applied with `match`, so a hunk header
+quoted inside a string — `"paste a hunk like @@ -1,3 +1,4 @@ here"` — is not
+at the start of its line and still parses. Somebody writing *about* a diff is
+unaffected.
+
+A guard sits beside the falsifier and is deliberately **not** cited below,
+because naming it here would cite it as one: brace source already parsed at
+the base, so it defends the refusal from widening into "refuse everything"
+rather than proving the refusal. Its name is in `tests/test_in_loop_check.py`
+next to the falsifier, and it carries the covers-existing-behaviour phrase.
+
+*Closing test:* `test_a_hunk_without_diff_headers_is_unread_for_every_declaration_suffix`
+in `tests/test_in_loop_check.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
+*Mutation:* the member broken is `has_hunk or ...` restored to `has_hunk and
+...`, which is the exact conjunction D133 shipped. It sits outside what the
+closing test enumerates because the test's population is
+`DECLARATION_SUFFIXES` — it names no suffix and no operator, so the mutation
+cannot be the sample it was written from. It fails all 46 suffix cases; the
+brace-source guard beside it stays green, which is what proves the refusal
+did not simply become "refuse everything".
+
+### D139 — Closed: the language-support lead said every branch set is derived from its grammar (Medium)
+
+D129 closed by narrowing the verification section: Python's coverage is
+derived from `ast`; every other language's fixture is a *set*; lizard
+agreement says nothing about constructs the fixture does not contain;
+`Ripper` / `go/ast` / `syn` "is unwritten, not refused."
+
+The page's lead, same file, still says:
+
+> Each language's branch set is derived from **its own grammar**, and
+> every one of them is checked construct-by-construct against an
+> independent implementation.
+
+That sentence is the defect D129 named. The honest paragraph is seventy
+lines later. A reader of the table never reaches it. `#197` added a
+lizard-token sweep, which is a second implementation's keyword list, not
+a grammar enumeration, and the test's own docstring says so. RULES.md
+(2026-09-06) asked for the language's specification. The lead claims
+that work is done.
+
+**Fixed where the reader arrives, not where the audit reported it.** The lead
+now says what the verification section says: Python's branch set is derived
+from its own grammar because `ast` implements it and CI enumerates from it,
+and every other language's is a set somebody wrote down. It also names what
+`2.11.1`'s sweep actually is — a second implementation's keyword list, better
+than the author's memory and still not a grammar — because calling that a
+grammar enumeration would reopen this entry with extra steps.
+
+The correction goes in the lead because that is the defect: D129 corrected the
+section seventy lines later and a reader of the table never reaches it. A
+correction applied where it was reported rather than where it is read is the
+shape this register keeps finding.
+
+A guard sits beside the falsifiers and is deliberately **not** cited below,
+because naming it here would cite it as one. The honest paragraph shipped with
+D129, so a check that it is still present passes at the base — it defends the
+fix from being satisfied by silence rather than proving it. Its name is in
+`tests/test_language_support_honesty.py` and it carries the
+covers-existing-behaviour phrase.
+
+*Closing test:* `test_the_lead_does_not_claim_every_language_is_derived_from_its_grammar`
+and `test_the_lizard_sweep_is_not_described_as_a_grammar` in
+`tests/test_language_support_honesty.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=local
+*Mutation:* two, because one alone is satisfiable the wrong way and the entry
+said so. Restoring the lead's "each language's branch set is derived from its
+own grammar" fails the first test. Deleting the honest paragraph — the
+cheapest way to pass a check that only forbids a sentence — fails the second,
+which requires the distinction to be *stated* rather than merely absent. Both
+were run and both failed as described. The members sit outside what any single
+test names because the page can break in either direction, over-claiming or
+falling silent, and a check written against only the reported direction would
+have shipped the other.
+
+*Note on seats:* written by the implementor rather than the writer or test
+engineer, on Marshall's instruction to close every open entry green. Nobody
+else had touched `docs/language-support.md`.
+
+### D140 — Closed: a published declarations rate mixed two counting conventions silently (High)
+
+`#198` completes an analyzer criterion set by copying built-in cognitive
+complexity onto lizard's cyclomatic and length for the same
+`(path, start_line)`. The result is published as `analyzer_pressures`.
+ADR 006's recorded reason for not writing more scanners: lizard, radon
+and mccabe all report "cyclomatic complexity" and disagree on the same
+function; a single number measures **that tool's counting convention,
+not the code**. Mixing lizard's convention with this project's cognitive
+regex on one unit is a third convention. It is not corroboration.
+
+The report records the mix only as "completion from the built-in tier
+included, which is the point of publishing it." A consumer of
+`analyzer_pressures.declarations` cannot see which criteria were filled,
+from which instrument, for which unit. 3.0.0 re-grades on this number.
+
+This is the scoring claim for the release that is about to publish. It
+is not silent in the code comments. It is silent in the artifact a user
+reads.
+
+**Fixed by naming the fill in the published label.** `analyzer_scored` now
+reports `declarations (completed by built-in detectors)` when the analyzer
+measurements alone did not cover the criterion set. The fill is derived from
+the raw measurements the pressures were reduced from, not from a flag set
+alongside them, so the label cannot disagree with what was actually
+published.
+
+ADR 006 is unchanged and this is it working: the analyzer tier stays primary
+for what it measures, and the label stops crediting `lizard` for the
+scanner's cognitive complexity. `lizard` reports cognitive complexity for no
+language at all, so on thirteen of the fourteen parsed languages the fill is
+the normal case rather than the exception.
+
+*Closing test:* `test_a_completed_go_pressure_names_its_builtin_fill_when_published`
+in `tests/test_criteria_completion.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
+*Mutation:* the member broken is `_completed_from_the_built_in_tier` made to
+return an empty set, which restores the unprovenanced label while leaving the
+number identical. It sits outside what the closing test enumerates because
+that test asserts the *label*, and the mutation changes only the label —
+every pressure value, every dimension and the estimate stay byte-identical,
+so a test comparing numbers would pass. That is the point: the defect was
+never a wrong number, it was a right number with a wrong attribution.
+
+### D141 — Closed: scan reads hung on a FIFO, and skipped it silently (Medium)
+
+D131 routed eight *state-file* sites through `read_operator_file`. The
+closing AST walk is `STATE_FILE_MODULES`, a seven-name list. `source.py`
+and `metrics.py` still `path.read_text` the files the scan discovers.
+
+    mkfifo src/hang.py
+    maintainability-agent --root . --format json
+
+`repository_path` is not in this path; occupancy for writes is not
+either. The scan opens the FIFO and blocks. Git cannot store a FIFO, so
+this is a local or agent-written tree — the same population D19 and D131
+already treated as a hang that must not be opened.
+
+The class D131 named was every `read_text` of a path that is not the
+primitive. The close carved "state files" out of that sentence without
+recording the remainder as a limit.
+
+**Fixed in two places, and the second was not the reported one.** The regular-file
+guard is extracted as `open_regular_file`, so `read_operator_file` and the new
+`read_source_file` share one implementation rather than the scan growing a
+second. `source._read` and `metrics.read_lines` both go through it.
+
+That alone changed nothing, because the FIFO never reached a read. `iter_files`
+tested `path.is_file()` first, which is **False** for a FIFO, so `src/hang.py`
+was dropped from the walk and the audit measured one file short without saying
+so. Skipping and blocking are the two ways this goes wrong and both are wrong:
+the primitive refuses rather than waiting, and the walk now refuses rather than
+pretending the file was not there. Directories are excluded before the check
+and a symlink leaving the tree is still dropped by `within`, so what reaches it
+is a path claiming a source extension that is not a file.
+
+*Closing test:* `test_a_fifo_discovered_by_the_source_scan_is_refused_without_hanging`
+in `tests/test_operator_named_reads.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
+*Mutation:* the member broken is the **walk**, not the reader —
+`iter_files` restored to testing `is_file()` first, which silently skips the
+FIFO again. It sits outside what the closing test enumerates because that test
+names a read primitive and a `PathNotAllowed`, and this mutation touches
+neither: every read site still goes through `read_source_file`, the primitive
+still refuses a FIFO handed to it, and `STATE_FILE_MODULES` is untouched. The
+audit simply never offers it one. A mutation of the reader would have been the
+sample the entry was written from; this is the half the entry did not predict.
+
 ## Disposition
 
-**Every entry is closed.** The most recent closed on 2026-09-07: the declarations
-criterion-set check was written at repository scope and applied to units, so one
+**Every entry is closed.** All four from Grok's post-2.11.0 audit closed on
+2026-09-08: They are the remainder of Grok's
+audit of `origin/main` after 2.11.0 (`1704498`) through `#198`, with the
+3.0.0 publish claims left for when that release is actually out. D138 is
+the D133 class still open: a hunk-only diff, the paste an agent actually
+sends, still reads as clean on every brace language. D139 is the D129
+sentence that survived the honest paragraph. D140 is the scoring claim
+`#198` shipped: two counting conventions published as one analyzer rate,
+which is what 3.0.0 will re-grade on. D141 is the D131 remainder: scan
+reads were carved out of the primitive without being named as a limit.
+
+D137 closed on 2026-09-07: the declarations criterion-set check was written at repository scope and applied to units, so one
 Python file let a C repository be scored on two of three criteria. It is now
 checked per language. That fix changes which repositories use analyzer readings,
 so it moves the corpus `declarations` reference and rides the recalibration

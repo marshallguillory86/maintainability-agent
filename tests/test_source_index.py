@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from maintainability_audit import source as source_module
 from maintainability_audit.config import load_config
 from maintainability_audit.deadcode import dead_declarations
 from maintainability_audit.duplication import duplicate_blocks, risk_findings
@@ -45,8 +46,16 @@ def test_a_file_is_read_only_once(tmp_path: Path, monkeypatch) -> None:
     index = SourceIndex()
     reads: list[Path] = []
 
-    original = Path.read_text
-    monkeypatch.setattr(Path, "read_text", lambda self, **kw: (reads.append(self), original(self, **kw))[1])
+    # Counted at the read primitive, not at `Path.read_text`. Scan reads
+    # go through `read_source_file` since D141 — a FIFO in the tree hung
+    # the audit — so patching `read_text` counted zero and the caching
+    # property it exists to pin went unasserted. Patching the mechanism
+    # instead of the property is a mistake this project has made before.
+    original = source_module.read_source_file
+    monkeypatch.setattr(
+        source_module, "read_source_file",
+        lambda p: (reads.append(p), original(p))[1],
+    )
 
     for _ in range(5):
         index.lines(path)
@@ -89,14 +98,14 @@ def test_lines_and_declarations_share_one_read(
     index = SourceIndex()
 
     reads = []
-    original = Path.read_text
+    original = source_module.read_source_file
 
-    def counted(self, *args, **kwargs):        # noqa: ANN001, ANN002, ANN003
-        if self == path:
-            reads.append(self)
-        return original(self, *args, **kwargs)
+    def counted(target: Path) -> list[str]:
+        if target == path:
+            reads.append(target)
+        return original(target)
 
-    monkeypatch.setattr(Path, "read_text", counted)
+    monkeypatch.setattr(source_module, "read_source_file", counted)
 
     ranges, masked = index.declarations(path)
     raw = index.lines(path)

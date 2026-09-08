@@ -22,6 +22,7 @@ from ._metrics_types import KNOWN_SOURCE_SUFFIXES, FileMetric, FunctionMetric
 # Re-exported because `metrics.is_test_path` is the import path a dozen
 # callers already use, and the move is not their business.
 from ._metrics_types import is_test_path as is_test_path
+from ._operator_reads import PathNotAllowed, read_source_file
 from .declarations import DECLARATION_SUFFIXES, detect_functions
 from .source import SourceIndex, index_or_new
 
@@ -66,7 +67,7 @@ def iter_files(root: Path, config: dict[str, Any], only_paths: set[str] | None =
     resolved_root = root.resolve()
     out: list[Path] = []
     for path in root.rglob("*"):
-        if not path.is_file():
+        if path.is_dir():
             continue
         if not within(resolved_root, path):
             continue
@@ -75,8 +76,28 @@ def iter_files(root: Path, config: dict[str, Any], only_paths: set[str] | None =
             continue
         if only_paths is not None and rel not in only_paths:
             continue
-        if path.suffix in include_ext:
-            out.append(path)
+        if path.suffix not in include_ext:
+            continue
+        if not path.is_file():
+            # Refused, not skipped (D141). The walk tested `is_file()`
+            # first, which is False for a FIFO, so a path named
+            # `src/hang.py` left the audit silently one file short — and
+            # a scan that quietly measures less than it was asked to is
+            # the absence-read-as-a-pass this project keeps finding.
+            #
+            # Skipping and blocking are the two ways this can go wrong
+            # and they are both wrong: the read primitive below refuses a
+            # FIFO rather than waiting on it, and this refuses it rather
+            # than pretending the file was not there. Directories are
+            # excluded above, and a symlink leaving the tree is dropped
+            # by `within`, so what reaches here is a path that claims to
+            # be source and is not a file.
+            raise PathNotAllowed(
+                f"{path} has a source extension but is not a regular file. "
+                "A device, socket or FIFO in the tree cannot be measured, "
+                "and omitting it would under-report the scan."
+            )
+        out.append(path)
     return sorted(out)
 
 
@@ -160,10 +181,7 @@ def read_lines(path: Path) -> list[str]:
     served from ``SourceIndex`` instead, so a file is not read once per
     scanner — see ``source``.
     """
-    try:
-        return path.read_text(encoding="utf-8").splitlines()
-    except UnicodeDecodeError:
-        return path.read_text(encoding="utf-8", errors="replace").splitlines()
+    return read_source_file(path)
 
 
 def file_status(lines: int, thresholds: dict[str, int]) -> str:

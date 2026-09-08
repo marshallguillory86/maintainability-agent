@@ -17,6 +17,7 @@ from the thing it gates.
 """
 from __future__ import annotations
 
+import posixpath
 from collections import defaultdict
 from pathlib import PurePosixPath
 
@@ -113,6 +114,112 @@ def _languages_missing_a_criterion(
             _concepts_by_language(per_unit, unit_languages).items())
         if (missing := declaration_concepts_missing(concepts))
     )
+
+
+def complete_from_built_ins(
+    per_unit: dict[str, dict[str, float]],
+    unit_locations: dict[str, tuple[str, int]],
+    built_in: dict[tuple[str, int], dict[str, float]],
+) -> dict[str, dict[str, float]]:
+    """Fill criteria an analyzer did not measure from the built-in reading.
+
+    **Per concept, not per dimension.** The rule above asks whether a
+    language carries all three criteria; this is what lets a language
+    answer yes when no single tier measures all three. `lizard` reports
+    cyclomatic complexity and declaration lines for sixteen languages and
+    cognitive complexity for none; the built-in scanners report all three
+    for fourteen. Neither tier is complete alone, and the union of them,
+    per declaration, is.
+
+    Without this the analyzer tier can drive `declarations` for **Python
+    and nothing else** — measured, not inferred: of the 112 corpus
+    repositories, zero satisfied the criterion set without `complexipy`,
+    which reads Python only. PMD is the sole other wired tool that speaks
+    cognitive complexity, and it emits *violations above a threshold*
+    rather than a reading per declaration, so it can never supply a rate
+    over a population.
+
+    The join is `(path, start_line)`, and it is exact rather than
+    approximate: measured on this package, all 1,008 declarations lizard
+    reports match a built-in declaration at the same start line — 100% of
+    lizard's population, 92% of the built-in's, the difference being
+    declarations lizard does not count as functions.
+
+    Mixing tiers inside one unit is the point rather than a compromise.
+    The comparability the criterion set protects is that every
+    declaration was *eligible* to fail on all three, not that one
+    instrument measured all three; ADR 006 already makes the analyzer
+    primary for what it measures, and the bands both tiers are scored
+    through come from the same thresholds.
+    """
+    completed: dict[str, dict[str, float]] = {}
+    for unit, values in per_unit.items():
+        missing = declaration_concepts_missing(set(values))
+        location = unit_locations.get(unit)
+        fallback = built_in.get(location) if location else None
+        if not missing or not fallback:
+            completed[unit] = values
+            continue
+        filled = dict(values)
+        for concept in missing:
+            if concept in fallback:
+                filled[concept] = fallback[concept]
+        completed[unit] = filled
+    return completed
+
+
+def built_in_readings(
+    metrics: object, root: str = ""
+) -> dict[tuple[str, int], dict[str, float]]:
+    """The scanner's three criteria per declaration, keyed for the join.
+
+    Lives beside the join rather than at the call site so both halves of
+    it share one path vocabulary. They did not, once, and the merge
+    shipped inert with the whole suite green.
+    """
+    return {
+        (canonical_path(root, metric.path), metric.start_line): {
+            "cyclomatic_complexity": float(metric.complexity),
+            "declaration_lines": float(metric.lines),
+            "cognitive_complexity": float(metric.cognitive),
+        }
+        for metric in metrics  # type: ignore[attr-defined]
+    }
+
+
+def canonical_path(root: str, path: str) -> str:
+    """One spelling for a file, so two tiers can be joined on it.
+
+    Three vocabularies meet at this join and no two agree: `lizard`
+    reports `./src/x.py`, `complexipy` reports the absolute path, and the
+    built-in scanner reports `src/x.py` relative to the scanned root.
+    Keying the join on any of them as given matches nothing, which is not
+    a hypothetical — it is how this merge shipped inert the first time,
+    with the whole suite green, because every test built both sides from
+    the same string.
+    """
+    text = path.replace("\\", "/")
+    if root and text.startswith(root):
+        text = text[len(root):]
+    return posixpath.normpath(text).lstrip("./") or text
+
+
+def unit_locations(
+    measurements: list[Measurement], root: str = ""
+) -> dict[str, tuple[str, int]]:
+    """Where each unit starts, for the join above.
+
+    A measurement with no line cannot be joined and is simply absent
+    here: `complexipy` reports no start line, and needs none, because it
+    supplies the one concept the built-in tier would have been asked for.
+    """
+    located: dict[str, tuple[str, int]] = {}
+    for measurement in measurements:
+        path = measurement.path or ""
+        if path and measurement.line is not None:
+            located[measurement.unit] = (
+                canonical_path(root, path), int(measurement.line))
+    return located
 
 
 def _scored_units(

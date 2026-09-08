@@ -39,6 +39,8 @@ from ._criteria_scope import (
     _languages_missing_a_criterion,
     _scored_units,
     _unit_languages,
+    complete_from_built_ins,
+    unit_locations,
 )
 from ._criteria_scope import (
     declaration_concepts_missing as declaration_concepts_missing,
@@ -210,8 +212,23 @@ def _relative(value: float, reference: float) -> float:
     return value / reference
 
 
+def _units_by_concept(
+    measurements: list[Measurement], production_only: bool
+) -> dict[str, dict[str, float]]:
+    """Each declaration's analyzer readings, keyed by unit then concept."""
+    per_unit: dict[str, dict[str, float]] = defaultdict(dict)
+    for measurement in measurements:
+        if production_only and is_test_path(measurement.path or measurement.unit):
+            continue
+        per_unit[measurement.unit][measurement.concept] = measurement.value
+    return per_unit
+
+
 def declined_dimensions(
-    measurements: list[Measurement], production_only: bool = False
+    measurements: list[Measurement],
+    production_only: bool = False,
+    built_in: dict[tuple[str, int], dict[str, float]] | None = None,
+    root: str = "",
 ) -> tuple[dict[str, Any], ...]:
     """Dimensions the analyzer tier could not drive, and why.
 
@@ -225,30 +242,57 @@ def declined_dimensions(
     reporting half of D137 — a C repository with one `setup.py` both
     scored its C on two criteria and printed no note saying so.
     """
-    per_unit: dict[str, dict[str, float]] = defaultdict(dict)
-    for measurement in measurements:
-        if production_only and is_test_path(measurement.path or measurement.unit):
-            continue
-        per_unit[measurement.unit][measurement.concept] = measurement.value
-
-    incomplete = _languages_missing_a_criterion(
-        per_unit, _unit_languages(measurements))
-    if not incomplete:
+    raw = _units_by_concept(measurements, production_only)
+    before = _languages_missing_a_criterion(raw, _unit_languages(measurements))
+    if not before:
         return ()
 
-    missing = sorted({concept for _language, concepts in incomplete
-                      for concept in concepts})
-    languages = [language for language, _concepts in incomplete]
+    completed = raw
+    if built_in:
+        completed = complete_from_built_ins(
+            raw, unit_locations(measurements, root), built_in)
+    after = _languages_missing_a_criterion(completed, _unit_languages(measurements))
+
+    # The same computation the score runs, deliberately. Reporting a
+    # fallback the scorer did not take — or staying silent about one it
+    # did — is how a report came to say "analyzer readings for
+    # declarations" and "declarations measured by built-in detectors" in
+    # the same document, which is worse than either alone.
+    if after:
+        missing = sorted({c for _language, concepts in after for c in concepts})
+        languages = [language for language, _concepts in after]
+        return ({
+            "dimension": "declarations",
+            "missing_concepts": missing,
+            "languages": languages,
+            "measured_by": "built-in detectors",
+            "reason": (
+                "no analyzer supplied " + ", ".join(missing) + " for "
+                + ", ".join(languages) + ", and a declaration rate built from "
+                "a narrower criterion set is not comparable to the rubric's, "
+                "which fails a declaration on any of the three"
+            ),
+        },)
+
+    # Completed rather than declined: the analyzers drove the dimension,
+    # and the built-in tier supplied the criteria no analyzer measures.
+    # P8 wants that composition visible, because "analyzer readings"
+    # alone would credit the pool for the scanner's work — which is the
+    # defect D68 filed against this very sentence.
+    filled = sorted({c for _language, concepts in before for c in concepts})
+    languages = [language for language, _concepts in before]
     return ({
         "dimension": "declarations",
-        "missing_concepts": missing,
+        "missing_concepts": filled,
         "languages": languages,
-        "measured_by": "built-in detectors",
+        "measured_by": "analyzers, completed by built-in detectors",
         "reason": (
-            "no analyzer supplied " + ", ".join(missing) + " for "
-            + ", ".join(languages) + ", and a declaration rate built from "
-            "a narrower criterion set is not comparable to the rubric's, "
-            "which fails a declaration on any of the three"
+            "no analyzer supplies " + ", ".join(filled) + " for "
+            + ", ".join(languages) + ", so the built-in scanner supplied "
+            + ("it" if len(filled) == 1 else "them")
+            + " for those declarations and the analyzers supplied the rest; "
+            "the criterion set is complete per declaration, which is what "
+            "makes the rate comparable to the rubric's"
         ),
     },)
 
@@ -306,14 +350,25 @@ class ExternalPressures:
 
 
 def _declaration_pressure(
-    measurements: list[Measurement], thresholds: dict[str, Any], production_only: bool
+    measurements: list[Measurement],
+    thresholds: dict[str, Any],
+    production_only: bool,
+    built_in: dict[tuple[str, int], dict[str, float]] | None = None,
+    root: str = "",
 ) -> dict[str, float | None]:
-    """Weighted breach rate over the analyzers' declarations."""
-    per_unit: dict[str, dict[str, float]] = defaultdict(dict)
-    for measurement in measurements:
-        if production_only and is_test_path(measurement.path or measurement.unit):
-            continue
-        per_unit[measurement.unit][measurement.concept] = measurement.value
+    """Weighted breach rate over the analyzers' declarations.
+
+    ``built_in`` carries the scanner's own reading of each declaration,
+    keyed by ``(path, start_line)``, and completes criteria the analyzers
+    did not measure. Optional so a caller holding only measurements still
+    works, but the difference is not small: without it the analyzer tier
+    can drive this dimension for Python alone.
+    """
+    per_unit = _units_by_concept(measurements, production_only)
+
+    if built_in:
+        per_unit = complete_from_built_ins(
+            per_unit, unit_locations(measurements, root), built_in)
 
     # The criterion set must be complete **for each language**, though an
     # individual unit need not carry all three. The built-in path fails a
@@ -366,7 +421,10 @@ def _declaration_pressure(
 
 
 def analyzer_pressures(
-    measurements: list[Measurement], thresholds: dict[str, Any]
+    measurements: list[Measurement],
+    thresholds: dict[str, Any],
+    built_in: dict[tuple[str, int], dict[str, float]] | None = None,
+    root: str = "",
 ) -> dict[str, float | None]:
     """The scorer's own dimensions, computed from analyzer measurements.
 
@@ -386,11 +444,15 @@ def analyzer_pressures(
 
     ``None`` where nothing was measured — never zero.
     """
-    return _declaration_pressure(measurements, thresholds, production_only=False)
+    return _declaration_pressure(
+        measurements, thresholds, production_only=False, built_in=built_in, root=root)
 
 
 def analyzer_production_pressures(
-    measurements: list[Measurement], thresholds: dict[str, Any]
+    measurements: list[Measurement],
+    thresholds: dict[str, Any],
+    built_in: dict[tuple[str, int], dict[str, float]] | None = None,
+    root: str = "",
 ) -> dict[str, float | None]:
     """The same reading, over production code only.
 
@@ -405,4 +467,5 @@ def analyzer_production_pressures(
     The gap is not small. On flask, 1,494 of 2,206 declarations the
     analyzers see are test code; the pressure moves 0.0049 → 0.0138.
     """
-    return _declaration_pressure(measurements, thresholds, production_only=True)
+    return _declaration_pressure(
+        measurements, thresholds, production_only=True, built_in=built_in, root=root)

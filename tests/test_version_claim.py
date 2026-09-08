@@ -74,9 +74,16 @@ def test_the_maturity_classifier_matches_the_version() -> None:
     assert len(status) == 1, status
     declared = _declared()
 
-    if declared.startswith("1.") and "rc" in declared:
+    # The rule, not the versions that happened to exist when it was
+    # written. It listed `1.` and `2.` literally, so 3.0.0 fell through
+    # to Alpha — a released major line demoted to pre-release by an
+    # enumeration nobody extended. Stated as the claim instead: a
+    # release candidate is Beta, any released major line is
+    # Production/Stable, and a pre-1.0 version is Alpha.
+    major = declared.split(".", 1)[0]
+    if "rc" in declared:
         expected = "Development Status :: 4 - Beta"
-    elif declared.startswith("1.") or declared.startswith("2."):
+    elif major.isdigit() and int(major) >= 1:
         expected = "Development Status :: 5 - Production/Stable"
     else:
         expected = "Development Status :: 3 - Alpha"

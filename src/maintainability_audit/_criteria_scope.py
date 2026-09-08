@@ -155,15 +155,35 @@ def complete_from_built_ins(
     completed: dict[str, dict[str, float]] = {}
     for unit, values in per_unit.items():
         missing = declaration_concepts_missing(set(values))
-        location = unit_locations.get(unit)
-        fallback = built_in.get(location) if location else None
-        if not missing or not fallback:
+        if not missing:
             completed[unit] = values
             continue
+        location = unit_locations.get(unit)
+        fallback = built_in.get(location) if location else None
         filled = dict(values)
         for concept in missing:
-            if concept in fallback:
+            if fallback and concept in fallback:
                 filled[concept] = fallback[concept]
+        if declaration_concepts_missing(set(filled)):
+            # No counterpart in the scanner's reading, so this
+            # declaration is not scoreable on the full criterion set by
+            # either tier — and it is dropped rather than left to
+            # disqualify its language.
+            #
+            # Measured, because the alternative looked reasonable and was
+            # not: `lizard` reads files the built-in scanner produces no
+            # declarations for — Alamofire's `docs/js/jquery.min.js` and
+            # `jazzy.js`, five generated documentation assets. Keeping
+            # them gave JavaScript a bucket that could never be completed
+            # and took the whole repository to the built-in tier, Swift
+            # and all. The same shape hid Java behind a repository's
+            # bundled `.js`.
+            #
+            # Dropping them also aligns the two populations: a unit the
+            # scanner never read is not in the built-in rate either, so
+            # including it in the analyzer rate compares a wider
+            # population against a narrower one.
+            continue
         completed[unit] = filled
     return completed
 

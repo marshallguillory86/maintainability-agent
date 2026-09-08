@@ -4,6 +4,78 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+## 3.0.0 - 2026-09-08
+
+### Changed — the recalibration, and the first release that re-grades
+
+**Every published grade may move.** 33 of the 112 repositories present in
+both the 2.x and 3.0 corpora change grade — 15 B→C, 7 C→B, 5 A→B, 4 C→D
+and 2 B→A — and the corpus gains its first D grades. A 2.11.x re-measure
+taken the day before moved nothing at all and said so; this one moves a
+third of them, which is the difference between a patch and a major.
+
+| Dimension | 2.x | 3.0 |
+|---|---|---|
+| `file_size` | 0.0952 | 0.0938 |
+| `declarations` | 0.0908 | 0.0962 |
+| `duplication` | 0.3222 | 0.3144 |
+| `risk` | 0.0826 | 0.0341 |
+| `gates` | 0.05 | 0.05 |
+| **`CALIBRATION_C`** | **8.7161** | **4.2565** |
+
+The corpus median still rolls up to exactly 4.0000, which is the anchor's
+only job and the one number that must not move.
+
+Three changes land together because each moves `scanner_fingerprint` and
+invalidates every stored measurement. Paying for them separately would
+mean measuring the corpus three times for an anchor obsolete at the next
+change.
+
+**The corpus grew from 112 repositories to 180**, and from eight anchored
+languages to thirteen. Swift, Go, Rust, PHP and Ruby are anchored at
+fourteen repositories each, twelve for Ruby. The 112 existing rows keep
+the commits their measurements were taken at, so the move is attributable
+to what was added.
+
+**COBOL is not anchored, and will not be.** Measured against the corpus
+criteria, GitHub holds one COBOL repository above 500 stars, and what is
+there is not COBOL: the most-starred is a programming course, `proleap`,
+`che4z`, `koopa` and `opensourcecobol4j` are Java projects that parse or
+compile COBOL, and `node-cobol` is a JavaScript wrapper. The one genuine
+COBOL codebase has 38 stars. Its real corpus is on private mainframes.
+COBOL stays parsed and disclosed as unanchored rather than anchored on
+teaching material.
+
+**The analyzer tier now drives `declarations` almost everywhere.** No
+single tier measures the full criterion set: `lizard` reads sixteen
+languages for cyclomatic complexity and declaration lines and none for
+cognitive complexity, while the built-in scanner reads all three for
+fourteen. Completing one from the other per declaration, joined on
+`(path, start_line)`, takes analyzer-driven declarations from **6 rows of
+180 to 173**. Where `lizard` reads the language its readings now drive
+the score, and the hand-written keyword sets supply only the concept no
+permissively-licensed tool measures.
+
+**`risk` more than halved, and the languages explain it.** Risk patterns
+are configured policy and the defaults were written against Python and C.
+As a multiple of the new reference the added languages read Swift 0.00×,
+PHP 0.01×, Ruby 0.04×, Go 0.10× and Rust 0.26×, against C 5.82×, C++
+4.95× and Python 4.24×. The old reference was measuring the pattern set
+rather than the code.
+
+### Also in this release
+
+- **Population floors move to the new corpus minima** — 24 source files
+  and 139 declarations, from 32 and 139. The added languages brought
+  smaller repositories, and a floor above the corpus minimum is a
+  repository the scale cannot score while claiming to be calibrated by
+  it.
+- **The shipped corpus note** said 112 repositories across eight of ten
+  parsed languages. It says 180 across thirteen of fourteen.
+- **D137, and the two defects found shipping its follow-up**, are in
+  [the register](docs/defect-register-chat-surface.md).
+
+
 ### Changed — the reference corpus was re-measured, and the anchor held
 
 No behaviour changes and no constant changes. The measurements file is

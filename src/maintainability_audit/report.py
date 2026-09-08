@@ -271,6 +271,24 @@ def _provenance(
     }
 
 
+def _published_pressures(pressures: object) -> dict[str, Any] | None:
+    """The analyzer tier's reading of the scorer's dimensions, as scored.
+
+    Completion from the built-in tier included, which is the point of
+    publishing it. `tools/calibration/measure.py` was computing its own
+    by calling `analyzer_pressures` without the built-in readings, so the
+    corpus recorded a pipeline the product had stopped using — 6 rows of
+    180 analyzer-driven where a live audit of the same trees gives 173.
+    An anchor derived through a different pipeline than the one that
+    ships is a defect this project has already had once, and it went
+    unnoticed then for the same reason: no test runs that file.
+    """
+    if pressures is None:
+        return None
+    return {"all_code": pressures.all_code,          # type: ignore[attr-defined]
+            "production": pressures.production}       # type: ignore[attr-defined]
+
+
 def _assemble(
     root: Path,
     analyzer: dict[str, Any],
@@ -310,6 +328,7 @@ def _assemble(
         # Beside the score, never behind it: two reports with different
         # analyzer coverage are not comparable (P8).
         "analyzer_coverage": analyzer["coverage"],
+        "analyzer_pressures": _published_pressures(analyzer["pressures"]),
         "environment_work_order": analyzer["environment"],
         # What the analyzers actually found. Coverage without findings
         # would report that nine tools examined the repository and then

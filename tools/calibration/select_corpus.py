@@ -46,7 +46,26 @@ import sys
 # it — LAPACK read 7.18x the declaration median while no Fortran was in
 # the comparison set at all.
 LANGUAGES = ["python", "typescript", "javascript", "java", "c", "cpp",
-             "csharp", "fortran"]
+             "csharp", "fortran", "swift", "go", "rust", "php", "ruby"]
+
+#: **COBOL is parsed and deliberately not selected.** Measured on
+#: 2026-09-07 against the criteria above: one repository clears 500 stars
+#: and six clear 50. What is there is not COBOL code. The most-starred by
+#: a wide margin is `cobol-programming-course`, which `_LIST_MARKERS`
+#: already excludes as curriculum; `proleap-cobol-parser`,
+#: `che-che4z-lsp-for-cobol`, `koopa` and `opensourcecobol4j` are **Java**
+#: projects that parse or compile COBOL; `node-cobol` and `node.cobol` are
+#: JavaScript wrappers. The one genuine COBOL codebase, `cics-genapp`,
+#: has 38 stars.
+#:
+#: The language's real corpus is on private mainframes and is not
+#: reachable by any query. Anchoring it on what is public would produce a
+#: reference measured from teaching material and parsers written in
+#: another language — an anchor that *looks* like one, which is worse
+#: than the disclosed absence the corpus policy already ships. COBOL
+#: therefore stays unanchored, and `_anchor.UNANCHORED_LANGUAGES` keeps
+#: saying so in every report that grades it.
+UNSELECTABLE = {"cobol": "no corpus-grade public repositories exist"}
 
 #: The star bar is per language because 3,000 stars is not the same
 #: statement in every ecosystem. Fortran has **zero** repositories above

@@ -52,11 +52,12 @@ SCORE_V2_FIELDS = (
 
 
 #: The corpus the shipped reference block names. 2.0.0 extended it from
-#: three languages to eight; `test_readme_claims` holds the report to
-#: `corpus.json` itself, and this contract only asserts the block did not
-#: change in any other way.
+#: three languages to eight and 3.0.0's recalibration to thirteen;
+#: `test_readme_claims` holds the report to `corpus.json` itself, and
+#: this contract only asserts the block did not change in any other way.
 CORPUS_LANGUAGES = [
     "Python", "TypeScript", "JavaScript", "Java", "C", "C++", "C#", "Fortran",
+    "Swift", "Go", "Rust", "PHP", "Ruby",
 ]
 
 

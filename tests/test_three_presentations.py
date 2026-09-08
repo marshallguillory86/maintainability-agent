@@ -289,7 +289,7 @@ def test_json_names_which_selected_analyzers_ran_and_did_not(
     """
     import json
 
-    import maintainability_audit.report as report_module
+    import maintainability_audit._analyzer_sections as report_module
     from maintainability_audit._analysis import Analysis, ToolCoverage
     from maintainability_audit._runner import Outcome
 

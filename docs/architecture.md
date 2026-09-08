@@ -60,6 +60,7 @@ flowchart TB
     report["report"]
     _analysis["_analysis"]
     _documents["_documents"]
+    _analyzer_sections["_analyzer_sections"]
     _economics["_economics"]
     _environment["_environment"]
     _built_ins["_built_ins"]

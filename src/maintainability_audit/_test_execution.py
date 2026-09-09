@@ -27,6 +27,7 @@ import shlex
 from pathlib import Path
 from typing import Any
 
+from ._operator_reads import PathNotAllowed, read_source_file
 from ._runner import Invocation, run
 from ._xml import AnalyzerXmlRefused, parse_analyzer_xml
 
@@ -64,7 +65,20 @@ def _parse_command(command: list[str]) -> tuple[dict[str, str], list[str]]:
 
 
 def suite_opted_in(config: dict[str, Any]) -> bool:
-    """Both halves of the opt-in: the request, and a command to run."""
+    """Both halves of the opt-in: the request, and a command to run.
+
+    A pure function of the config it is handed, deliberately. The
+    repository can no longer put either half there — `load_config`
+    strips `test_execution.requested` and `expected_commands.test` out
+    of the repository tier before the merge (D147) — so by the time a
+    config reaches here, an opt-in in it came from the person.
+
+    Keeping the check here and the boundary there is the design. A
+    reader of this function should not have to know which tier a key
+    came from, and a caller handing it a config should get an answer
+    about *that* config. The tier question belongs in the one function
+    whose job is deciding which tier wins.
+    """
     requested = bool((config.get("test_execution") or {}).get("requested"))
     command = (config.get("expected_commands") or {}).get("test")
     return requested and bool(command)
@@ -156,8 +170,15 @@ def _coverage_from_this_run(root: Path, before: int | None) -> float | None:
         return None
     try:
         element = parse_analyzer_xml(
-            report.read_text(encoding="utf-8", errors="replace"), fallback="<coverage/>")
+            "\n".join(read_source_file(report)), fallback="<coverage/>")
         rate = element.get("line-rate")
         return round(float(rate) * 100, 1) if rate is not None else None
+    except PathNotAllowed:
+        # Refused, not read as absent coverage (D145). The report is
+        # written by the tree's own suite, so its path is as
+        # repository-controlled as the source is, and `read_text` on a
+        # FIFO named `coverage.xml` would hang the audit after the
+        # suite had already run.
+        raise
     except (AnalyzerXmlRefused, ValueError, OSError):
         return None

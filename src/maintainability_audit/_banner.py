@@ -17,8 +17,11 @@ one-way.
 """
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
+
+from ._operator_reads import open_regular_file
 
 # Whatever a language uses to open a comment, plus decoration a generator
 # may pad the line with: `#`, `//`, `*`, `/*`, `!`, `--`, `<!--`, `;`, and
@@ -40,12 +43,29 @@ BANNER_LINES = 20
 def banner_says_generated(
     path: Path, banners: tuple[str, ...]
 ) -> str | None:
-    """The banner text, if the head of this file carries one."""
+    """The banner text, if the head of this file carries one.
+
+    The head only, so this stays cheap on a large tree — but read
+    *through* a checked handle rather than by name, so a FIFO refuses
+    instead of stopping the audit dead (D145). `path.open()` on one waits
+    for a writer that never comes, and the previous `except OSError`
+    could not have caught that: there is no error to catch, only a
+    process that never returns.
+    """
     try:
-        with path.open(encoding="utf-8", errors="replace") as handle:
-            head = "".join(next(handle, "") for _ in range(BANNER_LINES)).lower()
+        handle = open_regular_file(
+            path,
+            "Banner detection reads the head of a discovered file; a "
+            "device, socket or FIFO would block the audit rather than "
+            "declare itself generated.",
+        )
     except OSError:
         return None
+    try:
+        with os.fdopen(handle, "r", encoding="utf-8", errors="replace", closefd=False) as opened:
+            head = "".join(next(opened, "") for _ in range(BANNER_LINES)).lower()
+    finally:
+        os.close(handle)
     previous: str | None = None
     for raw in head.splitlines():
         stripped = COMMENT_LEAD.sub("", raw).strip()

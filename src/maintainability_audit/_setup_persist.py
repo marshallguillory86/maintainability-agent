@@ -12,7 +12,7 @@ from typing import Any
 
 from ._safe_write import write_bounded
 from ._setup_errors import SetupRequired
-from ._user_config import write_user_answers
+from ._user_config import user_config_answers, write_user_answers
 from .config import CONFIG_FILENAME, discovered_config, load_config
 from .config import _configured as _read_config
 
@@ -75,6 +75,33 @@ def _is_bounds_only(answers: dict[str, Any]) -> bool:
     return bool(given) and given <= names
 
 
+def _user_tier_with(**changes: Any) -> dict[str, Any]:
+    """The user's stored answers plus these, and nothing from the tree.
+
+    Both staged writers used to hand `write_user_answers` the
+    **repository's** document, because that was the dict they had built
+    for the repository write and it looked like "the config". So a
+    two-stage setup — answer the rates, or the test command — copied
+    whatever the audited tree had written under `analyzers.acquire_tools`,
+    `test_execution.requested` and `expected_commands.test` straight into
+    the user tier, which is the one tier `acquisition_permitted` and
+    `opted_in_command` trust (D147).
+
+    Four lines in a pull request, then any staged reply, and the tree had
+    granted itself `npx --yes` and a command to run. Neither check was
+    wrong: the tier they read had been told the tree's answers were the
+    user's.
+
+    So the user tier is now built **from the user tier**, the way
+    `_persist_answers` builds it from the setup payload. Merged rather
+    than replaced, for the same reason `_persist_answers` merges: a
+    stage-two reply must not reset the answers stage one wrote (D13).
+    """
+    stored = dict(user_config_answers() or {})
+    stored.update(changes)
+    return stored
+
+
 def _apply_bounds(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
     """Fill the rates into a configuration that already has its answers.
 
@@ -91,7 +118,7 @@ def _apply_bounds(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
         Path(root), config_path,
         json.dumps(stored, indent=2, sort_keys=True) + "\n",
     )
-    write_user_answers(stored)
+    write_user_answers(_user_tier_with(economic_context=economics))
     return load_config(str(config_path))
 
 
@@ -114,14 +141,31 @@ def _apply_command(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
         commands = dict(stored.get("expected_commands") or {})
         commands["test"] = shlex.split(command)
         stored["expected_commands"] = commands
+        # The user tier carries the command as well as the request,
+        # because `opted_in_command` reads both from there: a person
+        # consents to the command they were shown, and leaving the
+        # command to the repository would keep the consent and hand back
+        # the choice of what it means (D147).
+        user_tier = _user_tier_with(
+            expected_commands={
+                **(user_config_answers() or {}).get("expected_commands", {}),
+                "test": shlex.split(command),
+            },
+        )
     else:
         stored["test_execution"] = {"requested": False}
+        user_tier = _user_tier_with(
+            test_execution={
+                **(user_config_answers() or {}).get("test_execution", {}),
+                "requested": False,
+            },
+        )
     config_path = Path(root) / CONFIG_FILENAME
     write_bounded(
         Path(root), config_path,
         json.dumps(stored, indent=2, sort_keys=True) + "\n",
     )
-    write_user_answers(stored)
+    write_user_answers(user_tier)
     return load_config(str(config_path))
 
 

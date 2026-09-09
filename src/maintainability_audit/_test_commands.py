@@ -40,9 +40,12 @@ suite may be *executed* remains the Class 5 opt-in, default off.
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
+
+from ._operator_reads import open_regular_file
 
 #: Bounded like `_practice._read`: a manifest is small, and a multi-megabyte
 #: `package.json` is not a reason to read a multi-megabyte file.
@@ -69,11 +72,29 @@ class TestCommand:
 
 
 def _read(path: Path) -> str:
+    """A bounded read of a manifest the repository supplies.
+
+    The head only, so this stays cheap on a large tree — but read
+    *through* a checked handle rather than by name, so a FIFO refuses
+    instead of stopping the audit dead (D145). `path.open()` on one waits
+    for a writer that never comes, and the previous `except OSError`
+    could not have caught that: there is no error to catch, only a
+    process that never returns.
+    """
     try:
-        with path.open("r", encoding="utf-8", errors="replace") as handle:
-            return handle.read(_READ_LIMIT)
+        handle = open_regular_file(
+            path,
+            "Test-command detection reads manifests from the audited "
+            "tree; a device, socket or FIFO would block the audit rather "
+            "than suggest a command.",
+        )
     except OSError:
         return ""
+    try:
+        with os.fdopen(handle, "r", encoding="utf-8", errors="replace", closefd=False) as opened:
+            return opened.read(_READ_LIMIT)
+    finally:
+        os.close(handle)
 
 
 def _swift(root: Path) -> TestCommand | None:

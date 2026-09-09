@@ -172,8 +172,59 @@ def load_config(path: str | None) -> dict[str, Any]:
     if user_tier is not None:
         deep_update(config, user_tier)
     if path:
-        deep_update(config, _configured(Path(path)))
+        deep_update(config, _host_authority_stripped(_configured(Path(path))))
     return config
+
+
+#: The one key a repository may state and this tool will not act on,
+#: because acting on it runs a program of the tree's choosing on the host.
+#: The whole leaf is dropped, not merged.
+#:
+#: `expected_commands.test` is deliberately **not** here, and the
+#: distinction is the point. That key is *documentation* — "this is how
+#: you test me" — and a hard gate reads it to require that a repository
+#: declares one. Stripping it would fail `require_test_command` on every
+#: repository that correctly documents its command, which is a real
+#: capability lost to a threat that key does not carry: a command nobody
+#: opted in to running is inert. Authority lives in the opt-in, so that
+#: is what the tree cannot supply.
+_HOST_AUTHORITY = (("test_execution", "requested"),)
+
+
+def _host_authority_stripped(configured: dict[str, Any]) -> dict[str, Any]:
+    """The repository's document, minus the keys that would opt the host in.
+
+    `load_config` says a repository always beats a person, and that is
+    right for thresholds and exclusions — the repository knows its own
+    code. It is exactly wrong for a decision to *execute* that code, and
+    D35 already carved acquisition out of the merge for the same reason.
+    D147 is the same inversion on the seam that runs an arbitrary
+    command rather than installing a package, so it has the shorter path
+    to execution of the two.
+
+    Stripped here, at the merge, rather than re-checked at the consumer.
+    That placement is the point. `suite_opted_in` and `run_test_suite`
+    stay pure functions of the config they are handed — which is what a
+    caller, a test, and a reader all expect — and the tier boundary
+    lives in the one function whose job is deciding which tier wins.
+    Pushing the check downstream instead would mean every future reader
+    of `expected_commands.test` has to remember this entry.
+
+    The user tier is merged *before* this and is untouched: a person who
+    answered the setup questions still opts in, and their answer is what
+    `opted_in_command` reads. A repository that sets either key is
+    ignored rather than refused — it is a preference this tool declines
+    to act on, and the setup ask already offers the repository's own
+    suggested command for the person to accept or decline.
+    """
+    stripped = json.loads(json.dumps(configured))
+    for section, leaf in _HOST_AUTHORITY:
+        block = stripped.get(section)
+        if isinstance(block, dict):
+            block.pop(leaf, None)
+            if not block:
+                stripped.pop(section, None)
+    return stripped
 
 
 def _shaped_like_the_defaults(candidate: dict[str, Any], where: str) -> None:

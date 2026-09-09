@@ -5036,10 +5036,65 @@ still refuses a FIFO handed to it, and `STATE_FILE_MODULES` is untouched. The
 audit simply never offers it one. A mutation of the reader would have been the
 sample the entry was written from; this is the half the entry did not predict.
 
+### D142 — Closed: the prescribed remedy could not fix the reported problem (High)
+
+Found by running the audit against this repository through the **MCP server**,
+the surface [product intent](product-intent.md) calls primary. Nine analyzers
+came back "not installed or not on PATH" — the whole Python pool, `lizard` and
+`complexipy` among them. `declarations` fell to the built-in tier and the
+report said so honestly.
+
+Every one of the nine **was installed.** `locate` searched the interpreter's
+own `bin` and then `PATH`. Its docstring assumed "Python analyzers install
+alongside the agent", which holds in a virtualenv and fails on a **system**
+Python: the framework directory is not writable, `pip` falls back to `--user`,
+and the console script lands in the per-user scripts directory — here
+`~/Library/Python/3.11/bin`, on neither list and not on the default `PATH`.
+
+So the environment work order told the operator to run `pip install lizard`;
+they had; and the next audit reported it missing again. **The remedy the
+product prescribes cannot fix the problem the product reports**, for any
+operator on a system Python, which is the default install path the README
+itself offers.
+
+**The silent fallback scored higher than the truth.** Measured on this
+repository, same commit, same config:
+
+| | pool invisible | pool visible |
+|---|---|---|
+| tools contributed | 0 of 13 | 9 of 13 |
+| verified grade | **B** | **C** |
+
+A degradation that flatters the score is the worst direction for this failure:
+nothing in the result asks to be looked at. The gate passed, the grade improved,
+and the only signal was a work order whose instruction had already been
+followed.
+
+**Fixed** by deriving both script directories from this interpreter —
+`sys.executable`'s parent, then `sysconfig.get_path("scripts", ...)` under the
+preferred user scheme — rather than hardcoding either. `PATH` remains the last
+resort, so homebrew and system-package installs (`jscpd`, `pmd`) still resolve.
+
+*Closing test:* `test_a_tool_in_the_user_scripts_directory_is_found` in
+`tests/test_tool_resolution.py`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is `_agent_script_dirs` reduced to its first
+entry, which restores the exact lookup that shipped. It sits outside what the
+closing test enumerates because that test names a *directory* and a tool, while
+the four guards beside it name the three orderings the fix must preserve —
+own-bin precedence, `PATH` as last resort, and absence still reported as
+absence. A fix that widened the search until something was always found would
+pass the falsifier and fail those, which is why they are written from the other
+direction: the danger here is a false positive naming a tool that cannot run.
+
 ## Disposition
 
-**Every entry is closed.** All four from Grok's post-2.11.0 audit closed on
-2026-09-08: They are the remainder of Grok's
+**Every entry is closed.** D142 closed on 2026-09-09, found by the agent
+auditing itself over MCP: the analyzer pool was invisible because `locate` did
+not search where `pip install` actually writes on a system Python, and the
+resulting fallback reported a *better* grade than the truthful scan. The four
+from Grok's post-2.11.0 audit closed on 2026-09-08: They are the remainder of Grok's
 audit of `origin/main` after 2.11.0 (`1704498`) through `#198`, with the
 3.0.0 publish claims left for when that release is actually out. D138 is
 the D133 class still open: a hunk-only diff, the paste an agent actually

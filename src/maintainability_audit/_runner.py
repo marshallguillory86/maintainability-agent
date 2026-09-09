@@ -32,8 +32,10 @@ import re
 import shutil
 import subprocess
 import sys
+import sysconfig
 import tempfile
 import time
+from contextlib import suppress
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
@@ -137,11 +139,36 @@ def locate(executable: str) -> str | None:
     `maintainability-audit --analyzers` finds almost nothing and reports
     an honest but useless "not installed" for every one of them.
     """
-    own_bin = Path(sys.executable).parent
-    candidate = own_bin / executable
-    if candidate.is_file():
-        return str(candidate)
+    for directory in _agent_script_dirs():
+        candidate = directory / executable
+        if candidate.is_file():
+            return str(candidate)
     return shutil.which(executable)
+
+
+def _agent_script_dirs() -> tuple[Path, ...]:
+    """Where this interpreter's console scripts land, in precedence order.
+
+    Two directories, because `pip install lizard` writes to a different
+    one depending on whether the agent lives in a virtualenv. In a venv
+    it is the interpreter's own `bin`. On a **system** Python it is the
+    per-user scripts directory, because the framework directory is not
+    writable and pip falls back to `--user` — on macOS that is
+    `~/Library/Python/3.11/bin`, which is not on the default `PATH`.
+
+    Searching only the first was D142. A user followed the environment
+    work order's own instruction, ran `pip install lizard`, and the next
+    audit still reported it "not installed or not on PATH" — because it
+    was installed exactly where neither this function nor `PATH` looked.
+    The whole Python pool went missing that way on the MCP surface, so
+    `declarations` fell to the built-in tier while the report's own
+    remedy could not fix it.
+    """
+    directories = [Path(sys.executable).parent]
+    with suppress(Exception):
+        scheme = sysconfig.get_preferred_scheme("user")
+        directories.append(Path(sysconfig.get_path("scripts", scheme=scheme)))
+    return tuple(directories)
 
 
 # Variables that make an interpreter or a linter load code from

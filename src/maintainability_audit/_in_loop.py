@@ -299,6 +299,52 @@ def _is_unified_diff(text: str) -> bool:
     return has_hunk or (has_old and has_new)
 
 
+#: The two marks a unified diff puts in column one on a changed line.
+#: Context lines carry a space, which is why a fragment of *context*
+#: still parses: it is the file's own text with one column of padding,
+#: and refusing it would refuse the ordinary case of a pasted excerpt.
+_CHANGE_MARKS = ("+", "-")
+
+
+def _is_diff_fragment(text: str) -> bool:
+    """Whether this is the changed lines of a diff with the frame cut off.
+
+    D138 loosened `_is_unified_diff` so a hunk-only paste is refused,
+    because a chat window shows the hunk and not the file headers. This
+    is the paste one step smaller again, and the commonest of all: an
+    agent copies the *green* lines out of a review pane and pipes them
+    to `--check`. There is no `@@` and there are no `---`/`+++`
+    headers, so every shape check above passes it through, the brace
+    scanners find nothing in `+function hello() {`, and
+    `declarations_read` reports true (D146).
+
+    That is the same absence-read-as-a-pass D133 and D138 each closed
+    one fragment shape to the left, and the third time it arrived the
+    detector was still being widened by example rather than by rule. So
+    the rule is stated here: a body whose every non-blank line begins
+    with a change mark is a diff fragment, whatever suffix it was
+    named. Nothing else in this project's fourteen languages is written
+    that way, and a file that genuinely is would still be measured as
+    zero declarations rather than silently reported as read.
+
+    **The mention-versus-assertion guard survives, and by construction
+    rather than by luck.** Somebody writing *about* a diff writes prose
+    or code around the quoted line — `text = '+function hello()'` — and
+    that surrounding line does not begin with a mark, so the body is not
+    all-marked and parses normally. The guard is the same one
+    `_HUNK_HEADER`'s anchored `match` gives the hunk check: a mark has
+    to hold column one of *every* line to count, and a mention never
+    does.
+
+    Blank lines are ignored rather than counted against the fragment,
+    because a copied hunk keeps its blank lines unmarked.
+    """
+    marked = [line for line in text.splitlines() if line.strip()]
+    if not marked:
+        return False
+    return all(line[0] in _CHANGE_MARKS for line in marked)
+
+
 def _parses(path: str, text: str) -> bool:
     """Whether the content is what its extension claims to be.
 
@@ -309,7 +355,7 @@ def _parses(path: str, text: str) -> bool:
     is absence read as a pass, arriving through the exact feature whose
     docstring promises to refuse it (Gemini's field check).
     """
-    if _is_unified_diff(text):
+    if _is_unified_diff(text) or _is_diff_fragment(text):
         return False
     if Path(path).suffix != ".py":
         # No parser for the brace languages, and zero declarations is not

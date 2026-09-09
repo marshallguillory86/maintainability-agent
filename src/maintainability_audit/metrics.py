@@ -117,11 +117,31 @@ def unread_source(root: Path, config: dict[str, Any]) -> tuple[list[dict[str, An
     unread: Counter[str] = Counter()
     read = 0
     for path in root.rglob("*"):
-        if not path.is_file() or path.suffix not in KNOWN_SOURCE_SUFFIXES:
+        if path.is_dir():
+            continue
+        if path.suffix not in KNOWN_SOURCE_SUFFIXES:
             continue
         rel = str(path.relative_to(root)).replace(os.sep, "/")
         if is_excluded(rel, excludes):
             continue
+        if not path.is_file():
+            # The same refusal `iter_files` makes, on the same walk and
+            # for the same reason — D141 fixed one of the two and left
+            # this one, so D145 is the other half.
+            #
+            # `is_file()` first was worse here than in the scan. This
+            # function reports what share of the repository the score
+            # describes, so a source-suffixed FIFO skipped here goes
+            # missing from *both* sides of that fraction: not read, and
+            # not reported unread. The coverage share then reads exactly
+            # as it would if the file had never existed, which is the
+            # absence-read-as-a-pass shape this project keeps finding.
+            raise PathNotAllowed(
+                f"{path} has a source extension but is not a regular file. "
+                "A device, socket or FIFO in the tree cannot be measured, "
+                "and omitting it would overstate the share of the "
+                "repository this score describes."
+            )
         if path.suffix in include_ext:
             read += 1
         else:

@@ -20,6 +20,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from ._operator_reads import read_source_file
 from ._runner import Invocation, locate, run
 from .metrics import within
 
@@ -49,12 +50,21 @@ _QUOTED = re.compile(r"\"([A-Za-z_][\w-]*)\"")
 
 
 def recorded_type_analysis(root: Path) -> dict[str, Any] | None:
-    """The checked-in recording, when the repository keeps one."""
+    """The checked-in recording, when the repository keeps one.
+
+    `is_file()` used to stand in for both questions — does it exist, and
+    is it readable — and answered a FIFO with "absent" (D145). A
+    repository could then name `RECORDED_ANALYSIS` as a pipe and have
+    the tool report no recording rather than refuse one, which is the
+    same skip-and-pretend-absent shape D141 closed in the scan walk.
+    Existence is asked here; kind is asked by the primitive, which
+    refuses rather than waiting for a writer.
+    """
     path = root / RECORDED_ANALYSIS
-    if not path.is_file():
+    if not path.exists():
         return None
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads("\n".join(read_source_file(path)))
     except ValueError:
         return None
     return payload if isinstance(payload, dict) and payload.get("tool") else None
@@ -226,7 +236,7 @@ def operation_sets(root: Path) -> list[dict[str, Any]]:
     """
     found: list[dict[str, Any]] = []
     for path in _typescript_sources(root):
-        text = path.read_text(encoding="utf-8", errors="replace")
+        text = "\n".join(read_source_file(path))
         dispatch = frozenset(
             name for pair in _DISPATCH.findall(text) for name in pair if name
         )

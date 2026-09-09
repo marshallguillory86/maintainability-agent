@@ -42,6 +42,7 @@ from typing import Any
 
 from ._banner import banner_says_generated
 from ._metrics_types import KNOWN_SOURCE_SUFFIXES, is_test_path
+from ._operator_reads import PathNotAllowed, read_source_file
 from .metrics import is_excluded
 
 # The inventory names languages the way a person does; the analyzer
@@ -207,6 +208,19 @@ class Inventory:
         return tally
 
 
+def _text_of(path: Path) -> str:
+    """A repository file's text, read through the regular-file primitive.
+
+    Discovery reads whatever the tree names — `package.json` anywhere
+    beneath the root, `.gitmodules` at it — so every path here is
+    repository-controlled and none of it was going through the door
+    D131 and D141 built (D145). `read_text` on a FIFO waits for a writer
+    that never comes, and no `except OSError` catches a process that
+    simply does not return.
+    """
+    return "\n".join(read_source_file(path))
+
+
 def _generated_directories(root: Path, excludes: tuple[str, ...]) -> dict[str, str]:
     """Directories a `package.json` script deletes and rebuilds."""
     found: dict[str, str] = {}
@@ -215,7 +229,15 @@ def _generated_directories(root: Path, excludes: tuple[str, ...]) -> dict[str, s
         if is_excluded(relative, list(excludes)):
             continue
         try:
-            scripts = json.loads(manifest.read_text(encoding="utf-8")).get("scripts", {})
+            scripts = json.loads(_text_of(manifest)).get("scripts", {})
+        except PathNotAllowed:
+            # `PathNotAllowed` is a `ValueError`, so it would otherwise be
+            # swallowed by the clause below and the manifest would read as
+            # a malformed one rather than a refused one (D145). A FIFO
+            # named `package.json` is not bad JSON; it is a path this tool
+            # will not read, and saying so is the whole point of routing
+            # the read through the primitive.
+            raise
         except (OSError, ValueError, AttributeError):
             continue
         if not isinstance(scripts, dict):
@@ -241,7 +263,7 @@ def _vendored_directories(root: Path) -> dict[str, str]:
     modules = root / ".gitmodules"
     if modules.exists():
         try:
-            text = modules.read_text(encoding="utf-8", errors="replace")
+            text = _text_of(modules)
         except OSError:
             text = ""
         for entry in re.finditer(r"^\s*path\s*=\s*(.+?)\s*$", text, re.MULTILINE):

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/marshallguillory86/secure-code-agent/main/secure-code-agent.schema.json",
+  "version": 1,
+  "paths": {
+    "include_extensions": [".py", ".js", ".jsx", ".ts", ".tsx", ".sh", ".yaml", ".yml", ".json", "Dockerfile"],
+    "exclude_patterns": [
+      ".git/", "node_modules/", ".venv/", "venv/", "dist/", "build/",
+      "**/__pycache__/", "**/*.min.js", "**/*.lock",
+      "tests/fixtures/"
+    ]
+  },
+  "gates": {
+    "fail_on_severity": ["critical", "high"],
+    "fail_on_category": ["secrets"],
+    "fail_on_new": true,
+    "max_unsuppressed": {
+      "critical": 0,
+      "high": 0
+    }
+  },
+  "suppressions_file": ".scignore.yaml",
+  "outputs": {
+    "markdown_path": "secure-code-report.md",
+    "sarif_path": "secure-code.sarif",
+    "comment_path": "secure-code-pr-comment.md",
+    "prompt_path": "secure-code-remediation-prompt.md"
+  }
+}

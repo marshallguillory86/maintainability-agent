@@ -17,6 +17,31 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 **v1.1.0 shipped C, v1.2.0 C++, v1.3.0 C# and v1.4.0 free-form Fortran** — five languages over one shared walk in `_ranges_core`, where a language is a module and a row. Fortran is the first with no braces, so the walk now takes its bounding rule as an argument. The row above names the last *tagged* version and is compared verbatim against `git tag`, so it moves in the same step that creates the tag, not before. **Committed before the tag, with the tag pointing at that commit** — tagging first fails the release build, which checks out the tag, finds the older row and refuses. That is how v2.11.0 was tagged and never published, and it happened again at v3.0.0; that tag was moved onto the corrected commit because no artifact had shipped.
 
+**A release is not finished until the operator's own install is on it.** Written
+down 2026-09-09 because it was not being done. The local editable install was
+made on 2026-08-30 at 0.9.1 and never refreshed, so its metadata sat 0.9.1
+through every release up to 3.0.2 — twenty-odd tags. The code was current, since
+an editable install follows the working tree, and `--version` reads the source,
+so the tool never *reported* the wrong number. What was wrong is subtler and
+worse for UAT: the installed distribution and the tree disagreed about what was
+installed, `importlib.metadata.version("maintainability-agent")` answered 0.9.1
+to anything that asked, and the environment being tested was not a state any
+user could reproduce. A UAT run against an install nobody can name is not a
+test result.
+
+So the last step of every release, after the tag and the publish:
+
+```bash
+python3 -m pip install -e ".[dev,mcp]"     # or the published wheel
+python3 -m maintainability_audit --version # must equal the tag
+python3 -c "from importlib.metadata import version; print(version('maintainability-agent'))"
+```
+
+Both must print the version just tagged. Then restart any editor holding the
+MCP server, because it keeps the old process. This cannot be checked in CI — it
+is a property of a machine, not of the repository — which is exactly why it
+belongs written here rather than remembered.
+
 This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; the 8.8–8.10 release gates closed on 2026-09-01. Work after 1.0 is tracked on the [roadmap](roadmap.md) and in the [decision register](decisions.md), not by adding phases here.
 
 Two things are deliberately open rather than done:

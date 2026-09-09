@@ -15,7 +15,6 @@ from maintainability_audit._test_execution import run_test_suite, suite_opted_in
 from maintainability_audit._user_config import user_config_path
 from maintainability_audit.config import acquisition_permitted, load_config
 
-
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "src" / "maintainability_audit"
 

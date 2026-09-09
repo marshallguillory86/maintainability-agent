@@ -5222,7 +5222,7 @@ rather than when somebody remembers to list it. Mutating `fortitude`'s override
 instead would have been the sample the entry was written from, and would have
 left the fallback — the actual population — unproven.
 
-### D145 — Open: repository-controlled reads bypassed the regular-file door (High)
+### D145 — Closed: repository-controlled reads bypassed the regular-file door (High)
 
 D131 built one door for reading a path this tool was told to read, and
 D141 split `open_regular_file` out of it so a *discovered* path could use
@@ -5280,39 +5280,64 @@ and would otherwise be swallowed as malformed JSON — a refused path
 reported as bad content is the same class of lie this entry is about.
 `metrics.unread_source` refuses the way `iter_files` refuses.
 
-**This entry stays Open, and the fix is not what is missing.** Its
-falsifier is `tests/test_tree_reads_use_the_primitive.py`, and that file
-cannot pass or even collect:
+**The staged falsifier had to be rewritten before this could close, and
+that is worth recording rather than tidying away.**
+`tests/test_tree_reads_use_the_primitive.py` as delivered could not pass
+or even collect:
 
-- `test_every_tree_read_uses_a_regular_file_primitive` asserts `reads`
-  and then asserts `not reads` on the same list. No state of the code
-  satisfies both. The non-empty clause the falsifier standard requires
-  belongs on the population the sweep *walks*, not on the violations it
-  finds — this is the standard's own clause applied to the wrong list.
-- `test_discovery_refuses_metadata_fifos_without_blocking` derives its
+- `test_every_tree_read_uses_a_regular_file_primitive` asserted `reads`
+  and then `not reads` on the same list. No state of the code satisfies
+  both. The non-empty clause the falsifier standard requires belongs on
+  the population a sweep *walks*, never on the violations it finds —
+  the standard's own clause applied to the wrong list.
+- `test_discovery_refuses_metadata_fifos_without_blocking` derived its
   parameters from "functions in `_discovery.py` that call `read_text`",
-  which is the defect. Fixing the defect empties the parameter set and
-  the file stops collecting with `Empty parameter set`. A check that can
-  only run while the bug is present proves nothing about its absence.
-- The sweep's population is also wider than the defect's: it flags every
-  `read_text`/`open` in the package, including `_catalog` reading the
-  packaged catalog, `_mcp_resources` reading shipped docs, and
-  `_skill_install` reading its own payload. None of those is a
-  repository-controlled path, and their modules are outside the paths
-  this cycle may write.
+  which **is** the defect. Fixing the defect emptied the parameter set
+  and the module stopped collecting with `Empty parameter set`. A check
+  that can only run while the bug is present says nothing about its
+  absence.
+- Its sweep flagged every `read_text`/`open` in the package, including
+  `_catalog` reading the packaged catalog and `_skill_install` reading
+  its own payload. Neither is a repository-controlled path.
+- `_metadata_names` was the whole tree's only hard-gate failure at
+  cognitive 24 in 20 lines, and carried lint errors besides.
 
-*Closing test:* pending. The population belongs in the test as a written
-list of repository-controlled readers checked against the modules, or as
-a sweep whose non-empty assertion is on the files walked. Named here so
-the next writer seat has the correction rather than the symptom.
+The rewrite separates the two questions the old file conflated.
+*Behaviour* is asked on real FIFOs through the public entry points, and
+cannot be satisfied by rearranging code. *Structure* is asked over
+`TREE_READERS`, a written list of the readers that take a path from the
+audited tree, each checked to resolve so a rename fails loudly instead
+of emptying the sweep. The FIFO cases derive from the filenames
+`_discovery` **mentions**, which the fix does not delete — that is the
+correction to the self-emptying population.
 
-*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
-*Mutation:* stated for the falsifier this entry owes, not for the one it
-has. The member to break is `_practice._read` — reverting it alone to
-`path.read_text` while every other reader stays fixed — because it is a
-reader the FIFO probe does not name and the sweep would have to reach on
-its own. Breaking `_discovery` instead would be the sample the entry was
-written from.
+"Repository-controlled" is a fact about where a path came from, and no
+AST walk can see it. So the list is written and its members are
+verified, rather than inferred and silently wrong.
+
+*Closing test:* `test_a_tree_reader_never_reads_a_path_by_name`,
+`test_metadata_fifo_refuses_and_does_not_block`,
+`test_a_source_suffixed_fifo_is_refused_by_the_unread_walk` in
+`tests/test_tree_reads_use_the_primitive.py`.
+
+The two non-vacuity guards in that file —
+`test_the_reader_list_is_a_population_and_every_member_resolves` and
+`test_the_metadata_names_are_still_the_ones_discovery_reads` — pass at
+the base by design and are named here rather than above.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=local
+*Seat:* **`test=claude` is a deviation and is recorded, not hidden.**
+Tests belong to Codex precisely so a fix is not proved by the person who
+just convinced themselves they understood it. The delivered contract
+could not run and was blocking every other entry in this slice, so the
+seat was crossed deliberately; this falsifier is owed an adversarial
+read for that reason and not merely as routine.
+*Mutation:* the member broken is `_practice._read` — reverted alone to
+`path.read_text` while every other reader stays fixed. It sits outside
+the sample because the FIFO probes exercise `_discovery` and
+`metrics.unread_source`, and never reach `_practice` at all; only the
+structural sweep over `TREE_READERS` catches it. Breaking `_discovery`
+instead would have been the sample the entry was written from.
 
 ### D146 — Closed: `--check` read a plus-only fragment as file content (High)
 
@@ -5457,9 +5482,11 @@ writer added tomorrow is covered and a wrong *source* fails the same way
 a wrong *shape* does.
 ## Disposition
 
-**One entry is open: D145.** Its fix is in — every repository-controlled read now goes through the regular-file door — but its falsifier cannot run: the staged sweep asserts its violation list is both non-empty and empty, and the FIFO parametrization derives its cases from the very `read_text` calls the fix removes, so fixing the defect empties the parameter set and the file stops collecting. A fix whose proof cannot execute is not closed, whatever the code does.
+**Every entry is closed.** D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
-D143, D144, D146 and D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it. D142 closed on 2026-09-09, found by the agent
+D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
+
+D142 closed on 2026-09-09, found by the agent
 auditing itself over MCP: the analyzer pool was invisible because `locate` did
 not search where `pip install` actually writes on a system Python, and the
 resulting fallback reported a *better* grade than the truthful scan. The four

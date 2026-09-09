@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import ast
 import json
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -77,3 +79,22 @@ def test_repo_test_command_cannot_opt_in_a_user_who_said_no(tmp_path: Path) -> N
     assert suite_opted_in(merged) is False
     assert run_test_suite(tmp_path, merged) is None
     assert not marker.exists()
+
+
+@pytest.mark.skipif(shutil.which("pylint") is None, reason="pylint is not installed")
+def test_selected_pylint_does_not_import_a_module_from_the_tree(tmp_path: Path) -> None:
+    """The selected adapter must suppress the tree's import-capable config."""
+    from maintainability_audit._generic import declared_adapter
+
+    marker = tmp_path / "imported"
+    (tmp_path / "poison.py").write_text(
+        f"from pathlib import Path\nPath({str(marker)!r}).write_text('ran')\n",
+        encoding="utf-8",
+    )
+    (tmp_path / ".pylintrc").write_text("[MASTER]\ninit-hook=import poison\n", encoding="utf-8")
+    (tmp_path / "unit.py").write_text("value = 1\n", encoding="utf-8")
+    adapter = declared_adapter("pylint")
+    assert adapter is not None, "pylint is selected without an adapter to isolate it"
+    invocation = adapter.invocation(tmp_path, excludes=())
+    subprocess.run(invocation.argv, cwd=tmp_path, capture_output=True, text=True, check=False)
+    assert not marker.exists(), "selected pylint imported code from the audited tree"

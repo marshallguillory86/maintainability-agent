@@ -5088,9 +5088,143 @@ absence. A fix that widened the search until something was always found would
 pass the falsifier and fail those, which is why they are written from the other
 direction: the danger here is a false positive naming a tool that cannot run.
 
+### D143 — Closed: the unanchored caveat named five anchored languages (High)
+
+`UNANCHORED_LANGUAGES` read `("Swift", "COBOL", "Go", "Rust", "PHP", "Ruby")`.
+3.0.0 anchored five of those six: the corpus grew from 112 repositories to 180
+and from eight measured languages to thirteen, adding Swift, Go, Rust, PHP and
+Ruby. The constant did not move.
+
+**Population.** Every skin that prints a grade reads this constant —
+`corpus_note` in the reference block, the Markdown summary table, the HTML
+executive strip and the remediation prompt. So a Swift, Go, Rust, PHP or Ruby
+reader was told for two releases that their grade was **provisional against a
+corpus containing none of their language**, when 14 Swift repositories, 14 Go,
+14 Rust, 14 PHP and 12 Ruby had been measured for it.
+
+A caveat that names an anchored language is not a caution. It is a false
+statement about the evidence, and it undersells the recalibration that was the
+whole point of 3.0.0.
+
+**Reproduced**, deriving the set from its two sources rather than reading the
+constant:
+
+    parsed (DECLARATION_SUFFIXES)  14 languages
+    corpus (corpus.json)           13 languages
+    parsed - corpus                ['cobol']
+    UNANCHORED_LANGUAGES           ('Swift','COBOL','Go','Rust','PHP','Ruby')
+
+**Fixed** in the constant alone. Every skin already derived from it, so no
+presentation was special-cased — the three skin assertions in the closing test
+passed on the constant change with no renderer touched, which is the evidence
+that the disclosure had one source and it was simply wrong.
+
+COBOL stays and stays alone. It is unanchored **permanently** rather than
+pending a re-measure: GitHub holds one COBOL repository above 500 stars and
+what is public is curriculum, Java parsers and JavaScript wrappers rather than
+COBOL codebases. Emptying the tuple would delete a disclosure that is still
+true. `docs/standard.md` and its packaged copy said "six parsed languages are
+not in it" and now say what the constant says.
+
+**The same claim on two other pages, folded in rather than ticketed.** The
+constant is one source, but the *sentence* had been retyped into prose that no
+check reads:
+
+- `docs/roadmap.md` described six unanchored languages in the present tense in
+  six places after 3.0.0 anchored five — including a **Next** entry naming work
+  that had already shipped, a corpus-policy section still saying "Swift … is
+  unanchored today", and a paragraph calling the corpus-extension effect
+  "still unmeasured" two paragraphs below the release that measured it.
+- `docs/standard.md` and its packaged copy *opened* the corpus section with
+  "40 mature open-source repositories … across Python, TypeScript and
+  JavaScript" and corrected themselves to 180 across thirteen four paragraphs
+  later. A reader met both numbers on one page with nothing to say which was
+  current. Now 180, 24–18,789 source files, 2,749,575 declarations, all
+  derived from `corpus.json` rather than retyped.
+
+Neither is a separate defect. They are the D143 claim on pages the fix's
+population did not reach, and closing D143 with them standing would be the
+instance-not-class substitution this register's falsifier standard exists to
+name. Nothing tests them, which is why they went stale two releases ago and
+why the constant's own test could not have caught it.
+
+**`docs/language-support.md` is deliberately not in that list.** Its lead says
+every non-Python branch set is "checked construct-by-construct against an
+independent implementation" and then tells the reader the section below does
+not contradict it — which sends them past the one paragraph naming COBOL as
+the reader with no second implementation, since `lizard` does not read COBOL
+and there is no `constructs.cbl` in `tests/fixtures/grammar/`. That is a true
+gap and a different class: **D139's**, about what verification can promise,
+not about which languages the corpus anchors. It stays out of this entry
+rather than being absorbed into it, because folding an adjacent defect into a
+close is how a class gets counted as handled without being examined.
+
+COBOL remains the permanent exception here, and `UNANCHORED_LANGUAGES` keeps
+naming it. Emptying the tuple would delete a disclosure that is still true.
+
+*Closing test:* `test_unanchored_languages_are_exactly_parsed_minus_corpus`,
+`test_corpus_note_only_calls_unanchored_languages_absent` and
+`test_every_grade_skin_prints_the_derived_unanchored_caveat` in
+`tests/test_unanchored_set_matches_corpus.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
+*Mutation:* the member broken is a language **added to the corpus** —
+`corpus.json` gaining a COBOL row while the constant still names COBOL — not a
+language removed from the constant. It sits outside what the closing test
+enumerates because that test names no language at all: both sides are derived,
+so the mutation is in the *direction* the old check could not see. The stale
+constant grew when a scanner shipped and never shrank when the corpus caught
+up, and a test written from the reported instance would have pinned
+"Swift is not unanchored" and missed the next one.
+
+### D144 — Closed: the environment remedy addressed whichever pip PATH found (High)
+
+`environment_work_order` emitted `pip install lizard` and `lizard --version`.
+Neither names the interpreter that just reported the tool missing: both resolve
+through `PATH`, which on any machine with more than one Python is a different
+environment than the one the next audit reads.
+
+**Population.** Every implemented adapter whose install is pip-backed — the
+whole Python pool, ten of the thirteen wired analyzers. Node and JVM overrides
+(`npx`, `brew`) are correctly not interpreter-scoped and are untouched.
+
+**This is D142 seen from the other side, and that is what makes it High.** D142
+was the agent failing to find tools the operator had already installed, because
+`pip` had put them where `PATH` did not look. The remedy this work order hands
+back sends the operator around that same loop — and the second time through, it
+looks like the product's own instruction simply does not work. On the machine
+where D142 was found, the work order said `pip install lizard` to an operator
+who had run exactly that.
+
+**Fixed** at the emit site: pip-backed adapters emit
+`{sys.executable} -m pip install <distribution>` and verify with
+`{sys.executable} -m pip show <distribution>`. The `_INSTALL` values stay
+spelled as distribution names, because two tests derive the CI install list
+from them and moving that fact into the data would break the derivation.
+
+Verification moved from `--version` to `pip show`, against the old comment's
+stated reason — that `--version` runs the same probe the runner runs. Since
+D142 the runner does not probe `PATH` at all; it searches this interpreter's
+script directories. A bare `{slug} --version` therefore verified a *different*
+thing than the audit does, and `pip show` asks the question that decides the
+next run.
+
+*Closing test:* `test_pip_adapter_work_orders_bind_install_and_verify_to_this_agent`
+in `tests/test_work_order_binds_to_this_interpreter.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
+*Mutation:* the member broken is the **fallback**, not an override —
+`_remedy_for` returning `f"pip install {slug}"` for an adapter absent from
+`_INSTALL`, which is the path nine of the ten pip-backed tools take. It sits
+outside what the closing test enumerates because that test names no slug: it
+walks the catalog, so a newly added adapter is covered on the day it is added
+rather than when somebody remembers to list it. Mutating `fortitude`'s override
+instead would have been the sample the entry was written from, and would have
+left the fallback — the actual population — unproven.
+
 ## Disposition
 
-**Every entry is closed.** D142 closed on 2026-09-09, found by the agent
+**Every entry is closed.** D143 and D144 closed on 2026-09-09 from Grok's audit of `39a91b9` — a caveat that named five anchored languages, and an environment remedy that addressed whichever `pip` `PATH` found. D142 closed the same day, found by the agent
 auditing itself over MCP: the analyzer pool was invisible because `locate` did
 not search where `pip install` actually writes on a system Python, and the
 resulting fallback reported a *better* grade than the truthful scan. The four

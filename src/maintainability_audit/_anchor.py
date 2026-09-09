@@ -25,12 +25,33 @@ from __future__ import annotations
 
 #: Parsed by a scanner, absent from the reference corpus.
 #:
-#: Stated rather than derived. `tools/calibration/corpus.json` is a
-#: repository file and does not ship in the wheel, so a runtime read would
-#: be unavailable exactly where a user reads a grade.
-#: `test_anchor_disclosure` recomputes `parsed - corpus` from both sources
-#: and fails if this stops matching, so the list cannot quietly go stale.
-UNANCHORED_LANGUAGES: tuple[str, ...] = ("Swift", "COBOL", "Go", "Rust", "PHP", "Ruby")
+#: Stated rather than derived, and the reason still holds:
+#: `tools/calibration/corpus.json` is a repository file that does not ship
+#: in the wheel, so a runtime read would be unavailable exactly where a
+#: user reads a grade. What a stated list buys in availability it owes in
+#: upkeep, and it did not pay.
+#:
+#: **D143.** This read `("Swift", "COBOL", "Go", "Rust", "PHP", "Ruby")`
+#: after 3.0.0 anchored five of those six. The corpus grew from 112
+#: repositories to 180 and from eight measured languages to thirteen, and
+#: this line did not move — so every skin told a Swift, Go, Rust, PHP or
+#: Ruby reader their grade was provisional against a corpus that had
+#: measured their language for two releases. A caveat that names an
+#: anchored language is not a caution, it is a false statement about the
+#: evidence, and it undersells the thing the recalibration was for.
+#:
+#: COBOL stays, and stays alone. It is parsed and deliberately never
+#: anchored: GitHub holds one COBOL repository above 500 stars and what is
+#: there is curriculum, Java parsers and JavaScript wrappers rather than
+#: COBOL codebases, so the corpus policy excludes it permanently rather
+#: than temporarily. Emptying this tuple would delete a disclosure that is
+#: still true.
+#:
+#: `tests/test_unanchored_set_matches_corpus.py` recomputes
+#: `parsed - corpus` from `DECLARATION_SUFFIXES` and `corpus.json` and
+#: fails if this stops matching — including when a language is *added* to
+#: the corpus, which is the direction that went unnoticed.
+UNANCHORED_LANGUAGES: tuple[str, ...] = ("COBOL",)
 
 
 def unanchored_names() -> str:

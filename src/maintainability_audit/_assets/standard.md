@@ -118,9 +118,19 @@ The corpus median lands at **4.0 (B)**: a well-run real codebase earns a B, and 
 
 ### The reference corpus
 
-Calibration is reproducible, not a snapshot someone took once. The corpus is defined in [`tools/calibration/corpus.json`](../tools/calibration/corpus.json) — 40 mature open-source repositories **pinned to exact commits**, spanning 32 to 18,789 source files and 463,581 declarations across Python, TypeScript and JavaScript:
+Calibration is reproducible, not a snapshot someone took once. The corpus is defined in [`tools/calibration/corpus.json`](../tools/calibration/corpus.json) — **180 mature open-source repositories pinned to exact commits**, spanning 24 to 18,789 source files and 2,749,575 declarations across thirteen languages: Python, TypeScript, JavaScript, Java, C, C++, C#, Fortran, Swift, Go, Rust, PHP and Ruby.
+
+The forty repositories 1.x calibrated on are all still in it, at the commits they were measured at then:
 
 > angular · ansible · ant-design · anime · axios · Chart.js · code-server · django · echarts · excalidraw · express · fastapi · flask · freeCodeCamp · github-readme-stats · hackingtool · hoppscotch · jquery · keras · localstack · lodash · manim · material-ui · mermaid · models · n8n · nest · playwright · reveal.js · scrapy · strapi · svelte · tabby · tailwindcss · transformers · uBlock · vite · webpack · youtube-dl · yt-dlp
+
+**This paragraph opened "40 mature open-source repositories … across
+Python, TypeScript and JavaScript" for two releases after 3.0.0 measured
+180 across thirteen (D143).** The corrected numbers were four paragraphs
+below it the whole time, so a reader met both and had nothing to tell
+them which was current. Same defect as the unanchored caveat below and
+found in the same pass: a count written into prose, with nothing that
+fails when the thing it counts moves.
 
 **What the anchor does not cover.** For five releases this section named a
 real defect: the corpus was 40 repositories of Python, TypeScript and
@@ -131,23 +141,34 @@ median and fortran-lang/stdlib at **1.10x** — the first a true statement
 about LAPACK relative to mature OSS *web* code, and not a statement about
 typical Fortran, because no typical Fortran was in the comparison set.
 
-**2.0.0 extended the corpus rather than the caveat.** It is now 112
-repositories spanning eight languages: Python, TypeScript, JavaScript,
-Java, C, C++, C# and Fortran. The original 40 rows are unchanged and still
-pinned to the commits they were measured at, so what moved the constants
-is the languages added and nothing else.
+**3.0.0 extended the corpus.** It is now **180 repositories spanning
+thirteen languages**: Python, TypeScript, JavaScript, Java, C, C++, C#,
+Fortran, Swift, Go, Rust, PHP and Ruby. The 112 rows measured for 2.0.0
+are unchanged and still pinned to the commits they were measured at, so
+what moved the constants is the languages added and nothing else.
 
-**Six parsed languages are not in it.** Swift (2.4.0), COBOL (2.7.0)
-and Go, Rust, PHP and Ruby (2.11.0) shipped after that measurement and
-are **unanchored**: a scanner reads them, and the medians their rates are
-compared against were measured on other languages. This is the corpus policy decided with 2.4.1 — a
-language ships parsed, and the corpus is re-measured once after the
-remaining scanners land, because a new scanner moves
-`scanner_fingerprint` and invalidates every stored row. The cost is
-disclosed rather than absorbed: findings in those languages are as good
-as their parser, their grade is provisional, and every surface that
-prints a grade says so. This sentence read "every language this scanner
-parses" for three releases after it stopped being true.
+**One parsed language is not in it: COBOL.** It is **unanchored** — a
+scanner reads it, and the medians its rates are compared against were
+measured on other languages. The cost is disclosed rather than absorbed:
+findings in COBOL are as good as their parser, a COBOL grade is
+provisional, and every surface that prints a grade says so.
+
+COBOL is unanchored **permanently**, not pending a re-measure. Against
+the corpus criteria GitHub holds one COBOL repository above 500 stars,
+and what is public is curriculum, Java parsers and JavaScript wrappers
+rather than COBOL codebases; the language's real corpus is on private
+mainframes. Anchoring it on what exists would build a reference out of
+teaching material — an anchor that *looks* like one, which is worse than
+the disclosed absence.
+
+Two corrections are recorded here rather than quietly applied, because
+both were live for multiple releases. This sentence read "every language
+this scanner parses" for three releases after that stopped being true.
+It then named **six** unanchored languages for two releases after 3.0.0
+anchored five of them (D143) — Swift, Go, Rust, PHP and Ruby readers were
+told their grade was provisional against a corpus that had measured their
+language. A caveat naming an anchored language is not a caution; it is a
+false statement about the evidence.
 
 Three limits remain, and they are narrower than the one they replace:
 

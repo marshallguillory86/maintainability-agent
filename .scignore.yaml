@@ -1,0 +1,15 @@
+# Acknowledged secure-code-agent findings, with the reason each was reviewed
+# and the date the acknowledgement expires. Per secure-code-agent design.md §10.
+
+- rule_id: gitleaks.curl-auth-user
+  paths:
+    - ".github/workflows/quality-gates.yml"
+    - ".github/workflows/sonar-rename-main-branch.yml"
+  reason: >-
+    Reviewed: every match is `curl -u "$SONAR_TOKEN:"`, a shell expansion of a
+    GitHub Actions secret, not a literal credential. The gitleaks rule matches
+    the `-u` argument shape and cannot tell a variable reference from a value,
+    so it reports five criticals against the one pattern that is the correct
+    way to pass a token. Nothing here is in the tree to rotate. If a literal
+    ever replaces the variable the snippet changes and the fingerprint with it.
+  expires: "2027-09-01"

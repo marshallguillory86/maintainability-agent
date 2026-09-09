@@ -27,6 +27,7 @@ from __future__ import annotations
 import stat
 import sysconfig
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -41,25 +42,43 @@ def _fake_tool(directory: Path, name: str) -> Path:
     return script
 
 
-def test_a_tool_in_the_user_scripts_directory_is_found(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """The case `pip install <tool>` actually produces on a system Python.
+@pytest.fixture
+def isolated(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Point every place `locate` looks at an empty directory.
 
-    Neither beside the interpreter nor on `PATH`, because that is
-    precisely the combination that made the whole Python pool invisible
-    on the MCP surface.
+    Each test then puts the tool in exactly one of them, so what is being
+    asserted is the lookup and not the machine. Without this the tests
+    passed here and failed in CI: the runner installs the analyzer pool
+    beside its interpreter, so `own_bin` answered first and the fixture
+    directories were never reached. A test that agrees with the
+    environment it happens to run in cannot say which directory the code
+    actually searched.
     """
+    own_bin = tmp_path / "interpreter" / "bin"
     user_scripts = tmp_path / "user-base" / "bin"
-    _fake_tool(user_scripts, "lizard")
+    on_path = tmp_path / "opt" / "bin"
+    for directory in (own_bin, user_scripts, on_path):
+        directory.mkdir(parents=True, exist_ok=True)
 
-    monkeypatch.setenv("PATH", str(tmp_path / "empty"))
+    monkeypatch.setattr(_runner.sys, "executable", str(own_bin / "python3"))
+    monkeypatch.setenv("PATH", str(on_path))
     monkeypatch.setattr(
         sysconfig, "get_path",
         lambda name, scheme=None, **kw: (
             str(user_scripts) if name == "scripts" else sysconfig.get_paths()[name]
         ),
     )
+    return SimpleNamespace(own_bin=own_bin, user_scripts=user_scripts, on_path=on_path)
+
+
+def test_a_tool_in_the_user_scripts_directory_is_found(isolated) -> None:
+    """The case `pip install <tool>` actually produces on a system Python.
+
+    Neither beside the interpreter nor on `PATH`, because that is
+    precisely the combination that made the whole Python pool invisible
+    on the MCP surface.
+    """
+    _fake_tool(isolated.user_scripts, "lizard")
 
     found = _runner.locate("lizard")
 
@@ -68,12 +87,10 @@ def test_a_tool_in_the_user_scripts_directory_is_found(
         "found; that is where pip puts it and it is on neither the "
         "interpreter's bin nor PATH"
     )
-    assert Path(found) == user_scripts / "lizard"
+    assert Path(found) == isolated.user_scripts / "lizard"
 
 
-def test_the_interpreters_own_bin_still_wins(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_the_interpreters_own_bin_still_wins(isolated) -> None:
     """Covers existing behaviour: the venv co-install keeps precedence.
 
     It passes at the base — own-bin was already searched first — and is
@@ -82,25 +99,13 @@ def test_the_interpreters_own_bin_still_wins(
     the pinned one shipped beside the agent, which is the version-drift
     the analyzer pinning exists to prevent.
     """
-    own_bin = tmp_path / "venv" / "bin"
-    user_scripts = tmp_path / "user-base" / "bin"
-    _fake_tool(own_bin, "lizard")
-    _fake_tool(user_scripts, "lizard")
+    _fake_tool(isolated.own_bin, "lizard")
+    _fake_tool(isolated.user_scripts, "lizard")
 
-    monkeypatch.setattr(_runner.sys, "executable", str(own_bin / "python3"))
-    monkeypatch.setattr(
-        sysconfig, "get_path",
-        lambda name, scheme=None, **kw: (
-            str(user_scripts) if name == "scripts" else sysconfig.get_paths()[name]
-        ),
-    )
-
-    assert Path(_runner.locate("lizard")) == own_bin / "lizard"
+    assert Path(_runner.locate("lizard")) == isolated.own_bin / "lizard"
 
 
-def test_path_is_still_searched_when_neither_script_dir_has_it(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_path_is_still_searched_when_neither_script_dir_has_it(isolated) -> None:
     """Covers existing behaviour: `PATH` remains the last resort.
 
     Passes at the base. It is here because the fix changed the shape of
@@ -108,16 +113,12 @@ def test_path_is_still_searched_when_neither_script_dir_has_it(
     fallback would strand every tool an operator installed with homebrew
     or a system package manager — `jscpd` and `pmd` on this machine.
     """
-    elsewhere = tmp_path / "opt" / "bin"
-    _fake_tool(elsewhere, "pmd")
-    monkeypatch.setenv("PATH", str(elsewhere))
+    _fake_tool(isolated.on_path, "pmd")
 
-    assert Path(_runner.locate("pmd")) == elsewhere / "pmd"
+    assert Path(_runner.locate("pmd")) == isolated.on_path / "pmd"
 
 
-def test_a_missing_tool_is_still_reported_missing(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_a_missing_tool_is_still_reported_missing(isolated) -> None:
     """Covers existing behaviour: absence is still absence.
 
     Passes at the base, and pins the direction the fix must not move.
@@ -125,20 +126,11 @@ def test_a_missing_tool_is_still_reported_missing(
     installed" into a false positive, which is worse than the defect —
     the work order would name a tool that cannot run.
     """
-    monkeypatch.setenv("PATH", str(tmp_path / "empty"))
-    monkeypatch.setattr(
-        sysconfig, "get_path",
-        lambda name, scheme=None, **kw: (
-            str(tmp_path / "also-empty") if name == "scripts"
-            else sysconfig.get_paths()[name]
-        ),
-    )
-
     assert _runner.locate("a-tool-that-does-not-exist") is None
 
 
 def test_a_broken_user_scheme_does_not_break_resolution(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    isolated, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Covers existing behaviour: `PATH` resolution survives sysconfig.
 
@@ -147,16 +139,14 @@ def test_a_broken_user_scheme_does_not_break_resolution(
     on `PATH` must not become unfindable due to a lookup that exists only
     to find a *different* directory.
     """
-    elsewhere = tmp_path / "opt" / "bin"
-    _fake_tool(elsewhere, "radon")
-    monkeypatch.setenv("PATH", str(elsewhere))
+    _fake_tool(isolated.on_path, "radon")
 
     def explode(*_args: object, **_kwargs: object) -> str:
         raise KeyError("no such scheme")
 
     monkeypatch.setattr(sysconfig, "get_preferred_scheme", explode)
 
-    assert Path(_runner.locate("radon")) == elsewhere / "radon"
+    assert Path(_runner.locate("radon")) == isolated.on_path / "radon"
 
 
 def test_the_agents_script_dirs_are_real_directories_not_guesses() -> None:

@@ -47,6 +47,11 @@ def _repo_config(root: Path, marker: Path) -> Path:
 
 
 def test_every_setup_writer_is_a_population_not_one_named_helper() -> None:
+    """Covers existing behaviour: the falsifier standard's non-vacuity clause.
+
+    It asserts the `write_user_answers` sweep found something, so it
+    passes wherever those call sites exist — which is the point of it.
+    """
     assert _writers(), "no write_user_answers call was found; this sweep is vacuous"
 
 
@@ -82,7 +87,14 @@ def test_repo_test_command_cannot_opt_in_a_user_who_said_no(tmp_path: Path) -> N
 
 @pytest.mark.skipif(shutil.which("pylint") is None, reason="pylint is not installed")
 def test_selected_pylint_does_not_import_a_module_from_the_tree(tmp_path: Path) -> None:
-    """The selected adapter must suppress the tree's import-capable config."""
+    """Covers existing behaviour: `--rcfile=/dev/null` already held this.
+
+    The selected adapter must suppress the tree's import-capable config,
+    and D39 made it do so; this guards that D147 did not undo it. Measured
+    on pylint 4.0.8: the shipped flag stops an `init-hook` under `[MAIN]`,
+    under `[MASTER]` and in `pyproject.toml`, and every control without it
+    fires. That measurement is why pylint stays selected.
+    """
     from maintainability_audit._generic import declared_adapter
 
     marker = tmp_path / "imported"

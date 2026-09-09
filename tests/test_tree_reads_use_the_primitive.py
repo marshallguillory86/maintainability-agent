@@ -78,7 +78,12 @@ def _direct_reads(node: ast.FunctionDef) -> list[int]:
 
 
 def test_the_reader_list_is_a_population_and_every_member_resolves() -> None:
-    """A sweep over a list that has gone stale proves nothing."""
+    """A sweep over a list that has gone stale proves nothing.
+
+    Covers existing behaviour: this is the falsifier standard's own
+    non-vacuity clause. It asserts the population is real, so it passes
+    at any base where the readers exist — which is the point of it.
+    """
     assert TREE_READERS, "no tree readers listed; the sweep below is vacuous"
     for module, name in TREE_READERS:
         _function(module, name)
@@ -97,7 +102,13 @@ def test_a_tree_reader_never_reads_a_path_by_name(module: str, name: str) -> Non
 
 
 def test_the_metadata_names_are_still_the_ones_discovery_reads() -> None:
-    """The FIFO cases below must not drift away from the module."""
+    """The FIFO cases below must not drift away from the module.
+
+    Covers existing behaviour: a drift guard on the parametrization,
+    not a defence of the fix. `_discovery` mentioned both names before
+    the change and after it, which is exactly why the cases are derived
+    from the mentions rather than from the reads.
+    """
     assert METADATA_NAMES, "no metadata names; the FIFO sweep is vacuous"
     source = (PACKAGE / "_discovery.py").read_text(encoding="utf-8")
     missing = [name for name in METADATA_NAMES if repr(name)[1:-1] not in source]

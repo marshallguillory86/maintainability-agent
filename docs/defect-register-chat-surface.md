@@ -5315,15 +5315,16 @@ correction to the self-emptying population.
 AST walk can see it. So the list is written and its members are
 verified, rather than inferred and silently wrong.
 
+Two of the five tests in that file are non-vacuity **guards**, not
+falsifiers: one asserts the reader list resolves, the other that the
+metadata names still match the module. Both pass at the base by design —
+that is what a non-vacuity clause is — so they are described here and
+deliberately kept out of the citation below.
+
 *Closing test:* `test_a_tree_reader_never_reads_a_path_by_name`,
 `test_metadata_fifo_refuses_and_does_not_block`,
 `test_a_source_suffixed_fifo_is_refused_by_the_unread_walk` in
 `tests/test_tree_reads_use_the_primitive.py`.
-
-The two non-vacuity guards in that file —
-`test_the_reader_list_is_a_population_and_every_member_resolves` and
-`test_the_metadata_names_are_still_the_ones_discovery_reads` — pass at
-the base by design and are named here rather than above.
 
 *Roles:* found=grok prompt=marshall fix=claude test=claude run=local
 *Seat:* **`test=claude` is a deviation and is recorded, not hidden.**

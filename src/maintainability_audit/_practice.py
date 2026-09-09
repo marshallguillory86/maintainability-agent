@@ -31,11 +31,13 @@ engineering practice made from the outside.
 
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from ._operator_reads import open_regular_file
 from .metrics import is_excluded
 
 # A repository holding config but running none of it. See the module
@@ -139,10 +141,32 @@ class Practice:
 
 
 def _read(path: Path, limit: int = 200_000) -> str:
+    """A bounded read of a repository file, through a checked handle.
+
+    The head only, so this stays cheap on a large tree — but read
+    *through* a checked handle rather than by name, so a FIFO refuses
+    instead of stopping the audit dead (D145). `path.open()` on one waits
+    for a writer that never comes, and the previous `except OSError`
+    could not have caught that: there is no error to catch, only a
+    process that never returns.
+
+    Practice detection reads whatever the tree names as CI and toolchain
+    configuration, so every path here is repository-controlled.
+    """
     try:
-        return path.read_text(encoding="utf-8", errors="replace")[:limit]
+        handle = open_regular_file(
+            path,
+            "Practice detection reads CI and toolchain files from the "
+            "audited tree; a device, socket or FIFO would block the audit "
+            "rather than describe a practice.",
+        )
     except OSError:
         return ""
+    try:
+        with os.fdopen(handle, "r", encoding="utf-8", errors="replace", closefd=False) as opened:
+            return opened.read(limit)
+    finally:
+        os.close(handle)
 
 
 def _ci_files(root: Path) -> list[Path]:

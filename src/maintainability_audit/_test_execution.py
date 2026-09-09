@@ -27,6 +27,7 @@ import shlex
 from pathlib import Path
 from typing import Any
 
+from ._operator_reads import PathNotAllowed, read_source_file
 from ._runner import Invocation, run
 from ._xml import AnalyzerXmlRefused, parse_analyzer_xml
 
@@ -63,11 +64,63 @@ def _parse_command(command: list[str]) -> tuple[dict[str, str], list[str]]:
     return env, tokens
 
 
+def _user_tier() -> dict[str, Any]:
+    """The person's own answers, never the audited tree's document."""
+    from ._user_config import user_config_answers
+
+    answers = user_config_answers() or {}
+    return answers if isinstance(answers, dict) else {}
+
+
+def opted_in_command() -> list[str] | None:
+    """The command *this user* opted in to running, or ``None`` (D147).
+
+    Read from the XDG user tier alone, the way `acquisition_permitted`
+    reads `acquire_tools`, and for the identical reason. `load_config`
+    lets a repository beat a person, which is right for thresholds and
+    exclusions — the repository knows its own code — and exactly wrong
+    for a decision to execute that code.
+
+    This was reading the merged config, so four lines in a pull request
+
+        "test_execution": {"requested": true},
+        "expected_commands": {"test": ["…"]}
+
+    opted the host in and chose the program. Decision 9's guarantee is
+    that no opt-in means no spawn; the tree was writing its own opt-in.
+    That is D35's trust inversion on the one seam that runs arbitrary
+    commands rather than installing packages, so it is the same defect
+    with a shorter path to execution.
+
+    Both halves come from the user tier, not just the request. A person
+    who consents to "run my test suite" consents to the command they
+    were shown at setup, and leaving the *command* to the repository
+    would keep the consent and hand back the choice of what it means.
+
+    A repository that sets either key is ignored rather than refused, as
+    with acquisition: it is a preference this tool declines to act on,
+    and the setup ask already offers the repository's suggestion for the
+    person to accept.
+    """
+    answers = _user_tier()
+    if not bool((answers.get("test_execution") or {}).get("requested")):
+        return None
+    command = (answers.get("expected_commands") or {}).get("test")
+    if not command:
+        return None
+    return [str(word) for word in command]
+
+
 def suite_opted_in(config: dict[str, Any]) -> bool:
-    """Both halves of the opt-in: the request, and a command to run."""
-    requested = bool((config.get("test_execution") or {}).get("requested"))
-    command = (config.get("expected_commands") or {}).get("test")
-    return requested and bool(command)
+    """Both halves of the opt-in: the request, and a command to run.
+
+    `config` is accepted and not read. The signature stays because every
+    caller has the merged config in hand and the question is still "is
+    this audit allowed to run a suite" — but the answer no longer comes
+    from the document the audited tree controls (D147).
+    """
+    del config
+    return opted_in_command() is not None
 
 
 def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
@@ -76,9 +129,9 @@ def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
     Returning ``None`` on the default path is the Decision-9 guarantee: no
     opt-in, no spawn, no difference from an audit that never had this code.
     """
-    if not suite_opted_in(config):
+    command = opted_in_command()
+    if command is None:
         return None
-    command = list(config["expected_commands"]["test"])
     env, argv = _parse_command(command)
     # A whole test suite is legitimately slower than a single analyzer, so
     # it gets its own timeout rather than the 120s analyzer cap that was
@@ -156,8 +209,15 @@ def _coverage_from_this_run(root: Path, before: int | None) -> float | None:
         return None
     try:
         element = parse_analyzer_xml(
-            report.read_text(encoding="utf-8", errors="replace"), fallback="<coverage/>")
+            "\n".join(read_source_file(report)), fallback="<coverage/>")
         rate = element.get("line-rate")
         return round(float(rate) * 100, 1) if rate is not None else None
+    except PathNotAllowed:
+        # Refused, not read as absent coverage (D145). The report is
+        # written by the tree's own suite, so its path is as
+        # repository-controlled as the source is, and `read_text` on a
+        # FIFO named `coverage.xml` would hang the audit after the
+        # suite had already run.
+        raise
     except (AnalyzerXmlRefused, ValueError, OSError):
         return None

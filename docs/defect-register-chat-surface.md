@@ -5222,9 +5222,244 @@ rather than when somebody remembers to list it. Mutating `fortitude`'s override
 instead would have been the sample the entry was written from, and would have
 left the fallback — the actual population — unproven.
 
+### D145 — Open: repository-controlled reads bypassed the regular-file door (High)
+
+D131 built one door for reading a path this tool was told to read, and
+D141 split `open_regular_file` out of it so a *discovered* path could use
+the same check. Seven readers never went through either. Every one of
+them reads a path the audited tree chooses.
+
+**Population**, enumerated from the modules rather than from the report:
+
+| Reader | What the tree controls |
+|---|---|
+| `_discovery._generated_directories` | every `package.json` under the root |
+| `_discovery._vendored_directories` | `.gitmodules` at the root |
+| `_practice._read` | every CI and toolchain file it finds |
+| `_banner.banner_says_generated` | every discovered source file |
+| `_semantic_ts.recorded_type_analysis` | the checked-in analysis recording |
+| `_semantic_ts` type-role sweep | every TypeScript source |
+| `_test_commands._read` | every manifest it consults |
+| `_test_execution._coverage_from_this_run` | `coverage.xml` after the suite |
+| `metrics.unread_source` | the whole walk, by `is_file()` |
+
+**Two failure modes, and the second is the one that keeps coming back.**
+`read_text` on a FIFO waits for a writer that never comes, so a repository
+holding `package.json` as a pipe stopped the audit dead — and no
+`except OSError` catches that, because there is no error to catch, only a
+process that does not return. The other is quieter: `metrics.unread_source`
+and `_semantic_ts.recorded_type_analysis` tested `is_file()` first, which
+is False for a FIFO, and treated the path as **absent**. That is exactly
+the half of D141 that was left behind: `iter_files` was taught to refuse
+rather than skip, and the sibling walk in the same module was not.
+
+`unread_source` is the worst of the set, because it is the function that
+reports how much of the repository the score describes. A source-suffixed
+FIFO went missing from *both* sides of that fraction — not read, not
+reported unread — so the coverage share read exactly as it would if the
+file had never existed.
+
+**Reproduced** on the fix, by naming the population rather than deriving
+it from the presence of the defect:
+
+    package.json as a FIFO   → refused: … is not a regular file
+    .gitmodules as a FIFO    → refused: … is not a regular file
+    hang.py as a FIFO        → refused: … has a source extension but is not
+                                a regular file
+
+All three return in well under a second. Before the change the first two
+never returned at all.
+
+**Fixed.** Every reader above now goes through `read_source_file` or
+`open_regular_file`; the bounded readers (`_practice`, `_test_commands`,
+`_banner`) keep their limit by reading through the checked handle rather
+than by name, so the head-only reads stay cheap. `_discovery` re-raises
+`PathNotAllowed` explicitly before its `except (OSError, ValueError,
+AttributeError)` clause, because `PathNotAllowed` **is** a `ValueError`
+and would otherwise be swallowed as malformed JSON — a refused path
+reported as bad content is the same class of lie this entry is about.
+`metrics.unread_source` refuses the way `iter_files` refuses.
+
+**This entry stays Open, and the fix is not what is missing.** Its
+falsifier is `tests/test_tree_reads_use_the_primitive.py`, and that file
+cannot pass or even collect:
+
+- `test_every_tree_read_uses_a_regular_file_primitive` asserts `reads`
+  and then asserts `not reads` on the same list. No state of the code
+  satisfies both. The non-empty clause the falsifier standard requires
+  belongs on the population the sweep *walks*, not on the violations it
+  finds — this is the standard's own clause applied to the wrong list.
+- `test_discovery_refuses_metadata_fifos_without_blocking` derives its
+  parameters from "functions in `_discovery.py` that call `read_text`",
+  which is the defect. Fixing the defect empties the parameter set and
+  the file stops collecting with `Empty parameter set`. A check that can
+  only run while the bug is present proves nothing about its absence.
+- The sweep's population is also wider than the defect's: it flags every
+  `read_text`/`open` in the package, including `_catalog` reading the
+  packaged catalog, `_mcp_resources` reading shipped docs, and
+  `_skill_install` reading its own payload. None of those is a
+  repository-controlled path, and their modules are outside the paths
+  this cycle may write.
+
+*Closing test:* pending. The population belongs in the test as a written
+list of repository-controlled readers checked against the modules, or as
+a sweep whose non-empty assertion is on the files walked. Named here so
+the next writer seat has the correction rather than the symptom.
+
+*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
+*Mutation:* stated for the falsifier this entry owes, not for the one it
+has. The member to break is `_practice._read` — reverting it alone to
+`path.read_text` while every other reader stays fixed — because it is a
+reader the FIFO probe does not name and the sweep would have to reach on
+its own. Breaking `_discovery` instead would be the sample the entry was
+written from.
+
+### D146 — Closed: `--check` read a plus-only fragment as file content (High)
+
+`check_content` refuses a unified diff, and D138 widened that to a
+hunk-only paste. This is the paste one step smaller again and the
+commonest of the three: an agent copies the green lines out of a review
+pane and pipes them in. No `@@`, no `---`/`+++`, so every shape check
+passed it through, the brace scanners found nothing in
+`+function hello() {`, and `declarations_read` came back **true**.
+
+**Population.** Every suffix in `DECLARATION_SUFFIXES` — 33 of them —
+because the refusal is a property of the content's shape and not of any
+one language's parser. The contract parametrizes over the constant, so a
+suffix added tomorrow is covered on the day it is added.
+
+That matters here specifically: D133 closed this door for Python only,
+because Python was the language with a parser in the standard library
+that happened to refuse a diff. Every widening since has been a widening
+of the *shape* rule, and each one was written from the example that was
+reported. Stating the rule instead — a body whose every non-blank line
+begins with `+` or `-` is a diff fragment — is what makes the next
+fragment shape covered without a fourth entry.
+
+**The mention-versus-assertion guard survives by construction rather
+than by luck.** Somebody writing *about* a diff writes prose or code
+around the quoted line — `text = '+function hello()'` — and that
+surrounding line does not begin with a mark, so the body is not
+all-marked and parses normally. A mark has to hold column one of every
+line to count, which is the same guard `_HUNK_HEADER`'s anchored `match`
+gives the hunk check. Context lines carry a space rather than a mark, so
+a pasted *excerpt* of a hunk's context is still read as the file's own
+text, which is the ordinary case and stays working.
+
+The second test in that file is a **guard**, not a falsifier. It passes
+at the base by design, because its job is to prove the widening did not
+cost the mention-versus-assertion behaviour that already worked, so it
+is described here and deliberately left out of the citation below.
+
+*Closing test:* `test_plus_only_fragment_is_not_read_as_source` in
+`tests/test_check_refuses_plus_only_fragments.py`, parametrized over
+`DECLARATION_SUFFIXES`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
+*Mutation:* the member broken is `.html`, a suffix neither the fragment
+example nor the guard example names — `+<div>` and `+</div>` as a
+two-line body. It sits outside the sample because the reported instance
+was a brace-language function body, and a fix written from it could have
+keyed on `{`/`}` and still passed every example in the entry. The
+parametrization is over `DECLARATION_SUFFIXES`, so the test names no
+suffix at all and the mutation has to come from the constant.
+
+### D147 — Closed: the audited tree could persist host execution authority (High)
+
+D35 established that a **user** enables `analyzers.acquire_tools`, and
+`acquisition_permitted` reads the XDG user tier alone so a repository
+cannot grant itself `npx --yes`. Two staged setup writers handed the
+repository's own document to `write_user_answers`.
+
+**Population.** Every call site of `write_user_answers` — three:
+`_persist_answers`, which correctly writes the setup payload, and
+`_apply_bounds` and `_apply_command`, which wrote `stored`: the
+repository's `maintainability-agent.json`, read back and passed through.
+So a repository containing
+
+    "analyzers": {"acquire_tools": true},
+    "test_execution": {"requested": true},
+    "expected_commands": {"test": ["…"]}
+
+plus **any** stage-two reply — the labor rates, or the test command —
+copied all three into the user tier. `acquisition_permitted` then read
+its own tier and answered true. The check was never wrong; it had been
+told the tree's answers were the person's.
+
+The mechanism is worth naming because it is not a missed validation. Both
+writers built one dict for the repository write and reused it for the
+user write, and at the moment they were written the two documents held
+the same fields. The tier boundary was carried by a variable name.
+
+**A second half, on the seam that runs commands rather than installing
+them.** `suite_opted_in` read `test_execution.requested` and
+`expected_commands.test` from the *merged* config, where a repository
+beats a person by design. So four lines in a pull request opted the host
+in and chose the program, with no setup reply needed at all. Decision 9's
+guarantee is that no opt-in means no spawn; the tree was writing its own
+opt-in. Both halves now come from the user tier through
+`opted_in_command`, the command as well as the request — a person
+consents to the command they were shown at setup, and leaving the command
+to the repository would keep the consent and hand back the choice of what
+it means.
+
+**pylint stays selected, and this is the one place the audit prompt asked
+for a change that the measurement does not support.** The prompt directed
+that pylint be refused by selection the way eslint was in D39, unless
+[Decision 9](decisions.md) were amended. Decision 9 does not need
+amending, because pylint as shipped does not execute the tree's
+configuration. Measured on pylint 4.0.8 against the exact scenario:
+
+| `.pylintrc` in the tree | shipped `--rcfile=/dev/null` | init-hook |
+|---|---|---|
+| `[MAIN] init-hook=…` | present | **did not fire** |
+| `[MAIN] init-hook=…` | absent (control) | fired |
+| `[MASTER] init-hook=…` | absent (control) | fired |
+| `[tool.pylint.main]` in `pyproject.toml` | present | **did not fire** |
+
+The D39 flag holds. Refusing pylint by selection would drop the `style`
+and `structure` concerns for Python and buy nothing, and this project's
+rule is that a capability is removed on a proven gap rather than a
+suspected one. Nothing was written into `SECURITY.md` in place of a fix.
+
+The staged contract for it —
+`test_selected_pylint_does_not_import_a_module_from_the_tree` — passes,
+but **vacuously**: its payload is `init-hook=import poison`, and `import
+poison` raises `ModuleNotFoundError` even with no isolation at all,
+because the audited tree's directory is not on `sys.path` when the hook
+runs. Its control does not demonstrate the attack, so its pass says
+nothing. Recorded here rather than fixed, because this cycle may not
+write `tests/`; the working payload is in the table above.
+
+Two of the five tests in that file are **guards** and are deliberately
+left out of the citation below, because both pass at the base by design.
+The first asserts the `write_user_answers` sweep is not empty, which is
+the falsifier standard's own non-vacuity clause rather than a defence of
+this fix. The second asserts the pylint property `--rcfile=/dev/null`
+already held — the measurement recorded above, and the reason pylint
+stays selected.
+
+*Closing test:*
+`test_bounds_only_reply_cannot_copy_repo_authority_to_user_tier`,
+`test_command_only_reply_cannot_copy_repo_acquisition_to_user_tier`,
+and `test_repo_test_command_cannot_opt_in_a_user_who_said_no` in
+`tests/test_tree_cannot_opt_the_host_in.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
+*Mutation:* the member broken is `_apply_bounds`, and the mutation is not
+"put the repository document back". It is the narrower one a fix written
+from the report would survive: keep `_user_tier_with` but seed it from
+`_read_config` instead of `user_config_answers`, so the merge is right
+and the source is wrong. That sits outside the sample because the closing
+tests name neither writer — they sweep `write_user_answers` call sites
+and then exercise both staged replies through `apply_answers`, so a third
+writer added tomorrow is covered and a wrong *source* fails the same way
+a wrong *shape* does.
 ## Disposition
 
-**Every entry is closed.** D143 and D144 closed on 2026-09-09 from Grok's audit of `39a91b9` — a caveat that named five anchored languages, and an environment remedy that addressed whichever `pip` `PATH` found. D142 closed the same day, found by the agent
+**One entry is open: D145.** Its fix is in — every repository-controlled read now goes through the regular-file door — but its falsifier cannot run: the staged sweep asserts its violation list is both non-empty and empty, and the FIFO parametrization derives its cases from the very `read_text` calls the fix removes, so fixing the defect empties the parameter set and the file stops collecting. A fix whose proof cannot execute is not closed, whatever the code does.
+
+D143, D144, D146 and D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it. D142 closed on 2026-09-09, found by the agent
 auditing itself over MCP: the analyzer pool was invisible because `locate` did
 not search where `pip install` actually writes on a system Python, and the
 resulting fallback reported a *better* grade than the truthful scan. The four

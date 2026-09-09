@@ -4,6 +4,59 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+## 3.0.2 - 2026-09-09
+
+### Fixed — the analyzer pool was invisible to any system-Python install
+
+**A silently degraded audit scored *better* than a correct one.** Found by
+running this agent against its own repository through the MCP server, the
+surface [product intent](docs/product-intent.md) calls primary. Nine
+analyzers reported "not installed or not on PATH" — the whole Python pool,
+`lizard` and `complexipy` among them — so `declarations` fell to the
+built-in tier.
+
+Every one of them was installed. `locate` searched the interpreter's own
+`bin` and then `PATH`, on the assumption that "Python analyzers install
+alongside the agent". That holds in a virtualenv. On a **system** Python it
+does not: the framework directory is not writable, `pip` falls back to
+`--user`, and the console script lands in the per-user scripts directory —
+on macOS `~/Library/Python/3.11/bin`, which is on neither list and not on
+the default `PATH`.
+
+So the environment work order told the operator to run `pip install
+lizard`, they had already done exactly that, and the next audit reported it
+missing again. **The remedy the product prescribes could not fix the
+problem the product reports** — for any operator on a system Python, which
+is the install path the README itself offers first.
+
+Measured on this repository, same commit and config:
+
+| | pool invisible | pool visible |
+|---|---|---|
+| tools contributed | 0 of 13 | 9 of 13 |
+| verified grade | **B** | **C** |
+
+The estimate did not move; the grade did, and downward. A degradation that
+flatters the score is the worst direction for a silent failure, because
+nothing in the result asks to be looked at — the gate passed, the letter
+improved, and the only signal was a work order whose instruction had
+already been followed.
+
+Both script directories are now derived from the running interpreter:
+`sys.executable`'s parent, then `sysconfig.get_path("scripts", ...)` under
+the preferred user scheme. Neither is hardcoded, so this is not a macOS
+patch. `PATH` remains the last resort, so tools installed by homebrew or a
+system package manager — `jscpd` and `pmd` here — still resolve.
+
+Filed as D142 with a falsifier and four guards written from the opposite
+direction, because the dangerous fix is one that widens the search until
+something is always found and names a tool that cannot run.
+
+**A note for MCP users:** the server is a long-lived process and holds the
+module it imported at start-up. After upgrading, restart it — reloading the
+editor window is enough — or it will keep reporting the old result.
+
+
 ## 3.0.1 - 2026-09-08
 
 ### Fixed — Grok's post-2.11.0 audit, closed in full

@@ -80,6 +80,7 @@ flowchart TB
   subgraph scanners["scanners"]
     metrics["metrics"]
     _discovery["_discovery"]
+    _delegated_pillar["_delegated_pillar"]
     _banner["_banner"]
     _operator_reads["_operator_reads"]
     _practice["_practice"]

@@ -137,6 +137,12 @@ SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "id
             # reporting every unit, `_verdict_adapters` for tools reporting
             # only threshold breaches, `_tool_adapters` for the registry
             # naming them. The base module keeps only shared plumbing.
+            # `_delegated_pillar` reads `security-pillar.json` from the
+            # audited tree — the artifact secure-code-agent writes for
+            # the pillar ADR 007 delegates to it. A scanner because it
+            # reads a path the repository chooses; it computes nothing,
+            # and scoring may not import it.
+            "_delegated_pillar",
             "_metric_adapters", "_verdict_adapters", "_jvm_adapters",
             # `_ratio_adapters` holds the two tools that report a rate
             # for the whole tree rather than a reading per declaration —

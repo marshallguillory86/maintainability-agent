@@ -140,7 +140,64 @@ def _condition(aspects: tuple[str, ...], scores: dict[str, Any]) -> float | None
     return round(sum(values) / len(values), 2) if values else None
 
 
-def pillar_report(score: dict[str, Any], practice: dict[str, Any]) -> list[dict[str, Any]]:
+#: What a delegated pillar's entry takes from the producer's document.
+#: Named rather than copied wholesale, so a field added upstream cannot
+#: appear in this tool's report carrying meaning nobody here has checked.
+CARRIED = (
+    "practice",
+    "condition",
+    "condition_letter",
+    "posture",
+    "verified_grade",
+    "evidence_status",
+    "evidence_reasons",
+    "coverage",
+    "findings_by_severity",
+    "reported_not_scored",
+    "loc_scanned",
+)
+
+
+def delegated_entry(pillar_name: str, document: dict[str, Any]) -> dict[str, Any]:
+    """The pillar block for a pillar another tool measured.
+
+    Both axes as the producer reported them, and no mean of them: the
+    prohibition is ADR 007 §2's and it does not weaken because the
+    numbers arrived from somewhere else. The producer's own module
+    carries the same guard.
+
+    `scope` stays `delegated` — this tool still does not measure
+    security, and the document does not change that. What changes is
+    that the entry now carries the measurement instead of an apology for
+    not having one, and names who made it.
+    """
+    entry: dict[str, Any] = {
+        "pillar": pillar_name,
+        "scope": "delegated",
+        "reason": str(document.get("reason") or ""),
+        "delegated_to": (document.get("producer") or {}).get("tool"),
+        "producer_version": (document.get("producer") or {}).get("version"),
+        "generated": document.get("generated"),
+        "aspects": [],
+    }
+    for field in CARRIED:
+        if field in document:
+            entry[field] = document[field]
+    # The practice axis is a block here and an integer in this tool's own
+    # pillars. Both are reported; flattening the producer's block to its
+    # level would throw away the signals that name the files proving it,
+    # which are the only reason a maturity level is checkable at all.
+    practice = document.get("practice")
+    if isinstance(practice, dict) and "level" in practice:
+        entry["practice_level"] = practice["level"]
+    return entry
+
+
+def pillar_report(
+    score: dict[str, Any],
+    practice: dict[str, Any],
+    delegated: dict[str, dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
     """The pillar block exactly as it ships.
 
     Practice arrives as an argument rather than being computed here.
@@ -151,9 +208,19 @@ def pillar_report(score: dict[str, Any], practice: dict[str, Any]) -> list[dict[
     acquire a special case for a particular repository.
     """
     resolved = practice
+    handed_over = delegated or {}
     aspects = score.get("aspects") or {}
     report: list[dict[str, Any]] = []
     for pillar in PILLARS:
+        # A delegated pillar reports what the tool that owns it measured,
+        # when that tool left a document. `NotApplicable` was always a
+        # placeholder for this: security is a pillar of the source
+        # framework, out of scope here by design, and the point of
+        # declaring the scope was to make the handoff sayable rather than
+        # to close the question (ADR 007 §1).
+        if pillar.scope is Scope.DELEGATED and pillar.name in handed_over:
+            report.append(delegated_entry(pillar.name, handed_over[pillar.name]))
+            continue
         measured = (
             _condition(pillar.aspects, aspects)
             if pillar.scope in (Scope.OWNED, Scope.PARTIAL)

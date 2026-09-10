@@ -72,6 +72,26 @@ jobs:
             exit 1
           fi
 
+      # "No release until the known-defect ledger is empty" was a rule
+      # nothing enforced. v3.1.0 was tagged at 17:13 with a defect that
+      # had been reported twice in wrap-ups and never filed, so the
+      # register read zero and the release went out; the entry (D148)
+      # was written three hours later. A gate that only sees filed
+      # entries cannot catch an unfiled one — but it does catch the
+      # ordinary case, and it makes the rule real instead of remembered
+      # (D151).
+      - name: Refuse to release with an open defect entry
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -euo pipefail
+          open=$(grep -cE '^### D[0-9]+ — Open' docs/defect-register-chat-surface.md || true)
+          echo "open register entries: $open"
+          if [ "$open" != "0" ]; then
+            echo "::error::$open open entry/entries in docs/defect-register-chat-surface.md; a release cuts from an empty ledger"
+            grep -nE '^### D[0-9]+ — Open' docs/defect-register-chat-surface.md
+            exit 1
+          fi
+
       # The package's own claims should hold for the artifact being
       # shipped, not just for the working tree.
       - name: Test the built package

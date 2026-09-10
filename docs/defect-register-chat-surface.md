@@ -5615,9 +5615,105 @@ reported instance cannot show. It sits outside the sample because every
 other case in that file asserts a pairing *succeeds*.
 
 
+### D150 — Closed: the terminal asked five of the seven setup questions (Medium)
+
+`docs/cli.md`: an interactive first run on a TTY is "the **same** setup
+questions as chat/MCP". `_first_run.maybe_prompt_first_run`'s own
+docstring: "One setup, not one per surface." It asked five of seven.
+
+`default_format` is legitimately absent — ADR 011 §3 asks it on every
+invoke rather than once at setup. The other was **economics**, and
+nothing was asked in its place: a terminal user was never offered the
+economic scenario, never told it existed, and got reports without money
+in them having declined nothing.
+
+**Population.** Every question `setup_questions` defines — the shared
+definition chat and MCP both render. Seven today.
+
+**How it survived.** The prose claim was true of six of the seven, and a
+reader checking it would have found the questions they went looking for.
+The absent one is invisible from the terminal, because a question that
+is never asked leaves nothing on screen to notice. This is the shape
+D25 and D22 already recorded on this surface: the product had the
+capability and the door did not offer it.
+
+**Found and then not filed.** It was reported in a wrap-up on 2026-09-09
+as "CLI asking five of seven" and, when the D143 slice took the other
+three items in that list, left as a note. Nothing carried it. That is
+the corollary this register's own rule states — anything reported as
+still open gets filed in the same turn — and D151 is the entry about
+breaking it.
+
+**Fixed.** The terminal asks the economics gate, and only the gate: the
+three labor rates stay the staged second ask `economics_bounds_pending`
+raises on the next call, the same shape the other surfaces use. Asking
+three rates of somebody who has just declined is the defect staging
+already fixed, and the terminal inherits the fix rather than a copy.
+
+*Closing test:* `test_the_terminal_asks_every_setup_question` and
+`test_the_economic_scenario_is_among_them` in
+`tests/test_terminal_asks_the_same_questions.py`, which derive the
+population from `setup_questions` rather than listing it.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is `record_scan_history` — removed from
+the terminal's answers while `economics` stays. It sits outside the
+sample because the reported instance was economics and the closing
+test names economics only in its second assertion; the sweep has to
+reach a question nobody has ever seen go missing, which is the whole
+reason it derives from `setup_questions` instead of listing names.
+
+### D151 — Closed: a release was cut while a known defect was unfiled (High)
+
+The standing rule is "no release until the known-defect ledger is
+empty", and its corollary is that anything reported as still open gets
+**filed in the same turn**, because a ledger that gates a release has to
+be the whole ledger rather than a list plus what somebody remembers.
+
+v3.1.0 was tagged at 17:13 on 2026-09-10. The caveat's grammar had been
+reported to Marshall twice as a known wart — once in the 3.1.0 hand-off
+itself, in the same message that called the release clean. It was filed
+as D148 at 20:16, three hours after the tag.
+
+So the register read zero open entries at release time, and the release
+was correct by every check that existed. **The ledger was empty because
+the defect was never written down.**
+
+**Population.** Every release. Nothing in `.github/workflows/release.yml`
+read the register at all; `test_written_record` holds the disposition to
+*describing* the open headings, which keeps the register internally
+consistent and says nothing about whether a tag may be cut while entries
+are open. The rule was enforced by whoever was paying attention.
+
+**Fixed structurally**, per the standing rule that an audit finding a
+class of bug ships the check that blocks the class. `release.yml` now
+greps the register for open-entry headings and refuses the tag if any
+exist, before the build.
+
+**What the gate cannot do, stated plainly.** It sees filed entries. It
+cannot see a defect somebody declined to write down, which is exactly
+what happened here. The half that failed was the corollary, and no check
+enforces "file what you know" — the gate closes the ordinary case and
+makes the rule real rather than remembered. Claiming more for it would
+be the same error one layer up.
+
+*Closing test:* `test_the_release_workflow_reads_the_register` and
+`test_the_gate_matches_the_heading_the_register_actually_uses` in
+`tests/test_release_needs_an_empty_ledger.py`.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is the gate's **pattern**, not its
+presence — changing the em dash in `### D[0-9]+ — Open` to a hyphen.
+The step still runs, still greps, still reports "open register entries:
+0", and passes every release while the register holds open entries. It
+sits outside the sample because the reported instance was an absent
+gate, and a test written from that instance would assert the step
+exists — which the mutated workflow satisfies.
+
+
 ## Disposition
 
-**Every entry is closed.** D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

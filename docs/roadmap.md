@@ -26,6 +26,27 @@ The evidence model, its property tests, consumer migration and the version-2 con
 
 `render_hostile_audit_prompt` is now the third emitter on the prompt seam beside `render_ai_prompt` and `render_agent_instructions` — CLI `--hostile-prompt-output`, MCP prompt `maintainability-hostile-audit`. It seeds the adversary from one run: the commit under audit, the evidence already computed (what ran, what did not, which concepts nothing measured), P1–P8 with the shape of evidence that falsifies each, and the audit contract this project already holds itself to. The boundary is ADR 008's: **the deterministic core seeds the hostile audit; it never performs it.** No gate, no score, nothing written or sent.
 
+## The fifth pillar is delegated, not absent
+
+**Shipped in 3.2.0.** [ADR 007](adr-007-pillars-and-practice.md)'s security pillar
+was always outside what a deterministic maintainability scanner can read,
+so it reported nothing. It now reports what a *delegate* measured: MA
+reads `.maintainability/security-pillar.json`, written by
+[`secure-code-agent`](https://github.com/marshallguillory86/secure-code-agent),
+and renders the producer, its practice level and its condition beside the
+four pillars MA computes itself.
+
+This is the boundary the [Then](#then) section already names — security
+scanning is a neighbouring tool's job, and the better it gets the more an
+independent maintainability reading is worth. Delegation is how the two
+compose without either claiming the other's measurement. The file is a
+boundary in the ADR 008 sense: absent, malformed, wrongly-typed or
+self-contradicting input resolves to *no delegated pillar*, never to a
+partial one, and the two axes are still never averaged.
+
+MA does not run the delegate and does not install it. A repository with
+no such file reports exactly what it reported before.
+
 ## Next
 
 **The recalibration**, *as this entry read on 2026-09-04, before it shipped.* It was the only scheduled work, and everything that touched measurement queued behind it — six then-unanchored languages (Swift, COBOL, Go, Rust, PHP, Ruby), plus the two built-in changes recorded in [corpus policy](#corpus-policy-recalibrate-once-after-the-remaining-scanners-land): deleting the per-language cyclomatic regexes, and merging analyzer evidence per concept rather than per dimension.

@@ -4,6 +4,84 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+## 3.2.0 - 2026-09-10
+
+### Added — the security pillar reports what secure-code-agent measured
+
+ADR 007's fifth pillar was never MA's to measure. It is now **delegated**
+rather than absent: if `.maintainability/security-pillar.json` exists and
+carries the `secure-code-agent/security-pillar` v1 schema, the pillar
+table names the producer, its practice level and its condition, and both
+the chat and HTML reports render it alongside the four MA computes.
+
+The file is treated as a boundary, not as trusted input. A missing file,
+a directory, unparseable JSON, a non-object, an unknown schema, a
+mistyped field, or a posture that disagrees with the level and condition
+it was derived from all resolve to "no delegated pillar" — never to a
+partial one. The two axes are still never averaged.
+
+No delegate, no change: a repository without the file reports exactly
+what it reported before.
+
+### Fixed — pairing read filenames, so 52 tested modules were called untested (D149)
+
+`describe_tdd` paired a production module only when some test file's
+subject stem matched it — `test_scoring.py` covers `scoring.py`. That is
+one convention stated as if it were the only one, and every suite
+organised by *behaviour* was reported as having untested production code.
+
+The tool did it to itself. The 3.1.0 self-audit raised 58
+`unpaired-hotspot` findings against 146 production files; 52 of those
+modules were imported by at least one test, under a suite at 94.46%
+coverage with a single module below 82%.
+
+Pairing now accepts a test that **names or imports** a unit. Python reads
+the imports from the AST rather than a regex; the regex path is retained
+for JS/TS, Java and Fortran.
+
+**Reported numbers move.** A repository whose suite is behaviour-named
+will see `unpaired-hotspot` findings drop and its testability aspect
+rise. Nothing about the repository changed — the previous reading was
+wrong.
+
+### Changed — an interactive terminal asks all seven setup questions (D150)
+
+`docs/cli.md` promised an interactive first run on a TTY is "the same
+setup questions as chat/MCP". It asked five of seven. `default_format` is
+legitimately absent (ADR 011 §3 asks it per invocation); **economics was
+simply missing**, and nothing was asked in its place, so a terminal user
+was never offered the economic scenario and got reports without money in
+them having declined nothing.
+
+**Minor rather than patch, because first-run behaviour changes.** A
+terminal user who has not yet configured a repository is now asked one
+more question than before, and answering it changes what their reports
+contain.
+
+### Changed — a release build refuses to run while the ledger has an open entry (D151)
+
+v3.1.0 was tagged at 17:13 with a known defect that was not filed until
+20:16 — a violation of the project's own standing rule, caught by nothing
+because nothing checked. The release workflow now greps the defect
+register for `### D<n> — Open` and fails before the build if it finds
+one. The gate is unconditional: it runs on every trigger, not only on
+tag pushes, so it cannot pass by never having run.
+
+### Fixed — four sentences said "COBOL are parsed" (D148)
+
+Sentences built around a count agreed with the wrong noun when the count
+was one. A small `_grammar` module now supplies the verb, pronoun and
+possessive for a quantity, and the four callers take agreement from it
+rather than hard-coding the plural.
+
+### Fixed — the security job in this repository's own CI ran without its config
+
+`quality-gates.yml` invoked `secure-code-agent` with no `--config`, so
+`secure-code-agent.json` sat in the tree unread and the job scanned under
+defaults. Repository hygiene rather than a shipped defect, recorded here
+because the audit that found it is the same one that produced the pillar
+integration above.
+
 ## 3.1.0 - 2026-09-09
 
 ### Changed — a repository can no longer opt the host into running its own code

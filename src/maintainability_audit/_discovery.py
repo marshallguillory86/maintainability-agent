@@ -315,18 +315,44 @@ def _asset_snapshot_directories(root: Path, excludes: tuple[str, ...]) -> dict[s
     }
 
 
+def _sorted_by_kind(
+    files: list[Path],
+) -> tuple[list[Path], list[Path], list[str]]:
+    """Markup pages, source files, and the other suffixes present.
+
+    One pass, three answers. It was three comprehensions re-testing the
+    same two memberships, which read as cyclomatic 15 in sixteen lines —
+    the joint-highest in the package and one branch from failing the
+    gate — for a function whose actual job is "sort these into three
+    piles".
+
+    The two tests deliberately stay independent rather than becoming an
+    `elif` chain: `.html` is both a markup suffix and a known source
+    suffix, so it belongs in *both* piles, and an `elif` would quietly
+    drop it from `code` and change what the ratio below compares.
+    """
+    markup: list[Path] = []
+    code: list[Path] = []
+    other: set[str] = set()
+    for found in files:
+        lowered = found.suffix.lower()
+        is_markup = lowered in _MARKUP_SUFFIXES
+        is_code = found.suffix in KNOWN_SOURCE_SUFFIXES
+        if is_markup:
+            markup.append(found)
+        if is_code:
+            code.append(found)
+        if found.suffix and not is_markup and not is_code:
+            other.add(lowered)
+    return markup, code, sorted(other)
+
+
 def _asset_evidence(files: list[Path]) -> str | None:
     """Why a directory is a saved page asset, or None."""
     versioned = sorted(f.name for f in files if _VERSIONED_SNAPSHOT.search(f.name))
     if versioned:
         return f"versioned page snapshot(s): {', '.join(versioned[:3])}"
-    markup = [f for f in files if f.suffix.lower() in _MARKUP_SUFFIXES]
-    code = [f for f in files if f.suffix in KNOWN_SOURCE_SUFFIXES]
-    siblings = sorted({
-        f.suffix.lower() for f in files
-        if f.suffix and f.suffix.lower() not in _MARKUP_SUFFIXES
-        and f.suffix not in KNOWN_SOURCE_SUFFIXES
-    })
+    markup, code, siblings = _sorted_by_kind(files)
     if len(markup) >= 2 and len(markup) > len(code) and siblings:
         return (f"{len(markup)} HTML/CSS pages outnumbering source, beside "
                 f"non-source assets ({', '.join(siblings[:4])})")

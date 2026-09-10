@@ -46,23 +46,40 @@ def render_check(result: dict[str, Any]) -> list[str]:
     if not result["declarations_read"]:
         lines.append(f"  ? {result['note']}")
     for item in findings:
-        where = f":{item['line']}" if item.get("line") else ""
-        over = item["over_by"]
-        # `None` means the declaration failed on a rule no budget names,
-        # so there is no figure to give. "over by None" would be worse
-        # than the sentence without it (D132).
-        detail = f" — {over} over" if over is not None else " — over its budget"
-        lines.append(f"  ✗ {item['name']}{where}{detail}")
-        lines.append(f"    → {item['target']}")
+        lines.extend(_breach_lines(item))
     lines.extend(_room_line(entry) for entry in tight)
-    if file_room["band"] != "ok" and not any(
-        item["finding_class"] == "oversized-file" for item in findings
-    ):
-        lines.append(
-            f"  ! file — {file_room['lines']} of {file_room['limit']} lines, "
-            f"{file_room['remaining']} left"
-        )
+    lines.extend(_file_room_lines(file_room, findings))
     return lines
+
+
+def _breach_lines(item: dict[str, Any]) -> list[str]:
+    """One breach: what broke, and what to do about it."""
+    where = f":{item['line']}" if item.get("line") else ""
+    over = item["over_by"]
+    # `None` means the declaration failed on a rule no budget names,
+    # so there is no figure to give. "over by None" would be worse
+    # than the sentence without it (D132).
+    detail = f" — {over} over" if over is not None else " — over its budget"
+    return [f"  ✗ {item['name']}{where}{detail}", f"    → {item['target']}"]
+
+
+def _file_room_lines(
+    file_room: dict[str, Any], findings: list[dict[str, Any]]
+) -> list[str]:
+    """The file's own budget, unless a finding already said it.
+
+    Suppressed when an `oversized-file` finding is present: that finding
+    reports the same breach with a remedy attached, and printing both
+    tells an agent there are two problems to fix.
+    """
+    if file_room["band"] == "ok":
+        return []
+    if any(item["finding_class"] == "oversized-file" for item in findings):
+        return []
+    return [
+        f"  ! file — {file_room['lines']} of {file_room['limit']} lines, "
+        f"{file_room['remaining']} left"
+    ]
 
 
 def check_json(result: dict[str, Any]) -> str:

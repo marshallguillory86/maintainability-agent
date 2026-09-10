@@ -129,6 +129,26 @@ def prompt_escalation_note(report: dict[str, Any]) -> list[str]:
     ]
 
 
+def _withheld_paragraph(report: dict[str, Any]) -> list[str]:
+    """Name what was deliberately left out, so its absence is not a gap.
+
+    An agent that finds a Major Project in the report but not in the
+    prompt has to guess whether it was withheld or missed. Saying so
+    costs four lines and removes the guess.
+    """
+    withheld = [i for i in (report.get("work_order") or [])
+                if i["band"] == "major-project"]
+    if not withheld:
+        return []
+    names = ", ".join(sorted({i["title"] for i in withheld})[:3])
+    return [
+        f"**Not in scope for this change:** {len(withheld)} finding(s) need a "
+        f"design decision before code moves ({names}). They are in the report. "
+        "Do not attempt them here.",
+        "",
+    ]
+
+
 def prompt_work_order(report: dict[str, Any]) -> list[str]:
     """The ordered work, leading the prompt, Major Projects withheld.
 
@@ -170,17 +190,7 @@ def prompt_work_order(report: dict[str, Any]) -> list[str]:
         f"Verify with: `{items[0]['verification']}`",
         "",
     ])
-
-    withheld = [i for i in (report.get("work_order") or [])
-                if i["band"] == "major-project"]
-    if withheld:
-        names = ", ".join(sorted({i["title"] for i in withheld})[:3])
-        lines.extend([
-            f"**Not in scope for this change:** {len(withheld)} finding(s) need a "
-            f"design decision before code moves ({names}). They are in the report. "
-            "Do not attempt them here.",
-            "",
-        ])
+    lines.extend(_withheld_paragraph(report))
     return lines
 
 

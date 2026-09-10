@@ -94,22 +94,12 @@ def _validated_value(name: str, value: Any, provenance: str) -> float | int | bo
     return value
 
 
-def _check_relations(
+def _check_subsets(
     states: dict[str, EvidenceState],
     subsets: tuple[tuple[str, str], ...],
-    sums: tuple[tuple[tuple[str, ...], str], ...],
     prefix: str,
 ) -> None:
-    """Reject counts that contradict what the producer guarantees.
-
-    Cross-field validation, which the boundary originally had none of
-    and then had only for the pairs an audit named. A subset larger than
-    its set, or statuses summing past their population, describes a
-    repository the scanner could not have produced.
-
-    Only ``Measured`` values participate: an unknown constrains nothing,
-    and must not be treated as zero to manufacture a violation.
-    """
+    """No named part may outnumber the whole it is drawn from."""
     for part_name, whole_name in subsets:
         part, whole = states[part_name], states[whole_name]
         if isinstance(part, Measured) and isinstance(whole, Measured) and part.value > whole.value:
@@ -117,6 +107,14 @@ def _check_relations(
                 f"{prefix}.{part_name} ({part.value}) exceeds "
                 f"{prefix}.{whole_name} ({whole.value}): a subset cannot be larger than its set"
             )
+
+
+def _check_sums(
+    states: dict[str, EvidenceState],
+    sums: tuple[tuple[tuple[str, ...], str], ...],
+    prefix: str,
+) -> None:
+    """Mutually exclusive statuses may not outnumber their population."""
     for part_names, whole_name in sums:
         # Narrowed by construction rather than by `all(isinstance(...))`,
         # which tells a reader — and a type checker — nothing about the
@@ -133,6 +131,28 @@ def _check_relations(
                 f"{prefix}: {' + '.join(part_names)} ({total}) exceeds "
                 f"{prefix}.{whole_name} ({whole.value}): each member of a population has one status"
             )
+
+
+def _check_relations(
+    states: dict[str, EvidenceState],
+    subsets: tuple[tuple[str, str], ...],
+    sums: tuple[tuple[tuple[str, ...], str], ...],
+    prefix: str,
+) -> None:
+    """Reject counts that contradict what the producer guarantees.
+
+    Cross-field validation, which the boundary originally had none of
+    and then had only for the pairs an audit named. A subset larger than
+    its set, or statuses summing past their population, describes a
+    repository the scanner could not have produced.
+
+    Only ``Measured`` values participate: an unknown constrains nothing,
+    and must not be treated as zero to manufacture a violation. The two
+    relations are checked separately because they are two claims about
+    the producer, not two halves of one.
+    """
+    _check_subsets(states, subsets, prefix)
+    _check_sums(states, sums, prefix)
 
 
 def _state(source: dict[str, Any], name: str, prefix: str, missing_reason: str) -> EvidenceState:

@@ -55,6 +55,35 @@ class Deselected:
     reason: str = "inventory"
 
 
+def _resolve_adapter(
+    tool: dict[str, Any], root: Path,
+    excludes: Sequence[str], class_dirs: tuple[str, ...],
+) -> tuple[Any, tuple[str, ...], bool]:
+    """The adapter for a slug, the languages it reads, and whether it
+    can see artifacts here.
+
+    Resolution is not adjudication: this answers "what is this tool and
+    what can it see", and says nothing about whether it should run. Kept
+    apart so the four outcomes below read as four rules rather than as
+    rules interleaved with setup.
+    """
+    adapter = adapter_for(tool["slug"]) or declared_adapter(tool["slug"])
+    reads = tuple(
+        str(name).lower()
+        for name in (getattr(adapter, "languages", ()) or tool.get("languages") or ())
+    )
+    if adapter is not None and hasattr(adapter, "class_dirs"):
+        # analyzers.class_dirs for the adapter that reads compiled
+        # output (ADR 012). Assigned on EVERY run — including back
+        # to empty — because the registry holds one instance per
+        # process and configured dirs must not leak between audits.
+        # Before the gate below: that gate consults has_targets.
+        adapter.class_dirs = class_dirs
+    finds_targets = getattr(adapter, "has_targets", None) if adapter else None
+    has_artifacts = finds_targets is not None and finds_targets(root, excludes)
+    return adapter, reads, has_artifacts
+
+
 def _tool_outcome(
     tool: dict[str, Any], root: Path, inventory: Any,
     excludes: Sequence[str], class_dirs: tuple[str, ...],
@@ -73,20 +102,7 @@ def _tool_outcome(
     four outcomes here and each is now reachable in a test without
     constructing a pool.
     """
-    adapter = adapter_for(tool["slug"]) or declared_adapter(tool["slug"])
-    reads = tuple(
-        str(name).lower()
-        for name in (getattr(adapter, "languages", ()) or tool.get("languages") or ())
-    )
-    if adapter is not None and hasattr(adapter, "class_dirs"):
-        # analyzers.class_dirs for the adapter that reads compiled
-        # output (ADR 012). Assigned on EVERY run — including back
-        # to empty — because the registry holds one instance per
-        # process and configured dirs must not leak between audits.
-        # Before the gate below: that gate consults has_targets.
-        adapter.class_dirs = class_dirs
-    finds_targets = getattr(adapter, "has_targets", None) if adapter else None
-    has_artifacts = finds_targets is not None and finds_targets(root, excludes)
+    adapter, reads, has_artifacts = _resolve_adapter(tool, root, excludes, class_dirs)
 
     # Artifact-read tools are gated by their artifacts, not by source
     # languages: a tree holding `.class` files reaches SpotBugs whatever

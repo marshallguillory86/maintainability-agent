@@ -14,8 +14,8 @@ from pathlib import Path
 from maintainability_audit._anchor import UNANCHORED_LANGUAGES, unanchored_sentence
 from maintainability_audit._html_view import _executive_strip
 from maintainability_audit._metrics_types import KNOWN_SOURCE_SUFFIXES
+from maintainability_audit._prompt_sections import prompt_pressure_section
 from maintainability_audit.declarations import DECLARATION_SUFFIXES
-from maintainability_audit.prompts import prompt_pressure_section
 from maintainability_audit.renderers import summary_table
 from maintainability_audit.scoring import _reference_block
 

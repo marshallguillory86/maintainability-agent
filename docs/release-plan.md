@@ -174,7 +174,7 @@ Implements [ADR 007](adr-007-pillars-and-practice.md) and the actionable half of
 
 | # | Task | Exit condition |
 |---|---|---|
-| 4.1 | `_pillars`: taxonomy with declared scope | Every report shows five pillars; two always `NotApplicable` with reasons |
+| 4.1 | `_pillars`: taxonomy with declared scope | Every report shows five pillars, each with its scope and reason. Efficiency is permanently `NotApplicable`; Security reports `secure-code-agent`'s measurement when that tool has left one and `NotApplicable` naming it otherwise (ADR 007, amended 2026-09-10) |
 | 4.2 | `_practice`: enforcement detection from CI and config | Reads configuration only — enforced by test; a repo with no CI cannot exceed level 2 |
 | 4.3 | Practice and condition never averaged | No function returns their mean; asserted structurally |
 | 4.4 | Risk × Effort metadata per finding class | Declared in `standard.md` as a stated judgment, not buried in code |

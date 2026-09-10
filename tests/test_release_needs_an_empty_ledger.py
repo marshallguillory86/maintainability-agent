@@ -63,11 +63,15 @@ def test_the_gate_matches_the_heading_the_register_actually_uses() -> None:
 
 
 def test_the_register_currently_has_no_open_entries() -> None:
-    """The ledger this repository would release from, right now.
+    """Covers existing behaviour: the ledger this repository releases from.
 
-    Not a style check: this is the state the rule requires before a tag,
-    and it is worth failing in the ordinary suite rather than only in a
-    release build, where the tag already exists.
+    A guard, not a falsifier. It asserts the register's current state,
+    which was already empty before this change and is meant to stay
+    that way — so it passes at any base where the rule is being kept,
+    which is the point of it.
+
+    Worth having in the ordinary suite rather than only in the release
+    build: there, the tag already exists by the time anything checks.
     """
     register = REGISTER.read_text(encoding="utf-8")
     still_open = OPEN_HEADING.findall(register)

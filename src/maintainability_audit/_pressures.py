@@ -305,32 +305,6 @@ def declined_dimensions(
     },)
 
 
-def _breach_counts(
-    per_unit: dict[str, dict[str, float]], thresholds: dict[str, Any]
-) -> tuple[int, int]:
-    """Units failing or warning on *any* criterion, counted once each.
-
-    Matches `declarations.function_status`: a declaration is one failure
-    however many limits it breaks. Counting per criterion would
-    double-count the worst code, which is the direction that flatters
-    nothing but is wrong all the same.
-    """
-    failures = warnings = 0
-    for values in per_unit.values():
-        failed = warned = False
-        for concept, warn_key, fail_key in DECLARATION_CRITERIA:
-            value = values.get(concept)
-            if value is None or warn_key not in thresholds or fail_key not in thresholds:
-                continue
-            if value > float(thresholds[fail_key]):
-                failed = True
-            elif value > float(thresholds[warn_key]):
-                warned = True
-        failures += failed
-        warnings += warned and not failed
-    return failures, warnings
-
-
 @dataclass(frozen=True)
 class ExternalPressures:
     """A second source's reading of the scorer's dimensions, both populations.

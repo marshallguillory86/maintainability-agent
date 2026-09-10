@@ -146,6 +146,7 @@ flowchart TB
 
   subgraph foundations["foundations"]
     _metrics_types["_metrics_types"]
+    _grammar["_grammar"]
     _masking["_masking"]
     _hotspots["_hotspots"]
     config["config"]

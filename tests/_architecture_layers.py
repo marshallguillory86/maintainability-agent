@@ -31,6 +31,14 @@ PACKAGE = ROOT / "src" / "maintainability_audit"
 # Keeping the foundation spawners in one layer is what makes the
 # analyzer half of that rule checkable.
 FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "config",
+               # `_grammar` answers "how many are we talking about" for a
+               # sentence built from a measured population. A foundation
+               # because both the scorer (the corpus note) and the skins
+               # (the caveat beside a grade) need the same answer, and
+               # four hand-written copies of it shipped "COBOL are
+               # parsed" once the unanchored set became one (D148). It
+               # holds no report key and computes no score.
+               "_grammar",
                # `_operator_reads` is the one door for reading a file this
                # tool was told to read. It sits below `config` rather than
                # inside it: the user tier reads a file, `config` loads the

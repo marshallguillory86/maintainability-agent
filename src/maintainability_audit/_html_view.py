@@ -24,6 +24,7 @@ from typing import Any
 
 from . import _charts
 from . import _evidence_view as view
+from ._grammar import agreement
 from ._html_report_sections import coverage_section, remaining_sections, trend_section
 from ._semantic_view import semantic_class_label
 from ._work_order_view import prompt_body_lines
@@ -94,9 +95,10 @@ def _unanchored_html(score: dict[str, Any]) -> list[str]:
     names = view.unanchored_languages(score)
     if not names:
         return []
-    return [f"<div class='caveat'>{escape(' and '.join(names))} are parsed but "
-            "are not in the reference corpus, so a grade for code in them is "
-            "provisional.</div>"]
+    say = agreement(len(names))
+    return [f"<div class='caveat'>{escape(' and '.join(names))} {say.verb} "
+            f"parsed but {say.verb} not in the reference corpus, so a grade "
+            f"for code in {say.object_pronoun} is provisional.</div>"]
 
 
 def _executive_strip(report: dict[str, Any], score: dict[str, Any],

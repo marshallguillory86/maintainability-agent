@@ -19,7 +19,15 @@ visible if the refusals are written down with their evidence.
 
 Two of the six non-trivial items here are refusals. Both are cases where
 the detector was **correct by its own rule** and the right engineering
-answer was still "no". That is the interesting half of the run.
+answer was still "no".
+
+A third category turned out to matter more. Fifty-two items were first
+recorded here as refusals — correct findings under a convention this
+repository does not use — and that was a mistake. A tool emitting 52
+false positives every run has a defect, not a disagreement. The section
+below records the original reasoning, why it did not follow, and the fix
+(D149). **A refusal is a disposition; it is not a place to put a defect
+you would rather not fix.**
 
 ## The starting state
 
@@ -175,52 +183,66 @@ parser **refuses** a wrong shape because the *declaration* is wrong,
 while the line parser **skips** a non-object because the tool is merely
 talking. Thirteen tests; `_generic` coverage 60.4% → 89%.
 
-### Refused: 52 modules the suite covers, under a different convention
+### Corrected: the 52 were a defect in the tool, not a difference of opinion
 
-The rule encodes a naming convention. This repository deliberately uses
-another one, and the numbers are not close:
+**This section originally recorded 52 refusals. That was wrong, and the
+correction is the most useful thing in this document.**
 
-| Test files | Named after a module | Named after a behaviour |
-|---:|---:|---:|
-| 219 | **4** | **215** |
+The reasoning was: the rule encodes a naming convention, this repository
+deliberately uses another (219 test files — **215 named after a
+behaviour, 4 after a module**), the code is demonstrably exercised at
+94.46%, therefore the findings are false positives to be documented and
+declined.
 
-`test_written_record.py`, `test_falsifier_standard.py`,
-`test_anchor_disclosure.py`, `test_acquisition_trust.py` — the suite is
-organised by *the behaviour under test*, not by the module that happens
-to implement it. That is a deliberate choice with a stated reason, and
-this project's own remediation rules give it: **"avoid tests that only
-lock implementation details."** A file named for a module invites tests
-about that module's shape; a file named for a behaviour survives the
-refactor that moves the behaviour.
+Every fact in that paragraph is true. The conclusion did not follow.
 
-Adding 52 files named `test_scoring.py`, `test_report.py` and so on would
-clear 52 work-order items and add no coverage whatsoever. That is
-contorting the code to satisfy a metric, which the same rules forbid in
-the same sentence.
+A tool that emits 52 false positives on every run of the repository that
+ships it does not have a documentation problem. It has a **defect**, and
+writing the 52 down in a file while the tool goes on printing them is
+the failure this project's own workflow header warns about in the next
+sentence over: *"A pipeline that fails on a warning teaches people to
+ignore it, and then it protects nothing."*
 
-**The detector is not wrong.** It cannot see coverage, and it is asking a
-question worth asking. The answer here happens to be "we organise
-differently, and here is the measurement showing the code is exercised".
-Recording that answer is what stops the question being re-asked every run
-— and if this repository ever *did* stop testing one of these modules,
-the coverage gate at 92% is what would catch it, not the file name.
+**What the rule should have asked.** Pairing tested whether a test file
+was *named* for a module. The question worth asking is whether a test
+*exercises* it, and the evidence for that was already sitting unread in
+the test files: **52 of the 58 import the module they were said not to
+cover.** An import is a fact about the relationship; a filename is a
+guess about it.
 
-### Refused: 5 developer scripts outside the coverage target
+Fixed in D149 — pairing now accepts either signal:
 
-`tools/build_catalog.py`, `tools/calibration/measure.py`,
-`select_authored.py`, `measure_cohorts.py`, `measure_fix_breadth.py`.
+| | before | after |
+|---|---:|---:|
+| work-order items | 60 | **8** |
+| `unpaired-hotspot` | 58 | **6** |
+| paired production files | 7 / 146 | **111 / 146** |
+| estimate / grade | 4.1 / C | 4.1 / C |
+| `scanner_fingerprint` | `0f08242164497d73` | **unchanged** |
 
-These build the analyzer catalog and run the calibration study. They are
-not shipped in the wheel, they are not on any user's path, and they are
-excluded from the coverage target deliberately. A unit test named for one
-of them would assert against a script whose contract is "it produced the
-corpus we then pinned". The corpus *is* the artifact under version
-control, and `_calibration.py` holds the provenance.
+**A second correction, on the cost.** The fix was first deferred on the
+grounds that pairing feeds `test_presence`, which moves
+`scanner_fingerprint` and invalidates all 180 corpus rows — so it would
+need a full re-measure and a release of its own. That was asserted from
+how the change felt and never checked. `_test_pairing` is not in
+`MEASUREMENT_PATH`; the fingerprint is byte-identical either side of the
+change. `test_presence` reads 5.0 both ways, because it asks whether
+tests exist at all rather than what fraction is paired.
 
-Worth stating rather than dismissing: this is the weakest of the three
-refusals. A calibration script that silently changed its selection rule
-would be a serious problem, and the reason it is not a coverage problem
-is that its output is pinned and reviewed, not that it is unimportant.
+**The cost used to justify the delay did not exist.** An unverified
+estimate did the work of a reason, which is the same shape as a claim in
+prose standing in for a check — the mechanism this register was opened
+to track.
+
+### The six that remain, and they are honest
+
+`tools/build_catalog.py`, `tools/calibration/select_authored.py`,
+`tools/calibration/measure_cohorts.py` — developer scripts outside the
+coverage target, whose output is pinned and reviewed rather than
+unit-tested. `_ranges_core`, `_html_report_sections` and `_semantic_ts`
+are reached by tests only transitively, through the modules that import
+them. Both groups are worth a look rather than a dismissal, and neither
+is noise.
 
 ## What this run is evidence for
 
@@ -229,10 +251,13 @@ Three claims, each with something in this document behind it.
 1. **A deterministic gate produces a backlog a human can actually
    adjudicate.** 64 items, every one traceable to a rule, none requiring
    the reader to trust the tool's judgment over their own.
-2. **The refusals are the quality signal, not the fixes.** Two items were
-   correctly flagged and correctly declined. A process that cannot record
-   "no, and here is why" will either contort the code or leave the item
-   open forever, and both are worse than the third option.
+2. **A refusal is a disposition, not a hiding place.** Two items were
+   correctly flagged and correctly declined, and that is a real outcome a
+   process must be able to record. But 52 more were *also* filed as
+   refusals here, with sound reasoning, and they were a defect. The
+   difference is a question worth asking of any backlog: **would this
+   finding be wrong on somebody else's repository too?** If it would, it
+   is not a local judgment call — it is a bug in the check.
 3. **The knowledge worth preserving is usually in a comment, not in the
    duplication.** The single most valuable outcome of the ruff/fortitude
    merge was not removing sixteen duplicated lines; it was turning a

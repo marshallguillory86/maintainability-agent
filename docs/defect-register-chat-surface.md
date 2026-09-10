@@ -5481,9 +5481,143 @@ tests name neither writer — they sweep `write_user_answers` call sites
 and then exercise both staged replies through `apply_answers`, so a third
 writer added tomorrow is covered and a wrong *source* fails the same way
 a wrong *shape* does.
+### D148 — Closed: four sentences said "COBOL are parsed" (Low)
+
+D143 corrected `UNANCHORED_LANGUAGES` to `("COBOL",)`. Four sentences
+built from that constant kept the plural they were written with: the
+corpus note inside the score object, the Markdown caveat, the HTML strip
+beside the letter, and `unanchored_sentence` itself. Every skin that
+grades a COBOL repository printed **"COBOL are parsed but are not in the
+reference corpus, so a grade or multiple reported for code in them is
+provisional"**.
+
+Low severity and filed anyway, because the mechanism is the one this
+register exists for and the cost of not filing it was demonstrated: it
+was reported to Marshall twice as a known wart and fixed neither time.
+
+**Population.** Four call sites, and a contract test that asserted the
+literal `f"{expected_names} are parsed"` — so the wrong grammar was
+**pinned by a check** rather than caught by one. That is the sharpest
+part of this entry. A test written from the sample it was built on
+(six languages, plural correct) survived the population changing under
+it and then enforced the error.
+
+**Fixed** by making the number derivable. `_grammar.agreement(count)` is
+a foundation returning the verb, pronouns and quantity for a subject of
+that size; the four sentences ask it and keep their own wording. A
+foundation rather than a helper on `_anchor` because the scorer and the
+presentation layer both need the answer, and presentation may not import
+scoring — an attempt to put it in `_anchor` was correctly refused by
+`test_presentation_never_computes_a_score`.
+
+The architecture gate also caught the first draft returning a dict: a
+`say["grade"]` subscript reads, to the sweep hunting for score keys
+removed in ADR 001 stage 8, exactly like a report dictionary being
+indexed. A `NamedTuple` is unambiguous to that check and to a reader.
+
+*Closing test:* `test_every_grade_skin_prints_the_derived_unanchored_caveat`
+in `tests/test_unanchored_set_matches_corpus.py`, which now derives its
+verb from the population instead of asserting the plural.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is `unanchored_sentence` — the corpus note
+inside the score object, which no rendered skin produces and which the
+closing test reaches through `_reference_block` rather than by name.
+Hardcoding `are` there passes every skin assertion that names a
+renderer, because the note is data the scorer writes rather than a
+presentation the reader sees rendered.
+
+### D149 — Closed: pairing read filenames, and called 52 tested modules untested (High)
+
+`describe_tdd` paired a production file when some test file's *subject
+stem* matched it: `test_scoring.py` covers `scoring.py`. That is one
+convention, stated as if it were the only one, and every repository that
+organises its suite by **behaviour** is reported as having untested
+production code.
+
+**Found by the tool doing it to itself.** The 3.1.0 self-audit raised 58
+`unpaired-hotspot` items — 58 of 146 production files. Measured against
+what the suite actually does:
+
+| | |
+|---|---|
+| Unpaired modules reported | 58 |
+| Imported by at least one test file | **52** |
+| Suite coverage | **94.46%** |
+| Modules below 82% coverage | **1** |
+
+**The module's own docstring had already named this failure**, for the
+case of adding a language without teaching it that language's test
+naming: *"reports every repository in it as having untested production
+code — a confident finding, wrong on every project, of exactly the kind
+this tool exists to prevent."* The rule then did precisely that to the
+repository shipping it, because the warning was written about languages
+and the defect was about conventions.
+
+**Population.** Every pairable language — `PAIRABLE` is eight suffix
+families — and every repository in any of them that does not name test
+files after modules. On this one, 52 of 58 findings were false. The
+Python ecosystem's ordinary pytest layout is behaviour-named, so the
+false-positive rate is not a property of this repository.
+
+**Fixed** by widening the *evidence*, not the convention. A unit is
+paired when a test file names it **or imports it**. An import is a fact
+about the relationship; a filename is a guess about it, and the fact was
+already sitting in the test files unread. The scan reads Python, JS/TS,
+Java and Fortran import forms in the same pass that already counts test
+constructs, so it costs no additional file reads.
+
+    work-order items   60 -> 8
+    unpaired-hotspot   58 -> 6
+    paired files        7/146 -> 111/146
+    estimate, grade    4.1, C -> 4.1, C   (unchanged)
+
+**No corpus impact, and the first claim about this was wrong.** This
+entry was originally deferred on the grounds that pairing feeds
+`test_presence`, which moves `scanner_fingerprint` and invalidates all
+180 stored rows. That was asserted from how the change felt rather than
+checked. `_test_pairing` is **not in `MEASUREMENT_PATH`**, and the
+fingerprint is byte-identical before and after the change
+(`0f08242164497d73`). `test_presence` also reads 5.0 either way: it asks
+whether tests exist at all, not what fraction is paired. The cost used to
+defer the fix did not exist.
+
+Three bugs were found in the fix by its own falsifier before it shipped,
+each of which would have made the rule worse than the one it replaced:
+`./scoring.js` resolved to `js` (extension read as a module segment,
+pairing every JS file against any test importing another); `import y
+from './report'` collected `y`, a JavaScript binding name, through the
+Python branch; and `import static com.example.Helper.thing` resolved to
+the *member* rather than the class. All three fail in the flattering
+direction — reporting less work than exists.
+
+Six findings remain and they are honest: four `tools/` scripts outside
+the coverage target, and `_ranges_core` and `_html_report_sections`,
+which tests reach only transitively.
+
+*Closing test:* `test_an_import_form_names_its_subject`,
+`test_a_file_extension_is_not_read_as_a_module_segment`,
+`test_a_javascript_binding_name_is_not_a_subject` and
+`test_a_module_imported_by_a_behaviour_named_test_is_paired` in
+`tests/test_pairing_reads_imports.py`.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=local
+*Seat:* `test=claude` again, and recorded for the same reason as D145 —
+this falsifier is owed an adversarial read because its author wrote the
+fix. It did catch three real bugs in that fix, which is the argument for
+writing it, not a substitute for review.
+*Mutation:* the member broken is
+`test_a_module_no_test_names_or_imports_is_still_unpaired` — the guard
+that the widened rule still finds real gaps. A fix that paired
+everything would satisfy every other test in the file and report a clean
+tree, which is the failure mode a widening invites and the one the
+reported instance cannot show. It sits outside the sample because every
+other case in that file asserts a pairing *succeeds*.
+
+
 ## Disposition
 
-**Every entry is closed.** D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

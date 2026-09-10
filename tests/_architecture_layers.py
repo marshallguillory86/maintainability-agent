@@ -138,6 +138,12 @@ SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "id
             # only threshold breaches, `_tool_adapters` for the registry
             # naming them. The base module keeps only shared plumbing.
             "_metric_adapters", "_verdict_adapters", "_jvm_adapters",
+            # `_ratio_adapters` holds the two tools that report a rate
+            # for the whole tree rather than a reading per declaration —
+            # jscpd's duplication ratio and interrogate's docstring
+            # percentage. Split from `_metric_adapters` at the 500-line
+            # gate; a scanner either way, and it measures nothing itself.
+            "_ratio_adapters",
             "_tool_adapters", "_selection"}
 # `_bands` joins the rubric-data leaves: it is the band matrix, a table
 # of judgments like `_formula`, and imports nothing internal.

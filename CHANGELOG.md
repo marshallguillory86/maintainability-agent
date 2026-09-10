@@ -4,6 +4,140 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+## 3.1.0 - 2026-09-09
+
+### Changed — a repository can no longer opt the host into running its own code
+
+**Minor rather than patch, because a config key stops taking effect.** If a
+repository's `maintainability-agent.json` sets
+`test_execution.requested: true`, its suite will no longer run. The opt-in
+now comes from the user tier alone. A person who answered the setup
+question is unaffected; a repository that answered it for them is ignored.
+
+[Decision 9](docs/decisions.md) says this agent does not execute the
+audited tree's code, amended by Class 5 to "unless the operator opted in
+and configured a command". `suite_opted_in` read both halves of that
+opt-in from the **merged** config, where a repository beats a person by
+design — so four lines in a pull request opted the host in and chose the
+program, with no reply from anybody:
+
+```json
+"test_execution": {"requested": true},
+"expected_commands": {"test": ["…"]}
+```
+
+That is [D35](docs/defect-register-chat-surface.md)'s trust inversion on
+the one seam that runs an arbitrary command rather than installing a
+package, so it is the same defect with a shorter path to execution
+(D147).
+
+`load_config` now strips `test_execution.requested` out of the repository
+tier before the merge. The check stays where it was, so `suite_opted_in`
+and `run_test_suite` remain pure functions of the config they are handed —
+what a caller, a test and a reader all expect — and the tier question
+lives in the one function whose job is deciding which tier wins.
+
+`expected_commands.test` is deliberately **not** stripped. That key is
+documentation — "this is how you test me" — and the `require_test_command`
+hard gate reads it to require that a repository declares one. Removing it
+would fail that gate on every repository doing the right thing, to stop a
+threat the key does not carry: a command nobody opted in to running is
+inert. **Authority is the opt-in; the command is documentation.**
+
+*Migration:* if you relied on a repository config to enable suite
+execution, run setup once (`action: "reconfigure"`, or an interactive CLI
+run) and answer the test-execution question. Nothing else changes.
+
+### Fixed — two staged setup replies copied the audited tree into the user tier
+
+`_apply_bounds` and `_apply_command` handed `write_user_answers` the
+**repository's own document**. So a repository declaring
+`analyzers.acquire_tools`, plus *any* stage-two reply — the labor rates,
+or the test command — copied that grant into the user tier, and
+`acquisition_permitted` read its own tier and answered true. The check was
+never wrong; it had been told the tree's answers were the person's.
+
+Not a missed validation. Both writers built one dict for the repository
+write and reused it for the user write, and the tier boundary was carried
+by a variable name. The user tier is now built *from* the user tier, the
+way `_persist_answers` already built it from the setup payload (D147).
+
+### Fixed — repository-controlled reads bypassed the regular-file door
+
+Nine readers took a path the audited tree chooses and read it by name:
+every `package.json` under the root, `.gitmodules`, every CI and toolchain
+file, every discovered file's banner, the checked-in TypeScript analysis,
+every TypeScript source, every manifest, `coverage.xml`, and the whole
+`unread_source` walk.
+
+`read_text` on a FIFO waits for a writer that never comes, so a
+`package.json` named as a pipe stopped an audit dead — and no
+`except OSError` catches that, because there is no error to catch, only a
+process that does not return.
+
+The quieter half is D141's other side: `unread_source` and
+`recorded_type_analysis` tested `is_file()` first, which is False for a
+FIFO, and read the path as **absent**. `unread_source` is the worst of the
+set because it reports what share of the repository the score describes —
+a source-suffixed FIFO went missing from both sides of that fraction, so
+the share read exactly as it would if the file had never existed (D145).
+
+### Fixed — `--check` read a plus-only diff fragment as file content
+
+An agent copies the green lines out of a review pane and pipes them in. No
+`@@`, no `---`/`+++`, so every shape check passed it through, the brace
+scanners found nothing in `+function hello() {`, and `declarations_read`
+came back **true** on all 33 declaration suffixes.
+
+D133 closed this for a whole diff and D138 for a hunk-only paste, each
+written from the example reported. The rule is now stated instead: a body
+whose every non-blank line begins with `+` or `-` is a diff fragment. The
+mention-versus-assertion guard survives by construction — somebody writing
+*about* a diff writes something around the quoted line, and that line does
+not begin with a mark. Context lines carry a space, so a pasted excerpt
+still parses (D146).
+
+### Fixed — the unanchored caveat named five anchored languages
+
+`UNANCHORED_LANGUAGES` still read `("Swift", "COBOL", "Go", "Rust", "PHP",
+"Ruby")` two releases after 3.0.0 anchored five of the six. Every skin that
+prints a grade reads it, so Swift, Go, Rust, PHP and Ruby readers were told
+their grade was provisional against a corpus that had measured 14, 14, 14,
+14 and 12 repositories of their language. A caveat naming an anchored
+language is not a caution; it is a false statement about the evidence
+(D143).
+
+`roadmap.md` and both copies of `standard.md` carried the same claim in
+prose nothing checks, and are corrected with it.
+
+### Fixed — environment remedies addressed whichever `pip` `PATH` found
+
+`environment_work_order` emitted `pip install lizard` and
+`lizard --version`. Neither names the interpreter that just reported the
+tool missing. This is 3.0.2's D142 seen from the other side: on the machine
+where that was found, the work order said `pip install lizard` to someone
+who had run exactly that. Pip-backed adapters now emit
+`{sys.executable} -m pip install <dist>` and verify with `pip show` (D144).
+
+### Changed — this repository's own security gate can now fail
+
+`Audit (maintainability + security)` is a required check here and its
+security half could never trip: `--fail-on-gate` was passed with no
+`secure-code-agent.json` in the tree, so no gate existed. Measured on a
+three-line target with `subprocess.run(cmd, shell=True)` — two HIGH
+findings, grade **F**, `gate PASS`, exit 0.
+
+Now configured rather than dropped, and proven both ways: exit 0 clean,
+exit 1 with a planted sink. The five outstanding criticals were all one
+false positive (`curl -u "$SONAR_TOKEN:"` is a variable, not a literal),
+acknowledged in `.scignore.yaml` with a reason and an expiry rather than
+silenced by lowering a threshold. `secure-code-agent` is pinned: unpinned,
+it changed the meaning of a green build between two runs four hours apart.
+
+**This is CI configuration for this repository, not product integration.**
+The `security` pillar remains `DELEGATED` and this tool still never runs a
+security analyzer.
+
 ## 3.0.2 - 2026-09-09
 
 ### Fixed — the analyzer pool was invisible to any system-Python install

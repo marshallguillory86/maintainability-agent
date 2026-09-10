@@ -7,6 +7,7 @@ the operator opted into suite execution.
 """
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 from typing import Any
@@ -101,6 +102,48 @@ _IMPORT_REFERENCES: tuple[re.Pattern[str], ...] = (
 )
 
 
+def _python_references(text: str) -> set[str] | None:
+    """Real import statements, from the parse tree. `None` if it will not parse.
+
+    Regex over raw text cannot tell an import from a *mention* of one, and
+    a test fixture holding source as a string is an ordinary thing for
+    this tool's own suite to contain:
+
+        fixture = '''
+        import payment_gateway
+        '''
+
+    That paired a real `payment_gateway.py` against a test that never
+    imported it — a phantom pairing, and in the flattering direction this
+    module's own docstring says it must not err. Masking does not help:
+    it blanks the quotes and leaves the line between them.
+
+    The parse tree has no such ambiguity. A string is a string, and only
+    `import`/`from` statements are import nodes. `None` when the file
+    does not parse, so the caller falls back rather than reporting a
+    Python test file as importing nothing.
+    """
+    try:
+        tree = ast.parse(text)
+    except (SyntaxError, ValueError):
+        return None
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                found.add(alias.name.rsplit(".", 1)[-1])
+        elif isinstance(node, ast.ImportFrom):
+            if node.module:
+                found.add(node.module.rsplit(".", 1)[-1])
+            # `from . import scoring` and `from .pkg import scoring` both
+            # name the module. The first has no `module` at all, so a
+            # reader that only looked there saw nothing — a real sibling
+            # import going unpaired, the opposite error and just as wrong.
+            for alias in node.names:
+                found.add(alias.name.rsplit(".", 1)[-1])
+    return {_without_module_suffix(name.lower()) for name in found if name}
+
+
 def referenced_subjects(text: str) -> set[str]:
     """Every subject stem this test file names in an import.
 
@@ -120,6 +163,12 @@ def referenced_subjects(text: str) -> set[str]:
     identical collision through stems, so it is not new, and it errs
     toward reporting less work rather than inventing it.
     """
+    parsed = _python_references(text or "")
+    if parsed is not None:
+        return parsed
+    # Not Python, or not parseable Python. The regex path stays for the
+    # other four languages; it cannot tell an import from a mention, so
+    # it is the fallback rather than the rule.
     found: set[str] = set()
     for pattern in _IMPORT_REFERENCES:
         for raw in pattern.findall(text or ""):

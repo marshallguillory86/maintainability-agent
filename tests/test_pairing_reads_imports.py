@@ -152,3 +152,62 @@ def test_a_module_no_test_names_or_imports_is_still_unpaired(tmp_path) -> None:
     assert described["paired_production_files"] == 0, (
         "a module nothing names or imports was reported paired"
     )
+
+# --- a mention is not an import --------------------------------------------
+
+def test_source_inside_a_string_literal_does_not_pair(tmp_path) -> None:
+    """A fixture holding source as a string is not a test of that module.
+
+    This repository's own suite is full of them. Regex over raw text
+    cannot tell an import from a mention, so
+
+        fixture = '''
+        import payment_gateway
+        '''
+
+    paired a real `payment_gateway.py` against a test that never
+    imported it — a phantom pairing, in the flattering direction this
+    rule exists to avoid. Masking does not reach it either: it blanks
+    the quotes and leaves the line between them. The parse tree does.
+    """
+    phantom = 'fixture = """\nimport payment_gateway\n"""\n'
+    assert referenced_subjects(phantom) == set(), (
+        "source quoted inside a string was read as an import"
+    )
+
+    (tmp_path / "src").mkdir()
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "src" / "payment_gateway.py").write_text("def charge():\n    return 1\n", encoding="utf-8")
+    (tmp_path / "tests" / "test_quotes_it.py").write_text(
+        phantom + "\ndef test_nothing():\n    assert True\n", encoding="utf-8")
+    described = describe_tdd(
+        tmp_path,
+        [_file("src/payment_gateway.py"), _file("tests/test_quotes_it.py")],
+        [],
+    )
+    assert described["paired_production_files"] == 0, (
+        "a module was paired by a test that only quotes its name"
+    )
+
+
+def test_a_comment_naming_an_import_does_not_pair() -> None:
+    """The same mention-versus-assertion rule, one syntax over."""
+    assert referenced_subjects("# import payment_gateway\n") == set()
+
+
+@pytest.mark.parametrize("source", [
+    "from . import scoring",
+    "from .scoring import total",
+    "from ..pkg.scoring import total",
+])
+def test_a_relative_sibling_import_pairs(source: str) -> None:
+    """`from . import scoring` is a real import and was returning nothing.
+
+    The opposite error to the phantom above, and just as wrong: a test
+    that genuinely exercises a sibling module was reporting it unpaired.
+    The regex path had no case for an import statement whose module part
+    is empty.
+    """
+    assert "scoring" in referenced_subjects(source), (
+        f"{source!r} did not name scoring: {sorted(referenced_subjects(source))}"
+    )

@@ -76,12 +76,20 @@ jobs:
       # nothing enforced. v3.1.0 was tagged at 17:13 with a defect that
       # had been reported twice in wrap-ups and never filed, so the
       # register read zero and the release went out; the entry (D148)
-      # was written three hours later. A gate that only sees filed
-      # entries cannot catch an unfiled one — but it does catch the
-      # ordinary case, and it makes the rule real instead of remembered
-      # (D151).
-      - name: Refuse to release with an open defect entry
-        if: startsWith(github.ref, 'refs/tags/')
+      # was written three hours later (D151).
+      #
+      # **Unconditional, and the first cut was not.** It ran only for a
+      # tag ref, so `workflow_dispatch` — which this file documents as
+      # the way to publish a chosen ref — walked straight past it. A
+      # gate on one of two publishing paths is not a gate.
+      #
+      # What it cannot do, said precisely rather than flatteringly: it
+      # does not "refuse a tag". Pushing a tag creates it, and this
+      # workflow runs afterwards. It refuses the *publish*, which is
+      # what matters, and leaves a tag that has to be moved or deleted.
+      # Nor can it see a defect nobody wrote down — that is the
+      # corollary about filing in the same turn, which no check reaches.
+      - name: Refuse to publish with an open defect entry
         run: |
           set -euo pipefail
           open=$(grep -cE '^### D[0-9]+ — Open' docs/defect-register-chat-surface.md || true)

@@ -79,3 +79,72 @@ def test_the_register_currently_has_no_open_entries() -> None:
         f"{len(still_open)} open register entries; a release cuts from an "
         f"empty ledger: {still_open}"
     )
+
+def _build_steps() -> list[dict[str, str]]:
+    """The build job's steps, as name/if/run text.
+
+    Split by hand rather than with a YAML parser: `PyYAML` is
+    deliberately kept off the test extra — `test_declared_imports`
+    refuses it, because it would pull a catalog-regeneration parser into
+    every test install. A step here is the block from one `- name:` to
+    the next, which is all this file needs to know.
+    """
+    steps: list[dict[str, str]] = []
+    inside = False
+    for line in _release_workflow().splitlines():
+        stripped = line.strip()
+        if stripped.startswith("- name:") and line.startswith("      - name:"):
+            steps.append({"name": stripped[len("- name:"):].strip(), "if": "", "run": ""})
+            inside = True
+            continue
+        if not inside or not steps:
+            continue
+        if line and not line.startswith("       ") and not stripped.startswith("- "):
+            inside = False
+            continue
+        if stripped.startswith("if:"):
+            steps[-1]["if"] = stripped[3:].strip()
+        steps[-1]["run"] += line + "\n"
+    return steps
+
+
+def _ledger_steps() -> list[dict[str, str]]:
+    found = [s for s in _build_steps() if "defect-register-chat-surface.md" in s["run"]]
+    assert found, "no step in the release workflow reads the defect register"
+    return found
+
+
+def test_no_publishing_trigger_skips_the_ledger_check() -> None:
+    """Every path that can publish must pass the gate, not just a tag push.
+
+    The first cut ran only for `refs/tags/`, so `workflow_dispatch` —
+    which this workflow's own header documents as the way to publish a
+    chosen ref — walked past it with an open register. A gate on one of
+    two publishing paths is not a gate.
+
+    The earlier test searched the workflow text and proved the step
+    *existed*, which the conditional version satisfied. A condition is
+    invisible to a substring search, so this reads the step's own `if`.
+    """
+    assert "workflow_dispatch" in _release_workflow(), (
+        "this test exists because workflow_dispatch can publish; if that "
+        "trigger is gone, the reasoning here needs rechecking"
+    )
+    for step in _ledger_steps():
+        assert not step["if"], (
+            f"the ledger check is conditional on {step['if']!r}; a publishing "
+            "trigger that does not match it publishes with an open register"
+        )
+
+
+def test_the_gate_runs_before_anything_is_built_or_published() -> None:
+    """Order matters: refusing after the upload is not refusing."""
+    steps = _build_steps()
+    names = [s["name"] for s in steps]
+    ledger = next(
+        i for i, s in enumerate(steps) if "defect-register-chat-surface.md" in s["run"]
+    )
+    built = next(i for i, n in enumerate(names) if "Test the built package" in n)
+    assert ledger < built, (
+        f"the ledger check is step {ledger}, after the build at {built}"
+    )

@@ -106,4 +106,76 @@ def read_delegated(root: Path, relative: str = DEFAULT_PILLAR_PATH) -> dict[str,
         return None
     if payload.get("schema_version") != SCHEMA_VERSION:
         return None
-    return payload
+    return payload if _is_well_formed(payload) else None
+
+
+#: Fields whose *shape* the consumer depends on. A header check alone
+#: accepts any object announcing the right schema, and the pillar then
+#: reads these as if the producer had promised them.
+_SHAPES: tuple[tuple[str, type | tuple[type, ...]], ...] = (
+    ("producer", dict),
+    ("practice", dict),
+    ("condition", (int, float, type(None))),
+    ("posture", (str, type(None))),
+    ("evidence_status", (str, type(None))),
+    ("coverage", (dict, type(None))),
+    ("findings_by_severity", (dict, type(None))),
+    ("reported_not_scored", (dict, type(None))),
+)
+
+#: The postures this tool knows how to render. A document naming one it
+#: does not is refused rather than printed through: the word is the
+#: reader's whole summary of the pillar.
+_POSTURES = frozenset({"healthy", "managed debt", "unmanaged debt", "unverified"})
+
+
+def _is_well_formed(payload: dict[str, Any]) -> bool:
+    """Whether the document's fields are the shapes the pillar reads.
+
+    The header said what the document *claims to be*; this asks whether
+    it is. Checking only `schema` accepted
+    `{"producer": "not-an-object", ...}`, which the pillar then indexed
+    as a mapping and crashed on — a well-formed announcement with a
+    malformed body, which is the shape a header check cannot see.
+
+    Also refused: a `posture` this tool cannot render, and a `posture`
+    the document's own two axes do not support. The second is the one
+    worth stating. `healthy` requires practice at or above
+    `HIGH_PRACTICE` and a condition at or above `GOOD_CONDITION`; a
+    document claiming `healthy` at practice 1 is either a different
+    matrix or a mistake, and either way this tool must not print it.
+    Both tools are supposed to mean the same thing by the word — the
+    consumer is where that is checkable.
+    """
+    for name, kinds in _SHAPES:
+        if name in payload and not isinstance(payload[name], kinds):
+            return False
+    practice = payload.get("practice")
+    if isinstance(practice, dict) and not isinstance(practice.get("level"), int):
+        return False
+    posture = payload.get("posture")
+    if posture is not None and posture not in _POSTURES:
+        return False
+    return _posture_agrees(payload)
+
+
+def _posture_agrees(payload: dict[str, Any]) -> bool:
+    """Whether the stated posture follows from the two axes given.
+
+    Recomputed rather than trusted. The matrix and its thresholds are
+    `_pillars.py`'s, copied into the producer by value, and a copied
+    constant is a constant that can drift — so the one place the two
+    can be compared is here, against a document carrying both inputs
+    and the answer.
+    """
+    from ._pillars import posture as compute
+
+    stated = payload.get("posture")
+    practice = payload.get("practice")
+    if stated is None or not isinstance(practice, dict):
+        return True
+    level = practice.get("level")
+    condition = payload.get("condition")
+    if not isinstance(level, int):
+        return False
+    return compute(level, condition) == stated

@@ -5572,15 +5572,35 @@ constructs, so it costs no additional file reads.
     paired files        7/146 -> 111/146
     estimate, grade    4.1, C -> 4.1, C   (unchanged)
 
-**No corpus impact, and the first claim about this was wrong.** This
-entry was originally deferred on the grounds that pairing feeds
+**The first claim about this was wrong, and so was the correction.**
+
+The entry was originally deferred on the grounds that pairing feeds
 `test_presence`, which moves `scanner_fingerprint` and invalidates all
 180 stored rows. That was asserted from how the change felt rather than
-checked. `_test_pairing` is **not in `MEASUREMENT_PATH`**, and the
-fingerprint is byte-identical before and after the change
-(`0f08242164497d73`). `test_presence` also reads 5.0 either way: it asks
-whether tests exist at all, not what fraction is paired. The cost used to
-defer the fix did not exist.
+checked, and it is false: `_test_pairing` is **not in
+`MEASUREMENT_PATH`**, and `test_presence` reads 5.0 either way — it asks
+whether tests exist at all, not what fraction is paired.
+
+The correction then overreached in the other direction. It said the
+fingerprint was "byte-identical before and after the change
+(`0f08242164497d73`)". True of the pairing module in isolation. **False
+of the commit**, which also carried `_metric_adapters.py` and
+`_selection.py`, both in `MEASUREMENT_PATH`. Measured across the three
+commits of this slice:
+
+    eee8f4c  0f08242164497d73   before
+    08e4517  da4ac5e217816ff3   D149 landed, with the splits
+    116bc7f  c2b249230840d3cd   after the pillar work
+
+So corpus **reuse is invalidated** by this slice and the next
+re-measure cannot reuse stored rows. The constants are not known to have
+moved — the splits are refactors and change no measurement — but that is
+a separate question from reuse, and the fingerprint is deliberately a
+byte digest so that nobody has to decide which refactors were safe.
+
+Recorded rather than edited away because the mechanism is the entry's
+own subject: a measurement of one thing, stated about another. Found by
+a hostile audit of the commit that carried the correction.
 
 Three bugs were found in the fix by its own falsifier before it shipped,
 each of which would have made the rule worse than the one it replaced:
@@ -5686,16 +5706,32 @@ consistent and says nothing about whether a tag may be cut while entries
 are open. The rule was enforced by whoever was paying attention.
 
 **Fixed structurally**, per the standing rule that an audit finding a
-class of bug ships the check that blocks the class. `release.yml` now
-greps the register for open-entry headings and refuses the tag if any
-exist, before the build.
+class of bug ships the check that blocks the class. `release.yml` greps
+the register for open-entry headings and fails the build job if any
+exist, before anything is built or uploaded.
 
-**What the gate cannot do, stated plainly.** It sees filed entries. It
-cannot see a defect somebody declined to write down, which is exactly
-what happened here. The half that failed was the corollary, and no check
-enforces "file what you know" — the gate closes the ordinary case and
-makes the rule real rather than remembered. Claiming more for it would
-be the same error one layer up.
+**What the gate cannot do, and the first version of this paragraph got
+it wrong twice.**
+
+It does not "refuse the tag". Pushing a tag *creates* it; this workflow
+runs afterwards. What it refuses is the **publish**, which is the thing
+that matters, and it leaves behind a tag that has to be moved or
+deleted — exactly the mess D124 describes from the other direction.
+
+It also ran only for a tag ref in its first cut, so `workflow_dispatch`
+— which this workflow's own header documents as the way to publish a
+chosen ref — walked straight past it. A gate on one of two publishing
+paths is not a gate. It is now unconditional, and
+`test_no_publishing_trigger_skips_the_ledger_check` parses the workflow
+rather than grepping it, because a condition is invisible to a substring
+search and a text search is what let the first version pass.
+
+And it sees only *filed* entries. It cannot see a defect somebody
+declined to write down, which is exactly what happened here. That half
+is the corollary, and no check enforces "file what you know".
+
+All three limits found by a hostile audit of the commit that shipped
+this entry, which had claimed the first of them as a capability.
 
 *Closing test:* `test_the_release_workflow_reads_the_register` and
 `test_the_gate_matches_the_heading_the_register_actually_uses` in

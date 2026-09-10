@@ -183,13 +183,22 @@ def delegated_entry(pillar_name: str, document: dict[str, Any]) -> dict[str, Any
     for field in CARRIED:
         if field in document:
             entry[field] = document[field]
-    # The practice axis is a block here and an integer in this tool's own
-    # pillars. Both are reported; flattening the producer's block to its
-    # level would throw away the signals that name the files proving it,
-    # which are the only reason a maturity level is checkable at all.
+
+    # `practice` is an **integer** in every entry, because every renderer
+    # prints it into a column beside the others and a dict lands in that
+    # cell as `{'level': 5, 'summary': ...}`. The first cut of this carried
+    # the producer's block under that key and did exactly that: the data
+    # was right and the report was garbage, which is this project's
+    # oldest failure shape — the product produced the right thing and
+    # nothing told the reader.
+    #
+    # The block is kept whole under `practice_detail`, because the signals
+    # naming the files that prove a maturity level are the only reason it
+    # is checkable, and flattening to the number would throw that away.
     practice = document.get("practice")
-    if isinstance(practice, dict) and "level" in practice:
-        entry["practice_level"] = practice["level"]
+    if isinstance(practice, dict):
+        entry["practice"] = practice.get("level")
+        entry["practice_detail"] = practice
     return entry
 
 

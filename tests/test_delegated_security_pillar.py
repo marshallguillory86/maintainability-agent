@@ -153,7 +153,7 @@ def test_a_trusted_document_becomes_the_pillar(tmp_path: Path) -> None:
     assert entry["scope"] == "delegated", "this tool still does not measure security"
     assert entry["delegated_to"] == "secure-code-agent"
     assert entry["producer_version"] == "0.5.0"
-    assert entry["practice_level"] == 5
+    assert entry["practice"] == 5
     assert entry["posture"] == "unverified"
 
 
@@ -168,7 +168,7 @@ def test_the_producers_practice_wins_not_this_tools(tmp_path: Path) -> None:
     _write(tmp_path, _document(practice={"level": 1, "summary": "none", "signals": [], "caps": []}))
     document = read_delegated(tmp_path)
     entry = _security(pillar_report({"aspects": {}}, {"level": 5}, {"security": document}))
-    assert entry["practice_level"] == 1, (
+    assert entry["practice"] == 1, (
         "the security pillar reported this tool's practice level instead of "
         "the security tool's"
     )
@@ -186,7 +186,7 @@ def test_the_entry_never_offers_a_mean_of_the_two_axes(tmp_path: Path) -> None:
     entry = _security(pillar_report({"aspects": {}}, {"level": 3}, {"security": document}))
 
     assert entry["condition"] == 4.0
-    assert entry["practice_level"] == 2
+    assert entry["practice"] == 2
     mean = (4.0 + 2) / 2
     numbers = [
         value for key, value in entry.items()
@@ -196,3 +196,47 @@ def test_the_entry_never_offers_a_mean_of_the_two_axes(tmp_path: Path) -> None:
         f"the entry carries {mean}, the mean of its two axes; practice and "
         "condition answer different questions and must never be combined"
     )
+
+# --- it has to reach the reader --------------------------------------------
+
+def test_every_skin_renders_the_delegated_pillar_as_a_number(tmp_path: Path) -> None:
+    """The entry is shaped for the renderers, not only for the JSON.
+
+    The first cut carried the producer's practice *block* under
+    `practice`, which every skin prints into a column beside the other
+    pillars — so the Markdown table rendered
+    `{'level': 5, 'summary': ...}` into a cell. The data was right and
+    the report was garbage.
+
+    That is this project's oldest failure shape: the product produced
+    the right thing and nothing told the reader. Both skins are checked
+    here because checking one is how the other drifts.
+    """
+    from maintainability_audit._html_report_sections import _pillars_section
+    from maintainability_audit._scan_view import pillars_markdown
+
+    _write(tmp_path, _document(practice={
+        "level": 5, "summary": "discipline", "signals": [], "caps": []}))
+    document = read_delegated(tmp_path)
+    practice = {"level": 4, "summary": "own", "signals": [], "caps": []}
+    rows = pillar_report({"aspects": {}}, practice, {"security": document})
+
+    entry = _security(rows)
+    assert isinstance(entry["practice"], int), (
+        f"practice is {type(entry['practice']).__name__}; every skin prints "
+        "it into a column and a dict lands in the cell verbatim"
+    )
+    assert entry["practice_detail"]["signals"] == [], (
+        "the producer's block was dropped; the signals naming the files "
+        "that prove a maturity level are what make it checkable"
+    )
+
+    for name, lines in (
+        ("markdown", pillars_markdown(rows, practice)),
+        ("html", _pillars_section({"pillars": rows, "practice": practice})),
+    ):
+        rendered = "\n".join(lines)
+        assert "'level'" not in rendered and "{" not in rendered.split("security")[-1][:80], (
+            f"the {name} skin printed a raw structure for the delegated "
+            f"pillar: {rendered[:200]!r}"
+        )

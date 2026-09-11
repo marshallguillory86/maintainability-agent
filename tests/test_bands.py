@@ -142,3 +142,83 @@ def test_population_pressure_is_a_mean_not_a_worst_case(thresholds: dict) -> Non
     assert pressure is not None
     assert pressure < 0.05, "a single outlier must not swamp the population"
     assert pressure > 0, "and must not vanish either"
+
+
+def _complete_declaration_measurements(
+    complexity: float, unit: str = "src/example.py::work"
+) -> list:
+    """One analyzer unit with the full concept set the scorer requires."""
+    from maintainability_audit._metrics_types import Measurement
+
+    return [
+        Measurement(
+            concept=concept,
+            unit=unit,
+            value=value,
+            tool="recorded-analyzer",
+            path="src/example.py",
+        )
+        for concept, value in (
+            ("cyclomatic_complexity", complexity),
+            ("declaration_lines", 5.0),
+            ("cognitive_complexity", 1.0),
+        )
+    ]
+
+
+def test_analyzer_pressure_preserves_severity_past_the_failure_line(
+    thresholds: dict,
+) -> None:
+    """ADR 008's missing wire: CCN 16 and CCN 45 are not one failure.
+
+    Both values exceed ``max_complexity``. A binary failure rate therefore
+    merges them; the band matrix preserves the difference before the scorer
+    receives the declarations pressure.
+
+    Covers existing behaviour: the band matrix shipped in 3.2; this pins a reading it already
+    produced and was written against, not a fix landing with it.
+    """
+    from maintainability_audit._pressures import analyzer_pressures
+
+    ccn_16 = analyzer_pressures(
+        _complete_declaration_measurements(16.0), thresholds
+    )["declarations"]
+    ccn_45 = analyzer_pressures(
+        _complete_declaration_measurements(45.0), thresholds
+    )["declarations"]
+
+    assert ccn_16 is not None and ccn_45 is not None
+    assert ccn_45 > ccn_16, (
+        "_pressures flattened CCN 16 and CCN 45 into the same binary breach"
+    )
+
+
+def test_one_severe_unit_moves_population_pressure_more_than_one_high_unit(
+    thresholds: dict,
+) -> None:
+    """The band contribution survives aggregation; it is not display-only.
+
+    Covers existing behaviour: the band matrix shipped in 3.2; this pins a reading it already
+    produced and was written against, not a fix landing with it.
+    """
+    from maintainability_audit._pressures import analyzer_production_pressures
+
+    clean = [
+        measurement
+        for index in range(39)
+        for measurement in _complete_declaration_measurements(
+            1.0, unit=f"src/example.py::clean_{index}"
+        )
+    ]
+    high = analyzer_production_pressures(
+        clean + _complete_declaration_measurements(16.0), thresholds
+    )["declarations"]
+    severe = analyzer_production_pressures(
+        clean + _complete_declaration_measurements(45.0), thresholds
+    )["declarations"]
+
+    assert high is not None and severe is not None
+    assert severe > high, (
+        "one severe declaration contributes exactly the same population "
+        "pressure as one merely-over-limit declaration"
+    )

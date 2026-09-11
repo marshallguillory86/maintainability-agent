@@ -5864,10 +5864,85 @@ passes. It sits outside that test's sample because the sample was an
 *outward* path, and containment is sufficient for outward paths — which
 is precisely why the inward case went unnoticed.
 
+### D154 — Closed: the delegate scanned a million lines, and the report never disclosed the child boundary (High)
+
+Two findings on the `secure-code-agent` seam, both about scope nobody
+had stated.
+
+**The delegate was scanning other repositories' code.**
+`secure-code-agent.json` excluded `.venv`, `node_modules` and
+`tests/fixtures` and nothing else this repository actually carries. MA's
+own config has excluded `tools/validation/reports/` since those files
+existed — they are stored audit *output about other repositories*,
+1,015,343 lines of it, `lapack.json` alone 574,130.
+
+    loc_scanned     957,219 -> 33,227
+    findings          4,929 -> 82
+
+**The inflated denominator was hiding, not adding.** Five critical
+secrets findings sat inside 4,929 results over a million lines and the
+pillar read A-; over the real tree they are 5 of 82 and the gate fails.
+A denominator that large is absence-as-evidence wearing a score, and the
+security pillar MA renders was computed mostly over code nobody here
+wrote.
+
+The five are false positives — `gitleaks.curl-auth-user` on
+`curl -sS -u "$SONAR_TOKEN:"` in `quality-gates.yml`, a GitHub Actions
+secret *reference* rather than a value; no hardcoded token exists in any
+commit. Left unsuppressed: suppressing a finding is a decision with its
+own evidence and does not belong in a scoping fix.
+
+**The report never disclosed the child boundary.** `product-intent.md`
+has said since P1 was amended that this package "does not sandbox
+children", and lists *"that third-party tools cannot use the network"*
+among the things it does not promise. A reader holding a page headed
+"the analysis itself performs no network access" and a table naming
+eleven external tools that ran had nothing connecting the two. P8's
+gap rather than P1's: the promise was correctly scoped, and the run
+relying on that scoping never disclosed it.
+
+The Codex contract that found it demanded the **other** resolution —
+wrapping children in `sandbox-exec`/`unshare`/`bwrap`/`firejail`. That
+half is refused and the refusal is pinned: it contradicts a documented
+non-goal, and `analyzers.acquire_tools` is a shipped opt-in that needs
+the network, so a blanket deny would change which tools run and
+therefore what the evidence says.
+
+**Population.** Every repository that runs both tools, for the scoping;
+every run contributing at least one external analyzer, for the
+disclosure.
+
+One more found while fixing: `test_docs_links` globbed the tree and read
+`secure-code-report.md` — gitignored, 2.8 MB, whose regex patterns parse
+as markdown links. It passed in CI on a clean checkout and failed on any
+machine that had run the security gate, which is the noise that teaches
+a reader a red suite is a local artifact.
+
+`.secure-code/history.jsonl` is now tracked for the reason
+`.maintainability/history.jsonl` is: a history that is not committed
+restarts from zero on every machine and every CI run, which makes the
+trend it exists to carry meaningless. Security is a reported pillar
+(ADR 007), so the delegate's series is part of this repository's record.
+
+*Closing test:* `test_the_report_discloses_that_children_are_not_isolated`
+and `test_the_disclosure_reaches_the_html_skin_too` in
+`tests/test_child_sandbox.py`.
+
+*Roles:* found=codex prompt=marshall fix=claude test=codex+claude run=local
+*Mutation:* the member broken is the **exclusion of one generated
+directory**, not the scanner's configuration as a whole — restoring
+`tools/validation/reports/` to the delegate's scope while leaving every
+other exclusion in place. The scan still runs, still reports, still
+names its scanners, and the pillar silently returns to a grade computed
+over half a million lines of lapack. It sits outside the original sample
+because that sample was the child-boundary disclosure, and a test
+written from it never looks at what was scanned.
+
+
 
 ## Disposition
 
-**Every entry is closed.** D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

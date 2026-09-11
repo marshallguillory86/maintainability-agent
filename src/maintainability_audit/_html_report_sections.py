@@ -14,6 +14,7 @@ from __future__ import annotations
 from html import escape
 from typing import Any
 
+from ._coverage_notes import coverage_notes_html
 from ._evidence_view import test_suite_lines
 from ._grammar import counted
 from ._hotspots import hotspot_cognitive, hotspot_complexity, hotspot_name
@@ -55,6 +56,7 @@ def coverage_section(report: dict[str, Any]) -> list[str]:
                 f"<td>{escape(str(entry.get('measurements', '—')))}</td>"
                 f"<td>{escape(str(entry.get('findings', '—')))}</td></tr>")
     parts.append("</table>")
+    parts.extend(coverage_notes_html(coverage))
     return parts
 
 

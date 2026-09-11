@@ -5746,10 +5746,80 @@ sits outside the sample because the reported instance was an absent
 gate, and a test written from that instance would assert the step
 exists — which the mutated workflow satisfies.
 
+### D152 — Closed: the report never disclosed that analyzer children are unsandboxed (Medium)
+
+[Product intent](product-intent.md) has said since P1 was amended that
+this package **"does not sandbox children"**, and lists *"that
+third-party tools cannot use the network, or that a run is
+kernel-air-gapped"* among the things it does not promise. The scoping is
+correct and deliberate.
+
+**The report never said it.** A reader holding an audit whose promise
+reads "the analysis itself performs no network access" and a coverage
+table naming eleven external tools that ran had nothing telling them the
+first sentence does not cover the second. Eleven child processes this
+tool spawned, over the audited source, with no boundary and no mention
+of one.
+
+So this is **P8's defect, not P1's** — not a broken promise but an
+undisclosed one, which is the distinction the register exists to keep.
+The scoping lived in a document a report's reader has no reason to open.
+
+**Population.** Every run that contributes at least one external
+analyzer, on every surface. A run with no analyzers has no child to
+disclose and says nothing.
+
+**Found by a Codex contract** — `tests/test_child_sandbox.py`, which
+arrived untracked and demanded the *other* resolution: that `_runner`
+wrap every child in `sandbox-exec`, `unshare`, `bwrap` or `firejail`.
+That half is **refused**, on Marshall's call, and the refusal is
+recorded rather than deleted. A test demanding network isolation does
+not describe an unmet contract; it contradicts a documented non-goal,
+and satisfying it would have made the product assert something the
+intent page denies. The narrower reason is that the analyzers are not
+ours: `analyzers.acquire_tools` is a shipped opt-in that needs the
+network, and a blanket deny would change which tools run and therefore
+what the evidence says. A scanner that constrains the toolchain it is
+measuring is reporting on itself.
+
+**A second defect surfaced while fixing the first, and is the larger
+one.** The coverage notes were built as Markdown strings inside the
+Markdown formatter, so the **HTML report carried none of them** —
+including "Nothing examined", which `_coverage_notes` describes as the
+point of the whole section. ADR 011's claim is that the skins render one
+report dict and never disagree; that claim was resting on nobody
+checking. The notes are now built once as records and formatted per
+skin, and a guard asserts every record reaches both.
+
+The same class as the delegated pillar shipping unrendered on 2026-09-10:
+data correctly produced, and one consumer never printing it.
+
+`test_the_runner_does_not_wrap_children` pins the refusal and is
+deliberately **not** cited below: it passes at the base by construction,
+because the runner never wrapped children. It defends a decision against
+a future change rather than a fix against a past one, which the
+falsifier standard is right to treat as a different thing.
+
+*Closing test:* `test_the_report_discloses_that_children_are_not_isolated`,
+`test_both_skins_carry_every_coverage_note` and
+`test_the_html_notes_do_not_leak_markdown_syntax` in
+`tests/test_child_sandbox.py`.
+
+*Roles:* found=codex prompt=marshall fix=claude test=codex+claude run=local
+*Mutation:* the member broken is the **disclosure's presence in one
+skin**, not in the tool — deleting the `coverage_notes_html` call from
+`coverage_section` while leaving the Markdown note intact. Every
+Markdown assertion still passes, a chat audit still discloses the
+boundary, and the HTML report silently stops. It sits outside the
+original sample because the contract was written against `detail` rows
+and one skin, and a test written from that sample would never have
+looked at the other.
+
+
 
 ## Disposition
 
-**Every entry is closed.** D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D152 closed on 2026-09-11, found by a Codex contract this repository had not yet collected: the report never disclosed that the eleven analyzer children it spawns run without network isolation — a scoping the intent page states and the report did not — and fixing it surfaced that the HTML skin carried *none* of the coverage gap notes, "Nothing examined" included. The contract's other half, wrapping children in a sandbox, is refused: it contradicts a documented non-goal. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

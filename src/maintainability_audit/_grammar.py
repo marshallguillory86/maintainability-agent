@@ -76,3 +76,18 @@ def agreement(count: int) -> Agreement:
         possessive="its" if single else "their",
         quantity="a grade" if single else "a grade or multiple",
     )
+
+
+def counted(count: int, noun: str, plural: str | None = None) -> str:
+    """`1 scan`, `2 scans` — a count printed with a noun that agrees.
+
+    The same defect as `agreement`, one part of speech over. The trend
+    section was rendering **"1 scans"** for every single-scan series, and
+    this repository's own history has sixteen of them, so the report that
+    exists to hold a project to its measurements was miscounting out
+    loud in sixteen places.
+
+    `plural` is for the nouns English does not form by adding an `s`.
+    Callers that do not need it say nothing, which is most of them.
+    """
+    return f"{count} {noun}" if count == 1 else f"{count} {plural or noun + 's'}"

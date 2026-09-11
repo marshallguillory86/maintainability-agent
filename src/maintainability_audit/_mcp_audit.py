@@ -435,10 +435,22 @@ def _finish_result(result: dict[str, Any], format: str, root: Path,
 
     8.5: the host asked the user which presentation and passes the answer
     here. One findings body per call (D8): json carries the report dict
-    and no rendering; chat and markdown carry the rendered Markdown (on
-    the wire the two are the same text, ADR 011 §2); html adds the HTML
-    text beside that Markdown, returned for the host to save or show —
-    files are the CLI's job (ADR 011 §4).
+    and no rendering; html adds the HTML text beside a Markdown payload,
+    returned for the host to save or show — files are the CLI's job
+    (ADR 011 §4).
+
+    **`chat` and `markdown` are not the same text on the wire**, and
+    this docstring said they were while the code beside it already
+    passed `complete=(format == "markdown")`. They are two skins:
+
+    - **chat** is the *bounded* skin — the inline UI view, trimmed to
+      stay under a host's payload cap so a large repository's response
+      is not truncated mid-report with the remediation prompt inside it;
+    - **markdown** is the *complete* report, the whole document, because
+      it was chosen as a file to keep.
+
+    A reader who believed the old sentence would have concluded the
+    bounding was a rendering accident rather than the contract.
     """
     if format not in ("chat", "markdown", "html", "json"):
         raise InvalidAuditArgument(f"format must be chat, markdown, html or json, not {format!r}")

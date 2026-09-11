@@ -7,12 +7,13 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from maintainability_audit._mcp_setup import apply_answers
-from maintainability_audit._test_execution import run_test_suite, suite_opted_in
-from maintainability_audit._user_config import user_config_path
+from maintainability_audit._test_execution import DEFAULT_SUITE_TIMEOUT_SECONDS, run_test_suite, suite_opted_in
+from maintainability_audit._user_config import user_config_path, write_user_answers
 from maintainability_audit.config import acquisition_permitted, load_config
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,9 +31,25 @@ def _writers() -> list[str]:
     for path in PACKAGE.rglob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
-            if isinstance(node, ast.Call) and getattr(node.func, "id", "") == "write_user_answers":
+            if isinstance(node, ast.Call) and getattr(
+                node.func, "id", getattr(node.func, "attr", "")
+            ) == "write_user_answers":
                 found.append(f"{path.relative_to(PACKAGE)}:{node.lineno}")
     return found
+
+
+def _suite_config_keys() -> set[str]:
+    """Every literal key ``run_test_suite`` reads from its config argument."""
+    tree = ast.parse((PACKAGE / "_test_execution.py").read_text(encoding="utf-8"))
+    function = next(
+        node for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "run_test_suite"
+    )
+    return {
+        node.value
+        for node in ast.walk(function)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    }
 
 
 def _repo_config(root: Path, marker: Path) -> Path:
@@ -53,6 +70,47 @@ def test_every_setup_writer_is_a_population_not_one_named_helper() -> None:
     passes wherever those call sites exist — which is the point of it.
     """
     assert _writers(), "no write_user_answers call was found; this sweep is vacuous"
+
+
+def test_user_opt_in_cannot_be_completed_by_repo_controlled_spawn_settings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D147: every spawn-setting read belongs to the person, not the tree."""
+    reads = _suite_config_keys()
+    required = {"expected_commands", "test_execution", "test", "timeout_seconds"}
+    assert required <= reads, f"run_test_suite no longer reads the expected population: {reads}"
+
+    write_user_answers({
+        "test_execution": {"requested": True},
+        "expected_commands": {"test": ["pytest", "-q"]},
+    })
+    marker = tmp_path / "repo-command-ran"
+    config = tmp_path / "maintainability-agent.json"
+    config.write_text(json.dumps({
+        "version": 1,
+        "test_execution": {"requested": True, "timeout_seconds": 2147483647},
+        "expected_commands": {
+            "test": [
+                "PYTHONPATH=repo-controlled", sys.executable, "-c",
+                f"from pathlib import Path; Path({str(marker)!r}).write_text('ran')",
+            ],
+        },
+    }), encoding="utf-8")
+    seen: dict[str, object] = {}
+
+    def fake_run(_name, invocation, **kwargs):
+        seen["argv"] = invocation.argv
+        seen["env"] = invocation.env
+        seen["timeout"] = kwargs["timeout_seconds"]
+        return SimpleNamespace(exit_code=0, detail="")
+
+    monkeypatch.setattr("maintainability_audit._test_execution.run", fake_run)
+    run_test_suite(tmp_path, load_config(str(config)))
+
+    assert seen["argv"] == ("pytest", "-q")
+    assert seen["env"] is None
+    assert seen["timeout"] == DEFAULT_SUITE_TIMEOUT_SECONDS
+    assert not marker.exists()
 
 
 def test_bounds_only_reply_cannot_copy_repo_authority_to_user_tier(tmp_path: Path) -> None:

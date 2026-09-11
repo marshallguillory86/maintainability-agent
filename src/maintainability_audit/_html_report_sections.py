@@ -14,6 +14,7 @@ from __future__ import annotations
 from html import escape
 from typing import Any
 
+from ._coverage_notes import coverage_notes
 from ._evidence_view import test_suite_lines
 from ._grammar import counted
 from ._hotspots import hotspot_cognitive, hotspot_complexity, hotspot_name
@@ -55,7 +56,29 @@ def coverage_section(report: dict[str, Any]) -> list[str]:
                 f"<td>{escape(str(entry.get('measurements', '—')))}</td>"
                 f"<td>{escape(str(entry.get('findings', '—')))}</td></tr>")
     parts.append("</table>")
+    parts.extend(_coverage_notes_html(coverage))
     return parts
+
+
+def _coverage_notes_html(coverage: dict[str, Any]) -> list[str]:
+    """The gap prose the Markdown skin prints, in the HTML skin too.
+
+    The table answers "what ran". These notes answer what a reader asks
+    next — one source only, a dimension the analyzer tier declined,
+    nothing examined — and the HTML report carried **none** of them,
+    including "Nothing examined", which `_coverage_notes` itself calls
+    the point of the whole section. ADR 011 says the skins render one
+    report dict and never disagree; that claim was resting on the prose
+    being built as Markdown strings inside the Markdown renderer.
+
+    Rendered as the same visible sentences rather than re-marked-up:
+    the notes carry `**bold**` and `` `code` `` for Markdown, and a
+    reader of the page should see the text, not the syntax.
+    """
+    return [
+        f"<p>{escape(line.replace('**', '').replace('`', ''))}</p>"
+        for line in coverage_notes(coverage) if line
+    ]
 
 
 def _current_series_html(history: list[dict[str, Any]]) -> list[str]:

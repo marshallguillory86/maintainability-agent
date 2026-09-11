@@ -61,6 +61,7 @@ Repeat `--allow-root` to authorize unrelated repository directories. With no exp
 | `--backfill REVSPEC` | Scan each commit in a range into the history and exit, e.g. `HEAD~50..HEAD`. Each commit is checked out in a temporary worktree; the working tree is never touched. Expensive, so it never runs as part of a normal scan. |
 | `--backfill-interval N` | With `--backfill`, scan every Nth commit instead of all of them. |
 | `--sarif-output` | Write SARIF report for GitHub code scanning. |
+| `--security-pillar` | Read the `security-pillar.json` `secure-code-agent` wrote with its own `--security-pillar`. ADR 007 delegates the security pillar; this is the document it is read from. Defaults to `.maintainability/security-pillar.json`. |
 | `--init-agent-standards` | Generate model/tool-specific instruction files and exit without running an audit. |
 | `--install-skill` | Copy the packaged agent skill into the skills directory and exit. Re-run after every upgrade: an installed skill that drifts from the shipped one teaches agents a dead workflow. What it writes is the `_skill_data` payload inside the distribution; the command reads that payload and compares it against what is already installed, and it does not consult the repository. That the payload matches the reviewed `skills/maintainability-agent/SKILL.md` is held by the suite — `tests/test_wheel_contents.py` asserts it byte-for-byte against a staged build — not by a check at run time. |
 | `--skills-dir` | Where `--install-skill` writes (default `~/.claude/skills`). |

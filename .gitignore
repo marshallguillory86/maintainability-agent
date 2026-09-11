@@ -26,6 +26,10 @@ secure-code-report.md
 secure-code-remediation-prompt.md
 secure-code-pr-comment.md
 secure-code.sarif
+# The pillar document the delegate hands to this tool. Regenerated on
+# every run from the scan that produced it, so it is output rather
+# than record -- unlike the history beside it.
+.maintainability/security-pillar.json
 maintainability-baseline.json
 # Agent standards written by --init-agent-standards. Generated, not
 # authored: leaving them tracked makes a dogfood run dirty the worktree,

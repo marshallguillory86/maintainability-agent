@@ -382,7 +382,7 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install -e ".[dev]"
-          python3 -m pip install 'secure-code-agent==0.4.0'
+          python3 -m pip install 'secure-code-agent==0.9.0'
       - name: Install the pinned analyzer pool
         # The maintainability gate runs these analyzers in this job, so
         # the audit gate must use the same checked-in versions as verify.
@@ -403,29 +403,55 @@ jobs:
       #   --baseline .maintainability-baseline.json
       # to gate only on *new* findings, and regenerate that baseline only
       # in a commit that does nothing else, so it is visible in review.
+      # --- security, first, because the maintainability audit reads it ----
+      # ADR 007 delegates the security pillar: MA does not measure it, it
+      # reports what `secure-code-agent` measured, through
+      # `.maintainability/security-pillar.json`. That file is written by
+      # `--security-pillar` and by nothing else.
+      #
+      # This ran *after* the maintainability audit and without that flag,
+      # so in CI the pillar file never existed and the delegated pillar
+      # was permanently unmeasured — the integration was wired end to end
+      # everywhere except the one place it runs on every pull request.
+      #
+      # `continue-on-error` rather than `if: always()` on the step after:
+      # the security gate must still fail the job, but it must not stop
+      # the maintainability audit from reading what it produced. The
+      # verdict is re-raised below, after both have run.
+      - name: Security audit
+        id: security
+        continue-on-error: true
+        run: |
+          secure-code-agent \
+            --config secure-code-agent.json \
+            --fail-on-gate \
+            --security-pillar .maintainability/security-pillar.json \
+            --output secure-code-report.md \
+            --prompt-output secure-code-remediation-prompt.md \
+            --comment-output secure-code-pr-comment.md \
+            --sarif-output secure-code.sarif
+
+      # --- maintainability -------------------------------------------------
       - name: Maintainability audit
         id: maintainability
+        if: always()
         run: |
           maintainability-agent \
             --config maintainability-agent.json \
+            --security-pillar .maintainability/security-pillar.json \
             --fail-on-gate \
             --output maintainability-report.md \
             --prompt-output maintainability-remediation-prompt.md \
             --comment-output maintainability-pr-comment.md \
             --sarif-output maintainability.sarif
 
-      # --- security --------------------------------------------------------
-      - name: Security audit
-        id: security
-        if: always()
+      # The security verdict, re-raised after the pillar has been read.
+      # Swallowing it above would trade a gate for a report.
+      - name: Fail if the security gate tripped
+        if: always() && steps.security.outcome == 'failure'
         run: |
-          secure-code-agent \
-            --config secure-code-agent.json \
-            --fail-on-gate \
-            --output secure-code-report.md \
-            --prompt-output secure-code-remediation-prompt.md \
-            --comment-output secure-code-pr-comment.md \
-            --sarif-output secure-code.sarif
+          echo "secure-code-agent failed its gate; see the Security audit step." >&2
+          exit 1
 
       # --- surface the findings where people look --------------------------
       - name: Upload maintainability SARIF

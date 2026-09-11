@@ -23,19 +23,21 @@
 set -eu
 
 message_file="$1"
-source_type="${2:-}"
 
-# Merges, fixups, squashes and amend-from-template carry their subject
-# from somewhere else and are checked at their own commit or in CI.
-case "$source_type" in
-  merge|squash) exit 0 ;;
-esac
+# CI exempts **merge commits and nothing else** -- `git rev-list --no-merges`
+# over the whole PR range. This hook exempted `source_type=squash`, and any
+# subject beginning `fixup!`, `squash!` or `amend!`, on the theory that those
+# are checked "at their own commit or in CI". They are not: a `fixup!` commit
+# that survives to the branch tip is an ordinary non-merge commit by the time
+# authorship.yml sees it, so it passed here and failed the pull request.
+#
+# That is precisely the divergence this file's own header forbids -- a hook
+# that accepts what CI rejects is worse than no hook, because it teaches that
+# a clean local commit means a clean gate. Only the merge exemption survives,
+# because only the merge exemption is CI's.
 if [ -f "$(git rev-parse --git-dir)/MERGE_HEAD" ]; then
   exit 0
 fi
-case "$(head -n1 "$message_file")" in
-  "fixup!"*|"squash!"*|"amend!"*) exit 0 ;;
-esac
 
 if [ "${AGENT_TRAILER_SKIP:-0}" = "1" ]; then
   echo "commit-msg: Agent trailer check skipped by AGENT_TRAILER_SKIP" >&2

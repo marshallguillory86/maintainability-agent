@@ -5746,10 +5746,60 @@ sits outside the sample because the reported instance was an absent
 gate, and a test written from that instance would assert the step
 exists — which the mutated workflow satisfies.
 
+### D153 — Closed: the config door enforced half of D34 (High)
+
+`authorize_config` checked that a caller's `config_path` resolves inside
+the repository. That catches a config *outside* the tree. It cannot
+catch an **inward** link — `root/link -> root/src` — because that
+resolves to a path inside the repository and passes every containment
+check there is.
+
+D34's rule is two halves for exactly this reason: resolve and bound, then
+walk the route **as written**, because an inward link shows only on the
+lexical path. `repository_path` does both, through
+`_refuse_symlinked_route`. This door did the first and not the second.
+
+So two doors onto one rule disagreed on the same tree:
+
+| | |
+|---|---|
+| `repository_path(root, "link", …)` | refused |
+| `authorize_config("link/…json", root)` | **returned the target** |
+
+**Population.** Every MCP `audit_repository` call that names a
+`config_path`. The audited tree supplies the directory the link lives
+in, so a repository could route this agent's configuration read through
+a link it planted and be believed — the class D34 exists to refuse.
+
+**How it survived.** It was found here once already and closed
+elsewhere. The comment at the baseline seam in this same module records
+*"an inward `.maintainability -> src` symlink … the D34 escape history
+refused and baseline did not"*, and baseline was fixed by switching to
+`repository_path`. The config door was never revisited, so the module
+carries a note describing this escape a few dozen lines below the place
+it was still live. The same shape as D82 leaving a refusal standing at
+the next door, which the existing comment in this function also records.
+
+Found by Grok's audit of `673e667`, with the disagreement demonstrated
+against both doors rather than argued.
+
+*Closing test:* `test_a_config_reached_through_an_inward_symlink_is_refused`
+in `tests/test_mcp_server.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is the **lexical walk**, not the
+containment check — deleting the `_refuse_symlinked_route` call while
+leaving the resolve-and-bound above it. Every out-of-tree config is still
+refused, the message is unchanged, and `test_config_must_be_a_file_inside_the_repository`
+passes. It sits outside that test's sample because the sample was an
+*outward* path, and containment is sufficient for outward paths — which
+is precisely why the inward case went unnoticed.
+
+
 
 ## Disposition
 
-**Every entry is closed.** D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

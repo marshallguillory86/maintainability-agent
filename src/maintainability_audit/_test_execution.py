@@ -27,8 +27,10 @@ import shlex
 from pathlib import Path
 from typing import Any
 
+from ._catalog import MAX_TIMEOUT_SECONDS, MIN_TIMEOUT_SECONDS
 from ._operator_reads import PathNotAllowed, read_source_file
 from ._runner import Invocation, run
+from ._user_config import user_config_answers
 from ._xml import AnalyzerXmlRefused, parse_analyzer_xml
 
 _ENV_ASSIGNMENT = re.compile(r"^[A-Za-z_]\w*=")
@@ -67,21 +69,65 @@ def _parse_command(command: list[str]) -> tuple[dict[str, str], list[str]]:
 def suite_opted_in(config: dict[str, Any]) -> bool:
     """Both halves of the opt-in: the request, and a command to run.
 
-    A pure function of the config it is handed, deliberately. The
-    repository can no longer put either half there — `load_config`
-    strips `test_execution.requested` and `expected_commands.test` out
-    of the repository tier before the merge (D147) — so by the time a
-    config reaches here, an opt-in in it came from the person.
+    A pure function of the config it is handed, deliberately.
+    `load_config` strips **`test_execution.requested`** out of the
+    repository tier before the merge (D147), so the *request* reaching
+    here came from the person.
 
-    Keeping the check here and the boundary there is the design. A
-    reader of this function should not have to know which tier a key
-    came from, and a caller handing it a config should get an answer
-    about *that* config. The tier question belongs in the one function
-    whose job is deciding which tier wins.
+    `expected_commands.test` is **not** stripped, and this docstring
+    used to say it was. That key is documentation — "this is how you
+    test me" — and `require_test_command` reads it, so removing it would
+    fail a real gate on every repository that correctly documents its
+    command. The consequence is that the command in a merged config may
+    be the tree's, which makes this function the wrong place to learn
+    *what* to run. It answers only whether a run was consented to and
+    whether any command is documented; `opted_in_command` answers which
+    program the person actually agreed to.
     """
     requested = bool((config.get("test_execution") or {}).get("requested"))
     command = (config.get("expected_commands") or {}).get("test")
     return requested and bool(command)
+
+
+def opted_in_command() -> list[str]:
+    """The test command the person consented to — user tier only.
+
+    Cited by `config._host_authority_stripped` and by `_setup_persist`
+    as the reader that makes keeping `expected_commands.test` in the
+    repository document safe. **It did not exist.** Three docstrings
+    described a boundary that nothing enforced, and `run_test_suite`
+    read the merged config instead — so a repository that documented a
+    command had that command executed the moment any person opted in,
+    which is the authority inversion D147 named and did not close.
+
+    The distinction it restores: the tree may *say* how it is tested;
+    only the person may choose what this host runs. Setup writes the
+    command into the user tier at the moment it is shown and accepted
+    (`_setup_persist`), so consent and program are recorded together.
+
+    Empty means the person opted in without a command reaching their
+    tier, which is not permission to fall back to the repository's.
+    """
+    answers = user_config_answers() or {}
+    command = (answers.get("expected_commands") or {}).get("test")
+    return list(command) if isinstance(command, list) else []
+
+
+def _bounded_suite_timeout(configured: Any) -> int:
+    """A suite timeout the audited tree cannot weaponise.
+
+    The same clamp `_catalog._bounded_timeout` applies to
+    `analyzers.timeout_seconds`, on the sibling door: a crafted
+    `2147483647` makes the host wait sixty-eight years for a child it
+    was told to run, which is D40's family in a field that was missing
+    the bound. A non-integer or out-of-band value falls back to the
+    default rather than propagating.
+    """
+    try:
+        seconds = int(configured)
+    except (TypeError, ValueError):
+        return DEFAULT_SUITE_TIMEOUT_SECONDS
+    return max(MIN_TIMEOUT_SECONDS, min(seconds, MAX_TIMEOUT_SECONDS))
 
 
 def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
@@ -92,14 +138,34 @@ def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
     """
     if not suite_opted_in(config):
         return None
-    command = list(config["expected_commands"]["test"])
+    # Every spawn setting is read from the **person's** tier, never from
+    # the merged config. `config["expected_commands"]["test"]` is what
+    # this line used to be, and the repository's document reaches that
+    # key by design (it is documentation `require_test_command` needs),
+    # so reading it here let the tree choose the program the moment
+    # anybody opted in. The keys are named here rather than hidden
+    # behind the helper so a reader sees which population is governed.
+    answers = user_config_answers() or {}
+    command = opted_in_command()
+    if not command:
+        return {
+            "command": (config.get("expected_commands") or {}).get("test") or [],
+            "ran": False, "exit_code": None, "passed": False,
+            "detail": (
+                "opted in, but no test command is recorded in the user tier; "
+                "the repository's documented command is not run on its own say-so"
+            ),
+            "coverage_percent": None,
+        }
     env, argv = _parse_command(command)
     # A whole test suite is legitimately slower than a single analyzer, so
     # it gets its own timeout rather than the 120s analyzer cap that was
     # killing real suites mid-run. Operator-configurable under
-    # `test_execution.timeout_seconds`.
-    timeout = int((config.get("test_execution") or {}).get(
-        "timeout_seconds", DEFAULT_SUITE_TIMEOUT_SECONDS))
+    # `test_execution.timeout_seconds`, and clamped: a repository naming
+    # a timeout is naming how long this host waits.
+    timeout = _bounded_suite_timeout(
+        (answers.get("test_execution") or {}).get(
+            "timeout_seconds", DEFAULT_SUITE_TIMEOUT_SECONDS))
     if not argv:
         # A command that is only env assignments (or empty) names no
         # program to run. Report it as configured but unrunnable rather

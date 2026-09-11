@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from maintainability_audit._test_execution import run_test_suite, suite_opted_in
+from maintainability_audit._user_config import write_user_answers
 
 
 def _fake_suite(root: Path, exit_code: int, coverage_line_rate: str | None = None) -> list[str]:
@@ -29,8 +30,29 @@ def _fake_suite(root: Path, exit_code: int, coverage_line_rate: str | None = Non
     return ["./run-suite.sh"]
 
 
-def _opted_in(command: list[str]) -> dict:
-    return {"test_execution": {"requested": True}, "expected_commands": {"test": command}}
+def _opted_in(command: list[str], timeout_seconds: int | None = None) -> dict:
+    """An opted-in config, with the command where consent actually lives.
+
+    The command is written to the **user tier** as well as returned in
+    the config, because `run_test_suite` reads the program from the
+    person's tier and no longer from the merged config (D152). A
+    repository may document `expected_commands.test` — that key stays,
+    `require_test_command` needs it — but documenting a command is not
+    choosing what this host runs.
+
+    Every assertion below is unchanged. Only the tier the command is
+    sourced from moved, which is the contract that changed. The XDG
+    config home is redirected per test by an autouse fixture in
+    `conftest`, so this writes nowhere real.
+    """
+    opt_in: dict = {"requested": True}
+    if timeout_seconds is not None:
+        opt_in["timeout_seconds"] = timeout_seconds
+    write_user_answers({
+        "test_execution": opt_in,
+        "expected_commands": {"test": command},
+    })
+    return {"test_execution": dict(opt_in), "expected_commands": {"test": command}}
 
 
 def test_the_default_config_never_spawns_the_suite(tmp_path: Path) -> None:
@@ -185,9 +207,7 @@ def test_an_env_prefixed_command_runs_with_that_env(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     script.chmod(script.stat().st_mode | stat.S_IEXEC)
-    config = {"test_execution": {"requested": True},
-              "expected_commands": {"test": ["MARK=on ./run.sh"]}}
-    result = run_test_suite(tmp_path, config)
+    result = run_test_suite(tmp_path, _opted_in(["MARK=on ./run.sh"]))
     assert result["ran"] is True, "the env-prefixed command did not execute"
     assert result["coverage_percent"] == 50.0, "the env prefix did not reach the child"
 
@@ -321,7 +341,7 @@ def test_the_opted_in_suite_uses_its_own_timeout_not_the_analyzer_cap(
     _test_execution.run_test_suite(tmp_path, _opted_in(["pytest"]))
     assert captured["timeout"] == 600, "the suite inherited the 120s analyzer cap"
 
-    override = _opted_in(["pytest"])
-    override["test_execution"]["timeout_seconds"] = 900
-    _test_execution.run_test_suite(tmp_path, override)
+    # The override belongs to the person, like the command: a repository
+    # naming a timeout is naming how long this host waits (D152).
+    _test_execution.run_test_suite(tmp_path, _opted_in(["pytest"], timeout_seconds=900))
     assert captured["timeout"] == 900, "the configured suite timeout was ignored"

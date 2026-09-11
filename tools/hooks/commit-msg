@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Refuse a commit that does not declare who wrote it.
+#
+# `docs/machine-setup.md` §3 requires an `Agent:` trailer on every commit
+# and said "CI enforces it" -- which was true and was the whole problem.
+# The rule was checked only on a pull request, so nine commits were
+# written, reviewed locally, gated, and pushed before anything mentioned
+# it, and fixing them cost a rebase over all nine and a force-push.
+#
+# This hook moves the check to the moment the mistake is cheap. It is the
+# same rule as `.github/workflows/authorship.yml`, deliberately: a hook
+# that accepted something CI rejects would be worse than no hook.
+#
+# **It refuses; it does not fill in.** A hook cannot know which agent is
+# typing, and one that guessed would put `claude` on Marshall's own
+# commits -- turning a declaration into a fabrication, which is a worse
+# defect than the one it prevents. A trailer is a declaration, not a
+# proof (RULES.md); a hook that invents it is not even a declaration.
+#
+# Install: tools/hooks/install.sh
+# Emergency bypass, one commit: AGENT_TRAILER_SKIP=1 git commit ...
+
+set -eu
+
+message_file="$1"
+source_type="${2:-}"
+
+# Merges, fixups, squashes and amend-from-template carry their subject
+# from somewhere else and are checked at their own commit or in CI.
+case "$source_type" in
+  merge|squash) exit 0 ;;
+esac
+if [ -f "$(git rev-parse --git-dir)/MERGE_HEAD" ]; then
+  exit 0
+fi
+case "$(head -n1 "$message_file")" in
+  "fixup!"*|"squash!"*|"amend!"*) exit 0 ;;
+esac
+
+if [ "${AGENT_TRAILER_SKIP:-0}" = "1" ]; then
+  echo "commit-msg: Agent trailer check skipped by AGENT_TRAILER_SKIP" >&2
+  exit 0
+fi
+
+agent=$(git interpret-trailers --parse <"$message_file" \
+        | sed -n 's/^Agent:[[:space:]]*//p' | tr -d '[:space:]')
+
+case "$agent" in
+  claude|codex|grok|marshall)
+    exit 0 ;;
+  "")
+    echo "commit-msg: refused -- no 'Agent:' trailer." >&2
+    echo >&2
+    echo "  Every commit names who wrote it: claude, codex, grok or marshall." >&2
+    echo "  docs/machine-setup.md section 3; CI fails the PR without it." >&2
+    echo >&2
+    echo "  Add a blank line and then:  Agent: <name>" >&2
+    echo "  Or amend the last one:      git commit --amend --trailer 'Agent: <name>'" >&2
+    exit 1 ;;
+  *)
+    echo "commit-msg: refused -- 'Agent: $agent' is not a known agent." >&2
+    echo "  Expected one of: claude, codex, grok, marshall." >&2
+    exit 1 ;;
+esac

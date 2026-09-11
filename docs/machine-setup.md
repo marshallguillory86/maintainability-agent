@@ -147,6 +147,25 @@ CI enforces it over every non-merge commit in a pull request, and fails
 on an empty range rather than passing on nothing. Every defect-register
 entry from D89 forward carries a `*Roles:*` line for the same reason.
 
+**Install the local hook, which is the half that used to be missing:**
+
+```bash
+bash tools/hooks/install.sh
+```
+
+This line exists because CI was the *only* enforcement, and a
+pull-request check is the most expensive place to learn this. Nine
+commits were written, gated locally and pushed before anything mentioned
+the trailer; repairing them cost a rebase over all nine and a
+force-push. `tools/hooks/commit-msg` applies the same rule at the moment
+it costs one line to fix.
+
+The hook **refuses; it does not fill the trailer in.** A hook cannot know
+which agent is typing, and one that guessed would stamp `claude` on
+Marshall's own commits — turning a declaration into a fabrication, which
+is worse than the omission it prevents. Emergency bypass, one commit:
+`AGENT_TRAILER_SKIP=1 git commit …`.
+
 **A trailer is a declaration, not a proof.** A commit naming the wrong
 agent passes. Signing proves the *key*, and every agent on a machine
 shares that machine's key, so together they establish "this machine

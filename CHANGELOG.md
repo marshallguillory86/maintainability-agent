@@ -73,6 +73,12 @@ first scan after upgrading opens a new series. That break is real: the
 scans before it cannot be told apart from ones a different producer
 version made.
 
+Expect a new series on **every** `secure-code-agent` release, including
+ones that change no scoring. That is deliberate and the errors are not
+symmetric: a series that splits when nothing changed is visible and
+explicable, while one that joins across a scoring change is invisible
+and reads as knowledge.
+
 ### Fixed — a config path could be reached through a symlink (D153)
 
 `authorize_config` on the MCP seam checked that a caller's

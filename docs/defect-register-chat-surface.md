@@ -6009,6 +6009,39 @@ stopped comparing equal to a freshly built one. It is now actually
 derived, and the round-trip guard that caught this is why the cost was
 one test run rather than a corrupted history.
 
+**The known cost, decided rather than discovered.** Keying on the
+producer's *version* over-breaks: a docs-only or adapter-only release of
+`secure-code-agent` opens a new series having changed no scoring at all.
+The producer raised this itself rather than letting it look like a bug
+later, and offered to add a `scoring_model` field that moves only when
+the model does.
+
+Taken as-is, deliberately. A scoring model is not something this tool
+can observe, so the version is the only proxy it has, and the two errors
+are not symmetric: a series that splits when nothing changed is visible
+and explicable, while one that joins across a scoring change is
+invisible and reads as knowledge. That asymmetry is the whole argument
+of this module.
+
+The narrower field is the better long-term answer and it is **not** taken
+now, because it is a schema change and would mean a `schema_version` 2
+for a problem that is currently cosmetic. When something else forces a
+v2, it goes in — and MA's reader must accept v2 **before** the producer
+emits it, or every document is refused during the window between the two
+releases.
+
+MA will not pre-accept a schema it has not read. `_delegated_pillar`
+refuses an unknown schema outright because *"the schema string is the
+producer's promise about the shape, and guessing past it is how a
+consumer starts reporting fields that mean something different"* —
+widening the reader to a v2 nobody has specified would be that defect,
+committed in advance.
+
+A third option — MA special-casing which producer versions changed
+scoring, from a list the producer maintains — is refused. It puts
+knowledge of another tool's internals in this repository, where it would
+go stale silently and where nothing could check it.
+
 *Closing test:* `test_a_delegated_producer_change_breaks_the_series` in
 `tests/test_child_sandbox.py`.
 

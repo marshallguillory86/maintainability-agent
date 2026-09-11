@@ -6069,10 +6069,82 @@ child-boundary disclosure, and no test of a report's contents looks at
 how two reports are joined.
 
 
+### D156 — Closed: `**/dir/` excluded nothing, at any depth (High)
+
+`**/__pycache__/` is the gitignore spelling for "this directory wherever
+it appears". In `is_excluded` it matched **nothing** — not at depth, not
+at the root, not anywhere.
+
+Three branches and it fell through all of them. The directory branch
+compares against the literal prefix, so a path has to begin `**/`.
+`fnmatch` would need the path to end in a slash, which no file path
+does. The containment branch — the one that makes a bare `dir/` work at
+any depth — is skipped for patterns holding glob characters, and `**`
+is two of them.
+
+So **the two spellings of one intent differed by everything**: `dir/`
+excluded at every depth, `**/dir/` excluded nothing. A user writing the
+form gitignore taught them got a rule that reads as intent, never
+errors, and silently scans exactly what it was written to exclude.
+
+**Population.** Every repository whose config uses a `**/` directory
+pattern, on every surface, for the life of the matcher. Silent in all of
+them — the excluded files enter the scanned population, inflate the
+denominator, and can move a score without a single message saying so.
+`**/*.min.js` and other *file* patterns were unaffected, which is worse
+rather than better: a config mixing the two forms had half its rules
+working.
+
+**Found by the producer we delegate to.** The `secure-code-agent`
+session hit the identical defect in its own matcher — `.pyc` files
+scanned as source for that tool's entire life — and reported the class
+rather than only its instance, asking whether MA's config used the
+spelling. MA's own config does not. **MA's matcher had the same bug**,
+which is the part no instance report would have found, and it is why the
+question was worth asking across the boundary.
+
+An inert exclude is the hardest kind of defect to notice: it has no
+symptom of its own. Nothing errors, nothing is reported, and the only
+evidence is findings in files the operator believed were excluded —
+which reads as the audit being noisy rather than the config being dead.
+
+Fixed by honouring the prefix rather than by special-casing it: a
+leading `**/` is stripped before matching, so `**/dir/` reduces to the
+bare form that already worked at any depth.
+
+**Only the directory form.** The first attempt stripped the prefix from
+every pattern and anchored `**/generated/*.py` to the repository root,
+breaking a case that had always worked — a file pattern already matches
+through `fnmatch`, where `*` crosses separators, so it needed no help
+and was harmed by it. `test_exclude_patterns_use_glob_and_normalized_separators`
+caught that inside a minute, which is the argument for a suite that
+covers the behaviour a fix is adjacent to and not only the behaviour it
+targets.
+
+Two further tests ship with the fix and are deliberately **not** cited
+below, because both pass at the base: one bounds the fix against
+swallowing a similar name, the other pins the file-pattern regression
+the first attempt caused. Bounds and regression guards defend a change's
+blast radius rather than the defect, which the falsifier standard is
+right to treat as a different thing.
+
+*Closing test:* `test_both_spellings_of_a_directory_exclude_agree_at_every_depth`
+in `tests/test_operator_named_reads.py`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is **depth**, not the prefix — handling
+`**/dir/` only where it matches the path's own first segment. The bare
+spelling still works, the new pattern now matches *something*, and a
+test written from one example at one depth passes. It sits outside a
+single-example sample because the original bug was uniform: every depth
+failed, so any one case would have caught it, and only a sweep over
+depths catches a fix that is itself partial.
+
+
 
 ## Disposition
 
-**Every entry is closed.** D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D156 closed on 2026-09-11, found by the `secure-code-agent` session reporting the class rather than its own instance: `**/dir/` excluded nothing at any depth while the bare `dir/` excluded at all of them, so a config written in gitignore's spelling silently scanned what it named. D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

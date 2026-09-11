@@ -382,7 +382,7 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install -e ".[dev]"
-          python3 -m pip install 'secure-code-agent==0.9.0'
+          python3 -m pip install 'secure-code-agent==0.10.0'
       - name: Install the pinned analyzer pool
         # The maintainability gate runs these analyzers in this job, so
         # the audit gate must use the same checked-in versions as verify.

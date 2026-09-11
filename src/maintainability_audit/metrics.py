@@ -31,6 +31,31 @@ def is_excluded(rel: str, patterns: list[str]) -> bool:
     normalized = rel.replace("\\", "/").replace(os.sep, "/")
     for raw_pattern in patterns:
         pattern = raw_pattern.replace("\\", "/")
+        # `**/dir/` is the gitignore spelling for "this directory at any
+        # depth", and it matched **nothing** — at any depth, including
+        # the one it names. The directory branch below compares against
+        # the literal prefix, `fnmatch` needs a trailing slash the path
+        # never has, and the containment branch is skipped because the
+        # pattern holds glob characters. So it read as intent, never
+        # errored, and silently scanned what it was written to exclude.
+        #
+        # The bare `dir/` spelling has always matched at any depth via
+        # the containment branch, so the two spellings of one intent
+        # differed by everything. Stripping the prefix makes them agree;
+        # a file pattern like `**/*.min.js` already worked and is
+        # unaffected, because `*` matches a separator here.
+        #
+        # Only the **directory** form. A file pattern like
+        # `**/generated/*.py` already matches through `fnmatch`, where
+        # `*` crosses separators, and stripping its prefix would anchor
+        # it to the root — which this project's own exclude test caught
+        # within a minute of the first attempt.
+        #
+        # Reported by the `secure-code-agent` session, which found the
+        # identical defect in its own matcher — `.pyc` files had been
+        # scanned as source for its entire life (D156).
+        if pattern.startswith("**/") and pattern.endswith("/"):
+            pattern = pattern[3:]
         if pattern.endswith("/") and (normalized == pattern[:-1] or normalized.startswith(pattern)):
             return True
         if fnmatch.fnmatch(normalized, pattern) or fnmatch.fnmatch(Path(normalized).name, pattern):

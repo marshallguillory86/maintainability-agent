@@ -49,10 +49,37 @@ So the tool is a deep decomposition of one pillar, with partial reach into two o
 | **Readability** | **Partial.** Linter conformance, docstring coverage, declaration size, naming conventions where analyzers report them. Reported, with gaps named. |
 | **Maintainability** | **Owned.** The existing ISO 25010 decomposition is the detail view of this pillar. |
 | **Efficiency & Scalability** | **Out of scope, permanently.** Requires profiling, load testing and runtime telemetry. Reported as `NotApplicable` with that reason — an explicit statement, not a silent omission. |
-| **Security** | **Delegated** to `secure-code-agent`. Reported as `NotApplicable` naming the other tool, so a reader never mistakes silence for safety. |
+| **Security** | **Delegated** to `secure-code-agent`. Reports that tool's own measurement when it has left `security-pillar.json` in the tree; `NotApplicable` naming the other tool when it has not, so a reader never mistakes silence for safety. |
 | **Testability** | **Partial.** Test presence, declaration size and policy gates today; coverage and mutation results when the operator supplies them. |
 
-Declaring scope per pillar is itself a fix. Today the tool is silent about efficiency and security, and silence reads as "fine".
+Declaring scope per pillar is itself a fix. Before this the tool was silent about efficiency and security, and silence reads as "fine".
+
+**Amended 2026-09-10: delegation resolves when the delegate reports.**
+`NotApplicable` was the right answer while the other half did not exist,
+and it was never meant to be the permanent one — the pillar is delegated,
+not abandoned, and the point of naming the delegate was to make the
+handoff sayable. `secure-code-agent` 0.5.0 emits `security-pillar.json`
+against this document's own vocabulary: the scope words, the two-axis
+split and the posture matrix with its thresholds. Two tools reporting
+"level 3" or "healthy" about one repository have to mean the same thing
+by it, or the joined view is worse than either alone.
+
+So the entry now carries the delegate's measurement where one exists.
+Three properties hold, and each is how the join could go quietly wrong:
+
+- **Absence keeps the placeholder.** Most repositories run one tool. No
+  document is the ordinary case, not a failure, and not a warning.
+- **A document that cannot be trusted is refused whole.** Wrong schema,
+  wrong shapes, or a `posture` its own two axes do not support —
+  recomputed here against §2's matrix rather than believed, because the
+  thresholds are copied into the producer by value and a copied constant
+  drifts.
+- **This tool still measures nothing about security.** The scope stays
+  `delegated`. What changed is that the entry reports a measurement
+  instead of an apology for not having one, and names who made it.
+
+§2's prohibition is unaffected: the two axes arrive from another process
+and are still never averaged.
 
 ### 2. Every pillar reports two independent values that are never averaged together
 

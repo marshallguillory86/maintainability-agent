@@ -338,33 +338,55 @@ def practice_level(root: Path, config: dict[str, Any] | None = None) -> Practice
     caps: list[str] = []
 
     if not ci:
-        level = min(MAX_WITHOUT_CI, 1 + (1 if signals else 0))
-        if signals:
-            caps.append(
-                f"no CI configuration found, so nothing runs these checks on a "
-                f"change; capped at level {MAX_WITHOUT_CI}"
-            )
-        summary = (
-            "no enforcement detected: no linter configuration, no CI"
-            if not signals else
-            "standards are configured but nothing runs them on a change"
-        )
-        return Practice(level=level, summary=summary, signals=signals, caps=caps)
+        return _without_ci(signals, caps)
 
     signals += _ci_signals(root, ci, excludes)
-    kinds = {signal["signal"] for signal in signals}
+    level, summary, capped = _level_with_ci({signal["signal"] for signal in signals})
+    return Practice(level=level, summary=summary, signals=signals, caps=caps + capped)
+
+
+def _without_ci(signals: list[dict[str, Any]], caps: list[str]) -> Practice:
+    """The ceiling when nothing runs the checks on a change.
+
+    Configuration without CI is a standard nobody enforces, so it earns
+    one level for existing and no more. The cap is stated rather than
+    implied: a repository at level 2 with a full linter config is being
+    told what to fix, not just what it scored.
+    """
+    if signals:
+        caps = [*caps, (
+            "no CI configuration found, so nothing runs these checks on a "
+            f"change; capped at level {MAX_WITHOUT_CI}"
+        )]
+        summary = "standards are configured but nothing runs them on a change"
+    else:
+        summary = "no enforcement detected: no linter configuration, no CI"
+    return Practice(
+        level=min(MAX_WITHOUT_CI, 1 + (1 if signals else 0)),
+        summary=summary, signals=signals, caps=caps,
+    )
+
+
+def _level_with_ci(kinds: set[str]) -> tuple[int, str, list[str]]:
+    """Level, summary and any cap, for a repository that has CI.
+
+    The ladder in one place: a gate plus discipline plus checks that
+    actually run is 5; a numeric gate alone is 4; checks that run but
+    cannot fail is 3, and says so; CI that runs no checks is the
+    no-enforcement ceiling.
+    """
     checks_run = bool(kinds & {"lint-in-ci", "types-in-ci", "duplication-in-ci"})
     gates = kinds & {"coverage-gate", "complexity-gate"}
     discipline = kinds & {"pre-commit", "recorded-decisions", "type-config"}
 
-    if gates and len(discipline) >= 2 and len(gates) >= 1 and checks_run:
-        level, summary = 5, "gated in CI, with recorded decisions and local enforcement"
-    elif gates:
-        level, summary = 4, "CI holds a numeric quality gate"
-    elif checks_run:
-        level, summary = 3, "CI runs quality checks on every change"
-        caps.append("no coverage or complexity gate found; a check that cannot fail is advisory")
-    else:
-        level, summary = MAX_WITHOUT_CI, "CI exists but runs no quality checks"
-        caps.append("CI runs no linter, type checker or duplication check")
-    return Practice(level=level, summary=summary, signals=signals, caps=caps)
+    if gates and checks_run and len(discipline) >= 2:
+        return 5, "gated in CI, with recorded decisions and local enforcement", []
+    if gates:
+        return 4, "CI holds a numeric quality gate", []
+    if checks_run:
+        return 3, "CI runs quality checks on every change", [
+            "no coverage or complexity gate found; a check that cannot fail is advisory"
+        ]
+    return MAX_WITHOUT_CI, "CI exists but runs no quality checks", [
+        "CI runs no linter, type checker or duplication check"
+    ]

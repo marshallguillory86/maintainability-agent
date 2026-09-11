@@ -28,6 +28,11 @@ from __future__ import annotations
 
 from typing import Any
 
+# A foundation, not the scoring layer: grammar is neither scoring nor
+# wording, and taking the number from one place is what stops four
+# sentences printing "COBOL are parsed" (D148).
+from ._grammar import agreement
+
 NOT_VERIFIED = "Not verified"
 # One phrase for "no number was issued", used wherever a number would
 # otherwise go. Never a dash and never a zero: both read as a value, and
@@ -363,9 +368,11 @@ def unanchored_caveat(score: dict[str, Any]) -> list[str]:
     names = unanchored_languages(score)
     if not names:
         return []
+    say = agreement(len(names))
     return ["", (
-        f"*{' and '.join(names)} are parsed but are not in the reference "
-        "corpus, so a grade or multiple reported for code in them is "
-        "provisional: the findings are as good as the parser, the rate "
-        "they are compared against was measured on other languages.*"
+        f"*{' and '.join(names)} {say.verb} parsed but {say.verb} not in the "
+        f"reference corpus, so {say.quantity} reported for code in "
+        f"{say.object_pronoun} is provisional: the findings are as good as "
+        "the parser, the rate they are compared against was measured on "
+        "other languages.*"
     ), ""]

@@ -41,13 +41,13 @@ from maintainability_audit._calibration import (  # noqa: E402
     DIMENSION_WEIGHTS,
 )
 from maintainability_audit._derive import derive_curve_constant, derive_references  # noqa: E402
+from maintainability_audit._evidence_reader import normalize_report_evidence  # noqa: E402
 from maintainability_audit._pressures import (  # noqa: E402
     analyzer_pressures,
     analyzer_production_pressures,
     production_pressures,
 )
 from maintainability_audit.config import VERSION, load_config  # noqa: E402
-from maintainability_audit.evidence import normalize_report_evidence  # noqa: E402
 from maintainability_audit.report import build_report  # noqa: E402
 from maintainability_audit.scoring import dimension_pressures  # noqa: E402
 

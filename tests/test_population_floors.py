@@ -25,6 +25,7 @@ from pathlib import Path
 import pytest
 
 from maintainability_audit._aspects import undersupported_aspects
+from maintainability_audit._evidence_reader import normalize_report_evidence
 from maintainability_audit._formula import (
     ASPECT_POPULATIONS,
     CATEGORY_ASPECTS,
@@ -32,7 +33,6 @@ from maintainability_audit._formula import (
     ROOT_POPULATIONS,
 )
 from maintainability_audit.config import load_config
-from maintainability_audit.evidence import normalize_report_evidence
 from maintainability_audit.report import build_report
 from maintainability_audit.scoring import score_report
 

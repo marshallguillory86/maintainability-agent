@@ -166,6 +166,11 @@ class Segment:
 
     records: list[ScanRecord]
     break_reason: str = ""
+    # The same break without the explanatory tail, for places that list
+    # many segments at once. A table repeating "so scans before this
+    # point were produced by a different instrument" on all 48 rows
+    # states the rule 48 times and the fact once each.
+    break_summary: str = ""
 
     @property
     def comparable_trend(self) -> bool:
@@ -190,8 +195,26 @@ def comparability_key(record: ScanRecord) -> tuple[Any, ...]:
     )
 
 
-def _difference(earlier: ScanRecord, later: ScanRecord) -> str:
-    """Which comparability fields changed, named for the report."""
+# What each comparability field is, in words a reader can act on. The
+# stored names are terse and one of them actively misleads: the field
+# called `rubric_version` holds the *package* version, so a reader told
+# "rubric_version changed" hears that the rubric moved when a patch
+# release is all that happened — and on this repository's own history
+# that field accounts for 38 of 49 breaks. The name stays as stored
+# (renaming it is a migration of every written line); what the report
+# says about it is corrected here, which is where the claim is made.
+FIELD_NAMES: dict[str, str] = {
+    "rubric_version": "the tool version",
+    "calibration": "the calibration constant",
+    "thresholds_digest": "the configured thresholds",
+    "analyzers": "which analyzers contributed",
+    "scored_languages": "the scored languages",
+    "scope": "the scan scope",
+}
+
+
+def _changed_fields(earlier: ScanRecord, later: ScanRecord) -> list[str]:
+    """Which comparability fields differ, as their stored names."""
     changed = []
     for name in COMPARABILITY_FIELDS:
         before, after = getattr(earlier, name), getattr(later, name)
@@ -200,7 +223,14 @@ def _difference(earlier: ScanRecord, later: ScanRecord) -> str:
                 changed.append(name)
         elif before != after:
             changed.append(name)
-    return ", ".join(changed)
+    return changed
+
+
+def _difference(earlier: ScanRecord, later: ScanRecord) -> str:
+    """Which comparability fields changed, named for the report."""
+    return ", ".join(
+        FIELD_NAMES.get(name, name) for name in _changed_fields(earlier, later)
+    )
 
 
 def segments(records: list[ScanRecord]) -> list[Segment]:
@@ -218,13 +248,15 @@ def segments(records: list[ScanRecord]) -> list[Segment]:
         if comparability_key(previous) == comparability_key(current):
             found[-1].records.append(current)
             continue
+        difference = _difference(previous, current)
         found.append(Segment(
             records=[current],
             break_reason=(
-                f"{_difference(previous, current)} changed, so scans before this "
+                f"{difference} changed, so scans before this "
                 "point were produced by a different instrument and cannot be "
                 "joined to those after it"
             ),
+            break_summary=f"{difference} changed",
         ))
     return found
 

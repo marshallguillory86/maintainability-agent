@@ -22,6 +22,7 @@ from pathlib import Path
 import pytest
 from test_evidence_normalization import _commit, _report, _tested_repo
 
+from maintainability_audit._evidence_reader import normalize_report_evidence
 from maintainability_audit._verification import (
     DEFAULT_PROFILE,
     DEFAULT_V1_NOT_REQUIRED,
@@ -35,7 +36,6 @@ from maintainability_audit.evidence import (
     NotApplicable,
     Unknown,
     UnsupportedReportSchema,
-    normalize_report_evidence,
 )
 from maintainability_audit.prompts import render_agent_instructions, render_ai_prompt
 from maintainability_audit.renderers import render_markdown, render_pr_comment

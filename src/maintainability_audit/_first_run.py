@@ -49,10 +49,25 @@ def maybe_prompt_first_run(root: Path, explicit_config: str | None) -> None:
     makes a repository configured at a terminal identical to one
     configured in chat.
 
-    Economics (a staged, declinable add) and the presentation format
-    (asked every invoke, ADR 011) keep their own prompts. Writes the
-    config `discovered_config` then finds on any later run, so the prompt
-    has no second code path into the audit.
+    The presentation format keeps its own prompt because ADR 011 asks it
+    on *every* invoke rather than once at setup, so it is not part of
+    this reply.
+
+    Economics is asked here, and was not until D150. `docs/cli.md` says
+    an interactive first run is "the **same** setup questions as
+    chat/MCP"; it asked five of the seven, and the missing one was the
+    economic scenario — so a terminal user was never offered money in
+    their reports and nothing told them the option existed. The claim in
+    the doc was true of every question except the one nobody noticed was
+    absent, which is why the count is now derived by
+    `test_the_terminal_asks_every_setup_question` rather than trusted.
+
+    Its bounds stay a staged second ask, exactly as on the other
+    surfaces: `_economics_questions` returns the gate alone, and
+    `economics_bounds_pending` collects the rates on the next call when
+    the answer was "include". Asking three labor rates of somebody who
+    just declined is the defect that staging fixed, and the terminal
+    inherits the fix rather than a copy of it.
     """
     if explicit_config or discovered_config(root) is not None:
         return
@@ -81,6 +96,13 @@ def maybe_prompt_first_run(root: Path, explicit_config: str | None) -> None:
         "run_tests": _ask(
             "Run this repository's test suite for coverage? THIS EXECUTES THE "
             "TREE. (yes/no) [no]: ", ("yes", "no"), "no"),
+        # D150. The gate only; the three rates are the staged second ask
+        # that `economics_bounds_pending` raises on the next call, the
+        # same shape chat and MCP use.
+        "economics": _ask(
+            "Add the economic scenario (loaded labor rate per hour) beside "
+            "the score? Skip leaves money out of reports. "
+            "(include/skip) [skip]: ", ("include", "skip"), "skip"),
     }
     apply_answers(root, answers)
     print(f"Wrote {root / CONFIG_FILENAME}")
@@ -239,17 +261,7 @@ def maybe_prompt_test_command(root: Path, config: dict) -> None:
     the MCP one carry the same default in the same field: Enter accepts,
     editing replaces, and clearing the line cancels exactly as before.
     """
-    import shlex
-
-    if not _stdin_is_a_tty():
-        return
-    if (config.get("analyzers") or {}).get(
-        "prompt_when_interactive", DEFAULTS["prompt_when_interactive"]
-    ) is False:
-        return
-    if not (config.get("test_execution") or {}).get("requested"):
-        return
-    if (config.get("expected_commands") or {}).get("test"):
+    if not _should_ask_for_test_command(config):
         return
 
     from ._test_commands import suggested_test_command
@@ -264,7 +276,36 @@ def maybe_prompt_test_command(root: Path, config: dict) -> None:
         "The command that runs this repository's test suite, e.g. `pytest` "
         "(Enter to cancel running it): "
     )
-    answer = _input_with_default(prompt, detected).strip()
+    _record_test_command(root, config, _input_with_default(prompt, detected).strip())
+
+
+def _should_ask_for_test_command(config: dict) -> bool:
+    """The four conditions that all have to hold before anybody is asked.
+
+    Asking is the cheap half; not asking is the half with rules. Kept
+    together and apart from the ask so the conditions read as a list of
+    reasons to stay silent rather than as four early returns threaded
+    through a prompt.
+    """
+    if not _stdin_is_a_tty():
+        return False
+    if (config.get("analyzers") or {}).get(
+        "prompt_when_interactive", DEFAULTS["prompt_when_interactive"]
+    ) is False:
+        return False
+    if not (config.get("test_execution") or {}).get("requested"):
+        return False
+    return not (config.get("expected_commands") or {}).get("test")
+
+
+def _record_test_command(root: Path, config: dict, answer: str) -> None:
+    """Persist the answer, including the blank one that cancels the opt-in.
+
+    A blank answer is a decision, not a non-answer: it writes
+    ``test_execution.requested: False`` so the next run does not ask
+    again and nothing runs in the meantime.
+    """
+    import shlex
 
     from ._safe_write import write_bounded
 

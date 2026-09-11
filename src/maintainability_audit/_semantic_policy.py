@@ -27,12 +27,25 @@ def _exact_paths(entry: dict[str, Any]) -> list[str]:
     return paths
 
 
+def _named_entry(entry: dict[str, Any], block: str, required: tuple[str, ...]) -> dict[str, Any]:
+    """Validate one policy entry and start its record.
+
+    Both entry kinds are a named, path-scoped rule; only the fields that
+    describe the rule differ. Requiring the shared half in one place
+    keeps a rule that holds for `domain_types` from quietly not holding
+    for `operations` — the way near-copies drift.
+    """
+    missing = [name for name in required if not entry.get(name)]
+    if missing:
+        raise ValueError(
+            f"semantic_policy {block} entries need {' and '.join(required)}"
+        )
+    return {"name": str(entry["name"]), "paths": _exact_paths(entry)}
+
+
 def _domain_type(entry: dict[str, Any]) -> dict[str, Any]:
-    if not entry.get("name") or not entry.get("required_type"):
-        raise ValueError("semantic_policy domain_types entries need name and required_type")
     return {
-        "name": str(entry["name"]),
-        "paths": _exact_paths(entry),
+        **_named_entry(entry, "domain_types", ("name", "required_type")),
         "boundary": str(entry.get("boundary") or "public"),
         "symbol": str(entry.get("symbol") or ""),
         "required_type": str(entry["required_type"]),
@@ -40,11 +53,8 @@ def _domain_type(entry: dict[str, Any]) -> dict[str, Any]:
 
 
 def _operation(entry: dict[str, Any]) -> dict[str, Any]:
-    if not entry.get("name"):
-        raise ValueError("semantic_policy operations entries need a name")
     return {
-        "name": str(entry["name"]),
-        "paths": _exact_paths(entry),
+        **_named_entry(entry, "operations", ("name",)),
         "capability_type": str(entry.get("capability_type") or ""),
         "operation_contract": str(entry.get("operation_contract") or ""),
     }

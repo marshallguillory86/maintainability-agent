@@ -282,3 +282,47 @@ def scan_bounded(
         number = number + 1 if walk_in else end + 1
     ranges.sort(key=lambda item: (item.start, item.end))
     return ranges, masked
+
+
+def qualify_members(
+    ranges: list[DeclRange], spans: list[tuple[int, int, str]]
+) -> list[DeclRange]:
+    """Name each method for the innermost container that holds it.
+
+    PHP qualifies a method with its class, Rust with the type its `impl`
+    names, and both had written the same twenty-four lines to do it —
+    reported cross-file at 0.949 similarity by this repository's own
+    audit. What differs between them is *which spans* to qualify
+    against, which is the argument; the rule for choosing among them is
+    identical, so it lives once.
+
+    Consolidated on the condition this project sets for merging
+    duplication: the same business meaning, not merely the same shape.
+    Both answer "which container does this declaration belong to", and
+    both answer it the same way — innermost wins, so a method inside a
+    class nested in another class, or an `impl` nested in a `mod`, is
+    named for the thing it is actually a member of rather than the
+    outermost thing enclosing it.
+
+    A span with no name is not a container a work order can name, so it
+    is skipped. Rust needs that for an anonymous `impl`; PHP's class
+    spans always carry a name, so the guard costs it nothing and states
+    the rule for whichever language arrives next.
+    """
+    if not spans:
+        return ranges
+    qualified: list[DeclRange] = []
+    for entry in ranges:
+        holders = [
+            span for span in spans
+            if span[0] < entry.start and entry.end <= span[1] and span[2]
+        ]
+        if entry.kind == "function" and holders:
+            innermost = max(holders, key=lambda span: span[0])
+            qualified.append(
+                DeclRange(entry.start, entry.end, f"{innermost[2]}::{entry.name}",
+                          entry.kind, entry.cognitive)
+            )
+        else:
+            qualified.append(entry)
+    return qualified

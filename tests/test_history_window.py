@@ -168,11 +168,8 @@ def test_a_window_filtered_to_empty_says_so() -> None:
     that read every one of them -- and the reader was told nothing was
     committed at all.
     """
-    from maintainability_audit.evidence import (
-        NO_SCANNED_FILES_CHANGED,
-        NotApplicable,
-        _normalize_history,
-    )
+    from maintainability_audit._evidence_reader import _normalize_history
+    from maintainability_audit.evidence import NO_SCANNED_FILES_CHANGED, NotApplicable
     from maintainability_audit.renderers import render_history_markdown
 
     report = _empty_window_report(commits_in_window=7, commits_considered=7)
@@ -193,11 +190,8 @@ def test_a_window_filtered_to_empty_says_so() -> None:
 
 def test_a_merge_only_window_is_not_reported_as_a_quiet_one() -> None:
     """Every commit in the window is a merge, so `--no-merges` emptied it."""
-    from maintainability_audit.evidence import (
-        MERGES_ONLY,
-        NotApplicable,
-        _normalize_history,
-    )
+    from maintainability_audit._evidence_reader import _normalize_history
+    from maintainability_audit.evidence import MERGES_ONLY, NotApplicable
     from maintainability_audit.renderers import render_history_markdown
 
     report = _empty_window_report(commits_in_window=4, commits_considered=0)
@@ -210,11 +204,8 @@ def test_a_merge_only_window_is_not_reported_as_a_quiet_one() -> None:
 
 def test_a_genuinely_empty_window_still_reads_as_empty() -> None:
     """The case D56 closed must not become collateral of D66's wording."""
-    from maintainability_audit.evidence import (
-        EMPTY_WINDOW,
-        NotApplicable,
-        _normalize_history,
-    )
+    from maintainability_audit._evidence_reader import _normalize_history
+    from maintainability_audit.evidence import EMPTY_WINDOW, NotApplicable
     from maintainability_audit.renderers import render_history_markdown
 
     report = _empty_window_report(commits_in_window=0, commits_considered=0)
@@ -225,11 +216,8 @@ def test_a_genuinely_empty_window_still_reads_as_empty() -> None:
 
 def test_a_report_written_before_the_counts_existed_still_normalizes() -> None:
     """Reports already on disk carry neither count and must not crash."""
-    from maintainability_audit.evidence import (
-        EMPTY_WINDOW,
-        NotApplicable,
-        _normalize_history,
-    )
+    from maintainability_audit._evidence_reader import _normalize_history
+    from maintainability_audit.evidence import EMPTY_WINDOW, NotApplicable
     from maintainability_audit.renderers import render_history_markdown
 
     report = _empty_window_report()
@@ -284,11 +272,8 @@ def test_an_incoherent_pair_of_counts_earns_the_least_specific_reason(
     remove, so an incoherent pair falls back to the plain empty-window
     wording rather than to whichever specific story it happens to fit.
     """
-    from maintainability_audit.evidence import (
-        EMPTY_WINDOW,
-        NotApplicable,
-        _normalize_history,
-    )
+    from maintainability_audit._evidence_reader import _normalize_history
+    from maintainability_audit.evidence import EMPTY_WINDOW, NotApplicable
 
     report = _empty_window_report(**counts)  # type: ignore[arg-type]
     state = _normalize_history(report).qualifying_hotspots

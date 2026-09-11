@@ -17,9 +17,10 @@ from statistics import median
 from typing import Any
 
 from ._aspects import evidence_aspect_scores, is_untested
+from ._evidence_reader import normalize_report_evidence
 from ._formula import CALIBRATED_ASPECTS, curve, overall_from_aspects
 from ._pressures import production_pressures
-from .evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY, normalize_report_evidence
+from .evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY
 
 # The stored column holding the analyzers' production reading. Named
 # once because both the refusal and the mix key on it.

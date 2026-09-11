@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 
 from ._adapters import BaseAdapter, Extraction, _npx
@@ -53,6 +53,50 @@ class VultureAdapter(BaseAdapter):
 
 
 
+def _json_diagnostics(
+    result: ToolResult, *, slug: str,
+    concept_of: Callable[[str], str], line_key: str,
+) -> Extraction:
+    """Findings from a tool that emits a JSON array of diagnostics.
+
+    Two adapters read the identical envelope — ruff and fortitude are
+    both Rust linters in the same lineage, and ship the same object with
+    one key renamed. Their `_read` methods were byte-identical apart from
+    the concept mapper and that key, which the duplication detector
+    reported at similarity 1.0 (the near-duplicate work order on this
+    repository's own audit).
+
+    Consolidated because the *business meaning* is the same one —
+    "decode a diagnostics array into findings" — which is the only
+    condition this project accepts for merging duplication. The two
+    things that genuinely differ are the two parameters.
+
+    `line_key` is the sharp one and is why this takes a parameter rather
+    than guessing: ruff writes `row`, fortitude writes `line`, and
+    reading ruff's spelling against fortitude's payload silently drops
+    every line number rather than failing. A comment used to carry that
+    warning next to one of the two copies; a named argument carries it
+    to any adapter added later.
+    """
+    payload = json.loads(result.stdout or "[]")
+    if not isinstance(payload, list):
+        raise ValueError(
+            f"expected a JSON array of diagnostics, got {type(payload).__name__}"
+        )
+    findings = tuple(
+        Finding(
+            concept=concept_of(item.get("code") or ""),
+            path=item.get("filename", ""),
+            line=(item.get("location") or {}).get(line_key),
+            message=item.get("message", ""),
+            tool=slug,
+            rule=item.get("code"),
+        )
+        for item in payload
+    )
+    return Extraction(findings=findings)
+
+
 class RuffAdapter(BaseAdapter):
     """~800 lint rules, as located findings.
 
@@ -77,21 +121,8 @@ class RuffAdapter(BaseAdapter):
         )
 
     def _read(self, result: ToolResult) -> Extraction:
-        payload = json.loads(result.stdout or "[]")
-        if not isinstance(payload, list):
-            raise ValueError(f"expected a JSON array of diagnostics, got {type(payload).__name__}")
-        findings = tuple(
-            Finding(
-                concept=_ruff_concept(item.get("code") or ""),
-                path=item.get("filename", ""),
-                line=(item.get("location") or {}).get("row"),
-                message=item.get("message", ""),
-                tool=self.slug,
-                rule=item.get("code"),
-            )
-            for item in payload
-        )
-        return Extraction(findings=findings)
+        return _json_diagnostics(
+            result, slug=self.slug, concept_of=_ruff_concept, line_key="row")
 
 
 # Ruff rule prefixes mapped onto this project's concern vocabulary, so a
@@ -142,26 +173,9 @@ class FortitudeAdapter(BaseAdapter):
         )
 
     def _read(self, result: ToolResult) -> Extraction:
-        payload = json.loads(result.stdout or "[]")
-        if not isinstance(payload, list):
-            raise ValueError(
-                f"expected a JSON array of diagnostics, got {type(payload).__name__}"
-            )
-        findings = tuple(
-            Finding(
-                concept=_fortitude_concept(item.get("code") or ""),
-                path=item.get("filename", ""),
-                # `line`, not ruff's `row`: the two tools ship the same
-                # shape with one key renamed, and reading ruff's spelling
-                # here would silently drop every line number.
-                line=(item.get("location") or {}).get("line"),
-                message=item.get("message", ""),
-                tool=self.slug,
-                rule=item.get("code"),
-            )
-            for item in payload
-        )
-        return Extraction(findings=findings)
+        # `line`, not ruff's `row` — see `_json_diagnostics`.
+        return _json_diagnostics(
+            result, slug=self.slug, concept_of=_fortitude_concept, line_key="line")
 
 
 # Fortitude groups its rules by prefix: C correctness, OB obsolescent,

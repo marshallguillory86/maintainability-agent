@@ -5481,9 +5481,275 @@ tests name neither writer — they sweep `write_user_answers` call sites
 and then exercise both staged replies through `apply_answers`, so a third
 writer added tomorrow is covered and a wrong *source* fails the same way
 a wrong *shape* does.
+### D148 — Closed: four sentences said "COBOL are parsed" (Low)
+
+D143 corrected `UNANCHORED_LANGUAGES` to `("COBOL",)`. Four sentences
+built from that constant kept the plural they were written with: the
+corpus note inside the score object, the Markdown caveat, the HTML strip
+beside the letter, and `unanchored_sentence` itself. Every skin that
+grades a COBOL repository printed **"COBOL are parsed but are not in the
+reference corpus, so a grade or multiple reported for code in them is
+provisional"**.
+
+Low severity and filed anyway, because the mechanism is the one this
+register exists for and the cost of not filing it was demonstrated: it
+was reported to Marshall twice as a known wart and fixed neither time.
+
+**Population.** Four call sites, and a contract test that asserted the
+literal `f"{expected_names} are parsed"` — so the wrong grammar was
+**pinned by a check** rather than caught by one. That is the sharpest
+part of this entry. A test written from the sample it was built on
+(six languages, plural correct) survived the population changing under
+it and then enforced the error.
+
+**Fixed** by making the number derivable. `_grammar.agreement(count)` is
+a foundation returning the verb, pronouns and quantity for a subject of
+that size; the four sentences ask it and keep their own wording. A
+foundation rather than a helper on `_anchor` because the scorer and the
+presentation layer both need the answer, and presentation may not import
+scoring — an attempt to put it in `_anchor` was correctly refused by
+`test_presentation_never_computes_a_score`.
+
+The architecture gate also caught the first draft returning a dict: a
+`say["grade"]` subscript reads, to the sweep hunting for score keys
+removed in ADR 001 stage 8, exactly like a report dictionary being
+indexed. A `NamedTuple` is unambiguous to that check and to a reader.
+
+*Closing test:* `test_every_grade_skin_prints_the_derived_unanchored_caveat`
+in `tests/test_unanchored_set_matches_corpus.py`, which now derives its
+verb from the population instead of asserting the plural.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is `unanchored_sentence` — the corpus note
+inside the score object, which no rendered skin produces and which the
+closing test reaches through `_reference_block` rather than by name.
+Hardcoding `are` there passes every skin assertion that names a
+renderer, because the note is data the scorer writes rather than a
+presentation the reader sees rendered.
+
+### D149 — Closed: pairing read filenames, and called 52 tested modules untested (High)
+
+`describe_tdd` paired a production file when some test file's *subject
+stem* matched it: `test_scoring.py` covers `scoring.py`. That is one
+convention, stated as if it were the only one, and every repository that
+organises its suite by **behaviour** is reported as having untested
+production code.
+
+**Found by the tool doing it to itself.** The 3.1.0 self-audit raised 58
+`unpaired-hotspot` items — 58 of 146 production files. Measured against
+what the suite actually does:
+
+| | |
+|---|---|
+| Unpaired modules reported | 58 |
+| Imported by at least one test file | **52** |
+| Suite coverage | **94.46%** |
+| Modules below 82% coverage | **1** |
+
+**The module's own docstring had already named this failure**, for the
+case of adding a language without teaching it that language's test
+naming: *"reports every repository in it as having untested production
+code — a confident finding, wrong on every project, of exactly the kind
+this tool exists to prevent."* The rule then did precisely that to the
+repository shipping it, because the warning was written about languages
+and the defect was about conventions.
+
+**Population.** Every pairable language — `PAIRABLE` is eight suffix
+families — and every repository in any of them that does not name test
+files after modules. On this one, 52 of 58 findings were false. The
+Python ecosystem's ordinary pytest layout is behaviour-named, so the
+false-positive rate is not a property of this repository.
+
+**Fixed** by widening the *evidence*, not the convention. A unit is
+paired when a test file names it **or imports it**. An import is a fact
+about the relationship; a filename is a guess about it, and the fact was
+already sitting in the test files unread. The scan reads Python, JS/TS,
+Java and Fortran import forms in the same pass that already counts test
+constructs, so it costs no additional file reads.
+
+    work-order items   60 -> 8
+    unpaired-hotspot   58 -> 6
+    paired files        7/146 -> 111/146
+    estimate, grade    4.1, C -> 4.1, C   (unchanged)
+
+**The first claim about this was wrong, and so was the correction.**
+
+The entry was originally deferred on the grounds that pairing feeds
+`test_presence`, which moves `scanner_fingerprint` and invalidates all
+180 stored rows. That was asserted from how the change felt rather than
+checked, and it is false: `_test_pairing` is **not in
+`MEASUREMENT_PATH`**, and `test_presence` reads 5.0 either way — it asks
+whether tests exist at all, not what fraction is paired.
+
+The correction then overreached in the other direction. It said the
+fingerprint was "byte-identical before and after the change
+(`0f08242164497d73`)". True of the pairing module in isolation. **False
+of the commit**, which also carried `_metric_adapters.py` and
+`_selection.py`, both in `MEASUREMENT_PATH`. Measured across the three
+commits of this slice:
+
+    eee8f4c  0f08242164497d73   before
+    08e4517  da4ac5e217816ff3   D149 landed, with the splits
+    116bc7f  c2b249230840d3cd   after the pillar work
+
+So corpus **reuse is invalidated** by this slice and the next
+re-measure cannot reuse stored rows. The constants are not known to have
+moved — the splits are refactors and change no measurement — but that is
+a separate question from reuse, and the fingerprint is deliberately a
+byte digest so that nobody has to decide which refactors were safe.
+
+Recorded rather than edited away because the mechanism is the entry's
+own subject: a measurement of one thing, stated about another. Found by
+a hostile audit of the commit that carried the correction.
+
+Three bugs were found in the fix by its own falsifier before it shipped,
+each of which would have made the rule worse than the one it replaced:
+`./scoring.js` resolved to `js` (extension read as a module segment,
+pairing every JS file against any test importing another); `import y
+from './report'` collected `y`, a JavaScript binding name, through the
+Python branch; and `import static com.example.Helper.thing` resolved to
+the *member* rather than the class. All three fail in the flattering
+direction — reporting less work than exists.
+
+Six findings remain and they are honest: four `tools/` scripts outside
+the coverage target, and `_ranges_core` and `_html_report_sections`,
+which tests reach only transitively.
+
+*Closing test:* `test_an_import_form_names_its_subject`,
+`test_a_file_extension_is_not_read_as_a_module_segment`,
+`test_a_javascript_binding_name_is_not_a_subject` and
+`test_a_module_imported_by_a_behaviour_named_test_is_paired` in
+`tests/test_pairing_reads_imports.py`.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=local
+*Seat:* `test=claude` again, and recorded for the same reason as D145 —
+this falsifier is owed an adversarial read because its author wrote the
+fix. It did catch three real bugs in that fix, which is the argument for
+writing it, not a substitute for review.
+*Mutation:* the member broken is
+`test_a_module_no_test_names_or_imports_is_still_unpaired` — the guard
+that the widened rule still finds real gaps. A fix that paired
+everything would satisfy every other test in the file and report a clean
+tree, which is the failure mode a widening invites and the one the
+reported instance cannot show. It sits outside the sample because every
+other case in that file asserts a pairing *succeeds*.
+
+
+### D150 — Closed: the terminal asked five of the seven setup questions (Medium)
+
+`docs/cli.md`: an interactive first run on a TTY is "the **same** setup
+questions as chat/MCP". `_first_run.maybe_prompt_first_run`'s own
+docstring: "One setup, not one per surface." It asked five of seven.
+
+`default_format` is legitimately absent — ADR 011 §3 asks it on every
+invoke rather than once at setup. The other was **economics**, and
+nothing was asked in its place: a terminal user was never offered the
+economic scenario, never told it existed, and got reports without money
+in them having declined nothing.
+
+**Population.** Every question `setup_questions` defines — the shared
+definition chat and MCP both render. Seven today.
+
+**How it survived.** The prose claim was true of six of the seven, and a
+reader checking it would have found the questions they went looking for.
+The absent one is invisible from the terminal, because a question that
+is never asked leaves nothing on screen to notice. This is the shape
+D25 and D22 already recorded on this surface: the product had the
+capability and the door did not offer it.
+
+**Found and then not filed.** It was reported in a wrap-up on 2026-09-09
+as "CLI asking five of seven" and, when the D143 slice took the other
+three items in that list, left as a note. Nothing carried it. That is
+the corollary this register's own rule states — anything reported as
+still open gets filed in the same turn — and D151 is the entry about
+breaking it.
+
+**Fixed.** The terminal asks the economics gate, and only the gate: the
+three labor rates stay the staged second ask `economics_bounds_pending`
+raises on the next call, the same shape the other surfaces use. Asking
+three rates of somebody who has just declined is the defect staging
+already fixed, and the terminal inherits the fix rather than a copy.
+
+*Closing test:* `test_the_terminal_asks_every_setup_question` and
+`test_the_economic_scenario_is_among_them` in
+`tests/test_terminal_asks_the_same_questions.py`, which derive the
+population from `setup_questions` rather than listing it.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is `record_scan_history` — removed from
+the terminal's answers while `economics` stays. It sits outside the
+sample because the reported instance was economics and the closing
+test names economics only in its second assertion; the sweep has to
+reach a question nobody has ever seen go missing, which is the whole
+reason it derives from `setup_questions` instead of listing names.
+
+### D151 — Closed: a release was cut while a known defect was unfiled (High)
+
+The standing rule is "no release until the known-defect ledger is
+empty", and its corollary is that anything reported as still open gets
+**filed in the same turn**, because a ledger that gates a release has to
+be the whole ledger rather than a list plus what somebody remembers.
+
+v3.1.0 was tagged at 17:13 on 2026-09-10. The caveat's grammar had been
+reported to Marshall twice as a known wart — once in the 3.1.0 hand-off
+itself, in the same message that called the release clean. It was filed
+as D148 at 20:16, three hours after the tag.
+
+So the register read zero open entries at release time, and the release
+was correct by every check that existed. **The ledger was empty because
+the defect was never written down.**
+
+**Population.** Every release. Nothing in `.github/workflows/release.yml`
+read the register at all; `test_written_record` holds the disposition to
+*describing* the open headings, which keeps the register internally
+consistent and says nothing about whether a tag may be cut while entries
+are open. The rule was enforced by whoever was paying attention.
+
+**Fixed structurally**, per the standing rule that an audit finding a
+class of bug ships the check that blocks the class. `release.yml` greps
+the register for open-entry headings and fails the build job if any
+exist, before anything is built or uploaded.
+
+**What the gate cannot do, and the first version of this paragraph got
+it wrong twice.**
+
+It does not "refuse the tag". Pushing a tag *creates* it; this workflow
+runs afterwards. What it refuses is the **publish**, which is the thing
+that matters, and it leaves behind a tag that has to be moved or
+deleted — exactly the mess D124 describes from the other direction.
+
+It also ran only for a tag ref in its first cut, so `workflow_dispatch`
+— which this workflow's own header documents as the way to publish a
+chosen ref — walked straight past it. A gate on one of two publishing
+paths is not a gate. It is now unconditional, and
+`test_no_publishing_trigger_skips_the_ledger_check` parses the workflow
+rather than grepping it, because a condition is invisible to a substring
+search and a text search is what let the first version pass.
+
+And it sees only *filed* entries. It cannot see a defect somebody
+declined to write down, which is exactly what happened here. That half
+is the corollary, and no check enforces "file what you know".
+
+All three limits found by a hostile audit of the commit that shipped
+this entry, which had claimed the first of them as a capability.
+
+*Closing test:* `test_the_release_workflow_reads_the_register` and
+`test_the_gate_matches_the_heading_the_register_actually_uses` in
+`tests/test_release_needs_an_empty_ledger.py`.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is the gate's **pattern**, not its
+presence — changing the em dash in `### D[0-9]+ — Open` to a hyphen.
+The step still runs, still greps, still reports "open register entries:
+0", and passes every release while the register holds open entries. It
+sits outside the sample because the reported instance was an absent
+gate, and a test written from that instance would assert the step
+exists — which the mutated workflow satisfies.
+
+
 ## Disposition
 
-**Every entry is closed.** D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

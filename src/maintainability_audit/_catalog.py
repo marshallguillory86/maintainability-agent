@@ -190,7 +190,23 @@ def decide(tool: dict[str, Any], settings: dict[str, Any]) -> Selection:
     3. the depth, licence and concern tiers.
     """
     slug = tool["slug"]
+    return (
+        _denial(tool, settings)
+        or (Selection(slug, True, "explicitly allowed by name")
+            if slug in settings["allow_tools"] else None)
+        or _tier_decision(tool, settings)
+    )
 
+
+def _denial(tool: dict[str, Any], settings: dict[str, Any]) -> Selection | None:
+    """Step 1: every deny, which beats even an explicit allow.
+
+    `None` means nothing here refused the tool, not that it was admitted —
+    the caller has two more steps. Separate from the tiers because these
+    are the operator's own prohibitions and the tiers are policy: a deny
+    that could be overridden by an allow would not be a deny.
+    """
+    slug = tool["slug"]
     if slug in settings["deny_tools"]:
         return Selection(slug, False, "denied by name")
     if tool["license_class"] in settings["deny_license_classes"]:
@@ -198,10 +214,14 @@ def decide(tool: dict[str, Any], settings: dict[str, Any]) -> Selection:
     denied_concerns = set(tool["upstream_tags"]) & set(settings["deny_concerns"])
     if denied_concerns:
         return Selection(slug, False, f"concern {','.join(sorted(denied_concerns))} denied")
+    return None
 
-    if slug in settings["allow_tools"]:
-        return Selection(slug, True, "explicitly allowed by name")
 
+def _tier_decision(tool: dict[str, Any], settings: dict[str, Any]) -> Selection:
+    """Step 3: the depth, licence and concern tiers, for a tool no deny
+    caught and no allow admitted. The only step that can end in `True`
+    on the tool's own merits."""
+    slug = tool["slug"]
     if tool["deprecated"]:
         return Selection(slug, False, "deprecated upstream")
     if not tool["languages"]:

@@ -375,7 +375,20 @@ def test_a_break_is_named_in_the_rendered_report() -> None:
 
     assert "2 separate series" in rendered
     assert "different instrument" in rendered
-    assert "Series 1" in rendered and "Series 2" in rendered
+    # Both series are present and kept apart. The current one is rendered
+    # in full and the earlier ones as table rows — 49 segments printed as
+    # 49 paragraphs was a section nobody read — so this asserts that both
+    # windows reach the reader, not which heading each got.
+    assert "Current series" in rendered, "the series in force must be named"
+    assert "2 scans" in rendered, "the series in force must be rendered in full"
+    assert "Earlier series" in rendered, "the prior series must still be reported"
+    assert "| a to b |" in rendered, (
+        f"the earlier window is missing from the summary table:\n{rendered}"
+    )
+    assert "3 scans" not in rendered, (
+        "an earlier series belongs in the table, not rendered as a second full "
+        "series — that is the wall this presentation replaced"
+    )
 
 
 def test_a_quiet_period_is_not_described_as_getting_worse() -> None:

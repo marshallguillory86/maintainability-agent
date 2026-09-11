@@ -15,8 +15,9 @@ from html import escape
 from typing import Any
 
 from ._evidence_view import test_suite_lines
+from ._grammar import counted
 from ._hotspots import hotspot_cognitive, hotspot_complexity, hotspot_name
-from ._scan_view import POSTURE_NOTE
+from ._scan_view import pillar_cells
 from ._tdd_view import tdd_sentences
 
 
@@ -57,6 +58,57 @@ def coverage_section(report: dict[str, Any]) -> list[str]:
     return parts
 
 
+def _current_series_html(history: list[dict[str, Any]]) -> list[str]:
+    """The series in force, in full — the one a reader acts on today."""
+    segment = history[-1]
+    moved = segment["trajectory"]
+    change = f" Change {moved['change']:+.2f}." if moved.get("change") is not None else ""
+    label = "Current series — " if len(history) > 1 else ""
+    parts = []
+    if segment.get("break_reason"):
+        parts.append("<p><strong>This series begins at a break:</strong> "
+                     f"{escape(str(segment['break_reason']))}.</p>")
+    parts.append(
+        f"<p>{label}{counted(segment['scans'], 'scan')}, "
+        f"{escape(str(segment['from']))} to {escape(str(segment['to']))}.</p><ul>"
+        f"<li>Direction: {escape(str(moved['direction']))}.{change}</li>"
+        f"<li>Debt velocity: {segment['velocity']['introduced']} introduced, "
+        f"{segment['velocity']['cleared']} cleared.</li>"
+        f"<li>Growth: {escape(str(segment['growth']['verdict']))}.</li>"
+        f"<li>Never cleared in this window: "
+        f"{counted(segment['persistent_findings'], 'finding')}.</li></ul>")
+    return parts
+
+
+def _earlier_series_html(history: list[dict[str, Any]]) -> list[str]:
+    """Prior instruments as one table, newest first.
+
+    The Markdown skin's reasoning, kept identical here on purpose: 49
+    segments rendered as 49 blocks is a section nobody reads, and the two
+    skins disagreeing about that would be drift (ADR 011).
+    """
+    earlier = history[:-1]
+    if not earlier:
+        return []
+    rows = []
+    for segment in reversed(earlier):
+        moved = segment["trajectory"]
+        change = f"{moved['change']:+.2f}" if moved.get("change") is not None else "—"
+        began = (segment.get("break_summary") or segment.get("break_reason")
+                 or "the first recorded scan")
+        rows.append(
+            f"<tr><td>{escape(str(segment['from']))} to {escape(str(segment['to']))}</td>"
+            f"<td>{segment['scans']}</td>"
+            f"<td>{escape(str(moved['direction']))}</td><td>{change}</td>"
+            f"<td>{escape(str(began))}</td></tr>")
+    return [
+        f"<h3>Earlier series ({counted(len(earlier), 'series', 'series')})</h3>",
+        "<table><thead><tr><th>Window</th><th>Scans</th><th>Direction</th>"
+        "<th>Change</th><th>Began at a break in</th></tr></thead><tbody>"
+        + "".join(rows) + "</tbody></table>",
+    ]
+
+
 def trend_section(report: dict[str, Any]) -> list[str]:
     """The per-segment trend text the Markdown skin prints, from
     ``scan_history``: direction, debt velocity, growth, persistence, and
@@ -70,22 +122,10 @@ def trend_section(report: dict[str, Any]) -> list[str]:
     if len(history) > 1:
         parts.append(f"<p>{len(history)} separate series; scans either side of a "
                      "break were produced by different instruments and are reported "
-                     "apart.</p>")
-    for index, segment in enumerate(history, start=1):
-        if segment.get("break_reason"):
-            parts.append("<p><strong>Break before this series:</strong> "
-                         f"{escape(str(segment['break_reason']))}.</p>")
-        moved = segment["trajectory"]
-        change = f" Change {moved['change']:+.2f}." if moved.get("change") is not None else ""
-        parts.append(
-            f"<p>Series {index} — {segment['scans']} scans, "
-            f"{escape(str(segment['from']))} to {escape(str(segment['to']))}.</p><ul>"
-            f"<li>Direction: {escape(str(moved['direction']))}.{change}</li>"
-            f"<li>Debt velocity: {segment['velocity']['introduced']} introduced, "
-            f"{segment['velocity']['cleared']} cleared.</li>"
-            f"<li>Growth: {escape(str(segment['growth']['verdict']))}.</li>"
-            f"<li>Never cleared in this window: "
-            f"{segment['persistent_findings']} findings.</li></ul>")
+                     "apart. The current series is given in full, the earlier ones "
+                     "summarized.</p>")
+    parts.extend(_current_series_html(history))
+    parts.extend(_earlier_series_html(history))
     parts.append("<p>Every figure describes scans that happened; nothing forecasts.</p>")
     return parts
 
@@ -182,12 +222,7 @@ def _pillars_section(report: dict[str, Any]) -> list[str]:
     ]
     rows = []
     for entry in pillars:
-        condition = "—" if entry["condition"] is None else f"{entry['condition']:.1f}"
-        if entry["posture"] is None:
-            reading = "not measured — see below"
-        else:
-            note = POSTURE_NOTE.get(entry["posture"], entry["posture"])
-            reading = f"{entry['posture']}: {note}"
+        condition, reading = pillar_cells(entry)
         rows.append([
             escape(str(entry["pillar"])),
             escape(str(entry["scope"])),
@@ -198,15 +233,27 @@ def _pillars_section(report: dict[str, Any]) -> list[str]:
     parts.extend(_table(
         ["Pillar", "Scope", "Practice", "Condition", "Reading"], rows,
     ))
+    parts.extend(_unmeasured_pillars_html(pillars))
+    parts.extend(_practice_footer_html(practice))
+    return parts
+
+
+def _unmeasured_pillars_html(pillars: list[dict[str, Any]]) -> list[str]:
+    """Why a pillar has no condition — an unexplained dash reads as "fine"."""
     unmeasured = [e for e in pillars if e["condition"] is None]
-    if unmeasured:
-        parts.append("<p><strong>Not measured here, and why:</strong></p><ul>")
-        parts.extend(
-            f"<li><strong>{escape(str(e['pillar']))}</strong> — "
-            f"{escape(str(e['reason']))}</li>"
-            for e in unmeasured
-        )
-        parts.append("</ul>")
+    if not unmeasured:
+        return []
+    return [
+        "<p><strong>Not measured here, and why:</strong></p><ul>",
+        *(f"<li><strong>{escape(str(e['pillar']))}</strong> — "
+          f"{escape(str(e['reason']))}</li>" for e in unmeasured),
+        "</ul>",
+    ]
+
+
+def _practice_footer_html(practice: dict[str, Any]) -> list[str]:
+    """What enforcement was detected, and what held the level down."""
+    parts = []
     if practice.get("signals"):
         found = ", ".join(
             f"<code>{escape(str(s['signal']))}</code>" for s in practice["signals"]

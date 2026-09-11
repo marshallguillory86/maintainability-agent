@@ -319,35 +319,47 @@ def _items_from_semantic(report: dict[str, Any]) -> list[dict[str, Any]]:
             grouped.setdefault(finding["class"], []).append(finding)
     items: list[dict[str, Any]] = []
     for classification, findings in grouped.items():
-        # Typed facts are precise and local; policy work touches a
-        # declared boundary, which is more coordination than code.
-        risk, effort = (4, 2) if classification == "universal" else (4, 3)
-        band = band_of(risk, effort)
         for finding in findings:
-            evidence = finding.get("source_evidence") or {}
-            if not evidence.get("path"):
-                continue
-            items.append({
-                "finding_class": f"semantic-{classification}",
-                "title": f"{finding['rule_id']} in {evidence['path']}",
-                "path": evidence["path"],
-                "line": evidence.get("line"),
-                "target": finding.get("message") or "",
-                "severity": 1.0,
-                "band": band.value,
-                "risk": risk,
-                "effort": effort,
-                "rationale": (
-                    "a type checker proved this fact about the code"
-                    if classification == "universal"
-                    else "the repository's checked-in policy declares this boundary"
-                ),
-                "delta": 0.0,
-                "class_delta": 0.0,
-                "class_count": len(findings),
-                "verification": "python -m maintainability_audit --root . --format json",
-            })
+            item = _semantic_item(finding, classification, len(findings))
+            if item is not None:
+                items.append(item)
     return items
+
+
+def _semantic_item(
+    finding: dict[str, Any], classification: str, class_count: int
+) -> dict[str, Any] | None:
+    """One semantic finding as a work item, or `None` if it names no place.
+
+    A finding with no `source_evidence.path` is not work anyone can be
+    asked to do: the prompt would name a fix with nowhere to make it.
+    """
+    evidence = finding.get("source_evidence") or {}
+    if not evidence.get("path"):
+        return None
+    # Typed facts are precise and local; policy work touches a declared
+    # boundary, which is more coordination than code.
+    risk, effort = (4, 2) if classification == "universal" else (4, 3)
+    return {
+        "finding_class": f"semantic-{classification}",
+        "title": f"{finding['rule_id']} in {evidence['path']}",
+        "path": evidence["path"],
+        "line": evidence.get("line"),
+        "target": finding.get("message") or "",
+        "severity": 1.0,
+        "band": band_of(risk, effort).value,
+        "risk": risk,
+        "effort": effort,
+        "rationale": (
+            "a type checker proved this fact about the code"
+            if classification == "universal"
+            else "the repository's checked-in policy declares this boundary"
+        ),
+        "delta": 0.0,
+        "class_delta": 0.0,
+        "class_count": class_count,
+        "verification": "python -m maintainability_audit --root . --format json",
+    }
 
 
 def work_order_rows(items: list[dict[str, Any]]) -> list[dict[str, Any]]:

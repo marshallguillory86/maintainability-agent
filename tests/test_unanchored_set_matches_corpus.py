@@ -14,8 +14,8 @@ from pathlib import Path
 from maintainability_audit._anchor import UNANCHORED_LANGUAGES, unanchored_sentence
 from maintainability_audit._html_view import _executive_strip
 from maintainability_audit._metrics_types import KNOWN_SOURCE_SUFFIXES
+from maintainability_audit._prompt_sections import prompt_pressure_section
 from maintainability_audit.declarations import DECLARATION_SUFFIXES
-from maintainability_audit.prompts import prompt_pressure_section
 from maintainability_audit.renderers import summary_table
 from maintainability_audit.scoring import _reference_block
 
@@ -117,8 +117,13 @@ def test_every_grade_skin_prints_the_derived_unanchored_caveat() -> None:
         "remediation_prompt": "\n".join(prompt_pressure_section(score)),
     }
 
+    # The verb agrees with the population, and is derived here for the
+    # same reason the names are: hardcoding the plural is what shipped
+    # "COBOL are parsed" in all three skins once the set became one
+    # (D148). A test that asserts the wrong grammar enforces it.
+    verb = "is" if len(expected) == 1 else "are"
     for name, text in skins.items():
-        assert f"{expected_names} are parsed" in text, (
+        assert f"{expected_names} {verb} parsed" in text, (
             f"{name} does not print the derived unanchored caveat for "
             f"{sorted(expected)}: {text!r}"
         )

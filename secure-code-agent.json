@@ -6,7 +6,18 @@
     "exclude_patterns": [
       ".git/", "node_modules/", ".venv/", "venv/", "dist/", "build/",
       "**/__pycache__/", "**/*.min.js", "**/*.lock",
-      "tests/fixtures/"
+      "tests/fixtures/",
+      "tools/validation/reports/",
+      "tools/validation/*.json",
+      "tools/calibration/*.json",
+      "tools/experiments/*/results.json",
+      "examples/reports/",
+      "data/analyzer-catalog.json",
+      "src/maintainability_audit/_assets/",
+      "src/maintainability_audit/_skill_data/",
+      "htmlcov/",
+      "*.egg-info/",
+      ".pytest_cache/"
     ]
   },
   "gates": {

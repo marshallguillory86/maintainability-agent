@@ -155,6 +155,13 @@ CARRIED = (
     "findings_by_severity",
     "reported_not_scored",
     "loc_scanned",
+    #: v2 of the contract. The producer's identifier for its scoring
+    #: model, which is what a delegated trend is keyed on (D155). Absent
+    #: on a v1 document, and `None` there rather than invented — the
+    #: history falls back to the producer version, which fragments
+    #: pre-field releases correctly instead of asserting they shared one
+    #: model.
+    "scoring_model",
 )
 
 

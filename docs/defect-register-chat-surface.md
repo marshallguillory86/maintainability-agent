@@ -6009,36 +6009,50 @@ stopped comparing equal to a freshly built one. It is now actually
 derived, and the round-trip guard that caught this is why the cost was
 one test run rather than a corrupted history.
 
-**The known cost, decided rather than discovered.** Keying on the
-producer's *version* over-breaks: a docs-only or adapter-only release of
-`secure-code-agent` opens a new series having changed no scoring at all.
-The producer raised this itself rather than letting it look like a bug
-later, and offered to add a `scoring_model` field that moves only when
-the model does.
+**The version was the first key, and it over-breaks.** A docs-only or
+adapter-only release of `secure-code-agent` opens a new series having
+changed no scoring. The producer raised that itself rather than letting
+it surface later as a bug report.
 
-Taken as-is, deliberately. A scoring model is not something this tool
-can observe, so the version is the only proxy it has, and the two errors
-are not symmetric: a series that splits when nothing changed is visible
-and explicable, while one that joins across a scoring change is
-invisible and reads as knowledge. That asymmetry is the whole argument
-of this module.
+The first answer here was to accept it and document the noise: the two
+errors are not symmetric, and over-breaking is the safe direction. That
+answer was wrong for a reason this repository already knows. Its own
+file-size limit was widened from 250 to 600 the same week, because 161
+warnings nobody could act on is *"a signal that fires constantly
+teaches people to ignore it."* A trend that resets on a docs release is
+that signal, and shipping it with a note explaining the noise is
+documenting a defect rather than closing it.
 
-The narrower field is the better long-term answer and it is **not** taken
-now, because it is a schema change and would mean a `schema_version` 2
-for a problem that is currently cosmetic. When something else forces a
-v2, it goes in — and MA's reader must accept v2 **before** the producer
-emits it, or every document is refused during the window between the two
-releases.
+**So the contract gained the narrower field instead, agreed across the
+two tools before either released.** `scoring_model` is the producer's
+own identifier for "a repository's condition could differ here for
+reasons that are not the repository": the normalizer, slope, weight
+tables, letter bands, rank discount, the scanner floor, or the built-in
+rule profile. Not docs, adapters, CLI flags, output formats,
+performance, or a parser fix that changes no findings.
 
-MA will not pre-accept a schema it has not read. `_delegated_pillar`
-refuses an unknown schema outright because *"the schema string is the
-producer's promise about the shape, and guessing past it is how a
-consumer starts reporting fields that mean something different"* —
-widening the reader to a v2 nobody has specified would be that defect,
-committed in advance.
+A new *rule* bumps it, and that line is the producer's correction to a
+carve-out proposed from this side. A repository containing
+`yaml.unsafe_load` scores lower the day that rule ships without changing
+at all — adding findings is rescoring, because the score is a function
+of the finding set, and a reader takes "we can see more now" for "your
+code got worse".
+
+**MA reads schema v1 and v2**, keying on `scoring_model` where the
+document declares one and the producer version where it does not. That
+is what removes the deadlock: either tool can release first, and there
+is no window in which documents are refused. Accepting v2 is not
+guessing past a schema — its shape was specified jointly and the
+producer asserts the key-set difference from v1 is exactly that field.
+
+A v1 document is never collapsed onto one model id. The producer
+reserves model 1 and never emits it, because the releases before the
+field existed do not share a scoring model — its corroboration merge,
+rank discount and normalizer each moved the numbers independently.
+Falling back to the version fragments those correctly.
 
 A third option — MA special-casing which producer versions changed
-scoring, from a list the producer maintains — is refused. It puts
+scoring, from a list the producer maintains — was refused. It puts
 knowledge of another tool's internals in this repository, where it would
 go stale silently and where nothing could check it.
 

@@ -73,11 +73,18 @@ first scan after upgrading opens a new series. That break is real: the
 scans before it cannot be told apart from ones a different producer
 version made.
 
-Expect a new series on **every** `secure-code-agent` release, including
-ones that change no scoring. That is deliberate and the errors are not
-symmetric: a series that splits when nothing changed is visible and
-explicable, while one that joins across a scoring change is invisible
-and reads as knowledge.
+The trend keys on the producer's **scoring model** where its document
+declares one, and on its version where it does not. Keying on version
+alone over-breaks — a docs release of the delegate would reset the trend
+having changed no score — so the pillar contract gained a `scoring_model`
+field, agreed between the two tools before either released.
+
+MA reads **schema v1 and v2**. v2 is v1 plus that field, so either tool
+can release first and there is no window in which documents are refused.
+
+A v1 document is never collapsed onto a single model id: the delegate's
+releases before the field existed do not share one scoring model, so
+they keep the version as their key and fragment correctly.
 
 ### Fixed — a config path could be reached through a symlink (D153)
 

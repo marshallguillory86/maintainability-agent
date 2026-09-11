@@ -34,10 +34,11 @@ from pathlib import Path
 
 import pytest
 
-from maintainability_audit._delegated_pillar import (
+from maintainability_audit._delegated_pillar import (  # noqa: I001
     DEFAULT_PILLAR_PATH,
     SCHEMA,
     SCHEMA_VERSION,
+    SCHEMA_VERSIONS,
     read_delegated,
 )
 from maintainability_audit._pillars import PILLARS, Scope, pillar_report
@@ -114,7 +115,10 @@ def test_no_document_keeps_the_placeholder(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(("name", "payload"), [
     ("wrong schema", _document(schema="some-other-tool/pillar")),
-    ("wrong version", _document(schema_version=SCHEMA_VERSION + 1)),
+    # One past the newest contract MA knows. Was `SCHEMA_VERSION + 1`
+    # and that became 2, which is now a version MA reads — the case
+    # is still real, the number moved.
+    ("unknown version", _document(schema_version=max(SCHEMA_VERSIONS) + 1)),
     ("not an object", [1, 2, 3]),
     ("not json", "{not json at all"),
 ])
@@ -240,3 +244,69 @@ def test_every_skin_renders_the_delegated_pillar_as_a_number(tmp_path: Path) -> 
             f"the {name} skin printed a raw structure for the delegated "
             f"pillar: {rendered[:200]!r}"
         )
+
+
+def test_both_schema_versions_are_read() -> None:
+    """v2 is v1 plus `scoring_model`, so a reader of v1 reads v2.
+
+    Accepting v2 before the producer emits it is what removes the
+    release deadlock: if MA required v1 while secure-code-agent shipped
+    v2, every document would be refused for the window between the two
+    releases — silently, because a refused document reads as no
+    delegated pillar at all.
+    """
+    from maintainability_audit._delegated_pillar import SCHEMA_VERSIONS
+
+    assert set(SCHEMA_VERSIONS) == {1, 2}, (
+        "MA must read both contract versions; either side may release first"
+    )
+
+
+def test_the_trend_keys_on_the_scoring_model_when_one_is_declared() -> None:
+    """A docs release of the producer must not fragment the series.
+
+    Version was the first key and it over-breaks. `scoring_model` moves
+    when a repository's condition could differ for reasons that are not
+    the repository, and not otherwise.
+    """
+    from maintainability_audit._scan_history import _delegated_producers
+
+    def report(**pillar: object) -> dict:
+        return {"pillars": [{"pillar": "security",
+                             "delegated_to": "secure-code-agent", **pillar}]}
+
+    same_model = _delegated_producers(
+        report(producer_version="0.10.0", scoring_model=2))
+    later_release = _delegated_producers(
+        report(producer_version="0.11.0", scoring_model=2))
+    assert same_model == later_release, (
+        "a producer release that did not change the scoring model split the series"
+    )
+
+    rescored = _delegated_producers(
+        report(producer_version="0.11.0", scoring_model=3))
+    assert rescored != same_model, "a scoring-model change must break the series"
+
+
+def test_a_document_without_a_model_is_not_collapsed_onto_one() -> None:
+    """Pre-field releases do not share a scoring model, so they keep the
+    version as their key.
+
+    The producer reserves model 1 and never emits it, precisely because
+    assigning one id to everything before the field existed would assert
+    a comparability that was never true — its corroboration merge, rank
+    discount and normalizer each moved the numbers independently.
+    """
+    from maintainability_audit._scan_history import _delegated_producers
+
+    def report(version: str) -> dict:
+        return {"pillars": [{"pillar": "security",
+                             "delegated_to": "secure-code-agent",
+                             "producer_version": version}]}
+
+    assert _delegated_producers(report("0.9.0")) != _delegated_producers(report("0.8.0")), (
+        "two pre-field releases were treated as one scoring model"
+    )
+    assert "model" not in _delegated_producers(report("0.9.0"))[0], (
+        "a v1 document was given a model id it never declared"
+    )

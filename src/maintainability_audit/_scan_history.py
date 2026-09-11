@@ -518,9 +518,39 @@ def _delegated_producers(report: dict[str, Any]) -> tuple[str, ...]:
         tool = entry.get("delegated_to")
         if not tool:
             continue
-        version = entry.get("producer_version") or "unversioned"
-        found.append(f"{entry.get('pillar')}:{tool} {version}")
+        found.append(f"{entry.get('pillar')}:{tool} {_model_key(entry)}")
     return tuple(sorted(found))
+
+
+def _model_key(entry: dict[str, Any]) -> str:
+    """What identifies the instrument behind one delegated pillar.
+
+    The producer's **scoring model** when the document declares one, and
+    its version otherwise.
+
+    Version was the first answer and it over-breaks: a docs-only release
+    of the producer opens a new series having changed no score, and a
+    break that fires for nothing teaches a reader to ignore the ones that
+    matter. `scoring_model` is the producer's own identifier for "a
+    repository's condition could differ here for reasons that are not the
+    repository", so it moves when the numbers can and not otherwise.
+
+    **A document without the field is never collapsed to a single model.**
+    Falling back to the version fragments those releases, which is
+    correct: `secure-code-agent`'s releases before the field existed do
+    not share one scoring model — the corroboration merge, the rank
+    discount and the normalizer each moved the numbers independently.
+    Assigning them one id would assert a comparability that was never
+    true, so the producer reserves model 1 and never emits it.
+
+    The v1-to-v2 transition therefore breaks the series once, where the
+    instrument's self-description changed. That break is honest and it
+    happens exactly once.
+    """
+    model = entry.get("scoring_model")
+    if model is not None:
+        return f"model {model}"
+    return str(entry.get("producer_version") or "unversioned")
 
 
 def record_of(report: dict[str, Any], config: dict[str, Any], version: str,

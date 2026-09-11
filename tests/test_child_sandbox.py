@@ -154,3 +154,50 @@ def test_product_intent_matches_the_runner_sandbox_state() -> None:
         "product intent and _runner disagree about whether analyzer children "
         "receive network isolation"
     )
+
+
+def test_a_delegated_producer_change_breaks_the_series() -> None:
+    """A pillar this tool did not measure still moves when its producer does.
+
+    `secure-code-agent` changed its normalizer twice in one day without
+    touching the pillar document's schema: same shape, same fields, a
+    different condition for the same repository. MA stores that condition
+    in its history like any other, and the comparability gate could not
+    see the change — so the trend joined straight across it.
+
+    That is `_scan_history`'s opening defect arriving through a tool we
+    delegate to rather than one we run: *"a wrong snapshot is obviously a
+    snapshot, while a wrong trend looks like knowledge."*
+    """
+    from maintainability_audit._scan_history import (
+        COMPARABILITY_FIELDS,
+        ScanRecord,
+        segments,
+    )
+
+    assert "delegated_producers" in COMPARABILITY_FIELDS, (
+        "the producer's version must break a series; it is the only thing "
+        "this tool can see that moves when their scoring does"
+    )
+
+    def record(producer: str) -> ScanRecord:
+        return ScanRecord(
+            recorded_at="2026-09-11T00:00:00Z", commit="c", branch="main",
+            scope="full", rubric_version="3.3.0", calibration=1.0,
+            thresholds_digest="d", analyzers=(), scored_languages=(),
+            estimate=4.0, pillars={"security": 3.4},
+            delegated_producers=(producer,),
+        )
+
+    same = segments([record("security:secure-code-agent 0.9.0"),
+                     record("security:secure-code-agent 0.9.0")])
+    assert len(same) == 1, "an unchanged producer must not split a series"
+
+    moved = segments([record("security:secure-code-agent 0.9.0"),
+                      record("security:secure-code-agent 0.10.0")])
+    assert len(moved) == 2, (
+        "a producer version change joined two incomparable scores into one series"
+    )
+    assert "producer" in moved[1].break_reason, (
+        f"the break must name what changed; said: {moved[1].break_reason!r}"
+    )

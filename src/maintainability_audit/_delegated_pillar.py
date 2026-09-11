@@ -58,6 +58,19 @@ DEFAULT_PILLAR_PATH = ".maintainability/security-pillar.json"
 #: producer's promise about the shape, and guessing past it is how a
 #: consumer starts reporting fields that mean something different.
 SCHEMA = "secure-code-agent/security-pillar"
+#: Versions of that contract this tool can read. **Two, deliberately.**
+#: v2 is v1 plus `scoring_model` and nothing else, so a reader that
+#: handles both is not guessing: the producer asserts the key-set
+#: difference is exactly that one field.
+#:
+#: Accepting v2 before the producer emits it is what removes the
+#: deadlock. If MA required v1 while `secure-code-agent` shipped v2,
+#: every document would be refused for the window between the two
+#: releases -- silently, since a refused document reads as no delegated
+#: pillar. Either side can now release first.
+SCHEMA_VERSIONS = frozenset({1, 2})
+
+#: Kept for callers that imported the old name. The gate reads the set.
 SCHEMA_VERSION = 1
 
 #: What the pillar block takes from the document. Named rather than
@@ -75,6 +88,16 @@ CARRIED = (
     "findings_by_severity",
     "reported_not_scored",
     "loc_scanned",
+    #: v2. The producer's own identifier for its scoring model, bumped
+    #: when a repository's condition could differ for reasons that are
+    #: not the repository -- normalizer, slope, weights, letter bands,
+    #: the scanner floor, or the built-in rule profile. Absent on v1.
+    #:
+    #: This is what MA keys a delegated trend on, in preference to the
+    #: producer's version, because the version moves on docs releases
+    #: that change no score and fragmenting a trend for those teaches a
+    #: reader to ignore the breaks (D155).
+    "scoring_model",
 )
 
 
@@ -104,7 +127,7 @@ def read_delegated(root: Path, relative: str = DEFAULT_PILLAR_PATH) -> dict[str,
         return None
     if payload.get("schema") != SCHEMA:
         return None
-    if payload.get("schema_version") != SCHEMA_VERSION:
+    if payload.get("schema_version") not in SCHEMA_VERSIONS:
         return None
     return payload if _is_well_formed(payload) else None
 

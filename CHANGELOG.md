@@ -4,6 +4,137 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+## 3.3.0 - 2026-09-11
+
+### Changed — a repository's documented test command no longer runs (D152)
+
+**Minor rather than patch, because a config key stops taking effect.** If
+a repository's `maintainability-agent.json` documents
+`expected_commands.test`, that command is no longer what this tool runs
+when the suite is opted in. The command now comes from the **person's**
+tier — the one they were shown and accepted at setup.
+
+[D147](docs/defect-register-chat-surface.md) closed the half it named:
+`load_config` strips `test_execution.requested` from the repository
+tier, so a tree cannot opt the host in. It never stopped the tree
+choosing *what runs*.
+
+`expected_commands.test` is deliberately **not** stripped — it is
+documentation, and `require_test_command` reads it, so removing it would
+fail a real gate on every repository that documents its command
+honestly. The comment guarding that decision ended: *"their answer is
+what `opted_in_command` reads."*
+
+**`opted_in_command` did not exist.** Three docstrings named it as the
+user-tier reader that made keeping the key safe, and nothing
+implemented it. `run_test_suite` read the merged config, where the
+repository's document lands by design.
+
+So a person consented to `pytest -q`, having been shown `pytest -q`, and
+the host ran whatever the tree documented instead. That is worse than an
+unclosed opt-in, because the audit trail says the person agreed.
+
+`test_execution.timeout_seconds` took the same path **unclamped**: a
+documented `2147483647` made the host wait sixty-eight years for a child
+it was told to run. It now passes the same bound
+`analyzers.timeout_seconds` already had.
+
+A repository that documents a command still satisfies
+`require_test_command`. It simply no longer chooses the program.
+
+### Added — `--security-pillar`, and the delegated pillar that now runs
+
+[ADR 007](docs/adr-007-pillars-and-practice.md) delegates the security
+pillar: this tool reports what `secure-code-agent` measured rather than
+measuring it. The document is read from
+`.maintainability/security-pillar.json`, and that path was hardcoded —
+while `secure-code-agent`'s own help said the file is *"for
+maintainability-agent to ingest via `--security-pillar`"*, describing a
+flag that did not exist.
+
+It exists now, and takes a path. The default is unchanged, so nothing
+moves for anyone not passing it.
+
+### Fixed — a delegated pillar's trend joined across the producer's scoring change (D155)
+
+A delegated pillar's condition is stored in scan history like any other,
+and the comparability gate could not see when the tool that produced it
+changed its scoring. `secure-code-agent` altered its normalizer twice in
+one day without touching the document's schema: same shape, same fields,
+a different number for the same repository. The trend would have drawn
+one continuous line through it.
+
+Scan records now carry `delegated_producers` — `security:secure-code-agent 0.9.0`
+per delegated pillar — and it is a comparability field, so a producer or
+version change breaks the series and names itself.
+
+**History written before this release has no producer recorded**, so the
+first scan after upgrading opens a new series. That break is real: the
+scans before it cannot be told apart from ones a different producer
+version made.
+
+The trend keys on the producer's **scoring model** where its document
+declares one, and on its version where it does not. Keying on version
+alone over-breaks — a docs release of the delegate would reset the trend
+having changed no score — so the pillar contract gained a `scoring_model`
+field, agreed between the two tools before either released.
+
+MA reads **schema v1 and v2**. v2 is v1 plus that field, so either tool
+can release first and there is no window in which documents are refused.
+
+A v1 document is never collapsed onto a single model id: the delegate's
+releases before the field existed do not share one scoring model, so
+they keep the version as their key and fragment correctly.
+
+### Fixed — a config path could be reached through a symlink (D153)
+
+`authorize_config` on the MCP seam checked that a caller's
+`config_path` resolves inside the repository. That catches a config
+*outside* the tree. It cannot catch an **inward** link —
+`root/link -> root/src` — which resolves to a path inside the repository
+and passes every containment check there is.
+
+D34's rule is two halves: resolve and bound, then walk the route **as
+written**, because an inward link shows only on the lexical path.
+`repository_path` did both. This door did the first, so the two
+disagreed on the same tree — one refused, the other returned the target.
+The audited tree supplies the directory the link lives in.
+
+### Added — reports disclose that analyzer children are not isolated (D154)
+
+[Product intent](docs/product-intent.md) has said since P1 was amended
+that this package *"does not sandbox children"*, and lists *"that
+third-party tools cannot use the network"* among the things it does not
+promise. The scoping is correct and deliberate. **The report never said
+it.**
+
+A reader holding an audit whose promise reads "the analysis itself
+performs no network access" and a coverage table naming the external
+tools that ran had nothing connecting the two. The coverage section now
+carries the note, once, when children actually ran.
+
+P8's gap rather than P1's — an undisclosed promise, not a broken one.
+
+### Fixed — the HTML report carried none of the coverage gap notes
+
+"One source only", "nothing examined", and a dimension the analyzer tier
+declined are the coverage section's prose about its own gaps. The HTML
+skin printed the table and none of the notes — including "Nothing
+examined", which the module itself calls the point of the whole section.
+
+[ADR 011](docs/adr-011-three-report-presentations.md) says the skins
+render one report dict and never disagree. That claim was resting on the
+prose being built as Markdown strings inside the Markdown renderer.
+
+### Fixed — the MCP presentation contract described itself wrongly
+
+`audit_repository`'s documentation said `chat` and `markdown` are *"on
+the wire the two are the same text"* while the code beside it already
+rendered chat as the **bounded** skin and markdown as the **complete**
+report. The behaviour was right; the sentence was not, and a reader who
+believed it would have taken the bounding for a rendering accident
+rather than the contract.
+
 ## 3.2.0 - 2026-09-10
 
 ### Added — the security pillar reports what secure-code-agent measured

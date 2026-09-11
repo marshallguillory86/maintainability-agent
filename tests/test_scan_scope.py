@@ -18,14 +18,10 @@ from pathlib import Path
 
 import pytest
 
+from maintainability_audit._evidence_reader import normalize_report_evidence
 from maintainability_audit._evidence_view import NO_SCORE, estimate, score_range, status_sentence
 from maintainability_audit.config import load_config
-from maintainability_audit.evidence import (
-    KNOWN_SCOPES,
-    SCOPE_FULL,
-    EvidenceValidationError,
-    normalize_report_evidence,
-)
+from maintainability_audit.evidence import KNOWN_SCOPES, SCOPE_FULL, EvidenceValidationError
 from maintainability_audit.report import build_report
 from maintainability_audit.scoring import score_report
 

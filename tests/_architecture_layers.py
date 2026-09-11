@@ -31,6 +31,14 @@ PACKAGE = ROOT / "src" / "maintainability_audit"
 # Keeping the foundation spawners in one layer is what makes the
 # analyzer half of that rule checkable.
 FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "config",
+               # `_grammar` answers "how many are we talking about" for a
+               # sentence built from a measured population. A foundation
+               # because both the scorer (the corpus note) and the skins
+               # (the caveat beside a grade) need the same answer, and
+               # four hand-written copies of it shipped "COBOL are
+               # parsed" once the unanchored set became one (D148). It
+               # holds no report key and computes no score.
+               "_grammar",
                # `_operator_reads` is the one door for reading a file this
                # tool was told to read. It sits below `config` rather than
                # inside it: the user tier reads a file, `config` loads the
@@ -129,7 +137,19 @@ SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "id
             # reporting every unit, `_verdict_adapters` for tools reporting
             # only threshold breaches, `_tool_adapters` for the registry
             # naming them. The base module keeps only shared plumbing.
+            # `_delegated_pillar` reads `security-pillar.json` from the
+            # audited tree — the artifact secure-code-agent writes for
+            # the pillar ADR 007 delegates to it. A scanner because it
+            # reads a path the repository chooses; it computes nothing,
+            # and scoring may not import it.
+            "_delegated_pillar",
             "_metric_adapters", "_verdict_adapters", "_jvm_adapters",
+            # `_ratio_adapters` holds the two tools that report a rate
+            # for the whole tree rather than a reading per declaration —
+            # jscpd's duplication ratio and interrogate's docstring
+            # percentage. Split from `_metric_adapters` at the 500-line
+            # gate; a scanner either way, and it measures nothing itself.
+            "_ratio_adapters",
             "_tool_adapters", "_selection"}
 # `_bands` joins the rubric-data leaves: it is the band matrix, a table
 # of judgments like `_formula`, and imports nothing internal.
@@ -149,7 +169,8 @@ SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_anchor", "_calibra
            # a single value plus its spread. That is scoring input
            # preparation, and like the rest of this layer it reads
            # measurements and never scanners.
-           "_corroborate"}
+           "_corroborate",
+           "_evidence_reader"}
 # `_analysis` orchestrates: it calls the catalog, the runner and the
 # adapters and hands `report` a coverage document. That makes it assembly,
 # not a scanner — it composes rather than measures.
@@ -201,6 +222,13 @@ ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
             "_in_loop",
             "_work_order_weights", "_backfill"}
 PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
+                # `_prompt_sections` builds the pieces `prompts` composes
+                # — one builder per finding class, the dimension guidance
+                # table, the shared helpers. Split at the 500-line gate,
+                # the same split `_html_report_sections` makes for
+                # `_html_view`, and presentation for the same reason:
+                # it renders what the report already holds.
+                "_prompt_sections",
                 # `_attestation` composes the conformance and ratchet
                 # records into one artifact. Presentation because it
                 # renders what the report already holds, and like every
@@ -303,6 +331,13 @@ ENTRY = {"cli", "__main__", "mcp_server", "_first_run", "_mcp_setup", "_mcp_audi
          # entry may do.
          "_precommit_install",
          "_mcp_grants", "_mcp_refusals"}
+# `_evidence_reader` validates a report dictionary and produces the
+# vocabulary `evidence` defines. Scoring rather than boundary: validation
+# has opinions — which relations must hold, which schema versions are
+# supported, what an empty history window means — and a boundary carries
+# none. Split from `evidence` at the 500-line gate; the dependency runs
+# reader -> vocabulary and can never run back, or `evidence` stops being
+# a module that imports nothing.
 BOUNDARY = {"evidence"}
 
 LAYERS = {

@@ -55,6 +55,99 @@ class Deselected:
     reason: str = "inventory"
 
 
+def _resolve_adapter(
+    tool: dict[str, Any], root: Path,
+    excludes: Sequence[str], class_dirs: tuple[str, ...],
+) -> tuple[Any, tuple[str, ...], bool]:
+    """The adapter for a slug, the languages it reads, and whether it
+    can see artifacts here.
+
+    Resolution is not adjudication: this answers "what is this tool and
+    what can it see", and says nothing about whether it should run. Kept
+    apart so the four outcomes below read as four rules rather than as
+    rules interleaved with setup.
+    """
+    adapter = adapter_for(tool["slug"]) or declared_adapter(tool["slug"])
+    reads = tuple(
+        str(name).lower()
+        for name in (getattr(adapter, "languages", ()) or tool.get("languages") or ())
+    )
+    if adapter is not None and hasattr(adapter, "class_dirs"):
+        # analyzers.class_dirs for the adapter that reads compiled
+        # output (ADR 012). Assigned on EVERY run — including back
+        # to empty — because the registry holds one instance per
+        # process and configured dirs must not leak between audits.
+        # Before the gate below: that gate consults has_targets.
+        adapter.class_dirs = class_dirs
+    finds_targets = getattr(adapter, "has_targets", None) if adapter else None
+    has_artifacts = finds_targets is not None and finds_targets(root, excludes)
+    return adapter, reads, has_artifacts
+
+
+def _tool_outcome(
+    tool: dict[str, Any], root: Path, inventory: Any,
+    excludes: Sequence[str], class_dirs: tuple[str, ...],
+) -> Selected | Deselected:
+    """What one tool is to this repository: runnable, or why not.
+
+    Split from `select_runnable` when that function reached 79 lines
+    against a limit of 80 and cyclomatic 15 against a limit of 15 — one
+    line and one branch from failing this project's own gate, which is
+    a poor position for the function that decides what evidence an audit
+    is allowed to gather.
+
+    The split is along a real seam rather than at a convenient line
+    count: iterating a pool and adjudicating one member are two jobs,
+    and only the second has interesting behaviour. There are exactly
+    four outcomes here and each is now reachable in a test without
+    constructing a pool.
+    """
+    adapter, reads, has_artifacts = _resolve_adapter(tool, root, excludes, class_dirs)
+
+    # Artifact-read tools are gated by their artifacts, not by source
+    # languages: a tree holding `.class` files reaches SpotBugs whatever
+    # its sources speak.
+    if not (inventory.applicable(reads) or has_artifacts):
+        present = ", ".join(sorted(inventory.languages)) or "no recognised source"
+        return Deselected(
+            slug=tool["slug"],
+            detail=(
+                f"reads {', '.join(reads[:4])}; this tree is "
+                f"{present}, so it had nothing to examine"
+            ),
+            concepts=tuple(tool["measures"]),
+            languages=reads,
+        )
+    if adapter is None:
+        # Catalogued but not invokable. Reported rather than
+        # hidden — the inventory wanted it, this project just
+        # cannot run it — but never counted as runnable.
+        return Deselected(
+            slug=tool["slug"],
+            detail="selected by policy but no adapter is implemented",
+            concepts=tuple(tool["measures"]),
+            languages=reads,
+            reason="no-adapter",
+        )
+    if getattr(adapter, "executes_audited_configuration", False):
+        # Decision 9: configuration is code, and this agent does
+        # not run the audited tree's. A property of the adapter
+        # rather than a slug check, so the next tool that needs
+        # the tree's own config is refused without anyone
+        # remembering to add it here (D39).
+        return Deselected(
+            slug=tool["slug"],
+            detail=(
+                "cannot run without executing configuration from the "
+                "audited tree, which this agent does not do"
+            ),
+            concepts=tuple(tool["measures"]),
+            languages=reads,
+            reason="executes-audited-config",
+        )
+    return Selected(tool=tool, adapter=adapter, reads=reads)
+
+
 def select_runnable(
     pool: list[dict[str, Any]], root: Path, inventory: Any,
     excludes: Sequence[str] = (), class_dirs: tuple[str, ...] = (),
@@ -70,67 +163,15 @@ def select_runnable(
     inventory, instead of resolving the pool whole and marking the
     mismatches inapplicable afterwards.
 
-    Artifact-read tools are gated by their artifacts, not by source
-    languages: a tree holding `.class` files reaches SpotBugs whatever
-    its sources speak.
+    One outcome per tool, adjudicated by `_tool_outcome`; this walks the
+    pool and sorts what comes back.
     """
     runnable: list[Selected] = []
     deselected: list[Deselected] = []
     for tool in pool:
-        adapter = adapter_for(tool["slug"]) or declared_adapter(tool["slug"])
-        reads = tuple(
-            str(name).lower()
-            for name in (getattr(adapter, "languages", ()) or tool.get("languages") or ())
-        )
-        if adapter is not None and hasattr(adapter, "class_dirs"):
-            # analyzers.class_dirs for the adapter that reads compiled
-            # output (ADR 012). Assigned on EVERY run — including back
-            # to empty — because the registry holds one instance per
-            # process and configured dirs must not leak between audits.
-            # Before the gate below: that gate consults has_targets.
-            adapter.class_dirs = class_dirs
-        finds_targets = getattr(adapter, "has_targets", None) if adapter else None
-        has_artifacts = finds_targets is not None and finds_targets(root, excludes)
-        if inventory.applicable(reads) or has_artifacts:
-            if adapter is None:
-                # Catalogued but not invokable. Reported rather than
-                # hidden — the inventory wanted it, this project just
-                # cannot run it — but never counted as runnable.
-                deselected.append(Deselected(
-                    slug=tool["slug"],
-                    detail="selected by policy but no adapter is implemented",
-                    concepts=tuple(tool["measures"]),
-                    languages=reads,
-                    reason="no-adapter",
-                ))
-                continue
-            if getattr(adapter, "executes_audited_configuration", False):
-                # Decision 9: configuration is code, and this agent does
-                # not run the audited tree's. A property of the adapter
-                # rather than a slug check, so the next tool that needs
-                # the tree's own config is refused without anyone
-                # remembering to add it here (D39).
-                deselected.append(Deselected(
-                    slug=tool["slug"],
-                    detail=(
-                        "cannot run without executing configuration from the "
-                        "audited tree, which this agent does not do"
-                    ),
-                    concepts=tuple(tool["measures"]),
-                    languages=reads,
-                    reason="executes-audited-config",
-                ))
-                continue
-            runnable.append(Selected(tool=tool, adapter=adapter, reads=reads))
-            continue
-        present = ", ".join(sorted(inventory.languages)) or "no recognised source"
-        deselected.append(Deselected(
-            slug=tool["slug"],
-            detail=(
-                f"reads {', '.join(reads[:4])}; this tree is "
-                f"{present}, so it had nothing to examine"
-            ),
-            concepts=tuple(tool["measures"]),
-            languages=reads,
-        ))
+        outcome = _tool_outcome(tool, root, inventory, excludes, class_dirs)
+        if isinstance(outcome, Selected):
+            runnable.append(outcome)
+        else:
+            deselected.append(outcome)
     return runnable, deselected

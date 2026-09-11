@@ -149,18 +149,27 @@ class _PackageRow:
         return {"package": self.package, "files": self.files, "example": self.example}
 
 
-def divergent_idioms(
-    root: Path, files: list[Path], config: dict[str, Any], index: SourceIndex | None = None
-) -> list[dict[str, Any]]:
-    """Concerns served by more than one library in production code."""
-    source = index_or_new(index)
+def _packages_by_concern(
+    root: Path, files: list[Path], config: dict[str, Any], source: SourceIndex,
+) -> dict[str, dict[str, set[str]]]:
+    """Which production files import which package, grouped by concern.
+
+    Split out when `divergent_idioms` read 51 lines at cyclomatic 15 —
+    the gate's maximum, one branch from failing. The seam is the one the
+    function already had: it gathered, then it formatted, and only the
+    gathering knows about suffixes, test paths and vendored packages.
+
+    A package the repository publishes itself is not a divergence from
+    anything, which is why `own` is subtracted here rather than filtered
+    out of the rows later: a row that should never have existed is
+    cheaper to not build than to remove.
+    """
     groups = idiom_groups(config)
     membership = {
         member.lower(): concern for concern, members in groups.items() for member in members
     }
     own = _own_package_names(root)
     users: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
-
     for path in files:
         if path.suffix not in _SOURCE_SUFFIXES:
             continue
@@ -171,7 +180,14 @@ def divergent_idioms(
             concern = membership.get(package)
             if concern and package not in own:
                 users[concern][package].add(rel)
+    return users
 
+
+def divergent_idioms(
+    root: Path, files: list[Path], config: dict[str, Any], index: SourceIndex | None = None
+) -> list[dict[str, Any]]:
+    """Concerns served by more than one library in production code."""
+    users = _packages_by_concern(root, files, config, index_or_new(index))
     findings = []
     for concern, packages in users.items():
         if len(packages) < 2:

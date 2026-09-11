@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 from _git_path import GIT_PATH
 
+from maintainability_audit._evidence_reader import normalize_report_evidence
 from maintainability_audit.config import load_config
 from maintainability_audit.evidence import (
     REPORT_SCHEMA_VERSION,
@@ -36,7 +37,6 @@ from maintainability_audit.evidence import (
     SummaryEvidence,
     Unknown,
     UnsupportedReportSchema,
-    normalize_report_evidence,
     walk_evidence,
 )
 from maintainability_audit.report import build_report

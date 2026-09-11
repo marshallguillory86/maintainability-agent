@@ -239,6 +239,7 @@ def trend_report(segment: Segment) -> dict[str, Any]:
         "from": segment.records[0].recorded_at if segment.records else None,
         "to": segment.records[-1].recorded_at if segment.records else None,
         "break_reason": segment.break_reason,
+        "break_summary": segment.break_summary,
         "trajectory": {
             "direction": moved.direction.value,
             "change": moved.change,

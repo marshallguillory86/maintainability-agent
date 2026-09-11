@@ -24,11 +24,8 @@ from _scoring_fixtures import (  # shared fixtures, one source (dedup)
 )
 
 from maintainability_audit._calibration import DIMENSION_REFERENCES, WARN_WEIGHT
-from maintainability_audit.evidence import (
-    REPORT_SCHEMA_VERSION,
-    SCHEMA_VERSION_KEY,
-    normalize_report_evidence,
-)
+from maintainability_audit._evidence_reader import normalize_report_evidence
+from maintainability_audit.evidence import REPORT_SCHEMA_VERSION, SCHEMA_VERSION_KEY
 from maintainability_audit.scoring import dimension_pressures, grade_for, normalize
 
 

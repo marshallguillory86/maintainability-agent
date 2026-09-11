@@ -420,6 +420,7 @@ jobs:
         if: always()
         run: |
           secure-code-agent \
+            --config secure-code-agent.json \
             --fail-on-gate \
             --output secure-code-report.md \
             --prompt-output secure-code-remediation-prompt.md \

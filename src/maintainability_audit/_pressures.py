@@ -110,6 +110,37 @@ def _banded(banded_state: object, population: float | None,
     return _weighted_rate(failures, warnings, population)
 
 
+def _size_and_gate_pressures(
+    *,
+    file_band: object, files: float | None,
+    file_failures: float | None, file_warnings: float | None,
+    declaration_band: object, declarations: float | None,
+    function_failures: float | None, function_warnings: float | None,
+    gates: float | None,
+) -> dict[str, float | None]:
+    """The three pressures both count families share, computed once.
+
+    ``dimension_pressures`` and ``production_pressures`` ask the same
+    three questions of two different families of counts — all code, and
+    production only. The *counts* differ and are read at the call sites,
+    where the field names stay literal and greppable; the arithmetic
+    over them is one thing and lives here.
+
+    Split when the two read as an 81%-similar pair: near-copies drift
+    apart silently, and the band-withholding rule below is exactly the
+    kind of rule that must not hold in one copy and not the other.
+    """
+    return {
+        "file_size": _banded(file_band, files, file_failures, file_warnings),
+        "declarations": _banded(
+            declaration_band, declarations, function_failures, function_warnings,
+        ),
+        # Gates are discrete policy breaches, not a population sample, so
+        # they are scaled to sit on the same footing as a rate.
+        "gates": None if gates is None else 0.05 * gates,
+    }
+
+
 def dimension_pressures(summary: SummaryEvidence) -> dict[str, float | None]:
     """The five independently-sourced pressures, as rates.
 
@@ -120,39 +151,21 @@ def dimension_pressures(summary: SummaryEvidence) -> dict[str, float | None]:
     ``None`` for a dimension whose inputs were not all measured.
     """
     files = measured(summary.files_scanned)
-    decls = measured(summary.declarations_scanned)
-    gates = measured(summary.hard_gate_failures)
     return {
-        "file_size": _banded(
-            summary.file_band_pressure, files,
-            measured(summary.file_failures), measured(summary.file_warnings),
-        ),
-        "declarations": _banded(
-            summary.declaration_band_pressure, decls,
-            measured(summary.function_failures), measured(summary.function_warnings),
+        **_size_and_gate_pressures(
+            file_band=summary.file_band_pressure,
+            files=files,
+            file_failures=measured(summary.file_failures),
+            file_warnings=measured(summary.file_warnings),
+            declaration_band=summary.declaration_band_pressure,
+            declarations=measured(summary.declarations_scanned),
+            function_failures=measured(summary.function_failures),
+            function_warnings=measured(summary.function_warnings),
+            gates=measured(summary.hard_gate_failures),
         ),
         "duplication": _ratio(measured(summary.duplicate_blocks), files),
         "risk": _ratio(measured(summary.risk_findings), files),
-        # Gates are discrete policy breaches, not a population sample, so
-        # they are scaled to sit on the same footing as a rate.
-        "gates": None if gates is None else 0.05 * gates,
     }
-
-
-def _production(primary: object) -> float | None:
-    """A production-only count. Unknown stays unknown.
-
-    This used to fall back to the combined count when the production
-    figure was absent, on the theory that a summary might predate the
-    production split. An audit killed it twice over: the report contract
-    establishes that **no consumer rescores a historical report**, so the
-    fallback served no real caller, and it silently resurrected an
-    ``Unknown`` as a measured value — deleting
-    ``production_declarations_scanned`` produced a measured pressure and
-    raised the reported overall from 4.3 to 4.6. ADR 001 §3 forbids
-    exactly this: compatibility for a consumer that does not exist.
-    """
-    return measured(primary)
 
 
 def production_pressures(summary: SummaryEvidence) -> dict[str, float | None]:
@@ -162,23 +175,27 @@ def production_pressures(summary: SummaryEvidence) -> dict[str, float | None]:
     testable the *production* code is. Charging them for a long test body
     inverts the incentive — extracting duplicated test setup into a
     fixture would lower the score for improving the code.
+
+    Production counts take no fallback to the combined figure: an
+    ``Unknown`` stays unknown. A fallback was tried and killed twice —
+    the report contract establishes that **no consumer rescores a
+    historical report**, so it served no real caller, and it silently
+    resurrected an ``Unknown`` as a measured value. Deleting
+    ``production_declarations_scanned`` produced a measured pressure and
+    raised the reported overall from 4.3 to 4.6. ADR 001 §3 forbids
+    exactly this: compatibility for a consumer that does not exist.
     """
-    files = _production(summary.production_files_scanned)
-    decls = _production(summary.production_declarations_scanned)
-    gates = _production(summary.production_hard_gate_failures)
-    return {
-        "file_size": _banded(
-            summary.production_file_band_pressure, files,
-            _production(summary.production_file_failures),
-            _production(summary.production_file_warnings),
-        ),
-        "declarations": _banded(
-            summary.production_declaration_band_pressure, decls,
-            _production(summary.production_function_failures),
-            _production(summary.production_function_warnings),
-        ),
-        "gates": None if gates is None else 0.05 * gates,
-    }
+    return _size_and_gate_pressures(
+        file_band=summary.production_file_band_pressure,
+        files=measured(summary.production_files_scanned),
+        file_failures=measured(summary.production_file_failures),
+        file_warnings=measured(summary.production_file_warnings),
+        declaration_band=summary.production_declaration_band_pressure,
+        declarations=measured(summary.production_declarations_scanned),
+        function_failures=measured(summary.production_function_failures),
+        function_warnings=measured(summary.production_function_warnings),
+        gates=measured(summary.production_hard_gate_failures),
+    )
 
 
 def normalize_production(summary: SummaryEvidence) -> dict[str, float | None]:
@@ -303,32 +320,6 @@ def declined_dimensions(
             "makes the rate comparable to the rubric's"
         ),
     },)
-
-
-def _breach_counts(
-    per_unit: dict[str, dict[str, float]], thresholds: dict[str, Any]
-) -> tuple[int, int]:
-    """Units failing or warning on *any* criterion, counted once each.
-
-    Matches `declarations.function_status`: a declaration is one failure
-    however many limits it breaks. Counting per criterion would
-    double-count the worst code, which is the direction that flatters
-    nothing but is wrong all the same.
-    """
-    failures = warnings = 0
-    for values in per_unit.values():
-        failed = warned = False
-        for concept, warn_key, fail_key in DECLARATION_CRITERIA:
-            value = values.get(concept)
-            if value is None or warn_key not in thresholds or fail_key not in thresholds:
-                continue
-            if value > float(thresholds[fail_key]):
-                failed = True
-            elif value > float(thresholds[warn_key]):
-                warned = True
-        failures += failed
-        warnings += warned and not failed
-    return failures, warnings
 
 
 @dataclass(frozen=True)

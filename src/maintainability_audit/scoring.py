@@ -45,6 +45,7 @@ from ._aspects import (
     not_applicable_aspects,
 )
 from ._calibration import CATEGORIES, GRADE_GATES
+from ._evidence_reader import normalize_report_evidence
 from ._formula import (
     CATEGORY_ASPECTS,
     CATEGORY_WEIGHTS,
@@ -68,11 +69,7 @@ from ._second_source import (
     widen_for_spread,
 )
 from ._verification import INSUFFICIENT, verification
-from .evidence import (
-    NormalizedEvidence,
-    SummaryEvidence,
-    normalize_report_evidence,
-)
+from .evidence import NormalizedEvidence, SummaryEvidence
 
 __all__ = [
     "CATEGORIES",

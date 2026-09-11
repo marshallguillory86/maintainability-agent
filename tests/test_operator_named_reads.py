@@ -468,3 +468,131 @@ def test_what_is_validated_is_what_is_read(tmp_path: Path) -> None:
             read_operator_file(target)
     finally:
         target.unlink()
+
+
+def test_both_spellings_of_a_directory_exclude_agree_at_every_depth() -> None:
+    """`**/dir/` and `dir/` are one intent, so they must be one behaviour.
+
+    `**/dir/` matched **nothing** — at any depth, including the one it
+    names. The directory branch compares against the literal prefix,
+    `fnmatch` needs a trailing slash the path never has, and the
+    containment branch is skipped because the pattern holds glob
+    characters. It read as intent, never errored, and silently scanned
+    what it was written to exclude.
+
+    An inert exclude has no symptom of its own. The only sign is
+    findings you believed you had excluded, which is why this is asserted
+    over depths rather than on one example: the bug was uniform, so a
+    single case could have passed against a matcher that only handled
+    the depth it was written at.
+
+    Reported by the `secure-code-agent` session, which found the
+    identical defect in its own matcher (D156).
+    """
+    from maintainability_audit.metrics import is_excluded
+
+    for depth in range(4):
+        prefix = "/".join(f"d{n}" for n in range(depth))
+        path = f"{prefix}/__pycache__/x.pyc" if prefix else "__pycache__/x.pyc"
+        assert is_excluded(path, ["__pycache__/"]), f"bare spelling missed {path}"
+        assert is_excluded(path, ["**/__pycache__/"]), f"**/ spelling missed {path}"
+
+
+def test_the_file_form_of_a_double_star_pattern_still_matches() -> None:
+    """Only the directory form is rewritten; file patterns are untouched.
+
+    The first fix stripped `**/` from every pattern, which anchored
+    `**/generated/*.py` to the repository root and stopped it matching
+    `src/generated/client.py`. `test_exclude_patterns_use_glob_and_normalized_separators`
+    caught it — a file pattern already works through `fnmatch`, where
+    `*` crosses separators, so it needed no help and resented the help
+    it got.
+
+    Covers existing behaviour: this passed at the base, because file
+    patterns were never broken. It guards the fix's blast radius rather
+    than the defect, which is why it is not cited as D156's falsifier.
+    """
+    from maintainability_audit.metrics import is_excluded
+
+    assert is_excluded("src/generated/client.py", ["**/generated/*.py"])
+    assert is_excluded("a/b.min.js", ["**/*.min.js"])
+    assert not is_excluded("src/app.py", ["**/generated/*.py"])
+
+
+def test_a_directory_exclude_does_not_swallow_a_similar_name() -> None:
+    """Widening the matcher must not turn an exclude into a prefix match.
+
+    Covers existing behaviour: the matcher never swallowed a similar
+    name, so this passes at the base. It bounds the fix — a wider
+    matcher could have started excluding `pycache_notes.py` — and bounds
+    are not falsifiers.
+    """
+    from maintainability_audit.metrics import is_excluded
+
+    for pattern in ("__pycache__/", "**/__pycache__/"):
+        assert not is_excluded("src/pycache_notes.py", [pattern])
+        assert not is_excluded("src/my__pycache__helper.py", [pattern])
+        assert not is_excluded("src/app.py", [pattern])
+
+
+def test_a_globbed_directory_pattern_is_not_inert() -> None:
+    """`*.egg-info/` is a directory pattern holding a glob, and it matched
+    nothing.
+
+    D156's first fix handled one spelling — `**/dir/` — and left the
+    class. Any directory pattern with a glob in it fell through all
+    three branches: the literal branch cannot see a `*`, `fnmatch` on
+    the whole path needs a trailing slash no path has, and the
+    containment branch is skipped precisely because the pattern holds
+    glob characters.
+
+    This repository's own config carried `*.egg-info/` while
+    `src/maintainability_agent.egg-info/` sat in the tree being scanned.
+    """
+    from maintainability_audit.metrics import is_excluded
+
+    assert is_excluded("src/maintainability_agent.egg-info/PKG-INFO", ["*.egg-info/"])
+    assert is_excluded("pkg.egg-info/SOURCES.txt", ["*.egg-info/"])
+    # The trailing slash says directory, so a *file* with that suffix stays.
+    assert not is_excluded("src/notes.egg-info", ["*.egg-info/"])
+
+
+def test_every_configured_exclude_pattern_matches_something() -> None:
+    """A liveness sweep over this repository's whole exclude set.
+
+    The `secure-code-agent` session reported a liveness test of its own
+    that iterated only the directory half of its patterns — "half a
+    structural rule, which is the kind that reads as covered". Turning
+    that lesson on MA's config is what found `*.egg-info/` dead.
+
+    Asserted over every pattern rather than a sample, because an inert
+    exclude has no symptom of its own: it never errors, and the only
+    evidence is findings in files the operator believed were excluded.
+
+    Patterns are checked against paths constructed *from the pattern
+    itself*, so this stays true as the config changes and does not
+    depend on which generated artifacts happen to exist today.
+    """
+    import json
+
+    from maintainability_audit.metrics import is_excluded
+
+    patterns = json.loads(
+        (ROOT / "maintainability-agent.json").read_text(encoding="utf-8")
+    )["paths"]["exclude_patterns"]
+    assert patterns, "no exclude patterns configured; this sweep would be vacuous"
+
+    dead = []
+    for pattern in patterns:
+        bare = pattern.replace("**/", "").rstrip("/")
+        if pattern.endswith("/"):
+            probes = [f"{bare}/f.py".replace("*", "x"), f"deep/{bare}/f.py".replace("*", "x")]
+        else:
+            probes = [bare.replace("*", "x"), f"deep/{bare.replace('*', 'x')}"]
+        if not any(is_excluded(probe, [pattern]) for probe in probes):
+            dead.append(pattern)
+
+    assert not dead, (
+        "these configured exclude patterns match nothing and silently scan "
+        f"what they name: {dead}"
+    )

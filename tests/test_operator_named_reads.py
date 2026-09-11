@@ -556,6 +556,21 @@ def test_a_globbed_directory_pattern_is_not_inert() -> None:
     # The trailing slash says directory, so a *file* with that suffix stays.
     assert not is_excluded("src/notes.egg-info", ["*.egg-info/"])
 
+    # Every position a glob can take in a directory name, not just the
+    # leading one this defect was reported with. The class is "a glob
+    # anywhere in a directory pattern", and a test covering one shape of
+    # it is the vacuity the sweep below exists to avoid — asserted after
+    # the `secure-code-agent` session found its own liveness rule passing
+    # vacuously for exactly this class, because no shipped pattern
+    # exercised it.
+    for pattern, path in (
+        ("build-*/", "a/build-x86/out.js"),      # trailing
+        ("test_*/", "a/test_data/x.py"),         # trailing, underscore
+        ("*_ui/", "a/spec_ui/x.py"),             # leading
+        ("**/*.egg-info/", "src/pkg.egg-info/PKG-INFO"),  # prefix and glob
+    ):
+        assert is_excluded(path, [pattern]), f"{pattern} did not match {path}"
+
 
 def test_every_configured_exclude_pattern_matches_something() -> None:
     """A liveness sweep over this repository's whole exclude set.

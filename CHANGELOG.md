@@ -23,6 +23,41 @@ partial one. The two axes are still never averaged.
 No delegate, no change: a repository without the file reports exactly
 what it reported before.
 
+### Changed — the trend section reports the current series, not all of them
+
+A repository that has been audited across many releases accumulates
+comparable *segments*: the series breaks whenever the instrument changed,
+which is correct and is why a spliced trend line is never drawn. This
+repository's own history reached 49 of them, and all 49 were rendered in
+full, in both skins — a section nobody reads.
+
+The series in force is now given in full and the earlier ones become one
+table, newest first. Both skins, identically.
+
+Two things that section said are also fixed. It rendered **"1 scans"**
+for every single-scan series. And it named the changed field as
+`rubric_version`, which holds the *package* version — so a reader was
+told the rubric moved when a patch release was all that happened, on
+38 of this repository's 49 breaks. Break reasons now read in prose:
+"the tool version changed", "the configured thresholds changed".
+
+The stored field name is unchanged, so no history migrates.
+
+### Added — ADR 014 settles the adversarial-properties scope question
+
+[ADR 013](docs/adr-013-hostile-audit-prompt.md) deferred the *detection*
+half of that play to its own ADR because it brushes the
+`secure-code-agent` boundary. [ADR 014](docs/adr-014-absence-as-evidence.md)
+decides it: MA takes the evidence-integrity half — code that reads an
+absent, empty or failed measurement as a passing result — and leaves
+every exploitability class to the delegate. The boundary is a rule, not
+a list, and it is directional: where a finding is genuinely both, MA
+yields.
+
+A scope decision only. **Nothing is built**, nothing gates, nothing
+scores, and implementation is gated on a precision bar frozen before any
+result exists.
+
 ### Fixed — pairing read filenames, so 52 tested modules were called untested (D149)
 
 `describe_tdd` paired a production module only when some test file's

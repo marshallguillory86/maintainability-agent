@@ -4,6 +4,56 @@ All notable changes to Maintainability Agent will be documented here.
 
 ## Unreleased
 
+## 3.4.0 - 2026-09-11
+
+### Fixed — a directory exclude holding a glob matched nothing (D156)
+
+**Minor rather than patch, because an inert rule becomes live.** A
+configured exclude that silently did nothing now excludes what it names,
+so the scanned population shrinks and a reported score can move. Nothing
+about the config format changed — the patterns simply start meaning what
+they always said.
+
+Two forms were dead:
+
+- `**/dir/`, the gitignore spelling for "this directory wherever it
+  appears", matched nothing at any depth — including the depth it names;
+- **any** directory pattern holding a glob, so `*.egg-info/` excluded
+  nothing while an `.egg-info` directory sat in the tree being scanned.
+
+Three branches and both fell through all of them. The literal branch
+cannot see a `*`. `fnmatch` against the whole path wants a trailing
+slash no file path has. The containment branch — the one that makes a
+bare `dir/` work at any depth — is skipped *because* the pattern holds
+glob characters.
+
+So the two spellings of one intent differed by everything: `dir/`
+excluded at every depth, `**/dir/` excluded nothing. A config mixing the
+forms had half its rules working, and file patterns like `**/*.min.js`
+were unaffected, which made the failure harder to see rather than
+easier.
+
+**An inert exclude has no symptom of its own.** Nothing errors, nothing
+is reported, and the only evidence is findings in files the operator
+believed were excluded — which reads as the audit being noisy rather
+than the config being dead.
+
+If your config uses either form, expect **fewer** files scanned after
+this upgrade, and a score computed over that smaller population. That is
+the rule doing what it was written to do.
+
+### Changed — the delegated security pillar is read from `secure-code-agent` 0.10.0
+
+The pinned version moves to 0.10.0, the first release emitting the v2
+pillar contract. MA reads v1 and v2, keying a delegated trend on the
+producer's `scoring_model` where the document declares one and on its
+version where it does not.
+
+0.10.0 carries a scoring change on the producer's side, so a delegated
+security trend breaks once at that boundary. That break is correct: the
+same repository scores differently under the new model, and joining
+across it would draw a line through a change in the instrument.
+
 ## 3.3.0 - 2026-09-11
 
 ### Changed — a repository's documented test command no longer runs (D152)

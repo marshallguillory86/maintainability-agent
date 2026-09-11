@@ -214,14 +214,25 @@ def risk_findings(
         for path in files:
             if allowed and path.suffix not in allowed:
                 continue
-            for idx, line in enumerate(source.lines(path), start=1):
-                if pattern.search(line):
-                    findings.append(
-                        RiskFinding(
-                            path=str(path.relative_to(root)).replace(os.sep, "/"),
-                            line=idx,
-                            name=rule["name"],
-                            text=line.strip()[:180],
-                        )
-                    )
+            findings.extend(_rule_hits(source, root, path, pattern, rule["name"]))
     return findings
+
+
+def _rule_hits(
+    source: SourceIndex, root: Path, path: Path, pattern: re.Pattern[str], name: str
+) -> list[RiskFinding]:
+    """Every line of one file that one rule matches.
+
+    Line numbers are 1-based because they are printed for a human to
+    open, not used as an index.
+    """
+    return [
+        RiskFinding(
+            path=str(path.relative_to(root)).replace(os.sep, "/"),
+            line=idx,
+            name=name,
+            text=line.strip()[:180],
+        )
+        for idx, line in enumerate(source.lines(path), start=1)
+        if pattern.search(line)
+    ]

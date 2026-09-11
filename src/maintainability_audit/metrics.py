@@ -27,6 +27,37 @@ from .declarations import DECLARATION_SUFFIXES, detect_functions
 from .source import SourceIndex, index_or_new
 
 
+def _directory_matches(normalized: str, bare: str) -> bool:
+    """Whether a trailing-slash pattern names a directory on this path.
+
+    Matched against each **directory** component and each rooted prefix
+    of them, so `build/` catches `a/b/build/x.o` and
+    `tools/validation/reports/` catches its own file. The final
+    component is excluded: the trailing slash says directory, and
+    `*.egg-info/` must not match a *file* called `notes.egg-info`.
+
+    Globbed through `fnmatch` rather than compared as text, which is the
+    half D156's first fix left undone. `**/dir/` was one spelling of a
+    wider defect: **any** directory pattern holding a glob matched
+    nothing. The literal branch cannot see `*.egg-info/`, `fnmatch` on
+    the whole path needs a trailing slash no path has, and the
+    containment branch is skipped for patterns with glob characters.
+
+    Found by turning the producer's own lesson on this repository. They
+    reported a liveness test that iterated only half its population and
+    called it structural; sweeping MA's 35 configured patterns the same
+    way found `*.egg-info/` matching nothing while
+    `src/maintainability_agent.egg-info/` sat in the tree being scanned.
+    """
+    directories = normalized.split("/")[:-1]
+    for index, component in enumerate(directories):
+        if fnmatch.fnmatch(component, bare):
+            return True
+        if fnmatch.fnmatch("/".join(directories[:index + 1]), bare):
+            return True
+    return normalized == bare
+
+
 def is_excluded(rel: str, patterns: list[str]) -> bool:
     normalized = rel.replace("\\", "/").replace(os.sep, "/")
     for raw_pattern in patterns:
@@ -56,8 +87,10 @@ def is_excluded(rel: str, patterns: list[str]) -> bool:
         # scanned as source for its entire life (D156).
         if pattern.startswith("**/") and pattern.endswith("/"):
             pattern = pattern[3:]
-        if pattern.endswith("/") and (normalized == pattern[:-1] or normalized.startswith(pattern)):
-            return True
+        if pattern.endswith("/"):
+            if _directory_matches(normalized, pattern[:-1]):
+                return True
+            continue
         if fnmatch.fnmatch(normalized, pattern) or fnmatch.fnmatch(Path(normalized).name, pattern):
             return True
         if not any(char in pattern for char in "*?[]") and f"/{pattern.rstrip('/')}/" in f"/{normalized}/":

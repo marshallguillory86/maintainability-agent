@@ -533,3 +533,66 @@ def test_a_directory_exclude_does_not_swallow_a_similar_name() -> None:
         assert not is_excluded("src/pycache_notes.py", [pattern])
         assert not is_excluded("src/my__pycache__helper.py", [pattern])
         assert not is_excluded("src/app.py", [pattern])
+
+
+def test_a_globbed_directory_pattern_is_not_inert() -> None:
+    """`*.egg-info/` is a directory pattern holding a glob, and it matched
+    nothing.
+
+    D156's first fix handled one spelling — `**/dir/` — and left the
+    class. Any directory pattern with a glob in it fell through all
+    three branches: the literal branch cannot see a `*`, `fnmatch` on
+    the whole path needs a trailing slash no path has, and the
+    containment branch is skipped precisely because the pattern holds
+    glob characters.
+
+    This repository's own config carried `*.egg-info/` while
+    `src/maintainability_agent.egg-info/` sat in the tree being scanned.
+    """
+    from maintainability_audit.metrics import is_excluded
+
+    assert is_excluded("src/maintainability_agent.egg-info/PKG-INFO", ["*.egg-info/"])
+    assert is_excluded("pkg.egg-info/SOURCES.txt", ["*.egg-info/"])
+    # The trailing slash says directory, so a *file* with that suffix stays.
+    assert not is_excluded("src/notes.egg-info", ["*.egg-info/"])
+
+
+def test_every_configured_exclude_pattern_matches_something() -> None:
+    """A liveness sweep over this repository's whole exclude set.
+
+    The `secure-code-agent` session reported a liveness test of its own
+    that iterated only the directory half of its patterns — "half a
+    structural rule, which is the kind that reads as covered". Turning
+    that lesson on MA's config is what found `*.egg-info/` dead.
+
+    Asserted over every pattern rather than a sample, because an inert
+    exclude has no symptom of its own: it never errors, and the only
+    evidence is findings in files the operator believed were excluded.
+
+    Patterns are checked against paths constructed *from the pattern
+    itself*, so this stays true as the config changes and does not
+    depend on which generated artifacts happen to exist today.
+    """
+    import json
+
+    from maintainability_audit.metrics import is_excluded
+
+    patterns = json.loads(
+        (ROOT / "maintainability-agent.json").read_text(encoding="utf-8")
+    )["paths"]["exclude_patterns"]
+    assert patterns, "no exclude patterns configured; this sweep would be vacuous"
+
+    dead = []
+    for pattern in patterns:
+        bare = pattern.replace("**/", "").rstrip("/")
+        if pattern.endswith("/"):
+            probes = [f"{bare}/f.py".replace("*", "x"), f"deep/{bare}/f.py".replace("*", "x")]
+        else:
+            probes = [bare.replace("*", "x"), f"deep/{bare.replace('*', 'x')}"]
+        if not any(is_excluded(probe, [pattern]) for probe in probes):
+            dead.append(pattern)
+
+    assert not dead, (
+        "these configured exclude patterns match nothing and silently scan "
+        f"what they name: {dead}"
+    )

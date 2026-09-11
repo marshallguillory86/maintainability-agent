@@ -6112,9 +6112,33 @@ Fixed by honouring the prefix rather than by special-casing it: a
 leading `**/` is stripped before matching, so `**/dir/` reduces to the
 bare form that already worked at any depth.
 
-**Only the directory form.** The first attempt stripped the prefix from
-every pattern and anchored `**/generated/*.py` to the repository root,
-breaking a case that had always worked — a file pattern already matches
+**And `**/dir/` was one spelling of a wider defect.** The first fix
+closed the reported instance and left the class: **any** directory
+pattern holding a glob matched nothing. `*.egg-info/` was dead in this
+repository's own config while `src/maintainability_agent.egg-info/` sat
+in the tree being scanned. Same three branches, same reason — the
+literal branch cannot see a `*`, `fnmatch` on the whole path wants a
+trailing slash no path has, and the containment branch is skipped
+*because* the pattern holds glob characters.
+
+A trailing-slash pattern is now globbed against each directory
+component and each rooted prefix of them, so `build/` still catches
+`a/b/build/x.o` and `*.egg-info/` catches its directory at any depth.
+The final path component is excluded, because the trailing slash says
+directory and `*.egg-info/` must not match a *file* named
+`notes.egg-info`.
+
+**Found by turning the producer's own lesson on this repository.** They
+reported closing a liveness test that iterated only the directory half
+of their patterns — *"half a structural rule, which is the kind that
+reads as covered"*. Sweeping MA's 35 configured patterns the same way
+found the dead one. That sweep is now a test, asserted over every
+pattern rather than a sample, and it is non-vacuous: run against the
+previous matcher it names `*.egg-info/` and nothing else.
+
+**Only the directory form is rewritten.** An earlier attempt stripped
+the prefix from every pattern and anchored `**/generated/*.py` to the
+repository root, breaking a case that had always worked — a file pattern already matches
 through `fnmatch`, where `*` crosses separators, so it needed no help
 and was harmed by it. `test_exclude_patterns_use_glob_and_normalized_separators`
 caught that inside a minute, which is the argument for a suite that

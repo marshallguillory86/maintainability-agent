@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 from test_history_schema2 import _repo
 
+from maintainability_audit._coverage_notes import coverage_notes
 from maintainability_audit._mcp_audit import attach_history_views
 from maintainability_audit._scan_history import DEFAULT_HISTORY_PATH, read_history
 from maintainability_audit.cli import main
@@ -63,7 +64,13 @@ _COVERAGE = {
     "tools_attempted": 2,
     "tools_contributed": 1,
     "sources": {"built_in": 8},
-    "concepts_unexamined": [],
+    "concepts_single_source": ["risk"],
+    "concepts_unexamined": ["documentation"],
+    "dimensions_declined": [{
+        "dimension": "declarations",
+        "measured_by": "built-in detectors",
+        "reason": "no analyzer supplied the full criterion set",
+    }],
     "by_outcome": {
         "ran": [{"tool": "ruff", "tier": "analyzer", "version": "0.5.0",
                  "measurements": 12, "findings": 3}],
@@ -167,6 +174,19 @@ def test_the_fixture_actually_populates_the_fields(audited) -> None:
     assert ((report.get("score") or {}).get("rubric") or {}).get("unscored")
     assert report.get("largest_files")
     assert report.get("function_hotspots")
+
+
+def test_coverage_gap_notes_are_present_in_html_as_well_as_markdown(audited) -> None:
+    """The coverage table is not its explanatory gap prose (P8)."""
+    report, records = audited
+    notes = [line for line in coverage_notes(report["analyzer_coverage"]) if line]
+    assert notes, "fixture has no coverage notes; this parity population is vacuous"
+    markdown = render_markdown(report)
+    html = render_html(report, records)
+    for note in notes:
+        visible = note.replace("**", "").replace("`", "")
+        assert note in markdown
+        assert visible in html, f"HTML omitted coverage note: {visible!r}"
 
 
 @pytest.mark.parametrize("section", sorted(_REQUIRED_SECTIONS))

@@ -166,6 +166,21 @@ Marshall's own commits — turning a declaration into a fabrication, which
 is worse than the omission it prevents. Emergency bypass, one commit:
 `AGENT_TRAILER_SKIP=1 git commit …`.
 
+**It exempts exactly what CI exempts: merge commits, and nothing else.**
+The first version also let through `fixup!`, `squash!`, `amend!` and
+`source_type=squash`, on the reasoning that those are checked at their
+own commit or in CI. They are not — a `fixup!` that survives to the
+branch tip is an ordinary non-merge commit by the time `authorship.yml`
+walks the range, so it passed locally and failed the pull request. A
+hook that accepts what CI rejects is worse than no hook, because it
+teaches that a clean local commit means a clean gate.
+
+`install.sh` resolves the hooks directory with `git rev-parse --git-path
+hooks` rather than assuming `.git/hooks`. In a **linked worktree** `.git`
+is a file, not a directory, so the assumption created a directory
+nothing reads and reported success; it also ignored `core.hooksPath`
+entirely. Both are Git's to answer, and now it does.
+
 **A trailer is a declaration, not a proof.** A commit naming the wrong
 agent passes. Signing proves the *key*, and every agent on a machine
 shares that machine's key, so together they establish "this machine

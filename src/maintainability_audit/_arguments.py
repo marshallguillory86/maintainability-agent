@@ -120,6 +120,15 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--output", help="Output file. Defaults to stdout.")
     _add_artifact_arguments(parser)
     parser.add_argument("--sarif-output", help="Optional SARIF output path for GitHub code scanning.")
+    parser.add_argument(
+        "--security-pillar",
+        help=(
+            "Path to the security-pillar.json secure-code-agent writes with its "
+            "own --security-pillar. ADR 007 delegates the security pillar, and "
+            "this is the document it is read from; defaults to "
+            ".maintainability/security-pillar.json."
+        ),
+    )
     parser.add_argument("--sarif-input", action="append", help="Optional external SARIF file to summarize in reports. Repeatable.")
     parser.add_argument("--changed-only", help="Audit only files changed in a git revspec, for example main...HEAD.")
     parser.add_argument("--baseline", help="Existing baseline JSON. With --fail-on-new, only new findings fail.")

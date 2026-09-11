@@ -13,8 +13,19 @@
 set -eu
 
 repo_root=$(git rev-parse --show-toplevel)
-hooks_dir="$repo_root/.git/hooks"
 source_dir="$repo_root/tools/hooks"
+
+# Git's own answer, not a guess at where `.git` is. This was
+# "$repo_root/.git/hooks", which is wrong in a linked worktree: there
+# `.git` is a *file* pointing at the main repository, so the installer
+# created a directory that nothing reads and reported success. It also
+# ignored `core.hooksPath` entirely, so a machine that had configured
+# one got its hooks installed somewhere Git would never look.
+#
+# `--git-path hooks` honours both, and returns a path relative to the
+# worktree when that is what Git means, so resolve it from there.
+hooks_dir=$(cd "$repo_root" && cd "$(dirname "$(git rev-parse --git-path hooks)")" \
+            && printf '%s/%s' "$(pwd)" "$(basename "$(git rev-parse --git-path hooks)")")
 
 mkdir -p "$hooks_dir"
 

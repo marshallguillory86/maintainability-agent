@@ -17,7 +17,7 @@ from typing import Any
 from ._evidence_view import test_suite_lines
 from ._grammar import counted
 from ._hotspots import hotspot_cognitive, hotspot_complexity, hotspot_name
-from ._scan_view import POSTURE_NOTE
+from ._scan_view import pillar_cells
 from ._tdd_view import tdd_sentences
 
 
@@ -222,12 +222,7 @@ def _pillars_section(report: dict[str, Any]) -> list[str]:
     ]
     rows = []
     for entry in pillars:
-        condition = "—" if entry["condition"] is None else f"{entry['condition']:.1f}"
-        if entry["posture"] is None:
-            reading = "not measured — see below"
-        else:
-            note = POSTURE_NOTE.get(entry["posture"], entry["posture"])
-            reading = f"{entry['posture']}: {note}"
+        condition, reading = pillar_cells(entry)
         rows.append([
             escape(str(entry["pillar"])),
             escape(str(entry["scope"])),
@@ -238,15 +233,27 @@ def _pillars_section(report: dict[str, Any]) -> list[str]:
     parts.extend(_table(
         ["Pillar", "Scope", "Practice", "Condition", "Reading"], rows,
     ))
+    parts.extend(_unmeasured_pillars_html(pillars))
+    parts.extend(_practice_footer_html(practice))
+    return parts
+
+
+def _unmeasured_pillars_html(pillars: list[dict[str, Any]]) -> list[str]:
+    """Why a pillar has no condition — an unexplained dash reads as "fine"."""
     unmeasured = [e for e in pillars if e["condition"] is None]
-    if unmeasured:
-        parts.append("<p><strong>Not measured here, and why:</strong></p><ul>")
-        parts.extend(
-            f"<li><strong>{escape(str(e['pillar']))}</strong> — "
-            f"{escape(str(e['reason']))}</li>"
-            for e in unmeasured
-        )
-        parts.append("</ul>")
+    if not unmeasured:
+        return []
+    return [
+        "<p><strong>Not measured here, and why:</strong></p><ul>",
+        *(f"<li><strong>{escape(str(e['pillar']))}</strong> — "
+          f"{escape(str(e['reason']))}</li>" for e in unmeasured),
+        "</ul>",
+    ]
+
+
+def _practice_footer_html(practice: dict[str, Any]) -> list[str]:
+    """What enforcement was detected, and what held the level down."""
+    parts = []
     if practice.get("signals"):
         found = ", ".join(
             f"<code>{escape(str(s['signal']))}</code>" for s in practice["signals"]

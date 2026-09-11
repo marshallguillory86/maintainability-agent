@@ -261,17 +261,7 @@ def maybe_prompt_test_command(root: Path, config: dict) -> None:
     the MCP one carry the same default in the same field: Enter accepts,
     editing replaces, and clearing the line cancels exactly as before.
     """
-    import shlex
-
-    if not _stdin_is_a_tty():
-        return
-    if (config.get("analyzers") or {}).get(
-        "prompt_when_interactive", DEFAULTS["prompt_when_interactive"]
-    ) is False:
-        return
-    if not (config.get("test_execution") or {}).get("requested"):
-        return
-    if (config.get("expected_commands") or {}).get("test"):
+    if not _should_ask_for_test_command(config):
         return
 
     from ._test_commands import suggested_test_command
@@ -286,7 +276,36 @@ def maybe_prompt_test_command(root: Path, config: dict) -> None:
         "The command that runs this repository's test suite, e.g. `pytest` "
         "(Enter to cancel running it): "
     )
-    answer = _input_with_default(prompt, detected).strip()
+    _record_test_command(root, config, _input_with_default(prompt, detected).strip())
+
+
+def _should_ask_for_test_command(config: dict) -> bool:
+    """The four conditions that all have to hold before anybody is asked.
+
+    Asking is the cheap half; not asking is the half with rules. Kept
+    together and apart from the ask so the conditions read as a list of
+    reasons to stay silent rather than as four early returns threaded
+    through a prompt.
+    """
+    if not _stdin_is_a_tty():
+        return False
+    if (config.get("analyzers") or {}).get(
+        "prompt_when_interactive", DEFAULTS["prompt_when_interactive"]
+    ) is False:
+        return False
+    if not (config.get("test_execution") or {}).get("requested"):
+        return False
+    return not (config.get("expected_commands") or {}).get("test")
+
+
+def _record_test_command(root: Path, config: dict, answer: str) -> None:
+    """Persist the answer, including the blank one that cancels the opt-in.
+
+    A blank answer is a decision, not a non-answer: it writes
+    ``test_execution.requested: False`` so the next run does not ask
+    again and nothing runs in the meantime.
+    """
+    import shlex
 
     from ._safe_write import write_bounded
 

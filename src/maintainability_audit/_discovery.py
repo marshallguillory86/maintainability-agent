@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
@@ -228,25 +229,8 @@ def _generated_directories(root: Path, excludes: tuple[str, ...]) -> dict[str, s
         relative = manifest.relative_to(root).as_posix()
         if is_excluded(relative, list(excludes)):
             continue
-        try:
-            scripts = json.loads(_text_of(manifest)).get("scripts", {})
-        except PathNotAllowed:
-            # `PathNotAllowed` is a `ValueError`, so it would otherwise be
-            # swallowed by the clause below and the manifest would read as
-            # a malformed one rather than a refused one (D145). A FIFO
-            # named `package.json` is not bad JSON; it is a path this tool
-            # will not read, and saying so is the whole point of routing
-            # the read through the primitive.
-            raise
-        except (OSError, ValueError, AttributeError):
-            continue
-        if not isinstance(scripts, dict):
-            continue
-        for name, command in scripts.items():
-            for target in DELETES_DIRECTORY.findall(str(command)):
-                cleaned = target.strip("./")
-                if not cleaned or cleaned.startswith(".."):
-                    continue
+        for name, command in _manifest_scripts(manifest).items():
+            for cleaned in _deleted_targets(str(command)):
                 directory = (manifest.parent / cleaned).relative_to(root).as_posix()
                 found.setdefault(
                     directory,
@@ -254,6 +238,40 @@ def _generated_directories(root: Path, excludes: tuple[str, ...]) -> dict[str, s
                     f"`{str(command)[:60]}`",
                 )
     return found
+
+
+def _manifest_scripts(manifest: Path) -> dict[str, Any]:
+    """One `package.json`'s scripts block, or empty if it has none to read.
+
+    Empty covers unreadable, malformed and shaped-wrong alike, because
+    none of the three is a statement about generated directories. A
+    refusal is the exception: `PathNotAllowed` is re-raised.
+    """
+    try:
+        scripts = json.loads(_text_of(manifest)).get("scripts", {})
+    except PathNotAllowed:
+        # `PathNotAllowed` is a `ValueError`, so it would otherwise be
+        # swallowed by the clause below and the manifest would read as
+        # a malformed one rather than a refused one (D145). A FIFO
+        # named `package.json` is not bad JSON; it is a path this tool
+        # will not read, and saying so is the whole point of routing
+        # the read through the primitive.
+        raise
+    except (OSError, ValueError, AttributeError):
+        return {}
+    return scripts if isinstance(scripts, dict) else {}
+
+
+def _deleted_targets(command: str) -> Iterator[str]:
+    """The directory names one script command deletes, normalized.
+
+    A target that cleans to nothing, or that climbs out of the manifest's
+    own directory, is not a directory this repository generates.
+    """
+    for target in DELETES_DIRECTORY.findall(command):
+        cleaned = target.strip("./")
+        if cleaned and not cleaned.startswith(".."):
+            yield cleaned
 
 
 def _vendored_directories(root: Path) -> dict[str, str]:

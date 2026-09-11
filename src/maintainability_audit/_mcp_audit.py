@@ -47,6 +47,7 @@ from ._work_order import prompt_targets
 from .baseline import finding_fingerprints
 from .config import (
     VERSION,
+    _refuse_symlinked_route,
     analyzers_run_default,
     discovered_config,
     load_config,
@@ -122,6 +123,20 @@ def _check_freshness_when_a_grant_is_the_only_cover(
 
 
 def authorize_config(config_path: str | None, root: Path) -> str | None:
+    """The config a caller named, or a refusal — bounded like every other path.
+
+    Two rules, and this door enforced only one of them. Containment on
+    the *resolved* path catches a config outside the repository. It
+    cannot catch an **inward** link — `root/link -> root/src` — because
+    that resolves to a path inside the repository and passes every
+    containment check there is. That escape shows on the lexical route
+    only, which is why `repository_path` walks it (D34).
+
+    So the two doors onto one rule disagreed: `repository_path` refused
+    `link/…` and this returned the target. The baseline seam below
+    already carries a comment recording this same escape being found and
+    closed *there*; this door was never revisited (Grok, 673e667).
+    """
     if config_path is None:
         return None
     config = _resolved(config_path, relative_to=root)
@@ -137,6 +152,11 @@ def authorize_config(config_path: str | None, root: Path) -> str | None:
             "audited. A config file must live inside the repository it "
             "configures."
         )
+    # After containment, on the route as written rather than as resolved.
+    # `repository_path` orders it the same way, and the shared helper is
+    # what keeps the two doors from drifting apart again.
+    candidate = Path(config_path).expanduser()
+    _refuse_symlinked_route(root, candidate if candidate.is_absolute() else root / candidate)
     return str(config)
 
 

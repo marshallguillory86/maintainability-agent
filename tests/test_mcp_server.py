@@ -95,6 +95,39 @@ def test_config_must_be_a_file_inside_the_repository(tmp_path: Path) -> None:
         authorize_config(str(outside), root)
 
 
+def test_a_config_reached_through_an_inward_symlink_is_refused(tmp_path: Path) -> None:
+    """D34 on the config door, which is where it was still missing.
+
+    An **inward** link — `root/link -> root/src` — resolves to a path
+    inside the repository, so every containment check passes. It shows
+    only on the lexical route, which is exactly why `repository_path`
+    walks it with `_refuse_symlinked_route` after resolving.
+
+    `authorize_config` did the containment half and not the walk, so two
+    doors onto the same rule disagreed: `repository_path(root, 'link',
+    …)` refused while `authorize_config('link/…json', root)` returned the
+    target. The comment at `_mcp_audit`'s baseline seam already records
+    this escape being found and closed *there* — this door was not
+    revisited (Grok, 673e667).
+
+    Asserted as parity rather than as a message, so the two cannot drift
+    apart again without this failing.
+    """
+    from maintainability_audit.config import repository_path
+
+    root = _repo(tmp_path)
+    (root / "src").mkdir(exist_ok=True)
+    (root / "src" / "maintainability-agent.json").write_text("{}", encoding="utf-8")
+    (root / "link").symlink_to(root / "src")
+
+    with pytest.raises(PathNotAllowed, match="symlink|cannot redirect"):
+        authorize_config("link/maintainability-agent.json", root)
+
+    # The door that already enforced it, on the same tree, for parity.
+    with pytest.raises(PathNotAllowed, match="symlink|cannot redirect"):
+        repository_path(root, "link", "default")
+
+
 @pytest.mark.parametrize("value", ["--stat", "HEAD~1 --output=/tmp/x", "HEAD\nmain", "", "a" * 201])
 def test_changed_only_rejects_options_and_ambiguous_input(value: str) -> None:
     with pytest.raises(ValueError, match="git revision"):

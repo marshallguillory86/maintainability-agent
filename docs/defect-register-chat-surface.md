@@ -5423,11 +5423,32 @@ them.** `suite_opted_in` read `test_execution.requested` and
 beats a person by design. So four lines in a pull request opted the host
 in and chose the program, with no setup reply needed at all. Decision 9's
 guarantee is that no opt-in means no spawn; the tree was writing its own
-opt-in. Both halves now come from the user tier through
-`opted_in_command`, the command as well as the request — a person
-consents to the command they were shown at setup, and leaving the command
-to the repository would keep the consent and hand back the choice of what
-it means.
+opt-in. The *request* now comes from the user tier: `load_config` strips
+`test_execution.requested` out of the repository document before the
+merge.
+
+> **Correction, 2026-09-11 — this entry closed on a claim that was not
+> true when it was written.** The paragraph above read: *"Both halves now
+> come from the user tier through `opted_in_command`, the command as well
+> as the request."* **`opted_in_command` did not exist.** It was named
+> here, and in two more docstrings, as the reader that made keeping
+> `expected_commands.test` in the repository document safe — and nothing
+> implemented it. `run_test_suite` went on reading the *merged* config,
+> so a repository that documented a command still had that command
+> executed the moment any person opted in.
+>
+> Half of this entry's own subject therefore survived its close for two
+> days, described as fixed. The remainder is [D152](#d152--closed-d147-kept-the-consent-and-handed-back-the-choice-of-program-high),
+> which implements the function and moves every spawn setting — command,
+> child environment and timeout — to the person's tier.
+>
+> Recorded here rather than by reopening, because the class *is* closed
+> now and a reader arriving at D147 needs to know its original account
+> was wrong. Left uncorrected, this entry is evidence that the boundary
+> held, which is the worst thing a defect register can contain. Same
+> shape as D47, which had to be corrected after it was written,
+> and it is why the falsifier standard exists: a citation naming a
+> function is indistinguishable from a function.
 
 **pylint stays selected, and this is the one place the audit prompt asked
 for a change that the measurement does not support.** The prompt directed
@@ -5939,10 +5960,72 @@ because that sample was the child-boundary disclosure, and a test
 written from it never looks at what was scanned.
 
 
+### D155 — Closed: a delegated pillar's trend joined across the producer's own scoring change (High)
+
+MA stores a delegated pillar's condition in its scan history like any
+other — `pillars` maps each pillar to its condition score. It did not
+store **who produced it, at what version**, and the comparability gate
+therefore could not see when the producer's scoring changed.
+
+`secure-code-agent` changed its normalizer twice in one day —
+`sqrt(LOC/1000)` to straight density, then `secrets` exempted back —
+without touching the pillar document's schema. Same shape, same fields,
+same schema_version, a **different condition for the same repository**.
+MA would have drawn one continuous line through that.
+
+That is this module's opening defect arriving through a tool we delegate
+to rather than one we run. `_scan_history`'s own docstring: *"a wrong
+snapshot is obviously a snapshot, while a wrong trend looks like
+knowledge."* Every existing comparability field guards against an
+instrument we control. A delegated pillar is an instrument we do not,
+and it was the one thing nothing watched.
+
+**Population.** Every repository whose history spans a
+`secure-code-agent` upgrade, for as long as the delegated pillar has
+been recorded. Widening as the delegation model is used for more
+pillars.
+
+**Found by the producer telling us.** The sibling session working on
+`secure-code-agent` reported the normalizer change while confirming the
+*schema* was unchanged — which was the reassuring half. Nothing in
+either tool would have raised it: the document validates, MA accepts it,
+and the number simply moves. Had we relied on schema stability as the
+comparability signal, the series would have spliced silently and
+correctly by every check that existed.
+
+`delegated_producers` is now a comparability field, carrying
+`security:secure-code-agent 0.9.0` per delegated pillar. A producer
+change or a version change breaks the series and names itself. A
+document with no version still contributes its producer, because "same
+tool, version unknown" and "a different tool" are different facts and
+only the second should break a series alone.
+
+**A second defect surfaced while fixing it.** `_SEQUENCE_FIELDS` carried
+the comment *"derived from the dataclass rather than listed by hand so a
+new one is handled the day it is added"* — and was a hand-written list
+of five names. The sentence was aspirational and cost exactly what it
+promised to prevent: the new field was missed, and a stored record
+stopped comparing equal to a freshly built one. It is now actually
+derived, and the round-trip guard that caught this is why the cost was
+one test run rather than a corrupted history.
+
+*Closing test:* `test_a_delegated_producer_change_breaks_the_series` in
+`tests/test_child_sandbox.py`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is **`delegated_producers`' membership in
+`COMPARABILITY_FIELDS`**, not the field itself — the record still stores
+the producer and version, the report still names them, and every
+existing comparability assertion passes. Only the trend silently
+rejoins. It sits outside the original sample because that sample was the
+child-boundary disclosure, and no test of a report's contents looks at
+how two reports are joined.
+
+
 
 ## Disposition
 
-**Every entry is closed.** D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

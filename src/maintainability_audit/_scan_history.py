@@ -76,6 +76,15 @@ COMPARABILITY_FIELDS: tuple[str, ...] = (
     "analyzers",
     "scored_languages",
     "scope",
+    # A delegated pillar's condition is stored in `pillars` like any
+    # other, but this tool did not measure it and cannot see when the
+    # producer's scoring changed. `secure-code-agent` altered its
+    # normalizer twice in one day without touching the document's
+    # schema: same shape, same fields, a different number for the same
+    # repository. Without this field the series joins straight across
+    # that -- this module's opening defect, arriving through a tool we
+    # delegated to rather than one we run.
+    "delegated_producers",
 )
 
 
@@ -131,6 +140,11 @@ class ScanRecord:
     aspects: dict[str, float | None] = field(default_factory=dict)
     pillars: dict[str, float | None] = field(default_factory=dict)
     practice_level: int | None = None
+    #: Each delegated pillar's producer and version, as the document
+    #: announced them -- `("security:secure-code-agent 0.9.0",)`. A
+    #: comparability field: the producer's version is the only thing
+    #: this tool can see that moves when their scoring does.
+    delegated_producers: tuple[str, ...] = ()
     evidence_status: str = ""
     # Which of those a remediation prompt actually asked somebody to fix.
     # This is what makes recurrence a strong signal rather than a weak
@@ -210,6 +224,7 @@ FIELD_NAMES: dict[str, str] = {
     "analyzers": "which analyzers contributed",
     "scored_languages": "the scored languages",
     "scope": "the scan scope",
+    "delegated_producers": "a delegated pillar's producer or its version",
 }
 
 
@@ -349,11 +364,31 @@ def _is_scan_record(line: str) -> bool:
     return isinstance(record, dict) and "recorded_at" in record
 
 
-# Fields stored as sequences, derived from the dataclass rather than
-# listed by hand so a new one is handled the day it is added.
-_SEQUENCE_FIELDS: tuple[str, ...] = (
-    "analyzers", "scored_languages", "fingerprints", "targeted", "identities",
-)
+def _sequence_fields() -> tuple[str, ...]:
+    """Fields stored as sequences, read off the dataclass.
+
+    The constant this replaced carried the comment "derived from the
+    dataclass rather than listed by hand so a new one is handled the day
+    it is added" — and was a hand-written list of five names. The
+    sentence was aspirational, and it cost exactly what it promised to
+    prevent: `delegated_producers` was added and missed, and the
+    round-trip guard caught a stored record no longer comparing equal to
+    a freshly built one.
+
+    `from __future__ import annotations` makes every annotation a
+    string, so the declared type is matched textually. That is narrow on
+    purpose: a field is a sequence here only if it says `tuple`, and a
+    field that stores a sequence under some other spelling would need
+    naming — which is a smaller trap than a list nobody updates.
+    """
+    from dataclasses import fields
+    return tuple(
+        spec.name for spec in fields(ScanRecord)
+        if str(spec.type).startswith("tuple")
+    )
+
+
+_SEQUENCE_FIELDS: tuple[str, ...] = _sequence_fields()
 
 
 def read_history(path: Path) -> list[ScanRecord]:
@@ -465,6 +500,29 @@ def _score_fields(score: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _delegated_producers(report: dict[str, Any]) -> tuple[str, ...]:
+    """Which tool, at which version, supplied each delegated pillar.
+
+    Sorted and joined into one string per pillar so the comparability
+    key stays a plain value. Only delegated pillars carry a producer;
+    the ones this tool measures itself are already covered by
+    `rubric_version`.
+
+    A pillar whose document names no version still contributes its
+    producer, because "the same tool, version unknown" and "a different
+    tool" are different facts and only the second should break a series
+    on its own.
+    """
+    found = []
+    for entry in report.get("pillars") or []:
+        tool = entry.get("delegated_to")
+        if not tool:
+            continue
+        version = entry.get("producer_version") or "unversioned"
+        found.append(f"{entry.get('pillar')}:{tool} {version}")
+    return tuple(sorted(found))
+
+
 def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
               calibration: float, fingerprints: tuple[str, ...],
               targeted: tuple[str, ...] = (), backfilled: bool = False) -> ScanRecord:
@@ -496,6 +554,7 @@ def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
         # opts in by setting one field rather than by threading a new
         # argument through every caller of this function.
         transformation=str(report.get("transformation") or ""),
+        delegated_producers=_delegated_producers(report),
         estimate=published["estimate"],
         range_low=published["range_low"],
         range_high=published["range_high"],

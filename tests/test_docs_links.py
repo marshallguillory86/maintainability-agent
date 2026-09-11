@@ -14,17 +14,47 @@ rather than a habit.
 from __future__ import annotations
 
 import re
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+def _tracked_markdown() -> set[Path]:
+    """Markdown git actually tracks, or everything if git cannot answer.
+
+    Globbing the tree collected files that are **not in the repository**.
+    `secure-code-report.md` is gitignored, regenerated per run, and 2.8 MB
+    of findings whose regex patterns — `["\\'] -> [^"\\']+` — parse as
+    markdown links to files that were never meant to exist. The guard
+    passed in CI, where a clean checkout has no such file, and failed on
+    any machine that had run the security gate locally.
+
+    A check that fires on generated output is the noise this repository
+    keeps writing rules against: it teaches a reader that a red suite is
+    a local artifact, which is the habit that hides the real one.
+    """
+    try:
+        listed = subprocess.run(
+            ["git", "-C", str(ROOT), "ls-files", "-z", "--", "*.md"],
+            capture_output=True, text=True, check=True, timeout=30,
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    return {(ROOT / name).resolve() for name in listed.split("\0") if name}
+
+
 # Markdown we author. Generated reports and vendored skill payloads are
 # excluded: self-audit.md is regenerated from a command, and its file
 # references are report data rather than navigation.
+_TRACKED = _tracked_markdown()
 AUTHORED = sorted(
     path
     for path in list(ROOT.glob("*.md")) + list(ROOT.glob("docs/*.md")) + list(ROOT.glob("tools/**/*.md"))
     if path.name != "self-audit.md"
+    # An empty set means git could not be asked; fall back to the glob
+    # rather than silently checking nothing, which is this project's own
+    # absence-as-evidence defect in its test suite.
+    and (not _TRACKED or path.resolve() in _TRACKED)
 )
 
 LINK = re.compile(r"\[([^\]]*)\]\(([^)\s]+)\)")

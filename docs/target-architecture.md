@@ -232,6 +232,22 @@ Each pillar reports **two values that are never combined**:
 
 The hello-world that scored 5.0/A+ is *practice level 1, condition unmeasured*. That is the truth, and no single composite number can express it. This is the concept the six original promises lacked, and why [product intent](product-intent.md#what-it-promises) gained **P7** (a score only where enough was examined) and **P8** (every report states what examined it).
 
+### The detection boundary against the delegate
+
+**Planned; not implemented. [ADR 014](adr-014-absence-as-evidence.md).**
+
+Delegating the security pillar settles who *reports* exploitability. It does not by itself settle who may *detect* what, and the two questions come apart the moment a detection dimension is proposed that looks like security from the outside. The rule:
+
+> A candidate finding belongs to this tool when it would still be a defect on a machine no attacker can reach. It belongs to `secure-code-agent` when its harm requires someone hostile. Where a finding is genuinely both, this tool yields.
+
+That makes the boundary adjudicable per finding rather than per feature, and it is directional: MA gives ground, because a delegate whose findings MA also computes is not a delegate.
+
+What falls to MA under the rule is one class — **code that treats an absent, empty or failed measurement as a passing result.** An empty analyzer run read as clean; a swallowed exception returning a default pass; a missing configuration read as the permissive value; a check skipped for want of an input, with nothing recorded. None of these need an adversary to be wrong.
+
+This is not an arbitrary carve-out. It is [product intent](product-intent.md#what-it-promises) P3 and P7 — *withholding evidence cannot improve the reported grade*, and *a score is issued only where enough was examined to support it* — applied to a target repository instead of to this one. They are the two promises this project has broken most often and repaired most carefully, and that experience is the dimension's actual content.
+
+Like ADR 003's semantic findings, nothing here gates and nothing here scores, and nothing ships until a precision bar frozen before any result exists is met.
+
 ### Coverage gaps, and telling the user how to close them
 
 Detecting what the repository is written in, knowing which tools cover it, and knowing which of those can actually run are three facts the agent already has. Composed, they answer a question no current tool answers: **what part of this codebase did nobody look at, and what would it take to look?**

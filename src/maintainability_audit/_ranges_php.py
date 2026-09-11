@@ -33,7 +33,7 @@ import re
 
 from ._masking import mask_php_lines
 from ._metrics_types import DeclRange
-from ._ranges_core import _NAME, scan_bounded
+from ._ranges_core import _NAME, qualify_members, scan_bounded
 
 # Visibility and the rest, stripped once per line so the patterns stay
 # small. `abstract` and `final` lead a declaration and say nothing about
@@ -78,32 +78,6 @@ def _class_spans(masked: list[str]) -> list[tuple[int, int, str]]:
     return [(span.start, span.end, span.name) for span in spans]
 
 
-def _qualify_methods(ranges: list[DeclRange], masked: list[str]) -> list[DeclRange]:
-    """Report each method under the class that holds it.
-
-    The innermost enclosing class wins, so a method in a class nested
-    inside another is named for the one it actually belongs to.
-    """
-    spans = _class_spans(masked)
-    if not spans:
-        return ranges
-    qualified: list[DeclRange] = []
-    for entry in ranges:
-        holders = [
-            span for span in spans
-            if span[0] < entry.start and entry.end <= span[1]
-        ]
-        if entry.kind == "function" and holders:
-            innermost = max(holders, key=lambda span: span[0])
-            qualified.append(
-                DeclRange(entry.start, entry.end, f"{innermost[2]}::{entry.name}",
-                          entry.kind, entry.cognitive)
-            )
-        else:
-            qualified.append(entry)
-    return qualified
-
-
 def php_declaration_ranges(lines: list[str]) -> tuple[list[DeclRange], list[str]]:
     """Functions, methods and types, each bounded by its own body.
 
@@ -123,4 +97,4 @@ def php_declaration_ranges(lines: list[str]) -> tuple[list[DeclRange], list[str]
     ranges, masked = scan_bounded(
         lines, _php_declaration, descend=("class",), mask=mask_php_lines,
     )
-    return _qualify_methods(ranges, masked), masked
+    return qualify_members(ranges, _class_spans(masked)), masked

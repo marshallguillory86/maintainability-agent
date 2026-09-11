@@ -135,6 +135,31 @@ def _fortran_declaration(text: str) -> tuple[str, str | None] | None:
     return None
 
 
+def _closed_by_label(
+    statement: str, pending_labels: list[str]
+) -> tuple[str, int]:
+    """The statement past its leading label, and how many loops it closed.
+
+    A labelled `do` names the statement that terminates it, and several
+    loops may share one terminator — so a single label can close a stack
+    of them. Popping that stack was an inner `while` inside the depth
+    walk, which is most of why `_fortran_end` read cognitive 23, the
+    highest in the package.
+
+    Returned rather than mutated in place for the depth: the caller owns
+    the count, and a helper that reached in to decrement it would hide
+    the one number the walk exists to track.
+    """
+    label = _LEADING_LABEL_RE.match(statement)
+    if label is None:
+        return statement, 0
+    closed = 0
+    while pending_labels and pending_labels[-1] == label.group(1):
+        pending_labels.pop()
+        closed += 1
+    return statement[label.end():].strip(), closed
+
+
 def _fortran_end(masked: list[str], lines: list[str], start: int) -> int:
     """The line closing the program unit opened at ``start``.
 
@@ -154,17 +179,10 @@ def _fortran_end(masked: list[str], lines: list[str], start: int) -> int:
         statement = _statement(masked[number - 1])
         if not statement:
             continue
-        label = _LEADING_LABEL_RE.match(statement)
-        if label is not None:
-            # The statement carrying a pending label closes the loop that
-            # named it. Several loops may share one terminator, so every
-            # match is popped.
-            while pending_labels and pending_labels[-1] == label.group(1):
-                pending_labels.pop()
-                depth -= 1
-            statement = statement[label.end():].strip()
-            if not statement:
-                continue
+        statement, closed = _closed_by_label(statement, pending_labels)
+        depth -= closed
+        if not statement:
+            continue
         if _END_RE.match(statement) or _BLOCK_END_RE.match(statement):
             depth -= 1
             if depth <= 0:

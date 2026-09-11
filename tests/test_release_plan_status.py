@@ -120,11 +120,18 @@ def test_no_shipped_task_is_still_called_open_or_deferred() -> None:
     )
 
 
+# A phase id, not any text containing those three characters. The bare
+# substring also matched `| Last tagged version | v3.2.0 |` the moment
+# this project reached a 3.2 release, and demanded the tag row say
+# "shipped" — a guard failing on the release it was meant to survive.
+_PHASE_THREE_TWO = re.compile(r"(?<![\w.])3\.2(?![\w.])")
+
+
 def test_the_band_matrix_is_not_listed_as_open_exit_work() -> None:
     """3.2 shipped. Calling it open work after the wire is 7.2 inverted."""
     table = _standing_table()
     for line in table.splitlines():
-        if "band matrix" not in line.lower() and "3.2" not in line:
+        if "band matrix" not in line.lower() and not _PHASE_THREE_TWO.search(line):
             continue
         lowered = line.lower()
         assert "shipped" in lowered or "done" in lowered, (

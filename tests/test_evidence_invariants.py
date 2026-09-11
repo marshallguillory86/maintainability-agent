@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 from test_evidence_normalization import _commit, _report, _tested_repo
 
+from maintainability_audit._evidence_reader import normalize_report_evidence
 from maintainability_audit.evidence import (
     HISTORY_SUBSETS,
     SUMMARY_SUBSETS,
@@ -24,7 +25,6 @@ from maintainability_audit.evidence import (
     EvidenceValidationError,
     SummaryEvidence,
     Unknown,
-    normalize_report_evidence,
 )
 
 # ---------------------------------------------------------------------------

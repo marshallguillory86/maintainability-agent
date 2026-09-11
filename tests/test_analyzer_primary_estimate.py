@@ -36,9 +36,9 @@ from pathlib import Path
 
 import pytest
 
+from maintainability_audit._evidence_reader import normalize_report_evidence
 from maintainability_audit._pressures import ExternalPressures
 from maintainability_audit.config import load_config
-from maintainability_audit.evidence import normalize_report_evidence
 from maintainability_audit.report import build_report
 from maintainability_audit.scoring import score_evidence
 

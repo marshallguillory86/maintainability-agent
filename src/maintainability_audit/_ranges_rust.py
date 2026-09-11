@@ -32,7 +32,7 @@ from __future__ import annotations
 import re
 
 from ._metrics_types import DeclRange
-from ._ranges_core import _NAME, _mask_generics, scan_bounded
+from ._ranges_core import _NAME, _mask_generics, qualify_members, scan_bounded
 
 # `pub`, `pub(crate)`, `async`, `unsafe`, `const`, `extern "C"`. Stripped
 # once per line so the patterns stay small.
@@ -127,35 +127,6 @@ def _impl_spans(masked: list[str]) -> list[tuple[int, int, str]]:
     return [(span.start, span.end, span.name) for span in spans]
 
 
-def _qualify_impl_members(
-    ranges: list[DeclRange], masked: list[str]
-) -> list[DeclRange]:
-    """Prefix each method with the type its enclosing `impl` names.
-
-    The innermost enclosing span wins, so a method inside `impl Store`
-    nested in `mod store` is `Store::get` rather than `store::get`: the
-    type is what a work order has to name.
-    """
-    spans = _impl_spans(masked)
-    if not spans:
-        return ranges
-    qualified: list[DeclRange] = []
-    for entry in ranges:
-        holders = [
-            span for span in spans
-            if span[0] < entry.start and entry.end <= span[1] and span[2]
-        ]
-        if entry.kind == "function" and holders:
-            innermost = max(holders, key=lambda span: span[0])
-            qualified.append(
-                DeclRange(entry.start, entry.end, f"{innermost[2]}::{entry.name}",
-                          entry.kind, entry.cognitive)
-            )
-        else:
-            qualified.append(entry)
-    return qualified
-
-
 def rust_declaration_ranges(lines: list[str]) -> tuple[list[DeclRange], list[str]]:
     """Functions, methods and types, each bounded by its own body.
 
@@ -179,4 +150,4 @@ def rust_declaration_ranges(lines: list[str]) -> tuple[list[DeclRange], list[str
     ranges, masked = scan_bounded(
         lines, _rust_declaration, descend=("class",),
     )
-    return _qualify_impl_members(ranges, masked), masked
+    return qualify_members(ranges, _impl_spans(masked)), masked

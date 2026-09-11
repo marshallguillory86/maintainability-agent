@@ -260,6 +260,22 @@ def collect_metrics(
     return files, file_metrics, function_metrics
 
 
+def _worktree_gate(git_status: str | None) -> list[str]:
+    """Why the worktree fails the clean gate, if it does.
+
+    `None` is not "clean" — it is unreadable, and the difference is the
+    whole of D37: a plain directory satisfied this gate because a failed
+    `git status` arrived as an empty one, so a tree with no git at all
+    passed a check about git.
+    """
+    if git_status is None:
+        return ["A clean worktree is required, but this is not a git worktree "
+                "so its state could not be read."]
+    if git_status:
+        return ["Worktree must be clean for this audit gate."]
+    return []
+
+
 def hard_gate_failures(
     root: Path,
     config: dict[str, Any],
@@ -280,15 +296,7 @@ def hard_gate_failures(
     if hard.get("require_test_command") and not expected_commands.get("test"):
         gates.append("A documented test command is required but missing from config.")
     if hard.get("require_clean_worktree"):
-        if git_status is None:
-            # Not "clean" — unreadable. A plain directory used to satisfy
-            # this gate because a failed `git status` arrived as an empty
-            # one (D37).
-            gates.append(
-                "A clean worktree is required, but this is not a git worktree "
-                "so its state could not be read.")
-        elif git_status:
-            gates.append("Worktree must be clean for this audit gate.")
+        gates.extend(_worktree_gate(git_status))
     # Opt-in. Measured across the reference corpus these fired on every
     # single repository -- duplicate counts of 33 to 5,325 against a
     # default max of 20 -- so leaving them always-on made --fail-on-gate

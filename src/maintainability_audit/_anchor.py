@@ -63,8 +63,11 @@ def unanchored_sentence() -> str:
     """One sentence naming what the anchor omits, for the corpus note."""
     if not UNANCHORED_LANGUAGES:
         return ""
+    from ._grammar import agreement
+
+    say = agreement(len(UNANCHORED_LANGUAGES))
     return (
-        f"{unanchored_names()} are parsed but absent from it, so their "
-        "findings are as good as their parser while their grade is "
-        "provisional."
+        f"{unanchored_names()} {say.verb} parsed but absent from it, so "
+        f"{say.possessive} findings are as good as {say.possessive} "
+        f"parser while {say.possessive} grade is provisional."
     )

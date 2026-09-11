@@ -9,10 +9,10 @@ import pytest
 from _analyzer_fixtures import _clean_tree
 
 from maintainability_audit._corroborate import combine
+from maintainability_audit._evidence_reader import normalize_report_evidence
 from maintainability_audit._metrics_types import Measurement
 from maintainability_audit._pressures import ExternalPressures
 from maintainability_audit.config import load_config
-from maintainability_audit.evidence import normalize_report_evidence
 from maintainability_audit.report import build_report
 from maintainability_audit.scoring import score_evidence
 

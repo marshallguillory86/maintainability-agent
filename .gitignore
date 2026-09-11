@@ -54,3 +54,6 @@ tools/validation/reports/
 # its `suggestedRun` is `python -m src.main`, which is not how this
 # project runs. Same reason the agent-standards files above are ignored.
 .xgrok/
+
+# Competitive positioning drafts — not part of the product record.
+docs/comparison-*.html

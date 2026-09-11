@@ -16,6 +16,7 @@ from typing import Any
 
 from ._analyzer_sections import analyzer_sections
 from ._built_ins import record_built_in_counts
+from ._delegated_pillar import read_delegated
 from ._discovery import Provenance, discover
 from ._economics import economic_context_from, economic_impact, reorder_by_exposure
 from ._metrics_types import FileMetric, FunctionMetric
@@ -380,6 +381,29 @@ def _attach_semantics(report: dict[str, Any], root: Path, config: dict[str, Any]
     report["semantic_coverage"] = semantic["coverage"]
 
 
+def _pillars_with_delegation(report: dict[str, Any], root: Path) -> list[dict[str, Any]]:
+    """The pillar block, with a delegated pillar's own report folded in.
+
+    ADR 007 §1 makes Security a delegated pillar naming
+    `secure-code-agent`, reported as `NotApplicable` so silence is never
+    read as safety. That was a placeholder for an artifact: when the
+    other tool has left `security-pillar.json` in the tree, the entry
+    carries its measurement instead of an apology for not having one.
+
+    Absent, the entry stays exactly what it was. Most repositories run
+    one tool, so that is the ordinary path and not a warning.
+
+    Its own function because `build_report` was at eighty lines against a
+    limit of eighty, and adding this inline took it to eighty-eight —
+    caught by this tool's gate on the commit that added it.
+    """
+    handed_over = read_delegated(root)
+    return pillar_report(
+        report["score"], report["practice"],
+        {"security": handed_over} if handed_over else None,
+    )
+
+
 def build_report(
     root: Path,
     config: dict[str, Any],
@@ -447,7 +471,7 @@ def build_report(
     report["score"] = score_report(report, analyzer["pressures"])
     # Condition rolls up aspects; practice stays a separate axis (ADR 007).
     report["practice"] = practice_level(root, config).as_dict()
-    report["pillars"] = pillar_report(report["score"], report["practice"])
+    report["pillars"] = _pillars_with_delegation(report, root)
     _attach_semantics(report, root, config)
     # Last, because every item's delta is a rubric recomputation and the
     # rubric needs the scored report to recompute against.

@@ -33,6 +33,7 @@ from pathlib import Path
 import pytest
 from _git_path import GIT_PATH
 
+from maintainability_audit._evidence_reader import normalize_report_evidence
 from maintainability_audit._formula import rollup
 from maintainability_audit._verification import DEFAULT_V1_NOT_REQUIRED, DEFAULT_V1_REQUIRED
 from maintainability_audit.config import load_config
@@ -43,7 +44,6 @@ from maintainability_audit.evidence import (
     NotApplicable,
     SummaryEvidence,
     Unknown,
-    normalize_report_evidence,
     walk_evidence,
 )
 from maintainability_audit.report import build_report

@@ -41,14 +41,6 @@ def allowed_roots(explicit: tuple[str, ...] = ()) -> tuple[Path, ...]:
     return tuple(_resolved(root) for root in (*roots, *_persisted_root_grants()))
 
 
-def _grant_still_names_what_was_granted(entry: str, recorded: object = None) -> bool:
-    """True when a stored grant still names the directory it named.
-
-    The rule and the four versions it took live in `_stored_grants`.
-    """
-    return refusal_reason(entry, recorded) is None
-
-
 def _stored_grants_and_identities() -> tuple[list[str], dict[str, object]]:
     """The persisted allow-list and what each entry resolved to."""
     config = load_user_config() or {}

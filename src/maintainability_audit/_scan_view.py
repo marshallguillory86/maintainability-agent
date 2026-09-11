@@ -345,28 +345,56 @@ def pillars_markdown(
         "| Pillar | Scope | Practice | Condition | Reading |",
         "|---|---|---:|---:|---|",
     ]
-    for entry in pillars:
-        condition = "—" if entry["condition"] is None else f"{entry['condition']:.1f}"
-        if entry["posture"] is None:
-            reading = "not measured — see below"
-        else:
-            note = POSTURE_NOTE.get(entry["posture"], entry["posture"])
-            reading = f"{entry['posture']}: {note}"
-        lines.append(
-            f"| {entry['pillar']} | {entry['scope']} | {entry['practice']} | "
-            f"{condition} | {reading} |"
-        )
+    lines.extend(_pillar_row(entry) for entry in pillars)
     lines.append("")
+    lines.extend(_unmeasured_pillars(pillars))
+    lines.extend(_practice_footer(practice))
+    return lines
 
-    # Scope, stated rather than left as an empty cell. An unexplained dash
-    # is exactly the silence a reader fills in with "fine".
+
+def pillar_cells(entry: dict[str, Any]) -> tuple[str, str]:
+    """One pillar's condition and reading, as both skins print them.
+
+    Shared rather than written twice. The Markdown and HTML renderers had
+    the same eight lines each, and ADR 011's whole claim is that the skins
+    render one report dict and never disagree — two copies of the rule
+    that an unmeasured pillar reads "not measured" is that claim resting
+    on nobody editing one without the other.
+    """
+    condition = "—" if entry["condition"] is None else f"{entry['condition']:.1f}"
+    if entry["posture"] is None:
+        return condition, "not measured — see below"
+    note = POSTURE_NOTE.get(entry["posture"], entry["posture"])
+    return condition, f"{entry['posture']}: {note}"
+
+
+def _pillar_row(entry: dict[str, Any]) -> str:
+    """One pillar's row: both axes and the reading, never combined."""
+    condition, reading = pillar_cells(entry)
+    return (
+        f"| {entry['pillar']} | {entry['scope']} | {entry['practice']} | "
+        f"{condition} | {reading} |"
+    )
+
+
+def _unmeasured_pillars(pillars: list[dict[str, Any]]) -> list[str]:
+    """Why a pillar has no condition.
+
+    Scope, stated rather than left as an empty cell. An unexplained dash
+    is exactly the silence a reader fills in with "fine".
+    """
     unmeasured = [e for e in pillars if e["condition"] is None]
-    if unmeasured:
-        lines.append("**Not measured here, and why:**")
-        lines.append("")
-        lines.extend(f"- **{e['pillar']}** — {e['reason']}" for e in unmeasured)
-        lines.append("")
+    if not unmeasured:
+        return []
+    return [
+        "**Not measured here, and why:**", "",
+        *(f"- **{e['pillar']}** — {e['reason']}" for e in unmeasured), "",
+    ]
 
+
+def _practice_footer(practice: dict[str, Any]) -> list[str]:
+    """What enforcement was detected, and what held the level down."""
+    lines = []
     if practice.get("signals"):
         found = ", ".join(f"`{s['signal']}`" for s in practice["signals"])
         lines.extend([f"Enforcement found: {found}.", ""])

@@ -377,7 +377,8 @@ def test_a_collapsed_range_never_claims_complete_evidence(
     evidence" on exactly such a report. Completeness is a property of
     the typed evidence, never of two numbers that happen to match.
     """
-    from maintainability_audit.evidence import Unknown, normalize_report_evidence
+    from maintainability_audit._evidence_reader import normalize_report_evidence
+    from maintainability_audit.evidence import Unknown
     from maintainability_audit.scoring import score_evidence
 
     evidence = normalize_report_evidence(complete_report)

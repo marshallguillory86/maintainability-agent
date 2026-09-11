@@ -30,13 +30,13 @@ def test_complete_analyzer_declaration_pressure_sets_the_point_estimate(
 ) -> None:
     from maintainability_audit import _analyzer_sections as report_module
     from maintainability_audit._analysis import Analysis
+    from maintainability_audit._evidence_reader import normalize_report_evidence
     from maintainability_audit._pressures import (
         ExternalPressures,
         analyzer_pressures,
         analyzer_production_pressures,
     )
     from maintainability_audit.config import load_config
-    from maintainability_audit.evidence import normalize_report_evidence
     from maintainability_audit.report import build_report
 
     root = _clean_tree(tmp_path / "primary")
@@ -105,9 +105,9 @@ def test_missing_or_incomplete_analyzer_pressure_keeps_the_built_in_dimension(
 
 def test_a_disagreeing_second_source_widens_the_interval(tmp_path: Path) -> None:
     """Analyzer evidence sets the point; the built-in fallback shows uncertainty."""
+    from maintainability_audit._evidence_reader import normalize_report_evidence
     from maintainability_audit._pressures import ExternalPressures
     from maintainability_audit.config import load_config
-    from maintainability_audit.evidence import normalize_report_evidence
     from maintainability_audit.report import build_report
     from maintainability_audit.scoring import score_evidence
 
@@ -182,9 +182,9 @@ def test_each_population_is_substituted_from_its_own_reading(tmp_path: Path) -> 
     """
     import subprocess
 
+    from maintainability_audit._evidence_reader import normalize_report_evidence
     from maintainability_audit._pressures import ExternalPressures
     from maintainability_audit.config import load_config
-    from maintainability_audit.evidence import normalize_report_evidence
     from maintainability_audit.report import build_report
     from maintainability_audit.scoring import score_evidence
 

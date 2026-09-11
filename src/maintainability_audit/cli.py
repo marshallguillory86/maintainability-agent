@@ -418,7 +418,8 @@ def main(argv: list[str] | None = None) -> int:
     report = build_report(root, config, only_paths=only_paths,
                           changed_revspec=args.changed_only,
                           external_findings=external_findings,
-                          run_analyzers=_analyzers_resolved(args, config))
+                          run_analyzers=_analyzers_resolved(args, config),
+                          security_pillar=args.security_pillar)
     if selection:
         # A view over the work already gathered. The score block is
         # untouched by construction — `select` returns a subset of the

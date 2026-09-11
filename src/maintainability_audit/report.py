@@ -381,7 +381,9 @@ def _attach_semantics(report: dict[str, Any], root: Path, config: dict[str, Any]
     report["semantic_coverage"] = semantic["coverage"]
 
 
-def _pillars_with_delegation(report: dict[str, Any], root: Path) -> list[dict[str, Any]]:
+def _pillars_with_delegation(
+    report: dict[str, Any], root: Path, pillar_path: str | None = None,
+) -> list[dict[str, Any]]:
     """The pillar block, with a delegated pillar's own report folded in.
 
     ADR 007 §1 makes Security a delegated pillar naming
@@ -397,7 +399,8 @@ def _pillars_with_delegation(report: dict[str, Any], root: Path) -> list[dict[st
     limit of eighty, and adding this inline took it to eighty-eight —
     caught by this tool's gate on the commit that added it.
     """
-    handed_over = read_delegated(root)
+    handed_over = (read_delegated(root, pillar_path) if pillar_path
+                   else read_delegated(root))
     return pillar_report(
         report["score"], report["practice"],
         {"security": handed_over} if handed_over else None,
@@ -411,6 +414,7 @@ def build_report(
     changed_revspec: str | None = None,
     external_findings: list[dict[str, Any]] | None = None,
     run_analyzers: bool | None = None,
+    security_pillar: str | None = None,
 ) -> dict[str, Any]:
     """Assemble one report.
 
@@ -465,13 +469,12 @@ def build_report(
     )
     if analyzer["coverage"]:
         record_built_in_counts(analyzer["coverage"], report)
-    report["tdd_structure"] = describe_tdd(
-        root, file_metrics, function_metrics, source)
+    report["tdd_structure"] = describe_tdd(root, file_metrics, function_metrics, source)
     _attach_test_suite(report, root, config)
     report["score"] = score_report(report, analyzer["pressures"])
     # Condition rolls up aspects; practice stays a separate axis (ADR 007).
     report["practice"] = practice_level(root, config).as_dict()
-    report["pillars"] = _pillars_with_delegation(report, root)
+    report["pillars"] = _pillars_with_delegation(report, root, security_pillar)
     _attach_semantics(report, root, config)
     # Last, because every item's delta is a rubric recomputation and the
     # rubric needs the scored report to recompute against.

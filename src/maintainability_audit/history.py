@@ -176,21 +176,31 @@ def _commits(root: Path, since: str) -> list[tuple[str, list[tuple[str, int, int
             continue
         header, _, body = block.partition("\n")
         _, _, author = header.partition("\x1f")
-        files = []
-        for line in body.splitlines():
-            fields = line.split("\t")
-            if len(fields) != 3:
-                continue
-            added, removed, path = fields
-            # "-" marks a binary file: no line counts to attribute, but
-            # the commit still counts as a touch.
-            files.append((
-                _rename_target(path),
-                int(added) if added.isdigit() else 0,
-                int(removed) if removed.isdigit() else 0,
-            ))
-        parsed.append((author.strip(), files))
+        parsed.append((author.strip(), _numstat_files(body)))
     return parsed
+
+
+def _numstat_files(body: str) -> list[tuple[str, int, int]]:
+    """One commit's numstat body as (path, added, removed).
+
+    A line that is not three tab-separated fields is not a numstat row —
+    git writes other things into this stream — and is skipped rather than
+    guessed at.
+    """
+    files = []
+    for line in body.splitlines():
+        fields = line.split("\t")
+        if len(fields) != 3:
+            continue
+        added, removed, path = fields
+        # "-" marks a binary file: no line counts to attribute, but
+        # the commit still counts as a touch.
+        files.append((
+            _rename_target(path),
+            int(added) if added.isdigit() else 0,
+            int(removed) if removed.isdigit() else 0,
+        ))
+    return files
 
 
 def window_commits(root: Path, since: str = DEFAULT_SINCE) -> tuple[int, int]:
@@ -338,20 +348,10 @@ def history_section(
     }
 
 
-def change_coupling(
-    root: Path,
-    since: str = DEFAULT_SINCE,
-    tracked: set[str] | None = None,
-    limit: int | None = 25,
-) -> list[dict[str, Any]]:
-    """Pairs of files that keep changing together.
-
-    Reported with *confidence* as well as support, because raw
-    co-change counts just rank the busiest files. Confidence is the
-    share of one file's commits that also touched the other, so a pair
-    only surfaces when the relationship is most of what one of them
-    does.
-    """
+def _co_change_tallies(
+    root: Path, since: str, tracked: set[str] | None
+) -> tuple[dict[str, int], dict[tuple[str, str], int]]:
+    """How often each file was touched, and each pair touched together."""
     touches: dict[str, int] = {}
     together: dict[tuple[str, str], int] = {}
     for _, files in _commits(root, since):
@@ -366,7 +366,18 @@ def change_coupling(
             touches[path] = touches.get(path, 0) + 1
         for pair in combinations(sorted(paths), 2):
             together[pair] = together.get(pair, 0) + 1
+    return touches, together
 
+
+def _confident_pairs(
+    touches: dict[str, int], together: dict[tuple[str, str], int]
+) -> list[dict[str, Any]]:
+    """Pairs that clear both bars, unsorted.
+
+    Support alone ranks the busiest files. Confidence — the share of the
+    rarer file's commits that also touched the other — is what makes the
+    pair a relationship rather than a coincidence of traffic.
+    """
     coupled = []
     for (left, right), support in together.items():
         if support < MIN_COUPLING_SUPPORT:
@@ -379,6 +390,25 @@ def change_coupling(
             "co_changes": support,
             "confidence": round(confidence, 3),
         })
+    return coupled
+
+
+def change_coupling(
+    root: Path,
+    since: str = DEFAULT_SINCE,
+    tracked: set[str] | None = None,
+    limit: int | None = 25,
+) -> list[dict[str, Any]]:
+    """Pairs of files that keep changing together.
+
+    Reported with *confidence* as well as support, because raw
+    co-change counts just rank the busiest files. Confidence is the
+    share of one file's commits that also touched the other, so a pair
+    only surfaces when the relationship is most of what one of them
+    does.
+    """
+    touches, together = _co_change_tallies(root, since, tracked)
+    coupled = _confident_pairs(touches, together)
     coupled.sort(
         key=lambda item: (-_as_number(item["co_changes"]),
                           -_as_number(item["confidence"]),

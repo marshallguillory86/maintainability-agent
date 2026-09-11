@@ -8,9 +8,9 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 | Fact | Value |
 |---|---|
-| Last tagged version | v3.3.0 |
-| Production code | 32,024 lines across 130 modules |
-| Tests | 2,758 collected across 226 files |
+| Last tagged version | v3.4.0 |
+| Production code | 32,142 lines across 130 modules |
+| Tests | 2,766 collected across 226 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |
 | Known open exit conditions in Phases 0–5 | Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) **shipped**. |
 | Later phases outstanding | **None.** 6.1–6.4, 7.1–7.5 and 8.1–8.10 are all shipped; v1.0.0 was tagged 2026-09-01. This row claimed 1.0 was still waiting on acceptance, the hostile audit and the tag for nine releases after all three were done — the fourth time this table has outlived its own truth, and the reason 7.2 forbids exactly this. |

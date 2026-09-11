@@ -17,6 +17,11 @@ maintainability-pr-comment.md
 maintainability.sarif
 
 # secure-code-agent outputs, same reason: generated per run, never committed.
+# Its scan *history* is deliberately NOT here, the same way
+# .maintainability/history.jsonl is not: a history that is not committed
+# restarts from zero on every machine and every CI run, which makes the
+# trend it exists to carry meaningless. Security is a reported pillar
+# (ADR 007), so the delegate's series is part of this repository's record.
 secure-code-report.md
 secure-code-remediation-prompt.md
 secure-code-pr-comment.md

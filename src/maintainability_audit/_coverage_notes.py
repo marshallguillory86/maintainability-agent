@@ -59,4 +59,40 @@ def coverage_notes(coverage: dict[str, Any]) -> list[str]:
             "or widen `analyzers.depth`, to have them reported.",
             "",
         ])
+
+    lines.extend(_child_boundary_note(coverage))
     return lines
+
+
+def _child_boundary_note(coverage: dict[str, Any]) -> list[str]:
+    """What this run does not control about the tools it spawned.
+
+    `docs/product-intent.md` has said since P1 was amended that this
+    package "does not sandbox children", and lists *"that third-party
+    tools cannot use the network"* among the things it does not promise.
+    The **report** did not say it. A reader holding a page headed "the
+    analysis itself performs no network access" and a table naming the
+    external tools that ran had no way to learn the second sentence does
+    not cover the first.
+
+    That makes it P8's gap rather than P1's: the promise was correctly
+    scoped all along, and the run relying on that scoping never disclosed
+    it to the person reading the output.
+
+    Only when an external tool actually ran. With no children spawned
+    there is nothing to disclose, and saying it anyway would be the noise
+    this section is careful to avoid.
+    """
+    spawned = coverage.get("tools_contributed") or 0
+    if not spawned:
+        return []
+    return [
+        "**Analyzer children are not network-isolated.** "
+        f"{spawned} external {'tool' if spawned == 1 else 'tools'} ran as local "
+        "child processes. This agent does not transmit the audited source and "
+        "opens no socket of its own, but it does not sandbox what it spawns: a "
+        "third-party analyzer that reaches the network is outside what this run "
+        "controls or observes. Determinism and no upload are the promise; a "
+        "kernel air-gap is not.",
+        "",
+    ]

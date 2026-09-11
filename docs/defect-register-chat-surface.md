@@ -5746,10 +5746,81 @@ sits outside the sample because the reported instance was an absent
 gate, and a test written from that instance would assert the step
 exists — which the mutated workflow satisfies.
 
+### D152 — Closed: D147 kept the consent and handed back the choice of program (High)
+
+**D147's remainder, filed rather than left inside a Closed entry.** That
+entry closed the half it named — `load_config` strips
+`test_execution.requested` from the repository tier, so a tree can no
+longer opt the host in. It did not close who chooses *what runs*.
+
+`expected_commands.test` is deliberately **not** stripped, and that is
+correct: the key is documentation — "this is how you test me" — and
+`require_test_command` reads it, so removing it would fail a real gate
+on every repository that documents its command honestly. The comment
+above `_HOST_AUTHORITY` says exactly this, and ends: *"the user tier is
+merged before this and is untouched … their answer is what
+`opted_in_command` reads."*
+
+**`opted_in_command` did not exist.** Three docstrings — in
+`config.py` and twice in `_setup_persist.py` — named it as the reader
+that made keeping the key safe, and nothing implemented it.
+`run_test_suite` read `config["expected_commands"]["test"]` from the
+**merged** config, where the repository's document lands by design.
+
+So: a person consents to `pytest -q`, having been shown `pytest -q`. A
+repository documents `expected_commands.test` as something else. The
+host runs the repository's. The consent was real and attached to the
+wrong program — which is worse than an unclosed opt-in, because the
+audit trail says the person agreed.
+
+**Population.** Every repository that documents a test command, on every
+surface, once any person has opted the suite in. `test_execution.timeout_seconds`
+rode the same path: unclamped, from the merged config, so a documented
+`2147483647` made this host wait sixty-eight years for a child it was
+told to run — D40's crafted-configuration family in a field that never
+got the bound its sibling `analyzers.timeout_seconds` has.
+
+**How it survived.** The boundary was described accurately in three
+places and enforced in none. A reader checking the design found the
+right rule stated, and the citation named a function, and a function
+name in a docstring is indistinguishable from a function. This is the
+same shape as D23 and D25 in this register: the product had the
+capability described and the door did not implement it.
+
+Two presentation claims went with it, both the same class of untrue
+sentence:
+
+- `_finish_result` said chat and markdown are *"on the wire the two are
+  the same text"* while the line beneath it already passed
+  `complete=(format == "markdown")`. They are two skins — chat bounded
+  for a host's payload cap, markdown the complete report.
+- the HTML skin carried **none** of the coverage gap notes, "Nothing
+  examined" included, because the prose was built as Markdown strings
+  inside the Markdown renderer. ADR 011's claim that the skins never
+  disagree was resting on nobody checking (P8).
+
+*Closing test:* `test_user_opt_in_cannot_be_completed_by_repo_controlled_spawn_settings`
+in `tests/test_tree_cannot_opt_the_host_in.py`,
+`test_coverage_gap_notes_are_present_in_html_as_well_as_markdown` in
+`tests/test_html_section_parity_class.py`, and
+`test_chat_is_bounded_and_markdown_is_the_complete_report` in
+`tests/test_mcp_format_contract.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
+*Mutation:* the member broken is **which tier the command is read
+from**, not whether an opt-in is required — restoring
+`config["expected_commands"]["test"]` in `run_test_suite` while leaving
+`suite_opted_in`, the strip, and every opt-in assertion untouched. The
+suite still refuses to run unopted, the tree still cannot request a run,
+and the host still executes the tree's program. It sits outside D147's
+original sample because that sample was about the *request*, and a test
+written from it asserts nobody can opt in — which this mutation honours.
+
+
 
 ## Disposition
 
-**Every entry is closed.** D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D152 closed on 2026-09-11, from Grok's audit of `673e667`: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

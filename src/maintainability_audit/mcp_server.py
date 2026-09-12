@@ -262,9 +262,13 @@ def _audit_tool_for(ledger: _RootLedger) -> Any:
         decides: a configured repo runs its external analyzer pool — the
         primary evidence source — by default. Pass true/false to
         override for one call. ``format`` is the presentation the user
-        chose — chat or markdown (the same Markdown on the wire), html
-        (returned as text; never written to the tree) or json; unset
-        takes the persisted default from setup. Leave ``record_history``
+        chose. ``chat`` is the **bounded** skin — the inline view,
+        trimmed so a large repository's response stays under a host's
+        payload cap; ``markdown`` is the **complete** report, because it
+        was chosen as a file to keep. They are two skins and not one
+        text. ``html`` is returned as text and never written to the
+        tree; ``json`` carries the report dict. Unset takes the
+        persisted default from setup. Leave ``record_history``
         unset and an existing series appends; otherwise the persisted
         first-run consent decides (decision 4) — capability never
         records, only an answer does.

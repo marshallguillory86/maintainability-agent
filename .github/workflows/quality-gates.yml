@@ -35,16 +35,22 @@ on:
 # runs competing for the same runners, and pushing again started a third
 # while the first two kept going.
 #
-# `head_ref || ref_name` puts both events for one branch in the same
-# group, so the pull-request run supersedes the push run instead of
-# racing it. A branch with no PR is unaffected, which is the case the
-# `push` trigger exists for.
+# Keyed by **event as well as branch**, deliberately. The first version
+# grouped push and pull_request together so the PR run would supersede
+# the push run — and that cancelled the push run, whose required
+# contexts are the ones branch protection reads. A cancelled check is
+# not a passing check, so every PR went BLOCKED with nothing wrong.
+#
+# Per-event grouping keeps what actually matters: pushing again while a
+# run is going cancels the superseded one instead of stacking a third.
+# The push/pull_request pair still both run, which is the cost of having
+# a `push` trigger that covers branches with no PR.
 #
 # Not cancelled on `main`: a merge there is the commit a release is cut
 # from, and cancelling its run to start the next merge's would leave the
 # tag's own evidence unfinished.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:

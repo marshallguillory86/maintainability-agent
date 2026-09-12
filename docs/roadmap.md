@@ -55,7 +55,46 @@ no such file reports exactly what it reported before.
 
 Two of the four did not land as written, and both are recorded above with the measurement that withdrew them: deleting the per-language cyclomatic regexes would have cost the bare install half its decision points, and the per-concept merge had no analyzer-to-analyzer content to merge. COBOL is not anchored and will not be.
 
-**What is next is not decided here.** The recalibration was the only scheduled work and it is done, so this section names nothing until the next item is chosen — which is the honest state, and better than the seven releases this line spent naming Swift after Swift shipped.
+**What is next is language support, and that is the whole list.** The
+audit itself is finished for the job it claims: fourteen languages
+parsed, the rubric calibrated against 180 repositories, the evidence
+model migrated, the report contract stable. Nothing on this page
+proposes making it do a different job.
+
+Five languages, in the order they are worth doing, each on the terms
+[ADR 006](decisions.md) already sets — a scanner of its own, a
+documented list of what it misses, tests that pin them, one per minor
+release:
+
+| Language | Why this one |
+|---|---|
+| **Kotlin** | the largest real gap. Android and modern JVM services; the analyzer catalog already maps it |
+| **Shell** | in nearly every repository, audited by nobody, and where a great deal of operational risk actually lives |
+| **Objective-C** | completes iOS beside Swift, which shipped in 2.4.0 |
+| **Scala** | completes the JVM beside Java and Kotlin |
+| **PowerShell** | completes the Windows and enterprise side, beside the COBOL and mainframe reading |
+
+Below those the audience thins faster than the work shrinks — Dart,
+Elixir and Zig are real languages this tool would serve few people by
+parsing. The list stops at five on purpose, and a language is not added
+to it because someone asked.
+
+**The rest of "next" is maintenance, and naming it is the point.** A
+tool that stops being built still ages in three places, none of which
+announce themselves:
+
+- the **analyzer pool is pinned**, and a fresh install eventually stops
+  resolving. The scheduled drift job exists to say so; it only works if
+  somebody still reads it go red;
+- the **calibration describes 2026's code**. 180 repositories pinned at
+  commits is the right way to do it and it is still a snapshot, and it
+  is the one number here that silently stops being true;
+- **Python 3.12 is pinned in CI**, and a tool nobody touches meets a new
+  Python eventually.
+
+None of those are work today. They are the maintenance surface of a
+finished tool, written down so the absence of features is not mistaken
+for the absence of anything to do.
 
 This line said "Swift" for seven minor releases after Swift shipped in 2.4.0, and named the remediation-integrity checks as the other near-term block after they closed in 2.1.0 through 2.3.0. A roadmap whose "Next" is already done tells a reader nothing about what is coming, which is the failure the delivery entry below describes in the other direction.
 

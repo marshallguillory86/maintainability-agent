@@ -234,6 +234,43 @@ Adapted from [ADR 001](adr-001-evidence-and-verification.md), which earned these
 
 Passing the test suite and the self-audit is necessary and is not sufficient. Two consecutive audit rounds were rejected for fixing the demonstrated instance and leaving structurally identical paths untouched.
 
+## What counts as a defect, and what does not
+
+This tool audits itself, so it will always have findings. Without this
+section "no known defects" is unreachable by construction, every audit
+reopens the question of whether the work is finished, and the honest
+answer to "is it done" is permanently no.
+
+**A defect is a false claim.** Behaviour that contradicts what this
+repository says it does: a promise the code breaks, a document that
+describes something the code does not do, a citation naming a function
+that does not exist, a check that passes vacuously. Those get filed,
+and they get a severity.
+
+**A finding is not a defect.** The tool's own output about its own
+source — a declaration in the warn band, a near-duplicate pair, a file
+approaching the size limit, a style nit — is the product working. It is
+reported, it is weighed by a human, and it blocks nothing. A warn band
+that had to be empty would be a gate, and this project deliberately
+separates the two.
+
+Restyling this repository to raise its own grade is explicitly not work.
+The score is second class; a tool that games its own metric has broken
+the only promise that matters.
+
+### The release bar
+
+**No open High and no open Medium.** That is the whole rule.
+
+A Low may stand open through a release when it is recorded, understood
+and not worth holding a version for. The release workflow reads the
+register for open entries; a Low left open must say in the entry why it
+is not blocking, so the decision is visible rather than assumed.
+
+This is a stopping rule, not a quality ceiling. Nothing here says stop
+looking — the audits are the point, and finding something is the tool
+doing its job rather than evidence the job is unfinished.
+
 ## What success looks like
 
 - An agent handed the bounded work order acts on the standard instead of wandering.

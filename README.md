@@ -20,6 +20,24 @@ pip install "maintainability-agent[mcp]"   # optional local MCP server for chat 
 cp -r skills/maintainability-agent ~/.claude/skills/   # Claude Code slash command
 ```
 
+**One command to a work order.** A config file is the whole setup — with one
+present, nothing is asked and nothing is written into your tree:
+
+```bash
+curl -O https://raw.githubusercontent.com/marshallguillory86/maintainability-agent/main/maintainability-audit.example.json
+maintainability-audit --config maintainability-audit.example.json \
+  --output report.md --prompt-output prompt.md
+```
+
+`prompt.md` is the bounded work order: the findings worth fixing, in order,
+each with its location, why it matters and the command that verifies it — and
+the standing rule that nothing else gets refactored. Paste it into your agent.
+`report.md` is the evidence behind it. The prompt is the product.
+
+Without `--config`, an interactive run asks the first-run questions instead —
+analyzer pool, depth, licence policy, whether to run your suite — because those
+are choices this tool will not make on your behalf.
+
 ---
 
 ## Executive summary
@@ -82,15 +100,6 @@ record — and those checks read a diff's **shape**, never whether it works.
 The full argument, including what this deliberately does not compete on:
 [why this exists](docs/why-this-exists.md) and
 [philosophy](docs/philosophy.md).
-
-## The road to 1.0
-
-1.0 was the line drawn under a long arc of **subtraction** — what remained after
-every claim the project could not stand behind was removed. A scoring engine
-rebuilt after it was found to grade repo *size*; a headline claim about AI
-authorship retracted against a matched control; a score that is withheld rather
-than guessed. That arc is the credibility, and it is recorded in full, with the
-figures quoted from their approved summaries, in [the track record](docs/track-record.md).
 
 ## Install
 
@@ -335,19 +344,21 @@ it was generated against — a provenance record, not a claim about HEAD.
 
 | Metric | Value |
 |---|---:|
-| Maintainability estimate | 4.2 / 5 |
+| Maintainability estimate | 4.5 / 5 |
 | Verified grade | B |
-| Files scanned | 476 |
+| Files scanned | 511 |
 | Hard gate failures | 0 |
 
 A **B**, and the report says why: the grade is verified against the evidence
-*floor* of 4.1 rather than the 4.2 point estimate, because an unmeasured aspect
-prices at 0 when a grade has to be defended; and testability is capped at 4.0 by
-an unpaired production unit in the fail band. Those are measured against
-thresholds this repo sets stricter than the shipped defaults, and every threshold
-gate is opted **on** for its own CI, so drifting below the bar fails the build
-rather than the README. The full stamped table — warnings, duplication, risk
-findings — is in the report itself.
+*floor* of 4.2 rather than the 4.5 point estimate, because an unmeasured aspect
+prices at 0 when a grade has to be defended. Every threshold gate is opted
+**on** for this repository's own CI, so drifting below the bar fails the build
+rather than the README.
+
+The tool reports warn-band declarations here and they are not treated as
+defects — see [what counts as a defect](docs/product-intent.md#what-counts-as-a-defect-and-what-does-not).
+Restyling this codebase to raise its own grade is explicitly not work: a tool
+that games its own metric has broken the only promise that matters.
 
 ## Platform support
 

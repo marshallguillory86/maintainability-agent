@@ -12,6 +12,128 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.5.0 - 2026-09-11
+
+*The first five minutes, rebuilt: `-` pipes the prompt into an agent, the chat
+reply opens with the work order instead of a metric table, and there is a demo
+tree that produces a real one. From Grok's audit of what a stranger sees after
+cloning.*
+
+### Added — `-` writes to stdout on every rendered output (D161)
+
+**Minor rather than patch, because a flag gains a meaning it never had.**
+
+`-` is the POSIX spelling for stdout. Every rendered output went straight to
+`Path(name)`, so `-` was a *filename*:
+
+```bash
+maintainability-agent --config c.json --prompt-output - | claude
+```
+
+gave an empty pipe, a report on stdout nobody asked for, and the prompt on disk
+under a name a shell fights you over. Nothing errored.
+
+That command shape is the five-minute path Grok's audit recommends, and the flag
+it recommends did not work. All seven rendered outputs — `--output`,
+`--prompt-output`, `--comment-output`, `--agent-instructions-output`,
+`--attestation-output`, `--hostile-prompt-output`, `--sarif-output` — now stream
+through one seam, so a future output cannot be added with the old behaviour by
+accident.
+
+**The obvious fix introduces a second defect, handled here too.** With no
+`--output` the report prints to stdout, so sending the prompt there as well
+hands a reader a prompt with a full report stapled to its front — worse than the
+file, because it looks like it worked. A secondary output claiming stdout now
+suppresses the implicit report; an explicit `--output -` still prints it.
+
+`--write-baseline` and `--html-output` **refuse** `-` by name and with a reason:
+a baseline is read back by a later run, an HTML report is opened rather than
+piped. Refusing is the point — an output that accepts `-` and does something
+else is the defect being fixed.
+
+### Changed — the chat surface opens with the work order, not the grade (D160)
+
+**The behaviour that moves is what a chat reply shows first.** No data changed
+and no format was removed; the bounded skin's sections are reordered.
+
+The MCP `chat` format — the surface most people drive this tool through — built
+`## Summary` into the shared prelude, so every reply opened with four metadata
+lines and a fourteen-row metric table before anything said there was work to do.
+
+Measured on a tree with three fat modules:
+
+| | before | after |
+|---|---:|---:|
+| first line of `## Work Order` | 29 | **8** |
+| first pasteable prompt | 51 | **36** |
+| lines before the letter grade | 8 | **60** |
+
+Hard gates still lead — a failed gate changes which item you start with. The
+summary, the capped-grade reasons and the score tables follow the work order as
+the evidence that aimed it. **The complete report file is unchanged**: it is read
+top to bottom and correctly opens with what it is.
+
+A second half, found while measuring the first: **a run with an empty backlog
+rendered no work-order section at all.** This repository is that run — 511 files,
+74 function warnings, and a chat view of 73 lines that never once mentioned a
+work order. A reader could not tell *nothing met the bands* from *this tool does
+not produce work orders*. It now says which.
+
+### Added — a demo tree that produces a real work order
+
+`examples/demo` is a two-module order system with problems a reviewer would
+raise: a 72-line pricing function at complexity 27, the only money path with no
+test, and a pricing block duplicated between billing and invoicing so the
+invoice and the charge can disagree. Four items, three finding classes, a
+copy-paste prompt each, and it reads in under a minute.
+
+The score is deliberately **absent** and the demo's README explains why: two
+files is below the calibration floor of 24, so no rate is issued. That is the
+posture in one output — the work order is first class and the score is second.
+
+`expected-prompt.md` is checked in and a test regenerates and diffs it, so a
+renderer change shows its blast radius on real output rather than on a fixture
+nobody reads.
+
+### Added — the README names the analyzer pool, and says what you get without it
+
+A first run with no analyzer installed falls back to the built-in tier, and the
+install path never said so — so the fallback read as the product rather than as
+a degraded reading of it. That is the commonest reason a first run looks thin.
+
+The stanza names the exact set CI installs and calibrates against, and
+`test_the_readme_names_the_analyzer_pool_ci_installs` derives the expected set
+from the catalog and fails if the README drifts from it.
+
+### Fixed — the trend break named the wrong thing
+
+The break reason read *"a delegated pillar's producer or its version changed"*,
+while the key for a schema-2 document is `scoring_model` and the version is only
+the v1 fallback. A reader whose series broke went looking for a release change
+that in the common case had not happened.
+
+Confirmed against the delegate rather than assumed: `secure-code-agent` 0.11.0 is
+a docs-only release with its scoring model unchanged, and it correctly does not
+break the series.
+
+### Changed — a register citation naming a test that does not exist is refused
+
+`prove_falsifiers` already refused an entry where **no** citation resolved. It
+had nothing to say when **some** did, so an entry citing three tests and
+defining one proved the one and dropped the other two in silence.
+
+That is D147's exact shape: the entry closed on `opted_in_command`, the citation
+read as evidence, and the function had never been written. The sibling citation
+that *does* resolve is what hides the fiction. Every cited name must now resolve,
+and the refusal names which did not.
+
+### Documentation
+
+- The roadmap states the one public bet — clone-to-work-order — at the top,
+  rather than leaving a reader to infer it from what is missing.
+- The CHANGELOG opens with how to read it: these entries are a track record, and
+  anyone wanting the short version is pointed at the README and the roadmap.
+
 ## 3.4.0 - 2026-09-11
 
 *Config excludes that held a glob start working, so a scanned population can

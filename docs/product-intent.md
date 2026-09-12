@@ -2,51 +2,6 @@
 
 The governing document. When another document, a code comment, or a release note disagrees with this one, this one is right and the other is a bug.
 
-## Planned product split and companion workflow
-
-**Direction agreed; not shipped.** The existing audit tool is to become
-`maintainability-audit`. A new companion named `maintainability-agent` will
-run that audit and automate remediation of all or part of its work orders,
-under human direction within the user's agent chat. Current package names,
-commands and integrations remain unchanged until the rename is released.
-The audit promises and non-goals below apply to the independent audit tool;
-the companion's authorized remediation is a separate responsibility.
-
-The report already contains the work orders. The new capability is carrying
-selected work through execution and verification without requiring the human
-to copy each instruction and manually coordinate every step.
-
-The companion will:
-
-1. Run the audit through the existing setup and authorization flow.
-2. Let the human select all or part of the reported work orders and establish
-   scope, verification commands and attempt limits. "All" means the selected
-   report's work orders, not permission for unrestricted refactoring.
-3. Retain the original selected work order and starting revision as the task
-   contract; direct the host's coding capabilities within that contract and
-   the repository's instructions and role boundaries.
-4. Track attempts, remaining work and verification evidence so an interrupted
-   task can resume without reconstructing its scope from chat history.
-5. Run authorized tests and re-audit returned changes against the original
-   selection. Report findings cleared, scope conformance, suppressions,
-   regressions and test results separately. Missing evidence is not success;
-   a passing audit does not establish functional correctness.
-6. Continue within the approved limits, or stop for human direction when
-   scope must expand, progress stalls, or the attempt limit is reached.
-   Present the resulting changes and evidence for human review.
-
-The audit remains independently usable, deterministic under its stated input
-contract, and free of model calls and source-code remediation. The companion
-uses the user's host for reasoning and editing; it does not replace the host
-or take control away from the human. Remediation approval does not by itself
-approve publishing, pushing or merging changes.
-
-A host skill backed by durable task state is the initial implementation
-candidate, not a settled packaging decision. State storage, supported hosts,
-rename compatibility and release versions remain to be decided before build.
-See [target architecture](target-architecture.md#planned-companion-boundary)
-and [roadmap](roadmap.md#planned-audit-and-agent-split).
-
 ## What this is
 
 A deterministic maintainability audit that produces a **bounded work order** for an AI coding agent.
@@ -305,4 +260,4 @@ An earlier revision read "bounded ones did not", which concealed the bounded arm
 
 ## Non-goals
 
-Replacing mature analyzers; rewriting repositories automatically; sending code to an LLM by default; treating maintainability as purely numeric; preserving undocumented behavior for hypothetical consumers.
+Replacing mature analyzers; rewriting repositories automatically; sending code to an LLM by default; treating maintainability as purely numeric; preserving undocumented behavior for hypothetical consumers; **carrying the work out.** This tool measures and emits a bounded prompt; acting on that prompt is the agent's job and the operator's decision, not this package's. Nothing in this repository describes a successor, rename or execution layer — a reader who infers one is reading a plan that does not exist.

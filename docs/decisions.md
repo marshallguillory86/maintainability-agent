@@ -23,21 +23,6 @@ A decision recorded only as a sentence inside a design document is a decision th
 | [013](adr-013-hostile-audit-prompt.md) | Emit a deterministic, report-seeded hostile-audit prompt so the adversarial audit that builds this tool becomes a repeatable step; the LLM does the reasoning outside, the core never performs it | **Accepted** — implemented in 1.10.0: `render_hostile_audit_prompt` is the third emitter on the prompt seam, surfaced as CLI `--hostile-prompt-output` and the MCP `maintainability-hostile-audit` prompt. It seeds the audit from one run — commit, evidence already computed, P1-P8 with each stated falsifier, and the audit contract — and does not gate or score (`tests/test_hostile_prompt.py`). The promise table lives in code so the brief works offline, held to `product-intent.md` in both directions. A third emitter on the prompt seam beside `render_ai_prompt` / `render_agent_instructions`; non-gating, non-scoring. The deterministic adversarial-properties *detection* dimension (auditing a target for the same hardening classes) is deferred to a future release ([roadmap](roadmap.md)) and its own ADR | Prompt seam, CLI, MCP prompt, QA methodology |
 | [014](adr-014-absence-as-evidence.md) | Adversarial-properties detection takes the evidence-integrity half only — code that reads an absent, empty or failed measurement as a passing result — and leaves every exploitability class to `secure-code-agent` | **Accepted** (2026-09-10) — the *scope* decision only; **nothing is built**. The boundary is a rule rather than a list: a candidate is MA's when it would still be a defect on a machine no attacker can reach, and the delegate's when its harm requires someone hostile; where it is genuinely both, MA yields, because [ADR 007](adr-007-pillars-and-practice.md) already gave that pillar away. Non-gating and non-scoring on [ADR 003](adr-003-deterministic-semantic-policy.md)'s terms. Implementation is gated on a frozen precision bar pre-registered before any result exists, as [semantic-prototype.md](semantic-prototype.md) did; a measured precision below it supersedes this ADR rather than lowering the bar | Findings, remediation prompts, the `secure-code-agent` boundary, QA methodology |
 
-## Planned product split
-
-**Agreed direction; unimplemented.** The current audit becomes
-`maintainability-audit`; a new `maintainability-agent` companion runs it and
-coordinates human-selected remediation in the user's agent chat. The audit
-retains its deterministic, no-model boundary. The companion owns execution
-coordination, task state and bounded retries through the host.
-
-[Product intent](product-intent.md#planned-product-split-and-companion-workflow)
-is the behavioral contract. [Target architecture](target-architecture.md#planned-companion-boundary)
-and the [roadmap](roadmap.md#planned-audit-and-agent-split) describe design and
-completion criteria. Package/CLI/MCP/skill migration, compatibility duration,
-state storage, host support and release versions are undecided. A host skill
-with durable state is a candidate, not an accepted runtime design.
-
 ## Recorded operating decisions
 
 These choices settle cross-cutting behavior discovered while closing the chat

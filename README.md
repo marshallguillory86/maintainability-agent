@@ -53,6 +53,14 @@ each with its location, why it matters and the command that verifies it — and
 the standing rule that nothing else gets refactored. Paste it into your agent.
 `report.md` is the evidence behind it. The prompt is the product.
 
+**Want to see the output before pointing it at your own code?**
+[`examples/demo`](examples/demo/) is a two-module order system with real
+problems in it — an overgrown pricing function, a money path nothing tests, and
+a block duplicated between billing and invoicing. Four items, three finding
+classes, a copy-paste prompt each, and it reads in under a minute. The work
+order it produces is checked in at
+[`expected-prompt.md`](examples/demo/expected-prompt.md).
+
 Without `--config`, an interactive run asks the first-run questions instead —
 analyzer pool, depth, licence policy, whether to run your suite — because those
 are choices this tool will not make on your behalf.

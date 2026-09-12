@@ -55,33 +55,48 @@ no such file reports exactly what it reported before.
 
 Two of the four did not land as written, and both are recorded above with the measurement that withdrew them: deleting the per-language cyclomatic regexes would have cost the bare install half its decision points, and the per-concept merge had no analyzer-to-analyzer content to merge. COBOL is not anchored and will not be.
 
-**What is next is not decided here.** The recalibration was the only scheduled work and it is done, so this section names nothing until the next item is chosen — which is the honest state, and better than the seven releases this line spent naming Swift after Swift shipped.
+**What is next is language support, and that is the whole list.** The
+audit itself is finished for the job it claims: fourteen languages
+parsed, the rubric calibrated against 180 repositories, the evidence
+model migrated, the report contract stable. Nothing on this page
+proposes making it do a different job.
+
+Five languages, in the order they are worth doing, each on the terms
+[ADR 006](decisions.md) already sets — a scanner of its own, a
+documented list of what it misses, tests that pin them, one per minor
+release:
+
+| Language | Why this one |
+|---|---|
+| **Kotlin** | the largest real gap. Android and modern JVM services; the analyzer catalog already maps it |
+| **Shell** | in nearly every repository, audited by nobody, and where a great deal of operational risk actually lives |
+| **Objective-C** | completes iOS beside Swift, which shipped in 2.4.0 |
+| **Scala** | completes the JVM beside Java and Kotlin |
+| **PowerShell** | completes the Windows and enterprise side, beside the COBOL and mainframe reading |
+
+Below those the audience thins faster than the work shrinks — Dart,
+Elixir and Zig are real languages this tool would serve few people by
+parsing. The list stops at five on purpose, and a language is not added
+to it because someone asked.
+
+**The rest of "next" is maintenance, and naming it is the point.** A
+tool that stops being built still ages in three places, none of which
+announce themselves:
+
+- the **analyzer pool is pinned**, and a fresh install eventually stops
+  resolving. The scheduled drift job exists to say so; it only works if
+  somebody still reads it go red;
+- the **calibration describes 2026's code**. 180 repositories pinned at
+  commits is the right way to do it and it is still a snapshot, and it
+  is the one number here that silently stops being true;
+- **Python 3.12 is pinned in CI**, and a tool nobody touches meets a new
+  Python eventually.
+
+None of those are work today. They are the maintenance surface of a
+finished tool, written down so the absence of features is not mistaken
+for the absence of anything to do.
 
 This line said "Swift" for seven minor releases after Swift shipped in 2.4.0, and named the remediation-integrity checks as the other near-term block after they closed in 2.1.0 through 2.3.0. A roadmap whose "Next" is already done tells a reader nothing about what is coming, which is the failure the delivery entry below describes in the other direction.
-
-## Planned audit and agent split
-
-**Planned; not shipped or assigned a release.** Rename the existing tool to
-`maintainability-audit` and introduce `maintainability-agent`, a companion
-that runs the audit and automates human-selected work orders inside the
-user's agent chat. The [product intent](product-intent.md#planned-product-split-and-companion-workflow)
-defines the behavior; [target architecture](target-architecture.md#planned-companion-boundary)
-defines the proposed boundary. Existing commands remain current until migration.
-
-| Feature | Completion evidence required before claiming it ships |
-|---|---|
-| Audit/agent naming split | A decided migration policy covers packages, CLI, MCP, skills and documentation; existing users have a tested migration path |
-| Human-selected remediation | All or part of a report can be selected; execution respects the selected scope and host/repository permissions |
-| Durable work-order task | Original selection, starting context, attempts and pending evidence survive interruption; resume refuses stale or mismatched context |
-| Host-directed execution | The companion carries authorized work through the host, respecting repository role and testing instructions |
-| Verification loop | Tests and audit checks refer to the inspected changes and original selection; missing evidence or an incomparable result cannot become success |
-| Bounded continuation and review | Scope expansion requires human direction; stalled progress and exhausted limits stop; the human receives changes and separate verification results |
-
-First decide delivery and migration details, then prove one complete resumable
-chat task. Write behavioral tests before implementation. A host skill backed
-by durable state is the initial candidate; a separate runtime is not decided.
-No automatic publication or merge is included. This work does not reopen the
-audit's no-model boundary or replace its existing roadmap.
 
 ## Language adapters
 
@@ -240,6 +255,110 @@ Named because the failure mode for a one-maintainer project is competing everywh
 **Per-repository rubric overrides.** Currently refused: the rubric is a standard, and a standard everyone edits stops being one. Any override mechanism must label its output a **house variant** so it cannot be compared to a standard score.
 
 **Delivery** — GitLab and Azure DevOps adapters. The GitHub Action (`action.yml`), the PR-comment body (`--comment-output`) and historical trend reporting all **ship**; this line listed them as future work long after they landed, and an external evaluation of the tool got the CI story right by reading the README *despite* this roadmap. A document that under-claims is the same defect as one that over-claims — it just fails in the direction that costs adoption instead of credibility.
+
+## Claims without warrant — the family ADR 014 belongs to
+
+**Not built, not scheduled, and written down while the specimens are
+fresh.** [ADR 014](adr-014-absence-as-evidence.md) detects one class:
+code that reads an absent, empty or failed measurement as a passing
+result. That class is an instance of something larger, and the larger
+thing is the more interesting bet.
+
+**The thesis.** Human code under-documents. Generated code
+*over-asserts*. A model produces the artifact and the claim about the
+artifact in the same breath — docstring, comment, test, config key,
+identifier — with identical confidence whether or not the thing behind
+the claim exists. Nothing in the ordinary toolchain checks that seam,
+because before code was generated at scale the seam was mostly
+trustworthy. Linters check shape, type checkers check types, SAST checks
+exploitability, coverage checks whether a line ran. **None of them ask
+whether the code's own claims about itself are true.**
+
+Every specimen below is real and from this repository. That is the
+point: they are not hypothesised categories, they are defects this
+project shipped, and the register entry for each is the evidence.
+
+### 1. The citation that names nothing
+
+[D152](defect-register-chat-surface.md): three docstrings named
+`opted_in_command` as the reader that made keeping a repository-supplied
+key safe. **The function did not exist.** A reader checking the design
+found the right rule stated, and a function name — and a function name
+in a docstring is indistinguishable from a function.
+
+*Detection:* resolve backticked identifiers, `name()` forms and module
+paths found in docstrings and comments against the tree. Cheap, high
+precision, and the purest signature in the family. **The strongest
+candidate here, stronger than ADR 014.**
+
+### 2. The comment that claims a mechanism the code lacks
+
+[D155](defect-register-chat-surface.md): `_SEQUENCE_FIELDS` carried the
+comment *"derived from the dataclass rather than listed by hand so a new
+one is handled the day it is added"* and was a hand-written list of five
+names. It cost precisely what it promised to prevent — the sixth field
+was added and missed.
+
+*Detection:* comments asserting derivation, enforcement, exhaustiveness
+or completeness adjacent to a literal collection. Narrower precision
+than 1, still real.
+
+### 3. The test that defends nothing
+
+A test added with a fix that passes without the fix. This project
+already solved it for itself — `tools/prove_falsifiers.py` proves each
+newly cited test fails at the base commit — and that tool is internal.
+Generalised to audit a *target* repository's suite it is a capability
+with no equivalent on the market: generated tests assert what the code
+already does, which reads as coverage and is decoration.
+
+Arguably a larger product than ADR 014.
+
+### 4. The name that lies
+
+The comparability field called `rubric_version` holds the *package*
+version, so a report told its reader the rubric had moved when a patch
+release was all that happened — on 38 of this repository's 49 series
+breaks. Generated names describe what a thing is *for* rather than what
+it *holds*.
+
+Deliberately **uncited**: this one was never filed. It was corrected in
+`51e2060` by mapping the stored name to honest prose at the point the
+report makes the claim, and the field keeps its name because renaming it
+migrates every written line. The first draft of this section cited D155
+for it — an entry that does not mention it — which is category 1
+committed inside the paragraph describing category 1, caught by
+resolving the citation instead of trusting it.
+
+*Detection:* hardest of the five. Possible only in narrow shapes — a
+`*_version` field whose sole writer is a differently-named version
+constant.
+
+### 5. Configuration that cannot fire
+
+[D156](defect-register-chat-surface.md): `**/dir/` matched nothing, at
+any depth, while the bare `dir/` matched at all of them. A config
+written in the dialect the author had seen most rather than the one the
+tool implements. **An inert rule has no symptom of its own** — it never
+errors, and the only evidence is findings in files somebody believed
+were excluded.
+
+*Detection:* by execution rather than inspection — run each configured
+pattern against the tree and report those matching nothing. A liveness
+sweep, and it generalises well past exclude patterns.
+
+### Why this is not scheduled
+
+The same reason ADR 014 is not: precision is unmeasured, and this
+repository is the wrong corpus to measure it on. Everything above was
+found *here*, which means this codebase has been scrubbed of the class
+and would score clean — the one tree available for free is the one that
+cannot validate the detector.
+
+Building any of it needs a labelled external corpus and a frozen
+acceptance bar, the way [ADR 003](adr-003-deterministic-semantic-policy.md)
+and ADR 014 both require. Until there is a reason to build that corpus,
+this section is a record of specimens rather than a plan.
 
 ## Distant future
 

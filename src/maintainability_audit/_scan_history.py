@@ -57,7 +57,7 @@ from .config import PathNotAllowed, read_operator_file
 # followed. A schema-4 line read by an older build fails that one line's
 # parse and costs that scan, which is the tolerance `read_history` was
 # built with rather than a new risk.
-HISTORY_SCHEMA_VERSION = 4
+HISTORY_SCHEMA_VERSION = 5
 
 DEFAULT_HISTORY_PATH = ".maintainability/history.jsonl"
 
@@ -70,7 +70,7 @@ DEFAULT_HISTORY_PATH = ".maintainability/history.jsonl"
 # score being added and not added here, after which trends silently span
 # a change in the instrument.
 COMPARABILITY_FIELDS: tuple[str, ...] = (
-    "rubric_version",
+    "tool_version",
     "calibration",
     "thresholds_digest",
     "analyzers",
@@ -102,7 +102,14 @@ class ScanRecord:
     commit: str
     branch: str
     scope: str
-    rubric_version: str
+    #: The version of *this tool* that produced the scan. Named
+    #: `rubric_version` until 3.5.0, which is what it was never: a
+    #: rubric version would move when the rubric moved, and this moves
+    #: on every release. A reader of a stored line saw
+    #: `"rubric_version": "3.4.0"` and concluded the rubric had changed
+    #: when a patch release was all that happened — on 38 of this
+    #: repository's 49 series breaks (D158).
+    tool_version: str
     calibration: float
     # A digest of the thresholds in force. Stored rather than the
     # thresholds themselves: the comparison is equality, and a digest
@@ -210,15 +217,17 @@ def comparability_key(record: ScanRecord) -> tuple[Any, ...]:
 
 
 # What each comparability field is, in words a reader can act on. The
-# stored names are terse and one of them actively misleads: the field
-# called `rubric_version` holds the *package* version, so a reader told
-# "rubric_version changed" hears that the rubric moved when a patch
-# release is all that happened — and on this repository's own history
-# that field accounts for 38 of 49 breaks. The name stays as stored
-# (renaming it is a migration of every written line); what the report
-# says about it is corrected here, which is where the claim is made.
+# stored names are terse and prose is what a report should print: a
+# break that names `thresholds_digest` tells a reader less than one
+# saying the configured thresholds changed.
+#
+# `tool_version` was `rubric_version` until 3.5.0 and this map was
+# where that lie was first corrected — the display said "the tool
+# version" while the stored field still said otherwise. D158 finished
+# it by renaming the field, so the map and the record now agree instead
+# of one translating the other.
 FIELD_NAMES: dict[str, str] = {
-    "rubric_version": "the tool version",
+    "tool_version": "the tool version",
     "calibration": "the calibration constant",
     "thresholds_digest": "the configured thresholds",
     "analyzers": "which analyzers contributed",
@@ -408,6 +417,15 @@ def read_history(path: Path) -> list[ScanRecord]:
         try:
             payload = json.loads(line)
             payload.pop("history_schema_version", None)
+            # Schema 1-4 stored this as `rubric_version`. Renamed in 5
+            # because the name was never true (D158); every line written
+            # before that keeps loading, and keeps its place in a
+            # series, because the *value* never changed — only what it
+            # is called. A stored history is the one thing here that
+            # cannot be regenerated, so a rename that dropped it would
+            # cost more than the wrong name did.
+            if "rubric_version" in payload:
+                payload["tool_version"] = payload.pop("rubric_version")
             # Every sequence field back to a tuple. JSON has one list
             # type, so a field missed here returns as a list and the
             # record stops comparing equal to a freshly built one —
@@ -506,7 +524,7 @@ def _delegated_producers(report: dict[str, Any]) -> tuple[str, ...]:
     Sorted and joined into one string per pillar so the comparability
     key stays a plain value. Only delegated pillars carry a producer;
     the ones this tool measures itself are already covered by
-    `rubric_version`.
+    `tool_version`.
 
     A pillar whose document names no version still contributes its
     producer, because "the same tool, version unknown" and "a different
@@ -575,7 +593,7 @@ def record_of(report: dict[str, Any], config: dict[str, Any], version: str,
         commit=report.get("git_commit") or "",
         branch=report.get("git_branch") or "",
         scope=report.get("mode") or "full",
-        rubric_version=version,
+        tool_version=version,
         calibration=calibration,
         thresholds_digest=thresholds_digest(config.get("thresholds") or {}),
         analyzers=contributed,

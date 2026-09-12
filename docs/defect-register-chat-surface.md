@@ -6215,10 +6215,64 @@ sample because that sample was the function whose code contradicted its
 own docstring, and nothing there looks at the transport layer above it.
 
 
+### D158 — Closed: a stored field named `rubric_version` held the tool version (Medium)
+
+The scan record's comparability field was called `rubric_version` and
+held the **package** version. A rubric version would move when the
+rubric moved; this moved on every release, including patch releases that
+changed no scoring at all — and it accounts for 38 of this repository's
+49 series breaks.
+
+**Filed retroactively, and that is the second defect here.** The
+*displayed* half was found and fixed on 2026-09-10 in `51e2060`, shipped
+in 3.2.0: a field-to-prose map so a break reads "the tool version
+changed" instead of naming the field. It was never written down. The
+standing rule is that anything reportable as still open gets filed in
+the same turn, and D151 exists because a release was cut over a
+defect nobody had recorded. This is that failure in its quieter form —
+not a blocked release, an incomplete ledger, and the ledger is what the
+release gate reads.
+
+It surfaced while drafting the roadmap's "claims without warrant"
+section, as specimen 4: *the name that lies*. Writing it up required
+citing where it was closed, and there was nowhere to cite.
+
+**The fix left in 3.2.0 was half of one.** Correcting the prose made the
+*report* honest and left the *record* lying: anyone opening
+`.maintainability/history.jsonl` read `"rubric_version": "3.4.0"`. A
+stored line is read by more than this tool's renderer, and the
+comparability key is computed from the field rather than from its
+display name.
+
+Renamed to `tool_version` in history schema 5. Lines written under
+schemas 1 through 4 carry the old key and are mapped on read, because a
+stored history is the one artefact here that cannot be regenerated — a
+rename that dropped it would have cost more than the wrong name did.
+All 317 committed records load, and a history spanning the rename stays
+**one** series: the value never changed, only what it is called, so a
+break there would have been an instrument change that never happened.
+
+**Population.** Every stored scan record, since the field existed. The
+report's prose has been correct since 3.2.0; the record has not.
+
+*Closing test:* `test_a_line_written_before_the_rename_still_loads` and
+`test_the_two_spellings_land_in_one_series` in
+`tests/test_scan_history.py`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is the **read-side mapping**, not the
+rename — dropping the `rubric_version` to `tool_version` translation
+while keeping the new field. Every new line still writes and reads
+correctly, the whole suite passes on a fresh history, and 317 committed
+records silently lose their tool version and collapse into one
+comparability bucket. It sits outside a rename's obvious sample because
+that sample is "does the new name work", and the answer is yes.
+
+
 
 ## Disposition
 
-**Every entry is closed.** D157 closed on 2026-09-11, reported by Grok twice: the claim that chat and markdown are one text was fixed in the internal docstring and left standing in the MCP tool docstring a host actually renders, so a finding survived a full cycle. D156 closed on 2026-09-11, found by the `secure-code-agent` session reporting the class rather than its own instance: `**/dir/` excluded nothing at any depth while the bare `dir/` excluded at all of them, so a config written in gitignore's spelling silently scanned what it named. D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D158 closed on 2026-09-11, filed retroactively: a stored field called `rubric_version` held the package version, the displayed half was fixed in 3.2.0 and never written down, and the record went on saying it. D157 closed on 2026-09-11, reported by Grok twice: the claim that chat and markdown are one text was fixed in the internal docstring and left standing in the MCP tool docstring a host actually renders, so a finding survived a full cycle. D156 closed on 2026-09-11, found by the `secure-code-agent` session reporting the class rather than its own instance: `**/dir/` excluded nothing at any depth while the bare `dir/` excluded at all of them, so a config written in gitignore's spelling silently scanned what it named. D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

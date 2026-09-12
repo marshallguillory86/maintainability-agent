@@ -130,7 +130,7 @@ def test_a_history_is_an_input_and_the_report_says_so(
     def record(commit: str, findings: tuple[str, ...]) -> ScanRecord:
         return ScanRecord(
             recorded_at=f"2026-08-{len(commit):02d}T00:00:00Z", commit=commit * 40,
-            branch="main", scope="full", rubric_version="0.7.0", calibration=2.6279,
+            branch="main", scope="full", tool_version="0.7.0", calibration=2.6279,
             thresholds_digest="t", analyzers=(), scored_languages=("Python",),
             estimate=4.0, fingerprints=findings)
 

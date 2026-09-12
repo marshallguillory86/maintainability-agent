@@ -34,7 +34,7 @@ def _record(
         commit=commit,
         branch="main",
         scope="repository",
-        rubric_version="2",
+        tool_version="2",
         calibration=calibration,
         thresholds_digest="same",
         analyzers=("lizard", "jscpd"),

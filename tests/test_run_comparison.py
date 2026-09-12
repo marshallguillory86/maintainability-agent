@@ -38,7 +38,7 @@ def _record(
         commit=commit,
         branch="main",
         scope="full",
-        rubric_version="2.5.0",
+        tool_version="2.5.0",
         calibration=calibration,
         thresholds_digest="d" * 16,
         analyzers=analyzers,
@@ -294,14 +294,20 @@ def test_an_older_line_loads_with_no_transformation(tmp_path: Any) -> None:
 def test_the_label_round_trips_through_the_written_line(tmp_path: Any) -> None:
     import json
 
-    from maintainability_audit._scan_history import read_history
+    from maintainability_audit._scan_history import (
+        HISTORY_SCHEMA_VERSION,
+        read_history,
+    )
 
     path = tmp_path / "history.jsonl"
     path.write_text(_record(3.0, transformation="react-18").as_line() + "\n",
                     encoding="utf-8")
 
     assert read_history(path)[0].transformation == "react-18"
-    assert json.loads(path.read_text())["history_schema_version"] == 4
+    # Against the constant, not the literal it was written with. This
+    # said `== 4` and broke on the schema-5 rename (D158) — a test about
+    # a *label* round-tripping, failing for a reason it does not assert.
+    assert json.loads(path.read_text())["history_schema_version"] == HISTORY_SCHEMA_VERSION
 
 
 def test_the_label_is_read_off_the_report_like_every_other_run_fact() -> None:

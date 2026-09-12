@@ -216,9 +216,17 @@ def test_the_macos_runner_actually_runs_the_suite() -> None:
             line.split("run:", 1)[1].strip()
             for line in body if "run:" in line
         ]
+        # `-n auto` is a worker count, not a path, and the strict rule
+        # above rejects it because `auto` does not begin with a dash.
+        # Stripping the pair before matching teaches this about
+        # parallelism without loosening what it exists to catch: a
+        # `pytest tests/one_file.py` still fails, because a path is not
+        # preceded by a flag that takes a value.
+        worker_count = re.compile(r"\s+-n\s+\S+")
         suite = [
             command for command in runs
-            if re.fullmatch(r"(?:python3?\s+-m\s+)?pytest(?:\s+-\S+)*", command)
+            if re.fullmatch(r"(?:python3?\s+-m\s+)?pytest(?:\s+-\S+)*",
+                            worker_count.sub("", command))
         ]
         assert suite, (
             "the macOS job never runs the whole test suite -- a command "

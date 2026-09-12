@@ -6269,10 +6269,79 @@ comparability bucket. It sits outside a rename's obvious sample because
 that sample is "does the new name work", and the answer is yes.
 
 
+### D159 — Closed: the bounded work order spent its whole budget on one class (High)
+
+**The prompt is the product, and it was showing a stranger the same
+item twelve times.**
+
+`prompt_items` takes the top twelve eligible findings. It did not group,
+so a class with many members takes every slot. Measured on a real tree
+with the shipped example configuration:
+
+| | |
+|---|---|
+| work-order items | 125 |
+| `risk-pattern` | 100 |
+| `duplicate-block` | 24 |
+| `oversized-file` | 1 |
+| **paste slots given to `risk-pattern`** | **12 of 12** |
+
+Six of the twelve named the same file, with identical titles. The other
+two classes got nothing.
+
+The prompt opens *"Work in this order. The first items are the highest
+value for the least change"* and then spent its entire budget on one
+rule while omitting two classes outright — so the sentence the product
+leads with was not true of the list beneath it. The item already carried
+`class_count: 100` and `class_delta: +0.20`; the tool knew they were one
+class and printed them one per line anyway.
+
+**Population.** Every repository with more than twelve members in any
+one finding class, on every surface, since the paste existed. The
+commonest shape there is: configured risk patterns and duplicate blocks
+both count per occurrence, so this is the ordinary case rather than the
+edge.
+
+**Found by running the README's own quickstart as a stranger would**,
+against a real tree rather than a fixture. Grok's audit named the
+surrounding problem — "the first screen cannot be seven questions and a
+B" — and the first screen turned out to be worse than the framing: not
+ceremony, one item repeated.
+
+One row per class now, keeping the existing order so Severe still leads
+and the economic ordering behind it still holds. The row states its
+reach — *"First of 68 across 10 files"* — because it keeps its own
+title, and a title naming one file would otherwise read as one finding.
+
+**A second defect was introduced fixing the first, and a guard caught
+it.** `prompt_targets` derives from `prompt_items` on purpose, so
+recurrence scores exactly what was advised. Collapsing the rows
+collapsed the targets: 68 findings advised, one fingerprint recorded,
+and a later run would have scored 67 of them as never asked about.
+`test_prompt_targets_records_both_overloads` failed immediately.
+
+The two are now one decision with two views — `prompt_advised` expands
+the classes `prompt_items` names, rather than selecting again beside it,
+because two derivations of "what did we ask for" drift and the one that
+drifts is the one nobody reads.
+
+*Closing test:* `test_the_paste_is_kinds_of_work_not_repeated_rows` and
+`test_what_the_prompt_advised_covers_the_whole_class` in
+`tests/test_finding_identity.py`.
+
+*Roles:* found=marshall prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is **the expansion, not the grouping** —
+keeping one row per class and pointing `prompt_targets` back at
+`prompt_items`. The paste still reads correctly, every display assertion
+passes, and the durable loop silently forgets all but one member of each
+advised class. It sits outside the display sample because that sample
+asks what the prompt *shows*, and this is about what it *remembers*.
+
+
 
 ## Disposition
 
-**Every entry is closed.** D158 closed on 2026-09-11, filed retroactively: a stored field called `rubric_version` held the package version, the displayed half was fixed in 3.2.0 and never written down, and the record went on saying it. D157 closed on 2026-09-11, reported by Grok twice: the claim that chat and markdown are one text was fixed in the internal docstring and left standing in the MCP tool docstring a host actually renders, so a finding survived a full cycle. D156 closed on 2026-09-11, found by the `secure-code-agent` session reporting the class rather than its own instance: `**/dir/` excluded nothing at any depth while the bare `dir/` excluded at all of them, so a config written in gitignore's spelling silently scanned what it named. D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D159 closed on 2026-09-11, found by running the README's own quickstart as a stranger would: the bounded work order gave all twelve paste slots to one finding class, six of them naming the same file, while two other classes got none. D158 closed on 2026-09-11, filed retroactively: a stored field called `rubric_version` held the package version, the displayed half was fixed in 3.2.0 and never written down, and the record went on saying it. D157 closed on 2026-09-11, reported by Grok twice: the claim that chat and markdown are one text was fixed in the internal docstring and left standing in the MCP tool docstring a host actually renders, so a finding survived a full cycle. D156 closed on 2026-09-11, found by the `secure-code-agent` session reporting the class rather than its own instance: `**/dir/` excluded nothing at any depth while the bare `dir/` excluded at all of them, so a config written in gitignore's spelling silently scanned what it named. D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

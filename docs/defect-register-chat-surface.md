@@ -6339,9 +6339,63 @@ asks what the prompt *shows*, and this is about what it *remembers*.
 
 
 
+### D161 — Closed: `--prompt-output -` wrote a file named `-` (High)
+
+**The product is a prompt you pipe into an agent, and the pipe silently
+produced nothing.**
+
+`-` is the POSIX spelling for stdout. Every rendered output went straight
+to `Path(name)`, so `-` was a filename. A reader running
+
+    maintainability-agent --config c.json --prompt-output - | claude
+
+got an empty pipe, a report on stdout they did not ask for, and their
+prompt on disk under a name their shell fights them over. Nothing
+errored. Nothing said so.
+
+Grok's audit named this command shape in item 3 — *"install, example
+config, `--format markdown --prompt-output -`, done"* — as the
+five-minute path a stranger should get. The flag it recommends did not
+work.
+
+**Population.** Every rendered output, since each existed: `--output`,
+`--prompt-output`, `--comment-output`, `--agent-instructions-output`,
+`--attestation-output`, `--hostile-prompt-output`, `--sarif-output`.
+
+`-` now writes to stdout on all seven, through one `_emit` seam so a
+future output cannot be added with the old behaviour by accident.
+
+**A second defect the obvious fix introduces.** With no `--output`, the
+report prints to stdout. Sending the prompt there as well hands a reader
+a prompt with a full report stapled to its front — worse than the file,
+because it looks like it worked. A secondary output claiming stdout now
+suppresses the implicit report; an explicit `--output -` still prints it.
+
+**Two outputs refuse `-` by name and with a reason**, rather than
+accepting it and doing something else: `--write-baseline` is read back by
+a later run, and `--html-output` is opened rather than piped. That
+refusal is the same defect stated as a rule — an output that takes `-`
+and does not stream is the failure.
+
+**Found by running the demo tree's own documented command** while
+building it for Grok's item 5, not by reading the flag table.
+
+*Closing test:* `test_a_rendered_output_reaches_stdout_and_writes_no_file`,
+`test_the_report_does_not_interleave_with_the_piped_artifact` and
+`test_the_outputs_that_cannot_stream_refuse_by_name` in
+`tests/test_stdout_outputs.py`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is **the suppression, not the stream** —
+restoring the implicit `print(rendered)` beside a piped artifact. Every
+output still reaches stdout and every stdout assertion about the artifact
+passes; only the interleaving test fails, which is the half a reader
+actually pipes.
+
+
 ## Disposition
 
-**Every entry is closed.** D159 closed on 2026-09-11, found by running the README's own quickstart as a stranger would: the bounded work order gave all twelve paste slots to one finding class, six of them naming the same file, while two other classes got none. D158 closed on 2026-09-11, filed retroactively: a stored field called `rubric_version` held the package version, the displayed half was fixed in 3.2.0 and never written down, and the record went on saying it. D157 closed on 2026-09-11, reported by Grok twice: the claim that chat and markdown are one text was fixed in the internal docstring and left standing in the MCP tool docstring a host actually renders, so a finding survived a full cycle. D156 closed on 2026-09-11, found by the `secure-code-agent` session reporting the class rather than its own instance: `**/dir/` excluded nothing at any depth while the bare `dir/` excluded at all of them, so a config written in gitignore's spelling silently scanned what it named. D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D161 closed on 2026-09-11, found by running the demo tree's own documented command: `-` was a filename rather than stdout on all seven rendered outputs, so the `--prompt-output - | agent` shape Grok's audit recommends as the five-minute path produced an empty pipe and a file named `-`. D159 closed on 2026-09-11, found by running the README's own quickstart as a stranger would: the bounded work order gave all twelve paste slots to one finding class, six of them naming the same file, while two other classes got none. D158 closed on 2026-09-11, filed retroactively: a stored field called `rubric_version` held the package version, the displayed half was fixed in 3.2.0 and never written down, and the record went on saying it. D157 closed on 2026-09-11, reported by Grok twice: the claim that chat and markdown are one text was fixed in the internal docstring and left standing in the MCP tool docstring a host actually renders, so a finding survived a full cycle. D156 closed on 2026-09-11, found by the `secure-code-agent` session reporting the class rather than its own instance: `**/dir/` excluded nothing at any depth while the bare `dir/` excluded at all of them, so a config written in gitignore's spelling silently scanned what it named. D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

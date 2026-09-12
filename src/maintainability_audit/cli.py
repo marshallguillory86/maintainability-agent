@@ -73,6 +73,41 @@ def _selection_from(
     return criteria
 
 
+#: The POSIX spelling for "write this to stdout". Accepted by every
+#: rendered output below, refused with a message by the two that cannot
+#: honour it. Before this, `--prompt-output -` created a file **named
+#: `-`** in the working directory: the pipeline a reader wrote came back
+#: empty, the prompt was on disk under a name their shell would fight
+#: them over, and nothing said so.
+STDOUT = "-"
+
+
+def _emit(root: Path, target: str, text: str, *, json_artifact: bool = False) -> None:
+    """One rendered output, to stdout or to a bounded artifact path."""
+    if target == STDOUT:
+        # No trailing blank: the text already ends in one newline, and a
+        # prompt piped into an agent should arrive as written.
+        sys.stdout.write(text)
+        return
+    write_artifact(root, Path(target), text, json_artifact=json_artifact)
+
+
+def _claims_stdout(args: argparse.Namespace) -> bool:
+    """Whether a *secondary* output has asked for stdout.
+
+    When one has, the report does not also print there. Interleaving the
+    report with the artifact somebody is piping is how
+    `--prompt-output -` would have produced a prompt with a full report
+    stapled to its front -- worse than the file named `-`, because it
+    looks like it worked.
+    """
+    return any(
+        getattr(args, name, None) == STDOUT
+        for name in ("prompt_output", "comment_output", "agent_instructions_output",
+                     "attestation_output", "hostile_prompt_output", "sarif_output")
+    )
+
+
 def write_outputs(args: argparse.Namespace, report: dict, rendered: str) -> None:
     # Every rendered output the operator asks for is a product-artifact
     # write: a raw `Path(name).write_text` followed the tree's symlink
@@ -80,27 +115,27 @@ def write_outputs(args: argparse.Namespace, report: dict, rendered: str) -> None
     # repository the report was taken in (Grok 63ab820 audit).
     root = Path(report["root"])
     if args.output:
-        write_artifact(root, Path(args.output), rendered + "\n")
-    else:
+        _emit(root, args.output, rendered + "\n")
+    elif not _claims_stdout(args):
         print(rendered)
     if args.prompt_output:
-        write_artifact(root, Path(args.prompt_output), render_ai_prompt(report) + "\n")
+        _emit(root, args.prompt_output, render_ai_prompt(report) + "\n")
     if args.comment_output:
-        write_artifact(root, Path(args.comment_output), render_pr_comment(report) + "\n")
+        _emit(root, args.comment_output, render_pr_comment(report) + "\n")
     if args.agent_instructions_output:
-        write_artifact(root, Path(args.agent_instructions_output), render_agent_instructions(report) + "\n")
+        _emit(root, args.agent_instructions_output, render_agent_instructions(report) + "\n")
     if args.attestation_output:
         from ._attestation import render_attestation
 
-        write_artifact(root, Path(args.attestation_output), render_attestation(report))
+        _emit(root, args.attestation_output, render_attestation(report))
     if args.hostile_prompt_output:
-        write_artifact(root, Path(args.hostile_prompt_output),
-                       render_hostile_audit_prompt(report) + "\n")
+        _emit(root, args.hostile_prompt_output,
+              render_hostile_audit_prompt(report) + "\n")
     if args.write_baseline:
         write_baseline(args.write_baseline, report)
     if args.sarif_output:
-        write_artifact(root, Path(args.sarif_output),
-                       json.dumps(report_to_sarif(report), indent=2) + "\n", json_artifact=True)
+        _emit(root, args.sarif_output,
+              json.dumps(report_to_sarif(report), indent=2) + "\n", json_artifact=True)
 
 
 def _analyzers_resolved(args: argparse.Namespace, config: dict) -> bool:
@@ -382,6 +417,31 @@ def _instruction_pack_action(args: argparse.Namespace, config: dict) -> int:
     return 0
 
 
+#: Outputs that cannot be a stream, and why. `--write-baseline` is read
+#: back by a later run and `--html-output` is offered to a browser, so
+#: neither has a meaning on a pipe. They refuse `-` by name rather than
+#: accepting it and creating a file called `-`, which is what every
+#: output here used to do.
+_NO_STDOUT: dict[str, str] = {
+    "write_baseline": "--write-baseline (a later run reads this file back)",
+    "html_output": "--html-output (a single-file report is opened, not piped)",
+}
+
+
+def _refuse_stdout_where_it_cannot_work(
+    parser: argparse.ArgumentParser, args: argparse.Namespace,
+) -> None:
+    """Say no to `-` where honouring it is impossible, instead of writing `-`."""
+    refused = [
+        reason for attribute, reason in _NO_STDOUT.items()
+        if getattr(args, attribute, None) == STDOUT
+    ]
+    if refused:
+        parser.error(
+            "these outputs cannot be written to stdout: " + "; ".join(sorted(refused))
+        )
+
+
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
@@ -391,6 +451,7 @@ def main(argv: list[str] | None = None) -> int:
         return mcp_server.main(argv[1:])
 
     parser, args = _parse(argv)
+    _refuse_stdout_where_it_cannot_work(parser, args)
     # Every action that must not trigger the first-run questions.
     early = _action_before_config(parser, args)
     if early is not None:

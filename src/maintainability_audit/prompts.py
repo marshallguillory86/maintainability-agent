@@ -16,6 +16,20 @@ from ._hostile_prompt import render_hostile_audit_prompt  # noqa: F401
 
 
 def render_ai_prompt(report: dict[str, Any]) -> str:
+    """The file `--prompt-output` writes: the work order, then its evidence.
+
+    This is what the README calls the work order, so the work order is
+    what it opens with (D163). It used to lead with a preamble, seven
+    rules and a nine-line audit summary carrying the estimate and the
+    letter grade, and the first thing to *do* arrived after all of it —
+    the same defect D160 fixed on the chat surface, on the file the CLI
+    path actually hands a stranger.
+
+    The rules stay above the work order deliberately. They bound what an
+    agent may do with the items beneath them, so they are not evidence
+    that can follow; everything that describes the *run* rather than the
+    *task* now follows the task.
+    """
     summary = report["summary"]
     score = report["score"]
     lines = [
@@ -35,6 +49,11 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         "- If a finding is a false positive, explain why and leave the code unchanged.",
         "- After changes, run the repo's native tests/lints and this maintainability audit again.",
         "",
+    ]
+    # The product, before anything describing the run that produced it.
+    lines.extend(prompt_escalation_note(report))
+    lines.extend(prompt_work_order(report))
+    lines.extend([
         "Audit summary:",
         "",
         f"- Maintainability estimate: {view.estimate(score)} (range {view.score_range(score)})",
@@ -54,14 +73,12 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         f"- Risk findings: {summary['risk_findings']}",
         f"- Hard gate failures: {summary['hard_gate_failures']}",
         "",
-    ]
+    ])
     lines.extend(prompt_analyzer_caveat(report))
     # The prompt is the product artifact (H1): its remedy follows the
     # same report fact as every other skin, never a stale default.
     lines.extend(view.remediation_note(
         score, report.get("analyzer_coverage") is not None))
-    lines.extend(prompt_escalation_note(report))
-    lines.extend(prompt_work_order(report))
     lines.extend(prompt_tdd_section(report))
     lines.extend(prompt_semantic_section(report))
     lines.extend(prompt_pressure_section(score))

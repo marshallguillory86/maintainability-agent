@@ -226,7 +226,28 @@ def prompt_pressure_section(score: dict[str, Any]) -> list[str]:
     statement an agent can prioritize against. Dimensions at or below 1.0
     are deliberately left out: they are already normal, and listing them
     invites busywork.
+
+    **Nothing here is printed when the overall estimate was withheld
+    (D163).** A corpus multiple *is* a score — it is a rate compared
+    against a calibrated median — so a run that refused to issue an
+    overall on too little evidence cannot turn around and rank this
+    repository's dimensions against that same corpus. P7 governs both.
+
+    The demo tree is the case that made it visible: the report said
+    `Not scored` and its own README said *"only the rates are
+    withheld"*, while the file the README calls the work order opened
+    with `declarations at 3.9x` and `Start with declarations`. The
+    complete Markdown report on the same run printed no multiples. Only
+    the advertised product file did.
+
+    The work order itself is unaffected and still names every finding —
+    a finding is an observation, not a rate, and withholding those would
+    leave an undersized repository with nothing at all.
     """
+    if not view.is_scored(score):
+        # The grade blockers still render below: those say *why* no
+        # number was issued, which is exactly what this reader needs.
+        return [*view.unanchored_caveat(score), *_grade_blocker_lines(score)]
     dimensions = score.get("dimensions") or {}
     elevated = sorted(
         # `is not None` first: an unmeasured dimension is legitimate --
@@ -260,11 +281,21 @@ def prompt_pressure_section(score: dict[str, Any]) -> list[str]:
                 "",
             ]
         )
-    for blocker in view.grade_blockers(score):
-        lines.append(f"- Grade capped: {blocker}")
-    if view.grade_blockers(score):
-        lines.append("")
+    lines.extend(_grade_blocker_lines(score))
     return lines
+
+
+def _grade_blocker_lines(score: dict[str, Any]) -> list[str]:
+    """Why the grade is capped — printed whether or not a number was issued.
+
+    Split out so the withheld-score path above can render it too: the
+    reasons a score was capped or refused are the one part of this
+    section that is not itself a rate.
+    """
+    blockers = view.grade_blockers(score)
+    if not blockers:
+        return []
+    return [*(f"- Grade capped: {blocker}" for blocker in blockers), ""]
 
 
 def _escalated_fingerprints(report: dict[str, Any]) -> set[str]:

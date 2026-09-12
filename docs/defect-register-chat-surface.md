@@ -6165,10 +6165,60 @@ failed, so any one case would have caught it, and only a sweep over
 depths catches a fix that is itself partial.
 
 
+### D157 — Closed: the same false claim, fixed in one place and left in the other (Medium)
+
+`_finish_result`'s docstring said `chat` and `markdown` are *"on the
+wire the two are the same text"* while the line beneath it already
+passed `complete=(format == "markdown")`. That was corrected in D152.
+
+**The MCP tool docstring went on saying it** — `mcp_server.py`, inside
+`audit_repository_tool`: *"chat or markdown (the same Markdown on the
+wire)"*. That is the docstring a **host renders for the person choosing
+a format**. The internal one was fixed; the exposed one was not.
+
+Grok reported the claim, it was fixed in one location, and the next
+round found it still standing. **A finding survived a full cycle because
+the fix closed the instance it was reported at.** Third time in one day:
+D147 closed on a function that did not exist, D156 fixed one spelling of
+a dead exclude and left the class, and this.
+
+**Population.** Every MCP host. The tool docstring is the contract a
+person reads when asked which presentation they want, so a reader was
+told the two file formats differ only in destination — when `chat` is
+deliberately trimmed to stay inside a host's payload cap and `markdown`
+is the whole report. Someone choosing `chat` to read inline and
+expecting completeness got a bounded document with nothing saying so.
+
+The behaviour was right throughout. Both defects were the sentence.
+
+**Swept, not spot-fixed.** A test now asserts no module in the package
+makes the claim, over `src/**/*.py` rather than over the two files that
+were wrong, plus a second asserting the exposed tool docstring names
+both skins. Fixing a location at a time is exactly what let this survive
+a round, and a guard written the same way would have too.
+
+The sweep's first version flagged its own correction — `_mcp_audit` now
+says the two are *not* one text — so the pattern excludes the negation.
+Verified against both original wordings and both corrections.
+
+*Closing test:* `test_no_surface_claims_chat_and_markdown_are_one_text`
+and `test_the_tool_docstring_hosts_read_names_both_skins` in
+`tests/test_mcp_format_contract.py`.
+
+*Roles:* found=grok prompt=marshall fix=claude test=claude run=local
+*Mutation:* the member broken is **the exposed docstring**, not the
+internal one — restoring "the same Markdown on the wire" to
+`audit_repository_tool` while leaving `_finish_result`'s correction in
+place. Every D152 assertion passes, the behaviour is untouched, and the
+sentence a host shows its user is false again. It sits outside D152's
+sample because that sample was the function whose code contradicted its
+own docstring, and nothing there looks at the transport layer above it.
+
+
 
 ## Disposition
 
-**Every entry is closed.** D156 closed on 2026-09-11, found by the `secure-code-agent` session reporting the class rather than its own instance: `**/dir/` excluded nothing at any depth while the bare `dir/` excluded at all of them, so a config written in gitignore's spelling silently scanned what it named. D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D157 closed on 2026-09-11, reported by Grok twice: the claim that chat and markdown are one text was fixed in the internal docstring and left standing in the MCP tool docstring a host actually renders, so a finding survived a full cycle. D156 closed on 2026-09-11, found by the `secure-code-agent` session reporting the class rather than its own instance: `**/dir/` excluded nothing at any depth while the bare `dir/` excluded at all of them, so a config written in gitignore's spelling silently scanned what it named. D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

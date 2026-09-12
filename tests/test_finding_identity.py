@@ -345,3 +345,59 @@ def test_no_module_hardcodes_an_ordinal() -> None:
         "finding:\n  " + "\n  ".join(offenders)
         + "\nUse declaration_identities(report) / risk_identities(report)."
     )
+
+
+def test_the_paste_is_kinds_of_work_not_repeated_rows() -> None:
+    """A class with many members takes one row, not the whole budget.
+
+    Measured on a real tree before this: 100 of 125 work-order items
+    were one class, and **all twelve** paste slots went to it — six
+    naming the same file — while 24 duplicate blocks and an oversized
+    file got none. The prompt says "the first items are the highest
+    value for the least change" and then spent its entire budget on one
+    rule while omitting two other classes (D159).
+    """
+    from maintainability_audit._work_order import prompt_items
+
+    items = [
+        {"band": "quick-win", "finding_class": "risk-pattern", "risk": 3,
+         "fingerprint": f"r{n}", "path": f"docs/{n}.md", "title": f"risk in {n}.md",
+         "class_count": 40, "class_delta": 0.1}
+        for n in range(40)
+    ] + [
+        {"band": "quick-win", "finding_class": "oversized-file", "risk": 3,
+         "fingerprint": "o1", "path": "big.py", "title": "big.py is 900 lines",
+         "class_count": 1, "class_delta": 0.0},
+    ]
+
+    rows = prompt_items(items)
+
+    classes = [row["finding_class"] for row in rows]
+    assert classes.count("risk-pattern") == 1, (
+        f"one class took {classes.count('risk-pattern')} slots: {classes}"
+    )
+    assert "oversized-file" in classes, (
+        f"a whole class was crowded out of the paste: {classes}"
+    )
+
+
+def test_what_the_prompt_advised_covers_the_whole_class() -> None:
+    """One printed row asks for all of its class, so all of it is recorded.
+
+    The row reads "clearing all 40 of these"; recording one fingerprint
+    would tell a later run that 39 of them were never advised, and the
+    told-fixed-returned signal would score them as nothing was asked.
+    """
+    from maintainability_audit._work_order import prompt_advised, prompt_items
+
+    items = [
+        {"band": "quick-win", "finding_class": "risk-pattern", "risk": 3,
+         "fingerprint": f"r{n}", "path": f"docs/{n}.md", "title": f"risk in {n}.md",
+         "class_count": 40, "class_delta": 0.1}
+        for n in range(40)
+    ]
+
+    assert len(prompt_items(items)) == 1, "the paste should print one row"
+    assert len(prompt_advised(items)) == 40, (
+        "the prompt asked for the class; recurrence must remember the class"
+    )

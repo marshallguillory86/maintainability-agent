@@ -67,7 +67,7 @@
   "risk_patterns": [
     {
       "name": "public guarantee language",
-      "pattern": "\\b(guarantee|guaranteed|always|never|no exceptions)\\b",
+      "pattern": "\\b(we guarantee|guaranteed to (?:never|always|work|be)|100% (?:uptime|secure|accurate|reliable)|zero downtime|no exceptions apply)\\b",
       "extensions": [".html", ".md"]
     },
     {
@@ -77,7 +77,7 @@
     },
     {
       "name": "embedded secret wording",
-      "pattern": "\\b(api[_-]?key|secret|private[_-]?key|password)\\b",
+      "pattern": "(?i)\\b(api[_-]?key|secret|private[_-]?key|password)\\b\\s*[:=]\\s*['\"][^'\"\\s]{8,}['\"]",
       "extensions": [".py", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".html", ".md"]
     }
   ]

@@ -30,6 +30,23 @@ on:
     - cron: "17 6 * * 1"
   workflow_dispatch:
 
+# Every branch ran this workflow **twice** — once on `push`, once on
+# `pull_request` — so the wall clock was the slower of two identical
+# runs competing for the same runners, and pushing again started a third
+# while the first two kept going.
+#
+# `head_ref || ref_name` puts both events for one branch in the same
+# group, so the pull-request run supersedes the push run instead of
+# racing it. A branch with no PR is unaffected, which is the case the
+# `push` trigger exists for.
+#
+# Not cancelled on `main`: a merge there is the commit a release is cut
+# from, and cancelling its run to start the next merge's would leave the
+# tag's own evidence unfinished.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 permissions:
   contents: read
   security-events: write   # SARIF -> code scanning
@@ -84,9 +101,16 @@ jobs:
         # When one ships, drop the --ignore-vuln. Tracked at
         # https://github.com/pypa/pip/security/advisories
         run: pip-audit --ignore-vuln CVE-2026-3219
+      # `-n auto` because this step was 433 of the job's ~480 seconds and
+      # everything else is noise — installs are 13s and 7s, so caching
+      # them would have bought nothing. The suite is parallel-safe:
+      # 2743 tests, 204s serial against 33s across 16 cores locally,
+      # same result. `pytest-cov` combines the workers' data, so the
+      # coverage gate reads one total as before.
       - name: Tests + coverage
         run: |
           python3 -m pytest \
+            -n auto \
             --cov=maintainability_audit \
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml \

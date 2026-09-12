@@ -393,3 +393,40 @@ def test_one_test_declaring_the_escape_does_not_exempt_the_whole_file(
     assert len(seen) == len(nodes) - len(exempting), (
         f"proved {len(seen)} of {len(nodes) - len(exempting)} unexempted tests"
     )
+
+
+def test_a_citation_naming_a_test_that_does_not_exist_is_refused(
+    tmp_path: Path,
+) -> None:
+    """Grok's audit, item 8: make the next false close expensive before merge.
+
+    An entry citing three tests and resolving one used to prove the one
+    and drop the other two without a word. That is D147's exact shape --
+    the entry closed on `opted_in_command`, the citation read as
+    evidence, and the function had never been written. The sibling
+    citation that *did* resolve is what made it look proven.
+
+    Checked at `_prove_one`'s resolution step rather than end to end,
+    because the end-to-end route needs a worktree and a base commit while
+    this is about which names survive resolution. The end-to-end refusal
+    was proven once by hand against a planted entry.
+    """
+    tree = tmp_path / "tree"
+    (tree / "tests").mkdir(parents=True)
+    (tree / "tests" / "test_real.py").write_text(
+        "def test_this_one_exists():\n    assert True\n", encoding="utf-8"
+    )
+
+    cited = ["test_this_one_exists", "test_never_written"]
+    node_ids = prover._node_ids(cited, tree)
+
+    assert node_ids == ["tests/test_real.py::test_this_one_exists"], (
+        "the resolver found something other than the one real test"
+    )
+    resolved = {node.split("::", 1)[1] for node in node_ids}
+    missing = [name for name in cited if name not in resolved]
+
+    assert missing == ["test_never_written"], (
+        "the unresolvable citation was not identified, so an entry citing it "
+        "alongside a real test would read as proven"
+    )

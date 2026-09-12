@@ -214,6 +214,21 @@ def _prove_one(ident: str, names: list[str], base: str) -> list[str]:
         node_ids = _node_ids(names, tree)
         if not node_ids:
             return [f"{ident} cites {names}, none of which resolve"]
+        # Every cited name, not merely one of them. A citation naming
+        # three tests and resolving one used to prove the one and drop
+        # the other two in silence -- which is D147's exact shape: the
+        # entry closed on `opted_in_command`, a reader took the citation
+        # as evidence, and the function had never been written. The
+        # sibling citation that *does* resolve is what hides it.
+        resolved = {node.split("::", 1)[1] for node in node_ids}
+        missing = [name for name in names if name not in resolved]
+        if missing:
+            return [
+                f"{ident} cites {missing}, which no test defines. A citation "
+                "is the evidence a reader checks; one naming a test that does "
+                "not exist is worse than no citation, because a sibling that "
+                "does resolve makes the entry look proven."
+            ]
         failed, passed = _prove(base, node_ids, tree)
         for node in failed:
             print(f"{ident}: {node} fails without the change — proven")

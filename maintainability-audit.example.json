@@ -2,16 +2,54 @@
   "version": 1,
   "paths": {
     "include_extensions": [
-      ".py",
+      ".CBL",
+      ".COB",
+      ".CPY",
+      ".F",
+      ".F03",
+      ".F08",
+      ".F90",
+      ".F95",
+      ".FOR",
+      ".FTN",
+      ".c",
+      ".cbl",
+      ".cc",
+      ".cjs",
+      ".cob",
+      ".cpp",
+      ".cpy",
+      ".cs",
+      ".css",
+      ".cxx",
+      ".f",
+      ".f03",
+      ".f08",
+      ".f90",
+      ".f95",
+      ".for",
+      ".ftn",
+      ".gemspec",
+      ".go",
+      ".h",
+      ".hh",
+      ".hpp",
+      ".html",
+      ".java",
       ".js",
       ".jsx",
+      ".md",
       ".mjs",
-      ".cjs",
+      ".pf",
+      ".php",
+      ".phtml",
+      ".py",
+      ".rake",
+      ".rb",
+      ".rs",
+      ".swift",
       ".ts",
-      ".tsx",
-      ".html",
-      ".css",
-      ".md"
+      ".tsx"
     ],
     "exclude_patterns": [
       ".git/",
@@ -68,17 +106,38 @@
     {
       "name": "public guarantee language",
       "pattern": "\\b(we guarantee|guaranteed to (?:never|always|work|be)|100% (?:uptime|secure|accurate|reliable)|zero downtime|no exceptions apply)\\b",
-      "extensions": [".html", ".md"]
+      "extensions": [
+        ".html",
+        ".md"
+      ]
     },
     {
       "name": "unsafe html injection",
       "pattern": "\\.innerHTML\\s*=",
-      "extensions": [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".html"]
+      "extensions": [
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs",
+        ".ts",
+        ".tsx",
+        ".html"
+      ]
     },
     {
       "name": "embedded secret wording",
       "pattern": "(?i)\\b(api[_-]?key|secret|private[_-]?key|password)\\b\\s*[:=]\\s*['\"][^'\"\\s]{8,}['\"]",
-      "extensions": [".py", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".html", ".md"]
+      "extensions": [
+        ".py",
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs",
+        ".ts",
+        ".tsx",
+        ".html",
+        ".md"
+      ]
     }
   ]
 }

@@ -11,6 +11,14 @@ languages, a better first run — not a different product. There is no second
 track. A stranger who clones this is looking at a tool, not at a process that
 will announce something else next month.
 
+**3.5.0 is that bet's first instalment**, from Grok's audit of what a stranger
+actually sees: `-` pipes the prompt into an agent on every rendered output
+(D161), the chat reply opens with the work order rather than a metric table
+(D160), [`examples/demo`](../examples/demo/) produces a real work order in under
+a minute, and the README names the analyzer pool instead of letting a first run
+silently fall back to the built-in tier. None of it makes the tool do a
+different job.
+
 ## Shipped
 
 Dependency-light native scanner; Markdown, JSON, SARIF and PR-comment output; bounded AI remediation prompt; changed-only mode; baseline gating; agent instruction packs; ISO/IEC 25010-inspired rubric calibrated against a query-selected corpus (40 repositories of Python/TypeScript/JavaScript through 1.10.x; 112 from 2.0.0, across the eight languages parsed at that time); git-history aspects (churn, hotspots, coupling, ownership); 92% coverage gate; portable invokable skill for Claude Code, Codex and Copilot Chat; optional local MCP server (writes only its five disclosed config/state artifacts, never source or reports) for Codex and its VS Code extension.

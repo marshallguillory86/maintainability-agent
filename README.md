@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **3.4.0**.
+Version **3.5.0**.
 
 **Languages parsed:** Python, Java, C, C++, C#, Go, Rust, PHP, Ruby, Swift,
 COBOL, Fortran (free-form *and* fixed-form), and the JS/TS/HTML family — each

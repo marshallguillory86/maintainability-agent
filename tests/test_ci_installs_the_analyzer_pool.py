@@ -157,3 +157,51 @@ def test_the_non_pip_adapters_are_exempt_by_name() -> None:
         "a pip-installable adapter must stay in the CI-install sweep even "
         "when its distribution name differs from its command"
     )
+
+
+def _readme_pip_packages() -> set[str]:
+    """Package names the README's analyzer stanza tells a reader to install.
+
+    Tokenised the same way as the workflow scan above, and for the same
+    reason: a package mentioned in prose is not a package the stanza
+    installs, and a check prose can satisfy is not a check.
+    """
+    text = (ROOT / "README.md").read_text(encoding="utf-8")
+    packages: set[str] = set()
+    for chunk in text.split("pip install")[1:]:
+        # The command ends at the fence or the blank line after it;
+        # a trailing backslash continues it onto the next line.
+        command = ""
+        for line in chunk.splitlines():
+            command += " " + line.rstrip("\\")
+            if not line.rstrip().endswith("\\"):
+                break
+        packages |= {
+            word for word in command.split()
+            if word and not word.startswith(("-", '"', "`", "#"))
+        }
+    return packages
+
+
+def test_the_readme_names_the_analyzer_pool_ci_installs() -> None:
+    """The stanza a stranger follows must be the pool CI calibrates against.
+
+    Grok's audit, item 6: a first run with none of these installed falls
+    back to the built-in tier, and the README never said so -- so the
+    fallback read as the product rather than as a degraded reading of it.
+    The stanza now says it, and this is what keeps the stanza true.
+
+    Derived from `_INSTALL` and the workflows rather than restated here,
+    because a hand-copied list in a README is exactly the artefact that
+    goes stale the first time an adapter is added.
+    """
+    expected = {_expected_package(slug) for slug in _pip_installable_adapters()}
+    named = _readme_pip_packages()
+    missing = expected - named
+
+    assert not missing, (
+        f"the README's analyzer stanza omits {sorted(missing)}, which CI "
+        "installs and the calibration assumes. A reader following the "
+        "README gets the built-in tier for those concepts while the "
+        "report describes a pool they were never told to install."
+    )

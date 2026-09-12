@@ -4,6 +4,13 @@ Governed by [product intent](product-intent.md). Anything here that would requir
 
 This project should stay a thin orchestration and prompt layer, not a replacement for mature analyzers.
 
+**The bet is clone-to-work-order.** One public bet, stated here so a reader does
+not have to infer it from what is missing: this tool is finished for the job it
+claims, and the remaining work makes the first five minutes better — more
+languages, a better first run — not a different product. There is no second
+track. A stranger who clones this is looking at a tool, not at a process that
+will announce something else next month.
+
 ## Shipped
 
 Dependency-light native scanner; Markdown, JSON, SARIF and PR-comment output; bounded AI remediation prompt; changed-only mode; baseline gating; agent instruction packs; ISO/IEC 25010-inspired rubric calibrated against a query-selected corpus (40 repositories of Python/TypeScript/JavaScript through 1.10.x; 112 from 2.0.0, across the eight languages parsed at that time); git-history aspects (churn, hotspots, coupling, ownership); 92% coverage gate; portable invokable skill for Claude Code, Codex and Copilot Chat; optional local MCP server (writes only its five disclosed config/state artifacts, never source or reports) for Codex and its VS Code extension.

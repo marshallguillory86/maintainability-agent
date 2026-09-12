@@ -178,12 +178,26 @@ def prompt_work_order(report: dict[str, Any]) -> list[str]:
     for index, item in enumerate(items, start=1):
         location = item["path"] + (f":{item['line']}" if item.get("line") else "")
         lines.append(f"{index}. **{item['title']}** — {item['target']}")
-        lines.append(f"   - Location: `{location}`")
+        # One row now stands for its whole class (D159), so a count
+        # above one says where the rest are rather than leaving the
+        # single location reading as the only instance.
+        count = item.get("class_count") or 1
+        files = item.get("class_paths") or 1
+        if count > 1:
+            where = f"across {files} files, " if files > 1 else ""
+            lines.append(f"   - First of {count} {where}starting at: `{location}`")
+        else:
+            lines.append(f"   - Location: `{location}`")
         lines.append(f"   - Why it matters: {item['rationale']}")
         if item["class_delta"]:
             lines.append(
                 f"   - Clearing all {item['class_count']} of these is worth "
                 f"+{item['class_delta']:.2f} to the maintainability estimate."
+            )
+        elif count > 1:
+            lines.append(
+                f"   - The other {count - 1} are listed in the report; the "
+                "score does not move until the class is cleared."
             )
     lines.extend([
         "",

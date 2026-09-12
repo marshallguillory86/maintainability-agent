@@ -427,7 +427,48 @@ def prompt_items(items: list[dict[str, Any]], limit: int = 12,
     ]
     severe = [item for item in eligible if item.get("risk") == 5]
     rest = [item for item in eligible if item.get("risk") != 5]
-    return (severe + rest)[:limit]
+    return _one_per_class(severe + rest)[:limit]
+
+
+def _one_per_class(ordered: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The best member of each finding class, in the order they arrived.
+
+    **The paste is twelve kinds of work, not twelve rows.** Without this
+    a class with a hundred members takes every slot: measured on a real
+    tree, 100 of 125 items were one class and all twelve went to it,
+    six of them naming the same file, while 24 duplicate blocks and an
+    oversized file got none. The prompt says "the first items are the
+    highest value for the least change" and then spent its whole budget
+    on one rule while omitting two others entirely (D159).
+
+    One row per class is enough because the row already carries the
+    whole class: `class_count` and `class_delta` are on every item, so
+    it reads "clearing all 100 of these is worth +0.20" rather than
+    printing a hundred line numbers. An agent is better instructed by
+    one rule and its count than by twelve instances of it.
+
+    Order is preserved rather than re-sorted, so Severe still leads and
+    the economic ordering behind it still holds — this removes
+    repetition and decides nothing about priority.
+    """
+    spread: dict[str, set[str]] = {}
+    for item in ordered:
+        name = str(item.get("finding_class") or item.get("title"))
+        spread.setdefault(name, set()).add(str(item.get("path") or ""))
+
+    seen: set[str] = set()
+    first: list[dict[str, Any]] = []
+    for item in ordered:
+        name = str(item.get("finding_class") or item.get("title"))
+        if name in seen:
+            continue
+        seen.add(name)
+        # The surviving row keeps its own title, which names one file,
+        # so it must also say how far the class reaches — otherwise a
+        # row standing for 46 findings across seven files reads as one
+        # finding in the file it happens to name.
+        first.append({**item, "class_paths": len(spread[name])})
+    return first
 
 
 # The axes a reader can narrow by. Every one is a field already on the
@@ -460,6 +501,34 @@ def select(items: list[dict[str, Any]], **criteria: str) -> list[dict[str, Any]]
         )
 
     return [item for item in items if matches(item)]
+
+
+def prompt_advised(items: list[dict[str, Any]], limit: int = 12,
+                   escalated: set[str] | None = None) -> list[dict[str, Any]]:
+    """Every eligible item the prompt's rows stand for.
+
+    `prompt_items` returns one row per class, because a paste of twelve
+    is twelve *kinds* of work (D159). What was advised is wider than
+    what was printed: a row reading "clearing all 68 of these" asks for
+    all 68, so recurrence has to remember all 68.
+
+    Derived from `prompt_items` rather than re-selected beside it. The
+    advised set is the classes those rows name, and this expands them —
+    one decision about what to advise, two views of it. Two independent
+    selections would drift, and the one that drifts is the one nobody
+    reads.
+    """
+    advised = {
+        str(item.get("finding_class") or item.get("title"))
+        for item in prompt_items(items, limit, escalated)
+    }
+    blocked = escalated or set()
+    return [
+        item for item in items
+        if item["band"] != Band.MAJOR_PROJECT.value
+        and item.get("fingerprint") not in blocked
+        and str(item.get("finding_class") or item.get("title")) in advised
+    ]
 
 
 def prompt_targets(report: dict[str, Any]) -> tuple[str, ...]:
@@ -495,7 +564,10 @@ def prompt_targets(report: dict[str, Any]) -> tuple[str, ...]:
     }
     known = set(finding_fingerprints(report))
     targets = set()
-    for item in prompt_items(report.get("work_order") or [], escalated=escalated):
+    # Every member of every advised class, not only the rows printed:
+    # the prompt asks for the whole class, so the told-fixed-returned
+    # signal has to cover the whole class (D159).
+    for item in prompt_advised(report.get("work_order") or [], escalated=escalated):
         fingerprint = item.get("fingerprint")
         if fingerprint is None:
             continue

@@ -1,0 +1,36 @@
+# Repository-local gitleaks configuration.
+#
+# One allowlist entry, scoped as narrowly as the tool permits. The
+# default rules are otherwise unchanged: this file exists to record a
+# decision, not to quiet the scanner.
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "curl-auth-user"
+
+  [rules.allowlist]
+  # `curl -sS -u "$SONAR_TOKEN:"` in the quality-gates workflow.
+  #
+  # The rule fires on the `-u` *flag*, not on a credential: the value is
+  # `${{ secrets.SONAR_TOKEN }}`, injected by the runner at execution
+  # time and never present in the repository. No hardcoded token exists
+  # in any commit — checked with `git log -S` across all refs.
+  #
+  # Allowlisted rather than bypassed with GITLEAKS_SKIP, because a skip
+  # leaves no record and applies to the whole commit. This is one rule,
+  # in one file, matching one variable name: a real credential on that
+  # line still trips, because a literal is not `$SONAR_TOKEN`.
+  #
+  # The same false positive was reported upstream to `secure-code-agent`,
+  # which now routes a secrets finding whose source line holds a
+  # variable reference to REVIEW rather than FIX.
+  description = "GitHub Actions secret reference, not a credential"
+  # AND, not the default OR. With OR a path match alone allowlists the
+  # whole file for this rule, so a real literal on that same line passes
+  # silently — verified by putting one there, which is the only way to
+  # tell the two configurations apart.
+  condition = "AND"
+  paths = ['''^\.github/workflows/quality-gates\.yml$''']
+  regexes = ['''\$SONAR_TOKEN''']

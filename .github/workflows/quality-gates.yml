@@ -127,111 +127,6 @@ jobs:
         with:
           name: coverage
           path: coverage.xml
-      - name: SonarQube Cloud scan
-        # Advisory cross-check, never a gate. This project's rules are "no
-        # cloud service requirement" and "no vendor lock-in", so an expired
-        # token or a moved project must not block a PR whose deterministic
-        # checks all pass. A red mark here means "go look at the token".
-        #
-        # This comment used to read "main only, because the plan on this
-        # private project covers the main branch alone". Both halves were
-        # false. The repository is public and has been since 2026-05-09,
-        # and SonarCloud is free and unlimited for public projects,
-        # pull request analysis included.
-        #
-        # The symptom was real: "Not analyzed", and a quality gate the
-        # app built from no data. The cause was that SonarCloud's main
-        # branch was named `master`, which has never existed here, while
-        # `main` sat alongside it as a *short-lived* branch merging into
-        # it. So every scan of the real default branch was filed as a
-        # feature branch off a main branch that had never been analyzed,
-        # leaving pull requests with no baseline to diff against.
-        #
-        # Renamed 2026-08-26. Runs on pull requests again, where a
-        # cross-check is worth something — still advisory, still
-        # `continue-on-error`, because this project's rules are "no cloud
-        # service requirement" and "no vendor lock-in": an expired token
-        # must never block a PR whose deterministic checks all pass.
-        #
-        # **Pull requests and main, nothing else.** Re-enabling PR
-        # analysis removed the condition entirely rather than narrowing
-        # it, so every push to a feature branch ran a *second* scan that
-        # treated the branch as long-lived. That analysis has no
-        # meaningful new-code baseline, fails its quality gate, and the
-        # SonarCloud app posts the failure as a commit status — a red
-        # mark on every push that means nothing, which is the thing this
-        # file's header warns teaches people to ignore the signal.
-        if: >
-          github.event_name == 'pull_request' ||
-          (github.event_name == 'push' && github.ref == 'refs/heads/main')
-        continue-on-error: true
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8
-        with:
-          # Wait for the server-side gate and print which condition
-          # failed. Without this the action submits the analysis and
-          # exits, SonarCloud computes the gate afterwards, and its app
-          # posts a bare red status with no description and no link —
-          # unreadable from CI, and unreadable by anyone without the
-          # token, which is how it cost half an hour twice today.
-          # `continue-on-error` above still keeps the job green: the
-          # point is a legible log line, not a new gate.
-          args: -Dsonar.qualitygate.wait=true
-
-      # `qualitygate.wait` prints FAILED and a dashboard link, and stops
-      # there. The link is useless to anyone without access, and the
-      # dashboard is the only place the *conditions* live -- so a red
-      # gate stayed "go and look" rather than "coverage on new code is
-      # 61%". This asks the server which conditions it failed on and
-      # prints them, so the log answers the question the log raises.
-      #
-      # The token is the same one the scan uses; SonarCloud takes it as
-      # the basic-auth username with an empty password.
-      - name: Name the failing quality-gate conditions
-        if: >
-          always() && (github.event_name == 'pull_request' ||
-          (github.event_name == 'push' && github.ref == 'refs/heads/main'))
-        continue-on-error: true
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          PR: ${{ github.event.pull_request.number }}
-        run: |
-          set -uo pipefail
-          key=marshallguillory86_maintainability-agent
-          if [ -n "${PR:-}" ]; then scope="pullRequest=$PR"; else scope="branch=main"; fi
-          status=$(curl -sS -u "$SONAR_TOKEN:" \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$key&$scope")
-          echo "$status" | python3 -c '
-          import json, sys
-          body = json.load(sys.stdin)
-          if "errors" in body:
-              print("could not read the gate:", body["errors"])
-              raise SystemExit(0)
-          st = body["projectStatus"]
-          print("quality gate:", st["status"])
-          for c in st.get("conditions", []):
-              if c["status"] == "OK":
-                  continue
-              print("  FAILED %s: actual=%s %s threshold=%s" % (
-                  c.get("metricKey", c.get("metric", "?")),
-                  c.get("actualValue", "none"),
-                  c.get("comparator", "?"), c.get("errorThreshold", "?")))
-          '
-
-  # `pyproject` declares `Operating System :: POSIX`, and until this job
-  # existed the only evidence behind that claim was one Linux image. An
-  # audit put it plainly: the platform test forbade `windows` in
-  # `runs-on` and called that a demonstration, so macOS was claimed and
-  # never once run (D63, reopened).
-  #
-  # Tests only. Coverage thresholds, pip-audit and Sonar are properties
-  # of the project rather than of the platform, and running them twice
-  # buys nothing but a second thing to keep green. What this job answers
-  # is the one question the Linux runner cannot: does the product work
-  # on the other POSIX this package claims.
   verify-macos:
     name: Verify on macOS (tests)
     runs-on: macos-latest
@@ -246,8 +141,12 @@ jobs:
         run: python3 -m pip install --upgrade pip
       - name: Install tool with dev extras
         run: python3 -m pip install -e ".[dev]"
+      # `-n auto` here too. The Linux job got it and this did not, so
+      # macOS went on running the suite serially and became the
+      # wall-clock driver — the whole job is tests, and the run is only
+      # as fast as its slowest job.
       - name: Tests
-        run: python3 -m pytest -q
+        run: python3 -m pytest -q -n auto
 
   # An experiment, not a claim. `pyproject` says `Operating System ::
   # POSIX` and the README says Windows is untested and unclaimed — which
@@ -284,7 +183,7 @@ jobs:
       # `--continue-on-collection-errors` and no `-x`: the point is the
       # whole list of what fails, not the first thing that does.
       - name: Tests (the list is the deliverable)
-        run: python -m pytest -q -rf --continue-on-collection-errors
+        run: python -m pytest -q -rf -n auto --continue-on-collection-errors
 
   # Run by hand to produce the file `constraints/analyzers.txt` should
   # be. The pool has to be resolved on the platform it constrains, and
@@ -550,3 +449,131 @@ jobs:
             secure-code-remediation-prompt.md
             secure-code-pr-comment.md
             secure-code.sarif
+
+  # Advisory, never a gate, and therefore not on the critical path.
+  # It lived inside `verify`, which is a **required** check, so its
+  # ~78 seconds delayed the thing that gates merging for a cross-check
+  # that cannot fail the build. Split into its own job reading the
+  # coverage artifact `verify` already uploads: the required check goes
+  # green sooner and this still runs.
+  sonar:
+    name: SonarQube Cloud scan (advisory)
+    needs: verify
+    if: >
+      always() && (github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Take the coverage `verify` produced
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        continue-on-error: true
+        with:
+          name: coverage
+      - name: SonarQube Cloud scan
+        # Advisory cross-check, never a gate. This project's rules are "no
+        # cloud service requirement" and "no vendor lock-in", so an expired
+        # token or a moved project must not block a PR whose deterministic
+        # checks all pass. A red mark here means "go look at the token".
+        #
+        # This comment used to read "main only, because the plan on this
+        # private project covers the main branch alone". Both halves were
+        # false. The repository is public and has been since 2026-05-09,
+        # and SonarCloud is free and unlimited for public projects,
+        # pull request analysis included.
+        #
+        # The symptom was real: "Not analyzed", and a quality gate the
+        # app built from no data. The cause was that SonarCloud's main
+        # branch was named `master`, which has never existed here, while
+        # `main` sat alongside it as a *short-lived* branch merging into
+        # it. So every scan of the real default branch was filed as a
+        # feature branch off a main branch that had never been analyzed,
+        # leaving pull requests with no baseline to diff against.
+        #
+        # Renamed 2026-08-26. Runs on pull requests again, where a
+        # cross-check is worth something — still advisory, still
+        # `continue-on-error`, because this project's rules are "no cloud
+        # service requirement" and "no vendor lock-in": an expired token
+        # must never block a PR whose deterministic checks all pass.
+        #
+        # **Pull requests and main, nothing else.** Re-enabling PR
+        # analysis removed the condition entirely rather than narrowing
+        # it, so every push to a feature branch ran a *second* scan that
+        # treated the branch as long-lived. That analysis has no
+        # meaningful new-code baseline, fails its quality gate, and the
+        # SonarCloud app posts the failure as a commit status — a red
+        # mark on every push that means nothing, which is the thing this
+        # file's header warns teaches people to ignore the signal.
+        if: >
+          github.event_name == 'pull_request' ||
+          (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        continue-on-error: true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8
+        with:
+          # Wait for the server-side gate and print which condition
+          # failed. Without this the action submits the analysis and
+          # exits, SonarCloud computes the gate afterwards, and its app
+          # posts a bare red status with no description and no link —
+          # unreadable from CI, and unreadable by anyone without the
+          # token, which is how it cost half an hour twice today.
+          # `continue-on-error` above still keeps the job green: the
+          # point is a legible log line, not a new gate.
+          args: -Dsonar.qualitygate.wait=true
+
+      # `qualitygate.wait` prints FAILED and a dashboard link, and stops
+      # there. The link is useless to anyone without access, and the
+      # dashboard is the only place the *conditions* live -- so a red
+      # gate stayed "go and look" rather than "coverage on new code is
+      # 61%". This asks the server which conditions it failed on and
+      # prints them, so the log answers the question the log raises.
+      #
+      # The token is the same one the scan uses; SonarCloud takes it as
+      # the basic-auth username with an empty password.
+      - name: Name the failing quality-gate conditions
+        if: >
+          always() && (github.event_name == 'pull_request' ||
+          (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+        continue-on-error: true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -uo pipefail
+          key=marshallguillory86_maintainability-agent
+          if [ -n "${PR:-}" ]; then scope="pullRequest=$PR"; else scope="branch=main"; fi
+          status=$(curl -sS -u "$SONAR_TOKEN:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$key&$scope")
+          echo "$status" | python3 -c '
+          import json, sys
+          body = json.load(sys.stdin)
+          if "errors" in body:
+              print("could not read the gate:", body["errors"])
+              raise SystemExit(0)
+          st = body["projectStatus"]
+          print("quality gate:", st["status"])
+          for c in st.get("conditions", []):
+              if c["status"] == "OK":
+                  continue
+              print("  FAILED %s: actual=%s %s threshold=%s" % (
+                  c.get("metricKey", c.get("metric", "?")),
+                  c.get("actualValue", "none"),
+                  c.get("comparator", "?"), c.get("errorThreshold", "?")))
+          '
+
+  # `pyproject` declares `Operating System :: POSIX`, and until this job
+  # existed the only evidence behind that claim was one Linux image. An
+  # audit put it plainly: the platform test forbade `windows` in
+  # `runs-on` and called that a demonstration, so macOS was claimed and
+  # never once run (D63, reopened).
+  #
+  # Tests only. Coverage thresholds, pip-audit and Sonar are properties
+  # of the project rather than of the platform, and running them twice
+  # buys nothing but a second thing to keep green. What this job answers
+  # is the one question the Linux runner cannot: does the product work
+  # on the other POSIX this package claims.

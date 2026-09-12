@@ -105,6 +105,26 @@ def _node_ids(names: list[str], tree: Path) -> list[str]:
     return found
 
 
+def unresolved(names: list[str], node_ids: list[str]) -> list[str]:
+    """Cited test names that no test in the suite defines.
+
+    Every cited name has to resolve, not merely one of them. A citation
+    naming three tests and resolving one used to prove the one and drop
+    the other two in silence — which is D147's exact shape: the entry
+    closed on `opted_in_command`, a reader took the citation as evidence,
+    and the function had never been written. The sibling citation that
+    *does* resolve is what hides the fiction.
+
+    A function rather than three lines inside `_prove_one` because
+    `_prove_one` needs a git worktree and a base commit to reach them, so
+    a test of the rule would have had to restate the rule — and did, in
+    the first version of this change. This tool's own gate caught that:
+    the test passed at the base because it computed the answer itself.
+    """
+    resolved = {node.split("::", 1)[1] for node in node_ids}
+    return [name for name in names if name not in resolved]
+
+
 def _new_entries(base: str) -> dict[str, str]:
     """Entries in this commit that the base does not have."""
     before = _entries(git("show", f"{base}:{REGISTER.as_posix()}"))
@@ -214,6 +234,14 @@ def _prove_one(ident: str, names: list[str], base: str) -> list[str]:
         node_ids = _node_ids(names, tree)
         if not node_ids:
             return [f"{ident} cites {names}, none of which resolve"]
+        missing = unresolved(names, node_ids)
+        if missing:
+            return [
+                f"{ident} cites {missing}, which no test defines. A citation "
+                "is the evidence a reader checks; one naming a test that does "
+                "not exist is worse than no citation, because a sibling that "
+                "does resolve makes the entry look proven."
+            ]
         failed, passed = _prove(base, node_ids, tree)
         for node in failed:
             print(f"{ident}: {node} fails without the change — proven")

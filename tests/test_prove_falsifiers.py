@@ -393,3 +393,62 @@ def test_one_test_declaring_the_escape_does_not_exempt_the_whole_file(
     assert len(seen) == len(nodes) - len(exempting), (
         f"proved {len(seen)} of {len(nodes) - len(exempting)} unexempted tests"
     )
+
+
+def test_a_citation_naming_a_test_that_does_not_exist_is_refused(
+    tmp_path: Path,
+) -> None:
+    """Grok's audit, item 8: make the next false close expensive before merge.
+
+    An entry citing three tests and resolving one used to prove the one
+    and drop the other two without a word. That is D147's exact shape --
+    the entry closed on `opted_in_command`, the citation read as
+    evidence, and the function had never been written. The sibling
+    citation that *did* resolve is what made it look proven.
+
+    **The first version of this test was itself hollow, and this tool
+    caught it.** It called `_node_ids` and then computed the missing
+    names in the test body, so it passed at the base -- it asserted a
+    calculation the test performed rather than the rule the change added.
+    `unresolved` exists so the rule has one home and this can call it.
+    """
+    tree = tmp_path / "tree"
+    (tree / "tests").mkdir(parents=True)
+    (tree / "tests" / "test_real.py").write_text(
+        "def test_this_one_exists():\n    assert True\n", encoding="utf-8"
+    )
+
+    cited = ["test_this_one_exists", "test_never_written"]
+    node_ids = prover._node_ids(cited, tree)
+    assert node_ids == ["tests/test_real.py::test_this_one_exists"], (
+        "the resolver found something other than the one real test"
+    )
+
+    assert prover.unresolved(cited, node_ids) == ["test_never_written"], (
+        "the unresolvable citation was not reported, so an entry citing it "
+        "alongside a real test would read as proven"
+    )
+
+
+def test_a_citation_that_fully_resolves_reports_nothing_missing(
+    tmp_path: Path,
+) -> None:
+    """The other half: the rule must not refuse an honest citation.
+
+    Without this, `unresolved` returning every name would satisfy the
+    test above and refuse every entry in the register.
+    """
+    tree = tmp_path / "clean"
+    (tree / "tests").mkdir(parents=True)
+    (tree / "tests" / "test_two.py").write_text(
+        "def test_alpha():\n    assert True\n\n"
+        "def test_beta():\n    assert True\n",
+        encoding="utf-8",
+    )
+
+    cited = ["test_alpha", "test_beta"]
+    node_ids = prover._node_ids(cited, tree)
+
+    assert prover.unresolved(cited, node_ids) == [], (
+        "an entry whose every citation resolves was reported as missing one"
+    )

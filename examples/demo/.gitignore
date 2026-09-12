@@ -1,0 +1,4 @@
+# Artifacts a demo run produces. The fixture is the source; these are output.
+.maintainability/
+report.md
+prompt.md

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "paths": {
+    "include_extensions": [".py"],
+    "exclude_patterns": [".git/", "__pycache__/", "expected-prompt.md"]
+  },
+  "thresholds": {
+    "file_lines_warning": 300,
+    "file_lines_failure": 500,
+    "function_lines_warning": 40,
+    "function_lines_failure": 80,
+    "cyclomatic_warning": 10,
+    "cyclomatic_failure": 20
+  },
+  "hard_gates": {
+    "max_file_failures": 99,
+    "max_function_failures": 99
+  }
+}

@@ -36,6 +36,7 @@
       "build/",
       ".pytest_cache/",
       "examples/reports/",
+    "examples/demo/",
       "tools/validation/reports/",
       "maintainability-report.md",
       "maintainability-remediation-prompt.md",

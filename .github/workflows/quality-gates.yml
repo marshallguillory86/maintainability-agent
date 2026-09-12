@@ -246,8 +246,12 @@ jobs:
         run: python3 -m pip install --upgrade pip
       - name: Install tool with dev extras
         run: python3 -m pip install -e ".[dev]"
+      # `-n auto` here too. The Linux job got it and this did not, so
+      # macOS went on running the suite serially and became the
+      # wall-clock driver — the whole job is tests, and the run is only
+      # as fast as its slowest job.
       - name: Tests
-        run: python3 -m pytest -q
+        run: python3 -m pytest -q -n auto
 
   # An experiment, not a claim. `pyproject` says `Operating System ::
   # POSIX` and the README says Windows is untested and unclaimed — which
@@ -284,7 +288,7 @@ jobs:
       # `--continue-on-collection-errors` and no `-x`: the point is the
       # whole list of what fails, not the first thing that does.
       - name: Tests (the list is the deliverable)
-        run: python -m pytest -q -rf --continue-on-collection-errors
+        run: python -m pytest -q -rf -n auto --continue-on-collection-errors
 
   # Run by hand to produce the file `constraints/analyzers.txt` should
   # be. The pool has to be resolved on the platform it constrains, and

@@ -89,14 +89,26 @@ jobs:
       # what matters, and leaves a tag that has to be moved or deleted.
       # Nor can it see a defect nobody wrote down — that is the
       # corollary about filing in the same turn, which no check reaches.
-      - name: Refuse to publish with an open defect entry
+      # The bar is `product-intent.md`'s: no open High and no open
+      # Medium. A Low may stand open through a release when the entry
+      # records why it is not worth holding a version for, which keeps
+      # that a visible decision rather than an assumed one.
+      #
+      # Severity is read off the heading, where every entry already
+      # carries it: `### D<n> — Open: <summary> (High)`. An open entry
+      # with no severity at all is refused too — an unclassified defect
+      # is one nobody has decided about, and this gate exists precisely
+      # so that decision cannot be skipped.
+      - name: Refuse to publish with an open High or Medium
         run: |
           set -euo pipefail
-          open=$(grep -cE '^### D[0-9]+ — Open' docs/defect-register-chat-surface.md || true)
-          echo "open register entries: $open"
-          if [ "$open" != "0" ]; then
-            echo "::error::$open open entry/entries in docs/defect-register-chat-surface.md; a release cuts from an empty ledger"
-            grep -nE '^### D[0-9]+ — Open' docs/defect-register-chat-surface.md
+          open=$(grep -E '^### D[0-9]+ — Open' docs/defect-register-chat-surface.md || true)
+          blocking=$(printf '%s\n' "$open" | grep -vE '\((Low|Informational)\)\s*$' | grep -E '^### D' || true)
+          lows=$(printf '%s\n' "$open" | grep -cE '\((Low|Informational)\)\s*$' || true)
+          echo "open entries: $(printf '%s\n' "$open" | grep -cE '^### D' || true)  (low/informational, not blocking: $lows)"
+          if [ -n "$blocking" ]; then
+            echo "::error::open High/Medium entries in docs/defect-register-chat-surface.md; the release bar is no open High and no open Medium"
+            printf '%s\n' "$blocking"
             exit 1
           fi
 

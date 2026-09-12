@@ -144,25 +144,32 @@ def render_markdown(report: dict[str, Any], *, complete: bool = True) -> str:
 
     ``complete=True`` (the HTML/Markdown *file*): the whole work-order
     backlog with a per-item copy-paste prompt, plus every detail table.
-    Bounded (chat/CLI): score, capped-grade reasons, gates, the top items
-    with prompts, then a pointer to the report — so the payload-capped
-    surface can never truncate the prompt the way a 75k inline report did.
+    Bounded (chat/CLI): gates, the work order with its prompts, then the
+    score that aimed it and a pointer to the report — so the
+    payload-capped surface can never truncate the prompt the way a 75k
+    inline report did.
+
+    The two modes order their sections differently on purpose. A file is
+    a document and opens with what it is; chat is a door, and the first
+    screen has to be the thing the reader acts on (D160).
     """
     score = report["score"]
     root_label = report["root"]
-    lines = [
+    header = [
         "# Maintainability CI Report",
         "",
         *_report_metadata(report, score, root_label),
         "",
+    ]
+    summary = [
         "## Summary",
         "",
         *summary_table(report["summary"], score, _pool_ran(report)),
         "",
     ]
     if not complete:
-        return _bounded_markdown(report, score, root_label, lines)
-    return _complete_markdown(report, score, root_label, lines)
+        return _bounded_markdown(report, score, root_label, header, summary)
+    return _complete_markdown(report, score, root_label, header + summary)
 
 
 def _hard_gate_lines(report: dict[str, Any]) -> list[str]:
@@ -173,15 +180,44 @@ def _hard_gate_lines(report: dict[str, Any]) -> list[str]:
             *(f"- {gate}" for gate in report["hard_gate_failures"]), ""]
 
 
+def _no_work_order_lines() -> list[str]:
+    """Said out loud, because an absent section reads as an absent feature.
+
+    The work order is what this surface is for, so a run that produced
+    none has to say so. Rendering nothing left a reader unable to tell
+    "nothing met the bands" from "this tool does not do that" — and the
+    second reading is the one a stranger takes on a first run.
+    """
+    return [
+        "## Work Order", "",
+        "**Nothing to do.** No finding reached a band worth a work-order "
+        "item, so there is no prompt to paste. The evidence behind that is "
+        "below.",
+        "",
+    ]
+
+
 def _bounded_markdown(report: dict[str, Any], score: dict[str, Any],
-                      root_label: str, lines: list[str]) -> str:
-    """The chat/CLI UI view (issue A): score, gates, the top work items with
-    prompts, then a pointer to the complete report so a payload-capped
-    surface can never truncate the prompt."""
-    lines.extend(render_grade_blockers(report))
+                      root_label: str, header: list[str],
+                      summary: list[str]) -> str:
+    """The chat/CLI UI view (issue A), ordered for a door rather than a file.
+
+    Gates first — a failed hard gate changes which item you start with.
+    Then the work order and its copy-paste prompts, because that is the
+    product (`docs/product-intent.md`: *"the scanner and the score exist
+    to aim the remediation prompt"*). The summary, the capped-grade
+    reasons and the score tables follow as the evidence that aimed it.
+
+    Before D160 this surface opened with a fourteen-row metric table and
+    the first pasteable prompt began on line 51 of 208.
+    """
+    lines = [*header]
     lines.extend(_hard_gate_lines(report))
-    lines.extend(work_order_markdown(
-        report.get("work_order"), complete=False, root_label=root_label))
+    work_order = work_order_markdown(
+        report.get("work_order"), complete=False, root_label=root_label)
+    lines.extend(work_order or _no_work_order_lines())
+    lines.extend(summary)
+    lines.extend(render_grade_blockers(report))
     lines.extend(score_table(score))
     lines.extend([
         "---", "",

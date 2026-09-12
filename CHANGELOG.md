@@ -12,6 +12,66 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.6.0 - 2026-09-12
+
+*Grok's value-audit rerun on 3.5.0, which asked whether the first five minutes
+that release advertised actually work. Two of them did not.*
+
+### Changed — the published starter config opens every language, not a web subset (D162)
+
+**Minor rather than patch, because the scanned population grows.** A repository
+audited with `maintainability-audit.example.json` will now read files it
+previously skipped, so findings appear and a reported score can move. Nothing
+about the config format changed.
+
+That file is what the README tells a stranger to `curl` and pass as `--config`.
+Its `paths.include_extensions` listed 10 suffixes — Python, the JS/TS family,
+HTML, CSS, Markdown. The shipped default opens **48**. A config is a
+replacement, not a merge, so following the README on a Go, Java, Rust, Ruby,
+PHP, Swift, C#, C/C++, Fortran or COBOL tree scanned the README and little else.
+
+Measured on a one-function Go tree, following the README command exactly:
+
+| | before | after |
+|---|---|---|
+| files scanned | 1 (`README.md`) | 2 |
+| `.go` | Source Not Read | `applyPricing`, complexity 31 |
+| work order | absent | one quick-win |
+
+The report named the miss — `| .go | Go | 1 |` — and told the reader to add the
+extension. The file they were told to download is what removed it.
+
+The list is no longer hand-written. It is the shipped default's own set, so a
+language added to `DECLARATION_SUFFIXES` reaches the advertised config in the
+same change rather than whenever somebody remembers this file.
+
+### Changed — `--prompt-output` leads with the work order and issues no rates when unscored (D163)
+
+**The file the README calls the work order was a score sheet.** Two halves, one
+entry.
+
+`render_ai_prompt` opened with a preamble, seven rules and a nine-line audit
+summary carrying the estimate and the letter grade. The first thing to *do*
+arrived after all of it. That is the defect 3.5.0 fixed on the chat surface
+(D160), still standing on the file the CLI path hands a stranger. The work order
+now follows the rules that bound it, and everything describing the run rather
+than the task follows the task.
+
+**And it printed corpus multiples on a run whose overall the scorer had
+withheld.** A multiple is a rate against a calibrated median — it is a score —
+so P7 governs it. On `examples/demo` the report said `Not scored` and the demo's
+own README said *"only the rates are withheld"*, while the prompt said
+`declarations at 3.9x` and `Start with declarations`. The complete Markdown
+report on the same run printed no multiples. Only the advertised product file
+did.
+
+It now prints none either. The grade blockers still render, because those say
+*why* no number was issued, which is what that reader needs.
+
+The work order itself is unchanged and still names every finding. A finding is
+an observation, not a rate, and withholding those would leave an undersized
+repository with nothing at all.
+
 ## 3.5.0 - 2026-09-11
 
 *The first five minutes, rebuilt: `-` pipes the prompt into an agent, the chat

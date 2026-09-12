@@ -2,51 +2,6 @@
 
 The governing document. When another document, a code comment, or a release note disagrees with this one, this one is right and the other is a bug.
 
-## Planned product split and companion workflow
-
-**Direction agreed; not shipped.** The existing audit tool is to become
-`maintainability-audit`. A new companion named `maintainability-agent` will
-run that audit and automate remediation of all or part of its work orders,
-under human direction within the user's agent chat. Current package names,
-commands and integrations remain unchanged until the rename is released.
-The audit promises and non-goals below apply to the independent audit tool;
-the companion's authorized remediation is a separate responsibility.
-
-The report already contains the work orders. The new capability is carrying
-selected work through execution and verification without requiring the human
-to copy each instruction and manually coordinate every step.
-
-The companion will:
-
-1. Run the audit through the existing setup and authorization flow.
-2. Let the human select all or part of the reported work orders and establish
-   scope, verification commands and attempt limits. "All" means the selected
-   report's work orders, not permission for unrestricted refactoring.
-3. Retain the original selected work order and starting revision as the task
-   contract; direct the host's coding capabilities within that contract and
-   the repository's instructions and role boundaries.
-4. Track attempts, remaining work and verification evidence so an interrupted
-   task can resume without reconstructing its scope from chat history.
-5. Run authorized tests and re-audit returned changes against the original
-   selection. Report findings cleared, scope conformance, suppressions,
-   regressions and test results separately. Missing evidence is not success;
-   a passing audit does not establish functional correctness.
-6. Continue within the approved limits, or stop for human direction when
-   scope must expand, progress stalls, or the attempt limit is reached.
-   Present the resulting changes and evidence for human review.
-
-The audit remains independently usable, deterministic under its stated input
-contract, and free of model calls and source-code remediation. The companion
-uses the user's host for reasoning and editing; it does not replace the host
-or take control away from the human. Remediation approval does not by itself
-approve publishing, pushing or merging changes.
-
-A host skill backed by durable task state is the initial implementation
-candidate, not a settled packaging decision. State storage, supported hosts,
-rename compatibility and release versions remain to be decided before build.
-See [target architecture](target-architecture.md#planned-companion-boundary)
-and [roadmap](roadmap.md#planned-audit-and-agent-split).
-
 ## What this is
 
 A deterministic maintainability audit that produces a **bounded work order** for an AI coding agent.
@@ -279,6 +234,43 @@ Adapted from [ADR 001](adr-001-evidence-and-verification.md), which earned these
 
 Passing the test suite and the self-audit is necessary and is not sufficient. Two consecutive audit rounds were rejected for fixing the demonstrated instance and leaving structurally identical paths untouched.
 
+## What counts as a defect, and what does not
+
+This tool audits itself, so it will always have findings. Without this
+section "no known defects" is unreachable by construction, every audit
+reopens the question of whether the work is finished, and the honest
+answer to "is it done" is permanently no.
+
+**A defect is a false claim.** Behaviour that contradicts what this
+repository says it does: a promise the code breaks, a document that
+describes something the code does not do, a citation naming a function
+that does not exist, a check that passes vacuously. Those get filed,
+and they get a severity.
+
+**A finding is not a defect.** The tool's own output about its own
+source — a declaration in the warn band, a near-duplicate pair, a file
+approaching the size limit, a style nit — is the product working. It is
+reported, it is weighed by a human, and it blocks nothing. A warn band
+that had to be empty would be a gate, and this project deliberately
+separates the two.
+
+Restyling this repository to raise its own grade is explicitly not work.
+The score is second class; a tool that games its own metric has broken
+the only promise that matters.
+
+### The release bar
+
+**No open High and no open Medium.** That is the whole rule.
+
+A Low may stand open through a release when it is recorded, understood
+and not worth holding a version for. The release workflow reads the
+register for open entries; a Low left open must say in the entry why it
+is not blocking, so the decision is visible rather than assumed.
+
+This is a stopping rule, not a quality ceiling. Nothing here says stop
+looking — the audits are the point, and finding something is the tool
+doing its job rather than evidence the job is unfinished.
+
 ## What success looks like
 
 - An agent handed the bounded work order acts on the standard instead of wandering.
@@ -305,4 +297,4 @@ An earlier revision read "bounded ones did not", which concealed the bounded arm
 
 ## Non-goals
 
-Replacing mature analyzers; rewriting repositories automatically; sending code to an LLM by default; treating maintainability as purely numeric; preserving undocumented behavior for hypothetical consumers.
+Replacing mature analyzers; rewriting repositories automatically; sending code to an LLM by default; treating maintainability as purely numeric; preserving undocumented behavior for hypothetical consumers; **carrying the work out.** This tool measures and emits a bounded prompt; acting on that prompt is the agent's job and the operator's decision, not this package's. Nothing in this repository describes a successor, rename or execution layer — a reader who infers one is reading a plan that does not exist.

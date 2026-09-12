@@ -183,7 +183,7 @@ def test_a_delegated_producer_change_breaks_the_series() -> None:
     def record(producer: str) -> ScanRecord:
         return ScanRecord(
             recorded_at="2026-09-11T00:00:00Z", commit="c", branch="main",
-            scope="full", rubric_version="3.3.0", calibration=1.0,
+            scope="full", tool_version="3.3.0", calibration=1.0,
             thresholds_digest="d", analyzers=(), scored_languages=(),
             estimate=4.0, pillars={"security": 3.4},
             delegated_producers=(producer,),

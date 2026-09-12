@@ -62,7 +62,7 @@ def _record(commit: str, **overrides: object) -> ScanRecord:
     base: dict[str, object] = {
         "recorded_at": f"2026-08-{next(_ORDER):02d}T00:00:00Z",
         "commit": commit, "branch": "main", "scope": "full",
-        "rubric_version": "0.7.0", "calibration": 2.6279, "thresholds_digest": "t",
+        "tool_version": "0.7.0", "calibration": 2.6279, "thresholds_digest": "t",
         "analyzers": ("lizard",), "scored_languages": ("Python",), "estimate": 4.0,
     }
     base.update(overrides)

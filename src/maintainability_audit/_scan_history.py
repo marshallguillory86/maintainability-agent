@@ -233,7 +233,12 @@ FIELD_NAMES: dict[str, str] = {
     "analyzers": "which analyzers contributed",
     "scored_languages": "the scored languages",
     "scope": "the scan scope",
-    "delegated_producers": "a delegated pillar's producer or its version",
+    # Names the scoring model rather than the version, because that is
+    # what `_model_key` actually keys on. Saying "its version" sent a
+    # reader looking for a release that in the common case had not
+    # changed -- the v2 document breaks on `scoring_model`, and the
+    # version is only the v1 fallback.
+    "delegated_producers": "a delegated pillar's producer or its scoring model",
 }
 
 

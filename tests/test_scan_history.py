@@ -57,7 +57,7 @@ def _record(**overrides: object) -> ScanRecord:
         "commit": "a" * 40,
         "branch": "main",
         "scope": "full",
-        "rubric_version": "0.7.0",
+        "tool_version": "0.7.0",
         "calibration": 2.6279,
         "thresholds_digest": "t-abc",
         "analyzers": ("lizard", "ruff"),
@@ -149,7 +149,7 @@ def test_an_unreadable_line_does_not_destroy_the_history(tmp_path: Path) -> None
 
 
 @pytest.mark.parametrize("field", [
-    "rubric_version", "calibration", "thresholds_digest", "analyzers",
+    "tool_version", "calibration", "thresholds_digest", "analyzers",
     "scored_languages", "scope",
 ])
 def test_every_field_that_changes_meaning_breaks_comparability(field: str) -> None:
@@ -160,7 +160,7 @@ def test_every_field_that_changes_meaning_breaks_comparability(field: str) -> No
     trends silently start spanning a change in the instrument.
     """
     changed = {
-        "rubric_version": "0.8.0",
+        "tool_version": "0.8.0",
         "calibration": 2.7,
         "thresholds_digest": "t-xyz",
         "analyzers": ("lizard",),
@@ -283,7 +283,7 @@ def test_recording_appends_one_scan(tmp_path: Path) -> None:
     assert len(records) == 2
     assert records[0].scope == "full"
     assert records[0].populations["files_scanned"] >= 60
-    assert records[0].rubric_version, "the rubric that produced it is recorded"
+    assert records[0].tool_version, "the rubric that produced it is recorded"
 
 
 def test_a_recorded_scan_carries_what_the_gate_needs(tmp_path: Path) -> None:
@@ -373,3 +373,53 @@ def test_every_sequence_field_survives_the_round_trip(tmp_path: Path) -> None:
         assert not isinstance(value, list), (
             f"{spec.name} came back as a list; it must be converted in read_history"
         )
+
+
+def test_a_line_written_before_the_rename_still_loads(tmp_path: Path) -> None:
+    """Schema 1-4 stored `rubric_version`; schema 5 stores `tool_version`.
+
+    The value never changed — only what it is called — so an old line
+    must keep loading *and* keep its place in a series. A stored history
+    is the one artefact here that cannot be regenerated, so a rename
+    that silently dropped it would have cost more than the wrong name
+    did (D158).
+    """
+    history = tmp_path / "old.jsonl"
+    stored = json.loads(_record().as_line())
+    stored["rubric_version"] = stored.pop("tool_version")
+    stored["history_schema_version"] = 4
+    history.write_text(json.dumps(stored) + "\n", encoding="utf-8")
+
+    records = read_history(history)
+
+    assert len(records) == 1, "a pre-rename line stopped loading"
+    assert records[0].tool_version == _record().tool_version, (
+        "the value did not survive the rename; only the key should have moved"
+    )
+
+
+def test_the_two_spellings_land_in_one_series(tmp_path: Path) -> None:
+    """A history spanning the rename is one instrument, not two.
+
+    The comparability key reads `tool_version`. If an old line arrived
+    with that field empty it would compare unequal to a new line of the
+    same version and split the series at the upgrade — a break with no
+    instrument change behind it, which is the defect this module exists
+    to prevent, caused by fixing a name.
+    """
+    history = tmp_path / "spanning.jsonl"
+    before_rename = json.loads(_record().as_line())
+    before_rename["rubric_version"] = before_rename.pop("tool_version")
+    before_rename["history_schema_version"] = 4
+    after_rename = json.loads(_record().as_line())
+    history.write_text(
+        json.dumps(before_rename) + "\n" + json.dumps(after_rename) + "\n",
+        encoding="utf-8",
+    )
+
+    found = segments(read_history(history))
+
+    assert len(found) == 1, (
+        f"the rename split a series that never changed instrument: "
+        f"{[s.break_reason for s in found]}"
+    )

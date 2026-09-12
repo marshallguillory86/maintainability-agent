@@ -51,7 +51,7 @@ def _record() -> ScanRecord:
         commit="a" * 40,
         branch="main",
         scope="full",
-        rubric_version="0.7.0",
+        tool_version="0.7.0",
         calibration=2.6279,
         thresholds_digest="t-abc",
         analyzers=("lizard",),

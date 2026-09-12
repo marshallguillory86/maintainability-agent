@@ -46,7 +46,7 @@ from maintainability_audit._scan_history import ScanRecord, Segment
 def _scan(n: int, findings: tuple[str, ...], targeted: tuple[str, ...] = ()) -> ScanRecord:
     return ScanRecord(
         recorded_at=f"2026-0{n + 1}-01T00:00:00Z", commit=str(n) * 40, branch="main",
-        scope="full", rubric_version="0.7.0", calibration=2.6279,
+        scope="full", tool_version="0.7.0", calibration=2.6279,
         thresholds_digest="t", analyzers=("lizard",), scored_languages=("Python",),
         estimate=4.0, fingerprints=findings, targeted=targeted,
     )

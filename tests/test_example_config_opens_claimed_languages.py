@@ -40,7 +40,14 @@ def test_example_config_opens_the_source_derived_default_language_population() -
 
 
 def test_the_example_language_oracle_rejects_an_unnamed_omission() -> None:
-    """A source-derived member removed from the population makes D162 fail."""
+    """A source-derived member removed from the population makes D162 fail.
+
+    Covers existing behaviour: this exercises the oracle, not the fix.
+    `_assert_opens_shipped_default` raised on a missing member before
+    D162 and after it, so it passes at the base by construction — which
+    is the point. It is what stops the test above from being vacuous if
+    the comparison is ever loosened, and a guard is not a falsifier.
+    """
     shipped_default = default_include_extensions()
     declared = declaration_suffixes()
     removable = next(suffix for suffix in sorted(declared) if suffix in shipped_default)

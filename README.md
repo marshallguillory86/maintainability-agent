@@ -20,6 +20,25 @@ pip install "maintainability-agent[mcp]"   # optional local MCP server for chat 
 cp -r skills/maintainability-agent ~/.claude/skills/   # Claude Code slash command
 ```
 
+**Install the analyzer pool too, or you get the built-in tier.** This tool
+prefers established analyzers and falls back to its own detectors when none is
+present. The fallback is honest — the report says `Estimate source: built-in
+detectors` and the coverage section names what nothing examined — but it is a
+weaker reading than the tool is capable of, and a first run without these is
+the commonest reason it looks thin.
+
+```bash
+pip install cohesion complexipy flake8 fortitude-lint interrogate lizard \
+  multimetric mypy pydocstyle pylint radon ruff vulture
+npm install -g jscpd eslint            # duplication + JavaScript/TypeScript
+brew install pmd checkstyle spotbugs   # JVM languages, optional
+```
+
+Unpinned on purpose: this is the exact set CI installs and calibrates against,
+and `test_the_readme_names_the_analyzer_pool_ci_installs` fails if the two ever
+disagree. Nothing here is required — the audit runs without any of it and tells
+you what it could not measure.
+
 **One command to a work order.** A config file is the whole setup — with one
 present, nothing is asked and nothing is written into your tree:
 

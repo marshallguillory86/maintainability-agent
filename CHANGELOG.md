@@ -2,9 +2,22 @@
 
 All notable changes to Maintainability Agent will be documented here.
 
+**How to read this file.** Entries are written for someone deciding whether a
+change affects them, so each one states the behaviour that moved before it
+explains why. Most are long because this project fixes a *class* rather than an
+instance, and the reasoning is the evidence that the class is closed — it is a
+track record, not an apology. If you want the short version of where the product
+stands, read the [README](README.md); if you want what is coming, the
+[roadmap](docs/roadmap.md). Neither requires this file.
+
 ## Unreleased
 
 ## 3.4.0 - 2026-09-11
+
+*Config excludes that held a glob start working, so a scanned population can
+shrink and a score can move; the delegated security pillar reports the
+delegate's scoring model; scan trends now break when a delegated producer
+changes.*
 
 ### Fixed — a directory exclude holding a glob matched nothing (D156)
 

@@ -12,7 +12,23 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
-## 3.7.2 - 2026-09-13
+## 3.7.3 - 2026-09-13
+
+**3.7.2 was tagged and never published.** Its release build tests the built wheel in a fresh
+environment, and that job never installed secure-code-agent, so the security pillar's tests read
+"not installed" and the build stopped before PyPI. 3.7.3 is 3.7.2 as intended: the same code,
+with the release job installing secure-code-agent 0.12.1 like every other job that runs the
+suite.
+
+- A new test reads every workflow job that runs pytest and fails if it doesn't install
+  secure-code-agent. The earlier check only looked at the pins that existed, and the release job
+  had none.
+- The unsupported-release test no longer depends on whether secure-code-agent happens to be
+  installed where it runs.
+
+Everything described under 3.7.2 below ships in this release.
+
+## 3.7.2 - 2026-09-13 (tagged, not published)
 
 ### Changed — secure-code-agent is installed alongside, not a dependency, and 0.12.1 is required
 

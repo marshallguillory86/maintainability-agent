@@ -159,6 +159,7 @@ def test_an_unsupported_release_is_stated_not_run(tmp_path, monkeypatch, install
     whatever it has. Running a release outside the range would read a contract this
     audit has not been checked against.
     """
+    import importlib.machinery
     import importlib.metadata as metadata
 
     from maintainability_audit import _security_delegate
@@ -169,6 +170,12 @@ def test_an_unsupported_release_is_stated_not_run(tmp_path, monkeypatch, install
     real_version = metadata.version
     monkeypatch.setattr(metadata, "version",
                         lambda name: installed if name == "secure-code-agent" else real_version(name))
+    # Installed, as far as the audit can tell, whatever this environment holds:
+    # the release build ran this without secure-code-agent and read "not installed".
+    real_find = _security_delegate.importlib.util.find_spec
+    monkeypatch.setattr(_security_delegate.importlib.util, "find_spec",
+                        lambda name, *a: importlib.machinery.ModuleSpec(name, None)
+                        if name == "secure_code_audit" else real_find(name, *a))
     monkeypatch.setattr(_security_delegate, "run",
                         lambda *a, **k: (_ for _ in ()).throw(AssertionError("an unsupported release ran")),
                         raising=False)

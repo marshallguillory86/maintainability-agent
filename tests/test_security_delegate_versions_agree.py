@@ -55,3 +55,32 @@ def test_every_ci_pin_is_a_release_the_audit_runs() -> None:
     outside = [(name, pin) for name, pin in pins
                if not (SUPPORTED_FLOOR <= _version_tuple(pin) < SUPPORTED_CEILING)]
     assert not outside, f"CI pins a secure-code-agent this audit refuses to run: {outside}"
+
+
+def _jobs(text: str) -> dict[str, str]:
+    """Each job's text in a workflow, split on the two-space job keys under `jobs:`.
+
+    Read as text, as `test_ci_installs_the_analyzer_pool` does: the suite does
+    not import a YAML parser.
+    """
+    body = text.split("\njobs:\n", 1)[1] if "\njobs:\n" in text else ""
+    parts = re.split(r"^  ([A-Za-z0-9_-]+):\s*$", body, flags=re.MULTILINE)
+    return {parts[index]: parts[index + 1] for index in range(1, len(parts) - 1, 2)}
+
+
+def test_every_job_that_runs_the_suite_installs_secure_code_agent() -> None:
+    """The 3.7.2 tag failed in `release.yml`: it ran the suite without the tool.
+
+    `test_every_ci_pin_is_a_release_the_audit_runs` checked the pins that
+    existed, and the release job had none. The population here is every job,
+    in every workflow, whose steps run pytest.
+    """
+    running = [
+        (path.name, job, body)
+        for path in sorted((ROOT / ".github" / "workflows").glob("*.yml"))
+        for job, body in _jobs(path.read_text(encoding="utf-8")).items()
+        if re.search(r"-m pytest\b", body)
+    ]
+    assert running, "no workflow job runs pytest; the sweep would pass vacuously"
+    missing = [(name, job) for name, job, body in running if "secure-code-agent==" not in body]
+    assert not missing, f"jobs that run the suite without installing secure-code-agent: {missing}"

@@ -85,10 +85,11 @@ def item_prompt_block(item: dict[str, Any], root_label: str = ".") -> list[str]:
 #: The order sentence, by which sort actually produced the list (D169).
 #:
 #: `reorder_by_exposure` re-sorts the stored work order by recurrence and
-#: churn whenever an economic context is configured, ignoring band. The
-#: heading went on saying "ordered by what it costs to leave against what
-#: it costs to fix" over a list that sort had replaced, so the table and the
-#: prompt named different first items and neither said why.
+#: churn whenever an economic context is configured — within each band
+#: since D170, across bands before it. The heading went on saying "ordered
+#: by what it costs to leave against what it costs to fix" over a list that
+#: sort had reordered, so the table and the prompt named different first
+#: items and neither said why.
 _ORDER_BY_BAND = (
     "Ordered by what it costs to leave against what it costs to fix "
     "(see the standard)."
@@ -96,6 +97,14 @@ _ORDER_BY_BAND = (
 _ORDER_BY_EXPOSURE = (
     "Ordered by band, then by exposure within each band — how often a "
     "finding came back and how much its file changes (ADR 004)."
+)
+#: What a run with no work order says, on every skin that would otherwise
+#: hand over a task (D173). The chat report said this while the prompt from
+#: the same run asked for "the smallest coherent patch".
+NOTHING_TO_DO = (
+    "**Nothing to do.** No finding reached a band worth a work-order "
+    "item, so there is no prompt to paste. The evidence behind that is "
+    "below."
 )
 _BAND_IS_PER_CLASS = (
     "A band is declared per kind of finding in the standard, not sized per "

@@ -367,17 +367,33 @@ def _assemble(
     }
 
 
-def _attach_semantics(report: dict[str, Any], root: Path, config: dict[str, Any]) -> None:
+def _attach_semantics(
+    report: dict[str, Any], root: Path, config: dict[str, Any],
+    only_paths: set[str] | None = None,
+) -> None:
     """ADR 003 option C, after the score is sealed and before the work
     order reads it: semantic results are findings and prompt material,
     never rubric input — nothing from here reaches `score_report`.
+
+    **A changed-only run keeps the findings its paths hold (D174).** The
+    semantic walk reads the whole tree, so a changed-only audit of two
+    commits nominated a TypeScript fixture neither commit touched and
+    handed it to the prompt. A finding with no located source path cannot
+    be placed in or out of the change, and is not work anyone can act on
+    either (`_items_from_semantic` drops it), so it is left out here too.
     """
     semantic = semantic_findings(
         root,
         policy=load_semantic_policy(config),
         type_analysis=discover_type_analysis(root),
     )
-    report["semantic_findings"] = semantic["findings"]
+    findings = semantic["findings"]
+    if only_paths is not None:
+        findings = [
+            finding for finding in findings
+            if ((finding.get("source_evidence") or {}).get("path")) in only_paths
+        ]
+    report["semantic_findings"] = findings
     report["semantic_coverage"] = semantic["coverage"]
 
 
@@ -475,7 +491,7 @@ def build_report(
     # Condition rolls up aspects; practice stays a separate axis (ADR 007).
     report["practice"] = practice_level(root, config).as_dict()
     report["pillars"] = _pillars_with_delegation(report, root, security_pillar)
-    _attach_semantics(report, root, config)
+    _attach_semantics(report, root, config, only_paths)
     # Last, because every item's delta is a rubric recomputation and the
     # rubric needs the scored report to recompute against.
     report["work_order"] = work_order(report, thresholds=config["thresholds"])

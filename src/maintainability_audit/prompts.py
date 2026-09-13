@@ -32,23 +32,17 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
     """
     summary = report["summary"]
     score = report["score"]
+    # A run with nothing in scope hands over no task (D173): the chat report
+    # from the same run said "Nothing to do" while this file asked for a
+    # patch and listed warn-band hotspots the work order had refused.
+    has_work = prompt_has_work(report)
     lines = [
         "# AI Remediation Prompt",
         "",
         "You are working in a git repository that has just produced a maintainability audit.",
         "",
-        "Your task is to fix the highest-value maintainability issues in a small, reviewable change.",
-        "",
-        "Rules:",
-        "",
-        "- Do not rewrite the whole codebase.",
-        "- Do not change public behavior unless a finding explicitly requires it.",
-        "- Prefer existing architecture, naming, and local patterns.",
-        "- Add or update tests for meaningful behavior before changing production code where practical.",
-        "- Keep unrelated refactors out of scope.",
-        "- If a finding is a false positive, explain why and leave the code unchanged.",
-        "- After changes, run the repo's native tests/lints and this maintainability audit again.",
-        "",
+        *(_TASK if has_work else ()),
+        *_RULES,
     ]
     # The product, before anything describing the run that produced it.
     lines.extend(prompt_escalation_note(report))
@@ -82,9 +76,30 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
     lines.extend(prompt_tdd_section(report))
     lines.extend(prompt_semantic_section(report))
     lines.extend(prompt_pressure_section(score, (report.get("summary") or {}).get("languages")))
-    lines.extend(prompt_focus_sections(report))
-    lines.extend(prompt_deliverable())
+    if has_work:
+        lines.extend(prompt_focus_sections(report))
+        lines.extend(prompt_deliverable())
     return "\n".join(lines)
+
+
+_TASK = (
+    "Your task is to fix the highest-value maintainability issues in a small, reviewable change.",
+    "",
+)
+# Kept on every prompt: they bound what an agent may do, and a run with
+# nothing in scope is still bounded by them.
+_RULES = (
+    "Rules:",
+    "",
+    "- Do not rewrite the whole codebase.",
+    "- Do not change public behavior unless a finding explicitly requires it.",
+    "- Prefer existing architecture, naming, and local patterns.",
+    "- Add or update tests for meaningful behavior before changing production code where practical.",
+    "- Keep unrelated refactors out of scope.",
+    "- If a finding is a false positive, explain why and leave the code unchanged.",
+    "- After changes, run the repo's native tests/lints and this maintainability audit again.",
+    "",
+)
 
 
 def render_agent_instructions(report: dict[str, Any]) -> str:
@@ -138,6 +153,7 @@ from ._prompt_sections import (  # noqa: E402,F401 - re-export after the split
     prompt_deliverable,
     prompt_escalation_note,
     prompt_focus_sections,
+    prompt_has_work,
     prompt_pressure_section,
     prompt_semantic_section,
     prompt_tdd_section,

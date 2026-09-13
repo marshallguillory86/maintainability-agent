@@ -32,7 +32,7 @@ from ._scan_view import (
 )
 from ._semantic_view import semantic_markdown, without_semantic_suffixes
 from ._tdd_view import tdd_structure_markdown
-from ._work_order_view import work_order_markdown, work_order_selection_markdown
+from ._work_order_view import NOTHING_TO_DO, work_order_markdown, work_order_selection_markdown
 
 
 def _pool_ran(report: dict[str, Any]) -> bool:
@@ -188,13 +188,7 @@ def _no_work_order_lines() -> list[str]:
     "nothing met the bands" from "this tool does not do that" — and the
     second reading is the one a stranger takes on a first run.
     """
-    return [
-        "## Work Order", "",
-        "**Nothing to do.** No finding reached a band worth a work-order "
-        "item, so there is no prompt to paste. The evidence behind that is "
-        "below.",
-        "",
-    ]
+    return ["## Work Order", "", NOTHING_TO_DO, ""]
 
 
 def _bounded_markdown(report: dict[str, Any], score: dict[str, Any],

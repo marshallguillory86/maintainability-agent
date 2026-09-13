@@ -174,8 +174,17 @@ def test_function_hotspot_still_reports_its_complexity() -> None:
 
 def test_class_label_reaches_the_prompt_the_pr_comment_and_sarif() -> None:
     report = flagged_class_report()
+    # The prompt lists hotspots only when it hands over work (D173); a
+    # warn-only run is "Nothing to do" there. Give the prompt one item so
+    # its hotspot section — where the label is checked — renders.
+    prompted = {**report, "work_order": [{
+        "finding_class": "oversized-declaration", "title": "ScanWorker in scanner.py",
+        "path": "scanner.py", "line": 1, "band": "quick-win", "risk": 4, "effort": 2,
+        "target": "t", "rationale": "r", "verification": "v", "class_delta": 0.0,
+        "class_count": 1, "fingerprint": "fp", "severity": 1.0,
+    }]}
 
-    assert "`ScanWorker` (class) (260 lines, warn)" in render_ai_prompt(report)
+    assert "`ScanWorker` (class) (260 lines, warn)" in render_ai_prompt(prompted)
     assert "`ScanWorker` (class) (260 lines, warn)" in render_pr_comment(report)
     message = report_to_sarif(report)["runs"][0]["results"][0]["message"]["text"]
     assert message == "ScanWorker (class) (260 lines, warn)."

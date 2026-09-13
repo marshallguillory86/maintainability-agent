@@ -49,7 +49,7 @@ So the tool is a deep decomposition of one pillar, with partial reach into two o
 | **Readability** | **Partial.** Linter conformance, docstring coverage, declaration size, naming conventions where analyzers report them. Reported, with gaps named. |
 | **Maintainability** | **Owned.** The existing ISO 25010 decomposition is the detail view of this pillar. |
 | **Efficiency & Scalability** | **Out of scope, permanently.** Requires profiling, load testing and runtime telemetry. Reported as `NotApplicable` with that reason — an explicit statement, not a silent omission. |
-| **Security** | **Delegated** to `secure-code-agent`. Reports that tool's own measurement when it has left `security-pillar.json` in the tree; `NotApplicable` naming the other tool when it has not, so a reader never mistakes silence for safety. |
+| **Security** | **Delegated** to `secure-code-agent`, **which every audit runs** (amended 2026-09-13, D177). Reports that tool's measurement; when no trustworthy measurement comes back, the entry names the reason, so a reader never mistakes silence for safety. |
 | **Testability** | **Partial.** Test presence, declaration size and policy gates today; coverage and mutation results when the operator supplies them. |
 
 Declaring scope per pillar is itself a fix. Before this the tool was silent about efficiency and security, and silence reads as "fine".
@@ -77,6 +77,30 @@ Three properties hold, and each is how the join could go quietly wrong:
 - **This tool still measures nothing about security.** The scope stays
   `delegated`. What changed is that the entry reports a measurement
   instead of an apology for not having one, and names who made it.
+
+**Amended 2026-09-13: the audit runs the delegate (D177).** Decided with
+Marshall. The handoff above left the pillar measured only when some other
+process had written the document first — CI did, and nothing else did — so
+every audit through the chat door reported security unmeasured. The pillar
+is complete, so the audit completes it:
+
+- **Every audit runs `secure-code-agent`** through `_runner.run` with the
+  auditing interpreter, and `secure-code-agent` installs as a dependency of
+  this package. "Absence keeps the placeholder" above is superseded.
+- **An operator's document wins.** `--security-pillar <path>` — CI, which
+  runs the tool as its own gated step — is used as given and the tool is not
+  run a second time.
+- **A document the tree supplies is no longer read on its own authority.**
+  A `security-pillar.json` in the audited repository is repository content;
+  a repository may not report its own security posture in place of a run.
+- **Nothing but the delegate's declared trend is written into the tree.**
+  Every report the tool can produce is redirected to a temporary directory.
+  Its append-only `.secure-code/history.jsonl` cannot be redirected without
+  handing it an outside configuration, which that tool trusts to name
+  executables in the tree, so it is declared as the sixth artifact instead.
+- **No measurement is never silent.** Not installed, rejected configuration,
+  timeout: the pillar's reason says which, and a missing install is a line
+  in the environment work order.
 
 §2's prohibition is unaffected: the two axes arrive from another process
 and are still never averaged.

@@ -87,8 +87,9 @@ PILLARS: tuple[Pillar, ...] = (
         name="security",
         scope=Scope.DELEGATED,
         reason=(
-            "delegated to secure-code-agent; this tool catalogues security "
-            "analyzers and never runs them, so silence here is not safety"
+            "delegated to secure-code-agent, which this audit runs for the pillar; "
+            "when no measurement comes back the reason is given here, because "
+            "silence is not safety"
         ),
     ),
     Pillar(
@@ -213,8 +214,13 @@ def pillar_report(
     score: dict[str, Any],
     practice: dict[str, Any],
     delegated: dict[str, dict[str, Any]] | None = None,
+    unmeasured: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     """The pillar block exactly as it ships.
+
+    `unmeasured` names, per delegated pillar, why no measurement came back
+    from a run of the tool that owns it (D177), and replaces the generic
+    reason so the reader learns what actually happened.
 
     Practice arrives as an argument rather than being computed here.
     `_practice` reads the repository's configuration off disk, which
@@ -251,7 +257,7 @@ def pillar_report(
         report.append({
             "pillar": pillar.name,
             "scope": pillar.scope.value,
-            "reason": pillar.reason,
+            "reason": (unmeasured or {}).get(pillar.name) or pillar.reason,
             # Both axes, side by side, never merged. A consumer reads
             # either one; nothing in the document offers their mean.
             "practice": resolved["level"],

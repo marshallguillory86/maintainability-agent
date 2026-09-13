@@ -364,6 +364,13 @@ def pillar_cells(entry: dict[str, Any]) -> tuple[str, str]:
     condition = "—" if entry["condition"] is None else f"{entry['condition']:.1f}"
     if entry["posture"] is None:
         return condition, "not measured — see below"
+    if entry["condition"] is None:
+        # An ungraded pillar is `unverified` because nothing could be graded,
+        # not because a clean scan lacks enforcement — the note for that cell
+        # told a reader of secure-code-agent's partial-coverage pillar that
+        # its scan was clean (D176). Say why no grade was issued instead.
+        why = (entry.get("evidence_reasons") or [None])[0] or "the evidence could not support a grade"
+        return condition, f"{entry['posture']}: not graded — {why}"
     note = POSTURE_NOTE.get(entry["posture"], entry["posture"])
     return condition, f"{entry['posture']}: {note}"
 

@@ -118,6 +118,30 @@ def prompt_analyzer_caveat(report: dict[str, Any]) -> list[str]:
     ]
 
 
+def prompt_security_pillar(report: dict[str, Any]) -> list[str]:
+    """What the security pillar reported, stated where an agent reads the run (D176).
+
+    Evidence, never a task: security remediation is secure-code-agent's own
+    work order, not this prompt's. But a prompt that says nothing about
+    security lets an agent read silence as a clean bill, which is the one
+    reading ADR 007 exists to prevent.
+    """
+    entry = next((p for p in report.get("pillars") or [] if p.get("pillar") == "security"), None)
+    if entry is None:
+        return []
+    if not entry.get("delegated_to"):
+        return [f"**Security pillar: not measured.** {entry.get('reason')}.", ""]
+    producer = entry.get("delegated_to") or "the delegated tool"
+    version = f" {entry['producer_version']}" if entry.get("producer_version") else ""
+    condition = "not graded" if entry.get("condition") is None else f"{entry['condition']:.1f}"
+    return [
+        f"**Security pillar (measured by {producer}{version}):** posture "
+        f"{entry.get('posture')}, practice level {entry.get('practice')}, condition "
+        f"{condition}. Its findings are that tool's work order, not this one.",
+        "",
+    ]
+
+
 def prompt_escalation_note(report: dict[str, Any]) -> list[str]:
     """Tell the agent what is deliberately absent, and why.
 

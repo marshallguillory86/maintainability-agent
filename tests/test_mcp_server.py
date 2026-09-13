@@ -233,7 +233,7 @@ def test_real_stdio_process_initializes_and_reports_its_boundary(tmp_path: Path)
             assert info["allowed_roots"] == [str(tmp_path.resolve())]
             assert info.get("read_only") is not True
             boundary = json.dumps(info).lower()
-            assert len(info["writes"]) == 5
+            assert len(info["writes"]) == 6
             assert "maintainability-agent.json" in boundary
             assert "user" in boundary and "config" in boundary and "state" in boundary
             assert ".maintainability/history.jsonl" in boundary

@@ -45,7 +45,7 @@ from ._delegated_pillar import read_produced
 from ._runner import Invocation, Outcome, run
 
 #: The distribution the pillar requires, and the range this tool reads.
-REQUIREMENT = "secure-code-agent>=0.10,<0.11"
+REQUIREMENT = "secure-code-agent>=0.12.1,<0.13"
 
 #: How long the child may run before the pillar is reported as unmeasured.
 DEFAULT_TIMEOUT_SECONDS = 300

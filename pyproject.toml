@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "maintainability-agent"
-version = "3.7.1"
+version = "3.7.2"
 description = "Maintainability gate and AI remediation prompt generator for CI."
 readme = "README.md"
 # 3.11, not 3.10. `_discovery`, `_pillars` and `_runner` all import
@@ -19,7 +19,7 @@ requires-python = ">=3.11"
 # (`test_the_shipped_package_does_not_import_yaml`) — it runs the tool as a
 # child and reads the JSON document it writes.
 dependencies = [
-  "secure-code-agent>=0.10,<0.11",
+  "secure-code-agent>=0.12.1,<0.13",
 ]
 license = { text = "MIT" }
 authors = [

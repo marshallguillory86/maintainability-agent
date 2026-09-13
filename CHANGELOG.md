@@ -12,6 +12,23 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.2 - 2026-09-13
+
+### Changed — requires the current secure-code-agent, 0.12.1
+
+**3.7.0 and 3.7.1 required `secure-code-agent>=0.10,<0.11`, which excluded the current
+release.** The range was taken from this project's CI pin, not from secure-code-agent's
+published releases, which were at 0.12.1. On a machine that already had 0.12.1,
+installing 3.7.x downgraded it to 0.10.0 and quietly dropped two releases of that
+tool's fixes. The dependency is now `>=0.12.1,<0.13`, CI installs 0.12.1, and a test
+keeps the declared range, the install remedy and every CI pin in agreement.
+
+0.12.1 writes the same `security-pillar.json` contract (schema v2), and this release
+reads it unchanged.
+
+The setup page also notes that secure-code-agent's own `[mcp]` extra pins `mcp<2`, so it
+can't share an environment with this package's chat door.
+
 ## 3.7.1 - 2026-09-13
 
 ### Fixed — the chat door says what is installed when it cannot start (D178)

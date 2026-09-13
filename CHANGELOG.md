@@ -12,6 +12,21 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.1 - 2026-09-13
+
+### Fixed — the chat door says what is installed when it cannot start (D178)
+
+If `maintainability-agent-mcp` can't import `mcp`, the message now names the installed
+version, the range this server needs, and any other package that requires `mcp` —
+rather than "MCP support is not installed", which it said even when `mcp` was
+installed at an incompatible version.
+
+**If you followed 3.7.0's setup page:** installing `secure-code-agent[required-scanners]`
+or `[python-scanners]` into this package's environment pulls in semgrep, which pins
+`mcp<2` and replaces `mcp` 2.x, and the chat door stops starting. Restore it with
+`pip install "mcp>=2,<3"`, remove the pip-installed semgrep, njsscan and checkov, and
+install semgrep and checkov from Homebrew. The setup page now says so.
+
 ## 3.7.0 - 2026-09-13
 
 *Reported from the ChatGPT desktop app: MA ran, and the security pillar was not

@@ -393,7 +393,7 @@ def test_server_discloses_the_local_five_artifact_write_boundary(
 
     assert "local" in lowered and "stdio" in lowered
     assert info.get("read_only") is not True
-    assert len(info["writes"]) == 5
+    assert len(info["writes"]) == 6
     assert CONFIG_FILENAME in disclosure
     assert "user" in lowered and "config" in lowered and "state" in lowered
     assert DEFAULT_HISTORY_PATH in disclosure

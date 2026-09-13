@@ -57,6 +57,39 @@ def _lift_population_floors(request, monkeypatch):
     )
 
 
+@pytest.fixture(autouse=True)
+def _security_delegate_is_stubbed(request, monkeypatch):
+    """The suite builds thousands of reports; each would spawn secure-code-agent.
+
+    Stubbed to a stated non-measurement so every other test keeps its speed
+    and its determinism. A test about the delegate asks for
+    `real_security_delegate` and gets the real child process.
+    """
+    if "real_security_delegate" in request.fixturenames:
+        return
+    from maintainability_audit import report as report_module
+
+    try:
+        from maintainability_audit._security_delegate import DelegateRun
+    except ImportError:  # a base that predates D177
+        return
+
+    monkeypatch.setattr(
+        report_module, "run_security_delegate",
+        lambda root, **_: DelegateRun(None, "secure-code-agent is not run by the test suite"),
+        # A base that predates D177 has no such name; the falsifier prover
+        # runs these tests there, and a fixture that raised would turn every
+        # proof into an import error instead of the assertion it is.
+        raising=False,
+    )
+
+
+@pytest.fixture
+def real_security_delegate():
+    """Opt in to running the real secure-code-agent child (D177)."""
+    return True
+
+
 @pytest.fixture
 def real_population_floors(monkeypatch):
     """Restore the shipped floors for tests that are about the floors."""

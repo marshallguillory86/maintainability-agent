@@ -69,6 +69,7 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         "",
     ])
     lines.extend(prompt_analyzer_caveat(report))
+    lines.extend(prompt_security_pillar(report))
     # The prompt is the product artifact (H1): its remedy follows the
     # same report fact as every other skin, never a stale default.
     lines.extend(view.remediation_note(
@@ -155,6 +156,7 @@ from ._prompt_sections import (  # noqa: E402,F401 - re-export after the split
     prompt_focus_sections,
     prompt_has_work,
     prompt_pressure_section,
+    prompt_security_pillar,
     prompt_semantic_section,
     prompt_tdd_section,
     prompt_work_order,

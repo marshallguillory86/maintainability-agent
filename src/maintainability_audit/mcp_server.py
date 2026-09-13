@@ -4,10 +4,12 @@ This module is transport assembly: tool bindings, resources, prompts and
 the stdio entry point. The audit tool's own logic — authorization,
 tri-state resolution, history recording — lives in ``_mcp_audit`` and is
 re-exported here so every consumer keeps one import path. Setup, the
-loop record and baseline adoption may write only five local artifacts:
+loop record and baseline adoption may write only six local artifacts:
 repository and user configuration, user state, the repository's scan
-history, and the repository's baseline. It never writes source or a
-report, accepts a command string, or invokes a shell.
+history, the repository's baseline, and — because an audit runs
+secure-code-agent for the security pillar (D177) — that tool's own
+append-only trend. It never writes source or a report, accepts a command
+string, or invokes a shell.
 """
 
 from __future__ import annotations
@@ -66,11 +68,13 @@ SERVER_INSTRUCTIONS = (
     "step: do not inspect configuration first and do not ask the user "
     "which config to use — the tool resolves that itself. First contact with an "
     "unconfigured repository elicits setup, and the audit records its scan "
-    "history and can adopt a baseline, so it may write exactly five local "
+    "history and can adopt a baseline, so it may write exactly six local "
     "artifacts: the repository's maintainability-agent.json, the user-level "
     "config, the user state file, the repository's scan history "
-    "(.maintainability/history.jsonl by default), and a requested baseline "
-    "(.maintainability/baseline.json by default). Scan history rides the "
+    "(.maintainability/history.jsonl by default), a requested baseline "
+    "(.maintainability/baseline.json by default), and secure-code-agent's own "
+    "trend (.secure-code/history.jsonl), which that tool appends when the audit "
+    "runs it for the security pillar. Scan history rides the "
     "record_history tri-state, where unset means an existing history file "
     "appends and otherwise the persisted first-run consent decides, "
     "true forces the write, and false suppresses it. Nothing is audited "
@@ -109,12 +113,14 @@ def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
         "transport": "stdio",
         "local": True,
         # Not blanket read-only since D2/D5: setup, the loop record and
-        # baseline adoption write exactly the five local artifacts
-        # listed below, never source and never a report.
+        # baseline adoption write the local artifacts listed below, and the
+        # security pillar's run of secure-code-agent appends that tool's own
+        # trend (D177). Never source and never a report.
         "read_only": False,
         "writes": [CONFIG_FILENAME, "user config", "user state",
                    f"scan history ({DEFAULT_HISTORY_PATH})",
-                   "baseline (.maintainability/baseline.json)"],
+                   "baseline (.maintainability/baseline.json)",
+                   "secure-code-agent history (.secure-code/history.jsonl)"],
         "never_writes": ["source", "reports"],
         "allowed_roots": [str(root) for root in authorized_roots],
         # Stored grants this process will not honour. A hand-written

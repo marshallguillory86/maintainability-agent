@@ -214,6 +214,12 @@ def _bounded_markdown(report: dict[str, Any], score: dict[str, Any],
     lines.extend(summary)
     lines.extend(render_grade_blockers(report))
     lines.extend(score_table(score))
+    # The pillars, security among them, in the view most people read (D176).
+    # Rendered by the same function the complete report uses, so the two
+    # skins cannot disagree about a pillar (ADR 011); before this the chat
+    # view printed nothing about security at all, measured or not, and a
+    # missing pillar read exactly like a clean one (ADR 007).
+    lines.extend(pillars_markdown(report.get("pillars"), report.get("practice")))
     lines.extend([
         "---", "",
         "This is the bounded UI view. The complete report — every finding, "

@@ -143,6 +143,10 @@ SCANNERS = {"metrics", "_discovery", "_practice", "duplication", "deadcode", "id
             # reads a path the repository chooses; it computes nothing,
             # and scoring may not import it.
             "_delegated_pillar",
+            # `_security_delegate` runs secure-code-agent over the audited
+            # tree for the security pillar (D177): a scanner, because it
+            # spawns a tool on the repository, and scoring may not import it.
+            "_security_delegate",
             "_metric_adapters", "_verdict_adapters", "_jvm_adapters",
             # `_ratio_adapters` holds the two tools that report a rate
             # for the whole tree rather than a reading per declaration —

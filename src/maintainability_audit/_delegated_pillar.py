@@ -123,6 +123,25 @@ def read_delegated(root: Path, relative: str = DEFAULT_PILLAR_PATH) -> dict[str,
         if isinstance(error, PathNotAllowed):
             raise
         return None
+    return trusted(payload)
+
+
+def read_produced(path: Path) -> dict[str, Any] | None:
+    """The document this tool's own run of secure-code-agent just wrote (D177).
+
+    The file sits in a temporary directory this process created, not in the
+    audited tree, so it is read directly; every check a handed-over document
+    passes still applies, because the producer is the same tool either way.
+    """
+    try:
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return trusted(payload)
+
+
+def trusted(payload: Any) -> dict[str, Any] | None:
+    """The payload when it is a document this module understands, else `None`."""
     if not isinstance(payload, dict):
         return None
     if payload.get("schema") != SCHEMA:

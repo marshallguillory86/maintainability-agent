@@ -12,6 +12,51 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.0 - 2026-09-13
+
+*Reported from the ChatGPT desktop app: MA ran, and the security pillar was not
+in the report.*
+
+### Changed — every audit runs secure-code-agent for the security pillar (D177)
+
+**Minor rather than patch: an audit now executes a second tool, installs it as a
+dependency, and can write one more file.** Until now the security pillar was a
+handoff. secure-code-agent wrote `security-pillar.json` and MA read it if present.
+CI did that on every pull request; nothing else did, and the chat door never
+could. So the pillar was measured in CI and nowhere a person actually asked.
+
+- **`secure-code-agent` is now a dependency** (`>=0.10,<0.11`), and every audit
+  runs it through the interpreter that is auditing.
+- **What it writes into your repository:** its append-only trend,
+  `.secure-code/history.jsonl`, and nothing else. Every report it can produce is
+  redirected to a temporary directory. The MCP door now declares six artifacts, not
+  five. The history can't be switched off without handing secure-code-agent a
+  configuration from outside the tree, which it would trust to name executables
+  inside the tree, so it is declared, not suppressed.
+- **`--security-pillar <path>` still wins.** CI passes it, so the tool runs once.
+- **A `security-pillar.json` sitting in the audited tree is no longer read** on its
+  own authority: a repository doesn't get to report its own security posture in
+  place of a measurement.
+- **When no measurement comes back, the pillar says why** — not installed (with the
+  install command in the environment work order), a rejected configuration, or a
+  timeout.
+
+What the pillar reads depends on the scanners secure-code-agent can find. With none
+installed it runs its built-in rules and the pillar reads `unverified: not graded —
+scanner coverage is partial`. `secure-code-agent --preflight .` lists what to
+install.
+
+### Fixed — the chat view and the prompt show the pillars (D176)
+
+The chat view printed nothing about security, measured or not, and neither did the
+remediation prompt, so a missing pillar looked exactly like a clean one. The chat
+view now carries the same pillar table as the complete report, and the prompt
+states the security pillar — who measured it and what it found, or why it wasn't
+measured.
+
+An ungraded pillar is no longer described as "clean scan, but nothing prevents
+tomorrow's regression". It reads "not graded", with the reason.
+
 ## 3.6.3 - 2026-09-13
 
 ### Fixed — a build no longer changes what an audit scores (D175)

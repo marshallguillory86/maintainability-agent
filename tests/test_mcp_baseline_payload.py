@@ -273,7 +273,7 @@ def test_server_discloses_five_artifacts_and_the_history_tristate(tmp_path: Path
     info = server_info((tmp_path.resolve(),))
     disclosure = f"{SERVER_INSTRUCTIONS}\n{json.dumps(info, sort_keys=True)}".lower()
 
-    assert len(info["writes"]) == 5
+    assert len(info["writes"]) == 6
     assert "baseline" in disclosure and str(DEFAULT_BASELINE_PATH) in disclosure
     assert "source" in " ".join(info["never_writes"]).lower()
     assert "report" in " ".join(info["never_writes"]).lower()

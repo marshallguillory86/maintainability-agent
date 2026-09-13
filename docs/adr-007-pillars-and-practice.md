@@ -85,8 +85,14 @@ every audit through the chat door reported security unmeasured. The pillar
 is complete, so the audit completes it:
 
 - **Every audit runs `secure-code-agent`** through `_runner.run` with the
-  auditing interpreter, and `secure-code-agent` installs as a dependency of
-  this package. "Absence keeps the placeholder" above is superseded.
+  auditing interpreter, when the installed release is in the supported range
+  (`>=0.12.1,<1`). "Absence keeps the placeholder" above is superseded.
+- **Not a package dependency.** 3.7.0 made it one, and within the day that
+  capped the tool below its current release and put the two tools' opposed
+  `mcp` pins into one environment. secure-code-agent's D3 and ADR 008 hold the
+  tools independently releasable, so it is installed alongside, like the
+  analyzer pool, and an unsupported or missing release is the pillar's stated
+  reason with an install command in the environment work order.
 - **An operator's document wins.** `--security-pillar <path>` — CI, which
   runs the tool as its own gated step — is used as given and the tool is not
   run a second time.

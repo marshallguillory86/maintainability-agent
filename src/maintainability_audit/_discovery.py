@@ -222,8 +222,31 @@ def _text_of(path: Path) -> str:
     return "\n".join(read_source_file(path))
 
 
+#: The evidence recorded for a path the repository ignores and git does not
+#: track (D175), so a reader can see why it left the scored population.
+IGNORED_BUILD_OUTPUT_EVIDENCE = (
+    "untracked, and excluded by this repository's .gitignore "
+    "(git ls-files --others --ignored)"
+)
+
+
+def _ignored_build_output(root: Path) -> dict[str, str]:
+    """Untracked paths the repository's `.gitignore` excludes (D175).
+
+    A Maven build copied jsoup's test resources into `target/test-classes`,
+    and the next audit scored 29 more files — one a failing file — as the
+    team's own. The same commit scored one way before a build and another
+    after it. `target/` is not added to a list of names: ADR 010 §1 forbids
+    that, and the next build tool will choose another word. The repository
+    already says which paths are not its source.
+    """
+    from .git_tools import ignored_untracked_paths
+
+    return dict.fromkeys(ignored_untracked_paths(root), IGNORED_BUILD_OUTPUT_EVIDENCE)
+
+
 def _generated_directories(root: Path, excludes: tuple[str, ...]) -> dict[str, str]:
-    """Directories a `package.json` script deletes and rebuilds."""
+    """Directories a `package.json` script deletes and rebuilds, then ignored build output."""
     found: dict[str, str] = {}
     for manifest in root.rglob("package.json"):
         relative = manifest.relative_to(root).as_posix()
@@ -237,6 +260,10 @@ def _generated_directories(root: Path, excludes: tuple[str, ...]) -> dict[str, s
                     f"deleted and rebuilt by `{name}` in {relative}: "
                     f"`{str(command)[:60]}`",
                 )
+    # A manifest's own statement about a directory is the more specific
+    # evidence, so it wins where both apply.
+    for path, evidence in _ignored_build_output(root).items():
+        found.setdefault(path, evidence)
     return found
 
 
@@ -458,10 +485,18 @@ def discover(root: Path, config: dict[str, Any]) -> Inventory:
     inventory.directories = _directory_provenance(
         vendored_dirs, generated_dirs, asset_dirs)
     seen_directories: set[tuple[str, str]] = set()
+    # What the scanner reads, beyond source code: a generated or vendored
+    # tree's HTML, XML and JSON are scored too unless classified here (D175).
+    read = set((config.get("paths") or {}).get("include_extensions", ()))
+    not_ours_dirs = (*generated_dirs, *vendored_dirs)
     for path in sorted(root.rglob("*")):
-        if not path.is_file() or path.suffix not in KNOWN_SOURCE_SUFFIXES:
+        if not path.is_file():
             continue
         relative = path.relative_to(root).as_posix()
+        if path.suffix not in KNOWN_SOURCE_SUFFIXES and not (
+            path.suffix in read and any(_under(relative, owner) for owner in not_ours_dirs)
+        ):
+            continue
         if is_excluded(relative, list(excludes)):
             continue
         verdict, evidence, owner = _classify(

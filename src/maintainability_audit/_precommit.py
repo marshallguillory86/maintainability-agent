@@ -204,13 +204,12 @@ def _risk_items(report: dict[str, Any]) -> list[dict[str, Any]]:
             "title": f"{entry['pattern']} added in {entry['path']}",
             "path": entry["path"], "line": entry["line"],
             "target": (
-                f"remove or justify this {entry['pattern']} match; it is a "
-                "pattern this repository's own configuration asked to be "
-                "told about"
+                f"act on or justify this {entry['pattern']} match; it is a "
+                "risk pattern the active configuration enforces"
             ),
             "rationale": (
-                "the repository declared this pattern as risky, and this "
-                "change is adding a line that matches it"
+                "the active configuration declares this pattern risky, and "
+                "this change is adding a line that matches it"
             ),
             # Above a threshold breach and below an added suppression. A
             # risk pattern is what the repository asked to see; switching

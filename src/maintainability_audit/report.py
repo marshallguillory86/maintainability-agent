@@ -478,7 +478,7 @@ def build_report(
     _attach_semantics(report, root, config)
     # Last, because every item's delta is a rubric recomputation and the
     # rubric needs the scored report to recompute against.
-    report["work_order"] = work_order(report)
+    report["work_order"] = work_order(report, thresholds=config["thresholds"])
     # ADR 004 v1, after scoring on purpose: nothing money-shaped exists
     # until the score document is final, so no path from these numbers
     # into the estimate or the grade can exist to be misused.

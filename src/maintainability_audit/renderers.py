@@ -63,7 +63,7 @@ def summary_table(summary: dict[str, int], score: dict[str, Any],
         f"| Duplicate blocks | {summary['duplicate_blocks']} |",
         f"| Risk findings | {summary['risk_findings']} |",
         f"| Hard gate failures | {summary['hard_gate_failures']} |",
-        *view.unanchored_caveat(score),
+        *view.unanchored_caveat(score, summary.get("languages")),
     ]
 
 
@@ -214,7 +214,8 @@ def _bounded_markdown(report: dict[str, Any], score: dict[str, Any],
     lines = [*header]
     lines.extend(_hard_gate_lines(report))
     work_order = work_order_markdown(
-        report.get("work_order"), complete=False, root_label=root_label)
+        report.get("work_order"), complete=False, root_label=root_label,
+        exposure_ordered=_exposure_ordered(report))
     lines.extend(work_order or _no_work_order_lines())
     lines.extend(summary)
     lines.extend(render_grade_blockers(report))
@@ -227,6 +228,16 @@ def _bounded_markdown(report: dict[str, Any], score: dict[str, Any],
         "(ask for the `html` or `markdown` format).",
     ])
     return "\n".join(lines)
+
+
+def _exposure_ordered(report: dict[str, Any]) -> bool:
+    """Whether `reorder_by_exposure` replaced the band order (D169).
+
+    `build_report` attaches `economic_impact` and applies the exposure sort
+    under the same condition, so its presence is the fact rather than a
+    guess at it.
+    """
+    return bool(report.get("economic_impact"))
 
 
 def _complete_markdown(report: dict[str, Any], score: dict[str, Any],
@@ -242,7 +253,8 @@ def _complete_markdown(report: dict[str, Any], score: dict[str, Any],
         lines.extend(work_order_selection_markdown(selection))
     else:
         lines.extend(work_order_markdown(
-            report.get("work_order"), complete=True, root_label=root_label))
+            report.get("work_order"), complete=True, root_label=root_label,
+            exposure_ordered=_exposure_ordered(report)))
     lines.extend(economic_impact_markdown(report.get("economic_impact")))
     lines.extend(tdd_structure_markdown(report.get("tdd_structure")))
     lines.extend(test_suite_markdown(report))

@@ -195,6 +195,19 @@ source .venv/bin/activate
 python3 -m pip install -e ".[dev]"
 ```
 
+`secure-code-agent` installs with the package: every audit runs it for the
+security pillar (D177). What it measures depends on the scanners it can find.
+With none of them installed it runs only its built-in rules, reports coverage
+as partial, and the pillar reads `unverified: not graded`. See what it can
+resolve with:
+
+```bash
+secure-code-agent --preflight .
+```
+
+and install the ones it names (on macOS: `brew install gitleaks semgrep
+osv-scanner trivy` and `python3 -m pip install bandit`).
+
 The analyzer pool installs through the checked-in constraints, which are
 the Linux-resolved closure the gates run against (D89). A macOS machine
 may resolve differently; that is expected, and it is why the constraints

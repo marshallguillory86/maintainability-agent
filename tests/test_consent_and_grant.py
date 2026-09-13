@@ -232,11 +232,16 @@ def test_baseline_results_are_exclusive_and_self_consult_is_empty(tmp_path: Path
     assert result["new_findings"] == expected
 
 
-def test_mcp_boundary_docstrings_describe_the_five_artifact_payload_contract() -> None:
-    """Audit L1/L4: comments cannot resurrect four writes or universal Markdown."""
+def test_mcp_boundary_docstrings_describe_the_six_artifact_payload_contract() -> None:
+    """Audit L1/L4: comments cannot resurrect four writes or universal Markdown.
+
+    Six since D177: the security pillar's run of secure-code-agent appends
+    that tool's own trend, and the boundary docstring has to say so.
+    """
     server_source = Path(mcp_server.__file__).read_text(encoding="utf-8")
     module_doc = ast.get_docstring(ast.parse(server_source)) or ""
-    assert "five" in module_doc.lower() and "baseline" in module_doc.lower()
+    assert "six" in module_doc.lower() and "baseline" in module_doc.lower()
+    assert "secure-code-agent" in module_doc.lower()
     assert "exactly these four" not in server_source.lower()
 
     finish_doc = inspect.getdoc(_mcp_audit._finish_result) or ""

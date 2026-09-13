@@ -22,6 +22,7 @@ from __future__ import annotations
 from typing import Any
 
 from ._work_order import work_order_rows
+from ._work_order_weights import AUDIT_VERIFICATION
 
 # The report lists the whole backlog; these caps apply only to the bounded
 # UI, which shows the top items and points at the report for the rest.
@@ -48,7 +49,7 @@ def prompt_body_lines(item: dict[str, Any], root_label: str = ".") -> list[str]:
     between is identical, so the two skins can never disagree about what an
     agent is being asked to do.
     """
-    verify = item.get("verification") or "python -m maintainability_audit --root . --format json"
+    verify = item.get("verification") or AUDIT_VERIFICATION
     return [
         f"Repository: {root_label}",
         f"Task: {item['target']}.",
@@ -81,8 +82,30 @@ def item_prompt_block(item: dict[str, Any], root_label: str = ".") -> list[str]:
     ]
 
 
+#: The order sentence, by which sort actually produced the list (D169).
+#:
+#: `reorder_by_exposure` re-sorts the stored work order by recurrence and
+#: churn whenever an economic context is configured, ignoring band. The
+#: heading went on saying "ordered by what it costs to leave against what
+#: it costs to fix" over a list that sort had replaced, so the table and the
+#: prompt named different first items and neither said why.
+_ORDER_BY_BAND = (
+    "Ordered by what it costs to leave against what it costs to fix "
+    "(see the standard)."
+)
+_ORDER_BY_EXPOSURE = (
+    "Ordered by exposure — how often a finding came back and how much its "
+    "file changes (ADR 004) — rather than by band; each row keeps its band."
+)
+_BAND_IS_PER_CLASS = (
+    "A band is declared per kind of finding in the standard, not sized per "
+    "item: each target states that item's own reading."
+)
+
+
 def work_order_markdown(
     items: list[dict[str, Any]] | None, *, complete: bool = False, root_label: str = ".",
+    exposure_ordered: bool = False,
 ) -> list[str]:
     """The ordered work, worth first, with a copy-paste prompt for each item.
 
@@ -97,8 +120,8 @@ def work_order_markdown(
     limit = len(rows) if complete else CHAT_WORK_ORDER_LIMIT
     lines = [
         "## Work Order", "",
-        "Ordered by what it costs to leave against what it costs to fix "
-        "(see the standard). `Worth` is what clearing the whole class moves "
+        f"{_ORDER_BY_EXPOSURE if exposure_ordered else _ORDER_BY_BAND} "
+        f"{_BAND_IS_PER_CLASS} `Worth` is what clearing the whole class moves "
         "the score, recomputed through the rubric rather than estimated.",
         "",
         "| # | Band | Item | Worth | Target |",

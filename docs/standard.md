@@ -351,7 +351,7 @@ place it in one of four bands:
 
 | Finding class | Risk | Effort | Band | Why |
 |---|---:|---:|---|---|
-| `risk-pattern` | 5 | 1 | **quick-win** | a configured risk pattern is a rule this project chose to enforce on itself, and each hit is a single located line |
+| `risk-pattern` | 5 | 1 | **quick-win** | a risk pattern is a rule the active configuration enforces, and each hit is a single located line |
 | `oversized-declaration` | 4 | 2 | **quick-win** | a long, branching function is where defects concentrate and where every future change has to be understood first; extracting one is bounded, local work |
 | `unpaired-hotspot` | 4 | 2 | **quick-win** | an oversized production unit with no paired test is where changes land unguarded; adding a characterization test is bounded, local work |
 | `duplicate-block` | 4 | 4 | **major-project** | duplicated logic means a fix applied in one place and missed in the others; deduplicating across a codebase is a design change, not a tidy-up |
@@ -359,6 +359,15 @@ place it in one of four bands:
 | `near-duplicate` | 3 | 4 | **major-project** | near-copies drift apart silently, which is worse than exact duplication; reconciling them requires deciding which behaviour was intended |
 | `dead-code` | 2 | 1 | **fill-in** | unreachable code costs reading time and misleads a search, but deleting it is the cheapest change there is |
 | `competing-libraries` | 2 | 4 | **reconsider** | two libraries doing one job is a decision nobody made; converging on one is a migration across every call site |
+
+**A band is a judgment about the class, not a size for the item.** The
+effort above is declared once per finding class, so a 2876-line class and a
+90-line function share `oversized-declaration`'s band. The *Why* column is
+that class-level judgment and is published here; a work item does not repeat
+its effort claim. Each item instead states its own reading — its kind, and
+each figure against the limit it is graded on (`currently 2876 lines against
+the 300-line class limit`) — so a reader, or an agent sizing the work, has
+the fact rather than the class's estimate of it (D164).
 
 **Why Major Projects are withheld from the agent prompt.** An agent told to
 deduplicate a pattern across forty files produces exactly the sprawling,
@@ -369,7 +378,9 @@ appears in the report; scoping it is a human's job first.
 what clearing that single finding moves the published score — honestly zero
 more often than not, because the overall is the mean of the *rounded*
 categories and is therefore a step function. `class_delta` is what clearing
-every finding of that class is worth, and it is what the ordering uses.
+every finding of that class is worth, and it is what the band ordering uses
+within a band. When an economic context is configured, ADR 004's exposure
+sort replaces that order, and the work order's heading says so (D169).
 Neither is estimated: both come from re-running `score_report` over a summary
 with those findings removed. Per-item deltas do not sum to the whole.
 

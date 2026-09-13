@@ -17,7 +17,7 @@ from ._identity import (
     finding_fingerprints,
     risk_identities,
 )
-from ._work_order_weights import CLASS_RISK_EFFORT, ClassWeight
+from ._work_order_weights import AUDIT_VERIFICATION, CLASS_RISK_EFFORT, ClassWeight
 from .scoring import score_report
 
 
@@ -76,7 +76,59 @@ def _delta_for(report: dict[str, Any], counter: str, amount: int) -> float:
     return round(max(0.0, (after or before) - before), 3)
 
 
-def _items_from_hotspots(report: dict[str, Any]) -> list[dict[str, Any]]:
+def _declaration_reading(hotspot: dict[str, Any], thresholds: dict[str, int] | None) -> str:
+    """What this declaration measures, each figure against the limit it is graded on (D164).
+
+    A class is graded on length alone (`declarations.class_status`), so it
+    is given its length and the class budget and nothing else: its
+    complexity is the sum of its methods' branches, already counted
+    against those methods, and printing it beside a function limit
+    described a 2876-line class as a function with complexity 25. A
+    function is graded on lines, complexity and cognitive cost, so each
+    appears with its own limit. Without thresholds — a caller holding only
+    the report — the figures are stated bare rather than against a
+    default the repository may not use.
+    """
+    lines = hotspot["lines"]
+    if hotspot.get("kind") == "class":
+        if thresholds is None:
+            return f"currently {lines} lines; a class is graded on length alone"
+        limit = thresholds.get("max_class_lines", thresholds["max_function_lines"])
+        return f"currently {lines} lines against the {limit}-line class limit"
+    if thresholds is None:
+        return f"currently {lines} lines, complexity {hotspot['complexity']}"
+    parts = [
+        f"{lines} lines against {thresholds['max_function_lines']}",
+        f"complexity {hotspot['complexity']} against {thresholds['max_complexity']}",
+    ]
+    max_cognitive = thresholds.get("max_cognitive_complexity")
+    if max_cognitive is not None and hotspot.get("cognitive") is not None:
+        parts.append(f"cognitive {hotspot['cognitive']} against {max_cognitive}")
+    return "currently " + ", ".join(parts)
+
+
+def _declaration_rationale(hotspot: dict[str, Any]) -> str:
+    """Why this declaration matters, without sizing the change it needs (D164).
+
+    The class weight's rationale ends "extracting one is bounded, local
+    work" — a judgment about the class of finding, published in the
+    standard beside its declared effort. Printed on one item it became a
+    claim about that item, and it was false for a 2876-line class. The
+    band stays declared per class; the item states what it is and its own
+    reading states how far past the limit it sits.
+    """
+    if hotspot.get("kind") == "class":
+        return ("an oversized class hides its own structure, and every change "
+                "to it is read against all of it")
+    if float(hotspot["complexity"]) <= 10:
+        return "a long function is where every future change has to be understood first"
+    return ("a long, branching function is where defects concentrate and where "
+            "every future change has to be understood first")
+
+
+def _items_from_hotspots(
+    report: dict[str, Any], thresholds: dict[str, int] | None = None
+) -> list[dict[str, Any]]:
     """Declarations past a threshold, worst first."""
     weight = CLASS_RISK_EFFORT["oversized-declaration"]
     # Computed once over the whole population, because an ordinal is a
@@ -100,18 +152,13 @@ def _items_from_hotspots(report: dict[str, Any]) -> list[dict[str, Any]]:
             "line": hotspot["start_line"],
             "target": (
                 f"reduce below the configured limits "
-                f"(currently {hotspot['lines']} lines, complexity {hotspot['complexity']})"
+                f"({_declaration_reading(hotspot, thresholds)})"
             ),
             "severity": float(hotspot["lines"]) + 4.0 * float(hotspot["complexity"]),
             "fingerprint": identities[
                 (hotspot["path"], hotspot["name"], hotspot["start_line"])
             ],
-            "rationale": (
-                "a long function is where every future change has to be "
-                "understood first; extracting one is bounded, local work"
-                if float(hotspot["complexity"]) <= 10
-                else None
-            ),
+            "rationale": _declaration_rationale(hotspot),
             "weight": weight,
         })
     return items
@@ -130,6 +177,11 @@ def _items_from_unpaired(report: dict[str, Any]) -> list[dict[str, Any]]:
             "path": path,
             "line": finding.get("line"),
             "target": f"add a paired test for `{name}`",
+            # Not the class rationale: "adding a characterization test is
+            # bounded, local work" sizes the item, and a 1907-line class
+            # with no test is not bounded work (D164).
+            "rationale": ("an oversized production unit with no paired test is "
+                          "where changes land unguarded"),
             "severity": float(finding.get("lines") or 1),
             "weight": weight,
         })
@@ -234,11 +286,22 @@ def _items_from_counted(report: dict[str, Any]) -> list[dict[str, Any]]:
             }
             if name == "risk-pattern":
                 item["fingerprint"] = risks[(path, finding["name"], finding["line"])]
+                # "remove the configured risk pattern" read, for a TODO, as
+                # "delete the comment" — which clears the finding and the
+                # score while the debt it records stays (D165).
+                item["target"] = (
+                    f"act on what the `{finding['name']}` rule matched here, or "
+                    "say why it stays; deleting the matched text alone hides "
+                    "the finding without resolving it"
+                )
             items.append(item)
     return items
 
 
-def work_order(report: dict[str, Any], include_reconsider: bool = False) -> list[dict[str, Any]]:
+def work_order(
+    report: dict[str, Any], include_reconsider: bool = False,
+    thresholds: dict[str, int] | None = None,
+) -> list[dict[str, Any]]:
     """Every actionable finding, ordered by risk against effort.
 
     Quick Wins first, then Major Projects, then Fill-Ins; Reconsider is
@@ -247,7 +310,7 @@ def work_order(report: dict[str, Any], include_reconsider: bool = False) -> list
     value rather than by how many of something there are.
     """
     raw = (
-        _items_from_hotspots(report)
+        _items_from_hotspots(report, thresholds)
         + _items_from_files(report)
         + _items_from_counted(report)
         + _items_from_idioms(report)
@@ -358,7 +421,7 @@ def _semantic_item(
         "delta": 0.0,
         "class_delta": 0.0,
         "class_count": class_count,
-        "verification": "python -m maintainability_audit --root . --format json",
+        "verification": AUDIT_VERIFICATION,
     }
 
 

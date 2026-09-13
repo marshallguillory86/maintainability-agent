@@ -57,11 +57,18 @@ def _demo_report() -> dict:
 
 def _rendered() -> str:
     from maintainability_audit._work_order_view import work_order_markdown
+    from maintainability_audit._work_order_weights import (
+        AUDIT_VERIFICATION,
+        PORTABLE_AUDIT_VERIFICATION,
+    )
 
     report = _demo_report()
-    return "\n".join(
+    text = "\n".join(
         work_order_markdown(report["work_order"], complete=True, root_label=".")
     ) + "\n"
+    # The verify command names the interpreter that audited (D166); the
+    # golden text names a portable one, as it names the root `.`.
+    return text.replace(AUDIT_VERIFICATION, PORTABLE_AUDIT_VERIFICATION)
 
 
 def test_the_demo_tree_still_produces_a_work_order() -> None:

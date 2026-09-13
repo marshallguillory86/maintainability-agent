@@ -231,6 +231,36 @@ def probe_git(args: list[str], cwd: Path) -> str:
         return ""
 
 
+def ignored_untracked_paths(root: Path) -> set[str]:
+    """Paths the repository's own `.gitignore` files exclude and git does not track (D175).
+
+    A build writes `target/`, `out/` or `bin/` into the working tree, and the
+    repository's `.gitignore` is where it says those are not its source.
+    That is evidence the repository provides, so ADR 010 can act on it where
+    a list of directory names cannot.
+
+    Only the per-directory `.gitignore` files are read. `--exclude-standard`
+    would also honour `.git/info/exclude` and the user's `core.excludesFile`,
+    which differ by machine — the same commit would then score differently
+    on two laptops (P1). A tracked file matched by an ignore rule is not
+    listed, because git tracks it, and an untracked file that is *not*
+    ignored stays in: that is uncommitted work, which D56 keeps visible.
+
+    Directories come back with a trailing slash, which is stripped. A tree
+    git cannot read — not a repository, git absent — yields nothing, which
+    is the absence of evidence rather than a verdict.
+    """
+    try:
+        output = run_git(
+            ["ls-files", "--others", "--ignored",
+             "--exclude-per-directory=.gitignore", "--directory", "-z"],
+            root, strip=False,
+        )
+    except GitCommandFailed:
+        return set()
+    return {entry.rstrip("/") for entry in output.split("\0") if entry.strip("/")}
+
+
 def changed_paths(root: Path, revspec: str) -> set[str]:
     """Paths touched by `revspec`, as forward-slash relative strings.
 

@@ -89,7 +89,17 @@ def prompt_analyzer_caveat(report: dict[str, Any]) -> list[str]:
     """
     if not (report.get("analyzer_measurements") or report.get("analyzer_findings")):
         return []
-    scored = (report.get("score") or {}).get("analyzer_scored_dimensions") or []
+    score = report.get("score") or {}
+    if not view.is_scored(score):
+        # No estimate was issued, so none can have a source (D172). The
+        # analyzer output is still evidence about the code, and says so.
+        return [
+            "**No maintainability estimate was issued for this run**, so none is "
+            "attributed to the analyzers. Their output is reported here as "
+            "evidence about the code, never as a change to a score.",
+            "",
+        ]
+    scored = score.get("analyzer_scored_dimensions") or []
     if scored:
         return [
             "**The maintainability estimate above uses the analyzer readings** for "
@@ -149,6 +159,50 @@ def _withheld_paragraph(report: dict[str, Any]) -> list[str]:
     ]
 
 
+def _prompt_work_items(report: dict[str, Any]) -> list[dict[str, Any]]:
+    """The items this prompt hands to an agent, after withholding."""
+    # Withhold anything the history shows was fixed and came back
+    # twice. Naming it as a design candidate while asking an agent to
+    # patch it a third time would change nothing.
+    escalated = {
+        item["fingerprint"] for item in report.get("design_review_candidates") or []
+    }
+    return prompt_items(report.get("work_order") or [], escalated=escalated)
+
+
+def prompt_has_work(report: dict[str, Any]) -> bool:
+    """Whether this prompt hands an agent anything to change (D173).
+
+    A report with no `work_order` key at all — stored before the field
+    existed, or assembled by hand — cannot say there is nothing to do, so
+    it keeps the prompt it always had rather than reading as "Nothing to
+    do" over findings it does carry.
+    """
+    return "work_order" not in report or bool(_prompt_work_items(report))
+
+
+def _no_prompt_work(report: dict[str, Any]) -> list[str]:
+    """What the prompt says in place of a task when there is none (D173).
+
+    Two cases, because they are different facts. An empty work order is the
+    chat report's "Nothing to do", in the same words. A work order whose
+    every item was withheld — a Major Project, or a finding escalated for
+    design review — has work in it, none of it an agent's to patch.
+    """
+    if not report.get("work_order"):
+        from ._work_order_view import NOTHING_TO_DO
+
+        return [NOTHING_TO_DO, "", "Do not change code on the strength of this audit.", ""]
+    return [
+        "**Nothing in scope for this prompt.** Every work-order item needs a "
+        "design decision or keeps coming back, so none is handed to an agent. "
+        "They are in the report. Do not change code on the strength of this "
+        "prompt.",
+        "",
+        *_withheld_paragraph(report),
+    ]
+
+
 def prompt_work_order(report: dict[str, Any]) -> list[str]:
     """The ordered work, leading the prompt, Major Projects withheld.
 
@@ -161,15 +215,9 @@ def prompt_work_order(report: dict[str, Any]) -> list[str]:
     told to deduplicate a pattern across forty files produces exactly the
     sprawling, unreviewable diff a bounded prompt exists to prevent.
     """
-    # Withhold anything the history shows was fixed and came back
-    # twice. Naming it as a design candidate while asking an agent to
-    # patch it a third time would change nothing.
-    escalated = {
-        item["fingerprint"] for item in report.get("design_review_candidates") or []
-    }
-    items = prompt_items(report.get("work_order") or [], escalated=escalated)
+    items = _prompt_work_items(report)
     if not items:
-        return []
+        return _no_prompt_work(report) if "work_order" in report else []
     lines = [
         # What the order is, not what it is worth (D169): `prompt_items`
         # promotes risk-5 classes and keeps one item per class, so this

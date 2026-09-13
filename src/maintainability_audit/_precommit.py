@@ -171,6 +171,11 @@ def staged_report(root: Path, config: dict[str, Any]) -> dict[str, Any]:
     return {
         "root": str(root),
         "scanned": scannable,
+        # The limits these hotspots were graded against, so the work-order
+        # builder can name them. Without this the hook worded a class
+        # "graded on length alone" while the audit said "against the
+        # 300-line class limit" (D171).
+        "thresholds": thresholds,
         "largest_files": largest,
         "function_hotspots": hotspots,
         "risk_findings": risk,
@@ -288,7 +293,7 @@ def staged_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
     from ._work_order import _items_from_files, _items_from_hotspots, band_of
 
     items: list[dict[str, Any]] = []
-    for entry in _items_from_hotspots(report) + _items_from_files(report):
+    for entry in _items_from_hotspots(report, report.get("thresholds")) + _items_from_files(report):
         weight = entry.pop("weight")
         rationale = entry.pop("rationale", None) or weight.rationale
         items.append({**entry, "rationale": rationale,

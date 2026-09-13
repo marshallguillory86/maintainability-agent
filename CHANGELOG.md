@@ -12,6 +12,41 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.6.2 - 2026-09-13
+
+*Grok's hostile audit of 3.6.1 (`77de21c`). Four surfaces of one run told a
+different story from the report they belong to. No scoring, ordering, band or
+policy change.*
+
+### Fixed — the pre-commit hook words a declaration the way the audit does (D171)
+
+3.6.1 made a work item name the limit its kind is graded on, in the audit and the
+mid-edit check. A commit blocked by the hook still read `currently 2876 lines; a
+class is graded on length alone` where the audit read `against the 300-line class
+limit`. The hook now grades and words with the same thresholds. This gap was noticed
+while 3.6.1 was being made and not filed; the register records that.
+
+### Fixed — a withheld estimate is not attributed to anything (D172)
+
+When no estimate was issued, the prompt still said "the maintainability estimate
+above uses the analyzer readings" (or "comes from the built-in detectors"). It now
+says no estimate was issued and that analyzer output is evidence about the code.
+
+### Fixed — "Nothing to do" means nothing to do in the prompt too (D173)
+
+A run with no work order said **Nothing to do** in the chat report, while the
+remediation prompt — which a chat host treats as the work order — asked for "the
+smallest coherent patch" and listed warn-band hotspots the work order had refused.
+The prompt now carries the same sentence and no task, hotspot list or deliverable;
+the rules that bound an agent stay. A work order whose every item is withheld from the prompt (Major
+Projects, escalated findings) says so the same way.
+
+### Fixed — a changed-only run stays inside its change (D174)
+
+`--changed-only` ran the semantic walk over the whole tree, so an audit of two
+commits nominated a TypeScript fixture neither touched. Semantic findings are now
+kept only where their source file is in the change. Full runs are unchanged.
+
 ## 3.6.1 - 2026-09-13
 
 *Found by running a Java repository's top work item through the chat door to

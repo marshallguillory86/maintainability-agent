@@ -44,8 +44,19 @@ from typing import Any
 from ._delegated_pillar import read_produced
 from ._runner import Invocation, Outcome, run
 
-#: The distribution the pillar requires, and the range this tool reads.
-REQUIREMENT = "secure-code-agent>=0.12.1,<0.13"
+#: The releases this audit runs, and the install command's requirement.
+#:
+#: **Not a package dependency.** 3.7.0 made it one, and within the day it
+#: capped the tool below its current release — installing this package
+#: downgraded a machine's secure-code-agent — and put the two tools' opposed
+#: `mcp` pins into one environment. secure-code-agent's D3 and this project's
+#: ADR 008 both hold the tools independently releasable. So the audit runs
+#: whichever release is installed, when it falls in this range, and says so
+#: when it does not. The ceiling is the next major: within 0.x the pillar
+#: document is versioned by its own `schema_version`, which the reader checks.
+SUPPORTED_FLOOR = (0, 12, 1)
+SUPPORTED_CEILING = (1,)
+REQUIREMENT = "secure-code-agent>=0.12.1,<1"
 
 #: How long the child may run before the pillar is reported as unmeasured.
 DEFAULT_TIMEOUT_SECONDS = 300
@@ -82,6 +93,12 @@ def run_security_delegate(
     if importlib.util.find_spec("secure_code_audit") is None:
         reason = "secure-code-agent is not installed for the interpreter running this audit"
         return DelegateRun(None, reason, [_install_remedy(reason)])
+    installed = _installed_version()
+    if installed is None or not (SUPPORTED_FLOOR <= installed < SUPPORTED_CEILING):
+        shown = ".".join(map(str, installed)) if installed else "an unreadable version"
+        reason = (f"secure-code-agent {shown} is installed; this audit runs "
+                  f"{REQUIREMENT.removeprefix('secure-code-agent')}")
+        return DelegateRun(None, reason, [_install_remedy(reason)])
     with tempfile.TemporaryDirectory(prefix="ma-security-") as scratch:
         out = Path(scratch)
         pillar = out / "security-pillar.json"
@@ -114,6 +131,31 @@ def run_security_delegate(
         reason = (f"secure-code-agent exited {result.exit_code} without a pillar document"
                   + (f": {detail}" if detail else ""))
         return DelegateRun(None, reason)
+
+
+def _installed_version() -> tuple[int, ...] | None:
+    """The installed release as integers, or `None` when it cannot be read.
+
+    No `packaging` import: this package has no runtime dependencies. A
+    pre-release or local suffix is cut at the first non-numeric part, which
+    compares a `0.13.0rc1` as `0.13.0` — conservative at the ceiling.
+    """
+    import importlib.metadata as metadata
+    import re
+
+    try:
+        text = metadata.version("secure-code-agent")
+    except metadata.PackageNotFoundError:
+        return None
+    parts = []
+    for piece in text.split("."):
+        match = re.match(r"\d+", piece)
+        if not match:
+            break
+        parts.append(int(match.group()))
+        if match.group() != piece:
+            break
+    return tuple(parts) or None
 
 
 def _last_line(text: str | None) -> str:

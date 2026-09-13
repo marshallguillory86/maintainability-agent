@@ -195,8 +195,16 @@ source .venv/bin/activate
 python3 -m pip install -e ".[dev]"
 ```
 
-`secure-code-agent` installs with the package: every audit runs it for the
-security pillar (D177). What it measures depends on the scanners it can find.
+Install `secure-code-agent` alongside — it is not a dependency of this
+package, and every audit runs it for the security pillar (D177):
+
+```bash
+python3 -m pip install 'secure-code-agent>=0.12.1'
+```
+
+Check the published release first (`gh release list --repo
+marshallguillory86/secure-code-agent`); this project's CI pin is not the
+source of truth for what is current. What it measures depends on the scanners it can find.
 With none of them installed it runs only its built-in rules, reports coverage
 as partial, and the pillar reads `unverified: not graded`. See what it can
 resolve with:

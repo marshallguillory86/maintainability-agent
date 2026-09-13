@@ -13,14 +13,6 @@ readme = "README.md"
 # metadata said a user could stand: the suite runs 3.12 and the
 # composite action pins 3.11 (D42).
 requires-python = ">=3.11"
-# The security pillar is complete (D177): every audit runs secure-code-agent,
-# so it installs with this package rather than being left to the operator.
-# Its own dependency is PyYAML; this package still imports no YAML
-# (`test_the_shipped_package_does_not_import_yaml`) — it runs the tool as a
-# child and reads the JSON document it writes.
-dependencies = [
-  "secure-code-agent>=0.12.1,<0.13",
-]
 license = { text = "MIT" }
 authors = [
   { name = "Marshall Guillory" }

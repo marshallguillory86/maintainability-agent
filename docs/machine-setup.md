@@ -205,8 +205,20 @@ resolve with:
 secure-code-agent --preflight .
 ```
 
-and install the ones it names (on macOS: `brew install gitleaks semgrep
-osv-scanner trivy` and `python3 -m pip install bandit`).
+and install what it names. On macOS:
+
+```bash
+python3 -m pip install 'secure-code-agent[required-scanners]'   # bandit, njsscan
+brew install gitleaks osv-scanner trivy semgrep checkov
+```
+
+Two things decide whether a scanner resolves, both found setting up the
+second machine. **semgrep and checkov have no `python -m` fallback**, so they
+must be on the `PATH` the host launches the audit with — an MCP host such as
+the ChatGPT app may not include a virtualenv's `bin`, which is why they come
+from Homebrew here rather than pip. And **secure-code-agent refuses an
+executable inside the tree it is auditing**, so a virtualenv inside a
+repository cannot supply scanners for that repository's own audit.
 
 The analyzer pool installs through the checked-in constraints, which are
 the Linux-resolved closure the gates run against (D89). A macOS machine

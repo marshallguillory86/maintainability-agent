@@ -208,9 +208,18 @@ secure-code-agent --preflight .
 and install what it names. On macOS:
 
 ```bash
-python3 -m pip install 'secure-code-agent[required-scanners]'   # bandit, njsscan
+python3 -m pip install bandit
 brew install gitleaks osv-scanner trivy semgrep checkov
 ```
+
+**Do not install secure-code-agent's scanner extras into this environment**
+(`secure-code-agent[required-scanners]` or `[python-scanners]`). They pull in
+semgrep, and njsscan pulls it in too; semgrep pins `mcp<2`, and pip replaces
+this package's `mcp` 2.x to satisfy it. The chat door then fails to start
+(D178). `pip check` does not warn, because this package's `mcp` requirement
+lives in an optional extra it never inspects. semgrep from Homebrew has its
+own environment and no such conflict. njsscan has no Homebrew formula and
+cannot share this environment; leave it out, or give it one of its own.
 
 Two things decide whether a scanner resolves, both found setting up the
 second machine. **semgrep and checkov have no `python -m` fallback**, so they

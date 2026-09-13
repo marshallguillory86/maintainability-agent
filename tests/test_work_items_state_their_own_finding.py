@@ -116,26 +116,27 @@ def test_the_in_loop_check_words_a_breach_as_the_work_order_does() -> None:
     fixtures = sorted(GRAMMAR.rglob("constructs.*"))
     assert fixtures, f"no grammar fixtures under {GRAMMAR}"
     config = _failing_everything(load_config(None))
-    thresholds = config["thresholds"]
-    classes = functions = 0
-    wrong = []
-    for fixture in fixtures:
-        result = check_content(fixture.name, fixture.read_text(encoding="utf-8"), config)
-        for finding in result.get("findings") or []:
-            if finding.get("finding_class") != "oversized-declaration":
-                continue
-            target = finding["target"]
-            if "-line class limit" in target:
-                classes += 1
-                if f"against the {thresholds['max_class_lines']}-line class limit" not in target \
-                        or "complexity" in target:
-                    wrong.append(target)
-            else:
-                functions += 1
-                if f"lines against {thresholds['max_function_lines']}" not in target:
-                    wrong.append(target)
-    assert classes and functions, f"in-loop sweep examined classes={classes} functions={functions}"
+    targets = [
+        finding["target"]
+        for fixture in fixtures
+        for finding in check_content(
+            fixture.name, fixture.read_text(encoding="utf-8"), config).get("findings") or []
+        if finding.get("finding_class") == "oversized-declaration"
+    ]
+    classes = [target for target in targets if "-line class limit" in target]
+    assert classes and len(classes) < len(targets), (
+        f"in-loop sweep examined classes={len(classes)} of {len(targets)} targets"
+    )
+    wrong = [target for target in targets if _misstates_limit(target, config["thresholds"])]
     assert not wrong, f"in-loop targets that misstate the limit: {wrong[:5]}"
+
+
+def _misstates_limit(target: str, thresholds: dict[str, int]) -> bool:
+    """Whether a declaration target names a limit other than its own kind's."""
+    if "-line class limit" in target:
+        return (f"against the {thresholds['max_class_lines']}-line class limit" not in target
+                or "complexity" in target)
+    return f"lines against {thresholds['max_function_lines']}" not in target
 
 
 def test_no_work_item_rationale_sizes_the_change_it_asks_for(tmp_path) -> None:

@@ -36,6 +36,11 @@ class Band(StrEnum):
 HIGH_RISK = 3
 HIGH_EFFORT = 3
 
+#: ADR 007 §3's order of the four cells, taken from `Band`'s declaration
+#: order. Both sorts read it — the band sort here and `reorder_by_exposure`
+#: — so no ordering can place a Fill-In above a Quick Win (D170).
+BAND_ORDER = {band.value: rank for rank, band in enumerate(Band)}
+
 
 def band_of(risk: int, effort: int) -> Band:
     """Which of the four cells a finding falls in."""
@@ -331,7 +336,6 @@ def work_order(
         counts[entry["finding_class"]] = counts.get(entry["finding_class"], 0) + 1
     per_class: dict[str, float] = {}
     class_delta: dict[str, float] = {}
-    ordering = {Band.QUICK_WIN: 0, Band.MAJOR_PROJECT: 1, Band.FILL_IN: 2, Band.RECONSIDER: 3}
     items: list[dict[str, Any]] = []
     for entry in raw:
         weight: ClassWeight = entry.pop("weight")
@@ -361,7 +365,7 @@ def work_order(
 
     items.extend(_items_from_semantic(report))
     items.sort(key=lambda item: (
-        ordering[Band(item["band"])], -item["class_delta"],
+        BAND_ORDER[item["band"]], -item["class_delta"],
         # Within a class every delta is identical, so severity is what
         # actually orders the work a reader will do first.
         -item["severity"], item["path"]))

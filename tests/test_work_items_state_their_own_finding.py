@@ -292,7 +292,7 @@ def test_the_work_order_heading_states_the_order_the_list_is_in(tmp_path) -> Non
     markdown = render_markdown(report)
     headings = [line for line in markdown.splitlines() if line.startswith("Ordered by ")]
     assert headings, "no work-order heading was rendered"
-    assert all(line.startswith("Ordered by exposure") for line in headings), headings
+    assert all(line.startswith("Ordered by band, then by exposure") for line in headings), headings
     assert "highest value for the least change" not in render_ai_prompt(report)
 
 

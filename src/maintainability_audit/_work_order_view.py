@@ -94,8 +94,8 @@ _ORDER_BY_BAND = (
     "(see the standard)."
 )
 _ORDER_BY_EXPOSURE = (
-    "Ordered by exposure — how often a finding came back and how much its "
-    "file changes (ADR 004) — rather than by band; each row keeps its band."
+    "Ordered by band, then by exposure within each band — how often a "
+    "finding came back and how much its file changes (ADR 004)."
 )
 _BAND_IS_PER_CLASS = (
     "A band is declared per kind of finding in the standard, not sized per "

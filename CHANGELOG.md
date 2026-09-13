@@ -16,8 +16,10 @@ stands, read the [README](README.md); if you want what is coming, the
 
 *Found by running a Java repository's top work item through the chat door to
 verify that remediation works. Remediation worked; six things the report said
-about the work were not true. None of these changes scoring, ordering, bands
-or policy — each corrects what a report states, which is why this is a patch.*
+about the work were not true, and one of them exposed an ordering that broke a
+rule the project already had. None changes scoring, bands or policy. D164–D169
+correct what a report states; D170 makes the economic reorder obey ADR 007 §3,
+the only ordering change, and only with an economic context configured.*
 
 ### Fixed — a work item states its own finding, not its class's estimate of it (D164)
 
@@ -83,7 +85,16 @@ against what it costs to fix" and the prompt called its first items "the
 highest value for the least change". The table and the prompt led with
 different items and neither said why. The heading now names the sort that
 produced the list, and the prompt describes its own rule — severe findings
-first, one item per kind. No ordering changed.
+first, one item per kind.
+
+### Fixed — the economic reorder no longer lifts a Fill-In above a Quick Win (D170)
+
+**The one ordering change in this release, and only with an economic context
+configured.** The exposure sort (ADR 004) ranked the whole work order by
+recurrence and churn, so a Fill-In on a file that changes often could lead a
+Quick Win on a stable one — the nit-loop ADR 007 §3 rule 5 exists to prevent.
+Band is now the primary key and exposure orders items within each band. Without
+an economic context nothing moves. ADR 004 is amended to say so.
 
 ## 3.6.0 - 2026-09-12
 

@@ -380,7 +380,8 @@ more often than not, because the overall is the mean of the *rounded*
 categories and is therefore a step function. `class_delta` is what clearing
 every finding of that class is worth, and it is what the band ordering uses
 within a band. When an economic context is configured, ADR 004's exposure
-sort replaces that order, and the work order's heading says so (D169).
+sort takes its place *inside* each band — never across bands, so a Fill-In
+never leads a Quick Win (D170) — and the work order's heading says so (D169).
 Neither is estimated: both come from re-running `score_report` over a summary
 with those findings removed. Per-item deltas do not sum to the whole.
 

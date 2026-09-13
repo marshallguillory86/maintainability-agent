@@ -6526,9 +6526,124 @@ what this entry is about.
 *Mutation:* a member the test does not name — any tree below a population floor, not `examples/demo` — must fail if the prompt still prints a dimension multiple after `overall is None`.
 
 
+### D164 — Closed: a work item described a 2876-line class as a function, and sized a change the audit never measured (High)
+
+**Found running the top work item on a Java repository through the chat door. The item misstated what it was about.**
+
+On `jhy/jsoup` the work order's first row read `HtmlParserTest … reduce below the configured limits (currently 2876 lines, complexity 25)`, band **quick-win**, *Why:* "a long, branching function is where defects concentrate … extracting one is bounded, local work". `HtmlParserTest` is a class. A class is graded on length alone against `max_class_lines` (300), and its complexity is the sum of its methods' branches, already counted against those methods — so the item gave a class a function's reading, against no limit at all, and then asserted the change was bounded.
+
+P5 requires the prompt to name only what the audit produced. ADR 007 §3 makes effort "a judgment call to be stated in `standard.md`" — declared **per finding class**. "Extracting one is bounded, local work" is that class-level judgment, published beside effort 2. Printed on one item it became a measurement of that item, and nothing measured it: the same sentence sat on a 90-line function and on a class ten times its limit. A reader sizing work from the report — a person or an agent pricing it on the fly — was handed the class's estimate in place of the instance's fact. `unpaired-hotspot` carried the same per-item claim ("adding a characterization test is bounded, local work").
+
+**Population.** Every `oversized-declaration` and `unpaired-hotspot` item, on every language whose scanner emits a class, in every skin that prints a target or a *Why* — including `check_content`, the mid-edit check, whose docstring promised the audit's wording and which kept its own copy of the target.
+
+No effort is computed and the band is unchanged — it stays declared per class, and `standard.md` now says so in as many words. What changed is what an item states. The target names each figure against the limit its kind is graded on: `currently 2876 lines against the 300-line class limit` for a class; lines, complexity and cognitive cost each against their own limit for a function. The thresholds reach the builder from `build_report`, the one call site that holds them. The *Why* is kind-aware and describes why the finding matters, without the sizing clause. The class judgment stays in the standard, where ADR 007 put it.
+
+*Closing tests:* `test_every_declaration_item_names_the_limit_its_own_kind_is_graded_on`, `test_the_in_loop_check_words_a_breach_as_the_work_order_does`, `test_no_work_item_rationale_sizes_the_change_it_asks_for` and `test_an_unpaired_item_does_not_size_the_test_it_asks_for` in `tests/test_work_items_state_their_own_finding.py`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
+*Mutation:* the class limit read from `max_function_lines` instead of `max_class_lines`, which breaks the C#, Fortran and Java classes the grammar sweep scans and not the jsoup class that motivated this. It was first **missed**: the fixture set both budgets to 1, so either printed the same number. The budgets are now different values and the mutation fails the test. The test seat was not Codex's; the author of the fix wrote the falsifier, which is the blind spot the Roles line exists to expose, and the missed mutation is that blind spot showing.
+
+### D165 — Closed: a risk-pattern item asked for a TODO to be deleted, and credited shipped defaults to the repository (High)
+
+**On the same run, the prompt's first item was `configured risk pattern in HtmlTreeBuilder.java — remove the configured risk pattern`, and the matched line was `// todo - probably just create new parser objects to ensure all reset.`**
+
+Read literally, the instruction is "delete the comment". That clears the finding and moves the estimate +0.10 for the class while the debt the marker records stays exactly where it was — the one remediation a hostile reader would point at. The *Why* said "a configured risk pattern is a rule this project chose to enforce on itself". jsoup has no configuration; `debt-marker` is one of `DEFAULT_CONFIG`'s shipped rules. The pre-commit item said the same twice: "a pattern this repository's own configuration asked to be told about", "the repository declared this pattern as risky".
+
+P8 requires every reported value to carry an attributable source; "this project chose" is a false one for every repository that did not replace `risk_patterns`, which is most of them.
+
+**Population.** Every rule in `DEFAULT_CONFIG["risk_patterns"]`, on both surfaces that turn a match into an instruction: the audit's work order and the pre-commit hook.
+
+The target now names the rule and asks for what the match records: "act on what the `debt-marker` rule matched here, or say why it stays; deleting the matched text alone hides the finding without resolving it". The rationale and both pre-commit strings attribute the rule to "the active configuration", which is true whichever tier supplied it. Band, risk and effort are unchanged.
+
+*Closing tests:* `test_a_risk_item_names_its_rule_and_does_not_ask_for_the_match_deleted` and `test_no_risk_surface_attributes_a_rule_to_the_repository_choosing_it` in `tests/test_work_items_state_their_own_finding.py`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
+*Mutation:* the pre-commit item's target restored to "this repository's own configuration asked to be told about" — the hook surface, which the demo never showed — fails the attribution test.
+
+### D166 — Closed: the verify command in every work item addressed whatever `python` a shell found (High)
+
+**Every item ended `Verify when done: python -m maintainability_audit --root . --format json`. On the Mac the demo ran on, `python` does not exist; `python3` resolves to a 0.9.1 user-site install.**
+
+So the check an agent is told to run after a fix either fails to start or re-audits with a release three majors older than the one that issued the item. That is D144's defect on a different command: the environment work order's install remedy "addressed whichever `pip` `PATH` found", and D144 bound it to `sys.executable`. The verification string was a literal in all eight class weights, the semantic item builder and the view's fallback.
+
+**Population.** Every finding class in `CLASS_RISK_EFFORT` and every skin that prints a verify line — the remediation prompt's `Verify with:`, the work order's `Verify with:` and each copy-paste block's `Verify when done:`.
+
+One constant, `AUDIT_VERIFICATION`, built the way D144's `_pip_command` is: `shlex.quote(sys.executable) -m maintainability_audit --root . --format json`. The demo's checked-in work order normalises that interpreter to `python3` exactly as it already normalised the root to `.`, so the golden file is not machine-specific. Regenerating it surfaced a second fault: `tools/regen_demo_prompt.py` loaded the regenerating user's own configuration, so a personal economic context reordered the checked-in demo while `test_demo_tree`, isolated by conftest, rendered the shipped order. The tool now isolates the user tier the same way.
+
+*Closing test:* `test_every_verification_command_runs_the_interpreter_that_audited` in `tests/test_work_items_state_their_own_finding.py`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
+*Mutation:* only `competing-libraries` restored to the bare `python` literal — a class the demo tree never produces — fails the test through the declared-weights half of its population.
+
+### D167 — Closed: every grade skin said COBOL grades are provisional, on repositories with no COBOL (Medium)
+
+**The Java repository's chat view, prompt, Markdown and HTML reports each printed "*COBOL is parsed but is not in the reference corpus, so a grade reported for code in it is provisional*".**
+
+D143 and D148 made the anchor's gap reach every skin that prints a grade, and it does. But `unanchored_caveat` read only `score.reference.unanchored_languages` — a fact about the corpus — and never the run's own languages, so the sentence appeared on every report this tool produces. The disclosure's purpose, stated in `_anchor`, is that the limit sits "where the grade is read"; a Java repository's grade is not qualified by the corpus lacking COBOL, and telling its reader otherwise is a false statement about the number in front of them.
+
+**Population.** Every unanchored language, on every grade skin: bounded and complete Markdown, HTML, and the remediation prompt.
+
+The caveat is intersected with `summary.languages`, the census every report carries with or without the analyzer pool. A report without that census — one stored before it existed — cannot rule a language out and keeps the full disclosure. A tree that does contain an unanchored language still discloses it on every skin; that half is guarded so the narrowing cannot overreach into the D143 class.
+
+*Closing test:* `test_no_skin_discloses_an_unanchored_language_the_run_did_not_scan` in `tests/test_anchor_caveat_and_counts_follow_the_run.py`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
+*Mutation:* only the HTML executive strip ignores the census — the demo showed the chat prompt, not HTML — and the test fails on the `html` skin.
+
+### D168 — Closed: the prompt and the corpus note on one report gave the corpus two different language counts (Medium)
+
+**The prompt said the reference medians came from "eight of the ten parsed languages"; `score.reference.corpus_note` on the same report said thirteen of fourteen.**
+
+Both were typed as prose. The note's count happened to be current; the prompt's had been stale since the corpus grew past ten languages, and nothing failed when it went stale. P6 requires every quoted number to be re-derivable; two contradictory counts cannot both be.
+
+**Population.** Every rendered surface that states a count of the corpus's languages — the four grade skins and the corpus note.
+
+Both sentences now count `corpus_languages` and `unanchored_languages`, the two lists the reference block already publishes. The prompt reads them off `score.reference` so a stored report renders its own run's counts.
+
+*Closing test:* `test_every_stated_count_of_corpus_languages_matches_the_corpus_lists` in `tests/test_anchor_caveat_and_counts_follow_the_run.py`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
+*Mutation:* only the corpus note miscounted by one — the demo showed the prompt's count — fails the test on `corpus_note`.
+
+### D169 — Closed: the work order's heading claimed the band order over a list the exposure sort had replaced (Medium)
+
+**The same run's table led with `HtmlParserTest` and the prompt with the risk-pattern class, while the table's heading read "Ordered by what it costs to leave against what it costs to fix" and the prompt's "The first items are the highest value for the least change".**
+
+Both lists come from `report["work_order"]`. With an economic context configured, `reorder_by_exposure` (ADR 004) re-sorts it by recurrence and churn and ignores band; the prompt then promotes risk-5 classes and keeps one item per class. Neither heading described the order it sat over, so the reader saw two different first items and two claims that each was the priority. `standard.md` said `class_delta` "is what the ordering uses", which is false whenever the exposure sort ran.
+
+**Population.** Both work-order skins — bounded and complete Markdown — and the remediation prompt's order sentence.
+
+No ordering changed. The heading states the sort that produced the list, read from the same condition `build_report` applies it under (`economic_impact` is attached exactly when the exposure sort runs). The prompt's sentence describes its own rule rather than a value claim. `standard.md` states both orders.
+
+It surfaced a question for decision rather than for this fix: ADR 007 §3 rule 5 says Fill-Ins never appear above Quick Wins, and the exposure sort could place them there. Decided and closed as D170.
+
+*Closing test:* `test_the_work_order_heading_states_the_order_the_list_is_in` in `tests/test_work_items_state_their_own_finding.py`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
+*Mutation:* only the complete Markdown report ignores the exposure sort — the demo showed the bounded chat view — and the test fails on its heading.
+
+### D170 — Closed: with an economic context configured, the work order could place a Fill-In above a Quick Win (Medium)
+
+**ADR 007 §3 rule 5: "Remediation output is ordered by the Risk × Effort matrix, and Fill-Ins never appear above Quick Wins." ADR 004: "The work order reorders by exposure."**
+
+`reorder_by_exposure` implements ADR 004 by re-sorting the whole work order on `(-exposure, title)`, where exposure is `10 × recurrence + churn` on the item's path. Band is not in the key. A Fill-In on a file that changes often therefore sorts above a Quick Win on a stable one, which is the nit-loop ADR 007 §3 exists to prevent: low-risk work in the position reserved for the work that matters. D169 made the heading say which sort was applied; it did not make the sort obey the rule.
+
+The two ADRs are compatible as written. ADR 004 requires that exposure reorder the work order; it does not require that exposure outrank band. Decided 2026-09-13 with Marshall: exposure orders items **within** a band, and band order stays primary.
+
+**Population.** Every work order built under an economic context, across every band pair ADR 007 §3 ranks.
+
+Filed Open first, from the conflict D169 surfaced, and closed in the same change: the register refuses to carry an Open entry onto `main`, so the filing is recorded here rather than as a commit of its own.
+
+`reorder_by_exposure` now sorts on `(band, -exposure, title)`, reading `BAND_ORDER` — taken from `Band`'s declaration order and shared with the band sort itself, so the two cannot disagree about the matrix. Exposure is untouched within a band. ADR 004 is amended to state "within each band", `standard.md` says the same, and the heading D169 introduced now reads "ordered by band, then by exposure within each band".
+
+*Closing test:* `test_no_exposure_lifts_a_lower_band_above_a_higher_one` in `tests/test_exposure_never_outranks_band.py`.
+
+*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
+*Mutation:* the sort keeps only Quick Wins above everything else — so the Fill-In-under-Quick-Win pair ADR 007 names still holds — and the test fails on major-project against fill-in and reconsider, pairs the rule does not name.
+
 ## Disposition
 
-**Every entry is closed.** D163 and D162 closed on 2026-09-12, from Grok's value-audit rerun on `76cd40d` (3.5.0) against the first-five-minutes path that release advertised: the config the README tells a stranger to download opened 10 suffixes where the shipped default opens 48, hiding 11 of 14 parsed languages behind a web subset; and the file that README calls the work order still opened with the grade and printed corpus multiples on a run whose overall the scorer had withheld. D161 closed on 2026-09-11, found by running the demo tree's own documented command: `-` was a filename rather than stdout on all seven rendered outputs, so the `--prompt-output - | agent` shape Grok's audit recommends as the five-minute path produced an empty pipe and a file named `-`. D160 closed on 2026-09-11, from Grok's audit: the surface most users drive this tool through opened with a fourteen-row metric table, putting the first pasteable prompt on line 51 and the letter grade on line 8 — and a run with an empty backlog, which is what this repository produces, rendered no work-order section at all. D159 closed on 2026-09-11, found by running the README's own quickstart as a stranger would: the bounded work order gave all twelve paste slots to one finding class, six of them naming the same file, while two other classes got none. D158 closed on 2026-09-11, filed retroactively: a stored field called `rubric_version` held the package version, the displayed half was fixed in 3.2.0 and never written down, and the record went on saying it. D157 closed on 2026-09-11, reported by Grok twice: the claim that chat and markdown are one text was fixed in the internal docstring and left standing in the MCP tool docstring a host actually renders, so a finding survived a full cycle. D156 closed on 2026-09-11, found by the `secure-code-agent` session reporting the class rather than its own instance: `**/dir/` excluded nothing at any depth while the bare `dir/` excluded at all of them, so a config written in gitignore's spelling silently scanned what it named. D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D170 closed on 2026-09-13, filed from the ADR conflict D169 surfaced: the exposure sort could lift a Fill-In above a Quick Win, and band is now its primary key. D164 through D169 closed on 2026-09-13, found by running a Java repository's top work item through the chat door to verify remediation: a class described as a function with a bounded fix, a TODO the prompt asked to have deleted, a verify command that addressed whichever `python` a shell found, a COBOL caveat on a repository with no COBOL, two contradictory corpus counts on one report, and a heading that claimed an order the exposure sort had replaced. None changed scoring, ordering or policy; each corrected what a report stated. D163 and D162 closed on 2026-09-12, from Grok's value-audit rerun on `76cd40d` (3.5.0) against the first-five-minutes path that release advertised: the config the README tells a stranger to download opened 10 suffixes where the shipped default opens 48, hiding 11 of 14 parsed languages behind a web subset; and the file that README calls the work order still opened with the grade and printed corpus multiples on a run whose overall the scorer had withheld. D161 closed on 2026-09-11, found by running the demo tree's own documented command: `-` was a filename rather than stdout on all seven rendered outputs, so the `--prompt-output - | agent` shape Grok's audit recommends as the five-minute path produced an empty pipe and a file named `-`. D160 closed on 2026-09-11, from Grok's audit: the surface most users drive this tool through opened with a fourteen-row metric table, putting the first pasteable prompt on line 51 and the letter grade on line 8 — and a run with an empty backlog, which is what this repository produces, rendered no work-order section at all. D159 closed on 2026-09-11, found by running the README's own quickstart as a stranger would: the bounded work order gave all twelve paste slots to one finding class, six of them naming the same file, while two other classes got none. D158 closed on 2026-09-11, filed retroactively: a stored field called `rubric_version` held the package version, the displayed half was fixed in 3.2.0 and never written down, and the record went on saying it. D157 closed on 2026-09-11, reported by Grok twice: the claim that chat and markdown are one text was fixed in the internal docstring and left standing in the MCP tool docstring a host actually renders, so a finding survived a full cycle. D156 closed on 2026-09-11, found by the `secure-code-agent` session reporting the class rather than its own instance: `**/dir/` excluded nothing at any depth while the bare `dir/` excluded at all of them, so a config written in gitignore's spelling silently scanned what it named. D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
 D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
 

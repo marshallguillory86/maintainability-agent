@@ -81,7 +81,7 @@ def render_ai_prompt(report: dict[str, Any]) -> str:
         score, report.get("analyzer_coverage") is not None))
     lines.extend(prompt_tdd_section(report))
     lines.extend(prompt_semantic_section(report))
-    lines.extend(prompt_pressure_section(score))
+    lines.extend(prompt_pressure_section(score, (report.get("summary") or {}).get("languages")))
     lines.extend(prompt_focus_sections(report))
     lines.extend(prompt_deliverable())
     return "\n".join(lines)

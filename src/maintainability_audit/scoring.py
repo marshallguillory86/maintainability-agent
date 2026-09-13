@@ -407,18 +407,22 @@ def _reference_block() -> dict[str, object]:
     one-rubric promise, and two repositories must stay comparable
     regardless of what they are written in.
     """
+    held = [
+        "Python", "TypeScript", "JavaScript", "Java", "C", "C++", "C#", "Fortran",
+        "Swift", "Go", "Rust", "PHP", "Ruby",
+    ]
+    # Counted, not typed (D168): the prompt carried "eight of the ten"
+    # while this note said thirteen of fourteen on the same report.
+    parsed = len(held) + len(UNANCHORED_LANGUAGES)
     return {
         "unit": "multiple of the median mature-OSS repo (1.0 = typical real code)",
         "note": "Calibrated so a repo at the OSS median on every dimension scores 4.0.",
-        "corpus_languages": [
-            "Python", "TypeScript", "JavaScript", "Java", "C", "C++", "C#", "Fortran",
-            "Swift", "Go", "Rust", "PHP", "Ruby",
-        ],
+        "corpus_languages": held,
         # Parsed by a scanner, absent from the anchor — see `_anchor`.
         "unanchored_languages": UNANCHORED_LANGUAGES,
         "corpus_note": (
             "Reference medians are drawn from 180 mature repositories across "
-            "thirteen of the fourteen languages this scanner parses. "
+            f"{len(held)} of the {parsed} languages this scanner parses. "
             f"{unanchored_sentence()} Fortran entered at a lower "
             "star threshold than the rest, because its ecosystem has none "
             "above theirs; see docs/standard.md#the-reference-corpus."

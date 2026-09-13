@@ -6,7 +6,26 @@ point at.
 """
 from __future__ import annotations
 
+import shlex
+import sys
 from dataclasses import dataclass
+
+#: How a reader re-runs the audit that produced an item (D166).
+#:
+#: Bound to the interpreter doing the auditing, the way D144 bound the
+#: environment work order's install commands. The literal
+#: `python -m maintainability_audit` addressed whatever `python` a
+#: shell's `PATH` finds: on a Mac with no `python` it did not run, and
+#: where `python3` resolved to a user-site install it re-audited with a
+#: different release than the one whose report asked for the check.
+AUDIT_VERIFICATION = (
+    f"{shlex.quote(sys.executable)} -m maintainability_audit --root . --format json"
+)
+#: The same command with the interpreter spelled portably, for text checked
+#: into the repository — the demo's golden work order normalises this the
+#: way it normalises the root, so the file is about the work order and not
+#: about which machine regenerated it.
+PORTABLE_AUDIT_VERIFICATION = "python3 -m maintainability_audit --root . --format json"
 
 
 @dataclass(frozen=True)
@@ -34,7 +53,7 @@ CLASS_RISK_EFFORT: dict[str, ClassWeight] = {
             "every future change has to be understood first; extracting one is "
             "bounded, local work"
         ),
-        verification="python -m maintainability_audit --root . --format json",
+        verification=AUDIT_VERIFICATION,
         counter="function_failures",
         population="declarations_scanned",
     ),
@@ -44,7 +63,7 @@ CLASS_RISK_EFFORT: dict[str, ClassWeight] = {
             "a file past the limit hides its own structure, but splitting one "
             "touches every importer and is a change worth reviewing on its own"
         ),
-        verification="python -m maintainability_audit --root . --format json",
+        verification=AUDIT_VERIFICATION,
         counter="file_failures",
         population="files_scanned",
     ),
@@ -55,7 +74,7 @@ CLASS_RISK_EFFORT: dict[str, ClassWeight] = {
             "the others; deduplicating across a codebase is a design change, "
             "not a tidy-up"
         ),
-        verification="python -m maintainability_audit --root . --format json",
+        verification=AUDIT_VERIFICATION,
         counter="duplicate_blocks",
         population="files_scanned",
     ),
@@ -66,7 +85,7 @@ CLASS_RISK_EFFORT: dict[str, ClassWeight] = {
             "duplication; reconciling them requires deciding which behaviour "
             "was intended"
         ),
-        verification="python -m maintainability_audit --root . --format json",
+        verification=AUDIT_VERIFICATION,
         counter="near_duplicate_count",
         population="declarations_scanned",
     ),
@@ -76,7 +95,7 @@ CLASS_RISK_EFFORT: dict[str, ClassWeight] = {
             "unreachable code costs reading time and misleads a search, but "
             "deleting it is the cheapest change there is"
         ),
-        verification="python -m maintainability_audit --root . --format json",
+        verification=AUDIT_VERIFICATION,
         counter="dead_code_count",
         population="declarations_scanned",
     ),
@@ -87,17 +106,17 @@ CLASS_RISK_EFFORT: dict[str, ClassWeight] = {
             "changes land unguarded; adding a characterization test is "
             "bounded, local work"
         ),
-        verification="python -m maintainability_audit --root . --format json",
+        verification=AUDIT_VERIFICATION,
         counter="production_function_failures",
         population="production_declarations_scanned",
     ),
     "risk-pattern": ClassWeight(
         risk=5, effort=1,
         rationale=(
-            "a configured risk pattern is a rule this project chose to enforce "
-            "on itself, and each hit is a single located line"
+            "a risk pattern is a rule the active configuration enforces, and "
+            "each hit is a single located line"
         ),
-        verification="python -m maintainability_audit --root . --format json",
+        verification=AUDIT_VERIFICATION,
         counter="risk_findings",
         population="files_scanned",
     ),
@@ -107,7 +126,7 @@ CLASS_RISK_EFFORT: dict[str, ClassWeight] = {
             "two libraries doing one job is a decision nobody made; converging "
             "on one is a migration across every call site"
         ),
-        verification="python -m maintainability_audit --root . --format json",
+        verification=AUDIT_VERIFICATION,
         counter="idiom_concern_count",
         population="files_scanned",
     ),

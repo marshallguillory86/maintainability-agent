@@ -90,9 +90,9 @@ def render_html(report: dict[str, Any], records: list[Any]) -> str:
     return "\n".join(parts)
 
 
-def _unanchored_html(score: dict[str, Any]) -> list[str]:
+def _unanchored_html(score: dict[str, Any], present: Any = None) -> list[str]:
     """The anchor's gap, beside the letter rather than only in the JSON."""
-    names = view.unanchored_languages(score)
+    names = view.unanchored_languages(score, present)
     if not names:
         return []
     say = agreement(len(names))
@@ -122,7 +122,7 @@ def _executive_strip(report: dict[str, Any], score: dict[str, Any],
         f"Source: {escape(view.estimate_source(score))}</div>",
         f"<div>{escape(view.status_sentence(score, report.get('analyzer_coverage') is not None))}</div>",
         f"<div>{gate}</div>",
-        *_unanchored_html(score),
+        *_unanchored_html(score, (report.get("summary") or {}).get("languages")),
         f"<div>{escape(_direction_sentence(records))}</div>",
         "<table><tr><th>Severity</th><th>Findings</th></tr>",
         *count_rows,

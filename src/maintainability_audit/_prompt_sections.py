@@ -171,8 +171,12 @@ def prompt_work_order(report: dict[str, Any]) -> list[str]:
     if not items:
         return []
     lines = [
-        "Work in this order. The first items are the highest value for the "
-        "least change; stop when the change stops being reviewable.",
+        # What the order is, not what it is worth (D169): `prompt_items`
+        # promotes risk-5 classes and keeps one item per class, so this
+        # list and the report's table can lead with different items.
+        "Work in this order: severe findings (risk 5) first, then the work "
+        "order's own order, one item per kind of finding. Stop when the "
+        "change stops being reviewable.",
         "",
     ]
     for index, item in enumerate(items, start=1):
@@ -217,7 +221,22 @@ DIMENSION_GUIDANCE = {
 }
 
 
-def prompt_pressure_section(score: dict[str, Any]) -> list[str]:
+def corpus_span(score: dict[str, Any]) -> str:
+    """How much of what this scanner parses the corpus holds, counted (D168).
+
+    Read off `score.reference`, the two lists the corpus note is built
+    from. The prompt typed "eight of the ten parsed languages" while the
+    note on the same report said thirteen of fourteen: a count written
+    as prose goes stale the first time a language is added, and nothing
+    fails when it does.
+    """
+    reference = score.get("reference") or {}
+    held = len(reference.get("corpus_languages") or ())
+    parsed = held + len(reference.get("unanchored_languages") or ())
+    return f"{held} of the {parsed} parsed languages"
+
+
+def prompt_pressure_section(score: dict[str, Any], present: Any = None) -> list[str]:
     """Tell the agent *what kind* of trouble this repo is in, and how much.
 
     A letter grade is not actionable. These figures are multiples of what
@@ -247,7 +266,7 @@ def prompt_pressure_section(score: dict[str, Any]) -> list[str]:
     if not view.is_scored(score):
         # The grade blockers still render below: those say *why* no
         # number was issued, which is exactly what this reader needs.
-        return [*view.unanchored_caveat(score), *_grade_blocker_lines(score)]
+        return [*view.unanchored_caveat(score, present), *_grade_blocker_lines(score)]
     dimensions = score.get("dimensions") or {}
     elevated = sorted(
         # `is not None` first: an unmeasured dimension is legitimate --
@@ -259,13 +278,13 @@ def prompt_pressure_section(score: dict[str, Any]) -> list[str]:
         key=lambda item: -item[1],
     )
     # Unanchored languages are provisional here too, elevated or not.
-    lines: list[str] = view.unanchored_caveat(score)
+    lines: list[str] = view.unanchored_caveat(score, present)
     if elevated:
         lines.extend(
             [
                 "Where this repo is worse than typical real-world code",
-                "(1.0x = the median of a mature open-source corpus of eight "
-                "of the ten parsed languages; elevated dimensions only):",
+                f"(1.0x = the median of a mature open-source corpus of "
+                f"{corpus_span(score)}; elevated dimensions only):",
                 "",
             ]
         )

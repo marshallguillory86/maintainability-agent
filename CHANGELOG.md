@@ -12,6 +12,25 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.6.3 - 2026-09-13
+
+### Fixed — a build no longer changes what an audit scores (D175)
+
+**Scores can move on a repository audited after a build, and move toward what the
+same commit scores on a clean checkout.** Running `mvn test` in jsoup put its test
+resources in `target/test-classes`, and the next audit scored 29 more files — one of
+them failing — as jsoup's own code. The same commit audited differently before and
+after the build, and differently on a laptop than in CI.
+
+Build output now leaves the scored population when the repository itself says it is
+not source: a path git does not track and the repository's own `.gitignore` excludes.
+It is counted in `summary.generated_files`, not silently dropped. Nothing is excluded
+by directory name, per ADR 010. Tracked files, and untracked files no rule matches,
+are scored as before, and a machine's global ignore file is never read.
+
+Every file the scanner reads under a generated or vendored tree now leaves the score —
+its HTML, XML and JSON as well as its source. Before, only source-code files did.
+
 ## 3.6.2 - 2026-09-13
 
 *Grok's hostile audit of 3.6.1 (`77de21c`). Four surfaces of one run told a

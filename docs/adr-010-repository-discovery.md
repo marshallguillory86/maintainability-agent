@@ -35,13 +35,15 @@ Each rule points at something checkable, and the evidence is recorded beside the
 
 | Provenance | Evidence |
 |---|---|
-| `generated` | a generation banner in the file's head; a filename shape no human writes (`*.pb.go`, `*_pb2.py`, `*.designer.cs`); a directory a `package.json` script deletes and rebuilds (`rimraf lib && …`) |
+| `generated` | a generation banner in the file's head; a filename shape no human writes (`*.pb.go`, `*_pb2.py`, `*.designer.cs`); a directory a `package.json` script deletes and rebuilds (`rimraf lib && …`); a path git does not track and the repository's own `.gitignore` files exclude — build output such as Maven's `target/` (D175) |
 | `vendored` | a `.gitmodules` entry; a script named for the directory it overwrites from upstream (`scripts/sync-ggml.sh` maintaining `ggml/`) |
 | `test` | conventional path and name shapes, now including `TESTING/` |
 | `asset` | a saved page, not source: a versioned page snapshot (`scene_v1.2.3.html`), or a folder of two-or-more HTML/CSS pages outnumbering real code beside non-source siblings (png, svg). Its files keep a file-length finding but leave the declaration and clone populations, so four saved copies of one page are not 861 clone rows (plan-81dc6870 Class 4) |
 | `first-party` | everything else |
 
 `test_every_classification_carries_the_evidence_for_it` refuses a classification with no evidence. A verdict nobody can check is a guess with better manners. The same reasoning forbids a `graphics/` name in the exclude list: an asset directory is recognised by what it holds, never by what its authors called it — the exact mistake `ggml/` was.
+
+**Ignore rules are evidence only where the repository wrote them (D175).** Only the per-directory `.gitignore` files are read, never `.git/info/exclude` or a user's `core.excludesFile`: those differ by machine, and one commit would score differently on two laptops (P1). A tracked file stays first-party whatever a rule matches, because git tracking it is the repository saying it is source; an untracked file no rule matches stays first-party too, because that is uncommitted work (D56). A classified tree's every scanned file leaves the score — its HTML, XML and JSON as well as its source — and is counted in `summary.generated_files`.
 
 ### 2. Where there is no evidence, the answer is first-party
 

@@ -483,8 +483,9 @@ def prompt_items(items: list[dict[str, Any]], limit: int = 12,
                  escalated: set[str] | None = None) -> list[dict[str, Any]]:
     """Agent subset: no major projects, no escalated returns; Severe leads.
 
-    Economic reorder may bury a risk-5 item under hot-file Fill-Ins. The
-    table can stay exposure-ordered; the paste of 12 cannot drop Severe.
+    The economic reorder orders items by exposure within each band (D170),
+    so a risk-5 item can still sit below hotter Quick Wins of other classes.
+    The table can stay exposure-ordered; the paste of 12 cannot drop Severe.
     """
     blocked = escalated or set()
     eligible = [

@@ -37,6 +37,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from ._work_order import _declaration_reading
 from .declarations import DECLARATION_SUFFIXES, detect_functions
 from .metrics import file_status
 
@@ -237,11 +238,17 @@ def _declaration_findings(
             # number. Never negative: it names a budget that failed.
             "breached": breaches[0]["budget"],
             "over_by": breaches[0]["over_by"],
+            # The work order's own wording, called rather than copied: the
+            # copy printed a class's complexity against a function limit
+            # after the work order stopped doing so (D164).
             "target": (
-                f"reduce below the configured limits (currently {metric.lines} "
-                f"lines against {_budget_for(metric.kind, thresholds)[0]}, "
-                f"complexity {metric.complexity} against "
-                f"{thresholds['max_complexity']})"
+                "reduce below the configured limits ("
+                + _declaration_reading(
+                    {"lines": metric.lines, "complexity": metric.complexity,
+                     "kind": metric.kind, "cognitive": metric.cognitive},
+                    thresholds,
+                )
+                + ")"
             ),
         })
     return findings

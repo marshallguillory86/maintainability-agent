@@ -26,6 +26,7 @@ compatibility semantics.
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any
 
 # A foundation, not the scoring layer: grammar is neither scoring nor
@@ -346,17 +347,33 @@ def test_suite_lines(block: dict[str, Any] | None) -> list[str]:
     return lines
 
 
-def unanchored_languages(score: dict[str, Any]) -> tuple[str, ...]:
+def unanchored_languages(
+    score: dict[str, Any], present: Iterable[str] | None = None
+) -> tuple[str, ...]:
     """Parsed languages the reference corpus does not hold, from the report.
 
     Read off `score.reference` rather than imported from `_anchor`, so a
     report rendered from stored JSON discloses what *that* run's anchor
     omitted rather than what today's build omits.
+
+    ``present`` is the run's own language census, `summary.languages`
+    (D167). The anchor's gap is a fact about the corpus, but the caveat
+    is a claim about *this* grade: "a grade reported for code in COBOL is
+    provisional" printed on a Java tree tells the reader something false
+    about what they are looking at. ``None`` means the census is unknown —
+    a report stored before it existed — and keeps the whole list, because
+    a limit that cannot be ruled out is still disclosed.
     """
-    return tuple((score.get("reference") or {}).get("unanchored_languages") or ())
+    names = tuple((score.get("reference") or {}).get("unanchored_languages") or ())
+    if present is None:
+        return names
+    here = set(present)
+    return tuple(name for name in names if name in here)
 
 
-def unanchored_caveat(score: dict[str, Any]) -> list[str]:
+def unanchored_caveat(
+    score: dict[str, Any], present: Iterable[str] | None = None
+) -> list[str]:
     """The anchor's gap, in one sentence, for any skin that prints a grade.
 
     Lives here because all three skins were about to carry their own copy
@@ -365,7 +382,7 @@ def unanchored_caveat(score: dict[str, Any]) -> list[str]:
     disclosed only there is disclosed nowhere that matters, which is the
     shape this project already shipped once as F1.
     """
-    names = unanchored_languages(score)
+    names = unanchored_languages(score, present)
     if not names:
         return []
     say = agreement(len(names))

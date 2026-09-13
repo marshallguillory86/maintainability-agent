@@ -12,6 +12,90 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.6.1 - 2026-09-13
+
+*Found by running a Java repository's top work item through the chat door to
+verify that remediation works. Remediation worked; six things the report said
+about the work were not true, and one of them exposed an ordering that broke a
+rule the project already had. None changes scoring, bands or policy. D164–D169
+correct what a report states; D170 makes the economic reorder obey ADR 007 §3,
+the only ordering change, and only with an economic context configured.*
+
+### Fixed — a work item states its own finding, not its class's estimate of it (D164)
+
+A declaration item now names the limit its kind is graded on. Before, a
+2876-line Java class read `currently 2876 lines, complexity 25` — a function's
+reading against no limit — with *Why:* "a long, branching function … extracting
+one is bounded, local work". It now reads `currently 2876 lines against the
+300-line class limit`, and a function's item names lines, complexity and
+cognitive cost each against its own limit.
+
+The *Why* no longer sizes the change. "Bounded, local work" is the class's
+judgment, published in `standard.md` beside its declared effort; printed on an
+item it claimed something the audit never measured, and was false for a class
+ten times its limit. `unpaired-hotspot` carried the same clause. The band is
+unchanged and still declared per class — `standard.md` now says so — so a reader
+sizing the work has the item's fact rather than the class's estimate.
+
+### Fixed — a risk-pattern item no longer asks for the match to be deleted (D165)
+
+`remove the configured risk pattern` on a `// todo` read as "delete the comment",
+which clears the finding and the score while the debt stays. The target now
+names the rule and asks for what the match records: *act on what the
+`debt-marker` rule matched here, or say why it stays; deleting the matched text
+alone hides the finding without resolving it.*
+
+The rationale said the rule was one "this project chose to enforce on itself",
+and the pre-commit hook said "this repository's own configuration asked". For a
+repository on the shipped defaults, neither is true. All three now attribute the
+rule to the active configuration.
+
+### Fixed — the verify command runs the interpreter that audited (D166)
+
+Every item ended `python -m maintainability_audit --root . --format json`. Where
+no `python` exists it did not run; where `python3` resolved to an older install
+it re-audited with a different release than the one that issued the item. The
+command is now bound to `sys.executable`, as D144 bound the environment work
+order's install commands. The demo's checked-in work order normalises the
+interpreter to `python3` the way it already normalised the root.
+
+`tools/regen_demo_prompt.py` also isolates the user configuration tier now: it
+had been reading the regenerating developer's own config, and a personal
+economic context reordered the checked-in demo.
+
+### Fixed — the COBOL caveat appears only where COBOL was scanned (D167)
+
+Every grade skin printed "*COBOL is parsed but is not in the reference corpus,
+so a grade reported for code in it is provisional*" on every repository. The
+caveat now follows the run's own language census, `summary.languages`. A tree
+that contains COBOL still discloses on every skin, and a stored report without
+a census keeps the full disclosure.
+
+### Fixed — one report, one count of the corpus's languages (D168)
+
+The prompt said "eight of the ten parsed languages" while the corpus note on the
+same report said thirteen of fourteen. Both now count the two lists the
+reference block publishes.
+
+### Fixed — the work order's heading states the order it is in (D169)
+
+With an economic context configured, the exposure sort (ADR 004) replaces the
+band order, but the heading still said "ordered by what it costs to leave
+against what it costs to fix" and the prompt called its first items "the
+highest value for the least change". The table and the prompt led with
+different items and neither said why. The heading now names the sort that
+produced the list, and the prompt describes its own rule — severe findings
+first, one item per kind.
+
+### Fixed — the economic reorder no longer lifts a Fill-In above a Quick Win (D170)
+
+**The one ordering change in this release, and only with an economic context
+configured.** The exposure sort (ADR 004) ranked the whole work order by
+recurrence and churn, so a Fill-In on a file that changes often could lead a
+Quick Win on a stable one — the nit-loop ADR 007 §3 rule 5 exists to prevent.
+Band is now the primary key and exposure orders items within each band. Without
+an economic context nothing moves. ADR 004 is amended to say so.
+
 ## 3.6.0 - 2026-09-12
 
 *Grok's value-audit rerun on 3.5.0, which asked whether the first five minutes

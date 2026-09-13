@@ -133,18 +133,27 @@ def _exposure(item: dict[str, Any], churn: dict[str, int],
 
 
 def reorder_by_exposure(report: dict[str, Any]) -> None:
-    """Most-exposed first, in place, keeping every item intact.
+    """Most-exposed first within each band, in place, keeping every item intact.
 
     Applied only when an economic context exists: exposure is the
     ordering that context asks for, and without one the risk-by-effort
     order stands untouched. The sort moves whole items, so severity,
     risk, effort, band and class delta stay on each one — the standard
     evidence is reordered, never erased.
+
+    **Band stays the primary key (D170).** This sorted on exposure alone,
+    so a Fill-In on a file that changes often led a Quick Win on a stable
+    one — the nit-loop ADR 007 §3 rule 5 forbids. ADR 004 asks for the work
+    order to be reordered by exposure; it never asked for exposure to
+    outrank band, so ordering within a band satisfies both as written.
     """
+    from ._work_order import BAND_ORDER
+
     churn = _churn_by_path(report)
     returns = _returns_by_fingerprint(report)
     items = report.get("work_order") or []
-    items.sort(key=lambda item: (-_exposure(item, churn, returns),
+    items.sort(key=lambda item: (BAND_ORDER.get(item.get("band") or "", len(BAND_ORDER)),
+                                 -_exposure(item, churn, returns),
                                  item.get("title") or ""))
 
 

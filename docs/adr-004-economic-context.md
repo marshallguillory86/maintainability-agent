@@ -89,8 +89,14 @@ and without changing the uniform score.
 **Presentation is split.** The 0–5 score and `verified_grade` never mention
 money. A separate `economic_impact` block prints a low/base/high **scenario**
 range and the assumptions that produced it. The work order **reorders** by
-exposure; standard risk×effort severity remains on the report so both sorts
-are visible. Per-finding dollar lines are not in v1 — the $ range is a
+exposure **within each band**; standard risk×effort severity remains on the
+report so both sorts are visible.
+
+> **Amended 2026-09-13 (D170).** The reorder was implemented over the whole
+> work order, so a Fill-In on a hot file led a Quick Win on a stable one —
+> which [ADR 007](adr-007-pillars-and-practice.md) §3 rule 5 forbids. This
+> decision never required exposure to outrank band; band stays the primary
+> key and exposure orders items inside it. Per-finding dollar lines are not in v1 — the $ range is a
 rollup over the current work-order set.
 
 **Ask once, then persist.** The labor gate is part of the **same**

@@ -22,6 +22,7 @@ from ._economics import economic_context_from, economic_impact, reorder_by_expos
 from ._metrics_types import FileMetric, FunctionMetric
 from ._pillars import pillar_report
 from ._practice import practice_level
+from ._security_delegate import run_security_delegate
 from ._semantic import semantic_findings
 from ._semantic_policy import load_semantic_policy
 from ._semantic_ts import discover_type_analysis
@@ -399,27 +400,42 @@ def _attach_semantics(
 
 def _pillars_with_delegation(
     report: dict[str, Any], root: Path, pillar_path: str | None = None,
+    changed_revspec: str | None = None,
 ) -> list[dict[str, Any]]:
-    """The pillar block, with a delegated pillar's own report folded in.
+    """The pillar block, with the delegated security pillar measured.
 
-    ADR 007 §1 makes Security a delegated pillar naming
-    `secure-code-agent`, reported as `NotApplicable` so silence is never
-    read as safety. That was a placeholder for an artifact: when the
-    other tool has left `security-pillar.json` in the tree, the entry
-    carries its measurement instead of an apology for not having one.
+    ADR 007 §1 makes Security a delegated pillar naming `secure-code-agent`.
+    Until D177 that was a handoff: the entry carried the other tool's
+    measurement only when a `security-pillar.json` had been left in the tree,
+    so every audit nobody had prepared — and every audit through the chat
+    door — reported the pillar unmeasured.
 
-    Absent, the entry stays exactly what it was. Most repositories run
-    one tool, so that is the ordinary path and not a warning.
+    **The audit runs the delegate (D177).** An operator who names a document
+    with `--security-pillar` — CI, which runs secure-code-agent as its own
+    gated step — has that document used as given. Otherwise this audit runs
+    secure-code-agent itself. A `security-pillar.json` sitting in the tree is
+    no longer read on its own authority: it is repository content, and a
+    repository may not report its own security posture in place of a
+    measurement. When nothing trustworthy comes back, the entry says why.
 
     Its own function because `build_report` was at eighty lines against a
     limit of eighty, and adding this inline took it to eighty-eight —
     caught by this tool's gate on the commit that added it.
     """
-    handed_over = (read_delegated(root, pillar_path) if pillar_path
-                   else read_delegated(root))
+    if pillar_path:
+        handed_over = read_delegated(root, pillar_path)
+        reason = None if handed_over else (
+            f"the --security-pillar document {pillar_path} was absent or could not be trusted")
+    else:
+        run = run_security_delegate(root, changed_revspec=changed_revspec)
+        handed_over, reason = run.document, run.reason
+        if run.environment:
+            report["environment_work_order"] = [
+                *(report.get("environment_work_order") or []), *run.environment]
     return pillar_report(
         report["score"], report["practice"],
         {"security": handed_over} if handed_over else None,
+        {"security": reason} if reason else None,
     )
 
 
@@ -490,7 +506,7 @@ def build_report(
     report["score"] = score_report(report, analyzer["pressures"])
     # Condition rolls up aspects; practice stays a separate axis (ADR 007).
     report["practice"] = practice_level(root, config).as_dict()
-    report["pillars"] = _pillars_with_delegation(report, root, security_pillar)
+    report["pillars"] = _pillars_with_delegation(report, root, security_pillar, changed_revspec)
     _attach_semantics(report, root, config, only_paths)
     # Last, because every item's delta is a rubric recomputation and the
     # rubric needs the scored report to recompute against.

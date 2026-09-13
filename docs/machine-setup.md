@@ -195,8 +195,16 @@ source .venv/bin/activate
 python3 -m pip install -e ".[dev]"
 ```
 
-`secure-code-agent` installs with the package: every audit runs it for the
-security pillar (D177). What it measures depends on the scanners it can find.
+Install `secure-code-agent` alongside — it is not a dependency of this
+package, and every audit runs it for the security pillar (D177):
+
+```bash
+python3 -m pip install 'secure-code-agent>=0.12.1'
+```
+
+Check the published release first (`gh release list --repo
+marshallguillory86/secure-code-agent`); this project's CI pin is not the
+source of truth for what is current. What it measures depends on the scanners it can find.
 With none of them installed it runs only its built-in rules, reports coverage
 as partial, and the pillar reads `unverified: not graded`. See what it can
 resolve with:
@@ -219,7 +227,13 @@ this package's `mcp` 2.x to satisfy it. The chat door then fails to start
 (D178). `pip check` does not warn, because this package's `mcp` requirement
 lives in an optional extra it never inspects. semgrep from Homebrew has its
 own environment and no such conflict. njsscan has no Homebrew formula and
-cannot share this environment; leave it out, or give it one of its own.
+cannot share this environment; give it one of its own, and link its command
+onto a directory every host's `PATH` includes.
+
+The same applies to **secure-code-agent's own `[mcp]` extra**: it pins
+`mcp>=1.0,<2`, and this package's chat door needs `mcp>=2,<3`, so the two MCP
+servers cannot share one environment. Install `secure-code-agent` here without
+extras; it runs as a child of the audit and needs none.
 
 Two things decide whether a scanner resolves, both found setting up the
 second machine. **semgrep and checkov have no `python -m` fallback**, so they

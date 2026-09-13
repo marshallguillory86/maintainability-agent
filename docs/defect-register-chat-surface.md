@@ -6741,6 +6741,8 @@ The chat view renders the pillar block through the same `pillars_markdown` the c
 
 ### D177 — Closed: the audit did not run the security pillar it declares complete (High)
 
+> **Amended 2026-09-13 (3.7.2).** "secure-code-agent becomes this package's one runtime dependency" is reversed. The range was copied from this project's CI pin (`>=0.10,<0.11`) while the published tool was at 0.12.1, so installing 3.7.0 downgraded a current machine; and the dependency put secure-code-agent's `mcp<2` pin beside this package's `mcp>=2` (D178). secure-code-agent's D3 and ADR 008 both hold the tools independently releasable. The audit still runs it on every audit; it now runs whichever release is installed within `>=0.12.1,<1`, and a missing or unsupported release is the pillar's stated reason with an install command (`test_an_unsupported_release_is_stated_not_run`).
+
 **The same report. Investigating D176 showed the display was only half of it: on the Mac the audit ran on, no measurement existed to display.**
 
 The integration built in #208, #213, #214 and #216 was a handoff. secure-code-agent wrote `security-pillar.json`; this tool read it if it was there. CI runs secure-code-agent before this tool and passes the document, so every pull request carried a measured pillar. Nothing else ran it: not the CLI unless an operator ran the other tool first, and never the chat door, which has no way to pass a document. #214 recorded the same shape — "wired everywhere except where it runs" — and fixed it for CI only. Decided 2026-09-13 with Marshall: the pillar is complete, so the audit runs it. ADR 007 is amended.

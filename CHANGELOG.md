@@ -12,6 +12,27 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.2 - 2026-09-13
+
+### Changed — secure-code-agent is installed alongside, not a dependency, and 0.12.1 is required
+
+**3.7.0 and 3.7.1 declared `secure-code-agent>=0.10,<0.11` as a dependency, which excluded
+the current release.** The range was copied from this project's CI pin, not taken from
+the tool's published releases, which were at 0.12.1. Installing 3.7.x on a machine that
+had 0.12.1 downgraded it to 0.10.0. The dependency also put secure-code-agent's own
+`mcp<2` pin into the same environment as this package's chat door, which needs `mcp>=2`.
+
+It is no longer a package dependency. The two tools are independently releasable
+(secure-code-agent's D3, this project's ADR 008), so it is installed alongside, the way
+the analyzer pool is: `pip install 'secure-code-agent>=0.12.1'`. Every audit still runs
+it. The audit runs whichever release is installed if it falls within `>=0.12.1,<1`;
+a missing or out-of-range release is the pillar's stated reason, with the install
+command in the environment work order. CI installs 0.12.1, and a test keeps every CI pin
+inside the supported range.
+
+0.12.1 writes the same `security-pillar.json` contract (schema v2), and this release
+reads it unchanged.
+
 ## 3.7.1 - 2026-09-13
 
 ### Fixed — the chat door says what is installed when it cannot start (D178)

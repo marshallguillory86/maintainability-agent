@@ -151,6 +151,37 @@ def test_a_missing_delegate_is_stated_with_its_remedy(tmp_path, monkeypatch) -> 
     assert remedies and "pip install" in remedies[0]["install"], report["environment_work_order"]
 
 
+@pytest.mark.parametrize("installed", ["0.10.0", "0.12.0", "1.0.0"])
+def test_an_unsupported_release_is_stated_not_run(tmp_path, monkeypatch, installed) -> None:
+    """D177: installed but outside the supported range is a reason and a remedy, never a run.
+
+    secure-code-agent is no longer a package dependency, so the version a machine has is
+    whatever it has. Running a release outside the range would read a contract this
+    audit has not been checked against.
+    """
+    import importlib.metadata as metadata
+
+    from maintainability_audit import _security_delegate
+    from maintainability_audit import report as report_module
+    from maintainability_audit.config import load_config
+    from maintainability_audit.report import build_report
+
+    real_version = metadata.version
+    monkeypatch.setattr(metadata, "version",
+                        lambda name: installed if name == "secure-code-agent" else real_version(name))
+    monkeypatch.setattr(_security_delegate, "run",
+                        lambda *a, **k: (_ for _ in ()).throw(AssertionError("an unsupported release ran")),
+                        raising=False)
+    monkeypatch.setattr(report_module, "run_security_delegate",
+                        _security_delegate.run_security_delegate, raising=False)
+
+    report = build_report(_repo(tmp_path), load_config(None), run_analyzers=False)
+    entry = _security(report)
+    assert installed in entry["reason"] and "is installed" in entry["reason"], entry["reason"]
+    remedies = [item for item in report["environment_work_order"] if item["tool"] == "secure-code-agent"]
+    assert remedies and "secure-code-agent>=" in remedies[0]["install"], report["environment_work_order"]
+
+
 def _states() -> dict[str, dict[str, Any]]:
     """Every state the security pillar can be in, as `pillar_report` builds it."""
     from maintainability_audit._pillars import pillar_report

@@ -368,6 +368,46 @@ def _bind_prompts(server: Any) -> None:
         )
 
 
+#: The `mcp` releases this server is written against, as the `mcp` extra pins.
+MCP_REQUIREMENT = ">=2,<3"
+
+
+def mcp_unavailable_message(error: BaseException | None = None) -> str:
+    """Why the server cannot start, naming what is actually installed (D178).
+
+    The message said "MCP support is not installed" whenever the import
+    failed. On the machine this was found on, `mcp` *was* installed — at
+    1.23.3, because installing secure-code-agent's scanner extras pulled in
+    semgrep, which pins `mcp<2`, and pip replaced this package's 2.0.0 to
+    satisfy it. The chat door then failed to start, and the remedy it printed
+    was the install that had just been undone. A reader needs the version
+    that is there and the package that put it there.
+    """
+    import importlib.metadata as metadata
+    import re
+
+    try:
+        installed = metadata.version("mcp")
+    except metadata.PackageNotFoundError:
+        return ('MCP support is not installed. Install with: '
+                'pip install "maintainability-agent[mcp]"')
+    major = installed.split(".", 1)[0]
+    if major.isdigit() and int(major) == 2:
+        return (f"MCP support cannot start: mcp {installed} is installed and satisfies "
+                f"mcp{MCP_REQUIREMENT}, but importing it failed: {error}")
+    names_mcp = re.compile(r"^mcp(?=$|[\s<>=!~\[;(])", re.IGNORECASE)
+    dependents = sorted({
+        dist.metadata["Name"] for dist in metadata.distributions()
+        if dist.metadata["Name"] and dist.metadata["Name"].lower() not in ("maintainability-agent", "mcp")
+        and any(names_mcp.match(requirement.strip()) for requirement in (dist.requires or ()))
+    })
+    pinned = (f" It is required here by {', '.join(dependents)}, which may be what "
+              "installed this version; give that tool its own environment, or the next "
+              "install will replace mcp again.") if dependents else ""
+    return (f"MCP support cannot start: mcp {installed} is installed, and this server needs "
+            f"mcp{MCP_REQUIREMENT}.{pinned} Restore it with: pip install \"mcp{MCP_REQUIREMENT}\"")
+
+
 def create_server(*, roots: tuple[Path, ...] | None = None):
     """Create the SDK server; importing the base package does not require MCP."""
     try:
@@ -376,10 +416,8 @@ def create_server(*, roots: tuple[Path, ...] | None = None):
         from mcp.server.mcpserver.resources import FunctionResource
         from mcp.server.mcpserver.resources.templates import ResourceSecurity
         from mcp.types import ToolAnnotations
-    except ImportError as error:  # pragma: no cover - exercised by the console entry point
-        raise RuntimeError(
-            'MCP support is not installed. Install with: pip install "maintainability-agent[mcp]"'
-        ) from error
+    except ImportError as error:
+        raise RuntimeError(mcp_unavailable_message(error)) from error
 
     ledger = _RootLedger(roots if roots is not None else allowed_roots())
     server = MCPServer(

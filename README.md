@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **3.7.4**.
+Version **3.7.5**.
 
 **Languages parsed:** Python, Java, C, C++, C#, Go, Rust, PHP, Ruby, Swift,
 COBOL, Fortran (free-form *and* fixed-form), and the JS/TS/HTML family — each
@@ -47,7 +47,7 @@ and gives this command. Its scanners decide what it can grade — see
 don't add its `[mcp]` extra to this environment (it pins `mcp<2`).
 
 ```bash
-pip install 'secure-code-agent>=0.12.1'
+pip install 'secure-code-agent>=0.12.2'
 brew install gitleaks osv-scanner semgrep checkov   # its scanners; pip install bandit
 ```
 

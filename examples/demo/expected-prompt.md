@@ -13,7 +13,7 @@ Verify with: `python3 -m maintainability_audit --root . --format json`
 
 ### Copy-paste prompts
 
-One self-contained prompt per item — paste any block whole into a coding agent.
+One self-contained prompt per item — paste any block whole into a coding agent. A block for an item that needs a design decision asks for that decision, not a patch.
 
 #### apply_pricing in billing.py
 `billing.py:14` · quick-win
@@ -46,12 +46,12 @@ Verify when done: python3 -m maintainability_audit --root . --format json
 
 ```text
 Repository: .
-Task: remove the duplicated block.
+Design decision needed, not a patch: duplicated block in billing.py.
 Location: billing.py:16
 Why: duplicated logic means a fix applied in one place and missed in the others; deduplicating across a codebase is a design change, not a tidy-up
+Direction once decided: remove the duplicated block.
 
-Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
-Verify when done: python3 -m maintainability_audit --root . --format json
+Do not change code for this item, because it is a Major Project — the change it needs is a design decision before code moves, not one reviewable patch. Lay out the options for the surrounding design — what each would change, and where — then stop for a human decision. If this is a false positive, say so.
 ```
 
 #### duplicated block in billing.py
@@ -59,11 +59,11 @@ Verify when done: python3 -m maintainability_audit --root . --format json
 
 ```text
 Repository: .
-Task: remove the duplicated block.
+Design decision needed, not a patch: duplicated block in billing.py.
 Location: billing.py:55
 Why: duplicated logic means a fix applied in one place and missed in the others; deduplicating across a codebase is a design change, not a tidy-up
+Direction once decided: remove the duplicated block.
 
-Make one small, reviewable change. Do not alter public behavior or refactor unrelated code. If this is a false positive, say so and leave it unchanged; add or update a test when behavior changes.
-Verify when done: python3 -m maintainability_audit --root . --format json
+Do not change code for this item, because it is a Major Project — the change it needs is a design decision before code moves, not one reviewable patch. Lay out the options for the surrounding design — what each would change, and where — then stop for a human decision. If this is a false positive, say so.
 ```
 

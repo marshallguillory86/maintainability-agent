@@ -24,8 +24,10 @@ from typing import Any
 
 from . import _evidence_view as view
 from ._hotspots import hotspot_measure, hotspot_name
+from ._security_work_order import KEY as SECURITY_WORK_ORDER
+from ._security_work_order import severity_counts
 from ._tdd_view import tdd_sentences
-from ._work_order import prompt_items
+from ._work_order import escalated_fingerprints, prompt_items
 
 
 def prompt_tdd_section(report: dict[str, Any]) -> list[str]:
@@ -134,10 +136,18 @@ def prompt_security_pillar(report: dict[str, Any]) -> list[str]:
     producer = entry.get("delegated_to") or "the delegated tool"
     version = f" {entry['producer_version']}" if entry.get("producer_version") else ""
     condition = "not graded" if entry.get("condition") is None else f"{entry['condition']:.1f}"
+    counts = severity_counts(entry)
+    found = f" Findings: {counts}." if counts else ""
+    # Where that tool's work order is, when this run kept it (D179). The
+    # prompt names it rather than absorbing it: the security findings are
+    # not this prompt's task, and are not re-ranked into it.
+    where = (f" Its own work order for them is `{SECURITY_WORK_ORDER}`, in the report."
+             if report.get(SECURITY_WORK_ORDER) else "")
     return [
         f"**Security pillar (measured by {producer}{version}):** posture "
         f"{entry.get('posture')}, practice level {entry.get('practice')}, condition "
-        f"{condition}. Its findings are that tool's work order, not this one.",
+        f"{condition}.{found} Its findings are that tool's work order, not this "
+        f"one.{where}",
         "",
     ]
 
@@ -188,10 +198,7 @@ def _prompt_work_items(report: dict[str, Any]) -> list[dict[str, Any]]:
     # Withhold anything the history shows was fixed and came back
     # twice. Naming it as a design candidate while asking an agent to
     # patch it a third time would change nothing.
-    escalated = {
-        item["fingerprint"] for item in report.get("design_review_candidates") or []
-    }
-    return prompt_items(report.get("work_order") or [], escalated=escalated)
+    return prompt_items(report.get("work_order") or [], escalated=escalated_fingerprints(report))
 
 
 def prompt_has_work(report: dict[str, Any]) -> bool:

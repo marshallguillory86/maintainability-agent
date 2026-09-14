@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ._work_order import work_order_rows
+from ._work_order import withheld_reason, work_order_rows
 from ._work_order_weights import AUDIT_VERIFICATION
 
 # The report lists the whole backlog; these caps apply only to the bounded
@@ -40,7 +40,9 @@ def item_location(item: dict[str, Any]) -> str:
     return item["path"] + (f":{item['line']}" if item.get("line") else "")
 
 
-def prompt_body_lines(item: dict[str, Any], root_label: str = ".") -> list[str]:
+def prompt_body_lines(
+    item: dict[str, Any], root_label: str = ".", escalated: set[str] | None = None,
+) -> list[str]:
     """The copy-paste prompt text for one item, skin-agnostic.
 
     Deterministic: built entirely from the item's own fields, so the same
@@ -48,7 +50,26 @@ def prompt_body_lines(item: dict[str, Any], root_label: str = ".") -> list[str]:
     Markdown fences it as ``text`` and HTML wraps it in ``<pre>``; the text
     between is identical, so the two skins can never disagree about what an
     agent is being asked to do.
+
+    **A block travels alone, so it carries its own boundary (D180).** An
+    item the bounded prompt withholds is still listed with a block — a
+    human deciding on a forty-file deduplication needs to see it — but the
+    block asks for the decision, never the patch.
     """
+    withheld = withheld_reason(item, escalated)
+    if withheld:
+        return [
+            f"Repository: {root_label}",
+            f"Design decision needed, not a patch: {item['title']}.",
+            f"Location: {item_location(item)}",
+            f"Why: {item['rationale']}",
+            f"Direction once decided: {item['target']}.",
+            "",
+            f"Do not change code for this item, because {withheld}. Lay out the "
+            "options for the surrounding design — what each would change, and "
+            "where — then stop for a human decision. If this is a false "
+            "positive, say so.",
+        ]
     verify = item.get("verification") or AUDIT_VERIFICATION
     return [
         f"Repository: {root_label}",
@@ -63,7 +84,9 @@ def prompt_body_lines(item: dict[str, Any], root_label: str = ".") -> list[str]:
     ]
 
 
-def item_prompt_block(item: dict[str, Any], root_label: str = ".") -> list[str]:
+def item_prompt_block(
+    item: dict[str, Any], root_label: str = ".", escalated: set[str] | None = None,
+) -> list[str]:
     """One item's copy-paste prompt as Markdown: heading, then a fenced block.
 
     Fenced as ``text`` so a reader copies the whole thing into a coding
@@ -76,7 +99,7 @@ def item_prompt_block(item: dict[str, Any], root_label: str = ".") -> list[str]:
         f"`{item_location(item)}` · {item['band']}",
         "",
         "```text",
-        *prompt_body_lines(item, root_label),
+        *prompt_body_lines(item, root_label, escalated),
         "```",
         "",
     ]
@@ -114,7 +137,7 @@ _BAND_IS_PER_CLASS = (
 
 def work_order_markdown(
     items: list[dict[str, Any]] | None, *, complete: bool = False, root_label: str = ".",
-    exposure_ordered: bool = False,
+    exposure_ordered: bool = False, escalated: set[str] | None = None,
 ) -> list[str]:
     """The ordered work, worth first, with a copy-paste prompt for each item.
 
@@ -149,10 +172,11 @@ def work_order_markdown(
     lines.extend([
         "### Copy-paste prompts", "",
         "One self-contained prompt per item — paste any block whole into a "
-        "coding agent.", "",
+        "coding agent. A block for an item that needs a design decision asks "
+        "for that decision, not a patch.", "",
     ])
     for item in items[:limit]:
-        lines.extend(item_prompt_block(item, root_label))
+        lines.extend(item_prompt_block(item, root_label, escalated))
     return lines
 
 

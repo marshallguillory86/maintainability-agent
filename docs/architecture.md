@@ -48,6 +48,7 @@ flowchart TB
     _markdown_sections["_markdown_sections"]
     _charts["_charts"]
     _work_order_view["_work_order_view"]
+    _security_work_order["_security_work_order"]
     _economics_view["_economics_view"]
     _semantic_view["_semantic_view"]
     _history_view["_history_view"]

@@ -1,15 +1,31 @@
 # Acknowledged secure-code-agent findings, with the reason each was reviewed
 # and the date the acknowledgement expires. Per secure-code-agent design.md §10.
 
+# `file:` rather than `paths:`. gitleaks reports the path it was handed, which
+# is absolute whenever the audit names the repository by absolute path — as
+# maintainability-agent always does — and `paths:` globs are matched against
+# that string, so the relative glob this entry used to carry matched nothing
+# and all five findings read as live criticals. `file:` matches by suffix.
 - rule_id: gitleaks.curl-auth-user
-  paths:
-    - ".github/workflows/quality-gates.yml"
-    - ".github/workflows/sonar-rename-main-branch.yml"
+  file: ".github/workflows/sonar-rename-main-branch.yml"
   reason: >-
-    Reviewed: every match is `curl -u "$SONAR_TOKEN:"`, a shell expansion of a
-    GitHub Actions secret, not a literal credential. The gitleaks rule matches
-    the `-u` argument shape and cannot tell a variable reference from a value,
-    so it reports five criticals against the one pattern that is the correct
-    way to pass a token. Nothing here is in the tree to rotate. If a literal
-    ever replaces the variable the snippet changes and the fingerprint with it.
+    Reviewed: git history only. The workflow was deleted in a59c8e7, and every
+    match is `curl -u "$SONAR_TOKEN:"`, a shell expansion of a GitHub Actions
+    secret, not a literal credential. The rule matches the `-u` argument shape
+    and cannot tell a variable from a value. Nothing is in the tree to rotate,
+    and rewriting published history to drop a variable reference would break
+    every signed commit after it. The live instance in quality-gates.yml was
+    changed to a bearer header rather than acknowledged.
+  expires: "2027-09-01"
+
+- rule_id: CKV_GHA_7
+  file: ".github/workflows/sonar-resolve.yml"
+  reason: >-
+    Reviewed: the rule forbids workflow_dispatch inputs because they can steer
+    build output. This workflow builds nothing and publishes no artifact: it
+    is a manual, maintainer-only action that records a justification and
+    resolves one SonarCloud issue. Its inputs reach the script only through
+    environment variables, never interpolated into `run:` (the injection D43
+    closed), and the job holds `contents: read`. Removing the inputs removes
+    the justification the workflow exists to make mandatory.
   expires: "2027-09-01"

@@ -12,6 +12,55 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.4 - 2026-09-14
+
+Three fixes from Grok's audit of 3.7.3. Each one is a report that left out, or contradicted, what the
+same run had found. Scoring, ordering and policy are unchanged.
+
+### Fixed — the security pillar shows what secure-code-agent found, and its work order reaches you (D179)
+
+**An audit of this repository recorded 5 critical and 1 high security finding, and no surface
+mentioned them.** The pillar row read "unverified: not graded — …". The remediation prompt that
+secure-code-agent wrote was deleted with the temporary directory it was written into.
+
+- The pillar reading in the chat view, the Markdown and HTML reports and the remediation prompt now
+  states the producer's counts, such as `findings: 5 critical, 1 high, 4 medium, 69 low`, whether
+  the pillar was graded or not.
+- secure-code-agent's own work order is kept as `security_work_order` in the JSON report. It is
+  printed whole in the complete Markdown and HTML reports, and returned at the top level of every
+  chat-door result. The bounded chat view and the maintainability prompt say where it is and do not
+  merge it: those findings are still that tool's work order, not this one's (ADR 007).
+
+### Fixed — a copy-paste prompt no longer authorises what the remediation prompt withholds (D180)
+
+**The demo's remediation prompt withheld two duplicated blocks as needing a design decision.** Their
+copy-paste blocks in the report still said "Task: remove the duplicated block." Every item the
+prompt withholds — a Major Project, or a finding fixed before that came back — now gets a block
+that asks for the design options and a stop, on the chat view and the Markdown and HTML reports.
+`examples/demo/expected-prompt.md` is regenerated.
+
+### Fixed — semantic findings respect exclusions on a full scan (D181)
+
+**Excluding `tests/fixtures/` removed the fixture from every count, but a full scan still reported
+a design review candidate from it and named the file in the prompt.** A semantic finding is now kept
+only when its file is one the audit read, the same rule changed-only runs already followed (D174).
+The semantic coverage counts are taken from the findings kept.
+
+### Repository — this project's own critical and high security findings are cleared
+
+Once D179 made the counts visible, secure-code-agent's run on this repository showed 5 critical
+and 1 high. None was a leaked credential, and each is now fixed or acknowledged with a reason:
+
+- The Sonar quality-gate step in CI sends its token in a `Bearer` header, not
+  `curl -u "$SONAR_TOKEN:"`, which gitleaks reports as a hardcoded credential.
+- The four remaining gitleaks matches are in the git history of a workflow deleted in `a59c8e7`,
+  and each is a reference to a secret. The existing acknowledgement never applied: it matched by
+  relative path, while gitleaks reports absolute ones. It now matches by file.
+- The manual Sonar-resolve workflow's Checkov CKV_GHA_7 finding is acknowledged with its reason: it
+  builds nothing, and its inputs reach the script only through environment variables.
+- The analyzer-drift test runs the workflow's shell helper under `bash`, as Actions does, rather
+  than `shell=True`.
+
 ## 3.7.3 - 2026-09-13
 
 **3.7.2 was tagged and never published.** Its release build tests the built wheel in a fresh

@@ -130,9 +130,12 @@ def _assert_the_comparison_can_fail(steps: list[str]) -> None:
 
     helper = re.search(r"^\s*(strip\(\) \{.*?\})\s*$", compare, re.M)
     assert helper is not None, "the drift step defines no normaliser"
-    result = subprocess.run(  # noqa: S602 - the workflow's own one-liner
-        f"{helper.group(1)}\nstrip constraints/analyzers.txt",
-        shell=True, cwd=ROOT, capture_output=True, text=True, check=False,
+    # Under bash, as the Actions step runs it, rather than `shell=True`'s
+    # `/bin/sh`: the helper is the workflow's own bash, and a POSIX shell
+    # is not the interpreter it has to work in.
+    result = subprocess.run(  # noqa: S603 - the workflow's own one-liner
+        ["bash", "-c", f"{helper.group(1)}\nstrip constraints/analyzers.txt"],  # noqa: S607
+        cwd=ROOT, capture_output=True, text=True, check=False,
     )
     produced = [line for line in result.stdout.splitlines() if line.strip()]
     assert produced, "the normaliser produced nothing from the constraints file"

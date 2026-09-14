@@ -19,6 +19,7 @@ from __future__ import annotations
 from typing import Any
 
 from ._coverage_notes import coverage_notes
+from ._security_work_order import severity_counts
 
 
 def _by_language_rows(coverage: dict[str, Any]) -> list[str]:
@@ -364,15 +365,20 @@ def pillar_cells(entry: dict[str, Any]) -> tuple[str, str]:
     condition = "—" if entry["condition"] is None else f"{entry['condition']:.1f}"
     if entry["posture"] is None:
         return condition, "not measured — see below"
+    # What the producer found, in both states: an ungraded pillar still
+    # counted its findings, and printing only why no grade was issued hid
+    # five critical ones behind "scanner coverage is partial" (D179).
+    counts = severity_counts(entry)
+    found = f"; findings: {counts}" if counts else ""
     if entry["condition"] is None:
         # An ungraded pillar is `unverified` because nothing could be graded,
         # not because a clean scan lacks enforcement — the note for that cell
         # told a reader of secure-code-agent's partial-coverage pillar that
         # its scan was clean (D176). Say why no grade was issued instead.
         why = (entry.get("evidence_reasons") or [None])[0] or "the evidence could not support a grade"
-        return condition, f"{entry['posture']}: not graded — {why}"
+        return condition, f"{entry['posture']}: not graded — {why}{found}"
     note = POSTURE_NOTE.get(entry["posture"], entry["posture"])
-    return condition, f"{entry['posture']}: {note}"
+    return condition, f"{entry['posture']}: {note}{found}"
 
 
 def _pillar_row(entry: dict[str, Any]) -> str:

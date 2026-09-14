@@ -479,6 +479,29 @@ def combined_delta(report: dict[str, Any], items: list[dict[str, Any]]) -> float
     return round(max(0.0, (after or before) - before), 3)
 
 
+def escalated_fingerprints(report: dict[str, Any]) -> set[str]:
+    """The findings history shows were fixed and came back, as fingerprints."""
+    return {item["fingerprint"] for item in report.get("design_review_candidates") or []}
+
+
+def withheld_reason(item: dict[str, Any], escalated: set[str] | None = None) -> str | None:
+    """Why no agent is handed this item as a patch, or `None` when one is (D180).
+
+    The one rule the bounded prompt and every copy-paste block read. The
+    prompt withheld the demo's two duplicated blocks as needing a design
+    decision while the report's standalone block for each said "Task: remove
+    the duplicated block" — the same run authorising and forbidding the same
+    change, depending on which text was pasted.
+    """
+    if item["band"] == Band.MAJOR_PROJECT.value:
+        return ("it is a Major Project — the change it needs is a design "
+                "decision before code moves, not one reviewable patch")
+    if item.get("fingerprint") in (escalated or set()):
+        return ("it was fixed before and came back, so the same edit is known "
+                "not to hold and the surrounding design needs a decision")
+    return None
+
+
 def prompt_items(items: list[dict[str, Any]], limit: int = 12,
                  escalated: set[str] | None = None) -> list[dict[str, Any]]:
     """Agent subset: no major projects, no escalated returns; Severe leads.
@@ -487,12 +510,7 @@ def prompt_items(items: list[dict[str, Any]], limit: int = 12,
     so a risk-5 item can still sit below hotter Quick Wins of other classes.
     The table can stay exposure-ordered; the paste of 12 cannot drop Severe.
     """
-    blocked = escalated or set()
-    eligible = [
-        item for item in items
-        if item["band"] != Band.MAJOR_PROJECT.value
-        and item.get("fingerprint") not in blocked
-    ]
+    eligible = [item for item in items if withheld_reason(item, escalated) is None]
     severe = [item for item in eligible if item.get("risk") == 5]
     rest = [item for item in eligible if item.get("risk") != 5]
     return _one_per_class(severe + rest)[:limit]

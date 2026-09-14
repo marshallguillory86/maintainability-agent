@@ -11,7 +11,8 @@ Marshall: the pillar is complete, so the audit runs it.
 **What the child writes.** Every report `secure-code-agent` can produce is
 redirected into a temporary directory this process owns: the Markdown and
 JSON reports, SARIF, the PR comment, the remediation prompt and the pillar
-document itself. The one write that cannot be redirected is its append-only
+document itself. The pillar document and the remediation prompt — that
+tool's work order — are read back before the directory goes (D179). The one write that cannot be redirected is its append-only
 trend, `.secure-code/history.jsonl` in the audited tree, which it writes on
 every run from its own configuration. Turning that off would mean handing
 it a configuration from outside the tree, and `secure-code-agent` trusts an
@@ -71,6 +72,9 @@ class DelegateRun:
     document: dict[str, Any] | None
     reason: str | None = None
     environment: list[dict[str, str]] = field(default_factory=list)
+    #: The delegate's own remediation prompt — its work order — read before
+    #: the directory it was written into is deleted (D179).
+    work_order: str | None = None
 
 
 def _install_remedy(reason: str) -> dict[str, str]:
@@ -120,7 +124,7 @@ def run_security_delegate(
         ), timeout_seconds=timeout_seconds)
         document = read_produced(pillar)
         if document is not None:
-            return DelegateRun(document)
+            return DelegateRun(document, work_order=_read_text(out / "prompt.md"))
         if result.outcome is Outcome.TIMED_OUT:
             return DelegateRun(None, f"secure-code-agent did not finish within {timeout_seconds}s")
         detail = _last_line(result.stderr) or _last_line(result.stdout) or result.detail
@@ -156,6 +160,13 @@ def _installed_version() -> tuple[int, ...] | None:
         if match.group() != piece:
             break
     return tuple(parts) or None
+
+
+def _read_text(path: Path) -> str | None:
+    try:
+        return path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
 
 
 def _last_line(text: str | None) -> str:

@@ -37,6 +37,7 @@ from ._scan_history import (
     record_of,
     segments,
 )
+from ._security_work_order import KEY as SECURITY_WORK_ORDER
 from ._stored_grants import (
     StaleStandingGrant,
     refuse_a_stale_standing_grant,
@@ -301,6 +302,11 @@ def _top_level_result(report: dict[str, Any], root: Path, status: str,
     # travels only for json, so the remedy cannot live only inside it.
     if report.get("environment_work_order"):
         result["environment_work_order"] = report["environment_work_order"]
+    # D179, on the same reasoning: the bounded chat view has no room for
+    # secure-code-agent's whole work order, and the report dict travels only
+    # for json, so it rides every format at the top level.
+    if report.get(SECURITY_WORK_ORDER):
+        result[SECURITY_WORK_ORDER] = report[SECURITY_WORK_ORDER]
     if include_prompt:
         result["remediation_prompt"] = render_ai_prompt(report)
     return result

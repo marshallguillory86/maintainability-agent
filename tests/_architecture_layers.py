@@ -276,6 +276,10 @@ PRESENTATION = {"renderers", "prompts", "sarif", "baseline", "_evidence_view",
                 # is real (this is what to *do*; `_scan_view` is what was
                 # looked at). It reads the report dict and computes no score.
                 "_work_order_view",
+                # `_security_work_order` prints the security pillar's counts
+                # and carries secure-code-agent's own work order unchanged
+                # (D179). It re-ranks nothing and computes no score.
+                "_security_work_order",
                 # TDD-structure sentences shared by chat, Markdown, HTML.
                 "_tdd_view",
                 # What a blocked commit prints, and the JSON an agent

@@ -210,7 +210,10 @@ Code extension. It exposes all three MCP primitives over stdio:
   an existing series, or follows an explicit true or false; it can also write
   or consult a repository-scoped version-3 baseline. A top-level
   `environment_work_order` tells the host which selected tools could not run,
-  how to install them and what concepts they restore.
+  how to install them and what concepts they restore. A top-level
+  `security_work_order` carries secure-code-agent's own work order for the
+  security findings the pillar counts, unchanged; show it apart from the
+  maintainability `remediation_prompt`.
 - `get_agent_info` reports the installed version and authorized roots.
 - Resources expose the applied standard, analyzer catalog and byte-identical
   Markdown report without introducing a second rendering path.

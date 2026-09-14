@@ -30,8 +30,11 @@ from ._scan_view import (
     undetected_declarations_markdown,
     unread_source_markdown,
 )
+from ._security_work_order import complete_markdown as security_work_order_markdown
+from ._security_work_order import pointer_markdown as security_work_order_pointer
 from ._semantic_view import semantic_markdown, without_semantic_suffixes
 from ._tdd_view import tdd_structure_markdown
+from ._work_order import escalated_fingerprints
 from ._work_order_view import NOTHING_TO_DO, work_order_markdown, work_order_selection_markdown
 
 
@@ -209,7 +212,7 @@ def _bounded_markdown(report: dict[str, Any], score: dict[str, Any],
     lines.extend(_hard_gate_lines(report))
     work_order = work_order_markdown(
         report.get("work_order"), complete=False, root_label=root_label,
-        exposure_ordered=_exposure_ordered(report))
+        exposure_ordered=_exposure_ordered(report), escalated=escalated_fingerprints(report))
     lines.extend(work_order or _no_work_order_lines())
     lines.extend(summary)
     lines.extend(render_grade_blockers(report))
@@ -220,6 +223,7 @@ def _bounded_markdown(report: dict[str, Any], score: dict[str, Any],
     # view printed nothing about security at all, measured or not, and a
     # missing pillar read exactly like a clean one (ADR 007).
     lines.extend(pillars_markdown(report.get("pillars"), report.get("practice")))
+    lines.extend(security_work_order_pointer(report))
     lines.extend([
         "---", "",
         "This is the bounded UI view. The complete report — every finding, "
@@ -254,7 +258,8 @@ def _complete_markdown(report: dict[str, Any], score: dict[str, Any],
     else:
         lines.extend(work_order_markdown(
             report.get("work_order"), complete=True, root_label=root_label,
-            exposure_ordered=_exposure_ordered(report)))
+            exposure_ordered=_exposure_ordered(report), escalated=escalated_fingerprints(report)))
+    lines.extend(security_work_order_markdown(report))
     lines.extend(economic_impact_markdown(report.get("economic_impact")))
     lines.extend(tdd_structure_markdown(report.get("tdd_structure")))
     lines.extend(test_suite_markdown(report))

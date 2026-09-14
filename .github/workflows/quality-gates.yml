@@ -542,8 +542,10 @@ jobs:
       # 61%". This asks the server which conditions it failed on and
       # prints them, so the log answers the question the log raises.
       #
-      # The token is the same one the scan uses; SonarCloud takes it as
-      # the basic-auth username with an empty password.
+      # The token is the same one the scan uses, sent as a bearer token.
+      # `curl -u "$SONAR_TOKEN:"` worked too, and is the shape gitleaks'
+      # curl-auth-user rule reports as a hardcoded credential on every run;
+      # the header says the same thing without a finding to acknowledge.
       - name: Name the failing quality-gate conditions
         if: >
           always() && (github.event_name == 'pull_request' ||
@@ -556,7 +558,7 @@ jobs:
           set -uo pipefail
           key=marshallguillory86_maintainability-agent
           if [ -n "${PR:-}" ]; then scope="pullRequest=$PR"; else scope="branch=main"; fi
-          status=$(curl -sS -u "$SONAR_TOKEN:" \
+          status=$(curl -sS -H "Authorization: Bearer $SONAR_TOKEN" \
             "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$key&$scope")
           echo "$status" | python3 -c '
           import json, sys

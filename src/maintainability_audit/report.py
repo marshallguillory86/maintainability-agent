@@ -23,6 +23,8 @@ from ._metrics_types import FileMetric, FunctionMetric
 from ._pillars import pillar_report
 from ._practice import practice_level
 from ._security_delegate import run_security_delegate
+from ._security_work_order import KEY as SECURITY_WORK_ORDER
+from ._security_work_order import carried as carried_work_order
 from ._semantic import semantic_findings
 from ._semantic_policy import load_semantic_policy
 from ._semantic_ts import discover_type_analysis
@@ -369,33 +371,41 @@ def _assemble(
 
 
 def _attach_semantics(
-    report: dict[str, Any], root: Path, config: dict[str, Any],
-    only_paths: set[str] | None = None,
+    report: dict[str, Any], root: Path, config: dict[str, Any], audited: set[str],
 ) -> None:
     """ADR 003 option C, after the score is sealed and before the work
     order reads it: semantic results are findings and prompt material,
     never rubric input — nothing from here reaches `score_report`.
 
-    **A changed-only run keeps the findings its paths hold (D174).** The
-    semantic walk reads the whole tree, so a changed-only audit of two
-    commits nominated a TypeScript fixture neither commit touched and
-    handed it to the prompt. A finding with no located source path cannot
-    be placed in or out of the change, and is not work anyone can act on
-    either (`_items_from_semantic` drops it), so it is left out here too.
+    **A semantic finding is kept only where this run read its file (D174,
+    D181).** The semantic walk reads the whole tree. D174 held a
+    changed-only run to its paths, after it nominated a TypeScript fixture
+    neither commit touched; a full run still reported findings from paths
+    the operator had excluded, so excluding `tests/fixtures/` left a design
+    review candidate in the prompt. `audited` is the population every other
+    finding comes from — exclusions, changed-only paths, and code the
+    inventory classed as not the team's already applied — so one rule
+    covers both modes. A finding with no located source path cannot be
+    placed inside that population, and is not work anyone can act on either
+    (`_items_from_semantic` drops it), so it is left out here too.
     """
     semantic = semantic_findings(
         root,
         policy=load_semantic_policy(config),
         type_analysis=discover_type_analysis(root),
     )
-    findings = semantic["findings"]
-    if only_paths is not None:
-        findings = [
-            finding for finding in findings
-            if ((finding.get("source_evidence") or {}).get("path")) in only_paths
-        ]
+    findings = [
+        finding for finding in semantic["findings"]
+        if ((finding.get("source_evidence") or {}).get("path")) in audited
+    ]
+    coverage = semantic["coverage"]
+    if isinstance(coverage.get("violations"), dict):
+        # Counted from the findings the report carries, not the walk's.
+        coverage = {**coverage, "violations": {
+            name: sum(1 for finding in findings if finding["class"] == name)
+            for name in coverage["violations"]}}
     report["semantic_findings"] = findings
-    report["semantic_coverage"] = semantic["coverage"]
+    report["semantic_coverage"] = coverage
 
 
 def _pillars_with_delegation(
@@ -426,17 +436,24 @@ def _pillars_with_delegation(
         handed_over = read_delegated(root, pillar_path)
         reason = None if handed_over else (
             f"the --security-pillar document {pillar_path} was absent or could not be trusted")
+        work_order = None
     else:
         run = run_security_delegate(root, changed_revspec=changed_revspec)
-        handed_over, reason = run.document, run.reason
+        handed_over, reason, work_order = run.document, run.reason, run.work_order
         if run.environment:
             report["environment_work_order"] = [
                 *(report.get("environment_work_order") or []), *run.environment]
-    return pillar_report(
+    pillars = pillar_report(
         report["score"], report["practice"],
         {"security": handed_over} if handed_over else None,
         {"security": reason} if reason else None,
     )
+    security = next(entry for entry in pillars if entry["pillar"] == "security")
+    # Only beside the document it came with: a work order from a run whose
+    # pillar could not be trusted is not evidence either (D179).
+    if handed_over and (carried_order := carried_work_order(work_order, security)):
+        report[SECURITY_WORK_ORDER] = carried_order
+    return pillars
 
 
 def build_report(
@@ -507,7 +524,7 @@ def build_report(
     # Condition rolls up aspects; practice stays a separate axis (ADR 007).
     report["practice"] = practice_level(root, config).as_dict()
     report["pillars"] = _pillars_with_delegation(report, root, security_pillar, changed_revspec)
-    _attach_semantics(report, root, config, only_paths)
+    _attach_semantics(report, root, config, {p.relative_to(root).as_posix() for p in source_files})
     # Last, because every item's delta is a rubric recomputation and the
     # rubric needs the scored report to recompute against.
     report["work_order"] = work_order(report, thresholds=config["thresholds"])

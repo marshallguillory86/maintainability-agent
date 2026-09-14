@@ -12,6 +12,32 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.5 - 2026-09-14
+
+One fix. The security pillar now honours reviewed suppressions on any repository, not only this one.
+Scoring, ordering and policy are unchanged.
+
+### Fixed — this audit requires secure-code-agent 0.12.2, the first release that honours `paths:` suppressions (D182)
+
+**Before:** the audit ran any secure-code-agent from 0.12.1 up. 0.12.1 matches `.scignore.yaml`
+`paths:` globs against absolute finding paths, and this audit always passes it an absolute root. Every
+reviewed `paths:` suppression was ignored, and its finding counted as live in the security pillar,
+which every skin shows since D179. 3.7.4 worked around that for this repository alone, by rewriting its
+own entry as `file:`.
+
+**Now:** the supported range is `>=0.12.2,<1`. secure-code-agent fixed the defect in 0.12.2 (its D20):
+finding paths are repository-relative, and its fingerprints no longer depend on where the checkout
+lives. With 0.12.1 installed, the pillar states that the release is unsupported and the environment
+work order gives the install command, the same as for any release outside the range.
+
+- CI installs `secure-code-agent==0.12.2` in all five places. README, CONTRIBUTING, the machine-setup
+  page and ADR 007 give the new minimum.
+- This repository's `.scignore.yaml` is back to `paths:`. Audited with the entry restored,
+  0.12.1 left all four `gitleaks.curl-auth-user` history matches live and 0.12.2 suppressed all four.
+
+**If you run the audit yourself:** `pip install -U 'secure-code-agent>=0.12.2'`. secure-code-agent's own
+changelog covers what 0.12.2 changes for baselines. Existing ones keep matching.
+
 ## 3.7.4 - 2026-09-14
 
 Three fixes from Grok's audit of 3.7.3. Each one is a report that left out, or contradicted, what the

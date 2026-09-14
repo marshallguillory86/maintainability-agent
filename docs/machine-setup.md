@@ -199,7 +199,7 @@ Install `secure-code-agent` alongside — it is not a dependency of this
 package, and every audit runs it for the security pillar (D177):
 
 ```bash
-python3 -m pip install 'secure-code-agent>=0.12.1'
+python3 -m pip install 'secure-code-agent>=0.12.2'
 ```
 
 Check the published release first (`gh release list --repo

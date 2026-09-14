@@ -1,3 +1,3 @@
 """Maintainability Audit CI."""
 
-__version__ = "3.7.3"
+__version__ = "3.7.4"

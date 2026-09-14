@@ -26,7 +26,9 @@ from . import _charts
 from . import _evidence_view as view
 from ._grammar import agreement
 from ._html_report_sections import coverage_section, remaining_sections, trend_section
+from ._security_work_order import complete_html as security_work_order_html
 from ._semantic_view import semantic_class_label
+from ._work_order import escalated_fingerprints
 from ._work_order_view import prompt_body_lines
 
 _SEVERITY_BY_RISK = {5: "Severe", 4: "High", 3: "Medium"}
@@ -82,6 +84,7 @@ def render_html(report: dict[str, Any], records: list[Any]) -> str:
         *trend_section(report),
         *remaining_sections(report),
         *_work_order_section(report),
+        *security_work_order_html(report),
         *_hard_gate_section(report),
         *_unidentified_paths_section(report),
         *_semantic_section(report),
@@ -290,10 +293,12 @@ def _work_order_section(report: dict[str, Any]) -> list[str]:
     rows.extend([
         "<h3>Copy-paste prompts</h3>",
         "<p>One self-contained prompt per item — copy any block into a coding "
-        "agent.</p>",
+        "agent. A block for an item that needs a design decision asks for that "
+        "decision, not a patch.</p>",
     ])
+    escalated = escalated_fingerprints(report)
     for item in items:
-        body = "\n".join(prompt_body_lines(item, root_label))
+        body = "\n".join(prompt_body_lines(item, root_label, escalated))
         rows.append(f"<h4>{escape(str(item.get('title') or ''))}</h4>")
         rows.append(f"<pre>{escape(body)}</pre>")
     return rows

@@ -1,13 +1,14 @@
 # Acknowledged secure-code-agent findings, with the reason each was reviewed
 # and the date the acknowledgement expires. Per secure-code-agent design.md §10.
 
-# `file:` rather than `paths:`. gitleaks reports the path it was handed, which
-# is absolute whenever the audit names the repository by absolute path — as
-# maintainability-agent always does — and `paths:` globs are matched against
-# that string, so the relative glob this entry used to carry matched nothing
-# and all five findings read as live criticals. `file:` matches by suffix.
+# Scoped by `paths:`, repository-relative. secure-code-agent 0.12.1 and earlier
+# matched these globs against absolute paths, so an audit that named the
+# repository by absolute path — as maintainability-agent always does — left
+# every entry unmatched and its findings live. 3.7.4 worked around that with
+# `file:`; secure-code-agent 0.12.2 fixed it (its D20), and this audit refuses
+# to run anything older.
 - rule_id: gitleaks.curl-auth-user
-  file: ".github/workflows/sonar-rename-main-branch.yml"
+  paths: [".github/workflows/sonar-rename-main-branch.yml"]
   reason: >-
     Reviewed: git history only. The workflow was deleted in a59c8e7, and every
     match is `curl -u "$SONAR_TOKEN:"`, a shell expansion of a GitHub Actions
@@ -19,7 +20,7 @@
   expires: "2027-09-01"
 
 - rule_id: CKV_GHA_7
-  file: ".github/workflows/sonar-resolve.yml"
+  paths: [".github/workflows/sonar-resolve.yml"]
   reason: >-
     Reviewed: the rule forbids workflow_dispatch inputs because they can steer
     build output. This workflow builds nothing and publishes no artifact: it

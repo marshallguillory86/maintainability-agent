@@ -86,7 +86,8 @@ is complete, so the audit completes it:
 
 - **Every audit runs `secure-code-agent`** through `_runner.run` with the
   auditing interpreter, when the installed release is in the supported range
-  (`>=0.12.1,<1`). "Absence keeps the placeholder" above is superseded.
+  (`>=0.12.2,<1`; the floor was 0.12.1 until 3.7.5 and D182). "Absence keeps
+  the placeholder" above is superseded.
 - **Not a package dependency.** 3.7.0 made it one, and within the day that
   capped the tool below its current release and put the two tools' opposed
   `mcp` pins into one environment. secure-code-agent's D3 and ADR 008 hold the

@@ -18,7 +18,7 @@ Thanks for helping improve Maintainability Agent.
 # Install dev extras (ruff + pip-audit + jsonschema + pytest-cov + PyYAML
 # for tools/build_catalog.py). The shipped package does not depend on PyYAML.
 # secure-code-agent, which every audit runs (D177), is installed alongside,
-# not as a dependency: python3 -m pip install 'secure-code-agent>=0.12.1'.
+# not as a dependency: python3 -m pip install 'secure-code-agent>=0.12.2'.
 python3 -m pip install -e ".[dev]"
 
 # Lint, deps scan, tests with coverage gate, self-audit.

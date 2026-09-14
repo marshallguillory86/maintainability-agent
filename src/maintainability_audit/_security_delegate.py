@@ -55,9 +55,15 @@ from ._runner import Invocation, Outcome, run
 #: whichever release is installed, when it falls in this range, and says so
 #: when it does not. The ceiling is the next major: within 0.x the pillar
 #: document is versioned by its own `schema_version`, which the reader checks.
-SUPPORTED_FLOOR = (0, 12, 1)
+#:
+#: **The floor is 0.12.2, not the first release with this contract (D182).**
+#: 0.12.1 writes the same schema v2 document, and matches `.scignore.yaml`
+#: `paths:` globs against absolute finding paths. This audit always hands it an
+#: absolute root, so under 0.12.1 every reviewed `paths:` suppression is ignored
+#: and its finding counts as live in the pillar every skin shows (D179).
+SUPPORTED_FLOOR = (0, 12, 2)
 SUPPORTED_CEILING = (1,)
-REQUIREMENT = "secure-code-agent>=0.12.1,<1"
+REQUIREMENT = "secure-code-agent>=0.12.2,<1"
 
 #: How long the child may run before the pillar is reported as unmeasured.
 DEFAULT_TIMEOUT_SECONDS = 300

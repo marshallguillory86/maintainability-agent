@@ -151,13 +151,18 @@ def test_a_missing_delegate_is_stated_with_its_remedy(tmp_path, monkeypatch) -> 
     assert remedies and "pip install" in remedies[0]["install"], report["environment_work_order"]
 
 
-@pytest.mark.parametrize("installed", ["0.10.0", "0.12.0", "1.0.0"])
+@pytest.mark.parametrize("installed", ["0.10.0", "0.12.0", "0.12.1", "1.0.0"])
 def test_an_unsupported_release_is_stated_not_run(tmp_path, monkeypatch, installed) -> None:
     """D177: installed but outside the supported range is a reason and a remedy, never a run.
 
     secure-code-agent is no longer a package dependency, so the version a machine has is
     whatever it has. Running a release outside the range would read a contract this
     audit has not been checked against.
+
+    D182: 0.12.1 writes the same pillar contract and is still refused. It matches
+    `.scignore.yaml` `paths:` globs against absolute paths, so on the absolute root this
+    audit always passes it, a reviewed suppression is ignored and its finding counts as
+    live in the pillar every skin shows.
     """
     import importlib.machinery
     import importlib.metadata as metadata

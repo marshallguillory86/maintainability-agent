@@ -1,4 +1,4 @@
-"""Class B (Grok 63ab820), third seam: a standalone analyzer that turns a
+"""Class B (audit of `63ab820`), third seam: a standalone analyzer that turns a
 runner result into an availability verdict cannot read a not-usable run as
 clean.
 
@@ -164,7 +164,7 @@ def test_a_workspace_tsconfig_and_local_tsc_are_found_and_paths_re_rooted(
     What this used to also require — that `web/node_modules/.bin/tsc` be
     *used* when nothing is on PATH — was Decision 9 inverted into a test:
     it made "the audited tree chooses the binary we exec" a passing
-    condition. A Grok audit on 2026-09-04 found the production path, and
+    condition. An audit on 2026-09-04 found the production path, and
     `test_tree_chosen_spawn` now plants a `tsc` and asserts it never runs.
     So the compiler here comes from PATH, and a tree whose only compiler
     is project-local leaves coverage unknown — the honest fallback.

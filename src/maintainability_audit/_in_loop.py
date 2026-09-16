@@ -174,7 +174,7 @@ def _breaches_for(metric: Any, thresholds: dict[str, int]) -> list[dict[str, Any
     version subtracted `max_function_lines` from the line count whatever
     had failed. A short, complex function then rendered as "-71 over" —
     a negative overage of a budget it was comfortably inside, printed for
-    a breach that was real (Grok's audit). A figure has to be about the
+    a breach that was real (found by audit). A figure has to be about the
     thing that failed or it is worse than no figure.
     """
     lines_limit, _ = _budget_for(metric.kind, thresholds)

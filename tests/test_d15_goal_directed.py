@@ -1,6 +1,6 @@
 """D15 as originally written: goal-directed, inventory-aware selection.
 
-The Codex audit on d5b1c50 (H1) found the register's D15 entry was
+The audit on d5b1c50 (H1) found the register's D15 entry was
 rewritten at close: the original requirement — selection consults the
 same language inventory and concern→concept mapping the coverage
 section uses, covers the repository's languages with the verified
@@ -57,7 +57,7 @@ def test_inventory_deselects_before_any_probe_or_spawn(
 ) -> None:
     """Selection consults the inventory: a language-mismatched tool is
     never probed and never spawned — decided against, not attempted and
-    rejected (Codex audit H1: the earlier version of this test pinned
+    rejected (audit H1: the earlier version of this test pinned
     the attempted-then-rejected shape, which was the original defect)."""
     from maintainability_audit import _runner
 
@@ -209,7 +209,7 @@ def test_the_runnable_set_is_minimal_for_the_trees_languages(
     # The real key, and it must not be empty: an earlier version of
     # this test read a `languages` key the coverage document never
     # emitted, then passed itself when the resulting set came back
-    # empty — a falsifier that could not fail (Codex round four, M2).
+    # empty — a falsifier that could not fail (audit round four, M2).
     present = {name.lower() for name in coverage["by_language"]}
     assert present, "the fixture produced no languages, so this proves nothing"
     assert "java" in present and "javascript" in present

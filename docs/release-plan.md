@@ -220,7 +220,7 @@ Until that exists, a small repository gets path 2: a complete audit, every findi
 
 ## Phase 8 — 1.0 presentations and scoring continuity
 
-Decided in [ADR 011](adr-011-three-report-presentations.md) and the schema-2 close of [ADR 009](adr-009-scan-history.md). 7.5 and the tag wait on this. Marshall's acceptance test is the last human gate; if it fails, this phase is reopened, not papered over.
+Decided in [ADR 011](adr-011-three-report-presentations.md) and the schema-2 close of [ADR 009](adr-009-scan-history.md). 7.5 and the tag wait on this. The acceptance test is the last human gate; if it fails, this phase is reopened, not papered over.
 
 | # | Task | Exit condition |
 |---|---|---|
@@ -231,7 +231,7 @@ Decided in [ADR 011](adr-011-three-report-presentations.md) and the schema-2 clo
 | 8.5 | MCP format parameter | **Shipped.** The prompt tells the host to ask; `audit_repository` takes `format`; HTML comes back as text and the tree is never written; chat returns Markdown (`tests/test_format_ask.py`) |
 | 8.6 | HTML | **Shipped.** One file, inlined CSS, deterministic SVG from stored records, executive summary first, all four required charts, schema-1 scans as gaps, empty history as an empty state, and no http(s) resource load (`tests/test_three_presentations.py`) |
 | 8.7 | Honesty | **Shipped** for 8.1–8.6: the register rows for ADR 009 and ADR 011 and this table state exactly what the named tests prove. 8.8–8.10 closed below on 2026-09-01; this row said they remained open for a further two releases, which is the drift 7.2 forbids |
-| 8.8 | Acceptance (Marshall) | ✅ Done — run on bighound (a real Python + TypeScript repo) across chat, MCP and CLI, with recorded scans; the round surfaced the reconfigure and TS-semantic defects |
+| 8.8 | Acceptance | ✅ Done — run on a real Python + TypeScript repository across chat, MCP and CLI, with recorded scans; the round surfaced the reconfigure and TS-semantic defects |
 | 8.9 | 7.5 | ✅ Done — the acceptance round was itself the adversarial audit: it found the config-destroy-on-reconfigure bug and the TS-coverage-goes-unknown gap, both fixed and falsified before the tag |
 | 8.10 | Tag 1.0 | ✅ 8.8 and 8.9 complete; tagging v1.0.0 (2026-09-01) |
 

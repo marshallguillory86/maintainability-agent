@@ -1,6 +1,6 @@
 """What secure-code-agent found reaches the reader, with its own work order (D179).
 
-From Grok's audit of 3.7.3 (`7befdbd`) run on this repository: secure-code-agent
+From the audit of 3.7.3 (`7befdbd`) run on this repository: secure-code-agent
 recorded five critical findings and one high, and every skin printed
 "unverified: not graded — scanner coverage is partial" with no count. Its
 remediation prompt was written into a temporary directory and deleted with

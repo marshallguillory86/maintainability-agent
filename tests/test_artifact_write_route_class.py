@@ -1,4 +1,4 @@
-"""Class A (Grok 63ab820): every product-artifact write refuses a route the
+"""Class A (audit of `63ab820`): every product-artifact write refuses a route the
 audited tree could redirect, on both ``/var`` and ``/private/var`` spellings,
 and refuses to truncate a file that is not one of ours.
 

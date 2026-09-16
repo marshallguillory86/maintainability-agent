@@ -216,7 +216,7 @@ def cobol_cognitive(lines: list[str]) -> int:
     no `PROCEDURE DIVISION` — so re-masking blanked the whole thing and
     every COBOL paragraph in production scored exactly 0, including deeply
     nested ones. The souvenir test passed throughout because it called this
-    with a whole file. Found by a Grok audit on 2026-09-04.
+    with a whole file. Found by an audit on 2026-09-04.
     """
     masked = lines
     score = 0

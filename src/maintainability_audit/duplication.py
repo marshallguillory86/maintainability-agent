@@ -58,7 +58,7 @@ def duplicate_blocks(
         # The index into this filtered list is not a source line: reporting
         # `idx + 1` pointed a reader at the Nth non-comment line, not line N
         # of the file, so every duplicate location was off by however many
-        # comments and blanks preceded it (Grok e88b429 audit).
+        # comments and blanks preceded it (audit of `e88b429`).
         useful = [
             (number, line)
             for number, line in enumerate(lines, start=1)

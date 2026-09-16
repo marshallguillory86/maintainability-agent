@@ -437,7 +437,7 @@ def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
     # Risk findings honour the same escalation as the hotspots and large
     # files above: a design-review candidate is announced as withheld in
     # the escalation note, so listing it here too presented it twice and
-    # contradicted that note (P5, Grok e88b429 audit). The rule was
+    # contradicted that note (P5, audit of `e88b429`). The rule was
     # enforced on every focus category except this one.
     risk_ids = risk_identities(report)
     risks = [

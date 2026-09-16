@@ -16,7 +16,7 @@ obsolete again at the next one.
 What is *not* policy is silence about it where the grade is read. The
 report carried `score.reference` and the note said the corpus spanned
 "every language this scanner parses" — which was true when it was written
-and false from 2.4.0 onward, for three releases. A Grok audit on
+and false from 2.4.0 onward, for three releases. An audit on
 2026-09-04 named it as the second instance of a shape this project had
 already shipped once: a limit disclosed only in JSON is disclosed nowhere
 that matters.

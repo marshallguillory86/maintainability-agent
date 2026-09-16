@@ -10,8 +10,7 @@
 
 ## The problem
 
-This tool is built by hostile audits. An adversary — Grok, so far —
-reads a change and tries to make a stated promise false: a symlinked
+This tool is built by hostile audits. An adversary reads a change and tries to make a stated promise false: a symlinked
 write that escapes the grant, an empty analyzer run priced as clean, a
 type check that never ran reported as a pass. Every accepted finding
 becomes a **population-derived falsifier** that fails without its fix,
@@ -89,7 +88,7 @@ boundary). The boundary sentence:
 
 - The loop that builds this tool becomes a first-class, repeatable step:
   seeded, bounded, reproducible input, comparable across runs, and
-  usable by any model or IDE agent (Grok, Claude, Codex) the same way
+  usable by any model or IDE agent the same way
   the remediation prompt already is.
 - It is a third emitter on a seam that already carries two
   (`render_ai_prompt`, `render_agent_instructions`) — no new

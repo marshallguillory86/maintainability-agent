@@ -1,9 +1,9 @@
 """The demo tree still produces the work order its README promises.
 
-Grok's audit, item 5: *"Self-audit says 'prefer leaving this repo alone.'
-That is honest and a terrible demo. A tiny fixture with two real findings
-and two prompts a stranger can paste into Claude would sell the thesis in
-one minute."*
+A value audit, item 5: the self-audit's own advice — prefer leaving this
+repository alone — is honest and makes a poor demo. A tiny fixture with two
+real findings and two prompts a stranger can paste into a coding agent shows
+the product in a minute.
 
 `examples/demo` is that fixture, and this is what stops it rotting. A
 demo that quietly stops finding anything is worse than no demo: the
@@ -85,7 +85,7 @@ def test_the_demo_shows_more_than_one_kind_of_problem() -> None:
     """One class repeated is the D159 shape, and it does not sell anything.
 
     A demo whose every row is the same finding demonstrates a rule, not a
-    product. Grok asked for two real findings; the fixture carries three
+    product. The audit asked for two real findings; the fixture carries three
     classes so this has a margin before it stops being a demo.
     """
     classes = {item["finding_class"] for item in _demo_report()["work_order"]}
@@ -168,7 +168,7 @@ def test_the_demo_readme_quotes_real_output(promise: str) -> None:
 def test_the_demo_prompt_stays_readable() -> None:
     """A demo that takes ten minutes to read demonstrates the wrong thing.
 
-    Marshall's rule: a prompt is a paragraph or two, not a program. The
+    The rule: a prompt is a paragraph or two, not a program. The
     demo is where that is most visible, because it is the first work
     order most readers will ever see.
     """

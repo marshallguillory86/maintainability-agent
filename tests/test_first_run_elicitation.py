@@ -248,8 +248,8 @@ def test_declining_economics_omits_the_block_from_both_tiers(tmp_path: Path) -> 
         assert "economic_context" not in payload
 
 
-# Split mechanically (2026-08-16, precedent: Marshall's standing go on
-# contract helpers that breach the repo's own complexity gate): the
+# Split mechanically (2026-08-16, precedent: contract helpers that breach
+# the repo's own complexity gate are split rather than exempted): the
 # original single function measured CCN 17 against the budget of 15.
 # Every branch and value is verbatim; only the function boundary moved.
 def _preferred_for(text: str, field: dict[str, Any]) -> Any:

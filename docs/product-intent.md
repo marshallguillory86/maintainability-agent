@@ -169,7 +169,7 @@ the merge gate to certify a floating environment.
 `test_the_gating_pipeline_pins_the_analyzers_and_the_scheduled_run_detects_drift`
 holds the workflow and this page together.
 
-**What P1 does not police.** External analyzers run as local child processes (`_runner`). This package does not wrap them in a network sandbox, and it does not inspect whether *they* open sockets. A future SaaS CLI adapter would be a different product. The host that prints a report into an IDE chat (Grok, Claude, …) is also outside this process. P1 is enforced as determinism plus no HTTP client in `src/` that uploads the tree — not as “no packet can leave the box.”
+**What P1 does not police.** External analyzers run as local child processes (`_runner`). This package does not wrap them in a network sandbox, and it does not inspect whether *they* open sockets. A future SaaS CLI adapter would be a different product. The host that prints a report into an IDE chat is also outside this process. P1 is enforced as determinism plus no HTTP client in `src/` that uploads the tree — not as “no packet can leave the box.”
 
 The prerequisites this creates are listed in [the analyzer pool](analyzer-pool.md#runtime-prerequisites) rather than left for a user to discover from a failure.
 

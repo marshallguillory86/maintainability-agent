@@ -62,38 +62,6 @@ The third cannot be checked mechanically, so it is required to be
 why it sits outside what the test names, cannot make the substitution
 silently.
 
-## Roles, recorded from D90
-
-Every entry from **D90** onward carries a `*Roles:*` line naming who did
-each part:
-
-```
-*Roles:* found=grok prompt=claude fix=claude test=codex run=ci
-```
-
-* `found` — the agent or person whose audit produced the finding.
-* `prompt` — who wrote the audit prompt that produced it. Not the same
-  question: an auditor searches where it is pointed, and every finding
-  in D64–D89 came from a prompt written by the same agent that wrote the
-  code being audited.
-* `fix` — who implemented the change.
-* `test` — who wrote the falsifier. **The interesting one.** A fix and
-  its check written by one mind share that mind's blind spot, which is
-  the mechanism behind eleven of this register's entries being findings
-  about an inadequate check rather than about the product.
-* `run` — where it was verified: `local`, `ci`, or `mutation` when a
-  fix was proved by reverting it and watching the cited test fail.
-
-**Entries before D90 have no `*Roles:*` line and are not backfilled.**
-The authorship of those falsifiers is not recorded anywhere, and
-reconstructing it from memory would put invented data into a register
-whose entire value is that its claims are checkable. Where an early
-entry names its reporter it does so in prose, which is all that is
-known.
-
-The working split this records, set 2026-08-26: **Claude writes code,
-Codex writes tests and docs, Grok audits, and Codex may audit.**
-
 ## Entries
 
 ### D1 — Closed: analyzer pool execution is config-driven at every seam
@@ -506,8 +474,8 @@ Asked to audit a repository, the host agent offered two choices —
 where to write the markdown. The HTML report was never mentioned. The
 product ships three presentations (`chat`, `markdown`, `html`), the
 `format` argument accepts all three, and first-run setup already asks
-which one the user prefers; the operator's reaction was simply "what
-happened to my HTML report option?"
+which one the user prefers, and the operator found the HTML report option
+simply missing.
 
 Nothing in the product had lost the option. The skill's presentation
 step named only chat and "a location", so the agent filled the gap with
@@ -588,8 +556,8 @@ imitating the symptom.
 ### D25 — Closed: the questions handed back are questions someone is told to ask
 
 Reported by the operator on 2026-08-21, correcting a wrong diagnosis of
-D22: *"I never saw an option for HTML, ever across the prompts."* Not
-in that run — in any run, for the life of the product.
+D22: no prompt had ever offered HTML. Not in that run — in any run, for
+the life of the product.
 
 D22 blamed the skill's presentation step, and fixing it was necessary
 but did not touch the cause. When a host cannot be elicited, the audit
@@ -623,11 +591,10 @@ right the whole time.
 
 ### D26 — Closed: an unconfigured repository is asked, not audited
 
-Marshall's ruling on 2026-08-21, in response to my proposing three ways
-to *disclose* a provisional grade: *"An unconfigured run is supposed to
-ask the questions first."*
+Decided 2026-08-21, against a proposal of three ways to *disclose* a
+provisional grade: an unconfigured run asks the questions first.
 
-The behaviour I was proposing to decorate: when a host could not be
+The behaviour that proposal would have decorated: when a host could not be
 elicited, the audit ran anyway on built-in defaults and filed its
 questions beside a finished report. Demonstrated on an unconfigured
 scratch repository — `analyzers_requested: False`, the pool off, a
@@ -682,13 +649,12 @@ in the same file pins the degradation path.
 
 ### D27 — Closed: configuring is not running, and setup is reachable on every run
 
-Marshall, 2026-08-21, after D26 shipped half of it: *"The point of the
-questions is to setup the agent's configuration on the repo. NO audit
-should be run automatically. DO NOT run the audit until the
-configuration questions are answered. Then ask if the user is ready to
-run the audit. … The second run will actually have a config. No need to
-ask the same config questions over and over again. Still should offer
-an option to go back into config, or run the report."*
+Decided 2026-08-21, after D26 shipped half of it: the questions exist to
+set up the repository's configuration, so no audit runs automatically and
+none runs until they are answered; then the user is asked whether to run.
+A second run already has a config and is not asked the same questions
+again, but is still offered the choice to go back into configuration or to
+run the report.
 
 D26 stopped the audit on an unconfigured repository. It then let
 answering the questions start one — so the user was asked how to
@@ -724,7 +690,7 @@ in `tests/test_first_run_elicitation.py` holds the elicitation path to it.
 
 ### D28 — Closed: the first-run help misdescribes the economics questions
 
-Found by Grok on 2026-08-22, auditing the docs against the code.
+Found by audit on 2026-08-22, auditing the docs against the code.
 `docs/help/first-run.md` presents economics as a single bullet —
 "economic context: skip, or low/base/high loaded labor rates". The form
 has four economics fields: the `economics` include/skip choice and
@@ -732,11 +698,11 @@ three labor bounds, and the bounds are in the elicitation schema
 **unconditionally**, so a person answering "skip" is still shown all
 three. A reader of the help page cannot predict what they will see.
 
-Assigned to Codex as a documentation fix. Release-blocking under the
+Assigned as a documentation fix. Release-blocking under the
 standing rule that a release ships only from an empty known-defect
 ledger.
 
-Fixed by Codex. The page now lists all nine fields with their
+Fixed. The page now lists all nine fields with their
 defaults and says the labor bounds appear whatever the economics answer
 is. Writing the falsifier turned up a second omission on the same page:
 it named `chat` as the presentation default without naming `markdown`
@@ -750,7 +716,7 @@ question added to the form has to reach the page before it ships.
 
 ### D29 — Closed: ADR 011 states a status that stopped being true
 
-Found by Grok on 2026-08-22. `docs/adr-011-three-report-presentations.md`,
+Found by audit on 2026-08-22. `docs/adr-011-three-report-presentations.md`,
 Decision item 4, ends "that free-text ask remains open under D3". D3 is
 closed. The decision text itself is history and must not be rewritten —
 an ADR records what was decided when it was decided — but a *status*
@@ -759,9 +725,9 @@ current.
 
 The remedy is a dated amendment stamp under that item, in the form the
 register now uses for its own superseded clauses, not an edit to the
-decision. Assigned to Codex.
+decision.
 
-Fixed by Codex with a dated amendment stamp beneath the decision
+Fixed with a dated amendment stamp beneath the decision
 item, leaving the decision text as the history it is.
 
 *Closing test:* `test_no_document_says_a_register_entry_is_open_that_the_register_closed`
@@ -773,7 +739,7 @@ which is the form an ADR has to take.
 
 ### D30 — Closed: the setup gate is every chat door, not one call site
 
-Found by Grok on 2026-08-22, auditing D21–D27. D26 made setup a
+Found by audit on 2026-08-22, auditing D21–D27. D26 made setup a
 precondition at `audit_repository`, and an audit of the *other* doors
 found the gate was one door wide.
 
@@ -821,7 +787,7 @@ seam.
 
 ### D31 — Closed: a closing citation names a findable test, not merely a real one
 
-Found by Grok on 2026-08-22, attacking the citation check added the
+Found by audit on 2026-08-22, attacking the citation check added the
 same day. That check resolved every name under a *Closing test* marker
 against the suite, which stopped entries closing on deleted tests. It
 did not check the entry named the right *file*: the module stem in the
@@ -836,7 +802,7 @@ The collector also missed `async def test_...`. No async test exists in
 this tree, so nothing was slipping through; the hole was real and is
 closed.
 
-Grok's third defeat stands and is recorded rather than fixed: the check
+The audit's third defeat stands and is recorded rather than fixed: the check
 cannot read assertions, so an entry may cite a live test that proves
 something other than its defect. Blocking that mechanically would mean
 deciding what a test asserts, which is the reviewer's job. It is named
@@ -847,7 +813,7 @@ in `tests/test_written_record.py`.
 
 ### D32 — Closed: the refusal reaches the reader, on every door
 
-Found by Grok on 2026-08-22, round 2, attacking round 1's fixes. Three
+Found by audit on 2026-08-22, round 2, attacking round 1's fixes. Three
 of the four findings are defects in D30 and D31; the fourth is a claim
 this register made that the wire disproved.
 
@@ -868,7 +834,7 @@ where a traceback is the least useful outcome available. The CLI now
 refuses in its own idiom, naming the file to repair.
 
 **A file name is not a falsifier.** D31's check required cited names to
-exist and to live in the cited file, and Grok closed an entry with
+exist and to live in the cited file, and an audit closed an entry with
 nothing but a path on the closing line: no name to resolve, so nothing
 to object to, so it passed. "Which test fails if this defect returns?"
 must have an answer, and now must have one written down.
@@ -880,7 +846,7 @@ decided, with nobody to ask — but the entry claimed more than the fix
 delivered. Retitled to *chat* door and stamped, rather than left to
 read as a promise the code does not keep.
 
-Two of Grok's attacks are recorded as accepted limits rather than
+Two of the audit's attacks are recorded as accepted limits rather than
 fixed: a citation naming a real test that proves something other than
 its entry's defect (D31 already says no check can read assertions), and
 a test living in `conftest.py`, which the collector does not scan
@@ -894,7 +860,7 @@ refused by `test_every_closing_citation_names_a_test_that_exists` in
 
 ### D33 — Closed: the fixes for D32, audited
 
-Grok's round 3, on 2026-08-23, attacking round 2's fixes. Three
+Audit round 3, on 2026-08-23, attacking round 2's fixes. Three
 findings, all in code written the day before, plus one this check
 turned up on its own.
 
@@ -936,7 +902,7 @@ in `tests/test_written_record.py`;
 
 ### D34 — Closed: config, history and baseline writes cannot be redirected (High)
 
-Grok, 2026-08-23, security pass. D18 closed this class for the skill
+Found by audit, 2026-08-23, security pass. D18 closed this class for the skill
 installer — check the path, then open the name — and paid for
 descriptor binding, `O_NOFOLLOW`, and staging plus `os.replace`,
 because a hardlink defeats `O_NOFOLLOW` outright. None of that reached
@@ -986,7 +952,7 @@ tree is left alone, which was always allowed.
 
 ### D35 — Closed: the audited tree cannot enable tool acquisition (High)
 
-Grok, 2026-08-23. `product-intent.md` P1 is explicit that acquisition
+Found by audit, 2026-08-23. `product-intent.md` P1 is explicit that acquisition
 is opt-in and that **a user** enables `analyzers.acquire_tools`.
 `load_config` is equally explicit that a repository always beats a
 person. `_analysis.analyze` then calls
@@ -1030,7 +996,7 @@ tier now.
 
 ### D36 — Closed: the agent reads inside the grant, wherever the path came from (High)
 
-Grok, 2026-08-23. D20 bounded `paths.history` with `repository_path`
+Found by audit, 2026-08-23. D20 bounded `paths.history` with `repository_path`
 after an audit reproduced an escape. The same class survives in two
 fields that were never given the same treatment.
 
@@ -1039,8 +1005,8 @@ fields that were never given the same treatment.
   here: a repository config naming `/` yields `/` as a scan target,
   which is also an `rglob("*.class")` over the filesystem on an MCP
   child with no timeout.
-* **S9 / Codex 1.** `expand_files` and the built-in scan both use
-  `is_file()`, which follows symlinks. Codex proved the sharper half:
+* **S9 / C1.** `expand_files` and the built-in scan both use
+  `is_file()`, which follows symlinks. The C audit proved the sharper half:
   a repository containing `linked.py -> ../outside.py` had that file
   read, measured, and returned in the report — `TOP_SECRET_VALUE = 42`
   inside a findings payload. `expand_files` is worse still, because
@@ -1065,7 +1031,7 @@ than this agent reading past its grant.
 
 ### D37 — Closed: git argv is validated, bounded, and its failures are not data (Medium)
 
-Grok, 2026-08-23. `validate_revspec` refuses leading-dash arguments,
+Found by audit, 2026-08-23. `validate_revspec` refuses leading-dash arguments,
 and the MCP tool calls it. The CLI's `--changed-only` and `--backfill`
 do not, and neither `changed_paths` nor `_backfill._git` places `--`
 before the revspec: `changed_paths(repo, "--output=<path>")` creates
@@ -1113,7 +1079,7 @@ assertions about the two spawners that exist today. That is deliberate:
 this defect class was closed at the MCP door and left open at the CLI,
 which is the mistake the register keeps recording.
 
-**Audited by Codex and Grok independently, and three residues closed in
+**Audited twice independently, and three residues closed in
 the same entry.** Both rounds on 0bc2b57 found the same thing from
 different directions: the fix had been applied to the sites this entry
 named and not to the class.
@@ -1157,7 +1123,7 @@ unchecked.
 
 ### D38 — Closed: a standing grant authorizes what the question named (Medium)
 
-Grok, 2026-08-23. `persist_root_grant` stores the resolved path as a
+Found by audit, 2026-08-23. `persist_root_grant` stores the resolved path as a
 string; `allowed_roots()` resolves it again at process start.
 Elicitation refuses a symlink retarget in-process, and a restart does
 not: rename the granted directory, leave a symlink at the old name
@@ -1186,7 +1152,7 @@ because there is no directory there to audit.
 **Reopened and re-closed 2026-08-26.** The predicate that closed this
 was the inverse defect. It honoured a stored grant only when the path
 contained no symlink in any component — which on macOS is the ordinary
-spelling of `/tmp`, `/var` and every `tempfile` directory. Grok
+spelling of `/tmp`, `/var` and every `tempfile` directory. The audit
 reproduced it: a grant recorded as `/tmp/work` was dropped on every
 start, so someone who said "always" was asked again forever.
 
@@ -1220,7 +1186,7 @@ volunteer one.
 honour a non-canonical entry unless the granted path is itself a link —
 names its own residual in the paragraph that states it: *"a component
 above it being replaced is a residual the weaker rule does not catch."*
-Grok walked through exactly that. Retarget the *parent* of a stored
+The audit walked through exactly that. Retarget the *parent* of a stored
 grant, one directory above the leaf the rule checked, and the
 allow-list follows it on the next start.
 
@@ -1243,7 +1209,7 @@ first version of this rule invisible for two days.
 
 ### D39 — Closed: the audit takes no configuration from the tree it audits (Medium)
 
-Grok, 2026-08-23, filed as a disclosure defect rather than a fix.
+Found by audit, 2026-08-23, filed as a disclosure defect rather than a fix.
 `eslint` runs with no `--no-eslintrc`, and `has_config` *requires* a
 project config before running, so an audit of an allowed root executes
 `eslint.config.js` from the tree under audit; mypy runs without
@@ -1301,7 +1267,7 @@ arbitrary Python at startup. They are spawned with `--config-file` and
 This entry stalled for a while on the wrong question. Neither tool is
 installed on this machine, so the flags could not be demonstrated here,
 and the proposal was to add them as dev dependencies to make CI prove
-them. Marshall rejected the premise: analyzers are **runtime
+them. The premise was rejected: analyzers are **runtime
 prerequisites the user supplies**, never dependencies of this package —
 `analyzer-pool.md` says so, and making one a dependency would
 contradict the pool's whole design. The absence was a machine that had
@@ -1330,7 +1296,7 @@ the binary is absent, which `analyzer-pool.md` discloses.
 
 ### D40 — Closed: a repository's regex cannot hang the host (High)
 
-Codex, 2026-08-23, proven. `risk_patterns` are compiled from repository
+Found by audit, 2026-08-23, proven. `risk_patterns` are compiled from repository
 configuration and applied to every source line. The schema bounds
 neither their complexity nor their size. Pattern `(a+)+$` against
 thirty-one `a` characters and a `!` did not finish in two seconds.
@@ -1366,7 +1332,7 @@ through the real scanning path, and
 
 ### D41 — Closed: every action is pinned to a commit (High)
 
-Codex, 2026-08-23, proven. Every workflow action is referenced by tag
+Found by audit, 2026-08-23, proven. Every workflow action is referenced by tag
 or branch. `release.yml` hands OIDC publication authority — `id-token:
 write` — to `pypa/gh-action-pypi-publish@release/v1`, a moved-branch
 reference rather than an immutable commit. Checkout, setup-python,
@@ -1391,7 +1357,7 @@ for.
 
 ### D42 — Closed: the package claims a Python it can run on (Medium)
 
-Codex, 2026-08-23. `requires-python = ">=3.10"`, and `_discovery.py`,
+Found by audit, 2026-08-23. `requires-python = ">=3.10"`, and `_discovery.py`,
 `_pillars.py` and `_runner.py` import `enum.StrEnum`, which is 3.11.
 Pip installed happily on 3.10 and the import then failed. CI tests
 3.12 alone, and the composite action pins 3.11, so nothing in the
@@ -1399,7 +1365,7 @@ pipeline stood where the metadata said a user could stand — which is
 why no test caught it and an audit had to. Floor raised to 3.11, and
 the supported versions declared as classifiers.
 
-I first recorded that no honest falsifier existed here, on the grounds
+This entry first recorded that no honest falsifier existed here, on the grounds
 that any such test would restate a constant. The register's own
 citation lint disagreed — it refuses a closed entry that names no
 test — and it was right. The check does not restate the floor; it ties
@@ -1419,7 +1385,7 @@ follow-up in `docs/security-queue.md`.
 
 ### D43 — Closed: composite-action inputs are data, not source (Medium)
 
-Codex, 2026-08-23, proven. `action.yml` embedded `${{ inputs.* }}`
+Found by audit, 2026-08-23, proven. `action.yml` embedded `${{ inputs.* }}`
 directly inside a `run:` script. GitHub substitutes those *before* bash
 parses the script, so an input was never an argument — it was source
 code, and a path containing a shell metacharacter was enough to break a
@@ -1437,12 +1403,12 @@ auditing the whole repository on every pull request.
 
 Both are parsed by hand rather than with PyYAML: this repository keeps
 its `test` extra thin and `test_declared_imports` refuses a dev-only
-parser in tests. I added PyYAML anyway, that lint caught it, and the
+parser in tests. PyYAML was added anyway, that lint caught it, and the
 parser was rewritten.
 
 ### D44 — Closed: the annotations are derived from the behaviour (Medium)
 
-Codex, 2026-08-23. The audit tool declares itself non-destructive and
+Found by audit, 2026-08-23. The audit tool declares itself non-destructive and
 closed-world, and `tests/test_mcp_server.py` locks both values. Neither
 survives optional network acquisition, unsandboxed analyzer networking,
 executable repository analyzer configuration, or the config, history
@@ -1488,7 +1454,7 @@ and `test_the_read_only_tool_is_still_read_only` in
 
 ### D45 — Closed: the security policy supports the shipped release (Medium)
 
-Codex, 2026-08-23. `SECURITY.md` stated that only `0.1.x` receives
+Found by audit, 2026-08-23. `SECURITY.md` stated that only `0.1.x` receives
 security fixes, at version `0.9.1` — read literally, the shipped
 release was unsupported by its own policy.
 
@@ -1513,7 +1479,7 @@ an assertion from its own correction would forbid explaining the fix.
 
 ### D46 — Closed: an analyzer cannot decide how much work reading it is (Low)
 
-Codex, 2026-08-23, inferred rather than demonstrated. `_generic.py` and
+Found by audit, 2026-08-23, inferred rather than demonstrated. `_generic.py` and
 `_jvm_adapters.py` parse analyzer XML with `ElementTree.fromstring`.
 The input is a child process this agent spawned, not an upload, so the
 realistic exposure is resource exhaustion from a hostile or
@@ -1778,9 +1744,8 @@ reopened once for exactly that confusion.
 
 ### D50 — Closed: the economics ask stops at the question it gates (High)
 
-Marshall, 2026-08-25, during UAT preparation: *"if the user declines
-economics, should never ask the labor rate questions. that is basic
-logic."*
+Decided 2026-08-25, during UAT preparation: a user who declines
+economics is never asked the labor-rate questions.
 
 `_economics_questions` returned the gate **and** all three labor rates
 in one flat elicitation model, and the gate's default is `skip`. So the
@@ -1793,7 +1758,7 @@ who answered `include`. `setup_pending` stays true until the rates
 arrive, so the second ask is the existing gate doing its job rather
 than a new mechanism.
 
-**Codex had examined this surface and filed it under no-finding**,
+**An audit had examined this surface and filed it under no-finding**,
 citing `docs/help/first-run.md` — which stated plainly that the labor
 fields remain visible after `skip`. The page was accurate. D28 had made
 it accurate, and accuracy about a bad form is what kept the form. An
@@ -1823,7 +1788,7 @@ in `tests/test_first_run_elicitation.py`.
 
 ### D52 — Closed: a labor rate is refused where it is answered (High)
 
-Codex, 2026-08-25. Setup accepted `labor_low=-1` and wrote both
+Found by audit, 2026-08-25. Setup accepted `labor_low=-1` and wrote both
 configuration tiers happily; the next `action="run"` raised a raw
 `ValueError: loaded_engineering_cost_per_hour must satisfy 0 < low <=
 base <= high` from the scoring path. Same for `low > base`. The person
@@ -1838,7 +1803,7 @@ in `tests/test_first_run_elicitation.py`.
 
 ### D53 — Closed: a configuration key of the wrong shape is refused, not crashed on (High)
 
-Codex, 2026-08-25. `_configured` validated JSON syntax and an object
+Found by audit, 2026-08-25. `_configured` validated JSON syntax and an object
 root, then merged whatever it found. `{"thresholds": "nope"}` surfaced
 as a raw `TypeError: string indices must be integers` from inside
 scoring, and `{"hard_gates": []}` as an `AttributeError` on a list —
@@ -1856,7 +1821,7 @@ in `tests/test_config_shape.py`.
 
 ### D54 — Closed: `expected_files` names files in the repository (Medium)
 
-Codex, 2026-08-25. `paths.history` was bounded by D20 and this was
+Found by audit, 2026-08-25. `paths.history` was bounded by D20 and this was
 not, so a repository config could say `/etc/passwd` or `../outside`
 and the report would state whether that existed — a repository-
 controlled probe of the machine auditing it, answered in the output.
@@ -1867,7 +1832,7 @@ in `tests/test_config_shape.py`.
 
 ### D55 — Closed: the documents stop offering a tool the product refuses (Medium)
 
-Codex, 2026-08-25, and both halves are mine. `analyzer-pool.md` still
+Found by audit, 2026-08-25, and both halves are mine. `analyzer-pool.md` still
 listed eslint as a Node runtime need, as fetchable through `npx`, and
 as a verified moderate adapter — three offers to install a tool D39
 had just made unrunnable. The D39 change corrected the prose two
@@ -1883,7 +1848,7 @@ in `tests/test_config_shape.py`.
 
 ### D56 — Closed: an empty history window is unknown, not perfect (High)
 
-Grok, 2026-08-26. `_history_rate_aspect` returned **5.0** for
+Found by audit, 2026-08-26. `_history_rate_aspect` returned **5.0** for
 `files_changed == 0`, commented "had history to read; nothing changed
 in the window". A repository whose only commit predates the twelve
 month window therefore scored full marks on every history aspect —
@@ -1910,7 +1875,7 @@ in `tests/test_history_window.py`.
 
 ### D57 — Closed: the documented languages and the parsed languages are one set (High)
 
-Grok, 2026-08-26. `docs/language-support.md` and Decision 10 said v1.0
+Found by audit, 2026-08-26. `docs/language-support.md` and Decision 10 said v1.0
 handles Python and Java. The scanner also read JS, TS, JSX and HTML, so
 a repository of 140 JavaScript files was reported with
 `declarations_scanned=140`, `evidence_status: complete` and a verified
@@ -1921,9 +1886,8 @@ the sequence is the lesson. Narrowing only the sentence left the
 contradiction the audit had already named. Narrowing the parser to
 `{.py, .java}` removed JavaScript dead-code detection, idiom
 divergence, near-duplicate pairing and ADR 003's TypeScript work — and
-Marshall's question, *"if you don't have detectors, linters, etc for
-those languages and no adaptor then please explain how option C is
-valuable at all?"*, is what produced the check that should have come
+The question of what option C is worth without detectors, linters or an
+adapter for those languages is what produced the check that should have come
 first: **lizard, jscpd and multimetric are baseline-tier adapters that
 read JavaScript**, and baseline in this project means installed, run
 and parsed. Only eslint is refused, and only for its config.
@@ -1940,7 +1904,7 @@ and `test_every_scanned_source_suffix_can_be_read_by_something` in
 
 ### D58 — Closed: the generated standards pack teaches call-first (High)
 
-Grok, 2026-08-26. `--init-agent-standards` writes `AGENTS.md`,
+Found by audit, 2026-08-26. `--init-agent-standards` writes `AGENTS.md`,
 `CLAUDE.md` and their siblings, and every one of them opened with
 "Start with a configuration check (`maintainability-agent.json`, then
 the user tier)" — the archaeology D21 exists to stop, shipped into the
@@ -1964,7 +1928,7 @@ in `tests/test_chat_primary_docs.py`.
 
 ### D59 — Closed: the sweeps lint the class, not a name (High)
 
-Grok, 2026-08-26, three of them together.
+Found by audit, 2026-08-26, three of them together.
 
 *The isolation sweep covered two tools.* It diffed `DECLARED` — pylint
 and mypy — while `ADAPTERS` holds fifteen, so ruff sat in the baseline
@@ -2000,7 +1964,7 @@ in `tests/test_analyzer_config_isolation.py`;
 
 ### D60 — Closed: SECURITY.md states the guarantee the code keeps (Medium)
 
-Grok, 2026-08-26. Decision 9 closed D39 and D44 on 2026-08-25 and
+Found by audit, 2026-08-26. Decision 9 closed D39 and D44 on 2026-08-25 and
 `SECURITY.md` kept describing the defect for a further day: that the
 agent executes repository code, that mypy and pylint can load
 configured plugins, that children inherit the host environment, and
@@ -2008,7 +1972,7 @@ that the question is open.
 
 **Wrong in both directions now.** The file first denied executing
 scanned code while eslint was being invoked in a mode that requires the
-tree's configuration and then runs it (Codex, 2026-08-23). It was
+tree's configuration and then runs it (audit, 2026-08-23). It was
 corrected to assert the opposite. Then the code changed under it.
 
 Both directions are recorded rather than quietly rewritten, and the
@@ -2022,7 +1986,7 @@ in `tests/test_policy_claims.py`.
 
 ### D61 — Closed: P1 names the fields that are not compared (Low)
 
-Grok, 2026-08-26. P1 promised "same report out" and two runs on one
+Found by audit, 2026-08-26. P1 promised "same report out" and two runs on one
 tree differed by a millisecond, on an analyzer's wall-clock `seconds`.
 The determinism check had been stripping `root`, `git_status_short`
 and every `seconds` for as long as it had existed, so the promise was
@@ -2038,7 +2002,7 @@ in `tests/test_determinism.py`.
 
 ### D62 — Closed: the release plan is measured, not remembered (Low)
 
-Grok, 2026-08-26. The plan's own warning is that a previous version of
+Found by audit, 2026-08-26. The plan's own warning is that a previous version of
 its table "survived fifty-five commits past the point it stopped being
 true". It then did it again: last tag 0.7.0 with v0.9.1 shipped, 14,122
 lines against 20,071, 1,097 tests against 1,560. Re-measured, and the
@@ -2056,8 +2020,8 @@ in `tests/test_release_plan.py`.
 
 ### D63 — Closed: the platform is claimed where it is demonstrated (Medium)
 
-Marshall, 2026-08-26: *"what about the poor windows users?"* — asked
-about a test of mine that had just failed CI for asserting `/tmp` is a
+2026-08-26: what happens for Windows users? — asked about a test
+that had just failed CI for asserting `/tmp` is a
 symlink. The answer was larger than the test.
 
 `pyproject` named no operating system at all. CI runs `ubuntu-latest`
@@ -2091,7 +2055,7 @@ that only ran where the claim was true.
 
 ### D64 — Closed: flake8 reads no configuration from the tree (Medium)
 
-Grok, 2026-08-26. D39 isolated pylint and mypy and swept for the rest,
+Found by audit, 2026-08-26. D39 isolated pylint and mypy and swept for the rest,
 and the sweep covered two tools out of fifteen. `flake8` reads
 `setup.cfg`, `tox.ini` and `.flake8` from the tree under audit, which
 sets its own thresholds and select-lists — the score moving with a
@@ -2113,7 +2077,7 @@ from the invocation fails.
 
 ### D65 — Closed: two ADRs still had eslint running (Low)
 
-Codex, 2026-08-26. Decision 9 refuses eslint outright — an eslint flat
+Found by audit, 2026-08-26. Decision 9 refuses eslint outright — an eslint flat
 config is a JavaScript program, so honouring it means executing the
 audited tree. The adapter declares `executes_audited_configuration` and
 selection drops it on every run.
@@ -2141,7 +2105,7 @@ in `tests/test_analyzer_config_isolation.py`.
 
 ### D66 — Closed: an empty history window says which kind of empty (Medium)
 
-Grok, 2026-08-26, reopening D56 one layer down. D56 established that
+Found by audit, 2026-08-26, reopening D56 one layer down. D56 established that
 `files_changed: 0` is not a measured zero and marked every history rate
 not applicable. It then told every reader the same reason: *"no commit
 falls inside the history window."*
@@ -2168,7 +2132,7 @@ before the counts existed.
 
 ### D67 — Closed: the sweeps resolve dotted spellings (Medium)
 
-Grok, 2026-08-26 — the ninth evasion of the same two sweeps, and the
+Found by audit, 2026-08-26 — the ninth evasion of the same two sweeps, and the
 third time their name resolution has been wrong.
 
 Version one matched a literal attribute, so `import subprocess as sp`
@@ -2195,7 +2159,7 @@ as clean.
 
 ### D68 — Closed: the declarations dimension names its source (Medium)
 
-Grok, 2026-08-26. `DECLARATION_CRITERIA` requires cyclomatic
+Found by audit, 2026-08-26. `DECLARATION_CRITERIA` requires cyclomatic
 complexity, declaration lines **and** cognitive complexity, because the
 built-in path fails a declaration on any one of the three and a rate
 built from a narrower set is not comparable to it. lizard emits the
@@ -2209,8 +2173,9 @@ nothing saying what produced it.
 
 It also made a decision page wrong. Decision 10's amendment justified
 keeping JavaScript by citing lizard, jscpd and multimetric as
-baseline-tier adapters that read it. Marshall's ruling — *"keep JS in
-since we have a detector and can score it"* — is exactly right about
+baseline-tier adapters that read it. The ruling —
+JavaScript stays because there is a detector and it can be scored — is
+exactly right about
 the brace scanner and was never about the pool; the page credited the
 pool for work the pool cannot do here. Corrected in place.
 
@@ -2224,7 +2189,7 @@ missing concepts named, and the coverage section renders it.
 
 ### D69 — Closed: P1 discloses that the history window moves (Medium)
 
-Grok, 2026-08-26. `DEFAULT_SINCE` is `12 months ago`, resolved by git
+Found by audit, 2026-08-26. `DEFAULT_SINCE` is `12 months ago`, resolved by git
 against the wall clock at the moment the audit runs, and it is not
 configurable. P1 promised "same tree, config, pinned analyzer versions
 and scan history in, same evidence, findings and score out" and named
@@ -2249,7 +2214,7 @@ in `tests/test_determinism.py`.
 
 ### D70 — Closed: the POSIX claim runs on both POSIX platforms (Medium)
 
-Grok, 2026-08-26, reopening D63. `test_ci_runs_only_platforms_the_package_claims`
+Found by audit, 2026-08-26, reopening D63. `test_ci_runs_only_platforms_the_package_claims`
 forbade `windows` in `runs-on` and was treated as demonstrating the
 claim. `Operating System :: POSIX` covers macOS as well as Linux, and CI
 had only ever run one Linux image, so half the declared platform was
@@ -2333,7 +2298,7 @@ in `tests/test_git_argv.py`, and
 
 ### D72 — Closed: a refusal does not disclose where a symlink points (High)
 
-Codex, 2026-08-26. D38's refusal carried `write_instead`: the canonical
+Found by audit, 2026-08-26. D38's refusal carried `write_instead`: the canonical
 path the entry resolved to, so the user could correct their config. It
 was the more helpful message, and it told whatever host reads
 `server_info` where a symlink the user named actually points — a
@@ -2355,7 +2320,7 @@ target appears in no field of the refusal.
 
 ### D73 — Closed: the one git spawn that is not run_git (High)
 
-Codex, 2026-08-26, one commit after D71 closed. `_backfill._git` builds
+Found by audit, 2026-08-26, one commit after D71 closed. `_backfill._git` builds
 its own argv and does not go through `run_git`, so it ran `rev-list`
 without `gc.auto=0` / `maintenance.auto=false` — and
 `commits_in_range()` reaches it before any worktree exists. D71's whole
@@ -2377,7 +2342,7 @@ in `tests/test_git_argv.py`.
 
 ### D74 — Closed: an incoherent window explains itself as unknown (Medium)
 
-Codex, 2026-08-26. `commits_in_window` and `commits_considered` are not
+Found by audit, 2026-08-26. `commits_in_window` and `commits_considered` are not
 `HistoryEvidence` members, so nothing upstream validates them, and
 `_empty_window_reason` asked only `isinstance(..., int)`. `True` is an
 `int`. A report carrying `commits_in_window: true, commits_considered:
@@ -2394,7 +2359,7 @@ in `tests/test_history_window.py`, seven payloads.
 
 ### D75 — Closed: the doc sweep recognises more than three sentences (Medium)
 
-Codex, 2026-08-26. D65's closing test matched three exact phrasings,
+Found by audit, 2026-08-26. D65's closing test matched three exact phrasings,
 lifted from the two sentences it was written to catch. Adding
 *"maintainability-agent runs eslint whenever it is installed"* to an ADR
 left it green. A check shaped like the defect it already found is not a
@@ -2421,7 +2386,7 @@ distinct phrasings.
 
 ### D76 — Closed: P1 is held to the window a report is built with (Medium)
 
-Codex, 2026-08-26. D69's closing test compared the prose to the
+Found by audit, 2026-08-26. D69's closing test compared the prose to the
 `DEFAULT_SINCE` constant. Changing `history_section`'s default to
 `"24 months ago"` left the constant untouched and the test green, with
 the disclosure describing a window nothing used.
@@ -2436,7 +2401,7 @@ in `tests/test_determinism.py`.
 
 ### D77 — Closed: a comment cannot stand in for an install (Medium)
 
-Codex, 2026-08-26. The test asserting CI installs every pip-installable
+Found by audit, 2026-08-26. The test asserting CI installs every pip-installable
 adapter asked whether the slug appeared *anywhere* in the workflow file.
 Deleting `flake8` from the install line and leaving
 `# flake8 is installed by this step` behind kept all fourteen green
@@ -2453,9 +2418,9 @@ the claim was made literally true.
 
 ### D78 — Closed: the JS complexity number is about the code (High)
 
-Grok, 2026-08-26. Decision 10 keeps JavaScript because this project has
+Found by audit, 2026-08-26. Decision 10 keeps JavaScript because this project has
 a detector that can score it, and D68 made the fallback to that detector
-*visible*. Grok's sentence is the finding: **visibility is not
+*visible*. The audit's sentence is the finding: **visibility is not
 accuracy.** D68's closer checks that the built-in scanner is attributed
 and never asks whether its number means anything.
 
@@ -2481,7 +2446,7 @@ exactly the modern JavaScript this project claims to score, which is P7:
 a score issued where the thing measured was not the code. After the fix,
 3 and 8, and genuinely branching code is unchanged.
 
-Grok's other JS observations — regex literals unmasked, brace-free
+The audit's other JS observations — regex literals unmasked, brace-free
 bodies charged flat, object-literal arrows not detected as declarations
 — are disclosed limitations in `_ranges` and `_cognitive` and are not
 closed here. This entry closes the one that produced numbers that were
@@ -2494,7 +2459,7 @@ simply wrong.
 
 ### D79 — Closed: a grant records what it was, not only where (High)
 
-Grok, 2026-08-26 — the fourth predicate in three days, and the one whose
+Found by audit, 2026-08-26 — the fourth predicate in three days, and the one whose
 prediction was written into the finding: *"D38 is the one that will be
 filed again if this round is closed by tightening `resolve()==self`
 without an inode."*
@@ -2502,7 +2467,7 @@ without an inode."*
 Two holes, both reproduced. `Path.resolve()` is not `strict=True`, so a
 directory nobody has created "resolves to itself" and was honoured —
 hand-write it, get no refusal, then create it or mount over it. And
-`resolve()` preserves case, so on APFS `/USERS/marshallguillory/...`
+`resolve()` preserves case, so on APFS `/USERS/<user>/...`
 exists, resolves to itself, and was treated as a product-made grant.
 
 **The pattern is the finding.** Four rules compared better and better
@@ -2548,7 +2513,7 @@ thing compared is no longer a spelling.
 
 ### D80 — Closed: the population floors are bounded from below (High)
 
-Grok, 2026-08-26, in a table of "checks that cannot fail the property
+Found by audit, 2026-08-26, in a table of "checks that cannot fail the property
 they name". `test_no_calibration_member_is_unscoreable_by_the_scale_it_calibrates`
 bounds the floors from *above* — a floor may not exceed the corpus
 minimum. Nothing bounded them from below.
@@ -2569,7 +2534,7 @@ and `test_the_floors_are_bounded_from_below_as_well_as_above` in
 
 ### D81 — Closed: the witnesses no longer share fate with what they watch (High)
 
-Grok, 2026-08-26, reopening D71 at the layer Codex's version of the same
+Found by audit, 2026-08-26, reopening D71 at the layer an earlier version of the same
 finding did not reach. D73 fixed the backfill argv and widened the
 sweep; this is the other half.
 
@@ -2596,7 +2561,7 @@ in `tests/test_git_read_only.py`, and
 
 ### D82 — Closed: the audit door stops naming symlink targets too (High)
 
-Grok, UAT audit of `199fb1b`. D72 removed the resolved path from
+UAT audit of `199fb1b`. D72 removed the resolved path from
 `server_info`'s refusals because D48 forbids host paths crossing the
 transport. `authorize_repository` kept doing it: the user names
 `innocent`, and its `PathNotAllowed` tells the host `secret-target`.
@@ -2617,7 +2582,7 @@ in `tests/test_authorization_freshness.py`.
 
 ### D83 — Closed: a standing grant is re-checked at use, not at start-up (High)
 
-Grok, UAT audit of `199fb1b` — and the most consequential finding of the
+UAT audit of `199fb1b` — and the most consequential finding of the
 round, because D79 was closed without it and reads as complete.
 
 `allowed_roots()` runs **once**, when the server is constructed, and
@@ -2653,7 +2618,7 @@ declared refusal rather than seeing a crash (D48).
 
 ### D84 — Closed: a nested list's members are shaped too (Medium)
 
-Codex, UAT audit of `199fb1b`. `_shaped_inside` has a branch that
+UAT audit of `199fb1b`. `_shaped_inside` has a branch that
 validates list items and it only ever ran for a **top-level** list. So
 `{"paths": {"include_extensions": [1]}}` was accepted: the value is a
 list, which is all that was asked.
@@ -2673,7 +2638,7 @@ and `test_a_valid_nested_list_still_loads` in
 
 ### D85 — Closed: the version string is a claim like any other (High)
 
-Grok, UAT audit. Acceptance testing *for 1.0* was about to run against
+UAT audit. Acceptance testing *for 1.0* was about to run against
 an artifact naming itself `0.9.1` and `Development Status :: 3 - Alpha`.
 A tester would report a version that is not the thing under test, and
 this project already shipped nine releases whose contents did not match
@@ -2707,7 +2672,7 @@ intention was itself the intention.
 
 ### D86 — Closed: the JS scanner sees the file's actual functions (High)
 
-Grok, UAT audit, continuing D78. That entry fixed `?` arithmetic and
+UAT audit, continuing D78. That entry fixed `?` arithmetic and
 left the rest disclosed; the objection is that disclosure is not a score.
 
 Two defects, both reproduced. `function f() { return /a?b?c?d?e?/; }`
@@ -2731,7 +2696,7 @@ and the cases beside it in `tests/test_js_complexity_operators.py`.
 
 ### D87 — Closed: the macOS job runs the suite, not the word (Medium)
 
-Grok, UAT audit. D81 required `"pytest"` in the macOS job body. `echo
+UAT audit. D81 required `"pytest"` in the macOS job body. `echo
 pytest` satisfies that, and so does a pytest invocation naming one file
 — which would let the job stop running the product's suite without
 anything noticing. D77 had taught the same lesson one job over: a
@@ -2746,7 +2711,7 @@ against both bypasses.
 
 ### D88 — Closed: why the argv recorder is the only witness (Medium)
 
-Grok, UAT audit. D81's recorder watches the argv; the promise is about
+UAT audit. D81's recorder watches the argv; the promise is about
 the tree; the 36 snapshot tests still run under the suite-wide
 `GIT_CONFIG_*` guard and would not notice if `READ_ONLY_GIT_CONFIG`
 vanished. The objection is correct.
@@ -2777,7 +2742,7 @@ stands on its own.
 
 ### D89 — Closed: gating CI pins, on the wrong platform (Medium)
 
-Grok, UAT audit. P1's determinism is conditional on pinned analyzer
+UAT audit. P1's determinism is conditional on pinned analyzer
 versions. The gating pipeline had installed the pool **unpinned**, on
 purpose, so that an unchanged `main` going red because an analyzer
 shipped is a signal rather than a silence.
@@ -2850,14 +2815,13 @@ clause. Restoring the artefact passed it. The claim is about which
 platform resolved the pins, and both mutations make that claim false in
 the two ways it can be false: wrong platform, or no way to tell.
 
-The platform residual was closed by claude: dispatched
+The platform residual was closed: dispatched
 `resolve-constraints`, checked in its artefact, removed the marker.
 
-*Roles:* found=grok prompt=marshall fix=codex+claude test=codex+claude run=mutation
 
 ### D90 — Closed: a stale grant does not veto a launch root (High)
 
-Codex, 2026-08-26, against a fix made the same day. D83 re-checks
+Found by audit, 2026-08-26, against a fix made the same day. D83 re-checks
 persisted grants at use, and applied that check to any request a stale
 grant happened to *cover*. So launching with `--allow-root <base>` while
 holding a stale grant for `<base>/project` refused `<base>/project` —
@@ -2883,11 +2847,10 @@ when a persisted grant is the *sole* cover does freshness decide.
 and `test_a_stale_grant_with_no_launch_cover_is_still_refused` in
 `tests/test_authorization_freshness.py`.
 
-*Roles:* found=codex prompt=claude fix=claude test=claude run=mutation
 
 ### D91 — Closed: the config door stops publishing paths too (High)
 
-Codex, 2026-08-26. D82 removed the resolved path from
+Found by audit, 2026-08-26. D82 removed the resolved path from
 `authorize_repository`'s refusal. `authorize_config`, eleven lines
 below it, published **two**: a caller naming `innocent.json` was told
 the symlink's target and the canonical repository path.
@@ -2905,11 +2868,10 @@ theirs already, and resolve nothing into the message.
 *Closing test:* `test_the_config_refusals_name_no_resolved_path` in
 `tests/test_authorization_freshness.py`.
 
-*Roles:* found=codex prompt=claude fix=claude test=claude run=mutation
 
 ### D92 — Closed: an audited repository cannot run code in this process (Critical)
 
-Grok, 2026-08-26, and the most serious defect found in this project.
+Found by audit, 2026-08-26, and the most serious defect found in this project.
 
 Decision 9: *"this agent never executes the audited repository's code,
 and its configuration is code."* That was enforced on the analyzer
@@ -2951,11 +2913,10 @@ merely the conclusion.
 and `test_worktree_status_on_a_hostile_repository_changes_nothing` in
 `tests/test_git_read_only.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
 
 ### D93 — Closed: TypeScript type members are not declarations (High)
 
-Grok, 2026-08-26, against D86 — closed the same morning.
+Found by audit, 2026-08-26, against D86 — closed the same morning.
 
 `_PROPERTY_RE` matches `name: (args) =>`, which is also how TypeScript
 writes an interface member. So `onSave: (a: string) => void;` counted as
@@ -2977,11 +2938,10 @@ Type blocks are skipped now: inside `interface X { … }` or
 `test_a_real_object_literal_member_is_still_found` in
 `tests/test_js_declarations.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
 
 ### D94 — Closed: string-keyed members are declarations too (High)
 
-Grok, 2026-08-26, the other half of D86. Masking blanks string literals
+Found by audit, 2026-08-26, the other half of D86. Masking blanks string literals
 before any pattern runs, so `"onSave": (a) => {` arrives as
 `        : (a) => {` and the name is gone. Quoted keys were invisible,
 and a lone `function helper()` beside them still marked the file
@@ -2997,11 +2957,10 @@ The name is recovered from the line before masking touched it.
 `test_a_sibling_function_does_not_stand_in_for_the_handlers` in
 `tests/test_js_declarations.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
 
 ### D95 — Closed: a regex after a control paren is not code (Medium)
 
-Grok, 2026-08-26, third against D86. `_VALUE_MAY_BEGIN` lists the
+Found by audit, 2026-08-26, third against D86. `_VALUE_MAY_BEGIN` lists the
 positions where a `/` opens a regex literal. It includes `return`,
 which is the keyword D86's own closer used. It does not include `)`.
 
@@ -3015,11 +2974,10 @@ token owning it is asked.
 *Closing test:* `test_a_regex_literal_is_masked_wherever_a_value_may_begin`
 in `tests/test_js_declarations.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
 
 ### D96 — Closed: the last two doors stop publishing resolved paths (High)
 
-Grok, 2026-08-26. D72 removed a resolved path from `server_info`, D82
+Found by audit, 2026-08-26. D72 removed a resolved path from `server_info`, D82
 from `authorize_repository`, D91 from `authorize_config`. Two more were
 still open: `baseline_path`, and `config.repository_path` — which runs
 on an **ordinary audit** whenever the repository's own config names a
@@ -3032,16 +2990,14 @@ the next one along. Every closer read the function it was written for.
 *Closing test:* `test_no_repository_scoped_path_refusal_names_what_it_resolved_to`
 in `tests/test_authorization_freshness.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
 
 ### D97 — Closed: the class behind thirty entries (High)
 
-Marshall, 2026-08-27: *"have you asked WHY? these same type of defect
-keep coming back so you can address the root cause? it seems like a
-class of defect that is easily addressable, but you keep treating
-symptoms."*
+2026-08-27: the same type of defect kept coming back, so why? Is there a
+root cause — one class, easily addressed — rather than symptoms treated
+one at a time?
 
-No, I had not. Thirty of the ninety-six entries above are **one
+That had not been asked. Thirty of the ninety-six entries above are **one
 mechanism**, closed thirty times, each with a bespoke fix and no
 question about why the next one arrived. The mechanism, the three
 clauses that answer it, and why mutation testing was not catching it are
@@ -3081,9 +3037,8 @@ claiming a proof it cannot give.
 *Closing tests:* `test_a_sweep_asserts_its_population_is_not_empty` in
 `tests/test_falsifier_standard.py` and
 `test_entries_from_the_cutoff_state_what_their_mutation_broke` in
-`tests/test_roles_recorded.py`.
+`tests/test_mutation_recorded.py`.
 
-*Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
 
 *Mutation:* removed the population guard from
 `test_release_plan::test_the_release_plan_table_is_measured_not_remembered`
@@ -3093,10 +3048,10 @@ subjects from the suite rather than listing them — so breaking either is
 a member the closing test does not know about. The first draft of the
 closer survived the `test_files` mutation and was fixed because of it.
 
-### D98 — Closed: the first Codex-authored fix, reviewed (High)
+### D98 — Closed: a fix from a second author, reviewed (High)
 
-Reviewed 2026-08-27, the first change under the split where Codex wrote
-the code. Three defects, and what they were is more useful than that
+Reviewed 2026-08-27, the first change whose code came from a second
+author. Three defects, and what they were is more useful than that
 there were three.
 
 **The drift check could never pass.** It diffed `constraints/analyzers.txt`
@@ -3112,15 +3067,15 @@ detection entirely and left it green. My replacement asserted the step
 and **runs** it against the real constraints file, checking the output
 is something `pip freeze` could have produced.
 
-Two string-shaped checks in a row, mine and Codex's, on the day D97
+Two string-shaped checks in a row, from two authors, on the day D97
 named that exact class. The standard is easy to state and hard to
 apply, which is the argument for the parts of it that are mechanical.
 
 **The pin does not match the platform it constrains** — see D89, which
 this reopened.
 
-**What the review says about the experiment.** Codex's work was good on
-the parts I asked for: real resolved versions, honest provenance, the
+**What the review says about the experiment.** The work was good on
+the parts that were asked for: real resolved versions, honest provenance, the
 closure decision made explicitly rather than silently, gates pinned,
 drift moved rather than deleted. Its failure mode was the same as mine —
 a check written from the artifact rather than the behaviour — which is
@@ -3133,7 +3088,6 @@ not the author. That is the part that transfers.
 `test_product_intent_describes_the_arrangement_the_workflow_implements`
 in `tests/test_analyzer_pinning.py`.
 
-*Roles:* found=claude prompt=marshall fix=codex+claude test=claude run=mutation
 
 *Mutation:* appended `|| true` to the drift comparison, and separately
 replaced the normaliser body with `cat`. Neither is named by the closing
@@ -3153,14 +3107,15 @@ is enforced by tests the same agent can edit. The `*Mutation:*` line is
 the author's account of what they broke. Every control in this register
 was, ultimately, self-report.
 
-**The benign version is commonplace, and I did it three times in one
-day.** A test fails; I decide the test was wrong; I edit it.
+**The benign version is commonplace, and it happened three times in one
+day.** A test fails; the author decides the test was wrong; the author
+edits it.
 `test_git_argv` pinned an exact tuple and the tuple legitimately grew.
 `test_mcp_server` matched refusal text D82 changed.
 `test_declaration_grading` searched a whole document for `"42"`. Each
-edit was, I believe, correct. Nothing external distinguished *the test
-was wrong* from *I made the test agree with me*, and that is exactly the
-distinction Miles is asking for.
+edit was probably correct. Nothing external distinguished *the test was
+wrong* from *the test was made to agree with the code*, and that is
+exactly the distinction Miles is asking for.
 
 `tools/prove_falsifiers.py` is the first control that does not take the
 author's word. For every entry added since the base commit it reads the
@@ -3196,7 +3151,6 @@ case that was actually producing defects here.
 `test_the_tool_is_wired_into_the_pipeline` in
 `tests/test_prove_falsifiers.py`.
 
-*Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
 
 *Mutation:* neutered the proving job with `|| true`, and separately
 appended a `*Mutation:*` line naming a test to an entry to confirm the
@@ -3207,8 +3161,7 @@ fail without their changes and two do not.
 
 ### D100 — Closed: the artifact promoted itself to a 1.0 candidate (High)
 
-Marshall, 2026-08-28: *"i never told you to create a v1.0 candidate.
-ever."* He had not. D85 moved `pyproject`, `config.VERSION` and
+2026-08-28: nobody had authorized a v1.0 candidate. D85 moved `pyproject`, `config.VERSION` and
 `__init__.__version__` to `1.0.0rc1` and the classifier to Beta, added a
 `1.0.x` row to `SECURITY.md` and a `1.0.0rc1 — unreleased` section to the
 changelog, on 2026-08-26. No authorization for any of it is recorded
@@ -3224,22 +3177,10 @@ because its falsifier only ever refused a bare `1.0.0`. A candidate
 suffix is not a smaller claim than the release; it is the same claim
 about the same gate, made more quietly.
 
-*And the register could not say who made it.* Asked who promoted the
-version, the honest answer from the record was that nobody knows: D85
-carries no `*Roles:*` line. Every agent in this repository commits under
-Marshall's git identity, so authorship in `git log` proves nothing about
-authorization. The guess offered — *"maybe grok did it for the hostile
-audit"* — is a guess, and it is the only thing the record supports.
-
-The `*Roles:*` convention already existed. It starts at D89 and eleven
-entries have carried it since, on habit alone — no check ever read it,
-which is why D85 sitting four entries below the line cost nothing at the
-time. Recording that without enforcing it would be the
-disclosure-instead-of-a-fix that D89 itself was refused for, so the lint
-now reads every entry from D89 down. The cutoff is D89 because that is
-where the practice starts; choosing D100 would have picked the number
-that makes the check easy. D1-D88 cannot be reconstructed from memory
-and are left stated here rather than invented.
+*And the record could not say what authorized it.* Nothing in the
+repository recorded a decision to promote the version, and a commit is not
+an authorization. So the fix does not depend on recording one: a version
+claim is checked against what has actually been released.
 
 *The revert.* Every copy returns to `0.9.1` and `Development Status :: 3
 - Alpha`, the state before D85; the `1.0.x` support row and the
@@ -3249,20 +3190,13 @@ decision nobody authorized.
 
 *The bar is release history, not a plan row.* The first version of the
 falsifier refused a 1.x claim while the release plan's 8.8 acceptance
-row was open. Marshall's question killed that anchor: *"why do you keep
-bring up 8.8 when 0.9.1 is the latest release"*. He is right. 8.8 is a
+row was open. A question killed that anchor: why cite 8.8 when 0.9.1 was the latest
+release? That was right. 8.8 is a
 sentence in a document, and citing it made the bar sound like it was
 about a 1.0 programme when the operative fact is far simpler — what has
 actually shipped. The check now reads `git tag`: nothing may declare a
 major line above the newest release, and on the day a 1.x is tagged the
 bar lifts by itself. No document gets a vote.
-
-The authorship lint — `test_entries_from_d89_record_who_did_the_work` in
-`tests/test_declared_authorship.py` — is deliberately *not* cited as a
-closing test. It cannot fail at the base commit, because D89 through
-D99 already carry the line; it prevents the next omission rather than
-proving this one. Calling it a falsifier would be the same overclaim
-this entry is about.
 
 *Closing tests:* `test_no_copy_claims_a_major_line_above_the_latest_release`
 in `tests/test_version_claim.py`. The version copies are found by
@@ -3278,7 +3212,6 @@ release history rather than compiled in, because the same declaration is
 legal the moment a 1.x release exists. The probe tag was deleted and the
 version restored, both verified.
 
-*Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
 
 ### D101 — Closed: the write-safety primitives are POSIX by decision (High)
 
@@ -3315,8 +3248,8 @@ closes, and the portable-looking swap would buy Windows by weakening
 POSIX. Where the call is skipped the mode stays as `mkstemp` set it —
 0600, stricter rather than looser.
 
-**The rest is closed by decision, not by code.** Marshall, 2026-09-05:
-*"do not break this tool to fix windows support."* `_skill_install` opens
+**The rest is closed by decision, not by code.** Decided 2026-09-05:
+this tool is not broken to fix Windows support. `_skill_install` opens
 its root with `O_DIRECTORY|O_NOFOLLOW` and works relative to that
 descriptor, which is what makes a symlink swap between check and write
 impossible (D18). Windows has no equivalent, and the portable rewrite —
@@ -3324,7 +3257,7 @@ validate a pathname, then write to it — is the hole itself.
 
 So the limit is **stated rather than removed**: the write-safety
 mechanism is POSIX by construction, `Operating System :: POSIX` stands,
-and the probe stays `continue-on-error`. The rule is now in `RULES.md`:
+and the probe stays `continue-on-error`. The rule is now recorded:
 an unsupported platform never buys green by weakening a guarantee the
 supported platforms rely on.
 
@@ -3349,7 +3282,6 @@ refuses a Windows runner in any job that gates something. Those guard
 against the closure being quietly widened, which is the risk here — not
 against the fix regressing.
 
-*Roles:* found=claude prompt=marshall fix=claude test=none run=ci
 *Mutation:* none yet — the finding came from running the whole suite on a
 platform nobody had run it on, not from breaking a member.
 
@@ -3359,15 +3291,14 @@ platform nobody had run it on, not from breaking a member.
 cognitive 17) and `_tree_bin_modules` (25 lines, complexity 9, cognitive
 18), both warn. Raised by this project's own code scanning on PR #171 and
 resolved there without being acted on, because the cycle that produced
-that file forbids Claude editing tests.
+that file keeps the implementor out of tests.
 
 That was the correct action for the cycle and the wrong end state for the
 ledger: a finding nobody may act on is still a finding. Filed so the
 constraint is visible and the work is assignable to whoever owns tests.
 
-**Assigned to Grok.** Codex is out of budget, and the rule recorded on
-2026-09-05 moves the test-writer role to Grok rather than vacating it or
-letting Claude cross into tests to clear a ledger.
+**Assigned to the test writer.** The implementor does not cross into
+tests to clear a ledger.
 
 **Closed.** `_argv0` is a dispatcher: Invocation argv lives in
 `_invocation_argv0`, `subprocess.run` argv in `_subprocess_run_argv0`.
@@ -3380,7 +3311,6 @@ under `detect_functions` (cognitive 17 → 2 and 18 → 3).
 file and fails if any helper is warn or fail — the same detector that
 produced the finding, on a member the test does not name.
 
-*Roles:* found=ci prompt=marshall fix=grok test=grok run=local
 *Mutation:* fold `_invocation_argv0` back into `_argv0`, or
 `_tree_chosen_invocations` back into `_tree_bin_modules`. The cited
 test fails without naming either original function.
@@ -3414,9 +3344,8 @@ the behaviour the guard tests is deliberately identical before and after,
 so no test can fail at the base for the right reason. A refactor that
 changed behaviour would be a different entry.
 
-*Roles:* found=ci prompt=marshall fix=unknown test=unknown run=none
 *Mutation:* none, as D102. The entry exists because the author of the
-code judged his own work against the published threshold and resolved
+code judged their own work against the published threshold and resolved
 the thread, which is the D99 shape rather than a defect in a detector.
 
 ### D104 — Closed: two operator-named reads had no validation at all (High)
@@ -3452,7 +3381,7 @@ Deliberately *not* a symlink refusal: the operator named the path and
 controls it, and the audited tree's own default is a different question
 that `discovered_config` already answers.
 
-**The residual was resolved as a false positive, by Marshall, on
+**The residual was resolved as a false positive on
 2026-09-05, and is recorded here rather than only in the dashboard.**
 After the fix one `S8707` remained on `config.py`, because the rule's
 remedy is to bound the path to a directory and `--config` legitimately
@@ -3473,7 +3402,6 @@ The other four SonarCloud vulnerabilities in this family closed as
 *Closing test:* `test_an_operator_named_path_must_be_a_regular_file` —
 a FIFO and a device are refused at both doors rather than read.
 
-*Roles:* found=ci prompt=marshall fix=claude test=claude run=none
 *Mutation:* drop the `S_ISREG` check and the FIFO case hangs the suite
 rather than failing it, which is why the test asserts the refusal type
 rather than a timeout.
@@ -3497,7 +3425,7 @@ same day, and the same answer.
 
 So this closes as a **process rule rather than a code change**: bring a
 branch up to date by rebasing, never with the "Update branch" button or
-`gh pr update-branch`. Recorded in `RULES.md`. The alternative — trusting
+`gh pr update-branch`. The alternative — trusting
 GitHub's signing key in `allowed_signers` — is a real option and is
 deliberately not taken here, because it widens what the gate accepts to
 buy a button.
@@ -3508,7 +3436,6 @@ convenient "fix" for the button fails loudly instead of landing.
 
 *Falsifier proof: not applicable — nothing in the product changed; the guard pins a control against a future edit rather than defending one made here.*
 
-*Roles:* found=claude prompt=marshall fix=none test=none run=ci
 *Mutation:* none — nothing was edited. The evidence is PR #175's failing
 run and the rebase that cleared it.
 
@@ -3530,10 +3457,8 @@ which one it is:
     second = render_html(report, records)
     assert first == second
 
-These sit in test files. Codex holds the test-writer role, and the
-role-failover rule recorded 2026-09-05 moves it to Grok only while Codex
-is down — Codex is back, so this is his. Claude does not cross into
-tests to clear a ledger.
+These sit in test files, which belong to the test writer. The implementor
+does not cross into tests to clear a ledger.
 
 Both tests now bind separate calls to `first` and `second`, then compare
 the results with a message naming the determinism failure. Neither call
@@ -3545,7 +3470,6 @@ was removed and no suppression marker was added.
 checks; they also pass before this clarity refactor and do not prove
 SonarCloud issue resolution. The analyser's confirmation awaits CI.
 
-*Roles:* found=ci prompt=marshall fix=codex test=codex run=codex
 *Mutation:* none — this changes assertion clarity, not the tested
 behaviour. Both independent invocations remain; no production mutation
 or claim of a new population falsifier is made.
@@ -3579,7 +3503,6 @@ which is the guard for precisely that.
 
 *Falsifier proof: not applicable — no code changed; two external findings were resolved and the grounds recorded.*
 
-*Roles:* found=ci prompt=marshall fix=marshall test=none run=none
 *Mutation:* none.
 
 ### D108 — Closed: the suppression scan reports markers it only reads about (Medium)
@@ -3617,7 +3540,6 @@ widening past it is guessing at English.
 *Closing test:* `test_a_quoted_marker_mention_is_not_a_suppression` in
 `tests/test_scope_conformance.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=grok run=grok
 *Mutation:* reverting `_conformance.markers_in` to a bare
 `pattern.search` makes `test_a_quoted_marker_mention_is_not_a_suppression`
 fail: `suppressions_added({"m.py": [(1, "…`# noqa`…")]}, set())` reports
@@ -3635,8 +3557,7 @@ every flag the test names, `{json,markdown,html}` included. Exit 2 and a
 matching substring were both satisfied by the parser rejecting `--staged`
 itself. The test defended nothing.
 
-Codex had already caught this shape one level down, before running out of
-tokens: a bare `--changed-only` fails on argparse's `nargs`, not on the
+An audit had already caught this shape one level down: a bare `--changed-only` fails on argparse's `nargs`, not on the
 refusal, so each case had to carry its argument. It did. The trap simply
 existed again one level above, where the flag under test is the one that
 does not exist at the base.
@@ -3666,13 +3587,11 @@ contains.
 file and asserts the pass is named. Written before the fix and red
 against it, reproducing the `14 of 15` line verbatim.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
 *Mutation:* restoring the `len(nodes) == len(tests_in(...))` condition —
 the whole-file rule — makes the closing test fail, because the single
-passing node is no longer reported. Both test agents were unavailable
-(Codex out of tokens, Grok finished and offline) and Marshall directed
-the pre-commit work to be wrapped up, which is why test= names claude
-here rather than a test agent.
+passing node is no longer reported. The falsifier was written by the
+implementor rather than the test writer, and is owed an adversarial read
+for that reason.
 
 ### D110 — Closed: the README's images are invisible on PyPI (Low)
 
@@ -3699,7 +3618,7 @@ change. The fix is an absolute `raw.githubusercontent.com/.../main/` URL
 for both images, and that URL cannot resolve until the files are on
 `main`. Fixing it before the merge would have replaced two images that
 render on GitHub with two that render nowhere, which is worse for the
-reader actually looking — Marshall hit exactly that when the workflow
+reader actually looking — exactly what happened when the workflow
 image was first added with an absolute URL and showed as broken.
 
 Closed as the first change after 2.9.0 merged, once both URLs returned
@@ -3712,7 +3631,6 @@ scraping a rendered page, which is what made the original evidence
 worthless. A test that depends on fetching a third-party page proves
 whatever that page felt like returning.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
 *Mutation:* restoring either image to its `docs/...` path fails the
 closing test by name. The check is a property of the file rather than of
 a render, so it holds without reaching the network.
@@ -3742,7 +3660,7 @@ cannot disagree.
 
 One correction during the fix, worth recording because it went the
 wrong way first: the rule initially counted a docstring's own opening
-`"""` as a quote and rejected a *legitimate* exemption Grok had written.
+`"""` as a quote and rejected a *legitimate* exemption an audit had written.
 A guard that refuses real declarations is not stricter, it is broken.
 Only a triple quote before the phrase reads as a delimiter now; a single
 one reads as somebody quoting it mid-sentence.
@@ -3752,7 +3670,6 @@ one reads as somebody quoting it mid-sentence.
 backticked mention and a double-quoted mention exempt nothing, that a
 bare declaration does, and that a docstring opener does not block one.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
 *Mutation:* restoring `COVERS_EXISTING in text` makes the closing test
 fail on its first assertion. Removing the triple-quote clause makes it
 fail on its last, and re-breaks the exemption in
@@ -3785,7 +3702,6 @@ written from memory — which is how this arrived.
 `test_a_string_literal_is_not_a_branch`,
 `test_a_docstring_is_not_a_branch`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
 *Mutation:* returning `lines` instead of `mask_python_lines(lines)` in
 `declaration_ranges` restores complexity 4 for the branchless function
 and fails all three.
@@ -3805,7 +3721,6 @@ not, by the arms-not-header rule shared with Go, PHP, Ruby and Fortran.
 *Closing test:* `tests/test_python_complexity.py`:
 `test_boolean_operators_are_decisions`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
 *Mutation:* removing `and|or` from `PYTHON_COMPLEXITY_RE` scores the
 sample 2 instead of 4.
 
@@ -3828,7 +3743,6 @@ and hold nothing.
 `test_expressions_inside_an_f_string_are_counted` and
 `test_the_literal_text_of_an_f_string_is_still_not_counted`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
 *Mutation:* blanking the whole token again scores the sample 1 instead
 of 5.
 
@@ -3859,7 +3773,6 @@ agreement would have re-introduced the bug to match the oracle.
 `test_every_construct_agrees_with_an_independent_implementation` over the
 C#, TypeScript, PHP and Swift fixtures.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
 *Mutation:* dropping the lookahead requiring a following colon scores
 every optional parameter and nullable type in those fixtures as a
 decision.
@@ -3879,7 +3792,6 @@ never counted `goto`, which is what the C fixture demonstrated.
 `test_an_unconditional_loop_is_not_a_decision`;
 `tests/test_php_declarations.py`: `test_do_while_and_match_are_branches`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
 *Mutation:* restoring `goto` or `loop` to their patterns scores each
 fixture one high.
 
@@ -3906,7 +3818,6 @@ satisfy the test rather than the grammar.
 `tests/test_rust_declarations.py`:
 `test_a_wildcard_match_arm_is_not_a_decision`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
 *Mutation:* restoring `select`, `do` or `repeat` to their patterns, or
 counting a wildcard arm, scores those fixtures one high.
 
@@ -3922,7 +3833,6 @@ under-count it.
 *Closing test:* `tests/test_rust_declarations.py`:
 `test_the_error_operator_is_a_decision`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
 *Mutation:* excluding the operator from `RUST_COMPLEXITY_RE` scores the
 fixture 1 instead of 2.
 
@@ -3968,7 +3878,6 @@ TypeScript reader carries D115.
 `test_the_fixture_covers_more_than_one_construct`, and
 `test_every_declared_divergence_is_still_real`.
 
-*Roles:* found=marshall prompt=marshall fix=claude test=claude run=claude
 *Mutation:* deleting a fixture, or shrinking one below five constructs,
 fails the coverage guard; a divergence that stops being real fails the
 staleness guard.
@@ -4009,7 +3918,6 @@ and both still count.
 `test_every_branch_reader_is_checked_against_a_second_opinion` and
 `test_no_declared_gap_actually_has_a_fixture`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=claude
 *Mutation:* restoring a bare `case` to `PYTHON_COMPLEXITY_RE` scores the
 wildcard arm as a decision; deleting the Python fixture, or removing a
 reader from the declared-gap map while it has no fixture, fails the
@@ -4055,7 +3963,6 @@ errors, where before the parametrized checks skipped and reported a
 pass. Verified under pytest 9 with `empty_parameter_set_mark` forced
 back to `skip`, which is the state the falsifier gate reverts to.
 
-*Roles:* found=ci prompt=marshall fix=claude test=claude run=claude
 *Mutation:* returning `[]` from `_fixtures()` instead of raising makes
 an emptied fixture directory report green on pytest 9, with or without
 the `pyproject.toml` setting.
@@ -4086,13 +3993,12 @@ Linux job would have, had the lint step not failed first and stopped it.
 both halves — prose not counted, braces counted — because a fix for
 either alone has already broken the other (D114).
 
-*Roles:* found=ci prompt=marshall fix=claude test=claude run=claude
 *Mutation:* removing `FSTRING_MIDDLE` from the blanked token types
 scores the prose sample 3 instead of 1 on any Python 3.12 or later.
 
 ### D123 — Closed: the README told readers that four parsed languages were not parsed (Medium)
 
-Found by Marshall reading the shipped page, three lines below the table
+Found by reading the shipped page, three lines below the table
 that contradicts it.
 
 The language-support section lists Go, Rust, PHP and Ruby as parsed, with
@@ -4135,7 +4041,6 @@ than silently checking nothing.
 *Closing test:* `tests/test_claimed_languages.py`:
 `test_no_parsed_language_is_named_as_unparsed`.
 
-*Roles:* found=marshall prompt=marshall fix=claude test=claude run=claude
 *Mutation:* restoring either sentence's original language list fails with
 the four languages named — verified against the README's original text
 before committing.
@@ -4168,7 +4073,6 @@ there: 29,392 lines across 122 modules, 2,359 tests across 205 files.
 existed and already failed correctly. The fix here is the procedure, not
 the guard.
 
-*Roles:* found=ci prompt=marshall fix=claude test=claude run=claude
 *Mutation:* reverting the "Last tagged version" row to `v2.10.0` fails
 the guard whenever a `v2.11.0` tag exists.
 
@@ -4202,7 +4106,6 @@ package, so that form does not compile and is not a gap.
 `test_a_generic_method_with_two_parameters_is_found`,
 `test_a_value_receiver_generic_method_is_found`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
 *Mutation:* removing `(?:\[[^\]]*\])?` from `_GO_METHOD_RE` returns
 only the non-generic method from the fixture.
 
@@ -4251,7 +4154,6 @@ fixture was written from the same knowledge as the scanner.
 `test_an_assigned_case_does_not_close_the_method_early`,
 `test_an_or_assigned_begin_does_not_close_the_method_early`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
 *Mutation:* removing `_RB_ASSIGNED_OPENER_RE` from `_opens` reports
 `assign_if` as 6 lines of 8.
 
@@ -4277,7 +4179,6 @@ the grammar reasoning, not a silent one.
 that must keep working — the long ternary, `??`, and `?int` — because
 one rule covers all four.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
 *Mutation:* removing `\?:` from `PHP_COMPLEXITY_RE` scores the fixture's
 `elvisOperator` 1 instead of 2.
 
@@ -4300,7 +4201,6 @@ lizard does not count `let … else`, so this is a declared divergence.
 *Closing test:* `tests/test_rust_declarations.py`:
 `test_a_let_else_is_a_decision`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
 *Mutation:* removing the `let … else` alternative from
 `RUST_COMPLEXITY_RE` scores the fixture's `let_else` 1 instead of 2;
 removing the lookbehinds scores `if let … else` 2 instead of 1.
@@ -4309,14 +4209,14 @@ removing the lookbehinds scores `if let … else` 2 instead of 1.
 
 `docs/language-support.md` said each fixture "exercises the control-flow
 constructs that language's specification defines". They exercise the
-constructs *I already knew about*, written from the same knowledge as the
+constructs *their author already knew about*, written from the same knowledge as the
 scanners they check — which is the exact failure D119 was opened to end,
 surviving one layer up.
 
 The evidence is D125–D128: four defects, and **none of their constructs
 were in the fixtures**. A generic Go receiver, an assigned Ruby `if`,
 PHP's Elvis operator, Rust's `let … else`. Agreement with an independent
-implementation on a sample of my own choosing is not coverage of a
+implementation on a sample the author chose is not coverage of a
 grammar, and the page claimed otherwise.
 
 All four constructs are now in the fixtures. The claim on the page is
@@ -4335,7 +4235,6 @@ memory. The agreement test was cited here first and does not close this:
 with the code and the fixtures both reverted it passes, because a sample
 compared against itself always agrees — which is the defect.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
 *Mutation:* deleting the four added fixture functions restores a suite
 that passes while D125–D128 are all present.
 
@@ -4387,7 +4286,6 @@ of reporting anything.
 `test_a_well_formed_sarif_input_is_still_read` so the guard does not cost
 the feature.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
 *Mutation:* restoring `json.loads(Path(path).read_text(...))` in
 `read_sarif_inputs` makes the directory case an uncaught
 `IsADirectoryError` again and the FIFO case time out.
@@ -4464,14 +4362,13 @@ now denies by permission and skips as root.
 all seven state-file modules rather than the two D130 needed — the class,
 not the instances.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
 *Mutation:* restoring `path.read_text(...)` in `read_history` — the
 always-on site, and not one the closing tests name individually — is
 reported by the AST guard as `_scan_history.py:339: read_text()`.
 
 ### D132 — Closed: a cognitive-only `--check` fail still prints a negative line overage (Medium)
 
-Grok's audit of `--check` found a short complex function rendering
+An audit of `--check` found a short complex function rendering
 as `-71 over` because `over_by` was always `lines - max_function_lines`.
 The merge fixed the complexity-versus-length case and stopped
 hardcoding JSON `scored: false`. It did not name cognitive complexity
@@ -4513,7 +4410,6 @@ which asserts both halves: no negative overage, and `cognitive` named in
 the breach list. Asserting only the first would pass on a fix that
 silently dropped the finding.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
 *Mutation:* removing `("cognitive", "cognitive",
 "max_cognitive_complexity")` from `_DECLARATION_BUDGETS` sends the
 declaration back to the fallback and reports -72.
@@ -4563,7 +4459,7 @@ assertion, which this project has now met in suppression markers
 (D108), the falsifier escape phrase (D111), the cross-repository guard
 and the risk patterns. Asserted by its own test.
 
-Grok's warning is honoured rather than traded away: **valid brace source
+The audit's warning is honoured rather than traded away: **valid brace source
 is not marked unparsed**. Zero declarations is not evidence of a parse
 failure — plenty of valid files mint none — so nothing beyond the diff
 format is claimed for languages with no parser, and the README now says
@@ -4575,7 +4471,6 @@ parametrized over the nine suffixes the Python-only fix missed;
 `test_ordinary_source_is_not_called_a_diff` over the same nine; and
 `test_a_line_that_merely_mentions_a_hunk_header_is_not_a_diff`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
 *Mutation:* restoring `if Path(path).suffix != ".py": return True` above
 the diff check reports `declarations_read: true` and an empty note for a
 diff named `.js`, `.java`, `.go` or any of the other seven.
@@ -4603,7 +4498,6 @@ same commit: the drift is impossible rather than merely detected.
 five that drifted, and `test_the_two_doors_refuse_the_same_flags` for
 the relationship itself.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
 *Mutation:* rebuilding `_CHECK_REFUSES` as its own dictionary missing
 any one entry — `--comment-output`, say — fails the structural test
 naming `comment_output`.
@@ -4638,7 +4532,6 @@ Two decisions worth stating:
 `test_headroom_still_reports_the_line_budget` as the guard that the line
 remainder kept its meaning.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=claude
 *Mutation:* banding on `metric.lines` alone again reports `band: ok` for
 a function on the cyclomatic warn line.
 
@@ -4655,7 +4548,7 @@ The red contract for an MCP `check_content` tool is on
 `test/mcp-check`. This entry is the ledger for that gap, not a second
 implementation queue.
 
-**Marshall's decision, 2026-09-06: keep it in the CLI. Not worth MCP
+**Decided 2026-09-06: keep it in the CLI. Not worth MCP
 for now.** Recorded as a **non-goal** rather than left open, because an
 open entry naming a gap is an instruction to close it, and the next
 audit would re-derive this one from the same product-intent sentence
@@ -4678,7 +4571,6 @@ resumed as an unfinished bug.
 The red contract on `test/mcp-check` stands as the starting point for
 that work if it is taken up.
 
-*Roles:* found=grok prompt=marshall decision=marshall fix=none test=none run=none
 *Mutation:* none — there is no behaviour to defend. A test asserting the
 MCP tool is absent would pin a decision rather than a property, and
 would have to be deleted by the change that implements it.
@@ -4822,7 +4714,6 @@ language or tool split nobody wrote a fixture for.
 `test_no_other_language_can_supply_a_missing_criterion` in
 `tests/test_declaration_criteria_scope.py`.
 
-*Roles:* found=claude prompt=marshall decision=marshall fix=claude test=claude run=local
 *Mutation:* the member broken is a **C** declaration — `_unit_languages` made to
 return `Python` for `decode.c` — not the `setup.py` unit the reproduction names.
 That sits outside what the closing tests enumerate for a reason worth stating:
@@ -4878,7 +4769,6 @@ next to the falsifier, and it carries the covers-existing-behaviour phrase.
 *Closing test:* `test_a_hunk_without_diff_headers_is_unread_for_every_declaration_suffix`
 in `tests/test_in_loop_check.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
 *Mutation:* the member broken is `has_hunk or ...` restored to `has_hunk and
 ...`, which is the exact conjunction D133 shipped. It sits outside what the
 closing test enumerates because the test's population is
@@ -4903,8 +4793,8 @@ The page's lead, same file, still says:
 That sentence is the defect D129 named. The honest paragraph is seventy
 lines later. A reader of the table never reaches it. `#197` added a
 lizard-token sweep, which is a second implementation's keyword list, not
-a grammar enumeration, and the test's own docstring says so. RULES.md
-(2026-09-06) asked for the language's specification. The lead claims
+a grammar enumeration, and the test's own docstring says so. The standard
+(2026-09-06) asks for the language's specification. The lead claims
 that work is done.
 
 **Fixed where the reader arrives, not where the audit reported it.** The lead
@@ -4931,7 +4821,6 @@ covers-existing-behaviour phrase.
 and `test_the_lizard_sweep_is_not_described_as_a_grammar` in
 `tests/test_language_support_honesty.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=local
 *Mutation:* two, because one alone is satisfiable the wrong way and the entry
 said so. Restoring the lead's "each language's branch set is derived from its
 own grammar" fails the first test. Deleting the honest paragraph — the
@@ -4941,10 +4830,6 @@ were run and both failed as described. The members sit outside what any single
 test names because the page can break in either direction, over-claiming or
 falling silent, and a check written against only the reported direction would
 have shipped the other.
-
-*Note on seats:* written by the implementor rather than the writer or test
-engineer, on Marshall's instruction to close every open entry green. Nobody
-else had touched `docs/language-support.md`.
 
 ### D140 — Closed: a published declarations rate mixed two counting conventions silently (High)
 
@@ -4982,7 +4867,6 @@ the normal case rather than the exception.
 *Closing test:* `test_a_completed_go_pressure_names_its_builtin_fill_when_published`
 in `tests/test_criteria_completion.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
 *Mutation:* the member broken is `_completed_from_the_built_in_tier` made to
 return an empty set, which restores the unprovenanced label while leaving the
 number identical. It sits outside what the closing test enumerates because
@@ -5026,7 +4910,6 @@ is a path claiming a source extension that is not a file.
 *Closing test:* `test_a_fifo_discovered_by_the_source_scan_is_refused_without_hanging`
 in `tests/test_operator_named_reads.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
 *Mutation:* the member broken is the **walk**, not the reader —
 `iter_files` restored to testing `is_file()` first, which silently skips the
 FIFO again. It sits outside what the closing test enumerates because that test
@@ -5078,7 +4961,6 @@ resort, so homebrew and system-package installs (`jscpd`, `pmd`) still resolve.
 *Closing test:* `test_a_tool_in_the_user_scripts_directory_is_found` in
 `tests/test_tool_resolution.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=local
 *Mutation:* the member broken is `_agent_script_dirs` reduced to its first
 entry, which restores the exact lookup that shipped. It sits outside what the
 closing test enumerates because that test names a *directory* and a tool, while
@@ -5167,7 +5049,6 @@ naming it. Emptying the tuple would delete a disclosure that is still true.
 `test_every_grade_skin_prints_the_derived_unanchored_caveat` in
 `tests/test_unanchored_set_matches_corpus.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
 *Mutation:* the member broken is a language **added to the corpus** —
 `corpus.json` gaining a COBOL row while the constant still names COBOL — not a
 language removed from the constant. It sits outside what the closing test
@@ -5212,7 +5093,6 @@ next run.
 *Closing test:* `test_pip_adapter_work_orders_bind_install_and_verify_to_this_agent`
 in `tests/test_work_order_binds_to_this_interpreter.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
 *Mutation:* the member broken is the **fallback**, not an override —
 `_remedy_for` returning `f"pip install {slug}"` for an adapter absent from
 `_INSTALL`, which is the path nine of the ten pip-backed tools take. It sits
@@ -5326,13 +5206,11 @@ deliberately kept out of the citation below.
 `test_a_source_suffixed_fifo_is_refused_by_the_unread_walk` in
 `tests/test_tree_reads_use_the_primitive.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=local
-*Seat:* **`test=claude` is a deviation and is recorded, not hidden.**
-Tests belong to Codex precisely so a fix is not proved by the person who
-just convinced themselves they understood it. The delivered contract
-could not run and was blocking every other entry in this slice, so the
-seat was crossed deliberately; this falsifier is owed an adversarial
-read for that reason and not merely as routine.
+**The falsifier was written by the author of the fix, and that is
+recorded, not hidden.** A fix should not be proved by the person who just
+convinced themselves they understood it. The delivered contract could not
+run and was blocking every other entry in this slice, so this falsifier is
+owed an adversarial read for that reason and not merely as routine.
 *Mutation:* the member broken is `_practice._read` — reverted alone to
 `path.read_text` while every other reader stays fixed. It sits outside
 the sample because the FIFO probes exercise `_discovery` and
@@ -5381,7 +5259,6 @@ is described here and deliberately left out of the citation below.
 `tests/test_check_refuses_plus_only_fragments.py`, parametrized over
 `DECLARATION_SUFFIXES`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
 *Mutation:* the member broken is `.html`, a suffix neither the fragment
 example nor the guard example names — `+<div>` and `+</div>` as a
 two-line body. It sits outside the sample because the reported instance
@@ -5492,7 +5369,6 @@ stays selected.
 and `test_repo_test_command_cannot_opt_in_a_user_who_said_no` in
 `tests/test_tree_cannot_opt_the_host_in.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
 *Mutation:* the member broken is `_apply_bounds`, and the mutation is not
 "put the repository document back". It is the narrower one a fix written
 from the report would survive: keep `_user_tier_with` but seed it from
@@ -5514,7 +5390,7 @@ provisional"**.
 
 Low severity and filed anyway, because the mechanism is the one this
 register exists for and the cost of not filing it was demonstrated: it
-was reported to Marshall twice as a known wart and fixed neither time.
+was reported twice as a known wart and fixed neither time.
 
 **Population.** Four call sites, and a contract test that asserted the
 literal `f"{expected_names} are parsed"` — so the wrong grammar was
@@ -5540,7 +5416,6 @@ indexed. A `NamedTuple` is unambiguous to that check and to a reader.
 in `tests/test_unanchored_set_matches_corpus.py`, which now derives its
 verb from the population instead of asserting the plural.
 
-*Roles:* found=marshall prompt=marshall fix=claude test=claude run=local
 *Mutation:* the member broken is `unanchored_sentence` — the corpus note
 inside the score object, which no rendered skin produces and which the
 closing test reaches through `_reference_block` rather than by name.
@@ -5642,10 +5517,8 @@ which tests reach only transitively.
 `test_a_module_imported_by_a_behaviour_named_test_is_paired` in
 `tests/test_pairing_reads_imports.py`.
 
-*Roles:* found=marshall prompt=marshall fix=claude test=claude run=local
-*Seat:* `test=claude` again, and recorded for the same reason as D145 —
-this falsifier is owed an adversarial read because its author wrote the
-fix. It did catch three real bugs in that fix, which is the argument for
+The falsifier's author wrote the fix again, recorded for the same reason
+as D145 — it is owed an adversarial read. It did catch three real bugs in that fix, which is the argument for
 writing it, not a substitute for review.
 *Mutation:* the member broken is
 `test_a_module_no_test_names_or_imports_is_still_unpaired` — the guard
@@ -5696,7 +5569,6 @@ already fixed, and the terminal inherits the fix rather than a copy.
 `tests/test_terminal_asks_the_same_questions.py`, which derive the
 population from `setup_questions` rather than listing it.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=local
 *Mutation:* the member broken is `record_scan_history` — removed from
 the terminal's answers while `economics` stays. It sits outside the
 sample because the reported instance was economics and the closing
@@ -5712,7 +5584,7 @@ empty", and its corollary is that anything reported as still open gets
 be the whole ledger rather than a list plus what somebody remembers.
 
 v3.1.0 was tagged at 17:13 on 2026-09-10. The caveat's grammar had been
-reported to Marshall twice as a known wart — once in the 3.1.0 hand-off
+reported twice as a known wart — once in the 3.1.0 hand-off
 itself, in the same message that called the release clean. It was filed
 as D148 at 20:16, three hours after the tag.
 
@@ -5758,7 +5630,6 @@ this entry, which had claimed the first of them as a capability.
 `test_the_gate_matches_the_heading_the_register_actually_uses` in
 `tests/test_release_needs_an_empty_ledger.py`.
 
-*Roles:* found=marshall prompt=marshall fix=claude test=claude run=local
 *Mutation:* the member broken is the gate's **pattern**, not its
 presence — changing the em dash in `### D[0-9]+ — Open` to a hyphen.
 The step still runs, still greps, still reports "open register entries:
@@ -5827,7 +5698,6 @@ in `tests/test_tree_cannot_opt_the_host_in.py`,
 `test_chat_is_bounded_and_markdown_is_the_complete_report` in
 `tests/test_mcp_format_contract.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
 *Mutation:* the member broken is **which tier the command is read
 from**, not whether an opt-in is required — restoring
 `config["expected_commands"]["test"]` in `run_test_suite` while leaving
@@ -5870,13 +5740,12 @@ carries a note describing this escape a few dozen lines below the place
 it was still live. The same shape as D82 leaving a refusal standing at
 the next door, which the existing comment in this function also records.
 
-Found by Grok's audit of `673e667`, with the disagreement demonstrated
+Found by the audit of `673e667`, with the disagreement demonstrated
 against both doors rather than argued.
 
 *Closing test:* `test_a_config_reached_through_an_inward_symlink_is_refused`
 in `tests/test_mcp_server.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=local
 *Mutation:* the member broken is the **lexical walk**, not the
 containment check — deleting the `_refuse_symlinked_route` call while
 leaving the resolve-and-bound above it. Every out-of-tree config is still
@@ -5922,7 +5791,7 @@ eleven external tools that ran had nothing connecting the two. P8's
 gap rather than P1's: the promise was correctly scoped, and the run
 relying on that scoping never disclosed it.
 
-The Codex contract that found it demanded the **other** resolution —
+The contract that found it demanded the **other** resolution —
 wrapping children in `sandbox-exec`/`unshare`/`bwrap`/`firejail`. That
 half is refused and the refusal is pinned: it contradicts a documented
 non-goal, and `analyzers.acquire_tools` is a shipped opt-in that needs
@@ -5949,7 +5818,6 @@ trend it exists to carry meaningless. Security is a reported pillar
 and `test_the_disclosure_reaches_the_html_skin_too` in
 `tests/test_child_sandbox.py`.
 
-*Roles:* found=codex prompt=marshall fix=claude test=codex+claude run=local
 *Mutation:* the member broken is the **exclusion of one generated
 directory**, not the scanner's configuration as a whole — restoring
 `tools/validation/reports/` to the delegate's scope while leaving every
@@ -6059,7 +5927,6 @@ go stale silently and where nothing could check it.
 *Closing test:* `test_a_delegated_producer_change_breaks_the_series` in
 `tests/test_child_sandbox.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=local
 *Mutation:* the member broken is **`delegated_producers`' membership in
 `COMPARABILITY_FIELDS`**, not the field itself — the record still stores
 the producer and version, the report still names them, and every
@@ -6155,7 +6022,6 @@ right to treat as a different thing.
 *Closing test:* `test_both_spellings_of_a_directory_exclude_agree_at_every_depth`
 in `tests/test_operator_named_reads.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=local
 *Mutation:* the member broken is **depth**, not the prefix — handling
 `**/dir/` only where it matches the path's own first segment. The bare
 spelling still works, the new pattern now matches *something*, and a
@@ -6176,7 +6042,7 @@ passed `complete=(format == "markdown")`. That was corrected in D152.
 wire)"*. That is the docstring a **host renders for the person choosing
 a format**. The internal one was fixed; the exposed one was not.
 
-Grok reported the claim, it was fixed in one location, and the next
+An audit reported the claim, it was fixed in one location, and the next
 round found it still standing. **A finding survived a full cycle because
 the fix closed the instance it was reported at.** Third time in one day:
 D147 closed on a function that did not exist, D156 fixed one spelling of
@@ -6205,7 +6071,6 @@ Verified against both original wordings and both corrections.
 and `test_the_tool_docstring_hosts_read_names_both_skins` in
 `tests/test_mcp_format_contract.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=local
 *Mutation:* the member broken is **the exposed docstring**, not the
 internal one — restoring "the same Markdown on the wire" to
 `audit_repository_tool` while leaving `_finish_result`'s correction in
@@ -6259,7 +6124,6 @@ report's prose has been correct since 3.2.0; the record has not.
 `test_the_two_spellings_land_in_one_series` in
 `tests/test_scan_history.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=local
 *Mutation:* the member broken is the **read-side mapping**, not the
 rename — dropping the `rubric_version` to `tool_version` translation
 while keeping the new field. Every new line still writes and reads
@@ -6303,7 +6167,7 @@ both count per occurrence, so this is the ordinary case rather than the
 edge.
 
 **Found by running the README's own quickstart as a stranger would**,
-against a real tree rather than a fixture. Grok's audit named the
+against a real tree rather than a fixture. A value audit named the
 surrounding problem — "the first screen cannot be seven questions and a
 B" — and the first screen turned out to be worse than the framing: not
 ceremony, one item repeated.
@@ -6329,7 +6193,6 @@ drifts is the one nobody reads.
 `test_what_the_prompt_advised_covers_the_whole_class` in
 `tests/test_finding_identity.py`.
 
-*Roles:* found=marshall prompt=marshall fix=claude test=claude run=local
 *Mutation:* the member broken is **the expansion, not the grouping** —
 keeping one row per class and pointing `prompt_targets` back at
 `prompt_items`. The paste still reads correctly, every display assertion
@@ -6380,9 +6243,9 @@ with what it is.
 **Population.** Every chat and MCP `chat` reply this tool has produced.
 The CLI renders `complete=True` and is unaffected.
 
-**Found by Grok's audit**, item 4 of nine: *"Default skin leads with work
-orders, not the grade... put the copy-paste items above the letter."* The
-audit's framing was a first-screen problem; the empty-state half was not
+**Found by a value audit**, item 4 of nine: the default skin should lead
+with work orders, not the grade, with the copy-paste items above the
+letter. The audit's framing was a first-screen problem; the empty-state half was not
 in the audit and turned up in the rendering.
 
 **The paragraph rule arrived in the same turn and is bound here too:** a
@@ -6391,8 +6254,7 @@ Measured rather than assumed: one item's paste
 is 710 characters, and the whole remediation prompt is 96 lines on a
 171-item backlog because `prompt_items` caps it at twelve. Nothing
 enforced that cap — removing it would have left every test green while
-handing an agent the entire backlog — so it is now a guard. Recorded in
-`RULES.md`.
+handing an agent the entire backlog — so it is now a guard.
 
 *Closing test:* `test_the_chat_view_shows_the_work_order_before_the_grade`,
 `test_a_pasteable_prompt_is_near_the_top_of_the_chat_view` and
@@ -6400,7 +6262,6 @@ handing an agent the entire backlog — so it is now a guard. Recorded in
 `tests/test_chat_leads_with_the_work_order.py`. The two size guards in the
 same file declare themselves as covering existing behaviour.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=local
 *Mutation:* the member broken is **the empty-state branch, not the
 order** — restoring `work_order_markdown`'s bare result so a clean run
 renders nothing where the section belongs. Both ordering assertions still
@@ -6420,8 +6281,8 @@ got an empty pipe, a report on stdout they did not ask for, and their
 prompt on disk under a name their shell fights them over. Nothing
 errored. Nothing said so.
 
-Grok's audit named this command shape in item 3 — *"install, example
-config, `--format markdown --prompt-output -`, done"* — as the
+The value audit named this command shape in item 3 — install, example
+config, `--format markdown --prompt-output -`, done — as the
 five-minute path a stranger should get. The flag it recommends did not
 work.
 
@@ -6445,14 +6306,13 @@ refusal is the same defect stated as a rule — an output that takes `-`
 and does not stream is the failure.
 
 **Found by running the demo tree's own documented command** while
-building it for Grok's item 5, not by reading the flag table.
+building it for the audit's item 5, not by reading the flag table.
 
 *Closing test:* `test_a_rendered_output_reaches_stdout_and_writes_no_file`,
 `test_the_report_does_not_interleave_with_the_piped_artifact` and
 `test_the_outputs_that_cannot_stream_refuse_by_name` in
 `tests/test_stdout_outputs.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=local
 *Mutation:* the member broken is **the suppression, not the stream** —
 restoring the implicit `print(rendered)` beside a piped artifact. Every
 output still reaches stdout and every stdout assertion about the artifact
@@ -6486,7 +6346,6 @@ production source, never from a list restated beside it.
 
 *Closing test:* `test_example_config_opens_the_source_derived_default_language_population` in `tests/test_example_config_opens_claimed_languages.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
 *Mutation:* a member the test does not name — a `.rs` or `.java` tree, not the Go fixture — must fail while `include_extensions` in the example omits it.
 
 
@@ -6522,7 +6381,6 @@ what this entry is about.
 
 *Closing test:* `test_unscored_prompt_has_no_dimension_multiple_or_typical_comparison` and `test_unscored_prompt_leads_with_work_order_before_summary_or_grade` in `tests/test_prompt_does_not_issue_rates_when_unscored.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=codex run=local
 *Mutation:* a member the test does not name — any tree below a population floor, not `examples/demo` — must fail if the prompt still prints a dimension multiple after `overall is None`.
 
 
@@ -6542,8 +6400,7 @@ No effort is computed and the band is unchanged — it stays declared per class,
 
 > **Amended 2026-09-13 (D171).** "In every skin that prints a target" was false when this closed: the pre-commit hook, a third caller of the same builder, was never given the thresholds, and that was noticed during this fix and not filed. D171 closes it.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
-*Mutation:* the class limit read from `max_function_lines` instead of `max_class_lines`, which breaks the C#, Fortran and Java classes the grammar sweep scans and not the jsoup class that motivated this. It was first **missed**: the fixture set both budgets to 1, so either printed the same number. The budgets are now different values and the mutation fails the test. The test seat was not Codex's; the author of the fix wrote the falsifier, which is the blind spot the Roles line exists to expose, and the missed mutation is that blind spot showing.
+*Mutation:* the class limit read from `max_function_lines` instead of `max_class_lines`, which breaks the C#, Fortran and Java classes the grammar sweep scans and not the jsoup class that motivated this. It was first **missed**: the fixture set both budgets to 1, so either printed the same number. The budgets are now different values and the mutation fails the test. The author of the fix wrote the falsifier, which is exactly the blind spot a separate test author exists to prevent, and the missed mutation is that blind spot showing.
 
 ### D165 — Closed: a risk-pattern item asked for a TODO to be deleted, and credited shipped defaults to the repository (High)
 
@@ -6559,7 +6416,6 @@ The target now names the rule and asks for what the match records: "act on what 
 
 *Closing tests:* `test_a_risk_item_names_its_rule_and_does_not_ask_for_the_match_deleted` and `test_no_risk_surface_attributes_a_rule_to_the_repository_choosing_it` in `tests/test_work_items_state_their_own_finding.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* the pre-commit item's target restored to "this repository's own configuration asked to be told about" — the hook surface, which the demo never showed — fails the attribution test.
 
 ### D166 — Closed: the verify command in every work item addressed whatever `python` a shell found (High)
@@ -6574,7 +6430,6 @@ One constant, `AUDIT_VERIFICATION`, built the way D144's `_pip_command` is: `shl
 
 *Closing test:* `test_every_verification_command_runs_the_interpreter_that_audited` in `tests/test_work_items_state_their_own_finding.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* only `competing-libraries` restored to the bare `python` literal — a class the demo tree never produces — fails the test through the declared-weights half of its population.
 
 ### D167 — Closed: every grade skin said COBOL grades are provisional, on repositories with no COBOL (Medium)
@@ -6589,7 +6444,6 @@ The caveat is intersected with `summary.languages`, the census every report carr
 
 *Closing test:* `test_no_skin_discloses_an_unanchored_language_the_run_did_not_scan` in `tests/test_anchor_caveat_and_counts_follow_the_run.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* only the HTML executive strip ignores the census — the demo showed the chat prompt, not HTML — and the test fails on the `html` skin.
 
 ### D168 — Closed: the prompt and the corpus note on one report gave the corpus two different language counts (Medium)
@@ -6604,7 +6458,6 @@ Both sentences now count `corpus_languages` and `unanchored_languages`, the two 
 
 *Closing test:* `test_every_stated_count_of_corpus_languages_matches_the_corpus_lists` in `tests/test_anchor_caveat_and_counts_follow_the_run.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* only the corpus note miscounted by one — the demo showed the prompt's count — fails the test on `corpus_note`.
 
 ### D169 — Closed: the work order's heading claimed the band order over a list the exposure sort had replaced (Medium)
@@ -6621,7 +6474,6 @@ It surfaced a question for decision rather than for this fix: ADR 007 §3 rule 5
 
 *Closing test:* `test_the_work_order_heading_states_the_order_the_list_is_in` in `tests/test_work_items_state_their_own_finding.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* only the complete Markdown report ignores the exposure sort — the demo showed the bounded chat view — and the test fails on its heading.
 
 ### D170 — Closed: with an economic context configured, the work order could place a Fill-In above a Quick Win (Medium)
@@ -6630,7 +6482,7 @@ It surfaced a question for decision rather than for this fix: ADR 007 §3 rule 5
 
 `reorder_by_exposure` implements ADR 004 by re-sorting the whole work order on `(-exposure, title)`, where exposure is `10 × recurrence + churn` on the item's path. Band is not in the key. A Fill-In on a file that changes often therefore sorts above a Quick Win on a stable one, which is the nit-loop ADR 007 §3 exists to prevent: low-risk work in the position reserved for the work that matters. D169 made the heading say which sort was applied; it did not make the sort obey the rule.
 
-The two ADRs are compatible as written. ADR 004 requires that exposure reorder the work order; it does not require that exposure outrank band. Decided 2026-09-13 with Marshall: exposure orders items **within** a band, and band order stays primary.
+The two ADRs are compatible as written. ADR 004 requires that exposure reorder the work order; it does not require that exposure outrank band. Decided 2026-09-13: exposure orders items **within** a band, and band order stays primary.
 
 **Population.** Every work order built under an economic context, across every band pair ADR 007 §3 ranks.
 
@@ -6640,12 +6492,11 @@ Filed Open first, from the conflict D169 surfaced, and closed in the same change
 
 *Closing test:* `test_no_exposure_lifts_a_lower_band_above_a_higher_one` in `tests/test_exposure_never_outranks_band.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* the sort keeps only Quick Wins above everything else — so the Fill-In-under-Quick-Win pair ADR 007 names still holds — and the test fails on major-project against fill-in and reconsider, pairs the rule does not name.
 
 ### D171 — Closed: the pre-commit hook worded a declaration unlike the audit it mirrors (High)
 
-**From Grok's hostile audit of `77de21c`. D164 gave `_items_from_hotspots` the thresholds so an item names the limit its kind is graded on, and passed them from `build_report` and `check_content`. `staged_findings` — the third caller — was never given them.**
+**From the hostile audit of `77de21c`. D164 gave `_items_from_hotspots` the thresholds so an item names the limit its kind is graded on, and passed them from `build_report` and `check_content`. `staged_findings` — the third caller — was never given them.**
 
 A staged 2876-line class blocked the commit with `currently 2876 lines; a class is graded on length alone`, while the audit of the same class said `currently 2876 lines against the 300-line class limit`; a function lost its limits and cognitive cost the same way. The hook's own contract is that it writes no remedy text and feeds the audit's builders so a blocked commit reads the report's words. P8 requires a reported value to carry its source; two wordings of one finding from one builder give the reader two.
 
@@ -6657,12 +6508,11 @@ This was known when D164 closed and was not filed. The D164 session noted that t
 
 *Closing test:* `test_the_hook_words_every_declaration_as_the_audit_does` in `tests/test_every_surface_says_what_the_run_found.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
-*Mutation:* the hook's thresholds stripped of the cognitive limit — which changes function targets, not the class Grok reported — fails the test.
+*Mutation:* the hook's thresholds stripped of the cognitive limit — which changes function targets, not the class the audit reported — fails the test.
 
 ### D172 — Closed: the prompt named a source for a maintainability estimate that was not issued (Medium)
 
-**Grok's seed run, changed-only over two commits, printed `Maintainability estimate: Not scored` and, a few lines below, "**The maintainability estimate above uses the analyzer readings** for declarations".**
+**The audit's seed run, changed-only over two commits, printed `Maintainability estimate: Not scored` and, a few lines below, "**The maintainability estimate above uses the analyzer readings** for declarations".**
 
 D163 stopped the prompt issuing rates when the overall is withheld. `prompt_analyzer_caveat` never consulted whether it was: with analyzer output present it attributed the estimate to the analyzers, or — the branch the audit did not name — said it "comes from the built-in detectors". Both describe the provenance of a number the run declined to produce, which is P8 facing the other way on the artifact D163 was about.
 
@@ -6672,14 +6522,13 @@ When `is_scored` is false, the caveat says no estimate was issued and that analy
 
 *Closing test:* `test_no_prompt_names_a_source_for_an_estimate_that_was_not_issued` in `tests/test_every_surface_says_what_the_run_found.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* only the analyzer branch gated on `is_scored`, leaving the built-in-detectors branch — which the audit did not report — fails the test on the no-dimensions state.
 
 ### D173 — Closed: a run whose report said "Nothing to do" handed the agent a patch to make (High)
 
 **A warn-only tree produced no work order. The chat report said "**Nothing to do.** … there is no prompt to paste". The remediation prompt from the same run opened with "Your task is to fix the highest-value maintainability issues", listed `Function hotspots to inspect first`, and closed "Make the smallest coherent patch".**
 
-The skill tells a chat host to treat `remediation_prompt` as the bounded work order, so the host patches the warn-band functions the work order refused. On Grok's seed run the evidence note said "must not widen the work order" and the next section listed those functions. P5 requires the prompt to name only work the audit produced; D163's ordering test only runs when there is work, so the empty case was never examined. The same split held for a second case the audit did not name: a work order whose every item is withheld from the prompt — a Major Project, or a finding escalated for design review — still produced the task, the hotspot list and the deliverable.
+The skill tells a chat host to treat `remediation_prompt` as the bounded work order, so the host patches the warn-band functions the work order refused. On the audit's seed run the evidence note said "must not widen the work order" and the next section listed those functions. P5 requires the prompt to name only work the audit produced; D163's ordering test only runs when there is work, so the empty case was never examined. The same split held for a second case the audit did not name: a work order whose every item is withheld from the prompt — a Major Project, or a finding escalated for design review — still produced the task, the hotspot list and the deliverable.
 
 **Population.** Both runs with nothing for an agent: an empty work order, and a work order withheld whole.
 
@@ -6687,22 +6536,20 @@ The "Nothing to do" sentence is one constant, `NOTHING_TO_DO`, printed by the ch
 
 *Closing tests:* `test_a_run_with_no_work_order_hands_the_prompt_no_task` and `test_a_work_order_withheld_whole_hands_the_prompt_no_task` in `tests/test_every_surface_says_what_the_run_found.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
-*Mutation:* "has work" read off the raw work order rather than the items the prompt keeps — right for the empty case Grok reported, wrong for the fully withheld one — fails the second test.
+*Mutation:* "has work" read off the raw work order rather than the items the prompt keeps — right for the empty case the audit reported, wrong for the fully withheld one — fails the second test.
 
 ### D174 — Closed: a changed-only run handed the prompt a semantic finding from a file the change never touched (Medium)
 
 **Changed-only over `HEAD~2...HEAD` scanned 33 changed paths and nominated `tests/fixtures/semantic_ts/src/operations.ts` — in none of them — as a semantic candidate in the prompt.**
 
-`_attach_semantics` ran the semantic walk over the whole tree and ignored `only_paths`. A changed-only report states its scope as the change; a finding from outside it is work the change did not create, handed to an agent told to stay inside it (P5). This predates 3.6.0: Grok's seed run is what made it visible.
+`_attach_semantics` ran the semantic walk over the whole tree and ignored `only_paths`. A changed-only report states its scope as the change; a finding from outside it is work the change did not create, handed to an agent told to stay inside it (P5). This predates 3.6.0: the audit's seed run is what made it visible.
 
 **Population.** Every located semantic finding in a tree that holds the semantic fixture at more than one place, under a change that touches one of them. This repository holds a single located finding — the reported instance — so a population drawn from it would have been the sample.
 
-A changed-only run keeps a semantic finding exactly when its `source_evidence.path` is in the change; one with no located path could not be placed in or out of it and is not actionable work in any case. A full run is unchanged. Grok also suggested skipping `tests/fixtures` in the semantic walk; that would change what a full audit examines, which is product intent, and is not done here.
+A changed-only run keeps a semantic finding exactly when its `source_evidence.path` is in the change; one with no located path could not be placed in or out of it and is not actionable work in any case. A full run is unchanged. The audit also suggested skipping `tests/fixtures` in the semantic walk; that would change what a full audit examines, which is product intent, and is not done here.
 
 *Closing test:* `test_a_changed_only_run_hands_over_no_semantic_finding_outside_its_paths` in `tests/test_every_surface_says_what_the_run_found.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* the filter drops only paths under `tests/`, where the reported fixture lives, and the test fails on the copies under `lib/` and `services/`.
 
 ### D175 — Closed: a build changed what the audit scored, because its output was read as the repository's code (High)
@@ -6719,12 +6566,11 @@ Two gaps, found in order. The first fix recorded `target` as generated from the 
 
 *Closing test:* `test_ignored_untracked_build_output_leaves_the_score_and_is_counted` in `tests/test_build_output_is_not_the_repositorys_code.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* only `.html` classified under a not-ours tree — the suffix of the file the demo exposed — fails the test on the JSON, XML, Markdown and source suffixes the sweep also places there. A second mutation, reading `--exclude-standard`, fails the global-ignore guard.
 
 ### D176 — Closed: the chat view and the remediation prompt said nothing about the security pillar, measured or not (High)
 
-**Reported by Marshall running an audit from the ChatGPT desktop app: MA ran, and the security pillar was not in what came back.**
+**Reported from an audit run in the ChatGPT desktop app: MA ran, and the security pillar was not in what came back.**
 
 ADR 007 declares the security pillar delegated and reported "so that silence is never read as safety". The JSON report, the complete Markdown and the HTML all carried it. The bounded chat view — the persisted default through the chat door, and so what almost every reader sees — never called `pillars_markdown` at all, and the remediation prompt had no pillar section. A pillar that was never measured and one that was measured clean rendered identically: as nothing. That is this register's opening theme, *capability wired to the TTY, viewer shipped to the primary surface*, on the pillar block.
 
@@ -6736,8 +6582,7 @@ The chat view renders the pillar block through the same `pillars_markdown` the c
 
 *Closing tests:* `test_every_pillar_reaches_the_chat_view_and_the_prompt` and `test_an_ungraded_pillar_is_never_described_as_a_clean_scan` in `tests/test_security_pillar_runs_and_shows.py`.
 
-*Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
-*Mutation:* the chat view rendering pillars only while security is unmeasured — the state Marshall reported — fails on the measured and ungraded states; the prompt stating security only when measured fails on the unmeasured one.
+*Mutation:* the chat view rendering pillars only while security is unmeasured — the reported state — fails on the measured and ungraded states; the prompt stating security only when measured fails on the unmeasured one.
 
 ### D177 — Closed: the audit did not run the security pillar it declares complete (High)
 
@@ -6745,7 +6590,7 @@ The chat view renders the pillar block through the same `pillars_markdown` the c
 
 **The same report. Investigating D176 showed the display was only half of it: on the Mac the audit ran on, no measurement existed to display.**
 
-The integration built in #208, #213, #214 and #216 was a handoff. secure-code-agent wrote `security-pillar.json`; this tool read it if it was there. CI runs secure-code-agent before this tool and passes the document, so every pull request carried a measured pillar. Nothing else ran it: not the CLI unless an operator ran the other tool first, and never the chat door, which has no way to pass a document. #214 recorded the same shape — "wired everywhere except where it runs" — and fixed it for CI only. Decided 2026-09-13 with Marshall: the pillar is complete, so the audit runs it. ADR 007 is amended.
+The integration built in #208, #213, #214 and #216 was a handoff. secure-code-agent wrote `security-pillar.json`; this tool read it if it was there. CI runs secure-code-agent before this tool and passes the document, so every pull request carried a measured pillar. Nothing else ran it: not the CLI unless an operator ran the other tool first, and never the chat door, which has no way to pass a document. #214 recorded the same shape — "wired everywhere except where it runs" — and fixed it for CI only. Decided 2026-09-13: the pillar is complete, so the audit runs it. ADR 007 is amended.
 
 **Population.** An audit of a real repository with no document handed over; a repository that plants its own `security-pillar.json`; an operator who names one; and an interpreter without secure-code-agent installed.
 
@@ -6755,7 +6600,6 @@ Found running it on this machine: bighound's `secure-code-agent.json` carries a 
 
 *Closing tests:* `test_an_audit_runs_secure_code_agent_and_leaves_only_its_declared_history`, `test_a_pillar_document_the_tree_supplies_is_not_reported_as_the_measurement` and `test_a_missing_delegate_is_stated_with_its_remedy` in `tests/test_security_pillar_runs_and_shows.py`. The last fails at the base by import rather than by assertion, because the module it patches did not exist.
 
-*Roles:* found=marshall prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* one of secure-code-agent's reports left unredirected (`--output` dropped) — a write, not the display that was reported — fails the declared-history test; a tree-supplied document still winning when present fails the planted-document test.
 
 ### D178 — Closed: a documented scanner install broke the chat door, and the door's error called an installed package missing (High)
@@ -6772,12 +6616,11 @@ Two defects. The documentation prescribed an install that breaks the product (P5
 
 *Closing tests:* `test_a_version_outside_the_range_names_it_and_who_required_it`, `test_a_version_inside_the_range_reports_the_import_error_itself` and `test_the_console_entry_raises_the_named_message` in `tests/test_mcp_start_failure_names_what_is_installed.py`.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* the dependents found by a prefix test on the requirement string — the shortcut the first draft took — blames `mcp-helper`, a distribution the sweep plants that requires `mcpx` and not `mcp`, and fails the out-of-range test.
 
 ### D179 — Closed: the security pillar recorded five critical findings and every skin showed none of them, and secure-code-agent's work order was deleted unread (High)
 
-**From Grok's audit of 3.7.3 (`7befdbd`), run on this repository.** secure-code-agent 0.12.1 recorded 5 critical, 1 high, 4 medium and 69 low findings. The pillar row read "unverified: not graded — no gates.require_scanners is declared, so no scanner set was asserted to have run", and the remediation prompt read "posture unverified, practice level 5, condition not graded". Neither said a finding existed. D176's fix for the ungraded cell replaced the posture note with the reason no grade was issued, and dropped the one fact a reader could act on in the same move.
+**From the audit of 3.7.3 (`7befdbd`), run on this repository.** secure-code-agent 0.12.1 recorded 5 critical, 1 high, 4 medium and 69 low findings. The pillar row read "unverified: not graded — no gates.require_scanners is declared, so no scanner set was asserted to have run", and the remediation prompt read "posture unverified, practice level 5, condition not graded". Neither said a finding existed. D176's fix for the ungraded cell replaced the posture note with the reason no grade was issued, and dropped the one fact a reader could act on in the same move.
 
 The second half was in `_security_delegate.py`. 3.7.0 redirected every file secure-code-agent writes into a temporary directory, read back the pillar document, and let the directory be deleted with the tool's remediation prompt still in it: a located, constrained work order — 74 to fix, 5 to review on this repository — that the run had produced and nobody could see. ADR 007 §1 keeps security findings as that tool's work order; the handoff kept the grade and discarded the work order.
 
@@ -6787,12 +6630,11 @@ The second half was in `_security_delegate.py`. 3.7.0 redirected every file secu
 
 *Closing tests:* `test_every_skin_shows_what_the_pillar_counted`, `test_the_work_order_the_delegate_wrote_survives_the_run` and `test_the_work_order_reaches_every_skin_and_the_chat_door` in `tests/test_security_findings_keep_their_handoff.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* counts rendered from secure-code-agent's five known severities only — the shape the producer's own report uses — drop "3 unrated", which the sweep plants outside that list, and fail every state; demoting every `#` line without tracking fences rewrites the quoted `# a quoted comment` as a heading and fails the chat-door test.
 
 ### D180 — Closed: the prompt withheld a finding as a design decision while its copy-paste block told an agent to make the change (High)
 
-**From the same Grok audit.** `examples/demo/expected-prompt.md` — the demo's checked-in work order — gave each of its two duplicated blocks a standalone block reading "Task: remove the duplicated block. Make one small, reviewable change." The remediation prompt for the same run withheld both: "2 finding(s) need a design decision before code moves … Do not attempt them here." The per-item block exists to be pasted alone, so what an agent was authorised to do depended on which text it was handed.
+**From the same audit.** `examples/demo/expected-prompt.md` — the demo's checked-in work order — gave each of its two duplicated blocks a standalone block reading "Task: remove the duplicated block. Make one small, reviewable change." The remediation prompt for the same run withheld both: "2 finding(s) need a design decision before code moves … Do not attempt them here." The per-item block exists to be pasted alone, so what an agent was authorised to do depended on which text it was handed.
 
 `prompt_items` held two withholding rules — a Major Project, and a finding escalated for design review because it was fixed and came back — and `prompt_body_lines` knew neither. Every skin that renders a block called it: the bounded chat view, the complete Markdown report and the HTML report.
 
@@ -6802,12 +6644,11 @@ The second half was in `_security_delegate.py`. 3.7.0 redirected every file secu
 
 *Closing tests:* `test_the_demo_major_projects_ask_for_a_decision_on_every_skin` and `test_an_escalated_finding_asks_for_a_decision_on_every_skin` in `tests/test_withheld_work_keeps_its_boundary.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* the block keyed on band alone — the rule the demo sample shows — authorises the escalated quick win on all three skins and fails the escalation test.
 
 ### D181 — Closed: a full scan reported semantic findings from files the configuration excluded (Medium)
 
-**From the same Grok audit.** With `tests/fixtures/` excluded, the scan read one file and the report still carried a design review candidate from `tests/fixtures/semantic_ts/src/operations.ts`, which the remediation prompt named. The semantic walk reads the whole tree. D174 held a changed-only run to its paths and left the full run unfiltered — the same class, closed for one mode.
+**From the same audit.** With `tests/fixtures/` excluded, the scan read one file and the report still carried a design review candidate from `tests/fixtures/semantic_ts/src/operations.ts`, which the remediation prompt named. The semantic walk reads the whole tree. D174 held a changed-only run to its paths and left the full run unfiltered — the same class, closed for one mode.
 
 **Population.** A tree carrying the semantic fixture at three places, its located findings derived from the walk, and an exclusion in each pattern form `is_excluded` accepts: a directory prefix, a glob and a `**` glob.
 
@@ -6815,7 +6656,6 @@ The second half was in `_security_delegate.py`. 3.7.0 redirected every file secu
 
 *Closing tests:* `test_a_full_run_keeps_no_semantic_finding_from_an_excluded_file` in `tests/test_semantic_findings_stay_inside_the_audited_files.py`.
 
-*Roles:* found=grok prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* filtering on the configured patterns as text prefixes — enough for the audit's `tests/fixtures/` — keeps the findings under `services/*/src/*.ts` and `**/beta/**` and fails both glob cases.
 
 ### D182 — Closed: the supported secure-code-agent release ignored reviewed `paths:` suppressions on every audit this tool runs (High)
@@ -6837,20 +6677,19 @@ The floor, the install requirement and the CI pins stay in step through two guar
 
 *Closing tests:* `test_an_unsupported_release_is_stated_not_run` in `tests/test_security_pillar_runs_and_shows.py`, whose `0.12.1` case fails at the 3.7.4 floor.
 
-*Roles:* found=claude prompt=marshall fix=claude test=claude run=mutation
 *Mutation:* the floor left at `(0, 12, 1)` runs 0.12.1 and fails the new case; the floor raised with one CI pin left at `==0.12.1` fails the pin test; the floor raised with `REQUIREMENT` left at `>=0.12.1` fails the one-declaration test.
 
 ## Disposition
 
-**Every entry is closed.** D182 closed on 2026-09-14, found closing D179: the supported secure-code-agent range admitted 0.12.1, which ignores reviewed `paths:` suppressions on the absolute root this audit passes it; the floor is now 0.12.2, where that tool fixed it. D179 through D181 closed on 2026-09-14, from Grok's audit of 3.7.3 (`7befdbd`): the security pillar counted five critical findings and no skin said so, while secure-code-agent's own work order was deleted unread; a copy-paste block told an agent to make a change the prompt withheld as a design decision; and a full scan kept semantic findings from files the configuration excluded. D178 closed on 2026-09-13, found proving D177 through a fresh MCP server: the setup page's scanner install replaced `mcp` 2.x with 1.23.3 through semgrep's pin, and the door's startup error called the installed package missing. D176 and D177 closed on 2026-09-13, reported from the ChatGPT desktop app: the chat view and the prompt said nothing about the security pillar, and no audit outside CI ever ran the tool that measures it. The audit now runs secure-code-agent and every skin shows the pillar. D175 closed on 2026-09-13, found verifying the demo loop: a Maven build's output in `target/` was scored as jsoup's own code, so one commit audited differently before and after `mvn test`. D171 through D174 closed on 2026-09-13, from Grok's hostile audit of `77de21c`: the pre-commit hook worded a declaration unlike the audit (a gap known at D164 and left unfiled), the prompt attributed a withheld estimate to its sources, a run whose report said "Nothing to do" still handed the agent a patch, and a changed-only run nominated a semantic finding from a file outside the change. D170 closed on 2026-09-13, filed from the ADR conflict D169 surfaced: the exposure sort could lift a Fill-In above a Quick Win, and band is now its primary key. D164 through D169 closed on 2026-09-13, found by running a Java repository's top work item through the chat door to verify remediation: a class described as a function with a bounded fix, a TODO the prompt asked to have deleted, a verify command that addressed whichever `python` a shell found, a COBOL caveat on a repository with no COBOL, two contradictory corpus counts on one report, and a heading that claimed an order the exposure sort had replaced. None changed scoring, ordering or policy; each corrected what a report stated. D163 and D162 closed on 2026-09-12, from Grok's value-audit rerun on `76cd40d` (3.5.0) against the first-five-minutes path that release advertised: the config the README tells a stranger to download opened 10 suffixes where the shipped default opens 48, hiding 11 of 14 parsed languages behind a web subset; and the file that README calls the work order still opened with the grade and printed corpus multiples on a run whose overall the scorer had withheld. D161 closed on 2026-09-11, found by running the demo tree's own documented command: `-` was a filename rather than stdout on all seven rendered outputs, so the `--prompt-output - | agent` shape Grok's audit recommends as the five-minute path produced an empty pipe and a file named `-`. D160 closed on 2026-09-11, from Grok's audit: the surface most users drive this tool through opened with a fourteen-row metric table, putting the first pasteable prompt on line 51 and the letter grade on line 8 — and a run with an empty backlog, which is what this repository produces, rendered no work-order section at all. D159 closed on 2026-09-11, found by running the README's own quickstart as a stranger would: the bounded work order gave all twelve paste slots to one finding class, six of them naming the same file, while two other classes got none. D158 closed on 2026-09-11, filed retroactively: a stored field called `rubric_version` held the package version, the displayed half was fixed in 3.2.0 and never written down, and the record went on saying it. D157 closed on 2026-09-11, reported by Grok twice: the claim that chat and markdown are one text was fixed in the internal docstring and left standing in the MCP tool docstring a host actually renders, so a finding survived a full cycle. D156 closed on 2026-09-11, found by the `secure-code-agent` session reporting the class rather than its own instance: `**/dir/` excluded nothing at any depth while the bare `dir/` excluded at all of them, so a config written in gitignore's spelling silently scanned what it named. D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from Grok's audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from Grok's audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
+**Every entry is closed.** D182 closed on 2026-09-14, found closing D179: the supported secure-code-agent range admitted 0.12.1, which ignores reviewed `paths:` suppressions on the absolute root this audit passes it; the floor is now 0.12.2, where that tool fixed it. D179 through D181 closed on 2026-09-14, from the audit of 3.7.3 (`7befdbd`): the security pillar counted five critical findings and no skin said so, while secure-code-agent's own work order was deleted unread; a copy-paste block told an agent to make a change the prompt withheld as a design decision; and a full scan kept semantic findings from files the configuration excluded. D178 closed on 2026-09-13, found proving D177 through a fresh MCP server: the setup page's scanner install replaced `mcp` 2.x with 1.23.3 through semgrep's pin, and the door's startup error called the installed package missing. D176 and D177 closed on 2026-09-13, reported from the ChatGPT desktop app: the chat view and the prompt said nothing about the security pillar, and no audit outside CI ever ran the tool that measures it. The audit now runs secure-code-agent and every skin shows the pillar. D175 closed on 2026-09-13, found verifying the demo loop: a Maven build's output in `target/` was scored as jsoup's own code, so one commit audited differently before and after `mvn test`. D171 through D174 closed on 2026-09-13, from the hostile audit of `77de21c`: the pre-commit hook worded a declaration unlike the audit (a gap known at D164 and left unfiled), the prompt attributed a withheld estimate to its sources, a run whose report said "Nothing to do" still handed the agent a patch, and a changed-only run nominated a semantic finding from a file outside the change. D170 closed on 2026-09-13, filed from the ADR conflict D169 surfaced: the exposure sort could lift a Fill-In above a Quick Win, and band is now its primary key. D164 through D169 closed on 2026-09-13, found by running a Java repository's top work item through the chat door to verify remediation: a class described as a function with a bounded fix, a TODO the prompt asked to have deleted, a verify command that addressed whichever `python` a shell found, a COBOL caveat on a repository with no COBOL, two contradictory corpus counts on one report, and a heading that claimed an order the exposure sort had replaced. None changed scoring, ordering or policy; each corrected what a report stated. D163 and D162 closed on 2026-09-12, from a value-audit rerun on `76cd40d` (3.5.0) against the first-five-minutes path that release advertised: the config the README tells a stranger to download opened 10 suffixes where the shipped default opens 48, hiding 11 of 14 parsed languages behind a web subset; and the file that README calls the work order still opened with the grade and printed corpus multiples on a run whose overall the scorer had withheld. D161 closed on 2026-09-11, found by running the demo tree's own documented command: `-` was a filename rather than stdout on all seven rendered outputs, so the `--prompt-output - | agent` shape the audit recommends as the five-minute path produced an empty pipe and a file named `-`. D160 closed on 2026-09-11, from a value audit: the surface most users drive this tool through opened with a fourteen-row metric table, putting the first pasteable prompt on line 51 and the letter grade on line 8 — and a run with an empty backlog, which is what this repository produces, rendered no work-order section at all. D159 closed on 2026-09-11, found by running the README's own quickstart as a stranger would: the bounded work order gave all twelve paste slots to one finding class, six of them naming the same file, while two other classes got none. D158 closed on 2026-09-11, filed retroactively: a stored field called `rubric_version` held the package version, the displayed half was fixed in 3.2.0 and never written down, and the record went on saying it. D157 closed on 2026-09-11, reported twice by audit: the claim that chat and markdown are one text was fixed in the internal docstring and left standing in the MCP tool docstring a host actually renders, so a finding survived a full cycle. D156 closed on 2026-09-11, found by the `secure-code-agent` session reporting the class rather than its own instance: `**/dir/` excluded nothing at any depth while the bare `dir/` excluded at all of them, so a config written in gitignore's spelling silently scanned what it named. D155 closed on 2026-09-11, reported by the `secure-code-agent` session while confirming its schema had *not* changed: its scoring had, twice in one day, and MA recorded a delegated pillar's condition without recording who produced it — so the trend would have joined straight across a change neither tool could see. D154 closed on 2026-09-11: the delegate's config excluded almost nothing this repository carries, so the security pillar was computed over 957,219 lines of stored audit output about *other* repositories and a denominator that size hid five critical findings behind an A-; and the report never disclosed that analyzer children run unsandboxed, which the intent page has always said. D153 closed on 2026-09-11, from the audit of `673e667`: `authorize_config` bounded a config path but never walked its lexical route, so an inward symlink the audited tree planted was accepted at the one door `repository_path` already refused it at — D34 enforced at half its doors. D152 closed the same day, from the same audit: D147 stripped the repository's *request* to run the suite and left it choosing the *program*, because the `opted_in_command` its own comments cited as the user-tier reader had never been written — so a person's consent to `pytest -q` executed whatever the tree documented instead, on an unclamped timeout. D150 and D151 closed on 2026-09-10: the interactive terminal asked five of the seven setup questions, never offering the economic scenario; and v3.1.0 was tagged while a known defect sat unfiled, which the release workflow now refuses. D148 and D149 closed on 2026-09-10, both found by the tool auditing itself: a caveat that read "COBOL are parsed" in four places once the unanchored set became one, and a pairing rule that called 52 tested modules untested because their tests are named for behaviour rather than for modules. D143 through D147 all closed on 2026-09-09 from the audit of `39a91b9`: a caveat that named five anchored languages, an environment remedy that addressed whichever `pip` `PATH` found, nine repository-controlled readers that bypassed the regular-file door, a plus-only diff fragment read as file content on every declaration suffix, and two staged setup writers that copied the audited tree's document into the user tier where `acquisition_permitted` trusts it.
 
-D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the seat deviation that fixing it required.
+D145 was filed Open for part of that day because its delivered falsifier could not collect, and closed once the falsifier was rewritten — the entry records both the four defects in it and the change of test author that fixing it required.
 
 D142 closed on 2026-09-09, found by the agent
 auditing itself over MCP: the analyzer pool was invisible because `locate` did
 not search where `pip install` actually writes on a system Python, and the
 resulting fallback reported a *better* grade than the truthful scan. The four
-from Grok's post-2.11.0 audit closed on 2026-09-08: They are the remainder of Grok's
+from the post-2.11.0 audit closed on 2026-09-08: They are the remainder of the
 audit of `origin/main` after 2.11.0 (`1704498`) through `#198`, with the
 3.0.0 publish claims left for when that release is actually out. D138 is
 the D133 class still open: a hunk-only diff, the paste an agent actually
@@ -6865,7 +6704,7 @@ Python file let a C repository be scored on two of three criteria. It is now
 checked per language. That fix changes which repositories use analyzer readings,
 so it moves the corpus `declarations` reference and rides the recalibration
 release rather than shipping alone. D136 is closed by decision rather than by code — `--check` stays on the CLI for now, recorded as a non-goal so it is not re-derived as an unfinished bug. They are the
-remainder of Grok's audit of the twenty commits on `main` after 2.8.0.
+remainder of the audit of the twenty commits on `main` after 2.8.0.
 D125–D129 (the 2.11.0 language findings from that same audit) closed in
 2.11.1. D130 closed with it: `--sarif-input` now reads through
 `read_operator_file`, and every CLI option is classified by what it does
@@ -6886,10 +6725,10 @@ refusal list now, so the flag-refusal class `--staged` named cannot
 drift out of `--check` again.
 D135 closed: headroom reports every budget a
 declaration can fail on, and bands on the worst of them. D136 is the chat-primary gap:
-`--check` is CLI-only, and Marshall decided on 2026-09-06 that it stays
+`--check` is CLI-only, and it was decided on 2026-09-06 that it stays
 there for now. D124 is a release-checklist omission that cost a build
 and no artifact: the gate held, the tag was re-pointed. D123 is the
-shipped README contradicting its own table, found by Marshall reading
+shipped README contradicting its own table, found by reading
 the page rather than by any check. D121 and D122 were found by CI on
 the pull request that shipped the rest, after a green local suite — an
 empty parameter set reported as a pass, and f-strings unmasked on
@@ -6911,15 +6750,15 @@ taken.
 
 Everything before them is closed. D102 closed by splitting the two helpers that
 were over the cognitive warn line; D101 and D103 closed the day they
-were filed — D103 by splitting `_jobs`, D101 by Marshall's decision that
+were filed — D103 by splitting `_jobs`, D101 by the decision that
 an unsupported platform is a stated limit and never a reason to weaken
-the supported ones. All three were filed 2026-09-05 after
-Marshall asked "what is my rule" and the answer was the one being broken.
+the supported ones. All three were filed 2026-09-05, once it was noticed that the rule being
+broken was the known-defect rule.
 A Windows probe had produced a High finding about the write-safety path,
 and two warn-level findings had been resolved in PR threads without being
 acted on — and all three were reported in a wrap-up as "still open"
-rather than filed, which is the exact inversion of the rule at
-RULES.md:426. **2.8.0 was then tagged and released with them open**,
+rather than filed, which is the exact inversion of the known-defect
+rule. **2.8.0 was then tagged and released with them open**,
 against "no release until the known-defect ledger is empty". The release
 is not withdrawn; the entries are filed and the ledger gates the next one.
 
@@ -6947,12 +6786,12 @@ closure.
 two independent security audits on 2026-08-23 and closed over the two
 days after; D47 through D49 came from the chat-surface work that
 preceded them; D50 through D55 came from UAT preparation on 2026-08-25
-— one from Marshall reading the question set and five from a Codex
-audit of the whole repository; D56 through D62 came from a Grok audit of
+— one from reading the question set and five from an audit of the
+whole repository; D56 through D62 came from an audit of
 the whole repository on 2026-08-26, which also reopened D38. Its
 verdict was that the register was "an empty ledger, not an empty
-defect list", and on every finding it was right. D63 came from Marshall
-asking who the product is for, on 2026-08-26. D64 through D70 came from
+defect list", and on every finding it was right. D63 came from asking
+who the product is for, on 2026-08-26. D64 through D70 came from
 a second round of both audits on 2026-08-26, run against the fixes for
 the first — four of the seven reopened an entry that had already been
 closed once, and three of those reopens went through the *closing test*

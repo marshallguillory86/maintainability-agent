@@ -44,7 +44,7 @@ def maybe_prompt_first_run(root: Path, explicit_config: str | None) -> None:
     "chat-path twin"). The CLI had drifted to a depth/license-only subset
     that never answered pool execution, so the mere existence of the file
     it wrote defaulted the pool on and marked setup complete for a
-    decision nobody made (Grok 63ab820 audit). Asking `run_pool` and
+    decision nobody made (audit of `63ab820`). Asking `run_pool` and
     `record_scan_history` here, and persisting through `apply_answers`,
     makes a repository configured at a terminal identical to one
     configured in chat.

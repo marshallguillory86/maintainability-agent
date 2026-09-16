@@ -40,7 +40,7 @@ changelog covers what 0.12.2 changes for baselines. Existing ones keep matching.
 
 ## 3.7.4 - 2026-09-14
 
-Three fixes from Grok's audit of 3.7.3. Each one is a report that left out, or contradicted, what the
+Three fixes from the audit of 3.7.3. Each one is a report that left out, or contradicted, what the
 same run had found. Scoring, ordering and policy are unchanged.
 
 ### Fixed — the security pillar shows what secure-code-agent found, and its work order reaches you (D179)
@@ -205,7 +205,7 @@ its HTML, XML and JSON as well as its source. Before, only source-code files did
 
 ## 3.6.2 - 2026-09-13
 
-*Grok's hostile audit of 3.6.1 (`77de21c`). Four surfaces of one run told a
+*The hostile audit of 3.6.1 (`77de21c`). Four surfaces of one run told a
 different story from the report they belong to. No scoring, ordering, band or
 policy change.*
 
@@ -324,7 +324,7 @@ an economic context nothing moves. ADR 004 is amended to say so.
 
 ## 3.6.0 - 2026-09-12
 
-*Grok's value-audit rerun on 3.5.0, which asked whether the first five minutes
+*A value-audit rerun on 3.5.0, which asked whether the first five minutes
 that release advertised actually work. Two of them did not.*
 
 ### Changed — the published starter config opens every language, not a web subset (D162)
@@ -386,7 +386,7 @@ repository with nothing at all.
 
 *The first five minutes, rebuilt: `-` pipes the prompt into an agent, the chat
 reply opens with the work order instead of a metric table, and there is a demo
-tree that produces a real one. From Grok's audit of what a stranger sees after
+tree that produces a real one. From an audit of what a stranger sees after
 cloning.*
 
 ### Added — `-` writes to stdout on every rendered output (D161)
@@ -403,7 +403,7 @@ maintainability-agent --config c.json --prompt-output - | claude
 gave an empty pipe, a report on stdout nobody asked for, and the prompt on disk
 under a name a shell fights you over. Nothing errored.
 
-That command shape is the five-minute path Grok's audit recommends, and the flag
+That command shape is the five-minute path the audit recommends, and the flag
 it recommends did not work. All seven rendered outputs — `--output`,
 `--prompt-output`, `--comment-output`, `--agent-instructions-output`,
 `--attestation-output`, `--hostile-prompt-output`, `--sarif-output` — now stream
@@ -992,7 +992,7 @@ editor window is enough — or it will keep reporting the old result.
 
 ## 3.0.1 - 2026-09-08
 
-### Fixed — Grok's post-2.11.0 audit, closed in full
+### Fixed — the post-2.11.0 audit, closed in full
 
 Four defects. No scoring constants move, so no grade changes; one label
 in every report does.
@@ -1190,7 +1190,7 @@ Each correction states what it used to claim rather than being silently
 overwritten, because "Next: Swift" surviving seven releases is the part
 worth remembering.
 
-### Fixed — Grok's audit of the surfaces, six defects and a decision
+### Fixed — an audit of the surfaces, six defects and a decision
 
 Three High, three Medium, filed as D130–D136. Each was reproduced before
 it was fixed and each is closed as a **class** rather than as the
@@ -1646,12 +1646,11 @@ by reflex.
 The authorship gate still checks signatures over merge commits. Making
 GitHub's "Update branch" button pass would have meant skipping them, and
 that control exists because skipping them let unattested content through
-once already. Stale branches get rebased instead — recorded in
-`RULES.md`.
+once already. Stale branches get rebased instead.
 
 ## 2.8.0 - 2026-09-04
 
-**A Grok audit on f51fbbc found three classes, all shipped in the previous
+**An audit on f51fbbc found three classes, all shipped in the previous
 two days.** Two of them were mine from 2.4.0 and 2.7.0.
 
 ### Security — the audited tree chose what this process executed
@@ -2336,7 +2335,7 @@ with a shipped false result behind it.
 ### Fixed
 
 - **Documents that called shipped work open.** `release-plan.md` said 1.0
-  "still waits on Marshall's acceptance (8.8), the 7.5 hostile audit
+  "still waits on acceptance (8.8), the 7.5 hostile audit
   (8.9), and the human tag (8.10)" — all three done on 2026-09-01, nine
   releases earlier — and separately that "8.8–8.10 remain open below".
   `adr-011` said an ask "remains open under D3" when D3's register
@@ -3313,7 +3312,7 @@ not resolved.
   skins (chat default, Markdown file, one self-contained HTML file) render
   one report dictionary. New history records carry the per-scan score
   breakdown, while schema-1 records remain readable as gaps. 1.0 still
-  waits on Marshall's acceptance, the 7.5 hostile audit, and a human tag.
+  waits on acceptance, the 7.5 hostile audit, and a human tag.
 
 - **Self-audit restamped (7.1).** Provenance commit `9c2257a`, 235 files
   scanned. README table matches the stamp. Still a B.

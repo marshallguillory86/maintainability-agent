@@ -1,6 +1,6 @@
 """Decision 9, slice 3: SpotBugs reads bytecode that already exists.
 
-Cycle: Grok audit on 742a49f, queue closed at 9510c09. Spec is ADR 012
+Cycle: audit on 742a49f, queue closed at 9510c09. Spec is ADR 012
 plus that audit's 12-point do-not-copy list. This adapter never names
 .java files, never calls parse_checkstyle, never treats missing
 bytecode as not-installed, and never claims D15. One live test is

@@ -1,7 +1,7 @@
-"""Executable checks for the authorship-attestation workflow.
+"""Executable checks for the commit identity and signature workflow.
 
 The workflow is shell code with repository-protection authority.  These tests
-run the three scripts against small, real Git repositories instead of merely
+run the two scripts against small, real Git repositories instead of merely
 asserting that familiar strings still occur in YAML.
 """
 
@@ -17,7 +17,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "authorship.yml"
-PERSONAL_EMAIL = "152444602+marshallguillory86@users.noreply.github.com"
+COMMIT_IDENTITY = "152444602+marshallguillory86@users.noreply.github.com"
 
 
 def _git(repo: Path, *args: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
@@ -39,14 +39,14 @@ def _require_git(repo: Path, *args: str, env: dict[str, str] | None = None) -> s
 
 
 def _step_scripts() -> dict[str, str]:
-    """Extract the three literal run blocks with the constrained YAML shape here.
+    """Extract the literal run blocks with the constrained YAML shape here.
 
     Tests intentionally do not depend on PyYAML.  The workflow's relevant
     grammar is limited to named steps and ``run: |`` bodies; a shape change
     makes this parser return no matching step and fails loudly.
     """
     lines = WORKFLOW.read_text(encoding="utf-8").splitlines()
-    job_name = "    name: Every commit declares who wrote it"
+    job_name = "    name: Commit identity and signatures"
     start = lines.index(job_name)
     steps = lines.index("    steps:", start)
     scripts: dict[str, str] = {}
@@ -75,9 +75,8 @@ def _step_scripts() -> dict[str, str]:
                 break
             index += 1
     assert scripts.keys() == {
-        "Each commit carries an Agent trailer",
         "Each commit carries the repository's commit identity",
-        "Each commit is signed, so its Agent trailer is attested",
+        "Each commit is signed",
     }
     return scripts
 
@@ -104,7 +103,7 @@ def signed_repo(tmp_path: Path) -> tuple[Path, Callable[..., str]]:
     repo.mkdir()
     _require_git(repo, "init", "--initial-branch=main")
     _require_git(repo, "config", "user.name", "Marshall Guillory")
-    _require_git(repo, "config", "user.email", PERSONAL_EMAIL)
+    _require_git(repo, "config", "user.email", COMMIT_IDENTITY)
     key = tmp_path / "signing_key"
     subprocess.run(
         ["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(key)],
@@ -117,7 +116,7 @@ def signed_repo(tmp_path: Path) -> tuple[Path, Callable[..., str]]:
     (repo / ".github").mkdir()
     public_key = key.with_suffix(".pub").read_text(encoding="utf-8").strip()
     (repo / ".github" / "allowed_signers").write_text(
-        f"{PERSONAL_EMAIL} {public_key}\n", encoding="utf-8"
+        f"{COMMIT_IDENTITY} {public_key}\n", encoding="utf-8"
     )
     (repo / "base").write_text("base\n", encoding="utf-8")
     _require_git(repo, "add", ".")
@@ -129,10 +128,9 @@ def signed_repo(tmp_path: Path) -> tuple[Path, Callable[..., str]]:
 
     def commit(
         *,
-        agent: str = "codex",
         signed: bool = True,
-        author: str = PERSONAL_EMAIL,
-        committer: str = PERSONAL_EMAIL,
+        author: str = COMMIT_IDENTITY,
+        committer: str = COMMIT_IDENTITY,
     ) -> str:
         nonlocal counter
         counter += 1
@@ -149,9 +147,9 @@ def signed_repo(tmp_path: Path) -> tuple[Path, Callable[..., str]]:
             "--author",
             f"Marshall Guillory <{author}>",
             "-m",
-            f"change {counter}\n\nAgent: {agent}",
+            f"change {counter}",
             env={**os.environ, "GIT_IDENTITY_OVERRIDE": "1"}
-            if committer != PERSONAL_EMAIL
+            if committer != COMMIT_IDENTITY
             else None,
         )
         assert result.returncode == 0, result.stderr
@@ -175,7 +173,7 @@ def test_fixture_commits_ignore_ambient_global_signing(tmp_path: Path) -> None:
     result = _git(
         repo,
         "-c",
-        f"user.email={PERSONAL_EMAIL}",
+        f"user.email={COMMIT_IDENTITY}",
         "-c",
         "user.name=Fixture",
         "commit",
@@ -187,7 +185,7 @@ def test_fixture_commits_ignore_ambient_global_signing(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
 
 
-def test_signed_agent_commit_passes_every_gate(signed_repo: tuple[Path, Callable[..., str]]) -> None:
+def test_signed_commit_passes_every_gate(signed_repo: tuple[Path, Callable[..., str]]) -> None:
     repo, commit = signed_repo
     commit()
 
@@ -200,18 +198,21 @@ def test_unsigned_commit_fails_signature_as_n(signed_repo: tuple[Path, Callable[
     repo, commit = signed_repo
     commit(signed=False)
 
-    result = _run_gate(repo, "Each commit is signed, so its Agent trailer is attested")
+    result = _run_gate(repo, "Each commit is signed")
 
     assert result.returncode == 1
     assert "unsigned" in result.stdout
 
 
-def test_edited_signed_trailer_fails_signature_as_b(
+def test_edited_signed_message_fails_signature_as_b(
     signed_repo: tuple[Path, Callable[..., str]],
 ) -> None:
     repo, commit = signed_repo
-    sha = commit(agent="claude")
-    payload = _require_git(repo, "cat-file", "commit", sha).replace("Agent: claude", "Agent: grok")
+    sha = commit()
+    raw = _require_git(repo, "cat-file", "commit", sha)
+    head, _, subject = raw.rpartition("change 1")
+    assert head, "the fixture commit message was not where the test expects it"
+    payload = head + "change 9" + subject
     altered = subprocess.run(
         ["git", "hash-object", "-w", "-t", "commit", "--stdin"],
         cwd=repo,
@@ -222,7 +223,7 @@ def test_edited_signed_trailer_fails_signature_as_b(
     ).stdout.strip()
     _require_git(repo, "reset", "--hard", altered)
 
-    result = _run_gate(repo, "Each commit is signed, so its Agent trailer is attested")
+    result = _run_gate(repo, "Each commit is signed")
 
     assert result.returncode == 1
     assert "BAD signature" in result.stdout
@@ -233,34 +234,19 @@ def test_untrusted_signing_key_fails_as_u(signed_repo: tuple[Path, Callable[...,
     commit()
     (repo / ".github" / "allowed_signers").write_text("", encoding="utf-8")
 
-    result = _run_gate(repo, "Each commit is signed, so its Agent trailer is attested")
+    result = _run_gate(repo, "Each commit is signed")
 
     assert result.returncode == 1
     assert "signature state 'U'" in result.stdout
 
 
-def test_empty_range_fails_all_three_gates(signed_repo: tuple[Path, Callable[..., str]]) -> None:
+def test_empty_range_fails_every_gate(signed_repo: tuple[Path, Callable[..., str]]) -> None:
     repo, _commit = signed_repo
 
     for name in SCRIPTS:
         result = _run_gate(repo, name)
         assert result.returncode == 1, name
         assert "this check proved nothing" in result.stdout
-
-
-@pytest.mark.parametrize(
-    ("agent", "expected_returncode"),
-    [("codex ", 0), ("Codex", 1)],
-)
-def test_agent_trailer_whitespace_is_normalized_but_case_is_not(
-    signed_repo: tuple[Path, Callable[..., str]], agent: str, expected_returncode: int
-) -> None:
-    repo, commit = signed_repo
-    commit(agent=agent)
-
-    result = _run_gate(repo, "Each commit carries an Agent trailer")
-
-    assert result.returncode == expected_returncode
 
 
 def test_wrong_committer_fails_identity_gate(signed_repo: tuple[Path, Callable[..., str]]) -> None:
@@ -280,7 +266,7 @@ def test_partly_unsigned_range_fails_signature_gate(
     commit()
     commit(signed=False)
 
-    result = _run_gate(repo, "Each commit is signed, so its Agent trailer is attested")
+    result = _run_gate(repo, "Each commit is signed")
 
     assert result.returncode == 1
     assert "unsigned" in result.stdout
@@ -296,7 +282,7 @@ def test_unsigned_merge_commit_fails_the_signature_gate(
     _require_git(repo, "merge", "--no-ff", "side", "-m", "merge side")
 
     assert _require_git(repo, "log", "-1", "--format=%G?") == "N"
-    result = _run_gate(repo, "Each commit is signed, so its Agent trailer is attested")
+    result = _run_gate(repo, "Each commit is signed")
 
     assert result.returncode == 1, (
         "the gate skipped an unsigned merge commit; conflict-resolution content "
@@ -308,15 +294,15 @@ def test_unsigned_merge_commit_fails_the_signature_gate(
 def test_the_signature_gate_still_checks_merge_commits() -> None:
     """D105. The control someone will be tempted to remove.
 
-    The trailer step uses `--no-merges`; the signature step deliberately
+    The identity step uses `--no-merges`; the signature step deliberately
     does not, because a merge carries the conflict resolution its author
     wrote — an unsigned merge is unattested content, and skipping it let
     exactly that through once already.
 
     The temptation is concrete. `gh pr update-branch` and GitHub's green
     "Update branch" button create a merge signed with GitHub's key, which
-    is not in `.github/allowed_signers`, so the gate fails on a commit no
-    agent wrote. The convenient fix is to add `--no-merges` here, and it
+    is not in `.github/allowed_signers`, so the gate fails on a commit
+    nobody on the allow-list signed. The convenient fix is to add `--no-merges` here, and it
     would undo the control to buy a button. The answer is to rebase
     instead, and this pins the control so the shortcut fails loudly.
 

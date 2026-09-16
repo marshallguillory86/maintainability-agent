@@ -12,6 +12,35 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.6 - 2026-09-16
+
+*A documentation and CI release. No product behaviour changes.*
+
+### Changed — the published repository and package describe the product, not how it is built
+
+Source comments, test docstrings, the defect register, the changelog and the
+documentation no longer record which contributor found, wrote, tested or
+decided each change, and no longer quote anyone. Audits keep their commit and
+date, and every register entry keeps its defect, fix, closing test and mutation
+statement, so each is still traceable and still proven.
+
+The source distribution on PyPI carries the test suite, so earlier releases
+include some of that text; this is the first release without it.
+
+### Changed — the authorship check verifies identity and signatures only
+
+The pull-request workflow no longer requires a trailer naming the author of each
+commit. It still requires the repository's commit identity and a signature from
+a key on `.github/allowed_signers`, and a commit altered after signing still
+fails. The local `commit-msg` hook that required the trailer is removed.
+
+### Removed
+
+- `tools/prompts/v1`, a set of internal prompt files nothing referenced.
+- Two generated self-audit snapshots under `docs/audits`.
+- `maintainability-report.html`, a generated report committed at the repository
+  root in 0.9.0, now ignored.
+
 ## 3.7.5 - 2026-09-14
 
 One fix. The security pillar now honours reviewed suppressions on any repository, not only this one.

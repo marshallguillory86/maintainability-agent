@@ -150,3 +150,75 @@ jobs:
           EOF
             exit 1
           fi
+      - name: Commit messages name only the commit identity
+        # The identity step checks author and committer, and a message can
+        # still carry another address -- a `Co-authored-by:` trailer, most
+        # often. Removing one after it reaches a protected branch takes a
+        # history rewrite, so any address in a message other than the
+        # repository's commit identity fails here, before the merge.
+        run: |
+          set -euo pipefail
+          allowed="152444602+marshallguillory86@users.noreply.github.com"
+          range="origin/${{ github.base_ref }}..HEAD"
+          # Merges included, as in the signature step: a merge message is
+          # typed like any other and can carry a trailer just the same.
+          commits=$(git rev-list "$range")
+          if [ -z "$(git rev-list --no-merges "$range")" ]; then
+            echo "no non-merge commits in $range; this check proved nothing"
+            exit 1
+          fi
+          failed=0
+          for sha in $commits; do
+            others=$(git show -s --format=%B "$sha" \
+              | grep -o -E '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' \
+              | grep -v -x -F "$allowed" || true)
+            if [ -n "$others" ]; then
+              echo "FAIL  $sha  message names an address other than the commit identity"
+              failed=1
+            else
+              echo "ok    $sha"
+            fi
+          done
+          exit $failed
+      - name: No forbidden term in the change
+        # Terms that must never appear in this repository live in the
+        # FORBIDDEN_TERMS secret, one per line, so this check does not
+        # publish what it guards. It reads each commit's identity fields and
+        # message, and every line the change adds. It fails closed: without
+        # the secret it proves nothing, and says so.
+        #
+        # Matches are reported by commit and file only, never by the text
+        # that matched.
+        env:
+          FORBIDDEN_TERMS: ${{ secrets.FORBIDDEN_TERMS }}
+        run: |
+          set -euo pipefail
+          range="origin/${{ github.base_ref }}..HEAD"
+          commits=$(git rev-list "$range")
+          if [ -z "$(git rev-list --no-merges "$range")" ]; then
+            echo "no non-merge commits in $range; this check proved nothing"
+            exit 1
+          fi
+          terms=$(mktemp)
+          printf '%s\n' "${FORBIDDEN_TERMS:-}" | sed '/^[[:space:]]*$/d' > "$terms"
+          if [ ! -s "$terms" ]; then
+            echo "FORBIDDEN_TERMS is empty or unset; this check proved nothing"
+            exit 1
+          fi
+          failed=0
+          for sha in $commits; do
+            if git show -s --format='%an%n%ae%n%cn%n%ce%n%B' "$sha" | grep -q -i -F -f "$terms"; then
+              echo "FAIL  $sha  identity or message contains a forbidden term"
+              failed=1
+            fi
+          done
+          for path in $(git diff --name-only "origin/${{ github.base_ref }}...HEAD"); do
+            if git diff "origin/${{ github.base_ref }}...HEAD" -- "$path" | grep '^+' | grep -q -i -F -f "$terms"; then
+              echo "FAIL  $path  adds a forbidden term"
+              failed=1
+            fi
+          done
+          if [ "$failed" = "0" ]; then
+            echo "ok    no forbidden term in $range"
+          fi
+          exit $failed

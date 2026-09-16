@@ -5,6 +5,10 @@ nothing can tell whether a mutated member sits inside the sample a test
 names. So it is required to be written instead. An author who has to say
 which member they broke, and why it is outside what the test names,
 cannot make the substitution without noticing.
+
+Covers existing behaviour: both tests were moved here unchanged from a
+file that also held checks since removed, so they pass at the base by
+construction. The requirement they enforce is older than this file.
 """
 
 from __future__ import annotations

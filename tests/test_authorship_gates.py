@@ -77,19 +77,32 @@ def _step_scripts() -> dict[str, str]:
     assert scripts.keys() == {
         "Each commit carries the repository's commit identity",
         "Each commit is signed",
+        "Commit messages name only the commit identity",
+        "No forbidden term in the change",
     }
     return scripts
 
 
 SCRIPTS = _step_scripts()
 
+#: Stands in for the FORBIDDEN_TERMS secret. A made-up term, deliberately:
+#: the real terms live only in the secret and must never be written here.
+EXAMPLE_TERM = "example-forbidden-term"
 
-def _run_gate(repo: Path, name: str) -> subprocess.CompletedProcess[str]:
-    """Substitute the only Actions expression used by the checked script."""
+
+def _run_gate(
+    repo: Path, name: str, *, terms: str = EXAMPLE_TERM,
+) -> subprocess.CompletedProcess[str]:
+    """Substitute the only Actions expression used by the checked script.
+
+    ``terms`` is what the secret would hold; an empty string is the secret
+    being unset.
+    """
     script = SCRIPTS[name].replace("${{ github.base_ref }}", "main")
     return subprocess.run(
         ["bash", "-c", script],
         cwd=repo,
+        env={**os.environ, "FORBIDDEN_TERMS": terms},
         text=True,
         capture_output=True,
         check=False,
@@ -131,10 +144,13 @@ def signed_repo(tmp_path: Path) -> tuple[Path, Callable[..., str]]:
         signed: bool = True,
         author: str = COMMIT_IDENTITY,
         committer: str = COMMIT_IDENTITY,
+        message: str | None = None,
+        content: str | None = None,
     ) -> str:
         nonlocal counter
         counter += 1
-        (repo / f"change-{counter}").write_text(f"{counter}\n", encoding="utf-8")
+        (repo / f"change-{counter}").write_text(
+            content if content is not None else f"{counter}\n", encoding="utf-8")
         _require_git(repo, "add", ".")
         result = _git(
             repo,
@@ -147,7 +163,7 @@ def signed_repo(tmp_path: Path) -> tuple[Path, Callable[..., str]]:
             "--author",
             f"Marshall Guillory <{author}>",
             "-m",
-            f"change {counter}",
+            message if message is not None else f"change {counter}",
             env={**os.environ, "GIT_IDENTITY_OVERRIDE": "1"}
             if committer != COMMIT_IDENTITY
             else None,
@@ -325,3 +341,86 @@ def test_the_signature_gate_still_checks_merge_commits() -> None:
         "the conflict resolution its author wrote; rebase a stale branch "
         "rather than weakening this to make 'Update branch' pass (D105)."
     )
+
+
+def test_a_trailer_naming_another_address_fails(
+    signed_repo: tuple[Path, Callable[..., str]],
+) -> None:
+    """A co-author trailer is where an outside address reached history before.
+
+    The identity step reads author and committer only, so a trailer in the
+    message passed every check and landed on the protected branch.
+    """
+    repo, commit = signed_repo
+    commit(message="change\n\nCo-authored-by: Someone Else <someone@example.com>")
+
+    result = _run_gate(repo, "Commit messages name only the commit identity")
+
+    assert result.returncode == 1, result.stdout
+    assert "names an address other than the commit identity" in result.stdout
+
+
+def test_a_message_naming_only_the_commit_identity_passes(
+    signed_repo: tuple[Path, Callable[..., str]],
+) -> None:
+    """The allowlist is the identity itself, so naming it is not a failure."""
+    repo, commit = signed_repo
+    commit(message=f"change\n\nCo-authored-by: Marshall Guillory <{COMMIT_IDENTITY}>")
+
+    result = _run_gate(repo, "Commit messages name only the commit identity")
+
+    assert result.returncode == 0, result.stdout
+
+
+def test_a_forbidden_term_in_a_message_fails_in_any_case(
+    signed_repo: tuple[Path, Callable[..., str]],
+) -> None:
+    repo, commit = signed_repo
+    commit(message=f"change mentioning {EXAMPLE_TERM.upper()}")
+
+    result = _run_gate(repo, "No forbidden term in the change")
+
+    assert result.returncode == 1, result.stdout
+    assert "identity or message contains a forbidden term" in result.stdout
+
+
+def test_a_forbidden_term_added_to_a_file_fails_without_printing_it(
+    signed_repo: tuple[Path, Callable[..., str]],
+) -> None:
+    """The failure names the file, never the matched text.
+
+    A check that echoed the term into a public CI log would publish the
+    thing it exists to keep out.
+    """
+    repo, commit = signed_repo
+    commit(content=f"a line carrying {EXAMPLE_TERM}\n")
+
+    result = _run_gate(repo, "No forbidden term in the change")
+
+    assert result.returncode == 1, result.stdout
+    assert "adds a forbidden term" in result.stdout
+    assert EXAMPLE_TERM not in (result.stdout + result.stderr).lower()
+
+
+def test_a_clean_change_passes_the_forbidden_term_check(
+    signed_repo: tuple[Path, Callable[..., str]],
+) -> None:
+    repo, commit = signed_repo
+    commit()
+
+    result = _run_gate(repo, "No forbidden term in the change")
+
+    assert result.returncode == 0, result.stdout
+
+
+def test_the_forbidden_term_check_fails_closed_without_the_secret(
+    signed_repo: tuple[Path, Callable[..., str]],
+) -> None:
+    """An unset secret must not read as a clean change."""
+    repo, commit = signed_repo
+    commit()
+
+    result = _run_gate(repo, "No forbidden term in the change", terms="")
+
+    assert result.returncode == 1
+    assert "this check proved nothing" in result.stdout

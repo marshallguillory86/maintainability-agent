@@ -6385,9 +6385,9 @@ orders, not the grade... put the copy-paste items above the letter."* The
 audit's framing was a first-screen problem; the empty-state half was not
 in the audit and turned up in the rendering.
 
-**The paragraph rule arrived in the same turn and is bound here too.**
-Marshall: *"prompts should be paragraph or two sized within reason, not a
-fucking entire program."* Measured rather than assumed: one item's paste
+**The paragraph rule arrived in the same turn and is bound here too:** a
+prompt handed to an agent is a paragraph or two, not a whole program.
+Measured rather than assumed: one item's paste
 is 710 characters, and the whole remediation prompt is 96 lines on a
 171-item backlog because `prompt_items` caps it at twelve. Nothing
 enforced that cap — removing it would have left every test green while

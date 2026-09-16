@@ -66,3 +66,8 @@ tools/validation/reports/
 
 # Competitive positioning drafts — not part of the product record.
 docs/comparison-*.html
+
+# Personal agent instructions. Kept on the machine, never published.
+.claude/CLAUDE.local.md
+.grok/
+maintainability-product-improvements.md

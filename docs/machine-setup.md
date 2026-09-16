@@ -10,17 +10,10 @@ already caused a defect.
 
 ## Why this page exists
 
-For three days, 37 commits were authored as `***REMOVED***`
-— a work address, on a personal open-source repository, attributing the
-work to a company that did not do it. Nobody noticed, because nothing
-checked. The address came from `~/.gitconfig`, set months earlier and
-never revisited; a repository-local override had been masking it, and
-when that override stopped applying the commits silently fell through to
-the global value.
-
-Removing it needed a history rewrite, a force-push through two layers of
-branch protection, and a support ticket for the objects GitHub retains
-after a force-push. The fix cost more than the work it corrected.
+A commit identity set once in `~/.gitconfig` and never revisited can
+silently take over when a repository-local override stops applying.
+Nothing errors, and a wrong identity that reaches a protected branch
+cannot be corrected without a history rewrite and a force-push.
 
 The related failure is D100 in the [defect
 register](defect-register-chat-surface.md): the package promoted itself

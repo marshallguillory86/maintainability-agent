@@ -1,4 +1,4 @@
-"""Class C (Grok 63ab820): a JS/TS declaration counts iff it has a body.
+"""Class C (audit of `63ab820`): a JS/TS declaration counts iff it has a body.
 
 Two directions, one rule -- a declaration is code to measure only when it
 carries a body (a block ``{``) or an arrow value (``=>``). ``_ranges_js``

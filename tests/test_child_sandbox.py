@@ -1,11 +1,11 @@
 """P1's child boundary: not isolation — disclosure, and the report says it.
 
-**This file arrived as a Codex contract demanding network isolation** —
+**This file arrived as a contract demanding network isolation** —
 that `_runner` wrap every analyzer in `sandbox-exec`, `unshare`, `bwrap`
 or `firejail`, and that the spawned argv carry the boundary.
 
-That half is **refused**, and the refusal is Marshall's call recorded
-here rather than a silent deletion. `docs/product-intent.md` already
+That half is **refused**, and the refusal is a decision recorded here
+rather than a silent deletion. `docs/product-intent.md` already
 lists among the things this tool does not promise: *"That third-party
 tools cannot use the network, or that a run is kernel-air-gapped. This
 agent does not transmit the audited source; it does not sandbox

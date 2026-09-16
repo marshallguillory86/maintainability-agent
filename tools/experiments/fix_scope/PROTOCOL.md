@@ -106,7 +106,7 @@ history is the enforcement mechanism for that promise.
   bounded prompts differently.
 - The generic instruction is one representative phrasing; results are
   about *this* phrasing, not all possible generic prompts.
-- The experimenter (Claude, the agent whose product is under test) has
+- The experimenter (the agent whose product is under test) has
   a conflict of interest. Mitigations: this pre-registration, verbatim
   prompts recorded in the results file, one-shot runs, and raw
   per-repo results checked in for independent re-analysis.

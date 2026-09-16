@@ -118,7 +118,7 @@ def test_a_run_with_no_work_order_says_so(tmp_path: Path) -> None:
 
 
 def test_the_agent_prompt_stays_a_page_however_bad_the_tree_is(tmp_path: Path) -> None:
-    """Marshall's rule, bound: a prompt is a paragraph or two, not a program.
+    """The rule, bound: a prompt is a paragraph or two, not a program.
 
     Covers existing behaviour: `prompt_items`' twelve-item cap already
     held this at the base, so the assertion passes before and after. It

@@ -42,7 +42,7 @@ def test_the_citation_region_stops_at_the_next_field() -> None:
     entry = (
         "Body.\n\n"
         "*Closing tests:* `test_the_real_one` in `tests/test_x.py`.\n\n"
-        "*Roles:* found=grok fix=claude test=codex run=mutation\n\n"
+        "*Scope:* the field this citation must not run into\n\n"
         "*Mutation:* broke `test_a_different_one`, outside the sample.\n"
     )
     assert prover._cited(entry) == ["test_the_real_one"], (
@@ -352,7 +352,7 @@ def test_one_test_declaring_the_escape_does_not_exempt_the_whole_file(
 
     D109 made *reporting* per-test for an added file and left the
     *exemption* file-level. So a single test that legitimately covers
-    pre-existing behaviour — Grok wrote one in this very branch — exempted
+    pre-existing behaviour — one was written in this very branch — exempted
     all twenty tests beside it, and four falsifiers written to close a
     field check went unproven with the gate reporting green.
 
@@ -398,7 +398,7 @@ def test_one_test_declaring_the_escape_does_not_exempt_the_whole_file(
 def test_a_citation_naming_a_test_that_does_not_exist_is_refused(
     tmp_path: Path,
 ) -> None:
-    """Grok's audit, item 8: make the next false close expensive before merge.
+    """A value audit, item 8: make the next false close expensive before merge.
 
     An entry citing three tests and resolving one used to prove the one
     and drop the other two without a word. That is D147's exact shape --

@@ -133,7 +133,7 @@ def write_baseline(path: str, report: dict[str, Any]) -> None:
     # baseline's own parent directory: `write_bounded(target.parent, ...)`
     # bound the symlink check to the symlink itself and so checked
     # nothing, which is how `.maintainability -> src` still redirected the
-    # baseline into source (Grok 63ab820 audit). `write_artifact` keeps
+    # baseline into source (audit of `63ab820`). `write_artifact` keeps
     # the predating contract that a baseline may live outside the tree —
     # a path outside the grant is written on the operator's own ground —
     # while a path inside the grant inherits the lexical route refusal,

@@ -7,9 +7,9 @@ complete` and a verified grade for a JavaScript repository.
 
 The mismatch was in the writing. This project *does* detect and score
 JavaScript: the brace scanner reads it, and three baseline-tier
-adapters — lizard, jscpd and multimetric — measure it. Marshall's
-ruling, 2026-08-26: *"keep JS in since we have a detector and can score
-it."* A language belongs in the claim when the tool can detect and
+adapters — lizard, jscpd and multimetric — measure it. Decided
+2026-08-26: JavaScript stays in the claim, because the tool can detect and
+score it. A language belongs in the claim when the tool can detect and
 score it, and the documentation follows the capability rather than the
 other way round.
 

@@ -108,7 +108,7 @@ def test_a_config_reached_through_an_inward_symlink_is_refused(tmp_path: Path) -
     …)` refused while `authorize_config('link/…json', root)` returned the
     target. The comment at `_mcp_audit`'s baseline seam already records
     this escape being found and closed *there* — this door was not
-    revisited (Grok, 673e667).
+    revisited (audit of `673e667`).
 
     Asserted as parity rather than as a message, so the two cannot drift
     apart again without this failing.

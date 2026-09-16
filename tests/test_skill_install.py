@@ -2,7 +2,7 @@
 
 Found in the field (2026-08-19): the repository's skill went
 chat-primary while the installed copy kept teaching the dead CLI-first
-recipe for three days. Re-keyed by the Codex audit on d5b1c50: sync
+recipe for three days. Re-keyed by the audit on d5b1c50: sync
 means byte-identical including deletions (M3), and a differing copy is
 refused with the list unless forced (M5) — overwriting someone's edits
 without consent is not a sync.

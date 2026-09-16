@@ -20,7 +20,7 @@ care about instead. Regenerate for the current tree with:
 
 - Generated: 2026-09-12T00:53:47+00:00
 - Commit: `934f7739bd176d3e0fc5313624c361c7a50eb77c` · Branch: `docs/define-done`
-- Root: `/Users/marshallguillory/repos/maintainability-agent`
+- Root: `maintainability-agent`
 - Standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based
 
 ## Summary

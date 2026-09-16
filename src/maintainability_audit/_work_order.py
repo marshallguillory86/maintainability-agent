@@ -251,7 +251,7 @@ def _items_from_idioms(report: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _locate(finding: dict[str, Any]) -> tuple[str | None, int | None]:
-    """Path/line; a duplicate block carries only `locations`, which the old path/line read dropped (Grok e88b429)."""
+    """Path/line; a duplicate block carries only `locations`, which the old path/line read dropped (audit of `e88b429`)."""
     path = finding.get("path") or finding.get("first_path")
     line = finding.get("line") or finding.get("first_line") or finding.get("start_line")
     if path is None and (locs := finding.get("locations")):

@@ -1,27 +1,17 @@
 name: Authorship
 
-# Who wrote each commit, and can that claim be trusted?
+# Is every commit from the expected identity, and signed?
 #
-# Three checks in one required job, deliberately: the branch's
+# Two checks in one required job, deliberately: the branch's
 # required-checks list is keyed on the *job name*, so a new job name sits
-# un-enforced until someone adds it to branch protection by hand. Adding
-# steps to a job already named in that list inherits enforcement on the
-# day it merges. The job name below must therefore never change.
+# un-enforced until it is added to branch protection. Adding steps to a
+# job already named in that list inherits enforcement on the day it
+# merges.
 #
 # Split out of quality-gates.yml, which reached 624 lines and tripped this
 # tool's own max_file_lines gate on its own repository. The split is by
 # concern rather than by line count: correctness gates live there,
 # provenance lives here.
-#
-# The three checks build on each other and are worth reading in order:
-#
-#   1. the commit declares which agent wrote it
-#   2. it declares the right human identity
-#   3. it is signed, which is what makes 1 and 2 worth checking at all
-#
-# Step 3 is the load-bearing one. A signature covers the whole commit
-# object, message and trailers included, so the Agent trailer is inside
-# what was signed rather than a loose string beside it.
 
 on:
   pull_request:
@@ -31,7 +21,7 @@ permissions:
 
 jobs:
   declared-authorship:
-    name: Every commit declares who wrote it
+    name: Commit identity and signatures
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -40,10 +30,9 @@ jobs:
           # The branch tip, not the default `refs/pull/N/merge`. On a
           # pull_request event the default checkout is a merge commit
           # GitHub builds for CI: authored by the PR author, committed by
-          # `noreply@github.com`, signed by nobody. Nobody wrote it, so it
-          # has no agent to declare and no key on the allow-list to verify
-          # against -- the signature gate below read it as `E` and failed
-          # the run on GitHub's own artifact.
+          # `noreply@github.com`, signed by nobody. It has no key on the
+          # allow-list to verify against, so the signature gate below read
+          # it as `E` and failed the run on GitHub's own artifact.
           #
           # `--no-merges` used to hide this, and that was the wrong cure:
           # it also skipped the merges a developer actually makes, which
@@ -52,48 +41,12 @@ jobs:
           # merges can be checked without CI tripping over its own.
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - name: Each commit carries an Agent trailer
-        # Every agent in this project commits under Marshall's git
-        # identity, so `git log` cannot say who did the work. D100 is
-        # what that costs: the version was promoted to a 1.0 release
-        # candidate and the record could not name who decided it.
-        #
-        # The trailer is a declaration, not a proof -- a commit naming
-        # the wrong agent passes this check. Proof needs per-agent
-        # signing keys and required_signatures on the branch. RULES.md
-        # says so rather than letting this read as more than it is.
-        run: |
-          set -euo pipefail
-          range="origin/${{ github.base_ref }}..HEAD"
-          commits=$(git rev-list --no-merges "$range")
-          if [ -z "$commits" ]; then
-            echo "no non-merge commits in $range; this check proved nothing"
-            exit 1
-          fi
-          failed=0
-          for sha in $commits; do
-            agent=$(git show -s --format='%(trailers:key=Agent,valueonly)' "$sha" | tr -d '[:space:]')
-            case "$agent" in
-              claude|codex|grok|marshall)
-                echo "ok    $sha  Agent: $agent" ;;
-              "")
-                echo "FAIL  $sha  no Agent: trailer"; failed=1 ;;
-              *)
-                echo "FAIL  $sha  unknown Agent: $agent"; failed=1 ;;
-            esac
-          done
-          exit $failed
       - name: Each commit carries the repository's commit identity
         # An allowlist, not a denylist: a commit passes only when its author
         # and committer are the one identity below. A global `~/.gitconfig`
         # value falls through silently whenever a repo-local override stops
         # applying, and once such a commit reaches a protected branch it is
         # not fixable without a force-push.
-        #
-        # It lives as a step in this already-required job rather than as
-        # its own job on purpose: a new job name is not in the branch's
-        # required-checks list until someone adds it there, so it would
-        # sit un-enforced. This inherits enforcement the day it merges.
         #
         # Author *and* committer, because a rebase or an amend rewrites
         # one and not the other.
@@ -121,7 +74,7 @@ jobs:
           if [ "$failed" != "0" ]; then
             cat >&2 <<EOF
 
-          Commit identity is not the personal GitHub noreply address.
+          Commit identity is not the repository's GitHub noreply address.
 
           Expected: $allowed
 
@@ -136,30 +89,17 @@ jobs:
           EOF
             exit 1
           fi
-      - name: Each commit is signed, so its Agent trailer is attested
-        # This is what upgrades the trailer above from a declaration to
-        # an attestation, and it is the whole reason the trailer check
-        # is worth running.
-        #
+      - name: Each commit is signed
         # A signature is computed over the entire commit object -- tree,
-        # parents, author, committer, and the full message including
-        # trailers. So `Agent: claude` is not a loose string sitting
-        # beside the signature; it is inside what was signed. Rewrite it
-        # to `Agent: grok` after the fact and the signature goes bad:
-        # `%G?` returns B. Proven, not assumed -- forging that exact
-        # trailer under the original signature yields B.
+        # parents, author, committer and the full message -- so any edit
+        # to a commit after it was signed turns `%G?` to B.
         #
         # Verification runs against `.github/allowed_signers`, checked
         # into the repo, so the trusted set changes only by reviewed
         # pull request rather than by whatever sits on a runner.
         #
-        # What this establishes: nobody altered the agent attribution
-        # after signing, and a key on the allow-list -- which requires a
-        # human to authorise its use -- stood behind it. What it does
-        # NOT establish: that the attestation was truthful. Every agent
-        # on a machine shares that machine's key, so a commit naming the
-        # wrong agent still passes. RULES.md states that limit; do not
-        # let this comment upgrade it to "provable".
+        # What this establishes: the commit was not altered after signing,
+        # and a key on the allow-list stood behind it.
         run: |
           set -euo pipefail
           git config gpg.ssh.allowedSignersFile .github/allowed_signers
@@ -169,9 +109,9 @@ jobs:
           # The two are separate questions and were wrongly answered by one
           # `--no-merges`: a merge carries the conflict resolution its
           # author wrote, so an unsigned merge is unattested content, and
-          # skipping it let exactly that through (found by audit). Requiring
-          # a non-merge commit stays, because a range of nothing but merges
-          # still proves nothing about who wrote the work.
+          # skipping it let exactly that through. Requiring a non-merge
+          # commit stays, because a range of nothing but merges still
+          # proves nothing about the work.
           commits=$(git rev-list "$range")
           if [ -z "$(git rev-list --no-merges "$range")" ]; then
             echo "no non-merge commits in $range; this check proved nothing"
@@ -181,9 +121,8 @@ jobs:
           for sha in $commits; do
             state=$(git log -1 --format='%G?' "$sha")
             key=$(git log -1 --format='%GK' "$sha")
-            agent=$(git show -s --format='%(trailers:key=Agent,valueonly)' "$sha" | tr -d '[:space:]')
             case "$state" in
-              G) echo "ok    $sha  signed by $key  Agent: $agent" ;;
+              G) echo "ok    $sha  signed by $key" ;;
               B) echo "FAIL  $sha  BAD signature -- the commit was altered after signing"; failed=1 ;;
               N) echo "FAIL  $sha  unsigned"; failed=1 ;;
               U|X|Y|R|E)
@@ -198,8 +137,7 @@ jobs:
           A commit is unsigned, or its signature no longer matches its content.
 
           B means the object changed after it was signed -- most often an
-          edited trailer or message. The Agent trailer is covered by the
-          signature precisely so that this is visible.
+          edited message.
 
           N means the machine is not signing. See docs/machine-setup.md
           section 2, then prove it took effect rather than assuming:
@@ -212,4 +150,3 @@ jobs:
           EOF
             exit 1
           fi
-

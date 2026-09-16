@@ -136,7 +136,7 @@ def authorize_config(config_path: str | None, root: Path) -> str | None:
     So the two doors onto one rule disagreed: `repository_path` refused
     `link/…` and this returned the target. The baseline seam below
     already carries a comment recording this same escape being found and
-    closed *there*; this door was never revisited (Grok, 673e667).
+    closed *there*; this door was never revisited (audit of `673e667`).
     """
     if config_path is None:
         return None
@@ -375,7 +375,7 @@ def _baseline_workflow(report: dict[str, Any], root: Path,
     # resolves and this then bounded the resolved path, so an inward
     # `.maintainability -> src` symlink kept the target inside the root and
     # the write landed in source -- the D34 escape history refused and
-    # baseline did not (Grok e88b429 audit). `repository_path` refuses a
+    # baseline did not (audit of `e88b429`). `repository_path` refuses a
     # symlink anywhere on the route and keeps the same boundary check.
     target = repository_path(root, baseline_path, str(DEFAULT_BASELINE_PATH))
     if write:

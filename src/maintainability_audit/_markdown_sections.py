@@ -93,7 +93,7 @@ def render_history_markdown(report: dict[str, Any]) -> list[str]:
         # complete" with nothing about the window at all, while the
         # scoring layer had already marked every history rate
         # not-applicable. P8: the report states what examined each value
-        # (D56, reopened by Codex).
+        # (D56, reopened).
         return [
             "### History",
             "",

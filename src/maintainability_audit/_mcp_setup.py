@@ -341,9 +341,8 @@ def setup_schema(root: Path | None = None):
     """The elicitation model for whichever stage this repository is in.
 
     Two stages, because the three labor rates are only wanted by
-    someone who said yes to the gate. Asking them of everyone is what
-    Marshall called basic logic broken, and he was right: the default
-    answer to the gate is "skip".
+    someone who said yes to the gate. Asking them of everyone was broken
+    logic: the default answer to the gate is "skip".
     """
     if root is not None and economics_bounds_pending(root):
         return _schema_for(economics_bound_questions())

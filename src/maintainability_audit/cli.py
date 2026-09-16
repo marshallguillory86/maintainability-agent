@@ -112,7 +112,7 @@ def write_outputs(args: argparse.Namespace, report: dict, rendered: str) -> None
     # Every rendered output the operator asks for is a product-artifact
     # write: a raw `Path(name).write_text` followed the tree's symlink
     # into source, so each goes through `write_artifact`, bound to the
-    # repository the report was taken in (Grok 63ab820 audit).
+    # repository the report was taken in (audit of `63ab820`).
     root = Path(report["root"])
     if args.output:
         _emit(root, args.output, rendered + "\n")

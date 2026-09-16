@@ -143,7 +143,7 @@ def _comparable_tail(records: list[Any]) -> list[Any]:
     The HTML skin walked every stored record instead, so a first-vs-last
     estimate straddling a break read as "Improving across N scans" when
     the two numbers were produced by different instruments and cannot be
-    compared at all (Grok e88b429 audit). Restricting to the last segment
+    compared at all (audit of `e88b429`). Restricting to the last segment
     puts the HTML skin on the same comparability rule as the others.
     """
     from ._scan_history import segments

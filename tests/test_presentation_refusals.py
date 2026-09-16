@@ -75,7 +75,7 @@ def test_a_refused_path_identification_appears_in_all_three_presentations(
     """ADR 011 / D15: one report dict, three skins, one refusal.
 
     The refusal was visible in JSON and Markdown while HTML omitted it
-    (Codex round three): a reader of the page would chase a path that
+    (audit round three): a reader of the page would chase a path that
     does not exist with nothing saying the identification was refused.
     """
     from maintainability_audit.renderers import render_html, render_markdown

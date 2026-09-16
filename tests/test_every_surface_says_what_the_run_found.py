@@ -1,6 +1,6 @@
 """Every surface of one run says what that run found, and nothing else.
 
-D171–D174, from Grok's hostile audit of `77de21c` (3.6.0 + 3.6.1). Each is
+D171–D174, from the hostile audit of `77de21c` (3.6.0 + 3.6.1). Each is
 one surface telling a different story from the report it belongs to:
 
 * D171 — the pre-commit hook worded a declaration unlike the audit.

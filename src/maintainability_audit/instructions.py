@@ -142,7 +142,7 @@ def write_instruction_pack(
     # Each instruction file is a product-artifact write: `output_dir`
     # comes from a person (`--instructions-output-dir`), so the write is
     # bound to that directory and refuses a symlinked route the audited
-    # tree could plant beneath it (Grok 63ab820 audit).
+    # tree could plant beneath it (audit of `63ab820`).
     from ._safe_write import write_artifact
 
     written: list[str] = []

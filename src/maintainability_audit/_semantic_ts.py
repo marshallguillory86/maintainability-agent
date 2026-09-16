@@ -86,7 +86,7 @@ def local_tsc_analysis(root: Path) -> dict[str, Any] | None:
     *unknown*, not clean: a config error (FAILED, exit 3+) or a findings
     exit with an empty body (NOT_WORKING) both leave `stdout` empty, and
     reading that as a violation-free type check is the absence-as-a-pass
-    the class ADR 001 forbids (Grok 63ab820 audit). Only a usable run
+    the class ADR 001 forbids (audit of `63ab820`). Only a usable run
     counts; a RAN with no output is the real "compiled, no type errors".
     CLI output carries no boundary facts, so `typed_boundaries` is empty.
     """

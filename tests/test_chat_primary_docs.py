@@ -144,7 +144,7 @@ def test_integration_guide_and_generated_packs_teach_chat_before_automation(
 
 
 def test_decisions_four_through_eight_are_repository_records() -> None:
-    """A pull request is not the record of Marshall's operating decisions."""
+    """A pull request is not the record of operating decisions."""
     decisions = _read(DECISIONS).lower()
     assert decisions.count("2026-08-17") >= 5
     for number in range(4, 9):

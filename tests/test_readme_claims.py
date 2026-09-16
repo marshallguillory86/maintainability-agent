@@ -255,7 +255,7 @@ def test_no_readme_image_is_repository_relative() -> None:
 #: histories to report how one transformation fared across an org. It is
 #: a roadmap item and it is not built. It was also invented twice before
 #: it was ever decided, so what these patterns defend is not the idea —
-#: Marshall has since accepted it as a future item — but the difference
+#: it has since been accepted as a future item — but the difference
 #: between an idea and a shipped feature.
 #: Every gap is `\s+`, never a literal space. Prose wraps: at the base
 #: this guard is proven against, the seed phrase reads "across\nservices",

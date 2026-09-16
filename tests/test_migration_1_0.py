@@ -64,7 +64,7 @@ def test_adr_006_states_the_environment_work_order_ships() -> None:
     assert "Not shipped (2.5c)" not in text, (
         "the ADR still defers the environment work order; report[\"environment_work_order\"] ships it"
     )
-    # The blanket "never installs" was reconciled away (Grok UAT audit):
+    # The blanket "never installs" was reconciled away (UAT audit):
     # a user may enable acquisition, so the absolute was a user-visible
     # contradiction the moment they did. The line that may not blur is the
     # boundary that actually matters and must stay stated -- acquisition is

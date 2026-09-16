@@ -247,7 +247,7 @@ def test_html_does_not_dump_the_markdown_report_in_one_pre(
         assert "## Work Order" not in dumped
 
 
-# Split into per-property helpers (2026-08-16, Marshall's call): the
+# Split into per-property helpers (2026-08-16): the
 # original single test measured CCN 21 against the repo's budget of 15
 # and blocked its own merge through --fail-on-gate. Every assertion is
 # verbatim; only the function boundaries moved.

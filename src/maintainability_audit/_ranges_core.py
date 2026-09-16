@@ -141,7 +141,7 @@ def _is_bare_signature(masked: list[str], start: int, end: int) -> bool:
     """A declaration that terminates without opening a body or an arrow
     value: `declare function f(): void;`, a TS overload signature, an
     abstract method. No body to measure, so counting one mints a member
-    with no code behind it (Grok 63ab820 audit). A real function/method
+    with no code behind it (audit of `63ab820`). A real function/method
     opens a block `{`; an expression member carries `=>`; neither, closed
     on `;`, is signature only. `f() {}` and `g = () => x;` still count.
     """

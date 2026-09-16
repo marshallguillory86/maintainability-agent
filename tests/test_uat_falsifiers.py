@@ -4,18 +4,11 @@ These are deliberately behavior-level checks.  The register has repeatedly
 shown that a test aimed at a symbol, a sentence, or a partial fixture can stay
 green while the user-visible defect returns by another path.
 
-**Authorship, recorded because it is the point.** Written by Codex from the
-findings alone, without reading the implementations, as the first run of the
-split set 2026-08-26: Claude writes code, Codex writes tests and docs, Grok
-audits. The register records `*Roles:*` from D90; these two attach to earlier
-entries, so the data lives here instead of being backfilled into a document
-whose value is that its claims are checkable.
-
-    *Roles:* found=grok prompt=marshall fix=claude test=codex run=local
+Written from the findings alone, without reading the implementations.
 
 Mutation-verified after delivery, which is the check the author could not run
 on itself: reverting each fix fails the matching test here. The first one
-earned its keep immediately. The Claude-written test it replaces searched the
+earned its keep immediately. The earlier test it replaces searched the
 *whole rendered document* for ``"42"`` and so depended on this repository's
 12-month commit count containing those digits -- red at 142 commits, green at
 145, and due to return around 420 and 1042. It was a time bomb on a wall

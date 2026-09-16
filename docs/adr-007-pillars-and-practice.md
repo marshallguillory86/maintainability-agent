@@ -78,8 +78,8 @@ Three properties hold, and each is how the join could go quietly wrong:
   `delegated`. What changed is that the entry reports a measurement
   instead of an apology for not having one, and names who made it.
 
-**Amended 2026-09-13: the audit runs the delegate (D177).** Decided with
-Marshall. The handoff above left the pillar measured only when some other
+**Amended 2026-09-13: the audit runs the delegate (D177).** The handoff
+above left the pillar measured only when some other
 process had written the document first — CI did, and nothing else did — so
 every audit through the chat door reported security unmeasured. The pillar
 is complete, so the audit completes it:

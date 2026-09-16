@@ -27,7 +27,7 @@ A decision recorded only as a sentence inside a design document is a decision th
 
 These choices settle cross-cutting behavior discovered while closing the chat
 surface. They do not create new ADRs or silently amend the numbered decisions
-above; they record Marshall's answers so a pull request is never the only place
+above; they record the answers so a pull request is never the only place
 the choice exists.
 
 ### Decision 4 — History consent
@@ -135,9 +135,8 @@ and Java (dedicated scanner) are the two languages with real declaration
 parsers, and they are what v1.0 claims.
 
 Further languages — Fortran, C#, C, Rust, then JavaScript and the rest —
-arrive **one adapter per release**, not as a batch. Marshall's reason,
-in his words: he is an agilist, and a six-language batch is the opposite
-of that. The catalog already carries analyzer coverage for those
+arrive **one adapter per release**, not as a batch: small increments
+rather than a six-language batch. The catalog already carries analyzer coverage for those
 ecosystems, so each release adds a declaration parser to a pool that can
 already measure something.
 
@@ -154,9 +153,9 @@ complete` and a verified grade while this decision claimed two
 languages. An audit found the contradiction and the sentence was mine.
 
 The resolution is that the claim follows the capability, not the
-reverse. Marshall, on being shown that lizard, jscpd and multimetric
-are baseline-tier adapters that read JavaScript: *"keep JS in since we
-have a detector and can score it."*
+reverse. lizard, jscpd and multimetric are baseline-tier adapters that
+read JavaScript, so JavaScript stays in the claim: there is a detector and
+it can be scored.
 
 **Corrected 2026-08-26, on the same page's own evidence.** The sentence
 above got the *supporting* fact wrong even though the decision is
@@ -170,8 +169,8 @@ two. So for a JavaScript repository with lizard installed and nothing
 else, `_declaration_pressure` returns `None` and the built-in tier
 scores the dimension -- every time, by construction, not by accident.
 
-Marshall's ruling stands unchanged: *we have a detector and can score
-it* is exactly true of the brace scanner, and `language-support.md`
+The ruling stands unchanged: *there is a detector and it can be scored* is
+exactly true of the brace scanner, and `language-support.md`
 already names brace/paren depth as the mechanism. What was wrong was
 this page crediting the pool for work the pool cannot do here. The
 analyzers that read JavaScript still contribute duplication (jscpd) and

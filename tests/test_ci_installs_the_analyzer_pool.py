@@ -186,7 +186,7 @@ def _readme_pip_packages() -> set[str]:
 def test_the_readme_names_the_analyzer_pool_ci_installs() -> None:
     """The stanza a stranger follows must be the pool CI calibrates against.
 
-    Grok's audit, item 6: a first run with none of these installed falls
+    A value audit, item 6: a first run with none of these installed falls
     back to the built-in tier, and the README never said so -- so the
     fallback read as the product rather than as a degraded reading of it.
     The stanza now says it, and this is what keeps the stanza true.

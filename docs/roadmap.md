@@ -11,7 +11,7 @@ languages, a better first run — not a different product. There is no second
 track. A stranger who clones this is looking at a tool, not at a process that
 will announce something else next month.
 
-**3.5.0 is that bet's first instalment**, from Grok's audit of what a stranger
+**3.5.0 is that bet's first instalment**, from an audit of what a stranger
 actually sees: `-` pipes the prompt into an agent on every rendered output
 (D161), the chat reply opens with the work order rather than a metric table
 (D160), [`examples/demo`](../examples/demo/) produces a real work order in under

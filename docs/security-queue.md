@@ -1,7 +1,7 @@
 # Security queue — 2026-08-23
 
-Two independent audits of `897c3d7` / `20b2460`, one by Grok (S-numbers)
-and one by Codex (C-numbers), against seams three rounds of chat-surface
+Two independent audits of `897c3d7` / `20b2460`, one numbered S and one
+numbered C, against seams three rounds of chat-surface
 auditing had never looked at: write primitives, read boundaries, git
 argv, supply chain, and analyzer trust.
 
@@ -12,9 +12,9 @@ whoever touches it last.
 
 ## The one decision that was not mine — answered 2026-08-25
 
-**Are repositories trusted?** Both audits converge here (Grok R1,
-Codex 2), and it is genuinely product intent, so it stayed open until
-Marshall ruled on 2026-08-25. The ruling is below; the two options
+**Are repositories trusted?** Both audits converge here (S R1, C 2),
+and it is genuinely product intent, so it stayed open until it was
+decided on 2026-08-25. The ruling is below; the two options
 are kept because a decision that lists only the chosen path is a
 rationalization.
 
@@ -35,8 +35,8 @@ Two coherent answers:
 
 Child sandboxing stays refused and neither option reopens it.
 
-**Answered: neither, because the question is moot.** Marshall drew the
-line at *executing code* rather than at trusting repositories — see
+**Answered: neither, because the question is moot.** The line is drawn
+at *executing code* rather than at trusting repositories — see
 [Decision 9](decisions.md). The agent does not run the audited tree's
 code, and its configuration is code. Option 2's mechanism is what
 **will** ship (agent-owned configuration, plugin loading disabled,
@@ -81,7 +81,7 @@ so none of it needs a ruling.
 
 ## Why green CI missed almost all of it
 
-Codex's sharpest observation, and it deserves recording separately from
+The C audit's sharpest observation, and it deserves recording separately from
 any one defect: the security tests prove *the package imports no HTTP
 client*, while the package deliberately launches repository-programmable
 children holding the host environment. The abstraction under test was

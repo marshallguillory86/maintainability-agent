@@ -54,7 +54,7 @@ not an interruption of it:
    decision or defect register — never against the implementor's wrap-up.
 4. A hypothesis step turns what the audit found into the next bounded slice.
 
-The hypothesis step **is the improvement prompts** (Marshall, 2026-08-16).
+The hypothesis step **is the improvement prompts** (2026-08-16).
 Each finding becomes a falsifiable claim for the next slice, closed behind a
 test that would fail if the defect returned. That is how conjecture becomes a
 smaller implementation task instead of a broader rewrite.

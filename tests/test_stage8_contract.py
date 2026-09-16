@@ -156,7 +156,7 @@ def test_renaming_moved_no_value(name: str, tmp_path: Path) -> None:
     # `unanchored_languages` followed for the same reason one release
     # later — Swift and COBOL ship parsed and outside the corpus, and the
     # note claimed "every language this scanner parses" for three
-    # releases after that stopped being true (Grok, 2026-09-04).
+    # releases after that stopped being true (audit, 2026-09-04).
     # Stated as a delta on the frozen anchor, the way Class 5's aspect and
     # rubric changes are.
     assert score["reference"] == {

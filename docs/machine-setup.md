@@ -15,20 +15,12 @@ silently take over when a repository-local override stops applying.
 Nothing errors, and a wrong identity that reaches a protected branch
 cannot be corrected without a history rewrite and a force-push.
 
-The related failure is D100 in the [defect
-register](defect-register-chat-surface.md): the package promoted itself
-to a 1.0 release candidate, and asked who had decided that, the record
-could only guess — every agent here commits under one git identity, so
-`git log` settles nothing.
-
-Both are the same shape. **An identity nobody verified is an identity
-nobody can trust**, and the check is cheap only before the commits
-exist.
+**An identity nobody verified is an identity nobody can trust**, and the
+check is cheap only before the commits exist.
 
 ## 1. Commit identity
 
-The git identity is the GitHub noreply address. Not a personal address,
-not a work address:
+The git identity is the GitHub noreply address:
 
 ```bash
 git config --global user.name  "Marshall Guillory"
@@ -44,9 +36,8 @@ justifying.
 
 > GitHub → Settings → Emails → **Block command line pushes that expose my email**
 
-GitHub then rejects a push carrying any other address. It would have
-refused all 37 commits at the first push. It is a UI setting with no API
-equivalent, and it is per-account rather than per-machine — but confirm
+GitHub then rejects a push carrying any other address. It is a UI setting
+with no API equivalent, and it is per-account rather than per-machine — but confirm
 it, because it is the only control here that cannot fail open.
 
 **Verify rather than assume:**
@@ -56,14 +47,14 @@ git config --global user.email
 git -C <this-repo> config user.email
 ```
 
-Check the second one too. A repository-local override is what hid the
-problem last time.
+Check the second one too. A repository-local override can hide a wrong
+global value.
 
 ## 2. Commit signing
 
 `main` has `required_signatures` enabled, so an unsigned commit reaching
 it is rejected. SSH signing, not GPG — `gpg` is not installed on these
-machines and agents do not install tools.
+machines.
 
 ```bash
 ssh-keygen -t ed25519 -C "signing key (marshall)" -f ~/.ssh/id_ed25519_signing
@@ -118,7 +109,7 @@ machines cannot tell you which machine signed.
 **Prove it before relying on it:**
 
 ```bash
-git commit --allow-empty -m "chore: signing probe" -m "Agent: marshall"
+git commit --allow-empty -m "chore: signing probe"
 git log -1 --format='%G?'
 git reset --hard HEAD~1
 ```
@@ -127,60 +118,7 @@ git reset --hard HEAD~1
 often a missing `allowed_signers` entry. Do not skip this: unverified
 setup is the thing this page exists to prevent.
 
-## 3. Authorship declaration
-
-Every commit carries an `Agent:` trailer naming who wrote it — one of
-`claude`, `codex`, `grok`, `marshall`:
-
-```
-Agent: claude
-```
-
-CI enforces it over every non-merge commit in a pull request, and fails
-on an empty range rather than passing on nothing. Every defect-register
-entry from D89 forward carries a `*Roles:*` line for the same reason.
-
-**Install the local hook, which is the half that used to be missing:**
-
-```bash
-bash tools/hooks/install.sh
-```
-
-This line exists because CI was the *only* enforcement, and a
-pull-request check is the most expensive place to learn this. Nine
-commits were written, gated locally and pushed before anything mentioned
-the trailer; repairing them cost a rebase over all nine and a
-force-push. `tools/hooks/commit-msg` applies the same rule at the moment
-it costs one line to fix.
-
-The hook **refuses; it does not fill the trailer in.** A hook cannot know
-which agent is typing, and one that guessed would stamp `claude` on
-Marshall's own commits — turning a declaration into a fabrication, which
-is worse than the omission it prevents. Emergency bypass, one commit:
-`AGENT_TRAILER_SKIP=1 git commit …`.
-
-**It exempts exactly what CI exempts: merge commits, and nothing else.**
-The first version also let through `fixup!`, `squash!`, `amend!` and
-`source_type=squash`, on the reasoning that those are checked at their
-own commit or in CI. They are not — a `fixup!` that survives to the
-branch tip is an ordinary non-merge commit by the time `authorship.yml`
-walks the range, so it passed locally and failed the pull request. A
-hook that accepts what CI rejects is worse than no hook, because it
-teaches that a clean local commit means a clean gate.
-
-`install.sh` resolves the hooks directory with `git rev-parse --git-path
-hooks` rather than assuming `.git/hooks`. In a **linked worktree** `.git`
-is a file, not a directory, so the assumption created a directory
-nothing reads and reported success; it also ignored `core.hooksPath`
-entirely. Both are Git's to answer, and now it does.
-
-**A trailer is a declaration, not a proof.** A commit naming the wrong
-agent passes. Signing proves the *key*, and every agent on a machine
-shares that machine's key, so together they establish "this machine
-asserts claude wrote it" and no more. `RULES.md` states that limit;
-do not let a document upgrade it to "provable".
-
-## 4. Toolchain
+## 3. Toolchain
 
 ```bash
 python3 -m venv .venv
@@ -241,7 +179,7 @@ the Linux-resolved closure the gates run against (D89). A macOS machine
 may resolve differently; that is expected, and it is why the constraints
 file is generated on a runner rather than on a laptop.
 
-## 5. Before the first push from a new machine
+## 4. Before the first push from a new machine
 
 Run the gate as its own command, never chained to a commit:
 
@@ -255,8 +193,8 @@ configuration that was set is not the same as configuration that
 applied:
 
 ```bash
-git log -1 --format='%ae | %G? | %(trailers:key=Agent,valueonly)'
+git log -1 --format='%ae | %G?'
 ```
 
-Expect the noreply address, `G`, and an agent name. Anything else means
+Expect the noreply address and `G`. Anything else means
 one of the sections above did not land on this machine.

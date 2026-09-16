@@ -105,7 +105,7 @@ the architecture document points readers to.
 that it records what was decided *and* what overturned it.
 
 **Positive worth recording:** the cadence the register promised — *"one
-adapter per release, not as a batch"*, recorded as Marshall's own reason —
+adapter per release, not as a batch"* —
 was honoured exactly: 1.1.0 C, 1.2.0 C++, 1.3.0 C#, 1.4.0 Fortran.
 
 ---

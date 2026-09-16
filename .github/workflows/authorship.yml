@@ -83,20 +83,12 @@ jobs:
             esac
           done
           exit $failed
-      - name: Each commit carries the personal identity, never the work one
-        # Marshall holds two accounts: personal (this repo's identity) and
-        # work, `mguillory@agilerising.com`. RULES.md, 2026-08-29, in his
-        # words: the work address never signs anything here and is never
-        # attached to this work unless he explicitly asks for it.
-        #
-        # This is the lint for a class that already cost real money. 37
-        # commits carried the work address between 2026-08-25 and -27
-        # because nothing checked; `~/.gitconfig` held it, a repo-local
-        # override had been masking it, and when the override stopped
-        # applying the commits fell through to the global value silently.
-        # Removing them took a history rewrite, a force-push through two
-        # layers of branch protection, and a support ticket for the
-        # objects GitHub retains after a force-push.
+      - name: Each commit carries the repository's commit identity
+        # An allowlist, not a denylist: a commit passes only when its author
+        # and committer are the one identity below. A global `~/.gitconfig`
+        # value falls through silently whenever a repo-local override stops
+        # applying, and once such a commit reaches a protected branch it is
+        # not fixable without a force-push.
         #
         # It lives as a step in this already-required job rather than as
         # its own job on purpose: a new job name is not in the branch's
@@ -141,10 +133,6 @@ jobs:
               git config --global user.name  "Marshall Guillory"
               git rebase --exec 'git commit --amend --no-edit --reset-author -S' \\
                   origin/${{ github.base_ref }}
-
-          If this is mguillory@agilerising.com, it is forbidden here by
-          RULES.md and no exception applies unless Marshall asked for it
-          in that specific instance.
           EOF
             exit 1
           fi

@@ -102,7 +102,7 @@ def write_artifact(
       tree. So when the named path falls within the grant the write goes
       through ``write_bounded`` and inherits the lexical route refusal --
       ``.maintainability -> src`` on both ``/var`` and ``/private/var``
-      spellings of the same macOS path (Grok 63ab820 audit; the earlier
+      spellings of the same macOS path (audit of `63ab820`; the earlier
       ``write_bounded(target.parent, target)`` bound the check to the
       symlink itself and checked nothing). A path outside the grant is on
       ground the audited tree does not control; only the final component
@@ -117,7 +117,7 @@ def write_artifact(
     grant_real = os.path.realpath(grant_root)
     # Membership is decided on the *real* path so a ``/var`` spelling of
     # the target and a ``/private/var`` spelling of the grant name the
-    # same tree (Grok 63ab820 audit). In-tree, the write is bound to the
+    # same tree (audit of `63ab820`). In-tree, the write is bound to the
     # grant and inherits its lexical route refusal (the ``.maintainability
     # -> src`` link the real path erased); out-of-tree, it is bound to the
     # operator's own directory -- ground the audited tree cannot plant a
@@ -213,7 +213,7 @@ def _stage_and_replace(target: Path, body: str) -> Path:
     The staging name is unique per call. A fixed `.{name}.incoming` was
     guessable, and the audited tree could plant that exact file: `O_EXCL`
     then raised `FileExistsError` and took the write primitive down with a
-    crash the tree chose the timing of (Grok e88b429 audit). `mkstemp`
+    crash the tree chose the timing of (audit of `e88b429`). `mkstemp`
     creates an exclusive file under a random name in the same directory,
     so nothing the tree pre-places can collide with it, and it still lands
     on the same filesystem for an atomic `os.replace`.

@@ -67,17 +67,17 @@ out of the repository being audited. The rule is written down because it
 was broken once: the TypeScript checker preferred the tree's own
 `node_modules/.bin/tsc` over the machine's, so a `tsconfig.json` beside a
 writable `node_modules/.bin/tsc` was enough to make this agent execute
-the audited repository, with no TypeScript in it anywhere. A Grok audit
-on 2026-09-04 found it. The resolution was deleted rather than guarded —
+the audited repository, with no TypeScript in it anywhere. An audit on
+2026-09-04 found it. The resolution was deleted rather than guarded —
 there is no safe way to run a binary whose identity the audited tree
 controls — and a project whose only compiler is project-local now leaves
 type coverage **unknown**, which is the honest reading.
 
 **This section has now been wrong in both directions, and both are
 recorded rather than quietly rewritten.** It first said the agent does
-not execute scanned code, which was untrue and audit-proven so (Codex,
-2026-08-23). It was corrected to say the agent *does*, with the
-question left open as D39 and D44. Marshall settled it on 2026-08-25 by
+not execute scanned code, which was untrue and audit-proven so
+(2026-08-23). It was corrected to say the agent *does*, with the
+question left open as D39 and D44. It was settled on 2026-08-25 by
 drawing the line at execution rather than at trusting repositories
 (Decision 9), both entries closed, and this file kept describing the
 defect for a further day — a promise that had become true while its

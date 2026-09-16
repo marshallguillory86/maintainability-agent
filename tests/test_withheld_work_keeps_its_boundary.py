@@ -1,6 +1,6 @@
 """A copy-paste block never authorises what the prompt withholds (D180).
 
-From Grok's audit of 3.7.3 (`7befdbd`): the demo's remediation prompt withheld
+From the audit of 3.7.3 (`7befdbd`): the demo's remediation prompt withheld
 its two duplicated blocks as needing a design decision, while the report's
 standalone copy-paste block for each said "Task: remove the duplicated
 block". Which instruction an agent followed depended on which text was

@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **3.7.5**.
+Version **3.7.6**.
 
 **Languages parsed:** Python, Java, C, C++, C#, Go, Rust, PHP, Ruby, Swift,
 COBOL, Fortran (free-form *and* fixed-form), and the JS/TS/HTML family — each
@@ -43,7 +43,7 @@ you what it could not measure.
 installed alongside rather than as a dependency, so the two tools release
 independently. Without it the report says the security pillar was not measured
 and gives this command. Its scanners decide what it can grade — see
-[machine setup](docs/machine-setup.md#4-toolchain) for which to install, and
+[machine setup](docs/machine-setup.md#3-toolchain) for which to install, and
 don't add its `[mcp]` extra to this environment (it pins `mcp<2`).
 
 ```bash

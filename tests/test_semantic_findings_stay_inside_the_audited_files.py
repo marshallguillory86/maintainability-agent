@@ -1,6 +1,6 @@
 """A semantic finding comes only from a file the audit read (D181).
 
-From Grok's audit of 3.7.3 (`7befdbd`): excluding `tests/fixtures/` removed the
+From the audit of 3.7.3 (`7befdbd`): excluding `tests/fixtures/` removed the
 fixture from every count, and a full scan still reported a design review
 candidate from it — into the report and the remediation prompt. The semantic
 walk reads the whole tree; D174 held a changed-only run to its paths and left

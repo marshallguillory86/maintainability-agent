@@ -1,4 +1,4 @@
-"""Class E (Grok 63ab820, reopened 2026-08-30): HTML remaining sections.
+"""Class E (audit of `63ab820`, reopened 2026-08-30): HTML remaining sections.
 
 ADR 011 decision 5: after the executive strip and charts, HTML carries
 the same remaining sections Markdown prints when the report dict has

@@ -29,8 +29,8 @@ def test_no_surface_claims_chat_and_markdown_are_one_text() -> None:
     the two are the same text" while the code beside it already rendered
     chat bounded and markdown complete. That was corrected — and the
     **MCP tool docstring**, the one hosts actually read, went on saying
-    it. Grok's next round found it still standing, having reported it the
-    round before.
+    it. The next audit round found it still standing, having reported it
+    the round before.
 
     Fixing the instance and not the class is what let one round's finding
     survive into the next, so this asserts over every module rather than

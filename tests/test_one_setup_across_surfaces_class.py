@@ -1,4 +1,4 @@
-"""Class D (Grok 63ab820): one first-run setup, the same across surfaces.
+"""Class D (audit of `63ab820`): one first-run setup, the same across surfaces.
 
 The CLI terminal prompt (`_first_run`) and the MCP/chat elicitation
 (`_mcp_setup`) are two transports for one setup, not two setups (the arch

@@ -11,7 +11,7 @@ The product already has one report dictionary and several writers: Markdown (`--
 
 1.0 needs three **user-facing** skins of the **same** data: what the human sees in IDE chat, a Markdown file, and a single packaged HTML file that an executive will actually open. The bounded work order remains the product ([product intent](product-intent.md)); these are presentations of it, not a dashboard product.
 
-MCP is a local stdio process and does not run `input()`. It may write exactly five local artifacts: the repository config, user config, user state, repository scan history at `.maintainability/history.jsonl` and repository baseline at `.maintainability/baseline.json`; it never writes source or a report. First-run setup writes the first three, the audit's history rule may append the fourth, and an explicit baseline write controls the fifth. The host agent (Grok, Claude, …) is what can ask the user where to save returned report text.
+MCP is a local stdio process and does not run `input()`. It may write exactly five local artifacts: the repository config, user config, user state, repository scan history at `.maintainability/history.jsonl` and repository baseline at `.maintainability/baseline.json`; it never writes source or a report. First-run setup writes the first three, the audit's history rule may append the fourth, and an explicit baseline write controls the fifth. The host agent is what can ask the user where to save returned report text.
 
 ## Options
 

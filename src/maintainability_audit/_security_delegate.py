@@ -5,8 +5,8 @@
 tool wrote `security-pillar.json` and this one read it if it happened to be
 there. Nothing ran it, so every audit that did not follow a manual or CI run
 of the other tool reported the pillar as unmeasured — including every audit
-through the chat door, which cannot run it at all. Decided 2026-09-13 with
-Marshall: the pillar is complete, so the audit runs it.
+through the chat door, which cannot run it at all. Decided 2026-09-13: the
+pillar is complete, so the audit runs it.
 
 **What the child writes.** Every report `secure-code-agent` can produce is
 redirected into a temporary directory this process owns: the Markdown and

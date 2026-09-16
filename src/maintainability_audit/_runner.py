@@ -218,9 +218,9 @@ def analyzer_env() -> dict[str, str]:
         # `registry=https://evil/` silently redirects that fetch. Forcing
         # the registry through the environment -- which npm ranks above a
         # project `.npmrc` -- pins it to the value the user configured for
-        # themselves, read below where the tree cannot vote. Marshall's
-        # call, 2026-08-29: let the user pull tools, do not let the tree
-        # pick the source.
+        # themselves, read below where the tree cannot vote. Decided
+        # 2026-08-29: let the user pull tools, do not let the tree pick the
+        # source.
         env["npm_config_registry"] = registry
     return env
 
@@ -301,7 +301,7 @@ def _probe(slug: str, argv: tuple[str, ...]) -> ToolResult:
 #: a pin that changes with a tool's colour choices, not its version. The
 #: determinism suite stripped these before comparing, which hid that the
 #: stored value carried them; stripping at capture makes the recorded pin
-#: the version and nothing else (Grok e88b429 audit).
+#: the version and nothing else (audit of `e88b429`).
 _ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 
 

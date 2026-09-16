@@ -91,7 +91,7 @@ DEFAULT_V1_REQUIRED: frozenset[str] = frozenset({
     # The 3.2 band pressures. Score-bearing: the band matrix prices a
     # complexity-12 warn above a plain warn, so it can only add pressure
     # over the count rate. Withholding one therefore only improves the
-    # score -- the P3 hole Grok's e88b429 audit named -- so an absent band
+    # score -- the P3 hole the `e88b429` audit named -- so an absent band
     # withholds the grade rather than quietly falling back to the coarser
     # count rate. `_pressures._banded` no longer prices an Unknown band at
     # the count rate for the same reason.
@@ -107,7 +107,7 @@ DEFAULT_V1_REQUIRED: frozenset[str] = frozenset({
 #
 # The four 3.2 band pressures used to live here, on the reasoning that a
 # missing band predated the wiring and the count-rate fallback was a
-# coarser-but-verifiable number. Grok's e88b429 audit showed that was a
+# coarser-but-verifiable number. The `e88b429` audit showed that was a
 # P3 hole: the band can only add pressure over the count rate, so
 # withholding it only ever improved the score, and this list kept the
 # concealment sweep from ever noticing. They are now required (above).

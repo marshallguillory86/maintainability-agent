@@ -1,6 +1,6 @@
 """D15: one report composes source-read and artifact-read adapters honestly.
 
-Cycle: Grok audit on 48293d3, queue closed at cc71cd1. The six tripwires
+Cycle: audit on 48293d3, queue closed at cc71cd1. The six tripwires
 from that audit are the pins. Selection still filters by policy; composition
 must not manufacture agreement, must not miss the same file spelled two
 ways, must not hide staleness, and must not gate bytecode behind a source

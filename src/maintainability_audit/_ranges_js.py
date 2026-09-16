@@ -75,8 +75,8 @@ _PROPERTY_RE = re.compile(
 # field of type T; a value would need `name = ...`, so `name: (...) => X`
 # can only be a function-type annotation, with X a return type and no
 # body. D93 skipped these inside `interface`/`type` blocks but not inside
-# a class, so class fields still minted a declaration population (Grok
-# e88b429 audit). The `;` terminator and the absence of a block `{` after
+# a class, so class fields still minted a declaration population (audit
+# of `e88b429`). The `;` terminator and the absence of a block `{` after
 # the arrow are what tell an annotation from a real arrow-valued property
 # (`onSave: (a) => { ... }`), which keeps its body and stays counted.
 _FUNCTION_TYPE_ANNOTATION_RE = re.compile(
@@ -142,7 +142,7 @@ def _is_method(tail: str, match: re.Match[str]) -> bool:
 
     When the paren closes on the line, a real method opens a body brace
     after it -- run-on (`f(x) {`) or single-line (`f(x) { return x }`). A
-    trailing-`{` test missed the single-line one (Grok 63ab820 audit); a
+    trailing-`{` test missed the single-line one (audit of `63ab820`); a
     call (`foo(x);`) or a signature (`foo(): T;`) has no brace and stays out.
     """
     trimmed = tail.rstrip()

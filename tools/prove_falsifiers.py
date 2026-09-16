@@ -72,9 +72,9 @@ EXEMPT = "*Falsifier proof: not applicable"
 #: were closed before the tool existed and were never written against
 #: it, so proving them retroactively would produce a wall of failures
 #: that says more about when the control arrived than about the work.
-#: The same cutoff shape as the `*Roles:*` (D90) and `*Mutation:*` (D97)
-#: conventions, and for the same reason: a rule announced today does not
-#: get to be evidence about yesterday.
+#: The same cutoff shape as the `*Mutation:*` (D97) convention, and for
+#: the same reason: a rule announced today does not get to be evidence
+#: about yesterday.
 PROVE_FROM = 97
 
 

@@ -5,7 +5,7 @@ which this branch's work pushed it past.
 
 The seam is what the tests are about. `test_in_loop_check` holds the
 door's own contract — no repository, no git, the content on stdin is
-authoritative, it never scores. This file holds the four defects Grok's
+authoritative, it never scores. This file holds the four defects the
 audit found *at* that door: a diff refused in every language (D133), a
 cognitive-only failure reporting a negative overage (D132), flags
 accepted and then ignored (D134), and headroom that watched only the
@@ -84,7 +84,7 @@ def test_ordinary_source_is_not_called_a_diff(suffix: str) -> None:
     """Covers existing behaviour: ordinary brace source already read as
     read, and this pins it so the D133 refusal cannot take it away.
 
-    It is the guard Grok named — do not mark valid brace source unparsed
+    It is the guard the audit named — do not mark valid brace source unparsed
     because it minted zero declarations — so it passes at the base by
     construction. Only the unified-diff *format* is refused.
     """

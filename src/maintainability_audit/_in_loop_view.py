@@ -102,7 +102,7 @@ def check_json(result: dict[str, Any]) -> str:
             # Read from the result, never written as a constant. A
             # literal `False` here says "not scored" whatever the check
             # actually did, so the field would keep reassuring a caller
-            # through the exact bug it exists to disclose (Grok's audit).
+            # through the exact bug it exists to disclose (found by audit).
             "scored": result["scored"],
             "scored_reason": result["scored_reason"],
         },

@@ -99,7 +99,7 @@ def _banded(banded_state: object, population: float | None,
         # refinement that can only *add* pressure over the count rate (a
         # warn at complexity 12 is worse than a plain warn), so falling
         # back to the count rate when the band is withheld only improved
-        # the score -- the P3 hole Grok's e88b429 audit named. Dropping the
+        # the score -- the P3 hole the `e88b429` audit named. Dropping the
         # dimension is no better: averaging over the rest can still improve
         # the estimate when the withheld dimension was worse than its
         # peers. `SEVERE` is the only value that cannot improve any

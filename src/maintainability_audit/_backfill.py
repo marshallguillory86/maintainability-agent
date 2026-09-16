@@ -62,7 +62,7 @@ def _git(root: Path, *args: str) -> str:
             # tree instead -- and backfill's `worktree add` re-hashes
             # content, which is exactly what runs a `clean` filter. `run_git`
             # got this; this spawner, living outside `git_tools`, did not
-            # (Grok e88b429 audit; the D92 sweep only read `git_tools.py`).
+            # (audit of `e88b429`; the D92 sweep only read `git_tools.py`).
             ["git", *READ_ONLY_GIT_CONFIG, *_attr_tree_config(root),
              "-C", str(root), *args],
             capture_output=True, text=True, check=False,

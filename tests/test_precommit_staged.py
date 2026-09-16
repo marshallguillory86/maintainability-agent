@@ -256,7 +256,7 @@ def test_staged_refuses_flags_it_would_have_to_ignore(
     names — `--changed-only`, `--record-history`, `--output`, and
     `{json,markdown,html}`. Exit 2 and a matching substring were both
     satisfied by the parser rejecting `--staged` itself, so the test
-    defended nothing. Codex caught the same shape one level down (a bare
+    defended nothing. An audit caught the same shape one level down (a bare
     `--changed-only` failing on argparse's `nargs` rather than on the
     refusal); this is that trap at the level above it.
     """

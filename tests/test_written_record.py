@@ -44,25 +44,23 @@ def _decision_entries(headings: list[tuple[str, str]]) -> set[str]:
     return {ident for ident, title in headings if _DECISION in title}
 
 
-def test_a_decision_closure_names_who_decided() -> None:
+def test_a_decision_closure_states_the_decision_and_its_date() -> None:
     """Covers existing behaviour: no entry used this category before
     D136, so the loop below has nothing to walk at the base and passes
     vacuously. It defends the next decision, not this one.
 
     The obligation a decision carries instead of a falsifier: "we chose
-    not to" is only accountable if the entry says who chose and when.
-    Without that it is indistinguishable from "nobody got to it", which
-    is the state this register exists to make impossible.
+    not to" is only accountable if the entry says, in so many words, that
+    it was decided, and when. Without that it is indistinguishable from
+    "nobody got to it", which is the state this register exists to make
+    impossible.
     """
     register = _read(REGISTER)
     headings = re.findall(r"^### (D\d+) — (.+)$", register, re.MULTILINE)
     for ident in sorted(_decision_entries(headings)):
         section = _entry(register.split("## Disposition", maxsplit=1)[0], ident)
-        assert re.search(r"decision=\w+", section), (
-            f"{ident} closes by decision and names no decider in its roles"
-        )
-        assert re.search(r"\b20\d\d-\d\d-\d\d\b", section), (
-            f"{ident} closes by decision and gives no date"
+        assert re.search(r"\bDecided\b[^\n]*\b20\d\d-\d\d-\d\d\b", section), (
+            f"{ident} closes by decision and does not state 'Decided <date>'"
         )
 
 
@@ -124,7 +122,7 @@ def _cited_region(section: str, ident: str) -> str:
     """The part of an entry that claims to name a falsifier.
 
     It ends at the next `*Field:*` marker, not at the end of the entry.
-    `*Roles:*` and `*Mutation:*` sit after it and legitimately name
+    `*Mutation:*` and other fields sit after it and legitimately name
     tests -- a mutation statement is *required* to say which member it
     broke -- so reading to the end made every such statement look like a
     miscited falsifier. The region a check reads has to be the region
@@ -265,7 +263,7 @@ def _misdirected(ident: str, citation: str, by_module: dict[str, set[str]],
 def test_setup_is_one_question_set_on_every_interactive_surface() -> None:
     """CLI / chat / MCP are not three questionnaires.
 
-    Marshall 2026-08-30: "cli/chat is the same setup questions." The
+    Decided 2026-08-30: the CLI and chat ask the same setup questions. The
     governing pages must say that in those words so an implementor
     cannot invent a CLI-only depth+policy ask and call it a second
     process. `setup_questions` is the set; a subset is a bug.

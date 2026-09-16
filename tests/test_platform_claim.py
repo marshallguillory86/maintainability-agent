@@ -7,10 +7,9 @@ create symlinks with no platform guard, and `os.symlink` needs
 Developer Mode there, so the suite cannot reach the point of reporting
 whether the product works.
 
-Found by Marshall asking "what about the poor windows users?" — the
-fourth time in two days that a claim turned out to rest on a check that
-only ran where the claim was true. The rule he applied to JavaScript
-applies here: claim what you can demonstrate.
+Found by asking what happens for Windows users — the fourth time in two
+days that a claim turned out to rest on a check that only ran where the
+claim was true. The rule applied to JavaScript applies here: claim what you can demonstrate.
 """
 
 from __future__ import annotations

@@ -10,10 +10,10 @@ the product."* The bounded view is the MCP `chat` format, which the skill
 calls the primary surface. It opened with a fourteen-row metric table
 (D160).
 
-The size bound is Marshall's rule of 2026-09-11: *"prompts should be
-paragraph or two sized within reason, not a fucking entire program."*
-`prompt_items`' twelve-item cap is what holds it, so the cap is pinned
-here as a contract rather than left as an incidental default.
+The size bound: a prompt handed to an agent is a paragraph or two, not a
+whole program. `prompt_items`' twelve-item cap is what holds it, so the
+cap is pinned here as a contract rather than left as an incidental
+default.
 """
 
 from __future__ import annotations

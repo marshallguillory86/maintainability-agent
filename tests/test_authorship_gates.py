@@ -76,7 +76,7 @@ def _step_scripts() -> dict[str, str]:
             index += 1
     assert scripts.keys() == {
         "Each commit carries an Agent trailer",
-        "Each commit carries the personal identity, never the work one",
+        "Each commit carries the repository's commit identity",
         "Each commit is signed, so its Agent trailer is attested",
     }
     return scripts
@@ -267,7 +267,7 @@ def test_wrong_committer_fails_identity_gate(signed_repo: tuple[Path, Callable[.
     repo, commit = signed_repo
     commit(committer="wrong@example.com")
 
-    result = _run_gate(repo, "Each commit carries the personal identity, never the work one")
+    result = _run_gate(repo, "Each commit carries the repository's commit identity")
 
     assert result.returncode == 1
     assert "committer: wrong@example.com" in result.stdout

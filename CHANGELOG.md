@@ -12,6 +12,11 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.7 - 2026-09-16
+
+*Documentation and CI only; no product behaviour changes. Released so the
+package page carries the corrected README.*
+
 ### Added — the authorship check refuses an outside address or a forbidden term (D183)
 
 Every pull request's commits must name only the repository's commit identity in

@@ -23,10 +23,12 @@ number: a delegated pillar's numbers belong to the tool that measured
 them, and a consumer that recomputed anything would be a second opinion
 nobody asked for.
 
-**Absence is the normal case and stays the documented one.** No file
-means the pillar reports exactly what it reported before — delegated,
-`NotApplicable`, naming the other tool. That path is not a failure and
-does not warn: most repositories run one tool.
+**Absence is stated, never silent.** Since D177 every audit runs
+secure-code-agent itself; this reader serves `--security-pillar PATH`,
+where a pipeline hands over a document the delegate already wrote. A
+document that is missing or cannot be trusted yields `None`, and the
+caller records why in the pillar entry rather than reporting an empty
+pillar as a clean one.
 
 **A file that cannot be trusted is refused rather than partly believed.**
 Wrong schema, unreadable JSON, a shape that is not an object — each
@@ -108,7 +110,8 @@ def read_delegated(root: Path, relative: str = DEFAULT_PILLAR_PATH) -> dict[str,
     the file is absent, it is not a regular file, it does not parse, it
     is not an object, or it announces a schema this tool does not know.
     All five collapse to one answer because the caller does the same
-    thing with each — keep the placeholder that names the other tool.
+    thing with each — it states that the handed-over document was absent
+    or could not be trusted.
 
     Read through the regular-file primitive like every other path the
     audited tree chooses (D145): a FIFO here would hang the audit rather

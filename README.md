@@ -383,13 +383,13 @@ it was generated against — a provenance record, not a claim about HEAD.
 
 | Metric | Value |
 |---|---:|
-| Maintainability estimate | 4.5 / 5 |
+| Maintainability estimate | 4.4 / 5 |
 | Verified grade | B |
-| Files scanned | 511 |
+| Files scanned | 498 |
 | Hard gate failures | 0 |
 
 A **B**, and the report says why: the grade is verified against the evidence
-*floor* of 4.2 rather than the 4.5 point estimate, because an unmeasured aspect
+*floor* of 4.1 rather than the 4.4 point estimate, because an unmeasured aspect
 prices at 0 when a grade has to be defended. Every threshold gate is opted
 **on** for this repository's own CI, so drifting below the bar fails the build
 rather than the README.
@@ -432,7 +432,7 @@ instead of an invokable skill:
 This repo ships `action.yml`, usable as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v1.0.0
+- uses: marshallguillory86/maintainability-agent@v3.7.6
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

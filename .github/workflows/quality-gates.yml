@@ -321,6 +321,22 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install -e ".[dev]"
           python3 -m pip install 'secure-code-agent[required-scanners]==0.12.5'
+      - name: Install the security scanner floor (main only)
+        # Coverage is what decides whether the security pillar carries a
+        # grade or only a posture of `unverified`. The pip extra above
+        # supplies the scanners `gates.require_scanners` names, which keeps
+        # coverage PARTIAL rather than FAILED; the rest of the floor —
+        # gitleaks, semgrep, trivy, checkov, osv-scanner — are binaries, and
+        # without them coverage can never reach COMPLETE.
+        #
+        # They install on main and on tags rather than on every pull request.
+        # Grading matters at the boundary where a release is cut, and paying
+        # three minutes of install on every push to every branch buys a
+        # letter nobody reads on a feature branch. A PR still runs the gate;
+        # it just reports partial coverage, which is the truth about what ran.
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+        uses: marshallguillory86/secure-code-agent/.github/actions/install-floor@713ff0f1db363c686d91face198f2d0fb1fa9e5c # v0.12.5
+
       - name: Install the pinned analyzer pool
         # The maintainability gate runs these analyzers in this job, so
         # the audit gate must use the same checked-in versions as verify.

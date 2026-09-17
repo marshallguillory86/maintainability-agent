@@ -12,6 +12,25 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+### Added — the authorship check refuses an outside address or a forbidden term (D183)
+
+Every pull request's commits must name only the repository's commit identity in
+their messages, merges included, so a `Co-authored-by:` trailer for any other
+address fails before it reaches history. A second step refuses terms kept in a
+repository secret rather than in the tree, reading identity fields, messages
+and every added line, and fails closed when the secret is unset. CI only; no
+product behaviour changes.
+
+### Documentation — synced with the build
+
+- The GitHub Action example pinned `v1.0.0`; it pins the shipped version, and a
+  test now holds it there the way the version line is held.
+- The report help page said eight languages are parsed; fourteen are. It also
+  gains the security pillar, which it never described.
+- The roadmap records 3.6.0 through 3.7.6 and no longer says the audit does not
+  run `secure-code-agent`, which has been false since 3.7.0.
+- The release plan's measured counts and the self-audit record are regenerated.
+
 ## 3.7.6 - 2026-09-16
 
 *A documentation and CI release. No product behaviour changes.*

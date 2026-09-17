@@ -45,6 +45,23 @@ def test_the_readme_names_the_shipped_version() -> None:
     )
 
 
+
+def test_the_readme_action_example_pins_the_shipped_version() -> None:
+    """The copy-paste Action example installs whatever tag it names.
+
+    `action.yml` runs `pip install -e "$GITHUB_ACTION_PATH"`, so the pin is
+    the version a reader actually gets. It named `v1.0.0` through every
+    release from 1.0.1 to 3.7.5 while the version line above it was kept
+    current, because only that line had a guard.
+    """
+    from maintainability_audit.config import VERSION
+
+    readme = _read(ROOT / "README.md")
+    assert f"maintainability-agent@v{VERSION}" in readme, (
+        f"the README's GitHub Action example does not pin v{VERSION}; a "
+        "reader copying it installs an older release"
+    )
+
 def test_the_report_names_the_corpus_its_anchor_is_drawn_from() -> None:
     """Every multiple is against a corpus; the report must say which one.
 

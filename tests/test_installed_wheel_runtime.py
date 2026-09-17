@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import venv
@@ -105,8 +106,26 @@ def _run(command: list[str], *, cwd: Path, env: dict[str, str]) -> subprocess.Co
 
 @pytest.fixture(scope="module")
 def built_wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Build the actual PEP 517 wheel; backend failure is a test failure."""
+    """Build the actual PEP 517 wheel; backend failure is a test failure.
+
+    Built from a private copy of what the build reads, never from the
+    checkout itself. setuptools writes `build/` and `*.egg-info` into the
+    source it is given, and this fixture is module-scoped, so under
+    `pytest -n auto` each worker that draws a test from this file builds
+    its own wheel. Two of them building from the checkout at once raced in
+    those shared directories and one failed with "wheel build failed",
+    intermittently, on a tree with nothing wrong in it.
+    """
     work = tmp_path_factory.mktemp("installed-wheel-build")
+    source = work / "source"
+    source.mkdir()
+    for name in ("pyproject.toml", "README.md", "LICENSE"):
+        if (ROOT / name).exists():
+            shutil.copy2(ROOT / name, source / name)
+    shutil.copytree(
+        ROOT / "src", source / "src",
+        ignore=shutil.ignore_patterns("__pycache__", "*.egg-info"),
+    )
     result = _run(
         [
             sys.executable,
@@ -116,7 +135,7 @@ def built_wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
             "--no-deps",
             "--wheel-dir",
             str(work),
-            str(ROOT),
+            str(source),
         ],
         cwd=work,
         env=_clean_env(work),

@@ -18,12 +18,13 @@ written to disk, so any claim in the write-up can be checked against the
 run rather than taken on trust.
 
 Usage:
-    python tools/validation/run_sample.py --cache /tmp/validation-cache
+    python tools/validation/run_sample.py [--cache DIR]
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -119,9 +120,22 @@ def row(repo: dict, report: dict) -> dict:
     }
 
 
+def _default_cache() -> Path:
+    """A per-user cache directory, never a fixed path in shared /tmp.
+
+    Cloned repositories are reused between runs, so the cache persists. A
+    fixed `/tmp/validation-cache` could be created first by another local
+    user, and every later run would then clone into and read from a
+    directory someone else controls.
+    """
+    base = os.environ.get("XDG_CACHE_HOME") or str(Path.home() / ".cache")
+    return Path(base) / "maintainability-agent" / "validation"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cache", default="/tmp/validation-cache")
+    parser.add_argument("--cache", type=Path, default=_default_cache(),
+                        help="where cloned repositories are kept between runs")
     parser.add_argument("--only", help="Run a single repository by name.")
     args = parser.parse_args()
 

@@ -82,7 +82,7 @@ Tier 3 under [the evidence standard](../../docs/product-intent.md#the-evidence-s
 ## Reproducing it
 
 ```bash
-python tools/validation/run_sample.py --cache /tmp/validation-cache
+python tools/validation/run_sample.py
 ```
 
 Clones each repository at its pinned commit, audits it with the analyzer pool, and writes `results.json` plus a full report per repository under `tools/validation/reports/` (git-ignored). Repositories that fail to clone or crash the audit are recorded as failures rather than dropped.

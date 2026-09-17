@@ -27,6 +27,7 @@ and `python_files` matches `test_*.py`, which this is not. They are in
 from __future__ import annotations
 
 import os
+import site
 import sys
 from collections.abc import Iterator
 
@@ -252,8 +253,17 @@ def _git_ignores_developer_configuration(tmp_path_factory) -> Iterator[None]:
     """
     home = tmp_path_factory.mktemp("git-isolation-home")
     names = ("HOME", "USERPROFILE", "GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM",
-             "GIT_CONFIG_NOSYSTEM", "PYTHONPATH")
+             "GIT_CONFIG_NOSYSTEM", "PYTHONPATH", "PYTHONUSERBASE")
     previous = {name: os.environ.get(name) for name in names}
+    # Read before `HOME` moves, because Python derives the user base from
+    # it. `PYTHONPATH` below repairs imports for children that keep it,
+    # but the product's runner strips `PYTHONPATH` from every analyzer
+    # child on purpose (`_runner._CODE_LOADING_VARS`), so a delegate it
+    # launches — secure-code-agent, installed with `pip install --user` —
+    # lost its user site-packages and failed with a ModuleNotFoundError on
+    # a developer's laptop while a real audit on the same machine, with its
+    # real `HOME`, ran it fine. Pinning the user base keeps that one route.
+    os.environ.setdefault("PYTHONUSERBASE", site.getuserbase())
     os.environ["HOME"] = str(home)
     os.environ["USERPROFILE"] = str(home)
     os.environ["GIT_CONFIG_NOSYSTEM"] = "1"

@@ -8,7 +8,7 @@ The work between here and a 1.0 that matches the documented architecture. Ordere
 
 | Fact | Value |
 |---|---|
-| Last tagged version | v3.7.7 |
+| Last tagged version | v3.7.8 |
 | Production code | 33,247 lines across 132 modules |
 | Tests | 2,862 collected across 241 files |
 | ADR implementation status | [The decision register](decisions.md) is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps. |

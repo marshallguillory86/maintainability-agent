@@ -104,7 +104,7 @@ jobs:
         # Supplied like the analyzer pool, not as a package dependency: the
         # two tools are independently releasable (secure-code-agent D3, ADR
         # 008). Pinned for the same reason the pool is.
-        run: python3 -m pip install 'secure-code-agent==0.12.2'
+        run: python3 -m pip install 'secure-code-agent==0.12.5'
       - name: Lint (ruff)
         run: ruff check src tests tools
       - name: Dependency CVE scan (pip-audit)
@@ -147,7 +147,7 @@ jobs:
       - name: Install tool with dev extras
         run: python3 -m pip install -e ".[dev]"
       - name: Install secure-code-agent, which every audit runs (D177)
-        run: python3 -m pip install 'secure-code-agent==0.12.2'
+        run: python3 -m pip install 'secure-code-agent==0.12.5'
       # `-n auto` here too. The Linux job got it and this did not, so
       # macOS went on running the suite serially and became the
       # wall-clock driver — the whole job is tests, and the run is only
@@ -188,7 +188,7 @@ jobs:
       - name: Install tool with dev extras
         run: python -m pip install -e ".[dev]"
       - name: Install secure-code-agent, which every audit runs (D177)
-        run: python -m pip install 'secure-code-agent==0.12.2'
+        run: python -m pip install 'secure-code-agent==0.12.5'
       # `--continue-on-collection-errors` and no `-x`: the point is the
       # whole list of what fails, not the first thing that does.
       - name: Tests (the list is the deliverable)
@@ -320,7 +320,7 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install -e ".[dev]"
-          python3 -m pip install 'secure-code-agent==0.12.2'
+          python3 -m pip install 'secure-code-agent[required-scanners]==0.12.5'
       - name: Install the pinned analyzer pool
         # The maintainability gate runs these analyzers in this job, so
         # the audit gate must use the same checked-in versions as verify.

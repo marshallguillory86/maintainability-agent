@@ -24,6 +24,7 @@
     "fail_on_severity": ["critical", "high"],
     "fail_on_category": ["secrets"],
     "fail_on_new": true,
+    "require_scanners": ["bandit", "builtin_rules", "pip_audit", "njsscan"],
     "max_unsuppressed": {
       "critical": 0,
       "high": 0

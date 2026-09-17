@@ -19,6 +19,19 @@ a minute, and the README names the analyzer pool instead of letting a first run
 silently fall back to the built-in tier. None of it makes the tool do a
 different job.
 
+**3.6.0 through 3.7.6 finished the first five minutes and made the security
+pillar real.** The starter config opens every parsed language rather than a web
+subset (D162), and `--prompt-output` leads with the work order and issues no
+rates on a run whose estimate was withheld (D163). A work item states its own
+finding and the limit its kind is graded on, the verify command runs the
+interpreter that audited, and a changed-only run stays inside its change
+(D164–D175). Every audit now runs `secure-code-agent` for the security pillar
+(D177); its findings and its own work order reach the report and the prompt
+(D176, D179), a copy-paste prompt never authorises work the remediation prompt
+withholds (D180), and the supported delegate release honours reviewed
+suppressions (D182). 3.7.6 changed no behaviour: the published repository and
+package describe the product rather than how it is built.
+
 ## Shipped
 
 Dependency-light native scanner; Markdown, JSON, SARIF and PR-comment output; bounded AI remediation prompt; changed-only mode; baseline gating; agent instruction packs; ISO/IEC 25010-inspired rubric calibrated against a query-selected corpus (40 repositories of Python/TypeScript/JavaScript through 1.10.x; 112 from 2.0.0, across the eight languages parsed at that time); git-history aspects (churn, hotspots, coupling, ownership); 92% coverage gate; portable invokable skill for Claude Code, Codex and Copilot Chat; optional local MCP server (writes only its five disclosed config/state artifacts, never source or reports) for Codex and its VS Code extension.
@@ -43,13 +56,12 @@ The evidence model, its property tests, consumer migration and the version-2 con
 
 ## The fifth pillar is delegated, not absent
 
-**Shipped in 3.2.0.** [ADR 007](adr-007-pillars-and-practice.md)'s security pillar
+**Shipped in 3.2.0; run by every audit since 3.7.0.** [ADR 007](adr-007-pillars-and-practice.md)'s security pillar
 was always outside what a deterministic maintainability scanner can read,
-so it reported nothing. It now reports what a *delegate* measured: MA
-reads `.maintainability/security-pillar.json`, written by
+so it reported nothing. It now reports what a *delegate* measured:
 [`secure-code-agent`](https://github.com/marshallguillory86/secure-code-agent),
-and renders the producer, its practice level and its condition beside the
-four pillars MA computes itself.
+whose producer, practice level and condition render beside the four pillars
+MA computes itself.
 
 This is the boundary the [Then](#then) section already names — security
 scanning is a neighbouring tool's job, and the better it gets the more an
@@ -59,8 +71,14 @@ boundary in the ADR 008 sense: absent, malformed, wrongly-typed or
 self-contradicting input resolves to *no delegated pillar*, never to a
 partial one, and the two axes are still never averaged.
 
-MA does not run the delegate and does not install it. A repository with
-no such file reports exactly what it reported before.
+In 3.2.0 MA only read a document another step had written, so the pillar was
+measured wherever CI ran the delegate and unmeasured everywhere else, including
+every audit through the chat door. Since 3.7.0 (D177) every audit runs
+`secure-code-agent` itself, installed beside this package rather than as a
+dependency. Without it, or with an unsupported release, the report says the
+pillar was not measured and gives the install command. A `security-pillar.json`
+in the audited tree is no longer trusted on its own authority; a pipeline hands
+one over explicitly with `--security-pillar PATH`.
 
 ## Next
 

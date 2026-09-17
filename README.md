@@ -432,7 +432,7 @@ instead of an invokable skill:
 This repo ships `action.yml`, usable as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v1.0.0
+- uses: marshallguillory86/maintainability-agent@v3.7.6
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

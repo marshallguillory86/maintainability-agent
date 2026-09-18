@@ -18,6 +18,8 @@ import pytest
 from maintainability_audit._mcp_setup import (
     economics_bound_questions,
     setup_questions,
+)
+from maintainability_audit._mcp_setup import (
     test_command_questions as published_test_command_questions,
 )
 from maintainability_audit._user_config import load_user_config

@@ -252,6 +252,7 @@ def _audit_tool_for(ledger: _RootLedger) -> Any:
         write_baseline: bool = False,
         include_prompt: bool = True,
         action: str | None = None,
+        setup_answers: dict[str, str] | None = None,
         setup: Any = None,
         grant: Any = None,
         ctx: Any = None,
@@ -269,7 +270,16 @@ def _audit_tool_for(ledger: _RootLedger) -> Any:
         First contact with an unconfigured repository asks the setup
         questions through elicitation (or returns them as data when the
         host cannot ask) and writes the answers locally. Answering does
-        not start an audit. A repository
+        not start an audit.
+
+        A host that got the questions as data answers them with
+        ``setup_answers``: a flat mapping of the ``name`` of each question
+        in ``setup_needed`` to the chosen option, for example
+        ``{"run_pool": "yes", "depth": "heavy", ...}``. It is written to
+        this repository's local configuration exactly as an accepted
+        elicitation is, because it is the same call. Without it a host
+        that cannot be elicited had no way to answer and every reply
+        returned the same questions (D189). A repository
         outside the allowed roots asks for a grant the same way —
         session-only by default, "always" persisting to the user config
         (D10). Leave ``run_analyzers`` unset and the repository's config
@@ -289,7 +299,8 @@ def _audit_tool_for(ledger: _RootLedger) -> Any:
         """
         del ctx  # the resolvers already used it; kept so hosts see progress hooks
         try:
-            _apply_call_consents(ledger, repository_root, setup, grant)
+            _apply_call_consents(ledger, repository_root, setup, grant,
+                                 setup_answers)
             return audit_repository(
                 repository_root,
                 config_path,

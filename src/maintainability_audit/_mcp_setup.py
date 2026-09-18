@@ -151,6 +151,25 @@ def _economics_questions() -> list[dict[str, Any]]:
     ]
 
 
+def submittable_answer_names() -> frozenset[str]:
+    """Every answer key a host may submit, derived rather than listed.
+
+    The first-run question names come from `setup_questions`, so a
+    question this tool asks is always one it can be answered with — a
+    hand-kept list beside the questions is how the two drift, and the
+    drift is invisible until someone answers a question that goes
+    nowhere (D189).
+
+    The staged second-stage replies are here too: the economics bounds
+    and the test command are asked after the first stage and persist
+    through the same door.
+    """
+    names = {question["name"] for question in setup_questions({})}
+    names.update(name for name, _, _ in BOUNDS)
+    names.add("test_command")
+    return frozenset(names)
+
+
 def apply_answers(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
     """Assemble a full reply's payload and hand it to `_persist_answers`.
     A staged reply (only rates, or only the test command) merges instead."""

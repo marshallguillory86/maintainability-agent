@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from ._mcp_setup import run_tests_pending, setup_pending, setup_questions
+from ._test_execution import consented_without_command
 from ._user_config import mark_repo_seen
 from .config import VERSION, load_config
 
@@ -99,6 +100,16 @@ def _choose_next(root: Path) -> dict[str, Any]:
             " New since this repository was configured: an opt-in to run its "
             "own test suite for a coverage reading (test effectiveness). "
             "Choose reconfigure to set it up."
+        )
+    elif consented_without_command():
+        # The opt-in was answered yes and the command never reached the
+        # person's tier, so `run_tests_pending` reads it as asked-and-done
+        # and said nothing. The suite then does not run on any audit, and
+        # the report explained the refusal without naming a remedy.
+        prompt += (
+            " Note: this host is opted in to running the test suite, but no "
+            "test command is recorded for it, so no suite runs. Choose "
+            "reconfigure to record the command."
         )
     result["choice_needed"] = {
         "name": "next_action",

@@ -125,7 +125,7 @@ jobs:
           # Every audit runs secure-code-agent (D177), and it is installed
           # alongside rather than as a dependency. 3.7.2's tag failed here
           # because this job never installed it.
-          python3 -m pip install 'secure-code-agent==0.12.2'
+          python3 -m pip install 'secure-code-agent==0.12.7'
           PYTHONPATH=src python3 -m pytest -q
           # A real file inside the tree, not /dev/null: the D34 safe-write
           # hardening refuses a non-regular-file target *and* any path outside

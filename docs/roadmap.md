@@ -32,6 +32,25 @@ withholds (D180), and the supported delegate release honours reviewed
 suppressions (D182). 3.7.6 changed no behaviour: the published repository and
 package describe the product rather than how it is built.
 
+**3.7.8 lets the security pillar be graded.** The delegate config asserted no
+scanner set, so every audit reported a posture of `unverified` however complete
+its coverage was — a grade withheld for want of a declaration rather than for
+want of evidence (D184). `gates.require_scanners` now names the scanners the
+gate job installs, and the delegate pin moves to 0.12.5, where osv-scanner
+finding no package sources is no longer read as a scanner failure (that tool's
+D23) — the other half of the same symptom, and the reason this one stayed
+hidden.
+
+It also closes a smaller one found by reading this tool's own report. A person
+who opted into running the test suite, with no command recorded in their tier,
+got a refusal that named no remedy and a chat door that said nothing at all,
+because the discovery line only fires for a configuration written before the
+opt-in existed. This repository had been in that state for weeks, reporting
+"it did not run" on every self-audit (D185). The security pillar's scanner
+floor now installs on main and on tags rather than on every pull request:
+grading matters where a release is cut, and a feature branch reports the
+partial coverage that is the truth about what ran.
+
 ## Shipped
 
 Dependency-light native scanner; Markdown, JSON, SARIF and PR-comment output; bounded AI remediation prompt; changed-only mode; baseline gating; agent instruction packs; ISO/IEC 25010-inspired rubric calibrated against a query-selected corpus (40 repositories of Python/TypeScript/JavaScript through 1.10.x; 112 from 2.0.0, across the eight languages parsed at that time); git-history aspects (churn, hotspots, coupling, ownership); 92% coverage gate; portable invokable skill for Claude Code, Codex and Copilot Chat; optional local MCP server (writes only its five disclosed config/state artifacts, never source or reports) for Codex and its VS Code extension.

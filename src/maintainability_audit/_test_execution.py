@@ -113,6 +113,25 @@ def opted_in_command() -> list[str]:
     return list(command) if isinstance(command, list) else []
 
 
+def consented_without_command() -> bool:
+    """Opted in to running the suite, with no command in the person's tier.
+
+    `run_tests_pending` covers the config written before the opt-in existed:
+    no `test_execution` key at all, so the question was never asked. This
+    covers the state after it — the answer is recorded, `requested` is true,
+    and `expected_commands.test` never reached the user tier because setup
+    captured the consent without capturing the program.
+
+    Neither surface said anything about it. The report explained why nothing
+    ran and named no remedy, and the MCP gate treats a present `test_execution`
+    key as asked-and-answered, so it offered no discovery line either. A person
+    who said yes got silence on every door.
+    """
+    answers = user_config_answers() or {}
+    requested = bool((answers.get("test_execution") or {}).get("requested"))
+    return requested and not opted_in_command()
+
+
 def _bounded_suite_timeout(configured: Any) -> int:
     """A suite timeout the audited tree cannot weaponise.
 
@@ -153,7 +172,9 @@ def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
             "ran": False, "exit_code": None, "passed": False,
             "detail": (
                 "opted in, but no test command is recorded in the user tier; "
-                "the repository's documented command is not run on its own say-so"
+                "the repository's documented command is not run on its own say-so. "
+                "Reconfigure to record the command you consent to, or add it to "
+                "expected_commands.test in the user configuration"
             ),
             "coverage_percent": None,
         }

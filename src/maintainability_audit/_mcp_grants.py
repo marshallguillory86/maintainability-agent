@@ -13,7 +13,8 @@ from pathlib import Path
 from typing import Any
 
 from ._mcp_audit import PathNotAllowed, authorize_repository
-from ._mcp_setup import apply_answers
+from ._mcp_setup import apply_answers, submittable_answer_names
+from ._setup_errors import SetupRequired
 
 # The two affirmative D10 grant scopes (decision 5). "no" needs no
 # constant: a refusal is the absence of a grant, not a kind of one.
@@ -132,8 +133,28 @@ def _granted_scope(grant: Any) -> str | None:
     return str(values[0]) if values else None
 
 
+def _refuse_unknown_answers(answers: dict[str, str]) -> None:
+    """Refuse a key no question asked for, rather than dropping it.
+
+    `apply_answers` reads the names it knows and ignores the rest, which
+    is right for a validated elicitation payload and wrong for an
+    argument a host typed: a misspelled `dept` would persist the default
+    depth and report success. The legal names are derived from the
+    question set the tool publishes, so a question added without a way to
+    answer it cannot happen here (D189).
+    """
+    unknown = sorted(set(answers) - submittable_answer_names())
+    if unknown:
+        raise SetupRequired(
+            "setup_answers names questions this agent does not ask: "
+            f"{', '.join(unknown)}. Answer the questions in `setup_needed` "
+            "by their `name`."
+        )
+
+
 def _apply_call_consents(ledger: _RootLedger, repository_root: str,
-                         setup: Any, grant: Any) -> None:
+                         setup: Any, grant: Any,
+                         setup_answers: dict[str, str] | None = None) -> None:
     """Apply what this call's elicitations granted, before the audit runs.
 
     Grant first: an accepted D10 answer extends (and for "always"
@@ -157,3 +178,12 @@ def _apply_call_consents(ledger: _RootLedger, repository_root: str,
     if hasattr(answers, "model_dump"):
         root = authorize_repository(repository_root, ledger.current())
         apply_answers(root, answers.model_dump())
+    elif setup_answers:
+        _refuse_unknown_answers(setup_answers)
+        # The same answers, submitted as an ordinary argument by a host that
+        # cannot be elicited. `setup` is an elicitation-resolved parameter:
+        # the SDK fills it and it never appears in the published input
+        # schema, so a host reading the questions as data had nothing to
+        # answer with and every reply returned the same questions (D189).
+        root = authorize_repository(repository_root, ledger.current())
+        apply_answers(root, dict(setup_answers))

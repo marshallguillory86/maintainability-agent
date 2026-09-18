@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A Services Line on maintainability-agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    color-scheme:light dark;
+    --paper:#F6F7F9; --panel:#FFFFFF; --ink:#0F1720; --ink-2:#3A4551; --muted:#697585;
+    --rule:#DFE4EA; --rule-strong:#C4CCD6;
+    --accent:#0E6E78; --accent-soft:#E3F0F1;
+    --warm:#A8481B; --warm-soft:#F8EAE2;
+    --good:#2E6B41; --gap:#8A6A12; --none:#8B3A3A;
+    --shadow:0 1px 2px rgba(15,23,32,.06), 0 8px 24px rgba(15,23,32,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0D1319; --panel:#141C24; --ink:#E9EEF3; --ink-2:#BFC9D4; --muted:#8A97A6;
+      --rule:#25313C; --rule-strong:#36444F;
+      --accent:#54BFC8; --accent-soft:#122A2E;
+      --warm:#E08B5C; --warm-soft:#2A1C14;
+      --good:#7FC095; --gap:#D6B85F; --none:#E08585;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0D1319; --panel:#141C24; --ink:#E9EEF3; --ink-2:#BFC9D4; --muted:#8A97A6;
+    --rule:#25313C; --rule-strong:#36444F;
+    --accent:#54BFC8; --accent-soft:#122A2E;
+    --warm:#E08B5C; --warm-soft:#2A1C14;
+    --good:#7FC095; --gap:#D6B85F; --none:#E08585;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:16px; line-height:1.62; margin:0;
+  }
+  .wrap{max-width:60rem; margin:0 auto; padding:3rem 1.5rem 5rem; display:flex; flex-direction:column; gap:3rem}
+
+  header{display:flex; flex-direction:column; gap:.9rem; border-bottom:2px solid var(--ink); padding-bottom:1.6rem}
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.72rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--accent);
+  }
+  h1{
+    font-family:"IBM Plex Serif",Georgia,serif; font-weight:600; font-size:2.45rem;
+    line-height:1.15; margin:0; text-wrap:balance; letter-spacing:-.015em;
+  }
+  .standfirst{font-size:1.12rem; color:var(--ink-2); max-width:44rem; margin:0}
+  .byline{
+    font-family:"IBM Plex Mono",monospace; font-size:.76rem; color:var(--muted);
+    display:flex; flex-wrap:wrap; gap:.4rem 1.4rem;
+  }
+
+  h2{
+    font-family:"IBM Plex Serif",Georgia,serif; font-weight:600; font-size:1.5rem;
+    margin:0 0 .2rem; text-wrap:balance; letter-spacing:-.01em;
+  }
+  h3{font-size:1.02rem; font-weight:600; margin:0 0 .3rem; color:var(--ink)}
+  section{display:flex; flex-direction:column; gap:1rem}
+  p{margin:0; max-width:44rem}
+  .lede{font-size:1.04rem}
+
+  .summary{
+    background:var(--panel); border:1px solid var(--rule); border-left:3px solid var(--accent);
+    border-radius:2px; padding:1.6rem 1.7rem; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:1rem;
+  }
+  .summary h2{font-size:1.2rem}
+  .summary p{max-width:46rem}
+
+  .offers{display:flex; flex-direction:column; gap:1px; background:var(--rule);
+    border:1px solid var(--rule); border-radius:2px}
+  .offer{background:var(--panel); padding:1.3rem 1.4rem; display:flex; flex-direction:column; gap:.5rem}
+  .offer .n{font-family:"IBM Plex Mono",monospace; font-size:.7rem; letter-spacing:.1em;
+    color:var(--accent); text-transform:uppercase; display:flex; justify-content:space-between;
+    flex-wrap:wrap; gap:.5rem}
+  .offer .n em{font-style:normal; color:var(--warm)}
+  .offer p{font-size:.95rem; color:var(--ink-2); max-width:46rem}
+  .offer .who{font-family:"IBM Plex Mono",monospace; font-size:.76rem; color:var(--muted);
+    border-top:1px dotted var(--rule-strong); padding-top:.5rem; margin-top:.2rem}
+
+  .tablewrap{overflow-x:auto; border:1px solid var(--rule); border-radius:2px; background:var(--panel)}
+  table{border-collapse:collapse; width:100%; font-size:.9rem; min-width:34rem}
+  th,td{text-align:left; padding:.62rem .85rem; border-bottom:1px solid var(--rule); vertical-align:top}
+  thead th{
+    font-family:"IBM Plex Mono",monospace; font-size:.7rem; letter-spacing:.09em;
+    text-transform:uppercase; color:var(--muted); font-weight:500;
+    border-bottom:1px solid var(--rule-strong); white-space:nowrap;
+  }
+  tbody tr:last-child td{border-bottom:none}
+  td.cap{font-weight:500}
+  .mark{font-family:"IBM Plex Mono",monospace; font-weight:500; white-space:nowrap; font-size:.82rem}
+  .yes{color:var(--good)}
+  .note{color:var(--muted); font-size:.86rem}
+
+  ul{margin:0; padding-left:1.15rem; display:flex; flex-direction:column; gap:.45rem; max-width:44rem}
+  li{color:var(--ink-2)}
+  li strong{color:var(--ink)}
+
+  .boundary{background:var(--accent-soft); border:1px solid var(--rule); border-left:3px solid var(--accent);
+    border-radius:2px; padding:1.25rem 1.4rem; display:flex; flex-direction:column; gap:.6rem}
+  .boundary p{font-size:.95rem; max-width:46rem}
+
+  .ask{background:var(--panel); border:1px solid var(--rule-strong); border-radius:2px;
+    padding:1.5rem 1.6rem; display:flex; flex-direction:column; gap:.8rem; box-shadow:var(--shadow)}
+  .ask ol{margin:0; padding-left:1.3rem; display:flex; flex-direction:column; gap:.6rem; max-width:44rem}
+  .ask li{color:var(--ink-2)}
+
+  footer{border-top:1px solid var(--rule); padding-top:1.4rem; font-size:.84rem; color:var(--muted);
+    display:flex; flex-direction:column; gap:.6rem}
+  .version{font-family:"IBM Plex Mono",monospace; font-size:.74rem; letter-spacing:.06em;
+    color:var(--muted); border-top:1px dotted var(--rule-strong); padding-top:.7rem}
+
+  @media print{
+    body{background:#fff}
+    .wrap{padding:0; gap:1.6rem}
+    .summary,.offers,.tablewrap,.boundary,.ask{box-shadow:none}
+    section{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Internal &middot; Commercial proposal</div>
+  <h1>A Services Line on maintainability-agent</h1>
+  <p class="standfirst">There is an open-source instrument that measures code health deterministically. It is free, it is public, and it pairs directly with what IBM is already selling. This is the case for Agile Rising building a services offer on top of it.</p>
+  <div class="byline">
+    <span>Marshall Guillory</span>
+    <span>For: Chris Ruch</span>
+    <span>11 September 2026</span>
+  </div>
+</header>
+
+<section class="summary">
+  <h2>The short version</h2>
+  <p>Agile Rising sells AI strategy, operating model design and technical coaching. Every one of those conversations eventually reaches the same question from the client: <em>how do we know the code coming out of this is any good?</em> Today we answer it with judgment. There is no number.</p>
+  <p><strong>maintainability-agent produces that number.</strong> It is a deterministic analyser &mdash; same repository in, same score out, every time &mdash; calibrated against a reference corpus of 180 repositories across 13 languages. It runs locally in seconds, it states what measured every value, and it refuses to grade when the evidence is too thin to support one. It is not AI and it is not an agent; that is precisely why a build can fail on it.</p>
+  <p>It is <strong>MIT-licensed and public</strong>. Agile Rising, its clients, and anyone else may use, modify, integrate and deploy it today. No licence grant, no procurement cycle, no negotiation, no cost.</p>
+  <p>What is <em>not</em> free is the expertise to read the output, act on it, and build client-specific extensions on top of it. That is the services line, and it is the part only we can sell.</p>
+</section>
+
+<section>
+  <h2>Why this is worth our time specifically</h2>
+  <p class="lede">Three reasons, in order of how much money is behind them.</p>
+  <ul>
+    <li><strong>It attaches to the IBM relationship rather than competing with it.</strong> Bob generates and modernises code. This measures what came out. Bob consumes external tools over MCP, and maintainability-agent ships an MCP server. A Bob client adds it as a tool and audits from inside the IDE &mdash; no pipeline change, no new platform, no displacement of anything IBM sells.</li>
+    <li><strong>It gives our AI and operating-model work an outcome metric.</strong> We currently sell transformation and report on flow, adoption and practice maturity. None of those tell a CIO whether the estate got healthier. This does, on a scale with a published population behind it, so the before-and-after is defensible rather than anecdotal.</li>
+    <li><strong>The technical-coaching offer becomes evidence-led.</strong> Coaching a team on built-in quality is significantly easier when the conversation starts from a measured baseline and a ranked list of what to fix, rather than from an opinion about their codebase.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Four offers, in ascending order of value</h2>
+  <p class="lede">All four are consulting engagements. None of them sells software.</p>
+
+  <div class="offers">
+
+    <div class="offer">
+      <div class="n"><span>01 &middot; Entry</span><span>Codebase health baseline</span></div>
+      <h3>A measured starting point</h3>
+      <p>A fixed-scope assessment of a client's repositories producing a scored baseline, an evidence trail showing what was and was not measured, and a prioritised remediation list. Short engagement, low friction, and it is the natural first conversation with any client already worried about AI-generated code volume.</p>
+      <div class="who">Sells into: existing AI, transformation and coaching accounts &middot; Delivered by: one consultant</div>
+    </div>
+
+    <div class="offer">
+      <div class="n"><span>02 &middot; Recurring</span><span>Remediation coaching</span></div>
+      <h3>Coaching against a measured target</h3>
+      <p>Working with the client's engineering teams to close what the baseline found &mdash; test coverage gaps, unenforced practice, modules nothing measures. Every fix is tied to a test that provably fails without it, so improvement is demonstrated rather than asserted. This is the offer that turns a one-off assessment into a retained engagement.</p>
+      <div class="who">Sells into: any account that took the baseline &middot; Delivered by: coaching staff</div>
+    </div>
+
+    <div class="offer">
+      <div class="n"><span>03 &middot; Sticky</span><span>Pipeline integration</span></div>
+      <h3>Making the gate real</h3>
+      <p>Wiring the analyser into the client's build so the score becomes a gate rather than a report &mdash; thresholds agreed with the client, failures that block, trend reporting to leadership. Determinism is what makes this possible; a judgment that changes between runs cannot fail a build. Once a client's pipeline depends on it, we are in their delivery process.</p>
+      <div class="who">Sells into: accounts with an existing CI platform &middot; Delivered by: technical coaching</div>
+    </div>
+
+    <div class="offer">
+      <div class="n"><span>04 &middot; The value leader</span><em>Highest margin</em></div>
+      <h3>Custom analysers and client-specific rules</h3>
+      <p>Every large engineering organisation has standards no off-the-shelf tool checks &mdash; internal architectural rules, naming and layering conventions, domain constraints, regulated-industry requirements, legacy patterns specific to their estate. Building analysers and rule sets that encode a client's own standards, and integrating them into their pipeline, is bespoke engineering work at bespoke engineering rates. It is repeatable across clients as a <em>practice</em> while being non-transferable as a <em>deliverable</em>, which is the profile of the best consulting revenue we have.</p>
+      <div class="who">Sells into: enterprise accounts, IBM i and Z estates, regulated industries &middot; Delivered by: engagement teams</div>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <h2>Why this embraces Bob rather than competing with it</h2>
+  <p>This matters for the partner relationship, so it is worth being explicit.</p>
+  <p>Bob's gates are <strong>process</strong> gates: approvals, policy enforcement, sensitive-data scanning, red-teaming. They govern how work proceeds. By contrast, maintainability-agent is a <strong>product</strong> gate: it measures the condition of what came out. A team can have every approval in place and still ship a module nothing tests. Both are needed, and neither substitutes for the other.</p>
+  <p>IBM's own July announcement quotes survey research finding that 85% of DevSecOps professionals say AI has moved the bottleneck from writing code to reviewing and validating it. Bob accelerates the first half. Selling something that addresses the second half makes us more useful to IBM, not less &mdash; and it is a conversation we can have with a Bob client without asking them to buy anything from a third party.</p>
+  <p class="note">The full capability comparison is in the accompanying assessment, <em>Bob and the Verification Gap</em>.</p>
+</section>
+
+<section>
+  <h2>How this is licensed</h2>
+  <div class="boundary">
+    <p><strong>maintainability-agent is MIT-licensed and published publicly.</strong> Agile Rising, its clients, and anyone else may use, modify, integrate and deploy it today. There is no licence to grant, nothing to procure, no negotiation to conduct and no cost to carry. That is the point of choosing that licence &mdash; it removes every obstacle between us and selling the services around it.</p>
+    <p><strong>Custom analysers, rules and integrations built for a specific client under an Agile Rising engagement are Agile Rising work product</strong>, owned and billed exactly like any other deliverable we produce. The upstream open-source project is a separate thing that anyone may use, and it stays that way.</p>
+    <p>That line keeps the commercial position clean: we own what we build for clients, the tool underneath stays free and public, and no client has to take a dependency on a vendor relationship in order to buy the work.</p>
+  </div>
+</section>
+
+<section>
+  <h2>What this costs Agile Rising</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Item</th><th>Cost</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td class="cap">Software licensing</td><td class="mark yes">$0</td><td class="note">MIT licence, no per-seat or per-client fee, no renewal.</td></tr>
+        <tr><td class="cap">Development investment</td><td class="mark yes">$0</td><td class="note">The tool exists and is at release 3.1.0. Nothing to fund to start selling.</td></tr>
+        <tr><td class="cap">Procurement / legal</td><td class="mark yes">None</td><td class="note">No vendor agreement, no reseller terms, no client-side approval to obtain.</td></tr>
+        <tr><td class="cap">Infrastructure</td><td class="mark yes">Existing</td><td class="note">Runs as a local process on a consultant's machine or in the client's own CI. No servers, no cloud account, no data leaving the client estate &mdash; which also makes it viable in air-gapped and regulated environments.</td></tr>
+        <tr><td class="cap">Enablement</td><td class="mark">Internal time</td><td class="note">Consultants delivering offers 01&ndash;03 need to be trained to read and act on the output. I can run that.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">The only real investment is consultant enablement time. Everything else is already paid for.</p>
+</section>
+
+<section>
+  <h2>What I am asking for</h2>
+  <div class="ask">
+    <ol>
+      <li><strong>Agreement to take this to market.</strong> Add code-health assessment and remediation to what we offer, starting with the accounts where the AI conversation is already open.</li>
+      <li><strong>A written acknowledgement that the upstream project stays where it is</strong> &mdash; open-source, publicly licensed, outside Agile Rising's ownership &mdash; while client-specific analysers and integrations built under an Agile Rising engagement are Agile Rising work product. One short document; it protects both sides and it makes the offer easier to explain to a client.</li>
+      <li><strong>Commission on services sold on this basis</strong>, at the 5% already contemplated in my employment agreement, applied to engagements originated under this offer.</li>
+    </ol>
+    <p class="note">None of the above requires spending money, changing our partner relationships, or building anything before the first engagement is sold.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Companion document: <em>Bob and the Verification Gap</em> &mdash; capability assessment, v4.5.1.</p>
+  <p>maintainability-agent figures referenced here are from release 3.1.0 and are reproducible from the project's public repository.</p>
+  <p class="version">A Services Line on maintainability-agent &middot; v1.1.0 &middot; 11 September 2026</p>
+</footer>
+
+</div>
+
+</body>
+</html>

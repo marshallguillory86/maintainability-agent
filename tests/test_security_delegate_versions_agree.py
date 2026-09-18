@@ -18,6 +18,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+#: A pinned install of the delegate, with or without extras. The job that runs
+#: the security gate installs `secure-code-agent[required-scanners]==X` so the
+#: scanners named in `gates.require_scanners` exist on the runner; a pattern
+#: anchored on a bare `secure-code-agent==` stopped seeing that job's pin
+#: entirely, which would have let the gate job drift unwatched.
+_PIN = r"secure-code-agent(?:\[[^\]]+\])?==([0-9][0-9.]*)"
+
 
 def _version_tuple(text: str) -> tuple[int, ...]:
     return tuple(int(part) for part in text.split("."))
@@ -50,7 +57,7 @@ def test_every_ci_pin_is_a_release_the_audit_runs() -> None:
     workflows = sorted((ROOT / ".github" / "workflows").glob("*.yml"))
     assert workflows, "no workflows found"
     pins = [(path.name, pin) for path in workflows
-            for pin in re.findall(r"secure-code-agent==([0-9][0-9.]*)", path.read_text(encoding="utf-8"))]
+            for pin in re.findall(_PIN, path.read_text(encoding="utf-8"))]
     assert pins, "no workflow pins secure-code-agent; the gate would run whatever pip picks"
     outside = [(name, pin) for name, pin in pins
                if not (SUPPORTED_FLOOR <= _version_tuple(pin) < SUPPORTED_CEILING)]
@@ -82,5 +89,5 @@ def test_every_job_that_runs_the_suite_installs_secure_code_agent() -> None:
         if re.search(r"-m pytest\b", body)
     ]
     assert running, "no workflow job runs pytest; the sweep would pass vacuously"
-    missing = [(name, job) for name, job, body in running if "secure-code-agent==" not in body]
+    missing = [(name, job) for name, job, body in running if not re.search(_PIN, body)]
     assert not missing, f"jobs that run the suite without installing secure-code-agent: {missing}"

@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bob and the Verification Gap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    color-scheme:light dark;
+    --paper:#F6F7F9; --panel:#FFFFFF; --ink:#0F1720; --ink-2:#3A4551; --muted:#697585;
+    --rule:#DFE4EA; --rule-strong:#C4CCD6;
+    --accent:#0E6E78; --accent-soft:#E3F0F1;
+    --warm:#A8481B; --warm-soft:#F8EAE2;
+    --good:#2E6B41; --gap:#8A6A12; --none:#8B3A3A;
+    --shadow:0 1px 2px rgba(15,23,32,.06), 0 8px 24px rgba(15,23,32,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0D1319; --panel:#141C24; --ink:#E9EEF3; --ink-2:#BFC9D4; --muted:#8A97A6;
+      --rule:#25313C; --rule-strong:#36444F;
+      --accent:#54BFC8; --accent-soft:#122A2E;
+      --warm:#E08B5C; --warm-soft:#2A1C14;
+      --good:#7FC095; --gap:#D6B85F; --none:#E08585;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0D1319; --panel:#141C24; --ink:#E9EEF3; --ink-2:#BFC9D4; --muted:#8A97A6;
+    --rule:#25313C; --rule-strong:#36444F;
+    --accent:#54BFC8; --accent-soft:#122A2E;
+    --warm:#E08B5C; --warm-soft:#2A1C14;
+    --good:#7FC095; --gap:#D6B85F; --none:#E08585;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:16px; line-height:1.62; margin:0;
+  }
+  .wrap{max-width:60rem; margin:0 auto; padding:3rem 1.5rem 5rem; display:flex; flex-direction:column; gap:3rem}
+
+  header{display:flex; flex-direction:column; gap:.9rem; border-bottom:2px solid var(--ink); padding-bottom:1.6rem}
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.72rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--accent);
+  }
+  h1{
+    font-family:"IBM Plex Serif",Georgia,serif; font-weight:600; font-size:2.45rem;
+    line-height:1.15; margin:0; text-wrap:balance; letter-spacing:-.015em;
+  }
+  .standfirst{font-size:1.12rem; color:var(--ink-2); max-width:44rem; margin:0}
+  .byline{
+    font-family:"IBM Plex Mono",monospace; font-size:.76rem; color:var(--muted);
+    display:flex; flex-wrap:wrap; gap:.4rem 1.4rem;
+  }
+
+  h2{
+    font-family:"IBM Plex Serif",Georgia,serif; font-weight:600; font-size:1.5rem;
+    margin:0 0 .2rem; text-wrap:balance; letter-spacing:-.01em;
+  }
+  h3{font-size:1.02rem; font-weight:600; margin:0 0 .3rem; color:var(--ink)}
+  section{display:flex; flex-direction:column; gap:1rem}
+  p{margin:0; max-width:44rem}
+  .lede{font-size:1.04rem}
+  strong{font-weight:600}
+  em{font-style:italic}
+
+  .summary{
+    background:var(--panel); border:1px solid var(--rule); border-left:3px solid var(--accent);
+    border-radius:2px; padding:1.6rem 1.7rem; box-shadow:var(--shadow);
+    display:flex; flex-direction:column; gap:1rem;
+  }
+  .summary h2{font-size:1.2rem}
+  .summary p{max-width:46rem}
+
+  .claim{
+    font-family:"IBM Plex Serif",Georgia,serif; font-size:1.22rem; line-height:1.45;
+    color:var(--ink); border-left:2px solid var(--warm); padding-left:1rem; margin:.2rem 0;
+    max-width:42rem;
+  }
+  .claim cite{display:block; font-family:"IBM Plex Mono",monospace; font-size:.72rem;
+    font-style:normal; color:var(--muted); margin-top:.5rem; letter-spacing:.02em}
+
+  .tablewrap{overflow-x:auto; border:1px solid var(--rule); border-radius:2px; background:var(--panel)}
+  table{border-collapse:collapse; width:100%; font-size:.9rem; min-width:40rem}
+  th,td{text-align:left; padding:.62rem .85rem; border-bottom:1px solid var(--rule); vertical-align:top}
+  thead th{
+    font-family:"IBM Plex Mono",monospace; font-size:.7rem; letter-spacing:.09em;
+    text-transform:uppercase; color:var(--muted); font-weight:500;
+    border-bottom:1px solid var(--rule-strong); white-space:nowrap;
+  }
+  tbody tr:last-child td{border-bottom:none}
+  td.cap{font-weight:500}
+  .mark{font-family:"IBM Plex Mono",monospace; font-weight:500; white-space:nowrap; font-size:.82rem}
+  .yes{color:var(--good)} .partial{color:var(--gap)} .no{color:var(--none)}
+  .note{color:var(--muted); font-size:.86rem}
+
+  .key{display:flex; flex-wrap:wrap; gap:.4rem 1.5rem; font-size:.82rem; color:var(--muted);
+    font-family:"IBM Plex Mono",monospace}
+
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(17rem,1fr)); gap:1px;
+    background:var(--rule); border:1px solid var(--rule); border-radius:2px}
+  .card{background:var(--panel); padding:1.15rem 1.25rem; display:flex; flex-direction:column; gap:.45rem}
+  .card .n{font-family:"IBM Plex Mono",monospace; font-size:.7rem; letter-spacing:.1em;
+    color:var(--accent); text-transform:uppercase}
+  .card p{font-size:.92rem; color:var(--ink-2); max-width:none}
+  .card .ev{
+    font-family:"IBM Plex Mono",monospace; font-size:.76rem; color:var(--muted);
+    border-top:1px dotted var(--rule-strong); padding-top:.45rem; margin-top:.15rem;
+  }
+
+  .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:1px;
+    background:var(--rule); border:1px solid var(--rule); border-radius:2px}
+  .stat{background:var(--panel); padding:.9rem 1rem; display:flex; flex-direction:column; gap:.15rem}
+  .stat b{font-family:"IBM Plex Mono",monospace; font-size:1.35rem; font-weight:500;
+    font-variant-numeric:tabular-nums; color:var(--ink); line-height:1.1}
+  .stat span{font-size:.76rem; color:var(--muted)}
+
+  ul{margin:0; padding-left:1.15rem; display:flex; flex-direction:column; gap:.45rem; max-width:44rem}
+  li{color:var(--ink-2)}
+  li strong{color:var(--ink)}
+
+  code{font-family:"IBM Plex Mono",monospace; font-size:.86em; background:var(--accent-soft);
+    color:var(--ink); padding:.08em .32em; border-radius:2px}
+
+  .caution{background:var(--warm-soft); border:1px solid var(--rule); border-left:3px solid var(--warm);
+    border-radius:2px; padding:1.15rem 1.3rem; display:flex; flex-direction:column; gap:.55rem}
+  .caution h3{color:var(--warm)}
+  .caution p{font-size:.93rem; max-width:46rem}
+
+  footer{border-top:1px solid var(--rule); padding-top:1.4rem; font-size:.84rem; color:var(--muted);
+    display:flex; flex-direction:column; gap:.6rem}
+  footer a{color:var(--accent)}
+  .version{font-family:"IBM Plex Mono",monospace; font-size:.74rem; letter-spacing:.06em;
+    color:var(--muted); border-top:1px dotted var(--rule-strong); padding-top:.7rem}
+  a:focus-visible,summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  @media print{
+    body{background:#fff}
+    .wrap{padding:0; gap:1.6rem}
+    .summary,.cards,.stats,.tablewrap,.caution{box-shadow:none}
+    section{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Capability assessment</div>
+  <h1>Bob and the Verification Gap</h1>
+  <p class="standfirst">IBM Bob moves engineering work faster. IBM cites research showing that speed relocated the bottleneck to review and validation. This is an assessment of what fills it.</p>
+  <div class="byline">
+    <span>Prepared 10 September 2026</span>
+    <span>Subject: IBM Bob (GA April 2026) &middot; maintainability-agent 3.1.0</span>
+  </div>
+</header>
+
+<section class="summary">
+  <h2>Executive summary</h2>
+  <p>IBM Bob is an agentic development environment that plans, writes and modernises code, with claimed delivery gains of <strong>20&ndash;40% faster</strong> and <strong>50&ndash;80% less effort</strong>. Those gains are real and they create a second problem, which IBM states in the same announcement.</p>
+
+  <p class="claim">85% of DevSecOps professionals surveyed agree that AI has shifted the bottleneck from writing code to reviewing and validating it.
+    <cite>GitLab 2026 AI Accountability Report, cited by IBM Newsroom, 9 July 2026</cite></p>
+
+  <p>Bob ships gates for that shift, and they are <em>process</em> gates: approval checkpoints, policy enforcement, sensitive-data scanning, red-teaming, an ambiguity check on specifications. They govern <strong>how work proceeds</strong>. None of them measures the condition of the artifact that comes out.</p>
+
+  <p><strong>maintainability-agent (MA) is a deterministic product gate.</strong> Same tree in, same number out, every time &mdash; which is the property that lets a build fail on it. It scores against a reference corpus of 180 repositories across 13 languages, withholds a grade when the evidence cannot support one, and states what examined every value. It is a local process, not a service.</p>
+
+  <p>The two do not overlap. Bob produces; MA verifies what was produced. And the integration path exists today: <strong>Bob supports MCP, and MA ships an MCP server</strong>.</p>
+</section>
+
+<section>
+  <h2>What Bob does, from its own documentation</h2>
+  <p class="lede">Stated fairly, because the argument is weaker if it is unfair. Bob is a substantial platform and is ahead of MA on every axis below.</p>
+  <ul>
+    <li><strong>Agentic execution</strong> &mdash; three modes (Agent, Ask, Plan), multi-agent orchestration, subagents with context isolation and user approval before spawning.</li>
+    <li><strong>Enterprise language depth</strong> &mdash; Java, Python, Node.js, Linux, AIX, Z, and for IBM i: <strong>RPG, COBOL, DDS, SQL, CL</strong>. Very few tools go there.</li>
+    <li><strong>Modernisation workflows</strong> &mdash; pre-built and specialised, aimed at decades-old estates.</li>
+    <li><strong>Process governance</strong> &mdash; role-based approvals mapped to SOX, PCI and HIPAA controls; policy enforcement; automated red-teaming.</li>
+    <li><strong>Code review in the IDE</strong> &mdash; Branch Comparison and Issue Coverage, which "analyse changes and flag potential issues".</li>
+    <li><strong>Cost telemetry</strong> &mdash; Bobalytics, for consumption and resource allocation.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>The capability matrix</h2>
+  <p class="lede">Three states, kept distinct on purpose. <span class="mark partial">Not documented</span> is not a claim that a capability is absent &mdash; only that IBM's public documentation does not describe it. Anyone presenting this should say so plainly.</p>
+
+  <div class="tablewrap">
+  <table>
+    <thead>
+      <tr><th>Capability</th><th>IBM Bob</th><th>maintainability-agent</th><th>Why it matters</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="cap">Generates and modernises code</td>
+        <td class="mark yes">Yes</td>
+        <td class="mark no">No, by design</td>
+        <td class="note">MA never writes code. It produces a bounded remediation prompt for an agent that does.</td>
+      </tr>
+      <tr>
+        <td class="cap">Reproducible run-to-run result</td>
+        <td class="mark partial">Not documented</td>
+        <td class="mark yes">Yes &mdash; published promise P1</td>
+        <td class="note">A build cannot fail on a judgment that changes between runs.</td>
+      </tr>
+      <tr>
+        <td class="cap">Calibrated numeric score</td>
+        <td class="mark partial">Not documented</td>
+        <td class="mark yes">180 repos, 13 languages</td>
+        <td class="note">A score means nothing without a reference population you can inspect.</td>
+      </tr>
+      <tr>
+        <td class="cap">Withholds a grade on thin evidence</td>
+        <td class="mark partial">Not documented</td>
+        <td class="mark yes">Yes &mdash; ADR&nbsp;005</td>
+        <td class="note">The failure mode of every quality tool is scoring well because it looked at little.</td>
+      </tr>
+      <tr>
+        <td class="cap">States what measured each value</td>
+        <td class="mark partial">Not documented</td>
+        <td class="mark yes">Yes &mdash; promise P8</td>
+        <td class="note">Which analysers ran, which did not, and what nothing measured at all.</td>
+      </tr>
+      <tr>
+        <td class="cap">Process gates: approvals, policy, red-team</td>
+        <td class="mark yes">Yes</td>
+        <td class="mark no">No</td>
+        <td class="note">Bob's territory. MA has no view on who may approve what.</td>
+      </tr>
+      <tr>
+        <td class="cap">Compliance mapping (SOX, PCI, HIPAA)</td>
+        <td class="mark yes">Yes</td>
+        <td class="mark no">No</td>
+        <td class="note">Bob's territory entirely.</td>
+      </tr>
+      <tr>
+        <td class="cap">Security analysis</td>
+        <td class="mark yes">Yes</td>
+        <td class="mark partial">Delegated, with a contract</td>
+        <td class="note">MA declares security out of scope and reports a sibling tool's measurement rather than guessing.</td>
+      </tr>
+      <tr>
+        <td class="cap">Runs with no server or cloud account</td>
+        <td class="mark partial">Metered platform</td>
+        <td class="mark yes">Local stdio process</td>
+        <td class="note">Matters for air-gapped estates and for cost at scale.</td>
+      </tr>
+      <tr>
+        <td class="cap">Records why a finding was declined</td>
+        <td class="mark partial">Not documented</td>
+        <td class="mark yes">Yes</td>
+        <td class="note">A backlog closed by judgment is only credible if the judgment is written down.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="key">
+    <span class="yes">Yes &mdash; documented capability</span>
+    <span class="partial">Not documented &mdash; absent from public docs, not proven absent</span>
+    <span class="no">No &mdash; explicitly out of scope</span>
+  </div>
+</section>
+
+<section>
+  <h2>Six things MA does that an agentic reviewer cannot</h2>
+  <p class="lede">Not "does better" &mdash; <em>cannot</em>, as a property of what a language model is.</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="n">01 &middot; Determinism</div>
+      <h3>The same answer twice</h3>
+      <p>Same tree, same config, same pinned analyser versions &rarr; the same evidence, findings and score. An LLM reviewer is not reproducible, so it can advise but it cannot be the thing that fails a build.</p>
+      <div class="ev">Promise P1, held by test</div>
+    </div>
+    <div class="card">
+      <div class="n">02 &middot; Calibration</div>
+      <h3>A number with a population behind it</h3>
+      <p>The scale is fitted to 180 mature repositories pinned to exact commits across 13 languages. The constants are re-derivable offline from checked-in inputs, so nobody takes them on faith.</p>
+      <div class="ev">2,749,575 declarations measured</div>
+    </div>
+    <div class="card">
+      <div class="n">03 &middot; Refusal</div>
+      <h3>It declines to grade</h3>
+      <p>When the evidence cannot support a grade, none is issued &mdash; never a dash, never a zero, both of which read as a result. A shallow clone of a real project drops the grade entirely and says why.</p>
+      <div class="ev">ADR 005 &middot; "insufficient" is a real answer</div>
+    </div>
+    <div class="card">
+      <div class="n">04 &middot; Attribution</div>
+      <h3>Every value names its source</h3>
+      <p>Which analysers ran, which were not applicable, which concepts nothing measured. Silence is reported as silence. A clean section with nothing behind it is the defect this design exists to prevent.</p>
+      <div class="ev">Promise P8</div>
+    </div>
+    <div class="card">
+      <div class="n">05 &middot; Falsifiability</div>
+      <h3>Every fix carries a test that fails without it</h3>
+      <p>A gate proves each newly cited test fails at the base commit. A fix whose proof passes before the fix is not a proof, and the build says so.</p>
+      <div class="ev">22 of 22 proven, current branch</div>
+    </div>
+    <div class="card">
+      <div class="n">06 &middot; Two axes, never merged</div>
+      <h3>Clean code with nothing holding it there</h3>
+      <p>Practice level (is anything enforced?) and condition (what did the scanners find?) are reported side by side and never averaged. Their combination is the finding &mdash; a clean scan with no enforcement is <em>unverified</em>, not healthy.</p>
+      <div class="ev">ADR 007, structurally enforced</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Why a team already running Bob wants this</h2>
+
+  <h3>1. It closes the gap IBM itself named</h3>
+  <p>Bob's 20&ndash;40% acceleration lands upstream of review. The survey IBM cites puts 85% of DevSecOps professionals on the other side of that shift. Adding review capacity to match generation capacity is the obvious answer and the wrong one; the affordable answer is a check that runs in seconds and does not get tired. MA audits a 722-file project in <strong>12 seconds</strong> and a Go CLI in <strong>2</strong>.</p>
+
+  <h3>2. Different layer, no overlap</h3>
+  <p>Bob's gates ask <em>may this proceed</em>. MA asks <em>what is the condition of what came out</em>. A team can have every approval in place and still ship a module nothing tests; a team can have perfect metrics and no change control. Both are needed and neither substitutes.</p>
+
+  <h3>3. Cost telemetry is not quality telemetry</h3>
+  <p>Bobalytics answers what the AI consumed. It cannot answer whether the codebase got better. For an engineering organisation reporting on code health, the second question is the one leadership asks and the one that currently has no number attached.</p>
+
+  <h3>4. It gives AI-written code an objective referee</h3>
+  <p>The uncomfortable question about agentic development &mdash; <em>how do we know the volume it produces is any good?</em> &mdash; cannot be answered by another agent, because the answer would carry the same non-determinism as the thing under review. It needs an instrument. That is the entire argument in one sentence.</p>
+
+  <h3>5. The integration already exists</h3>
+  <p>Bob uses external tools through MCP. MA ships an MCP server as its primary surface. A Bob user adds it as a tool and audits from inside the IDE &mdash; no pipeline change, no new platform. The CLI is there for the build.</p>
+
+  <h3>6. COBOL is parsed, and honestly</h3>
+  <p>MA has a COBOL scanner &mdash; PROCEDURE DIVISION paragraphs, fixed-form card columns &mdash; which matters directly to Bob's IBM i and Z audience. It also reports that COBOL is <em>outside</em> its reference corpus, permanently, with the evidence: GitHub holds one COBOL repository above 500 stars, and what is public is curriculum and Java parsers rather than COBOL codebases. Findings hold; the grade is marked provisional. That disclosure is the product working.</p>
+</section>
+
+<section>
+  <div class="caution">
+    <h3>What this assessment does not claim</h3>
+    <p><strong>Absence from documentation is not absence from the product.</strong> Every "not documented" cell above means IBM's public materials do not describe the capability. Bob may do these things. If someone in the room knows otherwise, they are right and this table is out of date.</p>
+    <p><strong>MA is much smaller.</strong> It does one thing. It does not generate, modernise, orchestrate, or handle compliance. It has no enterprise support organisation behind it. Against Bob's scope it is an instrument, not a platform &mdash; which is the point, but it should not be oversold as anything more.</p>
+    <p><strong>The measured numbers are from one repository.</strong> The evidence below comes from MA auditing itself and five public projects. That is honest sampling, not a benchmark study.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Evidence</h2>
+  <p class="lede">Every figure here was measured, not estimated. All are reproducible from the checked-in repository.</p>
+
+  <div class="stats">
+    <div class="stat"><b>180</b><span>repositories in the reference corpus</span></div>
+    <div class="stat"><b>13</b><span>languages measured; 14 parsed</span></div>
+    <div class="stat"><b>2,719</b><span>tests, zero failing</span></div>
+    <div class="stat"><b>94.5%</b><span>branch coverage, gate at 92%</span></div>
+    <div class="stat"><b>22 / 22</b><span>falsifiers proven to fail at base</span></div>
+    <div class="stat"><b>2&ndash;12s</b><span>audit, public projects</span></div>
+  </div>
+
+  <p><strong>Five public projects, none in the corpus, none previously scanned</strong> &mdash; audited with the analyser pool, full history:</p>
+
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Project</th><th>Languages</th><th>Time</th><th>Grade</th><th>Estimate</th><th>Files</th></tr></thead>
+    <tbody>
+      <tr><td class="cap">tiangolo/typer</td><td class="note">JS + Python</td><td class="mark">12s</td><td class="mark yes">B</td><td class="mark">4.4</td><td class="mark">722</td></tr>
+      <tr><td class="cap">spf13/cobra</td><td class="note">Go</td><td class="mark">2s</td><td class="mark yes">B</td><td class="mark">4.2</td><td class="mark">53</td></tr>
+      <tr><td class="cap">encode/httpx</td><td class="note">Python</td><td class="mark">5s</td><td class="mark partial">C</td><td class="mark">4.2</td><td class="mark">91</td></tr>
+      <tr><td class="cap">BurntSushi/ripgrep</td><td class="note">Rust + Ruby</td><td class="mark">3s</td><td class="mark partial">C</td><td class="mark">3.7</td><td class="mark">134</td></tr>
+      <tr><td class="cap">pallets/jinja</td><td class="note">Python</td><td class="mark">6s</td><td class="mark no">D</td><td class="mark">4.0</td><td class="mark">70</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="note">Jinja scores D at an estimate of 4.0 while ripgrep scores C at 3.7, because the grade is computed on the evidence floor rather than the point estimate. That is the tool refusing to credit what it did not measure &mdash; and it is the most useful thing on this page for explaining what a quality number is and is not.</p>
+</section>
+
+<footer>
+  <p><strong>Sources.</strong> IBM Newsroom, 9 July 2026 &mdash; multi-agent capabilities and modernisation workflows; the 85% figure quoted there is from the GitLab 2026 AI Accountability Report. IBM Bob documentation (bob.ibm.com/docs/ide), including the code-reviews feature page. IBM product pages for the AI coding agent and IBM i modernisation. Coverage in The Register and DevClass, April 2026, on general availability.</p>
+  <p>maintainability-agent figures are from release 3.1.0 and the working branch as of 10 September 2026, reproducible from the repository's checked-in corpus and test suite.</p>
+  <p class="version">Bob and the Verification Gap &middot; v4.5.1 &middot; 11 September 2026</p>
+</footer>
+
+</div>
+
+</body>
+</html>

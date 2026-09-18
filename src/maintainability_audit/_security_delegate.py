@@ -61,9 +61,17 @@ from ._runner import Invocation, Outcome, run
 #: `paths:` globs against absolute finding paths. This audit always hands it an
 #: absolute root, so under 0.12.1 every reviewed `paths:` suppression is ignored
 #: and its finding counts as live in the pillar every skin shows (D179).
-SUPPORTED_FLOOR = (0, 12, 2)
+#:
+#: **Raised to 0.12.7 by D186.** The delegate config now declares what this
+#: tool is — `capabilities` — and secure-code-agent sweeps unknown top-level
+#: keys strictly, so anything below 0.12.6 refuses the configuration outright
+#: rather than ignoring the key: the audit would not run at all. 0.12.6 runs
+#: it and prints no reason under the declared axes (its D25), which is a grade
+#: moved in silence. The floor is the first release where the declaration is
+#: both accepted and disclosed.
+SUPPORTED_FLOOR = (0, 12, 7)
 SUPPORTED_CEILING = (1,)
-REQUIREMENT = "secure-code-agent>=0.12.2,<1"
+REQUIREMENT = "secure-code-agent>=0.12.7,<1"
 
 #: How long the child may run before the pillar is reported as unmeasured.
 DEFAULT_TIMEOUT_SECONDS = 300

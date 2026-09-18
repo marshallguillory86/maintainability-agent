@@ -52,6 +52,7 @@ from ._mcp_setup import (
     setup_schema,
     test_command_pending,
 )
+from ._running_version import version_drift
 from ._scan_history import DEFAULT_HISTORY_PATH
 from .baseline import StaleBaseline as StaleBaseline
 from .config import (
@@ -110,9 +111,13 @@ SERVER_INSTRUCTIONS = (
 
 def server_info(roots: tuple[Path, ...] | None = None) -> dict[str, Any]:
     authorized_roots = roots if roots is not None else allowed_roots()
+    drift = version_drift()
     return {
         "agent": "maintainability-agent",
         "agent_version": VERSION,
+        # None when the loaded code and the installed distribution agree,
+        # which is the ordinary case and says nothing (D188).
+        "version_drift": drift,
         "transport": "stdio",
         "local": True,
         # Not blanket read-only since D2/D5: setup, the loop record and

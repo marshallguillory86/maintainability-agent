@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from ._mcp_setup import run_tests_pending, setup_pending, setup_questions
+from ._running_version import version_drift
 from ._test_execution import consented_without_command
 from ._user_config import mark_repo_seen
 from .config import VERSION, load_config
@@ -69,11 +70,18 @@ def _envelope(root: Path) -> dict[str, Any]:
     number that no audit produced.
     """
     mark_repo_seen(root)
-    return {
+    reply = {
         "agent": "maintainability-agent",
         "agent_version": VERSION,
         "audit_ran": False,
     }
+    # Carried on the replies that run no audit, because this is the surface
+    # that went stale unnoticed: a server started before an upgrade answers
+    # every gate call with its own old version, stated as fact (D188).
+    drift = version_drift()
+    if drift is not None:
+        reply["version_drift"] = drift
+    return reply
 
 
 def _choose_next(root: Path) -> dict[str, Any]:

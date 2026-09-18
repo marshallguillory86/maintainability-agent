@@ -151,6 +151,72 @@ def _economics_questions() -> list[dict[str, Any]]:
     ]
 
 
+def published_questions(root: Path | None = None) -> dict[str, dict[str, Any]]:
+    """Every question a host can be shown, by name, across all stages.
+
+    Built from the same functions that produce the questions themselves, so
+    what a submission is judged against is what the host was offered. A
+    second list here would be a second opinion about the contract, which is
+    the shape D189 and D190 were both instances of.
+    """
+    questions: dict[str, dict[str, Any]] = {}
+    for question in setup_questions(load_config(None)):
+        questions[question["name"]] = question
+    for question in economics_bound_questions():
+        questions[question["name"]] = question
+    for question in test_command_questions(root):
+        questions[question["name"]] = question
+    return questions
+
+
+def coerce_submitted_answers(
+    answers: dict[str, Any], root: Path | None = None
+) -> dict[str, Any]:
+    """Check a host's submission against the questions, and store its types.
+
+    Two jobs, together because they read the same source. The published
+    parameter is a mapping of strings — that is what a JSON schema can say
+    about a flat object a host fills in — while the rates are stored as
+    numbers, so `"90"` has to become `90.0` or the bounds stay pending and
+    the host is asked the same question forever.
+
+    And a value is refused unless the question offered it. `apply_answers`
+    reads the vocabulary it knows and falls back to a default otherwise, so
+    `depth: "nuclear"` persisted `moderate` and reported success — a
+    submission silently answered as something the user did not choose.
+    Questions with no options are free text (the test command) and are
+    taken as given.
+    """
+    published = published_questions(root)
+    unknown = sorted(set(answers) - set(published))
+    if unknown:
+        raise SetupRequired(
+            "setup_answers names questions this agent does not ask: "
+            f"{', '.join(unknown)}. Answer the questions in `setup_needed` "
+            "by their `name`."
+        )
+    coerced: dict[str, Any] = {}
+    for name, value in answers.items():
+        options = published[name].get("options") or []
+        numeric = all(isinstance(option, (int, float)) for option in options) and options
+        if numeric:
+            try:
+                coerced[name] = float(value)
+            except (TypeError, ValueError):
+                raise SetupRequired(
+                    f"setup_answers['{name}'] is {value!r}, which is not a number. "
+                    "The rates are submitted as strings and read as numbers."
+                ) from None
+            continue
+        if options and str(value) not in {str(option) for option in options}:
+            raise SetupRequired(
+                f"setup_answers['{name}'] is {value!r}, which {name} does not "
+                f"offer. Choose one of: {', '.join(str(o) for o in options)}."
+            )
+        coerced[name] = value
+    return coerced
+
+
 def submittable_answer_names() -> frozenset[str]:
     """Every answer key a host may submit, derived rather than listed.
 

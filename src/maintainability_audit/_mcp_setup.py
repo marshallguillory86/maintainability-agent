@@ -356,6 +356,29 @@ async def maybe_elicit_setup(context: Any, root: Path) -> dict[str, Any] | None:
     return apply_answers(Path(root), answers)
 
 
+def staged_questions(root: Path | None = None) -> list[dict[str, Any]]:
+    """The questions this repository still needs, whichever stage it is in.
+
+    **The one stage decision.** `setup_schema` renders it as an
+    elicitation model and the gate returns it as data; they are two
+    renderings of this list and never two opinions about it.
+
+    They were two opinions. The staging lived only in `setup_schema`, and
+    the gate asked `setup_questions` directly with no root — so a host
+    that could not be elicited was re-asked stage one forever and could
+    never reach the rates or the command. Answering stage one set
+    `economics.requested`, which opened stage two, which that host was
+    never shown (D190). D189 fixed the answers having nowhere to go; this
+    is the same asymmetry one layer in, where the elicited path knew
+    something the data path did not.
+    """
+    if root is not None and economics_bounds_pending(root):
+        return economics_bound_questions()
+    if root is not None and test_command_pending(root):
+        return test_command_questions(root)
+    return setup_questions(load_config(None))
+
+
 def setup_schema(root: Path | None = None):
     """The elicitation model for whichever stage this repository is in.
 
@@ -363,11 +386,7 @@ def setup_schema(root: Path | None = None):
     someone who said yes to the gate. Asking them of everyone was broken
     logic: the default answer to the gate is "skip".
     """
-    if root is not None and economics_bounds_pending(root):
-        return _schema_for(economics_bound_questions())
-    if root is not None and test_command_pending(root):
-        return _schema_for(test_command_questions(root))
-    return _schema_for(setup_questions(load_config(None)))
+    return _schema_for(staged_questions(root))
 
 
 def _schema_for(questions: list[dict[str, Any]]):

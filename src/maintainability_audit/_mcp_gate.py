@@ -17,11 +17,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from ._mcp_setup import run_tests_pending, setup_pending, setup_questions
+from ._mcp_setup import run_tests_pending, setup_pending, staged_questions
 from ._running_version import version_drift
 from ._test_execution import consented_without_command
 from ._user_config import mark_repo_seen
-from .config import VERSION, load_config
+from .config import VERSION
 
 
 def _gate(root: Path, config_path: str | None,
@@ -163,7 +163,10 @@ def _setup_first(root: Path, reconfigure: bool = False) -> dict[str, Any]:
     from ._first_run import PRESENTATIONS
 
     result = _envelope(root)
-    result["setup_needed"] = {"questions": setup_questions(load_config(None))}
+    # The staged set, not stage one every time: answering stage one can
+    # open stage two, and a host reading questions as data has to be shown
+    # the stage it is actually in (D190).
+    result["setup_needed"] = {"questions": staged_questions(root)}
     opening = (
         "The user asked to change this repository's configuration."
         if reconfigure else

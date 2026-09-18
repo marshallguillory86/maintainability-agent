@@ -154,20 +154,20 @@ def test_a_misspelled_answer_is_refused_rather_than_dropped() -> None:
     validated elicitation payload and wrong for an argument a host typed:
     `dept` would persist the default depth and report success.
     """
-    from maintainability_audit._mcp_grants import _refuse_unknown_answers
+    from maintainability_audit._mcp_setup import coerce_submitted_answers
     from maintainability_audit._setup_errors import SetupRequired
 
     with pytest.raises(SetupRequired, match="dept"):
-        _refuse_unknown_answers({"run_pool": "yes", "dept": "heavy"})
+        coerce_submitted_answers({"run_pool": "yes", "dept": "heavy"})
 
 
 def test_the_answers_a_host_is_shown_are_all_accepted() -> None:
     """Answer every published question at once; none may be refused."""
-    from maintainability_audit._mcp_grants import _refuse_unknown_answers
+    from maintainability_audit._mcp_setup import coerce_submitted_answers
 
     answers = {
         question["name"]: str(question.get("default") or question["options"][0])
         for question in setup_questions({})
     }
 
-    _refuse_unknown_answers(answers)  # must not raise
+    coerce_submitted_answers(answers)  # must not raise

@@ -83,7 +83,11 @@ SERVER_INSTRUCTIONS = (
     "they answer: unset never audits. An unconfigured repository returns "
     "setup_needed — ask every question it lists, offering exactly the "
     "options each one names and no others (default_format offers chat, "
-    "markdown and html), then call again. A configured repository returns "
+    "markdown and html), then call again with setup_answers, a mapping of "
+    "each question's name to the option chosen. Answering one stage can "
+    "open the next — include for the economic scenario asks the three "
+    "rates, yes to the suite asks for the command — and the next reply "
+    "carries whatever is still outstanding. A configured repository returns "
     "choice_needed, run or reconfigure — ask it, then call again with "
     "action set to their answer. action='run' audits; "
     "action='reconfigure' reopens the setup questions on a repository "
@@ -234,14 +238,61 @@ def _bind_audit_tool(server: Any, ledger: _RootLedger,
     )
 
 
-#: The `audit_repository` tool description, as hosts display it.
-#:
-#: A module constant for the same reason `SERVER_INSTRUCTIONS` is one:
-#: user-facing prose that grows with the contract. Inlining it pushed
-#: `_audit_tool_for` past this repository's own function-length gate,
-#: which is the gate telling the truth rather than a metric to contort
-#: code around. The description a host reads is unchanged.
-AUDIT_TOOL_DESCRIPTION = """Audit one authorized repository and return findings plus a bounded remediation prompt.
+def _run_audit_tool(ledger, tool_error, repository_root, config_path, changed_only,
+                    run_analyzers, format, record_history, baseline_path,
+                    write_baseline, include_prompt, action, setup_answers,
+                    setup, grant) -> dict[str, Any]:
+    """Apply this call's consents, then audit; refusals become tool errors.
+
+    Split from the closure so the tool's description can stay inline on the
+    function it describes. It is the published contract and the test that
+    holds it reads the source, so a copy in a module constant would be a
+    second text to drift.
+    """
+    try:
+        _apply_call_consents(ledger, repository_root, setup, grant, setup_answers)
+        return audit_repository(
+            repository_root,
+            config_path,
+            changed_only,
+            run_analyzers,
+            format,
+            record_history,
+            baseline_path,
+            write_baseline,
+            include_prompt,
+            # Interactive door never assumes go (D27); CLI default is "run".
+            action=action,
+            roots=ledger.current(),
+        )
+    except ANTICIPATED_REFUSALS as refusal:
+        raise tool_error(str(refusal)) from refusal
+
+
+def _audit_tool_for(ledger: _RootLedger) -> Any:
+    """Build the `audit_repository` coroutine over `ledger`, the live
+    allow-list, so each call resolves paths against the grants in force
+    at that moment and not the set the process started with.
+    """
+    from mcp.server.mcpserver.exceptions import ToolError as tool_error
+
+    async def audit_repository_tool(
+        repository_root: str,
+        config_path: str | None = None,
+        changed_only: str | None = None,
+        run_analyzers: bool | None = None,
+        format: str | None = None,
+        record_history: bool | None = None,
+        baseline_path: str | None = None,
+        write_baseline: bool = False,
+        include_prompt: bool = True,
+        action: str | None = None,
+        setup_answers: dict[str, str] | None = None,
+        setup: Any = None,
+        grant: Any = None,
+        ctx: Any = None,
+    ) -> dict[str, Any]:
+        """Audit one authorized repository and return findings plus a bounded remediation prompt.
 
 Nothing is audited until the user has been asked twice: once to
 configure the repository, once to say go. Unset ``action`` — the
@@ -281,54 +332,14 @@ unset and an existing series appends; otherwise the persisted
 first-run consent decides (decision 4) — capability never
 records, only an answer does.
 """
-
-
-def _audit_tool_for(ledger: _RootLedger) -> Any:
-    """Build the `audit_repository` coroutine over `ledger`, the live
-    allow-list, so each call resolves paths against the grants in force
-    at that moment and not the set the process started with.
-    """
-    from mcp.server.mcpserver.exceptions import ToolError as tool_error
-
-    async def audit_repository_tool(
-        repository_root: str,
-        config_path: str | None = None,
-        changed_only: str | None = None,
-        run_analyzers: bool | None = None,
-        format: str | None = None,
-        record_history: bool | None = None,
-        baseline_path: str | None = None,
-        write_baseline: bool = False,
-        include_prompt: bool = True,
-        action: str | None = None,
-        setup_answers: dict[str, str] | None = None,
-        setup: Any = None,
-        grant: Any = None,
-        ctx: Any = None,
-    ) -> dict[str, Any]:
-        """Audit one authorized repository and return findings plus a bounded remediation prompt."""
         del ctx  # the resolvers already used it; kept so hosts see progress hooks
-        try:
-            _apply_call_consents(ledger, repository_root, setup, grant,
-                                 setup_answers)
-            return audit_repository(
-                repository_root,
-                config_path,
-                changed_only,
-                run_analyzers,
-                format,
-                record_history,
-                baseline_path,
-                write_baseline,
-                include_prompt,
-                # Interactive door never assumes go (D27); CLI default is "run".
-                action=action,
-                roots=ledger.current(),
-            )
-        except ANTICIPATED_REFUSALS as refusal:
-            raise tool_error(str(refusal)) from refusal
+        return _run_audit_tool(
+            ledger, tool_error,
+            repository_root, config_path, changed_only, run_analyzers, format,
+            record_history, baseline_path, write_baseline, include_prompt,
+            action, setup_answers, setup, grant,
+        )
 
-    audit_repository_tool.__doc__ = AUDIT_TOOL_DESCRIPTION
     return audit_repository_tool
 
 

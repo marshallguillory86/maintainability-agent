@@ -65,17 +65,19 @@ def test_no_surface_claims_chat_and_markdown_are_one_text() -> None:
 def test_the_tool_docstring_hosts_read_names_both_skins() -> None:
     """The exposed contract, not only the internal one.
 
-    `_finish_result` is internal. The docstring on the MCP tool is what a
+    `_finish_result` is internal. The description on the MCP tool is what a
     host renders for the person choosing a format, and it is the one that
     was still wrong after the internal fix.
+
+    Read from `AUDIT_TOOL_DESCRIPTION`, the object a host is served, rather
+    than scraped out of the module source. The text moved to a module
+    constant when inlining it pushed `_audit_tool_for` past the function
+    length gate; the contract did not move, and a test that scrapes source
+    fails on a relocation while passing on a rewrite, which is backwards.
     """
-    import inspect
+    from maintainability_audit.mcp_server import AUDIT_TOOL_DESCRIPTION
 
-    from maintainability_audit import mcp_server
+    doc = AUDIT_TOOL_DESCRIPTION.lower()
 
-    source = inspect.getsource(mcp_server)
-    start = source.index("async def audit_repository_tool")
-    doc = source[start:source.index('"""', source.index('"""', start) + 3)]
-
-    assert "bounded" in doc.lower(), "the tool docstring must name the chat skin as bounded"
-    assert "complete" in doc.lower(), "the tool docstring must name markdown as complete"
+    assert "bounded" in doc, "the tool description must name the chat skin as bounded"
+    assert "complete" in doc, "the tool description must name markdown as complete"

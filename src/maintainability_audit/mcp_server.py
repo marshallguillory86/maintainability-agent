@@ -234,6 +234,55 @@ def _bind_audit_tool(server: Any, ledger: _RootLedger,
     )
 
 
+#: The `audit_repository` tool description, as hosts display it.
+#:
+#: A module constant for the same reason `SERVER_INSTRUCTIONS` is one:
+#: user-facing prose that grows with the contract. Inlining it pushed
+#: `_audit_tool_for` past this repository's own function-length gate,
+#: which is the gate telling the truth rather than a metric to contort
+#: code around. The description a host reads is unchanged.
+AUDIT_TOOL_DESCRIPTION = """Audit one authorized repository and return findings plus a bounded remediation prompt.
+
+Nothing is audited until the user has been asked twice: once to
+configure the repository, once to say go. Unset ``action`` — the
+default here — never audits; an unconfigured repository returns
+its setup questions and a configured one returns the
+run-or-reconfigure choice, each with ``audit_ran: false`` and no
+score. ``action="run"`` audits. ``action="reconfigure"`` reopens
+setup on a repository that already has answers.
+
+First contact with an unconfigured repository asks the setup
+questions through elicitation (or returns them as data when the
+host cannot ask) and writes the answers locally. Answering does
+not start an audit.
+
+A host that got the questions as data answers them with
+``setup_answers``: a flat mapping of the ``name`` of each question
+in ``setup_needed`` to the chosen option, for example
+``{"run_pool": "yes", "depth": "heavy", ...}``. It is written to
+this repository's local configuration exactly as an accepted
+elicitation is, because it is the same call. Without it a host
+that cannot be elicited had no way to answer and every reply
+returned the same questions (D189). A repository
+outside the allowed roots asks for a grant the same way —
+session-only by default, "always" persisting to the user config
+(D10). Leave ``run_analyzers`` unset and the repository's config
+decides: a configured repo runs its external analyzer pool — the
+primary evidence source — by default. Pass true/false to
+override for one call. ``format`` is the presentation the user
+chose. ``chat`` is the **bounded** skin — the inline view,
+trimmed so a large repository's response stays under a host's
+payload cap; ``markdown`` is the **complete** report, because it
+was chosen as a file to keep. They are two skins and not one
+text. ``html`` is returned as text and never written to the
+tree; ``json`` carries the report dict. Unset takes the
+persisted default from setup. Leave ``record_history``
+unset and an existing series appends; otherwise the persisted
+first-run consent decides (decision 4) — capability never
+records, only an answer does.
+"""
+
+
 def _audit_tool_for(ledger: _RootLedger) -> Any:
     """Build the `audit_repository` coroutine over `ledger`, the live
     allow-list, so each call resolves paths against the grants in force
@@ -252,44 +301,16 @@ def _audit_tool_for(ledger: _RootLedger) -> Any:
         write_baseline: bool = False,
         include_prompt: bool = True,
         action: str | None = None,
+        setup_answers: dict[str, str] | None = None,
         setup: Any = None,
         grant: Any = None,
         ctx: Any = None,
     ) -> dict[str, Any]:
-        """Audit one authorized repository and return findings plus a bounded remediation prompt.
-
-        Nothing is audited until the user has been asked twice: once to
-        configure the repository, once to say go. Unset ``action`` — the
-        default here — never audits; an unconfigured repository returns
-        its setup questions and a configured one returns the
-        run-or-reconfigure choice, each with ``audit_ran: false`` and no
-        score. ``action="run"`` audits. ``action="reconfigure"`` reopens
-        setup on a repository that already has answers.
-
-        First contact with an unconfigured repository asks the setup
-        questions through elicitation (or returns them as data when the
-        host cannot ask) and writes the answers locally. Answering does
-        not start an audit. A repository
-        outside the allowed roots asks for a grant the same way —
-        session-only by default, "always" persisting to the user config
-        (D10). Leave ``run_analyzers`` unset and the repository's config
-        decides: a configured repo runs its external analyzer pool — the
-        primary evidence source — by default. Pass true/false to
-        override for one call. ``format`` is the presentation the user
-        chose. ``chat`` is the **bounded** skin — the inline view,
-        trimmed so a large repository's response stays under a host's
-        payload cap; ``markdown`` is the **complete** report, because it
-        was chosen as a file to keep. They are two skins and not one
-        text. ``html`` is returned as text and never written to the
-        tree; ``json`` carries the report dict. Unset takes the
-        persisted default from setup. Leave ``record_history``
-        unset and an existing series appends; otherwise the persisted
-        first-run consent decides (decision 4) — capability never
-        records, only an answer does.
-        """
+        """Audit one authorized repository and return findings plus a bounded remediation prompt."""
         del ctx  # the resolvers already used it; kept so hosts see progress hooks
         try:
-            _apply_call_consents(ledger, repository_root, setup, grant)
+            _apply_call_consents(ledger, repository_root, setup, grant,
+                                 setup_answers)
             return audit_repository(
                 repository_root,
                 config_path,
@@ -307,6 +328,7 @@ def _audit_tool_for(ledger: _RootLedger) -> Any:
         except ANTICIPATED_REFUSALS as refusal:
             raise tool_error(str(refusal)) from refusal
 
+    audit_repository_tool.__doc__ = AUDIT_TOOL_DESCRIPTION
     return audit_repository_tool
 
 

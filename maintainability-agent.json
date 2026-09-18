@@ -1,30 +1,63 @@
 {
-  "version": 1,
   "analyzers": {
     "_doc": "Which external analyzers may run. See docs/analyzer-pool.md. Resolve with: python tools/resolve_pool.py",
-    "run": true,
+    "allow_tools": [],
     "concerns": [
       "all"
     ],
-    "depth": "moderate",
-    "license_policy": "permissive",
-    "prompt_when_interactive": true,
-    "allow_tools": [],
-    "deny_tools": [],
-    "deny_license_classes": [],
     "deny_concerns": [
       "security"
     ],
+    "deny_license_classes": [],
+    "deny_tools": [],
+    "depth": "heavy",
+    "license_policy": "copyleft-any",
+    "prompt_when_interactive": true,
+    "run": true,
     "timeout_seconds": 120
   },
-  "paths": {
-    "include_extensions": [
-      ".py",
-      ".md",
-      ".json",
-      ".yml",
-      ".yaml"
+  "economic_context": {
+    "requested": true,
+    "version": 1
+  },
+  "expected_commands": {
+    "lint": [
+      "python3 -m py_compile src/maintainability_audit/*.py"
     ],
+    "test": [
+      "PYTHONPATH=src python3 -m pytest --cov=maintainability_audit --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=92"
+    ]
+  },
+  "expected_files": [
+    "README.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "maintainability-agent.schema.json",
+    "docs/cli.md",
+    "docs/philosophy.md"
+  ],
+  "hard_gates": {
+    "fail_on_duplicate_blocks": true,
+    "fail_on_file_failures": true,
+    "fail_on_function_failures": true,
+    "require_clean_worktree": false,
+    "require_readme": true,
+    "require_test_command": true
+  },
+  "history": {
+    "record": true
+  },
+  "instruction_pack": {
+    "architecture_notes": [
+      "Keep deterministic analysis separate from AI prompt generation.",
+      "Do not call LLMs or external services by default.",
+      "Prefer small adapter functions over a monolithic scanner."
+    ],
+    "project_name": "Maintainability Agent",
+    "strictness": "high",
+    "test_policy": "pytest for CLI behavior plus self-audit before release"
+  },
+  "paths": {
     "exclude_patterns": [
       ".git/",
       ".venv/",
@@ -36,17 +69,17 @@
       "build/",
       ".pytest_cache/",
       "examples/reports/",
-    "examples/demo/",
+      "examples/demo/",
       "tools/validation/reports/",
       "maintainability-report.md",
       "maintainability-remediation-prompt.md",
       "maintainability-pr-comment.md",
       "maintainability-baseline.json",
       "maintainability.sarif",
-    "secure-code-report.md",
-    "secure-code-remediation-prompt.md",
-    "secure-code-pr-comment.md",
-    "secure-code.sarif",
+      "secure-code-report.md",
+      "secure-code-remediation-prompt.md",
+      "secure-code-pr-comment.md",
+      "secure-code.sarif",
       "coverage.xml",
       "AGENTS-maintainability.md",
       "docs/self-audit.md",
@@ -62,46 +95,20 @@
       "_assets/",
       "CHANGELOG.md",
       "docs/defect-register-chat-surface.md"
-    ]
-  },
-  "thresholds": {
-    "max_file_lines": 750,
-    "warn_file_lines": 600,
-    "max_function_lines": 80,
-    "warn_function_lines": 60,
-    "max_complexity": 15,
-    "warn_complexity": 12,
-    "max_duplicate_blocks": 0,
-    "duplicate_block_lines": 14
-  },
-  "hard_gates": {
-    "require_test_command": true,
-    "require_readme": true,
-    "require_clean_worktree": false,
-    "fail_on_file_failures": true,
-    "fail_on_function_failures": true,
-    "fail_on_duplicate_blocks": true
-  },
-  "expected_files": [
-    "README.md",
-    "CONTRIBUTING.md",
-    "LICENSE",
-    "maintainability-agent.schema.json",
-    "docs/cli.md",
-    "docs/philosophy.md"
-  ],
-  "expected_commands": {
-    "test": [
-      "PYTHONPATH=src python3 -m pytest --cov=maintainability_audit --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=92"
     ],
-    "lint": [
-      "python3 -m py_compile src/maintainability_audit/*.py"
+    "include_extensions": [
+      ".py",
+      ".md",
+      ".json",
+      ".yml",
+      ".yaml"
     ]
+  },
+  "presentation": {
+    "format": "html"
   },
   "risk_patterns": [
     {
-      "name": "dynamic-code-execution",
-      "pattern": "\\b(eval|exec)\\s*\\(",
       "extensions": [
         ".py",
         ".js",
@@ -110,17 +117,23 @@
         ".cjs",
         ".ts",
         ".tsx"
-      ]
+      ],
+      "name": "dynamic-code-execution",
+      "pattern": "\\b(eval|exec)\\s*\\("
     }
   ],
-  "instruction_pack": {
-    "project_name": "Maintainability Agent",
-    "strictness": "high",
-    "test_policy": "pytest for CLI behavior plus self-audit before release",
-    "architecture_notes": [
-      "Keep deterministic analysis separate from AI prompt generation.",
-      "Do not call LLMs or external services by default.",
-      "Prefer small adapter functions over a monolithic scanner."
-    ]
-  }
+  "test_execution": {
+    "requested": true
+  },
+  "thresholds": {
+    "duplicate_block_lines": 14,
+    "max_complexity": 15,
+    "max_duplicate_blocks": 0,
+    "max_file_lines": 750,
+    "max_function_lines": 80,
+    "warn_complexity": 12,
+    "warn_file_lines": 600,
+    "warn_function_lines": 60
+  },
+  "version": 1
 }

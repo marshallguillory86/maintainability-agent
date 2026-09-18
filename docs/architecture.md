@@ -157,6 +157,7 @@ flowchart TB
     _hotspots["_hotspots"]
     config["config"]
     _config_defaults["_config_defaults"]
+    _running_version["_running_version"]
     _user_config["_user_config"]
     _stored_grants["_stored_grants"]
     _safe_write["_safe_write"]

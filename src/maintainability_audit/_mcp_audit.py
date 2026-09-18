@@ -30,6 +30,7 @@ from ._grant_ledger import allowed_roots as allowed_roots  # noqa: PLC0414
 from ._grant_ledger import refused_root_grants as refused_root_grants  # noqa: PLC0414
 from ._mcp_gate import _gate
 from ._recurrence import escalations
+from ._running_version import version_drift
 from ._scan_history import (
     DEFAULT_HISTORY_PATH,
     append_scan,
@@ -295,6 +296,12 @@ def _top_level_result(report: dict[str, Any], root: Path, status: str,
         "analyzers_run": _analyzers_contributed(report),
         "analyzers_requested": run_analyzers,
     }
+    # Stated beside the score, not instead of it. A stale agent still
+    # produces a real audit; what a reader cannot otherwise know is which
+    # release produced it (D188).
+    drift = version_drift()
+    if drift is not None:
+        result["version_drift"] = drift
     if baseline is not None:
         result["new_findings"] = baseline
     # D9: a selected tool that could not run is actionable evidence the

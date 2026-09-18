@@ -20,6 +20,7 @@ from ._gates import (
     audit_exit_code,
 )
 from ._mcp_audit import record_scan_and_attach
+from ._running_version import version_drift
 from ._safe_write import write_artifact
 from ._scan_history import (
     DEFAULT_HISTORY_PATH,
@@ -451,6 +452,12 @@ def main(argv: list[str] | None = None) -> int:
         return mcp_server.main(argv[1:])
 
     parser, args = _parse(argv)
+    # Before anything else this run reports, because it is about whether to
+    # trust what this run reports at all. stderr, so it never lands in a
+    # report piped from stdout (D188).
+    drift = version_drift()
+    if drift is not None:
+        print(f"maintainability-agent: {drift['detail']}", file=sys.stderr)
     _refuse_stdout_where_it_cannot_work(parser, args)
     # Every action that must not trigger the first-run questions.
     early = _action_before_config(parser, args)

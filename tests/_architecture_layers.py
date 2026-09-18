@@ -56,6 +56,14 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
                # split from `config` in 1.1.0: data with no internal
                # imports, which `config` re-exports.
                "_config_defaults",
+               # `_running_version` compares the loaded `config.VERSION`
+               # against the installed distribution's metadata and says
+               # which of the two is stale (D188). A foundation because
+               # every surface that reports a version needs the same
+               # answer — the gate replies, the audit result, server_info
+               # and the CLI — and because it measures nothing, reads no
+               # repository and imports only `config` and the stdlib.
+               "_running_version",
                "git_tools", "instructions", "_semantic_policy",
                # `_user_config` is the XDG user tier and its state (D13):
                # file reads and atomic writes, no internal imports.

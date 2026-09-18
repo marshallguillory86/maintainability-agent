@@ -20,6 +20,12 @@
       ".pytest_cache/"
     ]
   },
+  "capabilities": {
+    "spawns_processes": "The audit is a pool of external analyzers — ruff, radon, bandit, pip-audit, semgrep and the rest — each run as a subprocess with an argument list, never through a shell. Running them is the product.",
+    "parses_untrusted_xml": "Checkstyle, SpotBugs and JUnit report in XML, and this tool reads output it did not write. `_xml.parse_analyzer_xml` bounds the document and refuses any `<!ENTITY` or `<!DOCTYPE` before a parser sees it (D46); `_jvm_adapters` routes every parse through it.",
+    "fetches_remote_urls": "`tools/sonar_resolve.py` calls the SonarCloud API to record a justification against an issue. The host is a module constant, never taken from input.",
+    "uses_nondeterministic_randomness": "`tools/calibration/sampling_error.py` bootstraps the sampling distribution of the calibration fit. It is `random.Random(seed)` — seeded so the study reproduces — and it decides nothing at audit time."
+  },
   "gates": {
     "fail_on_severity": ["critical", "high"],
     "fail_on_category": ["secrets"],

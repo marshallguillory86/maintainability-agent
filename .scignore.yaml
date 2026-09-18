@@ -30,3 +30,17 @@
     closed), and the job holds `contents: read`. Removing the inputs removes
     the justification the workflow exists to make mandatory.
   expires: "2027-09-01"
+
+- rule_id: B105
+  paths: ["src/maintainability_audit/_masking.py"]
+  reason: >-
+    Reviewed: all four matches are the word "token" meaning a lexical token.
+    B105 fires on an identifier whose name looks credential-shaped, and this
+    module is a JavaScript tokenizer: `_STRING_TOKEN` and `_REGEX_TOKEN` are
+    regex source, and lines 103 and 105 compare a `token` variable against
+    "//" and "/*" — the comment delimiters it just matched. No credential is
+    involved and none of these values leaves the module. Not a declared
+    capability: a project cannot declare "my variables are called token", and
+    B105 belongs to no capability precisely because it is a name heuristic
+    rather than an architectural shape.
+  expires: "2027-09-01"

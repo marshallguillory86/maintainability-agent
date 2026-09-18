@@ -104,7 +104,7 @@ jobs:
         # Supplied like the analyzer pool, not as a package dependency: the
         # two tools are independently releasable (secure-code-agent D3, ADR
         # 008). Pinned for the same reason the pool is.
-        run: python3 -m pip install 'secure-code-agent==0.12.5'
+        run: python3 -m pip install 'secure-code-agent==0.12.7'
       - name: Lint (ruff)
         run: ruff check src tests tools
       - name: Dependency CVE scan (pip-audit)
@@ -147,7 +147,7 @@ jobs:
       - name: Install tool with dev extras
         run: python3 -m pip install -e ".[dev]"
       - name: Install secure-code-agent, which every audit runs (D177)
-        run: python3 -m pip install 'secure-code-agent==0.12.5'
+        run: python3 -m pip install 'secure-code-agent==0.12.7'
       # `-n auto` here too. The Linux job got it and this did not, so
       # macOS went on running the suite serially and became the
       # wall-clock driver — the whole job is tests, and the run is only
@@ -188,7 +188,7 @@ jobs:
       - name: Install tool with dev extras
         run: python -m pip install -e ".[dev]"
       - name: Install secure-code-agent, which every audit runs (D177)
-        run: python -m pip install 'secure-code-agent==0.12.5'
+        run: python -m pip install 'secure-code-agent==0.12.7'
       # `--continue-on-collection-errors` and no `-x`: the point is the
       # whole list of what fails, not the first thing that does.
       - name: Tests (the list is the deliverable)
@@ -320,7 +320,7 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install -e ".[dev]"
-          python3 -m pip install 'secure-code-agent[required-scanners]==0.12.5'
+          python3 -m pip install 'secure-code-agent[required-scanners]==0.12.7'
       - name: Install the security scanner floor (main only)
         # Coverage is what decides whether the security pillar carries a
         # grade or only a posture of `unverified`. The pip extra above
@@ -335,7 +335,7 @@ jobs:
         # letter nobody reads on a feature branch. A PR still runs the gate;
         # it just reports partial coverage, which is the truth about what ran.
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
-        uses: marshallguillory86/secure-code-agent/.github/actions/install-floor@713ff0f1db363c686d91face198f2d0fb1fa9e5c # v0.12.5
+        uses: marshallguillory86/secure-code-agent/.github/actions/install-floor@79c79fbc991467ac31f2608c4e3f0d64fa9dd572 # v0.12.7
 
       - name: Install the pinned analyzer pool
         # The maintainability gate runs these analyzers in this job, so

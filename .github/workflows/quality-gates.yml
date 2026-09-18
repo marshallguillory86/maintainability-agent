@@ -383,7 +383,8 @@ jobs:
             --output secure-code-report.md \
             --prompt-output secure-code-remediation-prompt.md \
             --comment-output secure-code-pr-comment.md \
-            --sarif-output secure-code.sarif
+            --sarif-output secure-code.sarif \
+            --code-scanning-sarif-output secure-code.code-scanning.sarif
 
       # --- maintainability -------------------------------------------------
       - name: Maintainability audit
@@ -418,7 +419,14 @@ jobs:
         uses: github/codeql-action/upload-sarif@42947a340483f03ba47bb1a039b2c519aab3df85 # v3
         if: always()
         with:
-          sarif_file: secure-code.sarif
+          # The filtered document, not the record (secure-code-agent D22).
+          # Code scanning opens an alert for every result it is handed, and
+          # branch protection requires every resulting review thread resolved:
+          # uploading the record made seventeen `assert`-in-a-test threads
+          # block a merge, and would have done so on every pull request that
+          # adds a test file, forever. The record is still kept as an
+          # artifact and still carries every finding (D187).
+          sarif_file: secure-code.code-scanning.sarif
           category: secure-code-agent
 
       - name: Comment on the PR
@@ -474,6 +482,7 @@ jobs:
             secure-code-remediation-prompt.md
             secure-code-pr-comment.md
             secure-code.sarif
+            secure-code.code-scanning.sarif
 
   # Advisory, never a gate, and therefore not on the critical path.
   # It lived inside `verify`, which is a **required** check, so its

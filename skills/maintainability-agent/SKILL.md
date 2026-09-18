@@ -36,8 +36,12 @@ engineering changes, not as permission to refactor unrelated code.
    never audits:
    - **Unconfigured** — the result carries `setup_needed`. Ask every
      question it lists, offering exactly the options that question
-     names and no others, then call again. Answering does *not* start
-     an audit.
+     names and no others, then call again with `setup_answers` — a
+     mapping of each question's `name` to the option chosen. Answering
+     one stage can open the next (`include` for the economic scenario
+     asks the three rates; `yes` to the suite asks for the command),
+     and the next reply carries whatever is still outstanding.
+     Answering does *not* start an audit.
    - **Configured** — the result carries `choice_needed`: run the
      audit, or go back into setup. Ask it, then call again with
      `action` set to their answer. `"run"` audits. `"reconfigure"`

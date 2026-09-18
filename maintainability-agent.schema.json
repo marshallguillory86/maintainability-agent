@@ -7,177 +7,6 @@
     "version"
   ],
   "properties": {
-    "version": {
-      "type": "integer",
-      "const": 1
-    },
-    "paths": {
-      "type": "object",
-      "properties": {
-        "include_extensions": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "exclude_patterns": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    "idiom_groups": {
-      "type": "object",
-      "description": "Concern name -> list of competing package names. Overrides the shipped list.",
-      "additionalProperties": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      }
-    },
-    "thresholds": {
-      "type": "object",
-      "properties": {
-        "max_file_lines": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "warn_file_lines": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "max_function_lines": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "warn_function_lines": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "max_class_lines": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "warn_class_lines": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "max_complexity": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "warn_complexity": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "max_cognitive_complexity": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "warn_cognitive_complexity": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "max_duplicate_blocks": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "duplicate_block_lines": {
-          "type": "integer",
-          "minimum": 2
-        }
-      },
-      "additionalProperties": false
-    },
-    "hard_gates": {
-      "type": "object",
-      "properties": {
-        "require_test_command": {
-          "type": "boolean"
-        },
-        "require_readme": {
-          "type": "boolean"
-        },
-        "require_clean_worktree": {
-          "type": "boolean"
-        },
-        "fail_on_file_failures": {
-          "type": "boolean"
-        },
-        "fail_on_function_failures": {
-          "type": "boolean"
-        },
-        "fail_on_duplicate_blocks": {
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false
-    },
-    "expected_files": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "expected_commands": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      }
-    },
-    "instruction_pack": {
-      "type": "object",
-      "properties": {
-        "project_name": {
-          "type": "string"
-        },
-        "strictness": {
-          "type": "string"
-        },
-        "test_policy": {
-          "type": "string"
-        },
-        "architecture_notes": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    "risk_patterns": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "name",
-          "pattern"
-        ],
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "pattern": {
-            "type": "string"
-          },
-          "extensions": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "additionalProperties": false
-      }
-    },
     "analyzers": {
       "type": "object",
       "description": "Which external analysis tools may run. See docs/analyzer-pool.md.",
@@ -282,6 +111,240 @@
         }
       },
       "additionalProperties": false
+    },
+    "economic_context": {
+      "description": "Written by first-run setup (ADR 004). `requested` records the opt-in; `loaded_engineering_cost_per_hour` carries the three rates once the staged second ask is answered, and replaces it.",
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "integer"
+        },
+        "requested": {
+          "type": "boolean"
+        },
+        "loaded_engineering_cost_per_hour": {
+          "type": "object",
+          "properties": {
+            "low": {
+              "type": "number"
+            },
+            "base": {
+              "type": "number"
+            },
+            "high": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "expected_commands": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "expected_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "hard_gates": {
+      "type": "object",
+      "properties": {
+        "require_test_command": {
+          "type": "boolean"
+        },
+        "require_readme": {
+          "type": "boolean"
+        },
+        "require_clean_worktree": {
+          "type": "boolean"
+        },
+        "fail_on_file_failures": {
+          "type": "boolean"
+        },
+        "fail_on_function_failures": {
+          "type": "boolean"
+        },
+        "fail_on_duplicate_blocks": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "history": {
+      "description": "Written by first-run setup: consent to record scan history.",
+      "type": "object",
+      "properties": {
+        "record": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "idiom_groups": {
+      "type": "object",
+      "description": "Concern name -> list of competing package names. Overrides the shipped list.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "instruction_pack": {
+      "type": "object",
+      "properties": {
+        "project_name": {
+          "type": "string"
+        },
+        "strictness": {
+          "type": "string"
+        },
+        "test_policy": {
+          "type": "string"
+        },
+        "architecture_notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "paths": {
+      "type": "object",
+      "properties": {
+        "include_extensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exclude_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "presentation": {
+      "description": "Written by first-run setup: the report skin this user chose.",
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "chat",
+            "markdown",
+            "html"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "risk_patterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "pattern"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "pattern": {
+            "type": "string"
+          },
+          "extensions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "test_execution": {
+      "description": "Written by first-run setup: the opt-in to run this repository's own suite. The command itself is a staged second ask and lands in `expected_commands.test` \u2014 the tree may say how it is tested, only the person may choose what the host executes.",
+      "type": "object",
+      "properties": {
+        "requested": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "thresholds": {
+      "type": "object",
+      "properties": {
+        "max_file_lines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "warn_file_lines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_function_lines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "warn_function_lines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_class_lines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "warn_class_lines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_complexity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "warn_complexity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_cognitive_complexity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "warn_cognitive_complexity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_duplicate_blocks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "duplicate_block_lines": {
+          "type": "integer",
+          "minimum": 2
+        }
+      },
+      "additionalProperties": false
+    },
+    "version": {
+      "type": "integer",
+      "const": 1
     }
   },
   "additionalProperties": false

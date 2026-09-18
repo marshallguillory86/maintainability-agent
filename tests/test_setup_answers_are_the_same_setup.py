@@ -84,14 +84,6 @@ def _call(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
     return asyncio.run(submit())
 
 
-def test_list_tools_exposes_only_the_host_submit_answer_path(tmp_path: Path) -> None:
-    """A field merely named ``setup`` is not a public answer path."""
-    properties = _tool_schema(_repository(tmp_path, "schema"))["properties"]
-
-    assert "setup_answers" in properties
-    assert {"setup", "grant", "ctx"}.isdisjoint(properties), properties
-
-
 def test_submitted_economics_and_test_answers_advance_the_derived_stages(
     tmp_path: Path,
 ) -> None:

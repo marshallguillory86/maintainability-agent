@@ -7179,13 +7179,19 @@ source, so a constant is a second text to drift from the first. The closure
 body moves to `_run_audit_tool` instead: the gate is satisfied by moving code,
 not by separating a contract from the thing it describes.
 
-*Closing tests:* `test_list_tools_exposes_only_the_host_submit_answer_path`,
-`test_submitted_economics_and_test_answers_advance_the_derived_stages`,
+*Closing tests:* `test_submitted_economics_and_test_answers_advance_the_derived_stages`,
 `test_host_submissions_refuse_values_outside_the_published_questions`
 (parametrised over `depth` and `default_format`) and
 `test_every_call_again_instruction_names_the_public_answer_path` in
 `tests/test_setup_answers_are_the_same_setup.py`, written by Codex against the
 published surface rather than the helpers behind it.
+
+The fourth test in that suite, which asserts `list_tools()` serves
+`setup_answers` and none of the private resolver parameters, guards **D189**
+and passes at this entry's base. It is kept — the defect it holds is invisible
+in the source, since the function has always taken a `setup` parameter — and
+lives in `tests/test_list_tools_publishes_the_answer_path.py` with its
+assertions unchanged, so it is not counted as evidence for this entry.
 
 *Mutation:* validating submissions against a hand-written vocabulary passes
 every value test and drifts the day a question changes its options, which is

@@ -166,19 +166,38 @@ def _setup_first(root: Path, reconfigure: bool = False) -> dict[str, Any]:
     # The staged set, not stage one every time: answering stage one can
     # open stage two, and a host reading questions as data has to be shown
     # the stage it is actually in (D190).
-    result["setup_needed"] = {"questions": staged_questions(root)}
-    opening = (
-        "The user asked to change this repository's configuration."
-        if reconfigure else
-        "This repository has not been set up."
+    questions = staged_questions(root)
+    result["setup_needed"] = {"questions": questions}
+    names = [question["name"] for question in questions]
+    # Said about the questions actually in the reply, not about a flag. A
+    # stage-two reply carried the stage-one preamble — "this repository has
+    # not been set up" above three labor rates that exist *because* it was —
+    # and recited the `default_format` options with no such question in it
+    # (D192).
+    if "run_pool" in names:
+        opening = (
+            "The user asked to change this repository's configuration."
+            if reconfigure else
+            "This repository has not been set up."
+        )
+    else:
+        opening = (
+            "This repository's setup is part-answered. These are the "
+            "questions the answers already given opened; the earlier ones "
+            "are recorded and are not asked again."
+        )
+    presentation = (
+        f" — default_format offers {', '.join(PRESENTATIONS)} —"
+        if "default_format" in names else ""
     )
     result["setup_instruction"] = (
         f"{opening} No audit ran and no score was produced. Ask the user "
         "every question in setup_needed, offering exactly the options each "
-        f"one lists — default_format offers {', '.join(PRESENTATIONS)} — "
-        "and then call audit_repository again. Answering setup does not "
-        "start an audit: the next call returns the run-or-reconfigure "
-        "choice, and the user decides when to run. Do not substitute "
+        f"one lists{presentation} and then call audit_repository again with "
+        "`setup_answers`, a mapping of each question's `name` to the chosen "
+        "option. Answering setup does not start an audit: the next call "
+        "returns the run-or-reconfigure choice, or the next stage of "
+        "questions, and the user decides when to run. Do not substitute "
         "questions of your own, do not answer on the user's behalf, and do "
         "not report a grade: there is none to report yet."
     )

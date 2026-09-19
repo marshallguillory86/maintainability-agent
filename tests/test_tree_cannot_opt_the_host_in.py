@@ -102,7 +102,10 @@ def test_user_opt_in_cannot_be_completed_by_repo_controlled_spawn_settings(
         seen["argv"] = invocation.argv
         seen["env"] = invocation.env
         seen["timeout"] = kwargs["timeout_seconds"]
-        return SimpleNamespace(exit_code=0, detail="")
+        # `resolved_program` since D196: the real ToolResult reports
+        # which program was executed, and this stand-in has to carry
+        # every field the caller reads or it stops standing in.
+        return SimpleNamespace(exit_code=0, detail="", resolved_program=None)
 
     monkeypatch.setattr("maintainability_audit._test_execution.run", fake_run)
     run_test_suite(tmp_path, load_config(str(config)))

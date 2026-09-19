@@ -17,7 +17,11 @@
     "timeout_seconds": 120
   },
   "economic_context": {
-    "requested": true,
+    "loaded_engineering_cost_per_hour": {
+      "base": 165.0,
+      "high": 275.0,
+      "low": 130.0
+    },
     "version": 1
   },
   "expected_commands": {
@@ -25,7 +29,12 @@
       "python3 -m py_compile src/maintainability_audit/*.py"
     ],
     "test": [
-      "PYTHONPATH=src python3 -m pytest --cov=maintainability_audit --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=92"
+      "pytest",
+      "-n",
+      "auto",
+      "--cov=maintainability_audit",
+      "--cov-report=xml:coverage.xml",
+      "-q"
     ]
   },
   "expected_files": [

@@ -35,6 +35,7 @@ silent, because silence is exactly what ADR 007 says must not read as safety.
 from __future__ import annotations
 
 import importlib.util
+import json
 import shlex
 import sys
 import tempfile
@@ -69,9 +70,15 @@ from ._runner import Invocation, Outcome, run
 #: it and prints no reason under the declared axes (its D25), which is a grade
 #: moved in silence. The floor is the first release where the declaration is
 #: both accepted and disclosed.
-SUPPORTED_FLOOR = (0, 12, 7)
+#:
+#: **Raised to 0.12.8 by D197.** The HTML report draws the delegate's work
+#: order rather than quoting it, and `--work-order-json` is where the facts
+#: come from. An older release still produces a readable report — the
+#: Markdown is carried and preformatted exactly as before — so this floor
+#: is about what the operator was promised, not about avoiding a crash.
+SUPPORTED_FLOOR = (0, 12, 8)
 SUPPORTED_CEILING = (1,)
-REQUIREMENT = "secure-code-agent>=0.12.7,<1"
+REQUIREMENT = "secure-code-agent>=0.12.8,<1"
 
 #: How long the child may run before the pillar is reported as unmeasured.
 DEFAULT_TIMEOUT_SECONDS = 300
@@ -89,6 +96,42 @@ class DelegateRun:
     #: The delegate's own remediation prompt — its work order — read before
     #: the directory it was written into is deleted (D179).
     work_order: str | None = None
+    #: The same work order as facts (secure-code-agent D27). The Markdown
+    #: above is what an operator reads; this is what the HTML report draws
+    #: from, because prose is the one thing this tool cannot re-present —
+    #: it used to wrap the Markdown in `<pre>` and hand a reader `##`
+    #: headings inside a rendered page (D197).
+    work_order_data: dict[str, Any] | None = None
+
+
+#: Work-order schema versions this tool knows how to draw. A document
+#: announcing anything else is left unread rather than half-rendered: the
+#: Markdown is still carried, so the reader loses the drawing and not the
+#: work order.
+_WORK_ORDER_SCHEMA_VERSIONS = frozenset({1})
+
+
+def _read_work_order_data(path: Path) -> dict[str, Any] | None:
+    """The delegate's work order as facts, when it wrote one this tool reads.
+
+    Not `read_produced`: that is the *pillar* reader, and it refuses any
+    document without the pillar's own `schema` key — which this one does
+    not have and should not. Reusing it returned `None` for a file that was
+    written correctly, and the HTML report fell back to quoting Markdown
+    with nothing saying why.
+
+    The file sits in a temporary directory this process created, so it is
+    read directly; what is checked is the contract, not the provenance.
+    """
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    if payload.get("schema_version") not in _WORK_ORDER_SCHEMA_VERSIONS:
+        return None
+    return payload
 
 
 def _install_remedy(reason: str) -> dict[str, str]:
@@ -128,6 +171,7 @@ def run_security_delegate(
             "--sarif-output", str(out / "report.sarif"),
             "--comment-output", str(out / "comment.md"),
             "--prompt-output", str(out / "prompt.md"),
+            "--work-order-json", str(out / "work-order.json"),
         ]
         if changed_revspec:
             argv += ["--changed-only", changed_revspec]
@@ -138,7 +182,11 @@ def run_security_delegate(
         ), timeout_seconds=timeout_seconds)
         document = read_produced(pillar)
         if document is not None:
-            return DelegateRun(document, work_order=_read_text(out / "prompt.md"))
+            return DelegateRun(
+                document,
+                work_order=_read_text(out / "prompt.md"),
+                work_order_data=_read_work_order_data(out / "work-order.json"),
+            )
         if result.outcome is Outcome.TIMED_OUT:
             return DelegateRun(None, f"secure-code-agent did not finish within {timeout_seconds}s")
         detail = _last_line(result.stderr) or _last_line(result.stdout) or result.detail

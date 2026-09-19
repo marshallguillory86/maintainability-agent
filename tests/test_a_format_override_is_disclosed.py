@@ -27,41 +27,13 @@ citations stay evidence.
 
 from __future__ import annotations
 
-import json
-
 import pytest
-
-from maintainability_audit import _mcp_audit
-
-
-def _config(tmp_path, persisted: str | None) -> dict:
-    config = {
-        "version": 1,
-        "analyzers": {"run": False},
-        "history": {"record": False},
-    }
-    if persisted is not None:
-        config["presentation"] = {"format": persisted}
-    (tmp_path / "maintainability-agent.json").write_text(
-        json.dumps(config), encoding="utf-8"
-    )
-    return config
-
-
-def _result(tmp_path, persisted: str | None, requested: str | None) -> dict:
-    """Run the audit through the MCP door and return its top-level result."""
-    _config(tmp_path, persisted)
-    (tmp_path / "module.py").write_text("def value():\n    return 1\n", encoding="utf-8")
-    return _mcp_audit.audit_repository(
-        str(tmp_path), action="run", format=requested,
-        run_analyzers=False, record_history=False, include_prompt=False,
-        roots=(tmp_path.resolve(),),
-    )
+from _presentation_fixtures import audit  # noqa: E402 - tests dir on sys.path
 
 
 def test_a_different_format_than_the_user_chose_is_disclosed(tmp_path) -> None:
     """The shape that shipped: html chosen, json delivered, nothing said."""
-    result = _result(tmp_path, persisted="html", requested="json")
+    result = audit(tmp_path, persisted="html", requested="json")
 
     assert result["presentation_override"] == {
         "requested": "json", "persisted": "html",
@@ -72,7 +44,7 @@ def test_a_different_format_than_the_user_chose_is_disclosed(tmp_path) -> None:
 def test_every_presentation_discloses_the_same_way(tmp_path, requested) -> None:
     """Not just json. Any format that is not the recorded one is a
     substitution, including one this tool happens to prefer."""
-    result = _result(tmp_path, persisted="markdown", requested=requested)
+    result = audit(tmp_path, persisted="markdown", requested=requested)
 
     assert result["presentation_override"]["persisted"] == "markdown"
     assert result["presentation_override"]["requested"] == requested

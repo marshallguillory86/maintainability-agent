@@ -107,14 +107,25 @@ DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
         ),
     },
     ".php": {
-        "elvisOperator": (
-            "lizard does not count `?:`. PHP's short ternary chooses "
-            "between two paths exactly as the long form does; the only "
-            "difference is that the first operand is reused as the "
-            "consequent. Counting `$a ? $b : $c` and not `$a ?: $c` "
-            "would make the score depend on which spelling a codebase "
-            "prefers, which is the same argument as the word operators "
-            "below (D127)."
+        # `elvisOperator` was declared here until 2026-09-18. lizard now
+        # counts `?:` and the two agree at 2, so the declaration was
+        # removed rather than kept as decoration — a divergence that is
+        # no longer real is a claim about another tool that has stopped
+        # being true, and `test_every_declared_divergence_is_still_real`
+        # is what caught it.
+        "ternaryAndCoalesce": (
+            "lizard scores 5 where this project scores 3, and the "
+            "difference is two separate lizard errors, each verified "
+            "against a minimal fixture. A function whose only `?` is the "
+            "nullable type hint `?int` scores 2 there: the hint is "
+            "counted as a decision, and a nullable parameter decides "
+            "nothing — exactly the `.ts` `optionalParameter` case "
+            "declared above. A function whose only operator is one `??` "
+            "scores 3: the null-coalesce is counted twice, which its "
+            "two `?` characters explain and its one branch does not. "
+            "`$v ?? $x` chooses between two paths once, so this project "
+            "counts it once, the same rule it already applies to `?:` "
+            "and the word operators below."
         ),
         "wordOperators": (
             "lizard counts `&&` and `||` but not PHP's word forms. "

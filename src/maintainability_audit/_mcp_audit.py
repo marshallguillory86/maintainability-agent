@@ -244,13 +244,35 @@ def audit_repository(
                            record=_record_resolved(record_history, history_path, config),
                            want_targets=bool(include_prompt))
     baseline = _baseline_workflow(report, root, baseline_path, write_baseline)
-    if format is None:
-        # Per-call beats persisted beats the documented default: chat —
-        # which is Markdown on the wire — not markdown-the-file (M2).
-        format = (config.get("presentation") or {}).get("format") or "chat"
+    format, override = _resolve_presentation(format, config)
     result = _top_level_result(report, root, status, run_analyzers,
                                baseline, include_prompt)
+    if override is not None:
+        result["presentation_override"] = override
     return _finish_result(result, format, root, config, report)
+
+
+def _resolve_presentation(
+    format: str | None, config: dict[str, Any]
+) -> tuple[str, dict[str, str] | None]:
+    """The presentation to deliver, and the override to disclose.
+
+    Per-call beats persisted beats the documented default: chat — which is
+    Markdown on the wire, not markdown-the-file (M2).
+
+    A per-call format still wins; CI asks for json and must get it. What it
+    may not do is win *silently*. This is the one place an agent could
+    substitute its own presentation for the one the person recorded during
+    setup and leave no trace — D26's failure with the report produced
+    instead of withheld, where the user chose html and read whatever the
+    relay preferred (D194). `None` for the override when the call honours
+    the choice, so the key is a signal rather than a field on every reply.
+    """
+    persisted = (config.get("presentation") or {}).get("format")
+    chosen = format if format is not None else (persisted or "chat")
+    if persisted and chosen != persisted:
+        return chosen, {"requested": chosen, "persisted": persisted}
+    return chosen, None
 
 
 def _analyzers_contributed(report: dict[str, Any]) -> bool:

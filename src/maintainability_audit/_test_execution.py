@@ -169,6 +169,7 @@ def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
     if not command:
         return {
             "command": (config.get("expected_commands") or {}).get("test") or [],
+            "resolved_program": None,
             "ran": False, "exit_code": None, "passed": False,
             "detail": (
                 "opted in, but no test command is recorded in the user tier; "
@@ -192,7 +193,8 @@ def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
         # program to run. Report it as configured but unrunnable rather
         # than spawning nothing and calling it a pass.
         return {
-            "command": command, "ran": False, "exit_code": None, "passed": False,
+            "command": command, "resolved_program": None,
+            "ran": False, "exit_code": None, "passed": False,
             "detail": "no program in the configured test command", "coverage_percent": None,
         }
     # Snapshot the artifact's state *before* the run so a pre-existing
@@ -211,6 +213,16 @@ def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
     ran = result.exit_code in (0, 1)
     return {
         "command": command,
+        # What was configured is not what ran. `locate` searches the
+        # agent's own script directory before PATH (D142), so the same
+        # name resolves to different programs depending on the
+        # interpreter running the agent — and this reported only the name
+        # it was handed. Through one door `pytest` was the project's;
+        # through another it was a different environment's, which could
+        # not import the project, so the suite did not run and test
+        # effectiveness was unmeasured on one surface and measured on the
+        # other with nothing saying why (D196).
+        "resolved_program": result.resolved_program,
         "ran": ran,
         "exit_code": result.exit_code,
         "passed": result.exit_code == 0,

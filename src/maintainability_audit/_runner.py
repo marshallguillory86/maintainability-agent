@@ -102,6 +102,18 @@ class ToolResult:
     exit_code: int | None = None
     duration_seconds: float = 0.0
     detail: str = ""
+    #: The program actually executed, after `locate` resolved the name.
+    #:
+    #: `locate` searches the agent's own script directory before `PATH`
+    #: (D142), so the same configured name can resolve to different
+    #: programs depending on which interpreter is running the agent — and
+    #: the audit reported only the name it was given. A console script
+    #: invoked by a foreign interpreter resolved `pytest` to a different
+    #: environment's pytest, which could not import the project, so the
+    #: suite did not run and test effectiveness was unmeasured through
+    #: one door and measured through the other. Saying which program ran
+    #: makes that one look instead of a search (D196).
+    resolved_program: str | None = None
 
     @property
     def usable(self) -> bool:
@@ -353,6 +365,54 @@ def _is_findings_exit_with_empty_body(completed: subprocess.CompletedProcess) ->
             and not completed.stderr.strip())
 
 
+def _classify_completed(slug: str, invocation: Invocation, completed: subprocess.CompletedProcess[str],
+                        program: str, duration: float) -> ToolResult:
+    """Turn a finished process into an outcome.
+
+    Split from `run` when carrying the resolved program pushed that
+    function past this repository's own length gate (D196). The three
+    endings are the whole of the classification and read better
+    together than interleaved with the spawn.
+    """
+    if completed.returncode not in invocation.findings_exit_codes:
+        return ToolResult(
+            slug=slug,
+            outcome=Outcome.FAILED,
+            stdout=completed.stdout,
+            stderr=completed.stderr,
+            exit_code=completed.returncode,
+            resolved_program=program,
+            duration_seconds=duration,
+            detail=(
+                f"{invocation.argv[0]} exited {completed.returncode}: "
+                f"{(completed.stderr or completed.stdout).strip().splitlines()[:1] or ['no output']}"
+            ),
+        )
+    if _is_findings_exit_with_empty_body(completed):
+        return ToolResult(
+            slug=slug,
+            outcome=Outcome.NOT_WORKING,
+            stdout=completed.stdout,
+            stderr=completed.stderr,
+            exit_code=completed.returncode,
+            resolved_program=program,
+            duration_seconds=duration,
+            detail=(
+                f"{invocation.argv[0]} exited {completed.returncode} with no output; "
+                "a findings exit that produced nothing is not a clean run"
+            ),
+        )
+    return ToolResult(
+        slug=slug,
+        outcome=Outcome.RAN,
+        stdout=completed.stdout,
+        stderr=completed.stderr,
+        exit_code=completed.returncode,
+        resolved_program=program,
+        duration_seconds=duration,
+    )
+
+
 def run(
     slug: str,
     invocation: Invocation,
@@ -366,6 +426,7 @@ def run(
     resolved = locate(argv[0])
     if resolved:
         argv[0] = resolved
+    program = argv[0]
     try:
         completed = subprocess.run(  # noqa: S603 - argv is built by adapters, never a shell string
             argv,
@@ -380,6 +441,7 @@ def run(
         return ToolResult(
             slug=slug,
             outcome=Outcome.TIMED_OUT,
+            resolved_program=program,
             duration_seconds=time.monotonic() - started,
             detail=(
                 f"{invocation.argv[0]} exceeded {timeout_seconds}s. Raise "
@@ -393,42 +455,10 @@ def run(
         return ToolResult(
             slug=slug,
             outcome=Outcome.NOT_WORKING,
+            resolved_program=program,
             duration_seconds=time.monotonic() - started,
             detail=f"{invocation.argv[0]} could not be executed: {error}",
         )
 
     duration = time.monotonic() - started
-    if completed.returncode not in invocation.findings_exit_codes:
-        return ToolResult(
-            slug=slug,
-            outcome=Outcome.FAILED,
-            stdout=completed.stdout,
-            stderr=completed.stderr,
-            exit_code=completed.returncode,
-            duration_seconds=duration,
-            detail=(
-                f"{invocation.argv[0]} exited {completed.returncode}: "
-                f"{(completed.stderr or completed.stdout).strip().splitlines()[:1] or ['no output']}"
-            ),
-        )
-    if _is_findings_exit_with_empty_body(completed):
-        return ToolResult(
-            slug=slug,
-            outcome=Outcome.NOT_WORKING,
-            stdout=completed.stdout,
-            stderr=completed.stderr,
-            exit_code=completed.returncode,
-            duration_seconds=duration,
-            detail=(
-                f"{invocation.argv[0]} exited {completed.returncode} with no output; "
-                "a findings exit that produced nothing is not a clean run"
-            ),
-        )
-    return ToolResult(
-        slug=slug,
-        outcome=Outcome.RAN,
-        stdout=completed.stdout,
-        stderr=completed.stderr,
-        exit_code=completed.returncode,
-        duration_seconds=duration,
-    )
+    return _classify_completed(slug, invocation, completed, program, duration)

@@ -437,9 +437,11 @@ def _pillars_with_delegation(
         reason = None if handed_over else (
             f"the --security-pillar document {pillar_path} was absent or could not be trusted")
         work_order = None
+        work_order_data = None
     else:
         run = run_security_delegate(root, changed_revspec=changed_revspec)
         handed_over, reason, work_order = run.document, run.reason, run.work_order
+        work_order_data = run.work_order_data
         if run.environment:
             report["environment_work_order"] = [
                 *(report.get("environment_work_order") or []), *run.environment]
@@ -451,7 +453,7 @@ def _pillars_with_delegation(
     security = next(entry for entry in pillars if entry["pillar"] == "security")
     # Only beside the document it came with: a work order from a run whose
     # pillar could not be trusted is not evidence either (D179).
-    if handed_over and (carried_order := carried_work_order(work_order, security)):
+    if handed_over and (carried_order := carried_work_order(work_order, security, work_order_data)):
         report[SECURITY_WORK_ORDER] = carried_order
     return pillars
 

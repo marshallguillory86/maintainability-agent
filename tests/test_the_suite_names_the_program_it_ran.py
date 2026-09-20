@@ -24,7 +24,13 @@ design, and did not say what it substituted.
 
 from __future__ import annotations
 
+from test_first_run_prompt import _repo
+
+from maintainability_audit._evidence_view import test_suite_lines as suite_lines
 from maintainability_audit._runner import Invocation, ToolResult, run
+from maintainability_audit.config import load_config
+from maintainability_audit.renderers import render_html, render_markdown
+from maintainability_audit.report import build_report
 
 
 def test_a_run_reports_the_program_it_resolved() -> None:
@@ -49,6 +55,28 @@ def test_an_unresolvable_program_is_reported_as_given() -> None:
                                      findings_exit_codes=(0,)))
 
     assert result.resolved_program == "definitely-not-a-real-tool-xyz"
+
+
+def test_module_style_pytest_names_the_resolved_interpreter(
+    monkeypatch,
+) -> None:
+    """``python3 -m pytest`` executes the located argv[0], never pytest.
+
+    Covers existing behaviour: D196 already resolved argv[0], so this
+    passes at that commit. It is kept because D199 changed what the skins
+    print about the resolved program, and the module-style command is the
+    case where the program and the command differ most — the one a
+    renderer is likeliest to get wrong.
+    """
+    monkeypatch.setattr(
+        "maintainability_audit._runner.locate", lambda _program: "/opt/venv/bin/python3"
+    )
+
+    result = run(
+        "probe", Invocation(argv=("python3", "-m", "pytest"), findings_exit_codes=(0,))
+    )
+
+    assert result.resolved_program == "/opt/venv/bin/python3"
 
 
 def test_the_field_defaults_to_none_for_results_that_never_executed() -> None:
@@ -99,3 +127,45 @@ def test_a_suite_that_never_ran_still_carries_the_key(tmp_path) -> None:
 
     assert "resolved_program" in result
     assert result["resolved_program"] is None
+
+
+def test_every_test_suite_skin_names_the_resolved_program_not_just_command(
+    tmp_path,
+) -> None:
+    """D196: the configured command and executable that ran are distinct.
+
+    ``python3 -m pytest`` resolves its program at argv[0].  A renderer that
+    merely joins ``command`` says only what the operator configured, which is
+    the instance D196 leaves open.  The population is the complete Markdown,
+    HTML, and bounded-chat skins consuming these production sentences.
+    """
+    root = _repo(tmp_path)
+    report = build_report(root, load_config(None))
+    suite = {
+        "command": ["python3", "-m", "pytest"],
+        "resolved_program": "/opt/venv/bin/python3",
+        "ran": True,
+        "exit_code": 0,
+        "passed": True,
+        "detail": "",
+        "coverage_percent": None,
+    }
+    report["test_suite"] = suite
+    sentences = suite_lines(suite)
+    skins = {
+        "complete Markdown": render_markdown(report),
+        "HTML": render_html(report, []),
+        "bounded chat": render_markdown(report, complete=False),
+    }
+
+    assert skins, "the derived test-suite skin population is empty"
+    assert any(suite["resolved_program"] in sentence for sentence in sentences), (
+        "test_suite_lines describes only the configured command, not the program run"
+    )
+    for skin, rendered in skins.items():
+        assert "Command: python3 -m pytest" in rendered, (
+            f"{skin} dropped the configured test command"
+        )
+        assert suite["resolved_program"] in rendered, (
+            f"{skin} joins command but hides the program it ran"
+        )

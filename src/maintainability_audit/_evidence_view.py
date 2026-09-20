@@ -319,10 +319,18 @@ def test_suite_lines(block: dict[str, Any] | None) -> list[str]:
 
     Empty on the default path (no opt-in, no ``test_suite`` block), so the
     section is absent from a report that never ran the tree. When it did
-    run, both skins render these same sentences, so a failed suite reads
+    run, every skin renders these same sentences, so a failed suite reads
     as failed everywhere rather than being silently indistinguishable from
     a pass — the report states what examined ``test_effectiveness`` (P8),
     which is the suite named here.
+
+    That sentence used to say "both skins" and was false. The bounded chat
+    view never called this function, so it reported
+    ``test effectiveness: not measurable`` for a suite that had run and
+    failed — a value with no attributable source, which is P8's stated
+    violation, and a *failed* measurement misreported as an absent one.
+    The claim was in this docstring, which is how it stayed invisible:
+    anyone reading it had been told the case was handled (D199).
     """
     if not block:
         return []
@@ -339,8 +347,21 @@ def test_suite_lines(block: dict[str, Any] | None) -> list[str]:
     lines = [
         f"The operator opted in to running the repository's test command; it {outcome}.",
         f"Command: {command}",
-        f"Coverage: {coverage_text}",
     ]
+    # What was configured is not always what ran. `locate` searches the
+    # agent's own script directory before PATH (D142), so the same command
+    # resolves to different programs depending on the environment running
+    # the audit — and D196 recorded that in the report while every skin
+    # still printed only the command. Two surfaces disagreed about whether
+    # the suite ran at all, and each showed the identical `Command:` line.
+    #
+    # Printed only when it adds something. `python3 -m pytest` resolving to
+    # a `python3` on PATH says nothing a reader did not already have; the
+    # same command resolving into a different virtualenv says everything.
+    resolved = block.get("resolved_program")
+    if resolved and resolved not in command:
+        lines.append(f"Program run: {resolved}")
+    lines.append(f"Coverage: {coverage_text}")
     detail = (block.get("detail") or "").strip()
     if detail and not block.get("passed"):
         lines.append(f"Detail: {detail}")

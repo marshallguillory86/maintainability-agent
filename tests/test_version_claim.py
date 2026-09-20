@@ -6,10 +6,15 @@ itself `0.9.1` and `Development Status :: 3 - Alpha`. A tester running
 project has already shipped nine releases whose contents did not match
 what they claimed (D23).
 
-Two properties, because two different things can drift.
+*Agreement* used to be half of this file: `pyproject`, `config.VERSION`
+and `__init__.__version__` were three copies of one fact and had to be
+checked against each other. D198 removed the copies — the literal lives
+in `__init__` alone, `config` re-exports it and `pyproject` reads it —
+so there is nothing left to disagree. `test_the_version_has_one_source`
+holds that, and policing copies that no longer exist would be worse than
+useless: it would make reintroducing one look safe.
 
-*Agreement*: `pyproject`, `config.VERSION` and `__init__.__version__`
-are three copies of one fact and have to say the same thing.
+What remains is the half that was never about duplication.
 
 *Earned*: `docs/release-plan.md` tags 1.0 at 8.10, after acceptance
 (8.8) and a hostile audit of the artifact that passed it (8.9). So a
@@ -29,20 +34,14 @@ PLAN = ROOT / "docs" / "release-plan.md"
 
 
 def _declared() -> str:
-    metadata = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    return metadata["project"]["version"]
+    """The version this build claims.
 
-
-def test_every_copy_of_the_version_says_the_same_thing() -> None:
-    """Three files hold one fact."""
+    Read from the package rather than `pyproject`, which no longer holds a
+    literal: it derives the number from here (D198).
+    """
     from maintainability_audit import __version__
-    from maintainability_audit.config import VERSION
 
-    declared = _declared()
-    assert declared == VERSION and __version__ == declared, (
-        f"pyproject says {declared!r}, config.VERSION says {VERSION!r}, "
-        f"__init__ says {__version__!r}"
-    )
+    return __version__
 
 
 def test_a_final_1_0_0_is_not_claimed_before_its_gates_close() -> None:
@@ -113,6 +112,10 @@ def _every_declared_copy() -> dict[str, str]:
     """
     literal = re.compile(r'(?:^version|\bVERSION|__version__)\s*=\s*"([^"]+)"', re.M)
     found: dict[str, str] = {}
+    # `pyproject.toml` is still swept even though it now derives the version:
+    # the point is to catch a literal reappearing there, which is the drift
+    # D198 removed and the exact way `secure-code-agent` shipped a wheel
+    # stamped with a version its own reports contradicted.
     for path in [ROOT / "pyproject.toml", *sorted((ROOT / "src").rglob("*.py"))]:
         for match in literal.finditer(path.read_text(encoding="utf-8")):
             found[str(path.relative_to(ROOT))] = match.group(1)
@@ -171,9 +174,14 @@ def test_no_copy_claims_a_major_line_above_the_latest_release() -> None:
     lifts by itself. No document has a vote.
     """
     copies = _every_declared_copy()
-    assert len(copies) >= 3, (
-        f"the sweep found {len(copies)} version declarations; it should find "
-        f"at least pyproject, config.VERSION and __init__: {copies}"
+    # One, since D198: `__init__` holds the literal, `config` re-exports it
+    # and `pyproject` derives it. The guard stays because the sweep must not
+    # pass by finding nothing — only its expected count changed. The claim
+    # itself still quantifies over *every* copy, so a fourth holder added
+    # tomorrow is covered without anyone remembering this test exists.
+    assert copies, (
+        "the sweep found no version declaration at all; it should find at "
+        "least the literal in __init__"
     )
 
     tag = _latest_release_tag()

@@ -5,6 +5,9 @@ import os
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+# Re-exported: the defaults live in `_config_defaults`, this module is
+# still the door every caller comes through.
+from . import __version__ as _package_version
 from ._config_defaults import DEFAULT_CONFIG, DEFAULT_IDIOM_GROUPS
 from ._operator_reads import (
     MAX_OPERATOR_FILE_BYTES as MAX_OPERATOR_FILE_BYTES,
@@ -16,11 +19,16 @@ from ._operator_reads import (
     read_operator_file as read_operator_file,
 )
 
-# Re-exported: the defaults live in `_config_defaults`, this module is
-# still the door every caller comes through.
 __all__ = ["DEFAULT_CONFIG", "DEFAULT_IDIOM_GROUPS", "PROJECT_URL", "VERSION"]
 
-VERSION = "3.7.16"
+#: Re-exported, not duplicated. `__init__.__version__` is the only place
+#: the number is written.
+#:
+#: These two were the most coupled pair in this repository's own audit —
+#: 64 co-changes at 0.985 confidence — because every release edited both.
+#: A test asserting they agree would only police the duplication; having
+#: one of them is the fix (D198).
+VERSION = _package_version
 
 PROJECT_URL = "https://github.com/marshallguillory86/maintainability-agent"
 

@@ -4,7 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "maintainability-agent"
-version = "3.7.16"
+# Derived from `maintainability_audit.__version__`, the only place the number
+# is written. Duplicating it here is how a release stamps one version into the
+# wheel and another into every report it produces — secure-code-agent shipped
+# exactly that wheel before removing its copy (its release note for 0.5.0).
+dynamic = ["version"]
 description = "Maintainability gate and AI remediation prompt generator for CI."
 readme = "README.md"
 # 3.11, not 3.10. `_discovery`, `_pillars` and `_runner` all import
@@ -59,6 +63,11 @@ mcp = ["mcp>=2,<3"]
 # ships imports it, and the oracle exists so a measurement can be
 # checked against something other than its author.
 dev = ["pytest>=8", "pytest-cov>=5", "pytest-xdist>=3.6", "jsonschema>=4", "ruff>=0.5", "pip-audit>=2.7", "mcp>=2,<3", "PyYAML>=6", "setuptools>=70", "lizard>=1.17"]
+
+[tool.setuptools.dynamic]
+# The single source of truth. `src/maintainability_audit/__init__.py` holds the
+# literal; this reads it. The two cannot drift because there is only one.
+version = { attr = "maintainability_audit.__version__" }
 
 [tool.setuptools.package-data]
 # `_assets` carries the runtime data the code cannot work without: the

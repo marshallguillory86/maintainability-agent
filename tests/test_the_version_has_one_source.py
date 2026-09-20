@@ -91,3 +91,28 @@ def test_only_one_module_writes_the_number() -> None:
     assert writers == ["src/maintainability_audit/__init__.py"], (
         f"the version literal appears in more than one module: {writers}"
     )
+
+
+def test_the_release_gate_reads_the_single_source() -> None:
+    """The gate that compares tag to package must read where it lives.
+
+    It read `pyproject`'s static `version` key. D198 removed that key, so
+    the gate raised `KeyError` and v3.7.17 failed its release eleven
+    seconds in — the fix for a release-breaking duplication broke a
+    release, because the check protecting it was reading one of the
+    copies.
+
+    Asserted against the workflow text: the gate runs in CI, where no
+    test does, and the only thing that can be checked from here is what
+    it is told to read.
+    """
+    workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+    gate = workflow[workflow.index("Verify the tag matches the packaged version"):]
+    gate = gate[: gate.index("\n      - name:")]
+
+    assert "__init__.py" in gate, (
+        "the release gate does not read the module holding the version literal"
+    )
+    assert "['project']['version']" not in gate, (
+        "the release gate reads pyproject's static version, which no longer exists"
+    )

@@ -7397,10 +7397,18 @@ by their own tests, and they are now the only places a human types it.
 D85's agreement check was retired with its premise rather than left passing
 vacuously; that entry is amended above to say so.
 
+**The first attempt broke the release it was fixing.** `release.yml` compares
+the tag against the packaged version by reading `pyproject`'s static `version`
+key — one of the copies this entry removed. v3.7.17 was tagged and failed
+eleven seconds in with `KeyError: 'version'`. The gate protecting against a
+mis-stamped release was itself reading a duplicate, which is the same defect
+one level up. It reads the literal now.
+
 *Closing tests:* `test_config_reexports_rather_than_duplicating`,
 `test_config_holds_no_version_literal`, `test_pyproject_derives_the_version`,
-`test_the_dynamic_version_points_at_the_package` and
-`test_only_one_module_writes_the_number` in
+`test_the_dynamic_version_points_at_the_package`,
+`test_only_one_module_writes_the_number` and
+`test_the_release_gate_reads_the_single_source` in
 `tests/test_the_version_has_one_source.py`.
 
 *Mutation:* asserting `VERSION == __version__` rather than `is` passes with the

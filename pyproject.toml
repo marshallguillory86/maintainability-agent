@@ -64,6 +64,33 @@ mcp = ["mcp>=2,<3"]
 # checked against something other than its author.
 dev = ["pytest>=8", "pytest-cov>=5", "pytest-xdist>=3.6", "jsonschema>=4", "ruff>=0.5", "pip-audit>=2.7", "mcp>=2,<3", "PyYAML>=6", "setuptools>=70", "lizard>=1.17"]
 
+[tool.pydocstyle]
+# D401 ("First line should be in imperative mood") is switched off, and the
+# reason is a product decision rather than a preference.
+#
+# It was 330 of this repository's 566 pydocstyle findings — the single most
+# voluminous rule against it by a wide margin — and every one of them asks for
+# the same edit: `"""Returns the score."""` to `"""Return the score."""`.
+#
+# The docstrings here are deliberately not in that voice. They are narrative,
+# and most of them exist to carry a defect's reasoning where the code that
+# caused it lives: "Why each axis sits outside the score", "The delegate's own
+# remediation prompt - its work order". D401 wants a terse imperative opener,
+# and complying would flatten the sentences this project uses to explain
+# itself. That trades the thing being measured for the measurement.
+#
+# It is also style rather than maintainability: a docstring's mood says
+# nothing about whether the code survives change, which is what the rest of
+# this tool measures. Turned off here rather than suppressed per finding,
+# because 330 acknowledgements with expiry dates would be a ritual, and
+# because the decision is about the whole repository's voice rather than any
+# one line.
+#
+# Every other pydocstyle rule stays on. Missing docstrings (D1xx), malformed
+# summaries (D2xx) and bad quoting (D3xx) are all still reported, which is the
+# conformance half `interrogate` does not measure.
+add-ignore = "D401"
+
 [tool.setuptools.dynamic]
 # The single source of truth. `src/maintainability_audit/__init__.py` holds the
 # literal; this reads it. The two cannot drift because there is only one.

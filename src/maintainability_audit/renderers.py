@@ -223,6 +223,16 @@ def _bounded_markdown(report: dict[str, Any], score: dict[str, Any],
     # view printed nothing about security at all, measured or not, and a
     # missing pillar read exactly like a clean one (ADR 007).
     lines.extend(pillars_markdown(report.get("pillars"), report.get("practice")))
+    # The suite, for the reason D176 put the pillars here: this view
+    # printed nothing about it at all, so a run whose tests *failed* read
+    # exactly like one that never ran — while the table above still
+    # reported `test effectiveness: not measurable`, which is a value with
+    # no attributable source (P8). It was measured; the measurement was a
+    # failure. Rendered through `test_suite_lines`, the same function the
+    # complete report uses, so the skins cannot disagree (ADR 011) — the
+    # property that function's docstring already claimed and did not have
+    # (D199).
+    lines.extend(test_suite_markdown(report))
     lines.extend(security_work_order_pointer(report))
     lines.extend([
         "---", "",

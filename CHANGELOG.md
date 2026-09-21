@@ -12,6 +12,30 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.23 - 2026-09-21
+
+### Fixed — the prompt no longer lists what it just withheld (D207)
+
+One prompt said two things. It printed *"Not in scope for this change: N
+finding(s) need a design decision before code moves … Do not attempt them
+here"*, and that escalated findings were deliberately excluded — and then listed
+those same targets under "to inspect first", "to verify" and "to inspect".
+
+`withheld_reason` is one rule with two clauses: a Major Project, and a finding
+fixed before that came back. The focus lists honoured only the second, and only
+on three of their seven categories — hotspots, large files and risk findings.
+Duplicate blocks, near-duplicates, dead code and competing libraries were
+filtered by nothing at all.
+
+Every category now reads the same rule through the same locator, which also
+gained the competing-libraries shape so that finding class can be placed at all.
+An identified finding is matched by identity and an unidentified one by
+location, and the two are not interchangeable — a location is coarser than the
+identity it stands in for, and mixing them lets one class's withheld finding
+suppress another class's listed one.
+
+A run that withholds nothing produces the same focus lists it always did.
+
 ## 3.7.22 - 2026-09-21
 
 ### Fixed — a pillar's condition says what produced it (D206)

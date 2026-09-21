@@ -251,12 +251,25 @@ def _items_from_idioms(report: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _locate(finding: dict[str, Any]) -> tuple[str | None, int | None]:
-    """Path/line; a duplicate block carries only `locations`, which the old path/line read dropped (audit of `e88b429`)."""
+    """Where a raw finding is, in whichever shape its class carries.
+
+    A duplicate block carries only `locations`, which the old path/line
+    read dropped (audit of `e88b429`). A competing-libraries finding
+    carries neither: its location is the minority package's example
+    file, which `_items_from_counted`'s sibling builder reads directly —
+    so a caller matching findings to work-order items by location found
+    nothing for that class and listed one the prompt had withheld
+    (D207). One locator, so both texts place a finding the same way.
+    """
     path = finding.get("path") or finding.get("first_path")
     line = finding.get("line") or finding.get("first_line") or finding.get("start_line")
     if path is None and (locs := finding.get("locations")):
         path, _, tail = str(locs[0]).rpartition(":")
         line = int(tail) if line is None and tail.isdigit() else line
+    if path is None and (packages := finding.get("packages")):
+        # Sorted by descending file count upstream: the last row is the
+        # minority usage, which is the one the work order points at.
+        path = packages[-1].get("example")
     return path, line
 
 
@@ -500,6 +513,72 @@ def withheld_reason(item: dict[str, Any], escalated: set[str] | None = None) -> 
         return ("it was fixed before and came back, so the same edit is known "
                 "not to hold and the surrounding design needs a decision")
     return None
+
+
+def withheld_targets(report: dict[str, Any],
+                     escalated: set[str] | None = None) -> set[Any]:
+    """Everything the bounded prompt refuses to hand an agent, as targets.
+
+    `withheld_reason` is the one rule, and it has two clauses — a Major
+    Project, and a finding fixed before that came back. Until now only
+    the second reached the prompt's focus sections, and only three of
+    their seven categories, so the same prompt printed *"Not in scope for
+    this change … Do not attempt them here"* and then listed those very
+    targets under "to inspect first" (D207).
+
+    Two kinds of key, because the report only identifies some findings.
+    Risk patterns, hotspots and large files carry a stable fingerprint.
+    Duplicate blocks, near-duplicates, dead code and competing libraries
+    are "located but not yet identified" — `_items_from_counted` says so
+    — and a location is what they have. Both are emitted, so a caller
+    matches on whichever it can produce for the finding in hand.
+
+    The location comes from `_locate`, the same function that placed the
+    work-order item, so "the same finding" means the same thing in the
+    text that withholds it and the text that would have listed it.
+    """
+    blocked = escalated if escalated is not None else escalated_fingerprints(report)
+    targets: set[Any] = set()
+    for item in report.get("work_order") or []:
+        if withheld_reason(item, blocked) is None:
+            continue
+        # One key per item, never both. An identified item is matched by
+        # identity, because a location cannot tell two overloads in one
+        # file apart and emitting both keys hides the sibling — the
+        # defect `test_escalating_one_overload_does_not_hide_the_other`
+        # holds. An unidentified one has only its location, which is
+        # what `_items_from_counted` means by "located but not yet
+        # identified".
+        if item.get("fingerprint"):
+            targets.add(item["fingerprint"])
+        elif item.get("path"):
+            targets.add((item["path"], item.get("line")))
+    return targets
+
+
+def is_withheld(targets: set[Any], finding: dict[str, Any],
+                fingerprint: str | None = None) -> bool:
+    """Whether this raw finding is one the prompt already refused.
+
+    **Identity decides for a class that has one; location only for a
+    class that has none, and the two are not interchangeable.** A
+    location is coarser than the identity it stands in for, so
+    consulting it for an identified finding lets one class's withheld
+    finding suppress another class's listed one. A caller passes
+    `fingerprint` exactly when the finding's class is identified; the
+    location key is reserved for the classes `_items_from_counted` calls
+    "located but not yet identified". D207 records the two wrong
+    attempts that established this.
+
+    Located with `_locate` rather than by reading `path`/`line` directly:
+    a duplicate block carries neither and has to be read out of
+    `locations`, which is the miss the audit of `e88b429` found once
+    already.
+    """
+    if fingerprint is not None:
+        return fingerprint in targets
+    path, line = _locate(finding)
+    return path is not None and (path, line) in targets
 
 
 def prompt_items(items: list[dict[str, Any]], limit: int = 12,

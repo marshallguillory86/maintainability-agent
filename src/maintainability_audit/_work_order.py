@@ -272,14 +272,62 @@ def _locate(finding: dict[str, Any]) -> tuple[str | None, int | None]:
     return path, line
 
 
+#: (class, report key, label) for every finding class the report carries
+#: as a located list. A module constant rather than a local, so a check
+#: about "every counted class" can enumerate them from here instead of
+#: from a list a test author remembered (D209).
+COUNTED_SOURCES: tuple[tuple[str, str, str], ...] = (
+    ("duplicate-block", "duplicate_blocks", "duplicated block"),
+    ("near-duplicate", "near_duplicates", "near-duplicate declaration"),
+    ("dead-code", "dead_code", "unreferenced declaration"),
+    ("risk-pattern", "risk_findings", "configured risk pattern"),
+)
+
+
+def _sites(name: str, finding: dict[str, Any], path: str, line: int | None) -> list[str]:
+    """Every place this finding is about, when it is about more than one.
+
+    Two classes are statements about a *relationship* between places, and
+    a work-order item carries one path. `_locate` picks the first, which
+    is the right place to send someone and not the whole finding: a
+    cross-file clone read as "duplicated block in a.py" invites deleting
+    a.py's copy, which is either wrong or half the job, and the other
+    copy is the half that tells you to extract instead (D209).
+
+    The near-duplicate section already names both sides —
+    *"`near.py:5` `copy` is 95% identical to `orig` at `orig.py:1`"* —
+    so this is the work order catching up to what one renderer already
+    did rather than a new idea.
+
+    Empty for a class that genuinely concerns one place. Dead code is
+    one declaration; a risk pattern is one match.
+    """
+    if name == "duplicate-block":
+        return [str(location) for location in finding.get("locations") or []]
+    if name == "near-duplicate" and (other := finding.get("duplicate_of")):
+        return [f"{path}:{line}", f"{other['path']}:{other['start_line']}"]
+    return []
+
+
+def _shared_target(name: str, sites: list[str]) -> str:
+    """What to do about a finding that lives in several places.
+
+    "Remove the duplicated block" is the instruction D165 already had to
+    correct for risk patterns, where "remove" read as "delete the text"
+    and cleared the finding without resolving it. The same word does the
+    same thing here, one class over: deleting one copy of a clone clears
+    nothing and breaks the file it was deleted from.
+    """
+    if name == "near-duplicate":
+        return ("consolidate the two into one declaration, or say why they are "
+                "deliberately separate; editing one alone leaves the other")
+    return (f"extract the shared block so its {len(sites)} copies become one; "
+            "editing one copy alone leaves the rest")
+
+
 def _items_from_counted(report: dict[str, Any]) -> list[dict[str, Any]]:
     """Classes the report carries as located lists."""
-    sources = (
-        ("duplicate-block", "duplicate_blocks", "duplicated block"),
-        ("near-duplicate", "near_duplicates", "near-duplicate declaration"),
-        ("dead-code", "dead_code", "unreferenced declaration"),
-        ("risk-pattern", "risk_findings", "configured risk pattern"),
-    )
+    sources = COUNTED_SOURCES
     # Risk findings are the one class here the report gives a stable
     # identity to, so they are the one class that can carry a
     # fingerprint. The rest are located but not yet identified.
@@ -301,6 +349,11 @@ def _items_from_counted(report: dict[str, Any]) -> list[dict[str, Any]]:
                                    or finding.get("count") or 1),
                 "weight": weight,
             }
+            # A clone is a statement about two or more places, and the
+            # item above describes one of them (D209).
+            if len(sites := _sites(name, finding, path, line)) > 1:
+                item["sites"] = sites
+                item["target"] = _shared_target(name, sites)
             if name == "risk-pattern":
                 item["fingerprint"] = risks[(path, finding["name"], finding["line"])]
                 # "remove the configured risk pattern" read, for a TODO, as

@@ -12,6 +12,29 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.25 - 2026-09-21
+
+### Fixed — a clone names every copy, and is not told to be removed (D209)
+
+A duplicate block is a statement about two or more locations. The work order
+carries one path, so the item read *"duplicated block in `billing.py`"* with the
+target *"remove the duplicated block"* — and an agent handed that deletes one
+copy, which clears nothing and breaks the file it was deleted from.
+
+Items for findings that occupy several places now carry all of them, and the
+target says what resolving it means: *"extract the shared block so its 2 copies
+become one; editing one copy alone leaves the rest"*. Near-duplicates get the
+same treatment from the other side — their item never named what they nearly
+duplicate, while the near-duplicate section in the same prompt already did.
+
+Both surfaces that print a location — the bounded prompt and the per-item
+copy-paste block that travels alone into an agent — read one shared helper, so
+one of them cannot be fixed without the other.
+
+"Remove" is the verb D165 corrected for risk patterns, where it read as "delete
+the matched text" and cleared a finding without resolving it. Same verb, one
+class over.
+
 ## 3.7.24 - 2026-09-21
 
 ### Changed — who gets handed what is its own module (D208)

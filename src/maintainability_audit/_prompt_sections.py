@@ -33,6 +33,7 @@ from ._hotspots import hotspot_measure, hotspot_name
 from ._security_work_order import KEY as SECURITY_WORK_ORDER
 from ._security_work_order import severity_counts
 from ._tdd_view import tdd_sentences
+from ._work_order_view import other_sites
 
 
 def _refused(withheld: set[Any] | None, finding: dict[str, Any]) -> bool:
@@ -251,6 +252,51 @@ def _no_prompt_work(report: dict[str, Any]) -> list[str]:
     ]
 
 
+def _work_item_lines(index: int, item: dict[str, Any]) -> list[str]:
+    """One numbered item: what, where, why, and what clearing it is worth.
+
+    Split out of `prompt_work_order` for this project's own cognitive
+    complexity gate, which D209's "Also at" line pushed it past — the
+    same move `_pillars._measured_entry` made for the length gate. The
+    branches are each a disclosure some audit asked for, so the fix is a
+    seam rather than fewer facts.
+    """
+    location = item["path"] + (f":{item['line']}" if item.get("line") else "")
+    # One row now stands for its whole class (D159), so a count above one
+    # says where the rest are rather than leaving the single location
+    # reading as the only instance.
+    count = item.get("class_count") or 1
+    files = item.get("class_paths") or 1
+    where = f"across {files} files, " if files > 1 else ""
+    lines = [
+        f"{index}. **{item['title']}** — {item['target']}",
+        f"   - First of {count} {where}starting at: `{location}`" if count > 1
+        else f"   - Location: `{location}`",
+    ]
+    # A clone is a statement about two or more places and the line above
+    # names one. Without the rest, "extract the shared block" has nothing
+    # to extract from, and the older wording — "remove the duplicated
+    # block" — read as delete the copy it points at (D209).
+    # `other_sites` is shared with the copy-paste block, because a rule
+    # about what a prompt says that lives in two places is how one of
+    # them gets fixed alone (D157).
+    if others := other_sites(item):
+        lines.append(f"   - Also at: {', '.join(f'`{site}`' for site in others[:4])}"
+                     + (f" and {len(others) - 4} more" if len(others) > 4 else ""))
+    lines.append(f"   - Why it matters: {item['rationale']}")
+    if item["class_delta"]:
+        lines.append(
+            f"   - Clearing all {item['class_count']} of these is worth "
+            f"+{item['class_delta']:.2f} to the maintainability estimate."
+        )
+    elif count > 1:
+        lines.append(
+            f"   - The other {count - 1} are listed in the report; the "
+            "score does not move until the class is cleared."
+        )
+    return lines
+
+
 def prompt_work_order(report: dict[str, Any]) -> list[str]:
     """The ordered work, leading the prompt, Major Projects withheld.
 
@@ -276,29 +322,7 @@ def prompt_work_order(report: dict[str, Any]) -> list[str]:
         "",
     ]
     for index, item in enumerate(items, start=1):
-        location = item["path"] + (f":{item['line']}" if item.get("line") else "")
-        lines.append(f"{index}. **{item['title']}** — {item['target']}")
-        # One row now stands for its whole class (D159), so a count
-        # above one says where the rest are rather than leaving the
-        # single location reading as the only instance.
-        count = item.get("class_count") or 1
-        files = item.get("class_paths") or 1
-        if count > 1:
-            where = f"across {files} files, " if files > 1 else ""
-            lines.append(f"   - First of {count} {where}starting at: `{location}`")
-        else:
-            lines.append(f"   - Location: `{location}`")
-        lines.append(f"   - Why it matters: {item['rationale']}")
-        if item["class_delta"]:
-            lines.append(
-                f"   - Clearing all {item['class_count']} of these is worth "
-                f"+{item['class_delta']:.2f} to the maintainability estimate."
-            )
-        elif count > 1:
-            lines.append(
-                f"   - The other {count - 1} are listed in the report; the "
-                "score does not move until the class is cleared."
-            )
+        lines.extend(_work_item_lines(index, item))
     lines.extend([
         "",
         f"Verify with: `{items[0]['verification']}`",

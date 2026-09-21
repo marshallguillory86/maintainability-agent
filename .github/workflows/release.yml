@@ -15,16 +15,30 @@ name: Release
 #   Environment name: pypi
 #
 # Release process after that — tagging is the only manual step:
-#   1. bump the version in pyproject.toml + __init__.py + config.py
-#   2. add the CHANGELOG entry (## X.Y.Z)
-#   3. re-measure the `docs/release-plan.md` table in the SAME commit:
-#      the "Last tagged version" row must already say vX.Y.Z, because
-#      `test_the_release_plan_table_is_measured_not_remembered` compares
-#      it against `git tag` and the tag is cut from this commit. Skipping
-#      this passes on main and fails the release build, after the tag
-#      exists — which is where v2.11.0 lost a build (D124).
+#   1. bump the version in ONE place: `src/maintainability_audit/__init__.py`.
+#      `pyproject.toml` derives it through `[tool.setuptools.dynamic]` and
+#      `config.VERSION` re-exports it (D198). Writing it into either of
+#      those again fails `test_the_version_has_one_source`.
+#   2. run `python3 tools/stamp_version.py`, which writes the README's
+#      version line, the README's Action pin, the `docs/release-plan.md`
+#      row and the SECURITY.md support table from that one literal, and
+#      exits non-zero if any of them stopped matching (D200). The release
+#      plan's row must already say vX.Y.Z in THIS commit, because
+#      `test_the_release_plan_table_is_measured_not_remembered` compares it
+#      against `git tag` and the tag is cut from here — skipping it passes
+#      on main and fails the release build after the tag exists, which is
+#      where v2.11.0 lost a build (D124). The stamp tool is what makes that
+#      step impossible to forget; it is not optional.
+#   3. add the CHANGELOG entry (## X.Y.Z). The GitHub Release job reads its
+#      notes from that section, and `test_the_changelog_covers_the_shipping_version`
+#      fails without it rather than letting the job substitute a placeholder
+#      (D204).
 #   4. merge to main
 #   5. git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z
+#
+# Steps 1-3 are all checked by the ordinary suite, which the build job below
+# re-runs against the installed wheel. Following this list by hand and
+# getting it wrong is a red build, not a bad release.
 #
 # Pushing the tag runs three jobs: build+verify the artifact, publish it
 # to PyPI, and cut the GitHub Release with notes read from the CHANGELOG
@@ -66,13 +80,19 @@ jobs:
           set -euo pipefail
           tag="${GITHUB_REF_NAME#v}"
           # Read the single source, not `pyproject`, which derives the
-          # version rather than stating it (D198). Reading the file this
-          # gate is meant to protect is also the point: a tag is checked
-          # against the literal the wheel will actually carry.
-          packaged=$(python3 -c "import pathlib,re; print(re.search(r'__version__ = \"([^\"]+)\"', pathlib.Path('src/maintainability_audit/__init__.py').read_text()).group(1))")
-          echo "tag=$tag packaged=$packaged"
-          if [ "$tag" != "$packaged" ]; then
-            echo "::error::Tag v$tag does not match pyproject version $packaged"
+          # version rather than stating it (D198).
+          #
+          # This reads the *source literal*, before anything is built. It
+          # is a cheap gate that fails in seconds rather than after an
+          # upload PyPI will not let anyone replace. It is NOT a check on
+          # the artifact: this comment used to claim it checked "the
+          # literal the wheel will actually carry", which is the one thing
+          # reading a file in the tree cannot do (D205). The wheel is
+          # compared to the tag in the build step below, after it exists.
+          source=$(python3 -c "import pathlib,re; print(re.search(r'__version__ = \"([^\"]+)\"', pathlib.Path('src/maintainability_audit/__init__.py').read_text()).group(1))")
+          echo "tag=$tag source=$source"
+          if [ "$tag" != "$source" ]; then
+            echo "::error::Tag v$tag does not match the packaged version $source"
             exit 1
           fi
 
@@ -124,7 +144,22 @@ jobs:
           python3 -m build
           python3 -m twine check dist/*
           python3 -m pip install dist/*.whl
+          # The artifact's own version, not the tree's. The pre-build gate
+          # above reads a file; this reads what a user will `pip install`,
+          # which is the only thing a PyPI upload actually puts under that
+          # name. The sibling project shipped a wheel stamped with one
+          # version while every report it produced carried another, and
+          # nothing on either side could see it (D205).
+          #
+          # Printed as well as compared, because a version that disagrees
+          # should say both numbers in the log rather than only fail.
+          built=$(python3 -c "from importlib.metadata import version; print(version('maintainability-agent'))")
+          echo "built wheel reports version $built"
           maintainability-agent --version
+          if [ "${GITHUB_REF_TYPE:-}" = "tag" ] && [ "$built" != "${GITHUB_REF_NAME#v}" ]; then
+            echo "::error::The built wheel carries $built, but the tag is $GITHUB_REF_NAME"
+            exit 1
+          fi
           python3 -m pip install ".[dev]"
           # Every audit runs secure-code-agent (D177), and it is installed
           # alongside rather than as a dependency. 3.7.2's tag failed here

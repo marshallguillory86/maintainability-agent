@@ -27,6 +27,9 @@ RELEASE = ROOT / "docs" / ".." / ".github" / "workflows" / "release.yml"
 REGISTER = ROOT / "docs" / "defect-register-chat-surface.md"
 
 OPEN_HEADING = re.compile(r"^### D\d+ — Open", re.MULTILINE)
+# The whole heading, because severity is the last thing on it and the
+# release gate reads it from there.
+OPEN_ENTRY = re.compile(r"^### D\d+ — Open.*$", re.MULTILINE)
 
 
 def _release_workflow() -> str:
@@ -62,22 +65,34 @@ def test_the_gate_matches_the_heading_the_register_actually_uses() -> None:
     assert "—" in workflow, "the gate's pattern lost the em dash the headings use"
 
 
-def test_the_register_currently_has_no_open_entries() -> None:
-    """Covers existing behaviour: the ledger this repository releases from.
+def test_the_register_carries_no_open_high_or_medium() -> None:
+    """Covers existing behaviour: the bar this repository releases from.
 
-    A guard, not a falsifier. It asserts the register's current state,
-    which was already empty before this change and is meant to stay
-    that way — so it passes at any base where the rule is being kept,
-    which is the point of it.
+    A guard, not a falsifier. It asserts the register's current state
+    against the same rule the release workflow applies, and passes at
+    any base where that rule is being kept.
+
+    It read "no open entries at all" until 2026-09-20, which is stricter
+    than the gate it exists to preview: the workflow reads severity off
+    the heading and blocks on High and Medium only, with a comment
+    explaining that an unclassified entry is refused too. Those two
+    cannot both be the bar. Holding the stricter one here made the
+    workflow's severity logic unreachable and gave a Low finding only
+    two destinations — closed today, or unrecorded — which is how a
+    known gap goes unfiled, the failure D151 exists for.
 
     Worth having in the ordinary suite rather than only in the release
     build: there, the tag already exists by the time anything checks.
     """
     register = REGISTER.read_text(encoding="utf-8")
-    still_open = OPEN_HEADING.findall(register)
-    assert not still_open, (
-        f"{len(still_open)} open register entries; a release cuts from an "
-        f"empty ledger: {still_open}"
+    blocking = [
+        heading
+        for heading in OPEN_ENTRY.findall(register)
+        if not heading.rstrip().endswith(("(Low)", "(Informational)"))
+    ]
+    assert not blocking, (
+        f"{len(blocking)} open High/Medium register entries; the release bar "
+        f"is no open High and no open Medium: {blocking}"
     )
 
 def _build_steps() -> list[dict[str, str]]:

@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from ._calibration import CALIBRATION_C
+from ._catalog import PRESENTATIONS
 from ._grant_ledger import (
     ALLOWED_ROOTS_ENV as ALLOWED_ROOTS_ENV,  # noqa: PLC0414 - re-export
 )
@@ -487,8 +488,13 @@ def _finish_result(result: dict[str, Any], format: str, root: Path,
     A reader who believed the old sentence would have concluded the
     bounding was a rendering accident rather than the contract.
     """
-    if format not in ("chat", "markdown", "html", "json"):
-        raise InvalidAuditArgument(f"format must be chat, markdown, html or json, not {format!r}")
+    if format not in PRESENTATIONS:
+        # Read from the tuple the questions are built from, so what this
+        # door accepts and what any surface offers cannot diverge. They
+        # did for eleven releases: `json` was accepted here and offered
+        # nowhere (D201).
+        offered = ", ".join(PRESENTATIONS[:-1]) + f" or {PRESENTATIONS[-1]}"
+        raise InvalidAuditArgument(f"format must be {offered}, not {format!r}")
     # D8: the requested format governs the payload — one findings body
     # per call (html also carries Markdown: chat shows Markdown
     # whatever else was requested, ADR 011). The report dict travels

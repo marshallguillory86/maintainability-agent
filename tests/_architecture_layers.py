@@ -187,6 +187,14 @@ SCORING = {"scoring", "_aspects", "_pressures", "_formula", "_anchor", "_calibra
 # adapters and hands `report` a coverage document. That makes it assembly,
 # not a scanner — it composes rather than measures.
 ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
+            # Which work-order items an agent is handed, split from
+            # `_work_order` at its own file gate (D208). Assembly for the
+            # same reason `_work_order` is: it composes from a finished
+            # work order and measures nothing. `architecture.md` already
+            # carved it out by name — presentation may import
+            # "`_work_order`'s presentation-facing prompt selection" —
+            # which described a boundary no module enforced.
+            "_handoff",
             # The analyzer half of a report, split from `report` at the
             # 500-line gate; it assembles sections and joins the two
             # measurement tiers, so it sits where `report` does.

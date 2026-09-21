@@ -29,12 +29,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from maintainability_audit._handoff import escalated_fingerprints, withheld_reason
 from maintainability_audit._prompt_sections import prompt_focus_sections
-from maintainability_audit._work_order import (
-    Band,
-    escalated_fingerprints,
-    withheld_reason,
-)
+from maintainability_audit._work_order import Band
 
 #: A report carrying one finding of every class the focus sections
 #: render, each with a work-order item that is withheld. Built here

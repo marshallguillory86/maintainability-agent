@@ -23,16 +23,16 @@ from __future__ import annotations
 from typing import Any
 
 from . import _evidence_view as view
-from ._hotspots import hotspot_measure, hotspot_name
-from ._security_work_order import KEY as SECURITY_WORK_ORDER
-from ._security_work_order import severity_counts
-from ._tdd_view import tdd_sentences
-from ._work_order import (
+from ._handoff import (
     escalated_fingerprints,
     is_withheld,
     prompt_items,
     withheld_targets,
 )
+from ._hotspots import hotspot_measure, hotspot_name
+from ._security_work_order import KEY as SECURITY_WORK_ORDER
+from ._security_work_order import severity_counts
+from ._tdd_view import tdd_sentences
 
 
 def _refused(withheld: set[Any] | None, finding: dict[str, Any]) -> bool:

@@ -4,6 +4,7 @@ from typing import Any
 
 from . import _evidence_view as view
 from ._economics_view import economic_impact_markdown
+from ._handoff import escalated_fingerprints
 from ._history_view import (
     escalations_markdown,
     run_comparison_markdown,
@@ -34,7 +35,6 @@ from ._security_work_order import complete_markdown as security_work_order_markd
 from ._security_work_order import pointer_markdown as security_work_order_pointer
 from ._semantic_view import semantic_markdown, without_semantic_suffixes
 from ._tdd_view import tdd_structure_markdown
-from ._work_order import escalated_fingerprints
 from ._work_order_view import NOTHING_TO_DO, work_order_markdown, work_order_selection_markdown
 
 

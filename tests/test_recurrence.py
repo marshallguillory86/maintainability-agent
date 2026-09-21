@@ -319,8 +319,7 @@ def test_the_prompt_withholds_a_finding_it_has_already_failed_to_fix() -> None:
     earned a design conversation. Handing it to an agent a third time
     would produce the same patch and the same return.
     """
-    from maintainability_audit._work_order import prompt_items
-
+    from maintainability_audit._handoff import prompt_items
     items = [
         {"title": "a", "band": "quick-win", "delta": 0.2,
          "fingerprint": "function:src/a.py:tangled#0"},

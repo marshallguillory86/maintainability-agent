@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **3.7.23**.
+Version **3.7.24**.
 
 **Languages parsed:** Python, Java, C, C++, C#, Go, Rust, PHP, Ruby, Swift,
 COBOL, Fortran (free-form *and* fixed-form), and the JS/TS/HTML family — each
@@ -436,7 +436,7 @@ instead of an invokable skill:
 This repo ships `action.yml`, usable as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v3.7.23
+- uses: marshallguillory86/maintainability-agent@v3.7.24
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

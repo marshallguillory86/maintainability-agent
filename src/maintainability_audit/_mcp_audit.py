@@ -29,6 +29,7 @@ from ._grant_ledger import (
 )
 from ._grant_ledger import allowed_roots as allowed_roots  # noqa: PLC0414
 from ._grant_ledger import refused_root_grants as refused_root_grants  # noqa: PLC0414
+from ._handoff import prompt_targets
 from ._mcp_gate import _gate
 from ._recurrence import escalations
 from ._running_version import version_drift
@@ -46,7 +47,6 @@ from ._stored_grants import (
 )
 from ._trends import trend_report
 from ._user_config import mark_repo_seen
-from ._work_order import prompt_targets
 from .baseline import finding_fingerprints
 from .config import (
     VERSION,

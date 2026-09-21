@@ -12,6 +12,22 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.24 - 2026-09-21
+
+### Changed — who gets handed what is its own module (D208)
+
+No behaviour changed. `_work_order.py` had reached 745 lines against this
+repository's own 750-line gate, and the next fix needed ten more. The whole
+question of which work-order items an agent is handed — `withheld_reason` and
+the two clauses it applies, the bounded paste, the conformance targets — moved
+to `_handoff`. `_work_order` is 491 lines and decides what findings are worth
+and how they are ordered.
+
+The boundary was already written down and enforced by nobody: `architecture.md`
+said presentation may import *"`_work_order`'s presentation-facing prompt
+selection"*, naming a module that did not exist. It exists now, so the rule is a
+module name that `test_architecture` holds rather than a sentence.
+
 ## 3.7.23 - 2026-09-21
 
 ### Fixed — the prompt no longer lists what it just withheld (D207)

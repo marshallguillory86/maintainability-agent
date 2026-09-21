@@ -21,7 +21,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from ._work_order import withheld_reason, work_order_rows
+from ._handoff import withheld_reason
+from ._work_order import work_order_rows
 from ._work_order_weights import AUDIT_VERIFICATION
 
 # The report lists the whole backlog; these caps apply only to the bounded

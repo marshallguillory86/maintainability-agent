@@ -127,18 +127,70 @@ def posture(level: int, condition: float | None) -> str:
     return "managed debt" if enforced else "unmanaged debt"
 
 
+def _measured(aspects: tuple[str, ...], scores: dict[str, Any]) -> tuple[str, ...]:
+    """Which of this pillar's aspects actually carried a number."""
+    return tuple(
+        name for name in aspects
+        if isinstance(scores.get(name), (int, float))
+    )
+
+
 def _condition(aspects: tuple[str, ...], scores: dict[str, Any]) -> float | None:
     """The mean of this pillar's measured aspects, or None.
 
     None when nothing under the pillar was measurable — never a zero and
     never a default. Averaging *within* one axis is fine; it is combining
     the two axes that is forbidden.
+
+    **The mean is over what was measured, which is the only honest
+    arithmetic and is not the whole story.** Dropping an unmeasured
+    aspect is not the same as it having scored well, and this number
+    cannot tell the difference: a maintainability pillar whose worst
+    aspect went unmeasured reads 5.0 where measuring it would have read
+    4.43. That is P3's shape — withholding evidence improving a reported
+    value — and the overall grade is defended against it by
+    `_grade_on_the_floor`, which prices unknowns at 0 so concealment can
+    only cost.
+
+    The same defence is wrong here. A pillar's condition is defined by
+    [ADR 007](../../docs/adr-007-pillars-and-practice.md) as the mean of
+    its measured aspects, and a delegated pillar's condition arrives
+    already computed by the tool that owns it — flooring one side would
+    make the two incomparable in the same column. So the fix is
+    disclosure, not different arithmetic: `condition_coverage` on the
+    entry names what produced the number, and no skin prints the number
+    without it (D206).
     """
-    values = [
-        scores[name] for name in aspects
-        if isinstance(scores.get(name), (int, float))
-    ]
+    values = [scores[name] for name in _measured(aspects, scores)]
     return round(sum(values) / len(values), 2) if values else None
+
+
+def condition_coverage(
+    aspects: tuple[str, ...],
+    scores: dict[str, Any],
+    not_applicable: frozenset[str] | set[str] | tuple[str, ...] = (),
+) -> dict[str, Any]:
+    """What produced this pillar's condition, so the number is attributable.
+
+    Three states, because two of them mean opposite things. `measured`
+    carried a number. `unknown` could not be measured — missing
+    evidence, a shallow clone, an analyzer that did not run — and is the
+    set whose absence flatters the mean. `not_applicable` was looked for
+    and had no population, which is a resolved absence and no reflection
+    on the code.
+
+    P8 is the requirement: a reported value names what produced it. A
+    condition of 5.0 over four of seven aspects and one over seven of
+    seven are different claims, and until this they printed identically.
+    """
+    resolved = frozenset(not_applicable)
+    measured = _measured(aspects, scores)
+    absent = [name for name in aspects if name not in measured]
+    return {
+        "measured": list(measured),
+        "unknown": [name for name in absent if name not in resolved],
+        "not_applicable": [name for name in absent if name in resolved],
+    }
 
 
 #: What a delegated pillar's entry takes from the producer's document.
@@ -210,6 +262,49 @@ def delegated_entry(pillar_name: str, document: dict[str, Any]) -> dict[str, Any
     return entry
 
 
+def _measured_entry(
+    pillar: Pillar,
+    aspects: dict[str, Any],
+    not_applicable: frozenset[str],
+    level: int,
+    stated_reason: str | None,
+) -> dict[str, Any]:
+    """One pillar's entry, for a pillar this tool measures or declines to.
+
+    Split out of `pillar_report` for this project's own function-length
+    gate, which the D206 additions pushed it past — the same move D196
+    made on `_runner._classify_completed`, and the reason to make it
+    rather than delete a comment is that the comments here are the
+    record of two defects.
+
+    A pillar this tool does not measure has no reading at all. The first
+    version printed "efficiency — healthy" from the practice axis alone:
+    a maturity level vouching for code the tool had explicitly declared
+    out of scope, which is the exact silence-reads-as-fine defect this
+    pillar block exists to end.
+    """
+    in_scope = pillar.scope in (Scope.OWNED, Scope.PARTIAL)
+    measured = _condition(pillar.aspects, aspects) if in_scope else None
+    return {
+        "pillar": pillar.name,
+        "scope": pillar.scope.value,
+        "reason": stated_reason or pillar.reason,
+        # Both axes, side by side, never merged. A consumer reads either
+        # one; nothing in the document offers their mean.
+        "practice": level,
+        "condition": measured,
+        "posture": posture(level, measured) if in_scope else None,
+        "aspects": list(pillar.aspects),
+        # What the condition was computed from. `aspects` above is what
+        # the pillar *declares*, which stops being what the number came
+        # from the moment one of them could not be measured (D206).
+        "condition_coverage": (
+            condition_coverage(pillar.aspects, aspects, not_applicable)
+            if in_scope else None
+        ),
+    }
+
+
 def pillar_report(
     score: dict[str, Any],
     practice: dict[str, Any],
@@ -232,6 +327,11 @@ def pillar_report(
     resolved = practice
     handed_over = delegated or {}
     aspects = score.get("aspects") or {}
+    # Which `None`s are a resolved absence rather than missing evidence.
+    # Read from the score rather than recomputed: the scorer already made
+    # this call for the grade, and a second opinion here would be a
+    # second rubric (D206).
+    not_applicable = frozenset(score.get("not_applicable") or ())
     report: list[dict[str, Any]] = []
     for pillar in PILLARS:
         # A delegated pillar reports what the tool that owns it measured,
@@ -243,26 +343,8 @@ def pillar_report(
         if pillar.scope is Scope.DELEGATED and pillar.name in handed_over:
             report.append(delegated_entry(pillar.name, handed_over[pillar.name]))
             continue
-        measured = (
-            _condition(pillar.aspects, aspects)
-            if pillar.scope in (Scope.OWNED, Scope.PARTIAL)
-            else None
-        )
-        # A pillar this tool does not measure has no reading at all.
-        # The first version printed "efficiency - healthy" from the
-        # practice axis alone: a maturity level vouching for code the
-        # tool had explicitly declared out of scope, which is the exact
-        # silence-reads-as-fine defect this pillar block exists to end.
-        in_scope = pillar.scope in (Scope.OWNED, Scope.PARTIAL)
-        report.append({
-            "pillar": pillar.name,
-            "scope": pillar.scope.value,
-            "reason": (unmeasured or {}).get(pillar.name) or pillar.reason,
-            # Both axes, side by side, never merged. A consumer reads
-            # either one; nothing in the document offers their mean.
-            "practice": resolved["level"],
-            "condition": measured,
-            "posture": posture(resolved["level"], measured) if in_scope else None,
-            "aspects": list(pillar.aspects),
-        })
+        report.append(_measured_entry(
+            pillar, aspects, not_applicable, resolved["level"],
+            (unmeasured or {}).get(pillar.name),
+        ))
     return report

@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 from test_evidence_normalization import _commit, _report, _tested_repo
+from test_stage8_contract import CANONICAL as _CANONICAL
 
 from maintainability_audit._evidence_reader import normalize_report_evidence
 from maintainability_audit._verification import (
@@ -42,13 +43,28 @@ from maintainability_audit.renderers import render_markdown, render_pr_comment
 from maintainability_audit.report import build_report
 from maintainability_audit.scoring import score_report
 
-# The version-2 public score contract, minus the two evidence fields the
-# tests below strip explicitly.
-SCORE_V2_FIELDS = (
-    "maintainability_estimate", "maintainability_range", "verified_grade_blockers",
-    "categories", "aspects", "dimensions", "rubric", "reference", "worst_dimension", "standard",
-    "analyzer_scored_dimensions",
+#: The published score contract minus the two fields stage 5 adds, which
+#: is what this file asserts stage 5 did *not* disturb.
+#:
+#: Derived rather than restated. It was a second hand-typed copy of
+#: `test_stage8_contract.CANONICAL`, so one additive field had to be
+#: written into two lists that no check compared — the shape D198
+#: removed from the source and D205 found still living in a test (D206).
+#: The subtraction is the whole difference between them, and if that ever
+#: stops being true this expression is what fails.
+SCORE_V2_FIELDS = tuple(
+    sorted(set(_CANONICAL) - {"evidence_status", "verified_grade"})
 )
+
+#: Score fields that did not exist when the pre-stage-5 anchor was
+#: frozen. They are excluded from the anchor comparison rather than
+#: written into the anchor: its whole value is that nobody edited it to
+#: agree with later code, so a field added afterwards can only be left
+#: out. Each is an additive disclosure that changes no number the anchor
+#: holds — `analyzer_scored_dimensions`, and `not_applicable` from D206.
+POST_ANCHOR_FIELDS = frozenset({
+    "evidence_status", "verified_grade", "analyzer_scored_dimensions", "not_applicable",
+})
 
 
 #: The corpus the shipped reference block names. 2.0.0 extended it from
@@ -286,7 +302,7 @@ def test_not_applicable_rollup_is_the_only_change_to_the_pre_stage_five_anchor(
     expected = {renamed.get(key, key): value for key, value in expected.items()}
 
     shipped = {key: value for key, value in report["score"].items()
-               if key not in {"evidence_status", "verified_grade", "analyzer_scored_dimensions"}}
+               if key not in POST_ANCHOR_FIELDS}
 
     changed = {"categories", "maintainability_range", "grade",
                "verified_grade_blockers", "aspects", "rubric", "reference"}

@@ -33,6 +33,14 @@ CANONICAL = (
     "standard", "maintainability_estimate", "maintainability_range", "evidence_status",
     "verified_grade", "verified_grade_blockers", "categories", "aspects", "rubric",
     "dimensions", "worst_dimension", "reference", "analyzer_scored_dimensions",
+    # Additive and optional, like `analyzer_scored_dimensions` before it,
+    # so it does not bump the schema version: nothing that read version 2
+    # breaks on a key it does not know. It names which `None`s in
+    # `aspects` are a resolved absence rather than missing evidence —
+    # a distinction the scorer always made for the grade and the document
+    # kept only the consequence of, so coverage could not be recovered
+    # from the output, which is P8's own falsifier (D206).
+    "not_applicable",
 )
 # Pure renames: same value, new key.
 RENAMED = {

@@ -12,6 +12,36 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.22 - 2026-09-21
+
+### Fixed — a pillar's condition says what produced it (D206)
+
+A pillar's condition is the mean of the aspects that carried a number, which is
+the only honest arithmetic — a `None` is not a zero — and it means an
+unmeasured aspect is dropped rather than counted. Maintainability's seven
+aspects with one bad one average 4.43; withhold that one aspect and the same
+pillar reads 5.0, in a row that still listed all seven and said nothing.
+Withholding evidence improved a reported value, and the value named nothing
+that produced it.
+
+The overall grade was never exposed to this — it is banded from the evidence
+floor, where unknowns price at 0 — and flooring a pillar's condition too was
+rejected, because a delegated pillar's condition arrives already computed by
+the tool that owns it and the two would stop being comparable in the same
+column. So every pillar entry now carries `condition_coverage` and no skin
+prints a partial condition without saying how many of how many aspects made it
+and which are missing. "Could not measure" and "nothing to measure" are named
+separately, because collapsing them is how an unknown reads as clean.
+
+### Added — `score.not_applicable` (D206)
+
+Which `None`s in the aspect layer are a resolved absence rather than missing
+evidence. The scorer has always drawn that line for the grade and the report
+kept only the consequence, so a consumer had to infer it by subtracting the
+blocker text from the aspect layer. Additive and optional, like
+`analyzer_scored_dimensions`: no schema version moves and nothing reading
+version 2 breaks on it.
+
 ## 3.7.21 - 2026-09-20
 
 ### Fixed — the written release process described the chore that had just been removed (D203)

@@ -28,7 +28,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from ._catalog import LICENSE_POLICIES
+from ._catalog import LICENSE_POLICIES, PRESENTATIONS
 from ._setup_errors import SetupRequired as SetupRequired
 from ._setup_persist import (
     BOUNDS,
@@ -91,8 +91,11 @@ def setup_questions(config: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "name": "default_format",
             "prompt": "Default report presentation for this user.",
-            "options": ["chat", "markdown", "html"],
-            "default": "chat",
+            # Read from the terminal's own tuple, not copied: this list
+            # was a second copy and it is how the TTY and MCP doors
+            # could have offered different sets (D201 added `json`).
+            "options": list(PRESENTATIONS),
+            "default": PRESENTATIONS[0],
         },
         {
             # Decision 4: recording is a disclosed choice the person

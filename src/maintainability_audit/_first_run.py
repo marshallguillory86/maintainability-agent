@@ -28,6 +28,7 @@ import sys
 from pathlib import Path
 
 from ._catalog import DEFAULTS, DEPTH_ORDER, LICENSE_POLICIES
+from ._catalog import PRESENTATIONS as PRESENTATIONS  # noqa: PLC0414 - re-export
 from .config import CONFIG_FILENAME, PathNotAllowed, discovered_config, read_operator_file
 
 # One retry per question, then the default. An audit must never be able
@@ -135,13 +136,15 @@ def _ask(question: str, allowed: tuple[str, ...], default: str) -> str:
     return default
 
 
-# The three presentations, and what each means (ADR 011). Order matters:
-# the first is what Enter selects.
-PRESENTATIONS = ("chat", "markdown", "html")
+# `PRESENTATIONS` is re-exported above rather than defined here: every
+# surface that recites the options reads it — the MCP `default_format`
+# question, the gate's instruction line, the skill, the server prompt
+# and the MCP door's validator — and their tests derive the population
+# from it rather than naming the words.
 
 
 def ask_presentation() -> str:
-    """Which of the three skins, asked at every interactive invoke.
+    """Which skin, asked at every interactive invoke.
 
     Never persisted, deliberately (ADR 011 §3): a remembered answer is a
     flag the user cannot see, and the whole point of asking is that
@@ -149,7 +152,7 @@ def ask_presentation() -> str:
     is where the question was asked.
     """
     answer = input(
-        "Report format — chat (Enter), markdown, or html: "
+        "Report format — chat (Enter), markdown, html, or json: "
     ).strip().lower()
     if answer in PRESENTATIONS:
         return answer

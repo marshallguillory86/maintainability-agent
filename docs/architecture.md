@@ -347,7 +347,7 @@ Every design point above traces to a record. Nothing here is a preference someon
 | The agent never calls an LLM; it produces that model's input | [ADR 008](adr-008-translation-and-decision.md), P1 |
 | CLI for CI, MCP for chat, one core, no combined server | [ADR 008](adr-008-translation-and-decision.md) |
 | The report is first-class; the CLI writes Markdown; the MCP report resource returns the byte-identical document | [ADR 008](adr-008-translation-and-decision.md) |
-| Chat, Markdown file, and one HTML file are three skins of that report; ask every interactive invoke | [ADR 011](adr-011-three-report-presentations.md) |
+| Chat, Markdown file, and one HTML file are three skins of that report, and `json` emits the dictionary they read; ask every interactive invoke | [ADR 011](adr-011-three-report-presentations.md) |
 | Work order with location, target, computed delta and verification | [ADR 008](adr-008-translation-and-decision.md) |
 | No rate without a denominator that supports it, per aspect | [ADR 005](adr-005-insufficient-population.md), P7 |
 | Scan scope is part of the result; scope escalation over silent scoring | [ADR 005](adr-005-insufficient-population.md) |

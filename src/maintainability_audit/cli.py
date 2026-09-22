@@ -525,6 +525,13 @@ def _render_presentation(args: argparse.Namespace, report: dict, history_path: P
             args.html_output = "maintainability-report.html"
         elif choice == "markdown":
             args.output = "maintainability-report.md"
+        elif choice == "json":
+            # D201: the two file skins name a file; chat and json are
+            # both stdout, which is what a person choosing json is
+            # about to pipe. Setting the format here rather than a path
+            # is also what stops the fallback below from silently
+            # answering a fourth choice with the second.
+            args.format = "json"
     args.format = args.format or "markdown"
     if args.html_output:
         write_artifact(Path(report["root"]), Path(args.html_output),

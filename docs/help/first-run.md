@@ -24,7 +24,8 @@ asks those fields as one structured form with visible defaults:
 - license policy: permissive;
 - economic context: skip;
 - run this repository's test suite for coverage — **this executes the tree**: no;
-- presentation: chat, markdown or html — default chat;
+- presentation: chat, markdown, html or json — default chat. `json` is the
+  report dictionary itself, for a pipeline rather than a reader (D201);
 - record scan history in this repository: yes.
 
 **The labor rates are a second question set, asked only if you include the

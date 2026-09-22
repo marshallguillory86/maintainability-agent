@@ -12,6 +12,23 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.29 - 2026-09-22
+
+### Fixed — the labor-rate questions accept the rate you type (D213)
+
+The three rates published `options: [90]`, `[140]`, `[210]` — a one-item
+enumeration — and meant it as a type marker. The elicitation door reads a
+non-string option list as "any number", so that path worked. A host reading the
+published questions as data reads `options` as what the word says and offers the
+single value, so entering a real rate meant contradicting the contract the tool
+had just published.
+
+The questions now carry `type: "number"`, and `default` is a suggestion rather
+than the only permitted answer. Both readers ask the question what it is instead
+of inferring it from the shape of its options.
+
+Menus are unchanged and still refuse what they do not offer.
+
 ## 3.7.28 - 2026-09-22
 
 ### Fixed — C#'s `foreach` is counted as the loop it is (D212)

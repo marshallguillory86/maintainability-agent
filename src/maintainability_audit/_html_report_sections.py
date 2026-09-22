@@ -18,7 +18,7 @@ from ._coverage_notes import coverage_notes
 from ._evidence_view import test_suite_lines
 from ._grammar import counted
 from ._hotspots import hotspot_cognitive, hotspot_complexity, hotspot_name
-from ._scan_view import pillar_cells
+from ._scan_view import pillar_cells, practice_cell
 from ._tdd_view import tdd_sentences
 
 
@@ -249,7 +249,7 @@ def _pillars_section(report: dict[str, Any]) -> list[str]:
         rows.append([
             escape(str(entry["pillar"])),
             escape(str(entry["scope"])),
-            escape(str(entry["practice"])),
+            escape(practice_cell(entry)),
             escape(condition),
             escape(reading),
         ])

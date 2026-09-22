@@ -415,11 +415,29 @@ def _coverage_note(entry: dict[str, Any]) -> str:
     return f"; condition {'; '.join(parts)}"
 
 
+def practice_cell(entry: dict[str, Any]) -> str:
+    """One pillar's practice level, or a dash where none was taken (D210).
+
+    The repository-wide level is stated once above this table. Repeating
+    it in a row for a pillar this tool does not measure turned a fact
+    about the repository into a claim about that pillar: the efficiency
+    row read "practice 4" for a pillar declared out of scope, and an
+    unmeasured security row said the same. A delegated pillar that came
+    back with a document shows the producer's own level, which is a real
+    measurement of that pillar.
+
+    Shared with the HTML renderer, like `pillar_cells` beside it: two
+    copies of "print a dash when there is nothing" is how one of them
+    goes on printing `None`.
+    """
+    return "—" if entry.get("practice") is None else str(entry["practice"])
+
+
 def _pillar_row(entry: dict[str, Any]) -> str:
     """One pillar's row: both axes and the reading, never combined."""
     condition, reading = pillar_cells(entry)
     return (
-        f"| {entry['pillar']} | {entry['scope']} | {entry['practice']} | "
+        f"| {entry['pillar']} | {entry['scope']} | {practice_cell(entry)} | "
         f"{condition} | {reading} |"
     )
 

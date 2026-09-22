@@ -291,7 +291,18 @@ def _measured_entry(
         "reason": stated_reason or pillar.reason,
         # Both axes, side by side, never merged. A consumer reads either
         # one; nothing in the document offers their mean.
-        "practice": level,
+        #
+        # **And neither axis is reported for a pillar this tool does not
+        # measure.** `posture` was nulled for that reason when the first
+        # version printed "efficiency — healthy" from practice alone;
+        # `practice` was left behind, so the efficiency row went on
+        # reading "practice 4" for a pillar the tool declares out of
+        # scope, and the unmeasured security row said the same — this
+        # repository's own maturity level standing in for one nobody
+        # took (D210). A delegated pillar that *did* come back with a
+        # document carries the producer's practice instead, which is a
+        # real measurement of that pillar; `delegated_entry` sets it.
+        "practice": level if in_scope else None,
         "condition": measured,
         "posture": posture(level, measured) if in_scope else None,
         "aspects": list(pillar.aspects),

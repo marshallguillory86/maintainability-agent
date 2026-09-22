@@ -47,11 +47,11 @@ from pathlib import Path
 
 import pytest
 
+from maintainability_audit._handoff import prompt_items
 from maintainability_audit._work_order import (
     CLASS_RISK_EFFORT,
     Band,
     band_of,
-    prompt_items,
     work_order,
 )
 
@@ -244,8 +244,7 @@ def test_a_major_project_is_named_but_not_inlined(tmp_path: Path) -> None:
     withheld from the agent prompt so the patch stays bounded — which is
     the whole premise of the bounded prompt.
     """
-    from maintainability_audit._work_order import prompt_items
-
+    from maintainability_audit._handoff import prompt_items
     items = [
         {"title": "a", "band": Band.QUICK_WIN.value, "delta": 0.2},
         {"title": "b", "band": Band.MAJOR_PROJECT.value, "delta": 0.9},

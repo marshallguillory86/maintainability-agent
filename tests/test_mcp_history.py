@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from maintainability_audit._calibration import CALIBRATION_C
+from maintainability_audit._handoff import prompt_items, prompt_targets
 from maintainability_audit._identity import finding_fingerprints
 from maintainability_audit._scan_history import (
     DEFAULT_HISTORY_PATH,
@@ -19,7 +20,6 @@ from maintainability_audit._scan_history import (
     read_history,
     record_of,
 )
-from maintainability_audit._work_order import prompt_items, prompt_targets
 from maintainability_audit.cli import main
 from maintainability_audit.config import CONFIG_FILENAME, VERSION, load_config
 from maintainability_audit.mcp_server import (

@@ -370,7 +370,7 @@ def score_evidence(
     worst = sorted(measurable.items(), key=lambda item: -item[1])
     document = _score_document(
         aspects, rounded_categories, overall, (low, high), grade, blockers, normalized, worst,
-        verification(evidence, grade),
+        verification(evidence, grade), not_applicable,
     )
     document["analyzer_scored_dimensions"] = analyzer_scored(external)
     return document
@@ -440,6 +440,7 @@ def _score_document(
     normalized: dict[str, float | None],
     worst: list[tuple[str, float]],
     verified: dict[str, Any],
+    not_applicable: frozenset[str],
 ) -> dict[str, Any]:
     """The score block exactly as it ships, assembled in one place."""
     low, high = interval
@@ -476,6 +477,15 @@ def _score_document(
             name: (clamp_score(value) if value is not None else None)
             for name, value in aspects.items()
         },
+        # Why each `None` above is None. An aspect scores None for two
+        # reasons that mean opposite things — Unknown, where the evidence
+        # was missing and the A-grades are withheld, and NotApplicable,
+        # where the tool looked and there was no population to measure.
+        # `_evidence_rules` has always separated them and the report kept
+        # only the consequence, so a consumer had to infer the difference
+        # by subtracting the blocker text from the aspect layer. Naming
+        # the resolved set makes it a field (D206).
+        "not_applicable": sorted(not_applicable),
         # The judgment layer, in the open: which aspects feed which
         # category at what weight, and what is not scored at all.
         "rubric": {

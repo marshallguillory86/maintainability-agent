@@ -6,8 +6,8 @@ Ordered by what it costs to leave against what it costs to fix (see the standard
 |---:|---|---|---:|---|
 | 1 | quick-win | apply_pricing in billing.py (`billing.py`:14) | — | reduce below the configured limits (currently 72 lines against 80, complexity 27 against 15, cognitive 33 against 25) |
 | 2 | quick-win | unpaired declaration in billing.py (`billing.py`:14) | — | add a paired test for `apply_pricing` |
-| 3 | major-project | duplicated block in billing.py (`billing.py`:16) | — | remove the duplicated block |
-| 4 | major-project | duplicated block in billing.py (`billing.py`:55) | — | remove the duplicated block |
+| 3 | major-project | duplicated block in billing.py (`billing.py`:16) | — | extract the shared block so its 2 copies become one; editing one copy alone leaves the rest |
+| 4 | major-project | duplicated block in billing.py (`billing.py`:55) | — | extract the shared block so its 2 copies become one; editing one copy alone leaves the rest |
 
 Verify with: `python3 -m maintainability_audit --root . --format json`
 
@@ -48,8 +48,9 @@ Verify when done: python3 -m maintainability_audit --root . --format json
 Repository: .
 Design decision needed, not a patch: duplicated block in billing.py.
 Location: billing.py:16
+Also at: invoices.py:15
 Why: duplicated logic means a fix applied in one place and missed in the others; deduplicating across a codebase is a design change, not a tidy-up
-Direction once decided: remove the duplicated block.
+Direction once decided: extract the shared block so its 2 copies become one; editing one copy alone leaves the rest.
 
 Do not change code for this item, because it is a Major Project — the change it needs is a design decision before code moves, not one reviewable patch. Lay out the options for the surrounding design — what each would change, and where — then stop for a human decision. If this is a false positive, say so.
 ```
@@ -61,8 +62,9 @@ Do not change code for this item, because it is a Major Project — the change i
 Repository: .
 Design decision needed, not a patch: duplicated block in billing.py.
 Location: billing.py:55
+Also at: invoices.py:30
 Why: duplicated logic means a fix applied in one place and missed in the others; deduplicating across a codebase is a design change, not a tidy-up
-Direction once decided: remove the duplicated block.
+Direction once decided: extract the shared block so its 2 copies become one; editing one copy alone leaves the rest.
 
 Do not change code for this item, because it is a Major Project — the change it needs is a design decision before code moves, not one reviewable patch. Lay out the options for the surrounding design — what each would change, and where — then stop for a human decision. If this is a false positive, say so.
 ```

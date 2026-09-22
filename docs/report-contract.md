@@ -103,6 +103,7 @@ New reports carry a top-level integer:
 | `categories`, `aspects`, `rubric`, `dimensions`, `reference` | unchanged structures |
 | `worst_dimension` | string or `null` |
 | `analyzer_scored_dimensions` | string[] — dimensions whose analyzer reading set the estimate; empty when none did |
+| `not_applicable` | string[] — which `None`s in `aspects` are a resolved absence (looked, no population) rather than missing evidence. Additive and optional, like `analyzer_scored_dimensions`: it bumps no version, because nothing reading version 2 breaks on a key it does not know. Added by D206, so that a run's coverage is recoverable from its output rather than inferred by subtracting the blocker text from the aspect layer |
 
 `overall`, `overall_range`, `grade` and `grade_blockers` are gone, with no aliases. **Version 1 is rejected, not migrated** — the inventory below established that nothing rescores a persisted report, so a migration would serve no caller.
 

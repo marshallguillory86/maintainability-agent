@@ -238,8 +238,7 @@ def test_prompt_targets_records_both_overloads(tmp_path: Path) -> None:
     because both rebuilt identities were `#0` and only `#0` could match.
     """
     _, report = _overloads(tmp_path)
-    from maintainability_audit._work_order import prompt_targets
-
+    from maintainability_audit._handoff import prompt_targets
     targets = {t for t in prompt_targets(report) if ":huge#" in t}
     assert targets == {"function:two.py:huge#0", "function:two.py:huge#1"}, (
         f"prompt_targets recorded {sorted(targets)}"
@@ -357,8 +356,7 @@ def test_the_paste_is_kinds_of_work_not_repeated_rows() -> None:
     value for the least change" and then spent its entire budget on one
     rule while omitting two other classes (D159).
     """
-    from maintainability_audit._work_order import prompt_items
-
+    from maintainability_audit._handoff import prompt_items
     items = [
         {"band": "quick-win", "finding_class": "risk-pattern", "risk": 3,
          "fingerprint": f"r{n}", "path": f"docs/{n}.md", "title": f"risk in {n}.md",
@@ -388,8 +386,7 @@ def test_what_the_prompt_advised_covers_the_whole_class() -> None:
     would tell a later run that 39 of them were never advised, and the
     told-fixed-returned signal would score them as nothing was asked.
     """
-    from maintainability_audit._work_order import prompt_advised, prompt_items
-
+    from maintainability_audit._handoff import prompt_advised, prompt_items
     items = [
         {"band": "quick-win", "finding_class": "risk-pattern", "risk": 3,
          "fingerprint": f"r{n}", "path": f"docs/{n}.md", "title": f"risk in {n}.md",

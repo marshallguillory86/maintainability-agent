@@ -378,7 +378,41 @@ def pillar_cells(entry: dict[str, Any]) -> tuple[str, str]:
         why = (entry.get("evidence_reasons") or [None])[0] or "the evidence could not support a grade"
         return condition, f"{entry['posture']}: not graded — {why}{found}"
     note = POSTURE_NOTE.get(entry["posture"], entry["posture"])
-    return condition, f"{entry['posture']}: {note}{found}"
+    return condition, f"{entry['posture']}: {note}{found}{_coverage_note(entry)}"
+
+
+def _coverage_note(entry: dict[str, Any]) -> str:
+    """What the condition was computed from, when it was not everything.
+
+    A mean over four of seven aspects and a mean over seven of seven
+    print the same number, and the four-of-seven one is *higher* when the
+    missing aspects were the bad ones — withholding evidence improving a
+    reported value, which is P3's shape. The overall grade is defended
+    against it by grading on the evidence floor; a pillar's condition is
+    defined as the mean of what was measured and cannot be floored
+    without making it incomparable to a delegated pillar's, so the
+    disclosure is the defence (D206).
+
+    Silent when everything under the pillar was measured, because then
+    the declared aspect list already says what produced it. A resolved
+    absence is named separately from missing evidence: "there was nothing
+    to measure" and "we could not measure" are opposite claims, and
+    collapsing them is how an unknown reads as clean.
+    """
+    coverage = entry.get("condition_coverage")
+    if not coverage:
+        return ""
+    measured, unknown = coverage["measured"], coverage["unknown"]
+    resolved = coverage["not_applicable"]
+    if not unknown and not resolved:
+        return ""
+    total = len(measured) + len(unknown) + len(resolved)
+    parts = [f"from {len(measured)} of {total} aspects"]
+    if unknown:
+        parts.append(f"not measured: {', '.join(unknown)}")
+    if resolved:
+        parts.append(f"nothing to measure: {', '.join(resolved)}")
+    return f"; condition {'; '.join(parts)}"
 
 
 def _pillar_row(entry: dict[str, Any]) -> str:

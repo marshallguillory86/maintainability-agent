@@ -12,6 +12,327 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.25 - 2026-09-21
+
+### Fixed — a clone names every copy, and is not told to be removed (D209)
+
+A duplicate block is a statement about two or more locations. The work order
+carries one path, so the item read *"duplicated block in `billing.py`"* with the
+target *"remove the duplicated block"* — and an agent handed that deletes one
+copy, which clears nothing and breaks the file it was deleted from.
+
+Items for findings that occupy several places now carry all of them, and the
+target says what resolving it means: *"extract the shared block so its 2 copies
+become one; editing one copy alone leaves the rest"*. Near-duplicates get the
+same treatment from the other side — their item never named what they nearly
+duplicate, while the near-duplicate section in the same prompt already did.
+
+Both surfaces that print a location — the bounded prompt and the per-item
+copy-paste block that travels alone into an agent — read one shared helper, so
+one of them cannot be fixed without the other.
+
+"Remove" is the verb D165 corrected for risk patterns, where it read as "delete
+the matched text" and cleared a finding without resolving it. Same verb, one
+class over.
+
+## 3.7.24 - 2026-09-21
+
+### Changed — who gets handed what is its own module (D208)
+
+No behaviour changed. `_work_order.py` had reached 745 lines against this
+repository's own 750-line gate, and the next fix needed ten more. The whole
+question of which work-order items an agent is handed — `withheld_reason` and
+the two clauses it applies, the bounded paste, the conformance targets — moved
+to `_handoff`. `_work_order` is 491 lines and decides what findings are worth
+and how they are ordered.
+
+The boundary was already written down and enforced by nobody: `architecture.md`
+said presentation may import *"`_work_order`'s presentation-facing prompt
+selection"*, naming a module that did not exist. It exists now, so the rule is a
+module name that `test_architecture` holds rather than a sentence.
+
+## 3.7.23 - 2026-09-21
+
+### Fixed — the prompt no longer lists what it just withheld (D207)
+
+One prompt said two things. It printed *"Not in scope for this change: N
+finding(s) need a design decision before code moves … Do not attempt them
+here"*, and that escalated findings were deliberately excluded — and then listed
+those same targets under "to inspect first", "to verify" and "to inspect".
+
+`withheld_reason` is one rule with two clauses: a Major Project, and a finding
+fixed before that came back. The focus lists honoured only the second, and only
+on three of their seven categories — hotspots, large files and risk findings.
+Duplicate blocks, near-duplicates, dead code and competing libraries were
+filtered by nothing at all.
+
+Every category now reads the same rule through the same locator, which also
+gained the competing-libraries shape so that finding class can be placed at all.
+An identified finding is matched by identity and an unidentified one by
+location, and the two are not interchangeable — a location is coarser than the
+identity it stands in for, and mixing them lets one class's withheld finding
+suppress another class's listed one.
+
+A run that withholds nothing produces the same focus lists it always did.
+
+## 3.7.22 - 2026-09-21
+
+### Fixed — a pillar's condition says what produced it (D206)
+
+A pillar's condition is the mean of the aspects that carried a number, which is
+the only honest arithmetic — a `None` is not a zero — and it means an
+unmeasured aspect is dropped rather than counted. Maintainability's seven
+aspects with one bad one average 4.43; withhold that one aspect and the same
+pillar reads 5.0, in a row that still listed all seven and said nothing.
+Withholding evidence improved a reported value, and the value named nothing
+that produced it.
+
+The overall grade was never exposed to this — it is banded from the evidence
+floor, where unknowns price at 0 — and flooring a pillar's condition too was
+rejected, because a delegated pillar's condition arrives already computed by
+the tool that owns it and the two would stop being comparable in the same
+column. So every pillar entry now carries `condition_coverage` and no skin
+prints a partial condition without saying how many of how many aspects made it
+and which are missing. "Could not measure" and "nothing to measure" are named
+separately, because collapsing them is how an unknown reads as clean.
+
+### Added — `score.not_applicable` (D206)
+
+Which `None`s in the aspect layer are a resolved absence rather than missing
+evidence. The scorer has always drawn that line for the grade and the report
+kept only the consequence, so a consumer had to infer it by subtracting the
+blocker text from the aspect layer. Additive and optional, like
+`analyzer_scored_dimensions`: no schema version moves and nothing reading
+version 2 breaks on it.
+
+## 3.7.21 - 2026-09-20
+
+### Fixed — the written release process described the chore that had just been removed (D203)
+
+3.7.17 reduced the version to one literal and 3.7.19 stamped the four documents
+that state it. Neither touched the instructions. `release.yml`'s header still
+said to bump it in `pyproject.toml`, `__init__.py` and `config.py`, and
+`CONTRIBUTING.md` still said "all three places" and named `config.py VERSION` —
+so following the documented process reintroduced exactly the copies that were
+removed, and the suite would then refuse the result. Both now describe the
+process the gates actually enforce, including the stamping step, which is not
+optional.
+
+### Fixed — twelve releases published notes that said nothing (D204)
+
+The GitHub Release job reads its notes from this file's `## X.Y.Z` section and
+falls back to the sentence `Release X.Y.Z.` when there is none. This file
+stopped at 3.7.7 and twelve tags went out after it, each with that placeholder.
+The sections below are the backfill, and a test now fails when the shipping
+version has no section — so the fallback stays for a re-pointed tag rather than
+serving as the normal path.
+
+### Fixed — the version checks verified a proxy for what they claimed (D205)
+
+Two checks tested something adjacent to their own claim. The release gate's
+comment said a tag is checked against "the literal the wheel will actually
+carry"; it read a file in the tree, which is the one thing that cannot say what
+a built artifact carries — and the build step installed the wheel, printed its
+version and compared it to nothing. The built wheel is now compared to the tag,
+and the comment says what each check does. Separately,
+`test_only_one_module_writes_the_number` searched for the *current* version's
+characters, so a module left holding `VERSION = "3.7.16"` after the package
+moved on was invisible — the check passed because the copy was stale. It now
+matches the shape of a version assignment.
+
+## 3.7.20 - 2026-09-20
+
+### Added — `json` is offered wherever a presentation is chosen (D201)
+
+`--format json` had been accepted on both doors for eleven releases and offered
+by no question. The terminal asked "chat, markdown, or html", the MCP
+`default_format` question listed the same three from a hand-written copy of the
+terminal's list, and the skill and server prompt were correct about a set that
+was wrong. It is now the fourth option at every door, with `chat` still what
+Enter selects; at a terminal it goes to stdout rather than writing a file. The
+four presentations read one report dictionary and none computes a score.
+
+The option list lives in one place now, and the MCP door's format validator
+reads it too, so what a surface offers and what a door accepts cannot diverge
+again.
+
+### Known — the hostile-audit brief reaches no report and no document (D202, open, Low)
+
+`--hostile-prompt-output` and the `maintainability-hostile-audit` prompt emit a
+run-derived brief for an adversarial review. It is in no README, neither
+`SKILL.md`, and nowhere in the product intent, and whatever a reviewer concludes
+from it reaches no report field and no history record. Nothing in it can affect
+a grade — no code path connects the emitter to the scorer — so it is recorded
+rather than held for. It may be an unfinished feature rather than a defect.
+
+## 3.7.19 - 2026-09-20
+
+### Changed — pydocstyle's imperative-mood rule is off, with the reasoning recorded (D200)
+
+D401 was 330 of 566 findings, each asking for `"""Returns the score."""` to
+become `"""Return the score."""`. The docstrings here are deliberately narrative
+and most carry a defect's reasoning where the code that caused it lives;
+complying would flatten the sentences this project explains itself with, and a
+docstring's mood says nothing about whether code survives change. Turned off in
+configuration with the reason beside it rather than as 330 expiring
+suppressions. Every other rule stays on. Analyzer findings fell 832 to 502 and
+the `documentation` aspect did not move.
+
+### Added — the release version is stamped into the documents that state it (D200)
+
+Four documents have to name the version and each went stale once: the README's
+version line, the README's GitHub Action pin (which is what a reader actually
+installs), the release plan's row and the SECURITY.md support table.
+`tools/stamp_version.py` writes all four from the single literal and exits
+non-zero if any pattern stops matching, rather than stamping three and
+reporting success — which is how v3.7.9 was tagged and lost its release. It
+does not improve `change_coupling` and says so: those files still move together
+because they must.
+
+## 3.7.18 - 2026-09-20
+
+### Fixed — every skin says what examined test effectiveness (D199)
+
+The bounded chat view reported `test effectiveness: not measurable` for a suite
+that had run and failed, because it never rendered the suite at all — a value
+with no attributable source, and a failed measurement misreported as an absent
+one. Chat now renders the suite section the complete report and HTML already
+carried.
+
+## 3.7.17 - 2026-09-20
+
+### Changed — the version is written once (D198)
+
+The version lived in five files, and this repository's own audit put
+`__init__.py` and `config.py` at the top of its change-coupling table at 0.985
+confidence. v3.7.9 had already been tagged and failed its release because four
+of the five were updated and the fifth was not, and the sibling project had
+shipped a wheel stamped with one version while every report it produced carried
+another. `maintainability_audit.__version__` holds the literal now,
+`config.VERSION` re-exports it, and `pyproject.toml` reads it through
+`[tool.setuptools.dynamic]`.
+
+The release gate had been reading `pyproject`'s static `version` key, which this
+change removed, so v3.7.17 failed eleven seconds in — the fix for a
+release-breaking duplication broke a release, because the check protecting it
+was reading one of the copies. The gate now reads the module that holds it.
+
+## 3.7.16 - 2026-09-19
+
+### Fixed — the HTML report draws the security work order (D197)
+
+A reader who chose HTML got the delegate's work order wrapped in `<pre>`: raw
+Markdown inside a rendered page. `secure-code-agent` now emits the same work
+order as data, and this tool draws it in the delegate's own tiers, counts and
+caps. Requires `secure-code-agent` 0.12.8 or later.
+
+## 3.7.15 - 2026-09-19
+
+### Fixed — the audit names the program it ran, not only the one configured (D196)
+
+The same configured test command produced different results through the two
+doors: the CLI resolved the project's pytest and measured 96% coverage, the MCP
+server resolved another environment's and could not run the suite at all, and
+neither result said which program it had executed. The resolved path is now
+reported beside the configured command wherever the suite is shown.
+
+## 3.7.14 - 2026-09-18
+
+### Fixed — a presentation override the user did not choose is disclosed (D194)
+
+A per-call `format` silently overrode the presentation chosen during setup, so
+an agent's preference and the user's own choice were indistinguishable in the
+result. The override is now disclosed.
+
+## 3.7.13 - 2026-09-18
+
+### Fixed — the data path is the same setup as elicitation (D193)
+
+`setup_answers` was published but unfinished. Labor rates arrived as strings and
+were never converted, so the economic bounds stayed pending forever; an illegal
+value such as `depth: "nuclear"` persisted the default and reported success; and
+three surfaces still told a host to "call again" without naming the parameter it
+should call with. Submissions are now checked and converted against the
+questions the host was actually offered.
+
+## 3.7.12 - 2026-09-18
+
+### Fixed — the setup instruction describes the reply it ships with (D192)
+
+The instruction announced that the repository had never been set up, above three
+labor rates that exist only because it had been; recited the presentation
+options when the payload contained no such question; and never named
+`setup_answers`. It is derived from the questions in the reply now.
+
+*No tag was cut for this version.*
+
+## 3.7.11 - 2026-09-18
+
+### Fixed — both setup paths ask the same stage, and what setup writes validates (D190, D191)
+
+Answering the first stage through the data path handed stage one back again,
+because the staging decision lived only in the elicitation schema. One stage
+decision now feeds both renderings.
+
+Separately, the published config schema set `additionalProperties: false` and
+described none of `presentation`, `history`, `test_execution` or
+`economic_context`, so a completed first-run setup produced a file the tool's own
+contract rejected. The gate is now the round trip: write with `apply_answers`,
+validate what lands.
+
+## 3.7.10 - 2026-09-18
+
+### Fixed — a question this agent asks is one a host can answer (D189)
+
+The tool returned its seven setup questions, the user answered all seven, and
+nothing was written: `setup` was an elicitation-resolved parameter absent from
+the published schema, so a host that cannot be elicited had no argument to
+answer with and the documented fallback could not close. A published
+`setup_answers` carries them to the same writer, and the legal names derive from
+the questions so an unanswerable question is not expressible.
+
+This also closed the dead end where consent to run the test suite, with no
+command recorded, produced a refusal on one surface and silence on the other
+(D185).
+
+## 3.7.9 - 2026-09-18
+
+### Added — the agent reports when it is running stale code (D188)
+
+The MCP server answered a call with `agent_version` 3.7.7 hours after 3.7.8
+shipped: the version was a source constant, so a stale process reports its own
+staleness as fact and nothing can notice. The venv beneath it was an editable
+install frozen at 1.8.0 carrying `secure-code-agent` 0.2.0 against a floor of
+0.12.7, which would have refused the delegate and left the Security pillar
+unmeasured. The agent now compares loaded code against installed metadata and
+names which of the two is stale — a process that needs restarting, or an install
+that needs reinstalling.
+
+## 3.7.8 - 2026-09-18
+
+### Fixed — the security pillar asserts a scanner set, so it can be graded (D184)
+
+The delegate config asserted no scanner set, so the security pillar reported
+`unverified` on complete coverage and could not be graded at all.
+`gates.require_scanners` now names the scanners the gate job installs.
+
+### Fixed — this tool's own capabilities are declared rather than scored against it (D186)
+
+The security grade was held at B+ by 68 true, permanent reports about what this
+tool *is*: spawning analyzer subprocesses, reading analyzer XML, calling the
+SonarCloud API, seeding a calibration bootstrap. The delegate config now
+declares those four capabilities with a stated reason each, and the findings are
+reported on their own axes rather than scored, with the undeclared score
+disclosed beside the declared one.
+
+### Fixed — code scanning gets the filtered record, not the full one (D187)
+
+Every required check passed and a merge was still refused, because the uploaded
+SARIF was the full record and code scanning had opened a blocking review thread
+for each of seventeen `assert` statements in the test files the branch added.
+Code scanning now receives the filtered document `secure-code-agent` writes for
+it, and the full record is kept as an artifact.
+
 ## 3.7.7 - 2026-09-16
 
 *Documentation and CI only; no product behaviour changes. Released so the

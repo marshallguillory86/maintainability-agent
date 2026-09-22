@@ -12,6 +12,33 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.27 - 2026-09-21
+
+### Security — the audited tree cannot redirect a read out of itself (D211)
+
+A configured path has always been bounded: resolved, refused if it lands outside
+the root, then walked component by component so an inward symlink cannot
+redirect it either. Three readers took their paths from the **audited tree** and
+never went through that boundary — practice detection, test-command detection
+and the generated-file banner. They were checked for what a path *is*, never for
+where it *goes*.
+
+A repository whose `pyproject.toml` was a symlink to a file outside its root
+scored practice level 2 with a `linter-config` signal, where the same tree with
+an ordinary in-root file scored 1. The audited tree could raise its own reported
+level using a file this tool was never pointed at, and practice level feeds the
+pillar posture.
+
+`refuse_symlinked_route` moved down to the module the reading primitive lives
+in, and practice and test-command detection now read through a door that applies
+both the containment check and the route walk. Either alone leaks: the route
+catches an inward link that resolves back inside, the containment check catches
+an absolute target the walk never meets.
+
+The operator-named door is unchanged and still does not check: an operator names
+their own configuration and a symlinked config is an ordinary setup. What
+changed is the reads where the **audited repository** chose the path.
+
 ## 3.7.26 - 2026-09-21
 
 ### Fixed — an unmeasured pillar reports nothing on either axis (D210)

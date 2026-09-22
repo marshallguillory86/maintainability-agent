@@ -31,6 +31,7 @@ from ._grant_ledger import allowed_roots as allowed_roots  # noqa: PLC0414
 from ._grant_ledger import refused_root_grants as refused_root_grants  # noqa: PLC0414
 from ._handoff import prompt_targets
 from ._mcp_gate import _gate
+from ._operator_reads import refuse_symlinked_route
 from ._recurrence import escalations
 from ._running_version import version_drift
 from ._scan_history import (
@@ -50,7 +51,6 @@ from ._user_config import mark_repo_seen
 from .baseline import finding_fingerprints
 from .config import (
     VERSION,
-    _refuse_symlinked_route,
     analyzers_run_default,
     discovered_config,
     load_config,
@@ -159,7 +159,7 @@ def authorize_config(config_path: str | None, root: Path) -> str | None:
     # `repository_path` orders it the same way, and the shared helper is
     # what keeps the two doors from drifting apart again.
     candidate = Path(config_path).expanduser()
-    _refuse_symlinked_route(root, candidate if candidate.is_absolute() else root / candidate)
+    refuse_symlinked_route(root, candidate if candidate.is_absolute() else root / candidate)
     return str(config)
 
 

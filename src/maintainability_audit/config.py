@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -18,6 +17,7 @@ from ._operator_reads import (
 from ._operator_reads import (
     read_operator_file as read_operator_file,
 )
+from ._operator_reads import refuse_symlinked_route
 
 __all__ = ["DEFAULT_CONFIG", "DEFAULT_IDIOM_GROUPS", "PROJECT_URL", "VERSION"]
 
@@ -65,25 +65,8 @@ def repository_path(root: Path, configured: str | None, default: str) -> Path:
         )
     # An inward `.maintainability -> src` link passes the boundary check on
     # the resolved path; it shows only on the lexical route (D34).
-    _refuse_symlinked_route(root, base)
+    refuse_symlinked_route(root, base)
     return target
-
-
-def _refuse_symlinked_route(root: Path, base: Path) -> None:
-    """No component between root and target may be a symlink, on the
-    lexical path (D34). The stop compares *real* paths so a ``/var`` root
-    against a ``/private/var`` target does not skip the walk (63ab820).
-    """
-    root_real = os.path.realpath(root)
-    current = Path(os.path.normpath(base))
-    while os.path.realpath(current) != root_real:
-        if current.is_symlink():
-            raise PathNotAllowed(
-                f"{current} is a symlink; the audited tree cannot redirect "
-                "where this agent reads or writes.")
-        if current.parent == current:
-            return  # filesystem root reached without meeting the grant
-        current = current.parent
 
 
 def deep_update(base: dict[str, Any], override: dict[str, Any]) -> None:

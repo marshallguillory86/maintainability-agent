@@ -85,6 +85,64 @@ def read_source_file(path: Path) -> list[str]:
     return raw.decode("utf-8", errors="replace").splitlines()
 
 
+def refuse_symlinked_route(root: Path, base: Path) -> None:
+    """No component between `root` and `base` may be a symlink (D34).
+
+    The stop compares *real* paths so a ``/var`` root against a
+    ``/private/var`` target does not skip the walk (63ab820).
+
+    Lifted here from `config` so the rule sits with the reading
+    primitive rather than above it. `config` reads through this module
+    and cannot be imported back, and the three readers that take a path
+    **from the audited tree** — practice detection, test-command
+    detection, generated-file banners — need the same rule `config`
+    already applied to configured paths (D211).
+    """
+    root_real = os.path.realpath(root)
+    current = Path(os.path.normpath(base))
+    while os.path.realpath(current) != root_real:
+        if current.is_symlink():
+            raise PathNotAllowed(
+                f"{current} is a symlink; the audited tree cannot redirect "
+                "where this agent reads or writes.")
+        if current.parent == current:
+            return  # filesystem root reached without meeting the grant
+        current = current.parent
+
+
+def open_repository_file(root: Path, path: Path, why: str) -> int:
+    """Open a path the **audited tree** named, bounded by that tree.
+
+    `open_regular_file` checks what a path *is*; this also checks where
+    it goes. The difference is who chose it: an operator naming their own
+    config controls it and a symlinked config is an ordinary setup, which
+    is why that door deliberately does not check (see
+    `read_operator_file`). A path the audited repository chose is
+    attacker-controlled by the same reasoning this project applies
+    everywhere else, and following it reads a file outside the tree under
+    audit.
+
+    That was not theoretical. A repository whose `pyproject.toml` was a
+    symlink to a file outside its root scored **practice level 2 with a
+    `linter-config` signal** where the same tree with an in-root file
+    scored 1 — the audited tree raising its own reported level with
+    evidence this tool was never pointed at (D211).
+
+    Both checks, because either alone leaks: the lexical route catches an
+    inward `.ci -> ../elsewhere` link that resolves back inside, and the
+    containment check catches an absolute target the route walk never
+    meets.
+    """
+    root_real = Path(os.path.realpath(root))
+    target = Path(os.path.realpath(path))
+    if target != root_real and not target.is_relative_to(root_real):
+        raise PathNotAllowed(
+            f"{path} resolves outside the audited repository; {why}"
+        )
+    refuse_symlinked_route(root, path)
+    return open_regular_file(path, why)
+
+
 def read_operator_file(path: Path) -> str:
     """Read a file the operator named, after checking it is one.
 

@@ -407,16 +407,40 @@ def test_the_operator_read_resolves_the_name_exactly_once() -> None:
     or a rename between the two calls is all it takes. Validating
     through the handle closes that window, and it is the reason S8707's
     prescription is not followed here.
+
+    **Scoped to the functions that perform the read**, not to the whole
+    module. Scanning the file was a proxy that held while the file held
+    only the read path; D211 moved `refuse_symlinked_route` here, and a
+    route walk resolves ancestor names because that is what a route walk
+    is. It does not weaken this property: it runs before any handle
+    exists, it inspects the target's *ancestors* rather than the target,
+    and the file itself is still opened once and validated through that
+    one handle. The proxy is replaced with the claim.
     """
     import ast
+
+    #: The read path. `refuse_symlinked_route` is deliberately outside
+    #: it — see the docstring — and `open_repository_file` composes the
+    #: two, so it is covered by whichever of them it calls.
+    READ_PATH = {"open_regular_file", "read_operator_file", "read_source_file"}
 
     source = (
         ROOT / "src" / "maintainability_audit" / "_operator_reads.py"
     ).read_text(encoding="utf-8")
     tree = ast.parse(source)
 
+    read_path = [
+        node for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name in READ_PATH
+    ]
+    assert {node.name for node in read_path} == READ_PATH, (
+        "the read path changed shape; this test names "
+        f"{sorted(READ_PATH)} and the module defines "
+        f"{sorted(n.name for n in read_path)}"
+    )
+
     opens, by_name = [], []
-    for node in ast.walk(tree):
+    for node in (child for function in read_path for child in ast.walk(function)):
         if not isinstance(node, ast.Call):
             continue
         func = node.func

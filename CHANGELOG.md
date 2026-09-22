@@ -12,6 +12,25 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.26 - 2026-09-21
+
+### Fixed — an unmeasured pillar reports nothing on either axis (D210)
+
+Practice level is a fact about the repository, and the pillar section states it
+once above the table. Every row then repeated that one number, including the
+rows for pillars this tool does not measure — so the efficiency row read
+`practice 4` for a pillar ADR 007 declares out of scope, and an unmeasured
+security row said the same, each beside a dash in the Condition column that said
+it had no reading.
+
+`posture` had been nulled for exactly this reason when an earlier version
+printed "efficiency — healthy" from the practice axis alone; its input was left
+behind. Both axes are now absent for a pillar with no reading of its own.
+
+A delegated pillar that came back with a document keeps its number, and it is a
+different one: `secure-code-agent` measures security practice and reports its
+own level.
+
 ## 3.7.25 - 2026-09-21
 
 ### Fixed — a clone names every copy, and is not told to be removed (D209)

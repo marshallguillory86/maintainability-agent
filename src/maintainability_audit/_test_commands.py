@@ -45,7 +45,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from ._operator_reads import open_regular_file
+from ._operator_reads import PathNotAllowed, open_repository_file
 
 #: Bounded like `_practice._read`: a manifest is small, and a multi-megabyte
 #: `package.json` is not a reason to read a multi-megabyte file.
@@ -71,7 +71,7 @@ class TestCommand:
     evidence: str
 
 
-def _read(path: Path) -> str:
+def _read(root: Path, path: Path) -> str:
     """A bounded read of a manifest the repository supplies.
 
     The head only, so this stays cheap on a large tree — but read
@@ -82,13 +82,15 @@ def _read(path: Path) -> str:
     process that never returns.
     """
     try:
-        handle = open_regular_file(
+        handle = open_repository_file(
+            root,
             path,
             "Test-command detection reads manifests from the audited "
             "tree; a device, socket or FIFO would block the audit rather "
-            "than suggest a command.",
+            "than suggest a command, and a symlink out of the tree would "
+            "let the tree name a command from a file outside it (D211).",
         )
-    except OSError:
+    except (OSError, PathNotAllowed):
         return ""
     try:
         with os.fdopen(handle, "r", encoding="utf-8", errors="replace", closefd=False) as opened:
@@ -109,7 +111,7 @@ def _swift(root: Path) -> TestCommand | None:
     if not manifest.is_file():
         return None
     has_tests = (root / "Tests").is_dir() or bool(
-        _SWIFT_TEST_TARGET.search(_read(manifest))
+        _SWIFT_TEST_TARGET.search(_read(root, manifest))
     )
     return TestCommand(["swift", "test"], "Package.swift") if has_tests else None
 
@@ -158,7 +160,7 @@ def _cmake(root: Path) -> TestCommand | None:
     were found" and exits non-zero.
     """
     manifest = root / "CMakeLists.txt"
-    if not manifest.is_file() or not _CMAKE_TESTS.search(_read(manifest)):
+    if not manifest.is_file() or not _CMAKE_TESTS.search(_read(root, manifest)):
         return None
     return TestCommand(["ctest"], "CMakeLists.txt")
 
@@ -169,7 +171,7 @@ def _node(root: Path) -> TestCommand | None:
     if not manifest.is_file():
         return None
     try:
-        parsed = json.loads(_read(manifest))
+        parsed = json.loads(_read(root, manifest))
     except (json.JSONDecodeError, ValueError):
         return None
     if not isinstance(parsed, dict):
@@ -194,7 +196,7 @@ def _python(root: Path) -> TestCommand | None:
         return TestCommand(["pytest"], "pytest.ini")
     for name in ("pyproject.toml", "tox.ini", "setup.cfg"):
         manifest = root / name
-        if manifest.is_file() and _PYTEST_DECLARED.search(_read(manifest)):
+        if manifest.is_file() and _PYTEST_DECLARED.search(_read(root, manifest)):
             return TestCommand(["pytest"], name)
     return None
 

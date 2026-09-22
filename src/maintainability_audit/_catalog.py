@@ -38,6 +38,17 @@ CATALOG_PATH = Path(__file__).resolve().parent / "_assets" / "analyzer-catalog.j
 # has installed it, run it and parsed its output.
 DEPTH_ORDER: tuple[str, ...] = ("baseline", "moderate", "heavy", "all")
 
+# The presentations, in the order they are offered (ADR 011). Order
+# matters: the first is what Enter selects. `json` joined them on
+# 2026-09-20 (D201) — both doors already accepted `format="json"` per
+# call, so the only thing missing was the question.
+#
+# It lives here, with the other setup vocabularies, rather than in the
+# terminal module that used to own it: the MCP question and the MCP
+# door's validator both read it now, and importing them from `_first_run`
+# closed a cycle the architecture test refuses.
+PRESENTATIONS: tuple[str, ...] = ("chat", "markdown", "html", "json")
+
 # Cumulative in the same way. Each policy admits the classes before it.
 # `source-available` and paid proprietary tools never appear: adding one
 # requires naming it in `allow_tools`, which is a deliberate act.

@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **3.7.19**.
+Version **3.7.20**.
 
 **Languages parsed:** Python, Java, C, C++, C#, Go, Rust, PHP, Ruby, Swift,
 COBOL, Fortran (free-form *and* fixed-form), and the JS/TS/HTML family — each
@@ -176,9 +176,12 @@ python3 -m pip install "maintainability-agent[mcp]"
 maintainability-agent mcp --allow-root /absolute/path/to/repository
 ```
 
-Presentation is exactly three choices — **chat**, a **Markdown** file, or a
-single-file **HTML** report. Where to save is asked only after a file format is
-chosen, and no report file is written without that choice. See
+Presentation is exactly four choices — **chat**, a **Markdown** file, a
+single-file **HTML** report, or **json**: the report dictionary itself, for a
+pipeline or an agent rather than a reader. Where to save is asked only after a
+file format is chosen, and no report file is written without that choice. The
+four render from one report dict and never compute a score of their own
+([ADR 011](docs/adr-011-three-report-presentations.md)). See
 [chat workflow help](docs/help/README.md) and [IDE and agent
 integration](docs/ide-agent-integration.md).
 
@@ -351,7 +354,8 @@ why COBOL's external tier is empty:
 
 ## What it produces
 
-Any combination of: `maintainability-report.md` (or a single-file HTML report),
+Any combination of: `maintainability-report.md` (or a single-file HTML report,
+or the report dictionary on stdout with `--format json`),
 `maintainability-remediation-prompt.md` (the bounded prompt),
 `maintainability-pr-comment.md`, `maintainability.sarif` (2.1.0, for GitHub
 Code Scanning), `maintainability-baseline.json` (for `--fail-on-new`
@@ -432,7 +436,7 @@ instead of an invokable skill:
 This repo ships `action.yml`, usable as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v3.7.19
+- uses: marshallguillory86/maintainability-agent@v3.7.20
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

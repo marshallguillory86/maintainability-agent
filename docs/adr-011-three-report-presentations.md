@@ -2,7 +2,7 @@
 
 - Status: Accepted. Implementation progress is tracked in the [decision register](decisions.md), which is the single place it is stated
 - Date: 2026-08-14
-- Scope: How a finished report is shown — chat, Markdown file, HTML file — and how the user chooses
+- Scope: How a finished report is shown — chat, Markdown file, HTML file, and `json` for a machine (added by the D201 amendment below) — and how the user chooses
 - Related: [ADR 008](adr-008-translation-and-decision.md), [ADR 009](adr-009-scan-history.md), [product intent](product-intent.md)
 
 ## Context
@@ -30,6 +30,24 @@ MCP is a local stdio process and does not run `input()`. It may write exactly fi
 2. **Default is chat/CLI text** — the Markdown the host already prints in an IDE conversation. Enter / go with no choice selects this.
 
 3. **TTY:** ask every interactive invoke which of the three to produce. Do not persist the choice. `--format` / `--output` / `--html-output` skip the question and win. Non-TTY and CI never call `input()` (same class as 6.1).
+
+> **Amended 2026-09-20 (D201): `json` is a fourth option at the question.**
+> This document defined three *user-facing* skins and said nothing about
+> `json`, so for eleven releases the two doors that accept `format="json"`
+> per call — `--format json` on the CLI, the `format` argument on MCP —
+> offered it to nobody. The reason given for excluding it, that `json` is
+> the dictionary the other three render rather than a rendering of it, is
+> true and is not a reason to hide a shipped capability behind a flag a
+> reader has to find. It is built, it is validated on both doors, and the
+> operator's decision is that it is offered: `PRESENTATIONS` is now
+> `chat, markdown, html, json`, in that order, and every surface that
+> recites the options derives them from it.
+>
+> The invariants below are unchanged. `json` computes no score — it emits
+> `json.dumps(report)` of the same dictionary the three renderers read, so
+> the guarantee that no two presentations disagree covers it by
+> construction. Chat stays the Enter default; `json` is the fourth thing
+> asked, not a new default.
 
 4. **MCP:** first-run setup uses structured elicitation. The `maintainability-agent` prompt still tells the host in prose to ask, then call `audit_repository` with a format argument; that free-text ask was closed under D3, which replaced setup and the slash prompt with structured choices. Chat returns Markdown. HTML and Markdown **files** are written by the CLI or saved by the host after a location ask, never by the MCP process.
 

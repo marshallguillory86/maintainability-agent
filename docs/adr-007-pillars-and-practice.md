@@ -116,7 +116,13 @@ and are still never averaged.
 
 **Practice level (1–5)** — the framework's maturity rubric, scored from detectable evidence of enforcement: does a linter config exist, is it wired into CI, is there a coverage gate, are complexity thresholds configured, are ADRs maintained, is there a duplication check. This is measured by looking at the repository's configuration and CI, not its source. Configuration is read wherever it lives — a gate in a nested `api/pyproject.toml`, a `docs/decisions/` folder not named `adr*` — bounded by the same exclusion the scan uses so a vendored manifest does not count (plan-81dc6870 Class 3).
 
-**Code condition** — what the analyzers found, normalized over population, as the tool scores today.
+**Code condition** — what the analyzers found, normalized over population, as the tool scores today. For a pillar this tool owns, it is the mean of the pillar's *measured* aspects.
+
+> **Amended 2026-09-21 (D206): the condition states what produced it.** The mean is taken over the aspects that carried a number, which is the only honest arithmetic — a `None` is not a zero — and it means an unmeasured aspect is dropped rather than counted. Maintainability's seven aspects with one bad one average 4.43; withhold that one aspect and the same pillar reads 5.0. That is P3's shape, withholding evidence improving a reported value, and for eleven months both printed as a bare number beside the same declared list of seven.
+>
+> **Flooring it, as the overall grade is floored, is rejected.** `_grade_on_the_floor` prices unknowns at 0 so concealment is monotonically unprofitable, and that is right for the graded field. A pillar's condition is not that field: it is defined here as the mean of what was measured, and a delegated pillar's condition arrives already computed by the tool that owns it. Flooring one side would put two incomparable numbers in the same column, which is a worse lie than the one being fixed.
+>
+> So the defence is disclosure. Every entry carries `condition_coverage` — which aspects were measured, which could not be, and which had no population to measure — and no skin prints a partial condition without saying how many aspects made it and which are missing. "Could not measure" and "nothing to measure" are named separately, because collapsing them is how an unknown reads as clean.
 
 The two are orthogonal and both are needed:
 

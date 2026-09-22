@@ -23,11 +23,29 @@ from __future__ import annotations
 from typing import Any
 
 from . import _evidence_view as view
+from ._handoff import (
+    escalated_fingerprints,
+    is_withheld,
+    prompt_items,
+    withheld_targets,
+)
 from ._hotspots import hotspot_measure, hotspot_name
 from ._security_work_order import KEY as SECURITY_WORK_ORDER
 from ._security_work_order import severity_counts
 from ._tdd_view import tdd_sentences
-from ._work_order import escalated_fingerprints, prompt_items
+from ._work_order_view import other_sites
+
+
+def _refused(withheld: set[Any] | None, finding: dict[str, Any]) -> bool:
+    """Whether the bounded prompt already refused this finding (D207).
+
+    `None` rather than an empty set is the "nobody asked" case: these
+    section builders are public and called directly by tests and by
+    other skins, and a caller that passes nothing gets the list it always
+    got. Only `prompt_focus_sections`, which renders beside the paragraph
+    that says "Do not attempt them here", passes the set.
+    """
+    return bool(withheld) and is_withheld(withheld, finding)
 
 
 def prompt_tdd_section(report: dict[str, Any]) -> list[str]:
@@ -234,6 +252,51 @@ def _no_prompt_work(report: dict[str, Any]) -> list[str]:
     ]
 
 
+def _work_item_lines(index: int, item: dict[str, Any]) -> list[str]:
+    """One numbered item: what, where, why, and what clearing it is worth.
+
+    Split out of `prompt_work_order` for this project's own cognitive
+    complexity gate, which D209's "Also at" line pushed it past — the
+    same move `_pillars._measured_entry` made for the length gate. The
+    branches are each a disclosure some audit asked for, so the fix is a
+    seam rather than fewer facts.
+    """
+    location = item["path"] + (f":{item['line']}" if item.get("line") else "")
+    # One row now stands for its whole class (D159), so a count above one
+    # says where the rest are rather than leaving the single location
+    # reading as the only instance.
+    count = item.get("class_count") or 1
+    files = item.get("class_paths") or 1
+    where = f"across {files} files, " if files > 1 else ""
+    lines = [
+        f"{index}. **{item['title']}** — {item['target']}",
+        f"   - First of {count} {where}starting at: `{location}`" if count > 1
+        else f"   - Location: `{location}`",
+    ]
+    # A clone is a statement about two or more places and the line above
+    # names one. Without the rest, "extract the shared block" has nothing
+    # to extract from, and the older wording — "remove the duplicated
+    # block" — read as delete the copy it points at (D209).
+    # `other_sites` is shared with the copy-paste block, because a rule
+    # about what a prompt says that lives in two places is how one of
+    # them gets fixed alone (D157).
+    if others := other_sites(item):
+        lines.append(f"   - Also at: {', '.join(f'`{site}`' for site in others[:4])}"
+                     + (f" and {len(others) - 4} more" if len(others) > 4 else ""))
+    lines.append(f"   - Why it matters: {item['rationale']}")
+    if item["class_delta"]:
+        lines.append(
+            f"   - Clearing all {item['class_count']} of these is worth "
+            f"+{item['class_delta']:.2f} to the maintainability estimate."
+        )
+    elif count > 1:
+        lines.append(
+            f"   - The other {count - 1} are listed in the report; the "
+            "score does not move until the class is cleared."
+        )
+    return lines
+
+
 def prompt_work_order(report: dict[str, Any]) -> list[str]:
     """The ordered work, leading the prompt, Major Projects withheld.
 
@@ -259,29 +322,7 @@ def prompt_work_order(report: dict[str, Any]) -> list[str]:
         "",
     ]
     for index, item in enumerate(items, start=1):
-        location = item["path"] + (f":{item['line']}" if item.get("line") else "")
-        lines.append(f"{index}. **{item['title']}** — {item['target']}")
-        # One row now stands for its whole class (D159), so a count
-        # above one says where the rest are rather than leaving the
-        # single location reading as the only instance.
-        count = item.get("class_count") or 1
-        files = item.get("class_paths") or 1
-        if count > 1:
-            where = f"across {files} files, " if files > 1 else ""
-            lines.append(f"   - First of {count} {where}starting at: `{location}`")
-        else:
-            lines.append(f"   - Location: `{location}`")
-        lines.append(f"   - Why it matters: {item['rationale']}")
-        if item["class_delta"]:
-            lines.append(
-                f"   - Clearing all {item['class_count']} of these is worth "
-                f"+{item['class_delta']:.2f} to the maintainability estimate."
-            )
-        elif count > 1:
-            lines.append(
-                f"   - The other {count - 1} are listed in the report; the "
-                "score does not move until the class is cleared."
-            )
+        lines.extend(_work_item_lines(index, item))
     lines.extend([
         "",
         f"Verify with: `{items[0]['verification']}`",
@@ -411,20 +452,38 @@ def _escalated_fingerprints(report: dict[str, Any]) -> set[str]:
 
 
 def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
+    """The inspect-first lists, minus everything the prompt withheld.
+
+    **One rule, every category.** `withheld_reason` has two clauses — a
+    Major Project, and a finding fixed before that came back — and the
+    prompt states both: `_withheld_paragraph` says "Do not attempt them
+    here", `prompt_escalation_note` says the escalated ones are
+    deliberately excluded. Until D207 the focus lists honoured only the
+    second clause, and only on three of their seven categories, so the
+    same prompt forbade a change and then listed its target under
+    "to inspect first". That is D180's "one run authorising and
+    forbidding the same change" on a different axis, and the audit of
+    `e88b429` had already fixed it once — for risk findings alone,
+    from the instance rather than from the claim.
+    """
     from ._identity import declaration_identities, file_fingerprint, risk_identities
 
     escalated = _escalated_fingerprints(report)
+    # Every target the bounded prompt refused, under both clauses.
+    withheld = withheld_targets(report, escalated)
     # Looked up, not rebuilt. `escalated` holds identities the history
     # recorded, so anything compared against it has to be numbered over
     # the same population — a hotspot that only warns has no identity
     # here, and cannot be escalated, so `None` correctly stays listed.
     identities = declaration_identities(report)
+    risk_ids = risk_identities(report)
     lines: list[str] = []
     lines.extend(bulleted_section("Start with these hard gates:", report["hard_gate_failures"]))
     hotspot_lines = [
         f"`{i['path']}:{i['start_line']}` {hotspot_name(i)} ({hotspot_measure(i)})."
         for i in report["function_hotspots"][:10]
         if identities.get((i["path"], i["name"], i["start_line"])) not in escalated
+        and not is_withheld(withheld, i, identities.get((i["path"], i["name"], i["start_line"])))
     ]
     lines.extend(bulleted_section("Function hotspots to inspect first:", hotspot_lines))
     large_files = [
@@ -432,32 +491,29 @@ def prompt_focus_sections(report: dict[str, Any]) -> list[str]:
         for i in report["largest_files"][:10]
         if i["status"] in {"warn", "fail"}
         and file_fingerprint(i["path"]) not in escalated
+        and not is_withheld(withheld, i, file_fingerprint(i["path"]))
     ]
     lines.extend(bulleted_section("Large files to inspect for responsibility splits:", large_files))
-    # Risk findings honour the same escalation as the hotspots and large
-    # files above: a design-review candidate is announced as withheld in
-    # the escalation note, so listing it here too presented it twice and
-    # contradicted that note (P5, audit of `e88b429`). The rule was
-    # enforced on every focus category except this one.
-    risk_ids = risk_identities(report)
     risks = [
         f"`{i['path']}:{i['line']}` {i['name']}: {i['text']}"
         for i in report["risk_findings"][:20]
         if risk_ids.get((i["path"], i["name"], i["line"])) not in escalated
+        and not is_withheld(withheld, i, risk_ids.get((i["path"], i["name"], i["line"])))
     ]
     lines.extend(bulleted_section("Risk pattern findings to verify:", risks))
     dupes = [
         f"Repeated block appears {i['count']} times near: {', '.join(i['locations'][:5])}"
         for i in report["duplicate_blocks"][:5]
+        if not is_withheld(withheld, i)
     ]
     lines.extend(bulleted_section("Duplicate blocks to inspect:", dupes))
-    lines.extend(near_duplicate_section(report))
-    lines.extend(dead_code_section(report))
-    lines.extend(idiom_section(report))
+    lines.extend(near_duplicate_section(report, withheld))
+    lines.extend(dead_code_section(report, withheld))
+    lines.extend(idiom_section(report, withheld))
     return lines
 
 
-def idiom_section(report: dict[str, Any]) -> list[str]:
+def idiom_section(report: dict[str, Any], withheld: set[Any] | None = None) -> list[str]:
     """Two libraries doing one job, with the minority usage named.
 
     Consolidating on the majority library is usually right, and naming
@@ -465,7 +521,8 @@ def idiom_section(report: dict[str, Any]) -> list[str]:
     But this is the finding most likely to be a deliberate migration
     caught mid-flight, so the instruction is to check intent first.
     """
-    findings = report.get("divergent_idioms") or []
+    findings = [f for f in report.get("divergent_idioms") or []
+                if not _refused(withheld, f)]
     if not findings:
         return []
     items = []
@@ -488,7 +545,7 @@ def idiom_section(report: dict[str, Any]) -> list[str]:
     return lines
 
 
-def dead_code_section(report: dict[str, Any]) -> list[str]:
+def dead_code_section(report: dict[str, Any], withheld: set[Any] | None = None) -> list[str]:
     """Debris an agent can delete outright, with the caveat that matters.
 
     Every entry is private and unreferenced, so deletion is usually safe.
@@ -497,7 +554,8 @@ def dead_code_section(report: dict[str, Any]) -> list[str]:
     the instruction is to verify before removing rather than to trust the
     finding.
     """
-    findings = report.get("dead_code") or []
+    findings = [f for f in report.get("dead_code") or []
+                if not _refused(withheld, f)]
     if not findings:
         return []
     items = [
@@ -518,7 +576,7 @@ def dead_code_section(report: dict[str, Any]) -> list[str]:
     return lines
 
 
-def near_duplicate_section(report: dict[str, Any]) -> list[str]:
+def near_duplicate_section(report: dict[str, Any], withheld: set[Any] | None = None) -> list[str]:
     """Name the existing helper each near-copy should collapse into.
 
     This is the one finding that comes with its own fix. "There is
@@ -527,7 +585,8 @@ def near_duplicate_section(report: dict[str, Any]) -> list[str]:
     because those are the ones where the second copy was written by
     someone — or something — that did not know the first existed.
     """
-    findings = report.get("near_duplicates") or []
+    findings = [f for f in report.get("near_duplicates") or []
+                if not _refused(withheld, f)]
     if not findings:
         return []
     ordered = sorted(findings, key=lambda item: (not item.get("cross_file"), -item["similarity"]))

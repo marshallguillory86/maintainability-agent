@@ -55,7 +55,7 @@ def test_filtering_never_changes_a_single_score(tmp_path: Path) -> None:
     Asserted over every filter axis at once: the score block must be
     byte-identical whatever the caller selected.
     """
-    from maintainability_audit._work_order import select
+    from maintainability_audit._handoff import select
     from maintainability_audit.config import load_config
     from maintainability_audit.report import build_report
 
@@ -89,7 +89,8 @@ def test_a_selection_quotes_its_own_recomputed_worth(tmp_path: Path) -> None:
     overstates a work order by more the longer it gets, which is exactly
     the direction that flatters.
     """
-    from maintainability_audit._work_order import combined_delta, select
+    from maintainability_audit._handoff import select
+    from maintainability_audit._work_order import combined_delta
     from maintainability_audit.config import load_config
     from maintainability_audit.report import build_report
 

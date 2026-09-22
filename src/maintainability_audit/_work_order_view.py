@@ -21,7 +21,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from ._work_order import withheld_reason, work_order_rows
+from ._handoff import withheld_reason
+from ._work_order import work_order_rows
 from ._work_order_weights import AUDIT_VERIFICATION
 
 # The report lists the whole backlog; these caps apply only to the bounded
@@ -38,6 +39,29 @@ _REPORT_POINTER = (
 def item_location(item: dict[str, Any]) -> str:
     """`path` or `path:line` — the one spelling both skins print."""
     return item["path"] + (f":{item['line']}" if item.get("line") else "")
+
+
+def other_sites(item: dict[str, Any]) -> list[str]:
+    """The places this finding also occupies, beyond the one it is filed at.
+
+    A clone is a statement about two or more locations and every surface
+    prints one of them, because that is where to send someone. The rest
+    are what make "extract" the right verb instead of "delete", so a
+    block that travels alone has to carry them (D209).
+
+    Shared rather than written per surface: the copy-paste block and the
+    bounded prompt both need it, and a rule about what a prompt says that
+    lives in two places is how one of them gets fixed alone — which is
+    what D157 recorded and what this finding is an instance of.
+    """
+    here = item_location(item)
+    return [site for site in item.get("sites") or [] if not here.startswith(site)]
+
+
+def _also_at(item: dict[str, Any]) -> list[str]:
+    """The other locations, as the one line every prompt body prints."""
+    others = other_sites(item)
+    return [f"Also at: {', '.join(others)}"] if others else []
 
 
 def prompt_body_lines(
@@ -62,6 +86,7 @@ def prompt_body_lines(
             f"Repository: {root_label}",
             f"Design decision needed, not a patch: {item['title']}.",
             f"Location: {item_location(item)}",
+            *_also_at(item),
             f"Why: {item['rationale']}",
             f"Direction once decided: {item['target']}.",
             "",
@@ -75,6 +100,7 @@ def prompt_body_lines(
         f"Repository: {root_label}",
         f"Task: {item['target']}.",
         f"Location: {item_location(item)}",
+        *_also_at(item),
         f"Why: {item['rationale']}",
         "",
         "Make one small, reviewable change. Do not alter public behavior or "

@@ -14,7 +14,6 @@ from typing import Any
 from ._identity import (
     declaration_identities,
     file_fingerprint,
-    finding_fingerprints,
     risk_identities,
 )
 from ._work_order_weights import AUDIT_VERIFICATION, CLASS_RISK_EFFORT, ClassWeight
@@ -251,23 +250,84 @@ def _items_from_idioms(report: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _locate(finding: dict[str, Any]) -> tuple[str | None, int | None]:
-    """Path/line; a duplicate block carries only `locations`, which the old path/line read dropped (audit of `e88b429`)."""
+    """Where a raw finding is, in whichever shape its class carries.
+
+    A duplicate block carries only `locations`, which the old path/line
+    read dropped (audit of `e88b429`). A competing-libraries finding
+    carries neither: its location is the minority package's example
+    file, which `_items_from_counted`'s sibling builder reads directly —
+    so a caller matching findings to work-order items by location found
+    nothing for that class and listed one the prompt had withheld
+    (D207). One locator, so both texts place a finding the same way.
+    """
     path = finding.get("path") or finding.get("first_path")
     line = finding.get("line") or finding.get("first_line") or finding.get("start_line")
     if path is None and (locs := finding.get("locations")):
         path, _, tail = str(locs[0]).rpartition(":")
         line = int(tail) if line is None and tail.isdigit() else line
+    if path is None and (packages := finding.get("packages")):
+        # Sorted by descending file count upstream: the last row is the
+        # minority usage, which is the one the work order points at.
+        path = packages[-1].get("example")
     return path, line
+
+
+#: (class, report key, label) for every finding class the report carries
+#: as a located list. A module constant rather than a local, so a check
+#: about "every counted class" can enumerate them from here instead of
+#: from a list a test author remembered (D209).
+COUNTED_SOURCES: tuple[tuple[str, str, str], ...] = (
+    ("duplicate-block", "duplicate_blocks", "duplicated block"),
+    ("near-duplicate", "near_duplicates", "near-duplicate declaration"),
+    ("dead-code", "dead_code", "unreferenced declaration"),
+    ("risk-pattern", "risk_findings", "configured risk pattern"),
+)
+
+
+def _sites(name: str, finding: dict[str, Any], path: str, line: int | None) -> list[str]:
+    """Every place this finding is about, when it is about more than one.
+
+    Two classes are statements about a *relationship* between places, and
+    a work-order item carries one path. `_locate` picks the first, which
+    is the right place to send someone and not the whole finding: a
+    cross-file clone read as "duplicated block in a.py" invites deleting
+    a.py's copy, which is either wrong or half the job, and the other
+    copy is the half that tells you to extract instead (D209).
+
+    The near-duplicate section already names both sides —
+    *"`near.py:5` `copy` is 95% identical to `orig` at `orig.py:1`"* —
+    so this is the work order catching up to what one renderer already
+    did rather than a new idea.
+
+    Empty for a class that genuinely concerns one place. Dead code is
+    one declaration; a risk pattern is one match.
+    """
+    if name == "duplicate-block":
+        return [str(location) for location in finding.get("locations") or []]
+    if name == "near-duplicate" and (other := finding.get("duplicate_of")):
+        return [f"{path}:{line}", f"{other['path']}:{other['start_line']}"]
+    return []
+
+
+def _shared_target(name: str, sites: list[str]) -> str:
+    """What to do about a finding that lives in several places.
+
+    "Remove the duplicated block" is the instruction D165 already had to
+    correct for risk patterns, where "remove" read as "delete the text"
+    and cleared the finding without resolving it. The same word does the
+    same thing here, one class over: deleting one copy of a clone clears
+    nothing and breaks the file it was deleted from.
+    """
+    if name == "near-duplicate":
+        return ("consolidate the two into one declaration, or say why they are "
+                "deliberately separate; editing one alone leaves the other")
+    return (f"extract the shared block so its {len(sites)} copies become one; "
+            "editing one copy alone leaves the rest")
 
 
 def _items_from_counted(report: dict[str, Any]) -> list[dict[str, Any]]:
     """Classes the report carries as located lists."""
-    sources = (
-        ("duplicate-block", "duplicate_blocks", "duplicated block"),
-        ("near-duplicate", "near_duplicates", "near-duplicate declaration"),
-        ("dead-code", "dead_code", "unreferenced declaration"),
-        ("risk-pattern", "risk_findings", "configured risk pattern"),
-    )
+    sources = COUNTED_SOURCES
     # Risk findings are the one class here the report gives a stable
     # identity to, so they are the one class that can carry a
     # fingerprint. The rest are located but not yet identified.
@@ -289,6 +349,11 @@ def _items_from_counted(report: dict[str, Any]) -> list[dict[str, Any]]:
                                    or finding.get("count") or 1),
                 "weight": weight,
             }
+            # A clone is a statement about two or more places, and the
+            # item above describes one of them (D209).
+            if len(sites := _sites(name, finding, path, line)) > 1:
+                item["sites"] = sites
+                item["target"] = _shared_target(name, sites)
             if name == "risk-pattern":
                 item["fingerprint"] = risks[(path, finding["name"], finding["line"])]
                 # "remove the configured risk pattern" read, for a TODO, as
@@ -477,190 +542,3 @@ def combined_delta(report: dict[str, Any], items: list[dict[str, Any]]) -> float
             summary[production] = min(int(summary[production]), int(summary[counter]))
     after = _score_of(amended)
     return round(max(0.0, (after or before) - before), 3)
-
-
-def escalated_fingerprints(report: dict[str, Any]) -> set[str]:
-    """The findings history shows were fixed and came back, as fingerprints."""
-    return {item["fingerprint"] for item in report.get("design_review_candidates") or []}
-
-
-def withheld_reason(item: dict[str, Any], escalated: set[str] | None = None) -> str | None:
-    """Why no agent is handed this item as a patch, or `None` when one is (D180).
-
-    The one rule the bounded prompt and every copy-paste block read. The
-    prompt withheld the demo's two duplicated blocks as needing a design
-    decision while the report's standalone block for each said "Task: remove
-    the duplicated block" — the same run authorising and forbidding the same
-    change, depending on which text was pasted.
-    """
-    if item["band"] == Band.MAJOR_PROJECT.value:
-        return ("it is a Major Project — the change it needs is a design "
-                "decision before code moves, not one reviewable patch")
-    if item.get("fingerprint") in (escalated or set()):
-        return ("it was fixed before and came back, so the same edit is known "
-                "not to hold and the surrounding design needs a decision")
-    return None
-
-
-def prompt_items(items: list[dict[str, Any]], limit: int = 12,
-                 escalated: set[str] | None = None) -> list[dict[str, Any]]:
-    """Agent subset: no major projects, no escalated returns; Severe leads.
-
-    The economic reorder orders items by exposure within each band (D170),
-    so a risk-5 item can still sit below hotter Quick Wins of other classes.
-    The table can stay exposure-ordered; the paste of 12 cannot drop Severe.
-    """
-    eligible = [item for item in items if withheld_reason(item, escalated) is None]
-    severe = [item for item in eligible if item.get("risk") == 5]
-    rest = [item for item in eligible if item.get("risk") != 5]
-    return _one_per_class(severe + rest)[:limit]
-
-
-def _one_per_class(ordered: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """The best member of each finding class, in the order they arrived.
-
-    **The paste is twelve kinds of work, not twelve rows.** Without this
-    a class with a hundred members takes every slot: measured on a real
-    tree, 100 of 125 items were one class and all twelve went to it,
-    six of them naming the same file, while 24 duplicate blocks and an
-    oversized file got none. The prompt says "the first items are the
-    highest value for the least change" and then spent its whole budget
-    on one rule while omitting two others entirely (D159).
-
-    One row per class is enough because the row already carries the
-    whole class: `class_count` and `class_delta` are on every item, so
-    it reads "clearing all 100 of these is worth +0.20" rather than
-    printing a hundred line numbers. An agent is better instructed by
-    one rule and its count than by twelve instances of it.
-
-    Order is preserved rather than re-sorted, so Severe still leads and
-    the economic ordering behind it still holds — this removes
-    repetition and decides nothing about priority.
-    """
-    spread: dict[str, set[str]] = {}
-    for item in ordered:
-        name = str(item.get("finding_class") or item.get("title"))
-        spread.setdefault(name, set()).add(str(item.get("path") or ""))
-
-    seen: set[str] = set()
-    first: list[dict[str, Any]] = []
-    for item in ordered:
-        name = str(item.get("finding_class") or item.get("title"))
-        if name in seen:
-            continue
-        seen.add(name)
-        # The surviving row keeps its own title, which names one file,
-        # so it must also say how far the class reaches — otherwise a
-        # row standing for 46 findings across seven files reads as one
-        # finding in the file it happens to name.
-        first.append({**item, "class_paths": len(spread[name])})
-    return first
-
-
-# The axes a reader can narrow by. Every one is a field already on the
-# item — filtering reads what the audit gathered and shows less of it.
-# It computes nothing, which is the property that keeps one rubric
-# applying to every repository: a filter that could move a number would
-# mean two people scoring the same tree differently because they asked
-# different questions.
-SELECTABLE: tuple[str, ...] = ("band", "finding_class", "path", "verification")
-
-
-def select(items: list[dict[str, Any]], **criteria: str) -> list[dict[str, Any]]:
-    """The subset matching every criterion given.
-
-    `path` matches a prefix, so a directory selects everything under it;
-    the rest match exactly. Unknown axes raise rather than silently
-    returning everything — a filter that quietly ignores what it was
-    asked is worse than one that refuses, because the caller believes
-    the narrowing happened.
-    """
-    unknown = sorted(set(criteria) - set(SELECTABLE))
-    if unknown:
-        raise ValueError(f"cannot select on {unknown}; available axes are {list(SELECTABLE)}")
-
-    def matches(item: dict[str, Any]) -> bool:
-        return all(
-            str(item.get(axis, "")).startswith(value) if axis == "path"
-            else item.get(axis) == value
-            for axis, value in criteria.items()
-        )
-
-    return [item for item in items if matches(item)]
-
-
-def prompt_advised(items: list[dict[str, Any]], limit: int = 12,
-                   escalated: set[str] | None = None) -> list[dict[str, Any]]:
-    """Every eligible item the prompt's rows stand for.
-
-    `prompt_items` returns one row per class, because a paste of twelve
-    is twelve *kinds* of work (D159). What was advised is wider than
-    what was printed: a row reading "clearing all 68 of these" asks for
-    all 68, so recurrence has to remember all 68.
-
-    Derived from `prompt_items` rather than re-selected beside it. The
-    advised set is the classes those rows name, and this expands them —
-    one decision about what to advise, two views of it. Two independent
-    selections would drift, and the one that drifts is the one nobody
-    reads.
-    """
-    advised = {
-        str(item.get("finding_class") or item.get("title"))
-        for item in prompt_items(items, limit, escalated)
-    }
-    blocked = escalated or set()
-    return [
-        item for item in items
-        if item["band"] != Band.MAJOR_PROJECT.value
-        and item.get("fingerprint") not in blocked
-        and str(item.get("finding_class") or item.get("title")) in advised
-    ]
-
-
-def prompt_targets(report: dict[str, Any]) -> tuple[str, ...]:
-    """The identities a generated prompt actually asked somebody to fix.
-
-    In the same identity space the history stores, so a later run can
-    ask whether *this specific thing* cleared. Derived from the same
-    `prompt_items` the prompt renders, rather than recomputed alongside
-    it — two derivations of "what did we ask for" would drift, and the
-    one that drifts is the one nobody reads.
-
-    This is what makes recurrence a strong signal. "A rule fired again"
-    says only that a file changed twice. "The thing we told you to fix
-    came back" says the advice did not hold, and only something that
-    remembers what it advised can say it.
-
-    The item already carries its identity, so this reads it. It used to
-    rebuild one from the item's rendered title — `title.split(" in ",
-    1)[0]` to recover a declaration's name, and the whole title for a
-    risk finding, which is the label "configured risk pattern" and never
-    a real name. Parsing prose back into an identifier is a second
-    identity scheme wearing the first one's clothes, and it disagreed
-    with the original in two ways at once: every declaration came out
-    `#0`, and no risk target survived the corroboration check below.
-    """
-    # The same escalation filter the rendered prompt applies (audit
-    # H1): a target the prompt deliberately withheld as a design-review
-    # candidate was never advice, and recording it would falsify the
-    # told-fixed-returned signal this exists to feed.
-    escalated = {
-        item["fingerprint"]
-        for item in report.get("design_review_candidates") or []
-    }
-    known = set(finding_fingerprints(report))
-    targets = set()
-    # Every member of every advised class, not only the rows printed:
-    # the prompt asks for the whole class, so the told-fixed-returned
-    # signal has to cover the whole class (D159).
-    for item in prompt_advised(report.get("work_order") or [], escalated=escalated):
-        fingerprint = item.get("fingerprint")
-        if fingerprint is None:
-            continue
-        # Only identities this scan actually produced. A target the
-        # report cannot corroborate would record advice about a finding
-        # that does not exist, and a later run would score it as never
-        # cleared forever.
-        if fingerprint in known:
-            targets.add(fingerprint)
-    return tuple(sorted(targets))

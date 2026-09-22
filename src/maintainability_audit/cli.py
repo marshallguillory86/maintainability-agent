@@ -19,6 +19,7 @@ from ._gates import (
     _attach_post_audit_records,
     audit_exit_code,
 )
+from ._handoff import SELECTABLE, select
 from ._mcp_audit import record_scan_and_attach
 from ._running_version import version_drift
 from ._safe_write import write_artifact
@@ -27,7 +28,7 @@ from ._scan_history import (
     read_history,
 )
 from ._user_config import mark_repo_seen
-from ._work_order import SELECTABLE, combined_delta, select
+from ._work_order import combined_delta
 from .baseline import (
     finding_fingerprints,
     load_baseline,

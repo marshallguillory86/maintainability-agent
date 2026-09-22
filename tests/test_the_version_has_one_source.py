@@ -74,23 +74,54 @@ def test_the_dynamic_version_points_at_the_package() -> None:
     assert attr == "maintainability_audit.__version__"
 
 
+# A module-level assignment of a dotted numeric literal to a name that
+# reads like a version: `VERSION = "3.7.16"`, `__version__ = '1.0'`.
+# Deliberately not keyed to the *current* version — see the test below.
+_VERSION_ASSIGNMENT = re.compile(
+    r'^\s*(?P<name>[A-Za-z_][A-Za-z_0-9]*)\s*(?::[^=\n]+)?=\s*'
+    r'["\'](?P<value>\d+\.\d+(?:\.\d+)?[^"\']*)["\']',
+    re.MULTILINE,
+)
+
+
+def _assigns_a_version(source: str) -> bool:
+    """A module-level name containing "version" bound to a dotted number."""
+    return any(
+        "version" in match.group("name").lower()
+        for match in _VERSION_ASSIGNMENT.finditer(source)
+    )
+
+
 def test_only_one_module_writes_the_number() -> None:
     """The population is every module, not a remembered list.
 
     A third module assigning its own version string is the same defect
     wearing a different name.
+
+    **It used to search for the current version's characters**, which
+    made it blind in exactly the direction that matters. A module still
+    holding `VERSION = "3.7.16"` after the package moved to 3.7.20 is
+    the drift this entry exists to stop, and a substring search for
+    "3.7.20" cannot see it — the check passed *because* the copy was
+    stale. It now matches the shape of a version assignment, so a second
+    writer is caught whether or not it agrees with the first.
     """
     from maintainability_audit import __version__
 
-    writers = [
+    writers = sorted(
         path.relative_to(ROOT).as_posix()
         for path in (ROOT / "src" / "maintainability_audit").rglob("*.py")
-        if re.search(rf'["\']{re.escape(__version__)}["\']', path.read_text(encoding="utf-8"))
-    ]
+        if _assigns_a_version(path.read_text(encoding="utf-8"))
+    )
 
     assert writers == ["src/maintainability_audit/__init__.py"], (
-        f"the version literal appears in more than one module: {writers}"
+        f"a version literal is assigned in more than one module: {writers}"
     )
+    # Clause two: a regex that matched nothing would pass the assertion
+    # above by returning an empty list.
+    assert __version__ in (ROOT / "src" / "maintainability_audit" / "__init__.py").read_text(
+        encoding="utf-8"
+    ), "the one writer does not contain the loaded version"
 
 
 def test_the_release_gate_reads_the_single_source() -> None:
@@ -115,4 +146,41 @@ def test_the_release_gate_reads_the_single_source() -> None:
     )
     assert "['project']['version']" not in gate, (
         "the release gate reads pyproject's static version, which no longer exists"
+    )
+
+
+def test_the_release_build_compares_the_artifact_to_the_tag() -> None:
+    """The source gate is not a check on the thing that ships (D205).
+
+    The gate above reads a file in the tree, before anything is built. Its
+    comment used to claim it checked "the literal the wheel will actually
+    carry" — the one thing reading the tree cannot do. The build step
+    installed the wheel, printed `maintainability-agent --version`, and
+    compared it to nothing, so a wheel whose metadata disagreed with the
+    tag would have been printed and published.
+
+    That is the failure D198's own entry cites from the sibling project:
+    a wheel stamped with one version while every report it produced
+    carried another.
+
+    Asserted against the workflow text, like the gate test above, and
+    scoped to the step rather than the file so that an unrelated mention
+    of `importlib.metadata` elsewhere cannot satisfy it.
+    """
+    workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+    step = workflow[workflow.index("Test the built package"):]
+    step = step[: step.index("\n      - uses:")]
+
+    assert "pip install dist/" in step, (
+        "the build step no longer installs the wheel, so there is no artifact to check"
+    )
+    assert "importlib.metadata" in step, (
+        "the build step does not read the installed artifact's own version"
+    )
+    assert "GITHUB_REF_NAME" in step, (
+        "the build step reads the artifact's version but never compares it to the tag"
+    )
+    # Printing it is not comparing it: that is exactly what was there.
+    assert "exit 1" in step, (
+        "the artifact/tag comparison reports without failing the build"
     )

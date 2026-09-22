@@ -60,27 +60,38 @@ PyPI Trusted Publishing (OIDC), which mints a short-lived token scoped to
 `release.yml` in this repository.
 
 ```bash
-# 1. bump the version in all three places
-#      pyproject.toml            version = "X.Y.Z"
+# 1. bump the version in ONE place
 #      src/maintainability_audit/__init__.py   __version__
-#      src/maintainability_audit/config.py     VERSION
-# 2. add the CHANGELOG entry, open a PR, merge it
-# 3. tag the merged commit and push
+#    `pyproject.toml` derives it and `config.py` re-exports it (D198);
+#    writing it into either again fails the suite.
+python3 tools/stamp_version.py   # 2. writes the four documents that state it
+# 3. add the CHANGELOG entry (## X.Y.Z), open a PR, merge it
+# 4. tag the merged commit and push
 git checkout main && git pull
 git tag -a vX.Y.Z -m "vX.Y.Z — one-line summary"
 git push origin vX.Y.Z
 ```
 
-The workflow refuses to publish if the tag disagrees with the packaged
-version. It also installs the built wheel and runs both the test suite and
-the tool's own `--fail-on-gate` audit against that artifact, so what ships
-is what was verified.
+Step 2 is not optional and is not a formatting chore. The README's version
+line, the README's GitHub Action pin, the `docs/release-plan.md` row and the
+SECURITY.md support table each have to state the number, each went stale once,
+and each is now written from the single literal rather than typed. The tool
+exits non-zero if any of them stopped matching, so a document that drifts out
+of its reach fails rather than being silently skipped. v3.7.9 was tagged and
+lost its release because one of those four was missed by hand.
 
-Then cut the GitHub Release from the CHANGELOG section:
+Step 3 is likewise enforced: the GitHub Release job reads its notes from the
+CHANGELOG section for that version, and the suite fails if the shipping version
+has no section — otherwise the job publishes a release whose entire notes are
+the sentence `Release X.Y.Z.` (D204).
 
-```bash
-gh release create vX.Y.Z --title "vX.Y.Z — summary" --notes-file <(...)
-```
+The workflow refuses to publish if the tag disagrees with the version in the
+source, and again if the **built wheel** disagrees with the tag (D205). It
+installs that wheel and runs both the test suite and the tool's own
+`--fail-on-gate` audit against it, so what ships is what was verified.
+
+Cutting the GitHub Release is automatic — the tag triggers a job that creates
+it, or refreshes its notes on a re-run. There is nothing to do by hand.
 
 If the default thresholds changed in the release, recalibrate first —
 the constants are the anchor for every score the tool emits:

@@ -12,6 +12,31 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.28 - 2026-09-22
+
+### Fixed — C#'s `foreach` is counted as the loop it is (D212)
+
+`\bfor\b` does not match `foreach`: the word boundary falls after `for`. C#'s
+primary loop therefore cost nothing at all. Two methods doing the same work
+scored `foreach` at complexity 1 and cognitive 0 against a counted `for` at 2
+and 2 — the first contains a loop, and both metrics read it as straight-line
+code.
+
+**If you audit C#, your complexity and cognitive numbers will rise**, and the
+new numbers are the ones that count the loops that were always there. Any
+threshold tuned against the old readings may need revisiting.
+
+This is the fourth time a language's own keyword was missing from its pattern —
+Fortran's `do`, Swift's `guard` and `repeat`, PHP's `elseif` and `foreach` came
+before it, each fixed in one language. The check is now over every parsed
+language, and a language with no loop fixture fails rather than being skipped.
+
+`lizard`, the independent implementation this project checks itself against,
+does not count `foreach`. The divergence is declared with its reasoning: the C#
+specification defines `foreach (V v in x)` by its expansion to a
+`while (e.MoveNext())` loop, so the condition is in the language's own
+definition of the statement.
+
 ## 3.7.27 - 2026-09-21
 
 ### Security — the audited tree cannot redirect a read out of itself (D211)

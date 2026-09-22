@@ -49,7 +49,14 @@ FUNC_PATTERNS = [
 # fires hardest on exactly the modern JavaScript this project claims to
 # score.
 COMPLEXITY_RE = re.compile(
-    r"\b(if|elif|for|while|except|case|catch)\b|&&|\|\||\?\?"
+    # `foreach` is here because `\bfor\b` does not match it: the word
+    # boundary falls after `for`. C# — which this pattern serves, and
+    # which the note below names — scored its primary loop as no
+    # branch at all (D212). PHP's own pattern gained `foreach` when
+    # that language was checked against a reference implementation;
+    # the C-family set was not, which is how the same keyword was
+    # missing in two places and fixed in one.
+    r"\b(if|elif|for|foreach|while|except|case|catch)\b|&&|\|\||\?\?"
     # A ternary needs both halves, so the `:` is required. Without it a
     # `?` in *type* position counted as a decision: C#'s `int? v`,
     # TypeScript's `v?: number`, Java's `List<?>`. Each is a nullable or

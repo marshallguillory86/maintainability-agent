@@ -118,7 +118,17 @@ def economics_bound_questions() -> list[dict[str, Any]]:
         {
             "name": name,
             "prompt": f"Labor rate, {label} (per hour).",
-            "options": [suggestion],
+            # A number, not a menu. This published `options: [suggestion]`
+            # — a one-item enumeration — and meant it as a type marker:
+            # the elicitation builder reads a non-string option list as
+            # "float field, any value", so that door worked. A host on
+            # the data path reads `options` as what it says and offers
+            # the single value, which is why submitting a real senior
+            # rate meant contradicting the published contract (D213).
+            #
+            # `type` says what the field is; `default` stays a
+            # suggestion rather than the only answer.
+            "type": "number",
             "default": suggestion,
         }
         for name, label, suggestion in BOUNDS
@@ -201,8 +211,10 @@ def coerce_submitted_answers(
     coerced: dict[str, Any] = {}
     for name, value in answers.items():
         options = published[name].get("options") or []
-        numeric = all(isinstance(option, (int, float)) for option in options) and options
-        if numeric:
+        # Asked of the question rather than inferred from the shape of
+        # its options, which is what let one field mean two things on
+        # two doors (D213).
+        if published[name].get("type") == "number":
             try:
                 coerced[name] = float(value)
             except (TypeError, ValueError):
@@ -470,13 +482,13 @@ def _schema_for(questions: list[dict[str, Any]]):
 
     fields: dict[str, Any] = {}
     for question in questions:
-        options = question["options"]
-        if not options:
-            kind: Any = str  # a free-text answer, e.g. a test command
-        elif all(isinstance(option, str) for option in options):
-            kind = Literal[tuple(options)]  # type: ignore[valid-type]
+        options = question.get("options") or []
+        if question.get("type") == "number":
+            kind: Any = float  # a rate: any number, suggestion as default
+        elif not options:
+            kind = str  # a free-text answer, e.g. a test command
         else:
-            kind = float
+            kind = Literal[tuple(options)]  # type: ignore[valid-type]
         fields[question["name"]] = (
             kind,
             Field(default=question["default"], description=question["prompt"]),

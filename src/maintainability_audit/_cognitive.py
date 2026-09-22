@@ -50,7 +50,15 @@ _NESTING_NODES = (ast.If, ast.For, ast.AsyncFor, ast.While, ast.ExceptHandler, a
 # itself a branch.
 _NESTING_ONLY = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)
 
-_CONTROL_RE = re.compile(r"\b(if|for|while|catch|switch|case|elif|except)\b")
+#: `foreach` is listed because `\bfor\b` does not match it — the word
+#: boundary falls after `for`, and `foreach` has `e` there. C#'s
+#: primary loop therefore cost nothing at all: two equivalent
+#: methods scored `foreach` at complexity 1 / cognitive 0 against a
+#: counted `for` at 2 / 2 (D212). That is the Swift `guard` note
+#: below and the Fortran `do` defect before it, in a fourth
+#: language — a pattern that does not know a language's primary
+#: keyword reads its loops as straight-line code.
+_CONTROL_RE = re.compile(r"\b(if|for|foreach|while|catch|switch|case|elif|except)\b")
 #: Swift adds `guard` — an early exit that is its primary branching idiom —
 #: and `repeat`, its do-while. Without them a function built from guards
 #: reads as having no branches at all, which is the Fortran `do` defect in

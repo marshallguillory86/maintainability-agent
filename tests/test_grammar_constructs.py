@@ -89,6 +89,23 @@ DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
             "reminder that lizard is a second opinion and not an oracle."
         ),
     },
+    ".cs": {
+        "ForEach": (
+            "lizard does not count `foreach`, which is the gap D212 "
+            "found: C#'s primary loop scored as straight-line code, "
+            "complexity 1 against an equivalent counted `for` at 2. "
+            "The grammar settles it rather than a preference — the C# "
+            "specification defines `foreach (V v in x)` by its "
+            "expansion, a `while (e.MoveNext())` loop over an "
+            "enumerator. The loop condition is written into the "
+            "language's own definition of the statement, and `while` is "
+            "counted here and by lizard alike. Microsoft's own metric "
+            "and SonarQube both count it too. This is the `??` case one "
+            "language over: a real branch, whatever it is spelled, and "
+            "a reminder that lizard is a second opinion rather than an "
+            "oracle."
+        ),
+    },
     ".swift": {
         "ternaryAndCoalesce": (
             "`(v ?? 0) > 0 ? 1 : 2` is two decisions: nil-coalescing "

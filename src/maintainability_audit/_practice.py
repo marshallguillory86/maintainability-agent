@@ -37,7 +37,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from ._operator_reads import open_regular_file
+from ._operator_reads import PathNotAllowed, open_repository_file
 from .metrics import is_excluded
 
 # A repository holding config but running none of it. See the module
@@ -140,7 +140,7 @@ class Practice:
         }
 
 
-def _read(path: Path, limit: int = 200_000) -> str:
+def _read(root: Path, path: Path, limit: int = 200_000) -> str:
     """A bounded read of a repository file, through a checked handle.
 
     The head only, so this stays cheap on a large tree — but read
@@ -154,13 +154,16 @@ def _read(path: Path, limit: int = 200_000) -> str:
     configuration, so every path here is repository-controlled.
     """
     try:
-        handle = open_regular_file(
+        handle = open_repository_file(
+            root,
             path,
             "Practice detection reads CI and toolchain files from the "
             "audited tree; a device, socket or FIFO would block the audit "
-            "rather than describe a practice.",
+            "rather than describe a practice, and a symlink out of the "
+            "tree would let the tree raise its own practice level with "
+            "evidence from outside it (D211).",
         )
-    except OSError:
+    except (OSError, PathNotAllowed):
         return ""
     try:
         with os.fdopen(handle, "r", encoding="utf-8", errors="replace", closefd=False) as opened:
@@ -192,7 +195,7 @@ def _pyproject_declares(root: Path, needle: str) -> Path | None:
     """A tool section in a shared manifest, which is config all the same."""
     for name in ("pyproject.toml", "setup.cfg", "package.json"):
         target = root / name
-        if target.exists() and needle in _read(target):
+        if target.exists() and needle in _read(root, target):
             return target
     return None
 
@@ -301,7 +304,7 @@ def _manifest_gates(root: Path, signals: list[dict[str, str]], excludes: list[st
     and a gate that holds is a gate however it is wired. Nested manifests
     are read too; vendored ones are not (Class 3).
     """
-    manifests = [(rel, _read(path)) for rel, path in _gate_manifests(root, excludes)]
+    manifests = [(rel, _read(root, path)) for rel, path in _gate_manifests(root, excludes)]
     for name, patterns in CI_GATE_SIGNALS:
         if _first_match(signals, name):
             continue
@@ -315,7 +318,7 @@ def _ci_signals(root: Path, ci: list[Path], excludes: list[str]) -> list[dict[st
     """What CI actually runs, and which numeric lines it holds."""
     signals: list[dict[str, str]] = []
     for path in ci:
-        _scan_ci_file(_read(path), path.relative_to(root).as_posix(), signals)
+        _scan_ci_file(_read(root, path), path.relative_to(root).as_posix(), signals)
     _manifest_gates(root, signals, excludes)
     return signals
 

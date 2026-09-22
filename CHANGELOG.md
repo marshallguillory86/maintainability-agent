@@ -12,6 +12,19 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.7.30 - 2026-09-22
+
+### Documentation — the hostile-audit brief is recorded as an unfinished feature (D202)
+
+D202 described the `--hostile-prompt-output` brief appearing in no user-facing
+document and reaching no report field, and was filed Open pending a decision on
+what it should become. That decision was made — it is an unfinished feature
+rather than a defect — and the entry now records it as a decision closure with
+its decider and date, rather than as a gap someone is meant to close.
+
+Nothing about the emitter changed. It remains deterministic, seeded from a real
+run, and connected to no scoring path.
+
 ## 3.7.29 - 2026-09-22
 
 ### Fixed — the labor-rate questions accept the rate you type (D213)

@@ -40,6 +40,19 @@ from maintainability_audit import _formula
 # `test_population_floors.test_the_shipped_floors_are_the_corpus_minima`.
 SHIPPED_FLOORS = dict(_formula.POPULATION_FLOORS)
 
+# Every process the suite starts reads *this* repository's coverage settings.
+# The test-execution tests run a suite inside a temporary tree; under
+# `pytest --cov` that child writes coverage data, reading its settings from
+# its own working directory — which has none, so it records statements while
+# this repository records branches, and `combine` aborts after the pass count
+# has already been printed. Set at import so it is in place before any test
+# starts a child, and `setdefault` so an operator's own choice still wins.
+# `test_coverage_config_reaches_children.py`.
+os.environ.setdefault(
+    "COVERAGE_RCFILE",
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pyproject.toml"),
+)
+
 
 @pytest.fixture(autouse=True)
 def _isolate_user_config(tmp_path, monkeypatch):

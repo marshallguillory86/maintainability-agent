@@ -103,6 +103,7 @@ FOUNDATIONS = {"_metrics_types", "_masking", "_hotspots", "_scan_history", "conf
 PARSING = {"source", "declarations", "_cognitive", "_tokens", "_xml",
            "_ranges_core", "_ranges_js", "_ranges_java", "_ranges_c",
            "_ranges_cpp", "_ranges_csharp", "_ranges_fortran", "_ranges_swift",
+           "_ranges_kotlin",
            # COBOL: the first language here whose declarations have no end
            # marker, so it supplies a finder that looks for the next
            # beginning rather than for a terminator. Its mask lives with it

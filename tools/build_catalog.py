@@ -143,8 +143,16 @@ NOT_ADAPTED: dict[str, str] = {
 # Evidence for each entry, so nobody has to take it on faith: lizard
 # 1.24.0 on a nested-loop kernel reports CCN 5, NLOC 11, 2 parameters —
 # the same 5 this project's own reading gives after 1.6.0.
+#
+# Kotlin joined it in 3.8.0 the same way and for the same reason: the
+# upstream row lists sixteen languages and Kotlin is not among them,
+# while lizard 1.24.0 reads a `.kt` file without being asked to. Probed
+# construct by construct — `if` 1, `&&` 1, `for` 1, `while` 1, elvis 1,
+# a two-arm `when` 1 — against this project's own reading, which agrees
+# on all of them but the last, where the fall-through path lizard omits
+# is declared as a divergence in `tests/test_grammar_constructs.py`.
 VERIFIED_EXTRA_LANGUAGES: dict[str, tuple[str, ...]] = {
-    "lizard": ("fortran",),
+    "lizard": ("fortran", "kotlin"),
 }
 
 VERIFIED_MEASURES: dict[str, tuple[str, ...]] = {

@@ -98,6 +98,50 @@ def swift_branch_points(line: str) -> int:
     return len(SWIFT_COMPLEXITY_RE.findall(line))
 
 
+#: Kotlin, which decides in three spellings the C family cannot read.
+#:
+#: **No ternary.** `if` is an expression in Kotlin, so the language has
+#: none — and the C-family `?…:` alternative is therefore absent rather
+#: than merely unused. With it, `fun find(id: Int?, name: String?)`
+#: scores two: D115's defect in a sixth spelling, after C#, TypeScript,
+#: PHP, Java and Swift.
+#:
+#: **`?:` is the elvis operator** and is Kotlin's `??`. Both halves are
+#: written, which is the test the C family already applies.
+#:
+#: **`?.` is not counted.** It yields `null` and carries on down the
+#: same path. Rust's `?` *is* counted here, and the difference is real
+#: rather than a taste: Rust's returns early from the function, while a
+#: safe call is the optional chaining C, C#, TypeScript and Java all
+#: decline to count.
+#:
+#: `do` is absent for the reason PHP's and Swift's are: `do { … } while
+#: (cond)` is one loop with one condition and the `while` carries it.
+KOTLIN_COMPLEXITY_RE = re.compile(
+    r"\b(if|for|while|catch)\b|&&|\|\||\?:"
+)
+
+#: `->` spells three different things in Kotlin and only one of them is
+#: a branch. A `when` arm decides; a lambda's parameter list and a
+#: function type do not, and both are everywhere in an ordinary file —
+#: counting them would make every collection pipeline read as a dispatch
+#: table. They are consumed before the arms are counted, which is the
+#: cheaper half of the choice: a `when` written entirely on one line has
+#: its first arm eaten with the brace and is under-counted, and
+#: under-reporting is the direction this project errs in.
+#:
+#: `else ->` is the wildcard and is not counted, as Go declines
+#: `default` and Rust declines `_ =>`.
+_KT_NOT_AN_ARM_RE = re.compile(r"\{[^}]*?->|\)\s*->|\belse\s*->")
+_KT_ARM_RE = re.compile(r"->")
+
+
+def kotlin_branch_points(line: str) -> int:
+    """Decision points on one line of Kotlin."""
+    arms = _KT_ARM_RE.findall(_KT_NOT_AN_ARM_RE.sub("", line))
+    return len(KOTLIN_COMPLEXITY_RE.findall(line)) + len(arms)
+
+
 #: Go's vocabulary is *smaller* than C's, not larger. It has no `while`
 #: (`for` covers looping), no ternary, and no `catch` — `if err != nil`
 #: is already an `if`.

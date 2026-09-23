@@ -101,7 +101,7 @@ def test_a_repository_of_unread_source_gets_no_score(tmp_path: Path) -> None:
     a detector. The property belongs to any unrecognized language.
     """
     root = _repo(tmp_path / "go", {
-        f"src/thing{n}.kt": SOURCE_BY_SUFFIX[".kt"] % {"n": n} for n in range(40)
+        f"src/thing{n}.ex": SOURCE_BY_SUFFIX[".ex"] % {"n": n} for n in range(40)
     })
 
     report = build_report(root, load_config(None))
@@ -115,10 +115,10 @@ def test_a_repository_of_unread_source_gets_no_score(tmp_path: Path) -> None:
     # disagree with it, which the evidence model forbids after
     # `history_present` did exactly that.
     assert report["summary"]["unread_source"] == [
-        {"suffix": ".kt", "language": "Kotlin", "files": 40}
+        {"suffix": ".ex", "language": "Elixir", "files": 40}
     ]
     rendered = render_markdown(report)
-    assert ".kt" in rendered and "include_extensions" in rendered, (
+    assert ".ex" in rendered and "include_extensions" in rendered, (
         "a reader must be told which extensions went unread and how to fix it"
     )
 
@@ -160,7 +160,7 @@ def test_the_report_names_every_unread_source_language(tmp_path: Path) -> None:
     root = _repo(tmp_path / "poly", {
         # Read by default now, so it must be absent from the unread list.
         **{f"src/Thing{n}.java": JAVA % {"n": n} for n in range(5)},
-        **{f"cmd/main{n}.kt": f"fun f{n}(): Int {{ return {n} }}\n" for n in range(3)},
+        **{f"cmd/main{n}.ex": f"defmodule M{n} do\n  def f, do: {n}\nend\n" for n in range(3)},
         **{f"lib/mod{n}.scala": f"object M{n} {{ def f(): Int = {n} }}\n"
            for n in range(4)},
         **{f"lib/mod{n}.py": PYTHON % {"n": n} for n in range(200)},
@@ -169,8 +169,8 @@ def test_the_report_names_every_unread_source_language(tmp_path: Path) -> None:
     report = build_report(root, load_config(None))
     unread = report["summary"]["unread_source"]
 
-    assert {entry["suffix"] for entry in unread} == {".kt", ".scala"}
-    assert {entry["suffix"]: entry["files"] for entry in unread} == {".kt": 3, ".scala": 4}
+    assert {entry["suffix"] for entry in unread} == {".ex", ".scala"}
+    assert {entry["suffix"]: entry["files"] for entry in unread} == {".ex": 3, ".scala": 4}
     assert report["summary"]["declarations_scanned"] > 0, (
         "the Java and Python in this tree are read, so they must count"
     )
@@ -192,15 +192,19 @@ def test_a_fully_read_repository_is_not_penalised(tmp_path: Path) -> None:
     assert report["score"]["maintainability_estimate"] is not None
 
 
-# `.java`, `.c` and now `.go` are deliberately absent: each has a detector
-# (`.c` as of 1.1.0, `.go` as of 2.11.0), so adding any of them to
-# `include_extensions` produces a real population rather than the false
-# "too small" sentence. Kotlin replaced Go here for that reason, and is a
-# durable stand-in: no tool in the analyzer catalog measures its
-# complexity, which is why it was ruled out for scanner support. Still in
-# the gap:
+# `.java`, `.c`, `.go` and now `.kt` are deliberately absent: each has a
+# detector (`.c` as of 1.1.0, `.go` as of 2.11.0, `.kt` as of 3.8.0), so
+# adding any of them to `include_extensions` produces a real population
+# rather than the false "too small" sentence.
+#
+# Elixir replaced Kotlin, which had replaced Go. The reason recorded for
+# Kotlin's durability was wrong as well as short-lived — it said no tool
+# in the analyzer catalog measures Kotlin's complexity, and lizard 1.24.0
+# reads a `.kt` file without being asked to. A stand-in is durable when
+# the roadmap says no scanner is scheduled for it, which is checkable;
+# not when someone believes no tool exists. Still in the gap:
 SOURCE_BY_SUFFIX: dict[str, str] = {
-    ".kt": "package a\n\nfun compute%(n)d(v: Int): Int {\n    if (v > 0) {\n        return v\n    }\n    return -v\n}\n",
+    ".ex": "defmodule A%(n)d do\n  def compute(v) do\n    if v > 0, do: v, else: -v\n  end\nend\n",
     ".scala": "object A%(n)d {\n  def compute(v: Int): Int =\n    if (v > 0) v else -v\n}\n",
 }
 
@@ -211,8 +215,8 @@ def test_following_the_remedy_does_not_produce_a_smaller_lie(
 ) -> None:
     """The named remedy has to be true after it is followed.
 
-    Default Kotlin is honest: the files are unread, `unread_source`
-    names `.kt`, and the remedy says add it to `include_extensions`. Doing
+    Default Elixir is honest: the files are unread, `unread_source`
+    names `.ex`, and the remedy says add it to `include_extensions`. Doing
     exactly that produced a *different* false statement — the files are
     now read for length, duplication and risk, but nothing extracts
     declarations from them, so `declarations_scanned` is 0, the

@@ -42,9 +42,31 @@ def _config() -> dict[str, Any]:
     return config
 
 
-def _tree(tmp_path: Path, name: str) -> Path:
+def _tree(tmp_path: Path, name: str, *, anchored_only: bool = False) -> Path:
+    """Every grammar fixture, or only those the reference corpus measured.
+
+    `anchored_only` is derived from the unanchored set rather than
+    listing suffixes, because the set moves: Kotlin shipped a scanner in
+    3.8.0 ahead of the corpus, so `constructs.kt` arrived in this
+    directory and the "a tree with none of them" case silently stopped
+    being one. Deriving it means the day Kotlin anchors, this corrects
+    itself instead of pinning a language list written today.
+    """
     fixtures = sorted(GRAMMAR.rglob("constructs.*"))
     assert fixtures, f"no grammar fixtures under {GRAMMAR}; this sweep would pass vacuously"
+    if anchored_only:
+        from maintainability_audit._anchor import UNANCHORED_LANGUAGES
+        from maintainability_audit._metrics_types import KNOWN_SOURCE_SUFFIXES
+
+        unanchored = set(UNANCHORED_LANGUAGES)
+        fixtures = [
+            fixture for fixture in fixtures
+            if KNOWN_SOURCE_SUFFIXES.get(fixture.suffix) not in unanchored
+        ]
+        assert fixtures, (
+            "every grammar fixture is an unanchored language, so there is "
+            "no tree left to check the no-caveat case against"
+        )
     tree = tmp_path / name
     tree.mkdir()
     for fixture in fixtures:
@@ -73,7 +95,9 @@ def test_no_skin_discloses_an_unanchored_language_the_run_did_not_scan(tmp_path)
     """D167: a tree with none of the unanchored languages prints no caveat."""
     from maintainability_audit.report import build_report
 
-    report = build_report(_tree(tmp_path, "anchored"), _config(), run_analyzers=False)
+    report = build_report(
+        _tree(tmp_path, "anchored", anchored_only=True), _config(), run_analyzers=False
+    )
     missing = _unanchored(report)
     assert missing, "the anchor names no unanchored language; nothing here to disclose or withhold"
     present = set(report["summary"]["languages"])

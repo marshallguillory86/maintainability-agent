@@ -18,6 +18,7 @@ from ._cognitive import (
     brace_cognitive,
     cobol_cognitive,
     fortran_cognitive,
+    kotlin_cognitive,
     python_cognitive,
     swift_cognitive,
 )
@@ -31,6 +32,7 @@ from ._metrics_types import (
     cobol_branch_points,
     fortran_branch_points,
     go_branch_points,
+    kotlin_branch_points,
     php_branch_points,
     python_branch_points,
     ruby_branch_points,
@@ -49,6 +51,7 @@ from ._ranges_fortran import (
 from ._ranges_go import go_declaration_ranges
 from ._ranges_java import java_declaration_ranges
 from ._ranges_js import js_declaration_ranges
+from ._ranges_kotlin import kotlin_declaration_ranges
 from ._ranges_php import php_declaration_ranges
 from ._ranges_ruby import ruby_declaration_ranges
 from ._ranges_rust import rust_declaration_ranges
@@ -81,6 +84,10 @@ CPP_SUFFIXES = {".cpp", ".hpp", ".cc", ".cxx", ".hh"}
 # `record`, and properties, which are deliberately not declarations.
 CSHARP_SUFFIXES = {".cs"}
 SWIFT_SUFFIXES = {".swift"}
+# `.kts` is a Kotlin script — a build file or a test harness. Same
+# language, same scanner; only the entry point differs, and that is
+# invisible to a brace-bounded scan.
+KOTLIN_SUFFIXES = {".kt", ".kts"}
 # Go: one extension, and no header/source split to worry about.
 GO_SUFFIXES = {".go"}
 RUST_SUFFIXES = {".rs"}
@@ -130,6 +137,7 @@ SCANNERS: tuple[tuple[set[str], object], ...] = (
     (CPP_SUFFIXES, cpp_declaration_ranges),
     (CSHARP_SUFFIXES, csharp_declaration_ranges),
     (SWIFT_SUFFIXES, swift_declaration_ranges),
+    (KOTLIN_SUFFIXES, kotlin_declaration_ranges),
     (GO_SUFFIXES, go_declaration_ranges),
     (RUST_SUFFIXES, rust_declaration_ranges),
     (PHP_SUFFIXES, php_declaration_ranges),
@@ -166,6 +174,11 @@ METRICS: tuple[tuple[set[str], object, object], ...] = (
     # keyword vocabulary differs, and `guard` is the difference that
     # matters — without it a guard-heavy function reads as branchless.
     (SWIFT_SUFFIXES, swift_branch_points, swift_cognitive),
+    # Kotlin's multi-way branch is `when`, counted at its arms like
+    # every other switch here; `?:` is its `??`; and it has no
+    # ternary, so the C-family `?…:` rule would score every nullable
+    # type in the file as a decision.
+    (KOTLIN_SUFFIXES, kotlin_branch_points, kotlin_cognitive),
     # Go has no `while`, no ternary and no `catch`, and it has `select` —
     # the concurrency branch the C pattern never looks for. A dispatch
     # loop counted only its cases, so the construct choosing between them
@@ -203,7 +216,8 @@ def metrics_for(suffix: str) -> tuple[object, object]:
 # Every extension we attempt declaration detection on at all.
 DECLARATION_SUFFIXES = (
     PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | CPP_SUFFIXES
-    | CSHARP_SUFFIXES | SWIFT_SUFFIXES | GO_SUFFIXES | RUST_SUFFIXES
+    | CSHARP_SUFFIXES | SWIFT_SUFFIXES | KOTLIN_SUFFIXES
+    | GO_SUFFIXES | RUST_SUFFIXES
     | PHP_SUFFIXES | RUBY_SUFFIXES
     | COBOL_SUFFIXES
     | FORTRAN_SUFFIXES | FIXED_FORM_SUFFIXES

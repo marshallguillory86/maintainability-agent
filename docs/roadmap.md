@@ -108,19 +108,20 @@ one over explicitly with `--security-pillar PATH`.
 Two of the four did not land as written, and both are recorded above with the measurement that withdrew them: deleting the per-language cyclomatic regexes would have cost the bare install half its decision points, and the per-concept merge had no analyzer-to-analyzer content to merge. COBOL is not anchored and will not be.
 
 **What is next is language support, and that is the whole list.** The
-audit itself is finished for the job it claims: fourteen languages
+audit itself is finished for the job it claims: fifteen languages
 parsed, the rubric calibrated against 180 repositories, the evidence
 model migrated, the report contract stable. Nothing on this page
 proposes making it do a different job.
 
-Five languages, in the order they are worth doing, each on the terms
+Five languages, in the order they are worth doing — one shipped, four
+left — each on the terms
 [ADR 006](decisions.md) already sets — a scanner of its own, a
 documented list of what it misses, tests that pin them, one per minor
 release:
 
 | Language | Why this one |
 |---|---|
-| **Kotlin** | the largest real gap. Android and modern JVM services; the analyzer catalog already maps it |
+| ~~**Kotlin**~~ | ~~the largest real gap. Android and modern JVM services; the analyzer catalog already maps it~~ — **shipped in 3.8.0.** The catalog did *not* map it: lizard reads Kotlin and the row never said so, which is the Fortran stale-row defect again and was fixed alongside. Kotlin is parsed and not yet anchored, and [its page](languages/kotlin.md) says what it misses |
 | **Shell** | in nearly every repository, audited by nobody, and where a great deal of operational risk actually lives |
 | **Objective-C** | completes iOS beside Swift, which shipped in 2.4.0 |
 | **Scala** | completes the JVM beside Java and Kotlin |
@@ -230,7 +231,7 @@ So scanner drift does not re-grade anything, and the claim that it does was a gu
 
 This does **not** open a question about the bare install, and an earlier draft of this paragraph wrongly said it did. [The analyzer pool help](help/analyzer-pool.md) already answers it: the pool is the primary evidence source, and *"built-in detectors always run as the fallback for concepts the selected analyzers cannot measure."* A user who declines the pool, or picks a density that selects nothing for their language, gets the built-ins — that is what the fallback tier is, it is disclosed in every report that uses it, and deleting the regexes above must leave that path intact rather than empty.
 
-**Not scheduled, and the distinction matters.** Kotlin, Scala, Elixir, Zig and the rest are classified by discovery and may be measured by adapters, but no scanner is scheduled for any of them. They are not refused — they are unwritten, on the terms above. A language moves onto this list when it is decided here, not by being named in an older register entry.
+**Not scheduled, and the distinction matters.** Scala, Elixir, Zig and the rest are classified by discovery and may be measured by adapters, but no scanner is scheduled for any of them. They are not refused — they are unwritten, on the terms above. A language moves onto this list when it is decided here, not by being named in an older register entry.
 
 Go, Rust, PHP and Ruby sat on that list until 2.11.0, when scanners were written for all four. The sentence above went on naming them for the length of that release, which is why a test now holds this paragraph against the languages the scanner actually reads.
 

@@ -46,6 +46,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
             ".cpp", ".hpp", ".cc", ".cxx", ".hh",
             ".cs",
             ".swift",
+            ".kt",
+            ".kts",
             ".go",
             ".rs",
             ".php", ".phtml",

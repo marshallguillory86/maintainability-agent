@@ -732,7 +732,7 @@
     },
     {
       "slug": "astre",
-      "name": "Astrée",
+      "name": "Astr\u00e9e",
       "license": "proprietary",
       "license_status": "proprietary",
       "license_class": "proprietary",
@@ -9623,6 +9623,7 @@
         "go",
         "java",
         "javascript",
+        "kotlin",
         "lua",
         "objectivec",
         "php",

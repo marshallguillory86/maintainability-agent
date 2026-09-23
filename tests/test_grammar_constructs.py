@@ -114,6 +114,32 @@ DECLARED_DIVERGENCES: dict[str, dict[str, str]] = {
             "PHP — it is a real branch, whatever it is spelled."
         ),
     },
+    ".kt": {
+        "whenStatement": (
+            "lizard counts a `when`'s arms minus one, treating `else` as "
+            "an arm — which is right for an exhaustive `when` and one "
+            "short for a statement `when` without one. Two arms and no "
+            "`else` is three paths: each arm, and falling through to the "
+            "line after. Probed arm by arm against lizard 1.24.0, which "
+            "scores 1/2/3 for two/three/four arms and agrees with this "
+            "project exactly whenever an `else` is present — see "
+            "`whenWithElse` and `whenWithoutSubject` in the fixture, "
+            "which are not in this list. It is the Fortran `case "
+            "default` rule read from the other side: a default is not a "
+            "test, and its absence leaves a path that is."
+        ),
+        "(anonymous)": (
+            "lizard mints a declaration for a trailing lambda and this "
+            "project does not, so there is no unit here to compare — the "
+            "disagreement is about what counts as a measurable thing, "
+            "not about what counts as a branch. Kotlin's trailing-lambda "
+            "syntax puts one in almost every collection pipeline, and "
+            "grading each as a function would flood the population every "
+            "rate divides by with one-line members. The same call Swift "
+            "makes for a closure property and Rust for a closure, both "
+            "recorded in their own scanners."
+        ),
+    },
     ".js": {
         "ternaryAndCoalesce": (
             "A ternary and a `??` are two decisions; lizard scores three. "

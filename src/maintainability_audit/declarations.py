@@ -50,8 +50,8 @@ from ._ranges_fortran import (
 )
 from ._ranges_go import go_declaration_ranges
 from ._ranges_java import java_declaration_ranges
-from ._ranges_kotlin import kotlin_declaration_ranges
 from ._ranges_js import js_declaration_ranges
+from ._ranges_kotlin import kotlin_declaration_ranges
 from ._ranges_php import php_declaration_ranges
 from ._ranges_ruby import ruby_declaration_ranges
 from ._ranges_rust import rust_declaration_ranges

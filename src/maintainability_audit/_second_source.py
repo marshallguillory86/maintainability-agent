@@ -54,7 +54,7 @@ def _completed_from_the_built_in_tier(external: ExternalPressures) -> set[str]:
     (D140). `declarations` is scored on cyclomatic complexity, declaration
     lines and cognitive complexity, and no analyzer in the pool supplies
     all three for any language but Python — `lizard` reports no cognitive
-    complexity at all — so on thirteen of the fourteen parsed languages
+    complexity at all — so on every parsed language but Python
     the built-in scanner fills that criterion per declaration.
 
     Naming it is ADR 006 working rather than an exception to it: the

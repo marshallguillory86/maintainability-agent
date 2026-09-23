@@ -330,7 +330,7 @@ def _is_diff_fragment(text: str) -> bool:
     detector was still being widened by example rather than by rule. So
     the rule is stated here: a body whose every non-blank line begins
     with a change mark is a diff fragment, whatever suffix it was
-    named. Nothing else in this project's fourteen languages is written
+    named. Nothing else in this project's fifteen languages is written
     that way, and a file that genuinely is would still be measured as
     zero declarations rather than silently reported as read.
 

@@ -390,7 +390,7 @@ it was generated against — a provenance record, not a claim about HEAD.
 |---|---:|
 | Maintainability estimate | 4.4 / 5 |
 | Verified grade | B |
-| Files scanned | 498 |
+| Files scanned | 543 |
 | Hard gate failures | 0 |
 
 A **B**, and the report says why: the grade is verified against the evidence

@@ -12,6 +12,21 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+### Documentation — the documents that describe today caught up with Kotlin
+
+3.8.0 updated the README, the language-support page and the roadmap's
+schedule, and left six statements about the present describing the tree
+before it: the help index still said "the fourteen parsed languages", the
+architecture document's list of what `DECLARATION_SUFFIXES` gates stopped at
+Ruby, the roadmap's *Shipped* entry counted fourteen, its paragraph on unwritten
+languages said Kotlin had no declaration population, and its Sonar comparison
+counted nine free languages of fourteen — Sonar's Community Build covers Kotlin
+too, so it is ten of fifteen. Two code comments carried the old count.
+
+`test_current_state_docs_name_every_parsed_language` now holds the help index's
+count to the one the report derives, and the architecture list to the
+language-support table, so the next language cannot leave them behind.
+
 ## 3.8.1 - 2026-09-23
 
 ### Fixed — a merged version cannot sit untagged under the next one

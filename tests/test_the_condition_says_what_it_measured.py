@@ -70,7 +70,12 @@ def test_every_partial_condition_says_how_many_aspects_made_it() -> None:
             _, reading = pillar_cells(entry)
             total = len(pillar.aspects)
 
-            assert f"from {total - 1} of {total} aspects" in reading, (
+            # Both counts and the missing aspect's own name, never the
+            # prose that joins them. Asserting the sentence this renderer
+            # happens to write would fail on a better-worded one and
+            # pass on any wording that contained the phrase — a test
+            # describing the code instead of the requirement.
+            assert str(total - 1) in reading and str(total) in reading, (
                 f"{pillar.name} withholding {withheld} reads {reading!r}, which "
                 f"never says the condition came from {total - 1} of {total}"
             )
@@ -92,11 +97,22 @@ def test_missing_evidence_and_a_resolved_absence_read_differently() -> None:
     for pillar in _in_scope():
         withheld = pillar.aspects[0]
         scores = {k: v for k, v in full.items() if k != withheld}
-        _, unknown = pillar_cells(_entry(pillar.name, scores, []))
-        _, resolved = pillar_cells(_entry(pillar.name, scores, [withheld]))
+        missing = _entry(pillar.name, scores, [])
+        absent = _entry(pillar.name, scores, [withheld])
+        _, unknown = pillar_cells(missing)
+        _, resolved = pillar_cells(absent)
 
-        assert "not measured:" in unknown, unknown
-        assert "nothing to measure:" in resolved, resolved
+        # The structured half, which no wording can satisfy by accident:
+        # the same aspect lands in a different bucket depending on why it
+        # has no number.
+        assert missing["condition_coverage"]["unknown"] == [withheld], pillar.name
+        assert absent["condition_coverage"]["not_applicable"] == [withheld], pillar.name
+
+        # The rendered half: both name the aspect, and the two readings
+        # are distinguishable. Which words carry the distinction is the
+        # renderer's business — pinning them here would have locked the
+        # first phrasing that happened to ship.
+        assert withheld in unknown and withheld in resolved
         assert unknown != resolved, (
             f"{pillar.name} reads identically whether {withheld} was missing "
             "evidence or had no population to measure"
@@ -121,5 +137,14 @@ def test_withholding_the_worst_aspect_raises_the_number_and_says_so() -> None:
     assert withheld["condition"] > complete["condition"], (
         "the worked example no longer demonstrates the rise this defends against"
     )
-    assert "of" in pillar_cells(withheld)[1] and worst in pillar_cells(withheld)[1]
-    assert pillar_cells(complete)[1] != pillar_cells(withheld)[1]
+    raised = pillar_cells(withheld)[1]
+
+    # `"of" in reading` stood here and was worthless: the word appears in
+    # ordinary prose, so a reading that disclosed nothing would have
+    # passed. The requirement is that the raised number states what
+    # produced it — both counts, and the aspect that is missing.
+    total = len(pillar.aspects)
+    assert str(total - 1) in raised, raised
+    assert str(total) in raised, raised
+    assert worst in raised, raised
+    assert pillar_cells(complete)[1] != raised

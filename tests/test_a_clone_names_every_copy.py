@@ -32,6 +32,11 @@ from typing import Any
 
 from maintainability_audit._work_order import COUNTED_SOURCES, _items_from_counted, _sites
 
+#: The label each class uses in its own single-place target, read from
+#: `COUNTED_SOURCES` rather than repeated, so the sentence this test
+#: refuses is built the same way the code builds it.
+_LABELS = {name: label for name, _key, label in COUNTED_SOURCES}
+
 #: One finding per counted class, each naming two places where its class
 #: can. Keyed by the class name so a new entry in `COUNTED_SOURCES` with
 #: no fixture fails `test_every_counted_class_has_a_fixture` rather than
@@ -108,10 +113,13 @@ def test_no_multi_place_item_is_told_to_remove_one_copy() -> None:
             f"{item['finding_class']} still says {target!r}, which for a finding "
             "in several places instructs deleting one of them"
         )
-        assert "alone leaves" in target, (
-            f"{item['finding_class']}'s target does not say the other copies "
-            f"survive the edit: {target!r}"
-        )
+        # The single-place wording is what must not survive, and the
+        # locations are asserted where they are rendered rather than
+        # here. `"alone leaves" in target` stood in this place and
+        # pinned the first phrasing that shipped: a clearer target
+        # would have failed it, and any target containing the phrase
+        # would have passed however wrong the rest of it was.
+        assert target != f"remove the {_LABELS[item['finding_class']]}", target
 
 
 def test_every_surface_that_prints_a_location_prints_the_others() -> None:

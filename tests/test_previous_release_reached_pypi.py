@@ -79,6 +79,54 @@ def test_the_shipping_version_must_lead_the_changelog() -> None:
     assert "9.9.9" in complaint
 
 
+def test_only_a_plain_version_ever_becomes_a_request(monkeypatch) -> None:
+    """Nothing but `X.Y.Z` reaches the index, and nothing else is fetched.
+
+    Code scanning flagged the first cut, which built a URL and handed it to
+    `urllib.request.urlopen` — a call that opens whatever scheme it is
+    given, `file:` included. The prefix was a constant, but "the prefix is
+    a constant" is a property a reader has to verify by hand. Now the host
+    is fixed in the connection itself and the version is validated first,
+    so a hostile string fails closed before any connection is made.
+    """
+    def no_network(*args, **kwargs):
+        raise AssertionError("a connection was attempted for an invalid version")
+
+    monkeypatch.setattr(check.http.client, "HTTPSConnection", no_network)
+
+    for hostile in ("file:///etc/passwd", "3.8.0/../../simple", "3.8", "", "3.8.0\n"):
+        assert check.on_pypi(hostile) is None, hostile
+
+
+def test_the_lookup_cannot_choose_a_scheme() -> None:
+    """The only network call is an HTTPS connection to a fixed host.
+
+    Read from the syntax tree, not the text: the docstring explains why
+    `urlopen` is gone, and a text search would fail on the explanation.
+    """
+    import ast
+
+    tree = ast.parse(TOOL.read_text(encoding="utf-8"))
+    imported = {
+        alias.name.split(".")[0]
+        for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))
+        for alias in node.names
+    } | {
+        node.module.split(".")[0]
+        for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module
+    }
+    hosts = [
+        node.args[0].value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and getattr(node.func, "attr", None) == "HTTPSConnection"
+        and node.args and isinstance(node.args[0], ast.Constant)
+    ]
+
+    assert "urllib" not in imported, "urllib can open any scheme it is handed"
+    assert hosts == ["pypi.org"], f"expected one fixed-host connection, found {hosts}"
+
+
 def test_an_unreachable_index_fails_rather_than_passes() -> None:
     """A lookup that could not answer is not a yes.
 

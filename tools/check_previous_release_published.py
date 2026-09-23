@@ -19,15 +19,16 @@ cannot run is not a check.
 
 from __future__ import annotations
 
+import http.client
 import json
 import re
 import sys
-import urllib.error
-import urllib.request
 from collections.abc import Callable
 from pathlib import Path
 
 HEADING = re.compile(r"^## (\d+\.\d+\.\d+)\b", re.M)
+#: The only shape of version that is ever put into a request path.
+PLAIN_VERSION = re.compile(r"\d+\.\d+\.\d+")
 PACKAGE = "maintainability-agent"
 
 
@@ -69,15 +70,30 @@ def verdict(
 
 
 def on_pypi(version: str) -> bool | None:
-    """Whether PyPI has this version: True, False, or None if unreachable."""
-    url = f"https://pypi.org/pypi/{PACKAGE}/{version}/json"
-    try:
-        with urllib.request.urlopen(url, timeout=20) as response:  # noqa: S310
-            return json.load(response).get("info", {}).get("version") == version
-    except urllib.error.HTTPError as error:
-        return False if error.code == 404 else None
-    except (urllib.error.URLError, TimeoutError, ValueError):
+    """Whether PyPI has this version: True, False, or None if it cannot say.
+
+    The host is fixed in the connection and the version is validated
+    before any request, so nothing but `https://pypi.org/pypi/…/X.Y.Z/json`
+    can ever be fetched. The first cut built a URL for `urlopen`, which
+    opens whatever scheme it is handed — `file:` included — and code
+    scanning was right to flag it: a constant prefix is a property a reader
+    has to check by hand, and this makes it one nobody has to.
+    """
+    if not PLAIN_VERSION.fullmatch(version):
         return None
+    connection = http.client.HTTPSConnection("pypi.org", timeout=20)
+    try:
+        connection.request("GET", f"/pypi/{PACKAGE}/{version}/json")
+        response = connection.getresponse()
+        if response.status == 404:
+            return False
+        if response.status != 200:
+            return None
+        return json.loads(response.read()).get("info", {}).get("version") == version
+    except (OSError, ValueError, http.client.HTTPException):
+        return None
+    finally:
+        connection.close()
 
 
 def main() -> int:

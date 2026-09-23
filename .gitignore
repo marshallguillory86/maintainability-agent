@@ -4,6 +4,10 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 .coverage
+# pytest-cov's per-process data files. `-n auto` writes one per
+# worker and a subprocess test writes more; 166 of them were once
+# swept into a commit by `git add -A`.
+.coverage.*
 coverage.xml
 htmlcov/
 .venv/

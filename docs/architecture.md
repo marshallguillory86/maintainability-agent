@@ -142,6 +142,7 @@ flowchart TB
     _ranges_csharp["_ranges_csharp"]
     _ranges_fortran["_ranges_fortran"]
     _ranges_swift["_ranges_swift"]
+    _ranges_kotlin["_ranges_kotlin"]
     _ranges_go["_ranges_go"]
     _ranges_rust["_ranges_rust"]
     _ranges_php["_ranges_php"]

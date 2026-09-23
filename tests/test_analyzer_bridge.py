@@ -371,12 +371,15 @@ def test_a_repository_of_only_tests_has_no_production_pressure(
 #
 # `.c` used to be one of these cases and is not one any more — 1.1.0 gave
 # it a scanner of its own, so it now has a real population and is covered
-# by tests/test_c_declarations.py. Both suffixes here must stay languages
-# nothing in this project parses.
+# by tests/test_c_declarations.py. `.kt` left the same way in 3.8.0, and
+# `.ex` took its place rather than letting the sweep shrink to one: a
+# guard that watches a single language stops being a sweep, and this one
+# exists to catch the last-resort regex reaching *any* unparsed language.
+# Both suffixes here must stay languages nothing in this project parses.
 @pytest.mark.parametrize(
     ("suffix", "body"),
     [
-        (".kt", "package main\nfun Real(): Int { return 1 }\nfunction decoy() {}\n"),
+        (".ex", "defmodule A do\n  def real, do: 1\nend\nfunction decoy() {}\n"),
         (".scala", "object A { def real(): Int = 1 }\nfunction decoy() {}\n"),
     ],
 )

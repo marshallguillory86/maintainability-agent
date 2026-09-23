@@ -12,6 +12,48 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.8.1 - 2026-09-23
+
+### Fixed — a merged version cannot sit untagged under the next one
+
+3.7.20 through 3.7.30 merged over two days and none was tagged, so none
+reached PyPI. Among them was D211, the fix that stops an audited tree
+redirecting a read out of itself — merged, reviewed, and delivered to nobody
+who installed the package. 3.8.0 was the first release after 3.7.19 and
+carried all eleven.
+
+Nothing noticed because the only check on tagging accepts the release plan's
+"Last tagged version" row if it names the newest tag *or* the version the tree
+is about to ship, and `tools/stamp_version.py` writes the second on every bump.
+The row always satisfied the check whether or not anything was tagged.
+
+`test_the_previous_release_was_tagged` now requires the release before the one
+a tree ships to carry its tag, which stops a backlog on its first step: 3.7.21
+could not have merged while 3.7.20 sat untagged. It deliberately does not look
+further back — forty-seven releases between 1.1.0 and 3.7.5 are on PyPI with no
+tag here, because the 2026-09-16 history rewrite left their tags pointing at
+commits that no longer exist. Those were removed on purpose and must not be
+re-created; a re-pushed tag would republish an old version over a newer one.
+
+It fails rather than skips on a checkout with no tags, so the release build now
+fetches full history like every quality-gate job already did. This release is
+the first to run through both.
+
+### Fixed — `pytest --cov` could hide a failing test behind its own pass count
+
+The test-execution tests run a repository's suite inside a temporary tree.
+Under `pytest --cov` that child wrote coverage data too, reading its settings
+from its own working directory — which has none, so it recorded statements
+while this repository records branches. `combine` then aborted with `DataError`
+after pytest had already printed "N passed", and the internal error consumed
+the failure summary. One run on 2026-09-23 reported a failure whose name was
+never recovered.
+
+The suite now points every child at this repository's coverage settings.
+Nothing changes in CI, where the two already agreed; a local coverage run
+completes and reports its failures.
+
+
 ## 3.8.0 - 2026-09-23
 
 ### Added — Kotlin is parsed

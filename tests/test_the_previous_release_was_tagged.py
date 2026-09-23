@@ -54,17 +54,6 @@ def _tags() -> set[str]:
     return {line.strip() for line in out.splitlines() if line.strip()}
 
 
-def test_the_changelog_leads_with_the_version_this_tree_ships() -> None:
-    """The anchor the rule below counts back from. Vacuous without it."""
-    versions = _changelog_versions()
-
-    assert len(versions) >= 2, "fewer than two releases; nothing to look back at"
-    assert versions[0] == VERSION, (
-        f"the changelog's newest section is {versions[0]} and the package "
-        f"ships {VERSION}; the previous release cannot be found from here"
-    )
-
-
 def test_the_release_before_this_one_carries_its_tag() -> None:
     """One step back is where a backlog starts, so one step back is checked.
 
@@ -80,7 +69,16 @@ def test_the_release_before_this_one_carries_its_tag() -> None:
         "`fetch-depth: 0`"
     )
 
-    previous = _changelog_versions()[1]
+    # The anchor this counts back from, checked first: if the changelog's
+    # newest section were not the shipping version, "one back" would name
+    # the wrong release and the assertion below would be about nothing.
+    versions = _changelog_versions()
+    assert len(versions) >= 2, "fewer than two releases; nothing to look back at"
+    assert versions[0] == VERSION, (
+        f"the changelog's newest section is {versions[0]} and the package "
+        f"ships {VERSION}; the previous release cannot be found from here"
+    )
+    previous = versions[1]
 
     assert f"v{previous}" in tags, (
         f"{previous} is the release before {VERSION} and was never tagged, so "

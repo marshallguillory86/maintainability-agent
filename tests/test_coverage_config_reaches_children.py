@@ -34,14 +34,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_the_repository_measures_branches() -> None:
-    """The setting a child has to agree with. Vacuous if it is not set."""
-    text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    run = text.split("[tool.coverage.run]", 1)
-    assert len(run) == 2, "no [tool.coverage.run] table; nothing to agree with"
-    assert "branch = true" in run[1].split("\n[", 1)[0]
-
-
 def test_a_child_started_elsewhere_reads_this_repositorys_coverage_config(
     tmp_path: Path,
 ) -> None:
@@ -51,10 +43,18 @@ def test_a_child_started_elsewhere_reads_this_repositorys_coverage_config(
     has no configuration, and reports statement coverage — the half that
     cannot be combined with the parent's branch data.
     """
-    # A plain import, not `importorskip`: coverage is a dev dependency, and
-    # a skip here would report a green run that checked nothing.
-    import coverage  # noqa: F401
+    # The setting the child has to agree with, checked first: if this
+    # repository stopped measuring branches, a child reading `False` would
+    # be agreeing with it and the assertion below would be vacuous.
+    text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    run = text.split("[tool.coverage.run]", 1)
+    assert len(run) == 2, "no [tool.coverage.run] table; nothing to agree with"
+    assert "branch = true" in run[1].split("\n[", 1)[0]
 
+    # Coverage is imported by the child, not here: `test_declared_imports`
+    # forbids an undeclared third-party import in tests, and the child's
+    # import already fails this test loudly through `check=True` if the
+    # module is missing. Nothing is skipped either way.
     result = subprocess.run(
         [
             sys.executable, "-c",

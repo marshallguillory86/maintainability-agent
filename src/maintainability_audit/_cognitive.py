@@ -296,3 +296,27 @@ def swift_cognitive(lines: list[str]) -> int:
     differs, and `guard` is the difference that matters.
     """
     return brace_cognitive(lines, _SWIFT_CONTROL_RE)
+
+
+#: Kotlin's multi-way branch is `when`, which is in none of the patterns
+#: above. Without it a dispatch written the idiomatic way reads as
+#: cognitively flat while the same dispatch written `if`/`else if` is
+#: charged in full — the Fortran `do`, Swift `guard` and C# `foreach`
+#: defect in a fifth language, and the reason this table exists.
+#:
+#: `switch` and `case` stay in the pattern they are inherited from and
+#: are simply never matched by Kotlin source.
+_KOTLIN_CONTROL_RE = re.compile(
+    r"\b(if|for|foreach|while|catch|switch|case|when|elif|except)\b"
+)
+
+
+def kotlin_cognitive(lines: list[str]) -> int:
+    """`brace_cognitive` reading Kotlin's control keywords.
+
+    Kotlin is braced, so nesting is read the same way; `when` is the
+    difference. Charged once rather than per arm, which is the point of
+    cognitive complexity: a `when` is genuinely easier to read than the
+    `if`/`else if` chain it replaces.
+    """
+    return brace_cognitive(lines, _KOTLIN_CONTROL_RE)

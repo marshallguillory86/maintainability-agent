@@ -5,10 +5,10 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **3.7.30**.
+Version **3.8.0**.
 
-**Languages parsed:** Python, Java, C, C++, C#, Go, Rust, PHP, Ruby, Swift,
-COBOL, Fortran (free-form *and* fixed-form), and the JS/TS/HTML family — each
+**Languages parsed:** Python, Java, Kotlin, C, C++, C#, Go, Rust, PHP, Ruby,
+Swift, COBOL, Fortran (free-form *and* fixed-form), and the JS/TS/HTML family — each
 by a scanner written for it, and measured with that language's own reading of
 what a branch is, checked construct-by-construct against an independent
 implementation.
@@ -309,9 +309,9 @@ SonarQube, Qlty) rather than replacing them — their SARIF folds in via
 **Be clear-eyed: the tool does not support every language equally, and on an
 unrecognized language it under-reports rather than fails.** Coverage has two layers.
 
-Fourteen languages are parsed as of **2.11.0**: Python (1.0), Java (1.0), C (1.1),
+Fifteen languages are parsed as of **3.8.0**: Python (1.0), Java (1.0), C (1.1),
 C++ (1.2), C# (1.3), Fortran (free-form 1.4, fixed-form 1.6), Swift (2.4),
-COBOL (2.7), Go (2.11), Rust (2.11), PHP (2.11), Ruby (2.11), the JS/TS family, and HTML. Each has a scanner written for it and a
+COBOL (2.7), Go (2.11), Rust (2.11), PHP (2.11), Ruby (2.11), Kotlin (3.8), the JS/TS family, and HTML. Each has a scanner written for it and a
 documented list of what it misses — a language is claimed only when both exist.
 
 **Built-in scanner (always on, no dependencies)** — reads function/class
@@ -326,6 +326,7 @@ these:
 | C++ (`.cpp`, `.hpp`, `.cc`, `.cxx`, `.hh`) | dedicated brace-bounded scanner — functions, class members, namespaces, templates | Bounded; bodyless declarations are not definitions |
 | C# (`.cs`) | dedicated brace-bounded scanner — methods, constructors, `class`/`interface`/`struct`/`record`/`enum` | Bounded; properties are not declarations |
 | Swift (`.swift`) | dedicated brace-bounded scanner — functions, initialisers, subscripts, `class`/`struct`/`enum`/`protocol`/`actor` | Bounded; extension members carry their type, protocol requirements and computed properties are not declarations |
+| Kotlin (`.kt`, `.kts`) | dedicated brace-bounded scanner — functions, constructors, `init`, `class`/`interface`/`object` and the `data`/`sealed`/`enum`/`value` forms | Bounded; extension functions carry the receiver the source writes, an expression body is a declaration, interface requirements and properties are not |
 | Go (`.go`) | dedicated brace-bounded scanner — functions, methods, `type`/`struct`/`interface` | Bounded; methods carry their receiver type, interface methods are requirements, function literals inside a body are not seen |
 | Rust (`.rs`) | dedicated brace-bounded scanner — functions, `impl` and `trait` members, `struct`/`enum`/`trait`/`union` | Bounded; methods carry the type their `impl` names, trait requirements mint nothing, closures and macro bodies are not read |
 | PHP (`.php`, `.phtml`) | dedicated brace-bounded scanner — functions, methods, `class`/`interface`/`trait`/`enum`; markup outside `<?php` is blanked | Bounded; methods carry their class, bodyless members mint nothing, heredoc bodies are not masked |
@@ -337,7 +338,7 @@ these:
 | HTML (`.html`) | same brace scanner (inline `<script>`) | Bounded |
 | TypeScript (semantic) | a recorded analysis or a locally-installed `tsc`, workspace projects included | Type-level facts; `unknown` when no checker is present |
 
-Any language **not** in that table — Kotlin, Scala, Elixir, Zig, and the rest —
+Any language **not** in that table — Scala, Elixir, Zig, and the rest —
 is **not parsed for declarations by the built-in scanner.** Its files still count
 toward repo size, but the built-ins produce no function-size, complexity,
 duplication or dead-code findings for them, and the estimate leans on whatever
@@ -389,7 +390,7 @@ it was generated against — a provenance record, not a claim about HEAD.
 |---|---:|
 | Maintainability estimate | 4.4 / 5 |
 | Verified grade | B |
-| Files scanned | 498 |
+| Files scanned | 543 |
 | Hard gate failures | 0 |
 
 A **B**, and the report says why: the grade is verified against the evidence
@@ -436,7 +437,7 @@ instead of an invokable skill:
 This repo ships `action.yml`, usable as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v3.7.30
+- uses: marshallguillory86/maintainability-agent@v3.8.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

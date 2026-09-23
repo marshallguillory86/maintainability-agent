@@ -86,6 +86,12 @@ LOOPS: dict[str, tuple[str, str]] = {
         "func counted(_ xs: [Int]) -> Int {\n    var t = 0\n    var i = 0\n"
         "    while i < xs.count { t += xs[i]; i += 1 }\n    return t\n}\n",
     ),
+    ".kt": (
+        "fun idiomatic(xs: List<Int>): Int {\n    var t = 0\n"
+        "    for (x in xs) { t += x }\n    return t\n}\n",
+        "fun counted(xs: List<Int>): Int {\n    var t = 0\n    var i = 0\n"
+        "    while (i < xs.size) { t += xs[i]; i += 1 }\n    return t\n}\n",
+    ),
     ".rb": (
         "def idiomatic(xs)\n  t = 0\n  for x in xs\n    t += x\n  end\n  t\nend\n",
         "def counted(xs)\n  t = 0\n  i = 0\n  while i < xs.length\n"

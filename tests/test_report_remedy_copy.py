@@ -31,7 +31,7 @@ def _config(run: bool) -> dict:
             "deny_concerns": [],
             "timeout_seconds": 5,
         },
-        "paths": {"include_extensions": [".kt"]},
+        "paths": {"include_extensions": [".ex"]},
     }
 
 
@@ -40,12 +40,17 @@ def _repo(tmp_path: Path, config: dict | None) -> Path:
     (root / "src").mkdir(parents=True)
     (root / "README.md").write_text("# fixture\n", encoding="utf-8")
     for number in range(40):
-        (root / "src" / f"thing{number}.kt").write_text(
-            "package fixture\n\n"
-            f"func Compute{number}(value int) int {{\n"
-            "\tif value > 0 { return value }\n"
-            "\treturn -value\n"
-            "}\n",
+        # Elixir, and it is Elixir: this fixture held Go source in a
+        # `.kt` file until 3.8.0 gave Kotlin a scanner and the mismatch
+        # started to matter. The language has to be one nothing here
+        # parses, and the bytes have to be that language, or the thing
+        # being measured is a filename.
+        (root / "src" / f"thing{number}.ex").write_text(
+            f"defmodule Fixture{number} do\n"
+            "  def compute(value) do\n"
+            "    if value > 0, do: value, else: -value\n"
+            "  end\n"
+            "end\n",
             encoding="utf-8",
         )
     if config is not None:
@@ -68,7 +73,7 @@ def _build_case(tmp_path: Path, config: dict | None) -> dict:
     root = _repo(tmp_path, config)
     if config is None:
         loaded = load_config(None)
-        loaded["paths"]["include_extensions"].append(".kt")
+        loaded["paths"]["include_extensions"].append(".ex")
     else:
         loaded = load_config(discovered_config(root))
     report = build_report(root, loaded)

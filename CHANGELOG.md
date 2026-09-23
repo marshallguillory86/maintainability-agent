@@ -12,6 +12,74 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.8.0 - 2026-09-23
+
+### Added — Kotlin is parsed
+
+Kotlin is the fifteenth language with a scanner of its own, the largest real
+gap left on the roadmap, and the first of the five languages scheduled there
+one per minor release. `.kt` and `.kts` produce a declaration population:
+functions, constructors, `init` blocks, and the types — `class`, `interface`,
+`object`, and the `data`/`sealed`/`enum`/`annotation`/`value`/`inner` forms,
+which Kotlin writes as modifiers on `class` rather than as keywords of their
+own.
+
+Three readings are Kotlin's own, and each is a place a shared default reached
+the wrong answer:
+
+**An expression body has no brace.** `fun area() = w * h` is idiomatic Kotlin,
+not a corner. The shared end-finder bounds a body by its braces and falls back
+to indentation, and that fallback walks to the closing `}` of the *enclosing
+class* — a one-line function came back two lines long, with the brace ending
+its container counted as its last line. The shared bodyless check looks for
+`=>`, the arrow JavaScript and C# use for an expression member; Kotlin writes
+`=`, so every expression-bodied function in a tree would have been dropped as a
+signature with nothing behind it. Kotlin supplies its own end-finder and
+answers the bodyless question itself.
+
+**`when` is counted at its arms**, the rule already shared with `switch` in Go,
+PHP, Ruby, Python, Swift and Fortran. Kotlin spells an arm `->`, which is also
+how it spells a lambda's parameter list and a function type, so both are
+consumed before the arms are counted. `when` was in none of the cognitive
+vocabularies either, so a dispatch written the idiomatic way read as
+cognitively flat while the same dispatch written `if`/`else if` was charged in
+full — the Fortran `do`, Swift `guard` and C# `foreach` defect in a fifth
+language.
+
+**Kotlin has no ternary**, because `if` is an expression there. The C-family
+`?…:` alternative is therefore absent rather than merely unused: with it,
+`fun find(id: Int?, name: String?)` scores two, which is D115's defect in a
+sixth spelling after C#, TypeScript, PHP, Java and Swift. `?:` (elvis) is
+counted as Kotlin's `??`; `?.` is not, because it yields `null` and carries on
+down the same path.
+
+An extension function needs no second pass: `fun Widget.draw()` writes its own
+receiver, which is the one place Kotlin is easier than Swift.
+
+### Fixed — lizard reads Kotlin, and the catalog said it did not
+
+The analyzer catalog's `lizard` row listed sixteen languages and Kotlin was not
+among them, while lizard 1.24.0 reads a `.kt` file without being asked to. This
+is the Fortran stale-row problem exactly: selection is gated on that list, so
+Kotlin would have come out `not-applicable` on every repository while the tool
+that measures it sat installed in the pool.
+
+Two test fixtures carried the same wrong claim in prose — that no tool in the
+analyzer catalog measures Kotlin's complexity, offered as the reason Kotlin was
+a durable stand-in for an unparsed language. It was never checked against the
+tool. Both fixtures now use Elixir, on the narrower and checkable ground that
+the roadmap lists it under languages no scanner is scheduled for.
+
+### Changed — Kotlin is disclosed as unanchored
+
+Kotlin is parsed but absent from the 180-repository reference corpus, so every
+grade skin now discloses that a Kotlin repository's grade is provisional — the
+caveat COBOL already carries. The two are there for different reasons and with
+different ends: COBOL is excluded from the corpus permanently, and Kotlin
+anchors at the next recalibration. The scanner shipped ahead of the corpus, and
+saying so is the whole job of that disclosure.
+
+
 ## 3.7.30 - 2026-09-22
 
 ### Documentation — the hostile-audit brief is recorded as an unfinished feature (D202)

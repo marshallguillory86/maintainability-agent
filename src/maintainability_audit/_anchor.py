@@ -47,11 +47,19 @@ from __future__ import annotations
 #: than temporarily. Emptying this tuple would delete a disclosure that is
 #: still true.
 #:
+#: **Kotlin joins it in 3.8.0**, and unlike COBOL it is expected to
+#: leave again. A scanner shipped ahead of the corpus, so a Kotlin
+#: repository is parsed in full and graded against medians drawn from
+#: thirteen other languages — which is provisional, and saying so is the
+#: whole job of this tuple. It anchors at the next recalibration, on the
+#: corpus policy's own terms; COBOL does not, and the distinction is the
+#: one the note above draws between permanently and temporarily absent.
+#:
 #: `tests/test_unanchored_set_matches_corpus.py` recomputes
 #: `parsed - corpus` from `DECLARATION_SUFFIXES` and `corpus.json` and
 #: fails if this stops matching — including when a language is *added* to
 #: the corpus, which is the direction that went unnoticed.
-UNANCHORED_LANGUAGES: tuple[str, ...] = ("COBOL",)
+UNANCHORED_LANGUAGES: tuple[str, ...] = ("COBOL", "Kotlin")
 
 
 def unanchored_names() -> str:

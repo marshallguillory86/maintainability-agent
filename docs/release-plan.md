@@ -49,6 +49,30 @@ Two things are deliberately open rather than done:
 - **The calibration constant is 5.8843** (2.6279 → 2.2658 on 2026-08-14, then 2.2658 → 5.8843 on 2026-08-31). The 08-31 re-fit followed a corpus re-measure: the stored measurements had gone stale, and plan-81dc6870 Class 4's clone-grouping had dropped the built-in duplication reading roughly fourteenfold, so every report scored duplication against a reference ~14x too high. All 40 pinned repos were re-measured `--with-analyzers`; the duplication reference moved 3.8644 → 0.28 and declarations 0.0860 → 0.1005. Corpus median still rolls up to 4.0 (a well-run codebase earns a B). Old and new values are recorded in `_calibration.py`, and a scanner-counting guard now fails if a change like Class 4 silently invalidates the reference again.
 - **ADR 007 §4's rename is refused**, and the deviation is recorded there and in `standard.md`: the ownership aspect measures the share of settled files one person owns, which is not the bus factor, and adopting the name would claim a measurement the tool never makes.
 
+## Versions that never reached PyPI
+
+*Checked against PyPI and this repository's release runs on 2026-09-23.* Every
+version below has a changelog section and no published package. **None is to be
+re-tagged or republished.** Each one's changes shipped inside a later release,
+and publishing an old number now would put a stale package beside the current
+one for no reader's benefit.
+
+| Version | What happened | Shipped inside |
+|---|---|---|
+| 0.3.0 – 0.6.0 | Not established. They predate the release workflow's record here; recorded as unknown rather than guessed. | 0.6.1 |
+| 2.11.0 | Tagged; the build refused it for the stale "Last tagged version" row described above, and no artifact shipped. | 2.11.1 |
+| 3.7.2 | Tagged; the release build ran the suite without secure-code-agent installed, four security-pillar tests failed and publishing was skipped. 3.7.3 added the install (D177) and shipped over the gap. | 3.7.3 |
+| 3.7.12 | Merged and never tagged. 3.7.13 merged 54 minutes later and was released. | 3.7.13 |
+| 3.7.20 – 3.7.30 | Merged over two days and never tagged — eleven versions, including D211. | 3.8.0 |
+
+Two checks now close the two ways this happened. A version that is never
+**tagged** fails the *next* version's pull request
+(`tests/test_the_previous_release_was_tagged.py`). A version that is tagged but
+never **published** fails the next version's release build
+(`tools/check_previous_release_published.py`, run by `release.yml`), which asks
+PyPI directly because the suite has no network. Both look one version back,
+deliberately: the gaps above are recorded, not repaired.
+
 ## Phase 0 — Land what exists, fix what is broken
 
 Small, independent, and blocking later phases. Nothing here needs the analyzer work.

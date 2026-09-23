@@ -12,6 +12,24 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+### Fixed — a release cannot ship over one that never reached PyPI
+
+3.7.2 was tagged and its release build failed — the suite ran without
+secure-code-agent installed — so it was never published. 3.7.3 fixed the build
+(D177) and shipped over the gap, and nothing recorded that a version was
+missing. The tag check added in 3.8.1 would not have caught it: the tag existed.
+
+The release build now runs `tools/check_previous_release_published.py` before
+publishing, which asks PyPI whether the previous version is there and refuses
+otherwise — including when PyPI cannot be reached, because a check that passes
+when it cannot run is not a check. Run against the real index, it refuses 3.7.3
+by name.
+
+`docs/release-plan.md` now lists every version with a changelog section and no
+package — 0.3.0–0.6.0, 2.11.0, 3.7.2, 3.7.12 and 3.7.20–3.7.30 — with what
+happened and which release carried its changes, and says plainly that none is
+to be republished.
+
 ### Documentation — the documents that describe today caught up with Kotlin
 
 3.8.0 updated the README, the language-support page and the roadmap's

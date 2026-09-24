@@ -1,0 +1,106 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>ADR 011: Three report presentations from one report · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#context">Context</a></li>
+<li><a href="#options">Options</a></li>
+<li><a href="#decision">Decision</a></li>
+<li><a href="#consequences">Consequences</a></li>
+<li><a href="#invariants">Invariants</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Decisions</div><h1>ADR 011: Three report presentations from one report</h1><ul>
+<li>Status: Accepted. Implementation progress is tracked in the <a href="decisions.html">decision register</a>, which is the single place it is stated</li>
+<li>Date: 2026-08-14</li>
+<li>Scope: How a finished report is shown — chat, Markdown file, HTML file, and <code>json</code> for a machine (added by the D201 amendment below) — and how the user chooses</li>
+<li>Related: <a href="adr-008-translation-and-decision.html">ADR 008</a>, <a href="adr-009-scan-history.html">ADR 009</a>, <a href="product-intent.html">product intent</a></li>
+</ul>
+<h2 id="context">Context</h2>
+<p>The product already has one report dictionary and several writers: Markdown (<code>--output</code>), a PR comment, a remediation prompt, SARIF. Chat (MCP / IDE agent) returns that Markdown. There is no HTML. Choosing a format is a flag, not a question.</p>
+<p>1.0 needs three <strong>user-facing</strong> skins of the <strong>same</strong> data: what the human sees in IDE chat, a Markdown file, and a single packaged HTML file that an executive will actually open. The bounded work order remains the product (<a href="product-intent.html">product intent</a>); these are presentations of it, not a dashboard product.</p>
+<p>MCP is a local stdio process and does not run <code>input()</code>. It may write exactly five local artifacts: the repository config, user config, user state, repository scan history at <code>.maintainability/history.jsonl</code> and repository baseline at <code>.maintainability/baseline.json</code>; it never writes source or a report. First-run setup writes the first three, the audit's history rule may append the fourth, and an explicit baseline write controls the fifth. The host agent is what can ask the user where to save returned report text.</p>
+<h2 id="options">Options</h2>
+<p><strong>A. Three independent report builders.</strong> Each walk of the tree produces its own numbers. Rejected: two scores is the class of bug this repo already paid for (P4).</p>
+<p><strong>B. One report dict, three renderers; flags only.</strong> Smallest change. Rejected: the user wants the agent to <strong>ask</strong> on invoke, default chat if they hit enter.</p>
+<p><strong>C. One report dict, three renderers; ask on every interactive invoke; flags win; CI never asks.</strong> Chosen.</p>
+<p><strong>D. MCP server writes <code>.html</code> / <code>.md</code> into the repo.</strong> Rejected: the MCP write boundary permits setup configuration and state, never reports. Chat shows text. Files are written by the CLI or saved by the host after it asks the user for a location.</p>
+<h2 id="decision">Decision</h2>
+<ol>
+<li>
+<p><strong>One view model, three renderers.</strong> Chat/CLI text, Markdown file, and one self-contained HTML file all read the report dictionary (and the scan-history records). None compute a score. Architecture rule 3 and the existing extension point stand.</p>
+</li>
+<li>
+<p><strong>Default is chat/CLI text</strong> — the Markdown the host already prints in an IDE conversation. Enter / go with no choice selects this.</p>
+</li>
+<li>
+<p><strong>TTY:</strong> ask every interactive invoke which of the three to produce. Do not persist the choice. <code>--format</code> / <code>--output</code> / <code>--html-output</code> skip the question and win. Non-TTY and CI never call <code>input()</code> (same class as 6.1).</p>
+</li>
+</ol>
+<blockquote>
+<p><strong>Amended 2026-09-20 (D201): <code>json</code> is a fourth option at the question.</strong>
+This document defined three <em>user-facing</em> skins and said nothing about
+<code>json</code>, so for eleven releases the two doors that accept <code>format="json"</code>
+per call — <code>--format json</code> on the CLI, the <code>format</code> argument on MCP —
+offered it to nobody. The reason given for excluding it, that <code>json</code> is
+the dictionary the other three render rather than a rendering of it, is
+true and is not a reason to hide a shipped capability behind a flag a
+reader has to find. It is built, it is validated on both doors, and the
+operator's decision is that it is offered: <code>PRESENTATIONS</code> is now
+<code>chat, markdown, html, json</code>, in that order, and every surface that
+recites the options derives them from it.</p>
+<p>The invariants below are unchanged. <code>json</code> computes no score — it emits
+<code>json.dumps(report)</code> of the same dictionary the three renderers read, so
+the guarantee that no two presentations disagree covers it by
+construction. Chat stays the Enter default; <code>json</code> is the fourth thing
+asked, not a new default.</p>
+</blockquote>
+<ol start="4">
+<li><strong>MCP:</strong> first-run setup uses structured elicitation. The <code>maintainability-agent</code> prompt still tells the host in prose to ask, then call <code>audit_repository</code> with a format argument; that free-text ask was closed under D3, which replaced setup and the slash prompt with structured choices. Chat returns Markdown. HTML and Markdown <strong>files</strong> are written by the CLI or saved by the host after a location ask, never by the MCP process.</li>
+</ol>
+<blockquote>
+<p><strong>Amended 2026-08-22 (D3 closed).</strong> The free-text ask closed under D3.
+Presentation now arrives through the <code>format</code> argument;
+<code>action</code>/<code>choice_needed</code> separately governs whether an audit runs at all.</p>
+</blockquote>
+<p><strong>Chat-path amendment (2026-08-16).</strong> First-run setup persists a default presentation for later chat calls. An explicit per-call format and the host's own presentation ask always win over that stored default. The TTY rule is unchanged: it asks on every interactive invocation unless an explicit format or output option already decides.</p>
+<ol start="5">
+<li>
+<p><strong>HTML</strong> is one file: inlined CSS, charts as deterministic SVG generated from stored fields (no CDN, no fetch at view time — P1). It leads with an <strong>executive summary</strong> (estimate, grade, range, series direction or “no history yet”). Required charts, from schema-2 records only:
+   - estimate + range over recorded scans
+   - <strong>five pillars over time</strong> (condition)
+   - <strong>practice / maturity level over time</strong> (separate series — never averaged with condition, <a href="adr-007-pillars-and-practice.html">ADR 007</a>)
+   - current-run category bars
+   Schema-1 scans appear on the rollup series and are gaps on pillar/practice charts. Empty history is an empty state, not a fabricated sparkline.
+   Same remaining sections as Markdown: coverage, trend text, economic
+   context, pillars (with practice caps), ISO categories, aspect scores
+   including the unscored list, environment work order, largest files,
+   function hotspots, work order / prompt, findings. A heading Markdown
+   prints because the report dict has the data cannot be HTML-only-absent;
+   <code>tests/test_html_section_parity_class.py</code> holds the catalog, not two
+   leftover headings.
+   Finding rows carry a presentation severity derived from the published class risk in the <a href="standard.html">standard</a> and <code>CLASS_RISK_EFFORT</code>: risk 5 is <strong>Severe</strong>, 4 is <strong>High</strong>, 3 is <strong>Medium</strong>, and 1–2 is <strong>Low</strong>. Hard-gate failures display as <strong>Severe</strong>. These labels organize the existing findings; they do not change the estimate, range, or verified grade.</p>
+</li>
+<li>
+<p><strong>SARIF and the PR comment stay.</strong> They are CI artifacts, not this trio.</p>
+</li>
+<li>
+<p><strong>History for charts</strong> is <a href="adr-009-scan-history.html">ADR 009</a> schema 2. No second store. Empty history is an empty state, not a fabricated series. Trends describe past scans; nothing forecasts.</p>
+</li>
+</ol>
+<h2 id="consequences">Consequences</h2>
+<p>Presentation grows an HTML renderer and a TTY format question. MCP grows a format parameter and a prompt line. The CLI writes <code>--output</code> and <code>--html-output</code>. Consumers who only ever use <code>--output</code> keep today’s Markdown path.</p>
+<p>A pretty HTML page that invents a second score, or that cannot be reproduced from tree + config + history, is a defect.</p>
+<h2 id="invariants">Invariants</h2>
+<ol>
+<li>Two renderers of the same report dict never disagree on estimate, range, grade, or finding identity.</li>
+<li>HTML contains no <code>http://</code> or <code>https://</code> resource load (no CDN, no live chart library).</li>
+<li>Non-TTY runs never call <code>input()</code> for format.</li>
+<li>A set <code>--format</code> / output path suppresses the TTY question.</li>
+<li>MCP never writes source or report files. Its write boundary is exactly repository configuration, user configuration, user state, repository scan history at <code>.maintainability/history.jsonl</code> and repository baseline at <code>.maintainability/baseline.json</code>.</li>
+<li>Charts and trend sentences are computed only from fields present on stored <code>ScanRecord</code>s (schema 2). A missing series is omitted or named empty, never interpolated.</li>
+</ol>
+<footer>Rendered from <code>docs/adr-011-three-report-presentations.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

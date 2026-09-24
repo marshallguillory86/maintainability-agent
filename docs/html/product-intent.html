@@ -1,0 +1,312 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Product intent · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#what-this-is">What this is</a></li>
+<li><a href="#the-job-it-does">The job it does</a><ul>
+<li><a href="#semantic-judgment-and-economic-priority">Semantic judgment and economic priority</a></li>
+</ul>
+</li>
+<li><a href="#who-it-is-for">Who it is for</a></li>
+<li><a href="#what-it-promises">What it promises</a><ul>
+<li><a href="#why-p1-was-amended">Why P1 was amended</a></li>
+<li><a href="#why-p7-and-p8-were-added">Why P7 and P8 were added</a></li>
+</ul>
+</li>
+<li><a href="#what-it-must-never-claim">What it must never claim</a></li>
+<li><a href="#the-evidence-standard">The evidence standard</a><ul>
+<li><a href="#tier-1-deterministic-property">Tier 1 — Deterministic property</a></li>
+<li><a href="#tier-2-standard-judgment">Tier 2 — Standard (judgment)</a></li>
+<li><a href="#tier-3-empirical-claim">Tier 3 — Empirical claim</a></li>
+</ul>
+</li>
+<li><a href="#when-a-finding-is-closed">When a finding is closed</a></li>
+<li><a href="#what-counts-as-a-defect-and-what-does-not">What counts as a defect, and what does not</a><ul>
+<li><a href="#the-release-bar">The release bar</a></li>
+</ul>
+</li>
+<li><a href="#what-success-looks-like">What success looks like</a><ul>
+<li><a href="#what-the-evidence-currently-supports">What the evidence currently supports</a></li>
+</ul>
+</li>
+<li><a href="#what-failure-looks-like">What failure looks like</a></li>
+<li><a href="#non-goals">Non-goals</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Product and standard</div><h1>Product intent</h1><p>The governing document. When another document, a code comment, or a release note disagrees with this one, this one is right and the other is a bug.</p>
+<h2 id="what-this-is">What this is</h2>
+<p>A deterministic maintainability audit that produces a <strong>bounded work order</strong> for an AI coding agent.</p>
+<p><strong>The role, stated once so the rest follows from it: this is the independent check on a generator's output — the role a generator cannot fill for itself.</strong> A tool that writes code and also grades it is reporting on its own work. This one writes nothing, runs no model, and re-derives the same verdict from the same inputs, which is what makes its answer usable as evidence rather than as an opinion. That is a separation-of-duties property before it is a technical one, and it is why determinism is load-bearing rather than a preference: a checker that cannot reproduce last quarter's verdict cannot attest to anything. <strong>A model reviewing a generator's output does not supply that independence either.</strong> It can find real problems, and hostile audits by a model are part of how this tool is built, but a model's verdict is an opinion until something deterministic reproduces it. Model review is a finder that sits on this tool's evidence, never a substitute for it.</p>
+<p>The corollary is a boundary, not a modesty statement. <strong>The better a code-generating agent becomes, the more an independent check on it is worth</strong> — so agents and the platforms around them are the customer for what this produces, not the competition. What this tool does not compete on is listed in the <a href="roadmap.html#what-this-tool-does-not-compete-on">roadmap</a>: generation, security scanning, compliance profiles, comprehension of languages it does not parse, IDE experience, model routing.</p>
+<p>Not a linter (those exist and are better at it), not an AI reviewer, not a quality dashboard. The scanner and the score exist to aim the remediation prompt. If the prompt were removed, the rest would be a worse version of tools that already ship.</p>
+<p><strong>The primary surface is an AI chat host</strong> — an IDE assistant or chat
+window driving the MCP server. The CLI is the automation surface for CI
+and scripts. Almost no user runs the audit at a bare terminal, so a
+capability that exists only behind a terminal prompt does not exist for
+most users. The individual wiring defects found when this contract first met a
+real host—and their closing tests—are recorded in the
+<a href="defect-register-chat-surface.html">chat-surface defect register</a>.</p>
+<p><strong>Chat, MCP, and an interactive CLI TTY are one setup: the same questions.</strong>
+MCP is the chat transport, not a third questionnaire.
+The questions are the set in <a href="help-first-run.html">first run and questions</a>
+(<code>setup_questions</code> in source). There is not a CLI setup, a chat setup,
+and an MCP setup. A surface that asks a subset is a bug. CI, a
+non-TTY, and an explicit <code>--config</code> never ask — that is not a
+different question set; there is no operator. MCP allowed-root grants
+are a server boundary, not first-run setup.</p>
+<h2 id="the-job-it-does">The job it does</h2>
+<p>Agents write code faster than humans can read it. The ratio of code-written to code-reviewed has collapsed, and unmaintainable code that used to accumulate over years can now accumulate in an afternoon. The same speed is the way out: an agent pointed at specific, deterministic findings can fix them at the same rate they appear.</p>
+<p>The loop this product closes:</p>
+<ol>
+<li>Measure pressure points deterministically, with no LLM involved.</li>
+<li>Apply one uniform standard, so "better" and "worse" are not an argument.</li>
+<li>Emit a prompt scoped to <em>those findings only</em>, with explicit instructions not to refactor beyond them.</li>
+<li>Hand it to the agent. Review a scoped diff instead of a speculative rewrite.</li>
+<li><strong>Check the diff against the work order that produced it</strong> — did it stay inside the named paths, did it silence anything, did any dimension move backwards.</li>
+</ol>
+<p>Step 3 is the product. Steps 1 and 2 are in service of it. Step 5 is what makes step 3 a constraint rather than a request.</p>
+<p>For most of this project's life the loop ended at step 4, and the honest statement of that limit was: <strong>the work order bounds the agent by instruction, and nothing verifies the diff came back inside it.</strong> That is no longer true. <code>--conformance</code> compares the diff against the paths the report named and answers two separate questions — stayed in scope, and silenced nothing — while <code>--fail-on-regression</code> ratchets the dimension scores across scan history. <code>--attestation-output</code> composes the three into one record. See <a href="roadmap.html#the-remediation-hole-closed-in-210-through-230">the remediation hole</a>.</p>
+<p>What the loop still does not do, and is not going to: <strong>step 5 reads the diff's shape, never its correctness.</strong> It establishes that a change went where it was told and hid nothing. Whether the change is right is a claim this tool does not make, and the attestation says so in its own text rather than leaving a reader to assume otherwise.</p>
+<h3 id="semantic-judgment-and-economic-priority">Semantic judgment and economic priority</h3>
+<p>The next useful boundary is not a larger generic smell catalog. It is a way to
+make repository knowledge explicit enough that a deterministic tool can act on
+it. Source code alone can observe that the same bare strings are repeated in
+dispatch, validation and capability checks. It cannot universally know whether
+those strings should be constants, an enum, a value object, or reified
+operations with behavior and generic result types. That choice contains domain
+intent.</p>
+<p><a href="adr-003-deterministic-semantic-policy.html">ADR 003</a> accepts three honestly
+different outputs: facts established by a language type system, violations of
+checked-in repository policy, and design-review candidates inferred from
+structural or historical friction. Determinism means that the same tree,
+analyzer versions and policy produce the same result; it does not require the
+tool to pretend that one universal rule contains every repository's semantics.
+The current increment is TypeScript only. These results aim the bounded prompt;
+they do not change the standard score, range, grade, or evidence status.</p>
+<p><a href="adr-004-economic-context.html">ADR 004</a> v1 is <strong>shipped</strong>. Change history
+supplies recurrence and hotspot churn; the user may supply loaded labor
+cost (low/base/high) and optional horizon, reliability tier, review
+burden and incident cost. The result is a labeled scenario range in a
+separate report block and a reordered work order, not a modification of
+the uniform score and not a prediction.
+The product direction is:</p>
+<blockquote>
+<p>deterministic finding + explicit repository semantics + configured economic
+context -&gt; a bounded work order ordered by estimated exposure</p>
+</blockquote>
+<p>ADR 003 option C is accepted and its TypeScript precision increment is current
+work. Both paths preserve the offline, no-LLM audit path and the evidence
+standard below.</p>
+<h2 id="who-it-is-for">Who it is for</h2>
+<ul>
+<li>Teams running agents in the dev loop who are tired of unbounded cleanup PRs.</li>
+<li>Repos that want a maintainability gate without a SaaS analyzer or shipping code to a third party.</li>
+<li>Solo developers who want one deterministic audit pinnable in a Makefile or CI script.</li>
+</ul>
+<h2 id="what-it-promises">What it promises</h2>
+<p>Each promise is falsifiable, and named so a failure can be reported against it.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Promise</th>
+<th>Falsified by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1</td>
+<td>The audit is deterministic: same tree, config, pinned analyzer versions <strong>and scan history</strong> in, same <em>evidence, findings and score</em> out — <strong>at a fixed point in time.</strong> The history window is relative to the wall clock (see below), so the same tree audited on two different days can report different history rates. Four further fields describe the run rather than the repository and are recorded without being compared — the absolute <code>root</code>, <code>git_status_short</code>, each analyzer's wall-clock <code>seconds</code>, and the <code>generated_at</code> audit timestamp; see below. History is an input, not decoration — a finding that cleared and returned twice is different information from one seen for the first time, so an identical tree reports differently against different histories, and that is the feature working. <strong>The analysis itself performs no network access and invokes no language model.</strong> Tool acquisition is opt-in through <code>analyzers.acquire_tools</code> and defaults off; when enabled, it may fetch a missing tool and records the acquired version</td>
+<td>Two runs disagreeing on identical tree, config, versions and history, or any network access during analysis</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>The score applies the same rubric to every repository, and the rubric is readable in source</td>
+<td>A repo-specific code path changing a weight or band</td>
+</tr>
+<tr>
+<td>P3</td>
+<td>Withholding evidence cannot improve the reported grade</td>
+<td>Any input whose removal raises the graded field</td>
+</tr>
+<tr>
+<td>P4</td>
+<td><code>maintainability_estimate</code> equals the weighted mean of the categories printed beside it</td>
+<td>A report where the arithmetic does not check</td>
+</tr>
+<tr>
+<td>P5</td>
+<td>The remediation prompt names only findings the audit actually produced</td>
+<td>A prompt instruction with no corresponding finding</td>
+</tr>
+<tr>
+<td>P6</td>
+<td>Every empirical claim in this repo is reproducible from checked-in pinned inputs</td>
+<td>A quoted number that cannot be re-derived offline</td>
+</tr>
+<tr>
+<td>P7</td>
+<td>A score is issued only where enough was examined to support it, and never as a consequence of not looking</td>
+<td>A number a reader with the repository in front of them would call absurd</td>
+</tr>
+<tr>
+<td>P8</td>
+<td>Every report states what examined it — which analyzers ran, which did not, and what measured each value</td>
+<td>A reported value with no attributable source, or a run whose coverage cannot be recovered from its output</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="why-p1-was-amended">Why P1 was amended</h3>
+<p>P1 read "no network, no LLM" when the tool was pure computation over a file tree. Under <a href="adr-006-analyzer-evidence.html">ADR 006</a> it invokes external analyzers, and some of those live in ecosystems whose normal installation path is a fetch — <code>npx</code> for the Node tools most obviously.</p>
+<p>Two honest options existed: refuse to acquire tools, which makes the multi-language story depend on every user hand-installing a dozen ecosystems; or provide an explicit acquisition choice and disclose it. The latter was chosen, so the promise separates <strong>analysis</strong> from <strong>acquisition</strong>. Analysis still touches no network and no model: <strong>this agent does not transmit the audited source.</strong> Acquisition defaults off. When a user enables <code>analyzers.acquire_tools</code>, a missing tool may be fetched and its version is recorded in the report so the run remains reproducible.</p>
+<p><strong>Why P1 names these excepted fields.</strong> An audit ran the same tree
+twice and found the reports differing by one millisecond, on an
+analyzer's <code>seconds</code>. The promise said "same report out" and the
+determinism check had been quietly stripping <code>root</code>,
+<code>git_status_short</code> and every <code>seconds</code> for as long as it had existed —
+so the promise was false of the JSON a consumer actually diffs, and
+true only of the test's own projection.</p>
+<p>The exceptions are legitimate: a duration is a fact about the run, not
+about the repository, and an absolute path is not portable. <code>generated_at</code>
+— the wall-clock time the audit ran, added so the report can state under
+its title when it was produced — is the same kind: a fact about the run,
+which the determinism check strips because two audits of one tree
+legitimately differ on it. What was wrong when only the first three were
+stripped was that they were undisclosed, which is exactly the shape this
+table exists to prevent — a promise kept green by a check narrower than
+the promise. They are named above now, and
+<code>test_the_determinism_exceptions_are_exactly_the_disclosed_ones</code> fails
+if the strip list grows without this page growing with it.</p>
+<p><strong>Why P1 names the history window.</strong> The run-describing fields above
+are recorded and not compared. The history window is an exception of a
+different kind, and it went undisclosed longer: <code>DEFAULT_SINCE</code> is
+<code>12 months ago</code>, which git resolves against the wall clock at the moment
+the audit runs. It is not configurable.</p>
+<p>So "same tree, config, pinned analyzer versions and scan history in,
+same score out" is true within a run and false across days. A commit
+ages out of the window overnight and the churn, hotspot, coupling and
+ownership rates move underneath an unchanged tree — no input changed,
+and the grade did. That is a real determinism limit, not a rounding
+one, and it is the same shape as the three fields above: legitimate
+behaviour kept invisible by a check narrower than the promise. The
+determinism test compares two runs seconds apart, which is precisely
+the interval over which this cannot fail.</p>
+<p>Named rather than removed, because a fixed absolute window would make
+every report a different question over time, and pinning the window per
+repository is a config decision nobody has asked for.
+<code>test_the_history_window_is_disclosed_as_clock_relative</code> fails if the
+window changes without this paragraph changing with it.</p>
+<p><strong>Why P1 says "pinned" and CI splits gating from drift detection.</strong> P1's determinism is
+<em>conditional</em>: same tree, config, <strong>pinned analyzer versions</strong> and scan
+history in, same evidence out. The condition is real and the report
+records each analyzer's version so two runs can be compared on it.</p>
+<p>The PR gates now do pin it. <code>verify</code> and <code>audit</code> install the twelve
+pip analyzers through checked-in <code>constraints/analyzers.txt</code>, so a
+green gating run certifies P1 against a fixed analyzer input set rather
+than against whatever PyPI served that day.</p>
+<p>The weekly scheduled run keeps the old drift signal on purpose. It
+installs the same top-level analyzer pool <strong>unpinned</strong> in a throwaway
+virtualenv, freezes what pip resolved, and fails visibly on a diff
+against <code>constraints/analyzers.txt</code>. That preserves the D48 signal — an
+unchanged <code>main</code> going red because an analyzer shipped — without asking
+the merge gate to certify a floating environment.
+<code>test_the_gating_pipeline_pins_the_analyzers_and_the_scheduled_run_detects_drift</code>
+holds the workflow and this page together.</p>
+<p><strong>What P1 does not police.</strong> External analyzers run as local child processes (<code>_runner</code>). This package does not wrap them in a network sandbox, and it does not inspect whether <em>they</em> open sockets. A future SaaS CLI adapter would be a different product. The host that prints a report into an IDE chat is also outside this process. P1 is enforced as determinism plus no HTTP client in <code>src/</code> that uploads the tree — not as “no packet can leave the box.”</p>
+<p>The prerequisites this creates are listed in <a href="analyzer-pool.html#runtime-prerequisites">the analyzer pool</a> rather than left for a user to discover from a failure.</p>
+<h3 id="why-p7-and-p8-were-added">Why P7 and P8 were added</h3>
+<p>P1–P6 are all <strong>self-consistency</strong> promises: the machine agrees with itself, the arithmetic checks, nothing is concealed. A repository holding one function and one test passed all six while being reported as <strong>5.0 / A+, evidence complete, verified</strong> — deterministically, under the same rubric, with the arithmetic correct and nothing withheld. Six for six, and the result was worthless.</p>
+<p>Nothing in P1–P6 asks whether a number corresponds to anything about the code, so four days of hostile audits could not see it. Worse, the <a href="#the-evidence-standard">evidence standard</a> classifies the rubric as Tier 2 — a judgment that "needs no validation study and no apology" — which is right for <em>weights</em> and became a principled-sounding reason never to ask whether a specific score was defensible.</p>
+<p>P7 is that missing question, stated as a falsifiable property. P8 makes it checkable: a score cannot be judged sufficient unless the report says what produced it. See <a href="adr-005-insufficient-population.html">ADR 005</a> and <a href="adr-006-analyzer-evidence.html">ADR 006</a>.</p>
+<h2 id="what-it-must-never-claim">What it must never claim</h2>
+<p>This list exists because the project has already broken it once and retracted. Adding a claim in these shapes requires deleting it from this list first, with the evidence that earns it.</p>
+<ul>
+<li><strong>That it detects AI-written code</strong>, or that any metric distinguishes AI authorship. Tested with a matched control and <a href="studies.html#does-this-detect-ai-written-code">retracted</a>. Any revival needs a pre-registered design with commit-level authorship.</li>
+<li><strong>That it detected TDD/BDD chronology or test quality.</strong> It may report TDD-shaped file pairing and constructs. It may not say tests were written first, or that they would catch a regression, unless the operator opted into suite execution and coverage was parsed.</li>
+<li><strong>That the score predicts business outcomes</strong> — defect rates, delivery speed, cost. No outcome study has been run. The rubric is a standard, not a model of the future.</li>
+<li><strong>That a configured economic scenario is a prediction or observed saving.</strong> User inputs make assumptions explicit; they do not validate the model. Scenario ranges must remain separate from the score until held-out outcomes establish predictive performance.</li>
+<li><strong>That a heuristic can recover experienced engineering judgment.</strong> A repeated string dispatch or repeatedly patched abstraction can justify a design-review candidate. It does not prove which abstraction is correct.</li>
+<li><strong>That a passing grade means the code is maintainable.</strong> It means nothing this tool measures is out of band.</li>
+<li><strong>That the architecture, or any ADR, is "fully implemented"</strong> while its consumers and invariants have not migrated.</li>
+<li><strong>That a bug class is closed</strong> because the reported instance stopped reproducing. See the closure rules below.</li>
+<li><strong>That third-party tools cannot use the network</strong>, or that a run is kernel-air-gapped. This agent does not transmit the audited source; it does not sandbox children.</li>
+</ul>
+<h2 id="the-evidence-standard">The evidence standard</h2>
+<p>Six audit rounds went in circles for one reason: claims of different kinds were held to the same loose bar. A judgment was defended as if it needed a study, and a study was asserted as if it were a judgment. Every claim in this repository is exactly one of these, and its type determines what it needs.</p>
+<h3 id="tier-1-deterministic-property">Tier 1 — Deterministic property</h3>
+<p><em>"<code>maintainability_estimate</code> is the mean of the printed categories."</em> A statement about what the code does.</p>
+<p><strong>Requires:</strong> a test that fails if it stops being true. Not an example — a property over the real field set or input space. No study, no debate.</p>
+<h3 id="tier-2-standard-judgment">Tier 2 — Standard (judgment)</h3>
+<p><em>"Duplication is 25% of modularity."</em> <em>"A file over 400 lines warns."</em></p>
+<p><strong>Requires:</strong> that it be explicit, deterministic, uniform across repositories, and readable in source. <strong>It requires no validation study, and no apology.</strong> Every standard — ISO 25010, a building code, a style guide — is judgment made explicit and applied uniformly. Anyone may disagree with a weight; they can read it and argue. Legitimacy comes from being stated and applied evenly, not from being proven optimal.</p>
+<p>Calibration against the reference corpus is what keeps these judgments <em>anchored</em> to real code. It does not convert them into Tier 3 facts.</p>
+<h3 id="tier-3-empirical-claim">Tier 3 — Empirical claim</h3>
+<p><em>"AI-assisted fixes touch more files."</em> A statement about the world.</p>
+<p><strong>Requires:</strong> pinned inputs checked in, a matched control, a pre-registered primary outcome, correction for multiple comparisons, and re-derivation offline. Absent any of those, it is reported as an <strong>exploratory direction</strong> and never as a finding. A result that crosses significance depending on a specification choice is <em>fragile by demonstration</em> and must be labeled so.</p>
+<p><strong>The failure mode this prevents:</strong> stating a Tier 3 claim in a document whose genre implies Tier 1 or 2. That is precisely how the retracted claim reached the README headline.</p>
+<h2 id="when-a-finding-is-closed">When a finding is closed</h2>
+<p>Adapted from <a href="adr-001-evidence-and-verification.html">ADR 001</a>, which earned these the hard way. All conditions, not a majority:</p>
+<ol>
+<li>The original reproduction no longer fails.</li>
+<li>The governing invariant is stated <strong>independently of that reproduction</strong>.</li>
+<li>Tests exercise the production model, not a hand-built fixture that happens to carry the right keys.</li>
+<li>The equivalent missing, invalid, zero, and not-applicable states are all covered.</li>
+<li>Public claims do not exceed what the invariant and tests establish.</li>
+<li>Any changed empirical result is re-derived from pinned inputs and corrected <strong>everywhere it is quoted</strong>.</li>
+</ol>
+<p>Passing the test suite and the self-audit is necessary and is not sufficient. Two consecutive audit rounds were rejected for fixing the demonstrated instance and leaving structurally identical paths untouched.</p>
+<h2 id="what-counts-as-a-defect-and-what-does-not">What counts as a defect, and what does not</h2>
+<p>This tool audits itself, so it will always have findings. Without this
+section "no known defects" is unreachable by construction, every audit
+reopens the question of whether the work is finished, and the honest
+answer to "is it done" is permanently no.</p>
+<p><strong>A defect is a false claim.</strong> Behaviour that contradicts what this
+repository says it does: a promise the code breaks, a document that
+describes something the code does not do, a citation naming a function
+that does not exist, a check that passes vacuously. Those get filed,
+and they get a severity.</p>
+<p><strong>A finding is not a defect.</strong> The tool's own output about its own
+source — a declaration in the warn band, a near-duplicate pair, a file
+approaching the size limit, a style nit — is the product working. It is
+reported, it is weighed by a human, and it blocks nothing. A warn band
+that had to be empty would be a gate, and this project deliberately
+separates the two.</p>
+<p>Restyling this repository to raise its own grade is explicitly not work.
+The score is second class; a tool that games its own metric has broken
+the only promise that matters.</p>
+<h3 id="the-release-bar">The release bar</h3>
+<p><strong>No open High and no open Medium.</strong> That is the whole rule.</p>
+<p>A Low may stand open through a release when it is recorded, understood
+and not worth holding a version for. The release workflow reads the
+register for open entries; a Low left open must say in the entry why it
+is not blocking, so the decision is visible rather than assumed.</p>
+<p>This is a stopping rule, not a quality ceiling. Nothing here says stop
+looking — the audits are the point, and finding something is the tool
+doing its job rather than evidence the job is unfinished.</p>
+<h2 id="what-success-looks-like">What success looks like</h2>
+<ul>
+<li>An agent handed the bounded work order acts on the standard instead of wandering.</li>
+<li>A maintainer can explain any grade by pointing at a named measurement.</li>
+<li>A hostile audit finds nothing that a stated invariant did not already cover.</li>
+</ul>
+<h3 id="what-the-evidence-currently-supports">What the evidence currently supports</h3>
+<p><strong><a href="studies.html">studies.md</a> is the source of record.</strong> This section holds no table and no interpretation — an earlier revision duplicated both and the copies promptly disagreed. What it does hold is the single approved public sentence, because a document whose job is to say what the product may claim cannot do that job while quoting nothing. Every figure below also appears in <code>studies.md</code>, and a test enforces that.</p>
+<p>One pre-registered experiment has been run: <a href="studies.html#does-the-bounded-prompt-work-controlled-experiment-pre-registered">does the bounded prompt work?</a>. Its registered verdict is <strong>INCONCLUSIVE</strong> and stays recorded that way; the registered hypothesis was that bounded prompts produce narrower diffs, and they did not.</p>
+<p><strong>The defensible public sentence</strong>, and the only one:</p>
+<blockquote>
+<p>Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, under this tool's own finding count.</p>
+</blockquote>
+<p>An earlier revision read "bounded ones did not", which concealed the bounded arm's own failure; an audit flagged it as a misleading public claim and it is corrected here rather than quietly rewritten. Two limits travel with that sentence wherever it goes: the bounded arm is told which findings to close and then scored on closing them, and "improved" means "closed the findings this tool names", which no outcome study has yet connected to real maintenance cost.</p>
+<h2 id="what-failure-looks-like">What failure looks like</h2>
+<ul>
+<li>The score becomes something to game rather than something to act on.</li>
+<li>The tool grows into a worse SonarQube.</li>
+<li>A claim outruns its evidence tier — the single failure this project has actually committed.</li>
+</ul>
+<h2 id="non-goals">Non-goals</h2>
+<p>Replacing mature analyzers; rewriting repositories automatically; sending code to an LLM by default; treating maintainability as purely numeric; preserving undocumented behavior for hypothetical consumers; <strong>carrying the work out.</strong> This tool measures and emits a bounded prompt; acting on that prompt is the agent's job and the operator's decision, not this package's. Nothing in this repository describes a successor, rename or execution layer — a reader who infers one is reading a plan that does not exist.</p>
+<footer>Rendered from <code>docs/product-intent.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

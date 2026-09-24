@@ -1,0 +1,139 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>ADR 006: External analyzers produce the evidence; the agent orchestrates and corroborates · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#context">Context</a></li>
+<li><a href="#decision">Decision</a><ul>
+<li><a href="#1-analyzers-are-the-primary-evidence-source">1. Analyzers are the primary evidence source</a></li>
+<li><a href="#2-availability-is-reported-never-assumed-and-proven-by-invocation">2. Availability is reported, never assumed — and proven by invocation</a></li>
+<li><a href="#2c-coverage-gaps-are-reported-with-the-remedy-and-never-remedied-automatically">2c. Coverage gaps are reported with the remedy, and never remedied automatically</a></li>
+<li><a href="#3-several-tools-measure-each-concept-and-their-readings-are-combined-with-weights">3. Several tools measure each concept, and their readings are combined with weights</a></li>
+<li><a href="#4-spread-becomes-the-reported-interval">4. Spread becomes the reported interval</a></li>
+<li><a href="#5-installation-is-layered-and-explicit">5. Installation is layered and explicit</a></li>
+</ul>
+</li>
+<li><a href="#options-considered">Options considered</a></li>
+<li><a href="#consequences">Consequences</a></li>
+<li><a href="#invariants">Invariants</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Decisions</div><h1>ADR 006: External analyzers produce the evidence; the agent orchestrates and corroborates</h1><ul>
+<li>Status: Accepted. Implementation progress is tracked in the <a href="decisions.html">decision register</a>, which is the single place it is stated</li>
+<li>Date: 2026-08-12</li>
+<li>Scope: The whole evidence layer, the score, the report contract, installation, CI</li>
+<li>Supersedes the "planned adapters" position in <a href="adapters.html">adapters.md</a></li>
+<li>Related: <a href="adr-001-evidence-and-verification.html">ADR 001</a>, <a href="adr-007-pillars-and-practice.html">ADR 007</a>, <a href="tool-inventory.html">tool inventory</a></li>
+</ul>
+<h2 id="context">Context</h2>
+<p>The README states the design principle plainly: <em>"Pair this tool with mature analyzers (ESLint, Ruff, Radon, Semgrep, SonarQube, Qlty/Code Climate) — don't replace them."</em> The roadmap lists replacing them as an explicit non-goal.</p>
+<p>The implementation does the opposite. <code>src/</code> contains <code>_cognitive.py</code>, <code>duplication.py</code>, <code>similarity.py</code>, <code>deadcode.py</code>, <code>idioms.py</code> and <code>metrics.py</code> — six homegrown detectors that reimplement, less well, what radon, jscpd, vulture, ruff and lizard already do. External analyzers are relegated to an optional side-channel: <code>--sarif-input</code>, which the operator must run themselves and hand to the tool. <strong>The commodity layer is bolted to the side of the thing it should sit underneath.</strong></p>
+<p>The cost is not theoretical. A repository with one production function and one test scored <strong>5.0 / A+, evidence complete, verified</strong>. Six shallow detectors found nothing and the rubric read that as excellence. The tool reported thirteen aspects and examined enough material to support none of them.</p>
+<p>Two further facts, established by running the tools rather than reading about them:</p>
+<p><strong>One tool covers most languages.</strong> <code>lizard</code> measures cyclomatic complexity, NLOC, parameter count and token count across C, C++, C#, Java, Fortran, Go, Rust, Kotlin, Swift, PHP, Ruby, Scala, JS/TS and more, with no per-language configuration. The same tangled function written in seven languages returned C 11, C# 11, Java 11, Go 10, Rust 10, C++ 7, Fortran 6. <code>jscpd</code> does the equivalent for duplication across ~150 formats.</p>
+<p><strong>Tools that claim the same metric disagree.</strong> On this repository's <code>history.py</code>:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th><code>history_section</code></th>
+<th><code>change_coupling</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lizard</td>
+<td>14</td>
+<td>13</td>
+</tr>
+<tr>
+<td>radon</td>
+<td>14</td>
+<td>13</td>
+</tr>
+<tr>
+<td>mccabe</td>
+<td>not in top 3</td>
+<td>8</td>
+</tr>
+</tbody>
+</table></div>
+<p>All three report "cyclomatic complexity". radon and lizard count boolean operators and comprehensions; mccabe's path graph does not. A single-tool number is therefore <strong>a measurement of that tool's counting convention, not of the code</strong>. Any score derived from one source inherits that convention silently and presents it as a property of the repository.</p>
+<h2 id="decision">Decision</h2>
+<p>The agent becomes an orchestrator over external analyzers. Five changes, in dependency order.</p>
+<h3 id="1-analyzers-are-the-primary-evidence-source">1. Analyzers are the primary evidence source</h3>
+<p>The pipeline's first act is to run the available FOSS quality analyzers over the target tree and collect their machine-readable output. Findings and metrics flow from those tools into the typed evidence model built by ADR 001. The rubric scores that evidence.</p>
+<p>The built-in detectors are <strong>demoted, not deleted</strong>. They remain as a fallback tier for languages and environments where nothing else runs, and for the zero-install path. Every measurement they produce is tagged single-source (see §3) and carries the weaker evidence strength that implies.</p>
+<p>Demotion means a lower tier, not a hidden one. The eight built-in sources appear in the coverage record beside the analyzers, each carrying <code>tier: built-in</code> and a note saying where it stands: which external tools cover the same concept, or that no adapter emits it at all. Four are in that second group — <code>file_lines</code>, <code>risk</code>, <code>idioms</code>, and the history concepts <code>churn</code> / <code>coupling</code> / <code>ownership</code> — so they are not merely a fallback but the only source the tool has for those. <code>test_no_built_in_claims_to_be_unique_when_an_adapter_exists</code> holds each of those notes against the adapter registry, so a claim of uniqueness fails the build on the day an adapter contradicts it.</p>
+<p>Leaving them out of coverage was itself a reporting defect, and the same one in mirror image: a section headed "what examined this code" that omitted half of what examined it. Coverage now reports <strong>three</strong> states per concern rather than two — corroborated by an external tool, single-source (a built-in looked and nothing else did), and unexamined. Collapsing single-source into "covered" would let a fallback pass for independent evidence; collapsing it into "unexamined" would claim nobody looked when something did.</p>
+<h3 id="2-availability-is-reported-never-assumed-and-proven-by-invocation">2. Availability is reported, never assumed — and proven by invocation</h3>
+<p>Presence on <code>PATH</code> is not availability. Measured: <code>/usr/bin/java</code> exists and <code>command -v java</code> succeeds, but it is the macOS stub with no JDK behind it, and PMD refused to launch through it.</p>
+<p>Exit codes are not a sufficient signal either, in both directions: many linters exit non-zero precisely to report findings, so treating that as failure discards real evidence, while a launcher can exit zero having done nothing. Either mistake ends the same way — a tool recorded as having run, found nothing, and contributed a clean result, which is the hello-world A+ arriving through a new door.</p>
+<p>So a tool counts as available only when invoked and its output validated against an expected shape. Version capture doubles as the probe.</p>
+<p>Each run records which analyzers were attempted, which ran, which were unavailable and why (not installed, unsupported language, timed out, crashed). A tool that did not run is <strong>not a clean result</strong>. <code>secure-code-agent</code> already reports <code>scanners run:</code> and <code>unavailable:</code>; this agent adopts the same discipline.</p>
+<p>This is the concept whose absence produced the A+. With coverage reporting, "twelve analyzers found nothing" and "one fallback detector found nothing" stop being the same output.</p>
+<h3 id="2c-coverage-gaps-are-reported-with-the-remedy-and-never-remedied-automatically">2c. Coverage gaps are reported with the remedy, and never remedied automatically</h3>
+<p>Language detection, the catalog and the availability probe compose into an answer no current tool gives: what part of this codebase was not examined, and what would it take. The gap is rarely total — multi-language tools reach nearly everything — so it is reported per language <em>and per concern</em>. Measured on a 60%-Java tree: complexity, duplication, documentation, structure and metrics covered; <strong>dead-code, testing, style and types covered by nothing</strong>, with 58 cataloged tools that could.</p>
+<p>Each gap names the tools that would close it and the prerequisite runtime — a JDK for PMD and Checkstyle, Node, the Go or Rust toolchain, the .NET SDK.</p>
+<p><strong>Acquisition is a user decision, not a repository decision.</strong> Installation is a network and privilege action belonging to the user. It is off by default; a user may enable <code>analyzers.acquire_tools</code> in user-tier configuration, while an audited tree cannot enable it. The <em>environment work order</em> (2.5c) ships each selected tool that could not run, why, the exact install command and how to verify it, rendered beside coverage — for a person to run or hand to their own agent.</p>
+<h3 id="3-several-tools-measure-each-concept-and-their-readings-are-combined-with-weights">3. Several tools measure each concept, and their readings are combined with weights</h3>
+<p>The unit of evidence stops being <em>a tool's output</em> and becomes <em>a measurement concept</em> — cyclomatic complexity, duplication ratio, dead code, docstring coverage — measured by every available tool that speaks to it. Each concept declares its contributing tools and their weights. The target is <strong>at least four independent sources where the ecosystem supports it</strong>. Redundancy is the point.</p>
+<p>The combination is ordinary arithmetic, not a new discipline:</p>
+<pre><code class="language-text">concept &quot;cyclomatic complexity&quot; on a function
+   lizard    14   weight 1.0
+   radon     14   weight 1.0
+   mccabe     8   weight 1.0
+   -&gt;  value  = weighted mean = 12.0
+       spread = 8 .. 14
+       sources = 3
+</code></pre>
+<p>That is the whole mechanism. Tools disagree because their counting rules differ — radon and lizard count boolean operators and comprehensions, mccabe's path graph does not — and a weighted mean over three readings is a better estimate of the underlying property than any one of them. The spread is kept because it is real information, not because disagreement needs adjudication.</p>
+<p>Weights are rubric data and live beside the aspect weights in the concept registry, visible and arguable. A tool known to be stricter or looser on a concept can be down-weighted with a stated reason; the default is equal weight, because that is the least arguable starting point.</p>
+<p>Two things are recorded with every value: <strong>how many tools produced it</strong>, and <strong>their spread</strong>. A measurement from four agreeing tools and a measurement from one tool are both usable; they are not equally well supported, and the report says which is which.</p>
+<p>Where <strong>no</strong> tool measured a concept, it is <code>Unknown</code> under ADR 001, with the attempted-tool list as the reason. That is the only case that produces no number.</p>
+<h3 id="4-spread-becomes-the-reported-interval">4. Spread becomes the reported interval</h3>
+<p><code>maintainability_range</code> already exists but is currently decorative — a fixed band around the estimate. It becomes the propagation of the measured spread from step 3: concepts where the tools agree narrow it, concepts where they disagree widen it, single-source concepts widen it further because one reading has no spread to trust.</p>
+<p>This gives the interval an empirical meaning it has never had, using machinery already in the contract.</p>
+<h3 id="5-installation-is-layered-and-explicit">5. Installation is layered and explicit</h3>
+<p>Analyzers span ecosystems and cannot all be a hard dependency. Three tiers:</p>
+<ul>
+<li><strong>Core</strong> — installed with the package, always present: <code>lizard</code> (multi-language metrics), <code>jscpd</code> where Node exists, <code>radon</code>, <code>ruff</code>.</li>
+<li><strong>Detected</strong> — used when already on <code>PATH</code>: <code>pylint</code>, <code>vulture</code>, <code>complexipy</code>, <code>interrogate</code>, <code>golangci-lint</code>, <code>detekt</code>, <code>PMD</code>, <code>clippy</code>, <code>cppcheck</code>, <code>rubocop</code>, <code>phpstan</code>, <code>swiftlint</code>.</li>
+<li><strong>Declared</strong> — named in configuration by the operator, for site-specific analyzers.</li>
+</ul>
+<p>Missing tools degrade evidence strength and are reported. They never fail the run, and they never silently become a clean result.</p>
+<p><strong>Superseded in part by Decision 9.</strong> This ADR listed <code>eslint</code> under <em>Detected</em>. Decision 9 rules that the agent never executes the audited repository's code and that configuration counts as code; an eslint flat config is a JavaScript program, so eslint cannot be invoked at all. Its adapter now declares <code>executes_audited_configuration</code>, and selection refuses every adapter that does — reported as a deselection with that reason, not silently dropped. The rest of this tier list stands.</p>
+<h2 id="options-considered">Options considered</h2>
+<p><strong>A. Keep the built-ins as primary, add adapters later.</strong> Rejected — this is the status quo, it contradicts the stated principle, and it produced the A+.</p>
+<p><strong>B. Delete the built-ins entirely, require external tools.</strong> Rejected. It breaks the zero-install path and abandons languages the ecosystem covers poorly. Demotion preserves the capability while ending the pretence that it is sufficient.</p>
+<p><strong>C. Single best tool per concept.</strong> Rejected, and this is the option the mccabe/radon evidence kills. Choosing radon over mccabe is choosing a counting convention, and the choice would be invisible in the output. Combining readings makes the spread visible instead of hiding it behind a preference.</p>
+<p><strong>D. Run everything available, combine the readings with weights.</strong> Accepted.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li>The agent gains a process-execution layer it does not currently have: subprocess invocation, timeouts, output parsing, failure isolation. Determinism (promise <strong>P1</strong>) now depends on pinned analyzer versions, which must be recorded in the report.</li>
+<li>Runtime rises from milliseconds to seconds or minutes. The <code>--changed-only</code> path becomes load-bearing rather than a convenience.</li>
+<li>Report schema gains an analyzer-coverage section and per-measurement provenance listing contributing tools. Another contract version.</li>
+<li><code>docs/adapters.md</code> "planned adapters" is superseded by this record.</li>
+<li>The six built-in detector modules become a fallback tier and must be labelled as such in code and docs, so nobody mistakes them for the primary path again.</li>
+<li>Scoring must handle contested measurements, which is new behavior in <code>_formula.py</code> and the interval logic.</li>
+</ul>
+<h2 id="invariants">Invariants</h2>
+<ol>
+<li>Every report names every analyzer attempted, with an outcome for each: ran, unavailable, failed.
+1b. Availability is established by invoking the tool and validating its output shape, never by <code>PATH</code> presence or exit code alone.</li>
+<li>No measurement is reported without the list of tools that produced it and their count.</li>
+<li>A concept measured by zero tools is <code>Unknown</code> with the attempted-tool list as its reason — never a default, never a zero, never a 5.0.</li>
+<li>Where two or more tools measure one concept, the report carries the combined value, the spread and the tool attribution. No tool is silently dropped.</li>
+<li>Combination weights are declared as data in the concept registry, never embedded in code paths.</li>
+<li>Analyzer versions are recorded in the report, and identical versions over an identical tree produce identical output.</li>
+<li>An unavailable analyzer never fails the run and never improves a score.</li>
+<li>Built-in fallback detectors are always tagged single-source.</li>
+<li>The built-in language set does not grow past what is shipped.
+   Python, JS/TS/HTML and Java have range detectors as the zero-install
+   fallback. Go, C, C++, C# and Rust wait on analyzer measurements plus
+   recalibration, not on a new <code>_ranges</code> function per language.</li>
+</ol>
+<footer>Rendered from <code>docs/adr-006-analyzer-evidence.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

@@ -1,0 +1,74 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>ADR 012 — SpotBugs and the build boundary · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#the-problem">The problem</a></li>
+<li><a href="#options-considered">Options considered</a></li>
+<li><a href="#resolution">Resolution</a></li>
+<li><a href="#consequences">Consequences</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Decisions</div><h1>ADR 012 — SpotBugs and the build boundary</h1><ul>
+<li>Status: Accepted (2026-08-19, decision 11). Implementation progress
+  belongs in the <a href="decisions.html">decision register</a>, not here.</li>
+</ul>
+<h2 id="the-problem">The problem</h2>
+<p>SpotBugs — the third of the Java "big three" beside PMD and
+Checkstyle — analyzes compiled bytecode, not source. Every value it
+adds (null-dereference paths, resource leaks, bad equals/hashCode
+contracts) requires <code>.class</code> files that only a build produces.</p>
+<p>This agent's boundary is settled and load-bearing: it never runs a
+repository's build, never accepts command strings, and never spawns
+anything but a catalogued analyzer over the tree as it stands (P1;
+the MCP security contract). A build is arbitrary code execution by
+definition — <code>pom.xml</code> and <code>build.gradle</code> run plugins. Crossing that
+line for one analyzer would trade the product's strongest safety
+claim for one tool's evidence.</p>
+<h2 id="options-considered">Options considered</h2>
+<ol>
+<li><strong>Run the build when asked.</strong> Rejected outright: it converts a
+   read-only-over-source auditor into an arbitrary-code runner, and
+   no elicited consent makes that class of risk proportionate to a
+   bug-pattern report.</li>
+<li><strong>Skip SpotBugs entirely.</strong> Honest but wasteful: many Java trees
+   under audit — CI workspaces, developer checkouts after a build —
+   already contain <code>target/classes</code> or <code>build/classes</code>. Refusing to
+   read evidence that already exists is absence-as-a-choice.</li>
+<li><strong>Analyze bytecode that already exists; never create it.</strong>
+   SpotBugs joins the pool with a <code>has_targets</code> gate on compiled
+   output (<code>target/classes</code>, <code>build/classes</code>, or configured class
+   dirs). Present bytecode → SpotBugs runs over it. Absent bytecode →
+   a <code>not-applicable</code> coverage row whose detail says a build would
+   widen coverage, and an environment work-order entry giving the
+   user the build-then-rerun instruction — the same "the user acts,
+   the agent reports" contract as a missing binary (agents never
+   install; agents never build).</li>
+</ol>
+<h2 id="resolution">Resolution</h2>
+<p>Option 3. The boundary sentence stays absolute — <em>the agent never
+builds</em> — and the work order carries the remedy, exactly as it does
+for missing tools. One honesty condition attaches: a SpotBugs run
+must record <strong>staleness evidence</strong> (bytecode may not match current
+source). The coverage row carries the newest source mtime vs the
+newest class-file mtime; when source is newer than bytecode, the row
+says so and the findings are labeled as measured against stale
+compilation. Two reports with different staleness are not comparable
+silently (P8).</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li>The JVM track completes with three adapters of two shapes:
+  source-read (PMD, Checkstyle) and artifact-read (SpotBugs). D15's
+  composition test covers both shapes
+  (<code>tests/test_d15_composition.py</code>).</li>
+<li>The environment work order gains its first non-install remedy
+  (build instruction), which generalizes to future artifact-read
+  tools (JaCoCo report reading was already declined — decision 10 —
+  but the same gate pattern would apply if that ever reopens).</li>
+<li>A CI image that builds before auditing gets full SpotBugs evidence
+  with zero configuration.</li>
+</ul>
+<footer>Rendered from <code>docs/adr-012-spotbugs-build-boundary.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

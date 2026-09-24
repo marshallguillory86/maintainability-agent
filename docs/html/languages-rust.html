@@ -1,0 +1,58 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Rust · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul></ul>
+</div>
+</aside>
+<main><div class="meta">Languages</div><h1>Rust</h1><p><strong>A method belongs to the type its <code>impl</code> block names.</strong> Rust splits data
+from behaviour — <code>struct Store</code> holds the fields, <code>impl Store</code> holds the
+methods, often far apart and sometimes in another file — so <code>get</code> alone
+is not an instruction in a tree with eleven of them. A method inside
+<code>impl Store</code> reports as <code>Store::get</code>, and <code>impl Display for Widget</code>
+reports its members under <code>Widget</code>, because the type is what a reader
+searches for and the trait is how it behaves.</p>
+<p>That is the same problem Swift's extensions posed and it is solved the
+same way, with a pass over the block spans. Go needed none of it: a Go
+receiver is written on the method itself.</p>
+<p><strong>An <code>impl</code> block is not graded</strong>, exactly as a Swift <code>extension</code> is not.
+It is a container, and measuring it as well as its methods counts the
+same lines twice. A <code>trait</code> <em>is</em> graded — it is a declaration in its own
+right — and it also qualifies its default implementations, so
+<code>Reader::describe</code> rather than <code>describe</code>.</p>
+<p><strong>A bodyless <code>fn</code> mints nothing.</strong> A trait requirement is a signature
+with nothing to maintain, as a C prototype and a Swift protocol
+requirement are.</p>
+<p><strong>Attributes are stripped, not matched.</strong> <code>#[derive(Clone)]</code> is a name
+followed by a parenthesised list — the shape of a signature — and Java's
+annotations forced the same treatment.</p>
+<p><strong>What it misses</strong>, all under-reporting rather than over:</p>
+<ul>
+<li>Closures (<code>|x| { … }</code>) live inside a body and are stepped over, so a
+  long one is invisible. Rust uses them heavily for iterators and error
+  handling.</li>
+<li>Declarations produced by a macro are not in the source and are not
+  seen, as in C, C++ and Swift. A <code>macro_rules!</code> body is stepped over as
+  a unit rather than read.</li>
+<li>Raw strings (<code>r#"…"#</code>) are not masked, so a brace inside one can
+  desync depth; the indentation fallback bounds that to one declaration.</li>
+<li>Conditional compilation is not evaluated, so a declaration behind a
+  disabled <code>#[cfg]</code> still counts.</li>
+</ul>
+<p><strong>Measured with Rust's own keywords.</strong> Branches are counted on <code>match</code>
+<em>arms</em> rather than on the <code>match</code> keyword — counting both would score the
+construct and its first arm, which is the <code>select case</code> lesson Fortran
+taught. The wildcard <code>_ =&gt;</code> is a default and is not counted: it always
+matches, so it adds a path without a decision to reach it.</p>
+<p><code>loop</code> is not counted either. It has no condition; the <code>if … break</code>
+inside it is what decides.</p>
+<p><strong><code>?</code> is counted.</strong> It was excluded at first on the reasoning that it
+"propagates an error and decides nothing", by analogy with JavaScript's
+optional chaining. The analogy is false, and the grammar settles it:
+<code>let x = f()?</code> either continues or returns early, and the operator
+expands to a <code>match</code> with two arms. Two paths, one decision. That
+idiomatic Rust is full of them is a fact about Rust, not a reason to
+under-count it (D118).</p>
+<footer>Rendered from <code>docs/languages/rust.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

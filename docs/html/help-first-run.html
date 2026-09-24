@@ -1,0 +1,112 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>First run and questions · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#repository-grants">Repository grants</a></li>
+<li><a href="#history-consent-and-files">History consent and files</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Help</div><h1>First run and questions</h1><p><strong>Chat, MCP, and an interactive CLI TTY are one setup: the same questions.</strong>
+MCP is the chat transport, not a third questionnaire.
+There is not a CLI process, a chat process, and an MCP process. The
+list below is the set. A surface that asks a subset is a bug.</p>
+<p>CI, a non-TTY, and an explicit <code>--config</code> never ask. That is not a
+different questionnaire; there is no operator. MCP allowed-root grants
+(this session / always / no) are a server boundary, not these questions.</p>
+<p>Call <code>audit_repository</code> on the chat path, or run the CLI at a TTY with
+no config. The tool checks configuration; the host does not inspect the
+repository first. Unset MCP <code>action</code> never audits.</p>
+<p>If both the repository's <code>maintainability-agent.json</code> and the XDG user
+configuration are absent, the interactive surface asks the setup
+questions and does not audit — no report, no score, no grade. On MCP
+that is <code>setup_needed</code> with <code>audit_ran: false</code>. A host that can elicit
+asks those fields as one structured form with visible defaults:</p>
+<ul>
+<li>run the validated analyzer pool: yes;</li>
+<li>analyzer depth: moderate;</li>
+<li>license policy: permissive;</li>
+<li>economic context: skip;</li>
+<li>run this repository's test suite for coverage — <strong>this executes the tree</strong>: no;</li>
+<li>presentation: chat, markdown, html or json — default chat. <code>json</code> is the
+  report dictionary itself, for a pipeline rather than a reader (D201);</li>
+<li>record scan history in this repository: yes.</li>
+</ul>
+<p><strong>The labor rates are a second question set, asked only if you include the
+economic scenario.</strong> Answer <code>include</code> and the next call asks three more:</p>
+<ul>
+<li>loaded labor rate, lower bound — default 90 per hour;</li>
+<li>loaded labor rate, central estimate — default 140 per hour;</li>
+<li>loaded labor rate, upper bound — default 210 per hour.</li>
+</ul>
+<p>Answer <code>skip</code> — the default — and you are never asked. Until this was staged, all three were on the first form
+regardless, so the common path answered three money questions for something
+it had just declined.</p>
+<p>They are refused if they do not satisfy <code>0 &lt; low &lt;= base &lt;= high</code>. That check
+used to live in scoring, so an impossible set was accepted here, written to
+both tiers, and surfaced two calls later as an error about a file the person
+had already left behind.</p>
+<p><strong>The test command is a second question set, asked only if you opt the suite
+in.</strong> Answer <code>yes</code> to running the suite and the next call asks one more:</p>
+<ul>
+<li>the exact test command to run, e.g. <code>pytest -q</code> or <code>npm test</code>.</li>
+</ul>
+<p><strong>The question arrives pre-filled where the repository answers it.</strong> Since
+2.5.0 the tool reads the tree's build manifests — <code>Package.swift</code>,
+<code>fpm.toml</code>, <code>Cargo.toml</code>, <code>go.mod</code>, <code>CMakeLists.txt</code>, <code>pom.xml</code>,
+<code>build.gradle</code>, a <code>.sln</code>, <code>package.json</code>, or a declared <code>[tool.pytest]</code>
+section — and offers the command they imply, naming the file it read.
+Accept it, edit it, or replace it; whatever you submit is what gets stored.
+It is only ever a default. The <code>require_test_command</code> hard gate asks
+whether <em>you</em> documented a command, so a suggestion the tool made and you
+never answered does not satisfy it.</p>
+<p>An Xcode project with no <code>Package.swift</code> is left blank on purpose: bare
+<code>xcodebuild test</code> needs a <code>-scheme</code> and usually a <code>-destination</code>, and
+neither can be read off the tree, so there is no command to offer that
+would run.</p>
+<p>Clearing the line still cancels the opt-in, exactly as a blank answer
+always did.</p>
+<p>This is the one exception to the tool never running the audited tree
+(Decision 9, amended 2026-08-31): it executes only the command you name, only
+because you opted in, and only for this repository. A blank answer cancels the
+opt-in. The command is stored in <code>expected_commands.test</code>; its line coverage,
+if the run produces a <code>coverage.xml</code>, scores <code>test_effectiveness</code> as
+<code>coverage / 20</code>, and the aspect is NotApplicable on every run that does not opt
+in. Answer <code>no</code> — the default — and neither this question nor any execution
+happens.</p>
+<p>Accepted answers are written to both configuration tiers. Answering does not
+start an audit, including when the host elicited the questions on that call.
+The next unset call on the now-configured repository returns <code>choice_needed</code>
+with options <code>run</code> and <code>reconfigure</code>, also <code>audit_ran: false</code>.
+<code>action="run"</code> audits. <code>action="reconfigure"</code> reopens the setup questions on a
+repository that already has answers.</p>
+<p>A decline or a host without elicitation support receives <code>setup_needed</code> with
+the same choices and does not receive a report; a later call asks again until
+answers are written. An explicit <code>config_path</code> bypasses both gates so
+automation is not blocked. The MCP tool passes unset <code>action</code> because a person
+is on the other end. The plain <code>audit_repository</code> Python function defaults
+<code>action="run"</code> for the CLI, the report resource, and scripted callers that
+have already decided.</p>
+<h2 id="repository-grants">Repository grants</h2>
+<p>An audit-tool call outside the server's allowed roots uses one structured grant
+question when the host supports it: <strong>this session</strong> (the default), <strong>always</strong>,
+or <strong>no</strong>. A session grant lasts only for the running process. Always writes the
+root to the user configuration, never the repository configuration. No—or a
+host without elicitation—returns the boundary error with the <code>--allow-root</code> and
+<code>MAINTAINABILITY_MCP_ALLOWED_ROOTS</code> remedies. Report-resource reads never ask
+for or persist a grant.
+How that boundary text survives MCP is the entry-layer transport rule in
+<a href="architecture.html#the-rules-and-why-each-exists">../architecture.md</a>: only
+the transport declares the named anticipated refusals that may carry their text
+to the caller.</p>
+<h2 id="history-consent-and-files">History consent and files</h2>
+<p>Written <code>history.record</code> consent wins over terminal interactivity. With no
+written answer, a CLI TTY may start a series; an existing history file remains
+a standing answer and appends. Explicit per-call true or false still wins.</p>
+<p>Chat returns report text. If the user chooses a file presentation, the host
+asks for a save location at save time. Neither the MCP process nor an agent may
+write or save a report file without that chosen location.</p>
+<footer>Rendered from <code>docs/help/first-run.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

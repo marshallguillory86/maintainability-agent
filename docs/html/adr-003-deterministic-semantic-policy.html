@@ -1,0 +1,212 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>ADR 003: Add deterministic semantic policy without changing the rubric · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#context">Context</a></li>
+<li><a href="#options">Options</a><ul>
+<li><a href="#a-treat-bare-primitives-as-a-universal-defect">A. Treat bare primitives as a universal defect</a></li>
+<li><a href="#b-add-an-llm-semantic-reviewer-to-the-audit">B. Add an LLM semantic reviewer to the audit</a></li>
+<li><a href="#c-combine-type-backed-facts-checked-in-policy-and-labeled-candidates">C. Combine type-backed facts, checked-in policy and labeled candidates</a></li>
+</ul>
+</li>
+<li><a href="#decision">Decision</a></li>
+<li><a href="#design">Design</a><ul>
+<li><a href="#analysis-boundary">Analysis boundary</a></li>
+<li><a href="#initial-typescript-signals">Initial TypeScript signals</a></li>
+<li><a href="#policy-shape">Policy shape</a></li>
+<li><a href="#discovery-and-acceptance-bar">Discovery and acceptance bar</a></li>
+<li><a href="#implementation-progress">Implementation progress</a></li>
+</ul>
+</li>
+<li><a href="#consequences">Consequences</a></li>
+<li><a href="#invariants">Invariants</a></li>
+<li><a href="#references">References</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Decisions</div><h1>ADR 003: Add deterministic semantic policy without changing the rubric</h1><ul>
+<li>Status: Accepted</li>
+<li>Date: 2026-08-11</li>
+<li>Scope: Type-aware analyzers, repository policy, finding classification and
+  remediation prompts</li>
+</ul>
+<h2 id="context">Context</h2>
+<p>The native scanner deliberately under-reports when syntax alone cannot support
+a finding. That is the right failure mode for generic structural checks, but it
+leaves out a class of maintenance problems experienced developers recognize
+through domain meaning.</p>
+<p>A representative case defines operations as bare strings and repeats those
+strings across dispatch and capability checks. Replacing the literals with
+method names or an enum removes misspelling risk but may leave the real design
+problem intact: an operation can be a domain object carrying behavior, and
+different operations may have different result types expressed through a
+generic contract. The source contains observable symptoms; it does not contain
+enough universal information to prove the intended abstraction.</p>
+<p>There is also a temporal signal that a one-shot scan cannot see. A developer
+feels the same module resist the fourth change and recognizes that repeated
+local patches have crossed a design threshold. An agent evaluating isolated
+requests can keep patching indefinitely. Git history can measure repeated
+touches, synchronized edits and recurring validation or dispatch changes, but
+those observations still do not prove a particular redesign.</p>
+<p>The product must preserve P1: no LLM, no network and identical results for the
+same inputs. It must also preserve P2: repository knowledge cannot silently
+change the uniform score.</p>
+<h2 id="options">Options</h2>
+<h3 id="a-treat-bare-primitives-as-a-universal-defect">A. Treat bare primitives as a universal defect</h3>
+<p>Flag strings used in dispatch, identifiers or closed value sets and recommend
+one replacement abstraction.</p>
+<p>This is simple and deterministic, but wrong in both directions. Many strings
+are appropriate, and syntax cannot decide whether the right replacement is a
+literal union, enum, value object, protocol or operation object.</p>
+<h3 id="b-add-an-llm-semantic-reviewer-to-the-audit">B. Add an LLM semantic reviewer to the audit</h3>
+<p>Ask a model to infer the domain and recommend an abstraction.</p>
+<p>This may produce useful review commentary, but it breaks the offline,
+repeatable audit contract. It cannot be the source of a deterministic finding
+or gate.</p>
+<h3 id="c-combine-type-backed-facts-checked-in-policy-and-labeled-candidates">C. Combine type-backed facts, checked-in policy and labeled candidates</h3>
+<p>Use language-native type information where it proves a fact, explicit policy
+where maintainers have supplied domain intent, and conservative heuristics only
+to nominate design-review candidates.</p>
+<p>This preserves determinism while admitting that not every design judgment is
+derivable from source.</p>
+<h2 id="decision">Decision</h2>
+<p>Choose option C. The first increment is the TypeScript-only precision
+prototype pre-registered in <a href="semantic-prototype.html">semantic-prototype.md</a>.</p>
+<p>Every semantic result has exactly one class:</p>
+<ol>
+<li><strong>Universal finding.</strong> A compiler or analyzer establishes the violation
+   without repository-specific meaning. An example is passing a plain <code>string</code>
+   where an existing declared <code>OrderStatus</code> is required.</li>
+<li><strong>Configured policy violation.</strong> A checked-in semantic policy declares the
+   repository's boundary or domain concept, and typed analysis establishes a
+   violation. An example is a public order API accepting <code>string</code> where policy
+   requires <code>OrderStatus</code>.</li>
+<li><strong>Design-review candidate.</strong> Structural or historical evidence suggests a
+   missing abstraction but cannot prove the intended design. An example is one
+   closed set of operation names repeated across dispatch, capability and
+   description sites, or repeatedly changed together over time.</li>
+</ol>
+<p>Universal findings and configured violations may become gateable only after
+their precision is measured and a later decision says so. Candidates are
+prompt-only and never hard-gating.
+Nothing in this path changes rubric weights, aspect scores, grade bands or the
+meaning of the standard score. A future decision may consider scoring only
+after an evidence-backed rule has a repository-independent meaning.</p>
+<h2 id="design">Design</h2>
+<h3 id="analysis-boundary">Analysis boundary</h3>
+<pre><code class="language-text">source + compiler/type checker + analyzer version
+                         |
+checked-in semantic policy
+                         |
+        normalized semantic finding
+        - class
+        - rule identifier and version
+        - exact locations and symbols
+        - observed type facts
+        - policy provenance, when applicable
+        - suggested review boundary
+                         |
+       report -&gt; bounded remediation prompt
+</code></pre>
+<p>Language-native analysis is preferred when a language exposes a stable type
+API. External analyzers may enter through SARIF if their provenance and rule
+identity survive normalization. The normalized result must not imply that two
+tools have identical semantics. TypeScript ESLint documents custom rules that
+consume TypeScript type information, and Semgrep documents typed metavariables;
+both are candidate implementation mechanisms, not evidence that a proposed
+rule is accurate.</p>
+<h3 id="initial-typescript-signals">Initial TypeScript signals</h3>
+<p>The TypeScript prototype has exactly three signals:</p>
+<ul>
+<li>an existing domain type bypassed by <code>string</code> at a typed boundary — universal;</li>
+<li>the same primitive repeatedly validated or converted at a public boundary
+  named by checked-in policy — policy; and</li>
+<li>one operation-name set repeated across dispatch, capability, and description,
+  or changed in lockstep through history — candidate only.</li>
+</ul>
+<p>The candidate signal is not proof that an enum or operation hierarchy is
+correct. The prompt must name the evidence and ask the implementer to preserve
+operation-specific input and result types. It must not mechanically prescribe
+an enum when behavior-bearing objects or a generic operation contract may be
+the actual design. Bare strings with no declared domain type are candidates or
+nothing, never universal findings; <code>_id</code> is not a value-object rule.</p>
+<h3 id="policy-shape">Policy shape</h3>
+<p>Policy is explicit, versioned and checked in. Initial configuration should
+prefer exact concepts and boundaries over broad naming conventions:</p>
+<pre><code class="language-yaml">semantic_policy:
+  version: 1
+  domain_types:
+    - name: order-status-public-boundary
+      paths: [&quot;src/orders/api.ts&quot;]
+      boundary: public
+      symbol: status
+      required_type: OrderStatus
+  operations:
+    - name: session-operation-review
+      paths: [&quot;src/session/operations.ts&quot;]
+      capability_type: SessionCapability
+      operation_contract: &quot;Op[TResult]&quot;
+</code></pre>
+<p>A convention such as “every name ending in <code>_id</code> must be a value object” is too
+broad for the first version. Configuration supplies intent; it does not get to
+declare its own score weights or relabel a candidate as a universal fact.</p>
+<h3 id="discovery-and-acceptance-bar">Discovery and acceptance bar</h3>
+<p>Build a reviewed corpus of true and benign examples before implementation is
+made gateable. The prototype should:</p>
+<ol>
+<li>run on TypeScript only;</li>
+<li>implement two or three signals through the compiler API or a typed analyzer;</li>
+<li>compare findings with human labels and report precision and recall
+   separately;</li>
+<li>target high precision and accept low recall;</li>
+<li>emit findings and prompts without score weight or hard gates; and</li>
+<li>test that the generated work order names exact evidence and does not widen
+   the requested refactor.</li>
+</ol>
+<p>The precision threshold and corpus are frozen before results in
+<a href="semantic-prototype.html">semantic-prototype.md</a>. Precision and recall are
+reported separately. A useful candidate stream does not by itself earn a
+universal finding.</p>
+<h3 id="implementation-progress">Implementation progress</h3>
+<p>Option C is accepted. The TypeScript-only corpus, recorded type-analysis input,
+and executable contract live under <code>tests/fixtures/semantic_ts/</code> and
+<code>tests/test_semantic_policy.py</code>. Production implementation is the current
+increment. Nothing in this progress changes the score or makes candidates a
+gate.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li>Repository maintainers can encode domain facts the generic scanner cannot
+  infer while keeping analysis offline and reproducible.</li>
+<li>The work order can surface design pressure that grep and token counting miss.</li>
+<li>Every supported language needs a type-aware implementation or a provenanced
+  adapter; coverage will therefore be uneven and explicitly reported.</li>
+<li>Policy authoring adds configuration cost and can encode a bad local decision.
+  The report must identify configured policy rather than laundering it into a
+  universal recommendation.</li>
+<li>Historical friction becomes visible, but remains a review trigger rather
+  than a claim that the tool possesses experienced judgment.</li>
+</ul>
+<h2 id="invariants">Invariants</h2>
+<ol>
+<li>Identical source, history window, analyzer versions and semantic policy
+   produce byte-identical semantic findings.</li>
+<li>A configured policy violation identifies the exact policy entry and source
+   evidence that produced it.</li>
+<li>Removing semantic policy cannot create a configured violation.</li>
+<li>A design-review candidate cannot fail a gate or alter any score or grade.</li>
+<li>No semantic finding changes <code>_formula</code>, <code>_calibration</code>, category weights or
+   grade bands through a repository-specific path.</li>
+<li>Unsupported or unavailable type analysis is reported as unknown coverage,
+   never as zero violations.</li>
+<li>The remediation prompt distinguishes an observed symptom from the proposed
+   abstraction and does not claim that one replacement design was proven.</li>
+</ol>
+<h2 id="references">References</h2>
+<ul>
+<li><a href="https://typescript-eslint.io/developers/custom-rules/">typescript-eslint: Custom Rules</a></li>
+<li><a href="https://semgrep.dev/blog/2020/type-awareness-in-semantic-grep/">Semgrep: Type awareness in semantic grep</a></li>
+</ul>
+<footer>Rendered from <code>docs/adr-003-deterministic-semantic-policy.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

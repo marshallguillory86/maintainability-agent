@@ -1,0 +1,450 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>IDE and Agent Integration · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#primary-chat-workflow">Primary chat workflow</a></li>
+<li><a href="#automation-ci-cli-commands">Automation / CI: CLI commands</a><ul>
+<li><a href="#run-audit">Run Audit</a></li>
+<li><a href="#generate-ai-remediation-prompt">Generate AI Remediation Prompt</a></li>
+<li><a href="#generate-pr-comment-body">Generate PR Comment Body</a></li>
+<li><a href="#audit-only-changed-files">Audit Only Changed Files</a></li>
+<li><a href="#create-use-baseline">Create / Use Baseline</a></li>
+<li><a href="#check-content-before-writing-it">Check Content Before Writing It</a></li>
+<li><a href="#check-what-a-commit-will-contain">Check What a Commit Will Contain</a></li>
+<li><a href="#generate-agent-standards">Generate Agent Standards</a></li>
+</ul>
+</li>
+<li><a href="#vs-code">VS Code</a></li>
+<li><a href="#local-mcp-server-visual-studio-vs-code-and-codex">Local MCP server: Visual Studio, VS Code and Codex</a></li>
+<li><a href="#invokable-skill-slash-command">Invokable skill / slash command</a></li>
+<li><a href="#per-agent-quick-start">Per-Agent Quick Start</a></li>
+<li><a href="#local-ci">Local CI</a></li>
+<li><a href="#github-actions">GitHub Actions</a></li>
+<li><a href="#recommended-human-workflow">Recommended Human Workflow</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Reference</div><h1>IDE and Agent Integration</h1><p>This guide shows how to use maintainability-agent with editors and AI coding
+agents. <strong>Chat is the primary surface; the CLI is the automation and CI
+surface.</strong> <strong>Chat, MCP, and an interactive CLI TTY are one setup: the same questions</strong>
+(<a href="help-first-run.html">first run</a>). MCP allowed-root grants are a server
+boundary, not a second questionnaire.</p>
+<h2 id="primary-chat-workflow">Primary chat workflow</h2>
+<p>Call <code>audit_repository</code>. The tool checks repository and user configuration;
+the host does not inspect the tree first. Unset <code>action</code> never audits. When
+both configuration tiers are absent, the result is <code>setup_needed</code> and
+<code>audit_ran: false</code> — no report. Ask those questions through MCP elicitation
+or the host's structured question UI (setup, root grants, history consent,
+economic context, and presentation). Answering writes the answers and does
+not start an audit. A configured repository returns <code>choice_needed</code> (<code>run</code> or
+<code>reconfigure</code>), also without a report. <code>action="run"</code> returns the report and
+bounded work order to the conversation.</p>
+<p>If the user chooses a file presentation, the host asks for the location at save
+time. It must not write or save a report file without that chosen location.
+See <a href="help.html">chat workflow help</a> for the first-run questions, analyzer
+pool, and report loop.</p>
+<p>The primary loop is:</p>
+<pre><code class="language-text">1. Call audit_repository. The tool checks configuration.
+2. If the result carries setup_needed, ask those structured choices
+   with disclosed defaults, then call again. Answering is not an audit.
+3. If the result carries choice_needed, ask run or reconfigure.
+4. action=run produces the report; show it in chat.
+5. Give the bounded work order to the coding agent.
+6. Re-audit after the bounded patch (action=run again).
+</code></pre>
+<h2 id="automation-ci-cli-commands">Automation / CI: CLI commands</h2>
+<h3 id="run-audit">Run Audit</h3>
+<pre><code class="language-bash">maintainability-agent \
+  --config maintainability-agent.json \
+  --output maintainability-report.md
+</code></pre>
+<h3 id="generate-ai-remediation-prompt">Generate AI Remediation Prompt</h3>
+<pre><code class="language-bash">maintainability-agent \
+  --config maintainability-agent.json \
+  --output maintainability-report.md \
+  --prompt-output maintainability-remediation-prompt.md
+</code></pre>
+<h3 id="generate-pr-comment-body">Generate PR Comment Body</h3>
+<pre><code class="language-bash">maintainability-agent \
+  --config maintainability-agent.json \
+  --output maintainability-report.md \
+  --comment-output maintainability-pr-comment.md
+</code></pre>
+<h3 id="audit-only-changed-files">Audit Only Changed Files</h3>
+<pre><code class="language-bash">maintainability-agent \
+  --config maintainability-agent.json \
+  --changed-only main...HEAD \
+  --output maintainability-report.md
+</code></pre>
+<h3 id="create-use-baseline">Create / Use Baseline</h3>
+<pre><code class="language-bash"># Snapshot today's findings.
+maintainability-agent --config maintainability-agent.json \
+  --write-baseline maintainability-baseline.json
+
+# Fail only on findings not in the baseline.
+maintainability-agent --config maintainability-agent.json \
+  --baseline maintainability-baseline.json --fail-on-new
+</code></pre>
+<h3 id="check-content-before-writing-it">Check Content Before Writing It</h3>
+<p>The in-loop door, and the cheapest call this tool offers. Content arrives
+on stdin; <code>PATH</code> names it and is never opened, so what you pass is what
+gets measured rather than whatever is already on disk.</p>
+<pre><code class="language-bash">printf '%s' &quot;$PROPOSED&quot; | maintainability-agent --check src/thing.py --format json
+</code></pre>
+<p>No repository, no git, no scan — an agent mid-edit is not at a commit
+boundary and should not have to reach one to get an answer. It reports
+breaches <strong>and headroom</strong> — the lines left in each budget — so a function can
+be sized before it is written rather than after being refused. Exit 1 on
+a breach, 0 when clear.</p>
+<p>It never scores, and says so: one file has no population to draw a rate
+from. A language with no declaration scanner reports that it read
+nothing, which is deliberately distinguishable from finding nothing.</p>
+<h3 id="check-what-a-commit-will-contain">Check What a Commit Will Contain</h3>
+<pre><code class="language-bash">maintainability-agent --staged --format json
+</code></pre>
+<p>Reads the git <strong>index</strong>, not the working tree, so a half-staged file is
+measured as it will land. Reports threshold breaches and any suppression
+marker the change <em>added</em>. <code>--install-precommit-hook</code> installs it as a
+git hook; it refuses to replace a hook it did not write and honours
+<code>core.hooksPath</code>.</p>
+<p>Neither of these is a substitute for an audit, and neither is an audit.
+Four ways an agent gets that wrong, named because each produces a
+confident green:</p>
+<ul>
+<li><strong><code>--staged</code> before <code>git add</code></strong> reads the index, which still holds the
+  old content. Stage first, then check.</li>
+<li><strong>A diff piped into <code>--check</code></strong> is not file content. It will say it
+  could not parse; do not read that as clean.</li>
+<li><strong><code>--check</code> proves a budget, not a fix.</strong> Duplication, dead code and
+  unpaired tests are population properties — one file cannot show them,
+  and a full audit is what answers for them.</li>
+<li><strong>Re-running a full audit after every edit</strong> is the opposite mistake.
+  Use these while working and the audit when the work is done.</li>
+</ul>
+<h3 id="generate-agent-standards">Generate Agent Standards</h3>
+<pre><code class="language-bash">maintainability-agent \
+  --config maintainability-agent.json \
+  --init-agent-standards \
+  --target generic --target codex --target claude-code \
+  --target cursor --target copilot --target windsurf \
+  --instructions-output-dir .
+</code></pre>
+<p>Generated files:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Target</th>
+<th>File</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>generic</td>
+<td><code>AI-MAINTAINABILITY.md</code></td>
+</tr>
+<tr>
+<td>codex</td>
+<td><code>AGENTS.md</code></td>
+</tr>
+<tr>
+<td>claude-code</td>
+<td><code>CLAUDE.md</code></td>
+</tr>
+<tr>
+<td>cursor</td>
+<td><code>.cursor/rules/maintainability.mdc</code></td>
+</tr>
+<tr>
+<td>copilot</td>
+<td><code>.github/copilot-instructions.md</code></td>
+</tr>
+<tr>
+<td>windsurf</td>
+<td><code>.windsurf/rules/maintainability.md</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="vs-code">VS Code</h2>
+<p>VS Code itself does not enforce agent behavior, but it can run the audit as a task and expose the generated prompt/report to Copilot Chat, Codex, Claude Code, or any terminal-based agent.</p>
+<p>Add <code>.vscode/tasks.json</code> to the target repo:</p>
+<pre><code class="language-json">{
+  &quot;version&quot;: &quot;2.0.0&quot;,
+  &quot;tasks&quot;: [
+    {
+      &quot;label&quot;: &quot;Maintainability: Audit&quot;,
+      &quot;type&quot;: &quot;shell&quot;,
+      &quot;command&quot;: &quot;maintainability-audit --config maintainability-agent.json --output maintainability-report.md --prompt-output maintainability-remediation-prompt.md --comment-output maintainability-pr-comment.md&quot;,
+      &quot;group&quot;: &quot;test&quot;,
+      &quot;problemMatcher&quot;: []
+    },
+    {
+      &quot;label&quot;: &quot;Maintainability: Changed Only&quot;,
+      &quot;type&quot;: &quot;shell&quot;,
+      &quot;command&quot;: &quot;maintainability-audit --config maintainability-agent.json --changed-only main...HEAD --output maintainability-report.md --prompt-output maintainability-remediation-prompt.md&quot;,
+      &quot;group&quot;: &quot;test&quot;,
+      &quot;problemMatcher&quot;: []
+    },
+    {
+      &quot;label&quot;: &quot;Maintainability: Init Agent Standards&quot;,
+      &quot;type&quot;: &quot;shell&quot;,
+      &quot;command&quot;: &quot;maintainability-audit --config maintainability-agent.json --init-agent-standards --target generic --target codex --target claude-code --target cursor --target copilot --target windsurf --instructions-output-dir .&quot;,
+      &quot;group&quot;: &quot;build&quot;,
+      &quot;problemMatcher&quot;: []
+    }
+  ]
+}
+</code></pre>
+<p>Suggested VS Code workflow:</p>
+<ol>
+<li>Run <code>Maintainability: Init Agent Standards</code>.</li>
+<li>Ask the agent to follow the generated repo instruction file.</li>
+<li>Make changes.</li>
+<li>Run <code>Maintainability: Changed Only</code>.</li>
+<li>If it fails, give the agent <code>maintainability-remediation-prompt.md</code>.</li>
+</ol>
+<h2 id="local-mcp-server-visual-studio-vs-code-and-codex">Local MCP server: Visual Studio, VS Code and Codex</h2>
+<p>The optional MCP server removes the file handoff for Codex and the Codex VS
+Code extension. It exposes all three MCP primitives over stdio:</p>
+<ul>
+<li><code>audit_repository</code> takes an <code>action</code> argument. Unset never audits. An
+  unconfigured repository returns <code>setup_needed</code> and <code>audit_ran: false</code>; a
+  configured one returns <code>choice_needed</code> (<code>run</code> or <code>reconfigure</code>).
+  <code>action="run"</code> runs the same production scan as the CLI and returns only
+  the requested report presentation plus the bounded remediation prompt when
+  requested. An explicit <code>config_path</code> bypasses both gates. Its tri-state
+  <code>record_history</code> decision follows the persisted first-run consent, appends
+  an existing series, or follows an explicit true or false; it can also write
+  or consult a repository-scoped version-3 baseline. A top-level
+  <code>environment_work_order</code> tells the host which selected tools could not run,
+  how to install them and what concepts they restore. A top-level
+  <code>security_work_order</code> carries secure-code-agent's own work order for the
+  security findings the pillar counts, unchanged; show it apart from the
+  maintainability <code>remediation_prompt</code>.</li>
+<li><code>get_agent_info</code> reports the installed version and authorized roots.</li>
+<li>Resources expose the applied standard, analyzer catalog and byte-identical
+  Markdown report without introducing a second rendering path.</li>
+<li>The <code>maintainability-agent</code> prompt tells the model to call the audit tool and
+  stay inside its returned remediation work order.</li>
+</ul>
+<p>It is deliberately not another scanner. The MCP module calls the existing
+configuration, report, renderer and prompt functions directly, so CLI and MCP
+cannot acquire different scoring or finding semantics.</p>
+<p>Install the extra:</p>
+<pre><code class="language-bash">python3 -m pip install &quot;maintainability-agent[mcp]&quot;
+</code></pre>
+<p>The package subcommand is <code>maintainability-agent mcp --allow-root &lt;path&gt;</code>.
+IDE examples retain <code>maintainability-agent-mcp</code> because it is a direct stdio
+console script and remains part of the public interface.</p>
+<p>This is a local stdio process, not a hosted service. On the first call to a
+repository with no repository or user configuration, it sends one structured
+setup form through MCP elicitation. The choices have visible defaults: run the
+validated analyzer pool (yes), moderate depth, permissive licensing, optional
+scan-history recording (yes), low/base/high loaded labor cost or skip, and chat
+presentation. The pool question explains that external analyzers are the
+primary evidence and the built-in detectors always run as the fallback;
+choosing no means built-ins only and a fallback-tier evidence label. Answering
+does not start an audit; the call returns <code>choice_needed</code>. A decline or a
+client without elicitation support receives <code>setup_needed</code> with the same
+choices for the host's own question UI, and <code>audit_ran: false</code> — no report,
+no score, no grade.</p>
+<p>The local process may write exactly five artifacts: repository
+<code>maintainability-agent.json</code>, the XDG user <code>config.json</code>, the XDG user
+<code>state.json</code> that records the completed audit, and repository scan history at
+<code>.maintainability/history.jsonl</code>, plus the repository baseline at
+<code>.maintainability/baseline.json</code>. Setup writes the first three; the audit's
+history rule may append the fourth, and <code>write_baseline</code> controls the fifth. It
+never writes source or a report. The stored presentation is the default for
+later calls; an explicit per-call <code>format</code> still wins.</p>
+<p>For Visual Studio, put this in <code>%USERPROFILE%\\.mcp.json</code> or
+<code>&lt;SOLUTIONDIR&gt;\\.mcp.json</code> (replace both absolute paths):</p>
+<pre><code class="language-json">{
+  &quot;servers&quot;: {
+    &quot;maintainabilityAgent&quot;: {
+      &quot;type&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;C:\\path\\to\\venv\\Scripts\\maintainability-agent-mcp.exe&quot;,
+      &quot;args&quot;: [&quot;--allow-root&quot;, &quot;C:\\absolute\\path\\to\\solution&quot;]
+    }
+  }
+}
+</code></pre>
+<p>For VS Code, put this in <code>.vscode/mcp.json</code> or the user-profile MCP
+configuration:</p>
+<pre><code class="language-json">{
+  &quot;servers&quot;: {
+    &quot;maintainabilityAgent&quot;: {
+      &quot;type&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;maintainability-agent-mcp&quot;,
+      &quot;args&quot;: [&quot;--allow-root&quot;, &quot;${workspaceFolder}&quot;]
+    }
+  }
+}
+</code></pre>
+<p>The <code>command</code> must be on the IDE process's <code>PATH</code>; an absolute path to the
+virtual-environment executable is also valid. Visual Studio enables discovered
+tools from the Copilot Agent tool picker. In VS Code, use <strong>MCP: List Servers</strong>
+to start the server and inspect its output.</p>
+<p>Codex and its VS Code extension can instead use <code>~/.codex/config.toml</code>:</p>
+<pre><code class="language-toml">[mcp_servers.maintainability_agent]
+command = &quot;maintainability-agent-mcp&quot;
+args = [&quot;--allow-root&quot;, &quot;/absolute/path/to/your/repos&quot;]
+startup_timeout_sec = 20
+tool_timeout_sec = 300
+enabled_tools = [&quot;audit_repository&quot;, &quot;get_agent_info&quot;]
+default_tools_approval_mode = &quot;auto&quot;
+</code></pre>
+<p>Repeat <code>--allow-root</code> to authorize unrelated repository directories. If no
+argument is supplied, the server permits only its launch directory. The
+<code>MAINTAINABILITY_MCP_ALLOWED_ROOTS</code> environment variable is an alternative;
+separate multiple roots with the platform path separator (<code>:</code> on macOS/Linux,
+<code>;</code> on Windows, which the code honours and nobody has tested — this is
+POSIX-only software). For audit-tool calls, an elicitation-capable host can instead
+offer a structured <strong>this session</strong> (default), <strong>always</strong>, or <strong>no</strong> grant.
+Session grants live only in the process; always grants persist only in the XDG
+user configuration. Report resources never ask for or persist a grant.</p>
+<p>Restart Codex, then inspect the connection with <code>/mcp</code> or <code>codex mcp list</code>.
+A typical call in any client is:</p>
+<pre><code class="language-text">Use maintainability_agent.audit_repository on this workspace with
+config_path maintainability-agent.json. Treat the returned remediation_prompt
+as the bounded work order; do not fix unreported issues.
+</code></pre>
+<p>Security properties are part of the contract:</p>
+<ul>
+<li>repository roots are canonicalized before authorization, so a symlink cannot
+  escape an allowed directory;</li>
+<li>a config file must resolve inside the repository being audited;</li>
+<li><code>changed_only</code> accepts one inert git revision expression, never command-line
+  options or whitespace;</li>
+<li>the server accepts no command strings or report output paths. It writes only
+  the five disclosed artifacts: repository config, XDG user config, XDG user
+  state, repository scan history and repository baseline — never a report or
+  source artifact;</li>
+<li><code>get_agent_info</code> advertises MCP read-only, non-destructive and closed-world,
+  and is all three. <code>audit_repository</code> advertises its bounded setup/state
+  writes, and is <strong>destructive</strong> and <strong>open-world</strong>: it replaces an existing
+  configuration or baseline when asked to, and with <code>analyzers.acquire_tools</code>
+  enabled it may fetch a missing Node tool, while analyzers run as local
+  children this package does not sandbox. It said non-destructive and
+  closed-world until D44; two tests locked those values, which is why the
+  claim outlived three audit rounds.</li>
+</ul>
+<p>This is a local integration. It needs no VPS and opens no listening socket.</p>
+<h2 id="invokable-skill-slash-command">Invokable skill / slash command</h2>
+<p>This repo ships a portable skill under
+<a href="../../skills/maintainability-agent"><code>skills/maintainability-agent/</code></a> so
+<code>/maintainability-agent</code> is one keystroke away. Keep the installed copy in sync
+— a drifted skill teaches agents a dead workflow:</p>
+<pre><code class="language-bash">maintainability-agent --install-skill        # writes ~/.claude/skills
+</code></pre>
+<p>Re-run after every upgrade; a differing installed copy is refused with the
+list of differences (<code>--force-skill</code> to overwrite).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Host</th>
+<th>Install destination</th>
+<th>Invocation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Codex / OpenAI</td>
+<td>via <code>skills/maintainability-agent/agents/openai.yaml</code></td>
+<td>per Codex's skills convention</td>
+</tr>
+<tr>
+<td>Claude Code</td>
+<td><code>skills/maintainability-agent/</code> → <code>~/.claude/skills/maintainability-agent/</code> (or repo <code>.claude/skills/</code>)</td>
+<td><code>/maintainability-agent</code></td>
+</tr>
+<tr>
+<td>GitHub Copilot (VS Code)</td>
+<td><code>skills/maintainability-agent/copilot/maintainability-agent.prompt.md</code> → <code>&lt;repo&gt;/.github/prompts/</code></td>
+<td><code>/maintainability-agent</code> in Copilot Chat</td>
+</tr>
+</tbody>
+</table></div>
+<p>For always-on guidance instead of an invokable skill, use
+<code>--init-agent-standards</code> (see <a href="#generate-agent-standards">--init-agent-standards</a>).</p>
+<h2 id="per-agent-quick-start">Per-Agent Quick Start</h2>
+<p>Every agent uses the same shape: pick a <code>--target</code>, run <code>--init-agent-standards</code>, then prompt the agent to follow the generated instruction file and use <code>maintainability-remediation-prompt.md</code> as the bounded task.</p>
+<pre><code class="language-bash"># Replace &lt;TARGET&gt; with one of: copilot, cursor, codex, claude-code, windsurf, generic
+maintainability-agent --config maintainability-agent.json \
+  --init-agent-standards --target &lt;TARGET&gt; --instructions-output-dir .
+</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Instruction file</th>
+<th>Suggested in-agent prompt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GitHub Copilot</td>
+<td><code>.github/copilot-instructions.md</code></td>
+<td>"Follow .github/copilot-instructions.md. Fix only the findings in maintainability-remediation-prompt.md. Keep the patch small and preserve current behavior unless the report says behavior is wrong."</td>
+</tr>
+<tr>
+<td>Cursor</td>
+<td><code>.cursor/rules/maintainability.mdc</code></td>
+<td>"Use the active Cursor rules. Apply only what maintainability-remediation-prompt.md asks for."</td>
+</tr>
+<tr>
+<td>Codex</td>
+<td><code>AGENTS.md</code></td>
+<td>"Follow AGENTS.md. Use maintainability-report.md + maintainability-remediation-prompt.md as the source of truth. Fix the highest-severity findings only, with tests where behavior changes."</td>
+</tr>
+<tr>
+<td>Claude Code</td>
+<td><code>CLAUDE.md</code></td>
+<td>"Read CLAUDE.md, maintainability-report.md, and maintainability-remediation-prompt.md. Make a small patch that resolves the hard gates. Do not refactor outside the reported scope."</td>
+</tr>
+<tr>
+<td>Windsurf</td>
+<td><code>.windsurf/rules/maintainability.md</code></td>
+<td>"Use the Windsurf rules. Resolve only the items in maintainability-remediation-prompt.md."</td>
+</tr>
+<tr>
+<td>Generic</td>
+<td><code>AI-MAINTAINABILITY.md</code></td>
+<td>"Follow AI-MAINTAINABILITY.md. Use maintainability-remediation-prompt.md as the bounded task. Keep the patch small, testable, and aligned with existing architecture."</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="local-ci">Local CI</h2>
+<p>For repos that do not use GitHub Actions:</p>
+<pre><code class="language-bash">examples/local-ci.sh
+</code></pre>
+<p>Or copy the command:</p>
+<pre><code class="language-bash">maintainability-audit \
+  --config maintainability-agent.json \
+  --fail-on-gate \
+  --output maintainability-report.md \
+  --prompt-output maintainability-remediation-prompt.md \
+  --comment-output maintainability-pr-comment.md
+</code></pre>
+<h2 id="github-actions">GitHub Actions</h2>
+<p>Use <code>.github/workflows/maintainability.yml</code> from this repo as a starting point.</p>
+<p>Artifacts:</p>
+<ul>
+<li><code>maintainability-report.md</code></li>
+<li><code>maintainability-remediation-prompt.md</code></li>
+<li><code>maintainability-pr-comment.md</code></li>
+</ul>
+<h2 id="recommended-human-workflow">Recommended Human Workflow</h2>
+<p>Do not let an AI agent blindly auto-fix everything.</p>
+<p>Use this sequence:</p>
+<ol>
+<li>Review <code>maintainability-report.md</code>.</li>
+<li>Decide which hard gates or high-value findings matter.</li>
+<li>Give the agent <code>maintainability-remediation-prompt.md</code>.</li>
+<li>Review the patch.</li>
+<li>Run native tests/lints.</li>
+<li>Run the audit again.</li>
+<li>Commit only bounded, explainable changes.</li>
+</ol>
+<footer>Rendered from <code>docs/ide-agent-integration.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

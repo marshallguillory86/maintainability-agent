@@ -1,0 +1,74 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Why this exists · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#ai-reviewing-ai-is-still-an-opinion">AI reviewing AI is still an opinion</a></li>
+<li><a href="#who-its-for">Who it's for</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Product and standard</div><h1>Why this exists</h1><p>Moved out of the README, which is a front door and had become an essay.
+The argument is unchanged; only its address is.</p>
+<p>The ratio of code-written to code-reviewed has collapsed. Unmaintainable code
+that used to accumulate over years can now accumulate in an afternoon:
+duplicated helpers, oversized files, speculative abstractions — the same slop
+hand-written codebases always accrued, now at machine speed.</p>
+<p>The same speed is the way out. An agent pointed at specific, deterministic
+findings can fix them at the rate they appear. The loop this tool closes:</p>
+<ol>
+<li><strong>Measure</strong> pressure points deterministically, with no LLM involved.</li>
+<li><strong>Score</strong> with one uniform standard, so the verdict is not a debate.</li>
+<li><strong>Emit</strong> a prompt scoped to <em>those findings only</em>, with explicit
+   instructions not to refactor beyond them.</li>
+<li><strong>Hand it to the agent.</strong> Review a scoped diff instead of a speculative
+   rewrite.</li>
+</ol>
+<p>Step 3 is the product; steps 1 and 2 are in service of it. Every other tool in
+this space stops at "here's a list of findings."</p>
+<p><strong>Who does the checking matters as much as what it checks.</strong> An author is never
+the independent check on their own work, so a platform that generates code and
+grades it is producing a self-assessment — a property of the arrangement, not a
+criticism of any one of them. This writes nothing and runs no model, which is
+what lets its verdict be evidence (<a href="philosophy.html#principles">the principle</a>).
+Since 2.1.0 the work order is also <strong>checked</strong>: <code>--conformance</code> compares the
+returned diff against the paths the report named, <code>--fail-on-regression</code>
+ratchets the dimension scores, and <code>--attestation-output</code> composes them into one
+record (<a href="roadmap.html#the-remediation-hole-closed-in-210-through-230">how that hole was closed</a>).
+The limit, stated in the same breath: those checks read the diff's <strong>shape</strong>,
+never its correctness — whether the change works is not a claim this tool makes.</p>
+<h3 id="ai-reviewing-ai-is-still-an-opinion">AI reviewing AI is still an opinion</h3>
+<p>A second model reading the first model's output does not change the
+arrangement. AI pull-request reviewers are useful and find real problems:
+Cursor's Bugbot runs several model passes over each pull request, keeps what a
+majority agree on and has a validator model filter that. Hostile audits by a
+language model are the same kind of thing, and are part of how this project is
+built (<a href="adr-013-hostile-audit-prompt.html">ADR 013</a>). But a model's verdict is a
+judgment. Ask twice and it can answer differently, and nothing stops it being
+confidently wrong in exactly the way the code it is reading was.</p>
+<p>So this tool treats model review as a <strong>finder, not evidence</strong>. A finding
+counts once something deterministic can reproduce it, when it becomes a test
+or check that fails without its fix. That is the loop ADR 013 closes: this tool
+emits a hostile-audit brief seeded from a real run, a model does the
+open-ended part outside the tool, and each accepted finding becomes a falsifier
+that re-checks it on every future run. Model review sits on top of a
+deterministic floor, never in place of one. Without that floor, AI-written
+code reviewed by AI is a self-assessment at one remove, and nothing in the loop
+can tell improvement from drift.</p>
+<p>One pre-registered experiment has tested the bounded prompt.
+Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, under this tool's own finding count.
+The <em>registered</em> hypothesis was narrower diffs, which did not hold, so the
+registered verdict stands at <strong>INCONCLUSIVE</strong>. Method, limits and raw data:
+<a href="studies.html#does-the-bounded-prompt-work-controlled-experiment-pre-registered">docs/studies.md</a>.</p>
+<h3 id="who-its-for">Who it's for</h3>
+<ul>
+<li>Teams running AI agents in the dev loop, tired of unbounded cleanup PRs, who
+  want a CI gate that actively constrains follow-up scope.</li>
+<li>Repos that want a maintainability gate without a SaaS analyzer or shipping
+  code to a third party.</li>
+<li>Solo devs who want a single deterministic audit to pin in a Makefile,
+  pre-commit, or local CI script.</li>
+</ul>
+<footer>Rendered from <code>docs/why-this-exists.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

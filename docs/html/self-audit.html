@@ -1,0 +1,2690 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Maintainability CI Report · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#summary">Summary</a></li>
+<li><a href="#trend">Trend</a><ul>
+<li><a href="#earlier-series-63-series">Earlier series (63 series)</a></li>
+</ul>
+</li>
+<li><a href="#security-work-order">Security Work Order</a><ul>
+<li><a href="#security-work-order_1">Security work order</a></li>
+</ul>
+</li>
+<li><a href="#economic-context-scenario">Economic Context (scenario)</a></li>
+<li><a href="#tdd-shaped-tests">TDD-shaped tests</a></li>
+<li><a href="#test-suite">Test Suite</a></li>
+<li><a href="#semantic-findings-adr-003">Semantic Findings (ADR 003)</a></li>
+<li><a href="#pillars">Pillars</a></li>
+<li><a href="#source-not-read">Source Not Read</a></li>
+<li><a href="#analyzer-coverage">Analyzer Coverage</a><ul>
+<li><a href="#coverage-by-language">Coverage by language</a></li>
+</ul>
+</li>
+<li><a href="#measurements">Measurements</a></li>
+<li><a href="#analyzer-findings">Analyzer Findings</a></li>
+<li><a href="#why-the-verified-grade-is-not-higher">Why the verified grade is not higher</a></li>
+<li><a href="#isoiec-25010-maintainability-score">ISO/IEC 25010 Maintainability Score</a></li>
+<li><a href="#aspect-scores">Aspect Scores</a></li>
+<li><a href="#not-scored-no-measurement-exists">Not Scored — no measurement exists</a></li>
+<li><a href="#largest-files">Largest Files</a></li>
+<li><a href="#function-hotspots">Function Hotspots</a></li>
+<li><a href="#hotspots-churn-x-cognitive-complexity-12-months-ago">Hotspots — churn x cognitive complexity (12 months ago)</a></li>
+<li><a href="#change-coupling-files-that-keep-changing-together">Change Coupling — files that keep changing together</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Audits and registers</div><h1>Maintainability CI Report</h1><!--
+Generated from the tree at commit 07419b41819cb083d19532378d12a04f38e1b818. This is a **provenance record, not a promise of currency**: it
+states the exact source commit it was generated against, and says
+nothing about how far that is from the current HEAD.
+
+An earlier version promised a fixed distance from HEAD — that it trailed
+by a single commit. That could not survive a merge — a merge commit puts it two or
+more behind, a squash makes the stamped commit not an ancestor at all,
+and a rebase rewrites the hash entirely. Worse, defending the claim
+meant regenerating the report every time anything landed on top of it,
+which is a loop with no end. Compare the stamp against the commit you
+care about instead. Regenerate for the current tree with:
+
+    maintainability-agent --config maintainability-agent.json \
+        --output /tmp/self-audit.md \
+        && sed "s|$(pwd)|.|g" /tmp/self-audit.md > docs/self-audit.md
+-->
+
+<ul>
+<li>Generated: 2026-09-23T20:22:48+00:00</li>
+<li>Commit: <code>07419b41819cb083d19532378d12a04f38e1b818</code> · Branch: <code>feat/kotlin-scanner</code></li>
+<li>Root: <code>.</code></li>
+<li>Standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based</li>
+</ul>
+<h2 id="summary">Summary</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Maintainability estimate</td>
+<td style="text-align: right;">4.4 / 5</td>
+</tr>
+<tr>
+<td>Estimate source</td>
+<td style="text-align: right;">Analyzer readings for declarations (completed by built-in detectors); built-in detectors for remaining dimensions</td>
+</tr>
+<tr>
+<td>Range (unmeasured evidence priced 0..5)</td>
+<td style="text-align: right;">4.1 – 4.7</td>
+</tr>
+<tr>
+<td>Evidence</td>
+<td style="text-align: right;">Evidence complete under profile <code>default-v1</code>.</td>
+</tr>
+<tr>
+<td>Verified grade</td>
+<td style="text-align: right;">B</td>
+</tr>
+<tr>
+<td>Files scanned</td>
+<td style="text-align: right;">543</td>
+</tr>
+<tr>
+<td>File warnings</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr>
+<td>File failures</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>Function warnings</td>
+<td style="text-align: right;">80</td>
+</tr>
+<tr>
+<td>Function failures</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>Duplicate blocks</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>Risk findings</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>Hard gate failures</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="trend">Trend</h2>
+<p>64 separate series. Scans either side of a break were produced by different instruments and cannot be compared, so they are reported apart rather than joined into one line. The current series is given in full; the earlier ones are summarized, because a reader deciding what to do today is acting on the instrument in use today.</p>
+<p><strong>This series begins at a break:</strong> the tool version, the scan scope changed, so scans before this point were produced by a different instrument and cannot be joined to those after it.</p>
+<p><strong>Current series</strong> — 1 scan, 2026-09-23T20:27:30Z to 2026-09-23T20:27:30Z.</p>
+<ul>
+<li><strong>Direction:</strong> unknown — not computable from these scans.</li>
+<li><strong>Debt velocity:</strong> 0 introduced, 0 cleared (unchanged).</li>
+<li><strong>Growth:</strong> unknown.</li>
+<li><strong>Never cleared in this window:</strong> 0 findings.</li>
+</ul>
+<h3 id="earlier-series-63-series">Earlier series (63 series)</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Window</th>
+<th>Scans</th>
+<th>Direction</th>
+<th>Change</th>
+<th>Began at a break in</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-09-21T18:30:16Z to 2026-09-21T18:40:04Z</td>
+<td>3</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-21T17:48:53Z to 2026-09-21T18:06:18Z</td>
+<td>4</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version, the scan scope changed</td>
+</tr>
+<tr>
+<td>2026-09-21T01:07:06Z to 2026-09-21T01:07:06Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-19T01:11:44Z to 2026-09-19T01:21:41Z</td>
+<td>2</td>
+<td>indistinguishable</td>
+<td>+0.10</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-18T21:32:18Z to 2026-09-18T21:32:18Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-18T20:50:09Z to 2026-09-18T20:50:09Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version, which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-09-18T19:59:49Z to 2026-09-18T20:03:00Z</td>
+<td>2</td>
+<td>indistinguishable</td>
+<td>+0.10</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-12T00:17:35Z to 2026-09-12T02:12:33Z</td>
+<td>11</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version, a delegated pillar's producer or its scoring model changed</td>
+</tr>
+<tr>
+<td>2026-09-12T00:03:02Z to 2026-09-12T00:03:02Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version, a delegated pillar's producer or its scoring model changed</td>
+</tr>
+<tr>
+<td>2026-09-11T23:21:19Z to 2026-09-11T23:43:19Z</td>
+<td>2</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-11T22:43:02Z to 2026-09-11T23:05:25Z</td>
+<td>4</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>a delegated pillar's producer or its scoring model changed</td>
+</tr>
+<tr>
+<td>2026-09-11T21:08:33Z to 2026-09-11T21:29:07Z</td>
+<td>2</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version, a delegated pillar's producer or its scoring model changed</td>
+</tr>
+<tr>
+<td>2026-09-10T23:35:05Z to 2026-09-11T19:24:09Z</td>
+<td>26</td>
+<td>indistinguishable</td>
+<td>+0.10</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-10T22:48:20Z to 2026-09-10T23:22:21Z</td>
+<td>6</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version, the configured thresholds changed</td>
+</tr>
+<tr>
+<td>2026-09-09T16:26:16Z to 2026-09-09T16:26:16Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version, which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-09-09T16:03:21Z to 2026-09-09T16:03:21Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-09-09T15:57:18Z to 2026-09-09T15:57:18Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-09-09T15:51:34Z to 2026-09-09T15:51:34Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-09-09T15:45:03Z to 2026-09-09T15:45:03Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-09-09T15:28:08Z to 2026-09-09T15:28:08Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-09-08T19:04:32Z to 2026-09-08T19:04:32Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-08T07:43:59Z to 2026-09-08T17:45:09Z</td>
+<td>5</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version, the calibration constant changed</td>
+</tr>
+<tr>
+<td>2026-09-07T18:48:35Z to 2026-09-08T00:14:00Z</td>
+<td>7</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version, which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-09-06T18:48:06Z to 2026-09-06T18:55:57Z</td>
+<td>2</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-06T14:42:34Z to 2026-09-06T18:28:54Z</td>
+<td>9</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-05T21:35:57Z to 2026-09-06T04:02:48Z</td>
+<td>6</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version, which analyzers contributed, the scored languages, the scan scope changed</td>
+</tr>
+<tr>
+<td>2026-09-05T20:49:08Z to 2026-09-05T20:53:53Z</td>
+<td>2</td>
+<td>unknown</td>
+<td>—</td>
+<td>which analyzers contributed, the scored languages changed</td>
+</tr>
+<tr>
+<td>2026-09-05T20:44:46Z to 2026-09-05T20:44:46Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the scan scope changed</td>
+</tr>
+<tr>
+<td>2026-09-05T19:52:45Z to 2026-09-05T19:52:45Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-05T00:59:02Z to 2026-09-05T18:15:54Z</td>
+<td>23</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-04T22:42:23Z to 2026-09-05T00:47:24Z</td>
+<td>6</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-04T19:52:42Z to 2026-09-04T22:33:54Z</td>
+<td>16</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-04T19:08:33Z to 2026-09-04T19:08:33Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-04T16:40:06Z to 2026-09-04T17:56:04Z</td>
+<td>2</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version, which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-09-04T07:53:46Z to 2026-09-04T07:53:46Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-04T07:11:36Z to 2026-09-04T07:40:48Z</td>
+<td>2</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-04T05:56:43Z to 2026-09-04T06:58:47Z</td>
+<td>4</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-04T04:25:28Z to 2026-09-04T05:44:00Z</td>
+<td>6</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-03T22:26:06Z to 2026-09-04T04:12:38Z</td>
+<td>11</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version, the calibration constant changed</td>
+</tr>
+<tr>
+<td>2026-09-03T16:43:03Z to 2026-09-03T19:57:41Z</td>
+<td>15</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-03T14:19:51Z to 2026-09-03T15:38:52Z</td>
+<td>5</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-03T04:32:13Z to 2026-09-03T14:04:41Z</td>
+<td>10</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-03T03:14:36Z to 2026-09-03T03:26:28Z</td>
+<td>3</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-03T01:50:55Z to 2026-09-03T01:50:55Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version, which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-09-02T21:22:31Z to 2026-09-02T21:22:31Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version, which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-09-02T20:57:23Z to 2026-09-02T20:57:23Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-02T19:48:51Z to 2026-09-02T20:10:01Z</td>
+<td>4</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-09-02T19:09:34Z to 2026-09-02T19:09:34Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version, which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-09-02T16:49:38Z to 2026-09-02T18:17:31Z</td>
+<td>5</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-02T15:53:44Z to 2026-09-02T16:09:57Z</td>
+<td>4</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-02T05:07:33Z to 2026-09-02T05:21:56Z</td>
+<td>2</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-02T04:13:12Z to 2026-09-02T04:32:59Z</td>
+<td>5</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-02T03:10:30Z to 2026-09-02T03:10:30Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-02T02:55:46Z to 2026-09-02T02:55:46Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-02T02:37:15Z to 2026-09-02T02:37:15Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-02T00:13:53Z to 2026-09-02T02:21:34Z</td>
+<td>2</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-01T22:50:04Z to 2026-09-01T23:57:58Z</td>
+<td>4</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version, the calibration constant, which analyzers contributed, the scan scope changed</td>
+</tr>
+<tr>
+<td>2026-08-28T13:05:26Z to 2026-08-28T13:07:10Z</td>
+<td>3</td>
+<td>unknown</td>
+<td>—</td>
+<td>which analyzers contributed, the scan scope changed</td>
+</tr>
+<tr>
+<td>2026-08-21T18:32:29Z to 2026-08-21T18:32:29Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-08-20T16:20:52Z to 2026-08-21T18:18:13Z</td>
+<td>27</td>
+<td>indistinguishable</td>
+<td>+0.20</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-08-19T22:59:02Z to 2026-08-19T23:50:01Z</td>
+<td>6</td>
+<td>indistinguishable</td>
+<td>+0.10</td>
+<td>which analyzers contributed changed</td>
+</tr>
+<tr>
+<td>2026-08-17T15:38:29Z to 2026-08-19T22:06:38Z</td>
+<td>48</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version, which analyzers contributed, the scored languages changed</td>
+</tr>
+<tr>
+<td>2026-08-15T20:46:31Z to 2026-08-16T06:01:10Z</td>
+<td>7</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the first recorded scan</td>
+</tr>
+</tbody>
+</table></div>
+<p>Every figure above describes scans that happened. This tool does not forecast, and no number here should be read as one.</p>
+<h2 id="security-work-order">Security Work Order</h2>
+<p>Written by secure-code-agent 0.12.9 and reproduced as it wrote it. It is that tool's work order, not this one's: its findings are not re-ranked or merged into the maintainability work order above.</p>
+<h3 id="security-work-order_1">Security work order</h3>
+<p><strong>0 to fix · 0 to review · 5449 suppression candidates.</strong></p>
+<p>Work the tiers in order. Everything in §FIX is a defect the scanner is confident about; everything in §REVIEW needs your judgement before you touch it, and the reason is stated per finding. This is a constrained task, not a refactor.</p>
+<h4 id="hard-constraints-must-not-violate">Hard constraints — MUST NOT violate</h4>
+<ol>
+<li>Fix only the findings listed. Touch nothing else.</li>
+<li>Do not change crypto algorithms, key derivation, IV/nonce, padding or random sources unless a finding names them.</li>
+<li>Do not change auth flows, sessions, token lifetime, cookie attributes or authorization gates unless a finding names them.</li>
+<li>Do not weaken validation, encoding, sanitization, bounds checks, regex strictness or rate limits to make tests pass.</li>
+<li>Do not disable, delete or skip security tests, or remove <code>@require_auth</code>-style decorators.</li>
+<li>Do not silence warnings: no <code># nosec</code>, <code># noqa</code>, <code># type: ignore</code>, <code>eslint-disable</code> or equivalent.</li>
+<li>Do not add dependencies. If one is genuinely required, stop and ask.</li>
+<li>Preserve behaviour. If a finding proves current behaviour unsafe, name the input → old/new output.</li>
+<li>Add one focused test per fix that FAILS before and PASSES after. No "TODO: add test later".</li>
+<li>Keep the patch small. If you are rewriting a function rather than patching it, stop and report why.</li>
+</ol>
+<h4 id="protocol">Protocol</h4>
+<p>Per finding: quote the lines you will change, state the minimum change and
+the test you will add, apply it, then confirm the test fails on the pre-fix
+code and passes after. Do not re-run this tool; CI will.</p>
+<p>Report per finding: id · files changed (<code>file:line</code>) · test added · behaviour
+change (yes/no, with input → old/new) · standards satisfied.</p>
+<p>A false positive is a successful outcome: do not patch it. Emit a
+<code>.scignore.yaml</code> suppression candidate with the justification and a proposed
+<code>expires</code> date (90 days maximum) for the operator to review.</p>
+<h4 id="accept-test-tree-and-documentation">§ACCEPT — test tree and documentation</h4>
+<p>Findings outside the shipped source. A credential in a test fixture
+or a tutorial is usually deliberate, and these do not grade the code
+condition — but they are reported, because one of them may be a real
+key committed to the wrong place.</p>
+<p><strong>Do not patch these.</strong> Decide per group: a genuine secret to rotate
+and remove, or a fixture to record in <code>.scignore.yaml</code> with a reason
+and an expiry. Propose, do not apply.</p>
+<p>Grouped by rule, because the decision is per rule and not per line.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>rule</th>
+<th style="text-align: right;">count</th>
+<th>worst</th>
+<th>example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>B108</code></td>
+<td style="text-align: right;">9</td>
+<td>medium</td>
+<td><code>tests/test_analyzer_config_isolation.py:139</code></td>
+</tr>
+<tr>
+<td><code>B310</code></td>
+<td style="text-align: right;">2</td>
+<td>medium</td>
+<td><code>tools/sonar_resolve.py:56</code></td>
+</tr>
+<tr>
+<td><code>B314</code></td>
+<td style="text-align: right;">1</td>
+<td>medium</td>
+<td><code>src/maintainability_audit/_xml.py:70</code></td>
+</tr>
+<tr>
+<td><code>B101</code></td>
+<td style="text-align: right;">4869</td>
+<td>low</td>
+<td><code>tests/_ast_reading.py:94</code></td>
+</tr>
+<tr>
+<td><code>B603</code></td>
+<td style="text-align: right;">244</td>
+<td>low</td>
+<td><code>src/maintainability_audit/_backfill.py:51</code></td>
+</tr>
+<tr>
+<td><code>B607</code></td>
+<td style="text-align: right;">206</td>
+<td>low</td>
+<td><code>src/maintainability_audit/_backfill.py:51</code></td>
+</tr>
+<tr>
+<td><code>B404</code></td>
+<td style="text-align: right;">113</td>
+<td>low</td>
+<td><code>src/maintainability_audit/_backfill.py:29</code></td>
+</tr>
+<tr>
+<td><code>B405</code></td>
+<td style="text-align: right;">3</td>
+<td>low</td>
+<td><code>src/maintainability_audit/_jvm_adapters.py:21</code></td>
+</tr>
+<tr>
+<td><em>2 more rule(s)</em></td>
+<td style="text-align: right;">2</td>
+<td></td>
+<td><em>see the report</em></td>
+</tr>
+</tbody>
+</table></div>
+<p>A suppression covering one of these groups looks like:</p>
+<pre><code class="language-yaml">- rule_id: B314
+  paths: [&quot;*/tests/*&quot;]
+  reason: &quot;state why this is deliberate, and what you checked&quot;
+  expires: &quot;YYYY-MM-DD&quot;
+</code></pre>
+<hr />
+<p>End of findings. Apply the patch protocol above per finding. Report each one in the summary block format.</p>
+<h2 id="economic-context-scenario">Economic Context (scenario)</h2>
+<p><strong>0 – 0 USD</strong> over 12 months (base 0 USD), across 0 work-order item(s).</p>
+<p>Assumptions:</p>
+<ul>
+<li>each bound = affected changes/year × incremental hours/change × loaded labor rate × horizon/12</li>
+<li>no usable history; assumed one change per work-order item per year</li>
+<li>incremental hours/change of 0.25-2.0 (base 1.0) — a stated default unless configured</li>
+<li>loaded labor rate 130.0-275.0 USD/hour (base 165.0), as configured</li>
+<li>planning horizon of 12 months</li>
+<li>a scenario computed from these assumptions; change them and the range moves with them</li>
+</ul>
+<h2 id="tdd-shaped-tests">TDD-shaped tests</h2>
+<p>TDD-shaped tests: detected beside 130 of 157 production source files (path pairing). Constructs: pytest in 282 file(s), unittest in 1 file(s), describe_it in 20 file(s), parametrize in 92 file(s), given_when_then in 2 file(s).
+Chronology is not measured. Effectiveness is unscored unless the operator opted into suite execution.</p>
+<h2 id="test-suite">Test Suite</h2>
+<ul>
+<li>The operator opted in to running the repository's test command; it did not run (exit 3).</li>
+<li>Command: pytest -n auto --cov=maintainability_audit --cov-report=xml:coverage.xml -q</li>
+<li>Program run: /Users/marshallguillory/Library/Python/3.11/bin/pytest</li>
+<li>Coverage: no coverage reported by the run</li>
+<li>Detail: pytest exited 3: ['/Users/marshallguillory/Library/Python/3.11/lib/python/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.']</li>
+</ul>
+<h2 id="semantic-findings-adr-003">Semantic Findings (ADR 003)</h2>
+<p>TypeScript semantic coverage: <strong>unknown</strong> — no recorded type analysis and no local type checker: semantic coverage for TypeScript is unknown. Absence of analysis is not absence of findings.</p>
+<h2 id="pillars">Pillars</h2>
+<p><strong>Practice level 4 of 5</strong> — CI holds a numeric quality gate.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Pillar</th>
+<th>Scope</th>
+<th style="text-align: right;">Practice</th>
+<th style="text-align: right;">Condition</th>
+<th>Reading</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>readability</td>
+<td>partial</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4.8</td>
+<td>healthy: enforced, and the code reflects it</td>
+</tr>
+<tr>
+<td>maintainability</td>
+<td>owned</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">3.9</td>
+<td>healthy: enforced, and the code reflects it</td>
+</tr>
+<tr>
+<td>efficiency</td>
+<td>out-of-scope</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+<td>not measured — see below</td>
+</tr>
+<tr>
+<td>security</td>
+<td>delegated</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">5.0</td>
+<td>healthy: enforced, and the code reflects it; findings: no findings</td>
+</tr>
+<tr>
+<td>testability</td>
+<td>partial</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">5.0</td>
+<td>healthy: enforced, and the code reflects it</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Not measured here, and why:</strong></p>
+<ul>
+<li><strong>efficiency</strong> — requires profiling, load testing and runtime telemetry, none of which a static pass produces; permanently out of scope rather than temporarily unmeasured</li>
+</ul>
+<p>Enforcement found: <code>linter-config</code>, <code>recorded-decisions</code>, <code>lint-in-ci</code>, <code>types-in-ci</code>, <code>duplication-in-ci</code>, <code>coverage-gate</code>.</p>
+<h2 id="source-not-read">Source Not Read</h2>
+<p>21 of 467 source files were not opened by this scan. Their extensions are absent from <code>paths.include_extensions</code>, so nothing below describes them.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Extension</th>
+<th>Language</th>
+<th>Files</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.ts</code></td>
+<td>TypeScript</td>
+<td>9</td>
+</tr>
+<tr>
+<td><code>.c</code></td>
+<td>C</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>.cpp</code></td>
+<td>C++</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>.cs</code></td>
+<td>C#</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>.f90</code></td>
+<td>Fortran</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>.go</code></td>
+<td>Go</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>.js</code></td>
+<td>JavaScript</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>.kt</code></td>
+<td>Kotlin</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>.php</code></td>
+<td>PHP</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>.rb</code></td>
+<td>Ruby</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>.rs</code></td>
+<td>Rust</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>.sh</code></td>
+<td>Shell</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>.swift</code></td>
+<td>Swift</td>
+<td>1</td>
+</tr>
+</tbody>
+</table></div>
+<p>Add these to <code>paths.include_extensions</code> and re-run to audit them.</p>
+<h2 id="analyzer-coverage">Analyzer Coverage</h2>
+<p>12 of 17 tools contributed — concerns <code>all</code>, depth <code>heavy</code>, license policy <code>copyleft-any</code>.</p>
+<p>Plus 8 built-in detectors, which always run and whose measurements are single-source.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Tier</th>
+<th>Outcome</th>
+<th>Version</th>
+<th>Measurements</th>
+<th>Findings</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cohesion</code></td>
+<td>analyzer</td>
+<td>failed</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>/Users/marshallguillory/Library/Python/3.11/bin/cohesion exited 2: ['usage: cohe</td>
+</tr>
+<tr>
+<td><code>eslint</code></td>
+<td>analyzer</td>
+<td>not-applicable</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>reads javascript, jsx, typescript; this tree is Python, Shell, so it had nothing</td>
+</tr>
+<tr>
+<td><code>fortitude</code></td>
+<td>analyzer</td>
+<td>not-applicable</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>reads fortran; this tree is Python, Shell, so it had nothing to examine</td>
+</tr>
+<tr>
+<td><code>spotbugs</code></td>
+<td>analyzer</td>
+<td>not-applicable</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>reads java; this tree is Python, Shell, so it had nothing to examine</td>
+</tr>
+<tr>
+<td><code>pylint</code></td>
+<td>analyzer</td>
+<td>parse-error</td>
+<td>pylint 4.0.7</td>
+<td>—</td>
+<td>—</td>
+<td>pylint ran but its output could not be read (JSONDecodeError: Expecting value: l</td>
+</tr>
+<tr>
+<td><code>checkstyle</code></td>
+<td>analyzer</td>
+<td>ran</td>
+<td>Checkstyle version: 14.0.0</td>
+<td>0</td>
+<td>119</td>
+<td></td>
+</tr>
+<tr>
+<td><code>complexipy</code></td>
+<td>analyzer</td>
+<td>ran</td>
+<td>7.0.1</td>
+<td>4100</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>interrogate</code></td>
+<td>analyzer</td>
+<td>ran</td>
+<td>interrogate, version 1.7.0</td>
+<td>1</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>jscpd</code></td>
+<td>analyzer</td>
+<td>ran</td>
+<td>cpd 5.1.1</td>
+<td>1</td>
+<td>141</td>
+<td></td>
+</tr>
+<tr>
+<td><code>lizard</code></td>
+<td>analyzer</td>
+<td>ran</td>
+<td>1.24.0</td>
+<td>13155</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>multimetric</code></td>
+<td>analyzer</td>
+<td>ran</td>
+<td>multimetric 2.4.4</td>
+<td>1876</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>mypy</code></td>
+<td>analyzer</td>
+<td>ran</td>
+<td>mypy 2.3.1 (compiled: yes)</td>
+<td>0</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>pmd</code></td>
+<td>analyzer</td>
+<td>ran</td>
+<td>PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z)</td>
+<td>0</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>pydocstyle</code></td>
+<td>analyzer</td>
+<td>ran</td>
+<td>6.3.0</td>
+<td>0</td>
+<td>234</td>
+<td></td>
+</tr>
+<tr>
+<td><code>radon</code></td>
+<td>analyzer</td>
+<td>ran</td>
+<td>6.0.1</td>
+<td>448</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>ruff</code></td>
+<td>analyzer</td>
+<td>ran</td>
+<td>ruff 0.16.5</td>
+<td>0</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td><code>vulture</code></td>
+<td>analyzer</td>
+<td>ran</td>
+<td>vulture 2.16</td>
+<td>0</td>
+<td>6</td>
+<td></td>
+</tr>
+<tr>
+<td><code>competing-libraries</code></td>
+<td>built-in</td>
+<td>ran</td>
+<td>—</td>
+<td>543</td>
+<td>0</td>
+<td>two libraries doing one job; no adapter emits idioms</td>
+</tr>
+<tr>
+<td><code>dead-code</code></td>
+<td>built-in</td>
+<td>ran</td>
+<td>—</td>
+<td>4338</td>
+<td>0</td>
+<td>vulture, ruff and eslint cover this</td>
+</tr>
+<tr>
+<td><code>declaration-size</code></td>
+<td>built-in</td>
+<td>ran</td>
+<td>—</td>
+<td>4338</td>
+<td>80</td>
+<td>lizard and complexipy cover these; the only source when neither runs</td>
+</tr>
+<tr>
+<td><code>duplicate-blocks</code></td>
+<td>built-in</td>
+<td>ran</td>
+<td>—</td>
+<td>543</td>
+<td>0</td>
+<td>jscpd covers this; the only source when Node is unavailable</td>
+</tr>
+<tr>
+<td><code>file-size</code></td>
+<td>built-in</td>
+<td>ran</td>
+<td>—</td>
+<td>543</td>
+<td>4</td>
+<td>per-file line counts; no adapter emits file_lines</td>
+</tr>
+<tr>
+<td><code>history</code></td>
+<td>built-in</td>
+<td>ran</td>
+<td>—</td>
+<td>542</td>
+<td>76</td>
+<td>git history; no adapter emits churn, coupling or ownership</td>
+</tr>
+<tr>
+<td><code>near-duplicates</code></td>
+<td>built-in</td>
+<td>ran</td>
+<td>—</td>
+<td>4338</td>
+<td>0</td>
+<td>token-shingle near-matches, which jscpd's exact-block scan misses</td>
+</tr>
+<tr>
+<td><code>risk-patterns</code></td>
+<td>built-in</td>
+<td>ran</td>
+<td>—</td>
+<td>543</td>
+<td>0</td>
+<td>regex policy from this repository's own config; nothing external can hold a proj</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="coverage-by-language">Coverage by language</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Scored</th>
+<th>Examined</th>
+<th>Unexamined</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python</td>
+<td>yes</td>
+<td><code>complexity</code>, <code>dead-code</code>, <code>documentation</code>, <code>duplication</code>, <code>metrics</code>, <code>structure</code>, <code>style</code>, <code>types</code></td>
+<td><code>testing</code></td>
+</tr>
+<tr>
+<td>Shell</td>
+<td>not read</td>
+<td><code>duplication</code></td>
+<td><code>complexity</code>, <code>dead-code</code>, <code>documentation</code>, <code>metrics</code>, <code>structure</code>, <code>style</code>, <code>testing</code>, <code>types</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>The score is drawn from the scored languages only. Anything marked <code>not read</code> is listed under Source Not Read with its file count.</p>
+<p><strong><code>declarations</code> measured by analyzers, completed by built-in detectors:</strong> no analyzer supplies cognitive_complexity for C, C#, C++, Fortran, Go, Java, JavaScript, Kotlin, PHP, Ruby, Rust, Swift, TypeScript, so the built-in scanner supplied it for those declarations and the analyzers supplied the rest; the criterion set is complete per declaration, which is what makes the rate comparable to the rubric's.</p>
+<p><strong>Nothing examined:</strong> <code>testing</code>.</p>
+<p>These concerns are unmeasured, not clean. Install a tool that covers them, or widen <code>analyzers.depth</code>, to have them reported.</p>
+<p><strong>Analyzer children are not network-isolated.</strong> 12 external tools ran as local child processes. This agent does not transmit the audited source and opens no socket of its own, but it does not sandbox what it spawns: a third-party analyzer that reaches the network is outside what this run controls or observes. Determinism and no upload are the promise; a kernel air-gap is not.</p>
+<h2 id="measurements">Measurements</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Concept</th>
+<th>Units</th>
+<th>Sources</th>
+<th>Tool disagreement</th>
+<th>Min</th>
+<th>Median</th>
+<th>p90</th>
+<th>Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cognitive_complexity</td>
+<td>4100</td>
+<td>complexipy</td>
+<td>single source</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>6.0</td>
+<td>34.0</td>
+</tr>
+<tr>
+<td>cyclomatic_complexity</td>
+<td>4385</td>
+<td>lizard</td>
+<td>single source</td>
+<td>1.0</td>
+<td>2.0</td>
+<td>6.0</td>
+<td>27.0</td>
+</tr>
+<tr>
+<td>declaration_lines</td>
+<td>4385</td>
+<td>lizard</td>
+<td>single source</td>
+<td>1.0</td>
+<td>13.0</td>
+<td>33.0</td>
+<td>80.0</td>
+</tr>
+<tr>
+<td>documentation</td>
+<td>470</td>
+<td>interrogate, multimetric</td>
+<td>no shared units</td>
+<td>0.0</td>
+<td>38.9</td>
+<td>58.63</td>
+<td>92.26</td>
+</tr>
+<tr>
+<td>duplication</td>
+<td>1</td>
+<td>jscpd</td>
+<td>single source</td>
+<td>1.28</td>
+<td>1.28</td>
+<td>1.28</td>
+<td>1.28</td>
+</tr>
+<tr>
+<td>file_cyclomatic_complexity</td>
+<td>469</td>
+<td>multimetric</td>
+<td>single source</td>
+<td>0.0</td>
+<td>2.0</td>
+<td>26.0</td>
+<td>70.0</td>
+</tr>
+<tr>
+<td>halstead_difficulty</td>
+<td>469</td>
+<td>multimetric</td>
+<td>single source</td>
+<td>0.67</td>
+<td>50.7</td>
+<td>98.0</td>
+<td>155.32</td>
+</tr>
+<tr>
+<td>maintainability_index</td>
+<td>469</td>
+<td>multimetric, radon</td>
+<td>36%</td>
+<td>21.47</td>
+<td>56.84</td>
+<td>76.42</td>
+<td>135.29</td>
+</tr>
+<tr>
+<td>parameters</td>
+<td>4385</td>
+<td>lizard</td>
+<td>single source</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>2.0</td>
+<td>18.0</td>
+</tr>
+</tbody>
+</table></div>
+<p>Where two tools measured the same thing, their disagreement is shown rather than averaged away — it is the uncertainty a single-tool number hides.</p>
+<p><em>The maintainability estimate uses the analyzer readings for declarations (completed by built-in detectors) — external tools are the primary evidence there. Dimensions no analyzer measured kept the fallback tier. Where the two sources disagree the range widens to contain both; they are never averaged.</em></p>
+<h2 id="analyzer-findings">Analyzer Findings</h2>
+<p>502 findings from external analyzers — 6 dead-code, 257 documentation, 141 duplication, 98 style.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Line</th>
+<th>Concern</th>
+<th>Tool</th>
+<th>Rule</th>
+<th>Finding</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.github/workflows/quality-gates.yml</code></td>
+<td>75</td>
+<td>duplication</td>
+<td><code>jscpd</code></td>
+<td>—</td>
+<td>9 duplicated lines</td>
+</tr>
+<tr>
+<td><code>.github/workflows/quality-gates.yml</code></td>
+<td>138</td>
+<td>duplication</td>
+<td><code>jscpd</code></td>
+<td>—</td>
+<td>9 duplicated lines</td>
+</tr>
+<tr>
+<td><code>.github/workflows/quality-gates.yml</code></td>
+<td>250</td>
+<td>duplication</td>
+<td><code>jscpd</code></td>
+<td>—</td>
+<td>9 duplicated lines</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td>196</td>
+<td>duplication</td>
+<td><code>jscpd</code></td>
+<td>—</td>
+<td>6 duplicated lines</td>
+</tr>
+<tr>
+<td><code>skills/maintainability-agent/SKILL.md</code></td>
+<td>129</td>
+<td>duplication</td>
+<td><code>jscpd</code></td>
+<td>—</td>
+<td>47 duplicated lines</td>
+</tr>
+<tr>
+<td><code>skills/maintainability-agent/SKILL.md</code></td>
+<td>179</td>
+<td>duplication</td>
+<td><code>jscpd</code></td>
+<td>—</td>
+<td>10 duplicated lines</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_adapters.py</code></td>
+<td>64</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D102</td>
+<td>Missing docstring in public method</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_adapters.py</code></td>
+<td>209</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D102</td>
+<td>Missing docstring in public method</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_adapters.py</code></td>
+<td>302</td>
+<td>duplication</td>
+<td><code>jscpd</code></td>
+<td>—</td>
+<td>7 duplicated lines</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_adapters.py</code></td>
+<td>304</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D102</td>
+<td>Missing docstring in public method</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_adapters.py</code></td>
+<td>318</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D102</td>
+<td>Missing docstring in public method</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_adapters.py</code></td>
+<td>377</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D103</td>
+<td>Missing docstring in public function</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_analysis.py</code></td>
+<td>92</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D102</td>
+<td>Missing docstring in public method</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_arguments.py</code></td>
+<td>111</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D103</td>
+<td>Missing docstring in public function</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_bands.py</code></td>
+<td>163</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D103</td>
+<td>Missing docstring in public function</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_banner.py</code></td>
+<td>48</td>
+<td>duplication</td>
+<td><code>jscpd</code></td>
+<td>—</td>
+<td>6 duplicated lines</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_banner.py</code></td>
+<td>48</td>
+<td>duplication</td>
+<td><code>jscpd</code></td>
+<td>—</td>
+<td>9 duplicated lines</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_catalog.py</code></td>
+<td>88</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D103</td>
+<td>Missing docstring in public function</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_catalog.py</code></td>
+<td>232</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D205</td>
+<td>1 blank line required between summary line and description (found 0)</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_catalog.py</code></td>
+<td>232</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D209</td>
+<td>Multi-line docstring closing quotes should be on a separate line</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_catalog.py</code></td>
+<td>232</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D400</td>
+<td>First line should end with a period (not 'y')</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_corroborate.py</code></td>
+<td>55</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D102</td>
+<td>Missing docstring in public method</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_corroborate.py</code></td>
+<td>59</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D102</td>
+<td>Missing docstring in public method</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_corroborate.py</code></td>
+<td>73</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D103</td>
+<td>Missing docstring in public function</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_discovery.py</code></td>
+<td>169</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D102</td>
+<td>Missing docstring in public method</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_discovery.py</code></td>
+<td>201</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D102</td>
+<td>Missing docstring in public method</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_discovery.py</code></td>
+<td>513</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D205</td>
+<td>1 blank line required between summary line and description (found 0)</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_discovery.py</code></td>
+<td>513</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D209</td>
+<td>Multi-line docstring closing quotes should be on a separate line</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_discovery.py</code></td>
+<td>513</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D400</td>
+<td>First line should end with a period (not 'o')</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_evidence_view.py</code></td>
+<td>84</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D103</td>
+<td>Missing docstring in public function</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_evidence_view.py</code></td>
+<td>88</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D103</td>
+<td>Missing docstring in public function</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_evidence_view.py</code></td>
+<td>112</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D103</td>
+<td>Missing docstring in public function</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_evidence_view.py</code></td>
+<td>126</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D103</td>
+<td>Missing docstring in public function</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_finding_match.py</code></td>
+<td>82</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D103</td>
+<td>Missing docstring in public function</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_finding_match.py</code></td>
+<td>86</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D103</td>
+<td>Missing docstring in public function</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_finding_match.py</code></td>
+<td>90</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D103</td>
+<td>Missing docstring in public function</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_first_run.py</code></td>
+<td>257</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D205</td>
+<td>1 blank line required between summary line and description (found 0)</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_first_run.py</code></td>
+<td>257</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D400</td>
+<td>First line should end with a period (not 'f')</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_gates.py</code></td>
+<td>130</td>
+<td>documentation</td>
+<td><code>pydocstyle</code></td>
+<td>D103</td>
+<td>Missing docstring in public function</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_generic.py</code></td>
+<td>146</td>
+<td>duplication</td>
+<td><code>jscpd</code></td>
+<td>—</td>
+<td>9 duplicated lines</td>
+</tr>
+</tbody>
+</table></div>
+<p>Showing 40 of 502. The complete list is in the JSON report under <code>analyzer_findings</code>.</p>
+<h2 id="why-the-verified-grade-is-not-higher">Why the verified grade is not higher</h2>
+<ul>
+<li>graded on the evidence floor 4.1 (point estimate 4.4, ceiling 4.7): unmeasured aspects price at 0 for the grade</li>
+</ul>
+<h2 id="isoiec-25010-maintainability-score">ISO/IEC 25010 Maintainability Score</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>modularity</td>
+<td>3.9</td>
+</tr>
+<tr>
+<td>reusability</td>
+<td>4.9</td>
+</tr>
+<tr>
+<td>analyzability</td>
+<td>4.4</td>
+</tr>
+<tr>
+<td>modifiability</td>
+<td>3.8</td>
+</tr>
+<tr>
+<td>testability</td>
+<td>4.8</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="aspect-scores">Aspect Scores</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>file size</td>
+<td>4.5</td>
+</tr>
+<tr>
+<td>declaration size</td>
+<td>4.3</td>
+</tr>
+<tr>
+<td>duplication</td>
+<td>5.0</td>
+</tr>
+<tr>
+<td>risk patterns</td>
+<td>5.0</td>
+</tr>
+<tr>
+<td>policy gates</td>
+<td>5.0</td>
+</tr>
+<tr>
+<td>test presence</td>
+<td>5.0</td>
+</tr>
+<tr>
+<td>dead code</td>
+<td>5.0</td>
+</tr>
+<tr>
+<td>near duplication</td>
+<td>5.0</td>
+</tr>
+<tr>
+<td>idiom consistency</td>
+<td>5.0</td>
+</tr>
+<tr>
+<td>documentation</td>
+<td>5.0</td>
+</tr>
+<tr>
+<td>churn hotspots</td>
+<td>4.0</td>
+</tr>
+<tr>
+<td>change coupling</td>
+<td>2.0</td>
+</tr>
+<tr>
+<td>knowledge concentration</td>
+<td>2.0</td>
+</tr>
+<tr>
+<td>test effectiveness</td>
+<td>not measurable</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="not-scored-no-measurement-exists">Not Scored — no measurement exists</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>naming quality</td>
+<td>no static proxy survives contact; a wrong-name detector needs semantics</td>
+</tr>
+<tr>
+<td>comment accuracy</td>
+<td>comments are deliberately unparsed; staleness needs meaning, not structure</td>
+</tr>
+<tr>
+<td>indirection depth</td>
+<td>call-graph construction is not implemented for the supported languages</td>
+</tr>
+<tr>
+<td>architectural coherence</td>
+<td>no measurement distinguishes a wrong boundary from an unusual one statically</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="largest-files">Largest Files</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Lines</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tests/test_operator_named_reads.py</code></td>
+<td>637</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_prompt_sections.py</code></td>
+<td>628</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_scan_history.py</code></td>
+<td>624</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>.github/workflows/quality-gates.yml</code></td>
+<td>615</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/cli.py</code></td>
+<td>564</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_discovery.py</code></td>
+<td>553</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_work_order.py</code></td>
+<td>544</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/report.py</code></td>
+<td>540</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/mcp_server.py</code></td>
+<td>536</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_mcp_audit.py</code></td>
+<td>532</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>tests/test_docs_links.py</code></td>
+<td>524</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_metrics_types.py</code></td>
+<td>523</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>tests/test_mcp_server.py</code></td>
+<td>520</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td>511</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/scoring.py</code></td>
+<td>509</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>tests/test_grammar_constructs.py</code></td>
+<td>507</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>tools/prove_falsifiers.py</code></td>
+<td>500</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>tests/test_calibration_corpus.py</code></td>
+<td>499</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_mcp_setup.py</code></td>
+<td>496</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>tests/test_evidence_properties.py</code></td>
+<td>496</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_scan_view.py</code></td>
+<td>495</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_adapters.py</code></td>
+<td>492</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>tests/test_adapters.py</code></td>
+<td>491</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>tests/test_mcp_history.py</code></td>
+<td>486</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_analysis.py</code></td>
+<td>485</td>
+<td>ok</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="function-hotspots">Function Hotspots</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Declaration</th>
+<th>Line</th>
+<th>Lines</th>
+<th>Complexity</th>
+<th>Cognitive</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tools/build_catalog.py</code></td>
+<td><code>build</code></td>
+<td>335</td>
+<td>36</td>
+<td>15</td>
+<td>0</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_docs_links.py</code></td>
+<td><code>test_no_markdown_table_is_split_by_prose</code></td>
+<td>198</td>
+<td>35</td>
+<td>15</td>
+<td>20</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_operator_named_reads.py</code></td>
+<td><code>test_the_operator_read_resolves_the_name_exactly_once</code></td>
+<td>402</td>
+<td>67</td>
+<td>14</td>
+<td>12</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/history.py</code></td>
+<td><code>history_section</code></td>
+<td>298</td>
+<td>51</td>
+<td>14</td>
+<td>3</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tools/build_catalog.py</code></td>
+<td><code>_entry</code></td>
+<td>265</td>
+<td>46</td>
+<td>14</td>
+<td>15</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/_ast_reading.py</code></td>
+<td><code>reachable_names</code></td>
+<td>203</td>
+<td>44</td>
+<td>14</td>
+<td>17</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_html_view.py</code></td>
+<td><code>_chart_sections</code></td>
+<td>196</td>
+<td>39</td>
+<td>14</td>
+<td>4</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_identity_resolution.py</code></td>
+<td><code>test_fail_on_new_uses_structured_matching_not_a_label_set_difference</code></td>
+<td>278</td>
+<td>33</td>
+<td>14</td>
+<td>13</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_ranges_core.py</code></td>
+<td><code>scan_bounded</code></td>
+<td>207</td>
+<td>78</td>
+<td>13</td>
+<td>19</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_skill_install.py</code></td>
+<td><code>install_skill</code></td>
+<td>48</td>
+<td>67</td>
+<td>13</td>
+<td>13</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_git_argv.py</code></td>
+<td><code>test_every_git_command_disables_gits_own_housekeeping</code></td>
+<td>396</td>
+<td>66</td>
+<td>13</td>
+<td>20</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_prompt_sections.py</code></td>
+<td><code>prompt_focus_sections</code></td>
+<td>454</td>
+<td>60</td>
+<td>13</td>
+<td>3</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_language_coverage.py</code></td>
+<td><code>test_every_parsed_language_can_reach_a_complexity_analyzer</code></td>
+<td>212</td>
+<td>58</td>
+<td>13</td>
+<td>3</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tools/calibration/sampling_error.py</code></td>
+<td><code>main</code></td>
+<td>88</td>
+<td>54</td>
+<td>13</td>
+<td>10</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_metric_adapters.py</code></td>
+<td><code>expand_files</code></td>
+<td>46</td>
+<td>47</td>
+<td>13</td>
+<td>6</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tools/resolve_pool.py</code></td>
+<td><code>main</code></td>
+<td>65</td>
+<td>46</td>
+<td>13</td>
+<td>12</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_authorship_gates.py</code></td>
+<td><code>_step_scripts</code></td>
+<td>41</td>
+<td>43</td>
+<td>13</td>
+<td>23</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_discovery.py</code></td>
+<td><code>discover</code></td>
+<td>466</td>
+<td>42</td>
+<td>13</td>
+<td>12</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_analysis_coverage.py</code></td>
+<td><code>test_no_built_in_claims_to_be_unique_when_an_adapter_exists</code></td>
+<td>302</td>
+<td>36</td>
+<td>13</td>
+<td>2</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/duplication.py</code></td>
+<td><code>duplicate_blocks</code></td>
+<td>50</td>
+<td>35</td>
+<td>13</td>
+<td>10</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_ci_installs_the_analyzer_pool.py</code></td>
+<td><code>_pip_installed_by_ci</code></td>
+<td>73</td>
+<td>35</td>
+<td>13</td>
+<td>15</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_documents.py</code></td>
+<td><code>coverage_document</code></td>
+<td>262</td>
+<td>34</td>
+<td>13</td>
+<td>4</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_semantic_view.py</code></td>
+<td><code>semantic_markdown</code></td>
+<td>36</td>
+<td>33</td>
+<td>13</td>
+<td>12</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_jvm_adapters.py</code></td>
+<td><code>_finding_of</code></td>
+<td>367</td>
+<td>27</td>
+<td>13</td>
+<td>12</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_promises.py</code></td>
+<td><code>_paths_the_audit_produced</code></td>
+<td>129</td>
+<td>25</td>
+<td>13</td>
+<td>20</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_first_run_elicitation.py</code></td>
+<td><code>_preferred_for</code></td>
+<td>255</td>
+<td>18</td>
+<td>13</td>
+<td>14</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_analysis.py</code></td>
+<td><code>analyze</code></td>
+<td>274</td>
+<td>79</td>
+<td>12</td>
+<td>5</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_pressures.py</code></td>
+<td><code>declined_dimensions</code></td>
+<td>244</td>
+<td>79</td>
+<td>12</td>
+<td>6</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tools/calibration/measure_cohorts.py</code></td>
+<td><code>main</code></td>
+<td>251</td>
+<td>67</td>
+<td>12</td>
+<td>8</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_platform_claim.py</code></td>
+<td><code>test_the_macos_runner_actually_runs_the_suite</code></td>
+<td>174</td>
+<td>61</td>
+<td>12</td>
+<td>8</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_masking.py</code></td>
+<td><code>_mask_code</code></td>
+<td>68</td>
+<td>47</td>
+<td>12</td>
+<td>20</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_ranges_js.py</code></td>
+<td><code>js_declaration_ranges</code></td>
+<td>202</td>
+<td>38</td>
+<td>12</td>
+<td>24</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_test_execution.py</code></td>
+<td><code>run_test_suite</code></td>
+<td>152</td>
+<td>80</td>
+<td>11</td>
+<td>11</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tools/calibration/measure_fix_breadth.py</code></td>
+<td><code>main</code></td>
+<td>225</td>
+<td>66</td>
+<td>11</td>
+<td>6</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/cli.py</code></td>
+<td><code>main</code></td>
+<td>447</td>
+<td>64</td>
+<td>11</td>
+<td>12</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_finding_identity.py</code></td>
+<td><code>test_no_module_hardcodes_an_ordinal</code></td>
+<td>300</td>
+<td>47</td>
+<td>11</td>
+<td>19</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_masking.py</code></td>
+<td><code>_blank_fstring_literals</code></td>
+<td>353</td>
+<td>44</td>
+<td>11</td>
+<td>18</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_ranges_fortran.py</code></td>
+<td><code>_fortran_end</code></td>
+<td>163</td>
+<td>38</td>
+<td>11</td>
+<td>16</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_network_disclosure.py</code></td>
+<td><code>test_no_module_imports_an_http_client</code></td>
+<td>69</td>
+<td>24</td>
+<td>11</td>
+<td>16</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_analysis.py</code></td>
+<td><code>_attempt</code></td>
+<td>398</td>
+<td>80</td>
+<td>10</td>
+<td>12</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_verified_grade.py</code></td>
+<td><code>test_not_applicable_rollup_is_the_only_change_to_the_pre_stage_five_anchor</code></td>
+<td>271</td>
+<td>80</td>
+<td>10</td>
+<td>0</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/scoring.py</code></td>
+<td><code>_score_document</code></td>
+<td>433</td>
+<td>77</td>
+<td>10</td>
+<td>13</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_written_record.py</code></td>
+<td><code>test_no_document_says_a_register_entry_is_open_that_the_register_closed</code></td>
+<td>343</td>
+<td>45</td>
+<td>10</td>
+<td>16</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_anticipated_refusals.py</code></td>
+<td><code>_named_exceptions</code></td>
+<td>95</td>
+<td>26</td>
+<td>10</td>
+<td>16</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/report.py</code></td>
+<td><code>build_report</code></td>
+<td>461</td>
+<td>80</td>
+<td>9</td>
+<td>3</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_prompt_sections.py</code></td>
+<td><code>prompt_pressure_section</code></td>
+<td>359</td>
+<td>66</td>
+<td>9</td>
+<td>5</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_docs_links.py</code></td>
+<td><code>test_every_internal_link_resolves_to_a_file_and_an_anchor</code></td>
+<td>82</td>
+<td>16</td>
+<td>9</td>
+<td>17</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_mcp_audit.py</code></td>
+<td><code>audit_repository</code></td>
+<td>181</td>
+<td>73</td>
+<td>8</td>
+<td>9</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tests/test_release_plan.py</code></td>
+<td><code>test_the_release_plan_table_is_measured_not_remembered</code></td>
+<td>27</td>
+<td>68</td>
+<td>8</td>
+<td>2</td>
+<td>warn</td>
+</tr>
+<tr>
+<td><code>tools/calibration/verify_corpus.py</code></td>
+<td><code>main</code></td>
+<td>100</td>
+<td>74</td>
+<td>7</td>
+<td>7</td>
+<td>warn</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="hotspots-churn-x-cognitive-complexity-12-months-ago">Hotspots — churn x cognitive complexity (12 months ago)</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Commits</th>
+<th>Lines +/-</th>
+<th>Cognitive</th>
+<th>Authors</th>
+<th>Score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/maintainability_audit/config.py</code></td>
+<td>101</td>
+<td>1192</td>
+<td>73</td>
+<td>2</td>
+<td>7373</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/cli.py</code></td>
+<td>40</td>
+<td>2856</td>
+<td>88</td>
+<td>2</td>
+<td>3520</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_mcp_audit.py</code></td>
+<td>28</td>
+<td>1094</td>
+<td>56</td>
+<td>2</td>
+<td>1568</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_work_order.py</code></td>
+<td>12</td>
+<td>1142</td>
+<td>102</td>
+<td>1</td>
+<td>1224</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/metrics.py</code></td>
+<td>14</td>
+<td>1261</td>
+<td>79</td>
+<td>2</td>
+<td>1106</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_mcp_setup.py</code></td>
+<td>18</td>
+<td>1032</td>
+<td>61</td>
+<td>2</td>
+<td>1098</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/report.py</code></td>
+<td>33</td>
+<td>964</td>
+<td>31</td>
+<td>2</td>
+<td>1023</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_html_view.py</code></td>
+<td>15</td>
+<td>865</td>
+<td>68</td>
+<td>1</td>
+<td>1020</td>
+</tr>
+<tr>
+<td><code>tests/test_architecture.py</code></td>
+<td>35</td>
+<td>736</td>
+<td>28</td>
+<td>2</td>
+<td>980</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/renderers.py</code></td>
+<td>33</td>
+<td>1339</td>
+<td>27</td>
+<td>2</td>
+<td>891</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/mcp_server.py</code></td>
+<td>33</td>
+<td>2117</td>
+<td>26</td>
+<td>2</td>
+<td>858</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_masking.py</code></td>
+<td>7</td>
+<td>490</td>
+<td>120</td>
+<td>2</td>
+<td>840</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/declarations.py</code></td>
+<td>17</td>
+<td>555</td>
+<td>43</td>
+<td>2</td>
+<td>731</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/scoring.py</code></td>
+<td>17</td>
+<td>1191</td>
+<td>43</td>
+<td>2</td>
+<td>731</td>
+</tr>
+<tr>
+<td><code>tools/prove_falsifiers.py</code></td>
+<td>11</td>
+<td>758</td>
+<td>66</td>
+<td>1</td>
+<td>726</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_prompt_sections.py</code></td>
+<td>9</td>
+<td>762</td>
+<td>80</td>
+<td>1</td>
+<td>720</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_scan_view.py</code></td>
+<td>11</td>
+<td>771</td>
+<td>63</td>
+<td>1</td>
+<td>693</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_discovery.py</code></td>
+<td>8</td>
+<td>815</td>
+<td>85</td>
+<td>1</td>
+<td>680</td>
+</tr>
+<tr>
+<td><code>tests/test_first_run_elicitation.py</code></td>
+<td>10</td>
+<td>816</td>
+<td>65</td>
+<td>1</td>
+<td>650</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_scan_history.py</code></td>
+<td>12</td>
+<td>768</td>
+<td>54</td>
+<td>2</td>
+<td>648</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_analysis.py</code></td>
+<td>14</td>
+<td>857</td>
+<td>39</td>
+<td>2</td>
+<td>546</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_ranges_core.py</code></td>
+<td>7</td>
+<td>334</td>
+<td>75</td>
+<td>1</td>
+<td>525</td>
+</tr>
+<tr>
+<td><code>tests/test_written_record.py</code></td>
+<td>14</td>
+<td>830</td>
+<td>36</td>
+<td>2</td>
+<td>504</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_first_run.py</code></td>
+<td>11</td>
+<td>479</td>
+<td>43</td>
+<td>1</td>
+<td>473</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_verdict_adapters.py</code></td>
+<td>12</td>
+<td>933</td>
+<td>37</td>
+<td>1</td>
+<td>444</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="change-coupling-files-that-keep-changing-together">Change Coupling — files that keep changing together</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Changes with</th>
+<th>Co-changes</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>README.md</code></td>
+<td><code>src/maintainability_audit/__init__.py</code></td>
+<td>69</td>
+<td>90%</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/__init__.py</code></td>
+<td><code>src/maintainability_audit/config.py</code></td>
+<td>69</td>
+<td>90%</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td><code>docs/release-plan.md</code></td>
+<td>67</td>
+<td>74%</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td><code>src/maintainability_audit/config.py</code></td>
+<td>67</td>
+<td>73%</td>
+</tr>
+<tr>
+<td><code>docs/release-plan.md</code></td>
+<td><code>src/maintainability_audit/__init__.py</code></td>
+<td>61</td>
+<td>79%</td>
+</tr>
+<tr>
+<td><code>docs/release-plan.md</code></td>
+<td><code>src/maintainability_audit/config.py</code></td>
+<td>55</td>
+<td>61%</td>
+</tr>
+<tr>
+<td><code>docs/architecture.md</code></td>
+<td><code>tests/test_architecture.py</code></td>
+<td>29</td>
+<td>97%</td>
+</tr>
+<tr>
+<td><code>SECURITY.md</code></td>
+<td><code>src/maintainability_audit/config.py</code></td>
+<td>29</td>
+<td>91%</td>
+</tr>
+<tr>
+<td><code>SECURITY.md</code></td>
+<td><code>src/maintainability_audit/__init__.py</code></td>
+<td>28</td>
+<td>88%</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td><code>SECURITY.md</code></td>
+<td>26</td>
+<td>81%</td>
+</tr>
+<tr>
+<td><code>SECURITY.md</code></td>
+<td><code>docs/release-plan.md</code></td>
+<td>26</td>
+<td>81%</td>
+</tr>
+<tr>
+<td><code>docs/architecture.md</code></td>
+<td><code>docs/decisions.md</code></td>
+<td>25</td>
+<td>81%</td>
+</tr>
+<tr>
+<td><code>docs/architecture.md</code></td>
+<td><code>src/maintainability_audit/cli.py</code></td>
+<td>24</td>
+<td>69%</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td><code>docs/roadmap.md</code></td>
+<td>22</td>
+<td>65%</td>
+</tr>
+<tr>
+<td><code>docs/cli.md</code></td>
+<td><code>src/maintainability_audit/cli.py</code></td>
+<td>19</td>
+<td>83%</td>
+</tr>
+<tr>
+<td><code>docs/architecture.md</code></td>
+<td><code>docs/cli.md</code></td>
+<td>18</td>
+<td>78%</td>
+</tr>
+<tr>
+<td><code>docs/architecture.md</code></td>
+<td><code>src/maintainability_audit/mcp_server.py</code></td>
+<td>18</td>
+<td>60%</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td><code>src/maintainability_audit/renderers.py</code></td>
+<td>17</td>
+<td>59%</td>
+</tr>
+<tr>
+<td><code>docs/architecture.md</code></td>
+<td><code>tests/_architecture_layers.py</code></td>
+<td>16</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>docs/decisions.md</code></td>
+<td><code>docs/release-plan.md</code></td>
+<td>16</td>
+<td>52%</td>
+</tr>
+<tr>
+<td><code>SECURITY.md</code></td>
+<td><code>docs/architecture.md</code></td>
+<td>16</td>
+<td>50%</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td><code>tests/_architecture_layers.py</code></td>
+<td>15</td>
+<td>94%</td>
+</tr>
+<tr>
+<td><code>docs/architecture.md</code></td>
+<td><code>src/maintainability_audit/report.py</code></td>
+<td>15</td>
+<td>52%</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/config.py</code></td>
+<td><code>tests/_architecture_layers.py</code></td>
+<td>14</td>
+<td>88%</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td><code>docs/cli.md</code></td>
+<td>14</td>
+<td>61%</td>
+</tr>
+</tbody>
+</table></div>
+<footer>Rendered from <code>docs/self-audit.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

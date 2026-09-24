@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>What the analyzer pool runs · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul></ul>
+</div>
+</aside>
+<main><div class="meta">Help</div><h1>What the analyzer pool runs</h1><p>The validated analyzer pool is the primary evidence source. Built-in detectors
+always run as the fallback for concepts the selected analyzers cannot measure.
+The report names the evidence tier used for its estimate; missing evidence is
+not a clean result.</p>
+<p>Configuration selects tools by concern, depth, license policy, language, and
+explicit allow/deny rules. <code>analyzers.run</code> controls whether the pool runs;
+explicit per-call choices override it. Tool acquisition remains opt-in: a user
+may enable <code>analyzers.acquire_tools</code> in user-tier configuration, but the
+audited tree cannot enable it.</p>
+<p>Every selected tool records an outcome and version or an unavailable reason.
+When a selected analyzer cannot run, the top-level <code>environment_work_order</code>
+names the tool, an install command, and the concepts installation would
+restore. The chat host surfaces that order rather than hiding it inside a JSON
+report body.</p>
+<p><strong>Language decides which tools are eligible</strong>, so the pool a repository gets is
+not the pool the catalog holds. A tool is offered only for languages it
+declares. That cuts both ways: a language the built-in scanner cannot parse may
+still be measured by an adapter, and a language the scanner parses may still
+have no adapter available — Fortran gained one in 1.5.0 (fortitude), but it
+emits verdicts and cannot supply a declaration population, so the built-in
+scanner remains the only path to one there. Where neither layer can measure a
+concept, the report withholds rather than estimates.</p>
+<p>Selection filters the catalog by the configured policy. Source-read and
+artifact-read adapters compose in one report without manufacturing
+agreement across unlike findings
+(<code>tests/test_d15_composition.py</code>; D15 in the
+<a href="defect-register-chat-surface.html">chat-surface defect register</a>).</p>
+<footer>Rendered from <code>docs/help/analyzer-pool.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

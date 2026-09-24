@@ -1,0 +1,182 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Migrating from 0.6.x to 0.7 · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#what-breaks">What breaks</a><ul>
+<li><a href="#1-baselines-must-be-regenerated">1. Baselines must be regenerated</a></li>
+<li><a href="#2-maintainability_estimate-and-verified_grade-can-be-null">2. maintainability_estimate and verified_grade can be null</a></li>
+<li><a href="#3-scores-move-where-generated-or-vendored-code-was-being-counted">3. Scores move where generated or vendored code was being counted</a></li>
+</ul>
+</li>
+<li><a href="#what-is-new-and-optional">What is new and optional</a></li>
+<li><a href="#report-schema">Report schema</a></li>
+<li><a href="#configuration">Configuration</a><ul>
+<li><a href="#known-limitation-go-rust-c-c-c-and-fortran-still-have-no-built-in-declaration-population">Known limitation: Go, Rust, C, C++, C# and Fortran still have no built-in declaration population</a></li>
+</ul>
+</li>
+<li><a href="#what-you-can-ignore">What you can ignore</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Reference</div><h1>Migrating from 0.6.x to 0.7</h1><p><strong>Genre: reference.</strong> What breaks, what to change, and what you can ignore.</p>
+<p>Two things break outright: <strong>the baseline format</strong>, because finding identity changed, and <strong><code>maintainability_estimate</code> becomes nullable</strong>, because a score is now withheld where the evidence does not support one. Everything else is additive.</p>
+<p>The short version, for anyone who wants to move on:</p>
+<pre><code class="language-bash"># 1. Regenerate the baseline. The old one will not match.
+maintainability-agent --root . --write-baseline maintainability-baseline.json
+
+# 2. If a consumer reads maintainability_estimate, handle null.
+# 3. Optional but recommended: start a history.
+maintainability-agent --root . --record-history
+</code></pre>
+<hr />
+<h2 id="what-breaks">What breaks</h2>
+<h3 id="1-baselines-must-be-regenerated">1. Baselines must be regenerated</h3>
+<p>In 0.7, declaration fingerprints change from the line-coupled <code>function:{path}:{name}:{start_line}</code> shape to <code>function:{path}:{name}#{ordinal}</code>. The path, declaration name, and same-name ordinal now identify the finding; a declaration-body hash did not ship.</p>
+<p>The practical effect is the reason for the change: a finding no longer changes identity because somebody inserted a line above it. Under 0.6, <code>--fail-on-new</code> fired on code that had only moved, which trained people to ignore it.</p>
+<p><strong>Every 0.6 baseline mismatches, in both directions.</strong> Regenerate once:</p>
+<pre><code class="language-bash">maintainability-agent --root . --write-baseline maintainability-baseline.json
+</code></pre>
+<p>Do it on a known-good commit, not on a branch mid-change, or the baseline records work in progress as accepted.</p>
+<h3 id="2-maintainability_estimate-and-verified_grade-can-be-null">2. <code>maintainability_estimate</code> and <code>verified_grade</code> can be <code>null</code></h3>
+<p>A score is now withheld — not lowered, withheld — where the evidence cannot support one. Four causes, each naming itself in <code>evidence_status.reasons</code>:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Cause</th>
+<th>What it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unread source</td>
+<td>The repository's language is absent from <code>paths.include_extensions</code>, so the scan never opened it</td>
+</tr>
+<tr>
+<td>Below the population floor</td>
+<td>Genuinely too small for a rate to mean anything</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td>A <code>--changed-only</code> diff is not a small repository; it is a different kind of object</td>
+</tr>
+<tr>
+<td>Incomplete evidence</td>
+<td>A required measurement is <code>Unknown</code> — a shallow clone, most often</td>
+</tr>
+</tbody>
+</table></div>
+<p>A consumer that does arithmetic on the estimate must handle <code>None</code>. <strong>Do not substitute zero.</strong> A withheld score means "we could not tell you", and zero means "this is as bad as code gets"; conflating them is the defect this release exists to remove.</p>
+<pre><code class="language-python">estimate = report[&quot;score&quot;][&quot;maintainability_estimate&quot;]
+if estimate is None:
+    # Findings are still complete and actionable. Only rates are withheld.
+    ...
+</code></pre>
+<p><code>--fail-on-gate</code> is unaffected: it reads hard findings, never a score, so a repository below the floor still fails on real gate breaches and passes when clean.</p>
+<h3 id="3-scores-move-where-generated-or-vendored-code-was-being-counted">3. Scores move where generated or vendored code was being counted</h3>
+<p>0.7 classifies every file by provenance from evidence the repository provides — a generation banner, a build script that deletes and rewrites a directory, a <code>.gitmodules</code> entry, a sync script. Generated and vendored code leaves the scored population and is reported separately.</p>
+<p>If your repository commits generated output — protobuf stubs, an icon library, a synced upstream tree — <strong>your score will change, and the new number is the correct one.</strong> <code>summary.classifications</code> names what was set aside and the evidence for each.</p>
+<hr />
+<h2 id="what-is-new-and-optional">What is new and optional</h2>
+<p>Nothing below is required. All of it is off unless asked for.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--analyzers</code></td>
+<td>Runs the external analyzer pool and reports its coverage per language</td>
+</tr>
+<tr>
+<td><code>--work AXIS=VALUE</code></td>
+<td>Narrows the work order. Repeatable</td>
+</tr>
+<tr>
+<td><code>--record-history</code></td>
+<td>Appends this scan to <code>.maintainability/history.jsonl</code></td>
+</tr>
+<tr>
+<td><code>--backfill REVSPEC</code></td>
+<td>Scans past commits into the history via temporary worktrees</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Starting a history is worth doing early.</strong> Recurrence, trends and debt velocity all need several scans before they say anything, so the sooner the first record exists the sooner they work. If you want them working today rather than in a month:</p>
+<pre><code class="language-bash">maintainability-agent --root . --backfill HEAD~50..HEAD --backfill-interval 5
+</code></pre>
+<p>That checks each sampled commit out in a temporary worktree — your working tree is never touched — and marks the records as reconstructed rather than observed.</p>
+<p>Whether to commit <code>.maintainability/history.jsonl</code> is your call and both answers are defensible. Checked in, the history is shared and reviewable in pull requests but adds churn. Ignored, it is per-machine and CI needs a cache. The default assumes checked in, because a history only one laptop can see is a history nobody uses.</p>
+<hr />
+<h2 id="report-schema">Report schema</h2>
+<p><code>schema_version</code> is <strong>3</strong>. Consumers that pin it will reject a 0.7 report until updated; that is the intent.</p>
+<p>New top-level keys, all additive:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>work_order</code></td>
+<td>Findings ordered by risk against effort, each with a computed score delta, a target and a verification command</td>
+</tr>
+<tr>
+<td><code>design_review_candidates</code></td>
+<td>Findings fixed and returned twice. These are withheld from the remediation prompt</td>
+</tr>
+<tr>
+<td><code>pillars</code></td>
+<td>Five pillars, each with a practice level and a condition, never averaged together</td>
+</tr>
+<tr>
+<td><code>practice</code></td>
+<td>Enforcement maturity 1–5, read from configuration and CI, never from source</td>
+</tr>
+<tr>
+<td><code>scan_history</code></td>
+<td>One trend report per comparable segment of the history</td>
+</tr>
+<tr>
+<td><code>git_commit</code></td>
+<td>The commit this report describes</td>
+</tr>
+</tbody>
+</table></div>
+<p>Inside <code>summary</code>: <code>unread_source</code>, <code>unread_source_files</code>, <code>read_source_files</code>, <code>generated_files</code>, <code>vendored_files</code>, <code>classifications</code>, <code>languages</code>.</p>
+<p>Inside <code>analyzer_coverage</code>: <code>scored_languages</code>, <code>by_language</code>, <code>gaps_by_language</code>, <code>sources</code>, <code>concepts_single_source</code>.</p>
+<p><strong>No 0.6 field was removed or repurposed.</strong> A consumer reading only 0.6 fields continues to work, with the nullable-estimate caveat above.</p>
+<hr />
+<h2 id="configuration">Configuration</h2>
+<p><code>paths.include_extensions</code> gains <code>.mjs</code> and <code>.cjs</code>. They are the same JavaScript the scanner already parses, and their absence meant real source went unread — babel carried 1,503 such files.</p>
+<p><strong>If your repository is not Python, JavaScript, TypeScript or Java, read the limitation below before changing anything.</strong> Adding your extensions here changes what gets <em>scanned</em>; it does not, on its own, produce a score.</p>
+<pre><code class="language-json">{ &quot;paths&quot;: { &quot;include_extensions&quot;: [&quot;.py&quot;, &quot;.java&quot;, &quot;.go&quot;] } }
+</code></pre>
+<h3 id="known-limitation-go-rust-c-c-c-and-fortran-still-have-no-built-in-declaration-population">Known limitation: Go, Rust, C, C++, C# and Fortran still have no built-in declaration population</h3>
+<p>The declaration scanner reads <code>.py</code>, <code>.js</code>, <code>.jsx</code>, <code>.mjs</code>, <code>.cjs</code>, <code>.ts</code>, <code>.tsx</code>, <code>.html</code> and <code>.java</code>. Java has a zero-install range detector (<code>java_declaration_ranges</code>); that shipped after 0.7.0. A Go, Rust, C, C++, C# or Fortran repository still has no built-in declaration population, and declarations are half the rubric, so the score is withheld on the population floor no matter what <code>include_extensions</code> says.</p>
+<p>At 0.7.0, Java was in that set: adding <code>.java</code> moved <code>files_scanned</code> and left declarations at zero until the range detector landed. That measurement is not the current tree.</p>
+<p>What you <em>do</em> get on the languages without a built-in population, and it is not nothing:</p>
+<ul>
+<li><strong>Findings</strong>, located and actionable, from lizard and jscpd via <code>--analyzers</code></li>
+<li><strong>A work order</strong> ordered by risk against effort, with verification commands</li>
+<li><strong>Per-language coverage</strong>, stating exactly which concerns were examined and which were not</li>
+<li><strong>File-level measurement</strong> once the extensions are added</li>
+</ul>
+<p>What you do not get is the score, and 0.7 tells you that instead of computing one from your Markdown — which is precisely what 0.6 did. curl reported <strong>4.3</strong> under 0.6, calculated from its documentation and Python test scripts while 20,547 declarations of C went unread.</p>
+<p>Analyzer measurements supply the <code>declarations</code> dimension where the full concept set was measured; lizard alone cannot compose that set, so those languages stay on the built-in fallback, which for them is still no population.</p>
+<p><code>paths.history</code> optionally relocates the history file. Everything else is unchanged.</p>
+<hr />
+<h2 id="what-you-can-ignore">What you can ignore</h2>
+<ul>
+<li><strong>Report fields you already read.</strong> All still present, same meanings.</li>
+<li><strong><code>--fail-on-gate</code> in CI.</strong> Same behaviour, same exit codes.</li>
+<li><strong>The rubric at 0.7.0.</strong> Thresholds, weights and bands were unchanged, and <code>CALIBRATION_C</code> stayed at 2.6279 — a 2,000-resample bootstrap put the 95% interval at [2.2522, 3.4718], so the re-derived alternative was not distinguishable from it. Two repositories scored under 0.6 and 0.7 differed only where 0.7 read different <em>code</em>. After 0.7.0, 3.6 re-derived <code>CALIBRATION_C</code> to 2.2658 against the analyzer-primary mix; old and new values are in <code>_calibration.py</code>.</li>
+</ul>
+<footer>Rendered from <code>docs/migration-0.7.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

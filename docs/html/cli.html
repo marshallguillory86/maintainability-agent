@@ -1,0 +1,218 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>CLI Reference · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#audit">Audit</a></li>
+<li><a href="#mcp-server">MCP server</a></li>
+<li><a href="#options">Options</a></li>
+<li><a href="#examples">Examples</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Reference</div><h1>CLI Reference</h1><p>Interactive first-run on a TTY is the <strong>same</strong> setup questions as chat/MCP
+(<a href="help-first-run.html">first run and questions</a>). There is not a CLI
+questionnaire. CI and a non-TTY never ask.</p>
+<h2 id="audit">Audit</h2>
+<pre><code class="language-bash">maintainability-agent --config maintainability-agent.json
+</code></pre>
+<p>Aliases:</p>
+<ul>
+<li><code>maintainability-agent</code></li>
+<li><code>maintainability-audit</code></li>
+</ul>
+<h2 id="mcp-server">MCP server</h2>
+<p>Install the optional extra, then start the same local MCP server through the package CLI (it writes only the five disclosed config/state artifacts — never source, never a report). The MCP <code>audit_repository</code> tool does not audit until configuration is answered and <code>action</code> is <code>run</code>; see <a href="help-first-run.html">first run and questions</a>:</p>
+<pre><code class="language-bash">python3 -m pip install &quot;maintainability-agent[mcp]&quot;
+maintainability-agent mcp --allow-root /absolute/path/to/repository
+</code></pre>
+<p>Repeat <code>--allow-root</code> to authorize unrelated repository directories. With no explicit root, the server permits only its launch directory. The standalone <code>maintainability-agent-mcp</code> console script remains available for existing IDE configurations.</p>
+<h2 id="options">Options</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--root</code></td>
+<td>Repository root to scan. Defaults to current directory.</td>
+</tr>
+<tr>
+<td><code>--version</code></td>
+<td>Print the CLI version and exit.</td>
+</tr>
+<tr>
+<td><code>--config</code></td>
+<td>JSON config path. Optional <code>economic_context</code> (ADR 004 v1) is described in <a href="config-schema.html#economic-context">config schema</a>.</td>
+</tr>
+<tr>
+<td><code>--format</code></td>
+<td><code>markdown</code>, <code>json</code> or <code>html</code>. Omitted at a terminal, the CLI asks which presentation you want — chat (Enter), markdown, html or json; in CI it defaults to <code>markdown</code> and never asks (ADR 011). <code>json</code> emits the report dictionary the other presentations render, computing no score of its own.</td>
+</tr>
+<tr>
+<td><code>--output</code></td>
+<td>Report output path.</td>
+</tr>
+<tr>
+<td><code>--html-output</code></td>
+<td>Write the single-file HTML report (inlined CSS, deterministic SVG charts from the recorded history; opens offline).</td>
+</tr>
+<tr>
+<td><code>--prompt-output</code></td>
+<td>AI remediation prompt output path.</td>
+</tr>
+<tr>
+<td><code>--comment-output</code></td>
+<td>PR comment body output path.</td>
+</tr>
+<tr>
+<td><code>--agent-instructions-output</code></td>
+<td>Audit-specific agent instructions output path.</td>
+</tr>
+<tr>
+<td><code>--attestation-output</code></td>
+<td>Write the attestation: an independent, reproducible record of what was measured, what the change was told to do, what it did, and what moved. Populated by <code>--conformance</code> and <code>--fail-on-regression</code>; a question nobody asked renders as <em>not asked</em>, never as a pass. Reproducible and <strong>not signed</strong> — the digest is over the record's own content and nothing here holds a key.</td>
+</tr>
+<tr>
+<td><code>--hostile-prompt-output</code></td>
+<td>Adversarial audit brief seeded from this run (<a href="adr-013-hostile-audit-prompt.html">ADR 013</a>). Text only: it does not gate, score, or send anything.</td>
+</tr>
+<tr>
+<td><code>--transformation</code></td>
+<td>Name the class of work this scan followed, e.g. <code>react-18</code>. Records the name on the scan and reports how this run of it compares with earlier ones — the movement in estimate between the previous recorded scan and this one, per run. <strong>A report, never a gate</strong>, and it changes no score. What it measures is the <em>interval</em>, not the transformation's effect: nothing in a tree says which transformation produced it, so the name is your claim and anything else that happened in the same interval is inside the number. It refuses across an instrument change and says how many runs it refused.</td>
+</tr>
+<tr>
+<td><code>--sarif-input</code></td>
+<td>External SARIF file to summarize in the report. Repeatable.</td>
+</tr>
+<tr>
+<td><code>--changed-only</code></td>
+<td>Git revspec for changed-file-only mode, e.g. <code>main...HEAD</code>.</td>
+</tr>
+<tr>
+<td><code>--check PATH</code></td>
+<td>Read proposed content on <strong>stdin</strong> and report what its budgets say — the in-loop door, for an agent mid-edit. Needs no repository and no git: <code>PATH</code> names the content (it decides the language and appears in the output) and is <strong>never opened</strong>, so the content you pass is what gets measured rather than whatever is already on disk. Reports breaches, and for what still fits, <strong>how much room is left in every budget it can be failed on</strong> — length, cyclomatic and cognitive complexity, banded on whichever is worst, because a short function sitting on the complexity warn line has no room left in the budget that matters. A gate says no once it is too late to be cheap. <strong>Never scores</strong>: one file has no population to draw a rate from. A <strong>unified diff is refused in every language</strong> — by its format, not by a parser — because piping a diff instead of file content is the likeliest mistake at this door and it used to read as clean. A language with no declaration scanner says so rather than reporting nothing and looking clean. <strong>Refuses the flags it would have to ignore</strong>, sharing one list with <code>--staged</code>: a flag accepted and ignored teaches the caller it was honoured. Exit 1 on a breach, silently 0 when clear; <code>--format json</code> for agents.</td>
+</tr>
+<tr>
+<td><code>--staged</code></td>
+<td>Scan what the git index will commit and exit — the pre-commit path. Reads the index rather than the working tree, so a half-staged file is measured as it will land. Reports threshold breaches and added suppression markers only, and <strong>never a score</strong>: a diff has no population to draw a rate from. Applies no repository gates, writes nothing, and never runs the opt-in test suite. Exit 1 blocks, 0 passes silently, 2 means the index could not be read — which also blocks, because a scan that could not be taken has not found nothing. Refuses the flags it would have to ignore rather than accepting them. Honours <code>--format json</code>.</td>
+</tr>
+<tr>
+<td><code>--install-precommit-hook</code></td>
+<td>Write a git pre-commit hook that runs <code>--staged</code>, and exit. Refuses to replace a hook this tool did not write and prints the line to add to that hook instead; replaces its own without asking, because that is an upgrade rather than a clobber. Honours <code>core.hooksPath</code> and works in a linked worktree.</td>
+</tr>
+<tr>
+<td><code>--baseline</code></td>
+<td>Existing baseline JSON file.</td>
+</tr>
+<tr>
+<td><code>--write-baseline</code></td>
+<td>Write current findings as a baseline JSON file.</td>
+</tr>
+<tr>
+<td><code>--fail-on-new</code></td>
+<td>Exit nonzero only for findings not in baseline.</td>
+</tr>
+<tr>
+<td><code>--fail-on-gate</code></td>
+<td>Exit nonzero when hard gates fail.</td>
+</tr>
+<tr>
+<td><code>--conformance</code></td>
+<td>Git revspec, e.g. <code>main...HEAD</code>. Reports how a diff relates to the work order it was given: which changed files the work order named, which are tests pairing to a named file, and which are neither — and any suppression marker (<code># noqa</code>, <code>eslint-disable</code>, a skipped test) the diff <em>added</em>, flagging those landing on a file the work order named. The bounded prompt says <em>fix exactly these and refactor nothing else</em>; without this the bound is an instruction nothing checks. Reports only — it never scores, and it does not fail a build on its own.</td>
+</tr>
+<tr>
+<td><code>--fail-on-regression</code></td>
+<td>Exit 1 when any scoring category is lower than the previous <strong>comparable</strong> scan. Reads the recorded history. Refuses — exit 2 — rather than comparing across an instrument change: two scans taken under different calibration or a different analyzer population cannot be subtracted, and 2.0.0 moving <code>CALIBRATION_C</code> would otherwise have read as a catastrophic regression everywhere.</td>
+</tr>
+<tr>
+<td><code>--fail-on-out-of-scope</code></td>
+<td>With <code>--conformance</code>, exit 1 when the diff touched files the work order did not name and that are not a named file's test, or when it added a suppression to a flagged file. Scope alone is satisfiable by adding <code># noqa</code> to the named file and changing nothing else, so the gate reads both. Opt-in, because a finding can legitimately require touching a caller nobody flagged.</td>
+</tr>
+<tr>
+<td><code>--analyzers</code></td>
+<td>Force the external analyzer pool on, overriding <code>analyzers.run</code>. A configured repository runs its pool by default. A complete concept set moves the point estimate; otherwise the built-in fallback stands and the range widens. Missing-tool acquisition is separately controlled by <code>analyzers.acquire_tools</code> and defaults off. See <a href="analyzer-pool.html">the analyzer pool</a>.</td>
+</tr>
+<tr>
+<td><code>--no-analyzers</code></td>
+<td>Force the external analyzer pool off for this invocation, overriding <code>analyzers.run</code>.</td>
+</tr>
+<tr>
+<td><code>--work AXIS=VALUE</code></td>
+<td>Narrow the work order. Repeatable; every criterion must match. Axes: <code>band</code>, <code>finding_class</code>, <code>path</code>, <code>verification</code>. Narrowing changes what is shown and never what anything scored.</td>
+</tr>
+<tr>
+<td><code>--record-history</code></td>
+<td>Create or append this scan to <code>.maintainability/history.jsonl</code>. Once the file exists, every later successful scan appends to it and reads the resulting history without another flag.</td>
+</tr>
+<tr>
+<td><code>--backfill REVSPEC</code></td>
+<td>Scan each commit in a range into the history and exit, e.g. <code>HEAD~50..HEAD</code>. Each commit is checked out in a temporary worktree; the working tree is never touched. Expensive, so it never runs as part of a normal scan.</td>
+</tr>
+<tr>
+<td><code>--backfill-interval N</code></td>
+<td>With <code>--backfill</code>, scan every Nth commit instead of all of them.</td>
+</tr>
+<tr>
+<td><code>--sarif-output</code></td>
+<td>Write SARIF report for GitHub code scanning.</td>
+</tr>
+<tr>
+<td><code>--security-pillar</code></td>
+<td>Use this <code>security-pillar.json</code>, written by <code>secure-code-agent --security-pillar</code>, instead of running the tool. Without it, every audit runs <code>secure-code-agent</code> for the security pillar itself (ADR 007, D177); CI passes the document so the tool runs once, as its own gated step. A document sitting in the audited tree is not read on its own authority.</td>
+</tr>
+<tr>
+<td><code>--init-agent-standards</code></td>
+<td>Generate model/tool-specific instruction files and exit without running an audit.</td>
+</tr>
+<tr>
+<td><code>--install-skill</code></td>
+<td>Copy the packaged agent skill into the skills directory and exit. Re-run after every upgrade: an installed skill that drifts from the shipped one teaches agents a dead workflow. What it writes is the <code>_skill_data</code> payload inside the distribution; the command reads that payload and compares it against what is already installed, and it does not consult the repository. That the payload matches the reviewed <code>skills/maintainability-agent/SKILL.md</code> is held by the suite — <code>tests/test_wheel_contents.py</code> asserts it byte-for-byte against a staged build — not by a check at run time.</td>
+</tr>
+<tr>
+<td><code>--skills-dir</code></td>
+<td>Where <code>--install-skill</code> writes (default <code>~/.claude/skills</code>).</td>
+</tr>
+<tr>
+<td><code>--force-skill</code></td>
+<td>With <code>--install-skill</code>: overwrite a differing installed copy and remove files the package no longer ships. Without it, a differing copy is refused with the list of differences against the packaged payload.</td>
+</tr>
+<tr>
+<td><code>--target</code></td>
+<td>Instruction target. Repeatable. Any name is accepted; one this tool has no built-in convention for must bring its own <code>--target-path</code>.</td>
+</tr>
+<tr>
+<td><code>--target-path</code></td>
+<td><code>TARGET=PATH</code> — where that agent reads its standing instructions, relative to <code>--instructions-output-dir</code>. Repeatable. Required for an agent with no built-in convention, and overrides the built-in path for one that has. The built-in list will always trail the market, and guessing a path writes a plausible file the agent never opens — so an unknown target is refused with the flag to use, rather than given a generated filename.</td>
+</tr>
+<tr>
+<td><code>--instructions-output-dir</code></td>
+<td>Output directory for generated instruction files.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-bash">maintainability-agent \
+  --config maintainability-agent.json \
+  --output maintainability-report.md \
+  --prompt-output maintainability-remediation-prompt.md \
+  --comment-output maintainability-pr-comment.md
+</code></pre>
+<pre><code class="language-bash">maintainability-agent \
+  --config maintainability-agent.json \
+  --changed-only main...HEAD \
+  --fail-on-gate
+</code></pre>
+<pre><code class="language-bash">maintainability-agent \
+  --config maintainability-agent.json \
+  --init-agent-standards \
+  --target codex \
+  --target claude-code \
+  --target cursor
+</code></pre>
+<footer>Rendered from <code>docs/cli.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

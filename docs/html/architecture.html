@@ -1,0 +1,612 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Architecture · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#layers">Layers</a></li>
+<li><a href="#the-rules-and-why-each-exists">The rules, and why each exists</a></li>
+<li><a href="#data-flow">Data flow</a></li>
+<li><a href="#invariants-and-where-they-are-enforced">Invariants and where they are enforced</a></li>
+<li><a href="#known-debt">Known debt</a></li>
+<li><a href="#extension-points">Extension points</a></li>
+<li><a href="#where-the-design-is-going">Where the design is going</a></li>
+<li><a href="#decisions-embodied-in-this-document">Decisions embodied in this document</a></li>
+<li><a href="#extension-boundaries">Extension boundaries</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Reference</div><h1>Architecture</h1><p>How the package is layered, which layer may depend on which, and the invariant each one owns.</p>
+<p>This describes the code <strong>as it is</strong>, not as intended. Where reality falls short of a decision, it is listed under <a href="#known-debt">Known debt</a> rather than described aspirationally. Direction of travel is kept in the <a href="decisions.html">decision register</a>; the explicitly labeled proposal section at the end maps those decisions onto the current layers without claiming they ship.</p>
+<p><strong>Network boundary (as-is).</strong> This agent does not transmit the audited tree and does not call an LLM. <code>_runner</code> is the only spawn point for analyzers besides <code>git_tools</code>. Those children are not network-sandboxed; this process does not police their sockets. <code>_npx</code> may run <code>npx --yes</code> when <code>analyzers.acquire_tools</code> is set and a Node binary is missing — acquisition, not analysis, still the internet. There is no seccomp / <code>unshare -n</code> wrap. See <a href="product-intent.html#what-it-promises">P1</a>.</p>
+<p>The layering is enforced by <code>tests/test_architecture.py</code>, which reads the real import graph. A rule stated here and not enforced there is decoration, and this document tries not to contain any.</p>
+<h2 id="layers">Layers</h2>
+<p>Dependencies point downward only. No cycles. Every module in a box is a file under <code>src/maintainability_audit/</code>. <code>tests/test_architecture.py</code> fails the build if a layer set names a module this diagram omits.</p>
+<pre><code class="language-mermaid">flowchart TB
+  subgraph entry[&quot;entry&quot;]
+    cli[&quot;cli&quot;]
+    _arguments[&quot;_arguments&quot;]
+    _first_run[&quot;_first_run&quot;]
+    _mcp_setup[&quot;_mcp_setup&quot;]
+    _setup_persist[&quot;_setup_persist&quot;]
+    _setup_errors[&quot;_setup_errors&quot;]
+    _mcp_audit[&quot;_mcp_audit&quot;]
+    _mcp_gate[&quot;_mcp_gate&quot;]
+    _mcp_resources[&quot;_mcp_resources&quot;]
+    _mcp_grants[&quot;_mcp_grants&quot;]
+    _mcp_refusals[&quot;_mcp_refusals&quot;]
+    _skill_install[&quot;_skill_install&quot;]
+    _precommit_install[&quot;_precommit_install&quot;]
+    dunder_main[&quot;__main__&quot;]
+    mcp_server[&quot;mcp_server&quot;]
+    _grant_ledger[&quot;_grant_ledger&quot;]
+  end
+
+  subgraph presentation[&quot;presentation — reads the report dict&quot;]
+    renderers[&quot;renderers&quot;]
+    prompts[&quot;prompts&quot;]
+    _prompt_sections[&quot;_prompt_sections&quot;]
+    _hostile_prompt[&quot;_hostile_prompt&quot;]
+    sarif[&quot;sarif&quot;]
+    baseline[&quot;baseline&quot;]
+    _evidence_view[&quot;_evidence_view&quot;]
+    _scan_view[&quot;_scan_view&quot;]
+    _coverage_notes[&quot;_coverage_notes&quot;]
+    _html_view[&quot;_html_view&quot;]
+    _html_report_sections[&quot;_html_report_sections&quot;]
+    _markdown_sections[&quot;_markdown_sections&quot;]
+    _charts[&quot;_charts&quot;]
+    _work_order_view[&quot;_work_order_view&quot;]
+    _security_work_order[&quot;_security_work_order&quot;]
+    _economics_view[&quot;_economics_view&quot;]
+    _semantic_view[&quot;_semantic_view&quot;]
+    _history_view[&quot;_history_view&quot;]
+    _identity[&quot;_identity&quot;]
+    _tdd_view[&quot;_tdd_view&quot;]
+    _precommit_view[&quot;_precommit_view&quot;]
+    _in_loop_view[&quot;_in_loop_view&quot;]
+  end
+
+  subgraph assembly[&quot;assembly — builds the report, calls the scorer once&quot;]
+    report[&quot;report&quot;]
+    _analysis[&quot;_analysis&quot;]
+    _documents[&quot;_documents&quot;]
+    _analyzer_sections[&quot;_analyzer_sections&quot;]
+    _economics[&quot;_economics&quot;]
+    _environment[&quot;_environment&quot;]
+    _built_ins[&quot;_built_ins&quot;]
+    _work_order[&quot;_work_order&quot;]
+    _handoff[&quot;_handoff&quot;]
+    _gates[&quot;_gates&quot;]
+    _conformance[&quot;_conformance&quot;]
+    _ratchet[&quot;_ratchet&quot;]
+    _run_comparison[&quot;_run_comparison&quot;]
+    _precommit[&quot;_precommit&quot;]
+    _in_loop[&quot;_in_loop&quot;]
+    _attestation[&quot;_attestation&quot;]
+    _work_order_weights[&quot;_work_order_weights&quot;]
+    _backfill[&quot;_backfill&quot;]
+  end
+
+  subgraph scanners[&quot;scanners&quot;]
+    metrics[&quot;metrics&quot;]
+    _discovery[&quot;_discovery&quot;]
+    _delegated_pillar[&quot;_delegated_pillar&quot;]
+    _security_delegate[&quot;_security_delegate&quot;]
+    _banner[&quot;_banner&quot;]
+    _operator_reads[&quot;_operator_reads&quot;]
+    _practice[&quot;_practice&quot;]
+    duplication[&quot;duplication&quot;]
+    deadcode[&quot;deadcode&quot;]
+    idioms[&quot;idioms&quot;]
+    similarity[&quot;similarity&quot;]
+    history[&quot;history&quot;]
+    _adapters[&quot;_adapters&quot;]
+    _generic[&quot;_generic&quot;]
+    _metric_adapters[&quot;_metric_adapters&quot;]
+    _ratio_adapters[&quot;_ratio_adapters&quot;]
+    _verdict_adapters[&quot;_verdict_adapters&quot;]
+    _jvm_adapters[&quot;_jvm_adapters&quot;]
+    _tool_adapters[&quot;_tool_adapters&quot;]
+    _selection[&quot;_selection&quot;]
+    _semantic[&quot;_semantic&quot;]
+    _semantic_ts[&quot;_semantic_ts&quot;]
+    _test_pairing[&quot;_test_pairing&quot;]
+    _test_execution[&quot;_test_execution&quot;]
+    _test_commands[&quot;_test_commands&quot;]
+  end
+
+  subgraph scoring[&quot;scoring&quot;]
+    scoring_mod[&quot;scoring&quot;]
+    _aspects[&quot;_aspects&quot;]
+    _pressures[&quot;_pressures&quot;]
+    _criteria_scope[&quot;_criteria_scope&quot;]
+    _evidence_reader[&quot;_evidence_reader&quot;]
+    _pillars[&quot;_pillars&quot;]
+    _trends[&quot;_trends&quot;]
+    _recurrence[&quot;_recurrence&quot;]
+    _formula[&quot;_formula&quot;]
+    _calibration[&quot;_calibration&quot;]
+    _anchor[&quot;_anchor&quot;]
+    _bands[&quot;_bands&quot;]
+    _corroborate[&quot;_corroborate&quot;]
+    _second_source[&quot;_second_source&quot;]
+    _verification[&quot;_verification&quot;]
+    _derive[&quot;_derive&quot;]
+  end
+
+  subgraph boundary[&quot;boundary&quot;]
+    evidence[&quot;evidence&quot;]
+  end
+
+  subgraph parsing[&quot;parsing&quot;]
+    source[&quot;source&quot;]
+    declarations[&quot;declarations&quot;]
+    _cognitive[&quot;_cognitive&quot;]
+    _ranges_core[&quot;_ranges_core&quot;]
+    _ranges_js[&quot;_ranges_js&quot;]
+    _ranges_java[&quot;_ranges_java&quot;]
+    _ranges_c[&quot;_ranges_c&quot;]
+    _ranges_cpp[&quot;_ranges_cpp&quot;]
+    _ranges_csharp[&quot;_ranges_csharp&quot;]
+    _ranges_fortran[&quot;_ranges_fortran&quot;]
+    _ranges_swift[&quot;_ranges_swift&quot;]
+    _ranges_kotlin[&quot;_ranges_kotlin&quot;]
+    _ranges_go[&quot;_ranges_go&quot;]
+    _ranges_rust[&quot;_ranges_rust&quot;]
+    _ranges_php[&quot;_ranges_php&quot;]
+    _ranges_ruby[&quot;_ranges_ruby&quot;]
+    _ranges_cobol[&quot;_ranges_cobol&quot;]
+    _tokens[&quot;_tokens&quot;]
+    _xml[&quot;_xml&quot;]
+  end
+
+  subgraph foundations[&quot;foundations&quot;]
+    _metrics_types[&quot;_metrics_types&quot;]
+    _grammar[&quot;_grammar&quot;]
+    _masking[&quot;_masking&quot;]
+    _hotspots[&quot;_hotspots&quot;]
+    config[&quot;config&quot;]
+    _config_defaults[&quot;_config_defaults&quot;]
+    _running_version[&quot;_running_version&quot;]
+    _user_config[&quot;_user_config&quot;]
+    _stored_grants[&quot;_stored_grants&quot;]
+    _safe_write[&quot;_safe_write&quot;]
+    git_tools[&quot;git_tools&quot;]
+    _scan_history[&quot;_scan_history&quot;]
+    _finding_match[&quot;_finding_match&quot;]
+    instructions[&quot;instructions&quot;]
+    _runner[&quot;_runner&quot;]
+    _catalog[&quot;_catalog&quot;]
+    _semantic_policy[&quot;_semantic_policy&quot;]
+  end
+
+  entry --&gt; presentation
+  presentation --&gt; assembly
+  assembly --&gt; scanners
+  assembly --&gt; scoring
+  scoring --&gt; evidence
+  scanners --&gt; parsing
+  scoring --&gt; parsing
+  parsing --&gt; foundations
+</code></pre>
+<p><code>_bands</code> sits in scoring because it is rubric data. Declaration and file-size pressures use it (3.2). <code>_finding_match</code> owns structured identity and matching; <code>_identity</code> presents the ordinal labels derived from the report. <code>_user_config</code> owns the XDG user configuration and per-repository seen state; it belongs beside <code>config</code> in foundations. <code>_safe_write</code> is the single way the agent writes into a tree it is auditing — bounded, symlink-refusing, staged and renamed so no existing inode is opened for writing — and sits in foundations for the same reason: every layer that writes must reach it, and it reaches nothing but <code>config</code> (D34). <code>_semantic</code> classifies type-backed findings; <code>_semantic_ts</code> supplies TypeScript type facts from recordings or an already-installed <code>tsc</code>; <code>_semantic_policy</code> loads the optional checked-in policy.</p>
+<p><strong>Chat, MCP, and an interactive CLI TTY are one setup: the same questions.</strong> MCP is the chat transport, not a third questionnaire. <code>_first_run</code> and <code>_mcp_setup</code> are two transports of <code>setup_questions</code>, not two processes. CI and a non-TTY never ask.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Owns</th>
+<th>May import</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>foundations</strong></td>
+<td>Data types, config defaults, git invocation, masking primitives, <code>_finding_match</code> (structured identities plus the one matching relation used by gates and recurrence), and <code>_semantic_policy</code></td>
+<td>nothing internal except <code>_finding_match</code> using <code>git_tools</code> for rename evidence</td>
+</tr>
+<tr>
+<td><strong>parsing</strong></td>
+<td>Reading files once, extracting declarations, complexity, ranges, tokens. Declaration ranges are one module per language — <code>_ranges_js</code>, <code>_ranges_java</code>, <code>_ranges_c</code>, <code>_ranges_cpp</code>, <code>_ranges_csharp</code>, <code>_ranges_fortran</code> — over <code>_ranges_core</code>, whose <code>scan_bounded</code> walks all of them identically; each module supplies only its patterns. Bounding is the one language-shaped part of that walk and is injected: braces by default, and Fortran (1.4.0) supplies an <code>end</code>-keyword finder, because the rule that a range never runs past its own body is what is shared, not the mechanism enforcing it. Dispatched by the <code>declarations.SCANNERS</code> table (1.1.0). Adding a language is a module and a row, and touches neither the core nor the dispatcher</td>
+<td>foundations</td>
+</tr>
+<tr>
+<td><strong>scanners</strong></td>
+<td>Producing findings: sizes, duplicates, dead code, idioms, near-duplicates, history, ADR 003 semantic classification (<code>_semantic</code>, <code>_semantic_ts</code>), and — via <code>_adapters</code> — whatever the external analyzers report; <code>_selection</code> composes the runnable set from the language inventory (D15)</td>
+<td>foundations, parsing, <code>_runner</code></td>
+</tr>
+<tr>
+<td><strong>scoring</strong></td>
+<td>Turning findings into aspects, categories, an overall, a grade, and whether the evidence supports verifying it (<code>_verification</code>)</td>
+<td>foundations, parsing (types only), the evidence boundary</td>
+</tr>
+<tr>
+<td><strong>assembly</strong></td>
+<td>Running the scan, running the analyzer pool (<code>_analysis</code>) and stating what it found (<code>_documents</code>), the environment work order composed from coverage (<code>_environment</code>), recording the built-in detectors as their own source tier (<code>_built_ins</code>), ordering the work by risk against effort and recomputing each item's worth (<code>_work_order</code>, weights in <code>_work_order_weights</code>), deciding which of those items an agent is handed and which are withheld for a design decision (<code>_handoff</code>, split from <code>_work_order</code> at its file gate — D208), assembling the report dict, invoking the scorer once</td>
+<td>anything below. <code>_conformance</code> compares a diff against the work order the report already produced — assembly because it composes from a finished report rather than measuring a tree, and it may never reach scoring: whether a diff was obedient is a fact about an agent, not evidence about the code's condition. <code>_ratchet</code> compares the newest scan with the previous <em>comparable</em> one, refusing to subtract across an instrument change — two scans taken under different calibration cannot be differenced, and <code>_scan_history.segments</code> already owns that rule</td>
+</tr>
+<tr>
+<td><strong>presentation</strong></td>
+<td>Markdown/chat, a self-contained HTML report, PR comment, SARIF, baseline, remediation prompt, <code>_hostile_prompt</code> (ADR 013's adversarial brief, split from <code>prompts</code> at the file-size line), <code>_evidence_view</code> (shared estimate/range/evidence/verified-grade wording), and <code>_identity</code> (labels and digests consumed from the report, never source). The renderers consume one report dictionary and do not score</td>
+<td>foundations, presentation helpers, the report dict, and <code>_handoff</code>, <code>_work_order</code>'s presentation-facing prompt selection. <code>_attestation</code> is the fourth emitter on the prompt seam: it composes the conformance and ratchet records into one reproducible per-change artifact — the record a code-generating agent cannot honestly produce about its own output, because an author is not the independent check on their own work</td>
+</tr>
+<tr>
+<td><strong>entry</strong></td>
+<td>Argument parsing, transport, output routing, exit codes, and first-run setup — <strong>one question set</strong>, two transports (<code>_first_run</code> on a CLI TTY, <code>_mcp_setup</code> over MCP elicitation; chat is MCP, not a third set) — and the MCP audit tool itself (<code>_mcp_audit</code>, split from <code>mcp_server</code>) and the D10 root-grant machinery (<code>_mcp_grants</code>, same split; grants are a server boundary, not setup) and the setup/run gate that answers with questions instead of a report (<code>_mcp_gate</code>) and the MCP resources, which answer reads and can never ask (<code>_mcp_resources</code>) and the set of refusals the transport may declare (<code>_mcp_refusals</code>, shared by both seam-binding modules so neither has to import the other) and the packaged-skill sync (<code>_skill_install</code>) — the one layer where the tool may ask a question</td>
+<td>anything below. <code>_gates</code> is the post-audit half of the CLI, split when <code>cli.py</code> crossed the 500-line file gate: it composes from a finished report — did the diff obey its work order, did a dimension slip since the last comparable scan — and turns those into a process exit code. It measures nothing and may not reach scoring</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="the-rules-and-why-each-exists">The rules, and why each exists</h2>
+<p>Each rule was bought by a specific failure. They are enforced, not advisory.</p>
+<p><strong>1. Scoring may not import scanners or assembly.</strong>
+The rubric must not be able to reach back into how a finding was produced. If it could, a repo-specific special case would eventually be written and P2 (one uniform rubric) would fail silently.</p>
+<p><strong>2. <code>_formula</code> and <code>_calibration</code> import nothing internal.</strong>
+They are the judgment layer — weights, bands, grade gates, the calibration constant — and they are data. A leaf cannot acquire a dependency on scanning, so the rubric cannot come to depend on what it is scoring.</p>
+<p><strong>3. Presentation may not import the scoring internals.</strong>
+<code>renderers</code>, <code>prompts</code>, and <code>sarif</code> consume the report dictionary. They may import presentation helpers, foundations such as <code>_hotspots</code> and <code>config</code>, and <code>prompts</code> may import <code>_handoff</code> for its presentation-facing prompt selection — a carve-out that named a boundary no module enforced until <code>_handoff</code> existed. They do not import the scoring layer or compute a score. This keeps one path to a score: if a renderer could compute one, two numbers could disagree, which is the class of bug that produced an overall contradicting the categories printed beside it.</p>
+<p><strong>4. <code>evidence</code> imports nothing internal.</strong>
+The normalization boundary is deliberately a leaf. Everything it needs arrives as an argument. This is what makes it a <em>boundary</em> rather than another participant — see <a href="adr-001-evidence-and-verification.html">ADR 001</a> §3.</p>
+<p><strong>5. The calibration derivation calls the shipped scorer.</strong>
+<code>_derive</code> imports <code>_aspects</code>, <code>_formula</code>, and <code>_pressures</code> and runs the same functions a live report runs. It may not restate the rollup. Three consecutive audits found the derivation differing from the live path by exactly one step — category rounding, then the untested cap, then per-aspect rounding — and each time the corpus median survived while the per-repository claim did not. "The same pipeline" is only true when there is one pipeline.</p>
+<p><strong>6. No import cycles.</strong>
+One existed: <code>_derive</code> needed the scorer and the scorer needed the calibration, so <code>_derive</code> imported from inside a function body. Splitting <code>scoring</code> into <code>_pressures</code> / <code>_aspects</code> / <code>scoring</code> removed it. Cycles are how layering rots without anyone deciding to rot it.</p>
+<p><strong>7. Only <code>_runner</code> runs analyzers; only <code>_runner</code>, <code>git_tools</code> and <code>_backfill</code> may spawn a process.</strong>
+Adapters describe invocations; they do not perform them. <code>_backfill</code> talks to git directly rather than through <code>git_tools</code> — a remaining inconsistency, not a third analyzer runner. <code>_test_execution</code> (Class 5) is not a fourth spawn point: it runs the operator's opted-in test command <em>through</em> <code>_runner</code>, so the one execution path the tree can reach still funnels through the single runner (Decision 9, amended 2026-08-31). Neither is <code>_security_delegate</code> (D177): it runs <code>secure-code-agent</code> for the security pillar through <code>_runner.run</code>, with the auditing interpreter as the command and every report redirected out of the tree.</p>
+<p><strong>8. Analyzer adapters may not import scoring.</strong>
+The same rule scanners already live under, for the same reason: an adapter that could see the rubric would eventually be tuned to it.</p>
+<p><strong>9. Corroboration happens before the evidence boundary.</strong>
+<code>evidence</code> receives already-combined values with their strength and provenance. The boundary stays a leaf and stays the single normalization point; it does not learn about tools.</p>
+<p><strong>10. <code>_practice</code> may not read source files.</strong>
+Practice level is a claim about enforcement, not about code. If it could read source, it would drift into being a second, uncalibrated condition score. It reads configuration and CI <em>wherever they live</em> — a coverage gate in a nested <code>api/pyproject.toml</code>, a decisions folder that is not named <code>adr*</code> — through the same exclusion the scan uses, so a vendored manifest is not read as this repository's gate. Nested config is still configuration, not source (plan-81dc6870 Class 3).</p>
+<p><strong>11. Practice level and code condition are never combined.</strong>
+No function returns their average. <a href="adr-007-pillars-and-practice.html">ADR 007</a> invariant 2 exists because a single composite number would destroy both.</p>
+<p><strong>12. Only the transport declares anticipated refusals.</strong>
+The plain functions keep raising the domain types — <code>InvalidAuditArgument</code>, <code>PathNotAllowed</code>, <code>SetupRequired</code>, <code>StaleBaseline</code>, <code>PolicyError</code> and <code>ConfigUnreadable</code> — because the CLI and every library caller depend on them. At the entry seam, the transport translates only named anticipated refusals into the SDK's declared forms: <code>ToolError</code> from the audit tool, <code>ResourceError</code> from the report resource and its security validator, with the message reaching the caller. Everything else stays a crash: the caller gets <code>Error executing tool &lt;name&gt;</code> or a bare resource URI, and the traceback stays server-side so nothing internal leaks. The list lives in <code>_mcp_refusals.py</code> as <code>ANTICIPATED_REFUSALS</code>, re-exported from <code>mcp_server</code> — it sits below both seam-binding modules because <code>mcp_server</code> imports <code>_mcp_resources</code>, so a tuple beside either would be a cycle for the other. It is named types only, never bare <code>ValueError</code>: modules below the transport raise those with internal paths in the message. It is also the <em>whole</em> set of refusals a caller can act on — a type missing from it stops teaching just as surely as an undeclared one, which is why <code>StaleBaseline</code> belongs there: it travels this path for real, from <code>_baseline_workflow</code> through <code>findings_not_in_baseline</code> and <code>load_baseline_identities</code> to <code>_read</code>, and its message tells the caller to regenerate the baseline. <code>PolicyError</code> is in the tuple on different grounds, and the difference is stated because this sentence first claimed the same grounds for both and was wrong about one. <code>PolicyError</code> cannot presently reach any of the three seams: every site that raises it — <code>load_catalog</code>, <code>settings_from</code>, <code>resolve_pool</code> — is reachable only through <code>_analysis.analyze()</code>, which catches it and returns <code>Analysis(error=...)</code> instead of raising, exactly as that function's docstring promises. It is declared ahead of a seam-level configuration path that does not exist yet. Dropping it would be defensible today and would silently lose the remedy on the day such a path appears, because the derivation test below would by then count the type as already accounted for. <code>ConfigUnreadable</code> joined the tuple when the security branch introduced it: a configuration file that exists and cannot be parsed is a refusal the caller can act on, and its message names the file they pointed at. It carried a second path for a while — the interpolated <code>OSError</code> appends the OS filename, which for a symlinked config is the <em>target</em> — so it now reports <code>strerror</code> alone. <code>EvidenceValidationError</code> is excluded outright: on this path the report is built internally, so a failure in it is an internal bug. A reviewer eyeballing that list got it wrong twice in opposite directions; <code>test_every_named_exception_is_a_declared_refusal_or_excluded</code> classifies every named exception in the package (in the tuple, or excluded with a stated reason) and <code>test_the_transport_excepts_the_named_tuple_not_a_copy</code> holds the three seams to the tuple by name, across every transport module rather than one — it counted seams in <code>mcp_server</code> alone until the resource bindings moved out from under it. Before any of this was declared, <code>mcp</code> 2.1.0 correctly classified every boundary refusal as a crash, so the refusal still refused but stopped teaching its remedy.</p>
+<h2 id="data-flow">Data flow</h2>
+<pre><code class="language-mermaid">flowchart LR
+  disk[&quot;files on disk&quot;] --&gt; src[&quot;SourceIndex — each file read once, parsed once&quot;]
+  src --&gt; scan[&quot;scanners — findings and counts&quot;]
+  scan --&gt; summary[&quot;report_summary — populations and finding counts&quot;]
+  summary --&gt; pressures[&quot;dimension_pressures — rates over their populations&quot;]
+  pressures --&gt; aspects[&quot;aspect_scores — 14 aspects, 0-5 or None&quot;]
+  aspects --&gt; categories[&quot;categories — five ISO means, rounded as displayed&quot;]
+  categories --&gt; estimate[&quot;estimate + range — unknowns priced 0 and 5&quot;]
+  estimate --&gt; grade[&quot;verified grade — banded from the interval floor, or null&quot;]
+  grade --&gt; report[&quot;report dict + schema_version&quot;]
+  report --&gt; out[&quot;renderers / prompts / sarif / baseline&quot;]
+</code></pre>
+<p>Two properties of this flow are load-bearing and each has a test:</p>
+<ul>
+<li><strong>Rates, not counts.</strong> Every pressure divides by the population it was drawn from. The 0.5.0 model counted absolutely and therefore scored repository <em>size</em>: Django, pytest, black and eight others all scored 0.0/F while a 53-file toy scored 4.6/A.</li>
+<li><strong>Absence is not a value.</strong> A count the report does not carry produces an unmeasured aspect, never a zero. Six audit rounds were spent on individual instances of this before it was stated as a property.</li>
+</ul>
+<h2 id="invariants-and-where-they-are-enforced">Invariants and where they are enforced</h2>
+<p>Two columns, deliberately. <strong>Property</strong> means the test varies the real input space or the real field set, so a case nobody thought of is still covered. <strong>Regression</strong> means it pins specific scenarios — valuable, but it only proves what it enumerates. An audit found this table claiming enforcement on the strength of test <em>names</em>, with a promise mapped to a corpus-median test that never checked the arithmetic it was cited for. The distinction is now stated rather than implied, and <code>test_architecture.py</code> fails the build if a test named here does not exist.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Invariant</th>
+<th>Enforced by</th>
+<th>Strength</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Layering and acyclicity above</td>
+<td><code>test_architecture.py</code></td>
+<td>Property — reads the real import graph</td>
+</tr>
+<tr>
+<td>Withholding any single summary input cannot raise the floor or the grade</td>
+<td><code>test_withholding_any_single_input_cannot_raise_the_floor_or_the_grade</code></td>
+<td>Property over summary keys; <strong>regression only</strong> for history, which is removed as a whole block rather than field by field</td>
+</tr>
+<tr>
+<td><code>maintainability_range</code> always contains <code>maintainability_estimate</code></td>
+<td><code>test_the_interval_always_contains_the_score</code></td>
+<td>Regression — five named configurations</td>
+</tr>
+<tr>
+<td>The estimate equals the weighted mean of the printed categories</td>
+<td><code>test_the_overall_is_the_weighted_mean_of_the_printed_categories</code></td>
+<td>Regression over six reports, including untested and unknown-bearing ones</td>
+</tr>
+<tr>
+<td>Every advertised aspect carries weight somewhere</td>
+<td><code>test_every_scored_aspect_carries_weight_in_some_category</code></td>
+<td>Property — compares the declared aspect set against the weighted set</td>
+</tr>
+<tr>
+<td>Derivation agrees with the live scorer</td>
+<td><code>test_derivation_matches_live_score_report_repo_by_repo</code></td>
+<td>Property over all 40 corpus repositories</td>
+</tr>
+<tr>
+<td>Absence never resolves into a better-defined state</td>
+<td><code>test_deleting_a_field_never_resolves_it_into_a_better_defined_state</code></td>
+<td>Regression — one field</td>
+</tr>
+<tr>
+<td>Concealing any required input withholds verification, never raises the floor and never improves the grade</td>
+<td><code>test_concealing_any_required_node_withholds_verification</code></td>
+<td><strong>Property</strong> — all 28 typed inputs, from production evidence</td>
+</tr>
+<tr>
+<td>Restoring a concealed input recovers the model, the grade and the score exactly</td>
+<td><code>test_restoring_a_concealed_node_recovers_everything</code></td>
+<td><strong>Property</strong> — all 28 typed inputs</td>
+</tr>
+<tr>
+<td>An aspect whose input is concealed reports unmeasured, never a re-estimate</td>
+<td><code>test_an_aspect_that_uses_a_concealed_input_is_unmeasured_not_re_estimated</code></td>
+<td><strong>Property</strong> — dependency derived by sweeping, not declared</td>
+</tr>
+<tr>
+<td>Every scored aspect can be unmeasured by concealing some required input</td>
+<td><code>test_every_scored_aspect_is_unmeasured_by_concealing_some_required_input</code></td>
+<td><strong>Property</strong> — coverage over the aspect set</td>
+</tr>
+<tr>
+<td>Fully measured evidence collapses the range</td>
+<td><code>test_fully_measured_evidence_collapses_the_range</code></td>
+<td>Property — on a fixture where every aspect is measured</td>
+</tr>
+<tr>
+<td>Complete NotApplicable evidence contributes no score or uncertainty</td>
+<td><code>test_not_applicable_is_excluded_instead_of_priced_as_clean_or_unknown</code>, <code>test_not_applicable_is_complete_evidence</code></td>
+<td>Regression — rollup arithmetic and a production young repository</td>
+</tr>
+<tr>
+<td>Measured(0), Unknown and NotApplicable survive a JSON round trip</td>
+<td><code>test_the_three_states_remain_distinguishable_across_a_json_round_trip</code></td>
+<td>Regression — one of each state</td>
+</tr>
+<tr>
+<td>Every declared invariant violation fails closed</td>
+<td><code>test_every_declared_summary_subset_is_enforced</code>, <code>test_every_declared_summary_sum_is_enforced</code>, <code>test_every_declared_history_subset_is_enforced</code></td>
+<td><strong>Property</strong> — iterate the shipped relation tables and assert the <em>specific</em> validator fired</td>
+</tr>
+<tr>
+<td>The whole sweep is deterministic</td>
+<td><code>test_the_whole_sweep_is_deterministic</code></td>
+<td>Property — byte-identical documents across runs</td>
+</tr>
+<tr>
+<td>Unknown production evidence is never resurrected</td>
+<td><code>test_unknown_production_evidence_is_never_resurrected</code></td>
+<td>Regression — one field</td>
+</tr>
+<tr>
+<td>Impossible values and subset violations are rejected</td>
+<td><code>test_a_value_no_scanner_could_produce_is_rejected</code>, <code>test_a_subset_count_larger_than_its_set_is_rejected</code></td>
+<td>Regression — enumerated field kinds and one cross-field pair</td>
+</tr>
+<tr>
+<td>History window is independent of cache depth</td>
+<td><code>test_fix_breadth_window.py</code></td>
+<td>Property over four cache depths</td>
+</tr>
+<tr>
+<td>Only the transport declares anticipated refusals</td>
+<td><code>test_every_named_exception_is_a_declared_refusal_or_excluded</code>, <code>test_the_transport_excepts_the_named_tuple_not_a_copy</code>, <code>test_a_stale_baseline_leaves_the_seam_as_a_declared_refusal</code>, <code>test_the_seams_own_argument_refusals_leave_it_declared</code>, <code>test_an_unconfigured_repository_refuses_through_the_resource_seam</code></td>
+<td>Property — every named exception in the package; the three seams except the tuple by name; every member that can reach a seam driven through it — <code>ToolError</code> plus <code>__cause__</code> at the tool, which bypasses the SDK, and at the resource the crash wrapper excluded on 2.1.0 and the refusal's own text on 2.0.0</td>
+</tr>
+</tbody>
+</table></div>
+<p>Recursive variation across the whole typed model now exists (<code>tests/test_evidence_properties.py</code>, ADR 001 stage 6): every one of the 28 typed scoring inputs — 23 summary, 5 nested history — is concealed one at a time from evidence generated by <code>build_report</code>, and restored, with the results scored through the production seam <code>scoring.score_evidence</code>. Cases are derived from <code>walk_evidence</code>, so a field added to either evidence dataclass is swept the day it is added.</p>
+<p><strong>Human-facing rendering of these states has shipped.</strong> Markdown, prompts and PR comments go through <code>_evidence_view</code>; SARIF reads the same score fields directly into its run-level property bag. All surface <code>evidence_status</code> and <code>verified_grade</code>.</p>
+<h2 id="known-debt">Known debt</h2>
+<p>Stated rather than hidden, because an architecture document that only describes the good parts stops being usable.</p>
+<ul>
+<li>~~The work order bounds the agent by instruction, not by construction~~ — <strong>resolved (2.1.0).</strong> <code>_conformance.py</code> compares a diff against the paths the report named, through <code>git_tools</code> in <strong>assembly</strong>, and reaches scoring not at all: whether a diff was obedient is not evidence about the code's condition. <code>--conformance &lt;revspec&gt;</code> reports it; <code>--fail-on-out-of-scope</code> gates on it. The one judgment in it is the test-pairing rule — a test added for a fix stays in scope though the work order never named the test file — because the alternative is a check that punishes the behaviour the product asks for.</li>
+<li>~~A suppression closes a finding~~ — <strong>resolved (2.1.0).</strong> <code>SUPPRESSION_MARKERS</code> reads <code># noqa</code>, <code># type: ignore</code>, <code>eslint-disable</code>, <code>pragma: no cover</code> and skipped tests out of the diff, on the paths the report named. It is deliberately a <strong>second, separate verdict</strong>: <code>conformant</code> answers "did it stay in scope", <code>clean</code> answers "and did it silence nothing". Merging them would let a change that obeyed the work order and gagged a finding inside it read as a pass. Detection is diff-scoped by construction — a marker already in the tree is somebody's earlier decision, not this change's dodge.</li>
+<li>~~There is no attestation artifact~~ — <strong>resolved (2.3.0).</strong> <code>_attestation.py</code> composes the record in <strong>assembly</strong> from the finished report, renders in <strong>presentation</strong> beside the other emitters, and reaches scoring not at all — it carries the estimate the audit produced and computes no verdict of its own. Its digest is over its own content, so it is reproducible; it states in its own text that it is <strong>not signed</strong>, because nothing here holds a key. A question nobody ran renders as <em>not asked</em>, and an incomparable ratchet as <em>not established</em>; neither is allowed to render as passed.</li>
+<li>~~Regression is gated per finding, not per dimension~~ — <strong>resolved (2.2.0).</strong> <code>_ratchet.py</code> reads dimension scores across the persisted history (ADR 009) with a <code>TOLERANCE</code> of 0.05, and returns three outcomes rather than two: held, regressed, and <strong>not comparable</strong>. The third exists because two scans taken under different calibration cannot be differenced, and it reuses the same rule as <code>segments()</code> — a comparison across an instrument change is not a comparison. <code>--fail-on-regression</code> gates on it.</li>
+<li>~~Nothing compares two runs of the same transformation~~ — <strong>resolved (2.6.0).</strong> <code>_run_comparison</code> joins scan history into one transformation's series, in <strong>assembly</strong> for the same reason as <code>_conformance</code> and <code>_ratchet</code>; <code>_history_view</code> renders it, so joining and presenting stay split. It is the only one of the five integrity records that <strong>cannot fail a build</strong> — "run seven moved further than run six" is worth knowing and is not a thing to block a merge on. Two constraints shape it. History schema 4 carries a <code>transformation</code> label the operator supplies, deliberately outside <code>COMPARABILITY_FIELDS</code> so a series is never broken for saying its own name. And it reports the <strong>movement across an interval</strong>, never the transformation's <em>effect</em>: nothing in a tree says which transformation produced it, so the label is a claim this tool records without verifying, and everything else that happened in that interval is inside the number. The rendered section says so.</li>
+<li>
+<p><strong>The integrity checks read a diff's shape, never its correctness.</strong> Named because the four resolutions above are easy to over-read: they establish that a change stayed where it was told, silenced nothing, and moved no dimension backwards. They establish nothing about whether the change <em>works</em>. The attestation says so in its own rendered text rather than leaving a reader to infer it, and no future item here should quietly widen that.</p>
+</li>
+<li>
+<p>~~Scoring consumes raw dictionaries~~ — <strong>resolved (ADR 001 stage 4).</strong> <code>score_report</code> normalizes at its entry and every layer below it takes typed evidence. The <code>.get(name, 0)</code> fallbacks and the <code>unmeasured_dimensions</code> companion list are deleted: a pressure is now computed only from <code>Measured</code> inputs, so there is no default left to forget to guard.</p>
+</li>
+<li>~~The compatibility grade is still banded from the pessimistic floor~~ — <strong>resolved (stage 8).</strong> <code>score.grade</code> is removed; <code>verified_grade</code> is the only letter a report carries, and it is null when the evidence does not support one.</li>
+<li><strong>Stage 5 is implemented:</strong> <code>score.evidence_status</code> and <code>score.verified_grade</code> ship. The compatibility fields are gone (stage 8). <a href="adr-002-null-verified-grade-in-ci.html">ADR 002</a> is rejected because it assumed <code>--fail-on-gate</code> consumes the grade; the shipped flag checks hard findings only, so no CI policy changed. The requirement list for the <code>default-v1</code> profile is frozen in <code>_verification.py</code> rather than derived from the typed model — deriving it let a new field silently change what the name demanded.</li>
+<li>~~<code>docs/standard.md</code> mixes genres~~ — <strong>resolved.</strong> The empirical studies moved to <a href="studies.html">studies.md</a>; the standard now holds only the rubric, its calibration method, and the reference corpus. Mixing them was the documentation shape that let a Tier 3 claim read as settled.</li>
+<li><strong>History window materialization is not separated from analysis.</strong> <a href="adr-001-evidence-and-verification.html">ADR 001</a> stage 9.</li>
+<li>~~The scale was still calibrated against the built-in path~~ — <strong>resolved (3.6, 2026-08-14).</strong> The point estimate uses the analyzers' reading for every dimension they measured on all three declaration criteria; a partial concept set is unmeasured, so the built-in detectors remain the fallback. <code>CALIBRATION_C</code> was re-derived against that mix, and again when the reference corpus was re-measured for 1.0 (2.6279 → 2.2658 → 5.8843). <code>_calibration.py</code> is the source of truth for the current value, and <code>tools/calibration/measure.py --check</code> fails the build on drift, so this note names the history rather than pinning a number that ages. The interval still widens to contain whichever source did not supply the point.</li>
+<li>~~The band matrix does not drive the score~~ — <strong>resolved (3.2).</strong> Live scans store per-unit band pressures; <code>_pressures</code> uses them for declarations and file size so CCN 16 and 45 are not the same fact. Hard gates stay binary. Count-rate fallback remains only for summaries written before the wiring (<code>tests/test_band_pressures.py</code>). <code>CALIBRATION_C</code> was not re-derived: the existing calibration tests still hold.</li>
+<li><strong>The proposed <code>_analyzers</code> package and <code>_concepts</code> registry were never created as named modules.</strong> Their roles landed in <code>_tool_adapters</code>, <code>_metric_adapters</code>, <code>_verdict_adapters</code>, <code>_generic</code>, and <code>_corroborate</code>. This document names the files that exist.</li>
+<li><strong>Declaration extraction is gated on <code>DECLARATION_SUFFIXES</code></strong> (Python, Java, Kotlin, C, C++, C#, Swift, Go, Rust, PHP, Ruby, COBOL, free-form and fixed-form Fortran, and JS/TS/HTML). A suffix outside that set can be included for length, duplication and risk; it does not produce a declaration population. <code>--changed-only</code> and <code>--fail-on-new</code> no longer have the defects previously listed here: a thin diff withholds (<a href="adr-005-insufficient-population.html">ADR 005</a>; <code>test_scan_scope.py</code>), while baseline v3 and recurrence resolve structured identities through <code>_finding_match</code>. The visible label stays <code>function:{path}:{name}#{ordinal}</code>; scan-time <code>body_digest</code> resolves same-name reorders and git-attested renames resolve path moves.</li>
+<li>~~The presentation layer lacked the three <a href="adr-011-three-report-presentations.html">ADR 011</a> skins~~ — <strong>resolved (8.3–8.6).</strong> Chat/CLI Markdown, a Markdown file and one self-contained HTML file render the same report dictionary. TTY asks every invoke; flags win; CI never asks. Chat first-run setup persists a presentation default; a per-call choice or the host's own ask wins. MCP returns report text and never writes a report file. Its five-artifact write boundary is the repository config, user config, user state, repository scan history at <code>.maintainability/history.jsonl</code> and repository baseline at <code>.maintainability/baseline.json</code>.</li>
+<li>~~History records lacked the series required by the HTML charts~~ — <strong>resolved (8.1–8.2).</strong> New JSONL records use schema 3: the schema-2 chart fields remain, and structured identities sit beside labels. Schema-1/2 records still load as explicit gaps; an existing history file gains each later successful scan.</li>
+<li>~~The chat surface lagged the terminal surface~~ — <strong>resolved (D1–D17).</strong>
+  The primary chat/MCP path now covers the pool, structured setup and grants,
+  history consent and recurrence, baselines, format-specific payloads,
+  environment remedies, and the same bounded advice as the CLI.
+  <code>tests/test_chat_primary_docs.py</code> keeps README, product intent, MCP
+  instructions, the portable skill, chat help, IDE guidance, and generated
+  instruction packs ordered around that primary flow. Source-read and
+  artifact-read analyzers compose in one report
+  (<code>tests/test_d15_composition.py</code>). The
+  <a href="defect-register-chat-surface.html">chat-surface defect register</a> retains
+  D1–D17 as closed history.</li>
+<li><strong>Zero-install scanners are written, never cloned.</strong> <code>java_declaration_ranges</code> finds methods, constructors and types and bounds each at its own body; <code>c_declaration_ranges</code> (1.1.0) does the same for C functions and <code>struct</code>/<code>enum</code>/<code>union</code> types, <code>cpp_declaration_ranges</code> (1.2.0) for C++ functions, class members, namespaces and templates, <code>csharp_declaration_ranges</code> (1.3.0) for C#, and <code>fortran_declaration_ranges</code> (1.4.0) for free-form Fortran program units — the first language here with no braces at all. None of them invents a bounding rule: all sit on <code>_ranges_core</code>, which owns the one rule the design rests on — a range is bounded by its own body, never by where the next declaration starts. Every suffix set is in <code>DECLARATION_SUFFIXES</code> and the default include list, so <code>pip install</code> with no lizard measures them. The 2026-08 wording here said there would be no further scanners; the C++ (1.2.0) and C# (1.3.0) increments amend it. The rule it was protecting stands and is the price of admission: a language is claimed only when it has a scanner of its own, a documented set of things it misses, and tests that pin them — never by aiming the last-resort regex at it, which matches <code>def</code>/<code>function</code>/arrows and would report a confident zero. Go, Rust and everything else stay recognized and withheld until analyzers supply a declaration population (<a href="adr-006-analyzer-evidence.html">ADR 006</a>). Feeding lizard into <code>declarations_scanned</code> without the full concept set would still move mixed-language scores in silence.</li>
+</ul>
+<h2 id="extension-points">Extension points</h2>
+<ul>
+<li><strong>A new detector</strong> belongs in scanners, returns findings, and adds a count to <code>report_summary</code>. It becomes scored only by being given weight in <code>_formula.CATEGORY_ASPECTS</code>; an aspect with no weight fails the build.</li>
+<li><strong>A new output format</strong> belongs in presentation and reads the report dictionary. It must not compute a score.</li>
+<li><strong>A new external analyzer</strong> is a leaf adapter in <code>_tool_adapters</code> (or a declared tool in the catalog) that <code>_analysis</code> invokes through <code>_runner</code>. SARIF ingest (<code>--sarif-input</code>) remains a side-channel and does not feed the point estimate. A metric adapter that completes a concept set does: <code>_primary_pressures</code> substitutes that reading. Per <a href="adapters.html">adapters</a>, do not pretend every analyzer has the same semantics.</li>
+</ul>
+<h2 id="where-the-design-is-going">Where the design is going</h2>
+<p>What has not landed is listed under <a href="#known-debt">Known debt</a>. Remaining direction of travel lives in <a href="target-architecture.html">target architecture</a>. Status of each decision lives in the <a href="decisions.html">register</a>. This file does not carry a second copy of either.</p>
+<h2 id="decisions-embodied-in-this-document">Decisions embodied in this document</h2>
+<p>Every design point above traces to a record. Nothing here is a preference someone remembered.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Design point</th>
+<th>Recorded in</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FOSS analyzers produce the evidence; built-ins demoted to a labelled fallback</td>
+<td><a href="adr-006-analyzer-evidence.html">ADR 006</a></td>
+</tr>
+<tr>
+<td>Several tools per concept, combined with weights; spread becomes the interval</td>
+<td><a href="adr-006-analyzer-evidence.html">ADR 006</a></td>
+</tr>
+<tr>
+<td>Analyzer coverage always reported; unavailable is never a clean result</td>
+<td><a href="adr-006-analyzer-evidence.html">ADR 006</a>, P8</td>
+</tr>
+<tr>
+<td>Metric emitters vs verdict emitters; only metric emitters supply denominators</td>
+<td><a href="adr-008-translation-and-decision.html">ADR 008</a></td>
+</tr>
+<tr>
+<td>The rubric sets tool thresholds; project lint config never moves the score</td>
+<td><a href="adr-008-translation-and-decision.html">ADR 008</a></td>
+</tr>
+<tr>
+<td>Measurements, counts and populations all survive to the report</td>
+<td><a href="adr-008-translation-and-decision.html">ADR 008</a></td>
+</tr>
+<tr>
+<td>Band-matrix pressures drive declaration and file-size scores; gates stay binary</td>
+<td><a href="adr-008-translation-and-decision.html">ADR 008</a></td>
+</tr>
+<tr>
+<td>The agent never calls an LLM; it produces that model's input</td>
+<td><a href="adr-008-translation-and-decision.html">ADR 008</a>, P1</td>
+</tr>
+<tr>
+<td>CLI for CI, MCP for chat, one core, no combined server</td>
+<td><a href="adr-008-translation-and-decision.html">ADR 008</a></td>
+</tr>
+<tr>
+<td>The report is first-class; the CLI writes Markdown; the MCP report resource returns the byte-identical document</td>
+<td><a href="adr-008-translation-and-decision.html">ADR 008</a></td>
+</tr>
+<tr>
+<td>Chat, Markdown file, and one HTML file are three skins of that report, and <code>json</code> emits the dictionary they read; ask every interactive invoke</td>
+<td><a href="adr-011-three-report-presentations.html">ADR 011</a></td>
+</tr>
+<tr>
+<td>Work order with location, target, computed delta and verification</td>
+<td><a href="adr-008-translation-and-decision.html">ADR 008</a></td>
+</tr>
+<tr>
+<td>No rate without a denominator that supports it, per aspect</td>
+<td><a href="adr-005-insufficient-population.html">ADR 005</a>, P7</td>
+</tr>
+<tr>
+<td>Scan scope is part of the result; scope escalation over silent scoring</td>
+<td><a href="adr-005-insufficient-population.html">ADR 005</a></td>
+</tr>
+<tr>
+<td>Five pillars with declared scope; practice level never averaged with condition</td>
+<td><a href="adr-007-pillars-and-practice.html">ADR 007</a></td>
+</tr>
+<tr>
+<td>Risk × Effort ordering; Fill-Ins never above Quick Wins</td>
+<td><a href="adr-007-pillars-and-practice.html">ADR 007</a></td>
+</tr>
+<tr>
+<td>Recurring findings escalate to design-review candidates</td>
+<td><a href="adr-008-translation-and-decision.html">ADR 008</a></td>
+</tr>
+<tr>
+<td>Depth and license policy select the pool; every deny wins</td>
+<td><a href="analyzer-pool.html">analyzer pool</a>, <a href="config-schema.html#analyzer-policy-analyzers">config</a></td>
+</tr>
+<tr>
+<td>Selection by intent: the user answers concerns and density, the agent picks tools</td>
+<td><a href="analyzer-pool.html">analyzer pool</a>, <a href="config-schema.html#analyzer-policy-analyzers">config</a></td>
+</tr>
+<tr>
+<td>Concern vocabulary comes from the scoring model; <code>measures</code> grows with adapters</td>
+<td><a href="analyzer-pool.html">analyzer pool</a></td>
+</tr>
+<tr>
+<td>Every finding stays in the report; ranking orders, never filters</td>
+<td><a href="adr-008-translation-and-decision.html">ADR 008</a></td>
+</tr>
+<tr>
+<td>Raw analyzer output is retained for the model, especially on parse failure</td>
+<td><a href="adr-008-translation-and-decision.html">ADR 008</a></td>
+</tr>
+<tr>
+<td>Work order is a queryable set; the consumer picks the slice</td>
+<td><a href="adr-008-translation-and-decision.html">ADR 008</a></td>
+</tr>
+<tr>
+<td>Set deltas are recomputed, never summed from per-item deltas</td>
+<td><a href="adr-008-translation-and-decision.html">ADR 008</a></td>
+</tr>
+<tr>
+<td>Coverage gaps reported per language and concern, with the prerequisite named</td>
+<td><a href="adr-006-analyzer-evidence.html">ADR 006</a></td>
+</tr>
+<tr>
+<td>Availability proven by invocation; acquisition is off unless the user enables it in user-tier configuration</td>
+<td><a href="adr-006-analyzer-evidence.html">ADR 006</a></td>
+</tr>
+<tr>
+<td>Scans append to a durable history; trends over comparable records only</td>
+<td><a href="adr-009-scan-history.html">ADR 009</a></td>
+</tr>
+<tr>
+<td>Finding labels use path + declaration name + same-name ordinal, never a line number; matching also uses scan-time body digests and git-attested renames</td>
+<td><a href="adr-009-scan-history.html">ADR 009</a></td>
+</tr>
+<tr>
+<td>Trends describe past scans; forecasting stays forbidden</td>
+<td><a href="adr-009-scan-history.html">ADR 009</a>, <a href="product-intent.html#what-it-must-never-claim">product intent</a></td>
+</tr>
+</tbody>
+</table></div>
+<p>MCP ships all three primitives: two tools expose the audit and describe its boundary, resources expose the rubric, analyzer catalog and byte-identical Markdown report, and the <code>maintainability-agent</code> prompt supplies the bounded slash command. <code>get_agent_info</code> is read-only; <code>audit_repository</code> may write exactly five local artifacts: the repository config, user config, user state, repository scan history at <code>.maintainability/history.jsonl</code> and repository baseline at <code>.maintainability/baseline.json</code>, never source or a report. Users can start it with <code>maintainability-agent mcp</code>; the <code>maintainability-agent-mcp</code> console script remains for existing IDE configurations. CI does not go through MCP — a protocol hop between a runner and an exit code costs determinism and buys nothing. There is no combined server with <code>secure-code-agent</code>, because independent releasability is worth more than cross-tool synthesis today.</p>
+<p>The first two ADR 006 rows describe the landed <em>shape</em>. The point estimate uses analyzer measurements where the full concept set was measured; the constant was re-derived against that mix (3.6). <code>_identity</code> keeps the <code>function:{path}:{name}#{ordinal}</code> label while <code>_finding_match</code> owns structured comparison. Scans append through <code>_scan_history</code>. Practice and condition stay separate numbers.</p>
+<p><code>--analyzers</code> makes P1 conditional on pinned versions on a given platform; the report records the versions that produced it. Runtime rises from milliseconds to seconds or minutes. A tool can be absent, wrong-versioned, slow, crash, or emit unparseable output — each is a distinct <code>Unknown</code> reason, and none may fail the run or improve a score. Built-ins stay labelled as the fallback tier via <code>_built_ins</code>.</p>
+<h2 id="extension-boundaries">Extension boundaries</h2>
+<p>ADR 004 v1 ships. ADR 003 option C is accepted and its TypeScript-only
+increment is current work. Neither may change what the standard score means:</p>
+<ul>
+<li><a href="adr-003-deterministic-semantic-policy.html">ADR 003</a> specifies a type-aware
+  semantic-analysis path. Language-native analyzers and checked-in repository
+  policy may produce universal findings, configured policy violations, or
+  explicitly non-gating design-review candidates. They do not get to modify
+  rubric weights or grade bands.</li>
+<li><a href="adr-004-economic-context.html">ADR 004</a> v1 is <strong>shipped</strong>
+  (<code>tests/test_economic_context.py</code>). Recurrence and hotspot churn plus
+  an optional configured labor range produce a labeled low/base/high
+  <strong>scenario</strong> block and may reorder the work order. They do not feed
+  scoring or grading. See the ADR's v1 slice for the ask set, persist
+  path, and env overrides.</li>
+</ul>
+<p>The intended dependency direction is:</p>
+<pre><code class="language-mermaid">flowchart TB
+  analyzers[&quot;language-native analyzers / SARIF&quot;] --&gt; semantic[&quot;_semantic — normalized semantic findings&quot;]
+  policy[&quot;_semantic_policy — checked-in semantic policy&quot;] --&gt; semantic
+  measures[&quot;repository measurements&quot;] --&gt; economic[&quot;economic impact scenarios&quot;]
+  context[&quot;configured economic context&quot;] --&gt; economic
+  semantic --&gt; work[&quot;bounded prioritized work order&quot;]
+  economic --&gt; work
+</code></pre>
+<p>Both paths terminate in report data consumed by presentation. Neither may
+reach backward into <code>_formula</code>, <code>_calibration</code>, <code>_aspects</code>, or grade policy.
+ADR 004 v1 is in the tree (<code>_economics</code>, <code>_economics_view</code>). ADR 003's
+TypeScript increment uses <code>_semantic</code> for type-backed classification,
+<code>_semantic_ts</code> for type facts, and <code>_semantic_policy</code> for the optional
+checked-in policy. <code>_semantic</code> and <code>_semantic_ts</code> belong with scanners;
+<code>_semantic_policy</code> belongs with configuration foundations. Their
+production change also places them in the layer list enforced by
+<code>tests/test_architecture.py</code>. Neither path may reach <code>_formula</code>, <code>_calibration</code>,
+<code>_aspects</code>, or grade policy.</p>
+<footer>Rendered from <code>docs/architecture.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

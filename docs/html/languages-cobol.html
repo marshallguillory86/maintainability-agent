@@ -1,0 +1,79 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>COBOL · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul></ul>
+</div>
+</aside>
+<main><div class="meta">Languages</div><h1>COBOL</h1><p><strong>The paragraph is the unit of work.</strong> A COBOL program has four divisions
+— IDENTIFICATION, ENVIRONMENT, DATA and PROCEDURE — and only the last
+holds executable code. Inside it, work is organised into sections and
+paragraphs, and <code>PERFORM SOME-PARAGRAPH</code> is how one is called. A paragraph
+is therefore what a function is elsewhere: the named, callable,
+measurable piece.</p>
+<p><strong>COBOL is the first language here whose declarations have no end.</strong> C
+closes a body with <code>}</code>; Fortran closes one with <code>end</code>. A paragraph ends
+where the next paragraph, the next section, <code>END PROGRAM</code> or the file
+begins — the boundary is the <em>start</em> of the next thing, and nothing in
+the source announces it. <code>scan_bounded</code> already took the bounding rule as
+an argument, so this needed no change to the shared walk: what is shared
+is that a range never runs past its own body, not the mechanism that
+enforces it.</p>
+<p><strong>Level numbers are not declarations.</strong> A DATA DIVISION is a wall of <code>01</code>,
+<code>05</code>, <code>77</code> and <code>88</code> items, and an ordinary program has hundreds. <code>01
+CUSTOMER-RECORD.</code> is shaped <em>exactly</em> like a paragraph header, and no
+line-local rule can tell them apart, because the difference is which
+division they are in. So the mask blanks every division before PROCEDURE,
+and a level number is never offered to the recogniser at all. Counting
+them would not merely add noise — it would dominate the declaration
+population every rate divides by, and every COBOL repository would read as
+though it were nothing but tiny declarations.</p>
+<p><strong>Programs and sections are walked into and not graded.</strong> Both are
+containers, and grading them would count their paragraphs' lines a second
+time — the same call the Swift scanner makes about an <code>extension</code>.</p>
+<p><strong>Area A is the rule, not a guess about indentation.</strong> Fixed-form COBOL
+puts division, section and paragraph headers in columns 8-11 and
+statements in 12-72, and free-form convention keeps the same shape. That
+is why a paragraph header is recognised only within the first four columns
+of the stripped statement. Allowing one more column, which the first
+working version did, matched a masked <code>DISPLAY "A".</code> sitting at column 12
+and reported a declaration named DISPLAY once per statement in the file.</p>
+<p><strong>Both source formats, and the default is the safe one.</strong> Fixed-form is
+punched-card source: a sequence number in columns 1-6, an indicator in
+column 7, code in 8-72. Both formats use the same extensions, so the
+extension cannot decide and the file is read to find out. The test is
+narrower than it looks: free-form indented seven spaces is byte-identical
+in those columns to card source with a blank sequence field, and stripping
+seven blanks from it changes nothing. What is excluded is source with
+<em>code</em> in columns 1-7 — the only case where the two readings disagree.
+The direction matters: reading fixed-form as free-form loses declarations,
+while reading free-form as fixed-form deletes the front of every line and
+invents findings from the wreckage.</p>
+<p><strong>A period closes every open scope.</strong> Classic COBOL writes <code>IF X DISPLAY
+Y.</code> with no <code>END-IF</code> anywhere, so a reader that only decremented on <code>END-</code>
+terminators would let nesting climb through a whole paragraph and charge
+the last statement for every branch above it.</p>
+<p>What it misses, it misses in the safe direction:</p>
+<ul>
+<li><strong>A section whose statements sit outside any paragraph</strong> mints nothing.</li>
+<li><strong><code>COPY</code> members are not expanded</strong>, so a paragraph arriving from a
+  copybook is invisible, exactly as an <code>#include</code>d function is in C. The
+  copybook is scanned on its own if it is in the tree — and a <code>.cpy</code> of
+  DATA DIVISION text produces no declarations, like a C header of
+  prototypes.</li>
+<li><strong><code>REPLACE</code> and <code>COPY ... REPLACING</code></strong> are not applied; source is read
+  as written.</li>
+<li><strong>A continuation line</strong> (<code>-</code> in column 7) is read as its own line rather
+  than joined. It continues a literal, and literals are masked first.</li>
+</ul>
+<p><strong>Analyzer coverage is thin, and this is where COBOL differs most from
+the other nine.</strong> lizard does not read COBOL; neither does jscpd usefully.
+The mainframe world's tooling — IBM Developer for z/OS, Application
+Discovery and Delivery Intelligence, and the build tooling around IBM
+Dependency Based Build — lives outside anything this project can invoke
+offline. So the built-in scanner is the only path to a declaration
+population here, as it is for Fortran, and the analyzer tier will report
+COBOL as unmeasured rather than pretending otherwise.</p>
+<footer>Rendered from <code>docs/languages/cobol.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

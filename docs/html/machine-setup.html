@@ -1,0 +1,157 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Machine setup · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#why-this-page-exists">Why this page exists</a></li>
+<li><a href="#1-commit-identity">1. Commit identity</a></li>
+<li><a href="#2-commit-signing">2. Commit signing</a></li>
+<li><a href="#3-toolchain">3. Toolchain</a></li>
+<li><a href="#4-before-the-first-push-from-a-new-machine">4. Before the first push from a new machine</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Reference</div><h1>Machine setup</h1><p><strong>Genre: operational.</strong> What a development machine must have configured
+before it commits to this repository. Written 2026-08-28, when a second
+machine was needed and the first machine's setup existed only as shell
+history.</p>
+<p>This is not optional polish. Every item here exists because its absence
+already caused a defect.</p>
+<h2 id="why-this-page-exists">Why this page exists</h2>
+<p>A commit identity set once in <code>~/.gitconfig</code> and never revisited can
+silently take over when a repository-local override stops applying.
+Nothing errors, and a wrong identity that reaches a protected branch
+cannot be corrected without a history rewrite and a force-push.</p>
+<p><strong>An identity nobody verified is an identity nobody can trust</strong>, and the
+check is cheap only before the commits exist.</p>
+<h2 id="1-commit-identity">1. Commit identity</h2>
+<p>The git identity is the GitHub noreply address:</p>
+<pre><code class="language-bash">git config --global user.name  &quot;Marshall Guillory&quot;
+git config --global user.email &quot;152444602+marshallguillory86@users.noreply.github.com&quot;
+</code></pre>
+<p>The noreply address is verified by construction, keeps a real address
+out of public commit metadata, and is already what GitHub stamps on
+squash merges here. Any other address is a decision that needs
+justifying.</p>
+<p><strong>Then turn on the control that makes this unnecessary to remember:</strong></p>
+<blockquote>
+<p>GitHub → Settings → Emails → <strong>Block command line pushes that expose my email</strong></p>
+</blockquote>
+<p>GitHub then rejects a push carrying any other address. It is a UI setting
+with no API equivalent, and it is per-account rather than per-machine — but confirm
+it, because it is the only control here that cannot fail open.</p>
+<p><strong>Verify rather than assume:</strong></p>
+<pre><code class="language-bash">git config --global user.email
+git -C &lt;this-repo&gt; config user.email
+</code></pre>
+<p>Check the second one too. A repository-local override can hide a wrong
+global value.</p>
+<h2 id="2-commit-signing">2. Commit signing</h2>
+<p><code>main</code> has <code>required_signatures</code> enabled, so an unsigned commit reaching
+it is rejected. SSH signing, not GPG — <code>gpg</code> is not installed on these
+machines.</p>
+<pre><code class="language-bash">ssh-keygen -t ed25519 -C &quot;signing key (marshall)&quot; -f ~/.ssh/id_ed25519_signing
+ssh-add --apple-use-keychain ~/.ssh/id_ed25519_signing
+
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519_signing.pub
+git config --global commit.gpgsign true
+git config --global tag.gpgsign true
+</code></pre>
+<p>Choose a passphrase and store it in the password manager before
+confirming it. The Keychain holds it afterwards, so it is typed once per
+machine.</p>
+<p><strong>Local verification needs an allowed-signers file</strong>, or <code>git log</code>
+reports <code>N</code> on a perfectly good signature:</p>
+<pre><code class="language-bash">printf '%s %s\n' &quot;152444602+marshallguillory86@users.noreply.github.com&quot; \
+  &quot;$(cat ~/.ssh/id_ed25519_signing.pub)&quot; &gt;&gt; ~/.ssh/allowed_signers
+git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
+</code></pre>
+<p><strong>Survive a reboot.</strong> Without this the key leaves the agent on restart
+and the next commit blocks on a passphrase prompt — which, with
+<code>commit.gpgsign</code> on, means every commit on the machine:</p>
+<pre><code class="language-bash">cat &gt;&gt; ~/.ssh/config &lt;&lt;'EOF'
+
+Host *
+  AddKeysToAgent yes
+  UseKeychain yes
+  IdentityFile ~/.ssh/id_ed25519_signing
+EOF
+chmod 600 ~/.ssh/config
+</code></pre>
+<p><strong>Register the key on GitHub as a <em>signing</em> key.</strong> A signing key and an
+authentication key are different objects, and the wrong type verifies
+nothing:</p>
+<pre><code class="language-bash">gh auth refresh -h github.com -s admin:ssh_signing_key
+gh ssh-key add ~/.ssh/id_ed25519_signing.pub --type signing --title &quot;&lt;machine&gt; signing key&quot;
+</code></pre>
+<p>Give each machine its own key and its own title. One key copied between
+machines cannot tell you which machine signed.</p>
+<p><strong>Prove it before relying on it:</strong></p>
+<pre><code class="language-bash">git commit --allow-empty -m &quot;chore: signing probe&quot;
+git log -1 --format='%G?'
+git reset --hard HEAD~1
+</code></pre>
+<p><code>G</code> is a good signature. <code>N</code> means unsigned; <code>U</code> means untrusted, most
+often a missing <code>allowed_signers</code> entry. Do not skip this: unverified
+setup is the thing this page exists to prevent.</p>
+<h2 id="3-toolchain">3. Toolchain</h2>
+<pre><code class="language-bash">python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -e &quot;.[dev]&quot;
+</code></pre>
+<p>Install <code>secure-code-agent</code> alongside — it is not a dependency of this
+package, and every audit runs it for the security pillar (D177):</p>
+<pre><code class="language-bash">python3 -m pip install 'secure-code-agent&gt;=0.12.2'
+</code></pre>
+<p>Check the published release first (<code>gh release list --repo
+marshallguillory86/secure-code-agent</code>); this project's CI pin is not the
+source of truth for what is current. What it measures depends on the scanners it can find.
+With none of them installed it runs only its built-in rules, reports coverage
+as partial, and the pillar reads <code>unverified: not graded</code>. See what it can
+resolve with:</p>
+<pre><code class="language-bash">secure-code-agent --preflight .
+</code></pre>
+<p>and install what it names. On macOS:</p>
+<pre><code class="language-bash">python3 -m pip install bandit
+brew install gitleaks osv-scanner trivy semgrep checkov
+</code></pre>
+<p><strong>Do not install secure-code-agent's scanner extras into this environment</strong>
+(<code>secure-code-agent[required-scanners]</code> or <code>[python-scanners]</code>). They pull in
+semgrep, and njsscan pulls it in too; semgrep pins <code>mcp&lt;2</code>, and pip replaces
+this package's <code>mcp</code> 2.x to satisfy it. The chat door then fails to start
+(D178). <code>pip check</code> does not warn, because this package's <code>mcp</code> requirement
+lives in an optional extra it never inspects. semgrep from Homebrew has its
+own environment and no such conflict. njsscan has no Homebrew formula and
+cannot share this environment; give it one of its own, and link its command
+onto a directory every host's <code>PATH</code> includes.</p>
+<p>The same applies to <strong>secure-code-agent's own <code>[mcp]</code> extra</strong>: it pins
+<code>mcp&gt;=1.0,&lt;2</code>, and this package's chat door needs <code>mcp&gt;=2,&lt;3</code>, so the two MCP
+servers cannot share one environment. Install <code>secure-code-agent</code> here without
+extras; it runs as a child of the audit and needs none.</p>
+<p>Two things decide whether a scanner resolves, both found setting up the
+second machine. <strong>semgrep and checkov have no <code>python -m</code> fallback</strong>, so they
+must be on the <code>PATH</code> the host launches the audit with — an MCP host such as
+the ChatGPT app may not include a virtualenv's <code>bin</code>, which is why they come
+from Homebrew here rather than pip. And <strong>secure-code-agent refuses an
+executable inside the tree it is auditing</strong>, so a virtualenv inside a
+repository cannot supply scanners for that repository's own audit.</p>
+<p>The analyzer pool installs through the checked-in constraints, which are
+the Linux-resolved closure the gates run against (D89). A macOS machine
+may resolve differently; that is expected, and it is why the constraints
+file is generated on a runner rather than on a laptop.</p>
+<h2 id="4-before-the-first-push-from-a-new-machine">4. Before the first push from a new machine</h2>
+<p>Run the gate as its own command, never chained to a commit:</p>
+<pre><code class="language-bash">python3 -m ruff check src tests tools
+python3 -m pytest -q --cov=maintainability_audit --cov-fail-under=92
+</code></pre>
+<p>Then confirm the identity actually took effect on a real commit, because
+configuration that was set is not the same as configuration that
+applied:</p>
+<pre><code class="language-bash">git log -1 --format='%ae | %G?'
+</code></pre>
+<p>Expect the noreply address and <code>G</code>. Anything else means
+one of the sections above did not land on this machine.</p>
+<footer>Rendered from <code>docs/machine-setup.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

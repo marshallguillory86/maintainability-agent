@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>PR and Baseline Workflows · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul></ul>
+</div>
+</aside>
+<main><div class="meta">Reference</div><h1>PR and Baseline Workflows</h1><p>Audit only the PR diff:</p>
+<pre><code class="language-bash">maintainability-agent \
+  --changed-only main...HEAD \
+  --output maintainability-report.md \
+  --prompt-output maintainability-remediation-prompt.md \
+  --comment-output maintainability-pr-comment.md
+</code></pre>
+<p>Create a baseline for existing debt:</p>
+<pre><code class="language-bash">maintainability-agent \
+  --write-baseline maintainability-baseline.json
+</code></pre>
+<p>Fail only on findings not present in the baseline:</p>
+<pre><code class="language-bash">maintainability-agent \
+  --baseline maintainability-baseline.json \
+  --fail-on-new
+</code></pre>
+<p>Generate reusable AI coding-agent instructions:</p>
+<pre><code class="language-bash">maintainability-agent \
+  --agent-instructions-output AGENTS-maintainability.md
+</code></pre>
+<p>Generate persistent agent standards before code is written:</p>
+<pre><code class="language-bash">maintainability-audit \
+  --config maintainability-agent.json \
+  --init-agent-standards \
+  --target codex \
+  --target claude-code \
+  --target cursor \
+  --target copilot \
+  --target windsurf \
+  --instructions-output-dir .
+</code></pre>
+<p>This writes tool-native instruction files such as <code>AGENTS.md</code>,
+<code>CLAUDE.md</code>, <code>.cursor/rules/maintainability.mdc</code>,
+<code>.github/copilot-instructions.md</code>, and
+<code>.windsurf/rules/maintainability.md</code>.</p>
+<footer>Rendered from <code>docs/pr-and-baseline-workflows.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

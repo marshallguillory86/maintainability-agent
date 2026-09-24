@@ -1,0 +1,347 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Language Support and Detection Accuracy · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#how-each-language-is-measured">How each language is measured</a></li>
+<li><a href="#what-counts-as-a-decision-per-language">What counts as a decision, per language</a><ul>
+<li><a href="#where-this-deliberately-under-reports">Where this deliberately under-reports</a></li>
+<li><a href="#how-this-is-verified">How this is verified</a></li>
+</ul>
+</li>
+<li><a href="#the-rule-that-matters-a-range-never-runs-past-its-own-body">The rule that matters: a range never runs past its own body</a></li>
+<li><a href="#known-limitations">Known limitations</a></li>
+<li><a href="#classes-are-not-graded-as-functions">Classes are not graded as functions</a></li>
+<li><a href="#migrations-are-excluded-by-default">Migrations are excluded by default</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Product and standard</div><h1>Language Support and Detection Accuracy</h1><p>What the scanner can see per language, how it decides where a declaration
+ends, and — deliberately — where it under-reports.</p>
+<h2 id="how-each-language-is-measured">How each language is measured</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Declaration ranges</th>
+<th>Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python (<code>.py</code>)</td>
+<td><code>ast</code> — exact <code>end_lineno</code></td>
+<td>Exact. Falls back to the pattern scan only if the file has a syntax error.</td>
+</tr>
+<tr>
+<td>Java (<code>.java</code>)</td>
+<td>dedicated scanner: methods, constructors and types, bounded by their own braces</td>
+<td>Bounded. Under-reports — see below.</td>
+</tr>
+<tr>
+<td>C (<code>.c</code>, <code>.h</code>)</td>
+<td>dedicated scanner: file-scope functions and <code>struct</code>/<code>enum</code>/<code>union</code> types, bounded by their own braces</td>
+<td>Bounded. Under-reports — see below.</td>
+</tr>
+<tr>
+<td>C++ (<code>.cpp</code>, <code>.hpp</code>, <code>.cc</code>, <code>.cxx</code>, <code>.hh</code>)</td>
+<td>dedicated scanner: functions, class/struct members, namespaces and templates, bounded by their own braces</td>
+<td>Bounded. Under-reports — see below.</td>
+</tr>
+<tr>
+<td>C# (<code>.cs</code>)</td>
+<td>dedicated scanner: methods, constructors and types (<code>class</code>, <code>interface</code>, <code>struct</code>, <code>record</code>, <code>enum</code>), bounded by their own braces</td>
+<td>Bounded. Properties are not declarations — see below.</td>
+</tr>
+<tr>
+<td>Swift (<code>.swift</code>)</td>
+<td>dedicated scanner: functions, initialisers, subscripts and types (<code>class</code>, <code>struct</code>, <code>enum</code>, <code>protocol</code>, <code>actor</code>), bounded by their own braces</td>
+<td>Bounded. Extension members carry the type they extend; protocol requirements and computed properties are not declarations — see below.</td>
+</tr>
+<tr>
+<td>Kotlin (<code>.kt</code>, <code>.kts</code>)</td>
+<td>dedicated scanner: functions, constructors, <code>init</code> blocks and types (<code>class</code>, <code>interface</code>, <code>object</code>, and the <code>data</code>/<code>sealed</code>/<code>enum</code>/<code>value</code>/<code>inner</code> forms), bounded by their own braces or by an expression body</td>
+<td>Bounded. An extension function carries the receiver the source writes; an expression body (<code>fun area() = w * h</code>) is a declaration; interface requirements and properties are not — see below.</td>
+</tr>
+<tr>
+<td>Go (<code>.go</code>)</td>
+<td>dedicated scanner: functions, methods and container types (<code>struct</code>, <code>interface</code>), bounded by their own braces</td>
+<td>Bounded. Methods carry their receiver type; interface methods are requirements rather than declarations; function literals inside a body are not seen — see below.</td>
+</tr>
+<tr>
+<td>Rust (<code>.rs</code>)</td>
+<td>dedicated scanner: functions, <code>impl</code> and <code>trait</code> members, and types (<code>struct</code>, <code>enum</code>, <code>trait</code>, <code>union</code>), bounded by their own braces</td>
+<td>Bounded. Methods carry the type their <code>impl</code> block names; trait requirements without a body mint nothing; closures and macro bodies are not read — see below.</td>
+</tr>
+<tr>
+<td>PHP (<code>.php</code>, <code>.phtml</code>)</td>
+<td>dedicated scanner: functions, methods and types (<code>class</code>, <code>interface</code>, <code>trait</code>, <code>enum</code>), with everything outside <code>&lt;?php … ?&gt;</code> blanked first</td>
+<td>Bounded. Methods carry their class; interface and abstract methods mint nothing; closures and heredoc bodies are not read — see below.</td>
+</tr>
+<tr>
+<td>Ruby (<code>.rb</code>, <code>.rake</code>, <code>.gemspec</code>)</td>
+<td>dedicated scanner: methods, classes and modules bounded by their own <code>end</code>, counted by openers because one <code>end</code> closes everything</td>
+<td>Bounded by depth. Methods carry their class (<code>Store#get</code>); blocks, modifier forms, heredocs and <code>=begin</code> blocks are discounted first; metaprogrammed methods are not seen — see below.</td>
+</tr>
+<tr>
+<td>COBOL (<code>.cbl</code>, <code>.cob</code>, <code>.cpy</code>, <code>.CBL</code>, <code>.COB</code>, <code>.CPY</code>)</td>
+<td>dedicated scanner: PROCEDURE DIVISION paragraphs, bounded by the start of whatever follows them. Fixed-form card columns are read where the layout carries them</td>
+<td>Bounded by the next header. Programs and sections are containers and are not graded; level numbers are not declarations; a section whose statements sit outside any paragraph mints nothing — see below.</td>
+</tr>
+<tr>
+<td>Fortran, free-form (<code>.f90</code>, <code>.f95</code>, <code>.f03</code>, <code>.f08</code>, <code>.F90</code>, <code>.F95</code>, <code>.F03</code>, <code>.F08</code>, <code>.pf</code>)</td>
+<td>dedicated scanner: modules, submodules, programs, subroutines, functions and derived types, bounded by their own <code>end</code></td>
+<td>Bounded by keyword rather than braces.</td>
+</tr>
+<tr>
+<td>Fortran, fixed-form (<code>.f</code>, <code>.for</code>, <code>.ftn</code>, <code>.F</code>, <code>.FOR</code>, <code>.FTN</code>)</td>
+<td>the same scanner, over source laid out for punched cards: label in columns 1-5, continuation in 6, statement in 7-72</td>
+<td>Bounded by keyword. Continuations are joined before reading — see below.</td>
+</tr>
+<tr>
+<td>JS / TS / JSX / TSX (<code>.js</code>, <code>.jsx</code>, <code>.mjs</code>, <code>.cjs</code>, <code>.ts</code>, <code>.tsx</code>)</td>
+<td>brace/paren depth over a comment- and string-masked copy</td>
+<td>Bounded by the declaration's own braces.</td>
+</tr>
+<tr>
+<td>HTML (<code>.html</code>)</td>
+<td>same brace scanner, so inline <code>&lt;script&gt;</code> bodies are measured</td>
+<td>Bounded.</td>
+</tr>
+<tr>
+<td>Anything else</td>
+<td>not parsed for declarations</td>
+<td>File length, duplication and risk only, and declaration rates <strong>withheld</strong> with the missing parser named. Adding the suffix to <code>include_extensions</code> does not produce a declaration population.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>This table is the claim, and it is enforced.</strong> An audit found the
+page and <a href="decisions.html">Decision 10</a> saying v1.0 handled Python and
+Java while the scanner also read JS, TS, JSX and HTML — and it does,
+with three baseline-tier adapters (lizard, jscpd, multimetric)
+measuring those files besides. The mismatch was in the writing, not the
+code: a language belongs here when this project can detect and score
+it.</p>
+<p>What the tool must never do is produce a declaration population for a
+language it can neither parse nor send to an adapter. That is the P7
+failure — a number a reader with the repository in front of them would
+call absurd —
+and <code>test_the_parsed_languages_are_exactly_the_claimed_languages</code>
+fails when this page and the parser disagree in either direction, so a
+suffix added to one has to reach the other.</p>
+<p>Only these extensions get declaration-level findings. Every other
+extension in <code>include_extensions</code> is still measured for file length,
+duplication, and risk patterns.</p>
+<p>The pattern scan named in the Python row is the only place it runs.
+<code>SourceIndex</code> asks for declaration ranges only when the suffix is one of
+the rows above, so a <code>.go</code> or <code>.rs</code> file does not reach it — deliberately,
+because its patterns match <code>def</code> and <code>function</code> and would report such a
+file as containing no declarations rather than as unparsed. A repository
+whose code is mostly outside those extensions has its declaration rates
+<strong>withheld</strong>, naming the missing parser as the reason; it does not get an
+approximate population.</p>
+<p><strong>Per-language accuracy — what each scanner sees and what it misses</strong> is
+one page per language, so adding a language adds a file rather than
+growing this one: <a href="languages-java.html">Java</a>, <a href="languages-c.html">C</a>, <a href="languages-cpp.html">C++</a>, <a href="languages-csharp.html">C#</a>, <a href="languages-fortran.html">Fortran</a>, <a href="languages-rust.html">Rust</a>, <a href="languages-go.html">Go</a>, <a href="languages-php.html">PHP</a>, <a href="languages-ruby.html">Ruby</a>, <a href="languages-swift.html">Swift</a>, <a href="languages-cobol.html">COBOL</a>.</p>
+<h2 id="what-counts-as-a-decision-per-language">What counts as a decision, per language</h2>
+<p><strong>Python's branch set is derived from its own grammar. Every other
+language's is a set somebody wrote down</strong>, checked construct-by-construct
+against an independent implementation — see <a href="#how-this-is-verified">How this is
+verified</a> below, which says the same thing at
+length rather than contradicting this.</p>
+<p>That distinction is the whole of what the verification can promise, and
+the lead said the opposite for two releases: that every language's set
+was derived from its grammar. It is not. <code>ast</code> ships with the
+interpreter and enumerates Python's branching constructs, so a construct
+added to a future Python arrives on its own; no comparable enumeration
+exists for the other thirteen, and <code>2.11.1</code> added a sweep against
+<code>lizard</code>'s decision tokens, which is a <strong>second implementation's keyword
+list</strong> rather than a grammar — the test's own docstring says so.</p>
+<p>The checks are not decoration either way: they found nine defects in
+2.11.0, including this project measuring Python against its own
+comments, and three more in 2.11.1 that no fixture exercised.</p>
+<p>The distinction from the C-family pattern is not pedantry either. PHP's
+<code>elseif</code> chains scored zero, because the C pattern looks for <code>elif</code> and
+<code>elseif</code> has no word boundary inside it. Ruby's <code>unless</code> guards scored
+zero. Fortran's <code>do</code> loops scored 1.</p>
+<p><strong>One rule is shared and is stated here once.</strong> A multi-way construct is
+counted at its <strong>arms, not its header</strong>, and a <em>default</em> arm is not
+counted at all. <code>switch</code>, <code>select</code>, <code>match</code> and <code>case</code> headers score
+nothing; their <code>case</code>, <code>when</code> and <code>=&gt;</code> arms score one each; <code>default:</code>,
+<code>_ =&gt;</code> and <code>case _</code> score nothing, because a branch that always matches
+adds a path without a decision to reach it.</p>
+<p>Counting a header <em>and</em> its arms scores the construct and its first arm
+together, which is the mistake Fortran's <code>select case</code> made before 1.6.0.
+It was made again in 2.11.0 for Go's <code>select</code>, PHP's <code>do … while</code> and
+Swift's <code>repeat … while</code>, and the wildcard half of the rule was missed
+for Rust and Python — five languages, one rule, written down and then not
+applied.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Counted</th>
+<th>Deliberately not counted</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python</td>
+<td><code>if</code>, <code>elif</code>, <code>for</code>, <code>while</code>, <code>except</code>, <code>case</code>, <code>and</code>, <code>or</code></td>
+<td><code>match</code> (its cases carry it); <code>case _</code>, the wildcard, which is Python's <code>default</code></td>
+</tr>
+<tr>
+<td>Go</td>
+<td><code>if</code>, <code>for</code>, <code>case</code>, <code>&amp;&amp;</code>, <code>\|\|</code></td>
+<td><code>switch</code> and <code>select</code> headers (their cases carry them); <code>goto</code>, which transfers control without deciding; no <code>while</code>, ternary or <code>catch</code> exists</td>
+</tr>
+<tr>
+<td>Rust</td>
+<td><code>if</code>, <code>for</code>, <code>while</code>, <code>?</code>, <code>=&gt;</code> arms, <code>&amp;&amp;</code>, <code>\|\|</code></td>
+<td><code>match</code> (its arms carry it); <code>loop</code>, which has no condition; the wildcard <code>_ =&gt;</code></td>
+</tr>
+<tr>
+<td>PHP</td>
+<td><code>elseif</code>, <code>if</code>, <code>for</code>, <code>foreach</code>, <code>while</code>, <code>match</code>, <code>case</code>, <code>catch</code>, <code>and</code>, <code>or</code>, <code>xor</code>, <code>&amp;&amp;</code>, <code>\|\|</code>, <code>??</code>, ternary <code>?</code></td>
+<td><code>switch</code> (its cases carry it); <code>do</code>, whose <code>while</code> carries the loop; <code>goto</code>; <code>?int</code>, a nullable type hint</td>
+</tr>
+<tr>
+<td>Ruby</td>
+<td><code>if</code>, <code>elsif</code>, <code>unless</code>, <code>while</code>, <code>until</code>, <code>for</code>, <code>when</code>, <code>rescue</code>, <code>and</code>, <code>or</code>, <code>&amp;&amp;</code>, <code>\|\|</code>, ternary <code>?</code></td>
+<td><code>case</code> (its <code>when</code>s carry it); <code>&amp;.</code>, which is navigation rather than a decision</td>
+</tr>
+<tr>
+<td>Swift</td>
+<td><code>if</code>, <code>for</code>, <code>while</code>, <code>case</code>, <code>catch</code>, <code>guard</code>, <code>&amp;&amp;</code>, <code>\|\|</code>, <code>??</code>, ternary <code>?</code></td>
+<td><code>switch</code> (its cases carry it); <code>repeat</code>, whose <code>while</code> carries the loop; <code>Int?</code>, an optional type</td>
+</tr>
+<tr>
+<td>Kotlin</td>
+<td><code>if</code>, <code>for</code>, <code>while</code>, <code>catch</code>, <code>-&gt;</code> arms, <code>&amp;&amp;</code>, <code>\|\|</code>, <code>?:</code></td>
+<td><code>when</code> (its arms carry it); the <code>else</code> arm, which is Kotlin's <code>default</code>; <code>do</code>, whose <code>while</code> carries the loop; <code>?.</code>, which yields null rather than deciding; <code>String?</code>, a nullable type — and no ternary exists to confuse it with</td>
+</tr>
+<tr>
+<td>C, C++, C#, Java, JS, TS, HTML</td>
+<td><code>if</code>, <code>else if</code>, <code>for</code>, <code>while</code>, <code>case</code>, <code>catch</code>, <code>&amp;&amp;</code>, <code>\|\|</code>, <code>??</code>, ternary <code>?</code></td>
+<td><code>switch</code> (its cases carry it); <code>default</code>; a <code>?</code> in type position — <code>int?</code>, <code>List&lt;?&gt;</code>, <code>v?:</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="where-this-deliberately-under-reports">Where this deliberately under-reports</h3>
+<p>Both of these under-report, which is the direction this project errs in
+when it has to choose, and both are consequences of counting keywords on
+a line rather than building a control-flow graph.</p>
+<ul>
+<li><strong>A many-armed PHP <code>match</code> scores 1.</strong> The arms rule is not applied
+  here, and this is the one place it is not: PHP spells array keys with
+  <code>=&gt;</code> as well (<code>['a' =&gt; 1]</code>), so counting arms would count every array
+  literal in the file. The <code>match</code> keyword is counted once instead, which
+  under-counts a wide dispatch. <code>lizard</code> reads it the same way.</li>
+<li><strong>A ternary split across lines is not counted.</strong> Both halves have to be
+  visible on one line, because that is what distinguishes <code>?</code> the
+  conditional operator from <code>?</code> the nullable-type marker — the defect
+  (D115) that made every <code>int?</code>, <code>List&lt;?&gt;</code> and <code>title?:</code> in five
+  languages read as a branch.</li>
+</ul>
+<h3 id="how-this-is-verified">How this is verified</h3>
+<p>Until 2.11.0 every branch set here was <strong>asserted rather than tested</strong>: a
+list written from somebody's knowledge of a language, checked against
+examples written by the same person from the same knowledge. That reads
+as evidence because the prose around it is confident, which is worse than
+reading as a guess. Measured against an independent implementation on
+this project's own source, it agreed on <strong>45%</strong> of declarations.</p>
+<p>Now <code>tests/fixtures/grammar/</code> holds one fixture per language exercising
+a set of control-flow constructs from that language's specification, and
+CI compares each construct against
+<a href="https://github.com/terryyin/lizard"><code>lizard</code></a> — a separate codebase, by
+separate authors, with its own reading of each grammar. <strong>Thirteen
+languages</strong> are covered.</p>
+<p><strong>Python's coverage is derived from the grammar; the rest is a set.</strong>
+For Python the specification ships with the interpreter: <code>ast</code> is the
+module that <em>implements</em> the grammar, so CI enumerates every branching
+construct from it — nodes carrying a <code>test</code>, <code>orelse</code>, <code>handlers</code>, <code>ifs</code>,
+<code>cases</code> or <code>finalbody</code> field, plus <code>BoolOp</code> — and fails if the fixture
+exercises none of one. The checklist is the grammar's, so a construct
+added to a future Python arrives on its own rather than when somebody
+remembers it. Anything deliberately not exercised must be named with its
+reason.</p>
+<p>For every other language the fixture is still a <strong>set</strong>, and this page
+used to call it the specification. That was not true: those fixtures
+exercise the constructs their author already knew about, written from the
+same knowledge as the scanners they check. An audit found four defects
+whose constructs were all absent from them — a generic Go receiver, an
+assigned Ruby <code>if</code>, PHP's Elvis operator, Rust's <code>let … else</code>
+(D125–D129). The set grows whenever a gap is found, and the comparison
+says nothing about the constructs it does not contain. The same treatment
+is available for the others — Ruby's <code>Ripper</code>, Go's <code>go/ast</code>, Rust's
+<code>syn</code> each enumerate their own grammar — and is unwritten, not refused.</p>
+<p><strong>Agreement has a ceiling as well as a floor.</strong> lizard finds no method on
+a generic Go type either, so that defect was invisible to a check built on
+two implementations agreeing — the same limit already noted for PHP's
+<code>match</code>, met by a real defect rather than a hypothetical one.</p>
+<p>Coverage is counted in <em>branch readers</em> rather than fixtures, because the
+reader is the thing that can be wrong: counting fixtures is what let
+Python go unchecked while twelve other languages were added (D120). A
+reader with no second implementation available has to be named with the
+reason, and <strong>COBOL is the only one</strong>.</p>
+<p>A disagreement does not say who is right — two implementations can share
+a misconception, and PHP's <code>match</code> above is one they share. What it does
+is make the question unavoidable and send a reader to the grammar, which
+is the only authority either tool answers to. Divergences are therefore
+<strong>declared with the reasoning that settles them</strong>, and a further test
+fails when a declared divergence stops being real. <code>lizard</code>'s own
+TypeScript reader carries D115, so a harness built to chase agreement
+would have re-introduced the bug to match the oracle.</p>
+<h2 id="the-rule-that-matters-a-range-never-runs-past-its-own-body">The rule that matters: a range never runs past its own body</h2>
+<p>Before v0.4.0, a declaration ended where the <em>next</em> pattern match began.
+That is only safe if the pattern list matches every declaration in the
+file — and it didn't. <code>export function</code>, generic signatures like
+<code>async function request&lt;T&gt;(</code>, and object/class methods were invisible, so
+the first recognised declaration absorbed everything up to the next match
+or to end-of-file.</p>
+<p>The damage was not subtle. In one TypeScript API client a 4-line
+<code>csrfToken()</code> was reported as <strong>262 lines with complexity 35</strong>, the clean
+file holding it was graded an <strong>F</strong>, and every one of the 18 function
+findings on that repo was false.</p>
+<p>Ranges are now bounded by the declaration's own braces, counted over a
+copy of the source with comments and string/template literals blanked
+out. The consequence is the important part: <strong>a declaration this scanner
+fails to recognise costs one missed finding, not a cascade of false
+ones.</strong> Where braces are unavailable or inconclusive, the range falls
+back to indentation. Nothing runs to end-of-file any more.</p>
+<p>Complexity is scored against that same masked copy, so <code>if</code> in a doc
+comment and <code>?</code> in a URL are no longer counted as branches.</p>
+<h2 id="known-limitations">Known limitations</h2>
+<p>All of these under-report rather than over-report, which is the trade
+this design deliberately makes:</p>
+<ul>
+<li><strong>Object-literal properties holding arrow functions</strong> (<code>onSave: () =&gt; {…}</code>)
+  are not treated as declarations. Class fields and <code>const</code> bindings are.</li>
+<li><strong>Regex literals are not tokenized</strong>, so an unbalanced brace inside one
+  (<code>/[{]/</code>) can desync brace depth. The indentation fallback bounds the
+  fallout to that single declaration.</li>
+<li><strong>An inline object return type</strong> (<code>function f(): { a: string } {</code>) can
+  end a range at the annotation when no second <code>{</code> follows on the same line.</li>
+<li><strong>Complexity is approximate</strong> everywhere — a keyword count, not a real
+  control-flow graph. Pair this with Radon, ESLint, or SonarQube when you
+  need a precise number.</li>
+</ul>
+<h2 id="classes-are-not-graded-as-functions">Classes are not graded as functions</h2>
+<p>A class is a container, so the per-function line budget is the wrong
+yardstick — an ordinary six-method class is not a defect. Classes are
+measured against <code>max_class_lines</code> / <code>warn_class_lines</code> (default 300 /
+200) on <strong>length alone</strong>.</p>
+<p>Complexity is not applied to a class at all, and the report shows <code>-</code>
+rather than a number. <code>ast.walk</code> yields a class <em>and</em> each of its
+methods, so a class's measured complexity is the sum of branches already
+charged to those methods — acting on it would mean double-counting.</p>
+<p>In the report, prompt, PR comment, and SARIF output a class is labelled
+as one: <code>`ScanWorker` (class)</code>.</p>
+<h2 id="migrations-are-excluded-by-default">Migrations are excluded by default</h2>
+<p><code>migrations/</code> is in the default <code>exclude_patterns</code>. A 102-line,
+complexity-2 <code>upgrade()</code> is what a correct migration looks like, and
+migrations are append-only history — refactoring one rewrites the past.
+Remove the pattern from your config if you disagree.</p>
+<footer>Rendered from <code>docs/language-support.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

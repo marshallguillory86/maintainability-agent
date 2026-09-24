@@ -1,0 +1,70 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>PHP · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#what-it-misses">What it misses</a></li>
+<li><a href="#measured-with-phps-own-keywords">Measured with PHP's own keywords</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Languages</div><h1>PHP</h1><p><strong>A <code>.php</code> file is a template that happens to contain code.</strong> It is HTML
+until <code>&lt;?php</code> says otherwise and HTML again after <code>?&gt;</code>, and the text in
+between is not source. That text is full of braces — a CSS rule, an
+inline script, a snippet in a paragraph — and a brace counted from markup
+moves depth. A desynced depth does not mis-bound the declaration it
+appeared in; it mis-bounds every declaration after it.</p>
+<p>So everything outside the tags is blanked before anything reads a line,
+in the same way Swift's multiline literals are. It is the first thing
+that happens rather than a refinement. A file that never opens a PHP tag
+declares nothing, which is correct.</p>
+<p><strong>A method carries its class.</strong> <code>get</code> alone is not an instruction in a
+tree with eleven of them, so a method inside <code>class Store</code> reports as
+<code>Store::get</code>. PHP writes the class on the container rather than the
+member, so the qualification is carried down by a span pass, exactly as
+Rust's <code>impl</code> and Swift's <code>extension</code> are.</p>
+<p><strong>Bodyless members mint nothing.</strong> An interface method and an <code>abstract</code>
+method are signatures with nothing to maintain, as a C prototype and a
+Swift protocol requirement are.</p>
+<h2 id="what-it-misses">What it misses</h2>
+<p>All under-reporting rather than over:</p>
+<ul>
+<li>A closure or arrow function assigned inside a body is stepped over with
+  that body, as Rust's closures and Go's function literals are.</li>
+<li>Text outside <code>&lt;?php … ?&gt;</code> is not read at all, so a declaration written
+  into markup — which would never execute — is correctly absent.</li>
+<li>Heredoc and nowdoc bodies (<code>&lt;&lt;&lt;EOT</code>) are not masked, so a brace inside
+  one can desync depth; the indentation fallback bounds that to a single
+  declaration.</li>
+<li>A method created by <code>__call</code>, or resolved by a trait's <code>insteadof</code>,
+  does not exist in the source and is not seen.</li>
+</ul>
+<h2 id="measured-with-phps-own-keywords">Measured with PHP's own keywords</h2>
+<p><code>elseif</code> is one word with no boundary inside it, so the C-family pattern
+matched neither <code>if</code> nor <code>elif</code> and scored a dispatch chain <strong>zero</strong> —
+the ordinary way PHP writes a multi-way branch, reading as branchless.
+That is Fortran's defect in a language nobody expected it in. <code>foreach</code>
+is the primary loop, and <code>and</code>/<code>or</code>/<code>xor</code> are word operators alongside
+<code>&amp;&amp;</code> and <code>||</code>.</p>
+<p>Three further corrections, from checking every construct in the
+reference against an independent implementation:</p>
+<ul>
+<li><strong><code>do</code> is not counted.</strong> <code>do { … } while (cond)</code> is one loop with one
+  condition, and the <code>while</code> clause already carries it. Counting both
+  scored every do-while one high.</li>
+<li><strong><code>goto</code> is not counted.</strong> It transfers control unconditionally — an
+  edge without a decision, the same reasoning that removed it from Go.</li>
+<li><strong><code>?int</code> is a nullable type hint, not a ternary.</strong> Counting it made
+  every nullable parameter in the language read as a branch, which is
+  D78's optional-chaining defect wearing different syntax. A <code>?</code>
+  followed immediately by an identifier character is a type; a ternary
+  is written with its expression separated.</li>
+</ul>
+<p>On the word operators this project counts what lizard does not. That
+divergence is declared with its reasoning in
+<code>tests/test_grammar_constructs.py</code>: <code>$a and $b</code> has the same two paths as
+<code>$a &amp;&amp; $b</code>, and scoring one but not the other would make a repository's
+complexity depend on which spelling it prefers.</p>
+<footer>Rendered from <code>docs/languages/php.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

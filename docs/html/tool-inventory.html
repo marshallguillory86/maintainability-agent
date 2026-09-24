@@ -1,0 +1,197 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>FOSS code-quality tool inventory · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#proven-on-this-machine-in-this-session">Proven, on this machine, in this session</a></li>
+<li><a href="#worth-adding-not-yet-proven-here">Worth adding, not yet proven here</a></li>
+<li><a href="#what-this-changes-about-the-agent">What this changes about the agent</a></li>
+<li><a href="#method">Method</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Reference</div><h1>FOSS code-quality tool inventory</h1><p>Every free tool this agent could run to gather maintainability evidence, what each one actually produces, and whether it has been <strong>proven to run</strong> rather than merely listed.</p>
+<p>This exists because the agent used to reimplement a fraction of these in <code>src/</code> — its own complexity approximation, its own clone detector, its own dead-code pass — while the README said <em>"pair this tool with mature analyzers … don't replace them."</em> <a href="adr-006-analyzer-evidence.html">ADR 006</a> inverted that: <code>--analyzers</code> runs the FOSS tools, coverage is reported, and the point estimate uses their readings where the full concept set was measured. The inventory below is the proven table that decision was built from.</p>
+<p><strong>Scope: maintainability and code quality only.</strong> Security scanning belongs to <code>secure-code-agent</code> and is deliberately absent here. Duplicating it would be the same replace-don't-pair mistake in a different direction.</p>
+<h2 id="proven-on-this-machine-in-this-session">Proven, on this machine, in this session</h2>
+<p>Every row below was installed and run against real code, and produced machine-readable output. The "found" column is an actual result, not a capability claim.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Languages</th>
+<th>Produces</th>
+<th>Output</th>
+<th>Found when run</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>lizard</strong></td>
+<td>C, C++, C#, Java, JavaScript, TypeScript, Objective-C, Swift, Python, Ruby, PHP, Scala, Go, Lua, Rust, <strong>Fortran</strong>, Kotlin, Solidity, Erlang, Zig, Perl, GDScript, TTCN-3</td>
+<td>Cyclomatic complexity, NLOC, parameter count, token count, per function</td>
+<td>CSV, XML</td>
+<td>205 functions in <code>src/</code>; worst CCN 14. Across seven languages simultaneously: C 11, C# 11, Java 11, Go 10, Rust 10, C++ 7, Fortran 6</td>
+</tr>
+<tr>
+<td><strong>jscpd</strong></td>
+<td>~150 formats incl. all of the above</td>
+<td>Copy-paste clones, duplication %</td>
+<td>JSON, SARIF</td>
+<td>Detected a 30-line Java clone across two files (27.9% duplication); correctly identified c, csharp, fortran, go, java, rust in one pass</td>
+</tr>
+<tr>
+<td><strong>radon</strong></td>
+<td>Python</td>
+<td><strong>Maintainability Index</strong> (the academic MI formula), cyclomatic complexity, Halstead, raw LOC</td>
+<td>JSON</td>
+<td>34 files ranked; lowest MI 42.23 (<code>cli.py</code>); 220 functions measured</td>
+</tr>
+<tr>
+<td><strong>ruff</strong></td>
+<td>Python</td>
+<td>~800 lint rules incl. complexity (C901), comprehensions, unused code, naming</td>
+<td>JSON, SARIF</td>
+<td>Already the repo's linter</td>
+</tr>
+<tr>
+<td><strong>multimetric</strong></td>
+<td>Python, C, C++, Java, JavaScript, Go, Ruby, PHP</td>
+<td>Per-file maintainability index, cyclomatic complexity, comment ratio, Halstead difficulty</td>
+<td>JSON</td>
+<td>Locally verified at 2.4.4; contributed measurements in all 40 checked-in analyzer-corpus rows</td>
+</tr>
+<tr>
+<td><strong>pylint</strong></td>
+<td>Python</td>
+<td>Design smells — too many arguments, locals, instance attributes, branches; duplicate-code checker</td>
+<td>JSON</td>
+<td>107 messages: too-many-arguments ×5, too-many-instance-attributes ×2, too-many-locals ×2</td>
+</tr>
+<tr>
+<td><strong>vulture</strong></td>
+<td>Python</td>
+<td>Dead code with a confidence score</td>
+<td>text</td>
+<td>0 at ≥80% confidence on <code>src/</code></td>
+</tr>
+<tr>
+<td><strong>eslint</strong></td>
+<td>JavaScript, TypeScript (via typescript-eslint)</td>
+<td><code>complexity</code>, <code>max-depth</code>, <code>max-params</code>, <code>max-lines-per-function</code>, plus the rule ecosystem</td>
+<td>JSON, SARIF</td>
+<td>complexity 11, max-depth 4 and 5, max-params 5 on a synthetic file</td>
+</tr>
+<tr>
+<td><strong>xenon</strong></td>
+<td>Python</td>
+<td>Pass/fail thresholds over radon — a gate, not a metric</td>
+<td>exit code</td>
+<td>installed, threshold-only</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>The headline is <code>lizard</code>.</strong> One binary covers C, C++, C#, Java, Fortran, Go, Rust, Kotlin, Swift, PHP, Ruby, Scala and more with no per-language configuration, producing the same four metrics everywhere. Combined with <code>jscpd</code> for duplication, two tools give comparable maintainability evidence across essentially every language someone might point an AI at.</p>
+<h2 id="worth-adding-not-yet-proven-here">Worth adding, not yet proven here</h2>
+<p>Listed with what they add beyond the proven set. Nothing here should be described as working until it has been run.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Languages</th>
+<th>Adds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PMD / CPD</strong></td>
+<td>Java, C#, C++, Go, Kotlin, Swift, JS, PHP, Ruby, Fortran…</td>
+<td>Design rules (god class, cyclomatic, coupling) and a mature copy-paste detector; the standard Java answer</td>
+</tr>
+<tr>
+<td><strong>Checkstyle</strong></td>
+<td>Java</td>
+<td>Style and structural conventions; complements PMD rather than repeating it</td>
+</tr>
+<tr>
+<td><strong>SpotBugs</strong></td>
+<td>Java bytecode</td>
+<td>Bug patterns the source-level tools miss</td>
+</tr>
+<tr>
+<td><strong>detekt</strong></td>
+<td>Kotlin</td>
+<td>The best-in-class Kotlin maintainability linter, complexity and smell rules</td>
+</tr>
+<tr>
+<td><strong>golangci-lint</strong></td>
+<td>Go</td>
+<td>Meta-runner: gocyclo, gocognit, dupl, funlen, deadcode in one pass</td>
+</tr>
+<tr>
+<td><strong>clippy</strong></td>
+<td>Rust</td>
+<td>The canonical Rust lint set, many maintainability rules</td>
+</tr>
+<tr>
+<td><strong>cppcheck</strong> / <strong>clang-tidy</strong></td>
+<td>C, C++</td>
+<td>Static analysis and modernisation/readability checks</td>
+</tr>
+<tr>
+<td><strong>Roslyn analyzers</strong> / <strong>SonarAnalyzer.CSharp</strong> (free tier)</td>
+<td>C#</td>
+<td>Complexity and smell rules native to the toolchain</td>
+</tr>
+<tr>
+<td><strong>rubocop</strong>, <strong>reek</strong>, <strong>flog</strong></td>
+<td>Ruby</td>
+<td>Style, smells, complexity</td>
+</tr>
+<tr>
+<td><strong>phpstan</strong>, <strong>phpmd</strong></td>
+<td>PHP</td>
+<td>Level-based static analysis and mess detection</td>
+</tr>
+<tr>
+<td><strong>swiftlint</strong></td>
+<td>Swift</td>
+<td>Style and complexity</td>
+</tr>
+<tr>
+<td><strong>fortran-linter</strong>, <strong>fprettify</strong></td>
+<td>Fortran</td>
+<td>Thin; lizard carries most of the Fortran signal</td>
+</tr>
+<tr>
+<td><strong>knip</strong>, <strong>ts-prune</strong></td>
+<td>TS/JS</td>
+<td>Dead exports — needs project config, failed a no-config run here</td>
+</tr>
+<tr>
+<td><strong>madge</strong>, <strong>dependency-cruiser</strong></td>
+<td>JS/TS</td>
+<td>Circular dependencies and architecture rules</td>
+</tr>
+<tr>
+<td><strong>mypy</strong>, <strong>pyright</strong></td>
+<td>Python</td>
+<td>Type coverage as a maintainability signal</td>
+</tr>
+<tr>
+<td><strong>scc</strong>, <strong>cloc</strong>, <strong>tokei</strong></td>
+<td>Everything</td>
+<td>LOC and a rough complexity estimate; useful as denominators</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="what-this-changes-about-the-agent">What this changes about the agent</h2>
+<p>Three things follow from the table, and they are the actual work:</p>
+<p><strong>Availability must be reported, never assumed.</strong> A tool that is not installed is not a clean result. That was the hole behind a one-function repository scoring 5.0/A+: six shallow built-in checks found nothing, and the rubric read that as excellence. <code>--analyzers</code> now prints which tools were attempted, which ran, which were unavailable and why. A concern nobody looked at is reported unexamined, never clean.</p>
+<p><strong>Installation has to be explicit and layered.</strong> Python tools install with the package; Node tools need <code>npx</code>; Java, Go, Rust and C tools are per-ecosystem binaries. Acquisition is off unless the user enables <code>analyzers.acquire_tools</code> in user-tier configuration; the audited tree cannot enable it. A small proven core (lizard, jscpd, ruff, radon) runs when present; the rest is reported unavailable rather than pretended to have looked.</p>
+<p><strong>The rubric is a metric over their findings</strong> where they measured a full concept set, with the built-in detectors as the labelled fallback. That change is <a href="adr-006-analyzer-evidence.html">ADR 006</a>.</p>
+<h2 id="method">Method</h2>
+<p>Everything in the proven table was installed into this repository's virtualenv or run through <code>npx</code>, executed against either <code>src/</code> or a synthetic multi-language fixture, and its machine-readable output parsed. The multi-language fixture deliberately contained the same tangled function written in seven languages so the complexity numbers could be compared directly.</p>
+<footer>Rendered from <code>docs/tool-inventory.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

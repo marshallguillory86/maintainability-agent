@@ -1,0 +1,161 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Configuration Schema · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#minimal-config">Minimal Config</a></li>
+<li><a href="#common-fields">Common Fields</a></li>
+<li><a href="#configuration-locations-and-precedence">Configuration locations and precedence</a></li>
+<li><a href="#analyzer-policy-analyzers">Analyzer policy (analyzers)</a></li>
+<li><a href="#economic-context">Economic context</a></li>
+<li><a href="#semantic-policy">Semantic policy</a></li>
+<li><a href="#validation">Validation</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Reference</div><h1>Configuration Schema</h1><p>The config file is JSON, conventionally named <code>maintainability-agent.json</code>, and currently uses <code>"version": 1</code>.</p>
+<p>The machine-readable schema lives at:</p>
+<pre><code class="language-text">maintainability-agent.schema.json
+</code></pre>
+<h2 id="minimal-config">Minimal Config</h2>
+<pre><code class="language-json">{
+  &quot;version&quot;: 1
+}
+</code></pre>
+<h2 id="common-fields">Common Fields</h2>
+<ul>
+<li><code>paths.include_extensions</code>: file extensions to scan.</li>
+<li><code>paths.exclude_patterns</code>: directories or <code>fnmatch</code> glob patterns to ignore. Separators are normalized so a pattern written either way matches, but <strong>this is POSIX-only software and Windows is untested</strong> — see <a href="readme.html#platform-support">platform support</a>. The normalization exists because patterns get copied between machines, not as a Windows claim. <code>migrations/</code> is excluded by default — migrations are append-only history, so a long, branchless <code>upgrade()</code> is correct code rather than a finding.</li>
+<li><code>thresholds</code>: warning/failure limits for file size, function size, complexity, and duplication.</li>
+<li><code>thresholds.max_cognitive_complexity</code> / <code>warn_cognitive_complexity</code> (default 25 / 15): nesting-weighted reading cost, charged per flow break <em>plus the depth it sits at</em>. Distinct from <code>max_complexity</code>, which counts branches and is blind to nesting — five guard clauses and five levels of nesting score the same under it. Fitted against 21,300 declarations in the reference corpus, where 15 sits near the 94th percentile and 25 near the 97th. Omit both keys to disable the check.</li>
+<li><code>thresholds.max_class_lines</code> / <code>warn_class_lines</code>: separate budget for classes (default 300 / 200). Classes are graded on length alone: they are containers, so the per-function line budget is the wrong yardstick, and a class's measured complexity is the sum of branches already charged to its own methods.</li>
+<li><code>idiom_groups</code>: concern name → list of competing package names, e.g. <code>{"logging": ["loguru", "structlog"]}</code>. Setting this <strong>replaces</strong> the shipped list, which covers only well-known, slow-moving alternatives (HTTP clients, date handling, client state, schema validation, ORMs, web frameworks) and is incomplete by construction.</li>
+<li><code>hard_gates</code>: rules that can fail CI.</li>
+<li><code>expected_files</code>: files required by the repo.</li>
+<li><code>expected_commands</code>: documented native commands such as test and lint.</li>
+<li><code>risk_patterns</code>: regex checks for project-specific risk language or unsafe patterns.</li>
+<li><code>instruction_pack</code>: context used when generating AI agent standards.</li>
+</ul>
+<h2 id="configuration-locations-and-precedence">Configuration locations and precedence</h2>
+<p>Configuration merges from least to most specific: built-in defaults, then the
+user file at <code>$XDG_CONFIG_HOME/maintainability-agent/config.json</code> (default
+<code>~/.config/maintainability-agent/config.json</code>), then the repository's
+<code>maintainability-agent.json</code> or explicit <code>--config</code> file. Later tiers win via
+the same recursive merge used for repository configuration. Documented
+environment overrides, where a setting has one, remain the highest-precedence
+one-run value; there is no generic environment-to-JSON replacement.</p>
+<p>Loading either the user or repository tier defaults <code>analyzers.run</code> to <code>true</code>.
+An explicit <code>run: false</code> survives until a later tier explicitly overrides it.
+With neither file, <code>load_config(None)</code> retains the built-in <code>run: false</code> path.</p>
+<p>Per-user first-run state lives at
+<code>$XDG_STATE_HOME/maintainability-agent/state.json</code> (default
+<code>~/.local/state/maintainability-agent/state.json</code>). Its <code>seen</code> object maps an
+absolute repository root to an ISO date. Missing, corrupt, or unreadable user
+configuration and state are treated as absent rather than aborting an audit.</p>
+<h2 id="analyzer-policy-analyzers">Analyzer policy (<code>analyzers</code>)</h2>
+<p>Controls whether the external pool runs and which analysis tools may run in it. Full background, including the tool inventory and what each class means, is in <a href="analyzer-pool.html">the analyzer pool</a>.</p>
+<pre><code class="language-json">&quot;analyzers&quot;: {
+  &quot;run&quot;: true,
+  &quot;depth&quot;: &quot;moderate&quot;,
+  &quot;license_policy&quot;: &quot;permissive&quot;,
+  &quot;prompt_when_interactive&quot;: true,
+  &quot;allow_tools&quot;: [],
+  &quot;deny_tools&quot;: [],
+  &quot;deny_license_classes&quot;: [],
+  &quot;deny_concerns&quot;: [&quot;security&quot;],
+  &quot;timeout_seconds&quot;: 120
+}
+</code></pre>
+<ul>
+<li><code>run</code>: whether ordinary audits run the configured external analyzer pool. A loaded configuration file defaults this to <code>true</code>; set it to <code>false</code> to use only the built-in fallback. <code>load_config(None)</code> keeps <code>run: false</code>, so unconfigured programmatic callers retain the zero-install behavior. CLI flags override this value. This switch does not enable tool acquisition: <code>acquire_tools</code> remains separately opt-in and defaults to <code>false</code>.</li>
+<li><code>depth</code>: <code>baseline</code> | <code>moderate</code> | <code>heavy</code> | <code>all</code>. Cumulative — <code>heavy</code> includes everything in <code>baseline</code> and <code>moderate</code>. Larger pools take longer and produce better-supported scores.</li>
+<li><code>license_policy</code>: <code>permissive</code> | <code>copyleft-weak</code> | <code>copyleft-any</code> | <code>commercial-free-tier</code> | <code>unverified</code>. Also cumulative. Defaults to <code>permissive</code>, the setting fewest organizations have to argue about.</li>
+<li><code>acquire_tools</code>: whether a missing Node tool may be fetched (<code>npx --yes</code>) during a run. <strong>Default <code>false</code></strong> — acquisition is a network action, and the P1 separation of analysis from acquisition only means something when acquisition is chosen rather than defaulted. Off, a missing tool is reported <code>not-installed</code> with its install command in the environment work order.</li>
+<li><code>prompt_when_interactive</code>: whether an interactive first run may ask the setup questions when no config exists (release-plan 6.1, shipped). Chat, MCP, and a CLI TTY ask the <strong>same</strong> questions (<a href="help-first-run.html">first run</a>); this key only gates whether an interactive surface asks at all. The ask fires only when there is an operator (MCP elicitation / host question UI, or a CLI TTY) and no discovered or <code>--config</code> file. It never fires in CI — a non-TTY run neither asks nor writes. Set <code>false</code> to keep even an interactive run silent. Answers otherwise come from this file. <code>--depth</code> / <code>--license-policy</code> on <code>tools/resolve_pool.py</code> preview a pool; they are not a second setup.</li>
+<li><code>allow_tools</code>: tool slugs admitted even when the policy tiers would exclude them — for a commercial analyzer you hold a license for, say.</li>
+<li><code>deny_tools</code>: tool slugs never run, whatever else permits them.</li>
+<li><code>deny_license_classes</code>: whole classes never run, e.g. <code>["strong-copyleft"]</code>.</li>
+<li><code>deny_concerns</code>: concern tags never run. <code>security</code> is denied by default; that work belongs to <code>secure-code-agent</code> and duplicating it here would produce two tools disagreeing about the same repository.</li>
+<li><code>timeout_seconds</code>: per-tool wall clock. A tool that exceeds it is recorded as unavailable-timeout, never as a clean result.</li>
+<li><code>class_dirs</code>: extra directories of already-compiled Java classes for SpotBugs, on top of the defaults <code>target/classes</code> and <code>build/classes</code>. The agent never creates these directories and never runs the build (ADR 012).</li>
+</ul>
+<p><strong>Precedence is fixed and not configurable:</strong> every deny wins, including over <code>allow_tools</code>. An organization's prohibition must not be overridable by a per-repository opt-in. Within what remains, <code>allow_tools</code> admits, then the depth and license tiers decide.</p>
+<p>Slugs come from <a href="../../src/maintainability_audit/_assets/analyzer-catalog.json"><code>src/maintainability_audit/_assets/analyzer-catalog.json</code></a>. To see exactly what a configuration selects, and why everything else was left out:</p>
+<pre><code class="language-bash">python tools/resolve_pool.py                    # resolve the current config
+python tools/resolve_pool.py --explain pylint   # why is one tool in or out?
+python tools/resolve_pool.py --depth all        # what-if, without editing the file
+</code></pre>
+<p>A slug that is not in the catalog is a config error, not a silent no-op.</p>
+<h2 id="economic-context">Economic context</h2>
+<p>ADR 004 v1. Optional. The audit CLI reads these keys
+(<code>tests/test_economic_context.py</code>).</p>
+<p>Optional. Absent, the report is a normal maintainability report: no $
+block, work order stays in risk×effort order. Present, it never changes
+the 0–5 score or <code>verified_grade</code>.</p>
+<pre><code class="language-json">&quot;economic_context&quot;: {
+  &quot;version&quot;: 1,
+  &quot;currency&quot;: &quot;USD&quot;,
+  &quot;planning_horizon_months&quot;: 12,
+  &quot;loaded_engineering_cost_per_hour&quot;: { &quot;low&quot;: 90, &quot;base&quot;: 140, &quot;high&quot;: 210 }
+}
+</code></pre>
+<ul>
+<li><code>loaded_engineering_cost_per_hour</code>: <strong>required for any $ scenario</strong>.
+  Low / base / high loaded blended rate. One number is not enough; the
+  range is the honesty.</li>
+<li><code>currency</code>: display label only (default <code>USD</code>). No network conversion.</li>
+<li><code>planning_horizon_months</code>: default <code>12</code> when omitted.</li>
+<li>Optional later keys (not required for the $ block): <code>reliability_tier</code>
+  (<code>internal</code> | <code>customer</code> | <code>regulated</code>), <code>typical_review_minutes_per_change</code>,
+  <code>representative_incident_cost</code>.</li>
+</ul>
+<p>When the labor range is missing and stdin is a TTY, a first interactive
+run may ask and write this block into <code>maintainability-agent.json</code>.
+Non-TTY never asks. <code>analyzers.prompt_when_interactive: false</code> suppresses
+the ask. Environment overrides for one run, not persisted unless the ask
+writes the file: <code>MAINTAINABILITY_LABOR_LOW</code>, <code>MAINTAINABILITY_LABOR_BASE</code>,
+<code>MAINTAINABILITY_LABOR_HIGH</code>, <code>MAINTAINABILITY_CURRENCY</code>,
+<code>MAINTAINABILITY_HORIZON_MONTHS</code>.</p>
+<p>This section is the shipped v1 contract.</p>
+<h2 id="semantic-policy">Semantic policy</h2>
+<p>ADR 003 option C. Optional and absent by default. The first increment is
+TypeScript only and contributes report findings and prompt-only candidates,
+never score weights.</p>
+<pre><code class="language-json">&quot;semantic_policy&quot;: {
+  &quot;version&quot;: 1,
+  &quot;domain_types&quot;: [
+    {
+      &quot;name&quot;: &quot;order-status-public-boundary&quot;,
+      &quot;paths&quot;: [&quot;src/orders/api.ts&quot;],
+      &quot;boundary&quot;: &quot;public&quot;,
+      &quot;symbol&quot;: &quot;updateStatus&quot;,
+      &quot;required_type&quot;: &quot;OrderStatus&quot;
+    }
+  ],
+  &quot;operations&quot;: [
+    {
+      &quot;name&quot;: &quot;session-operation-review&quot;,
+      &quot;paths&quot;: [&quot;src/session/operations.ts&quot;],
+      &quot;capability_type&quot;: &quot;SessionCapability&quot;,
+      &quot;operation_contract&quot;: &quot;Op&lt;TResult&gt;&quot;
+    }
+  ]
+}
+</code></pre>
+<ul>
+<li><code>version</code>: currently <code>1</code>.</li>
+<li><code>domain_types</code>: exact TypeScript paths and public symbols for which the
+  repository declares a required domain type. Each entry names itself so a
+  finding can cite the policy that produced it.</li>
+<li><code>operations</code>: exact TypeScript paths and operation concepts eligible for the
+  repeated dispatch/capability/description candidate. Configuration does not
+  promote that candidate to a fact.</li>
+</ul>
+<p>Broad naming rules are outside v1. In particular, policy cannot say every
+<code>*_id</code> must be a value object. Missing type analysis is reported as unknown
+coverage rather than zero semantic violations.</p>
+<h2 id="validation">Validation</h2>
+<p>Any JSON Schema validator that supports draft 2020-12 can validate the config.</p>
+<footer>Rendered from <code>docs/config-schema.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

@@ -1,0 +1,538 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Maintainability Agent · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#executive-summary">Executive summary</a></li>
+<li><a href="#why-this-exists">Why this exists</a></li>
+<li><a href="#install">Install</a></li>
+<li><a href="#primary-surface-chat-mcp">Primary Surface: Chat / MCP</a></li>
+<li><a href="#automation-ci-cli">Automation / CI: CLI</a><ul>
+<li><a href="#checking-that-the-agent-did-the-work">Checking that the agent did the work</a></li>
+<li><a href="#during-the-loop-not-only-after-it">During the loop, not only after it</a></li>
+</ul>
+</li>
+<li><a href="#what-it-analyzes">What it analyzes</a></li>
+<li><a href="#language-support">Language support</a></li>
+<li><a href="#what-it-produces">What it produces</a></li>
+<li><a href="#scoring-standard">Scoring standard</a></li>
+<li><a href="#self-audit">Self-audit</a></li>
+<li><a href="#platform-support">Platform support</a></li>
+<li><a href="#invokable-skill-slash-command">Invokable skill / slash command</a></li>
+<li><a href="#github-action">GitHub Action</a></li>
+<li><a href="#documentation">Documentation</a></li>
+<li><a href="#running-tests">Running tests</a></li>
+<li><a href="#get-in-touch">Get in touch</a></li>
+<li><a href="#support-this-work">Support this work</a></li>
+<li><a href="#acknowledgements">Acknowledgements</a></li>
+<li><a href="#license">License</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Project</div><h1>Maintainability Agent</h1><p><img alt="maintainability-agent — a deterministic audit whose output is a bounded work order for your AI coding agent: fix exactly these findings, refactor nothing else" src="https://raw.githubusercontent.com/marshallguillory86/maintainability-agent/main/docs/cover.png" /></p>
+<p><strong>A deterministic, offline maintainability audit whose output is a <em>bounded
+work order</em> for an AI coding agent</strong> — a copy-paste prompt, per finding, that
+says <em>fix exactly these and refactor nothing else</em>. Chat-primary; CLI for CI.
+Version <strong>3.8.1</strong>.</p>
+<p><strong>Languages parsed:</strong> Python, Java, Kotlin, C, C++, C#, Go, Rust, PHP, Ruby,
+Swift, COBOL, Fortran (free-form <em>and</em> fixed-form), and the JS/TS/HTML family — each
+by a scanner written for it, and measured with that language's own reading of
+what a branch is, checked construct-by-construct against an independent
+implementation.
+<a href="#language-support">What that means per language</a>.</p>
+<pre><code class="language-bash">pip install maintainability-agent          # CLI + library
+pip install &quot;maintainability-agent[mcp]&quot;   # optional local MCP server for chat / IDE hosts
+cp -r skills/maintainability-agent ~/.claude/skills/   # Claude Code slash command
+</code></pre>
+<p><strong>Install the analyzer pool too, or you get the built-in tier.</strong> This tool
+prefers established analyzers and falls back to its own detectors when none is
+present. The fallback is honest — the report says <code>Estimate source: built-in
+detectors</code> and the coverage section names what nothing examined — but it is a
+weaker reading than the tool is capable of, and a first run without these is
+the commonest reason it looks thin.</p>
+<pre><code class="language-bash">pip install cohesion complexipy flake8 fortitude-lint interrogate lizard \
+  multimetric mypy pydocstyle pylint radon ruff vulture
+npm install -g jscpd eslint            # duplication + JavaScript/TypeScript
+brew install pmd checkstyle spotbugs   # JVM languages, optional
+</code></pre>
+<p>Unpinned on purpose: this is the exact set CI installs and calibrates against,
+and <code>test_the_readme_names_the_analyzer_pool_ci_installs</code> fails if the two ever
+disagree. Nothing here is required — the audit runs without any of it and tells
+you what it could not measure.</p>
+<p><strong>Install secure-code-agent for the security pillar.</strong> Every audit runs it; it is
+installed alongside rather than as a dependency, so the two tools release
+independently. Without it the report says the security pillar was not measured
+and gives this command. Its scanners decide what it can grade — see
+<a href="machine-setup.html#3-toolchain">machine setup</a> for which to install, and
+don't add its <code>[mcp]</code> extra to this environment (it pins <code>mcp&lt;2</code>).</p>
+<pre><code class="language-bash">pip install 'secure-code-agent&gt;=0.12.2'
+brew install gitleaks osv-scanner semgrep checkov   # its scanners; pip install bandit
+</code></pre>
+<p><strong>One command to a work order.</strong> A config file is the whole setup — with one
+present, nothing is asked and nothing is written into your tree:</p>
+<pre><code class="language-bash">curl -O https://raw.githubusercontent.com/marshallguillory86/maintainability-agent/main/maintainability-audit.example.json
+maintainability-audit --config maintainability-audit.example.json \
+  --output report.md --prompt-output prompt.md
+</code></pre>
+<p><code>prompt.md</code> is the bounded work order: the findings worth fixing, in order,
+each with its location, why it matters and the command that verifies it — and
+the standing rule that nothing else gets refactored. Paste it into your agent.
+<code>report.md</code> is the evidence behind it. The prompt is the product.</p>
+<p><strong>Want to see the output before pointing it at your own code?</strong>
+<a href="../../examples/demo"><code>examples/demo</code></a> is a two-module order system with real
+problems in it — an overgrown pricing function, a money path nothing tests, and
+a block duplicated between billing and invoicing. Four items, three finding
+classes, a copy-paste prompt each, and it reads in under a minute. The work
+order it produces is checked in at
+<a href="../../examples/demo/expected-prompt.md"><code>expected-prompt.md</code></a>.</p>
+<p>Without <code>--config</code>, an interactive run asks the first-run questions instead —
+analyzer pool, depth, licence policy, whether to run your suite — because those
+are choices this tool will not make on your behalf.</p>
+<hr />
+<h2 id="executive-summary">Executive summary</h2>
+<p>Agents write code faster than anyone can review it. Not measurably <em>worse</em>
+code — this project tested that claim about itself and retracted it — just
+<strong>more</strong>, arriving faster than trust can accumulate. Linters and quality
+dashboards catch some of the resulting slop. None of them ship the one thing
+that actually closes the loop: <strong>a bounded prompt back to the agent, scoped to
+the findings, that forbids unbounded rewrites.</strong></p>
+<p>That prompt is the product. Everything else — the scanner, the ISO/IEC
+25010-inspired 0–5 score, the analyzer pool, the semantic and economic
+signals — exists to aim it. Remove the prompt and what's left is a worse
+version of tools that already ship.</p>
+<p>What 1.0 guarantees:</p>
+<ul>
+<li><strong>Deterministic and local.</strong> Same tree, config, pinned analyzer versions and
+  history in → same evidence, findings and score out. The analysis performs no
+  network access and invokes no LLM, and <strong>this agent does not transmit your
+  source.</strong> Every report states what it examined and produced — files,
+  declarations, findings, bounded work items — <strong>all computed with no model
+  call</strong>: work a metered agent never has to do. Third-party analyzers it may
+  spawn (eslint, jscpd, lizard) are <strong>not network-sandboxed</strong> — this process does
+  not police whether <em>they</em> phone home; install them for an air-gapped run.</li>
+<li><strong>One uniform rubric</strong>, readable in source, applied to every repository —
+  so "better" and "worse" are not an argument. Calibrated against a
+  query-selected corpus of mature open-source projects; the corpus median
+  earns a <strong>B</strong>, and A+ is <em>gated</em>, not averaged.</li>
+<li><strong>Honest about evidence.</strong> A score is withheld when too little was examined
+  to support one — a <code>--changed-only</code> diff is not a repository grade, and a
+  shallow clone is not an A. Every reported value names what measured it.</li>
+<li><strong>The complete work order is the report; chat/CLI is a bounded UI.</strong> The
+  HTML/Markdown report carries the entire backlog with a deterministic
+  copy-paste prompt for each item. The chat surface stays a tight summary so a
+  host's payload cap can never truncate the prompt.</li>
+<li><strong>One setup, three transports.</strong> Chat, MCP, and an interactive CLI TTY ask
+  the <em>same</em> first-run questions. A surface that asks a subset is a bug.</li>
+</ul>
+<p>Governing intent lives in <a href="product-intent.html">docs/product-intent.md</a> —
+that document is authoritative, and this README defers to it wherever the two
+differ.</p>
+<h2 id="why-this-exists">Why this exists</h2>
+<p>The ratio of code-written to code-reviewed has collapsed, and the same speed is
+the way out: an agent pointed at specific, deterministic findings can fix them
+at the rate they appear. The loop is <strong>measure</strong> with no model involved,
+<strong>score</strong> against one uniform standard, <strong>emit a prompt scoped to those findings
+only</strong>, and hand it over. Step three is the product.</p>
+<p><strong>Who does the checking matters as much as what it checks.</strong> An author is never
+the independent check on their own work, so a platform that generates code and
+grades it is producing a self-assessment. This writes nothing and runs no model,
+which is what lets its verdict count as evidence. Since 2.1.0 the work order is
+itself checked — scope conformance, a dimension ratchet, and an attestation
+record — and those checks read a diff's <strong>shape</strong>, never whether it works.</p>
+<p>The full argument, including what this deliberately does not compete on:
+<a href="why-this-exists.html">why this exists</a> and
+<a href="philosophy.html">philosophy</a>.</p>
+<h2 id="install">Install</h2>
+<pre><code class="language-bash">python3 -m pip install maintainability-agent
+maintainability-agent --root . --config maintainability-agent.json
+</code></pre>
+<p>Or run from a source checkout without installing:</p>
+<pre><code class="language-bash">python3 -m maintainability_audit --root . --config maintainability-agent.json
+</code></pre>
+<p>For an editable dev install and the full local-verification sequence, see
+<a href="contributing.html#local-verification">CONTRIBUTING.md</a>. Upgrading from 0.x? The
+scale and the evidence model changed on the way to 1.0 — see
+<a href="migration-1.0.html">docs/migration-1.0.md</a>.</p>
+<h2 id="primary-surface-chat-mcp">Primary Surface: Chat / MCP</h2>
+<p>Drive the local MCP process from an IDE assistant or chat host. Call
+<code>audit_repository</code>; <strong>unset <code>action</code> never audits.</strong> An unconfigured repository
+(no repository <code>maintainability-agent.json</code> and no user config) returns
+<code>setup_needed</code> and <code>audit_ran: false</code> — structured setup choices for analyzer
+policy, history consent, economics, test-suite execution, and presentation, and
+no report. A configured repository returns <code>choice_needed</code> (<code>run</code> or
+<code>reconfigure</code>), also without a report. Answering setup does not start an audit.
+<code>action="run"</code> returns the report and its bounded remediation prompt to the
+conversation. <code>record_history=None</code> follows the persisted first-run consent and
+always appends to an existing history; an explicit <code>true</code> or <code>false</code> wins.</p>
+<pre><code class="language-bash">python3 -m pip install &quot;maintainability-agent[mcp]&quot;
+maintainability-agent mcp --allow-root /absolute/path/to/repository
+</code></pre>
+<p>Presentation is exactly four choices — <strong>chat</strong>, a <strong>Markdown</strong> file, a
+single-file <strong>HTML</strong> report, or <strong>json</strong>: the report dictionary itself, for a
+pipeline or an agent rather than a reader. Where to save is asked only after a
+file format is chosen, and no report file is written without that choice. The
+four render from one report dict and never compute a score of their own
+(<a href="adr-011-three-report-presentations.html">ADR 011</a>). See
+<a href="help.html">chat workflow help</a> and <a href="ide-agent-integration.html">IDE and agent
+integration</a>.</p>
+<h2 id="automation-ci-cli">Automation / CI: CLI</h2>
+<p><img alt="The loop, end to end: staged content meets a fast gate that blocks or passes it, the full audit measures what landed, the work order names exactly what to fix, and the repair is checked back against it" src="https://raw.githubusercontent.com/marshallguillory86/maintainability-agent/main/docs/MA_workflow.jpg" /></p>
+<p>Use the CLI for scripts, repeatable automation, and CI gates. Copy the example
+config to your repo root as <code>maintainability-agent.json</code>, then:</p>
+<pre><code class="language-bash">maintainability-agent \
+  --config maintainability-agent.json \
+  --fail-on-gate \
+  --output maintainability-report.md \
+  --prompt-output maintainability-remediation-prompt.md \
+  --comment-output maintainability-pr-comment.md \
+  --sarif-output maintainability.sarif
+</code></pre>
+<p><code>--fail-on-gate</code> fails CI on hard gates only (a missing README, an undocumented
+test command, a breached threshold) — never on a letter grade, and never on a
+withheld estimate. For PR work, add <code>--changed-only main...HEAD</code> to audit the
+diff; on a change too small to support a rate, the estimate and grade are
+withheld and the scope is named as the reason.</p>
+<h3 id="checking-that-the-agent-did-the-work">Checking that the agent did the work</h3>
+<p>The work order tells an agent to fix exactly these findings and refactor nothing
+else. Four flags check that the diff obeyed it — reading its <em>shape</em>, never
+whether it works:</p>
+<pre><code class="language-bash">maintainability-agent \
+  --config maintainability-agent.json \
+  --conformance main...HEAD \
+  --fail-on-out-of-scope \
+  --fail-on-regression \
+  --attestation-output maintainability-attestation.md
+</code></pre>
+<p><code>--conformance</code> answers two questions separately — did the diff <strong>stay in
+scope</strong>, and did it <strong>silence nothing</strong> — because a change can obey the work
+order and still add a <code># noqa</code> to a finding inside it. <code>--fail-on-out-of-scope</code>
+turns that into a CI failure. <code>--fail-on-regression</code> ratchets the <em>dimension</em>
+scores against history, with three outcomes rather than two: held, regressed,
+and <strong>not comparable</strong>, because two scans taken under different calibration
+cannot be differenced. <code>--attestation-output</code> composes them into one per-change
+record, reproducible and <strong>not signed</strong> — a check nobody ran renders as <em>not
+asked</em>, never as passed.</p>
+<p>Each flag in full, including <code>--transformation</code>:
+<a href="cli.html">docs/cli.md</a>. Why this was the hole under the product's central
+claim: <a href="roadmap.html#the-remediation-hole-closed-in-210-through-230">the roadmap</a>.</p>
+<h3 id="during-the-loop-not-only-after-it">During the loop, not only after it</h3>
+<p>The gate above runs once the work is done. Two flags run while it is still in
+the author's hands, and neither produces a score — a diff and a single file
+both lack the population a rate needs.</p>
+<pre><code class="language-bash">maintainability-agent --check src/thing.py &lt; proposed.py   # while writing
+maintainability-agent --install-precommit-hook             # before committing
+</code></pre>
+<p><strong><code>--check PATH</code></strong> answers about content on stdin. No repository, no git, no
+scan; <code>PATH</code> names the content and is never opened. Pass file content, not a
+diff — <strong>a piped diff is refused in every language</strong>, by its format rather
+than by a parser, and says so rather than reading as clean; so does a
+language with no scanner. Beyond that, only Python's content is parsed:
+a brace language's invalid source is not detected, because zero
+declarations is not evidence of a parse failure and marking valid files
+unparsed would be worse than the silence. In text it is <strong>silent while you have room</strong>
+and speaks once a declaration nears its limit — on <em>any</em> budget it can be
+failed on, length or cyclomatic or cognitive, not length alone.
+<code>--format json</code> carries the remaining budget for every declaration whether
+or not it is close, per budget rather than as one number.</p>
+<p><strong><code>--staged</code></strong> scans the git index. Stage half a file with <code>git add -p</code>, keep
+typing, and what gets measured is what the commit will actually contain —
+reading the working tree is the classic pre-commit bug. It applies no
+repository gates, runs nothing, writes nothing, and costs 0.17s here against
+the full audit's 266; a hook slower than the author's patience is one they
+uninstall. <code>--install-precommit-hook</code> refuses to replace a hook it did not
+write and honours <code>core.hooksPath</code>. It pins the interpreter that installed it by
+absolute path, so re-run it if that virtualenv moves.</p>
+<p>Both exit 1 on a breach and 0 silently, and both take <code>--format json</code>.</p>
+<h2 id="what-it-analyzes">What it analyzes</h2>
+<p>The deterministic scanner reads code from your repo (no LLM calls) and produces
+signals on:</p>
+<ul>
+<li>largest files (configurable warn/fail thresholds)</li>
+<li>function size and complexity — exact ranges for Python via <code>ast</code>, and
+  bounded ranges for every other parsed language, each measured with that
+  language's own reading of what a branch is (<a href="#language-support">Language
+  support</a> is the list, so this sentence cannot drift
+  out of step with it) — plus <strong>cognitive complexity</strong> (nesting-weighted
+  reading cost)</li>
+<li>class size, against its own budget (<code>max_class_lines</code>)</li>
+<li>duplicate blocks, and <strong>near-duplicate declarations</strong> compared structurally so
+  renaming can't hide a copy, each paired with the original to reuse</li>
+<li>unreferenced private declarations (debris nothing can reach)</li>
+<li>competing libraries for one concern (two HTTP clients, two validators)</li>
+<li>configurable risk patterns (<code>eval(</code>, <code>exec(</code>, TODO/FIXME, custom regex)</li>
+<li>expected files / commands / clean-worktree (opt-in hard gates)</li>
+<li><strong>TypeScript semantic facts</strong> from a recorded analysis or an
+  already-installed <code>tsc</code>, including workspace projects (ADR 003)</li>
+<li><strong>test effectiveness</strong> from an opted-in suite run and parsed coverage
+  (Class 5, default off — the one place the agent may execute the tree)</li>
+<li>an ISO/IEC 25010-inspired 0–5 estimate per category, and a verified grade —
+  or a disclosed withholding when the evidence is thin.</li>
+</ul>
+<p>The analyzer is intentionally conservative and under-reports rather than
+over-reports: an unrecognized declaration costs one missed finding, never a
+cascade of false ones. Pair it with native tools (ESLint, Ruff, Radon, Semgrep,
+SonarQube, Qlty) rather than replacing them — their SARIF folds in via
+<code>--sarif-input</code>. Accuracy and limits: <a href="language-support.html">docs/language-support.md</a>.</p>
+<h2 id="language-support">Language support</h2>
+<p><strong>Be clear-eyed: the tool does not support every language equally, and on an
+unrecognized language it under-reports rather than fails.</strong> Coverage has two layers.</p>
+<p>Fifteen languages are parsed as of <strong>3.8.0</strong>: Python (1.0), Java (1.0), C (1.1),
+C++ (1.2), C# (1.3), Fortran (free-form 1.4, fixed-form 1.6), Swift (2.4),
+COBOL (2.7), Go (2.11), Rust (2.11), PHP (2.11), Ruby (2.11), Kotlin (3.8), the JS/TS family, and HTML. Each has a scanner written for it and a
+documented list of what it misses — a language is claimed only when both exist.</p>
+<p><strong>Built-in scanner (always on, no dependencies)</strong> — reads function/class
+declarations, sizes and complexity for a fixed set of languages, and <strong>only</strong>
+these:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Language</th>
+<th>How it's measured</th>
+<th>Fidelity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python (<code>.py</code>)</td>
+<td><code>ast</code> — exact <code>end_lineno</code></td>
+<td>Exact</td>
+</tr>
+<tr>
+<td>Java (<code>.java</code>)</td>
+<td>dedicated brace-bounded scanner</td>
+<td>Bounded; under-reports some constructs</td>
+</tr>
+<tr>
+<td>C (<code>.c</code>, <code>.h</code>)</td>
+<td>dedicated brace-bounded scanner — functions, <code>struct</code>/<code>enum</code>/<code>union</code></td>
+<td>Bounded; prototypes and macros are not declarations</td>
+</tr>
+<tr>
+<td>C++ (<code>.cpp</code>, <code>.hpp</code>, <code>.cc</code>, <code>.cxx</code>, <code>.hh</code>)</td>
+<td>dedicated brace-bounded scanner — functions, class members, namespaces, templates</td>
+<td>Bounded; bodyless declarations are not definitions</td>
+</tr>
+<tr>
+<td>C# (<code>.cs</code>)</td>
+<td>dedicated brace-bounded scanner — methods, constructors, <code>class</code>/<code>interface</code>/<code>struct</code>/<code>record</code>/<code>enum</code></td>
+<td>Bounded; properties are not declarations</td>
+</tr>
+<tr>
+<td>Swift (<code>.swift</code>)</td>
+<td>dedicated brace-bounded scanner — functions, initialisers, subscripts, <code>class</code>/<code>struct</code>/<code>enum</code>/<code>protocol</code>/<code>actor</code></td>
+<td>Bounded; extension members carry their type, protocol requirements and computed properties are not declarations</td>
+</tr>
+<tr>
+<td>Kotlin (<code>.kt</code>, <code>.kts</code>)</td>
+<td>dedicated brace-bounded scanner — functions, constructors, <code>init</code>, <code>class</code>/<code>interface</code>/<code>object</code> and the <code>data</code>/<code>sealed</code>/<code>enum</code>/<code>value</code> forms</td>
+<td>Bounded; extension functions carry the receiver the source writes, an expression body is a declaration, interface requirements and properties are not</td>
+</tr>
+<tr>
+<td>Go (<code>.go</code>)</td>
+<td>dedicated brace-bounded scanner — functions, methods, <code>type</code>/<code>struct</code>/<code>interface</code></td>
+<td>Bounded; methods carry their receiver type, interface methods are requirements, function literals inside a body are not seen</td>
+</tr>
+<tr>
+<td>Rust (<code>.rs</code>)</td>
+<td>dedicated brace-bounded scanner — functions, <code>impl</code> and <code>trait</code> members, <code>struct</code>/<code>enum</code>/<code>trait</code>/<code>union</code></td>
+<td>Bounded; methods carry the type their <code>impl</code> names, trait requirements mint nothing, closures and macro bodies are not read</td>
+</tr>
+<tr>
+<td>PHP (<code>.php</code>, <code>.phtml</code>)</td>
+<td>dedicated brace-bounded scanner — functions, methods, <code>class</code>/<code>interface</code>/<code>trait</code>/<code>enum</code>; markup outside <code>&lt;?php</code> is blanked</td>
+<td>Bounded; methods carry their class, bodyless members mint nothing, heredoc bodies are not masked</td>
+</tr>
+<tr>
+<td>Ruby (<code>.rb</code>, <code>.rake</code>, <code>.gemspec</code>)</td>
+<td>dedicated scanner — methods, classes and modules bounded by <code>end</code>, counted by openers</td>
+<td>Bounded by depth; methods carry their class, blocks and modifier forms discounted, metaprogrammed methods are not seen</td>
+</tr>
+<tr>
+<td>COBOL (<code>.cbl</code>, <code>.cob</code>, <code>.cpy</code>, and <code>.CBL</code>/<code>.COB</code>/<code>.CPY</code>)</td>
+<td>dedicated scanner — PROCEDURE DIVISION paragraphs, bounded by the start of whatever follows; fixed-form card columns read where the layout carries them</td>
+<td>Bounded by the next header; level numbers and container programs/sections are not declarations</td>
+</tr>
+<tr>
+<td>Fortran, free-form (<code>.f90</code>, <code>.f95</code>, <code>.f03</code>, <code>.f08</code>, <code>.F90</code>, <code>.F95</code>, <code>.F03</code>, <code>.F08</code>, <code>.pf</code>)</td>
+<td>dedicated <strong>keyword</strong>-bounded scanner — modules, subroutines, functions, derived types</td>
+<td>Bounded by <code>end</code>; measured with Fortran's own branch and nesting reading</td>
+</tr>
+<tr>
+<td>Fortran, fixed-form (<code>.f</code>, <code>.for</code>, <code>.ftn</code>, <code>.F</code>, <code>.FOR</code>, <code>.FTN</code>)</td>
+<td>the same scanner over card-column source; continuations joined, labelled <code>DO</code> loops understood</td>
+<td>Bounded by <code>end</code> or by the loop's label</td>
+</tr>
+<tr>
+<td>JS / TS / JSX / TSX (<code>.js</code>, <code>.jsx</code>, <code>.mjs</code>, <code>.cjs</code>, <code>.ts</code>, <code>.tsx</code>)</td>
+<td>brace/paren depth over a masked copy</td>
+<td>Bounded by the declaration's own braces</td>
+</tr>
+<tr>
+<td>HTML (<code>.html</code>)</td>
+<td>same brace scanner (inline <code>&lt;script&gt;</code>)</td>
+<td>Bounded</td>
+</tr>
+<tr>
+<td>TypeScript (semantic)</td>
+<td>a recorded analysis or a locally-installed <code>tsc</code>, workspace projects included</td>
+<td>Type-level facts; <code>unknown</code> when no checker is present</td>
+</tr>
+</tbody>
+</table></div>
+<p>Any language <strong>not</strong> in that table — Scala, Elixir, Zig, and the rest —
+is <strong>not parsed for declarations by the built-in scanner.</strong> Its files still count
+toward repo size, but the built-ins produce no function-size, complexity,
+duplication or dead-code findings for them, and the estimate leans on whatever
+evidence <em>is</em> available — which is why the report discloses its evidence tier
+and can withhold the grade.</p>
+<p>So: <strong>first-class today is Python</strong> (and TypeScript for semantics); every other
+parsed language is bounded-but-real; anything outside the table is only as
+covered as the analyzer you point at it. Per-language accuracy and limits:
+<a href="language-support.html">docs/language-support.md</a>. Which analyzer covers
+which language, how the opt-in pool extends coverage past the built-in set, and
+why COBOL's external tier is empty:
+<a href="adapters.html#which-analyzer-covers-which-language">docs/adapters.md</a>.</p>
+<h2 id="what-it-produces">What it produces</h2>
+<p>Any combination of: <code>maintainability-report.md</code> (or a single-file HTML report,
+or the report dictionary on stdout with <code>--format json</code>),
+<code>maintainability-remediation-prompt.md</code> (the bounded prompt),
+<code>maintainability-pr-comment.md</code>, <code>maintainability.sarif</code> (2.1.0, for GitHub
+Code Scanning), <code>maintainability-baseline.json</code> (for <code>--fail-on-new</code>
+incremental adoption), and per-tool agent instruction files
+(<code>AGENTS.md</code>, <code>CLAUDE.md</code>, Cursor/Copilot/Windsurf rules) via
+<code>--init-agent-standards</code>.</p>
+<p><strong>The report is the complete work order.</strong> The HTML and Markdown reports carry
+the whole backlog — every finding with a self-contained, deterministic
+copy-paste prompt telling the agent to fix only the listed items, keep the
+patch small, preserve architecture and behavior, add tests where behavior
+changes, and report false positives instead of rewriting blindly. Chat and CLI
+render a bounded view — a summary plus the top items and a pointer to the
+report — so a payload cap can never truncate the prompt.</p>
+<h2 id="scoring-standard">Scoring standard</h2>
+<p>One rubric, applied uniformly, published in full at
+<a href="standard.html">docs/standard.md</a>: the aspects, their weights, the
+calibration method, and the reference corpus. A score is withheld rather than
+guessed when the evidence does not support one, and the report says which tier
+the evidence came from.</p>
+<h2 id="self-audit">Self-audit</h2>
+<p>The tool runs against this codebase in CI, and the report is checked in at
+<a href="self-audit.html">docs/self-audit.md</a>, stamped with the exact source commit
+it was generated against — a provenance record, not a claim about HEAD.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Maintainability estimate</td>
+<td style="text-align: right;">4.4 / 5</td>
+</tr>
+<tr>
+<td>Verified grade</td>
+<td style="text-align: right;">B</td>
+</tr>
+<tr>
+<td>Files scanned</td>
+<td style="text-align: right;">543</td>
+</tr>
+<tr>
+<td>Hard gate failures</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table></div>
+<p>A <strong>B</strong>, and the report says why: the grade is verified against the evidence
+<em>floor</em> of 4.1 rather than the 4.4 point estimate, because an unmeasured aspect
+prices at 0 when a grade has to be defended. Every threshold gate is opted
+<strong>on</strong> for this repository's own CI, so drifting below the bar fails the build
+rather than the README.</p>
+<p>The tool reports warn-band declarations here and they are not treated as
+defects — see <a href="product-intent.html#what-counts-as-a-defect-and-what-does-not">what counts as a defect</a>.
+Restyling this codebase to raise its own grade is explicitly not work: a tool
+that games its own metric has broken the only promise that matters.</p>
+<h2 id="platform-support">Platform support</h2>
+<p><strong>POSIX. Windows is not claimed, for a measured reason.</strong> A <code>windows-latest</code> probe
+found most failures in three POSIX-only calls: <code>os.fchmod</code>, <code>os.O_DIRECTORY</code> and
+<code>os.O_NONBLOCK</code>. The third arrived with the one-handle operator read (D130/D131)
+and is now the dominant failure in the probe, which is why the count moved. The
+bounded, symlink-refusing write works through a <em>file descriptor</em>, so a validated
+path cannot be swapped for a symlink before the write lands — Windows has no
+equivalent and the portable rewrite is the hole. <strong>An unsupported platform never
+buys green by weakening the supported ones.</strong></p>
+<h2 id="invokable-skill-slash-command">Invokable skill / slash command</h2>
+<p>This repo ships a portable skill under
+<a href="../../skills/maintainability-agent"><code>skills/maintainability-agent/</code></a>, so
+<code>/maintainability-agent</code> is one keystroke away in Claude Code, Codex and
+Copilot Chat:</p>
+<pre><code class="language-bash">maintainability-agent --install-skill        # writes ~/.claude/skills
+</code></pre>
+<p>Re-run it after every upgrade — a drifted skill teaches agents a dead workflow,
+so a differing installed copy is refused with the list of differences. Per-host
+install destinations, and <code>--init-agent-standards</code> for always-on guidance
+instead of an invokable skill:
+<a href="ide-agent-integration.html#invokable-skill--slash-command">docs/ide-agent-integration.md</a>.</p>
+<h2 id="github-action">GitHub Action</h2>
+<p>This repo ships <code>action.yml</code>, usable as a composite action:</p>
+<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v3.8.1
+  with:
+    config: maintainability-agent.json
+    changed-only: main...HEAD
+    fail-on-gate: &quot;true&quot;
+</code></pre>
+<p>Or copy <code>.github/workflows/maintainability.yml</code> into the target repo. For repos
+not on GitHub Actions, <code>examples/local-ci.sh</code> enforces coverage and writes
+<code>coverage.xml</code>.</p>
+<h2 id="documentation">Documentation</h2>
+<p>Start with <a href="docs.html">the documentation index</a>, which states each
+document's genre and what it is allowed to assert.</p>
+<p><strong>Governing</strong> — <a href="product-intent.html">Product intent</a> (authoritative:
+promises, and what it must never claim) · <a href="architecture.html">Architecture</a>
+(layers, enforced invariants, known debt) · <a href="philosophy.html">Philosophy</a>
+(why AI-specific: volume, not pathology) · <a href="decisions.html">Decision register</a>
+including <a href="adr-001-evidence-and-verification.html">ADR 001</a> (evidence and
+verification).</p>
+<p><strong>Reference</strong> — <a href="standard.html">Maintainability standard</a> ·
+<a href="studies.html">Studies and measured results</a> ·
+<a href="report-contract.html">Report contract</a> · <a href="cli.html">CLI reference</a> ·
+<a href="config-schema.html">Config schema</a> ·
+<a href="language-support.html">Language support</a> ·
+<a href="adapters.html">Analyzer adapters</a> ·
+<a href="ide-agent-integration.html">IDE and agent integration</a> ·
+<a href="help.html">Chat workflow help</a> ·
+<a href="pr-and-baseline-workflows.html">PR and baseline workflows</a> ·
+<a href="roadmap.html">Roadmap</a> · <a href="changelog.html">Changelog</a>.</p>
+<h2 id="running-tests">Running tests</h2>
+<pre><code class="language-bash">PYTHONPATH=src python3 -m pytest
+</code></pre>
+<p>The full local verification that matches CI — ruff, pip-audit, the 92% coverage
+gate, and the self-audit — is in
+<a href="contributing.html#local-verification">CONTRIBUTING.md</a>.</p>
+<h2 id="get-in-touch">Get in touch</h2>
+<ul>
+<li><strong>Bugs / features / questions</strong> — open a <a href="https://github.com/marshallguillory86/maintainability-agent/issues/new">GitHub Issue</a>.</li>
+<li><strong>Discussion</strong> — the <a href="https://github.com/marshallguillory86/maintainability-agent/discussions">Discussions tab</a>.</li>
+<li><strong>Security</strong> — see <a href="security.html"><code>SECURITY.md</code></a> and the <a href="https://github.com/marshallguillory86/maintainability-agent/security/advisories/new">private advisory flow</a>. Do <strong>not</strong> post vulnerabilities in public issues.</li>
+</ul>
+<h2 id="support-this-work">Support this work</h2>
+<p>This is a single-maintainer, MIT-licensed project — free to use, and built on a
+lot of unpaid hours. If it saves you or your team time, please consider
+sponsoring its continued development:</p>
+<p><strong>❤️ <a href="https://github.com/sponsors/marshallguillory86">Sponsor on GitHub</a></strong></p>
+<p>Sponsorship is optional and never gates a feature, a fix, or support — the whole
+tool stays free and open. It just helps keep the work going.</p>
+<h2 id="acknowledgements">Acknowledgements</h2>
+<ul>
+<li><strong>Miles Parker</strong> — identified the friction-signal gap: that the "this keeps
+  fighting me" signal a maintainer accumulates over months is exactly the
+  evidence an LLM cannot hold across sessions, and that a tool positioned
+  between the two should carry it. A contribution of insight rather than code,
+  and it changed what this project is for.</li>
+</ul>
+<h2 id="license">License</h2>
+<p>MIT</p>
+<footer>Rendered from <code>README.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

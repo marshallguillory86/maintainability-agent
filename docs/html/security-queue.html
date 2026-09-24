@@ -1,0 +1,173 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Security queue — 2026-08-23 · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#the-one-decision-that-was-not-mine-answered-2026-08-25">The one decision that was not mine — answered 2026-08-25</a></li>
+<li><a href="#order-of-work">Order of work</a></li>
+<li><a href="#why-green-ci-missed-almost-all-of-it">Why green CI missed almost all of it</a></li>
+<li><a href="#follow-up-that-is-not-a-defect">Follow-up that is not a defect</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Audits and registers</div><h1>Security queue — 2026-08-23</h1><p>Two independent audits of <code>897c3d7</code> / <code>20b2460</code>, one numbered S and one
+numbered C, against seams three rounds of chat-surface
+auditing had never looked at: write primitives, read boundaries, git
+argv, supply chain, and analyzer trust.</p>
+<p>Register entries are the record; this page is the working order. It
+exists because the audits arrived as prose and the operator left for a
+flight — a queue nobody can read is a queue that gets reordered by
+whoever touches it last.</p>
+<h2 id="the-one-decision-that-was-not-mine-answered-2026-08-25">The one decision that was not mine — answered 2026-08-25</h2>
+<p><strong>Are repositories trusted?</strong> Both audits converge here (S R1, C 2),
+and it is genuinely product intent, so it stayed open until it was
+decided on 2026-08-25. The ruling is below; the two options
+are kept because a decision that lists only the chosen path is a
+rationalization.</p>
+<p>Today the agent runs <code>eslint</code> such that it <em>requires</em> and executes the
+audited tree's own configuration, and mypy and pylint can load
+configured plugins. <code>SECURITY.md</code> says the agent does not execute
+scanned code. Both cannot be true.</p>
+<p>Two coherent answers:</p>
+<ol>
+<li><strong>Repositories are trusted.</strong> Correct <code>SECURITY.md</code>, the MCP
+   annotations, and the architecture docs to say so plainly. Cheap,
+   honest, and narrows who can safely run the tool.</li>
+<li><strong>Repositories are untrusted.</strong> Invoke analyzers with agent-owned
+   configuration, <code>--no-eslintrc</code> / <code>--no-plugins</code>, and a scrubbed
+   environment. Costs fidelity — a repository's own lint rules stop
+   being what gets reported — and is a real product change.</li>
+</ol>
+<p>Child sandboxing stays refused and neither option reopens it.</p>
+<p><strong>Answered: neither, because the question is moot.</strong> The line is drawn
+at <em>executing code</em> rather than at trusting repositories — see
+<a href="decisions.html">Decision 9</a>. The agent does not run the audited tree's
+code, and its configuration is code. Option 2's mechanism is what
+<strong>will</strong> ship (agent-owned configuration, plugin loading disabled,
+scrubbed environment); option 2's framing is not, because the
+guarantee is not "we distrust you" but "we never run it".</p>
+<p><strong>That mechanism now exists (D39, closed 2026-08-25).</strong> pylint is
+spawned with <code>--rcfile</code>, mypy with <code>--config-file</code>, eslint is refused
+by selection rather than run, and the analyzer child's environment has
+the code-loading variables removed. An earlier revision of this
+paragraph said the mechanism shipped while none of it had been
+written; it is kept here, corrected, rather than deleted.</p>
+<p>Most of the exposure leaves by scope rather than by engineering:
+eslint is the analyzer that <em>requires</em> the tree's own flat config, and
+JavaScript is not a v1.0 language (<a href="decisions.html">Decision 10</a>). What
+remains is mypy and pylint, which are Python and therefore in scope,
+and which merely <em>may</em> load configured plugins — they run with that
+disabled.</p>
+<h2 id="order-of-work">Order of work</h2>
+<p>Severity first, then blast radius. Everything here is decidable from
+documents that already exist — a stated promise the code contradicts —
+so none of it needs a ruling.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Entry</th>
+<th>What</th>
+<th>State</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>D34</td>
+<td>Config, history and baseline writes open by name; hardlink and symlink escape</td>
+<td><strong>closed</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td>D36</td>
+<td><code>class_dirs</code>, <code>expand_files</code> and the scan itself follow paths out of the root</td>
+<td><strong>closed</strong></td>
+</tr>
+<tr>
+<td>3</td>
+<td>D35</td>
+<td>Repository config can enable tool acquisition against P1</td>
+<td><strong>closed</strong></td>
+</tr>
+<tr>
+<td>4</td>
+<td>D40</td>
+<td>Repository-configured regex is a trivial ReDoS</td>
+<td><strong>closed</strong></td>
+</tr>
+<tr>
+<td>5</td>
+<td>D42</td>
+<td><code>requires-python</code> claims 3.10; <code>StrEnum</code> needs 3.11</td>
+<td><strong>closed</strong></td>
+</tr>
+<tr>
+<td>6</td>
+<td>D43</td>
+<td>Composite action interpolates inputs into Bash</td>
+<td><strong>closed</strong></td>
+</tr>
+<tr>
+<td>7</td>
+<td>D41</td>
+<td>Release authority rides mutable third-party Action tags</td>
+<td><strong>closed</strong></td>
+</tr>
+<tr>
+<td>8</td>
+<td>D45</td>
+<td><code>SECURITY.md</code> supports <code>0.1.x</code>; the package is <code>0.9.1</code></td>
+<td><strong>closed</strong></td>
+</tr>
+<tr>
+<td>9</td>
+<td>D37</td>
+<td>CLI passes git options the MCP door rejects; no timeouts; swallowed errors</td>
+<td><strong>closed</strong></td>
+</tr>
+<tr>
+<td>10</td>
+<td>D38</td>
+<td>A standing grant follows a renamed directory after restart</td>
+<td><strong>closed</strong></td>
+</tr>
+<tr>
+<td>11</td>
+<td>D46</td>
+<td>XML parsers unbounded against analyzer output</td>
+<td><strong>closed</strong></td>
+</tr>
+<tr>
+<td>12</td>
+<td>D44</td>
+<td>MCP annotations contradict behaviour</td>
+<td><strong>closed</strong></td>
+</tr>
+<tr>
+<td>13</td>
+<td>D39</td>
+<td>Analyzer configuration executes</td>
+<td><strong>closed</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="why-green-ci-missed-almost-all-of-it">Why green CI missed almost all of it</h2>
+<p>The C audit's sharpest observation, and it deserves recording separately from
+any one defect: the security tests prove <em>the package imports no HTTP
+client</em>, while the package deliberately launches repository-programmable
+children holding the host environment. The abstraction under test was
+"does our code reach the network", when the risk was "what do we hand
+the tree's own code".</p>
+<p>Every fix below ships a falsifier. Several ship a lint, because the
+defect classes here — open-by-name writes, unbounded configured paths —
+were each closed once already at one seam and left open at the others.</p>
+<h2 id="follow-up-that-is-not-a-defect">Follow-up that is not a defect</h2>
+<p>D42 raised the Python floor to 3.11. The honest check is a CI matrix
+entry that installs and imports on the floor version, because the
+defect was that nothing ever ran there — a test asserting the metadata
+matches the language features in use would restate a constant. That is
+a pipeline change and belongs to whoever next touches CI.</p>
+<footer>Rendered from <code>docs/security-queue.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

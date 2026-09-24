@@ -1,0 +1,98 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Migrating from 0.7 to 1.0 · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#what-breaks">What breaks</a><ul>
+<li><a href="#1-analyzers-moves-the-point-estimate">1. --analyzers moves the point estimate</a></li>
+<li><a href="#2-the-scale-moved">2. The scale moved</a></li>
+<li><a href="#3-java-can-receive-a-score">3. Java can receive a score</a></li>
+</ul>
+</li>
+<li><a href="#what-does-not-break">What does not break</a></li>
+<li><a href="#what-you-can-ignore">What you can ignore</a></li>
+<li><a href="#coming-from-06">Coming from 0.6</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Reference</div><h1>Migrating from 0.7 to 1.0</h1><p><strong>Genre: reference.</strong> What changes the number after 0.7.0, what does not, and what you can ignore.</p>
+<p>1.0 is not tagged yet. These breaks are already on <code>main</code> after <strong>0.7.0</strong>. Coming from 0.6? Do <a href="migration-0.7.html">0.7 first</a>. This page does not repeat that migration.</p>
+<p>Two things change a score that 0.7 already produced. The report schema does not
+break again; the finding baseline does, because rename-aware identity needs data
+the old string list did not store.</p>
+<p>The short version:</p>
+<pre><code class="language-bash"># 1. Same command. Scores can move even with no --analyzers, because the scale moved.
+maintainability-agent --root . --config maintainability-agent.json
+
+# 2. If you pass --analyzers, the point estimate now uses those readings
+#    where the full concept set was measured. 0.7 only widened the range.
+
+# 3. Do not compare a 0.7 number to a current number as if they were
+#    the same measurement. The constant and the mix both changed.
+</code></pre>
+<hr />
+<h2 id="what-breaks">What breaks</h2>
+<h3 id="1-analyzers-moves-the-point-estimate">1. <code>--analyzers</code> moves the point estimate</h3>
+<p>In 0.7.0, external analyzers reported coverage and findings. They widened <code>maintainability_range</code> and left the point estimate on the built-in detectors.</p>
+<p>After 3.5, <code>scoring._primary_pressures</code> takes the analyzer reading for every dimension measured on the full concept set (cyclomatic + declaration lines + cognitive). A partial set is unmeasured, so that dimension stays on the built-in fallback. The range widens to contain both sources. They are never averaged.</p>
+<p>The report names the mix: <code>score.analyzer_scored_dimensions</code> lists what the analyzers set. Empty means the number came from the fallback tier. The Markdown measurements section and the remediation prompt say the same thing.</p>
+<p>A consumer that assumed <code>--analyzers</code> was display-only will now see the estimate move. That is the feature, not a regression.</p>
+<p>JS/TS trees typically cannot compose the three-criterion set (lizard has no cognitive partner in the default pool), so they stay on the built-in fallback even with <code>--analyzers</code>. Python trees that have lizard + complexipy typically do move.</p>
+<h3 id="2-the-scale-moved">2. The scale moved</h3>
+<p><code>CALIBRATION_C</code> <strong>2.6279 → 2.2658</strong> (2026-08-14), then <strong>2.2658 → 5.8843</strong> (2026-08-31). The declarations reference <strong>0.0599 → 0.0860 → 0.1005</strong>, and the duplication reference <strong>3.8644 → 0.28</strong>. The 08-14 fit followed the analyzer-primary mix after generated and vendored code left the scored population. The 08-31 re-fit followed a corpus re-measure: the stored corpus had gone stale, and plan-81dc6870 Class 4 (one clone group per clone, not one finding per overlapping window) dropped the built-in duplication reading roughly fourteenfold, so every report had been scoring duplication against a reference ~14x too high. All 40 pinned repos were re-measured <code>--with-analyzers</code>; the corpus median still rolls up to 4.0 (a well-run codebase earns a B). Old and new values are in <code>_calibration.py</code>.</p>
+<p>A zero-install run (no <code>--analyzers</code>) still uses this constant. The same tree can score differently than it did on 0.7.0 with no other change.</p>
+<h3 id="3-java-can-receive-a-score">3. Java can receive a score</h3>
+<p>0.7.0 could open <code>.java</code> for length, duplication and risk, and still measure zero declarations. A zero-install range detector now finds methods, constructors and types. A Java repository that was withheld on the population floor can now get a number. Go, Rust, C, C++, C# and Fortran still have no built-in declaration population.</p>
+<hr />
+<h2 id="what-does-not-break">What does not break</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Report <code>schema_version</code></td>
+<td>Still <strong>3</strong>. The estimate and range were already nullable in 0.7. <code>analyzer_scored_dimensions</code> is an additive optional field and did not bump the version.</td>
+</tr>
+<tr>
+<td>Baseline format</td>
+<td><strong>Version 3.</strong> The visible label stays <code>function:{path}:{name}#{ordinal}</code>, while each entry also stores kind, path, name, ordinal, <code>body_digest</code>, and fingerprint plus the source commit. Regenerate older baselines with <code>--write-baseline</code>; their strings cannot recover those fields.</td>
+</tr>
+<tr>
+<td><code>--fail-on-gate</code></td>
+<td>Still reads hard findings only. A moved estimate does not change the exit code.</td>
+</tr>
+<tr>
+<td>Config file</td>
+<td>No new required keys. <code>analyzers.prompt_when_interactive</code> controls the shipped first-run TTY prompt and remains optional.</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>normalize_report_evidence</code> accepts version 3 only, same as 0.7.</p>
+<p>The optional MCP add-on now exposes tools, resources and a bounded prompt. Start
+it with <code>maintainability-agent mcp</code>; the existing <code>maintainability-agent-mcp</code>
+console script remains available for IDE configurations. This is additive, not
+a report-schema or baseline break.</p>
+<p>The first run asks the <strong>same</strong> setup questions on a CLI TTY as on
+chat/MCP (<a href="help-first-run.html">first run</a>) when no config exists, then
+writes the answers to <code>maintainability-agent.json</code>. Non-TTY and
+already-configured runs do not ask. Analyzer runs also publish an
+environment work order for selected tools that were unavailable; the agent
+does not install them.</p>
+<hr />
+<h2 id="what-you-can-ignore">What you can ignore</h2>
+<ul>
+<li><strong>Re-reading 0.6 fields.</strong> They still mean what 0.7 said they mean.</li>
+<li><strong>Keeping a 0.7 baseline.</strong> Baseline v3 is required for rename-aware matching.
+  Regenerate it with <code>--write-baseline</code>; versions 1 and 2 fail closed with that
+  instruction instead of treating every old finding as new.</li>
+</ul>
+<hr />
+<h2 id="coming-from-06">Coming from 0.6</h2>
+<p><a href="migration-0.7.html">Migrating to 0.7</a> is the document: regenerate the baseline, handle a nullable estimate, schema 3. Then this page.</p>
+<footer>Rendered from <code>docs/migration-1.0.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

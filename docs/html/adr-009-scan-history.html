@@ -1,0 +1,160 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>ADR 009: Scan history — maintainability is a trend, not a snapshot · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#context">Context</a><ul>
+<li><a href="#what-exists-today">What exists today</a></li>
+<li><a href="#a-prerequisite-defect-labels-alone-cannot-resolve-identity">A prerequisite defect: labels alone cannot resolve identity</a></li>
+</ul>
+</li>
+<li><a href="#decision">Decision</a><ul>
+<li><a href="#1-labels-stay-line-independent-matching-becomes-structural">1. Labels stay line-independent; matching becomes structural</a></li>
+<li><a href="#2-scans-are-appended-to-a-durable-history">2. Scans are appended to a durable history</a></li>
+<li><a href="#3-trends-are-measurements-of-the-past-never-forecasts">3. Trends are measurements of the past, never forecasts</a></li>
+<li><a href="#3b-remediation-outcomes-are-recorded-not-just-finding-recurrence">3b. Remediation outcomes are recorded, not just finding recurrence</a></li>
+<li><a href="#4-comparability-is-checked-never-assumed">4. Comparability is checked, never assumed</a></li>
+<li><a href="#5-history-can-be-backfilled">5. History can be backfilled</a></li>
+</ul>
+</li>
+<li><a href="#options-considered">Options considered</a></li>
+<li><a href="#consequences">Consequences</a></li>
+<li><a href="#invariants">Invariants</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Decisions</div><h1>ADR 009: Scan history — maintainability is a trend, not a snapshot</h1><ul>
+<li>Status: Accepted. Implementation progress is tracked in the <a href="decisions.html">decision register</a>, which is the single place it is stated</li>
+<li>Date: 2026-08-12</li>
+<li>Scope: Persistence, finding identity, the report, trend analysis, determinism</li>
+<li>Related: <a href="adr-005-insufficient-population.html">ADR 005</a>, <a href="adr-006-analyzer-evidence.html">ADR 006</a>, <a href="adr-008-translation-and-decision.html">ADR 008</a></li>
+</ul>
+<h2 id="context">Context</h2>
+<p>Every decision recorded so far — the analyzer pool, the band matrix, the pillar view, the work order — describes <strong>one scan</strong>. That is a framing error, and it omits the thing practitioners actually use to judge a codebase.</p>
+<p>Nobody forms an opinion about maintainability from a single reading. The judgment is <em>"this is getting worse"</em>, <em>"they keep patching around that module"</em>, <em>"complexity has been climbing since the rewrite"</em>. Those are statements about change over time, and they are usually better evidence than any snapshot, because a codebase at 3.8 and improving is in a completely different position from a codebase at 3.8 and sliding.</p>
+<h3 id="what-exists-today">What exists today</h3>
+<p><strong>Git history is analyzed, but only for the current scan.</strong> <code>history.py</code> measures churn hotspots, change coupling, multi-commit files and single-author files over a configured window. That is history <em>of the code</em>, computed fresh each run and never retained.</p>
+<p><strong>The baseline is not a history.</strong> The original baseline held a flat list of
+fingerprint strings. Baseline v3 now also stores one source commit and
+structured identities, but still no timestamp series, scores, populations, or
+tool coverage. It exists to suppress known findings for <code>--fail-on-new</code>, and it
+is overwritten rather than appended.</p>
+<p>So nothing anywhere records <em>what this repository scored last month</em>.</p>
+<h3 id="a-prerequisite-defect-labels-alone-cannot-resolve-identity">A prerequisite defect: labels alone cannot resolve identity</h3>
+<p>The first implementation embedded the start line. The ordinal label that
+replaced it — <code>function:{path}:{name}#{ordinal}</code> — fixed unrelated line shifts,
+but a label alone still changes after <code>git mv</code> or after same-named declarations
+are reordered. Either operation made an untouched finding look simultaneously
+fixed and new.</p>
+<pre><code class="language-text">before: function:old.py:huge#0
+after : function:new.py:huge#0
+
+looks NEW to --fail-on-new: function:new.py:huge#0
+looks FIXED:                function:old.py:huge#0
+</code></pre>
+<p>The function was not edited. One line was inserted above it.</p>
+<p>Two consequences. <code>--fail-on-new</code> — a shipped flag — raises false failures on pre-existing findings after any refactor that shifts lines. And <strong>recurrence tracking is impossible</strong>: a finding that returns after remediation cannot be distinguished from a new one, which means the friction signal in <a href="adr-008-translation-and-decision.html">ADR 008</a> cannot be built on this scheme.</p>
+<p>Stable identity is therefore not a nice-to-have for this record; it is the precondition.</p>
+<h2 id="decision">Decision</h2>
+<h3 id="1-labels-stay-line-independent-matching-becomes-structural">1. Labels stay line-independent; matching becomes structural</h3>
+<p>A declaration's human label remains <code>function:{path}:{name}#{ordinal}</code>. Line
+numbers stay in the report but never enter that label. The matching contract is
+a structured identity record: <code>kind</code>, <code>path</code>, <code>name</code>, <code>ordinal</code>, <code>body_digest</code>,
+and <code>fingerprint</code>. Declaration digests are computed during scanning from a
+dedented body; <code>_identity</code> consumes the report and never reopens the audited
+tree.</p>
+<p>A later finding first matches the recorded path, name and ordinal. That keeps a
+still-failing body edit attached to the finding already known. If same-named
+siblings move, path + name + <code>body_digest</code> supplies the second match. The digest
+is stable under indentation-only movement. It never overrides a declaration
+name change.</p>
+<p>For a path change, <code>_finding_match.rename_map</code> accepts only rename evidence from
+git between the recorded and current commits. A real <code>git mv</code> follows the old
+finding; a copied file does not. File, declaration, risk and duplicate findings
+use this same matching relation. Fingerprint strings remain readable labels,
+not the gate's comparison algorithm.</p>
+<h3 id="2-scans-are-appended-to-a-durable-history">2. Scans are appended to a durable history</h3>
+<p>An append-only record per scan, default <code>.maintainability/history.jsonl</code>, path configurable. One line per scan, holding what a later run needs to compare honestly:</p>
+<ul>
+<li>timestamp, commit SHA, branch, and the scan <strong>scope</strong> (whole repository, changed-only, subset)</li>
+<li>the <strong>rubric version</strong> and the <strong>analyzer coverage</strong>: tools run, tools unavailable, versions, depth and license policy</li>
+<li>populations, counts, and band distributions — not just the rolled-up score</li>
+<li>aspect, category and pillar values; practice level; evidence status</li>
+<li>the set of stable finding fingerprints</li>
+</ul>
+<p>The score alone would be useless for diagnosis. Retaining populations and band distributions is what lets a later run answer <em>why</em> something moved.</p>
+<p><strong>What schema 1 actually stored</strong> (progress in the <a href="decisions.html">register</a>): timestamp, commit, branch, scope, rubric/calibration/threshold digest, contributing analyzers, estimate, range, four population counts, fingerprints, targeted findings. That is enough for rollup trajectory, velocity, growth-versus-quality, and recurrence. It is <strong>not</strong> enough for patterns <em>in the scoring</em> (category, aspect, pillar over time). Schema 1 is thinner than this section required.</p>
+<p><strong>Schema 2</strong> added the missing breakdown: <code>categories</code>, <code>aspects</code>, <code>pillars</code>,
+<code>practice_level</code>, <code>evidence_status</code>. Those series remain separate, as ADR 007
+requires.</p>
+<p><strong>Schema 3</strong> adds <code>identities</code>, the structured records used by recurrence, next
+to <code>fingerprints</code>, the human labels used by charts and targeted work. Readers
+still accept schema 1 and 2. Because old lines have no digest or rename inputs,
+matching between two old records honestly remains string equality. No old data
+is silently upgraded.</p>
+<p><strong>Append policy (1.0):</strong> if <code>.maintainability/history.jsonl</code> exists, a run appends even without <code>--record-history</code>. The first interactive run creates the file. CI already records (6.4). A forgotten flag must not drop the current scan from the series.</p>
+<p><strong>Committing it is the user's choice</strong>, and both are legitimate: checked in, history is shared and reviewable in PRs but adds churn; ignored, it is per-machine and CI needs a cache. The default is checked in, because a history only one laptop can see is a history nobody uses.</p>
+<h3 id="3-trends-are-measurements-of-the-past-never-forecasts">3. Trends are measurements of the past, never forecasts</h3>
+<p>With a history the deterministic engine can compute, as arithmetic over stored records:</p>
+<ul>
+<li><strong>Debt velocity</strong> — findings introduced versus cleared per period. A repository clearing more than it adds is improving regardless of its absolute score.</li>
+<li><strong>Score trajectory</strong> — direction and rate, with the interval, so noise is not read as movement.</li>
+<li><strong>Growth versus quality</strong> — is the finding rate rising faster than the population? This distinguishes "getting bigger" from "getting worse", which a snapshot cannot.</li>
+<li><strong>Recurrence</strong> — findings cleared and returned, with a count and the commits involved. This is the friction signal a language model structurally lacks.</li>
+<li><strong>Stability</strong> — which units keep changing without their findings ever clearing.</li>
+</ul>
+<p>Every one of these is a statement about scans that happened. <strong>Extrapolating forward is a prediction and remains forbidden</strong> under <a href="product-intent.html#what-it-must-never-claim">what the product must never claim</a> until an outcome study earns it. "Complexity rose 18% over six months" is a fact; "will keep rising" is not, and the report must not blur them.</p>
+<h3 id="3b-remediation-outcomes-are-recorded-not-just-finding-recurrence">3b. Remediation outcomes are recorded, not just finding recurrence</h3>
+<p>Recurrence alone is a weak signal. Code churns for many reasons, so "this finding came back" says only that the file changed twice.</p>
+<p>The tool has a stronger signal available and should use it: <strong>it generates the remediation prompt, so it knows which findings that prompt targeted.</strong> Recording the targeted set, then checking on the next run whether those specific findings cleared, closes a loop nothing else in the design closes — <em>did the advice work?</em></p>
+<p>Three outcomes, each meaning something different:</p>
+<ul>
+<li><strong>cleared and stayed cleared</strong> — the advice worked; nothing more to say.</li>
+<li><strong>never cleared</strong> — the advice was ignored, or was not actionable. Repeated across findings of one kind, it indicts the prompt rather than the developer.</li>
+<li><strong>cleared, then returned</strong> — the strongest signal in the system. Someone was told exactly what to change, changed it, and the problem came back. That is evidence the finding is a symptom and the advice addressed the symptom, which is precisely the case that should escalate to a design-review candidate rather than being re-issued as the same nit a third time.</li>
+</ul>
+<p>This is what separates the tool from a linter with a database. A linter can tell you a rule fired again. Only something that remembers what it <em>advised</em> can tell you its own advice is not working — and a model, which has no accumulated friction signal, cannot hold that across sessions no matter how much context it is given.</p>
+<p>Requires the prompt to record its targeted finding identities alongside the scan record. Cheap once identity is stable, which it now is.</p>
+<h3 id="4-comparability-is-checked-never-assumed">4. Comparability is checked, never assumed</h3>
+<p>Two scans are comparable only when the rubric version, analyzer coverage and scope match. A trend computed across a coverage change measures the tooling, not the code — precisely the error <a href="adr-006-analyzer-evidence.html">ADR 006</a> exists to prevent, arriving through the time dimension.</p>
+<p>Where records differ, the report says so and either segments the series at that boundary or withholds the trend with a reason. A silently spliced series is worse than none.</p>
+<h3 id="5-history-can-be-backfilled">5. History can be backfilled</h3>
+<p>A first run need not be blind. Past commits can be scanned by materializing them in a git worktree and recording each result, producing a real series on day one. It is expensive, so it is explicit — a separate command with a commit range or sampling interval, never implicit in a normal run.</p>
+<h2 id="options-considered">Options considered</h2>
+<p><strong>A. Keep the single-scan framing; rely on git history analysis.</strong> Rejected. Churn tells you what changed, never what it <em>scored</em>. It cannot answer whether quality improved.</p>
+<p><strong>B. Extend the baseline file in place.</strong> Rejected. The baseline is a suppression list with a defined job and a schema version, consumed by <code>--fail-on-new</code>. Overloading it would couple two lifecycles: a baseline is deliberately reset when a team accepts current debt, and resetting must not erase the history.</p>
+<p><strong>C. Store only scores per scan.</strong> Rejected as too thin. A score that moved with no populations or distributions retained cannot be diagnosed, and diagnosis is the point.</p>
+<p><strong>D. Append-only scan records with line-independent finding identities.</strong> Accepted.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li>Determinism (<strong>P1</strong>) needs restating: identical tree, config <em>and history file</em> produce identical output. History is an input, and the report must name the history file and record count it used.</li>
+<li>New persistent state means a schema and a migration path. The history format gets its own version, independent of the report schema.</li>
+<li>The file grows without bound. It needs a documented compaction policy — retain full recent records, thin older ones to scores and populations — and compaction must be explicit, because silently discarding records changes computed trends.</li>
+<li>Baseline version 3 stores its source commit and structured identity records
+  beside the labels. Version 1 and 2 baselines cannot be reconstructed from
+  their strings and are rejected with an instruction to regenerate.</li>
+<li>CI needs the history to persist across runs — a cached path or a committed file. Without it, every CI run is the first run.</li>
+<li>The work order gains recurrence data, which is what turns a repeated nit into a design-review candidate.</li>
+</ul>
+<h2 id="invariants">Invariants</h2>
+<ol>
+<li>A declaration finding's identity is unchanged by non-declaration edits above it.</li>
+<li><code>--fail-on-new</code> reports as new only findings the structured matcher cannot
+   resolve against baseline version 3, including git rename evidence.</li>
+<li>Every scan appends exactly one record; no run rewrites or reorders earlier records.</li>
+<li>Each record states the rubric version, analyzer coverage and scope that produced it.</li>
+<li>No trend is computed across records whose rubric version, coverage or scope differ; such a series is segmented or withheld with a stated reason.</li>
+<li>Every trend statement describes scans that occurred. No output extrapolates beyond the last recorded scan.</li>
+<li>Identical tree, config and history produce identical output, and the report names the history it consumed.</li>
+<li>Compaction never occurs as a side effect of a normal scan.</li>
+<li>Every remediation prompt records the finding identities it targeted, and a later run reports whether each cleared, never cleared, or cleared and returned.</li>
+<li>A finding that returns after a recorded remediation attempt escalates out of the nit class; a finding that returns after unrelated churn does not.</li>
+<li>A schema-3 record includes the category, aspect, pillar and practice-level
+    values plus structured finding identities. Schema-1 and schema-2 records
+    remain readable; missing fields stay missing. Pillar and practice series
+    are never combined into one number.</li>
+<li>When the history file exists, a successful scan appends exactly one new line whether or not <code>--record-history</code> was passed.</li>
+</ol>
+<footer>Rendered from <code>docs/adr-009-scan-history.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

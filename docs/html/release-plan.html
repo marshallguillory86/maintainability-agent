@@ -1,0 +1,673 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Release plan: what it takes to finish · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#where-this-actually-stands">Where this actually stands</a></li>
+<li><a href="#versions-that-never-reached-pypi">Versions that never reached PyPI</a></li>
+<li><a href="#phase-0-land-what-exists-fix-what-is-broken">Phase 0 — Land what exists, fix what is broken</a></li>
+<li><a href="#phase-1-population-floors-and-honest-withholding">Phase 1 — Population floors and honest withholding</a></li>
+<li><a href="#phase-2-the-analyzer-runner-and-the-first-adapters">Phase 2 — The analyzer runner and the first adapters</a></li>
+<li><a href="#phase-3-translation-bands-combination-the-seam">Phase 3 — Translation: bands, combination, the seam</a><ul>
+<li><a href="#what-36-did-2026-08-14">What 3.6 did (2026-08-14)</a></li>
+</ul>
+</li>
+<li><a href="#phase-4-pillars-practice-level-work-order">Phase 4 — Pillars, practice level, work order</a></li>
+<li><a href="#phase-5-scan-history-and-trends">Phase 5 — Scan history and trends</a></li>
+<li><a href="#deferred-deliberately-a-calibration-profile-for-small-repositories">Deferred, deliberately — a calibration profile for small repositories</a></li>
+<li><a href="#phase-6-entry-points">Phase 6 — Entry points</a></li>
+<li><a href="#phase-7-release-10">Phase 7 — Release 1.0</a></li>
+<li><a href="#phase-8-10-presentations-and-scoring-continuity">Phase 8 — 1.0 presentations and scoring continuity</a></li>
+<li><a href="#sequencing-constraints">Sequencing constraints</a></li>
+<li><a href="#what-could-be-cut">What could be cut</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Plan and evidence</div><h1>Release plan: what it takes to finish</h1><p>The work between here and a 1.0 that matches the documented architecture. Ordered by dependency, not by preference. Every item names its exit condition, because "done" without one is how the last four days went.</p>
+<h2 id="where-this-actually-stands">Where this actually stands</h2>
+<p><em>Measured 2026-09-23. Regenerate the counts before quoting them: the previous version of this table survived fifty-five commits past the point it stopped being true, and then did it again — an audit on 2026-08-26 found it still naming 0.7.0 as the last tag while v0.9.1 was shipped and 26 further commits sat on the branch, and a v1.0 readiness audit on 2026-08-31 found the counts stale a third time. Three times now, in the paperwork of the project that exists to catch drift.</em></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Fact</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Last tagged version</td>
+<td>v3.8.1</td>
+</tr>
+<tr>
+<td>Production code</td>
+<td>34,687 lines across 135 modules</td>
+</tr>
+<tr>
+<td>Tests</td>
+<td>3,069 collected across 280 files</td>
+</tr>
+<tr>
+<td>ADR implementation status</td>
+<td><a href="decisions.html">The decision register</a> is canonical. Acceptance does not mean full implementation; consult the register for each ADR's shipped behavior and remaining gaps.</td>
+</tr>
+<tr>
+<td>Known open exit conditions in Phases 0–5</td>
+<td>Phase 2's 2.7 shipped — flake8 and cohesion parse real output; xenon stays deliberately unadapted (a gate over radon adds no independent reading). Phase 3's band matrix (3.2) <strong>shipped</strong>.</td>
+</tr>
+<tr>
+<td>Later phases outstanding</td>
+<td><strong>None.</strong> 6.1–6.4, 7.1–7.5 and 8.1–8.10 are all shipped; v1.0.0 was tagged 2026-09-01. This row claimed 1.0 was still waiting on acceptance, the hostile audit and the tag for nine releases after all three were done — the fourth time this table has outlived its own truth, and the reason 7.2 forbids exactly this.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>v1.1.0 shipped C, v1.2.0 C++, v1.3.0 C# and v1.4.0 free-form Fortran</strong> — five languages over one shared walk in <code>_ranges_core</code>, where a language is a module and a row. Fortran is the first with no braces, so the walk now takes its bounding rule as an argument. The row above names the last <em>tagged</em> version and is compared verbatim against <code>git tag</code>, so it moves in the same step that creates the tag, not before. <strong>Committed before the tag, with the tag pointing at that commit</strong> — tagging first fails the release build, which checks out the tag, finds the older row and refuses. That is how v2.11.0 was tagged and never published, and it happened again at v3.0.0; that tag was moved onto the corrected commit because no artifact had shipped.</p>
+<p><strong>A release is not finished until the operator's own install is on it.</strong> Written
+down 2026-09-09 because it was not being done. The local editable install was
+made on 2026-08-30 at 0.9.1 and never refreshed, so its metadata sat 0.9.1
+through every release up to 3.0.2 — twenty-odd tags. The code was current, since
+an editable install follows the working tree, and <code>--version</code> reads the source,
+so the tool never <em>reported</em> the wrong number. What was wrong is subtler and
+worse for UAT: the installed distribution and the tree disagreed about what was
+installed, <code>importlib.metadata.version("maintainability-agent")</code> answered 0.9.1
+to anything that asked, and the environment being tested was not a state any
+user could reproduce. A UAT run against an install nobody can name is not a
+test result.</p>
+<p>So the last step of every release, after the tag and the publish:</p>
+<pre><code class="language-bash">python3 -m pip install -e &quot;.[dev,mcp]&quot;     # or the published wheel
+python3 -m maintainability_audit --version # must equal the tag
+python3 -c &quot;from importlib.metadata import version; print(version('maintainability-agent'))&quot;
+</code></pre>
+<p>Both must print the version just tagged. Then restart any editor holding the
+MCP server, because it keeps the old process. This cannot be checked in CI — it
+is a property of a machine, not of the repository — which is exactly why it
+belongs written here rather than remembered.</p>
+<p>This table is a navigation summary, not a second implementation register. Phase completion follows the exit conditions below; the 8.8–8.10 release gates closed on 2026-09-01. Work after 1.0 is tracked on the <a href="roadmap.html">roadmap</a> and in the <a href="decisions.html">decision register</a>, not by adding phases here.</p>
+<p>Two things are deliberately open rather than done:</p>
+<ul>
+<li><strong>The calibration constant is 5.8843</strong> (2.6279 → 2.2658 on 2026-08-14, then 2.2658 → 5.8843 on 2026-08-31). The 08-31 re-fit followed a corpus re-measure: the stored measurements had gone stale, and plan-81dc6870 Class 4's clone-grouping had dropped the built-in duplication reading roughly fourteenfold, so every report scored duplication against a reference ~14x too high. All 40 pinned repos were re-measured <code>--with-analyzers</code>; the duplication reference moved 3.8644 → 0.28 and declarations 0.0860 → 0.1005. Corpus median still rolls up to 4.0 (a well-run codebase earns a B). Old and new values are recorded in <code>_calibration.py</code>, and a scanner-counting guard now fails if a change like Class 4 silently invalidates the reference again.</li>
+<li><strong>ADR 007 §4's rename is refused</strong>, and the deviation is recorded there and in <code>standard.md</code>: the ownership aspect measures the share of settled files one person owns, which is not the bus factor, and adopting the name would claim a measurement the tool never makes.</li>
+</ul>
+<h2 id="versions-that-never-reached-pypi">Versions that never reached PyPI</h2>
+<p><em>Checked against PyPI and this repository's release runs on 2026-09-23.</em> Every
+version below has a changelog section and no published package. <strong>None is to be
+re-tagged or republished.</strong> Each one's changes shipped inside a later release,
+and publishing an old number now would put a stale package beside the current
+one for no reader's benefit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Version</th>
+<th>What happened</th>
+<th>Shipped inside</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.3.0 – 0.6.0</td>
+<td>Not established. They predate the release workflow's record here; recorded as unknown rather than guessed.</td>
+<td>0.6.1</td>
+</tr>
+<tr>
+<td>2.11.0</td>
+<td>Tagged; the build refused it for the stale "Last tagged version" row described above, and no artifact shipped.</td>
+<td>2.11.1</td>
+</tr>
+<tr>
+<td>3.7.2</td>
+<td>Tagged; the release build ran the suite without secure-code-agent installed, four security-pillar tests failed and publishing was skipped. 3.7.3 added the install (D177) and shipped over the gap.</td>
+<td>3.7.3</td>
+</tr>
+<tr>
+<td>3.7.12</td>
+<td>Merged and never tagged. 3.7.13 merged 54 minutes later and was released.</td>
+<td>3.7.13</td>
+</tr>
+<tr>
+<td>3.7.20 – 3.7.30</td>
+<td>Merged over two days and never tagged — eleven versions, including D211.</td>
+<td>3.8.0</td>
+</tr>
+</tbody>
+</table></div>
+<p>Two checks now close the two ways this happened. A version that is never
+<strong>tagged</strong> fails the <em>next</em> version's pull request
+(<code>tests/test_the_previous_release_was_tagged.py</code>). A version that is tagged but
+never <strong>published</strong> fails the next version's release build
+(<code>tools/check_previous_release_published.py</code>, run by <code>release.yml</code>), which asks
+PyPI directly because the suite has no network. Both look one version back,
+deliberately: the gaps above are recorded, not repaired.</p>
+<h2 id="phase-0-land-what-exists-fix-what-is-broken">Phase 0 — Land what exists, fix what is broken</h2>
+<p>Small, independent, and blocking later phases. Nothing here needs the analyzer work.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Task</th>
+<th>Exit condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.1</td>
+<td>Merge this branch to <code>main</code></td>
+<td><code>main</code> carries the design; the stale A+ README is gone</td>
+</tr>
+<tr>
+<td>0.2</td>
+<td>Fix <code>--changed-only</code> reporting a whole-repository grade for a diff</td>
+<td>A diff scan reports scope and withholds the grade; test asserts a 2-file scan cannot produce a repository estimate</td>
+</tr>
+<tr>
+<td>0.3</td>
+<td>Finding identity is path, name and ordinal</td>
+<td>Inserting a line above a finding does not change its fingerprint; property test over insertion positions</td>
+</tr>
+<tr>
+<td>0.4</td>
+<td>Regenerate baselines, document the break</td>
+<td><code>--fail-on-new</code> no longer fires on moved code; CHANGELOG names the incompatibility</td>
+</tr>
+<tr>
+<td>0.5</td>
+<td>Release 0.7.0</td>
+<td>Tagged, published, two real bug fixes in the notes</td>
+</tr>
+</tbody>
+</table></div>
+<p>Phase 0 has landed. Identity shipped as <code>function:{path}:{name}#{ordinal}</code>,
+not a content hash. 0.4 is the migration note and the version-2 baseline
+rejection. 0.7.0 is tagged on <code>main</code>.</p>
+<p><strong>0.2 and 0.3 are prerequisites</strong> for ADR 005 and ADR 009 respectively. They are also the only user-visible bug fixes available without the larger build, so they justify a release on their own.</p>
+<h2 id="phase-1-population-floors-and-honest-withholding">Phase 1 — Population floors and honest withholding</h2>
+<p>Implements <a href="adr-005-insufficient-population.html">ADR 005</a>. No external tools required, so it can land before the runner.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Task</th>
+<th>Exit condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.1</td>
+<td>Per-aspect minimum denominators in <code>_formula</code></td>
+<td>Every aspect declares a floor beside its weight; test asserts none is missing</td>
+</tr>
+<tr>
+<td>1.2</td>
+<td><code>Unknown</code> for aspects below their floor</td>
+<td>The hello-world fixture reports no aspect scores, not 5.0s</td>
+</tr>
+<tr>
+<td>1.3</td>
+<td><code>evidence_status: insufficient</code> and null estimate/range/grade</td>
+<td>Property test: no report with zero measurable aspects carries a number</td>
+</tr>
+<tr>
+<td>1.4</td>
+<td>Scope in the report; scope-escalation advice</td>
+<td>A subset scan recommends a whole-repository rescan, naming the observed population</td>
+</tr>
+<tr>
+<td>1.5</td>
+<td>Consumer migration</td>
+<td>Markdown, PR comment, SARIF, prompt all render insufficiency without a dash or a zero</td>
+</tr>
+<tr>
+<td>1.6</td>
+<td>Name the path out</td>
+<td>A withheld score states which applies: widen the scan, take the findings, or calibrate a fitting scale — never a bare "insufficient"</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Exit for the phase:</strong> the fixture that started all of this reports "practice level 1, condition unmeasured" rather than 5.0/A+.</p>
+<h2 id="phase-2-the-analyzer-runner-and-the-first-adapters">Phase 2 — The analyzer runner and the first adapters</h2>
+<p>Implements the executable half of <a href="adr-006-analyzer-evidence.html">ADR 006</a>. The largest phase and the one that changes the product.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Task</th>
+<th>Exit condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.1</td>
+<td><code>_runner</code>: subprocess, timeout, isolation, version capture</td>
+<td>A crashing or hanging tool produces <code>Unknown</code> with a reason and never fails the run</td>
+</tr>
+<tr>
+<td>2.1b</td>
+<td>Availability proven by invocation, not <code>PATH</code></td>
+<td>A stub on <code>PATH</code> that fails when run (macOS <code>java</code>) is recorded unavailable, not clean; a tool that exits 0 saying nothing is too</td>
+</tr>
+<tr>
+<td>2.2</td>
+<td><code>_catalog</code>: resolve the pool from concerns, depth, policy</td>
+<td>Matches <code>tools/resolve_pool.py</code> output exactly; the script becomes a thin wrapper</td>
+</tr>
+<tr>
+<td>2.3</td>
+<td>Adapter protocol, metric and verdict shapes</td>
+<td>Adding an adapter requires no change outside its own module</td>
+</tr>
+<tr>
+<td>2.4</td>
+<td>Baseline adapter tranche: lizard, multimetric, jscpd, radon, ruff, vulture, complexipy, interrogate, pydocstyle</td>
+<td>Each parses real output on the corpus; per-adapter fixture tests. The later moderate tranche brings the runnable total to fourteen (twelve native plus pylint and mypy).</td>
+</tr>
+<tr>
+<td>2.5</td>
+<td>Coverage reporting in the report</td>
+<td>Every run states tools attempted, run, unavailable and why, with versions</td>
+</tr>
+<tr>
+<td>2.5b</td>
+<td>Coverage gaps per language and concern</td>
+<td>A concern with no tool running against it is <code>Unknown</code>, never clean</td>
+</tr>
+<tr>
+<td>2.5c</td>
+<td>Environment work order</td>
+<td><strong>Shipped.</strong> <code>report["environment_work_order"]</code> names each selected tool that could not run, why, the install command and the verification; rendered after coverage in the Markdown report. Acquisition stays off unless the user enables <code>analyzers.acquire_tools</code> in user-tier configuration (<code>tests/test_environment_work_order.py</code>)</td>
+</tr>
+<tr>
+<td>2.6</td>
+<td>Rubric-driven tool configuration</td>
+<td>Changing a project's <code>eslint.config.mjs</code> provably does not move the score</td>
+</tr>
+<tr>
+<td>2.7</td>
+<td>Five moderate adapters</td>
+<td><strong>Shipped</strong>, deliberately as four: pylint, flake8, eslint and cohesion parse real recorded output (<code>tests/test_adapter_recordings.py</code>); xenon is deliberately unadapted — a threshold gate over radon contributes no independent measurement, and two tools agreeing because one <em>is</em> the other would inflate corroboration</td>
+</tr>
+<tr>
+<td>2.8</td>
+<td>Determinism under pinned versions</td>
+<td>Two runs on one tree with identical tool versions are byte-identical</td>
+</tr>
+</tbody>
+</table></div>
+<p>The exit-condition tests for 2.6 and 2.8 have landed. The latter compares
+recorded tool versions after removing terminal paint; it does not claim every
+consumer pins analyzer versions in CI. Their rows remain here as the historical
+definition of the work.</p>
+<p><strong>Watch item:</strong> P1 weakens here from "deterministic" to "deterministic given pinned analyzer versions." <a href="product-intent.html#what-it-promises">Product intent</a> must be edited in the same commit that makes it true.</p>
+<h2 id="phase-3-translation-bands-combination-the-seam">Phase 3 — Translation: bands, combination, the seam</h2>
+<p>Implements <a href="adr-008-translation-and-decision.html">ADR 008</a>'s normalization half. Depends on Phase 2.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Task</th>
+<th>Exit condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.1</td>
+<td><code>_concepts</code> registry: tools, weights, denominators, floors</td>
+<td>Data only; imports nothing internal, enforced by the layering test</td>
+</tr>
+<tr>
+<td>3.2</td>
+<td><strong>Shipped.</strong> Live scans store per-unit band pressures; CCN 16 and 45 no longer yield the same declarations pressure (<code>tests/test_band_pressures.py</code>). Gates stay binary</td>
+<td>Two measurements in different bands never yield the same pressure</td>
+</tr>
+<tr>
+<td>3.3</td>
+<td><code>_corroborate</code>: weighted mean and spread across tools</td>
+<td>lizard 14 + radon 14 + mccabe 8 yields 12.0 with spread 8–14 and three sources</td>
+</tr>
+<tr>
+<td>3.4</td>
+<td>Spread drives <code>maintainability_range</code></td>
+<td><strong>Shipped.</strong> The interval narrows when independent tools agree and widens when they do not (<code>tests/test_analyzer_spread_range.py</code>). Built-in vs analyzer rollup still both sit in the range.</td>
+</tr>
+<tr>
+<td>3.5</td>
+<td>Measurements, counts and populations all reach the report</td>
+<td>Report carries distributions, not only counts</td>
+</tr>
+<tr>
+<td>3.6</td>
+<td>Recalibrate against the 40-repo corpus</td>
+<td><strong>Done 2026-08-14.</strong> <code>CALIBRATION_C</code> 2.6279 → 2.2658; declarations reference 0.0599 → 0.0860. 13/40 repos used analyzer declarations; 27 fell back. Median rollup is 4.0.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Order within this phase is forced.</strong> 3.1–3.6 have landed: the band matrix drives declaration and file-size pressure; the interval contains the other source's rollup and widens with per-concept analyzer spread.</p>
+<p><strong>Measured across the corpus, and it corrected an earlier claim.</strong> This document previously reported the swap as "roughly 4x on declaration pressure", from a single measurement on this repository. Running all 40 corpus repositories gives a median ratio of <strong>0.3x</strong> — the analyzers see <em>less</em> pressure than the built-in detectors on most of them, not more.</p>
+<p>The split is by language, and it was a defect rather than a finding:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Repos</th>
+<th>Median ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python</td>
+<td>13</td>
+<td>0.88x</td>
+</tr>
+<tr>
+<td>JavaScript</td>
+<td>12</td>
+<td>0.27x</td>
+</tr>
+<tr>
+<td>TypeScript</td>
+<td>15</td>
+<td>0.23x</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>complexipy</code> and <code>radon</code> are Python-only, so a Python repository's <code>declarations</code> dimension averaged lizard's cyclomatic complexity with complexipy's cognitive complexity while a TypeScript one used lizard alone — and the two were then compared as though they measured the same thing. <code>analyzer_pressures</code> now composes a dimension only from its full concept set and reports <code>None</code> otherwise, for the same reason two reports with different analyzer coverage are not comparable.</p>
+<p>The 4x figure came from this repository being Python-heavy. Generalizing from n=1 is the mistake this plan warns against two sections down, and it survived a commit message and this document before forty repositories caught it.</p>
+<p><strong>What the corpus run settled.</strong> Every reference and the curve constant reproduced exactly except <code>risk</code>, which moved 0.0726 to 0.0733 — traced to this release adding three Python-only default risk patterns that fire on the 13 Python repositories. Both values and the cause are recorded in <code>_calibration.py</code>. Corpus median still rolls up to 4.0.</p>
+<p><strong>3.6 was the risk item and is done.</strong> Replacing homegrown detectors with external tools moved the corpus scores. The constant was re-derived, <a href="studies.html">studies.md</a> records the shift, and the old and new numbers are both in <code>_calibration.py</code>.</p>
+<p>This is how Go, C, C++, C# and Rust get a declaration population. Java already has a zero-install fallback in <code>_ranges</code>; there will not be another language clone. See the <a href="decisions.html">register</a> on ADR 006.</p>
+<h3 id="what-36-did-2026-08-14">What 3.6 did (2026-08-14)</h3>
+<p>The 2026-08-12 block was real: widening include_extensions without provenance would have fitted material-ui's 10,759 generated icon wrappers into the scale. Provenance now excludes generated/vendored files from the scored population, and the point estimate uses analyzer declaration pressure where the full concept set was measured.</p>
+<p>Re-measured the 40 pinned repos with <code>--with-analyzers</code>. The fit replays the shipped mix (<code>_derive.primary_declarations</code>). <strong>13 of 40</strong> (the Python members) supplied an analyzer declaration pressure; <strong>27</strong> fell back because lizard alone cannot compose the three-criterion set. Constants moved:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align: right;">old</th>
+<th style="text-align: right;">new</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>file_size</td>
+<td style="text-align: right;">0.0576</td>
+<td style="text-align: right;">0.0573</td>
+</tr>
+<tr>
+<td>declarations</td>
+<td style="text-align: right;">0.0599</td>
+<td style="text-align: right;">0.0860</td>
+</tr>
+<tr>
+<td>duplication</td>
+<td style="text-align: right;">3.7350</td>
+<td style="text-align: right;">3.8644</td>
+</tr>
+<tr>
+<td>risk</td>
+<td style="text-align: right;">0.0733</td>
+<td style="text-align: right;">0.0737</td>
+</tr>
+<tr>
+<td>CALIBRATION_C</td>
+<td style="text-align: right;">2.6279</td>
+<td style="text-align: right;">2.2658</td>
+</tr>
+</tbody>
+</table></div>
+<p>Corpus median rollup is 4.0. Previous values remain in <code>_calibration.py</code>.</p>
+<h2 id="phase-4-pillars-practice-level-work-order">Phase 4 — Pillars, practice level, work order</h2>
+<p>Implements <a href="adr-007-pillars-and-practice.html">ADR 007</a> and the actionable half of <a href="adr-008-translation-and-decision.html">ADR 008</a>.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Task</th>
+<th>Exit condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.1</td>
+<td><code>_pillars</code>: taxonomy with declared scope</td>
+<td>Every report shows five pillars, each with its scope and reason. Efficiency is permanently <code>NotApplicable</code>; Security reports <code>secure-code-agent</code>'s measurement when that tool has left one and <code>NotApplicable</code> naming it otherwise (ADR 007, amended 2026-09-10)</td>
+</tr>
+<tr>
+<td>4.2</td>
+<td><code>_practice</code>: enforcement detection from CI and config</td>
+<td>Reads configuration only — enforced by test; a repo with no CI cannot exceed level 2</td>
+</tr>
+<tr>
+<td>4.3</td>
+<td>Practice and condition never averaged</td>
+<td>No function returns their mean; asserted structurally</td>
+</tr>
+<tr>
+<td>4.4</td>
+<td>Risk × Effort metadata per finding class</td>
+<td>Declared in <code>standard.md</code> as a stated judgment, not buried in code</td>
+</tr>
+<tr>
+<td>4.5</td>
+<td>Work order with computed score deltas</td>
+<td>Each item's delta equals a rubric recomputation with that finding removed</td>
+</tr>
+<tr>
+<td>4.6</td>
+<td>Verification command per item</td>
+<td>An item lacking location, target or verification is not emitted</td>
+</tr>
+<tr>
+<td>4.7</td>
+<td>Work items addressable by every dimension</td>
+<td>Filter by severity, class, concern, pillar, path, tool, recurrence; raw tool output reachable per item</td>
+</tr>
+<tr>
+<td>4.8</td>
+<td>Recomputed deltas for a selection</td>
+<td>Clearing a filtered set quotes a recomputed figure; test asserts it differs from the sum of per-item deltas</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="phase-5-scan-history-and-trends">Phase 5 — Scan history and trends</h2>
+<p>Implements <a href="adr-009-scan-history.html">ADR 009</a>. Needs 0.3 (identity) and Phase 3 (stable score semantics), or the series records numbers that later change meaning.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Task</th>
+<th>Exit condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5.1</td>
+<td><code>_scan_history</code>: append-only record, own schema version</td>
+<td>One record per run; no run rewrites earlier records</td>
+</tr>
+<tr>
+<td>5.2</td>
+<td>Comparability gate</td>
+<td>A trend across differing coverage, rubric version or scope is segmented or withheld with a reason</td>
+</tr>
+<tr>
+<td>5.3</td>
+<td>Trend computation</td>
+<td>Debt velocity, growth-versus-quality, trajectory with interval, recurrence, stability</td>
+</tr>
+<tr>
+<td>5.4</td>
+<td>Recurrence escalation</td>
+<td>A finding cleared and returned twice is emitted as a design-review candidate</td>
+</tr>
+<tr>
+<td>5.4b</td>
+<td>Remediation outcome tracking</td>
+<td>Each prompt records the finding identities it targeted; the next run reports cleared / never-cleared / returned per target</td>
+</tr>
+<tr>
+<td>5.5</td>
+<td>Backfill command</td>
+<td>Scans a commit range into history via worktrees; never implicit in a normal run</td>
+</tr>
+<tr>
+<td>5.6</td>
+<td>Compaction policy</td>
+<td>Documented, explicit, never a side effect of a scan</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>5.4 is Miles's feature</strong> and the sharpest differentiator: the accumulated-friction signal a language model structurally cannot hold.</p>
+<h2 id="deferred-deliberately-a-calibration-profile-for-small-repositories">Deferred, deliberately — a calibration profile for small repositories</h2>
+<p>An organization whose whole estate is small services needs a scale fitted to that, not a lowered floor on a scale fitted to mature repositories. That means a <strong>calibration profile</strong>: a corpus, the constant fitted to it, floors from its minima, bands from its percentiles — distinct from the <em>evidence</em> profile (<code>default-v1</code>), which declares what must be measured.</p>
+<p><strong>Sequencing is forced, not preferred.</strong> The shipped constant is the 2026-08-14 analyzer-primary fit. A second profile still waits on a sampling frame; it must not be fitted until that frame is written down. The order was: build, test, audit, re-derive the primary (3.6), then gather the small-repository data using the finished instrument — which is also the first real exercise of it at scale.</p>
+<p><strong>The sampling frame is the hard part, and it is a study-design decision.</strong> The existing corpus has a defensible frame: <em>mature OSS</em>, standing in for "what good looks like". A small-repository corpus does not inherit that justification. A random sample of small public repositories is mostly abandoned toys, and fitting to those would anchor the scale to "typical small repository" — a materially weaker claim than the current one, and one nobody asked for. The frame likely needs to be <em>small repositories from organizations with demonstrated practice</em>: a real service from a team that ships, not a weekend project. Whatever is chosen changes what the resulting scale means, so it is decided and written down before any repository is cloned, under the Tier 3 bar in <a href="product-intent.html#the-evidence-standard">product intent</a> — pinned inputs, a stated frame, stated limits.</p>
+<p>Until that exists, a small repository gets path 2: a complete audit, every finding, and no score.</p>
+<h2 id="phase-6-entry-points">Phase 6 — Entry points</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Task</th>
+<th>Exit condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6.1</td>
+<td>Interactive first-run prompt</td>
+<td><strong>Shipped.</strong> Chat, MCP, and a CLI TTY ask the <strong>same</strong> questions (<a href="help-first-run.html">first run</a>); never in CI; the answer persists to <code>maintainability-agent.json</code>. A CLI that asks only depth and policy is a bug against that set, not a second process.</td>
+</tr>
+<tr>
+<td>6.2</td>
+<td><strong>Done.</strong> MCP server as a subcommand</td>
+<td><code>maintainability-agent mcp</code> exposes all three primitives: <code>tools</code> run the audit, <code>resources</code> expose rubric/report/catalog, <code>prompts</code> is the slash command</td>
+</tr>
+<tr>
+<td>6.3</td>
+<td><strong>Done.</strong> Markdown retrievable from chat</td>
+<td>The MCP report resource is byte-identical to <code>render_markdown(build_report(...))</code></td>
+</tr>
+<tr>
+<td>6.4</td>
+<td>CI recipes</td>
+<td><strong>Shipped.</strong> GitHub Actions and a generic runner, with history caching — cache restore/save around <code>--record-history</code>, saving even on failed runs (<code>tests/test_ci_history_recipe.py</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="phase-7-release-10">Phase 7 — Release 1.0</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Task</th>
+<th>Exit condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7.1</td>
+<td>Regenerate the self-audit under the new pipeline</td>
+<td><strong>Shipped.</strong> <code>docs/self-audit.md</code> stamped at <code>9c2257a</code>; README table matches (<code>tests/test_docs_links.py</code>)</td>
+</tr>
+<tr>
+<td>7.2</td>
+<td>Reconcile every document with shipped behavior</td>
+<td><strong>Shipped.</strong> No document describes an unimplemented component as present, and none calls shipped work open or deferred — both directions held by lints (<code>tests/test_phase6_claims.py</code>, <code>tests/test_doc_claims.py</code>, <code>tests/test_release_plan_status.py</code>), which is what closes the class rather than the instances</td>
+</tr>
+<tr>
+<td>7.3</td>
+<td><strong>Done.</strong> Update the promise set</td>
+<td><code>tests/test_promises.py</code> indexes the enforcement for every promise; P7's score-withholding tests and P8's coverage and estimate-source tests name their falsifiers</td>
+</tr>
+<tr>
+<td>7.4</td>
+<td>Migration guide</td>
+<td><strong>Done.</strong> <a href="migration-1.0.html">migration-1.0.md</a> names the post-0.7 breaks: <code>--analyzers</code> moves the estimate; <code>CALIBRATION_C</code> 2.6279 → 2.2658. Schema 3 and baseline v2 do not break again. 1.0 is not tagged.</td>
+</tr>
+<tr>
+<td>7.5</td>
+<td>Hostile audit against the shipped artifact</td>
+<td>Findings closed as a class, not instance by instance. <strong>After Phase 8.</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="phase-8-10-presentations-and-scoring-continuity">Phase 8 — 1.0 presentations and scoring continuity</h2>
+<p>Decided in <a href="adr-011-three-report-presentations.html">ADR 011</a> and the schema-2 close of <a href="adr-009-scan-history.html">ADR 009</a>. 7.5 and the tag wait on this. The acceptance test is the last human gate; if it fails, this phase is reopened, not papered over.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Task</th>
+<th>Exit condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8.1</td>
+<td>History schema 2</td>
+<td><strong>Shipped.</strong> New lines are schema 2 with categories, aspects, pillars, practice_level and evidence_status; pillars and practice are two series, never averaged; schema-1 lines still load (<code>tests/test_history_schema2.py</code>)</td>
+</tr>
+<tr>
+<td>8.2</td>
+<td>Append when the file exists</td>
+<td><strong>Shipped.</strong> An existing <code>.maintainability/history.jsonl</code> gains every successful scan without the flag; a first interactive run creates the file; CI without either still writes nothing (<code>tests/test_history_schema2.py</code>)</td>
+</tr>
+<tr>
+<td>8.3</td>
+<td>One view model, three renderers</td>
+<td><strong>Shipped.</strong> The skins agree on estimate, range, grade and finding identity, and the HTML renderer imports no scorer (<code>tests/test_three_presentations.py</code>)</td>
+</tr>
+<tr>
+<td>8.4</td>
+<td>Format ask</td>
+<td><strong>Shipped.</strong> Every TTY invoke with no format/output flag asks; Enter = chat; flags win; non-TTY never calls <code>input()</code>; the choice is never persisted (<code>tests/test_format_ask.py</code>)</td>
+</tr>
+<tr>
+<td>8.5</td>
+<td>MCP format parameter</td>
+<td><strong>Shipped.</strong> The prompt tells the host to ask; <code>audit_repository</code> takes <code>format</code>; HTML comes back as text and the tree is never written; chat returns Markdown (<code>tests/test_format_ask.py</code>)</td>
+</tr>
+<tr>
+<td>8.6</td>
+<td>HTML</td>
+<td><strong>Shipped.</strong> One file, inlined CSS, deterministic SVG from stored records, executive summary first, all four required charts, schema-1 scans as gaps, empty history as an empty state, and no http(s) resource load (<code>tests/test_three_presentations.py</code>)</td>
+</tr>
+<tr>
+<td>8.7</td>
+<td>Honesty</td>
+<td><strong>Shipped</strong> for 8.1–8.6: the register rows for ADR 009 and ADR 011 and this table state exactly what the named tests prove. 8.8–8.10 closed below on 2026-09-01; this row said they remained open for a further two releases, which is the drift 7.2 forbids</td>
+</tr>
+<tr>
+<td>8.8</td>
+<td>Acceptance</td>
+<td>✅ Done — run on a real Python + TypeScript repository across chat, MCP and CLI, with recorded scans; the round surfaced the reconfigure and TS-semantic defects</td>
+</tr>
+<tr>
+<td>8.9</td>
+<td>7.5</td>
+<td>✅ Done — the acceptance round was itself the adversarial audit: it found the config-destroy-on-reconfigure bug and the TS-coverage-goes-unknown gap, both fixed and falsified before the tag</td>
+</tr>
+<tr>
+<td>8.10</td>
+<td>Tag 1.0</td>
+<td>✅ 8.8 and 8.9 complete; tagging v1.0.0 (2026-09-01)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="sequencing-constraints">Sequencing constraints</h2>
+<pre><code class="language-text">0.2 --------&gt; Phase 1 (ADR 005)
+0.3 --------------------------------&gt; Phase 5 (ADR 009)
+Phase 2 (runner) --&gt; Phase 3 (translation) --&gt; Phase 4 (pillars, work order)
+                                  \--&gt; Phase 5 (history)
+Phases 1-5 --&gt; Phase 6 --&gt; Phase 7
+</code></pre>
+<p>Phase 0 is independent and shippable now. Phase 1 needs no external tools. Everything from Phase 3 onward waits on the runner.</p>
+<h2 id="what-could-be-cut">What could be cut</h2>
+<p>If the finish line has to move nearer, these can be deferred without making the tool dishonest:</p>
+<ul>
+<li><strong>Phase 5 backfill (5.5)</strong> — history still accumulates going forward.</li>
+<li><strong>Phase 6 MCP (6.2, 6.3)</strong> — the CLI covers CI, which is the load-bearing entry point.</li>
+<li><strong>Adapters beyond the ten baseline ones (2.7)</strong> — the pool grows over time by design; <code>all</code> already reports honestly what it could not run.</li>
+<li><strong>2.5c environment work order</strong> — shipped: the install-command artifact now rides beside coverage. Acquisition remains opt-in in user-tier configuration; the audited tree cannot enable it.</li>
+</ul>
+<p>What cannot be cut without the tool lying: population floors (Phase 1), coverage reporting (2.5), and rubric-driven tool configuration (2.6). Those three are what stop the score from being fiction.</p>
+<footer>Rendered from <code>docs/release-plan.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

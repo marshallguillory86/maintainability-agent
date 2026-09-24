@@ -1,0 +1,46 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>C · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul></ul>
+</div>
+</aside>
+<main><div class="meta">Languages</div><h1>C</h1><p>File-scope function definitions and <code>struct</code>, <code>enum</code> and <code>union</code> types,
+each bounded by its own braces. Storage-class and inline keywords
+(<code>static</code>, <code>extern</code>, <code>inline</code>, <code>_Noreturn</code>, …) are stripped before
+matching, so <code>static inline int clamp(</code> is a function named <code>clamp</code>; a
+pointer return type is stripped with them, so <code>const char *greeting(</code>
+names <code>greeting</code> and not its type. The brace may sit on the signature
+line or on its own line below it, and the signature may span several
+lines — all three are ordinary C style and all three are bounded
+correctly.</p>
+<p>Two things are deliberately not declarations. A <strong>prototype</strong> has no
+body, so it mints no population — a header of 40 prototypes is not 40
+declarations. A <strong>preprocessor line</strong> is skipped whole, so
+<code>#define MAX(a, b) ((a) &gt; (b) ? (a) : (b))</code> is not read as a function
+called <code>MAX</code>; macros are text substitution, and measuring one as a
+declaration would report a length and a complexity nobody wrote.</p>
+<p>Function bodies are stepped over once their end is known, so nothing
+inside one — <code>if (</code>, <code>for (</code>, a call — can be read as a declaration.
+Unlike Java, type bodies are not descended into either: C types hold
+fields, not methods, so there is nothing inside them to grade.</p>
+<p>Everything it misses, it misses in the safe direction:</p>
+<ul>
+<li><strong>K&amp;R-style definitions</strong> (<code>int add(a, b)</code> with the parameter
+  declarations on following lines) are not recognised. Cost: that one
+  function, not the file.</li>
+<li><strong>Declarations produced by macros</strong> — a function defined inside a
+  <code>#define</code>, or a body wrapped in <code>BEGIN_/END_</code> macros — are invisible.</li>
+<li><strong><code>.h</code> is treated as C.</strong> A C++ header using <code>.h</code> gets the C scanner,
+  which reads its free functions and <code>struct</code>s and misses its classes
+  and methods. The C++ increment disambiguates this.</li>
+<li><strong>Conditional compilation is not evaluated.</strong> Both arms of an
+  <code>#if</code>/<code>#else</code> are read as ordinary source, so a declaration in a
+  disabled arm still counts.</li>
+</ul>
+<p>Complexity for C is the same keyword count used everywhere else here,
+not a control-flow graph. Pair it with an external analyzer — lizard
+covers C and is in the shipped pool — when the number has to be exact.</p>
+<footer>Rendered from <code>docs/languages/c.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

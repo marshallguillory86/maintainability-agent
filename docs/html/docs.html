@@ -1,0 +1,264 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Documentation · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#start-here">Start here</a></li>
+<li><a href="#decisions">Decisions</a></li>
+<li><a href="#the-standard-and-what-has-been-measured">The standard, and what has been measured</a></li>
+<li><a href="#operating-the-tool">Operating the tool</a></li>
+<li><a href="#adding-a-claim-to-any-of-these">Adding a claim to any of these</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Reference</div><h1>Documentation</h1><p>Every document here has a <strong>genre</strong>, and the genre determines what it may assert. This is not filing tidiness: mixing genres is how a claim in this repository once reached the README as settled fact and had to be retracted. See <a href="product-intent.html#the-evidence-standard">the evidence standard</a>.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Genre</th>
+<th>May assert</th>
+<th>Changes when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Governing</strong></td>
+<td>What the product is for and what it may never claim</td>
+<td>The product's purpose changes</td>
+</tr>
+<tr>
+<td><strong>Normative</strong></td>
+<td>The standard applied to every repository — weights, bands, thresholds</td>
+<td>A judgment is deliberately revised</td>
+</tr>
+<tr>
+<td><strong>Decision</strong></td>
+<td>One architectural choice, its context, its consequences</td>
+<td>Superseded by a later decision</td>
+</tr>
+<tr>
+<td><strong>Empirical</strong></td>
+<td>What was measured, with pinned inputs and stated limits</td>
+<td>New evidence is derived</td>
+</tr>
+<tr>
+<td><strong>Operational</strong></td>
+<td>How to run, configure, and integrate the tool</td>
+<td>Behavior changes</td>
+</tr>
+<tr>
+<td><strong>Generated</strong></td>
+<td>Output of a command; never hand-edited</td>
+<td>Regenerated</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Where empirical numbers may appear.</strong> <code>studies.md</code> is the <strong>source of record</strong>: every result lives there in full, with its method, controls and limits. Other documents <strong>may quote an approved summary sentence verbatim</strong> — a governing document that cannot state what the product may claim is not governing anything — and may not restate a result's interpretation in their own words. The approved sentences are listed under <a href="studies.html#approved-summaries">Approved summaries</a> and <code>test_docs_links.py</code> compares quotations character for character. It detects sentences carrying an "N of M", a p-value or a "median of N"; it does <strong>not</strong> detect percentage-only claims, because this repository also writes "92% coverage gate" and "25% of modularity" and no pattern separates those from a study figure. The recognized statistical forms are checked automatically; <strong>discovering a new or paraphrased percentage claim is a review responsibility</strong>. The canonical wording for the percentage claims that exist is in the approved list so there is something to review against, not because the build enforces it.</p>
+<p>Verbatim, not "contains the same numbers": an earlier guard checked whether each figure appeared <em>somewhere</em> in <code>studies.md</code>, which cannot detect a swapped attribution or a different sentence assembled from the same digits. It also only examined blockquotes, so a restatement written as ordinary prose passed unread.</p>
+<h2 id="start-here">Start here</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Genre</th>
+<th>What it settles</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="product-intent.html">Product intent</a></td>
+<td>Governing</td>
+<td>What this is, what it promises, what it must never claim, and the bar each kind of claim must clear. <strong>When another document disagrees with this one, this one is right.</strong></td>
+</tr>
+<tr>
+<td><a href="architecture.html">Architecture</a></td>
+<td>Governing</td>
+<td>Layers, dependency rules, invariants and where each is enforced, and the known debt — <strong>as the code is today</strong></td>
+</tr>
+<tr>
+<td><a href="target-architecture.html">Target architecture</a></td>
+<td>Decision</td>
+<td>Where the design is going: analyzer pipeline, pillars, band matrix, work order. Nothing here ships</td>
+</tr>
+<tr>
+<td><a href="philosophy.html">Philosophy</a></td>
+<td>Governing</td>
+<td>Why the tool is AI-specific — volume, not pathology</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="decisions">Decisions</h2>
+<p><strong><a href="decisions.html">The decision register</a></strong> lists every architectural decision and its status, including the ones not yet made. It also holds the ADR template and the rule for when to write one.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="adr-001-evidence-and-verification.html">ADR 001 — Evidence and verification</a></td>
+<td>Accepted — status in the <a href="decisions.html">register</a></td>
+</tr>
+<tr>
+<td><a href="adr-002-null-verified-grade-in-ci.html">ADR 002 — Null verified grade in CI</a></td>
+<td><strong>Rejected</strong> — assumed a CI grade gate that does not exist</td>
+</tr>
+<tr>
+<td><a href="adr-003-deterministic-semantic-policy.html">ADR 003 — Deterministic semantic policy</a></td>
+<td><strong>Proposed</strong> — repository semantics without rubric drift</td>
+</tr>
+<tr>
+<td><a href="adr-004-economic-context.html">ADR 004 — Economic context</a></td>
+<td>Accepted — status in the <a href="decisions.html">register</a>. v1 scenario layer; score and grade stay money-free</td>
+</tr>
+<tr>
+<td><a href="adr-005-insufficient-population.html">ADR 005 — Insufficient population</a></td>
+<td>Accepted — status in the <a href="decisions.html">register</a>. No rate without a denominator that supports one</td>
+</tr>
+<tr>
+<td><a href="adr-006-analyzer-evidence.html">ADR 006 — Analyzer evidence</a></td>
+<td>Accepted — status and remaining gaps in the <a href="decisions.html">register</a>. Optional analyzers report measurements, findings, provenance, and coverage; a complete concept set is the primary evidence for the point estimate, and the built-in detectors remain the fallback</td>
+</tr>
+<tr>
+<td><a href="adr-007-pillars-and-practice.html">ADR 007 — Pillars and practice</a></td>
+<td>Accepted — status in the <a href="decisions.html">register</a>. Five-pillar taxonomy; practice maturity separate from code condition. The §4 rename was refused, not deferred</td>
+</tr>
+<tr>
+<td><a href="adr-008-translation-and-decision.html">ADR 008 — Translation and decision</a></td>
+<td>Accepted — status in the <a href="decisions.html">register</a>. Tool output to scoring input, the LLM boundary, CLI and MCP</td>
+</tr>
+<tr>
+<td><a href="adr-009-scan-history.html">ADR 009 — Scan history</a></td>
+<td>Accepted — status in the <a href="decisions.html">register</a>. Maintainability is a trend; comparability is checked before any of it is computed</td>
+</tr>
+<tr>
+<td><a href="adr-010-repository-discovery.html">ADR 010 — Repository discovery</a></td>
+<td>Accepted — status in the <a href="decisions.html">register</a>. What is in this tree and whose code it is, from evidence the repository provides</td>
+</tr>
+<tr>
+<td><a href="adr-011-three-report-presentations.html">ADR 011 — Three report presentations</a></td>
+<td>Accepted — status in the <a href="decisions.html">register</a>. Chat, Markdown file, and one HTML file from one report, plus <code>json</code> for a machine (amended, D201); the host asks, flags win, CI never asks</td>
+</tr>
+<tr>
+<td><a href="report-contract.html">Report contract</a></td>
+<td>Current — the report's producers, consumers, and schema-version policy</td>
+</tr>
+</tbody>
+</table></div>
+<p>New ADRs are <code>adr-NNN-short-title.md</code>, numbered in order, added to the register, and never edited after acceptance except to record implementation progress or mark them superseded.</p>
+<h2 id="the-standard-and-what-has-been-measured">The standard, and what has been measured</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Genre</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="standard.html">Maintainability standard</a></td>
+<td>Normative</td>
+<td>The rubric, its weights and bands, the calibration method, and the reference corpus. Judgments applied uniformly to every repository; requires no study to be legitimate</td>
+</tr>
+<tr>
+<td><a href="studies.html">Studies and measured results</a></td>
+<td>Empirical</td>
+<td>Every claim about the world, with pinned inputs, controls and stated limits — the bounded-prompt experiment, the retracted AI-authorship claim, and fix breadth. Licenses nothing beyond the sentence stated with each result</td>
+</tr>
+<tr>
+<td><a href="self-audit.html">Self-audit</a></td>
+<td>Generated</td>
+<td>This tool run against this repository, stamped with the source commit that produced it; provenance is the stamp, not a fixed distance from current HEAD</td>
+</tr>
+<tr>
+<td><a href="tool-inventory.html">FOSS tool inventory</a></td>
+<td>Empirical</td>
+<td>Every free quality analyzer this agent could run, which were installed and executed here, and what each one found. Separates proven from listed</td>
+</tr>
+<tr>
+<td><a href="analyzer-pool.html">The analyzer pool</a></td>
+<td>Reference</td>
+<td>The 760-tool catalog, its license classification, and the depth and license-policy selectors that narrow it at run time</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="operating-the-tool">Operating the tool</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="help.html">Chat workflow help</a></td>
+<td>What the agent does, first-run questions and grants, analyzer evidence, and reading the report loop</td>
+</tr>
+<tr>
+<td><a href="cli.html">CLI</a></td>
+<td>Commands and flags</td>
+</tr>
+<tr>
+<td><a href="machine-setup.html">Machine setup</a></td>
+<td>What a development machine must configure before it commits: identity, signing, the <code>Agent:</code> trailer</td>
+</tr>
+<tr>
+<td><a href="config-schema.html">Config schema</a></td>
+<td>Configuration file</td>
+</tr>
+<tr>
+<td><a href="language-support.html">Language support</a></td>
+<td>What is parsed, and how well</td>
+</tr>
+<tr>
+<td><a href="pr-and-baseline-workflows.html">PR and baseline workflows</a></td>
+<td>Incremental adoption</td>
+</tr>
+<tr>
+<td><a href="adapters.html">Adapters</a></td>
+<td>Ingesting other analyzers</td>
+</tr>
+<tr>
+<td><a href="external-quality-tools.html">External quality tools</a></td>
+<td>Sitting alongside SonarQube and friends</td>
+</tr>
+<tr>
+<td><a href="ide-agent-integration.html">IDE and agent integration</a></td>
+<td>Claude Code, Codex, Copilot Chat, Cursor</td>
+</tr>
+<tr>
+<td><a href="roadmap.html">Roadmap</a></td>
+<td>What is planned, and what is deliberately refused</td>
+</tr>
+<tr>
+<td><a href="release-plan.html">Release plan</a></td>
+<td>The ordered work from here to 1.0, with an exit condition per task</td>
+</tr>
+<tr>
+<td><a href="migration-0.7.html">Migrating to 0.7</a></td>
+<td>Reference</td>
+</tr>
+<tr>
+<td><a href="migration-1.0.html">Migrating to 1.0</a></td>
+<td>Reference</td>
+</tr>
+<tr>
+<td><a href="../../tools/validation/results.md">Report validation</a></td>
+<td>Fourteen real repositories against a frame written before selection: what the output actually looked like, and the defect it exposed</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="adding-a-claim-to-any-of-these">Adding a claim to any of these</h2>
+<ol>
+<li>Decide its tier — deterministic property, standard, or empirical (<a href="product-intent.html#the-evidence-standard">definitions</a>).</li>
+<li>Meet that tier's bar. A property needs a test over the real input space; a standard needs to be explicit and uniform; an empirical claim needs pinned inputs and a control.</li>
+<li>Put it in a document of the matching genre.</li>
+<li>If it is empirical and later changes, correct it <strong>everywhere it is quoted</strong>, naming the correction rather than rewriting silently.</li>
+</ol>
+<footer>Rendered from <code>docs/README.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

@@ -1,0 +1,78 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>ADR 002: Do not couple `verified_grade` to the existing CI gate · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#context">Context</a></li>
+<li><a href="#options-considered">Options considered</a></li>
+<li><a href="#decision">Decision</a></li>
+<li><a href="#consequences">Consequences</a></li>
+<li><a href="#invariants">Invariants</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Decisions</div><h1>ADR 002: Do not couple `verified_grade` to the existing CI gate</h1><ul>
+<li>Status: <strong>Rejected</strong> — the proposed decision assumed a grade gate that does not exist</li>
+<li>Date: 2026-08-10</li>
+<li>Scope: CLI exit codes and ADR 001 stage 5</li>
+</ul>
+<h2 id="context">Context</h2>
+<p><a href="adr-001-evidence-and-verification.html">ADR 001</a> stage 5 introduces
+<code>evidence_status</code> and <code>verified_grade</code> alongside the existing compatibility
+fields. Insufficient evidence produces <code>verified_grade: null</code> with specific
+reasons instead of pretending that unknown quality is demonstrated poor
+quality.</p>
+<p>The original proposal treated <code>--fail-on-gate</code> as a consumer of the letter
+grade and asked whether a null grade should fail open or fail closed. That
+premise is false. The shipped CLI exits nonzero for <code>--fail-on-gate</code> only when
+<code>report["hard_gate_failures"]</code> is non-empty. It does not inspect <code>score.grade</code>,
+an overall threshold, or any grade field. The CLI documentation describes the
+same contract.</p>
+<p>No shipped badge or API consumer that gates on the grade was identified.
+Designing null-grade behavior for those hypothetical consumers would violate
+ADR 001's staged migration: introduce the fields first, then migrate actual
+consumers deliberately.</p>
+<h2 id="options-considered">Options considered</h2>
+<p><strong>A. Make null fail through <code>--fail-on-gate</code>.</strong>
+Rejected because it changes an existing hard-finding gate into an
+evidence-completeness gate. That is a new CLI contract, not a consequence of
+adding a report field.</p>
+<p><strong>B. Make null pass through <code>--fail-on-gate</code>.</strong>
+Rejected because the flag never reads the grade. Calling the unchanged behavior
+"fail open" would falsely imply that a grade gate exists today.</p>
+<p><strong>C. Add configuration for null-grade behavior now.</strong>
+Rejected because no current consumer needs it. It would add a speculative code
+path before ADR 001 stage 5 has established the field being configured.</p>
+<p><strong>D. Preserve existing behavior while Stage 5 adds shadow fields.</strong>
+Accepted as the bounded migration path in ADR 001; it requires no separate CI
+policy decision.</p>
+<h2 id="decision">Decision</h2>
+<p>Reject this ADR's proposed CI policy decision. Its premise does not match the
+shipped CLI.</p>
+<p>ADR 001 stage 5 is not blocked. It may add <code>evidence_status</code> and
+<code>verified_grade</code> alongside compatibility fields without changing exit codes,
+<code>--fail-on-gate</code>, or existing rendered fields. Consumer migration remains ADR
+001 stage 7 work.</p>
+<p>If a real consumer later needs to gate on <code>verified_grade</code>, that behavior must
+be designed from that consumer's explicit contract. This ADR does not invent a
+flag, configuration key, badge, API, or threshold for it.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li>Stage 5 remains a backward-compatible schema addition.</li>
+<li><code>--fail-on-gate</code> keeps its documented meaning: fail on hard-gate findings.</li>
+<li>No speculative <code>require_verified_grade</code> setting is added.</li>
+<li>Stage 7 must inventory actual consumers before changing how any of them use
+  <code>verified_grade</code>.</li>
+</ul>
+<h2 id="invariants">Invariants</h2>
+<ol>
+<li>Adding Stage 5 fields does not change CLI exit codes for an otherwise
+   identical report.</li>
+<li><code>--fail-on-gate</code> continues to depend only on hard-gate findings unless a
+   later accepted decision explicitly changes its contract.</li>
+<li><code>verified_grade: null</code> carries specific evidence reasons and is never
+   represented as a passing verified grade.</li>
+</ol>
+<footer>Rendered from <code>docs/adr-002-null-verified-grade-in-ci.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

@@ -1,0 +1,230 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>ADR 008: The translation layer, the decision engine, and the two entry points · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#context-what-the-audit-found">Context: what the audit found</a><ul>
+<li><a href="#1-the-input-contract-is-fully-wired">1. The input contract is fully wired</a></li>
+<li><a href="#2-the-scoring-inputs-are-count-shaped-tools-emit-measurements">2. The scoring inputs are count-shaped; tools emit measurements</a></li>
+<li><a href="#3-verdict-emitters-import-their-thresholds-into-the-score-measured">3. Verdict emitters import their thresholds into the score — measured</a></li>
+<li><a href="#4-verdict-emitters-cannot-supply-a-denominator-measured">4. Verdict emitters cannot supply a denominator — measured</a></li>
+<li><a href="#5-two-inputs-have-no-foss-equivalent">5. Two inputs have no FOSS equivalent</a></li>
+<li><a href="#6-productiontest-classification-belongs-to-the-agent">6. Production/test classification belongs to the agent</a></li>
+</ul>
+</li>
+<li><a href="#decision">Decision</a><ul>
+<li><a href="#every-tool-is-classified-and-the-classification-constrains-its-use">Every tool is classified, and the classification constrains its use</a></li>
+<li><a href="#the-rubric-drives-the-tools-not-the-reverse">The rubric drives the tools, not the reverse</a></li>
+<li><a href="#all-three-data-kinds-survive-bands-do-the-normalizing">All three data kinds survive; bands do the normalizing</a></li>
+<li><a href="#scan-scope-is-part-of-the-result">Scan scope is part of the result</a></li>
+<li><a href="#normalization-is-a-pipeline-with-one-shape">Normalization is a pipeline with one shape</a></li>
+<li><a href="#the-report-is-a-first-class-output-not-a-by-product-of-the-prompt">The report is a first-class output, not a by-product of the prompt</a></li>
+<li><a href="#the-work-order-is-the-actionable-artifact">The work order is the actionable artifact</a></li>
+<li><a href="#raw-analyzer-output-is-retained-for-a-reader-with-different-constraints">Raw analyzer output is retained, for a reader with different constraints</a></li>
+<li><a href="#the-agent-never-calls-an-llm">The agent never calls an LLM</a></li>
+<li><a href="#two-entry-points-over-one-core">Two entry points over one core</a></li>
+<li><a href="#recurrence-is-tracked-because-the-model-cannot">Recurrence is tracked, because the model cannot</a></li>
+</ul>
+</li>
+<li><a href="#consequences">Consequences</a></li>
+<li><a href="#invariants">Invariants</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Decisions</div><h1>ADR 008: The translation layer, the decision engine, and the two entry points</h1><ul>
+<li>Status: Accepted. Implementation progress is tracked in the <a href="decisions.html">decision register</a>, which is the single place it is stated</li>
+<li>Date: 2026-08-12</li>
+<li>Scope: How tool output becomes scoring input, who calls the LLM, and how the agent is invoked</li>
+<li>Related: <a href="adr-006-analyzer-evidence.html">ADR 006</a>, <a href="adr-005-insufficient-population.html">ADR 005</a>, <a href="adr-007-pillars-and-practice.html">ADR 007</a></li>
+</ul>
+<h2 id="context-what-the-audit-found">Context: what the audit found</h2>
+<p><a href="adr-006-analyzer-evidence.html">ADR 006</a> decided that external analyzers produce the evidence. Before writing a line of connector code, the existing scoring contract was audited against what real tools actually emit. Six findings, four of them load-bearing.</p>
+<h3 id="1-the-input-contract-is-fully-wired">1. The input contract is fully wired</h3>
+<p>The scorer consumes exactly 28 typed inputs — 23 on <code>SummaryEvidence</code>, 5 on <code>HistoryEvidence</code>. Every one is read by <code>_pressures</code> or <code>_aspects</code>. There are no dead inputs and no undeclared ones, so the target the translation layer must hit is exact and small.</p>
+<h3 id="2-the-scoring-inputs-are-count-shaped-tools-emit-measurements">2. The scoring inputs are count-shaped; tools emit measurements</h3>
+<p>Every scoring input is a <strong>count</strong> (<code>function_failures</code>, <code>duplicate_blocks</code>, <code>dead_code_count</code>) or a <strong>population</strong> (<code>declarations_scanned</code>). No input accepts a measurement — because a <em>rate</em> needs a numerator and a denominator, and that is what the score is built from.</p>
+<p>That is a fact about the score's needs, not a reason to discard the measurements. See "All three data kinds survive" below.</p>
+<p>Tools emit one of two very different things, and conflating them is the trap:</p>
+<ul>
+<li><strong>Metric emitters</strong> report a value for <em>every</em> unit: lizard gives cyclomatic complexity, NLOC and parameter count for every function; radon gives a Maintainability Index per file. Threshold-free, complete, and therefore able to supply both numerator and denominator.</li>
+<li><strong>Verdict emitters</strong> report only units that violated <em>the tool's own configured threshold</em>: eslint, ruff, pylint, most linters. A pass produces no output at all.</li>
+</ul>
+<h3 id="3-verdict-emitters-import-their-thresholds-into-the-score-measured">3. Verdict emitters import their thresholds into the score — measured</h3>
+<p>The same file, one function, cyclomatic complexity 11, run through eslint at four thresholds:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>eslint <code>complexity</code> threshold</th>
+<th>findings reported</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5</td>
+<td>1</td>
+</tr>
+<tr>
+<td>10</td>
+<td>1</td>
+</tr>
+<tr>
+<td>15</td>
+<td>0</td>
+</tr>
+<tr>
+<td>20</td>
+<td>0</td>
+</tr>
+</tbody>
+</table></div>
+<p>Consuming those verdicts makes the score a function of the repository's <code>eslint.config.mjs</code>. Two repositories with identical code and different lint configs would score differently, which falsifies promise <strong>P2</strong> — one uniform rubric applied to every repository. The rubric's threshold must be the only threshold that decides a count.</p>
+<p>Worse, the value itself is not machine-readable. eslint's JSON carries <code>ruleId</code>, <code>severity</code>, <code>line</code>, <code>column</code> and a human sentence — <em>"Function 'tangled' has a complexity of 11"</em>. <strong>The number 11 exists only inside the message string.</strong> Recovering it means regex-parsing prose that changes between releases.</p>
+<h3 id="4-verdict-emitters-cannot-supply-a-denominator-measured">4. Verdict emitters cannot supply a denominator — measured</h3>
+<p>The same one-function file at eslint threshold 15 produces <strong>zero messages</strong>. Nothing in that output reveals that a function exists. lizard on the identical file reports one function with CCN 11 — numerator and denominator together.</p>
+<p>This matters more than it looks. Rates-not-counts is the property that fixed the 0.5.0 model, where Django, pytest and black all scored 0.0/F while a 53-file toy scored 4.6/A because the model counted absolutely and therefore scored repository <em>size</em>. Feeding verdict-only output into a rate would reintroduce exactly that bug from a new direction.</p>
+<h3 id="5-two-inputs-have-no-foss-equivalent">5. Two inputs have no FOSS equivalent</h3>
+<p><code>idiom_concern_count</code> (competing libraries for one concern) and <code>risk_findings</code> (repository-configured regex patterns) are not measured by any catalogued tool. They stay native, permanently, and should be stated as such rather than left looking like a gap.</p>
+<h3 id="6-productiontest-classification-belongs-to-the-agent">6. Production/test classification belongs to the agent</h3>
+<p>Eleven of the 23 summary inputs are production-only variants. No analyzer knows which files are tests — that is the agent's path classification. Tools measure; the agent attributes.</p>
+<h2 id="decision">Decision</h2>
+<h3 id="every-tool-is-classified-and-the-classification-constrains-its-use">Every tool is classified, and the classification constrains its use</h3>
+<p>The catalog gains a required <code>emits</code> field: <code>metric</code>, <code>verdict</code>, or <code>both</code>.</p>
+<ul>
+<li><strong>Only metric emitters may supply populations or feed rate-based aspects.</strong> They are the sole source of denominators.</li>
+<li><strong>Verdict emitters may contribute findings</strong> — a named problem at a location — and may never contribute a rate or a population.</li>
+<li><strong>A tool with a rubric-drivable threshold is promoted to metric-equivalent</strong> for that concept, by the next rule.</li>
+</ul>
+<h3 id="the-rubric-drives-the-tools-not-the-reverse">The rubric drives the tools, not the reverse</h3>
+<p>Where a tool's threshold is configurable <strong>from the command line</strong>, the agent <strong>sets it from the rubric</strong> and ignores any project-local configuration for scoring purposes. Counts then mean what the rubric says they mean.</p>
+<p>Where a threshold cannot be forced, the tool is verdict-only for that concept and its output never becomes a rate.</p>
+<p><strong>Amended by Decision 9.</strong> This section originally read "from the command line <em>or a generated config</em>", and used eslint as its example. Generating a config for a tool that reads it as a program — an eslint flat config is JavaScript — means executing code from, or alongside, the audited tree, which Decision 9 forbids. The escape hatch is withdrawn: a threshold is rubric-drivable only through argv. eslint is refused outright rather than configured (see ADR 006), so it is no longer the example here; the tools that carry the rule today take an isolation flag on the command line and nothing else.</p>
+<p>Project-local lint configuration is still honored for the developer's own workflow; it simply does not get to move the score. A score that moves with a config file is not a measurement of the code.</p>
+<h3 id="all-three-data-kinds-survive-bands-do-the-normalizing">All three data kinds survive; bands do the normalizing</h3>
+<p>An earlier draft of this record described step 7 as "apply the rubric's thresholds to the measurements, producing counts." That is lossy in two ways, and both matter.</p>
+<p><strong>It discards the measurements.</strong> Counts, populations and measurements are distinct, useful taxonomies. The score needs counts and populations because a rate needs a numerator and a denominator; that is a fact about the <em>score</em>, not a licence to throw the underlying values away. All three reach the report. The distribution is the part a model can reason with: <em>"seven functions failed"</em> supports a sentence, <em>"seven failed, worst CCN 45, median 6, clustered in two modules"</em> supports a plan.</p>
+<p><strong>It flattens severity.</strong> A binary threshold makes CCN 14 and CCN 45 the same fact. The difference between extracting a guard clause and redesigning a module is precisely the information the reader wanted.</p>
+<p>So measurements are normalized through a <strong>band matrix</strong> — ordered ranges, each mapping to a pressure between 0 and 1, weighted and averaged over the population — with boundaries drawn from corpus percentiles rather than invented. Hard gates stay binary: bands drive the score, gates drive the exit code.</p>
+<h3 id="scan-scope-is-part-of-the-result">Scan scope is part of the result</h3>
+<p>A five-line function and a 4,500-line multi-module commit are different measurement problems, and the small one reaches a high score trivially. The tool must encode that rather than assume the reader supplies it.</p>
+<p>Every report states its scope, and a scope-limited run with a small population recommends a whole-repository rescan. Withholding is the floor case; <strong>scope escalation is the useful case</strong>, because widening the scan usually yields a real answer.</p>
+<h3 id="normalization-is-a-pipeline-with-one-shape">Normalization is a pipeline with one shape</h3>
+<pre><code class="language-text">tool process output (JSON/CSV/XML/text)
+  -&gt; adapter            parse into per-unit measurements or located findings
+  -&gt; concept            &quot;cyclomatic complexity&quot; on this function, from this tool
+  -&gt; combine            several tools measuring one concept -&gt; weighted mean + spread
+  -&gt; attribute          agent classifies each unit as production or test
+  -&gt; band               RUBRIC band matrix maps each measurement to a pressure
+                        (measurements, counts and populations all retained)
+  -&gt; populate           the 28 typed inputs, each Measured / Unknown / NotApplicable
+  -&gt; score              unchanged from here down
+</code></pre>
+<p>The seam is deliberate: <strong>everything above <code>band</code> is tool-shaped, everything below is rubric-shaped.</strong> No tool's opinion survives the seam, only its measurements.</p>
+<p>Combination happens <em>before</em> banding, and only among measurements. Averaging a verdict with a number is meaningless and is not attempted.</p>
+<p><strong><code>attribute</code> is not optional, and skipping it was measured.</strong> The scorer keeps two populations — every declaration scanned, and production declarations only — because <code>analyzability</code>, <code>testability</code> and <code>declaration_size</code> ask about the production code, and growing a test suite must not change the answer. The first bridge produced only one number and the scorer substituted it into <strong>both</strong> slots, so production aspects were charged for the state of the test suite. The compromise was written down in a code comment and then forgotten, which is what a compromise written in a code comment does.</p>
+<p>The gap it papered over is not small. On flask, 1,494 of the 2,206 declarations the analyzers see are test code, and the reading moves 0.0049 → 0.0138; on scrapy, 5,938 of 9,143. Left alone, the alternative rollup was pessimistic on exactly the repositories that test themselves well.</p>
+<p>So the bridge now produces both readings, and they are passed together in one <code>ExternalPressures</code> value rather than as a dict a caller can use twice. Supplying one and getting the old behaviour is no longer expressible.</p>
+<p>This is the same defect class as the three wrong formulas before it: a bridge that describes itself rather than the code. The defence is the same too — <code>test_analyzer_production_pressure_excludes_test_declarations</code> fixes the population, <code>test_analyzer_pressures_are_a_drop_in_for_the_built_in_ones</code> fixes the formula, and <code>test_each_population_is_substituted_from_its_own_reading</code> fixes the wiring between them.</p>
+<h3 id="the-report-is-a-first-class-output-not-a-by-product-of-the-prompt">The report is a first-class output, not a by-product of the prompt</h3>
+<p>The tool already emits Markdown, JSON, a PR comment, SARIF and a baseline, and those remain. But a design that describes the pipeline as ending in an improvement prompt gets built as one, and the reader who simply wants to know <em>what is wrong with this repository</em> is left invoking a language model to find out.</p>
+<p>So the pipeline has two terminal outputs, both first-class: the <strong>report</strong> is the record of what was examined and found; the <strong>prompt</strong> is one action taken from it. Neither depends on the other, and a user who never invokes a model still gets the full record.</p>
+<p>What the report must gain, because the new architecture produces information the current report has no place for:</p>
+<ul>
+<li><strong>Analyzer coverage</strong> — tools attempted, ran, unavailable-and-why, their versions, and the depth and license policy in force. Two reports with different coverage are not comparable, so this sits beside the score, not in an appendix.</li>
+<li><strong>Attribution and spread</strong> — per measurement, which tools produced it and how far apart they were.</li>
+<li><strong>The pillar view</strong> — five pillars with scope status, practice level and code condition side by side and never averaged.</li>
+<li><strong>Withheld measures</strong> — each aspect suppressed for insufficient population, with the observed count and the floor.</li>
+<li><strong>Recurrence</strong> — findings that returned after remediation, escalated as design-review candidates.</li>
+<li><strong>Ranked work</strong> — Risk × Effort ordering.</li>
+</ul>
+<p><strong>Markdown delivery.</strong> The CLI writes it with <code>--format markdown --output report.md</code>, and chat retrieves the byte-identical document from the <code>maintainability-report</code> MCP template resource with the <code>text/markdown</code> media type. One rendering is the rule — the chat summary may never contain a claim the file does not, and if they disagree the file is authoritative.</p>
+<h3 id="the-work-order-is-the-actionable-artifact">The work order is the actionable artifact</h3>
+<p>A compiler is useful because of exactly what it emits: <code>file:line:col</code>, a specific defect, and a check you can re-run. It never reports "your code is 4.2 out of 5." Fix, recompile, the message is gone or it is not — that loop is the value.</p>
+<p>Scores close no loop, and an unranked finding list produces nit loops. So alongside the report the agent emits a <strong>work order</strong>, every entry locatable, measured, targeted and verifiable: location, unit, measurement, band and clearing target, tool attribution, computed score delta, Risk × Effort class, recurrence count, and a verification command.</p>
+<p><strong>The score delta is arithmetic, not prophecy.</strong> The rubric is a deterministic function of counts over populations, so removing a finding and recomputing yields the exact resulting score. "Clearing this function moves modularity 3.1 → 3.4" is computed. That makes prioritization honest — work sorts by measured impact rather than by severity labels or row counts.</p>
+<p>It is also what makes the output usable by a language model rather than merely readable. "Reduce complexity" invites slop; <em>"<code>history_section</code> at <code>history.py:217</code>, CCN 14 across three tools, target below 10, clears modularity 3.1 → 3.4, verify with <code>lizard …</code>"</em> is a bounded task with a finish line and its own test.</p>
+<p>An item with no verification command does not belong in the work order. If the tool cannot say how to check the fix, it has not finished thinking about the finding.</p>
+<p><strong>The work order is a queryable set, not a narrative.</strong> A run produces all three layers — raw tool output, work items, scores — so the consumer chooses the slice: <em>all severity 1</em>, <em>just the Quick Wins</em>, <em>everything under <code>payments/</code></em>, <em>only what recurred</em>. Work items are therefore structured records with orthogonal dimensions (severity, Risk × Effort class, concern, pillar, aspect, path, producing tool, recurrence count, score delta), and raw tool output is retained and addressable so a reader can reach what the analyzer actually said.</p>
+<p><strong>Set deltas are recomputed, never summed.</strong> The impact of clearing a <em>selection</em> is not the sum of its items' individual deltas: findings share denominators, the pressure-to-score curve is non-linear, and the aspect → category → overall rollup rounds at each step. Ten items each worth "+0.05" do not make "+0.5". Any interface offering a slice must quote the rubric recomputed with that whole slice removed.</p>
+<h3 id="raw-analyzer-output-is-retained-for-a-reader-with-different-constraints">Raw analyzer output is retained, for a reader with different constraints</h3>
+<p>The engine consumes only measurements, refuses verdicts as rates, and maps output onto nine concerns — lossy by design, and that is what makes a score reproducible.</p>
+<p>A language model reading the report is bound by none of those rules. It can observe that forty unused-import findings cluster in one module, that every complexity warning sits on one code path, or that a rule category is missing because nobody enabled it. Refusing verdict output for <em>scoring</em> was never a reason to withhold it from <em>reading</em>.</p>
+<p>So every tool's raw output is retained, bounded per tool and marked when truncated, and kept <strong>especially when the adapter failed to parse it</strong> — a parse error means this agent could not read the output, not that nobody can.</p>
+<p>The boundary that holds: a model's judgment is never a score. It is commentary on a report, downstream and disposable; the score stays a deterministic function of measurements.</p>
+<h3 id="the-agent-never-calls-an-llm">The agent never calls an LLM</h3>
+<p>The audit stays deterministic, offline, and LLM-free — promise <strong>P1</strong> is unchanged. What the agent produces is the <em>input</em> to a language model:</p>
+<ul>
+<li>the rubric that was applied,</li>
+<li>the scores and the maturity level,</li>
+<li>the ranked target areas, ordered by Risk × Effort per <a href="adr-007-pillars-and-practice.html">ADR 007</a>,</li>
+<li>the real findings backing each area, with locations.</li>
+</ul>
+<p>The <strong>user's</strong> model consumes that and writes the improvement prompt. This keeps the boundary that makes the tool trustworthy: everything the agent asserts is reproducible from a pinned run, and everything a model says about it is downstream and disposable.</p>
+<h3 id="two-entry-points-over-one-core">Two entry points over one core</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Entry point</th>
+<th>For</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CLI</strong></td>
+<td>CI runners, Makefiles, pre-merge gates; interactive TTY uses the same first-run questions as chat</td>
+<td>Exit codes, files on disk, fully deterministic once configured. CI / non-TTY never prompts. An interactive TTY with no config asks the <strong>same</strong> setup questions as MCP/chat (<a href="help-first-run.html">first run</a>) — not a shorter CLI set.</td>
+</tr>
+<tr>
+<td><strong>MCP server</strong></td>
+<td>Chat, agentic loops</td>
+<td>Tools run the audit and describe the boundary; resources expose the rubric, analyzer catalog and Markdown report; the <code>maintainability-agent</code> prompt supplies the bounded slash command. Setup questions are the same as an interactive CLI TTY.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The implementation maps MCP's three primitives onto the requirement without inventing anything: a slash command <em>is</em> an MCP prompt, "let the model read the rubric and scores" <em>is</em> MCP resources, and "run the audit" <em>is</em> an MCP tool.</p>
+<p>The server lives in this package as both the <code>maintainability-agent mcp</code> subcommand and the retained <code>maintainability-agent-mcp</code> console script used by IDE configurations. <code>secure-code-agent</code> remains independent. <strong>No combined server.</strong> Two independent servers keep the tools independently releasable, which is the property that just survived a release cycle. An aggregator that synthesizes both is a reasonable later idea and a bad first one.</p>
+<p>CI does not go through MCP. A protocol hop between a runner and an exit code buys nothing and costs determinism.</p>
+<h3 id="recurrence-is-tracked-because-the-model-cannot">Recurrence is tracked, because the model cannot</h3>
+<p>A finding that has been fixed and returned is not a nit; it is evidence that the abstraction is wrong. Language models have no accumulated-friction signal — no "I have touched this module four times and it keeps fighting me" — so each turn re-evaluates cold and will patch the same bad shape indefinitely.</p>
+<p>The agent has git history and a persistent baseline and can integrate what the model cannot:</p>
+<ul>
+<li>a file repeatedly modified whose findings never clear,</li>
+<li>a finding recurring after two or more remediation attempts,</li>
+<li>files that keep changing together.</li>
+</ul>
+<p>Such findings <strong>escalate</strong> out of the nit class into a design-review candidate, and the remediation input says so. This requires stable finding identity across runs, which today's baseline does not have; that is the prerequisite work.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li>The catalog needs an <code>emits</code> classification per tool, and it cannot be inferred from the database — it requires running each tool. Another reason tiers grow one verified tool at a time.</li>
+<li>Adapters are not uniform. A metric adapter parses a table; a verdict adapter parses located findings. Two adapter shapes, not one.</li>
+<li>Invoking tools with generated configuration is now a requirement, not an optimization, which enlarges <code>_runner</code>.</li>
+<li>Message-string parsing is accepted for verdict emitters where no structured value exists, and must be pinned to a tool version and tested, because it breaks silently on upgrade.</li>
+<li>The remediation prompt gains ordering and escalation metadata it does not have today.</li>
+<li>Recurrence tracking needs stable finding fingerprints — new persistent state, and a migration for the existing baseline.</li>
+</ul>
+<h2 id="invariants">Invariants</h2>
+<ol>
+<li>No scoring input is derived from a tool's own threshold verdict unless the agent set that threshold from the rubric.</li>
+<li>Populations and rates come only from tools classified <code>metric</code> or <code>both</code>.</li>
+<li>A verdict-only tool can contribute findings and can never change a denominator.</li>
+<li>Combination across tools happens on measurements, before banding, never on verdicts.</li>
+<li>Production/test attribution is performed by the agent, never taken from a tool.</li>
+<li>The audit performs no network access and invokes no language model.</li>
+<li>The CLI path never prompts <strong>once configured</strong>, and never varies its pool between runs given the same configuration. CI / non-TTY never prompts. Interactive first-run is the same question set as chat/MCP, not a second process.</li>
+<li>A finding's identity is stable across runs, so recurrence is a fact rather than a coincidence of formatting.</li>
+<li>A full report is produced on every run, whether or not a remediation prompt is generated or a model is ever invoked.</li>
+<li>Every report states its analyzer coverage, and no score is presented without it.</li>
+<li>The Markdown report is retrievable as a file from every entry point, and any chat-rendered summary is a strict subset of it.</li>
+<li>Measurements, counts and populations all reach the report; the score consumes counts and populations without the measurements being discarded.</li>
+<li>Two measurements in different bands never produce the same pressure.</li>
+<li>Every report states its scan scope, and a scope-limited run whose population falls short recommends a whole-repository rescan.</li>
+<li>Every work item carries a location, a clearing target and a verification command; an item missing any of the three is not emitted.</li>
+<li>A work item's score delta equals the score obtained by recomputing the rubric with that finding removed.</li>
+<li>A selection's score delta is obtained by recomputing the rubric with the whole selection removed, and is never a sum of per-item deltas.</li>
+<li>Work items are addressable by severity, class, concern, pillar, aspect, path, tool and recurrence, and the raw tool output behind each is retrievable.</li>
+<li>A tool's raw output is retained whether or not its adapter parsed it, bounded and marked when truncated.</li>
+<li>No judgment produced by a language model becomes part of a score.</li>
+</ol>
+<footer>Rendered from <code>docs/adr-008-translation-and-decision.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

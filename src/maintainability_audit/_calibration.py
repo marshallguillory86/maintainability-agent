@@ -261,6 +261,15 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 # 2026-09-08: 8.7161 -> 4.2565, the 3.0.0 recalibration above.
 CALIBRATION_C = 4.2565
 
+#: When the reference corpus these constants were derived from was measured.
+#: A calibration describes the code of its moment, and the one number here
+#: that silently stops being true is how representative that moment still
+#: is — so every report states it, and a weekly check opens an issue once it
+#: passes its age limit (`tools/check_corpus_age.py`). Bound to the last
+#: commit that changed `tools/calibration/corpus.json`: re-measuring without
+#: re-dating fails `tests/test_maintenance_signals.py`.
+CORPUS_MEASURED = "2026-09-08"
+
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3
 

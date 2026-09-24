@@ -12,6 +12,23 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+### Maintenance — the ways a finished tool ages now open an issue
+
+Three risks the roadmap named, each of which failed silently:
+
+- **The pinned analyzer pool stops installing.** The weekly drift job went red
+  and nobody saw it. It now keeps one standing GitHub issue open while it fails
+  (install failure or drift) and closes it when it passes
+  (`tools/scheduled_issue.py`).
+- **The calibration corpus goes stale.** `reference.corpus_measured` in every
+  report says when the corpus was measured, and the corpus note says so in
+  words. A test binds that date to the corpus file's last commit. A new weekly
+  check (`tools/check_corpus_age.py`) opens an issue once it is more than 365
+  days old. It never blocks a release.
+- **Python 3.12 is the only version CI runs.** The package claims 3.11–3.13. A
+  weekly `maintenance.yml` job runs the suite on 3.11, 3.13 and the newest
+  Python, and a test fails if a claimed version has no CI job exercising it.
+
 ### Documentation — every document in one readable HTML copy
 
 `docs/html/` now holds a reading copy of all the documentation: the root

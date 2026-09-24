@@ -44,7 +44,7 @@ from ._aspects import (
     is_untested,
     not_applicable_aspects,
 )
-from ._calibration import CATEGORIES, GRADE_GATES
+from ._calibration import CATEGORIES, CORPUS_MEASURED, GRADE_GATES
 from ._evidence_reader import normalize_report_evidence
 from ._formula import (
     CATEGORY_ASPECTS,
@@ -420,8 +420,12 @@ def _reference_block() -> dict[str, object]:
         "corpus_languages": held,
         # Parsed by a scanner, absent from the anchor — see `_anchor`.
         "unanchored_languages": UNANCHORED_LANGUAGES,
+        # When the anchor was measured: a calibration describes its moment's
+        # code, and a reader deserves to know which moment.
+        "corpus_measured": CORPUS_MEASURED,
         "corpus_note": (
-            "Reference medians are drawn from 180 mature repositories across "
+            f"Reference medians were measured on {CORPUS_MEASURED}, "
+            "drawn from 180 mature repositories across "
             f"{len(held)} of the {parsed} languages this scanner parses. "
             f"{unanchored_sentence()} Fortran entered at a lower "
             "star threshold than the rest, because its ecosystem has none "

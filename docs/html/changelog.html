@@ -5,6 +5,7 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a><ul>
+<li><a href="#maintenance-the-ways-a-finished-tool-ages-now-open-an-issue">Maintenance — the ways a finished tool ages now open an issue</a></li>
 <li><a href="#documentation-every-document-in-one-readable-html-copy">Documentation — every document in one readable HTML copy</a></li>
 <li><a href="#documentation-ai-reviewing-ai-is-still-an-opinion">Documentation — AI reviewing AI is still an opinion</a></li>
 <li><a href="#fixed-a-release-cannot-ship-over-one-that-never-reached-pypi">Fixed — a release cannot ship over one that never reached PyPI</a></li>
@@ -482,6 +483,22 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h3 id="maintenance-the-ways-a-finished-tool-ages-now-open-an-issue">Maintenance — the ways a finished tool ages now open an issue</h3>
+<p>Three risks the roadmap named, each of which failed silently:</p>
+<ul>
+<li><strong>The pinned analyzer pool stops installing.</strong> The weekly drift job went red
+  and nobody saw it. It now keeps one standing GitHub issue open while it fails
+  (install failure or drift) and closes it when it passes
+  (<code>tools/scheduled_issue.py</code>).</li>
+<li><strong>The calibration corpus goes stale.</strong> <code>reference.corpus_measured</code> in every
+  report says when the corpus was measured, and the corpus note says so in
+  words. A test binds that date to the corpus file's last commit. A new weekly
+  check (<code>tools/check_corpus_age.py</code>) opens an issue once it is more than 365
+  days old. It never blocks a release.</li>
+<li><strong>Python 3.12 is the only version CI runs.</strong> The package claims 3.11–3.13. A
+  weekly <code>maintenance.yml</code> job runs the suite on 3.11, 3.13 and the newest
+  Python, and a test fails if a claimed version has no CI job exercising it.</li>
+</ul>
 <h3 id="documentation-every-document-in-one-readable-html-copy">Documentation — every document in one readable HTML copy</h3>
 <p><code>docs/html/</code> now holds a reading copy of all the documentation: the root
 documents, all 60-odd under <code>docs/</code>, grouped by kind, and cards linking the

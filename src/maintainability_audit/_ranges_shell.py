@@ -89,23 +89,35 @@ def _mask_code(line: str, index: int, pending: list[tuple[str, bool]]) -> tuple[
     """
     out: list[str] = []
     while index < len(line):
-        char = line[index]
         if _starts_comment(line, index):
             out.append(" " * (len(line) - index))
             return out, len(line), None
-        if char in "'\"":
-            ansi = char == "'" and line[index - 1:index] == "$"
-            masked, index, open_quote = _mask_string(line, index + 1, char, escapes=char == '"' or ansi)
-            out.append(char + masked)
+        if line[index] in "'\"":
+            masked, index, open_quote = _mask_quoted(line, index)
+            out.append(masked)
             if open_quote is not None:
                 return out, index, open_quote
             continue
-        after = _heredoc_at(line, index, pending)
-        step = 2 if char == "\\" else 1
-        end = after if after is not None else index + step
+        end = _code_step(line, index, pending)
         out.append(line[index:end])
         index = end
     return out, index, None
+
+
+def _mask_quoted(line: str, index: int) -> tuple[str, int, str | None]:
+    """The string opening at ``index``, quote kept and contents blanked."""
+    quote = line[index]
+    ansi = quote == "'" and line[index - 1:index] == "$"
+    masked, after, open_quote = _mask_string(line, index + 1, quote, escapes=quote == '"' or ansi)
+    return quote + masked, after, open_quote
+
+
+def _code_step(line: str, index: int, pending: list[tuple[str, bool]]) -> int:
+    """Where the next unit of open code ends: a heredoc operator, an escape, a character."""
+    after = _heredoc_at(line, index, pending)
+    if after is not None:
+        return after
+    return index + (2 if line[index] == "\\" else 1)
 
 
 def _mask_string(line: str, index: int, quote: str, *, escapes: bool) -> tuple[str, int, str | None]:

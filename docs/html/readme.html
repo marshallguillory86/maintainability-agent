@@ -34,7 +34,7 @@
 <p><strong>A deterministic, offline maintainability audit whose output is a <em>bounded
 work order</em> for an AI coding agent</strong> — a copy-paste prompt, per finding, that
 says <em>fix exactly these and refactor nothing else</em>. Chat-primary; CLI for CI.
-Version <strong>3.8.1</strong>.</p>
+Version <strong>3.9.0</strong>.</p>
 <p><strong>Languages parsed:</strong> Python, Java, Kotlin, C, C++, C#, Go, Rust, PHP, Ruby,
 Swift, Shell, COBOL, Fortran (free-form <em>and</em> fixed-form), and the JS/TS/HTML family — each
 by a scanner written for it, and measured with that language's own reading of
@@ -443,7 +443,7 @@ it was generated against — a provenance record, not a claim about HEAD.</p>
 </tr>
 <tr>
 <td>Files scanned</td>
-<td style="text-align: right;">543</td>
+<td style="text-align: right;">558</td>
 </tr>
 <tr>
 <td>Hard gate failures</td>
@@ -483,7 +483,7 @@ instead of an invokable skill:
 <a href="ide-agent-integration.html#invokable-skill--slash-command">docs/ide-agent-integration.md</a>.</p>
 <h2 id="github-action">GitHub Action</h2>
 <p>This repo ships <code>action.yml</code>, usable as a composite action:</p>
-<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v3.8.1
+<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v3.9.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

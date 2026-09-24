@@ -12,6 +12,8 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.9.0 - 2026-09-24
+
 ### Added — Shell is parsed
 
 The sixteenth language with a scanner of its own, and the second of the five

@@ -1,5 +1,5 @@
 <!--
-Generated from the tree at commit 07419b41819cb083d19532378d12a04f38e1b818. This is a **provenance record, not a promise of currency**: it
+Generated from the tree at commit 0c57062302db1b0e2f3bbef9eeb25356586ddea8. This is a **provenance record, not a promise of currency**: it
 states the exact source commit it was generated against, and says
 nothing about how far that is from the current HEAD.
 
@@ -18,8 +18,8 @@ care about instead. Regenerate for the current tree with:
 
 # Maintainability CI Report
 
-- Generated: 2026-09-23T20:22:48+00:00
-- Commit: `07419b41819cb083d19532378d12a04f38e1b818` · Branch: `feat/kotlin-scanner`
+- Generated: 2026-09-24T19:58:14+00:00
+- Commit: `0c57062302db1b0e2f3bbef9eeb25356586ddea8` · Branch: `feat/shell`
 - Root: `.`
 - Standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based
 
@@ -32,32 +32,37 @@ care about instead. Regenerate for the current tree with:
 | Range (unmeasured evidence priced 0..5) | 4.1 – 4.7 |
 | Evidence | Evidence complete under profile `default-v1`. |
 | Verified grade | B |
-| Files scanned | 543 |
+| Files scanned | 558 |
 | File warnings | 4 |
 | File failures | 0 |
-| Function warnings | 80 |
+| Function warnings | 81 |
 | Function failures | 0 |
 | Duplicate blocks | 0 |
 | Risk findings | 0 |
 | Hard gate failures | 0 |
 
+*Shell is parsed but is not in the reference corpus, so a grade reported for code in it is provisional: the findings are as good as the parser, the rate they are compared against was measured on other languages.*
+
+
 ## Trend
 
-64 separate series. Scans either side of a break were produced by different instruments and cannot be compared, so they are reported apart rather than joined into one line. The current series is given in full; the earlier ones are summarized, because a reader deciding what to do today is acting on the instrument in use today.
+66 separate series. Scans either side of a break were produced by different instruments and cannot be compared, so they are reported apart rather than joined into one line. The current series is given in full; the earlier ones are summarized, because a reader deciding what to do today is acting on the instrument in use today.
 
-**This series begins at a break:** the tool version, the scan scope changed, so scans before this point were produced by a different instrument and cannot be joined to those after it.
+**This series begins at a break:** the tool version changed, so scans before this point were produced by a different instrument and cannot be joined to those after it.
 
-**Current series** — 1 scan, 2026-09-23T20:27:30Z to 2026-09-23T20:27:30Z.
+**Current series** — 1 scan, 2026-09-24T20:02:45Z to 2026-09-24T20:02:45Z.
 
 - **Direction:** unknown — not computable from these scans.
 - **Debt velocity:** 0 introduced, 0 cleared (unchanged).
 - **Growth:** unknown.
 - **Never cleared in this window:** 0 findings.
 
-### Earlier series (63 series)
+### Earlier series (65 series)
 
 | Window | Scans | Direction | Change | Began at a break in |
 |---|---|---|---|---|
+| 2026-09-24T19:14:06Z to 2026-09-24T19:30:54Z | 3 | indistinguishable | +0.00 | the tool version changed |
+| 2026-09-23T20:27:30Z to 2026-09-23T20:27:30Z | 1 | unknown | — | the tool version, the scan scope changed |
 | 2026-09-21T18:30:16Z to 2026-09-21T18:40:04Z | 3 | unknown | — | the tool version changed |
 | 2026-09-21T17:48:53Z to 2026-09-21T18:06:18Z | 4 | unknown | — | the tool version, the scan scope changed |
 | 2026-09-21T01:07:06Z to 2026-09-21T01:07:06Z | 1 | unknown | — | the tool version changed |
@@ -130,7 +135,7 @@ Written by secure-code-agent 0.12.9 and reproduced as it wrote it. It is that to
 
 ### Security work order
 
-**0 to fix · 0 to review · 5449 suppression candidates.**
+**0 to fix · 0 to review · 5560 suppression candidates.**
 
 Work the tiers in order. Everything in §FIX is a defect the scanner is confident about; everything in §REVIEW needs your judgement before you touch it, and the reason is stated per finding. This is a constrained task, not a refactor.
 
@@ -178,10 +183,10 @@ Grouped by rule, because the decision is per rule and not per line.
 | `B108` | 9 | medium | `tests/test_analyzer_config_isolation.py:139` |
 | `B310` | 2 | medium | `tools/sonar_resolve.py:56` |
 | `B314` | 1 | medium | `src/maintainability_audit/_xml.py:70` |
-| `B101` | 4869 | low | `tests/_ast_reading.py:94` |
-| `B603` | 244 | low | `src/maintainability_audit/_backfill.py:51` |
-| `B607` | 206 | low | `src/maintainability_audit/_backfill.py:51` |
-| `B404` | 113 | low | `src/maintainability_audit/_backfill.py:29` |
+| `B101` | 4963 | low | `tests/_ast_reading.py:94` |
+| `B603` | 251 | low | `src/maintainability_audit/_backfill.py:51` |
+| `B607` | 212 | low | `src/maintainability_audit/_backfill.py:51` |
+| `B404` | 117 | low | `src/maintainability_audit/_backfill.py:29` |
 | `B405` | 3 | low | `src/maintainability_audit/_jvm_adapters.py:21` |
 | _2 more rule(s)_ | 2 | | _see the report_ |
 
@@ -213,16 +218,15 @@ Assumptions:
 
 ## TDD-shaped tests
 
-TDD-shaped tests: detected beside 130 of 157 production source files (path pairing). Constructs: pytest in 282 file(s), unittest in 1 file(s), describe_it in 20 file(s), parametrize in 92 file(s), given_when_then in 2 file(s).
+TDD-shaped tests: detected beside 131 of 162 production source files (path pairing). Constructs: pytest in 290 file(s), unittest in 1 file(s), describe_it in 20 file(s), parametrize in 93 file(s), given_when_then in 3 file(s).
 Chronology is not measured. Effectiveness is unscored unless the operator opted into suite execution.
 
 ## Test Suite
 
-- The operator opted in to running the repository's test command; it did not run (exit 3).
+- The operator opted in to running the repository's test command; it failed (exit 1).
 - Command: pytest -n auto --cov=maintainability_audit --cov-report=xml:coverage.xml -q
 - Program run: /Users/marshallguillory/Library/Python/3.11/bin/pytest
-- Coverage: no coverage reported by the run
-- Detail: pytest exited 3: ['/Users/marshallguillory/Library/Python/3.11/lib/python/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.']
+- Coverage: 71.7% line coverage
 
 ## Semantic Findings (ADR 003)
 
@@ -235,7 +239,7 @@ TypeScript semantic coverage: **unknown** — no recorded type analysis and no l
 | Pillar | Scope | Practice | Condition | Reading |
 |---|---|---:|---:|---|
 | readability | partial | 4 | 4.8 | healthy: enforced, and the code reflects it |
-| maintainability | owned | 4 | 3.9 | healthy: enforced, and the code reflects it |
+| maintainability | owned | 4 | 4.1 | healthy: enforced, and the code reflects it |
 | efficiency | out-of-scope | — | — | not measured — see below |
 | security | delegated | 5 | 5.0 | healthy: enforced, and the code reflects it; findings: no findings |
 | testability | partial | 4 | 5.0 | healthy: enforced, and the code reflects it |
@@ -248,7 +252,7 @@ Enforcement found: `linter-config`, `recorded-decisions`, `lint-in-ci`, `types-i
 
 ## Source Not Read
 
-21 of 467 source files were not opened by this scan. Their extensions are absent from `paths.include_extensions`, so nothing below describes them.
+21 of 480 source files were not opened by this scan. Their extensions are absent from `paths.include_extensions`, so nothing below describes them.
 
 | Extension | Language | Files |
 |---|---|---|
@@ -282,25 +286,25 @@ Plus 8 built-in detectors, which always run and whose measurements are single-so
 | `spotbugs` | analyzer | not-applicable | — | — | — | reads java; this tree is Python, Shell, so it had nothing to examine |
 | `pylint` | analyzer | parse-error | pylint 4.0.7 | — | — | pylint ran but its output could not be read (JSONDecodeError: Expecting value: l |
 | `checkstyle` | analyzer | ran | Checkstyle version: 14.0.0 | 0 | 119 |  |
-| `complexipy` | analyzer | ran | 7.0.1 | 4100 | 0 |  |
+| `complexipy` | analyzer | ran | 7.0.1 | 4211 | 0 |  |
 | `interrogate` | analyzer | ran | interrogate, version 1.7.0 | 1 | 0 |  |
-| `jscpd` | analyzer | ran | cpd 5.1.1 | 1 | 141 |  |
-| `lizard` | analyzer | ran | 1.24.0 | 13155 | 0 |  |
-| `multimetric` | analyzer | ran | multimetric 2.4.4 | 1876 | 0 |  |
+| `jscpd` | analyzer | ran | cpd 5.1.1 | 1 | 144 |  |
+| `lizard` | analyzer | ran | 1.24.0 | 13494 | 0 |  |
+| `multimetric` | analyzer | ran | multimetric 2.4.4 | 1928 | 0 |  |
 | `mypy` | analyzer | ran | mypy 2.3.1 (compiled: yes) | 0 | 0 |  |
 | `pmd` | analyzer | ran | PMD 7.26.0 (8fd38edf285a33e1164f66205ebe243441db9557, 2026-06-29T08:22:36Z) | 0 | 0 |  |
-| `pydocstyle` | analyzer | ran | 6.3.0 | 0 | 234 |  |
-| `radon` | analyzer | ran | 6.0.1 | 448 | 0 |  |
-| `ruff` | analyzer | ran | ruff 0.16.5 | 0 | 2 |  |
+| `pydocstyle` | analyzer | ran | 6.3.0 | 0 | 240 |  |
+| `radon` | analyzer | ran | 6.0.1 | 461 | 0 |  |
+| `ruff` | analyzer | ran | ruff 0.16.5 | 0 | 1 |  |
 | `vulture` | analyzer | ran | vulture 2.16 | 0 | 6 |  |
-| `competing-libraries` | built-in | ran | — | 543 | 0 | two libraries doing one job; no adapter emits idioms |
-| `dead-code` | built-in | ran | — | 4338 | 0 | vulture, ruff and eslint cover this |
-| `declaration-size` | built-in | ran | — | 4338 | 80 | lizard and complexipy cover these; the only source when neither runs |
-| `duplicate-blocks` | built-in | ran | — | 543 | 0 | jscpd covers this; the only source when Node is unavailable |
-| `file-size` | built-in | ran | — | 543 | 4 | per-file line counts; no adapter emits file_lines |
-| `history` | built-in | ran | — | 542 | 76 | git history; no adapter emits churn, coupling or ownership |
-| `near-duplicates` | built-in | ran | — | 4338 | 0 | token-shingle near-matches, which jscpd's exact-block scan misses |
-| `risk-patterns` | built-in | ran | — | 543 | 0 | regex policy from this repository's own config; nothing external can hold a proj |
+| `competing-libraries` | built-in | ran | — | 558 | 0 | two libraries doing one job; no adapter emits idioms |
+| `dead-code` | built-in | ran | — | 4451 | 0 | vulture, ruff and eslint cover this |
+| `declaration-size` | built-in | ran | — | 4451 | 81 | lizard and complexipy cover these; the only source when neither runs |
+| `duplicate-blocks` | built-in | ran | — | 558 | 0 | jscpd covers this; the only source when Node is unavailable |
+| `file-size` | built-in | ran | — | 558 | 4 | per-file line counts; no adapter emits file_lines |
+| `history` | built-in | ran | — | 557 | 75 | git history; no adapter emits churn, coupling or ownership |
+| `near-duplicates` | built-in | ran | — | 4451 | 0 | token-shingle near-matches, which jscpd's exact-block scan misses |
+| `risk-patterns` | built-in | ran | — | 558 | 0 | regex policy from this repository's own config; nothing external can hold a proj |
 
 ### Coverage by language
 
@@ -323,15 +327,15 @@ These concerns are unmeasured, not clean. Install a tool that covers them, or wi
 
 | Concept | Units | Sources | Tool disagreement | Min | Median | p90 | Max |
 |---|---|---|---|---|---|---|---|
-| cognitive_complexity | 4100 | complexipy | single source | 0.0 | 1.0 | 6.0 | 34.0 |
-| cyclomatic_complexity | 4385 | lizard | single source | 1.0 | 2.0 | 6.0 | 27.0 |
-| declaration_lines | 4385 | lizard | single source | 1.0 | 13.0 | 33.0 | 80.0 |
-| documentation | 470 | interrogate, multimetric | no shared units | 0.0 | 38.9 | 58.63 | 92.26 |
-| duplication | 1 | jscpd | single source | 1.28 | 1.28 | 1.28 | 1.28 |
-| file_cyclomatic_complexity | 469 | multimetric | single source | 0.0 | 2.0 | 26.0 | 70.0 |
-| halstead_difficulty | 469 | multimetric | single source | 0.67 | 50.7 | 98.0 | 155.32 |
-| maintainability_index | 469 | multimetric, radon | 36% | 21.47 | 56.84 | 76.42 | 135.29 |
-| parameters | 4385 | lizard | single source | 0.0 | 1.0 | 2.0 | 18.0 |
+| cognitive_complexity | 4211 | complexipy | single source | 0.0 | 1.0 | 6.0 | 34.0 |
+| cyclomatic_complexity | 4498 | lizard | single source | 1.0 | 2.0 | 6.0 | 27.0 |
+| declaration_lines | 4498 | lizard | single source | 1.0 | 13.0 | 32.0 | 80.0 |
+| documentation | 483 | interrogate, multimetric | no shared units | 0.0 | 38.9 | 58.56 | 92.28 |
+| duplication | 1 | jscpd | single source | 1.27 | 1.27 | 1.27 | 1.27 |
+| file_cyclomatic_complexity | 482 | multimetric | single source | 0.0 | 2.0 | 26.0 | 70.0 |
+| halstead_difficulty | 482 | multimetric | single source | 0.67 | 50.67 | 96.8 | 155.32 |
+| maintainability_index | 482 | multimetric, radon | 36% | 21.47 | 57.17 | 76.43 | 135.29 |
+| parameters | 4498 | lizard | single source | 0.0 | 1.0 | 2.0 | 18.0 |
 
 Where two tools measured the same thing, their disagreement is shown rather than averaged away — it is the uncertainty a single-tool number hides.
 
@@ -339,14 +343,14 @@ Where two tools measured the same thing, their disagreement is shown rather than
 
 ## Analyzer Findings
 
-502 findings from external analyzers — 6 dead-code, 257 documentation, 141 duplication, 98 style.
+510 findings from external analyzers — 6 dead-code, 263 documentation, 144 duplication, 97 style.
 
 | File | Line | Concern | Tool | Rule | Finding |
 |---|---|---|---|---|---|
 | `.github/workflows/quality-gates.yml` | 75 | duplication | `jscpd` | — | 9 duplicated lines |
 | `.github/workflows/quality-gates.yml` | 138 | duplication | `jscpd` | — | 9 duplicated lines |
 | `.github/workflows/quality-gates.yml` | 250 | duplication | `jscpd` | — | 9 duplicated lines |
-| `README.md` | 196 | duplication | `jscpd` | — | 6 duplicated lines |
+| `README.md` | 197 | duplication | `jscpd` | — | 6 duplicated lines |
 | `skills/maintainability-agent/SKILL.md` | 129 | duplication | `jscpd` | — | 47 duplicated lines |
 | `skills/maintainability-agent/SKILL.md` | 179 | duplication | `jscpd` | — | 10 duplicated lines |
 | `src/maintainability_audit/_adapters.py` | 64 | documentation | `pydocstyle` | D102 | Missing docstring in public method |
@@ -384,7 +388,7 @@ Where two tools measured the same thing, their disagreement is shown rather than
 | `src/maintainability_audit/_gates.py` | 130 | documentation | `pydocstyle` | D103 | Missing docstring in public function |
 | `src/maintainability_audit/_generic.py` | 146 | duplication | `jscpd` | — | 9 duplicated lines |
 
-Showing 40 of 502. The complete list is in the JSON report under `analyzer_findings`.
+Showing 40 of 510. The complete list is in the JSON report under `analyzer_findings`.
 
 ## Why the verified grade is not higher
 
@@ -394,17 +398,17 @@ Showing 40 of 502. The complete list is in the JSON report under `analyzer_findi
 
 | Category | Score |
 |---|---|
-| modularity | 3.9 |
+| modularity | 4.2 |
 | reusability | 4.9 |
 | analyzability | 4.4 |
-| modifiability | 3.8 |
-| testability | 4.8 |
+| modifiability | 4.0 |
+| testability | 4.6 |
 
 ## Aspect Scores
 
 | Aspect | Score |
 |---|---|
-| file size | 4.5 |
+| file size | 4.6 |
 | declaration size | 4.3 |
 | duplication | 5.0 |
 | risk patterns | 5.0 |
@@ -415,9 +419,9 @@ Showing 40 of 502. The complete list is in the JSON report under `analyzer_findi
 | idiom consistency | 5.0 |
 | documentation | 5.0 |
 | churn hotspots | 4.0 |
-| change coupling | 2.0 |
+| change coupling | 3.0 |
 | knowledge concentration | 2.0 |
-| test effectiveness | not measurable |
+| test effectiveness | 3.6 |
 
 ## Not Scored — no measurement exists
 
@@ -432,22 +436,22 @@ Showing 40 of 502. The complete list is in the JSON report under `analyzer_findi
 
 | File | Lines | Status |
 |---|---|---|
+| `.github/workflows/quality-gates.yml` | 637 | warn |
 | `tests/test_operator_named_reads.py` | 637 | warn |
 | `src/maintainability_audit/_prompt_sections.py` | 628 | warn |
 | `src/maintainability_audit/_scan_history.py` | 624 | warn |
-| `.github/workflows/quality-gates.yml` | 615 | warn |
 | `src/maintainability_audit/cli.py` | 564 | ok |
+| `src/maintainability_audit/_metrics_types.py` | 561 | ok |
 | `src/maintainability_audit/_discovery.py` | 553 | ok |
 | `src/maintainability_audit/_work_order.py` | 544 | ok |
 | `src/maintainability_audit/report.py` | 540 | ok |
 | `src/maintainability_audit/mcp_server.py` | 536 | ok |
 | `src/maintainability_audit/_mcp_audit.py` | 532 | ok |
 | `tests/test_docs_links.py` | 524 | ok |
-| `src/maintainability_audit/_metrics_types.py` | 523 | ok |
 | `tests/test_mcp_server.py` | 520 | ok |
-| `README.md` | 511 | ok |
-| `src/maintainability_audit/scoring.py` | 509 | ok |
-| `tests/test_grammar_constructs.py` | 507 | ok |
+| `tests/test_grammar_constructs.py` | 516 | ok |
+| `README.md` | 513 | ok |
+| `src/maintainability_audit/scoring.py` | 513 | ok |
 | `tools/prove_falsifiers.py` | 500 | ok |
 | `tests/test_calibration_corpus.py` | 499 | ok |
 | `src/maintainability_audit/_mcp_setup.py` | 496 | ok |
@@ -474,7 +478,7 @@ Showing 40 of 502. The complete list is in the JSON report under `analyzer_findi
 | `src/maintainability_audit/_skill_install.py` | `install_skill` | 48 | 67 | 13 | 13 | warn |
 | `tests/test_git_argv.py` | `test_every_git_command_disables_gits_own_housekeeping` | 396 | 66 | 13 | 20 | warn |
 | `src/maintainability_audit/_prompt_sections.py` | `prompt_focus_sections` | 454 | 60 | 13 | 3 | warn |
-| `tests/test_language_coverage.py` | `test_every_parsed_language_can_reach_a_complexity_analyzer` | 212 | 58 | 13 | 3 | warn |
+| `tests/test_language_coverage.py` | `test_every_parsed_language_can_reach_a_complexity_analyzer` | 218 | 58 | 13 | 3 | warn |
 | `tools/calibration/sampling_error.py` | `main` | 88 | 54 | 13 | 10 | warn |
 | `src/maintainability_audit/_metric_adapters.py` | `expand_files` | 46 | 47 | 13 | 6 | warn |
 | `tools/resolve_pool.py` | `main` | 65 | 46 | 13 | 12 | warn |
@@ -503,15 +507,15 @@ Showing 40 of 502. The complete list is in the JSON report under `analyzer_findi
 | `tests/test_network_disclosure.py` | `test_no_module_imports_an_http_client` | 69 | 24 | 11 | 16 | warn |
 | `src/maintainability_audit/_analysis.py` | `_attempt` | 398 | 80 | 10 | 12 | warn |
 | `tests/test_verified_grade.py` | `test_not_applicable_rollup_is_the_only_change_to_the_pre_stage_five_anchor` | 271 | 80 | 10 | 0 | warn |
-| `src/maintainability_audit/scoring.py` | `_score_document` | 433 | 77 | 10 | 13 | warn |
+| `src/maintainability_audit/scoring.py` | `_score_document` | 437 | 77 | 10 | 13 | warn |
 | `tests/test_written_record.py` | `test_no_document_says_a_register_entry_is_open_that_the_register_closed` | 343 | 45 | 10 | 16 | warn |
 | `tests/test_anticipated_refusals.py` | `_named_exceptions` | 95 | 26 | 10 | 16 | warn |
 | `src/maintainability_audit/report.py` | `build_report` | 461 | 80 | 9 | 3 | warn |
 | `src/maintainability_audit/_prompt_sections.py` | `prompt_pressure_section` | 359 | 66 | 9 | 5 | warn |
+| `src/maintainability_audit/_ranges_shell.py` | `_mask_code` | 84 | 25 | 9 | 16 | warn |
 | `tests/test_docs_links.py` | `test_every_internal_link_resolves_to_a_file_and_an_anchor` | 82 | 16 | 9 | 17 | warn |
 | `src/maintainability_audit/_mcp_audit.py` | `audit_repository` | 181 | 73 | 8 | 9 | warn |
 | `tests/test_release_plan.py` | `test_the_release_plan_table_is_measured_not_remembered` | 27 | 68 | 8 | 2 | warn |
-| `tools/calibration/verify_corpus.py` | `main` | 100 | 74 | 7 | 7 | warn |
 
 ## Hotspots — churn x cognitive complexity (12 months ago)
 
@@ -523,14 +527,14 @@ Showing 40 of 502. The complete list is in the JSON report under `analyzer_findi
 | `src/maintainability_audit/_work_order.py` | 12 | 1142 | 102 | 1 | 1224 |
 | `src/maintainability_audit/metrics.py` | 14 | 1261 | 79 | 2 | 1106 |
 | `src/maintainability_audit/_mcp_setup.py` | 18 | 1032 | 61 | 2 | 1098 |
+| `src/maintainability_audit/_html_view.py` | 16 | 869 | 68 | 1 | 1088 |
 | `src/maintainability_audit/report.py` | 33 | 964 | 31 | 2 | 1023 |
-| `src/maintainability_audit/_html_view.py` | 15 | 865 | 68 | 1 | 1020 |
 | `tests/test_architecture.py` | 35 | 736 | 28 | 2 | 980 |
 | `src/maintainability_audit/renderers.py` | 33 | 1339 | 27 | 2 | 891 |
 | `src/maintainability_audit/mcp_server.py` | 33 | 2117 | 26 | 2 | 858 |
 | `src/maintainability_audit/_masking.py` | 7 | 490 | 120 | 2 | 840 |
-| `src/maintainability_audit/declarations.py` | 17 | 555 | 43 | 2 | 731 |
-| `src/maintainability_audit/scoring.py` | 17 | 1191 | 43 | 2 | 731 |
+| `src/maintainability_audit/declarations.py` | 18 | 569 | 43 | 2 | 774 |
+| `src/maintainability_audit/scoring.py` | 18 | 1199 | 43 | 2 | 774 |
 | `tools/prove_falsifiers.py` | 11 | 758 | 66 | 1 | 726 |
 | `src/maintainability_audit/_prompt_sections.py` | 9 | 762 | 80 | 1 | 720 |
 | `src/maintainability_audit/_scan_view.py` | 11 | 771 | 63 | 1 | 693 |
@@ -540,19 +544,19 @@ Showing 40 of 502. The complete list is in the JSON report under `analyzer_findi
 | `src/maintainability_audit/_analysis.py` | 14 | 857 | 39 | 2 | 546 |
 | `src/maintainability_audit/_ranges_core.py` | 7 | 334 | 75 | 1 | 525 |
 | `tests/test_written_record.py` | 14 | 830 | 36 | 2 | 504 |
-| `src/maintainability_audit/_first_run.py` | 11 | 479 | 43 | 1 | 473 |
-| `src/maintainability_audit/_verdict_adapters.py` | 12 | 933 | 37 | 1 | 444 |
+| `src/maintainability_audit/_evidence_view.py` | 11 | 458 | 44 | 1 | 484 |
+| `src/maintainability_audit/_cognitive.py` | 9 | 390 | 53 | 2 | 477 |
 
 ## Change Coupling — files that keep changing together
 
 | File | Changes with | Co-changes | Confidence |
 |---|---|---|---|
-| `README.md` | `src/maintainability_audit/__init__.py` | 69 | 90% |
-| `src/maintainability_audit/__init__.py` | `src/maintainability_audit/config.py` | 69 | 90% |
-| `README.md` | `docs/release-plan.md` | 67 | 74% |
+| `README.md` | `src/maintainability_audit/__init__.py` | 70 | 90% |
+| `src/maintainability_audit/__init__.py` | `src/maintainability_audit/config.py` | 69 | 88% |
+| `README.md` | `docs/release-plan.md` | 68 | 74% |
 | `README.md` | `src/maintainability_audit/config.py` | 67 | 73% |
-| `docs/release-plan.md` | `src/maintainability_audit/__init__.py` | 61 | 79% |
-| `docs/release-plan.md` | `src/maintainability_audit/config.py` | 55 | 61% |
+| `docs/release-plan.md` | `src/maintainability_audit/__init__.py` | 62 | 80% |
+| `docs/release-plan.md` | `src/maintainability_audit/config.py` | 55 | 60% |
 | `docs/architecture.md` | `tests/test_architecture.py` | 29 | 97% |
 | `SECURITY.md` | `src/maintainability_audit/config.py` | 29 | 91% |
 | `SECURITY.md` | `src/maintainability_audit/__init__.py` | 28 | 88% |
@@ -560,7 +564,7 @@ Showing 40 of 502. The complete list is in the JSON report under `analyzer_findi
 | `SECURITY.md` | `docs/release-plan.md` | 26 | 81% |
 | `docs/architecture.md` | `docs/decisions.md` | 25 | 81% |
 | `docs/architecture.md` | `src/maintainability_audit/cli.py` | 24 | 69% |
-| `README.md` | `docs/roadmap.md` | 22 | 65% |
+| `README.md` | `docs/roadmap.md` | 22 | 60% |
 | `docs/cli.md` | `src/maintainability_audit/cli.py` | 19 | 83% |
 | `docs/architecture.md` | `docs/cli.md` | 18 | 78% |
 | `docs/architecture.md` | `src/maintainability_audit/mcp_server.py` | 18 | 60% |

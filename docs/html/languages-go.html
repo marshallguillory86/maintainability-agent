@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Go · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul></ul>
+</div>
+</aside>
+<main><div class="meta">Languages</div><h1>Go</h1><p><strong>Recognition is easier than in the C family, not harder.</strong> Every Go
+declaration is keyword-led — <code>func</code> or <code>type</code> — so a bare <code>name(</code> is
+always a call and never a definition. That is the ambiguity that makes
+C++ expensive, and Go does not have it.</p>
+<p><strong>A method carries its receiver type.</strong> <code>func (s *Store) Get(...)</code> is
+reported as <code>Store.Get</code>. <code>Get</code> alone is not an instruction in a tree with
+eleven of them, which is the same judgment Swift's extension members
+forced; the difference is that Go writes the qualification into the
+signature already, so it is kept rather than reconstructed. A generic
+receiver (<code>func (s *Store[T]) Get</code>) reports through its base name,
+<code>Store</code>, because that is the name a reader searches for — the type
+parameter list is stepped over.</p>
+<p>That sentence was written before the behaviour existed. Until 2.11.0 the
+receiver pattern required <code>)</code> immediately after the type name, so <code>[T]</code>
+between them meant <strong>every method on every generic type was invisible</strong>,
+and the only thing asserting otherwise was this paragraph. The suite
+covered the generic <em>function</em> form and not the receiver (D125). lizard
+does not find these methods either, so the grammar fixture checks a
+construct its oracle cannot see.</p>
+<p><strong>Containers are walked into, not graded.</strong> <code>type Store struct</code> and
+<code>type Reader interface</code> hold members, and measuring the container as well
+as its members counts the same lines twice.</p>
+<p><strong>An interface method mints nothing.</strong> It has no body — nothing to
+maintain and nothing to measure — so it is skipped exactly as a C
+prototype and a Swift protocol requirement are. Counting them would put a
+pile of one-line members into the denominator of every declaration rate.</p>
+<p><strong>Generic type parameters are stepped over.</strong> A generic function writes
+<code>func Map[T any, U any]</code> and <em>then</em> its parameter list; a scanner reading
+the bracket list as the signature would report a function taking one
+argument named <code>T</code> and lose the real list entirely.</p>
+<p><strong>What it misses</strong>, all under-reporting rather than over:</p>
+<ul>
+<li>A function literal assigned inside a body — <code>f := func() {…}</code> — lives
+  inside a stepped-over body and is never counted. Go uses these for
+  callbacks and goroutine bodies, so a long one is invisible here.</li>
+<li>Raw string literals (backticks) are not masked, so a brace inside one
+  can desync depth. The indentation fallback bounds that to a single
+  declaration.</li>
+<li><code>type ID string</code> and other plain type definitions are not declarations.
+  They hold nothing and have no body.</li>
+</ul>
+<p><strong>Measured with Go's own keywords, not C's.</strong> Go has no <code>while</code> (<code>for</code>
+covers looping), no ternary, and no <code>catch</code> — <code>if err != nil</code> carries
+what other languages put in a catch block and is already counted as an
+<code>if</code>.</p>
+<p><strong><code>select</code> is counted at its cases, not at its header</strong>, exactly as
+<code>switch</code> is. A <code>select</code> with two cases has two paths; the header chooses
+between cases that are already counted, and <code>select {}</code> with no cases
+simply blocks and decides nothing.</p>
+<p>That is worth stating plainly because this project got it wrong in the
+other direction first, and the record is instructive: the shared
+C-family pattern already counted <code>case</code>, so Go's dispatch was <strong>measured
+correctly before anyone touched it</strong>. A test written from a wrong
+intuition failed, and the code was changed to satisfy the test rather
+than the grammar (D117).</p>
+<p><strong><code>goto</code> is not counted.</strong> It transfers control unconditionally — an
+edge without a decision. C never counted it, and Go should not have
+either (D116).</p>
+<footer>Rendered from <code>docs/languages/go.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

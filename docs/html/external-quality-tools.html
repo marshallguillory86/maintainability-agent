@@ -1,0 +1,86 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>External Quality Tool Readiness · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#local-signal-first">Local Signal First</a></li>
+<li><a href="#sonarqube-cloud">SonarQube Cloud</a></li>
+<li><a href="#qlty">Qlty</a></li>
+<li><a href="#codacy">Codacy</a></li>
+<li><a href="#current-readiness">Current Readiness</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Reference</div><h1>External Quality Tool Readiness</h1><p>Maintainability Agent should be easy to test against mature third-party quality platforms. The repo is prepared for the common public-repo path on SonarQube Cloud, Qlty, and Codacy.</p>
+<h2 id="local-signal-first">Local Signal First</h2>
+<p>Run this before connecting external services:</p>
+<pre><code class="language-bash">PYTHONPATH=src python3 -m pytest \
+  --cov=maintainability_audit \
+  --cov-report=term-missing \
+  --cov-report=xml:coverage.xml \
+  --cov-fail-under=92
+
+PYTHONPATH=src python3 -m maintainability_audit \
+  --config maintainability-agent.json \
+  --fail-on-gate \
+  --output maintainability-report.md \
+  --prompt-output maintainability-remediation-prompt.md \
+  --comment-output maintainability-pr-comment.md \
+  --sarif-output maintainability.sarif
+</code></pre>
+<p>Expected local bar:</p>
+<ul>
+<li>tests pass</li>
+<li>coverage is at least 92%</li>
+<li><code>coverage.xml</code> exists</li>
+<li>no hard-gate failures</li>
+<li>no file, function, duplicate, or risk findings</li>
+</ul>
+<h2 id="sonarqube-cloud">SonarQube Cloud</h2>
+<p>Public projects can use SonarQube Cloud's free public-project analysis path. This repo includes <code>sonar-project.properties</code> with:</p>
+<ul>
+<li><code>src</code> as source code</li>
+<li><code>tests</code> as tests</li>
+<li><code>coverage.xml</code> as Python coverage input</li>
+<li>generated/build directories excluded</li>
+</ul>
+<p>After publishing the repo, connect it through SonarQube Cloud and make sure the project key and organization match the GitHub owner/repo.</p>
+<p>Likely gate concerns:</p>
+<ul>
+<li>maintainability rating</li>
+<li>new-code issues</li>
+<li>duplicated lines</li>
+<li>coverage imported from <code>coverage.xml</code></li>
+<li>security hotspots, if any are detected</li>
+</ul>
+<h2 id="qlty">Qlty</h2>
+<p>Qlty provides a free open-source path through its GitHub App for qualifying public repositories. Use it after publishing by installing the app on the repo.</p>
+<p>Likely gate concerns:</p>
+<ul>
+<li>duplication</li>
+<li>structure issues</li>
+<li>complexity</li>
+<li>technical debt ratio</li>
+<li>coverage, if configured</li>
+</ul>
+<h2 id="codacy">Codacy</h2>
+<p>Codacy advertises free open-source/public repository scanning and coverage tracking. Use it after publishing by adding the GitHub repository in Codacy.</p>
+<p>Likely gate concerns:</p>
+<ul>
+<li>issues</li>
+<li>complexity</li>
+<li>duplication</li>
+<li>coverage import</li>
+<li>security and dependency findings</li>
+</ul>
+<h2 id="current-readiness">Current Readiness</h2>
+<p>The built-in local audit is not meant to replace these tools. Its job is to keep AI-assisted changes bounded and produce a remediation prompt before the external platforms see the code.</p>
+<p>External tools should be treated as independent checks. If one reports a finding that Maintainability Agent does not, either:</p>
+<ul>
+<li>fix the underlying code,</li>
+<li>document the false positive,</li>
+<li>or add a deterministic adapter/rule so the local audit catches similar issues earlier.</li>
+</ul>
+<footer>Rendered from <code>docs/external-quality-tools.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

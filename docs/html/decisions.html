@@ -1,0 +1,316 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Decision register · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#register">Register</a></li>
+<li><a href="#recorded-operating-decisions">Recorded operating decisions</a><ul>
+<li><a href="#decision-4-history-consent">Decision 4 — History consent</a></li>
+<li><a href="#decision-5-three-way-root-grant-session-default">Decision 5 — Three-way root grant, session default</a></li>
+<li><a href="#decision-6-verification-audit-l-scope-stays-in-one-slice">Decision 6 — Verification-audit L scope stays in one slice</a></li>
+<li><a href="#decision-7-config-wins-over-terminal-interactivity">Decision 7 — Config wins over terminal interactivity</a></li>
+<li><a href="#decision-8-flat-allowed_roots-stands">Decision 8 — Flat allowed_roots stands</a></li>
+<li><a href="#decision-9-the-line-is-executing-code">Decision 9 — The line is executing code</a></li>
+<li><a href="#decision-10-v10-ships-python-and-java">Decision 10 — v1.0 ships Python and Java</a></li>
+</ul>
+</li>
+<li><a href="#statuses">Statuses</a></li>
+<li><a href="#when-to-write-one">When to write one</a></li>
+<li><a href="#template">Template</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Decisions</div><h1>Decision register</h1><p>Every architectural decision, including the ones not yet made.</p>
+<p>A decision recorded only as a sentence inside a design document is a decision that gets re-litigated. This register exists so that "why is it like this?" and "what are we still arguing about?" both have one answer, and so an open question is visibly <em>open</em> rather than dissolved into prose in three files.</p>
+<h2 id="register">Register</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Decision</th>
+<th>Status</th>
+<th>Affects</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="adr-001-evidence-and-verification.html">001</a></td>
+<td>Separate maintainability scoring from evidence verification</td>
+<td><strong>Accepted</strong> — stages 1–9 implemented. Stage 9 (1.9.0) split history materialization from measurement: <code>tools/calibration/history_manifest.py</code> fetches and pins, <code>measure_fix_breadth</code> reads the manifest and never touches the network, and a cache that has drifted is refused rather than measured (<code>tests/test_history_manifest.py</code>). The checked-in <code>history_manifest.json</code> pins 33 subjects, 6,120 commit ids and 293 required parent objects</td>
+<td>Report schema, scoring, grading, history studies</td>
+</tr>
+<tr>
+<td><a href="adr-002-null-verified-grade-in-ci.html">002</a></td>
+<td>Whether null <code>verified_grade</code> needs a CI policy before stage 5</td>
+<td><strong>Rejected</strong> — premise assumed a grade gate that does not exist</td>
+<td>CLI exit codes, ADR 001 stage 5</td>
+</tr>
+<tr>
+<td><a href="adr-003-deterministic-semantic-policy.html">003</a></td>
+<td>Add deterministic, repository-aware semantic findings without changing the uniform rubric</td>
+<td><strong>Accepted</strong> — option C; this increment is TypeScript only: type-backed universal facts, checked-in policy violations, and prompt-only design-review candidates. The pre-registered corpus and precision bar are in <a href="semantic-prototype.html">semantic-prototype.md</a>. No semantic result changes the score</td>
+<td>Analyzers, configuration, findings, remediation prompts</td>
+</tr>
+<tr>
+<td><a href="adr-004-economic-context.html">004</a></td>
+<td>Add configured economic-impact scenarios without turning the score into a cost prediction</td>
+<td><strong>Accepted</strong> — v1 <strong>shipped</strong> (<code>tests/test_economic_context.py</code>): optional TTY ask once, persist <code>economic_context</code>, env overrides; labeled scenario range; work order reorders by recurrence + churn; score/grade untouched. Ladder 2–4 (prediction language) still unearned</td>
+<td>Configuration, report schema, prioritization, studies</td>
+</tr>
+<tr>
+<td><a href="adr-005-insufficient-population.html">005</a></td>
+<td>Withhold rates, per aspect, where the denominator is too small to support one</td>
+<td><strong>Accepted</strong> — implemented</td>
+<td>Scoring, grade profile, report contract, every consumer</td>
+</tr>
+<tr>
+<td><a href="adr-006-analyzer-evidence.html">006</a></td>
+<td>External analyzers produce the evidence; the agent orchestrates and corroborates across tools</td>
+<td><strong>Accepted</strong> — implemented; the point estimate uses analyzer pressures for every dimension measured on the full concept set, with the built-in detectors as the fallback. Calibration (3.6) was re-derived 2026-08-14 against that mix (<code>CALIBRATION_C</code> 2.6279 → 2.2658). Java has a built-in range fallback. This entry read <strong>"we will not write more range detectors" for Go/C/C++/C#/Rust</strong> until 1.6.0; five were written — C (1.1.0), C++ (1.2.0), C# (1.3.0), free-form Fortran (1.4.0), fixed-form Fortran (1.6.0) — each as its own minor release, which is the cadence recorded below. The rule the original wording protected still holds and is the price of admission: a language is claimed only when it has a scanner of its own, a documented list of what it misses, and tests that pin them. Go and Rust remained unwritten on exactly those terms until 2.11.0, which wrote them along with PHP and Ruby — and paid the price of admission twice, since an audit of that release found four defects whose constructs were in no fixture (D125–D129). Remaining population work is analyzer-supplied measurements for languages the built-ins cannot range. 2.5c shipped: the environment work order rides beside coverage; acquisition remains opt-in in user-tier configuration and unavailable to the audited tree.</td>
+<td>Whole evidence layer, determinism promise, installation, CI, report contract</td>
+</tr>
+<tr>
+<td><a href="adr-007-pillars-and-practice.html">007</a></td>
+<td>Adopt the five-pillar framework; separate practice maturity from code condition</td>
+<td><strong>Accepted</strong> — implemented; the §4 vocabulary rename was <strong>refused</strong>, recorded in the ADR and <a href="standard.html#shared-vocabulary-and-where-this-tools-terms-differ">standard.md</a></td>
+<td>Reporting taxonomy, scope boundaries, remediation prioritization</td>
+</tr>
+<tr>
+<td><a href="adr-008-translation-and-decision.html">008</a></td>
+<td>Translation layer from tool output to scoring input; the LLM boundary; CLI and MCP entry points</td>
+<td><strong>Accepted</strong> — band matrix <strong>shipped (3.2)</strong>: live declaration and file-size pressures use <code>_bands</code> so values in different bands are not one failure (<code>tests/test_band_pressures.py</code>); gates stay binary. MCP tools, resources and prompt ship through <code>maintainability-agent mcp</code>, with <code>maintainability-agent-mcp</code> retained for IDEs</td>
+<td>Evidence normalization, thresholds, remediation, entry points</td>
+</tr>
+<tr>
+<td><a href="adr-009-scan-history.html">009</a></td>
+<td>Persist a scan history so the engine can measure change over time</td>
+<td><strong>Accepted</strong> — implemented. Schema 3 stores structured identities (<code>kind</code>, path, name, ordinal, <code>body_digest</code>, fingerprint) beside labels; schema-1/2 lines still load and remain label-equality comparisons. Baseline v3 and recurrence use <code>_finding_match</code>, including git-attested rename following and same-name reorder resolution. The human label remains <code>function:{path}:{name}#{ordinal}</code>. Append-when-file-exists and the separate pillar/practice series remain shipped</td>
+<td>Persistence, finding identity, determinism, report, <code>--fail-on-new</code>, HTML/MD trend charts</td>
+</tr>
+<tr>
+<td><a href="adr-010-repository-discovery.html">010</a></td>
+<td>Classify every file by language and provenance from evidence the repository provides</td>
+<td><strong>Accepted</strong> — implemented</td>
+<td>Scanned population, scored population, analyzer applicability, coverage</td>
+</tr>
+<tr>
+<td><a href="adr-011-three-report-presentations.html">011</a></td>
+<td>Three user-facing skins of one report dict: chat/CLI text (default), Markdown file, one self-contained HTML file; ask every interactive invoke</td>
+<td><strong>Accepted</strong> — implemented except acceptance: the three skins render from one report dict and never disagree on the headline (<code>tests/test_three_presentations.py</code>), the TTY ask and MCP format argument shipped (<code>tests/test_format_ask.py</code>), and the HTML file is one self-contained deterministic page. Amended 2026-09-20 (D201): <code>json</code> is offered at the question too — both doors already accepted it per call, so it was a shipped capability nobody was ever shown. 8.8 acceptance, then 7.5 and the tag, remain</td>
+<td>Presentation, CLI, MCP prompt, HTML</td>
+</tr>
+<tr>
+<td><a href="adr-012-spotbugs-build-boundary.html">012</a></td>
+<td>The agent never builds: SpotBugs analyzes bytecode that already exists, absence becomes a build-then-rerun work-order remedy, and every run records staleness evidence (source mtime vs class mtime)</td>
+<td><strong>Accepted</strong> (2026-08-19, decision 11) — implemented in slice 3 behind <code>tests/test_spotbugs_adapter.py</code>; D15 composition of source-read and artifact-read shapes is <code>tests/test_d15_composition.py</code></td>
+<td>Analyzer pool, environment work order, JVM adapters</td>
+</tr>
+<tr>
+<td><a href="adr-013-hostile-audit-prompt.html">013</a></td>
+<td>Emit a deterministic, report-seeded hostile-audit prompt so the adversarial audit that builds this tool becomes a repeatable step; the LLM does the reasoning outside, the core never performs it</td>
+<td><strong>Accepted</strong> — implemented in 1.10.0: <code>render_hostile_audit_prompt</code> is the third emitter on the prompt seam, surfaced as CLI <code>--hostile-prompt-output</code> and the MCP <code>maintainability-hostile-audit</code> prompt. It seeds the audit from one run — commit, evidence already computed, P1-P8 with each stated falsifier, and the audit contract — and does not gate or score (<code>tests/test_hostile_prompt.py</code>). The promise table lives in code so the brief works offline, held to <code>product-intent.md</code> in both directions. A third emitter on the prompt seam beside <code>render_ai_prompt</code> / <code>render_agent_instructions</code>; non-gating, non-scoring. The deterministic adversarial-properties <em>detection</em> dimension (auditing a target for the same hardening classes) is deferred to a future release (<a href="roadmap.html">roadmap</a>) and its own ADR</td>
+<td>Prompt seam, CLI, MCP prompt, QA methodology</td>
+</tr>
+<tr>
+<td><a href="adr-014-absence-as-evidence.html">014</a></td>
+<td>Adversarial-properties detection takes the evidence-integrity half only — code that reads an absent, empty or failed measurement as a passing result — and leaves every exploitability class to <code>secure-code-agent</code></td>
+<td><strong>Accepted</strong> (2026-09-10) — the <em>scope</em> decision only; <strong>nothing is built</strong>. The boundary is a rule rather than a list: a candidate is MA's when it would still be a defect on a machine no attacker can reach, and the delegate's when its harm requires someone hostile; where it is genuinely both, MA yields, because <a href="adr-007-pillars-and-practice.html">ADR 007</a> already gave that pillar away. Non-gating and non-scoring on <a href="adr-003-deterministic-semantic-policy.html">ADR 003</a>'s terms. Implementation is gated on a frozen precision bar pre-registered before any result exists, as <a href="semantic-prototype.html">semantic-prototype.md</a> did; a measured precision below it supersedes this ADR rather than lowering the bar</td>
+<td>Findings, remediation prompts, the <code>secure-code-agent</code> boundary, QA methodology</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="recorded-operating-decisions">Recorded operating decisions</h2>
+<p>These choices settle cross-cutting behavior discovered while closing the chat
+surface. They do not create new ADRs or silently amend the numbered decisions
+above; they record the answers so a pull request is never the only place
+the choice exists.</p>
+<h3 id="decision-4-history-consent">Decision 4 — History consent</h3>
+<ul>
+<li>Recorded: 2026-08-17</li>
+</ul>
+<p>First-run setup asks whether to record scan history in the repository, with
+<strong>yes</strong> as the disclosed default and <strong>no</strong> as the alternative. The answer is
+persisted like the other setup choices. Client capability alone does not start
+a series.</p>
+<h3 id="decision-5-three-way-root-grant-session-default">Decision 5 — Three-way root grant, session default</h3>
+<ul>
+<li>Recorded: 2026-08-17</li>
+</ul>
+<p>An out-of-roots audit elicitation offers <strong>this session</strong>, <strong>always</strong>, and
+<strong>no</strong>, with <strong>this session</strong> pre-selected. Always persists a user-tier
+<code>allowed_roots</code> entry; a session grant changes only the running process; no
+returns the static <code>--allow-root</code> and environment-variable remedies.
+How that refusal survives MCP is the entry-layer transport rule in
+<a href="architecture.html#the-rules-and-why-each-exists">architecture.md</a>: only the
+transport declares the named anticipated refusals that may carry their text to
+the caller.</p>
+<h3 id="decision-6-verification-audit-l-scope-stays-in-one-slice">Decision 6 — Verification-audit L scope stays in one slice</h3>
+<ul>
+<li>Recorded: 2026-08-17</li>
+</ul>
+<p>The TOCTOU repair (resolve once and grant exactly what was asked), the
+<code>write_user_config</code> caller-class lint, and the stale D10 register citation land
+together before the documentation sweep.</p>
+<h3 id="decision-7-config-wins-over-terminal-interactivity">Decision 7 — Config wins over terminal interactivity</h3>
+<ul>
+<li>Recorded: 2026-08-17</li>
+</ul>
+<p>Written consent outranks the terminal: <code>history.record: false</code> suppresses
+recording even on a TTY. The terminal may start a series only when no consent is
+written, and the CLI and MCP doors apply the same rule.</p>
+<h3 id="decision-8-flat-allowed_roots-stands">Decision 8 — Flat allowed_roots stands</h3>
+<ul>
+<li>Recorded: 2026-08-17</li>
+</ul>
+<p><code>get_agent_info</code> keeps the honest flat <code>allowed_roots</code> list. Provenance labels
+are not added to that response.</p>
+<p>Decisions 005–007 were written together after a repository containing one production function was reported as 5.0 / A+, evidence complete, verified. They address three distinct causes of that single result: no rate has a minimum population (005), the evidence comes from six homegrown detectors rather than the mature analyzers the README says to pair with (006), and nothing distinguishes <em>a clean scan</em> from <em>an enforced standard</em> (007).</p>
+<h3 id="decision-9-the-line-is-executing-code">Decision 9 — The line is executing code</h3>
+<ul>
+<li>Recorded: 2026-08-25</li>
+</ul>
+<p><strong>This agent never executes the audited repository's code, and its
+configuration is code.</strong> An eslint flat config is a JavaScript program; a
+pylint or mypy plugin is a Python module. Loading either to produce a
+finding is executing the tree, so the boundary is drawn at execution
+rather than at a judgment about whether a given repository is
+trustworthy.</p>
+<p>This answers the question <code>security-queue.md</code> recorded as <em>"the one
+decision that is not mine"</em> — are repositories trusted? — by making it
+moot. The agent does not need to decide; it does not run their code
+either way.</p>
+<p><strong>A pillar that can only be measured by running the code waits for a
+future version.</strong> It is not approximated, not half-measured, and not
+shipped behind a caveat. <code>test_effectiveness</code> was already <code>unscored</code> for
+exactly this reason ("requires running the suite (mutation/coverage);
+this audit never executes code"), and that entry now reflects a rule
+rather than a limitation.</p>
+<p><strong>Amended 2026-08-31 (Class 5 — opt-in suite execution).</strong> The pillar
+<code>test_effectiveness</code> named above no longer waits unconditionally. The one
+exception to "never executes the audited repository's code" is an
+explicit, per-repository operator opt-in: setup asks — defaulting to
+<strong>no</strong> — whether to run the tree's <em>own documented</em> test command, and
+only a <code>yes</code> together with a recorded command lets the audit spawn it.
+The default is unchanged and total: with no opt-in the agent never runs
+the tree, and every report produced without it keeps the original
+guarantee verbatim. This is consent to run one operator-named command,
+not a retreat from the boundary — it does not load the tree's
+configuration as code (Decision 9's actual target), does not reopen child
+sandboxing, and runs nothing the operator did not name. Coverage from
+that run scores <code>test_effectiveness</code> as <code>coverage / 20</code>; without it the
+aspect is <code>NotApplicable</code>, scored exactly as if the pillar were still
+deferred.</p>
+<p>Consequences: <code>SECURITY.md</code>'s existing claim becomes true rather than
+aspirational. D39 stops being an accepted residual and becomes a defect
+— the promise was right and the code drifted from it. Analyzers that
+require the tree's own configuration leave the default pool; analyzers
+that merely <em>may</em> load configured plugins (mypy, pylint) run with that
+loading disabled. Child sandboxing stays refused and this does not
+reopen it: not executing the tree is a narrower and cheaper guarantee
+than containing it while it runs.</p>
+<h3 id="decision-10-v10-ships-python-and-java">Decision 10 — v1.0 ships Python and Java</h3>
+<ul>
+<li>Recorded: 2026-08-25</li>
+</ul>
+<p><strong>v1.0 is the current language capability with an empty defect ledger,
+not a larger language matrix.</strong> Python (<code>ast</code>, exact declaration ranges)
+and Java (dedicated scanner) are the two languages with real declaration
+parsers, and they are what v1.0 claims.</p>
+<p>Further languages — Fortran, C#, C, Rust, then JavaScript and the rest —
+arrive <strong>one adapter per release</strong>, not as a batch: small increments
+rather than a six-language batch. The catalog already carries analyzer coverage for those
+ecosystems, so each release adds a declaration parser to a pool that can
+already measure something.</p>
+<p>Consequences: v1.0's remaining work is the defect ledger, not new
+adapters. Every language outside Python and Java gets file length,
+duplication and risk, with declaration rates <strong>withheld</strong> and the
+missing parser named, which is what P7 requires.</p>
+<p><strong>Amended 2026-08-26.</strong> The paragraph above said every language
+outside Python and Java has declaration rates withheld. That was never
+true: the brace scanner reads JS, TS, JSX and HTML, so a JavaScript
+repository was handed a declaration population, <code>evidence_status:
+complete</code> and a verified grade while this decision claimed two
+languages. An audit found the contradiction and the sentence was mine.</p>
+<p>The resolution is that the claim follows the capability, not the
+reverse. lizard, jscpd and multimetric are baseline-tier adapters that
+read JavaScript, so JavaScript stays in the claim: there is a detector and
+it can be scored.</p>
+<p><strong>Corrected 2026-08-26, on the same page's own evidence.</strong> The sentence
+above got the <em>supporting</em> fact wrong even though the decision is
+right. The detector that scores JavaScript declarations is this
+project's own brace scanner (<code>_ranges</code>, <code>_cognitive.brace_cognitive</code>),
+not the analyzer pool. <code>DECLARATION_CRITERIA</code> requires cyclomatic
+complexity, declaration lines <strong>and</strong> cognitive complexity, because the
+built-in path fails a declaration on any of the three and a rate built
+from a narrower set is not comparable to it. lizard emits the first
+two. So for a JavaScript repository with lizard installed and nothing
+else, <code>_declaration_pressure</code> returns <code>None</code> and the built-in tier
+scores the dimension -- every time, by construction, not by accident.</p>
+<p>The ruling stands unchanged: <em>there is a detector and it can be scored</em> is
+exactly true of the brace scanner, and <code>language-support.md</code>
+already names brace/paren depth as the mechanism. What was wrong was
+this page crediting the pool for work the pool cannot do here. The
+analyzers that read JavaScript still contribute duplication (jscpd) and
+file metrics (multimetric); they do not drive the declarations
+dimension, and PMD is the only catalogued tool that could.</p>
+<p>So v1.0's declaration languages were <strong>Python, Java, JS, TS, JSX and
+HTML</strong> — everything this project could detect and score at that release —
+and <code>docs/language-support.md</code> said exactly that. It now names seven
+languages, C through Fortran having arrived one per minor release since,
+and it is still the page the parser is held to in both directions. The one-adapter-per-
+release cadence is unchanged and applies to languages nothing here
+reads yet. That list was <strong>Go, Rust, C, C# and Fortran</strong> when this was
+written; C (1.1.0), C# (1.3.0) and Fortran (1.4.0, fixed-form 1.6.0) have
+since been written and are in the default extensions. <strong>Go and Rust</strong>
+remain absent from them rather than scanned and unscored, which is the
+condition this paragraph exists to state.</p>
+<p>The rule the falsifier holds is the narrow one that was actually
+broken: a declaration population must never come from a language the
+tool can neither parse nor hand to an adapter, and the page and the
+parser must name the same set.
+<code>test_the_parsed_languages_are_exactly_the_documented_languages</code> fails
+in either direction.</p>
+<h2 id="statuses">Statuses</h2>
+<ul>
+<li><strong>Proposed</strong> — written up with options; not yet decided. May be edited freely.</li>
+<li><strong>Accepted</strong> — decided. The text is frozen except to record implementation progress or to mark it superseded.</li>
+<li><strong>Superseded by NNN</strong> — replaced. Left in place; never deleted, because the reasoning explains code that still exists.</li>
+<li><strong>Rejected</strong> — considered and declined, with the reason. Worth keeping so it is not proposed again.</li>
+</ul>
+<h2 id="when-to-write-one">When to write one</h2>
+<p>Write an ADR when a choice would be expensive to reverse, when it constrains code that has not been written yet, or when it has already been argued about more than once. Do not write one for a preference a reviewer could simply request a change to.</p>
+<p>The bar is deliberately low for <strong>Proposed</strong>. An open question sitting in a register is cheap; the same question sitting in someone's head is what produces a sixth audit round.</p>
+<h2 id="template">Template</h2>
+<pre><code class="language-markdown"># ADR NNN: &lt;decision in a few words&gt;
+
+- Status: Proposed | Accepted | Superseded by NNN | Rejected
+- Date: YYYY-MM-DD
+- Scope: &lt;what this constrains&gt;
+
+## Context
+
+What is true today, and what forces the choice. Facts, not preferences.
+
+## Options
+
+Each with its consequence. Include the one that will be rejected — an ADR
+listing only the chosen path is a rationalization.
+
+## Decision
+
+The choice, in the active voice. For Proposed, state the recommendation
+and what is needed to settle it.
+
+## Consequences
+
+What becomes easier, what becomes harder, and what has to migrate.
+
+## Invariants
+
+The properties that must hold afterwards, phrased so a test can check
+them — see [product intent](product-intent.md#the-evidence-standard).
+</code></pre>
+<p>An ADR that states no invariant is usually describing a preference rather than a decision.</p>
+<footer>Rendered from <code>docs/decisions.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

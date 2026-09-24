@@ -1,0 +1,120 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>ADR 010: Discovery — what is in this tree, and whose code is it · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#context">Context</a><ul>
+<li><a href="#tools-claimed-coverage-of-languages-that-are-not-present">Tools claimed coverage of languages that are not present</a></li>
+<li><a href="#other-peoples-code-was-scored-as-the-teams-own">Other people's code was scored as the team's own</a></li>
+</ul>
+</li>
+<li><a href="#decision">Decision</a><ul>
+<li><a href="#1-classification-is-by-evidence-never-by-name">1. Classification is by evidence, never by name</a></li>
+<li><a href="#2-where-there-is-no-evidence-the-answer-is-first-party">2. Where there is no evidence, the answer is first-party</a></li>
+<li><a href="#3-a-tool-with-no-input-is-not-applicable-not-ran">3. A tool with no input is not-applicable, not ran</a></li>
+<li><a href="#3a-coverage-is-claimed-per-language-without-a-threshold">3a. Coverage is claimed per language, without a threshold</a></li>
+<li><a href="#4-generated-and-vendored-code-leaves-the-scored-population">4. Generated and vendored code leaves the scored population</a></li>
+<li><a href="#5-the-corpus-is-re-derived-only-after-this-lands">5. The corpus is re-derived only after this lands</a></li>
+</ul>
+</li>
+<li><a href="#options-considered">Options considered</a></li>
+<li><a href="#consequences">Consequences</a></li>
+<li><a href="#invariants">Invariants</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Decisions</div><h1>ADR 010: Discovery — what is in this tree, and whose code is it</h1><ul>
+<li>Status: Accepted. Implementation progress is tracked in the <a href="decisions.html">decision register</a>, which is the single place it is stated</li>
+<li>Date: 2026-08-12</li>
+<li>Scope: What gets scanned, what gets scored, which analyzers are applicable, what the report states about the tree</li>
+<li>Related: <a href="adr-005-insufficient-population.html">ADR 005</a>, <a href="adr-006-analyzer-evidence.html">ADR 006</a>, <a href="adr-007-pillars-and-practice.html">ADR 007</a></li>
+</ul>
+<h2 id="context">Context</h2>
+<p>Nothing looked at the repository before deciding what to run and what to score. The pool was resolved from the operator's concerns, depth and licence policy; the scan walked whatever <code>include_extensions</code> listed; and the score was computed over whatever that produced. At no point did the tool ask <em>what is actually in this tree</em>.</p>
+<p>Two defects came out of that gap, both measured, both invisible on every repository the tool had previously been tested against.</p>
+<h3 id="tools-claimed-coverage-of-languages-that-are-not-present">Tools claimed coverage of languages that are not present</h3>
+<p><code>kilo</code> is one C file. complexipy, mypy, pydocstyle, radon, ruff and vulture all ran, produced zero measurements and zero findings between them, and the coverage section reported <code>documentation</code>, <code>style</code>, <code>types</code> and <code>dead-code</code> as <strong>examined</strong>. Identical on gson and ripgrep.</p>
+<p>The rule that produced this is correct in general and wrong here: <em>a tool that ran and found nothing has examined its concern.</em> That is what stops "vulture found no dead code" collapsing into "nobody looked". It holds only when the tool <strong>had input</strong>. A Python linter on a C repository examined nothing, and recording it as coverage is absence-as-value arriving in the section written to prevent absence-as-value.</p>
+<h3 id="other-peoples-code-was-scored-as-the-teams-own">Other people's code was scored as the team's own</h3>
+<p>Adding <code>.mjs</code>/<code>.cjs</code> to the include list — a correct fix for genuinely unread source — pulled 10,759 files from <code>packages/mui-icons-material/lib/</code> into the calibration corpus. Six-line SVG icon wrappers, one per icon, written by <code>builder.mjs</code> in the same package. They dropped material-ui's duplication from 3.729 to 2.321 and moved <code>CALIBRATION_C</code> from 2.6279 to 2.6414.</p>
+<p>The same class elsewhere: 5,090 of whisper.cpp's findings sit in <code>ggml/</code>, a library synced from another repository. 16,719 of lapack's sit in <code>TESTING/</code>, which <code>is_test_path</code> missed because it matched <code>test</code> and <code>tests</code> but not <code>testing</code>. transformers' duplication read 25.567 with its generated modular files included and 13.690 without.</p>
+<p><strong>The existing defence was a list of directory names</strong> — <code>vendor/</code>, <code>third_party/</code>, <code>node_modules/</code>, <code>migrations/</code>. <code>ggml/</code> was not on it, so a vendored tree counted as first-party because of what its authors happened to call it. Extending the list is not a fix; it is the same mechanism with one more entry, waiting for the next project to choose a different word.</p>
+<h2 id="decision">Decision</h2>
+<p><strong>A discovery pass runs before anything else, and classifies every file by language and provenance from evidence the repository itself provides.</strong></p>
+<h3 id="1-classification-is-by-evidence-never-by-name">1. Classification is by evidence, never by name</h3>
+<p>Each rule points at something checkable, and the evidence is recorded beside the verdict so a reader can disagree with it:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Provenance</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>generated</code></td>
+<td>a generation banner in the file's head; a filename shape no human writes (<code>*.pb.go</code>, <code>*_pb2.py</code>, <code>*.designer.cs</code>); a directory a <code>package.json</code> script deletes and rebuilds (<code>rimraf lib &amp;&amp; …</code>); a path git does not track and the repository's own <code>.gitignore</code> files exclude — build output such as Maven's <code>target/</code> (D175)</td>
+</tr>
+<tr>
+<td><code>vendored</code></td>
+<td>a <code>.gitmodules</code> entry; a script named for the directory it overwrites from upstream (<code>scripts/sync-ggml.sh</code> maintaining <code>ggml/</code>)</td>
+</tr>
+<tr>
+<td><code>test</code></td>
+<td>conventional path and name shapes, now including <code>TESTING/</code></td>
+</tr>
+<tr>
+<td><code>asset</code></td>
+<td>a saved page, not source: a versioned page snapshot (<code>scene_v1.2.3.html</code>), or a folder of two-or-more HTML/CSS pages outnumbering real code beside non-source siblings (png, svg). Its files keep a file-length finding but leave the declaration and clone populations, so four saved copies of one page are not 861 clone rows (plan-81dc6870 Class 4)</td>
+</tr>
+<tr>
+<td><code>first-party</code></td>
+<td>everything else</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>test_every_classification_carries_the_evidence_for_it</code> refuses a classification with no evidence. A verdict nobody can check is a guess with better manners. The same reasoning forbids a <code>graphics/</code> name in the exclude list: an asset directory is recognised by what it holds, never by what its authors called it — the exact mistake <code>ggml/</code> was.</p>
+<p><strong>Ignore rules are evidence only where the repository wrote them (D175).</strong> Only the per-directory <code>.gitignore</code> files are read, never <code>.git/info/exclude</code> or a user's <code>core.excludesFile</code>: those differ by machine, and one commit would score differently on two laptops (P1). A tracked file stays first-party whatever a rule matches, because git tracking it is the repository saying it is source; an untracked file no rule matches stays first-party too, because that is uncommitted work (D56). A classified tree's every scanned file leaves the score — its HTML, XML and JSON as well as its source — and is counted in <code>summary.generated_files</code>.</p>
+<h3 id="2-where-there-is-no-evidence-the-answer-is-first-party">2. Where there is no evidence, the answer is first-party</h3>
+<p>This module removes code from someone's audit. A false positive silently deletes their own work from their own report, which is the worse direction of error, so the bias is deliberately toward leaving code in.</p>
+<p>That bias was tested immediately and in the right direction. The first banner rule matched substrings, and classified material-ui's hand-written <code>formatMuiErrorMessage.ts</code> as generated because its docstring says <em>"It's imported by the code generated by <code>@mui/babel-plugin</code>"</em>. Prose <strong>about</strong> generated code, mid-sentence. Two further iterations were needed: requiring the phrase to open a line rejected curl's genuine <code>/*** Sample code generated by the curl command line tool ***</code>, which does not. The rule that holds is <strong>position, not presence</strong> — a declaration comes before the prose, so nothing that reads like a finished sentence may precede it, on its line or the one above.</p>
+<h3 id="3-a-tool-with-no-input-is-not-applicable-not-ran">3. A tool with no input is <code>not-applicable</code>, not <code>ran</code></h3>
+<p>A tool whose catalog languages do not intersect the tree records <code>not-applicable</code> with a reason naming both halves — <em>"reads python; this tree is C, so it had nothing to examine"</em> — and claims no concern coverage.</p>
+<p>Any overlap is enough to <em>run</em> a tool. lizard reads a dozen languages and must not be excluded from a C repository for the absence of Kotlin. Suppressing a tool removes real evidence, so an inapplicable verdict has to be positively supported by a language list sharing nothing with the tree.</p>
+<p><strong>Running a tool and covering a language are different questions, and treating them as one was wrong.</strong> This section originally stopped here, and the validation sample showed what that costs: <code>json</code> holds 6 Python files among 305 C++ ones and <code>lapack</code> 1 among 2,884 C files, so a single build script made every Python-only tool applicable and both repositories claimed <code>types</code> and <code>style</code> for the whole tree. Binary applicability is right at the extremes — curl, with no Python at all, correctly reported 3 of 11 — and wrong everywhere in between. See §3a.</p>
+<p>The two vocabularies are mapped explicitly. The inventory says <code>C++</code> and <code>C#</code>; the catalog says <code>cpp</code> and <code>csharp</code>. Comparing them directly finds no overlap and marks every C++ tool inapplicable — the same defect as concerns against concepts, and the third instance of it in this codebase. <code>CATALOG_LANGUAGE</code> is held complete against <code>KNOWN_SOURCE_SUFFIXES</code> by a test.</p>
+<h3 id="3a-coverage-is-claimed-per-language-without-a-threshold">3a. Coverage is claimed per language, without a threshold</h3>
+<p>Amended 2026-08-13, superseding the repository-wide coverage claim above.</p>
+<p>The obvious fix for §3's gap is a share threshold — <em>a language must be at least N% of the tree for its tools to count</em> — and it is the wrong fix. It tunes a number until the two repositories in front of you behave, and that number then applies to every repository forever, distorting a genuinely polyglot tree to make a mostly-C++ one read correctly.</p>
+<p><strong>Per-language coverage needs no cutoff.</strong> "mypy covers <code>types</code> for Python" is true when Python is 2% of the tree and true when it is 98%, so there is nothing to tune and no way for a rule fitted to one repository to distort another. <code>test_the_answer_does_not_depend_on_the_language_mix</code> holds exactly that property.</p>
+<p>The repository-wide claim is then <strong>scoped to the languages that were scored</strong>, not composed across every language present. The first attempt intersected across all of them and erased click's coverage entirely — a healthy Python library holding one shell script that no tool reads, where one unscanned file rewrote the answer for six hundred scanned ones. A language the scan never opened is reported by the unread-source rule and must not also rewrite the coverage claim.</p>
+<p>Scoping is necessary and not sufficient: <code>concepts_covered: [types]</code> still reads as <em>"this repository is type-checked"</em> on a tree that is 98% unread C++. So the record carries <code>scored_languages</code> beside it and the report renders the full matrix. A claim that cannot be read without its scope is a claim that will be misread.</p>
+<h3 id="4-generated-and-vendored-code-leaves-the-scored-population">4. Generated and vendored code leaves the scored population</h3>
+<p>It is counted and reported, never silently dropped: <code>summary.generated_files</code>, <code>summary.vendored_files</code> and <code>summary.classifications</code> state what was set aside and why. Excluding code without saying so would replace one dishonesty with another.</p>
+<h3 id="5-the-corpus-is-re-derived-only-after-this-lands">5. The corpus is re-derived only after this lands</h3>
+<p>Recorded because the sequencing is load-bearing. Widening what the tool reads widens what contaminates it, in the same act. Any constant fitted before provenance detection embeds material-ui's icon build in the scale.</p>
+<h2 id="options-considered">Options considered</h2>
+<p><strong>A. Extend the exclusion list.</strong> Add <code>ggml/</code>, <code>TESTING/</code>, <code>lib/</code>. Rejected: <code>lib/</code> is an ordinary source directory in most repositories, and the approach has already failed once for exactly the reason it will fail again — it can only know the names it was told.</p>
+<p><strong>B. Detect generated code by structure</strong> — a directory of many tiny mutually-near-identical files. Would have caught material-ui's icons. Rejected: it is a heuristic over shape rather than a fact the repository states, and it would misclassify legitimate repetitive code. This project's whole method is evidence over inference.</p>
+<p><strong>C. Ask the operator to configure it.</strong> Rejected as the <em>only</em> mechanism — a tool that requires per-repository setup before its score means anything is a tool nobody runs on a repository they did not write. Configuration remains available and overrides discovery.</p>
+<p><strong>D. Score everything and report provenance alongside.</strong> Rejected: it leaves the number wrong and asks the reader to correct it mentally. The score is the artifact people quote.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li>Scores move on any repository containing generated or vendored code, and move <em>correctly</em>. This is a public change and rides with the schema bump.</li>
+<li><code>CALIBRATION_C</code> was re-derived after this landed and <strong>kept at 2.6279</strong>: a 2,000-resample bootstrap puts the 95% interval at [2.2522, 3.4718], both candidates roll the corpus median to exactly 4.0000, and they differ on one repository in forty by 0.1. See <code>tools/calibration/sampling_error.py</code>.</li>
+<li>Coverage shrinks honestly on non-Python repositories. gson, cobra, ripgrep and curl went from reporting 9 of 11 analyzers contributing to 3 of 11, because the other six had nothing to read.</li>
+<li>Detection is partial and will stay partial. Ecosystems this does not yet recognise report their code as first-party, which is the safe direction. New rules are added when a real repository demonstrates the need, not speculatively.</li>
+<li>One more pass over the tree per audit. Measured at under a second on babel's 17,818 files.</li>
+</ul>
+<h2 id="invariants">Invariants</h2>
+<ol>
+<li>Every non-first-party classification carries the evidence that produced it.</li>
+<li>A file with no evidence against it is first-party. Doubt leaves code in the audit.</li>
+<li>A tool whose languages do not appear in the tree records <code>not-applicable</code>; any overlap makes it applicable <em>to run</em>.
+3a. Coverage is claimed per language and never by a share threshold. The repository-wide claim covers only the scored languages, and is published with those languages named.</li>
+<li>Generated and vendored files are excluded from the scored population <strong>and counted in the report</strong>.</li>
+<li>Classification reads the repository's own declarations. No rule may be a bare list of directory names.</li>
+</ol>
+<footer>Rendered from <code>docs/adr-010-repository-discovery.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

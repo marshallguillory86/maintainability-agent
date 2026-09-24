@@ -1,0 +1,126 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>ADR 013 — The hostile-audit prompt · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#the-problem">The problem</a></li>
+<li><a href="#options-considered">Options considered</a></li>
+<li><a href="#resolution">Resolution</a></li>
+<li><a href="#consequences">Consequences</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Decisions</div><h1>ADR 013 — The hostile-audit prompt</h1><ul>
+<li>Status: <strong>Accepted</strong> (2026-08-30). Implementation progress belongs in the
+  <a href="decisions.html">decision register</a>, not here.</li>
+<li>Related: <a href="adr-003-deterministic-semantic-policy.html">ADR 003</a> (a
+  non-gating finding class that never touches the score),
+  <a href="adr-008-translation-and-decision.html">ADR 008</a> (the LLM boundary and
+  the prompt seam), <a href="product-intent.html">product intent</a> (P1 determinism;
+  the falsifiable-promise table).</li>
+</ul>
+<h2 id="the-problem">The problem</h2>
+<p>This tool is built by hostile audits. An adversary reads a change and tries to make a stated promise false: a symlinked
+write that escapes the grant, an empty analyzer run priced as clean, a
+type check that never ran reported as a pass. Every accepted finding
+becomes a <strong>population-derived falsifier</strong> that fails without its fix,
+and the goal is the one <a href="product-intent.html">product intent</a> already
+states: <em>"A hostile audit finds nothing that a stated invariant did not
+already cover."</em> The promises P1–P8 are named with the thing that would
+falsify each.</p>
+<p>That loop is the highest-leverage quality process the project has, and
+it is the only one with no artifact. Remediation has <code>render_ai_prompt</code>;
+agent standards have <code>render_agent_instructions</code> — deterministic prompts
+the tool emits so an LLM can do the non-deterministic part outside. The
+hostile audit has nothing. It depends on a human hand-writing a fresh
+prompt into a fresh session, re-deriving context the report already
+holds, with audit quality riding on whoever wrote the prompt that day.
+It is not repeatable, not seeded, and not comparable run to run.</p>
+<p>The obvious shortcut is the wrong one. Determinism (P1) is the product's
+identity — the score is reproducible byte for byte — and an LLM
+red-team <strong>inside</strong> the audit would give a different answer every run:
+it could not gate, could not be compared, and "send code to an LLM by
+default" is a stated non-goal. The adversarial <em>reasoning</em> cannot live
+in the deterministic core.</p>
+<h2 id="options-considered">Options considered</h2>
+<ol>
+<li>
+<p><strong>Embed an LLM red-team in the audit.</strong> Rejected. Non-deterministic
+   reasoning in the deterministic core breaks P1 outright; a hostile
+   result that changes between identical runs is not evidence, and
+   routing the tree to an LLM by default is a non-goal. This is the same
+   line ADR 012 drew for builds: the core does not take on a capability
+   that trades the product's strongest claim for one activity's output.</p>
+</li>
+<li>
+<p><strong>Leave it ad-hoc.</strong> Honest but wasteful. The loop that finds the
+   real holes is the only one with no repeatable, seeded artifact; each
+   audit re-derives what the report already computed — what ran, what
+   did not, which promises the change touches — and the result is only
+   as good as the prompt a person improvised.</p>
+</li>
+<li>
+<p><strong>Emit a deterministic hostile-audit prompt; delegate the reasoning
+   outward.</strong> Seed the adversary from the report and the commit under
+   audit; the LLM does the adversarial thinking outside the process,
+   exactly as remediation delegates the fixing. Deterministic input,
+   deterministic prompt text, non-deterministic work kept out of the
+   core.</p>
+</li>
+</ol>
+<h2 id="resolution">Resolution</h2>
+<p>Option 3. A <code>render_hostile_audit_prompt(report)</code> on the existing prompt
+seam — surfaced as a CLI <code>--hostile-prompt</code> output and an MCP prompt —
+that produces a bounded adversarial brief, deterministically, from what
+the audit already knows:</p>
+<ul>
+<li><strong>The promises in scope.</strong> P1–P8 and the invariants the changed code
+  touches, each named with its stated falsifier, so the adversary starts
+  from the claims rather than inventing a target.</li>
+<li><strong>The evidence already computed.</strong> Coverage, what ran and what did
+  not, the declaration population, the write boundary — so the audit
+  begins where measurement ended and does not re-derive it.</li>
+<li><strong>The audit contract, stated.</strong> Reproduce, do not speculate: a finding
+  is a concrete input → wrong output, not a worry. Every accepted
+  finding must become a population-derived falsifier that fails without
+  its fix. A real hole and a population-derived claim are different
+  outcomes and are labeled as such. (This is the standard these audits
+  already hold themselves to; the prompt writes it down.)</li>
+</ul>
+<p>The prompt is <strong>text the tool returns</strong> — never a report it writes,
+never code it sends anywhere itself (P1, the MCP five-artifact write
+boundary). The boundary sentence:</p>
+<blockquote>
+<p>The deterministic core <strong>seeds</strong> the hostile audit; it never
+<strong>performs</strong> it.</p>
+</blockquote>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li>The loop that builds this tool becomes a first-class, repeatable step:
+  seeded, bounded, reproducible input, comparable across runs, and
+  usable by any model or IDE agent the same way
+  the remediation prompt already is.</li>
+<li>It is a third emitter on a seam that already carries two
+  (<code>render_ai_prompt</code>, <code>render_agent_instructions</code>) — no new
+  architecture, and the same "the tool prompts, the LLM acts" contract
+  ADR 008 drew.</li>
+<li><strong>It does not gate and it does not score.</strong> A hostile-audit prompt is
+  a QA aid; its findings return to the falsifier-and-fix loop, never to
+  the estimate, range, or grade — the same discipline ADR 003 holds for
+  design-review candidates.</li>
+<li>It points at this tool's own promises today, and at any codebase that
+  states invariants tomorrow; the mechanism does not care whose promises
+  they are.</li>
+<li><strong>Deferred, distant future (the second play).</strong> A <em>deterministic</em>
+  adversarial-properties detection dimension — one that checks a
+  <strong>target</strong> repository for the hardening classes this agent enforces on
+  itself (a write that follows a symlinked route, an empty tool run read
+  as clean, a caller argument reaching a filesystem or shell sink
+  unvalidated) — is a different thing: deterministic detection, not a
+  prompt, and it brushes the <code>secure-code-agent</code> boundary. It is
+  recorded in the <a href="roadmap.html">roadmap</a> and earns its own ADR when it
+  comes up, not this one.</li>
+</ul>
+<footer>Rendered from <code>docs/adr-013-hostile-audit-prompt.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

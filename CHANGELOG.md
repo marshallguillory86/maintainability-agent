@@ -12,6 +12,19 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+### Documentation — every document in one readable HTML copy
+
+`docs/html/` now holds a reading copy of all the documentation: the root
+documents, all 60-odd under `docs/`, grouped by kind, and cards linking the
+standalone HTML pages already there. `tools/render_docs.py` produces it, adapted
+from the renderer the cq-team project uses. The markdown stays the source of truth.
+
+The set of documents is read from git rather than a list, so a new document is
+picked up automatically and an untracked file is never published. The output has
+no timestamps, so `tests/test_rendered_docs.py` can require the committed copy to
+match its markdown: a document edited without re-rendering fails the build.
+`markdown` joins the `dev` extra; the product never renders documentation.
+
 ### Documentation — AI reviewing AI is still an opinion
 
 The docs said a platform that generates code and grades it is producing a

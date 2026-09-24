@@ -1,0 +1,104 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Contributing · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#project-rules">Project Rules</a></li>
+<li><a href="#local-verification">Local Verification</a></li>
+<li><a href="#documentation">Documentation</a></li>
+<li><a href="#pull-requests">Pull Requests</a></li>
+<li><a href="#releasing">Releasing</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Project</div><h1>Contributing</h1><p>Thanks for helping improve Maintainability Agent.</p>
+<h2 id="project-rules">Project Rules</h2>
+<ul>
+<li>No cloud service requirement.</li>
+<li>No automatic LLM calls by default.</li>
+<li>No vendor lock-in.</li>
+<li>Deterministic analysis comes first.</li>
+<li>AI prompts are generated artifacts for human-reviewed workflows.</li>
+<li>Tests are required for CLI behavior changes.</li>
+<li>Keep changes small and reviewable.</li>
+</ul>
+<h2 id="local-verification">Local Verification</h2>
+<pre><code class="language-bash"># Install dev extras (ruff + pip-audit + jsonschema + pytest-cov + PyYAML
+# for tools/build_catalog.py). The shipped package does not depend on PyYAML.
+# secure-code-agent, which every audit runs (D177), is installed alongside,
+# not as a dependency: python3 -m pip install 'secure-code-agent&gt;=0.12.2'.
+python3 -m pip install -e &quot;.[dev]&quot;
+
+# Lint, deps scan, tests with coverage gate, self-audit.
+ruff check src tests
+pip-audit
+PYTHONPATH=src python3 -m pytest --cov=maintainability_audit --cov-fail-under=92
+PYTHONPATH=src python3 -m maintainability_audit \
+  --config maintainability-agent.json --fail-on-gate
+</code></pre>
+<p>Sandbox-friendly invocation (for AI agents that disable plugin autoload)
+drops coverage and works fine:</p>
+<pre><code class="language-bash">PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
+  PYTHONPATH=src python3 -m pytest -p no:cacheprovider
+</code></pre>
+<p>Single-test fast-iteration (no coverage gate):</p>
+<pre><code class="language-bash">PYTHONPATH=src python3 -m pytest tests/test_cli.py::test_version_flag
+</code></pre>
+<h2 id="documentation">Documentation</h2>
+<p>Every document is also rendered into one readable HTML copy in
+<a href="index.html"><code>docs/html/</code></a>: the root documents, everything under
+<code>docs/</code>, and cards for the standalone HTML pages. The markdown stays the source
+of truth. After changing any document, re-render and commit both:</p>
+<pre><code class="language-bash">python3 tools/render_docs.py
+</code></pre>
+<p><code>tests/test_rendered_docs.py</code> fails when the committed copy no longer matches
+its markdown, or when a tracked document has no page. The set of documents is
+read from git, so a new document is picked up without editing a list.</p>
+<h2 id="pull-requests">Pull Requests</h2>
+<p>Include:</p>
+<ul>
+<li>what changed</li>
+<li>why it belongs here</li>
+<li>commands run</li>
+<li>any follow-up work</li>
+</ul>
+<h2 id="releasing">Releasing</h2>
+<p>Publishing to PyPI is automated. Pushing a version tag builds, verifies and
+publishes; there are no credentials to manage because authentication uses
+PyPI Trusted Publishing (OIDC), which mints a short-lived token scoped to
+<code>release.yml</code> in this repository.</p>
+<pre><code class="language-bash"># 1. bump the version in ONE place
+#      src/maintainability_audit/__init__.py   __version__
+#    `pyproject.toml` derives it and `config.py` re-exports it (D198);
+#    writing it into either again fails the suite.
+python3 tools/stamp_version.py   # 2. writes the four documents that state it
+# 3. add the CHANGELOG entry (## X.Y.Z), open a PR, merge it
+# 4. tag the merged commit and push
+git checkout main &amp;&amp; git pull
+git tag -a vX.Y.Z -m &quot;vX.Y.Z — one-line summary&quot;
+git push origin vX.Y.Z
+</code></pre>
+<p>Step 2 is not optional and is not a formatting chore. The README's version
+line, the README's GitHub Action pin, the <code>docs/release-plan.md</code> row and the
+SECURITY.md support table each have to state the number, each went stale once,
+and each is now written from the single literal rather than typed. The tool
+exits non-zero if any of them stopped matching, so a document that drifts out
+of its reach fails rather than being silently skipped. v3.7.9 was tagged and
+lost its release because one of those four was missed by hand.</p>
+<p>Step 3 is likewise enforced: the GitHub Release job reads its notes from the
+CHANGELOG section for that version, and the suite fails if the shipping version
+has no section — otherwise the job publishes a release whose entire notes are
+the sentence <code>Release X.Y.Z.</code> (D204).</p>
+<p>The workflow refuses to publish if the tag disagrees with the version in the
+source, and again if the <strong>built wheel</strong> disagrees with the tag (D205). It
+installs that wheel and runs both the test suite and the tool's own
+<code>--fail-on-gate</code> audit against it, so what ships is what was verified.</p>
+<p>Cutting the GitHub Release is automatic — the tag triggers a job that creates
+it, or refreshes its notes on a re-run. There is nothing to do by hand.</p>
+<p>If the default thresholds changed in the release, recalibrate first —
+the constants are the anchor for every score the tool emits:</p>
+<pre><code class="language-bash">python3 tools/calibration/measure.py --check
+</code></pre>
+<footer>Rendered from <code>CONTRIBUTING.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

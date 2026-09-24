@@ -264,6 +264,9 @@ jobs:
     name: Analyzer drift (scheduled, unpinned)
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write   # one standing issue while this check fails
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
@@ -294,7 +297,26 @@ jobs:
             | grep -v '^pip==' > /tmp/analyzer-drift.raw
           strip constraints/analyzers.txt > /tmp/pinned.txt
           strip /tmp/analyzer-drift.raw > /tmp/resolved.txt
-          diff -u /tmp/pinned.txt /tmp/resolved.txt
+          if diff -u /tmp/pinned.txt /tmp/resolved.txt > /tmp/analyzer-drift.diff; then exit 0; fi
+          {
+            echo "The unpinned analyzer pool no longer resolves to constraints/analyzers.txt."
+            echo "Refresh the pins with the resolve-constraints job (workflow_dispatch), review, merge."
+            echo; echo '```diff'; cat /tmp/analyzer-drift.diff; echo '```'
+          } > /tmp/analyzer-drift.md
+          cat /tmp/analyzer-drift.diff
+          exit 1
+      - name: Keep one standing issue while this check fails
+        # A red scheduled run is read by nobody; this job went red weekly
+        # for any upstream release. The job's status, not the diff step's,
+        # decides: an install that no longer resolves never reaches the
+        # diff, and that is the failure the roadmap names.
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          [ -f /tmp/analyzer-drift.md ] || echo "The unpinned analyzer pool failed to install. See the run." > /tmp/analyzer-drift.md
+          python3 tools/scheduled_issue.py --title "Weekly check: the analyzer pool drifted or no longer installs" \
+            --failed ${{ job.status == 'failure' }} --body-file /tmp/analyzer-drift.md
 
   audit:
     name: Audit (maintainability + security)

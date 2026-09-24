@@ -1,0 +1,83 @@
+name: Maintenance
+
+# The ways a finished tool ages, checked weekly rather than on every push.
+# Each check keeps one standing GitHub issue open while it fails and closes it
+# when it passes again (tools/scheduled_issue.py), because a red scheduled run
+# is read by nobody. The analyzer-drift check lives in quality-gates.yml, where
+# the pinning tests expect it, and reports the same way.
+#
+# Weekly, not per push: GitHub Actions minutes are a real cost, and none of
+# this changes with an ordinary pull request. Roughly a dozen minutes a week.
+
+on:
+  schedule:
+    - cron: "41 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-compat:
+    # pyproject claims Python 3.11, 3.12 and 3.13; the per-push gates run only
+    # 3.12. This runs the claimed ones that nothing else exercises, plus the
+    # newest release, so a new Python breaking the suite is known before it
+    # is claimed (tests/test_maintenance_signals.py holds the claim to CI).
+    name: Tests on Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.13", "3.x"]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install tool with dev extras, the pinned pool and secure-code-agent
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -e ".[dev]"
+          python3 -m pip install --constraint constraints/analyzers.txt \
+            cohesion complexipy flake8 fortitude-lint interrogate lizard \
+            multimetric mypy pydocstyle pylint radon ruff vulture
+          python3 -m pip install 'secure-code-agent==0.12.8'
+      - name: Tests
+        run: python3 -m pytest -q -n auto
+      - name: Keep one standing issue while this check fails
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          echo "The suite fails on Python ${{ matrix.python }} ($(python3 --version)). See the run." > /tmp/compat.md
+          python3 tools/scheduled_issue.py --title "Weekly check: tests fail on Python ${{ matrix.python }}" \
+            --failed ${{ job.status == 'failure' }} --body-file /tmp/compat.md
+
+  corpus-age:
+    # The calibration describes the code of its moment. This asks for a
+    # decision once that moment is past its age limit: recalibrate, or
+    # re-affirm with a reason. It never blocks a release.
+    name: Calibration corpus age
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - name: Check the corpus against its age limit
+        run: python3 tools/check_corpus_age.py > /tmp/corpus-age.md
+      - name: Keep one standing issue while this check fails
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 tools/scheduled_issue.py --title "Weekly check: the calibration corpus is past its age limit" \
+            --failed ${{ job.status == 'failure' }} --body-file /tmp/corpus-age.md

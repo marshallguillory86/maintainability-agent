@@ -309,15 +309,15 @@ def test_not_applicable_rollup_is_the_only_change_to_the_pre_stage_five_anchor(
     assert {key: value for key, value in shipped.items() if key not in changed} == {
         key: value for key, value in expected.items() if key not in changed | {"grade"}
     }
-    # `reference` gained disclosures, not a meaning: the corpus holds
-    # eight languages while the scanner reads ten, so the report says what
-    # the multiple is of and which parsed languages it is not. Number
-    # unchanged.
+    # `reference` gained disclosures, not a meaning: what the multiple is
+    # of, which parsed languages it is not, and (3.9.0) when the corpus was
+    # measured. Number unchanged.
     assert shipped["reference"] == {
         **expected["reference"],
         "corpus_languages": CORPUS_LANGUAGES,
         "unanchored_languages": shipped["reference"]["unanchored_languages"],
         "corpus_note": shipped["reference"]["corpus_note"],
+        "corpus_measured": shipped["reference"]["corpus_measured"],
     }
     assert shipped["categories"] == {
         **expected["categories"],

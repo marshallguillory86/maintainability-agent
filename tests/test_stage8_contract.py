@@ -180,6 +180,10 @@ def test_renaming_moved_no_value(name: str, tmp_path: Path) -> None:
         ],
         "unanchored_languages": score["reference"]["unanchored_languages"],
         "corpus_note": score["reference"]["corpus_note"],
+        # When the anchor was measured (3.9.0). A disclosure again: a
+        # calibration describes its moment's code, and the report now says
+        # which moment. The multiple is unchanged.
+        "corpus_measured": score["reference"]["corpus_measured"],
     }, "reference gained only the corpus disclosure"
     assert "docs/standard.md" in score["reference"]["corpus_note"]
     # aspects gained exactly one field after a6b3c0f: test_effectiveness,

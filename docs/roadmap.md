@@ -132,22 +132,25 @@ Elixir and Zig are real languages this tool would serve few people by
 parsing. The list stops at five on purpose, and a language is not added
 to it because someone asked.
 
-**The rest of "next" is maintenance, and naming it is the point.** A
-tool that stops being built still ages in three places, none of which
-announce themselves:
+**The rest of "next" is maintenance, and each piece now speaks for
+itself.** A tool that stops being built still ages in three places, none
+of which announced themselves until 3.9.0:
 
 - the **analyzer pool is pinned**, and a fresh install eventually stops
-  resolving. The scheduled drift job exists to say so; it only works if
-  somebody still reads it go red;
-- the **calibration describes 2026's code**. 180 repositories pinned at
-  commits is the right way to do it and it is still a snapshot, and it
-  is the one number here that silently stops being true;
-- **Python 3.12 is pinned in CI**, and a tool nobody touches meets a new
-  Python eventually.
+  resolving. The weekly drift job no longer relies on somebody reading
+  it go red: while it fails it keeps one GitHub issue open, and closes it
+  when it passes;
+- the **calibration describes the code of its moment**. Every report now
+  says when the corpus was measured (`reference.corpus_measured`), and a
+  weekly check opens an issue once that date is more than a year old,
+  asking for a recalibration or a stated reason to keep it;
+- **Python 3.12 is pinned in the per-push gates**. The package claims
+  3.11 to 3.13, so a weekly job runs the suite on 3.11, 3.13 and the
+  newest release, and a test holds every claimed version to a CI job
+  that exercises it.
 
-None of those are work today. They are the maintenance surface of a
-finished tool, written down so the absence of features is not mistaken
-for the absence of anything to do.
+None of those is feature work. They are the maintenance surface of a
+finished tool, and each now opens an issue when it needs a person.
 
 This line said "Swift" for seven minor releases after Swift shipped in 2.4.0, and named the remediation-integrity checks as the other near-term block after they closed in 2.1.0 through 2.3.0. A roadmap whose "Next" is already done tells a reader nothing about what is coming, which is the failure the delivery entry below describes in the other direction.
 

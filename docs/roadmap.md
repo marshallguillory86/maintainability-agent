@@ -289,7 +289,7 @@ What survives is the true part, stated where a reader meets it: the report says 
 
 ### What this tool does not compete on
 
-Named because the failure mode for a one-maintainer project is competing everywhere and winning nowhere. **Code generation. Security scanning and compliance profiles. Comprehension of languages it does not parse. IDE experience. Model routing.** Tools that do those things are the customer for what this produces, not the competition — and the better a generator gets, the more an independent check on its output is worth.
+Named because the failure mode for a one-maintainer project is competing everywhere and winning nowhere. **Code generation. Security scanning and compliance profiles. Comprehension of languages it does not parse. IDE experience. Model routing. Model-judged code review** — AI pull-request reviewers such as Cursor's Bugbot find logic bugs this tool never looks for, and their findings are worth most when something deterministic reproduces them ([why](why-this-exists.md#ai-reviewing-ai-is-still-an-opinion)). Tools that do those things are the customer for what this produces, not the competition — and the better a generator gets, the more an independent check on its output is worth.
 
 **Related, and named separately because it is a detector rather than a gate:** *tests that assert implementation details instead of behaviour* is listed under Additional detectors below. It is the direct answer to the review problem the same article raises — generated tests that look like yours and slide through review — and it is aspirational today.
 

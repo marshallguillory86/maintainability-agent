@@ -26,6 +26,7 @@ The wording stays each caller's own; only the number comes from here.
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import NamedTuple
 
 
@@ -91,3 +92,14 @@ def counted(count: int, noun: str, plural: str | None = None) -> str:
     Callers that do not need it say nothing, which is most of them.
     """
     return f"{count} {noun}" if count == 1 else f"{count} {plural or noun + 's'}"
+
+
+def listed(names: Iterable[str]) -> str:
+    """`A`, `A and B`, `A, B and C` — names joined as a sentence lists them.
+
+    Every skin once joined its names with `" and "`, which was right only
+    while there were at most two: the third unanchored language printed
+    "COBOL and Kotlin and Shell" beside every grade.
+    """
+    *head, last = list(names) or [""]
+    return f"{', '.join(head)} and {last}" if head else last

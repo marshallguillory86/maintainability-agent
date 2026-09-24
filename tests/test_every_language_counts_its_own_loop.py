@@ -92,6 +92,12 @@ LOOPS: dict[str, tuple[str, str]] = {
         "fun counted(xs: List<Int>): Int {\n    var t = 0\n    var i = 0\n"
         "    while (i < xs.size) { t += xs[i]; i += 1 }\n    return t\n}\n",
     ),
+    ".sh": (
+        "idiomatic() {\n  t=0\n  for x in \"$@\"; do\n    t=$((t + x))\n  done\n"
+        "  echo \"$t\"\n}\n",
+        "counted() {\n  t=0\n  i=0\n  while [ \"$i\" -lt \"$#\" ]; do\n"
+        "    i=$((i + 1))\n  done\n  echo \"$t\"\n}\n",
+    ),
     ".rb": (
         "def idiomatic(xs)\n  t = 0\n  for x in xs\n    t += x\n  end\n  t\nend\n",
         "def counted(xs)\n  t = 0\n  i = 0\n  while i < xs.length\n"

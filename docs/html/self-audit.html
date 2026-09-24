@@ -6,7 +6,7 @@
 <ul>
 <li><a href="#summary">Summary</a></li>
 <li><a href="#trend">Trend</a><ul>
-<li><a href="#earlier-series-63-series">Earlier series (63 series)</a></li>
+<li><a href="#earlier-series-65-series">Earlier series (65 series)</a></li>
 </ul>
 </li>
 <li><a href="#security-work-order">Security Work Order</a><ul>
@@ -37,7 +37,7 @@
 </div>
 </aside>
 <main><div class="meta">Audits and registers</div><h1>Maintainability CI Report</h1><!--
-Generated from the tree at commit 07419b41819cb083d19532378d12a04f38e1b818. This is a **provenance record, not a promise of currency**: it
+Generated from the tree at commit 0c57062302db1b0e2f3bbef9eeb25356586ddea8. This is a **provenance record, not a promise of currency**: it
 states the exact source commit it was generated against, and says
 nothing about how far that is from the current HEAD.
 
@@ -55,8 +55,8 @@ care about instead. Regenerate for the current tree with:
 -->
 
 <ul>
-<li>Generated: 2026-09-23T20:22:48+00:00</li>
-<li>Commit: <code>07419b41819cb083d19532378d12a04f38e1b818</code> · Branch: <code>feat/kotlin-scanner</code></li>
+<li>Generated: 2026-09-24T19:58:14+00:00</li>
+<li>Commit: <code>0c57062302db1b0e2f3bbef9eeb25356586ddea8</code> · Branch: <code>feat/shell</code></li>
 <li>Root: <code>.</code></li>
 <li>Standard: ISO/IEC 25010 maintainability-inspired 0-5 scale, rate-based</li>
 </ul>
@@ -91,7 +91,7 @@ care about instead. Regenerate for the current tree with:
 </tr>
 <tr>
 <td>Files scanned</td>
-<td style="text-align: right;">543</td>
+<td style="text-align: right;">558</td>
 </tr>
 <tr>
 <td>File warnings</td>
@@ -103,7 +103,7 @@ care about instead. Regenerate for the current tree with:
 </tr>
 <tr>
 <td>Function warnings</td>
-<td style="text-align: right;">80</td>
+<td style="text-align: right;">81</td>
 </tr>
 <tr>
 <td>Function failures</td>
@@ -123,17 +123,18 @@ care about instead. Regenerate for the current tree with:
 </tr>
 </tbody>
 </table></div>
+<p><em>Shell is parsed but is not in the reference corpus, so a grade reported for code in it is provisional: the findings are as good as the parser, the rate they are compared against was measured on other languages.</em></p>
 <h2 id="trend">Trend</h2>
-<p>64 separate series. Scans either side of a break were produced by different instruments and cannot be compared, so they are reported apart rather than joined into one line. The current series is given in full; the earlier ones are summarized, because a reader deciding what to do today is acting on the instrument in use today.</p>
-<p><strong>This series begins at a break:</strong> the tool version, the scan scope changed, so scans before this point were produced by a different instrument and cannot be joined to those after it.</p>
-<p><strong>Current series</strong> — 1 scan, 2026-09-23T20:27:30Z to 2026-09-23T20:27:30Z.</p>
+<p>66 separate series. Scans either side of a break were produced by different instruments and cannot be compared, so they are reported apart rather than joined into one line. The current series is given in full; the earlier ones are summarized, because a reader deciding what to do today is acting on the instrument in use today.</p>
+<p><strong>This series begins at a break:</strong> the tool version changed, so scans before this point were produced by a different instrument and cannot be joined to those after it.</p>
+<p><strong>Current series</strong> — 1 scan, 2026-09-24T20:02:45Z to 2026-09-24T20:02:45Z.</p>
 <ul>
 <li><strong>Direction:</strong> unknown — not computable from these scans.</li>
 <li><strong>Debt velocity:</strong> 0 introduced, 0 cleared (unchanged).</li>
 <li><strong>Growth:</strong> unknown.</li>
 <li><strong>Never cleared in this window:</strong> 0 findings.</li>
 </ul>
-<h3 id="earlier-series-63-series">Earlier series (63 series)</h3>
+<h3 id="earlier-series-65-series">Earlier series (65 series)</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -145,6 +146,20 @@ care about instead. Regenerate for the current tree with:
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>2026-09-24T19:14:06Z to 2026-09-24T19:30:54Z</td>
+<td>3</td>
+<td>indistinguishable</td>
+<td>+0.00</td>
+<td>the tool version changed</td>
+</tr>
+<tr>
+<td>2026-09-23T20:27:30Z to 2026-09-23T20:27:30Z</td>
+<td>1</td>
+<td>unknown</td>
+<td>—</td>
+<td>the tool version, the scan scope changed</td>
+</tr>
 <tr>
 <td>2026-09-21T18:30:16Z to 2026-09-21T18:40:04Z</td>
 <td>3</td>
@@ -592,7 +607,7 @@ care about instead. Regenerate for the current tree with:
 <h2 id="security-work-order">Security Work Order</h2>
 <p>Written by secure-code-agent 0.12.9 and reproduced as it wrote it. It is that tool's work order, not this one's: its findings are not re-ranked or merged into the maintainability work order above.</p>
 <h3 id="security-work-order_1">Security work order</h3>
-<p><strong>0 to fix · 0 to review · 5449 suppression candidates.</strong></p>
+<p><strong>0 to fix · 0 to review · 5560 suppression candidates.</strong></p>
 <p>Work the tiers in order. Everything in §FIX is a defect the scanner is confident about; everything in §REVIEW needs your judgement before you touch it, and the reason is stated per finding. This is a constrained task, not a refactor.</p>
 <h4 id="hard-constraints-must-not-violate">Hard constraints — MUST NOT violate</h4>
 <ol>
@@ -655,25 +670,25 @@ and an expiry. Propose, do not apply.</p>
 </tr>
 <tr>
 <td><code>B101</code></td>
-<td style="text-align: right;">4869</td>
+<td style="text-align: right;">4963</td>
 <td>low</td>
 <td><code>tests/_ast_reading.py:94</code></td>
 </tr>
 <tr>
 <td><code>B603</code></td>
-<td style="text-align: right;">244</td>
+<td style="text-align: right;">251</td>
 <td>low</td>
 <td><code>src/maintainability_audit/_backfill.py:51</code></td>
 </tr>
 <tr>
 <td><code>B607</code></td>
-<td style="text-align: right;">206</td>
+<td style="text-align: right;">212</td>
 <td>low</td>
 <td><code>src/maintainability_audit/_backfill.py:51</code></td>
 </tr>
 <tr>
 <td><code>B404</code></td>
-<td style="text-align: right;">113</td>
+<td style="text-align: right;">117</td>
 <td>low</td>
 <td><code>src/maintainability_audit/_backfill.py:29</code></td>
 </tr>
@@ -711,15 +726,14 @@ and an expiry. Propose, do not apply.</p>
 <li>a scenario computed from these assumptions; change them and the range moves with them</li>
 </ul>
 <h2 id="tdd-shaped-tests">TDD-shaped tests</h2>
-<p>TDD-shaped tests: detected beside 130 of 157 production source files (path pairing). Constructs: pytest in 282 file(s), unittest in 1 file(s), describe_it in 20 file(s), parametrize in 92 file(s), given_when_then in 2 file(s).
+<p>TDD-shaped tests: detected beside 131 of 162 production source files (path pairing). Constructs: pytest in 290 file(s), unittest in 1 file(s), describe_it in 20 file(s), parametrize in 93 file(s), given_when_then in 3 file(s).
 Chronology is not measured. Effectiveness is unscored unless the operator opted into suite execution.</p>
 <h2 id="test-suite">Test Suite</h2>
 <ul>
-<li>The operator opted in to running the repository's test command; it did not run (exit 3).</li>
+<li>The operator opted in to running the repository's test command; it failed (exit 1).</li>
 <li>Command: pytest -n auto --cov=maintainability_audit --cov-report=xml:coverage.xml -q</li>
 <li>Program run: /Users/marshallguillory/Library/Python/3.11/bin/pytest</li>
-<li>Coverage: no coverage reported by the run</li>
-<li>Detail: pytest exited 3: ['/Users/marshallguillory/Library/Python/3.11/lib/python/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.']</li>
+<li>Coverage: 71.7% line coverage</li>
 </ul>
 <h2 id="semantic-findings-adr-003">Semantic Findings (ADR 003)</h2>
 <p>TypeScript semantic coverage: <strong>unknown</strong> — no recorded type analysis and no local type checker: semantic coverage for TypeScript is unknown. Absence of analysis is not absence of findings.</p>
@@ -747,7 +761,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>maintainability</td>
 <td>owned</td>
 <td style="text-align: right;">4</td>
-<td style="text-align: right;">3.9</td>
+<td style="text-align: right;">4.1</td>
 <td>healthy: enforced, and the code reflects it</td>
 </tr>
 <tr>
@@ -779,7 +793,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 </ul>
 <p>Enforcement found: <code>linter-config</code>, <code>recorded-decisions</code>, <code>lint-in-ci</code>, <code>types-in-ci</code>, <code>duplication-in-ci</code>, <code>coverage-gate</code>.</p>
 <h2 id="source-not-read">Source Not Read</h2>
-<p>21 of 467 source files were not opened by this scan. Their extensions are absent from <code>paths.include_extensions</code>, so nothing below describes them.</p>
+<p>21 of 480 source files were not opened by this scan. Their extensions are absent from <code>paths.include_extensions</code>, so nothing below describes them.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -932,7 +946,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>analyzer</td>
 <td>ran</td>
 <td>7.0.1</td>
-<td>4100</td>
+<td>4211</td>
 <td>0</td>
 <td></td>
 </tr>
@@ -951,7 +965,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>ran</td>
 <td>cpd 5.1.1</td>
 <td>1</td>
-<td>141</td>
+<td>144</td>
 <td></td>
 </tr>
 <tr>
@@ -959,7 +973,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>analyzer</td>
 <td>ran</td>
 <td>1.24.0</td>
-<td>13155</td>
+<td>13494</td>
 <td>0</td>
 <td></td>
 </tr>
@@ -968,7 +982,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>analyzer</td>
 <td>ran</td>
 <td>multimetric 2.4.4</td>
-<td>1876</td>
+<td>1928</td>
 <td>0</td>
 <td></td>
 </tr>
@@ -996,7 +1010,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>ran</td>
 <td>6.3.0</td>
 <td>0</td>
-<td>234</td>
+<td>240</td>
 <td></td>
 </tr>
 <tr>
@@ -1004,7 +1018,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>analyzer</td>
 <td>ran</td>
 <td>6.0.1</td>
-<td>448</td>
+<td>461</td>
 <td>0</td>
 <td></td>
 </tr>
@@ -1014,7 +1028,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>ran</td>
 <td>ruff 0.16.5</td>
 <td>0</td>
-<td>2</td>
+<td>1</td>
 <td></td>
 </tr>
 <tr>
@@ -1031,7 +1045,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>built-in</td>
 <td>ran</td>
 <td>—</td>
-<td>543</td>
+<td>558</td>
 <td>0</td>
 <td>two libraries doing one job; no adapter emits idioms</td>
 </tr>
@@ -1040,7 +1054,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>built-in</td>
 <td>ran</td>
 <td>—</td>
-<td>4338</td>
+<td>4451</td>
 <td>0</td>
 <td>vulture, ruff and eslint cover this</td>
 </tr>
@@ -1049,8 +1063,8 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>built-in</td>
 <td>ran</td>
 <td>—</td>
-<td>4338</td>
-<td>80</td>
+<td>4451</td>
+<td>81</td>
 <td>lizard and complexipy cover these; the only source when neither runs</td>
 </tr>
 <tr>
@@ -1058,7 +1072,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>built-in</td>
 <td>ran</td>
 <td>—</td>
-<td>543</td>
+<td>558</td>
 <td>0</td>
 <td>jscpd covers this; the only source when Node is unavailable</td>
 </tr>
@@ -1067,7 +1081,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>built-in</td>
 <td>ran</td>
 <td>—</td>
-<td>543</td>
+<td>558</td>
 <td>4</td>
 <td>per-file line counts; no adapter emits file_lines</td>
 </tr>
@@ -1076,8 +1090,8 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>built-in</td>
 <td>ran</td>
 <td>—</td>
-<td>542</td>
-<td>76</td>
+<td>557</td>
+<td>75</td>
 <td>git history; no adapter emits churn, coupling or ownership</td>
 </tr>
 <tr>
@@ -1085,7 +1099,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>built-in</td>
 <td>ran</td>
 <td>—</td>
-<td>4338</td>
+<td>4451</td>
 <td>0</td>
 <td>token-shingle near-matches, which jscpd's exact-block scan misses</td>
 </tr>
@@ -1094,7 +1108,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>built-in</td>
 <td>ran</td>
 <td>—</td>
-<td>543</td>
+<td>558</td>
 <td>0</td>
 <td>regex policy from this repository's own config; nothing external can hold a proj</td>
 </tr>
@@ -1147,7 +1161,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <tbody>
 <tr>
 <td>cognitive_complexity</td>
-<td>4100</td>
+<td>4211</td>
 <td>complexipy</td>
 <td>single source</td>
 <td>0.0</td>
@@ -1157,7 +1171,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 </tr>
 <tr>
 <td>cyclomatic_complexity</td>
-<td>4385</td>
+<td>4498</td>
 <td>lizard</td>
 <td>single source</td>
 <td>1.0</td>
@@ -1167,37 +1181,37 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 </tr>
 <tr>
 <td>declaration_lines</td>
-<td>4385</td>
+<td>4498</td>
 <td>lizard</td>
 <td>single source</td>
 <td>1.0</td>
 <td>13.0</td>
-<td>33.0</td>
+<td>32.0</td>
 <td>80.0</td>
 </tr>
 <tr>
 <td>documentation</td>
-<td>470</td>
+<td>483</td>
 <td>interrogate, multimetric</td>
 <td>no shared units</td>
 <td>0.0</td>
 <td>38.9</td>
-<td>58.63</td>
-<td>92.26</td>
+<td>58.56</td>
+<td>92.28</td>
 </tr>
 <tr>
 <td>duplication</td>
 <td>1</td>
 <td>jscpd</td>
 <td>single source</td>
-<td>1.28</td>
-<td>1.28</td>
-<td>1.28</td>
-<td>1.28</td>
+<td>1.27</td>
+<td>1.27</td>
+<td>1.27</td>
+<td>1.27</td>
 </tr>
 <tr>
 <td>file_cyclomatic_complexity</td>
-<td>469</td>
+<td>482</td>
 <td>multimetric</td>
 <td>single source</td>
 <td>0.0</td>
@@ -1207,27 +1221,27 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 </tr>
 <tr>
 <td>halstead_difficulty</td>
-<td>469</td>
+<td>482</td>
 <td>multimetric</td>
 <td>single source</td>
 <td>0.67</td>
-<td>50.7</td>
-<td>98.0</td>
+<td>50.67</td>
+<td>96.8</td>
 <td>155.32</td>
 </tr>
 <tr>
 <td>maintainability_index</td>
-<td>469</td>
+<td>482</td>
 <td>multimetric, radon</td>
 <td>36%</td>
 <td>21.47</td>
-<td>56.84</td>
-<td>76.42</td>
+<td>57.17</td>
+<td>76.43</td>
 <td>135.29</td>
 </tr>
 <tr>
 <td>parameters</td>
-<td>4385</td>
+<td>4498</td>
 <td>lizard</td>
 <td>single source</td>
 <td>0.0</td>
@@ -1240,7 +1254,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <p>Where two tools measured the same thing, their disagreement is shown rather than averaged away — it is the uncertainty a single-tool number hides.</p>
 <p><em>The maintainability estimate uses the analyzer readings for declarations (completed by built-in detectors) — external tools are the primary evidence there. Dimensions no analyzer measured kept the fallback tier. Where the two sources disagree the range widens to contain both; they are never averaged.</em></p>
 <h2 id="analyzer-findings">Analyzer Findings</h2>
-<p>502 findings from external analyzers — 6 dead-code, 257 documentation, 141 duplication, 98 style.</p>
+<p>510 findings from external analyzers — 6 dead-code, 263 documentation, 144 duplication, 97 style.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -1279,7 +1293,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 </tr>
 <tr>
 <td><code>README.md</code></td>
-<td>196</td>
+<td>197</td>
 <td>duplication</td>
 <td><code>jscpd</code></td>
 <td>—</td>
@@ -1575,7 +1589,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 </tr>
 </tbody>
 </table></div>
-<p>Showing 40 of 502. The complete list is in the JSON report under <code>analyzer_findings</code>.</p>
+<p>Showing 40 of 510. The complete list is in the JSON report under <code>analyzer_findings</code>.</p>
 <h2 id="why-the-verified-grade-is-not-higher">Why the verified grade is not higher</h2>
 <ul>
 <li>graded on the evidence floor 4.1 (point estimate 4.4, ceiling 4.7): unmeasured aspects price at 0 for the grade</li>
@@ -1591,7 +1605,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <tbody>
 <tr>
 <td>modularity</td>
-<td>3.9</td>
+<td>4.2</td>
 </tr>
 <tr>
 <td>reusability</td>
@@ -1603,11 +1617,11 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 </tr>
 <tr>
 <td>modifiability</td>
-<td>3.8</td>
+<td>4.0</td>
 </tr>
 <tr>
 <td>testability</td>
-<td>4.8</td>
+<td>4.6</td>
 </tr>
 </tbody>
 </table></div>
@@ -1622,7 +1636,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <tbody>
 <tr>
 <td>file size</td>
-<td>4.5</td>
+<td>4.6</td>
 </tr>
 <tr>
 <td>declaration size</td>
@@ -1666,7 +1680,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 </tr>
 <tr>
 <td>change coupling</td>
-<td>2.0</td>
+<td>3.0</td>
 </tr>
 <tr>
 <td>knowledge concentration</td>
@@ -1674,7 +1688,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 </tr>
 <tr>
 <td>test effectiveness</td>
-<td>not measurable</td>
+<td>3.6</td>
 </tr>
 </tbody>
 </table></div>
@@ -1716,6 +1730,11 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 </thead>
 <tbody>
 <tr>
+<td><code>.github/workflows/quality-gates.yml</code></td>
+<td>637</td>
+<td>warn</td>
+</tr>
+<tr>
 <td><code>tests/test_operator_named_reads.py</code></td>
 <td>637</td>
 <td>warn</td>
@@ -1731,13 +1750,13 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>warn</td>
 </tr>
 <tr>
-<td><code>.github/workflows/quality-gates.yml</code></td>
-<td>615</td>
-<td>warn</td>
-</tr>
-<tr>
 <td><code>src/maintainability_audit/cli.py</code></td>
 <td>564</td>
+<td>ok</td>
+</tr>
+<tr>
+<td><code>src/maintainability_audit/_metrics_types.py</code></td>
+<td>561</td>
 <td>ok</td>
 </tr>
 <tr>
@@ -1771,28 +1790,23 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>ok</td>
 </tr>
 <tr>
-<td><code>src/maintainability_audit/_metrics_types.py</code></td>
-<td>523</td>
-<td>ok</td>
-</tr>
-<tr>
 <td><code>tests/test_mcp_server.py</code></td>
 <td>520</td>
 <td>ok</td>
 </tr>
 <tr>
+<td><code>tests/test_grammar_constructs.py</code></td>
+<td>516</td>
+<td>ok</td>
+</tr>
+<tr>
 <td><code>README.md</code></td>
-<td>511</td>
+<td>513</td>
 <td>ok</td>
 </tr>
 <tr>
 <td><code>src/maintainability_audit/scoring.py</code></td>
-<td>509</td>
-<td>ok</td>
-</tr>
-<tr>
-<td><code>tests/test_grammar_constructs.py</code></td>
-<td>507</td>
+<td>513</td>
 <td>ok</td>
 </tr>
 <tr>
@@ -1967,7 +1981,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <tr>
 <td><code>tests/test_language_coverage.py</code></td>
 <td><code>test_every_parsed_language_can_reach_a_complexity_analyzer</code></td>
-<td>212</td>
+<td>218</td>
 <td>58</td>
 <td>13</td>
 <td>3</td>
@@ -2228,7 +2242,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <tr>
 <td><code>src/maintainability_audit/scoring.py</code></td>
 <td><code>_score_document</code></td>
-<td>433</td>
+<td>437</td>
 <td>77</td>
 <td>10</td>
 <td>13</td>
@@ -2271,6 +2285,15 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>warn</td>
 </tr>
 <tr>
+<td><code>src/maintainability_audit/_ranges_shell.py</code></td>
+<td><code>_mask_code</code></td>
+<td>84</td>
+<td>25</td>
+<td>9</td>
+<td>16</td>
+<td>warn</td>
+</tr>
+<tr>
 <td><code>tests/test_docs_links.py</code></td>
 <td><code>test_every_internal_link_resolves_to_a_file_and_an_anchor</code></td>
 <td>82</td>
@@ -2295,15 +2318,6 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>68</td>
 <td>8</td>
 <td>2</td>
-<td>warn</td>
-</tr>
-<tr>
-<td><code>tools/calibration/verify_corpus.py</code></td>
-<td><code>main</code></td>
-<td>100</td>
-<td>74</td>
-<td>7</td>
-<td>7</td>
 <td>warn</td>
 </tr>
 </tbody>
@@ -2370,20 +2384,20 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>1098</td>
 </tr>
 <tr>
+<td><code>src/maintainability_audit/_html_view.py</code></td>
+<td>16</td>
+<td>869</td>
+<td>68</td>
+<td>1</td>
+<td>1088</td>
+</tr>
+<tr>
 <td><code>src/maintainability_audit/report.py</code></td>
 <td>33</td>
 <td>964</td>
 <td>31</td>
 <td>2</td>
 <td>1023</td>
-</tr>
-<tr>
-<td><code>src/maintainability_audit/_html_view.py</code></td>
-<td>15</td>
-<td>865</td>
-<td>68</td>
-<td>1</td>
-<td>1020</td>
 </tr>
 <tr>
 <td><code>tests/test_architecture.py</code></td>
@@ -2419,19 +2433,19 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 </tr>
 <tr>
 <td><code>src/maintainability_audit/declarations.py</code></td>
-<td>17</td>
-<td>555</td>
+<td>18</td>
+<td>569</td>
 <td>43</td>
 <td>2</td>
-<td>731</td>
+<td>774</td>
 </tr>
 <tr>
 <td><code>src/maintainability_audit/scoring.py</code></td>
-<td>17</td>
-<td>1191</td>
+<td>18</td>
+<td>1199</td>
 <td>43</td>
 <td>2</td>
-<td>731</td>
+<td>774</td>
 </tr>
 <tr>
 <td><code>tools/prove_falsifiers.py</code></td>
@@ -2506,20 +2520,20 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td>504</td>
 </tr>
 <tr>
-<td><code>src/maintainability_audit/_first_run.py</code></td>
+<td><code>src/maintainability_audit/_evidence_view.py</code></td>
 <td>11</td>
-<td>479</td>
-<td>43</td>
+<td>458</td>
+<td>44</td>
 <td>1</td>
-<td>473</td>
+<td>484</td>
 </tr>
 <tr>
-<td><code>src/maintainability_audit/_verdict_adapters.py</code></td>
-<td>12</td>
-<td>933</td>
-<td>37</td>
-<td>1</td>
-<td>444</td>
+<td><code>src/maintainability_audit/_cognitive.py</code></td>
+<td>9</td>
+<td>390</td>
+<td>53</td>
+<td>2</td>
+<td>477</td>
 </tr>
 </tbody>
 </table></div>
@@ -2537,19 +2551,19 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <tr>
 <td><code>README.md</code></td>
 <td><code>src/maintainability_audit/__init__.py</code></td>
-<td>69</td>
+<td>70</td>
 <td>90%</td>
 </tr>
 <tr>
 <td><code>src/maintainability_audit/__init__.py</code></td>
 <td><code>src/maintainability_audit/config.py</code></td>
 <td>69</td>
-<td>90%</td>
+<td>88%</td>
 </tr>
 <tr>
 <td><code>README.md</code></td>
 <td><code>docs/release-plan.md</code></td>
-<td>67</td>
+<td>68</td>
 <td>74%</td>
 </tr>
 <tr>
@@ -2561,14 +2575,14 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <tr>
 <td><code>docs/release-plan.md</code></td>
 <td><code>src/maintainability_audit/__init__.py</code></td>
-<td>61</td>
-<td>79%</td>
+<td>62</td>
+<td>80%</td>
 </tr>
 <tr>
 <td><code>docs/release-plan.md</code></td>
 <td><code>src/maintainability_audit/config.py</code></td>
 <td>55</td>
-<td>61%</td>
+<td>60%</td>
 </tr>
 <tr>
 <td><code>docs/architecture.md</code></td>
@@ -2616,7 +2630,7 @@ Chronology is not measured. Effectiveness is unscored unless the operator opted 
 <td><code>README.md</code></td>
 <td><code>docs/roadmap.md</code></td>
 <td>22</td>
-<td>65%</td>
+<td>60%</td>
 </tr>
 <tr>
 <td><code>docs/cli.md</code></td>

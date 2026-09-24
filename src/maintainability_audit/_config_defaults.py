@@ -52,6 +52,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
             ".rs",
             ".php", ".phtml",
             ".rb", ".rake", ".gemspec",
+            ".sh", ".bash", ".zsh",
             ".cbl", ".cob", ".cpy", ".CBL", ".COB", ".CPY",
             ".f90", ".f95", ".f03", ".f08",
             ".F90", ".F95", ".F03", ".F08", ".pf",

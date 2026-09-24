@@ -186,6 +186,7 @@ ROW_SUFFIX = {
     "Ruby": ".rb",
     "Swift": ".swift",
     "Kotlin": ".kt",
+    "Shell": ".sh",
     "C, C++, C#, Java, JS, TS, HTML": ".java",
 }
 

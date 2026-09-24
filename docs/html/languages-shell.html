@@ -1,0 +1,102 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Shell · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#what-counts-as-a-decision">What counts as a decision</a></li>
+<li><a href="#how-it-is-verified">How it is verified</a></li>
+<li><a href="#not-anchored">Not anchored</a></li>
+<li><a href="#what-it-misses">What it misses</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Languages</div><h1>Shell</h1><p>Functions, in the three forms scripts actually use: POSIX <code>name() {</code>,
+and bash's <code>function name {</code> and <code>function name() {</code>. The body may open
+on the next line — the brace-on-its-own-line style older scripts favour
+— and may be a subshell <code>name() ( … )</code> rather than a brace group. Names
+are read whole, including the <code>lib::log</code> package form the Google style
+guide recommends and the hyphens bash allows. <code>.sh</code>, <code>.bash</code> and <code>.zsh</code>
+are read; POSIX sh, bash and zsh share the definition and control syntax
+this scanner reads.</p>
+<p><strong>Shell is parsed by default, and that is a decision, not a default
+left in place.</strong> Shell is in nearly every repository, so turning it on
+changes something for most users: their scripts join the graded
+population, and the report's list of concerns an independent analyzer
+examined narrows, because only jscpd reads shell. Both are the true
+statement. The alternative — parse it only on request — would have kept
+a scanner written for the file type most repositories contain switched
+off for all of them. Decided 2026-09-24.</p>
+<p><strong>Shell is braced, and its text is not what the C-family masker
+thinks it is.</strong> The walk is the one C, Java and Swift share; the masker
+is shell's own, and it is most of the module.</p>
+<ul>
+<li><strong><code>#</code> starts a comment only at the start of a word.</strong> <code>$#</code> is the
+  argument count, <code>${#list[@]}</code> a length, <code>${path#prefix}</code> a trim.
+  Blanking from any of them to the end of the line would hide the <code>if</code>
+  that tests it.</li>
+<li><strong><code>//</code> and <code>/*</code> are not comments.</strong> <code>rm -rf "$dir"/*</code> is ordinary
+  shell, and the C masker blanks the rest of that line — or of the file,
+  waiting for a <code>*/</code>.</li>
+<li><strong>A heredoc body is text.</strong> Usage messages, generated config and
+  embedded scripts contain braces, <code>fi</code> and function-shaped lines.
+  <code>&lt;&lt;-</code> strips leading tabs, so an indented terminator still closes one.</li>
+<li><strong>A double-quoted string may span lines</strong>, as usage text does.</li>
+</ul>
+<p>Quote characters survive masking with their contents blanked, because a
+<code>case</code> arm is written <code>"start"|"stop")</code> and a pattern that could not see
+the quotes could not tell an arm from a subshell.</p>
+<h2 id="what-counts-as-a-decision">What counts as a decision</h2>
+<p><code>if</code>, <code>elif</code>, <code>while</code>, <code>until</code>, <code>for</code>, <code>select</code>, each <code>case</code> arm, <code>&amp;&amp;</code>
+and <code>||</code>. Not counted: the <code>case</code> header, whose arms carry it; the <code>*)</code>
+default arm, as Go declines <code>default</code>; <code>else</code>; a pipe <code>|</code>.</p>
+<p><strong>A keyword counts only in command position</strong> — at the start of a line,
+after <code>;</code>, <code>&amp;</code>, <code>|</code>, <code>(</code>, <code>{</code> or <code>!</code>, or after <code>then</code>, <code>do</code> or <code>else</code>.
+Shell scripts are full of unquoted prose, and <code>echo waiting for the
+server</code> has a <code>for</code> in it that is an argument, not a loop.</p>
+<p><strong>An AND-OR list decides.</strong> <code>cmd || exit 1</code> is the guard clause most
+scripts are built from, and <code>[[ -n $a &amp;&amp; -n $b ]]</code> is a compound
+condition. Both operators are counted everywhere.</p>
+<p><strong>Nesting is read from <code>fi</code>, <code>done</code> and <code>esac</code></strong>, because shell's
+control structures have no braces. The brace reader would score a
+deeply nested script as flat — Fortran's defect before 1.4.0 in another
+language. A construct written on one line, <code>if [ -f x ]; then rm x;
+fi</code>, opens and closes on that line and leaks no depth. A <code>case</code> is
+charged once for cognitive complexity, like Kotlin's <code>when</code>.</p>
+<h2 id="how-it-is-verified">How it is verified</h2>
+<p>No second implementation reads shell complexity offline: lizard 1.24.0
+has no shell reader, and nothing adapted in the analyzer catalog
+measures it. So the branch reader is checked against the grammar itself
+— every compound command and list operator in POSIX XCU 2.9.3 and
+2.9.4, and the constructs the Bash Reference Manual adds in 3.2.5, one
+specimen each in <code>tests/test_shell_metrics.py</code>, with a test that fails
+if a construct on that list has none. <code>shellmetrics</code> computes a
+per-function CCN for shell and is the candidate second opinion; it is a
+single upstream script outside the pinned pool, and is not installed.</p>
+<p>For the same reason <strong>Shell has no external complexity reading.</strong> The
+built-in reader is the only one, and the language is named in the
+analyzer-floor exemption beside COBOL rather than counted as covered.</p>
+<h2 id="not-anchored">Not anchored</h2>
+<p>Shell is outside the calibration corpus, so a Shell repository is graded
+against medians drawn from other languages and every report says so. It
+anchors at the next recalibration, as Kotlin does.</p>
+<h2 id="what-it-misses">What it misses</h2>
+<p>Each of these under-reports rather than invents:</p>
+<ul>
+<li><strong>A body that is some other compound command</strong> (<code>f() if …; fi</code>) is
+  legal POSIX and almost never written. It is read as one line.</li>
+<li><strong>A nested definition is part of its parent</strong>, as a local function is
+  in every other language here.</li>
+<li><strong>Code inside a double-quoted <code>"$(…)"</code></strong> is masked with the string, so
+  a decision written inside a quoted command substitution is not counted.</li>
+<li><strong>A <code>case</code> written on one line</strong> counts no arms; the pattern has to
+  lead its line.</li>
+<li><strong>A ternary inside <code>$(( … ))</code></strong> is not counted.</li>
+<li><strong>A script with no suffix</strong> — known only by its <code>#!</code> line — is not
+  opened, as with every language here.</li>
+</ul>
+<p>One construct over-counts: a line in a multi-line array that ends in
+<code>)</code> (<code>last)</code>) reads as a <code>case</code> arm. It is rare, and it is named here
+so a reader who meets it knows it was known.</p>
+<footer>Rendered from <code>docs/languages/shell.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

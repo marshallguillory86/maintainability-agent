@@ -174,3 +174,20 @@ def test_the_prompt_does_not_describe_a_three_language_corpus() -> None:
         "Python, TypeScript and JavaScript corpus while "
         f"{sorted(missing)} are parsed and unanchored"
     )
+
+
+def test_three_or_more_unanchored_languages_read_as_a_list(monkeypatch) -> None:
+    """"COBOL, Kotlin and Shell", not "COBOL and Kotlin and Shell".
+
+    The sentence is printed beside every grade, so it is read more than
+    anything else the anchor says. Two names join with "and"; more take
+    commas.
+    """
+    from maintainability_audit import _anchor
+
+    monkeypatch.setattr(_anchor, "UNANCHORED_LANGUAGES", ("COBOL", "Kotlin", "Shell"))
+    assert _anchor.unanchored_names() == "COBOL, Kotlin and Shell"
+    monkeypatch.setattr(_anchor, "UNANCHORED_LANGUAGES", ("COBOL", "Kotlin"))
+    assert _anchor.unanchored_names() == "COBOL and Kotlin"
+    monkeypatch.setattr(_anchor, "UNANCHORED_LANGUAGES", ("COBOL",))
+    assert _anchor.unanchored_names() == "COBOL"

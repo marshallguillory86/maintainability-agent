@@ -24,7 +24,7 @@ from typing import Any
 
 from . import _charts
 from . import _evidence_view as view
-from ._grammar import agreement
+from ._grammar import agreement, listed
 from ._handoff import escalated_fingerprints
 from ._html_report_sections import coverage_section, remaining_sections, trend_section
 from ._security_work_order import complete_html as security_work_order_html
@@ -99,7 +99,7 @@ def _unanchored_html(score: dict[str, Any], present: Any = None) -> list[str]:
     if not names:
         return []
     say = agreement(len(names))
-    return [f"<div class='caveat'>{escape(' and '.join(names))} {say.verb} "
+    return [f"<div class='caveat'>{escape(listed(names))} {say.verb} "
             f"parsed but {say.verb} not in the reference corpus, so a grade "
             f"for code in {say.object_pronoun} is provisional.</div>"]
 

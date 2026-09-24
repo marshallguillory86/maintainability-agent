@@ -296,6 +296,15 @@ NO_INDEPENDENT_IMPLEMENTATION: dict[str, str] = {
         "terminators in `tests/test_cobol_declarations.py` and against "
         "nothing else."
     ),
+    "shell_branch_points": (
+        "lizard 1.24.0 has no shell reader — its language list names "
+        "twenty-seven languages and none is sh, bash or zsh — and no other "
+        "implementation in the analyzer catalog measures shell complexity. "
+        "The reader is checked against the grammar instead: every compound "
+        "command and list operator in POSIX XCU 2.9.3–2.9.4 and the bash "
+        "constructs from the Bash Reference Manual 3.2.5, one specimen "
+        "each, in `tests/test_shell_metrics.py`."
+    ),
 }
 
 

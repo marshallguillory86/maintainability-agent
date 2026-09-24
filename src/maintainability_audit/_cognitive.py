@@ -34,6 +34,7 @@ import ast
 import re
 
 from ._masking import mask_fortran_lines, mask_lines
+from ._metrics_types import SHELL_COMMAND_POSITION
 
 # No COBOL masker is imported here, deliberately: `cobol_cognitive` takes
 # lines that are already masked. COBOL's mask is the only file-level one —
@@ -320,3 +321,44 @@ def kotlin_cognitive(lines: list[str]) -> int:
     `if`/`else if` chain it replaces.
     """
     return brace_cognitive(lines, _KOTLIN_CONTROL_RE)
+
+
+#: Shell opens a construct with a word and closes it with a word — `fi`,
+#: `done`, `esac` — so the brace reader sees none of its nesting, which
+#: is Fortran's defect before 1.4.0 in another language. Every word is
+#: read only in command position, because shell prose says `for` and
+#: `while` in unquoted arguments.
+_SH_TOKEN_RE = re.compile(
+    SHELL_COMMAND_POSITION
+    + r"(if|while|until|for|select|case|elif|else|fi|done|esac)\b|(&&|\|\|)"
+)
+_SH_OPENERS = frozenset({"if", "while", "until", "for", "select", "case"})
+_SH_CLOSERS = frozenset({"fi", "done", "esac"})
+
+
+def shell_cognitive(lines: list[str]) -> int:
+    """Cognitive complexity for a shell function, from its masked lines.
+
+    Read token by token in order, so a construct written on one line —
+    `if [ -f x ]; then rm x; fi` — opens and closes there and leaks no
+    depth. A `case` is charged once, like Kotlin's `when`; `elif` and
+    `else` cost one flat point, as they do in every reader here.
+
+    **Takes lines that are already masked, and does not mask them again.**
+    The shell masker is the one that knows `#` and `/*`; the C masker the
+    brace reader applies would blank `rm -rf "$dir"/*` to the end of the
+    line.
+    """
+    score = 0
+    depth = 0
+    for line in lines:
+        for token in _SH_TOKEN_RE.finditer(line):
+            word = token.group(1)
+            if word is None or word in ("elif", "else"):
+                score += 1
+            elif word in _SH_CLOSERS:
+                depth = max(0, depth - 1)
+            elif word in _SH_OPENERS:
+                score += 1 + depth
+                depth += 1
+    return score

@@ -159,7 +159,7 @@ def test_the_readme_language_table_lists_every_parsed_language() -> None:
 # refusing to check rather than the sentence being wrong.
 WORDS = {"five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9,
          "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13,
-         "fourteen": 14, "fifteen": 15}
+         "fourteen": 14, "fifteen": 15, "sixteen": 16}
 
 
 def _language_groups(table: str) -> set[str]:

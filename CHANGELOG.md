@@ -12,6 +12,56 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.9.0 - 2026-09-24
+
+### Added — Shell is parsed
+
+The sixteenth language with a scanner of its own, and the second of the five
+the roadmap schedules. `.sh`, `.bash` and `.zsh` produce a declaration
+population: functions in the POSIX `name()` form and bash's `function name`
+forms, whose body may open on the next line and may be a subshell `( … )`.
+
+**Parsed by default, and that changes something for most users.** Shell is in
+nearly every repository, so their scripts now join the graded population, and a
+grade can move because a repository's scripts were read for the first time.
+Shell is not in the calibration corpus, so every report says the grade is
+provisional for it, beside COBOL and Kotlin. The report's list of concerns an
+independent analyzer examined also narrows for any repository with scored
+scripts, because only jscpd reads shell: that list is the intersection over
+scored languages, and it is disclosure only — the grade does not read it. Each
+language's own coverage is still reported separately.
+
+Three readings are shell's own:
+
+**A masker of its own.** `#` starts a comment only at the start of a word, so
+`$#`, `${#list[@]}` and `${path#prefix}` are code. `//` and `/*` are not
+comments, so `rm -rf "$dir"/*` does not blank the rest of the line. Heredoc
+bodies are text, `<<-` terminators may be tab-indented, and a double-quoted
+string may span lines. Quote characters survive masking, so a `case` arm written
+`"start"|"stop")` is still recognisable as one.
+
+**A keyword counts only in command position.** Shell scripts are full of
+unquoted prose, and `echo waiting for the server` has a `for` in it that is an
+argument. `if`, `elif`, `while`, `until`, `for` and `select` count at the start
+of a command; `case` counts at its arms, not its header, and `*)` is the default
+and not counted; `&&` and `||` each count, because `cmd || exit 1` is the guard
+clause scripts are built from.
+
+**Nesting is read from `fi`, `done` and `esac`.** The brace reader would score a
+deeply nested script as flat. A construct written on one line opens and closes
+there and leaks no depth.
+
+**No second implementation reads shell complexity**: lizard 1.24.0 has no shell
+reader and nothing adapted in the catalog measures it. The reader is checked
+against the grammar instead — every compound command and list operator in POSIX
+XCU 2.9.3–2.9.4 and the bash constructs in the Bash Reference Manual 3.2.5, one
+specimen each — and Shell is named beside COBOL in both the second-opinion and
+the external-complexity exemptions, each disclosed on the language-support page.
+What it misses is on [its page](docs/languages/shell.md).
+
+The unanchored-language caveat now reads as a list — "COBOL, Kotlin and Shell"
+— rather than joining every name with "and", which was right only while there
+were two.
 ### Maintenance — the ways a finished tool ages now open an issue
 
 Three risks the roadmap named, each of which failed silently:

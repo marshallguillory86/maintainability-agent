@@ -53,7 +53,10 @@ def _display_names(languages: set[str]) -> str:
         for suffix, display in KNOWN_SOURCE_SUFFIXES.items()
         if suffix in DECLARATION_SUFFIXES
     }
-    return " and ".join(displays[language] for language in sorted(languages))
+    # A list, as a sentence writes one: "COBOL, Kotlin and Shell". Joining
+    # every name with "and" was right only while there were two.
+    *head, last = [displays[language] for language in sorted(languages)]
+    return f"{', '.join(head)} and {last}" if head else last
 
 
 def test_unanchored_languages_are_exactly_parsed_minus_corpus() -> None:

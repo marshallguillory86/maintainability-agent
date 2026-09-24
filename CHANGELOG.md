@@ -12,6 +12,17 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+### Documentation — AI reviewing AI is still an opinion
+
+The docs said a platform that generates code and grades it is producing a
+self-assessment, and said nothing about the more common case: a *different*
+model reviewing AI-written code, as AI pull-request reviewers such as Cursor's
+Bugbot do. `docs/why-this-exists.md` now covers it. Model review is a finder,
+not evidence, and a finding counts once something deterministic reproduces it.
+That is the loop ADR 013's hostile-audit brief already closes.
+`docs/product-intent.md` states the principle, and the roadmap lists model-judged
+code review among what this tool does not compete on, as a complement.
+
 ### Fixed — a release cannot ship over one that never reached PyPI
 
 3.7.2 was tagged and its release build failed — the suite ran without

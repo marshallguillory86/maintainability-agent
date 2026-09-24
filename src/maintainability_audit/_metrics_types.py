@@ -142,6 +142,44 @@ def kotlin_branch_points(line: str) -> int:
     return len(KOTLIN_COMPLEXITY_RE.findall(line)) + len(arms)
 
 
+#: Where a shell command may begin, and so where `if` is a reserved word
+#: rather than an argument. Shell scripts are full of unquoted prose —
+#: `echo waiting for the server` — and a keyword pattern with only word
+#: boundaries counts that `for` as a loop. Start of line, after a
+#: separator or an opening bracket, or after `then`, `do` or `else`.
+SHELL_COMMAND_POSITION = (
+    r"(?:^|(?<=[;&|(!{`])|(?<=\bthen)|(?<=\bdo)|(?<=\belse))\s*(?:!\s+)?"
+)
+_SH_DECISION_RE = re.compile(
+    SHELL_COMMAND_POSITION + r"(if|elif|while|until|for|select)\b|&&|\|\|"
+)
+#: A `case` arm: one or more patterns joined by `|`, then `)`, leading
+#: the line. Quotes survive masking with their contents blanked, which
+#: is what lets `"start"|"stop")` read as an arm while `$(date)`,
+#: `(cd dir && make)` and `(( n++ ))` do not — each has a `(` or a space
+#: where a pattern cannot. `*)` is the default and is not counted, as Go
+#: declines `default`. A line in a multi-line array (`  last)`) reads as
+#: an arm; that is the one over-count, and it is rare.
+_SH_WORD = r"""(?:"[^"]*"|'[^']*'|[^\s()|;&<>"'])+"""
+_SH_ARM_RE = re.compile(
+    rf"^\s*\(?\s*({_SH_WORD}(?:\s*\|\s*{_SH_WORD})*)\s*\)"
+)
+
+
+def shell_branch_points(line: str) -> int:
+    """Decision points on one masked line of shell.
+
+    `case` is counted at its arms, `else` not at all, and `&&`/`||` each
+    once — an AND-OR list is shell's primary conditional, and `cmd ||
+    exit 1` is the guard clause most scripts are built from.
+    """
+    decisions = len(_SH_DECISION_RE.findall(line))
+    arm = _SH_ARM_RE.match(line)
+    if arm is not None and set(re.split(r"\s*\|\s*", arm.group(1))) != {"*"}:
+        decisions += 1
+    return decisions
+
+
 #: Go's vocabulary is *smaller* than C's, not larger. It has no `while`
 #: (`for` covers looping), no ternary, and no `catch` — `if err != nil`
 #: is already an `if`.

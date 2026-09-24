@@ -5,13 +5,14 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **3.8.1**.
+Version **3.9.0**.
 
 **Languages parsed:** Python, Java, Kotlin, C, C++, C#, Go, Rust, PHP, Ruby,
-Swift, COBOL, Fortran (free-form *and* fixed-form), and the JS/TS/HTML family — each
+Swift, Shell, COBOL, Fortran (free-form *and* fixed-form), and the JS/TS/HTML family — each
 by a scanner written for it, and measured with that language's own reading of
 what a branch is, checked construct-by-construct against an independent
-implementation.
+implementation — or, for Shell and COBOL, which no second implementation
+reads, against the language's own grammar.
 [What that means per language](#language-support).
 
 ```bash
@@ -309,9 +310,9 @@ SonarQube, Qlty) rather than replacing them — their SARIF folds in via
 **Be clear-eyed: the tool does not support every language equally, and on an
 unrecognized language it under-reports rather than fails.** Coverage has two layers.
 
-Fifteen languages are parsed as of **3.8.0**: Python (1.0), Java (1.0), C (1.1),
+Sixteen languages are parsed as of **3.9.0**: Python (1.0), Java (1.0), C (1.1),
 C++ (1.2), C# (1.3), Fortran (free-form 1.4, fixed-form 1.6), Swift (2.4),
-COBOL (2.7), Go (2.11), Rust (2.11), PHP (2.11), Ruby (2.11), Kotlin (3.8), the JS/TS family, and HTML. Each has a scanner written for it and a
+COBOL (2.7), Go (2.11), Rust (2.11), PHP (2.11), Ruby (2.11), Kotlin (3.8), Shell (3.9), the JS/TS family, and HTML. Each has a scanner written for it and a
 documented list of what it misses — a language is claimed only when both exist.
 
 **Built-in scanner (always on, no dependencies)** — reads function/class
@@ -331,6 +332,7 @@ these:
 | Rust (`.rs`) | dedicated brace-bounded scanner — functions, `impl` and `trait` members, `struct`/`enum`/`trait`/`union` | Bounded; methods carry the type their `impl` names, trait requirements mint nothing, closures and macro bodies are not read |
 | PHP (`.php`, `.phtml`) | dedicated brace-bounded scanner — functions, methods, `class`/`interface`/`trait`/`enum`; markup outside `<?php` is blanked | Bounded; methods carry their class, bodyless members mint nothing, heredoc bodies are not masked |
 | Ruby (`.rb`, `.rake`, `.gemspec`) | dedicated scanner — methods, classes and modules bounded by `end`, counted by openers | Bounded by depth; methods carry their class, blocks and modifier forms discounted, metaprogrammed methods are not seen |
+| Shell (`.sh`, `.bash`, `.zsh`) | dedicated brace-bounded scanner — `name()` and `function name` definitions, over a masker that knows `#`, heredocs and multi-line strings | Bounded; keywords count only in command position, nesting is read from `fi`/`done`/`esac`; no external analyzer measures shell complexity |
 | COBOL (`.cbl`, `.cob`, `.cpy`, and `.CBL`/`.COB`/`.CPY`) | dedicated scanner — PROCEDURE DIVISION paragraphs, bounded by the start of whatever follows; fixed-form card columns read where the layout carries them | Bounded by the next header; level numbers and container programs/sections are not declarations |
 | Fortran, free-form (`.f90`, `.f95`, `.f03`, `.f08`, `.F90`, `.F95`, `.F03`, `.F08`, `.pf`) | dedicated **keyword**-bounded scanner — modules, subroutines, functions, derived types | Bounded by `end`; measured with Fortran's own branch and nesting reading |
 | Fortran, fixed-form (`.f`, `.for`, `.ftn`, `.F`, `.FOR`, `.FTN`) | the same scanner over card-column source; continuations joined, labelled `DO` loops understood | Bounded by `end` or by the loop's label |
@@ -390,7 +392,7 @@ it was generated against — a provenance record, not a claim about HEAD.
 |---|---:|
 | Maintainability estimate | 4.4 / 5 |
 | Verified grade | B |
-| Files scanned | 543 |
+| Files scanned | 558 |
 | Hard gate failures | 0 |
 
 A **B**, and the report says why: the grade is verified against the evidence
@@ -437,7 +439,7 @@ instead of an invokable skill:
 This repo ships `action.yml`, usable as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v3.8.1
+- uses: marshallguillory86/maintainability-agent@v3.9.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

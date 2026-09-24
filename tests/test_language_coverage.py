@@ -47,6 +47,12 @@ NO_EXTERNAL_COMPLEXITY = {
     # mainframe. lizard does not read it; jscpd reads duplication only,
     # which is the half this floor exists to reject.
     "cobol",
+    # No adapted analyzer measures shell complexity. lizard 1.24.0 has no
+    # shell reader; shellcheck and bashate lint and measure nothing the
+    # rubric reads; jscpd reads duplication only. `shellmetrics` computes
+    # a per-function CCN for shell, and is a single upstream script outside
+    # the pinned pool — a candidate, not something installed.
+    "shell",
 }
 
 

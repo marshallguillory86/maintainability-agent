@@ -55,16 +55,24 @@ from __future__ import annotations
 #: corpus policy's own terms; COBOL does not, and the distinction is the
 #: one the note above draws between permanently and temporarily absent.
 #:
+#: **Shell joins it in 3.9.0** on Kotlin's terms, not COBOL's: a scanner
+#: shipped ahead of the corpus, and it anchors at the next recalibration.
+#: Shell is in nearly every repository, so this is the entry most readers
+#: will see — and a grade that moved because a repository's scripts were
+#: read for the first time is exactly what this tuple exists to say.
+#:
 #: `tests/test_unanchored_set_matches_corpus.py` recomputes
 #: `parsed - corpus` from `DECLARATION_SUFFIXES` and `corpus.json` and
 #: fails if this stops matching — including when a language is *added* to
 #: the corpus, which is the direction that went unnoticed.
-UNANCHORED_LANGUAGES: tuple[str, ...] = ("COBOL", "Kotlin")
+UNANCHORED_LANGUAGES: tuple[str, ...] = ("COBOL", "Kotlin", "Shell")
 
 
 def unanchored_names() -> str:
     """The languages, joined for a sentence. Empty when there are none."""
-    return " and ".join(UNANCHORED_LANGUAGES)
+    from ._grammar import listed
+
+    return listed(UNANCHORED_LANGUAGES)
 
 
 def unanchored_sentence() -> str:

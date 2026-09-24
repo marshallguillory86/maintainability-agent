@@ -34,12 +34,13 @@
 <p><strong>A deterministic, offline maintainability audit whose output is a <em>bounded
 work order</em> for an AI coding agent</strong> — a copy-paste prompt, per finding, that
 says <em>fix exactly these and refactor nothing else</em>. Chat-primary; CLI for CI.
-Version <strong>3.8.1</strong>.</p>
+Version <strong>3.9.0</strong>.</p>
 <p><strong>Languages parsed:</strong> Python, Java, Kotlin, C, C++, C#, Go, Rust, PHP, Ruby,
-Swift, COBOL, Fortran (free-form <em>and</em> fixed-form), and the JS/TS/HTML family — each
+Swift, Shell, COBOL, Fortran (free-form <em>and</em> fixed-form), and the JS/TS/HTML family — each
 by a scanner written for it, and measured with that language's own reading of
 what a branch is, checked construct-by-construct against an independent
-implementation.
+implementation — or, for Shell and COBOL, which no second implementation
+reads, against the language's own grammar.
 <a href="#language-support">What that means per language</a>.</p>
 <pre><code class="language-bash">pip install maintainability-agent          # CLI + library
 pip install &quot;maintainability-agent[mcp]&quot;   # optional local MCP server for chat / IDE hosts
@@ -277,9 +278,9 @@ SonarQube, Qlty) rather than replacing them — their SARIF folds in via
 <h2 id="language-support">Language support</h2>
 <p><strong>Be clear-eyed: the tool does not support every language equally, and on an
 unrecognized language it under-reports rather than fails.</strong> Coverage has two layers.</p>
-<p>Fifteen languages are parsed as of <strong>3.8.0</strong>: Python (1.0), Java (1.0), C (1.1),
+<p>Sixteen languages are parsed as of <strong>3.9.0</strong>: Python (1.0), Java (1.0), C (1.1),
 C++ (1.2), C# (1.3), Fortran (free-form 1.4, fixed-form 1.6), Swift (2.4),
-COBOL (2.7), Go (2.11), Rust (2.11), PHP (2.11), Ruby (2.11), Kotlin (3.8), the JS/TS family, and HTML. Each has a scanner written for it and a
+COBOL (2.7), Go (2.11), Rust (2.11), PHP (2.11), Ruby (2.11), Kotlin (3.8), Shell (3.9), the JS/TS family, and HTML. Each has a scanner written for it and a
 documented list of what it misses — a language is claimed only when both exist.</p>
 <p><strong>Built-in scanner (always on, no dependencies)</strong> — reads function/class
 declarations, sizes and complexity for a fixed set of languages, and <strong>only</strong>
@@ -347,6 +348,11 @@ these:</p>
 <td>Ruby (<code>.rb</code>, <code>.rake</code>, <code>.gemspec</code>)</td>
 <td>dedicated scanner — methods, classes and modules bounded by <code>end</code>, counted by openers</td>
 <td>Bounded by depth; methods carry their class, blocks and modifier forms discounted, metaprogrammed methods are not seen</td>
+</tr>
+<tr>
+<td>Shell (<code>.sh</code>, <code>.bash</code>, <code>.zsh</code>)</td>
+<td>dedicated brace-bounded scanner — <code>name()</code> and <code>function name</code> definitions, over a masker that knows <code>#</code>, heredocs and multi-line strings</td>
+<td>Bounded; keywords count only in command position, nesting is read from <code>fi</code>/<code>done</code>/<code>esac</code>; no external analyzer measures shell complexity</td>
 </tr>
 <tr>
 <td>COBOL (<code>.cbl</code>, <code>.cob</code>, <code>.cpy</code>, and <code>.CBL</code>/<code>.COB</code>/<code>.CPY</code>)</td>
@@ -437,7 +443,7 @@ it was generated against — a provenance record, not a claim about HEAD.</p>
 </tr>
 <tr>
 <td>Files scanned</td>
-<td style="text-align: right;">543</td>
+<td style="text-align: right;">558</td>
 </tr>
 <tr>
 <td>Hard gate failures</td>
@@ -477,7 +483,7 @@ instead of an invokable skill:
 <a href="ide-agent-integration.html#invokable-skill--slash-command">docs/ide-agent-integration.md</a>.</p>
 <h2 id="github-action">GitHub Action</h2>
 <p>This repo ships <code>action.yml</code>, usable as a composite action:</p>
-<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v3.8.1
+<pre><code class="language-yaml">- uses: marshallguillory86/maintainability-agent@v3.9.0
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

@@ -273,6 +273,10 @@ def test_a_scored_shell_script_narrows_the_claim(tmp_path: Path) -> None:
     })
 
     analysis = analyze(root, load_config(None))
+    # Asserted before the mypy skip, because it is the change itself and
+    # needs no analyzer: an environment without mypy would otherwise skip
+    # the whole test and read as a pass on the tree before Shell shipped.
+    assert "Shell" in analysis.scored_languages
     if not _contributed(analysis, "mypy"):
         pytest.skip("mypy did not run")
 

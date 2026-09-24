@@ -28,13 +28,19 @@ import html
 import os
 import re
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
 import markdown
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+# Every git call in this repository goes through run_git: a fixed argv, never
+# a shell, a timeout, and a read-only config. Code scanning flagged the first
+# cut of this tool for calling subprocess itself.
+from maintainability_audit.git_tools import run_git  # noqa: E402
+
 STYLES = Path(__file__).with_suffix(".css")
 BRAND = "maintainability-agent"
 #: Where the reading copy lives, relative to the repository root.
@@ -62,15 +68,13 @@ DEFAULT_GROUP = "Reference"
 
 def sources(repo: Path) -> list[Path]:
     """Every tracked markdown document at the root or under docs/."""
-    listed = subprocess.run(["git", "-C", str(repo), "ls-files", "*.md"],
-                            capture_output=True, text=True, check=True).stdout.split()
+    listed = run_git(["ls-files", "*.md"], repo).split()
     return sorted(Path(p) for p in listed if "/" not in p or p.startswith("docs/"))
 
 
 def standalone_html(repo: Path) -> list[Path]:
     """HTML documents that already exist, which the index links as they are."""
-    listed = subprocess.run(["git", "-C", str(repo), "ls-files", "docs/*.html", "docs/**/*.html"],
-                            capture_output=True, text=True, check=True).stdout.split()
+    listed = run_git(["ls-files", "docs/*.html", "docs/**/*.html"], repo).split()
     return sorted(Path(p) for p in listed if not p.startswith("docs/html/"))
 
 
@@ -148,58 +152,68 @@ def _page(title: str, body: str, toc: str, nav: str, meta: str, footer: str) -> 
 """
 
 
+def _render_document(repo: Path, rel: Path, out: Path, pages: dict[str, str], nav: str) -> tuple[str, str]:
+    """Write one document's page; return its group and title."""
+    text = (repo / rel).read_text(encoding="utf-8")
+    title = title_of(text, rel)
+    converter = markdown.Markdown(extensions=["tables", "toc", "fenced_code", "sane_lists"],
+                                  extension_configs={"toc": {"toc_depth": "2-3"}})
+    body = converter.convert(_without_first_heading(text))
+    body = body.replace("<table>", '<div class="table-wrap"><table>').replace("</table>", "</table></div>")
+    body = _rewrite_links(body, rel, pages, HOME)
+    group = group_of(rel)
+    footer = (f"Rendered from <code>{html.escape(rel.as_posix())}</code> in the {BRAND} repository. "
+              "The markdown is the source of truth.")
+    (out / pages[rel.as_posix()]).write_text(
+        _page(title, f"<h1>{html.escape(title)}</h1>{body}", converter.toc, nav, group, footer),
+        encoding="utf-8")
+    return group, title
+
+
+def _render_index(out: Path, cards: dict[str, list[tuple[str, str, str]]], counts: tuple[int, int], nav: str) -> None:
+    """Write the index: one card per page, grouped, then the standalone documents."""
+    filled = [(g, items) for g, items in cards.items() if items]
+    sections = "".join(
+        f'<h2 id="{_anchor(g)}">{html.escape(g)}</h2><div class="cards">'
+        + "".join(f'<a class="card" href="{href}"><div class="t">{html.escape(t)}</div>'
+                  f'<div class="v">{html.escape(sub)}</div></a>' for t, href, sub in items)
+        + "</div>"
+        for g, items in filled)
+    toc = "<ul>" + "".join(f'<li><a href="#{_anchor(g)}">{html.escape(g)}</a></li>' for g, _ in filled) + "</ul>"
+    intro = (f"<h1>{BRAND} documentation</h1><p>Every document in the repository, in one readable place: "
+             f"{counts[0]} rendered from markdown, plus {counts[1]} standalone pages. The markdown "
+             "in the repository remains the source of truth.</p>")
+    (out / "index.html").write_text(
+        _page("Documentation", intro + sections, toc, nav, "Index",
+              "Rendered by <code>tools/render_docs.py</code>. The markdown is the source of truth."),
+        encoding="utf-8")
+
+
 def render(repo: Path, out: Path) -> list[Path]:
-    """Write the whole reading copy into `out`, replacing what was there."""
+    """Write the whole reading copy into `out`, replacing what was there.
+
+    Links to repository files are written for where the copy lives,
+    docs/html (`HOME`), wherever this call writes it. Computing them from
+    `out` made a copy rendered elsewhere differ from the committed one.
+    """
     out.mkdir(parents=True, exist_ok=True)
     for old in list(out.glob("*.html")) + list(out.glob("*.css")):
         old.unlink()
-    # Links to repository files are written for where the copy lives,
-    # docs/html, wherever this call writes it. Computing them from `out`
-    # made a copy rendered elsewhere differ from the committed one.
-    out_rel = HOME
 
     docs = sources(repo)
     pages = {rel.as_posix(): page_name(rel) for rel in docs}
     group_names = [g for g, _ in GROUPS] + [DEFAULT_GROUP]
     nav = _nav(group_names)
     cards: dict[str, list[tuple[str, str, str]]] = {g: [] for g in group_names}
-
     for rel in docs:
-        text = (repo / rel).read_text(encoding="utf-8")
-        title = title_of(text, rel)
-        converter = markdown.Markdown(extensions=["tables", "toc", "fenced_code", "sane_lists"],
-                                      extension_configs={"toc": {"toc_depth": "2-3"}})
-        body = converter.convert(_without_first_heading(text))
-        body = body.replace("<table>", '<div class="table-wrap"><table>').replace("</table>", "</table></div>")
-        body = _rewrite_links(body, rel, pages, out_rel)
-        group = group_of(rel)
-        footer = (f"Rendered from <code>{html.escape(rel.as_posix())}</code> in the {BRAND} repository. "
-                  "The markdown is the source of truth.")
-        (out / pages[rel.as_posix()]).write_text(
-            _page(title, f"<h1>{html.escape(title)}</h1>{body}", converter.toc, nav, group, footer),
-            encoding="utf-8")
+        group, title = _render_document(repo, rel, out, pages, nav)
         cards[group].append((title, pages[rel.as_posix()], rel.as_posix()))
 
-    standalone = [(p.stem.replace("_", " "), Path(os.path.relpath(p, out_rel)).as_posix(), p.as_posix())
+    standalone = [(p.stem.replace("_", " "), Path(os.path.relpath(p, HOME)).as_posix(), p.as_posix())
                   for p in standalone_html(repo)]
     if standalone:
         cards["Standalone documents"] = standalone
-
-    sections = "".join(
-        f'<h2 id="{_anchor(g)}">{html.escape(g)}</h2><div class="cards">'
-        + "".join(f'<a class="card" href="{href}"><div class="t">{html.escape(t)}</div>'
-                  f'<div class="v">{html.escape(sub)}</div></a>' for t, href, sub in items)
-        + "</div>"
-        for g, items in cards.items() if items)
-    toc = "<ul>" + "".join(f'<li><a href="#{_anchor(g)}">{html.escape(g)}</a></li>'
-                           for g, items in cards.items() if items) + "</ul>"
-    intro = (f"<h1>{BRAND} documentation</h1><p>Every document in the repository, in one readable place: "
-             f"{len(docs)} rendered from markdown, plus {len(standalone)} standalone pages. The markdown "
-             "in the repository remains the source of truth.</p>")
-    (out / "index.html").write_text(
-        _page("Documentation", intro + sections, toc, nav, "Index",
-              "Rendered by <code>tools/render_docs.py</code>. The markdown is the source of truth."),
-        encoding="utf-8")
+    _render_index(out, cards, (len(docs), len(standalone)), nav)
     shutil.copyfile(STYLES, out / "style.css")
     return docs
 

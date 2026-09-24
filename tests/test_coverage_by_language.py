@@ -237,6 +237,10 @@ def test_one_stray_unscored_file_does_not_erase_a_python_library(tmp_path: Path)
     statement (`test_a_scored_shell_script_narrows_the_claim`). The
     property is about any unscored file, so Elixir stands in: the
     roadmap schedules no scanner for it.
+
+    Covers existing behaviour: renamed from
+    `test_one_stray_shell_script_does_not_erase_a_python_library` when
+    Shell became scored; the property predates 3.9.0 and is kept.
     """
     root = _repo(tmp_path / "library", {
         **{f"pkg/mod{n}.py": PY % {"n": n} for n in range(60)},

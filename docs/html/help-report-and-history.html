@@ -1,0 +1,77 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Reading the report and its history · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#headline">Headline</a></li>
+<li><a href="#the-security-pillar">The security pillar</a></li>
+<li><a href="#when-declaration-rates-are-withheld">When declaration rates are withheld</a></li>
+<li><a href="#history-recurrence-and-baselines">History, recurrence, and baselines</a></li>
+<li><a href="#economic-context">Economic context</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Help</div><h1>Reading the report and its history</h1><p>The report and bounded work order come from one deterministic report dictionary
+regardless of whether the host shows chat Markdown, returns JSON, or saves a
+chosen Markdown or HTML file.</p>
+<h2 id="headline">Headline</h2>
+<ul>
+<li><strong>Maintainability estimate:</strong> the point selected by the published rubric from
+  measured evidence.</li>
+<li><strong>Maintainability range:</strong> the uncertainty interval. Missing evidence and
+  disagreement can widen it; they are not converted to zero findings.</li>
+<li><strong>Verified grade:</strong> a letter only when the evidence floor supports one.</li>
+<li><strong>Evidence source:</strong> which analyzer or built-in fallback tier supplied the
+  scored dimensions.</li>
+</ul>
+<p>Findings remain named evidence. The work order selects a bounded subset for the
+agent and does not authorize a repository-wide rewrite. In chat and in the
+remediation prompt the work order comes first and these figures follow it as the
+evidence that aimed it; the complete Markdown or HTML report opens with them.</p>
+<h2 id="the-security-pillar">The security pillar</h2>
+<p>Every audit runs <code>secure-code-agent</code>, installed beside this package, and reports
+its reading as the security pillar alongside the four pillars this tool measures
+itself. Its practice level and its condition are shown separately and never
+averaged, and its own findings and work order are carried into the report and
+the prompt.</p>
+<p>When it is not installed, is an unsupported release, or does not produce a
+trustworthy result, the pillar says it was not measured, says why, and the
+environment work order gives the install command. An unmeasured pillar is never
+reported as a clean one.</p>
+<p>A pipeline that has already run it can hand the result over with
+<code>--security-pillar PATH</code> instead. A <code>security-pillar.json</code> sitting in the audited
+repository is not trusted on its own.</p>
+<h2 id="when-declaration-rates-are-withheld">When declaration rates are withheld</h2>
+<p>Declaration-level findings — function size, complexity, dead code — need a
+parser for the language. Fourteen are parsed: Python, Java, C, C++, C#, Go,
+Rust, PHP, Ruby, Swift, COBOL, Fortran (free-form and fixed-form), the JS/TS
+family and HTML. Each has a scanner
+written for it and a documented list of what it misses; see
+<a href="language-support.html">language support</a>.</p>
+<p>For any other language the report <strong>withholds</strong> declaration rates and names the
+missing parser as the reason. It does not estimate a population from patterns
+that were written for other languages, because a rate divided by a wrong
+population is a number a reader with the repository open would call absurd.
+Those files are still measured for length, duplication and risk, and still
+count toward repository size.</p>
+<p>Adding an extension to <code>include_extensions</code> does not create a population. It
+widens what is scanned, not what can be parsed.</p>
+<p>Two consequences worth expecting rather than reporting as bugs: a repository
+written mostly in an unparsed language can show few declaration findings while
+being large, and its verified grade may be withheld for want of evidence. Both
+are the disclosure working, not the scan failing.</p>
+<h2 id="history-recurrence-and-baselines">History, recurrence, and baselines</h2>
+<p>Scan history is an input to the next report. Comparable records form a trend;
+a finding that clears and later returns contributes recurrence evidence. When
+repeated targeted advice fails and the finding returns, the report can escalate
+it to a design-review candidate instead of asking for the same patch again.</p>
+<p>A version-3 baseline records structured finding identities. Later audits report
+the exclusive set of new findings; git-attested renames are not new findings.
+Baselines do not suppress hard gates.</p>
+<h2 id="economic-context">Economic context</h2>
+<p>Optional low/base/high loaded labor inputs attach an economic scenario range to
+the work order. It is not a prediction, saving, avoided cost, or ROI claim, and
+changing it cannot change the maintainability estimate, range, or grade.</p>
+<footer>Rendered from <code>docs/help/report-and-history.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

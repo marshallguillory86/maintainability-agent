@@ -1,0 +1,207 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Studies and measured results · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#summary">Summary</a></li>
+<li><a href="#approved-summaries">Approved summaries</a></li>
+<li><a href="#does-the-bounded-prompt-work-controlled-experiment-pre-registered">Does the bounded prompt work? (controlled experiment, pre-registered)</a></li>
+<li><a href="#does-this-detect-ai-written-code">Does this detect AI-written code?</a></li>
+<li><a href="#is-the-output-any-use-on-real-code">Is the output any use on real code?</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Plan and evidence</div><h1>Studies and measured results</h1><p><strong>Genre: empirical.</strong> Everything here is a claim about the world, and carries pinned inputs, a control where one exists, and its own limits. Nothing here is part of the standard — the rubric, its weights and its thresholds are judgments applied uniformly and live in <a href="standard.html">the standard</a>, which needs no study to be legitimate.</p>
+<p>The split exists because mixing the two genres in one document is how this project's one retracted claim reached the README as settled fact. See <a href="product-intent.html#the-evidence-standard">the evidence standard</a> for the bar each tier of claim must clear.</p>
+<p><strong>Nothing on this page licenses a product claim beyond the sentence stated with it.</strong></p>
+<h2 id="summary">Summary</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Study</th>
+<th>Question</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#does-the-bounded-prompt-work-controlled-experiment-pre-registered">Bounded prompt</a></td>
+<td>Does a findings-bounded prompt beat a generic instruction?</td>
+<td>Pre-registered; verdict <strong>INCONCLUSIVE</strong> as registered. Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, closing a median of 7.5 findings against 0</td>
+</tr>
+<tr>
+<td><a href="#does-this-detect-ai-written-code">AI authorship</a></td>
+<td>Does any metric distinguish AI-written code?</td>
+<td><strong>Retracted.</strong> Matched control, p = 0.546. This design could not measure a difference</td>
+</tr>
+<tr>
+<td><a href="#does-this-detect-ai-written-code">Fix breadth</a></td>
+<td>Are AI-assisted fixes broader?</td>
+<td>Exploratory only. Three specifications straddle p = 0.05; none survives Holm</td>
+</tr>
+<tr>
+<td><a href="#is-the-output-any-use-on-real-code">Report validation</a></td>
+<td>Is the output any use on real code?</td>
+<td><strong>Complete, and it failed.</strong> 14 of 14 repositories audited without a crash; the tool was found scoring code it had never read</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="approved-summaries">Approved summaries</h2>
+<p>The <strong>only</strong> sentences other documents may use to describe these results. Governing and public documents quote one of these verbatim or say nothing; <code>test_docs_links.py</code> compares them character for character, because matching individual numbers cannot detect a swapped attribution or a different sentence built from the same figures.</p>
+<p>Changing a sentence here is changing a public claim. Do it when the evidence changes, and correct every document that quotes it in the same commit.</p>
+<!-- approved-summaries:start -->
+<ul>
+<li>Generic prompting made 2 of 6 repositories worse; bounded prompting made 1 of 6 worse and improved 5 of 6, under this tool's own finding count.</li>
+<li>No metric measured here distinguishes AI-written code from human-written code; the one claim that did was retracted.</li>
+<li>Re-run against a control matched on age, popularity and language, the near-duplication gap is not significant (p = 0.546), and no other metric earns the claim either.</li>
+<li>0.6.0 reported near-duplication at 1.49% for AI-written applications against 0.20% for human-written OSS, comparing six young applications against twelve decade-old libraries.</li>
+<li>The AI figure barely moved (1.49% to 1.73%); the control moved, from 0.20% to 0.83%, because it stopped being decade-old libraries.</li>
+<li>On a 14-repository sample chosen for language variety, the tool scored three repositories from a minority of their source and named the wrong cause on three more; both defects are fixed and held by tests written before the fix.</li>
+<li>curl reported 4.3 computed from 1,041 declarations of Markdown and Python test scripts while 20,547 declarations of its C went unread.</li>
+</ul>
+<!-- approved-summaries:end -->
+
+<h2 id="does-the-bounded-prompt-work-controlled-experiment-pre-registered">Does the bounded prompt work? (controlled experiment, pre-registered)</h2>
+<p>The product's central promise — a findings-bounded prompt produces narrower, more targeted agent fixes than a generic instruction — was tested under a protocol committed before any run (<a href="../../tools/experiments/fix_scope/PROTOCOL.md"><code>PROTOCOL.md</code></a>): six repositories at pinned commits, two <code>codex exec</code> runs each (<code>gpt-5.6-sol</code>, 10-minute budget), generic instruction versus this tool's generated prompt. <strong>Provenance, stated precisely:</strong> the protocol — including the decision rule — was committed before the first run began; the analyzer was <strong>not</strong>: its first version landed about a minute into the runs, and it was rewritten mid-run after an audit found it diverged from the protocol's wording. What predates the data is the rule; the code applying it does not, and an earlier revision of this page claimed otherwise. Every arm was re-derived against its pinned base after a runner defect was audited (no recorded number changed). Raw data: <a href="../../tools/experiments/fix_scope/results.json"><code>results.json</code></a>, plus <a href="../../tools/experiments/fix_scope/artifacts"><code>artifacts/</code></a> holding every arm's full diff against its pinned base and every bounded prompt (regenerated deterministically from the pinned inputs; regenerated lengths match the recorded ones byte-for-byte). The agents' full transcripts were not captured — only 2,000-character tails — and cannot be recovered; that loss is permanent and noted here rather than papered over.</p>
+<p><strong>The registered verdict is INCONCLUSIVE</strong>, and it stands as registered:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>median (n = 6 pairs)</th>
+<th>generic</th>
+<th>bounded</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>files touched</td>
+<td>2.5</td>
+<td>3.0</td>
+</tr>
+<tr>
+<td>lines changed</td>
+<td>113.5</td>
+<td>170</td>
+</tr>
+<tr>
+<td>out-of-scope share</td>
+<td>0.500</td>
+<td>0.484</td>
+</tr>
+<tr>
+<td>findings closed</td>
+<td><strong>0.0</strong></td>
+<td><strong>7.5</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>The bounded arm was <strong>not narrower</strong> on files touched — one of the three registered conditions — so the claim is not SUPPORTED. It was better-targeted (out-of-scope share lower, paired median −0.10) and closed far more findings (positive in 5 of 6 pairs, paired median +14, best single run +78), so the claim does not FAIL either.</p>
+<p>What the data descriptively shows is not the contest the protocol anticipated. The registered rule braced for generic-prompt <em>thrashing</em> — broad rewrites the bounded prompt would rein in. Under this model and budget the generic instruction instead produced <strong>timid motion</strong>: median zero findings closed, and <strong>two generic-arm runs made their codebase measurably worse</strong> (net −6 and −7 findings; one <em>bounded</em> run also went net −1, and an earlier revision of this page miscounted the two arms' failures as three generic). The bounded prompt's measured value here is <em>effectiveness by this tool's aggregate count</em> — total findings fell sharply in its arms, at comparable breadth — not narrowness, and not verified finding-by-finding: <code>findings_closed</code> is a net aggregate, so closing named findings and, say, deleting code that carried findings are indistinguishable in it. The scope set also contains every finding path in the full report, which is broader than the subset the prompt actually names, and a supporting test or doc edit counts as out-of-scope unless that file had findings of its own — both symmetric across arms, neither what the phrase "named findings" implies. The out-of-scope difference itself is small (0.484 vs 0.500 marginal; paired median −0.10 at n = 6).</p>
+<p><strong>Limits, stated with the result:</strong> n = 6 pairs and one agent/model; a 10-minute budget that may cap generic exploration; subject test suites were not executed, so a fix that breaks behavior counts the same as one that does not; and findings-closed is measured by this tool's own ruler while the bounded prompt names exactly what that ruler measures — some closure is teaching-to-the-test by construction. A SUPPORTED claim about narrowness would need an agent and budget under which the generic arm actually rewrites broadly, and an outcome measure not owned by the vendor of the prompt.</p>
+<h2 id="does-this-detect-ai-written-code">Does this detect AI-written code?</h2>
+<p><strong>This tool does not claim to. Its 0.6.0 claim that it could is retracted, and a follow-up study designed to test the claim properly could not measure a difference — which is weaker than "there is no difference", and the distinction matters.</strong></p>
+<p>0.6.0 reported near-duplication at 1.49% for AI-written applications against 0.20% for human-written OSS, and called it "the first signal that separates the two populations". The AI cohort was six young applications; the control was twelve libraries with a decade of maintenance behind them. Authorship, age, domain and size all differed at once, and the conclusion was attributed to the only one of those the project found interesting.</p>
+<p>The re-run builds a control <strong>selected to match on age, popularity and language</strong> — same creation window, same star band (both cohorts have a median of <strong>zero</strong> stars), same language mix, with no AI co-author trailer on any of up to 300 sampled commits. <strong>Size was not matched at selection</strong>: the AI cohort came out carrying 1.8x the control's median declarations, and size is handled after the fact by re-testing inside a common size band, which is a weaker control than matching would have been. Cohorts are built by <a href="../../tools/calibration/select_authored.py"><code>select_authored.py</code></a> and measured by <a href="../../tools/calibration/measure_cohorts.py"><code>measure_cohorts.py</code></a>; the cohort definitions are pinned in <a href="../../tools/calibration/ai.json"><code>ai.json</code></a> and <a href="../../tools/calibration/human.json"><code>human.json</code></a>, and the analysis reproduces offline from the checked-in <a href="../../tools/calibration/cohorts.json"><code>cohorts.json</code></a> via <a href="../../tools/calibration/analyze_cohorts.py"><code>analyze_cohorts.py</code></a>. The rank-sum test carries tie and continuity corrections and is pinned numerically against scipy — an earlier version lacked the tie correction, which inflated p-values by up to 2.4x on tie-heavy metrics, in the direction that flattered the null.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>metric</th>
+<th>AI-assisted (n=20)</th>
+<th>no-trailer control (n=18)</th>
+<th>mature OSS (n=40)</th>
+<th>p</th>
+<th>size correlation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>near-duplicate rate</td>
+<td>1.73%</td>
+<td>0.83%</td>
+<td>0.64%</td>
+<td>0.546</td>
+<td>0.10</td>
+</tr>
+<tr>
+<td>dead code rate</td>
+<td>0.00%</td>
+<td>0.00%</td>
+<td>0.02%</td>
+<td>0.266</td>
+<td>0.52</td>
+</tr>
+<tr>
+<td>file failure rate</td>
+<td>2.89%</td>
+<td>0.80%</td>
+<td>3.26%</td>
+<td>0.043</td>
+<td>0.58</td>
+</tr>
+<tr>
+<td>function failure rate</td>
+<td>9.14%</td>
+<td>8.83%</td>
+<td>6.70%</td>
+<td>0.629</td>
+<td>0.12</td>
+</tr>
+<tr>
+<td>duplicate block rate</td>
+<td>6.70</td>
+<td>1.73</td>
+<td>6.23</td>
+<td>0.042</td>
+<td>0.49</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Read the whole table, not the best row.</strong> Two metrics fall under p = 0.05 — more than chance alone would typically yield across five tests, but they are also the two metrics most correlated with codebase size (r = 0.58 and 0.49), and the AI cohort is the larger one. Inside the shared size band (109–3,655 declarations), file failures go to <strong>p = 0.123 with the medians nearly equal</strong> (1.82% vs 1.77%) — that gap really does look like size. Duplicate blocks are less tidy: <strong>p = 0.117, but the banded medians still differ 3.3x</strong> (5.67 vs 1.73), so that comparison is underpowered rather than resolved, and a larger study could plausibly find a real difference there. Near-duplication — the retracted headline — is p = 0.546 unbanded and 0.871 banded: not close.</p>
+<p>What actually changed from 0.6.0 is instructive: the AI near-duplication figure barely moved (1.49% → 1.73%). <strong>The control moved</strong>, from 0.20% to 0.83%, because it stopped being decade-old libraries. The signal was maturity wearing authorship's clothes.</p>
+<p><strong>Fix breadth showed a direction, then failed to hold significance under pinned inputs — reported here as the exploratory trend it is.</strong> "Broad rewrites for narrow bugs" is a diff property, so <a href="../../tools/calibration/measure_fix_breadth.py"><code>measure_fix_breadth.py</code></a> measures it from commit history: over non-merge commits whose subjects mark them as fixes, the files and lines each fix touches. Three specifications have now been run, and their disagreement is the finding. Unpinned caches: nominally significant. Pinned commits over whatever history the cache held: not significant (best banded p = 0.071). Pinned commits over a <strong>deterministic window</strong> (<code>git log -n 300</code> from each pinned HEAD — what <code>fix_breadth.json</code> now records, with per-repo commit and clone depth): nominally significant again (banded p = 0.029 / 0.046 / 0.037; AI-assisted median 3 vs 2 files per fix, 21% vs 13% broad). The window's determinism took two further corrections, and the second one moved numbers. First: the deepening step was gated on the cached HEAD differing from the pinned commit, so a <em>shallow cache already at the pin</em> was accepted as-is, and an audit showed a depth-one clone of one subject yielding 0 fix commits against the deep cache's 96 — dropping the repository from the population entirely rather than measuring it. Depth is now verified and repaired independently of HEAD. Re-measuring under that repair alone reproduced every published figure identically, and an earlier revision of this paragraph stopped there and called the window deterministic.</p>
+<p>It was not. A sixth audit found the remaining hole: <strong>the oldest commit a shallow clone holds has no parent</strong>, so git diffs it against the empty tree and its <code>--numstat</code> reports the entire tree as added instead of what the commit changed. A synthetic fix commit measured 1 file / 75 lines in a full clone and 2 files / 39 lines at the shallow boundary. This was not hypothetical here — <strong>two AI-cohort repositories had a fix commit sitting on that boundary, and its fabricated whole-tree diff counted as a "broad" fix</strong>, so the bug inflated the AI cohort's broad-fix share in exactly the direction that flattered the hypothesis. Clones now fetch one commit deeper than the window so every commit <em>in</em> the window is parented, and grafted boundary commits are excluded outright. Corrected figures: <code>broad_fix_share</code> <strong>p = 0.025 → 0.028</strong> unbanded, with two per-repo shares falling (0.114 → 0.102, 0.434 → 0.427). The banded tests and the medians quoted above are unchanged. <code>tests/test_fix_breadth_window.py</code> now pins the property across cache depths with synthetic repositories, rather than pinning the one repository whose failure had been demonstrated. A result that crosses the 0.05 line depending on window choice is fragile by demonstration, none of the three specifications survives a Holm correction for the three correlated outcomes (threshold 0.0167), no primary outcome was registered, authorship is classified per <em>repository</em> rather than per fix commit, and fix detection trusts subject lines, which agent tooling writes far more consistently than humans (19/20 vs 11/18 repos cleared the labeled-fix filter). The honest status is unchanged by the friendlier third run: <strong>a consistent direction worth a better-designed study — a diff-content fix detector, a registered primary outcome, commit-level authorship — and no claim beyond that.</strong></p>
+<p><strong>The history is now pinned, and the pin found something the study could not see.</strong> ADR 001 stage 9 (1.9.0) separated materialization from measurement: <code>tools/calibration/history_manifest.json</code> records the pinned head, the selection rule, all 6,120 selected commit ids and the 293 parent objects they require, and measurement refuses a cache that does not match it rather than measuring whatever the cache holds. That is what closes the six-audit loop above — each earlier repair fixed the symptom it found because there was nothing to check a cache <em>against</em>.</p>
+<p>Materializing it also showed that <strong>five of the 38 selected repositories no longer exist</strong>, deleted or made private since selection. The published numbers stand as measured; a re-run today would have 33 subjects, not 38. That is not a flaw in the result — it is the ordinary decay of any study whose subjects are other people's repositories, and it is exactly why the inputs are pinned in the file rather than re-derived on each run.</p>
+<p><strong>The design has a hole no statistics repair: the control cannot be verified as human.</strong> "No AI trailer on any sampled commit" excludes only tooling that writes trailers — Copilot and pasted LLM output leave none. The control contains zero-star 2024-25 projects whose subject matter (RAG apps, AI platforms) makes LLM assistance likely. If enough of the control is quietly AI-assisted, this study compares AI-with-trailers to AI-without-trailers, and its null is guaranteed and uninformative. That is why the honest conclusion is <strong>"this design could not measure a difference"</strong>, not "there is no difference". Add the usual limits — n = 20 vs 18 misses anything subtler than roughly two-fold, and the trailer-writing cohort self-selects for deliberate workflows — and the study licenses exactly one claim: the 0.6.0 evidence was wrong, and nothing measured so far replaces it. A study that wanted the stronger claim would need a control whose humanity is verifiable, such as code committed before LLM assistants existed, measured at a pinned historical commit.</p>
+<h2 id="is-the-output-any-use-on-real-code">Is the output any use on real code?</h2>
+<p><strong>Genre: empirical, and the only study here whose subject is this tool's own output rather than the code it examines.</strong> Full record, per-repository: <a href="../../tools/validation/results.md"><code>tools/validation/results.md</code></a>, from data in <a href="../../tools/validation/results.json"><code>results.json</code></a>.</p>
+<p>The <a href="../../tools/validation/sample-frame.md">frame</a> was committed before any repository was selected, and the <a href="../../tools/validation/sample.json">sample</a> pinned to exact commits before any repository was cloned — fourteen repositories across Python, TypeScript, JavaScript, Java, Go, Rust, C, C++, C# and Fortran, deliberately including cases expected to be handled badly. Five pass criteria were stated in the frame in advance.</p>
+<p><strong>Deliberately not the calibration corpus.</strong> That set is Python, TypeScript and JavaScript by selection, because its job is to fit the <em>scale</em>. A corpus chosen to fit a scale cannot also be the sample that tests whether the output is any good, and this study is the demonstration: the largest defect it found is invisible on every repository the scale was ever fitted against.</p>
+<p>The scale itself moved on 2026-08-14 (Phase 3.6): <code>CALIBRATION_C</code> 2.6279 → 2.2658 and the declarations reference 0.0599 → 0.0860, fitted to the analyzer-primary mix after generated/vendored code left the scored population. 13 of 40 corpus members used the analyzer declaration reading; 27 stayed on the built-in fallback. Both old and new numbers are in <code>_calibration.py</code>. This study's <em>validation</em> figures were measured under the previous constant and are not re-stated here as if they were re-run.</p>
+<p><strong>Result: three of five criteria failed.</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Completes on every repository</td>
+<td>Pass — 14 of 14, no crash, no hang</td>
+</tr>
+<tr>
+<td>Findings are locatable</td>
+<td>37 of 40 sampled findings landed on a real line; the 3 failures shared one cause</td>
+</tr>
+<tr>
+<td>Coverage is honest</td>
+<td><strong>Failed.</strong> The score was computed from a different file set than the coverage section described</td>
+</tr>
+<tr>
+<td>The floor behaves</td>
+<td><strong>Failed.</strong> It fired for the wrong reason on 5 repositories</td>
+</tr>
+<tr>
+<td>Nothing is fabricated</td>
+<td>Pass as process — no failure dropped — <strong>failed as substance</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>The finding: <code>paths.include_extensions</code> omitted every language outside Python and JS/TS, so the scan that produces the score could not open the source while the analyzer pool read it fine. curl reported <strong>4.3</strong> computed from 1,041 declarations of Markdown and Python test scripts while lizard measured 20,547 declarations of its C. gson withheld its score saying "0 is below the calibration floor of 139" while holding 9,639 unread Java declarations.</p>
+<p>Every defect found is fixed, each with a test written before the fix (<a href="../../tests/test_unread_code.py"><code>tests/test_unread_code.py</code></a>), and the four affected repositories are pinned as regressions against the recorded run.</p>
+<p><strong>Limits.</strong> A convenience sample, not a random one: nothing here supports a claim about repositories in general. It cannot say a score is <em>correct</em> — no ground truth for maintainability exists to check against. It shows the output is coherent, located and honest about its gaps, and that the largest failure mode found was one the tool had been shipping silently. Tier 3 under <a href="product-intent.html#the-evidence-standard">the evidence standard</a>.</p>
+<footer>Rendered from <code>docs/studies.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

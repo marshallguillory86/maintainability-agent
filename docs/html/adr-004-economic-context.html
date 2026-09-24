@@ -1,0 +1,259 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>ADR 004: Keep economic context separate from score and grade · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#context">Context</a></li>
+<li><a href="#options">Options</a><ul>
+<li><a href="#a-do-not-estimate-economic-impact">A. Do not estimate economic impact</a></li>
+<li><a href="#b-convert-maintainability-scores-directly-into-money">B. Convert maintainability scores directly into money</a></li>
+<li><a href="#c-add-transparent-configured-scenario-ranges-beside-the-score">C. Add transparent, configured scenario ranges beside the score</a></li>
+<li><a href="#d-train-a-cross-organization-predictive-model-immediately">D. Train a cross-organization predictive model immediately</a></li>
+</ul>
+</li>
+<li><a href="#proposed-decision">Proposed decision</a></li>
+<li><a href="#v1-slice-shipped-2026-08-15">v1 slice (shipped 2026-08-15)</a></li>
+<li><a href="#design">Design</a><ul>
+<li><a href="#inputs">Inputs</a></li>
+<li><a href="#scenario-model">Scenario model</a></li>
+<li><a href="#report-boundary">Report boundary</a></li>
+<li><a href="#validation-ladder">Validation ladder</a></li>
+</ul>
+</li>
+<li><a href="#consequences">Consequences</a></li>
+<li><a href="#invariants">Invariants</a></li>
+<li><a href="#references">References</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Decisions</div><h1>ADR 004: Keep economic context separate from score and grade</h1><ul>
+<li>Status: Accepted. Implementation progress is recorded in the
+  <a href="decisions.html">decision register</a>.</li>
+<li>Date: 2026-08-11</li>
+<li>Scope: Repository configuration, impact scenarios, work-order priority and
+  outcome validation</li>
+</ul>
+<h2 id="context">Context</h2>
+<p>The same maintainability finding can be economically negligible in a stable
+internal utility and material in a frequently changed, regulated or
+reliability-critical service. Source structure alone does not contain labor
+rates, planning horizon, verification burden, incident cost or product
+criticality. Asking maintainers for that context can make assumptions explicit
+and produce a more useful ordering of the bounded work order.</p>
+<p>It does not make the maintainability score a cost predictor. User-supplied
+inputs can improve relevance while still being wrong, optimistic or stale. No
+outcome study has connected this project's score or findings to future labor
+cost, and product intent forbids that claim.</p>
+<p>The architecture therefore needs a hard boundary between:</p>
+<ul>
+<li>the uniform standard score, which remains comparable across repositories;</li>
+<li>evidence about how often affected code changes and how work flows through the
+  repository; and</li>
+<li>a repository-specific economic scenario used only to prioritize work.</li>
+</ul>
+<p>Established cost-estimation work supports the need for context, not this
+project's coefficients. COCOMO II, as summarized in NASA's software cost
+estimation handbook, separates product, platform, personnel and project
+attributes. That is evidence against treating source structure as the whole
+cost model. It is not permission to transplant a development-effort model into
+finding-level maintenance estimates.</p>
+<h2 id="options">Options</h2>
+<h3 id="a-do-not-estimate-economic-impact">A. Do not estimate economic impact</h3>
+<p>Keep the work order ordered only by finding severity and structural pressure.</p>
+<p>This avoids speculative numbers, but treats a cold utility and a critical
+hotspot as economically equivalent when the available context says otherwise.</p>
+<h3 id="b-convert-maintainability-scores-directly-into-money">B. Convert maintainability scores directly into money</h3>
+<p>Fit or choose one global multiplier and publish expected cost or savings.</p>
+<p>This is easy to communicate and unsupported. It hides the variables that
+actually drive effort and would turn a standard into a prediction without an
+outcome study.</p>
+<h3 id="c-add-transparent-configured-scenario-ranges-beside-the-score">C. Add transparent, configured scenario ranges beside the score</h3>
+<p>Derive exposure data from the repository where possible, ask for irreducible
+business context, and calculate low/base/high scenarios whose assumptions and
+provenance are visible.</p>
+<p>This improves prioritization without claiming validated prediction.</p>
+<h3 id="d-train-a-cross-organization-predictive-model-immediately">D. Train a cross-organization predictive model immediately</h3>
+<p>Collect repository and labor data and fit one model across organizations.</p>
+<p>This may become a later study. It is premature before organization-specific
+measurements, task definitions and held-out validation exist.</p>
+<h2 id="proposed-decision">Proposed decision</h2>
+<p>Choose option C. Treat option D as a research path that requires a separate
+empirical decision and pre-registered validation.</p>
+<p>Economic context produces an optional <code>economic_impact</code> section and a priority
+ordering for work items. It never changes aspects, categories, overall, grade,
+<code>evidence_status</code> or <code>verified_grade</code>. Reports without economic configuration
+remain fully valid maintainability reports.</p>
+<p>The output vocabulary is <strong>scenario</strong>, <strong>estimate</strong>, <strong>exposure</strong> and
+<strong>assumption</strong>. The words <strong>prediction</strong>, <strong>saving</strong>, <strong>avoided cost</strong> and
+<strong>return on investment</strong> require observed or held-out outcome evidence and must
+not describe the initial feature.</p>
+<h2 id="v1-slice-shipped-2026-08-15">v1 slice (shipped 2026-08-15)</h2>
+<p>The first increment is option C, narrowed so it can ship without a survey
+and without changing the uniform score.</p>
+<p><strong>Presentation is split.</strong> The 0–5 score and <code>verified_grade</code> never mention
+money. A separate <code>economic_impact</code> block prints a low/base/high <strong>scenario</strong>
+range and the assumptions that produced it. The work order <strong>reorders</strong> by
+exposure <strong>within each band</strong>; standard risk×effort severity remains on the
+report so both sorts are visible.</p>
+<blockquote>
+<p><strong>Amended 2026-09-13 (D170).</strong> The reorder was implemented over the whole
+work order, so a Fill-In on a hot file led a Quick Win on a stable one —
+which <a href="adr-007-pillars-and-practice.html">ADR 007</a> §3 rule 5 forbids. This
+decision never required exposure to outrank band; band stays the primary
+key and exposure orders items inside it. Per-finding dollar lines are not in v1 — the $ range is a
+rollup over the current work-order set.</p>
+</blockquote>
+<p><strong>Ask once, then persist.</strong> The labor gate is part of the <strong>same</strong>
+first-run question set on chat, MCP, and a CLI TTY
+(<a href="help-first-run.html">first run</a>). Non-TTY / CI never asks. Answers are
+written into <code>maintainability-agent.json</code> under <code>economic_context</code>.
+Later runs read the file. For one run, flags and environment variables
+override the file. <code>prompt_when_interactive: false</code> keeps even an
+interactive run silent (the same switch as the rest of first-run
+setup).</p>
+<p><strong>Required for any $ block:</strong> loaded engineering cost per hour as
+low / base / high, plus a currency <strong>label</strong> (default <code>USD</code>; no exchange
+fetch). Planning horizon defaults to <strong>12 months</strong> if omitted.</p>
+<p><strong>Optional asks (Enter skips; missing widens or drops that term):</strong>
+reliability tier (<code>internal</code> / <code>customer</code> / <code>regulated</code>); typical review
+minutes per change; representative incident or downtime cost.</p>
+<p><strong>Do not ask in v1.</strong> Derive exposure from what the scan already has:
+recurrence (a finding that cleared and returned) and hotspot churn.
+Do not ask for PR lead time, deploy duration, incident linkage, or team
+tenure. Those stay later adapters.</p>
+<p><strong>Environment overrides</strong> (one run; do not persist unless the TTY ask
+writes the file): <code>MAINTAINABILITY_LABOR_LOW</code>, <code>MAINTAINABILITY_LABOR_BASE</code>,
+<code>MAINTAINABILITY_LABOR_HIGH</code>, and optionally <code>MAINTAINABILITY_CURRENCY</code>,
+<code>MAINTAINABILITY_HORIZON_MONTHS</code>.</p>
+<p><strong>Arithmetic</strong> stays the inspectable product of
+<code>expected affected changes per year × incremental hours per change ×
+loaded rate</code>, over the horizon. Incremental hours are a visible
+configured or defaulted range, not a COCOMO coefficient. Operational
+incident $ is a separate optional term, never folded into the rate.</p>
+<p>This slice does not license predictive language. Validation ladder stages
+2–4 remain studies.</p>
+<h2 id="design">Design</h2>
+<h3 id="inputs">Inputs</h3>
+<p>Prefer measurements over questions. Derive these when the repository or an
+explicit local adapter contains them:</p>
+<ul>
+<li>change frequency and hotspot concentration;</li>
+<li>contributor concentration and continuity;</li>
+<li>pull-request lead time, review cycles and rework;</li>
+<li>release frequency and test or deployment duration; and</li>
+<li>incident-linked changes, when a configured local source establishes them.</li>
+</ul>
+<p>Ask users only for context the repository cannot establish:</p>
+<ul>
+<li>loaded engineering cost as a low/base/high range;</li>
+<li>planning horizon and expected supported lifespan;</li>
+<li>reliability or product-criticality tier;</li>
+<li>regulatory, review and verification burden;</li>
+<li>representative incident or downtime cost, when relevant;</li>
+<li>team experience or continuity not observable from repository history; and</li>
+<li>material human or agent execution costs outside source control.</li>
+</ul>
+<p>Every input carries one state and provenance compatible with ADR 001's evidence
+model: measured, configured, defaulted or unknown. Defaults are visible and
+cannot make an unknown scenario appear precise. Sensitive values remain local;
+the feature adds no network requirement.</p>
+<p>An illustrative configuration is:</p>
+<pre><code class="language-yaml">economic_context:
+  version: 1
+  currency: USD
+  planning_horizon_months: 12
+  loaded_engineering_cost_per_hour:
+    low: 90
+    base: 140
+    high: 210
+  reliability_tier: business_critical
+  typical_review_minutes_per_change: 30
+</code></pre>
+<p>Currency is a label, not a conversion service. The deterministic offline path
+does not fetch exchange rates.</p>
+<h3 id="scenario-model">Scenario model</h3>
+<p>The first model must be inspectable rather than statistically impressive. A
+finding-level labor exposure can begin with:</p>
+<pre><code class="language-text">annual labor exposure
+  = expected affected changes per year
+  x incremental effort per affected change
+  x loaded labor cost
+</code></pre>
+<p>Operational risk, incident cost and cost of delay are separate terms with
+separate assumptions; they are not folded invisibly into an effort multiplier.
+Low/base/high input combinations produce a range, and sensitivity output names
+the assumptions responsible for most of its width.</p>
+<p>The hard problem is <code>incremental effort per affected change</code>. The first version
+may use a visible configured range or an organization-specific historical
+baseline. It must not import coefficients from a development-cost model and
+present them as validated maintenance costs.</p>
+<h3 id="report-boundary">Report boundary</h3>
+<pre><code class="language-text">maintainability finding ----------------------------+
+                                                     |
+repository-derived exposure --+                     |
+                               +-&gt; scenario engine -&gt; economic_impact
+configured business context ---+                     |
+                                                     v
+                                          work-order priority
+
+standard evidence -&gt; scoring -&gt; grade       (no dependency upward)
+</code></pre>
+<p>The report preserves the original finding severity and score-derived ordering
+inputs so a consumer can reproduce both the standard order and the contextual
+order. Presentation must label configured and experimental values where they
+are shown.</p>
+<h3 id="validation-ladder">Validation ladder</h3>
+<ol>
+<li><strong>Scenario correctness:</strong> property-test arithmetic, ranges, missing states,
+   units and provenance over the production model.</li>
+<li><strong>Organization-specific calibration:</strong> use completed work items and pull
+   requests to relate task type, changed area, review time, rework and incident
+   handling to observed effort.</li>
+<li><strong>Held-out validation:</strong> freeze the model before estimating later work and
+   compare estimates with actual effort using pre-registered error measures.</li>
+<li><strong>Cross-organization validation:</strong> only after task definitions and inputs
+   are comparable may the project test whether a transferable model exists.</li>
+</ol>
+<p>Stages 1 and configured scenarios license deterministic calculations. They do
+not license predictive language. Stages 2 through 4 are empirical studies and
+belong in <code>studies.md</code> with pinned inputs and stated limitations.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li>Work orders can be prioritized using product and engineering context rather
+  than structural severity alone.</li>
+<li>Organizations can calibrate to their own process before attempting a broad
+  cost model.</li>
+<li>Configuration and telemetry integration increase setup cost. The CLI should
+  therefore make the feature optional and useful with partial information.</li>
+<li>Monetary output creates false-precision risk. Ranges, provenance,
+  sensitivity and explicit unknowns are required product behavior, not display
+  polish.</li>
+<li>Standard scores remain comparable because labor rates and business
+  criticality never enter the rubric.</li>
+</ul>
+<h2 id="invariants">Invariants</h2>
+<ol>
+<li>Changing any economic-context input cannot change a finding, aspect,
+   category, overall, grade, <code>evidence_status</code> or <code>verified_grade</code>.</li>
+<li>Reports without economic context are valid and retain their existing
+   deterministic output except for explicitly versioned optional fields.</li>
+<li>Every displayed economic number identifies its currency, time horizon,
+   range and input provenance.</li>
+<li>Unknown required inputs widen or suppress a scenario; they never receive a
+   hidden favorable value.</li>
+<li>Low, base and high outputs are ordered for every accepted configuration.</li>
+<li>Identical findings, repository measurements, configuration and model
+   version produce byte-identical scenarios without network access.</li>
+<li>A configured scenario is never labeled a prediction, observed saving or
+   return on investment.</li>
+<li>Economic priority cannot suppress a hard finding or erase the standard
+   severity and ordering evidence from the report.</li>
+</ol>
+<h2 id="references">References</h2>
+<ul>
+<li><a href="https://swehb.nasa.gov/download/attachments/16450436/Handbook_for_Software_Cost_Estimation.pdf?api=v2">NASA Software Cost Estimation Handbook</a></li>
+<li><a href="https://www.cs.umd.edu/projects/SoftEng/ESEG/papers/ICSE96.html">University of Maryland: An Industrial Case Study of Software Maintenance</a></li>
+</ul>
+<footer>Rendered from <code>docs/adr-004-economic-context.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

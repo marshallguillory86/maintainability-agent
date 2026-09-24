@@ -1,0 +1,100 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Analyzer Adapters · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#supported-now">Supported Now</a><ul>
+<li><a href="#sarif-input">SARIF Input</a></li>
+<li><a href="#sarif-output">SARIF Output</a></li>
+<li><a href="#native-analyzer-pool">Native analyzer pool</a></li>
+</ul>
+</li>
+<li><a href="#which-analyzer-covers-which-language">Which analyzer covers which language</a></li>
+<li><a href="#planned-native-adapters">Planned Native Adapters</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Reference</div><h1>Analyzer Adapters</h1><p>Maintainability Agent should not replace mature analyzers. It should collect their output and turn it into reviewable reports and bounded AI remediation prompts.</p>
+<h2 id="supported-now">Supported Now</h2>
+<h3 id="sarif-input">SARIF Input</h3>
+<pre><code class="language-bash">maintainability-agent \
+  --sarif-input semgrep.sarif \
+  --output maintainability-report.md
+</code></pre>
+<p>External SARIF findings appear in the Markdown report under <code>External Findings</code>.</p>
+<h3 id="sarif-output">SARIF Output</h3>
+<pre><code class="language-bash">maintainability-agent \
+  --sarif-output maintainability.sarif
+</code></pre>
+<p>The SARIF file can be uploaded to GitHub code scanning.</p>
+<h3 id="native-analyzer-pool">Native analyzer pool</h3>
+<p>Fifteen adapters ship in the optional analyzer pool: cohesion, complexipy,
+eslint, flake8, fortitude, interrogate, jscpd, lizard, multimetric, mypy,
+pydocstyle, pylint, radon, ruff, and vulture. See <a href="analyzer-pool.html">analyzer pool</a>
+for selection and coverage.</p>
+<h2 id="which-analyzer-covers-which-language">Which analyzer covers which language</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Built-in scanner</th>
+<th>External analyzer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python</td>
+<td><code>ast</code>, exact</td>
+<td>ruff, radon, mypy, vulture, complexipy, interrogate, pydocstyle, pylint, cohesion</td>
+</tr>
+<tr>
+<td>Java</td>
+<td>dedicated scanner</td>
+<td>lizard, PMD, Checkstyle, SpotBugs</td>
+</tr>
+<tr>
+<td>C / C++ / C#</td>
+<td>dedicated scanners</td>
+<td>lizard, multimetric</td>
+</tr>
+<tr>
+<td><strong>Fortran</strong> (free- and fixed-form)</td>
+<td>dedicated scanner</td>
+<td><strong>fortitude</strong> — 100+ rules; <strong>lizard</strong> — complexity, NLOC, params</td>
+</tr>
+<tr>
+<td><strong>COBOL</strong></td>
+<td>dedicated scanner</td>
+<td><strong>none</strong> — no offline analyzer in the catalog reads it</td>
+</tr>
+<tr>
+<td>JS / TS / JSX / TSX</td>
+<td>brace scanner</td>
+<td>ESLint, lizard, jscpd</td>
+</tr>
+</tbody>
+</table></div>
+<p>Fortran reached parity in 1.6.0: lizard had read it for years behind a
+stale catalog row, so it came out <code>not-applicable</code> and never ran. A lint fails
+the build if a parsed language has no analyzer measuring complexity — <strong>COBOL is
+the one disclosed exemption</strong>, because the tooling that reads it is licensed and
+host-resident, so its external tier is empty and the report says so.</p>
+<p><strong>External analyzer adapters (opt-in pool)</strong> — this is how coverage extends
+beyond the built-in set. When you enable the analyzer pool, the tool shells out
+to mature analyzers and folds their output in through per-tool
+<a href="adapters.html">adapters</a>: <strong>lizard</strong> (cyclomatic complexity across ~a dozen
+languages), <strong>jscpd</strong> (cross-language duplication), <strong>ESLint</strong> (JS/TS),
+<strong>PMD</strong> / <strong>SpotBugs</strong> (JVM), and others in the catalog. These run only when
+selected <em>and</em> installed (acquisition is opt-in and off by default), and where
+they measured a full concept set they become the <em>primary</em> evidence, with the
+built-ins as the fallback.</p>
+<h2 id="planned-native-adapters">Planned Native Adapters</h2>
+<ul>
+<li>Semgrep JSON</li>
+<li>pytest / coverage summaries</li>
+<li>SonarQube API export</li>
+</ul>
+<p>The adapter rule is simple: ingest tool output, preserve provenance, and avoid pretending every analyzer has the same semantics.</p>
+<footer>Rendered from <code>docs/adapters.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

@@ -1,0 +1,128 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Security Policy · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#supported-versions">Supported Versions</a></li>
+<li><a href="#reporting-a-vulnerability">Reporting a Vulnerability</a></li>
+<li><a href="#scope">Scope</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Project</div><h1>Security Policy</h1><h2 id="supported-versions">Supported Versions</h2>
+<p>Only the latest release line receives security fixes.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Supported</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>3.8.x</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>&lt; <code>3.8</code></td>
+<td>❌</td>
+</tr>
+</tbody>
+</table></div>
+<p>The line above is the shipped one, and keeping it that way is a
+maintenance task nobody remembers. An audit found this table still
+naming <code>0.1.x</code> eight release lines later, which read literally meant
+the current release was unsupported by its own policy (D45).</p>
+<h2 id="reporting-a-vulnerability">Reporting a Vulnerability</h2>
+<p>If you find a security issue:</p>
+<ol>
+<li><strong>Do not</strong> open a public GitHub issue.</li>
+<li>Use GitHub's <a href="https://github.com/marshallguillory86/maintainability-agent/security/advisories/new">private security advisory flow</a>:
+   repo → <strong>Security</strong> → <strong>Report a vulnerability</strong>. This keeps the
+   report private until coordinated disclosure.</li>
+<li>Include:
+   - a clear description of the issue
+   - reproduction steps or a minimal proof-of-concept
+   - the affected version (<code>maintainability-agent --version</code>)
+   - your proposed severity (CVSS or informal)</li>
+</ol>
+<p>You will receive an acknowledgement within 5 business days. If a fix is
+warranted, expect a coordinated disclosure timeline of up to 90 days
+depending on complexity.</p>
+<h2 id="scope">Scope</h2>
+<p>This project runs deterministic static analysis against a local git
+repository and produces Markdown / JSON / SARIF artifacts. It does not
+send any code to LLMs, and performs no network access during analysis
+unless the user explicitly enables tool acquisition in their own
+configuration.</p>
+<p><strong>It does not execute code from the repository under audit, and
+configuration counts as code.</strong> An <code>eslint</code> flat config is a JavaScript
+program, a <code>pylint</code> <code>init-hook=</code> runs arbitrary Python before analysis
+begins, and a <code>mypy</code> <code>plugins =</code> imports a module out of the tree. So
+eslint is refused by selection rather than run, pylint is invoked with
+<code>--rcfile</code> and mypy with <code>--config-file</code>, both pointed at the null
+device, and the analyzer child's environment has <code>PYTHONPATH</code>,
+<code>PYTHONSTARTUP</code>, <code>NODE_PATH</code>, <code>NODE_OPTIONS</code> and the <code>LD_</code>/<code>DYLD_</code> pair
+removed so nothing outside your own choice decides what it loads.</p>
+<p><strong>The one exception is an explicit opt-in to run the tree's own test
+command.</strong> Setup asks — defaulting to <strong>no</strong> — whether to run the
+repository's documented test command for a coverage reading, and only a
+<code>yes</code> together with a recorded command lets the audit spawn it. This is
+the sole path by which anything from the audited tree runs, it is off
+until the operator turns it on per repository, and it executes exactly
+the one command they named — not the tree's configuration, plugins, or
+build. With no opt-in the guarantee above is unchanged and total
+(Decision 9, amended 2026-08-31).</p>
+<p><strong>Every other binary this process runs is named by this machine, never by
+the tree.</strong> An analyzer is invoked by a constant program name resolved on
+<code>PATH</code>, or by a path from the checked-in catalog — never by a path built
+out of the repository being audited. The rule is written down because it
+was broken once: the TypeScript checker preferred the tree's own
+<code>node_modules/.bin/tsc</code> over the machine's, so a <code>tsconfig.json</code> beside a
+writable <code>node_modules/.bin/tsc</code> was enough to make this agent execute
+the audited repository, with no TypeScript in it anywhere. An audit on
+2026-09-04 found it. The resolution was deleted rather than guarded —
+there is no safe way to run a binary whose identity the audited tree
+controls — and a project whose only compiler is project-local now leaves
+type coverage <strong>unknown</strong>, which is the honest reading.</p>
+<p><strong>This section has now been wrong in both directions, and both are
+recorded rather than quietly rewritten.</strong> It first said the agent does
+not execute scanned code, which was untrue and audit-proven so
+(2026-08-23). It was corrected to say the agent <em>does</em>, with the
+question left open as D39 and D44. It was settled on 2026-08-25 by
+drawing the line at execution rather than at trusting repositories
+(Decision 9), both entries closed, and this file kept describing the
+defect for a further day — a promise that had become true while its
+own documentation still denied it.</p>
+<p><strong>What this is not.</strong> Analyzers are ordinary local child processes and
+this package does not sandbox them: it does not police what they open,
+and it makes no claim that one cannot reach the network. The narrower
+guarantee is the one made here — nothing from the audited tree chooses
+what those children run. Child sandboxing is refused as a design
+direction and the reasoning is in <code>docs/security-queue.md</code>.</p>
+<p>Two isolation flags are structurally asserted everywhere and spawned
+only where the binary exists, which <code>docs/analyzer-pool.md</code> discloses:
+on a machine without pylint and mypy installed, they are documented and
+asserted rather than demonstrated.</p>
+<p>Audit only repositories you would be willing to run a build from. The
+guarantee above is about this agent's own behaviour, not about the
+analyzers you install to work with it.</p>
+<p>In-scope:</p>
+<ul>
+<li>arbitrary-write or arbitrary-read on the host filesystem outside the
+  configured <code>--root</code></li>
+<li>shell-injection in any <code>git</code> command or subprocess call</li>
+<li>prototype pollution / unsafe-deserialization in JSON / SARIF parsers</li>
+<li>denial-of-service via crafted config files or repository inputs</li>
+<li>secret leakage in generated reports</li>
+</ul>
+<p>Out-of-scope:</p>
+<ul>
+<li>vulnerabilities in third-party analyzers whose output you ingest via
+  <code>--sarif-input</code> (report those upstream)</li>
+<li>general code-quality findings — those belong in normal issues</li>
+<li>correctness bugs in the metrics themselves (file the issue or a PR)</li>
+</ul>
+<footer>Rendered from <code>SECURITY.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

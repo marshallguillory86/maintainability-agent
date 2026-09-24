@@ -1,0 +1,284 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>The report contract · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#the-single-producer">The single producer</a></li>
+<li><a href="#consumers">Consumers</a><ul>
+<li><a href="#the-persisted-baseline-contract">The persisted baseline contract</a></li>
+</ul>
+</li>
+<li><a href="#the-stage-5-fields">The stage 5 fields</a></li>
+<li><a href="#schema-version">Schema version</a></li>
+<li><a href="#evidence-states">Evidence states</a></li>
+<li><a href="#deliberate-no-ops">Deliberate no-ops</a></li>
+<li><a href="#remaining-work">Remaining work</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Product and standard</div><h1>The report contract</h1><p>Inventory and versioning policy for the dictionary <code>build_report</code> returns.</p>
+<p>This document exists because <a href="adr-001-evidence-and-verification.html">ADR 001</a> requires the report's producers and consumers to be <em>named</em> before any migration is written: "Compatibility code will not be retained for hypothetical consumers." Everything below was traced in the source, not assumed.</p>
+<p><strong>Status:</strong> see the <a href="decisions.html">decision register</a>, which is the single place ADR 001's implementation status is stated. This document describes the report contract as it stands today.</p>
+<h2 id="the-single-producer">The single producer</h2>
+<p><a href="../../src/maintainability_audit/report.py"><code>report.build_report</code></a> is the only function that constructs a report. It assembles the scan results, calls <code>scoring.score_report(report)</code> on the in-memory dictionary, attaches the result as <code>report["score"]</code>, and returns it.</p>
+<p><code>scoring.score_report</code> has exactly one caller: that line. <strong>No code path rescores a report loaded from disk.</strong></p>
+<h2 id="consumers">Consumers</h2>
+<p>Classified as the task requires: <em>current</em> reports only, <em>persisted</em> historical reports, reliance on undocumented dictionary fallbacks, and whether migration is needed.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Consumer</th>
+<th>Reads</th>
+<th>Class</th>
+<th>Fallbacks</th>
+<th>Migration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../../src/maintainability_audit/scoring.py"><code>scoring.score_report</code></a></td>
+<td>normalizes the report at entry</td>
+<td>current only</td>
+<td>none — migrated</td>
+<td>done</td>
+</tr>
+<tr>
+<td><a href="../../src/maintainability_audit/_pressures.py"><code>_pressures</code></a></td>
+<td><code>SummaryEvidence</code> states</td>
+<td>current only</td>
+<td>none — migrated</td>
+<td>done</td>
+</tr>
+<tr>
+<td><a href="../../src/maintainability_audit/_aspects.py"><code>_aspects</code></a></td>
+<td><code>NormalizedEvidence</code></td>
+<td>current only</td>
+<td>none — migrated</td>
+<td>done</td>
+</tr>
+<tr>
+<td><a href="../../src/maintainability_audit/renderers.py"><code>renderers.render_markdown</code></a></td>
+<td><code>summary</code>, <code>score</code>, <code>history</code>, finding lists</td>
+<td>current only</td>
+<td>minor</td>
+<td><strong>migrated (stage 7)</strong> — estimate, range, evidence status, verified grade, and a table of unavailable measurements with provenance</td>
+</tr>
+<tr>
+<td><a href="../../src/maintainability_audit/renderers.py"><code>renderers.render_pr_comment</code></a></td>
+<td><code>summary</code>, <code>score</code>, <code>hard_gate_failures</code>, <code>function_hotspots</code></td>
+<td>current only</td>
+<td>minor</td>
+<td><strong>migrated (stage 7)</strong> — same four concepts, condensed</td>
+</tr>
+<tr>
+<td><a href="../../src/maintainability_audit/prompts.py"><code>prompts.render_ai_prompt</code></a></td>
+<td><code>summary</code>, <code>score</code>, all finding lists</td>
+<td>current only</td>
+<td>minor</td>
+<td><strong>migrated (stage 7)</strong> — plus an evidence section stating that incomplete evidence is not a code defect and must not widen the work order</td>
+</tr>
+<tr>
+<td><a href="../../src/maintainability_audit/prompts.py"><code>prompts.render_agent_instructions</code></a></td>
+<td>canonical score fields, four <code>summary</code> counts</td>
+<td>current only</td>
+<td>none</td>
+<td><strong>migrated</strong> — reads <code>maintainability_estimate</code> and <code>verified_grade</code>; there is no other letter to substitute</td>
+</tr>
+<tr>
+<td><a href="../../src/maintainability_audit/sarif.py"><code>sarif.report_to_sarif</code></a></td>
+<td>finding lists, and <code>score</code> for run properties</td>
+<td>current only</td>
+<td><code>.get(key, [])</code> on finding lists</td>
+<td><strong>migrated (stage 7)</strong> — evidence at run level only; results, rule ids and levels unchanged, and missing evidence never becomes a result</td>
+</tr>
+<tr>
+<td><a href="../../src/maintainability_audit/baseline.py"><code>baseline.write_baseline</code></a></td>
+<td>root, git commit, and finding lists</td>
+<td>current only (write side)</td>
+<td>none</td>
+<td>baseline v3</td>
+</tr>
+<tr>
+<td><a href="../../src/maintainability_audit/baseline.py"><code>baseline.load_baseline_identities</code></a></td>
+<td><strong>persisted file</strong>, <code>identities</code> plus labels</td>
+<td><strong>persisted</strong></td>
+<td>a hand-added bare label matches that exact label only</td>
+<td>versions 1/2 rejected; regenerate</td>
+</tr>
+<tr>
+<td><a href="../../src/maintainability_audit/cli.py"><code>cli</code></a></td>
+<td>orchestrates; passes the report through</td>
+<td>current only</td>
+<td>none</td>
+<td><strong>no change (stage 7)</strong> — <code>--fail-on-gate</code> still reads hard findings only, per ADR 002</td>
+</tr>
+<tr>
+<td><a href="../../tools/calibration/measure.py"><code>tools/calibration/measure.py</code></a></td>
+<td><code>summary</code> of a live <code>build_report</code></td>
+<td>current only</td>
+<td>none</td>
+<td>stage 4</td>
+</tr>
+<tr>
+<td><a href="../../tools/calibration/measure_cohorts.py"><code>tools/calibration/measure_cohorts.py</code></a></td>
+<td><code>summary</code>, <code>score.maintainability_estimate</code> of a live <code>build_report</code></td>
+<td>current only</td>
+<td>none</td>
+<td><strong>migrated (stage 8)</strong></td>
+</tr>
+<tr>
+<td><a href="../../src/maintainability_audit/_derive.py"><code>_derive._corpus_overall</code></a></td>
+<td>a <strong>synthesized</strong> summary from <code>measurements.json</code> <code>evidence</code> blocks</td>
+<td>persisted <em>measurements</em>, not reports</td>
+<td>builds its own dict</td>
+<td>stage 4</td>
+</tr>
+</tbody>
+</table></div>
+<p>Tests and fixtures that construct or consume report shapes: <code>test_audit_components.py</code>, <code>test_scanning.py</code>, <code>test_cli.py</code>, <code>test_sarif.py</code>, <code>test_near_duplicates.py</code>, <code>test_declaration_grading.py</code> (all via <code>build_report</code>), plus <code>test_scoring_calibration.py</code> and <code>test_calibration_corpus.py</code> (hand-built summary dictionaries passed directly to <code>score_report</code>). The hand-built ones are the reason ADR 001 §6 requires production-model tests: they carry whichever keys the scorer needs and cannot demonstrate a property of real reports. <code>test_evidence_normalization.py</code> starts from <code>build_report</code> for exactly that reason.</p>
+<h3 id="the-persisted-baseline-contract">The persisted baseline contract</h3>
+<p>Baseline version 3 stores two views of the same finding population:</p>
+<pre><code class="language-json">{
+  &quot;version&quot;: 3,
+  &quot;commit&quot;: &quot;&lt;git commit&gt;&quot;,
+  &quot;findings&quot;: [&quot;function:{path}:{name}#{ordinal}&quot;],
+  &quot;identities&quot;: [{
+    &quot;kind&quot;: &quot;declaration&quot;,
+    &quot;path&quot;: &quot;path/to/file.py&quot;,
+    &quot;name&quot;: &quot;name&quot;,
+    &quot;ordinal&quot;: 0,
+    &quot;body_digest&quot;: &quot;&lt;scan-time digest&gt;&quot;,
+    &quot;fingerprint&quot;: &quot;function:path/to/file.py:name#0&quot;
+  }]
+}
+</code></pre>
+<p><code>findings</code> remains the sorted human-label list. <code>identities</code> carries the
+structured matching inputs: kind, path, name, ordinal, <code>body_digest</code>, and
+fingerprint. <code>findings_not_in_baseline</code> compares current identities against
+those records and applies git's old-path-to-new-path rename map between the
+stored commit and the audited commit. A copy is not a rename; a declaration
+name change is not rescued by a matching digest.</p>
+<p>Baseline versions 1 and 2 cannot be migrated because labels do not contain a
+body digest or the commit needed for rename evidence. They are rejected with a
+specific <code>--write-baseline</code> regeneration instruction. This remains separate
+from report-schema normalization: no persisted report is rescored.</p>
+<h2 id="the-stage-5-fields">The stage 5 fields</h2>
+<p><code>score.evidence_status</code> reports <code>complete</code> or <code>incomplete</code> against the named profile <code>default-v1</code>, with one reason per unresolved measurement carrying its typed-model path and provenance. <code>score.verified_grade</code> is the letter when the evidence supports one and <code>null</code> when it does not.</p>
+<p>The profile's required measurements are <strong>frozen by name</strong> in <code>_verification.DEFAULT_V1_REQUIRED</code>. Adding a scoring input does not silently change what <code>default-v1</code> demands: it fails a test until the input is required under a new profile name or recorded as not required. Editing v1's set in place is a v2.</p>
+<p><code>Measured(0)</code> and <code>NotApplicable</code> are both <strong>complete</strong> evidence — the scanner looked and found none, and the measurement has no population here. Only <code>Unknown</code> withholds a grade. In the rollup, <code>NotApplicable</code> removes the corresponding aspect from the category denominator under the point estimate and both interval endpoints; it is neither a clean score nor unresolved uncertainty.</p>
+<p><strong>What stage 8 changed.</strong> <code>score.grade</code> is gone; <code>verified_grade</code> is the only letter a report carries. <code>verified_grade_blockers</code> explains an <em>issued</em> grade and is empty when none was issued — what is missing is named in <code>evidence_status.reasons</code> instead. Adding optional fields does not bump the schema version, but removing or renaming public fields does, which is why stage 8 became version 2. ADR 005 then made the estimate nullable as version 3. Invalid input still raises <code>EvidenceValidationError</code> or <code>UnsupportedReportSchema</code>: there is no serialized <code>invalid</code> status, because a malformed report must not flow onward carrying numbers nobody should trust.</p>
+<h2 id="schema-version">Schema version</h2>
+<p><strong>Version 3 (ADR 005).</strong> <code>maintainability_estimate</code> and <code>maintainability_range</code> are nullable, and <code>evidence_status.status</code> gains <code>insufficient</code>. A scan whose scope is not a whole repository carries no score: the scale is calibrated over whole repositories, so a diff is a different kind of object rather than a small one. Consumers that assumed a number must handle null; the shared presentation helper renders <code>Not scored</code>, never a dash or a zero.</p>
+<p>Findings, aspects, categories and dimensions are unaffected — only the rolled-up judgment is withheld.</p>
+<p>New reports carry a top-level integer:</p>
+<pre><code class="language-json">{ &quot;schema_version&quot;: 3, &quot;root&quot;: &quot;...&quot;, &quot;summary&quot;: { ... } }
+</code></pre>
+<p><strong>Version 2 (ADR 001 stage 8)</strong> removed the ambiguous compatibility score fields. <strong>Version 3 (ADR 005)</strong> made the estimate and range nullable. The public <code>score</code> object is now:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>standard</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>maintainability_estimate</code></td>
+<td>number or <code>null</code></td>
+</tr>
+<tr>
+<td><code>maintainability_range</code></td>
+<td><code>[number, number]</code> or <code>null</code></td>
+</tr>
+<tr>
+<td><code>evidence_status</code></td>
+<td><code>{status, profile, reasons[]}</code></td>
+</tr>
+<tr>
+<td><code>verified_grade</code></td>
+<td>string or <code>null</code></td>
+</tr>
+<tr>
+<td><code>verified_grade_blockers</code></td>
+<td>string[] — empty whenever no grade was issued</td>
+</tr>
+<tr>
+<td><code>categories</code>, <code>aspects</code>, <code>rubric</code>, <code>dimensions</code>, <code>reference</code></td>
+<td>unchanged structures</td>
+</tr>
+<tr>
+<td><code>worst_dimension</code></td>
+<td>string or <code>null</code></td>
+</tr>
+<tr>
+<td><code>analyzer_scored_dimensions</code></td>
+<td>string[] — dimensions whose analyzer reading set the estimate; empty when none did</td>
+</tr>
+<tr>
+<td><code>not_applicable</code></td>
+<td>string[] — which <code>None</code>s in <code>aspects</code> are a resolved absence (looked, no population) rather than missing evidence. Additive and optional, like <code>analyzer_scored_dimensions</code>: it bumps no version, because nothing reading version 2 breaks on a key it does not know. Added by D206, so that a run's coverage is recoverable from its output rather than inferred by subtracting the blocker text from the aspect layer</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>overall</code>, <code>overall_range</code>, <code>grade</code> and <code>grade_blockers</code> are gone, with no aliases. <strong>Version 1 is rejected, not migrated</strong> — the inventory below established that nothing rescores a persisted report, so a migration would serve no caller.</p>
+<ul>
+<li><strong>Owner.</strong> <code>build_report</code> stamps it. The constant lives in <a href="../../src/maintainability_audit/evidence.py"><code>evidence.py</code></a> as <code>REPORT_SCHEMA_VERSION</code>, next to the code that validates it.</li>
+<li><strong>Not the baseline version.</strong> <code>baseline.write_baseline</code> writes its own
+  <code>"version": 3</code>. That numbers a different artifact with a different lifecycle;
+  it does not change report schema 3.</li>
+<li><strong>What forces a bump.</strong> Removing or renaming a scoring input, or changing the meaning of an existing field. Adding a new optional field does not, because absent inputs already normalize to <code>Unknown</code> rather than to a value.</li>
+<li><strong>Compatibility policy.</strong> <code>normalize_report_evidence</code> accepts version 3 only. An unsupported or absent version raises <code>UnsupportedReportSchema</code>. Nothing is silently interpreted under the latest rubric.</li>
+<li><strong>Non-normalizing consumers are unaffected.</strong> Renderers, SARIF, prompts and baselines read named keys; an added top-level key is inert to them. Verified by comparing a full report before and after this slice: <code>score</code>, <code>summary</code> and <code>history</code> are byte-identical.</li>
+</ul>
+<h2 id="evidence-states">Evidence states</h2>
+<p><a href="../../src/maintainability_audit/evidence.py"><code>evidence.py</code></a> defines exactly three, per ADR 001 §2:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>State</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Measured(value, provenance)</code></td>
+<td>the scanner looked and established this value; <code>Measured(0)</code> is a finding</td>
+</tr>
+<tr>
+<td><code>Unknown(reason, provenance)</code></td>
+<td>no value could be established, with the reason</td>
+</tr>
+<tr>
+<td><code>NotApplicable(reason, provenance)</code></td>
+<td>the measurement has no population in this repository</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>SummaryEvidence</code> and <code>HistoryEvidence</code> name every scoring input currently drawn from <code>summary</code> and <code>history</code>. <code>walk_evidence</code> recurses the model, so tests sweep the real field set instead of a hand-maintained list.</p>
+<p>Two behaviors worth recording because they are decisions, not details:</p>
+<ul>
+<li><strong>History is always a structure.</strong> When a report carries no history, every field is <code>Unknown</code> with a reason naming the shallow clone, rather than the object being absent. A caller cannot reach a history number without passing a state that says whether it exists.</li>
+<li><strong>The state is the only authority after normalization.</strong> Raw history presence is used only while constructing <code>Measured</code>, <code>Unknown</code>, and <code>NotApplicable</code>; no companion <code>history_present</code> flag survives into <code>NormalizedEvidence</code> or grading. Two representations can disagree, and one did: an <code>Unknown</code> ownership count inherited the <code>NotApplicable</code> grade exemption merely because a history object existed.</li>
+<li><strong>Absence is never upgraded.</strong> <code>single_author_files</code> becomes <code>NotApplicable</code> when no file has three commits — but only if the count was actually recorded. A deleted field stays <code>Unknown</code> even when the population is empty, because deleting evidence must not resolve it into a <em>better-defined</em> state than leaving it in. This was a live bug in the first draft of the module, caught by its own tests.</li>
+</ul>
+<h2 id="deliberate-no-ops">Deliberate no-ops</h2>
+<p>Confirmed in source during stage 7 rather than assumed:</p>
+<ul>
+<li><strong>No badge consumer exists.</strong> Nothing in this repository renders or publishes a grade badge, so there was nothing to migrate. One was not created to satisfy the ADR's wording.</li>
+<li><strong>No API consumer exists.</strong> The JSON report is the API; it already carries both fields.</li>
+<li><strong>The gate does not compare label sets.</strong> <code>load_baseline</code> remains available to
+  string consumers, but <code>--fail-on-new</code> calls <code>findings_not_in_baseline</code>, which
+  loads structured identities and applies the shared matcher.</li>
+</ul>
+<h2 id="remaining-work">Remaining work</h2>
+<p>The contract migration is done; see the <a href="decisions.html">decision register</a> for where the ADR stands. One stage remains:</p>
+<p><strong>Stage 9 — separate history-window materialization from measurement.</strong> Fix-breadth still resolves, fetches, repairs and measures in one path. The ADR calls for an explicit manifest — pinned head, selection rule, selected commit ids, required parent objects, tool version — checked in, with analysis reading only the manifest and performing no network access.</p>
+<p>Older notes on the work those stages cover:</p>
+<p>ADR 001 is <strong>partially implemented</strong>: stage 8 shipped; stage 9 remains. Nothing here should be read as claiming otherwise.</p>
+<footer>Rendered from <code>docs/report-contract.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

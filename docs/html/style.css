@@ -1,0 +1,51 @@
+/* Reading-copy styles for docs/html, adapted from the cq-team documentation renderer. */
+:root{--bg:#fbfaf7;--panel:#ffffff;--ink:#1d1d1f;--muted:#6b6b70;--rule:#e6e3dc;
+--accent:#1f5f8b;--accent-soft:#e8f0f6;--code:#f3f1ec;--decided:#1e7a4b;--decided-bg:#e3f3ea;
+--leaning:#8a5a00;--leaning-bg:#fbf0d9;--open:#1f5f8b;--open-bg:#e5eef6;--stated:#5c5c63;--stated-bg:#ececef}
+@media (prefers-color-scheme:dark){:root{--bg:#141517;--panel:#1b1c1f;--ink:#e8e6e1;--muted:#9a9aa1;
+--rule:#2c2d31;--accent:#7fb4dc;--accent-soft:#1d2a35;--code:#232428;--decided:#7fd3a6;--decided-bg:#17301f;
+--leaning:#e6b85c;--leaning-bg:#33280f;--open:#8fc0e6;--open-bg:#172735;--stated:#b4b4bb;--stated-bg:#26272b}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.top-inner{max-width:1280px;margin:0 auto;padding:10px 24px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-size:14px}
+.brand{font-weight:700;letter-spacing:-.01em;color:var(--ink)}
+.top nav a{color:var(--muted);margin-right:14px}.top nav a.here{color:var(--ink);font-weight:600}
+.layout{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:250px minmax(0,1fr);gap:40px;padding:32px 24px 80px}
+aside{position:sticky;top:64px;align-self:start;max-height:calc(100vh - 90px);overflow:auto;font-size:13.5px;border-right:1px solid var(--rule);padding-right:16px}
+aside .label{text-transform:uppercase;font-size:11px;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
+aside ul{list-style:none;margin:0;padding-left:0}aside ul ul{padding-left:12px}aside li{margin:4px 0}aside a{color:var(--muted)}aside a:hover{color:var(--ink)}
+main{min-width:0}
+.meta{color:var(--muted);font-size:13px;margin-bottom:6px}
+h1{font-size:34px;line-height:1.2;letter-spacing:-.02em;margin:.2em 0 .4em}
+h2{font-size:23px;letter-spacing:-.01em;margin:2.2em 0 .6em;padding-top:.6em;border-top:1px solid var(--rule)}
+h3{font-size:18px;margin:1.8em 0 .5em}
+p,li{max-width:78ch}
+blockquote{margin:1.2em 0;padding:14px 18px;background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:6px}
+blockquote p{margin:.3em 0}
+code{background:var(--code);padding:.12em .38em;border-radius:4px;font:13.5px/1.4 ui-monospace,"SF Mono",Menlo,monospace}
+pre{background:var(--code);padding:14px 16px;border-radius:8px;overflow:auto}pre code{padding:0;background:none}
+.table-wrap{overflow-x:auto;margin:1.2em 0;border:1px solid var(--rule);border-radius:10px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--bg);padding:10px 12px;border-bottom:1px solid var(--rule)}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tr:target td{background:var(--accent-soft)}
+td:first-child{font-weight:600;min-width:14ch}
+tr[id] td:first-child{white-space:nowrap;min-width:0}
+.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill.decided,.pill.accepted{color:var(--decided);background:var(--decided-bg)}
+.pill.leaning{color:var(--leaning);background:var(--leaning-bg)}
+.pill.open{color:var(--open);background:var(--open-bg)}
+.pill.stated{color:var(--stated);background:var(--stated-bg)}
+a.cite{font-size:.85em;padding:0 .3em;border-radius:4px;background:var(--accent-soft);white-space:nowrap}
+hr{border:0;border-top:1px solid var(--rule);margin:2em 0}
+footer{color:var(--muted);font-size:12.5px;margin-top:60px;padding-top:16px;border-top:1px solid var(--rule)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin:18px 0 34px}
+.card{display:block;background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:16px 18px;color:var(--ink)}
+.card:hover{border-color:var(--accent);text-decoration:none}
+.card .t{font-weight:650}.card .v{color:var(--muted);font-size:13px}
+@media (max-width:900px){.layout{grid-template-columns:1fr;gap:0}aside{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--rule);padding:0 0 16px;margin-bottom:24px}}
+@media (max-width:600px){body{font-size:15.5px}.layout{padding:20px 16px 60px}h1{font-size:27px}tr[id] td:first-child{white-space:normal}}
+.cards .g{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}

@@ -42,6 +42,9 @@ _EXTRA_IMPORTS: dict[str, frozenset[str]] = {
     # ships imports it, and `test_the_shipped_package_does_not_import_yaml`
     # has the equivalent guard for the package itself.
     "lizard": frozenset({"lizard"}),
+    # `tools/render_docs.py` turns the markdown into the docs/html reading
+    # copy. Development only: the product never renders documentation.
+    "markdown": frozenset({"markdown"}),
 }
 
 # Every declared extra. Tests may import these (mcp tests need `mcp`).
@@ -52,6 +55,8 @@ _DECLARED_EXTRAS = frozenset({
     # `tools/` diffs this project against. Development only — nothing the
     # product ships imports it, and this guard is what keeps that true.
     "lizard",
+    # `markdown` renders the docs/html reading copy in `tools/render_docs.py`.
+    "markdown",
 })
 _TEST_FORBIDDEN = frozenset({"yaml"})
 

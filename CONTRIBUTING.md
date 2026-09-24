@@ -43,6 +43,21 @@ Single-test fast-iteration (no coverage gate):
 PYTHONPATH=src python3 -m pytest tests/test_cli.py::test_version_flag
 ```
 
+## Documentation
+
+Every document is also rendered into one readable HTML copy in
+[`docs/html/`](docs/html/index.html): the root documents, everything under
+`docs/`, and cards for the standalone HTML pages. The markdown stays the source
+of truth. After changing any document, re-render and commit both:
+
+```bash
+python3 tools/render_docs.py
+```
+
+`tests/test_rendered_docs.py` fails when the committed copy no longer matches
+its markdown, or when a tracked document has no page. The set of documents is
+read from git, so a new document is picked up without editing a list.
+
 ## Pull Requests
 
 Include:

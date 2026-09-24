@@ -1,0 +1,115 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Kotlin · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#what-counts-as-a-decision">What counts as a decision</a></li>
+<li><a href="#second-opinion">Second opinion</a></li>
+<li><a href="#analyzer-coverage">Analyzer coverage</a></li>
+<li><a href="#not-yet-anchored">Not yet anchored</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Languages</div><h1>Kotlin</h1><p>Functions, constructors, <code>init</code> blocks, and the types — <code>class</code>,
+<code>interface</code>, <code>object</code>, and the <code>data</code>, <code>sealed</code>, <code>enum</code>, <code>annotation</code>,
+<code>value</code> and <code>inner</code> forms, each of which is a <em>modifier</em> on <code>class</code> or
+<code>object</code> rather than a keyword of its own. Types and objects are
+descended into, because that is where members live; a function body is
+stepped over.</p>
+<p><strong>Kotlin is keyword-led and braced</strong>, so the walk is the one C, C++, C#,
+Java and Swift share. Three things make its reading its own.</p>
+<p><strong>An extension function writes its own receiver.</strong> <code>fun Widget.draw()</code>
+is <code>Widget.draw</code> in the report because it is <code>Widget.draw</code> in the
+source. This is the one place Kotlin is <em>easier</em> than Swift, which
+spells the same idea <code>extension Widget { func draw() }</code> and needs a
+second pass to carry the type name onto the member. A work order saying
+"shorten <code>draw</code>" against a tree with eleven of them is not a bounded
+instruction, and Kotlin hands over the qualification for free.</p>
+<p><strong>An expression body has no brace.</strong> <code>fun area() = w * h</code> is idiomatic
+Kotlin rather than a corner, and two shared mechanisms reach the wrong
+answer on it. The end-finder bounds a body by its braces and falls back
+to indentation, and that fallback walks to the closing <code>}</code> of the
+<em>enclosing class</em> — so a one-line function came back two lines long,
+with the brace that ends its container counted as its last line. And the
+shared bodyless check looks for <code>=&gt;</code>, the arrow JavaScript and C# use
+for an expression member; Kotlin writes <code>=</code>, so every expression-bodied
+function in the tree would have been dropped as a signature with nothing
+behind it. Kotlin therefore supplies its own end-finder and answers the
+bodyless question itself.</p>
+<p><strong>A type with no body is still a type.</strong> <code>data class Point(val x: Int)</code>
+is a complete, useful class and mints a declaration. <code>fun draw()</code> inside
+an interface is a requirement and mints nothing, as in C, C++, C# and
+Swift. The bodyless rule is about functions, not about declarations in
+general — which is where C++ and Swift, whose bodyless <em>types</em> are
+forward declarations, are not a guide.</p>
+<p>Everything it misses, it misses in the safe direction:</p>
+<ul>
+<li><strong>Properties are not declarations</strong>, accessor or not. <code>val area: Int
+  get() = w * h</code> is the computed property C# and Swift already exclude,
+  for the reason they exclude it: an ordinary type has many, each a line
+  or two, and counting them dilutes the population every rate divides by.</li>
+<li><strong>A trailing lambda mints nothing.</strong> Kotlin's syntax puts one in
+  almost every collection pipeline, and grading each as a function would
+  flood the population with one-line members. <code>lizard</code> does mint them,
+  which is declared as a divergence rather than absorbed.</li>
+<li><strong>An anonymous <code>object : Foo { }</code> expression</strong> is a body with no
+  declaration keyword leading the line and is not counted.</li>
+<li><strong>An anonymous <code>companion object</code> is named <code>Companion</code></strong> — Kotlin's
+  own default — so the walk descends into it. Returning no name would
+  skip its members, and a companion object is where Kotlin puts its
+  factories.</li>
+<li><strong>A body written with the brace on the next line</strong> leaves the
+  signature's parentheses balanced with no <code>{</code> and no <code>=</code>, so it reads
+  as a requirement and mints nothing. Legal Kotlin, vanishingly rare in
+  it, and missing one declaration is cheaper than counting every
+  interface requirement in the tree.</li>
+</ul>
+<h2 id="what-counts-as-a-decision">What counts as a decision</h2>
+<p><strong><code>when</code> is counted at its arms, not at its header</strong> — the rule shared
+with <code>switch</code> in Go, PHP, Ruby, Python, Swift and Fortran, and bought by
+the Fortran <code>select case</code> defect where an N-way branch scored 1. Kotlin
+spells an arm <code>-&gt;</code>, which is also how it spells a lambda's parameter
+list and a function type, so both are consumed before the arms are
+counted. The cost is a <code>when</code> written entirely on one line, whose first
+arm is eaten with the brace — under-reporting, the direction this
+project errs in. The <code>else</code> arm is not counted, as Go declines
+<code>default</code> and Rust declines <code>_ =&gt;</code>.</p>
+<p><strong><code>?:</code> decides and <code>?.</code> does not.</strong> Elvis is Kotlin's <code>??</code>: both halves
+are written, which is the test the C family already applies. A safe call
+yields <code>null</code> and carries on down the same path, and is the optional
+chaining C, C#, TypeScript and Java all decline to count. Rust's <code>?</code> <em>is</em>
+counted here and the difference is real rather than a taste — Rust's
+returns early from the function.</p>
+<p><strong>There is no ternary.</strong> <code>if</code> is an expression in Kotlin, so the
+C-family <code>?…:</code> alternative is absent rather than merely unused. With it,
+<code>fun find(id: Int?, name: String?)</code> would score two: D115's defect in a
+sixth spelling, after C#, TypeScript, PHP, Java and Swift.</p>
+<p><strong><code>do</code> is not counted.</strong> <code>do { … } while (cond)</code> is one loop with one
+condition and the <code>while</code> carries it, as PHP's <code>do</code> and Swift's <code>repeat</code>
+already do.</p>
+<h2 id="second-opinion">Second opinion</h2>
+<p>Checked construct by construct against <code>lizard</code> 1.24.0, which reads
+Kotlin although the upstream analyzer inventory never said so — the same
+stale-row problem that left Fortran without a metric emitter for two
+releases. The two readings agree on <code>if</code>, <code>&amp;&amp;</code>, <code>for</code>, <code>while</code>, elvis,
+and on a <code>when</code> with an <code>else</code>.</p>
+<p>They differ in one place, declared in
+<code>tests/test_grammar_constructs.py</code>: lizard counts a <code>when</code>'s arms minus
+one, treating <code>else</code> as an arm. That is right for an exhaustive <code>when</code>
+and one short for a statement <code>when</code> without one, where falling through
+to the next line is a path that exists and is not counted.</p>
+<h2 id="analyzer-coverage">Analyzer coverage</h2>
+<p>Kotlin has it. <code>lizard</code> reads it for complexity and <code>jscpd</code> for
+duplication, both in the shipped pool, so a Kotlin repository gets
+analyzer-primary evidence rather than depending on the built-in scanner
+alone.</p>
+<h2 id="not-yet-anchored">Not yet anchored</h2>
+<p>Kotlin is <strong>parsed but absent from the reference corpus</strong>, so every skin
+discloses that its grade is provisional — the same caveat COBOL carries,
+for a different reason and with a different expected end. The scanner
+shipped ahead of the corpus in 3.8.0; Kotlin anchors at the next
+recalibration on the corpus policy's own terms, where COBOL is excluded
+permanently.</p>
+<footer>Rendered from <code>docs/languages/kotlin.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

@@ -1,0 +1,352 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Work-order run, 2026-09-10 — the tool&#x27;s own backlog, worked to a disposition · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#why-a-refusal-is-a-disposition">Why a refusal is a disposition</a></li>
+<li><a href="#the-starting-state">The starting state</a></li>
+<li><a href="#dead-code-2-items-both-fixed">Dead code — 2 items, both fixed</a></li>
+<li><a href="#near-duplicates-4-items-2-fixed-and-2-refused">Near-duplicates — 4 items, 2 fixed and 2 refused</a><ul>
+<li><a href="#fixed-two-identical-json-diagnostic-readers-similarity-100">Fixed: two identical JSON diagnostic readers (similarity 1.00)</a></li>
+<li><a href="#fixed-php-and-rust-member-qualification-similarity-0949-cross-file">Fixed: PHP and Rust member qualification (similarity 0.949, cross-file)</a></li>
+<li><a href="#refused-_semantic_policy_domain_type-_operation-similarity-0900">Refused: _semantic_policy._domain_type / _operation (similarity 0.900)</a></li>
+<li><a href="#refused-_pressuresdimension_pressures-production_pressures-similarity-0813">Refused: _pressures.dimension_pressures / production_pressures (similarity 0.813)</a></li>
+</ul>
+</li>
+<li><a href="#unpaired-files-58-items-1-fixed-and-57-refused">Unpaired files — 58 items, 1 fixed and 57 refused</a><ul>
+<li><a href="#what-the-suite-actually-covers">What the suite actually covers</a></li>
+<li><a href="#fixed-_genericpy-604-89">Fixed: _generic.py, 60.4% → 89%</a></li>
+<li><a href="#corrected-the-52-were-a-defect-in-the-tool-not-a-difference-of-opinion">Corrected: the 52 were a defect in the tool, not a difference of opinion</a></li>
+<li><a href="#the-six-that-remain-and-they-are-honest">The six that remain, and they are honest</a></li>
+</ul>
+</li>
+<li><a href="#what-this-run-is-evidence-for">What this run is evidence for</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Audits and registers</div><h1>Work-order run, 2026-09-10 — the tool&#x27;s own backlog, worked to a disposition</h1><p><strong>Genre: work log.</strong> Written to be cited. Every row here is a decision with
+the measurement that drove it, so a reader can disagree with the decision
+without having to re-derive the facts.</p>
+<p>The subject is <code>maintainability-agent</code> auditing itself at <code>v3.1.0</code>
+(<code>87cf1ef</code>), through its own MCP server, with the analyzer pool running.
+That run produced <strong>64 work-order items</strong>. This document takes every one of
+them to a disposition: fixed, or refused with the reason.</p>
+<h2 id="why-a-refusal-is-a-disposition">Why a refusal is a disposition</h2>
+<p>This project's own remediation rules say: <em>"Explain false positives or
+justified complexity instead of contorting clear code to satisfy a
+metric."</em> A backlog worked to zero by satisfying the metric is worth less
+than a backlog worked to zero by judgment, and the difference is only
+visible if the refusals are written down with their evidence.</p>
+<p>Two of the six non-trivial items here are refusals. Both are cases where
+the detector was <strong>correct by its own rule</strong> and the right engineering
+answer was still "no".</p>
+<p>A third category turned out to matter more. Fifty-two items were first
+recorded here as refusals — correct findings under a convention this
+repository does not use — and that was a mistake. A tool emitting 52
+false positives every run has a defect, not a disagreement. The section
+below records the original reasoning, why it did not follow, and the fix
+(D149). <strong>A refusal is a disposition; it is not a place to put a defect
+you would rather not fix.</strong></p>
+<h2 id="the-starting-state">The starting state</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Version</td>
+<td>3.1.0 (<code>87cf1ef</code>)</td>
+</tr>
+<tr>
+<td>Grade</td>
+<td>C · estimate 4.1 / 5 · range 3.8 – 4.6</td>
+</tr>
+<tr>
+<td>Evidence</td>
+<td>complete, profile <code>default-v1</code></td>
+</tr>
+<tr>
+<td>Analyzers</td>
+<td>10 of 13 contributing</td>
+</tr>
+<tr>
+<td>Files scanned</td>
+<td>497</td>
+</tr>
+<tr>
+<td>Hard gate failures</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Work-order items</td>
+<td>64</td>
+</tr>
+</tbody>
+</table></div>
+<p>Item classes: 58 <code>unpaired-hotspot</code>, 4 <code>near-duplicate</code>, 2 <code>dead-code</code>.</p>
+<h2 id="dead-code-2-items-both-fixed">Dead code — 2 items, both fixed</h2>
+<p>Both were genuinely unreferenced. The check before deleting was a
+repository-wide grep for the name, in <code>src/</code>, <code>tests/</code> and <code>tools/</code>, with
+the definition line excluded: zero call sites for each.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Evidence</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>_pressures._breach_counts</code> (26 lines)</td>
+<td>no reference anywhere</td>
+<td>deleted</td>
+</tr>
+<tr>
+<td><code>_grant_ledger._grant_still_names_what_was_granted</code> (8 lines)</td>
+<td>no reference anywhere</td>
+<td>deleted</td>
+</tr>
+</tbody>
+</table></div>
+<p>Neither is a judgment call. Unreferenced code costs reading time and
+misleads a search, and deleting it is the cheapest change there is.</p>
+<h2 id="near-duplicates-4-items-2-fixed-and-2-refused">Near-duplicates — 4 items, 2 fixed and 2 refused</h2>
+<p>The condition this project sets for merging duplication is <strong>the same
+business meaning</strong>, not the same shape. All four are similar in shape.
+Two mean the same thing and two do not.</p>
+<h3 id="fixed-two-identical-json-diagnostic-readers-similarity-100">Fixed: two identical JSON diagnostic readers (similarity 1.00)</h3>
+<p><code>RuffAdapter._read</code> and <code>FortitudeAdapter._read</code> were byte-identical apart
+from two tokens: the concept mapper, and the key holding the line number.</p>
+<p>ruff and fortitude are both Rust linters in the same lineage and ship the
+same envelope with one key renamed — ruff writes <code>row</code>, fortitude writes
+<code>line</code>. Reading ruff's spelling against fortitude's payload does not fail;
+it silently drops every line number. One of the two copies carried a
+comment warning about exactly that.</p>
+<p>Consolidated into <code>_json_diagnostics(result, *, slug, concept_of,
+line_key)</code>. <strong>The warning that used to be a comment beside one copy is now
+a required argument on every caller</strong>, which is the part worth noting: the
+duplication was the smaller problem, and the knowledge trapped in a comment
+was the larger one.</p>
+<p><em>Verified:</em> 185 adapter tests pass.</p>
+<h3 id="fixed-php-and-rust-member-qualification-similarity-0949-cross-file">Fixed: PHP and Rust member qualification (similarity 0.949, cross-file)</h3>
+<p><code>_ranges_php._qualify_methods</code> and <code>_ranges_rust._qualify_impl_members</code>
+were twenty-four lines answering one question — <em>which container does this
+declaration belong to?</em> — and answering it identically: innermost span
+wins, so a method inside a class nested in another class, or an <code>impl</code>
+nested in a <code>mod</code>, is named for the thing it is actually a member of.</p>
+<p>What genuinely differed was <strong>which spans to qualify against</strong>, which is
+now the argument. Extracted to <code>_ranges_core.qualify_members</code>, beside the
+shared <code>scan_bounded</code> walk both languages already used.</p>
+<p>Rust's version additionally skipped an unnamed span (an anonymous <code>impl</code>).
+That guard is kept for both: PHP class spans always carry a name, so it
+costs PHP nothing, and it states the rule for whichever language arrives
+next.</p>
+<p><em>Verified:</em> 460 language tests pass.</p>
+<h3 id="refused-_semantic_policy_domain_type-_operation-similarity-0900">Refused: <code>_semantic_policy._domain_type</code> / <code>_operation</code> (similarity 0.900)</h3>
+<p>Both validate a config entry and return a normalized dict. There the
+resemblance ends:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th><code>_domain_type</code></th>
+<th><code>_operation</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>required fields</td>
+<td><code>name</code>, <code>required_type</code></td>
+<td><code>name</code></td>
+</tr>
+<tr>
+<td>error message</td>
+<td>names both fields</td>
+<td>names one</td>
+</tr>
+<tr>
+<td>output keys</td>
+<td><code>boundary</code>, <code>symbol</code>, <code>required_type</code></td>
+<td><code>capability_type</code>, <code>operation_contract</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Merging them needs a schema parameter and a shared error path. The result
+is one function whose behaviour depends on a mode argument, and two entry
+contracts that a reader can no longer see by reading the function that
+enforces them. <strong>The shape is shared; the meaning is not.</strong> Refused.</p>
+<h3 id="refused-_pressuresdimension_pressures-production_pressures-similarity-0813">Refused: <code>_pressures.dimension_pressures</code> / <code>production_pressures</code> (similarity 0.813)</h3>
+<p>These deliberately compute over <strong>two different populations</strong>, and the
+separation is load-bearing rather than incidental.</p>
+<p><code>analyzability</code> and <code>testability</code> ask how understandable and testable the
+<em>production</em> code is. Charging them for a long test body inverts the
+incentive: extracting duplicated test setup into a fixture would lower the
+score for improving the code.</p>
+<p>The decisive evidence is already in the module. <code>_production()</code> exists
+solely to stop the production path falling back to the combined count. Its
+docstring records that an audit killed that fallback twice over, and what
+it cost: deleting <code>production_declarations_scanned</code> produced a <em>measured</em>
+pressure out of an <code>Unknown</code> and <strong>raised the reported overall from 4.3 to
+4.6</strong>. ADR 001 §3 forbids exactly that.</p>
+<p>Merging the two functions re-creates the shared path that mistake came
+through. <strong>Refused, and this is the strongest refusal in the run</strong>: the
+code already carries the record of what happens when these two are
+allowed to share.</p>
+<h2 id="unpaired-files-58-items-1-fixed-and-57-refused">Unpaired files — 58 items, 1 fixed and 57 refused</h2>
+<p>This is the interesting class, and the only honest way to dispose of it
+was to measure. The finding asks <strong>"does a test file exist named for this
+module"</strong>. That is a real maintainability question — can a maintainer
+find the tests for this code — and it is <em>not</em> the same question as
+"is this module tested". Answering the second does not automatically
+answer the first, so both are reported below.</p>
+<h3 id="what-the-suite-actually-covers">What the suite actually covers</h3>
+<p>Branch coverage over the whole suite, 2,664 tests, gate at 92%:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Total coverage</td>
+<td><strong>94.46%</strong></td>
+</tr>
+<tr>
+<td>Unpaired modules inside the coverage target</td>
+<td>53</td>
+</tr>
+<tr>
+<td>Unpaired paths outside it (<code>tools/</code>)</td>
+<td>5</td>
+</tr>
+<tr>
+<td>Unpaired modules <strong>below 82%</strong></td>
+<td><strong>1</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>The distribution is the answer. Of 53 measured modules, the lowest was
+60.4%, the next lowest 82.9%, and the rest ran from there to 100% — six
+of them at exactly 100%. One genuine gap, fifty-two well-covered modules,
+and five developer scripts outside the target.</p>
+<h3 id="fixed-_genericpy-604-89">Fixed: <code>_generic.py</code>, 60.4% → 89%</h3>
+<p>The one real gap, and it was the right one to find. <code>_generic</code> is the
+module a new analyzer is added through <em>without writing code</em>: a
+declaration says where the findings array is and which keys hold the
+location, and one of four parsers does the rest.</p>
+<p>That makes it the widest untrusted-input surface in the package — every
+one of those parsers is handed whatever a third-party binary printed —
+and a third of it was unexercised.</p>
+<p><code>tests/test_declarative_parsers.py</code> covers what a malformed or merely
+chatty tool produces: a missing rule key, a wrong shape at the declared
+path, a progress line mid-stream, an entry that is not an object. It also
+pins the deliberate asymmetry between the two JSON formats — the array
+parser <strong>refuses</strong> a wrong shape because the <em>declaration</em> is wrong,
+while the line parser <strong>skips</strong> a non-object because the tool is merely
+talking. Thirteen tests; <code>_generic</code> coverage 60.4% → 89%.</p>
+<h3 id="corrected-the-52-were-a-defect-in-the-tool-not-a-difference-of-opinion">Corrected: the 52 were a defect in the tool, not a difference of opinion</h3>
+<p><strong>This section originally recorded 52 refusals. That was wrong, and the
+correction is the most useful thing in this document.</strong></p>
+<p>The reasoning was: the rule encodes a naming convention, this repository
+deliberately uses another (219 test files — <strong>215 named after a
+behaviour, 4 after a module</strong>), the code is demonstrably exercised at
+94.46%, therefore the findings are false positives to be documented and
+declined.</p>
+<p>Every fact in that paragraph is true. The conclusion did not follow.</p>
+<p>A tool that emits 52 false positives on every run of the repository that
+ships it does not have a documentation problem. It has a <strong>defect</strong>, and
+writing the 52 down in a file while the tool goes on printing them is
+the failure this project's own workflow header warns about in the next
+sentence over: <em>"A pipeline that fails on a warning teaches people to
+ignore it, and then it protects nothing."</em></p>
+<p><strong>What the rule should have asked.</strong> Pairing tested whether a test file
+was <em>named</em> for a module. The question worth asking is whether a test
+<em>exercises</em> it, and the evidence for that was already sitting unread in
+the test files: <strong>52 of the 58 import the module they were said not to
+cover.</strong> An import is a fact about the relationship; a filename is a
+guess about it.</p>
+<p>Fixed in D149 — pairing now accepts either signal:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align: right;">before</th>
+<th style="text-align: right;">after</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>work-order items</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;"><strong>8</strong></td>
+</tr>
+<tr>
+<td><code>unpaired-hotspot</code></td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;"><strong>6</strong></td>
+</tr>
+<tr>
+<td>paired production files</td>
+<td style="text-align: right;">7 / 146</td>
+<td style="text-align: right;"><strong>111 / 146</strong></td>
+</tr>
+<tr>
+<td>estimate / grade</td>
+<td style="text-align: right;">4.1 / C</td>
+<td style="text-align: right;">4.1 / C</td>
+</tr>
+<tr>
+<td><code>scanner_fingerprint</code></td>
+<td style="text-align: right;"><code>0f08242164497d73</code></td>
+<td style="text-align: right;"><strong>unchanged</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>A second correction, on the cost.</strong> The fix was first deferred on the
+grounds that pairing feeds <code>test_presence</code>, which moves
+<code>scanner_fingerprint</code> and invalidates all 180 corpus rows — so it would
+need a full re-measure and a release of its own. That was asserted from
+how the change felt and never checked. <code>_test_pairing</code> is not in
+<code>MEASUREMENT_PATH</code>; the fingerprint is byte-identical either side of the
+change. <code>test_presence</code> reads 5.0 both ways, because it asks whether
+tests exist at all rather than what fraction is paired.</p>
+<p><strong>The cost used to justify the delay did not exist.</strong> An unverified
+estimate did the work of a reason, which is the same shape as a claim in
+prose standing in for a check — the mechanism this register was opened
+to track.</p>
+<h3 id="the-six-that-remain-and-they-are-honest">The six that remain, and they are honest</h3>
+<p><code>tools/build_catalog.py</code>, <code>tools/calibration/select_authored.py</code>,
+<code>tools/calibration/measure_cohorts.py</code> — developer scripts outside the
+coverage target, whose output is pinned and reviewed rather than
+unit-tested. <code>_ranges_core</code>, <code>_html_report_sections</code> and <code>_semantic_ts</code>
+are reached by tests only transitively, through the modules that import
+them. Both groups are worth a look rather than a dismissal, and neither
+is noise.</p>
+<h2 id="what-this-run-is-evidence-for">What this run is evidence for</h2>
+<p>Three claims, each with something in this document behind it.</p>
+<ol>
+<li><strong>A deterministic gate produces a backlog a human can actually
+   adjudicate.</strong> 64 items, every one traceable to a rule, none requiring
+   the reader to trust the tool's judgment over their own.</li>
+<li><strong>A refusal is a disposition, not a hiding place.</strong> Two items were
+   correctly flagged and correctly declined, and that is a real outcome a
+   process must be able to record. But 52 more were <em>also</em> filed as
+   refusals here, with sound reasoning, and they were a defect. The
+   difference is a question worth asking of any backlog: <strong>would this
+   finding be wrong on somebody else's repository too?</strong> If it would, it
+   is not a local judgment call — it is a bug in the check.</li>
+<li><strong>The knowledge worth preserving is usually in a comment, not in the
+   duplication.</strong> The single most valuable outcome of the ruff/fortitude
+   merge was not removing sixteen duplicated lines; it was turning a
+   warning that one copy happened to carry into an argument every future
+   caller must supply.</li>
+</ol>
+<footer>Rendered from <code>docs/audits/2026-09-10-work-order-run.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

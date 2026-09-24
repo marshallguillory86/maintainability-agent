@@ -1,0 +1,74 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Ruby · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#two-defects-found-by-adversarial-cases-not-by-the-contract">Two defects found by adversarial cases, not by the contract</a></li>
+<li><a href="#what-it-misses">What it misses</a></li>
+<li><a href="#measured-with-rubys-own-keywords">Measured with Ruby's own keywords</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Languages</div><h1>Ruby</h1><p>The second language here with no braces, and the harder of the two.
+Fortran's closer names what it closes — a <code>subroutine</code> ends at <code>end
+subroutine</code> — so its end-finder looks for a word. Ruby's one bare <code>end</code>
+closes a method, a class, a module, a block, an <code>if</code>, a <code>while</code>, a <code>case</code>
+and a <code>begin</code>, so telling them apart means counting openers.</p>
+<p><strong>That counting is the whole scanner.</strong> A method containing one
+<code>items.each do |item| … end</code> ends at its <em>own</em> <code>end</code>, not the block's,
+and a naive <code>def</code>/<code>end</code> pairing reports half the method. The lengths and
+complexities drawn from that are not approximately wrong — they describe
+a different span of code.</p>
+<p>Three things make the count wrong if they are not handled first:</p>
+<ul>
+<li><strong>Modifier forms open nothing.</strong> <code>return 0 if value.nil?</code> has an <code>if</code>
+  that never needs an <code>end</code>. Counted as an opener it eats the enclosing
+  method and everything after it, so a keyword opens only when it
+  <em>leads</em> the statement.</li>
+<li><strong><code>=begin</code>/<code>=end</code> blocks are comments</strong>, and <code>=end</code> is not an <code>end</code>.</li>
+<li><strong>Heredoc bodies are not code.</strong> <code>&lt;&lt;~SQL</code> … <code>SQL</code> may contain the word
+  <code>end</code> in a query or in prose.</li>
+</ul>
+<p>All three are blanked or discounted before a single keyword is counted,
+because a miscount does not corrupt one declaration — it shifts every
+range after it.</p>
+<p><strong>A method carries its class in Ruby's own notation</strong>: <code>Store#get</code> for an
+instance method, <code>Store.build</code> for one defined with <code>def self.</code>.</p>
+<h2 id="two-defects-found-by-adversarial-cases-not-by-the-contract">Two defects found by adversarial cases, not by the contract</h2>
+<p>Both were the dangerous kind, and both are now pinned by tests:</p>
+<ul>
+<li><strong>An endless method swallowed its neighbour.</strong> <code>def square(x) = x * x</code>
+  (Ruby 3.0) has no body and no <code>end</code>, but it matched the <code>def</code> opener,
+  so depth never returned to zero on its own line and the declaration
+  consumed the following method whole — which then disappeared from the
+  report entirely.</li>
+<li><strong>A nested class named the wrong owner.</strong> The span pass stepped over
+  each container's body and never saw a class inside a class, so
+  <code>Inner#deep</code> was reported as <code>Outer#deep</code>. Naming the wrong class is
+  worse than naming none: it sends a reader to a method that is not
+  there.</li>
+</ul>
+<h2 id="what-it-misses">What it misses</h2>
+<p>All under-reporting rather than over:</p>
+<ul>
+<li><strong>Metaprogrammed declarations are not in the source and are not seen.</strong>
+  <code>define_method</code>, <code>attr_accessor</code> and anything built by <code>class_eval</code>
+  produce methods no scanner can read, exactly as C and Swift macros do.
+  Ruby leans on these more than most languages, so this is the largest
+  gap here and it is stated first.</li>
+<li>A <code>{ … }</code> block is closed by <code>}</code> rather than <code>end</code> and is not counted
+  as an opener. Idiomatic Ruby uses <code>do … end</code> for multi-line blocks,
+  which is counted.</li>
+<li>A singleton class body (<code>class &lt;&lt; self</code>) reads as a container named
+  <code>self</code>, so its methods qualify oddly.</li>
+<li>Operator method names beyond the ordinary forms (<code>&lt;=&gt;</code>, <code>[]=</code>) are not
+  matched and are not reported.</li>
+</ul>
+<h2 id="measured-with-rubys-own-keywords">Measured with Ruby's own keywords</h2>
+<p><code>unless</code> is the idiomatic guard clause and <code>until</code> the negated loop;
+neither is in the C-family pattern, and <code>elsif</code> has one <code>e</code> so <code>elif</code>
+misses it too. Measured with C's keywords a guard-heavy Ruby method reads
+as branchless. <code>and</code> and <code>or</code> are word operators alongside <code>&amp;&amp;</code> and <code>||</code>.</p>
+<footer>Rendered from <code>docs/languages/ruby.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

@@ -1,0 +1,235 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>ADR 007: Adopt the five-pillar framework, and separate practice maturity from code condition · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#context">Context</a><ul>
+<li><a href="#where-the-two-models-already-agree">Where the two models already agree</a></li>
+<li><a href="#where-they-conflict">Where they conflict</a></li>
+</ul>
+</li>
+<li><a href="#decision">Decision</a><ul>
+<li><a href="#1-the-five-pillars-become-the-top-level-reporting-taxonomy-with-declared-scope">1. The five pillars become the top-level reporting taxonomy, with declared scope</a></li>
+<li><a href="#2-every-pillar-reports-two-independent-values-that-are-never-averaged-together">2. Every pillar reports two independent values that are never averaged together</a></li>
+<li><a href="#3-findings-are-prioritized-by-risk-effort-and-the-prompt-leads-with-quick-wins">3. Findings are prioritized by Risk × Effort, and the prompt leads with Quick Wins</a></li>
+<li><a href="#4-shared-vocabulary-is-adopted-verbatim">4. Shared vocabulary is adopted verbatim</a></li>
+</ul>
+</li>
+<li><a href="#options-considered">Options considered</a></li>
+<li><a href="#consequences">Consequences</a></li>
+<li><a href="#invariants">Invariants</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Decisions</div><h1>ADR 007: Adopt the five-pillar framework, and separate practice maturity from code condition</h1><ul>
+<li>Status: Accepted. Implementation progress is tracked in the <a href="decisions.html">decision register</a>, which is the single place it is stated</li>
+<li>Date: 2026-08-12</li>
+<li>Scope: Reporting taxonomy, the score's meaning, remediation prioritization, scope boundaries</li>
+<li>Source: <em>Code Quality Framework — Readability · Maintainability · Efficiency &amp; Scalability · Security · Testability</em>, July 2026</li>
+<li>Related: <a href="adr-006-analyzer-evidence.html">ADR 006</a>, <a href="adr-005-insufficient-population.html">ADR 005</a>, <a href="product-intent.html">product intent</a></li>
+</ul>
+<h2 id="context">Context</h2>
+<p>An internal framework document defines code quality across five pillars, gives each a 1–5 maturity rubric, a cost/risk table and a standards checklist, and adds a Risk × Effort prioritization matrix and a per-stack tooling template.</p>
+<p>Two things make it worth adopting rather than noting.</p>
+<p><strong>It has a concept this tool lacks, and that concept is exactly the one whose absence caused this week's central bug.</strong> Its 1–5 scale measures <em>process maturity</em>, not code properties:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 Initial</td>
+<td>Ad hoc; problems found reactively, often in production</td>
+</tr>
+<tr>
+<td>2 Managed</td>
+<td>Practices exist but are inconsistently applied or enforced</td>
+</tr>
+<tr>
+<td>3 Defined</td>
+<td>Standards documented and <strong>enforced automatically in CI</strong></td>
+</tr>
+<tr>
+<td>4 Quantitatively Managed</td>
+<td>Metrics tracked over time and used to guide decisions</td>
+</tr>
+<tr>
+<td>5 Optimizing</td>
+<td>Continuous data-driven improvement; near best-practice outcomes</td>
+</tr>
+</tbody>
+</table></div>
+<p>Score the hello-world repository against that rubric and it lands at <strong>Level 1</strong>: no enforced linter, no CI gate, no tracked metrics, no coverage threshold. It cannot reach Level 3 no matter how few findings it has, because Level 3 asks whether a standard is <em>enforced</em>, not whether a scan came back empty.</p>
+<p>This tool gave the same repository 5.0 / A+. The framework's rubric would have caught what four days of internal audits did not, because it measures a different thing.</p>
+<p><strong>It also names the audience problem this tool has never solved.</strong> The cost/risk tables translate technical neglect into velocity loss, incident cost and rework cost; the Risk × Effort matrix sequences remediation into Quick Wins, Major Projects, Fill-Ins and Reconsider. That matrix is a direct answer to the failure mode this project keeps hitting — remediation prompts that generate endless low-value nits because nothing ranks findings by consequence against effort.</p>
+<h3 id="where-the-two-models-already-agree">Where the two models already agree</h3>
+<p>The tool's five scoring categories are the ISO/IEC 25010 sub-characteristics of maintainability: modularity, reusability, analyzability, modifiability, testability. The framework's <strong>Maintainability</strong> pillar is defined in the same terms — modularity, low coupling, low duplication, clear architecture.</p>
+<p>So the tool is a deep decomposition of one pillar, with partial reach into two others. That is a clean relationship, not a conflict, and stating it prevents the two 1–5 scales from being mistaken for each other.</p>
+<h3 id="where-they-conflict">Where they conflict</h3>
+<ul>
+<li><strong>Same numerals, different meaning.</strong> The framework's 1–5 is CMMI-style process maturity. This tool's 1–5 is a code-property scale calibrated so the mature-OSS median lands at 4.0. A "3" means unrelated things in each. Left unreconciled, someone will average them.</li>
+<li><strong>Aggregation differs.</strong> The framework averages five pillars equally. The tool takes a weighted mean of categories, weighted again over aspects.</li>
+<li><strong>Scope differs.</strong> Security is a framework pillar and is out of scope here by design. Efficiency &amp; Scalability is not statically measurable at all.</li>
+</ul>
+<h2 id="decision">Decision</h2>
+<h3 id="1-the-five-pillars-become-the-top-level-reporting-taxonomy-with-declared-scope">1. The five pillars become the top-level reporting taxonomy, with declared scope</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Pillar</th>
+<th>This agent's position</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Readability</strong></td>
+<td><strong>Partial.</strong> Linter conformance, docstring coverage, declaration size, naming conventions where analyzers report them. Reported, with gaps named.</td>
+</tr>
+<tr>
+<td><strong>Maintainability</strong></td>
+<td><strong>Owned.</strong> The existing ISO 25010 decomposition is the detail view of this pillar.</td>
+</tr>
+<tr>
+<td><strong>Efficiency &amp; Scalability</strong></td>
+<td><strong>Out of scope, permanently.</strong> Requires profiling, load testing and runtime telemetry. Reported as <code>NotApplicable</code> with that reason — an explicit statement, not a silent omission.</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td><strong>Delegated</strong> to <code>secure-code-agent</code>, <strong>which every audit runs</strong> (amended 2026-09-13, D177). Reports that tool's measurement; when no trustworthy measurement comes back, the entry names the reason, so a reader never mistakes silence for safety.</td>
+</tr>
+<tr>
+<td><strong>Testability</strong></td>
+<td><strong>Partial.</strong> Test presence, declaration size and policy gates today; coverage and mutation results when the operator supplies them.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Declaring scope per pillar is itself a fix. Before this the tool was silent about efficiency and security, and silence reads as "fine".</p>
+<p><strong>Amended 2026-09-10: delegation resolves when the delegate reports.</strong>
+<code>NotApplicable</code> was the right answer while the other half did not exist,
+and it was never meant to be the permanent one — the pillar is delegated,
+not abandoned, and the point of naming the delegate was to make the
+handoff sayable. <code>secure-code-agent</code> 0.5.0 emits <code>security-pillar.json</code>
+against this document's own vocabulary: the scope words, the two-axis
+split and the posture matrix with its thresholds. Two tools reporting
+"level 3" or "healthy" about one repository have to mean the same thing
+by it, or the joined view is worse than either alone.</p>
+<p>So the entry now carries the delegate's measurement where one exists.
+Three properties hold, and each is how the join could go quietly wrong:</p>
+<ul>
+<li><strong>Absence keeps the placeholder.</strong> Most repositories run one tool. No
+  document is the ordinary case, not a failure, and not a warning.</li>
+<li><strong>A document that cannot be trusted is refused whole.</strong> Wrong schema,
+  wrong shapes, or a <code>posture</code> its own two axes do not support —
+  recomputed here against §2's matrix rather than believed, because the
+  thresholds are copied into the producer by value and a copied constant
+  drifts.</li>
+<li><strong>This tool still measures nothing about security.</strong> The scope stays
+  <code>delegated</code>. What changed is that the entry reports a measurement
+  instead of an apology for not having one, and names who made it.</li>
+</ul>
+<p><strong>Amended 2026-09-13: the audit runs the delegate (D177).</strong> The handoff
+above left the pillar measured only when some other
+process had written the document first — CI did, and nothing else did — so
+every audit through the chat door reported security unmeasured. The pillar
+is complete, so the audit completes it:</p>
+<ul>
+<li><strong>Every audit runs <code>secure-code-agent</code></strong> through <code>_runner.run</code> with the
+  auditing interpreter, when the installed release is in the supported range
+  (<code>&gt;=0.12.2,&lt;1</code>; the floor was 0.12.1 until 3.7.5 and D182). "Absence keeps
+  the placeholder" above is superseded.</li>
+<li><strong>Not a package dependency.</strong> 3.7.0 made it one, and within the day that
+  capped the tool below its current release and put the two tools' opposed
+  <code>mcp</code> pins into one environment. secure-code-agent's D3 and ADR 008 hold the
+  tools independently releasable, so it is installed alongside, like the
+  analyzer pool, and an unsupported or missing release is the pillar's stated
+  reason with an install command in the environment work order.</li>
+<li><strong>An operator's document wins.</strong> <code>--security-pillar &lt;path&gt;</code> — CI, which
+  runs the tool as its own gated step — is used as given and the tool is not
+  run a second time.</li>
+<li><strong>A document the tree supplies is no longer read on its own authority.</strong>
+  A <code>security-pillar.json</code> in the audited repository is repository content;
+  a repository may not report its own security posture in place of a run.</li>
+<li><strong>Nothing but the delegate's declared trend is written into the tree.</strong>
+  Every report the tool can produce is redirected to a temporary directory.
+  Its append-only <code>.secure-code/history.jsonl</code> cannot be redirected without
+  handing it an outside configuration, which that tool trusts to name
+  executables in the tree, so it is declared as the sixth artifact instead.</li>
+<li><strong>No measurement is never silent.</strong> Not installed, rejected configuration,
+  timeout: the pillar's reason says which, and a missing install is a line
+  in the environment work order.</li>
+</ul>
+<p>§2's prohibition is unaffected: the two axes arrive from another process
+and are still never averaged.</p>
+<h3 id="2-every-pillar-reports-two-independent-values-that-are-never-averaged-together">2. Every pillar reports two independent values that are never averaged together</h3>
+<p><strong>Practice level (1–5)</strong> — the framework's maturity rubric, scored from detectable evidence of enforcement: does a linter config exist, is it wired into CI, is there a coverage gate, are complexity thresholds configured, are ADRs maintained, is there a duplication check. This is measured by looking at the repository's configuration and CI, not its source. Configuration is read wherever it lives — a gate in a nested <code>api/pyproject.toml</code>, a <code>docs/decisions/</code> folder not named <code>adr*</code> — bounded by the same exclusion the scan uses so a vendored manifest does not count (plan-81dc6870 Class 3).</p>
+<p><strong>Code condition</strong> — what the analyzers found, normalized over population, as the tool scores today. For a pillar this tool owns, it is the mean of the pillar's <em>measured</em> aspects.</p>
+<blockquote>
+<p><strong>Amended 2026-09-21 (D206): the condition states what produced it.</strong> The mean is taken over the aspects that carried a number, which is the only honest arithmetic — a <code>None</code> is not a zero — and it means an unmeasured aspect is dropped rather than counted. Maintainability's seven aspects with one bad one average 4.43; withhold that one aspect and the same pillar reads 5.0. That is P3's shape, withholding evidence improving a reported value, and for eleven months both printed as a bare number beside the same declared list of seven.</p>
+<p><strong>Flooring it, as the overall grade is floored, is rejected.</strong> <code>_grade_on_the_floor</code> prices unknowns at 0 so concealment is monotonically unprofitable, and that is right for the graded field. A pillar's condition is not that field: it is defined here as the mean of what was measured, and a delegated pillar's condition arrives already computed by the tool that owns it. Flooring one side would put two incomparable numbers in the same column, which is a worse lie than the one being fixed.</p>
+<p>So the defence is disclosure. Every entry carries <code>condition_coverage</code> — which aspects were measured, which could not be, and which had no population to measure — and no skin prints a partial condition without saying how many aspects made it and which are missing. "Could not measure" and "nothing to measure" are named separately, because collapsing them is how an unknown reads as clean.</p>
+</blockquote>
+<p>The two are orthogonal and both are needed:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>Poor condition</th>
+<th>Good condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>High practice</strong></td>
+<td>Known debt, managed — invest in remediation</td>
+<td>Healthy</td>
+</tr>
+<tr>
+<td><strong>Low practice</strong></td>
+<td>Unmanaged debt — highest risk</td>
+<td><strong>Unverified.</strong> Clean scan, no enforcement, nothing preventing regression tomorrow</td>
+</tr>
+</tbody>
+</table></div>
+<p>The hello-world sits in the bottom-right cell. Today the tool calls that A+. Under this decision it reads <em>"practice level 1, condition unmeasured"</em>, which is the truth.</p>
+<p>Combining them into one number is forbidden. They answer different questions and the framework's own document keeps them apart.</p>
+<h3 id="3-findings-are-prioritized-by-risk-effort-and-the-prompt-leads-with-quick-wins">3. Findings are prioritized by Risk × Effort, and the prompt leads with Quick Wins</h3>
+<p>Every finding class carries a risk weighting (its cost driver, from the framework's cost/risk tables) and an effort estimate. The remediation prompt orders by that matrix rather than by count or severity alone:</p>
+<ul>
+<li><strong>Quick Wins</strong> (high risk, low effort) — lead with these</li>
+<li><strong>Major Projects</strong> (high risk, high effort) — name them, do not inline them into a prompt</li>
+<li><strong>Fill-Ins</strong> (low risk, low effort) — offer opportunistically, never as the headline</li>
+<li><strong>Reconsider</strong> (low risk, high effort) — suppress unless explicitly requested</li>
+</ul>
+<p>This is the structural answer to nit-loops: a prompt that opens with eighty line-length violations is generating Fill-Ins as if they were Quick Wins.</p>
+<h3 id="4-shared-vocabulary-is-adopted-verbatim">4. Shared vocabulary is adopted verbatim</h3>
+<p>The framework's glossary — cyclomatic complexity, duplication %, code churn, bus factor, coverage % — becomes the tool's published vocabulary. The tool already measures churn and a bus-factor proxy under the name <code>knowledge_concentration</code>; that aspect is renamed or aliased to the shared term so a report and the framework can be read side by side.</p>
+<p><strong>Amended 2026-08-13: the rename is refused, and the mapping is published instead.</strong> <code>knowledge_concentration</code> is the share of settled files (3+ commits) that exactly one person has touched. Bus factor is a <em>count of people</em> whose loss would stall the project. A repository where one author owns 80% of files can still have a bus factor of four, so these are different quantities and the shared term would claim a measurement this tool never makes — the defect the rest of this record exists to prevent. The glossary reconciliation lives in <a href="standard.html#shared-vocabulary-and-where-this-tools-terms-differ"><code>standard.md</code></a>, which states the relationship for every term including the two the tool does not measure at all. <code>test_the_ownership_aspect_does_not_claim_to_be_bus_factor</code> fails the build if someone closes this item by renaming the key.</p>
+<p>The framework's action thresholds (below 2.5 urgent, 2.5–3.5 targeted, above 3.5 maintain) apply to <strong>practice level</strong>, where they were designed to apply. They are not applied to the condition scale, whose bands are separately calibrated.</p>
+<h2 id="options-considered">Options considered</h2>
+<p><strong>A. Ignore the framework; keep ISO 25010 only.</strong> Rejected. It forfeits the practice-maturity concept, which demonstrably catches a bug the current model cannot see, and leaves the tool speaking a vocabulary no stakeholder uses.</p>
+<p><strong>B. Replace ISO 25010 with the five pillars.</strong> Rejected. Two pillars are unmeasurable or delegated, and the ISO decomposition is the tool's calibrated, tested detail. Replacement would discard working machinery for a taxonomy that does not decompose far enough to score.</p>
+<p><strong>C. Adopt the pillars as the outer taxonomy, keep ISO 25010 as the Maintainability detail, and add practice level as a second axis.</strong> Accepted. Nothing calibrated is discarded, the tool gains the missing concept, and the two 1–5 scales stay explicitly separate.</p>
+<p><strong>D. Merge practice and condition into one composite score.</strong> Rejected. It is the mistake that makes both meaningless, and it would reintroduce exactly the confusion this record exists to prevent.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li>A new detection layer is required for practice level: reading CI configuration, linter configuration, coverage thresholds and hook definitions. It examines repository configuration, not source, which is a genuinely new capability.</li>
+<li>The report gains a pillar-level view above the existing categories. The category detail is retained unchanged beneath Maintainability.</li>
+<li>Two pillars will always report <code>NotApplicable</code>. That is the intended output and must survive review as a feature, not get "fixed" later.</li>
+<li>Findings need risk and effort metadata, which is new per-finding-class data and a judgment call to be stated in <code>standard.md</code>, not hidden in code.</li>
+<li>The framework's per-stack tooling template maps onto <a href="tool-inventory.html">tool inventory</a> — the same artefact, one for humans and one for the runner.</li>
+</ul>
+<h2 id="invariants">Invariants</h2>
+<ol>
+<li>Every pillar appears in every report, with an explicit scope status: owned, partial, delegated or out of scope.</li>
+<li>Practice level and code condition are separate fields and are never averaged into a single number.</li>
+<li>A repository with no enforcement evidence cannot report a practice level above 2, regardless of findings.</li>
+<li>Delegated and out-of-scope pillars carry a reason naming what would be required, so silence is never read as a pass.</li>
+<li>Remediation output is ordered by the Risk × Effort matrix, and Fill-Ins never appear above Quick Wins.</li>
+<li>The framework's action thresholds are applied only to practice level, never to the condition scale.</li>
+</ol>
+<footer>Rendered from <code>docs/adr-007-pillars-and-practice.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

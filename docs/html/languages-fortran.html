@@ -1,0 +1,76 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Fortran · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul></ul>
+</div>
+</aside>
+<main><div class="meta">Languages</div><h1>Fortran</h1><p><strong>The first language here with no braces.</strong> C, C++, C# and Java share
+one walk because a body sits between <code>{</code> and <code>}</code>. Fortran closes a
+program unit with a keyword — a <code>subroutine</code> ends at <code>end subroutine</code>, a
+<code>module</code> at <code>end module</code>, and a bare <code>end</code> is legal for several of them.
+The rule is unchanged and the mechanism is not: the shared walk takes a
+<code>find_end</code>, and Fortran supplies one that counts program units instead
+of braces.</p>
+<p>Counting matters because <code>if</code>, <code>do</code>, <code>select</code>, <code>associate</code> and <code>block</code>
+all close with <code>end</code> too. A scanner that stopped at the first <code>end</code>
+would report a subroutine as ending at its first <code>end if</code>, and read the
+rest of its body as top-level code.</p>
+<p>Modules, submodules, programs and derived types are descended into,
+because that is where procedures live; a procedure body is stepped over.
+A function is named correctly whether it is written with a type prefix
+(<code>pure elemental real(dp) function norm(v)</code>) or a <code>result</code> clause
+(<code>real function accel(h) result(a)</code>). Keywords are matched
+case-insensitively, because Fortran is and older code SHOUTS.</p>
+<p><strong>An <code>interface</code> block is stepped over, not descended into.</strong> It holds
+signatures with no bodies, so walking in would mint a one-line
+declaration for every procedure a module merely <em>describes</em> — inflating
+the population every declaration rate divides by, with procedures
+defined somewhere else entirely.</p>
+<p><strong>Fixed-form is read as of 1.6.0.</strong> <code>.f</code>, <code>.for</code>, <code>.ftn</code> and their
+uppercase spellings are column-significant, and the columns mean what
+punched cards meant: a label in 1-5, a continuation marker in column 6,
+the statement in 7-72, and sequence numbers after that. A <code>C</code>, <code>c</code>, <code>*</code>
+or <code>!</code> in column 1 makes the whole line a comment.</p>
+<p>None of that changes what a program unit <em>is</em>, so fixed-form shares the
+recogniser and the <code>end</code>-keyword bounding with free-form and differs
+only in how a line becomes a statement. <strong>Continuation lines are joined
+onto the statement they continue</strong> before anything is read, which is
+not tidiness: a condition written</p>
+<pre><code class="language-fortran">      IF (A .GT. B .AND.
+     &amp;    C .LT. D) THEN
+</code></pre>
+<p>has its <code>THEN</code> on the second line. Read line by line the first looks
+like a single-line <code>IF</code>, no block opens, and the matching <code>END IF</code> then
+closes something that was never opened — ending the enclosing procedure
+early and reading the rest of its body as top-level code.</p>
+<p>Two limits: indentation carries no meaning in fixed-form, so the
+fallback for a unit whose <code>end</code> is missing is weaker here than in
+free-form; and a <code>D</code> in column 1 is a debug line in several legacy
+dialects but is not standard, so it is read as code rather than guessed
+at.</p>
+<p><code>.F90</code> (capital F) means "run the C preprocessor first" and is read as
+free-form; unexpanded macros are invisible, the same limitation C
+documents. <code>.pf</code> is pFUnit test source — free-form Fortran plus <code>@test</code>
+directives — and is read and treated as a test file.</p>
+<p>Everything else it misses, it misses in the safe direction:</p>
+<ul>
+<li><strong>Statement functions</strong> (a one-line <code>f(x) = x*2</code>) are not declarations.</li>
+<li><strong>Declarations produced by <code>#include</code> or a macro</strong> are invisible.</li>
+<li><strong>A procedure whose <code>end</code> is missing</strong> falls back to indentation, which
+  is a weak signal in Fortran; it costs that one declaration.</li>
+</ul>
+<p><strong>Testing conventions are recognised, because the claim depends on it.</strong>
+fpm puts tests in <code>test/</code>; test-drive writes <code>test_gravity.f90</code>; pFUnit
+writes <code>.pf</code> files and the camelCase <code>testGravity_mod.F90</code>. A module file
+is conventionally <code>gravity_mod.f90</code>, so <code>_mod</code> comes off both sides when
+pairing. Claiming Fortran without these would report untested production
+code on every Fortran repository there is.</p>
+<p>Fortran gained an analyzer in 1.5.0 — <strong>fortitude</strong>, 100+ lint rules —
+but it is a verdict emitter: it reports findings and cannot supply a
+declaration population. lizard, which could, does not read Fortran. So
+the built-in scanner remains the only path to a population here, rather
+than the zero-install convenience it is for C and C++.</p>
+<footer>Rendered from <code>docs/languages/fortran.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

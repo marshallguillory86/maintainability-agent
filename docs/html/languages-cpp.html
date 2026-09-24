@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>C++ · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul></ul>
+</div>
+</aside>
+<main><div class="meta">Languages</div><h1>C++</h1><p>Free functions, class and struct members, constructors, destructors,
+operator overloads, and the types themselves — <code>class</code>, <code>struct</code>,
+<code>union</code>, <code>enum</code> and <code>enum class</code>. A type is descended into, because that
+is where its methods live; a function body is stepped over once its end
+is known, so nothing inside one is read as a declaration.</p>
+<p>Names are reported the way a reader searches for them. An out-of-line
+definition keeps its qualification — <code>void geo::Widget::draw()</code> is
+<code>geo::Widget::draw</code>, not a second <code>draw</code> indistinguishable from every
+other class's. An operator overload is <code>operator==</code>. A <code>template &lt;...&gt;</code>
+header is stripped, so the declaration under it is measured rather than
+the template line.</p>
+<p>A <strong>bodyless declaration is not a definition</strong>, as in C: a prototype, a
+pure virtual (<code>virtual int area() const = 0;</code>) and <code>= default</code> / <code>=
+delete</code> all mint nothing. A header of forty declarations is not forty
+declarations.</p>
+<p>Everything it misses, it misses in the safe direction:</p>
+<ul>
+<li><strong>A constructor braced Allman inside its class</strong> (<code>W()</code> with <code>{</code> on
+  the next line, no return type and no qualification) is not counted.
+  That shape is indistinguishable from a bodyless macro invocation
+  written <code>MY_MACRO(x)</code>, and accepting it let the macro absorb the next
+  declaration's braces — an invented function hiding a real one. Missing
+  one constructor is the cheaper error.</li>
+<li><strong>Declarations produced by macros</strong> are invisible, as in C.</li>
+<li><strong>A template header spanning several lines</strong> leaves its declaration
+  unrecognised — one missed declaration, never a cascade.</li>
+<li><strong>Methods of a local class or inside a lambda</strong> sit within a function
+  body and are not counted.</li>
+<li><strong>Conditional compilation is not evaluated</strong>, so a declaration in a
+  disabled <code>#if</code> arm still counts.</li>
+</ul>
+<p><code>.h</code> remains <strong>C</strong>, not C++: it is the one extension both languages
+write, and the C reading under-reports a C++ header (finding its free
+functions and structs, missing its classes) where the reverse would
+invent nothing but read nothing either.</p>
+<p>Complexity for C++ is the same keyword count used everywhere else here.
+lizard covers C++ and is in the shipped pool when the number has to be
+exact.</p>
+<footer>Rendered from <code>docs/languages/cpp.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

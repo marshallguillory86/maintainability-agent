@@ -1,0 +1,79 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Swift · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul></ul>
+</div>
+</aside>
+<main><div class="meta">Languages</div><h1>Swift</h1><p>Functions, initialisers, deinitialisers, subscripts, and the types —
+<code>class</code>, <code>struct</code>, <code>enum</code>, <code>protocol</code> and <code>actor</code>. Types and extensions are
+descended into, because that is where members live; a function body is
+stepped over.</p>
+<p><strong>Every Swift declaration is keyword-led</strong>, which makes recognition easier
+here than in C++: a bare <code>name(</code> there is equally a call, a macro and a
+constructor, and a wrong guess once let a macro swallow the next
+declaration's braces. Nothing in Swift has to be guessed.</p>
+<p><strong>An <code>extension</code> member is reported under the type it extends.</strong>
+<code>extension Widget { func draw() }</code> is <code>Widget.draw</code>, not a second bare
+<code>draw</code> indistinguishable from every other type's. C++ gets this for free
+because the source writes <code>void geo::Widget::draw()</code>; Swift does not write
+it, so the scanner carries it. A work order saying "shorten <code>draw</code>" against
+a tree with eleven of them is not a bounded instruction.</p>
+<p><strong><code>class</code> is read as a keyword or a modifier as the line requires.</strong> Swift
+spells two things with it: <code>class Widget</code> declares a type, <code>class func
+make()</code> declares a type-level method. Stripping it with the other modifiers
+cost every <code>final class Store</code> its keyword — the type vanished and only its
+members were reported, which makes a declaration <em>rate</em> wrong rather than
+merely incomplete.</p>
+<p><strong>A protocol requirement mints nothing.</strong> Swift has no statement
+terminator, so the shared bare-signature rule — a signature that closes
+without opening a brace, which in C is a <code>;</code> — cannot see where a
+requirement ends. The first version walked on and adopted the next line's
+brace, reporting <code>func describe() -&gt; String</code> as two lines of body. The rule
+that replaces it: parentheses balancing on the line with no <code>{</code> following
+means no body. A wrapped signature leaves them unbalanced and is kept.</p>
+<p>Everything it misses, it misses in the safe direction:</p>
+<ul>
+<li><strong>Computed properties</strong> (<code>var area: Double { w * h }</code>) are not
+  declarations — the C# properties call, for the C# reason: an ordinary
+  type has many, each a line or two, and counting them dilutes the
+  population every rate divides by.</li>
+<li><strong>A body written Allman</strong> — <code>func f()</code> with <code>{</code> alone on the next line —
+  is read as a requirement and mints nothing. Legal Swift, vanishingly rare
+  in it, and missing one declaration is cheaper than counting every
+  protocol requirement in the tree.</li>
+<li><strong>A closure assigned to a property</strong> is a body with no declaration
+  keyword and is not counted.</li>
+<li><strong>Declarations produced by a macro</strong> are not in the source and are not
+  seen, as in C and C++.</li>
+<li><strong>Conditional compilation is not evaluated</strong>, so a declaration in a
+  disabled <code>#if</code> arm still counts.</li>
+</ul>
+<p><strong>Swift has analyzer coverage, unlike Fortran.</strong> <code>lizard</code> reads it for
+complexity and <code>jscpd</code> for duplication, both in the shipped pool, and
+<code>swiftlint</code>, <code>swiftformat</code> and <code>tailor</code> are catalogued as verdict emitters.
+So a Swift repository gets analyzer-primary evidence rather than depending
+on the built-in scanner alone — the position Fortran is still in, where
+<code>fortitude</code> reports findings but cannot supply a declaration population.</p>
+<p><strong>Swift is measured with its own reading of a branch.</strong> <code>guard</code> is the
+language's primary early exit and is absent from the C-family pattern, so a
+guard-heavy function would have read as branchless — the defect Fortran
+shipped with, where six nested <code>do</code> loops scored complexity 1 because the
+pattern did not know the keyword.</p>
+<p>Three constructs are deliberately <strong>not</strong> counted, each of which was
+counted until 2.11.0:</p>
+<ul>
+<li><strong><code>Int?</code> is an optional type, not a ternary.</strong> A <code>?</code> was read as a
+  conditional wherever it appeared, so every optional in the file scored
+  a branch. A ternary needs both halves, so a following <code>:</code> is now
+  required (D115). The cost is a ternary split across lines, which is
+  not counted — under-reporting, the direction this project errs in.</li>
+<li><strong><code>repeat</code> is not counted.</strong> <code>repeat { … } while cond</code> is one loop with
+  one condition, and the <code>while</code> carries it. Counting both scored the
+  construct and its own test (D117).</li>
+<li><strong><code>switch</code> is counted at its cases, not at its header</strong>, the rule
+  shared with Go, PHP, Ruby, Python and Fortran.</li>
+</ul>
+<footer>Rendered from <code>docs/languages/swift.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

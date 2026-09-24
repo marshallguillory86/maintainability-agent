@@ -1,0 +1,76 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Philosophy · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#principles">Principles</a></li>
+<li><a href="#why-ai-specific">Why AI-Specific?</a></li>
+<li><a href="#the-development-loop">The Development Loop</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Product and standard</div><h1>Philosophy</h1><blockquote>
+<p>Governed by <a href="product-intent.html">product intent</a>, which is authoritative on what this product is for and what it may claim. This page is the reasoning behind it, not a second definition of it.</p>
+</blockquote>
+<p>Maintainability Agent is not an AI reviewer and it does not send code to an LLM.</p>
+<p>It is a deterministic audit and prompt-generation layer for teams using AI-assisted development.</p>
+<h2 id="principles">Principles</h2>
+<ul>
+<li><strong>No author is the independent check on their own work.</strong> A platform that
+  generates code and then reports on its quality is producing a
+  self-assessment. That is not a criticism of any particular one — it is a
+  property of the arrangement, and no amount of engineering removes it. The
+  question a reviewer actually asks is <em>who checked this, and can they
+  re-derive the check months from now</em>; the author cannot be the answer, and a
+  checker that routes across models cannot re-derive anything. This tool writes
+  nothing and runs no model, which is the only reason its verdict can be
+  evidence rather than an opinion — and the better the generator gets, the more
+  a second, reproducible reading is worth.</li>
+<li>Deterministic first, AI optional. <strong>A gate that returns three answers is not a gate</strong> — Addy Osmani reports asking an agent to review the same code twice, getting disagreement, then a third answer on re-run (<a href="https://addyo.substack.com/p/agentic-code-quality">Agentic Code Quality</a>). Judgment can be probabilistic; the thing that blocks a merge cannot be.</li>
+<li>Human stays in control.</li>
+<li>CI produces evidence, not vibes.</li>
+<li>The remediation prompt is bounded by findings.</li>
+<li>The tool should prevent giant speculative cleanup PRs.</li>
+<li>Existing architecture matters.</li>
+<li>Passing a metric is not the same as maintainable code.</li>
+</ul>
+<h2 id="why-ai-specific">Why AI-Specific?</h2>
+<p><strong>Volume, not pathology.</strong></p>
+<p>An earlier version of this page claimed AI-written code fails in recognizably different ways. When this project finally tested its best candidate for such a signal against a properly matched control, the claim did not survive (<a href="studies.html#does-this-detect-ai-written-code">docs/studies.md</a>). And it never needed to be true: anyone who has spent decades in software has seen thousands of lines of unmaintainable code written entirely by hand. Slop is not a new failure mode. It is the oldest one.</p>
+<p>What AI changes is the <em>rate</em>. Agents produce code faster than humans can read it, so the ratio of code-written to code-reviewed collapses — and unmaintainable code that used to accumulate over years can now accumulate in an afternoon. That is the problem this tool exists for, and it needs no claim about AI writing <em>worse</em> code, only the observable fact that it writes <em>more</em>.</p>
+<p><strong>The same volume is the way out.</strong> If agents can produce slop at scale, agents pointed at deterministic findings can fix it at scale — that is the loop this tool closes:</p>
+<ol>
+<li>The audit finds the specific pressure points, deterministically, with no LLM in the loop.</li>
+<li>The score applies one uniform standard, so "better" and "worse" are not arguments.</li>
+<li>The remediation prompt hands an agent a bounded work order — <em>these</em> findings, <em>this</em> scope — so cleanup happens at machine speed without becoming a machine-speed rewrite.</li>
+</ol>
+<p>The failure modes commonly attributed to AI — misplaced abstractions, broad rewrites for narrow bugs, duplicated helpers, stale comments, implementation-detail tests — are worth detecting <strong>regardless of who wrote them</strong>, and detectors for them are built or planned on exactly that basis. Whether AI produces them at a different rate than humans is an empirical question; each claim about it gets tested against a matched control before it is made, because this project has retracted one such claim already and intends never to need a second retraction.</p>
+<h2 id="the-development-loop">The Development Loop</h2>
+<p>This repository is built iteratively and incrementally. The loop is the process,
+not an interruption of it:</p>
+<ol>
+<li>A test contract is written first, stating the behavior at a seam the product
+   actually uses.</li>
+<li>The implementor makes that contract pass at the production seam.</li>
+<li>A hostile audit checks the work against the prompt, the tests, and the
+   decision or defect register — never against the implementor's wrap-up.</li>
+<li>A hypothesis step turns what the audit found into the next bounded slice.</li>
+</ol>
+<p>The hypothesis step <strong>is the improvement prompts</strong> (2026-08-16).
+Each finding becomes a falsifiable claim for the next slice, closed behind a
+test that would fail if the defect returned. That is how conjecture becomes a
+smaller implementation task instead of a broader rewrite.</p>
+<p><strong>Zero known defects means no parking lot for known bugs.</strong> Once an audit finds
+a defect, it enters the current queue. A later phase is not a place to store a
+bug that already reproduces; sequencing may bound the fix, but it does not turn
+the finding back into a future possibility.</p>
+<p>This belongs in philosophy rather than <a href="product-intent.html">product intent</a>
+because it describes how the tool is built, not how it behaves. Treating the
+workflow itself as a product feature was considered and declined on 2026-08-16.
+The register-driven cycle in the
+<a href="defect-register-chat-surface.html">chat-surface defect register</a> is the worked
+example: findings became contracts, contracts became implementation slices,
+and hostile verification determined what entered the next queue.</p>
+<footer>Rendered from <code>docs/philosophy.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

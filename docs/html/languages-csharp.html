@@ -1,0 +1,39 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>C# · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul></ul>
+</div>
+</aside>
+<main><div class="meta">Languages</div><h1>C#</h1><p>Methods, constructors, destructors, and the types — <code>class</code>,
+<code>interface</code>, <code>struct</code>, <code>record</code>, <code>record struct</code> and <code>enum</code>. Types are
+descended into, because that is where members live; a method body is
+stepped over. Generic parameter lists are blanked before matching, so
+<code>public List&lt;T&gt; Sort&lt;T&gt;(List&lt;T&gt; items) where T : IComparable</code> yields
+<code>Sort</code>, and attributes are stripped with their arguments, so
+<code>[Obsolete("x")]</code> is not read as a method called <code>Obsolete</code>.</p>
+<p>Namespaces are handled in both forms: a braced <code>namespace Geo {</code> is
+walked into without being graded, and C# 10's file-scoped <code>namespace
+Geo;</code> declares nothing and is ignored rather than being allowed to
+swallow the file.</p>
+<p><strong>Properties are deliberately not declarations.</strong> <code>public int Count {
+get; set; }</code> has braces and would bound cleanly, and an ordinary C# tree
+holds thousands of them — each one line long, each nobody's maintenance
+burden. Counting them would dilute the population that every
+declaration rate divides by. They are excluded by construction: a
+property has no parameter list, and every pattern here requires one. The
+same applies to a parameterless expression-bodied member
+(<code>public int Area =&gt; w * h;</code>). A method written <code>public int Fast() =&gt;
+count_;</code> <strong>is</strong> counted — it has a parameter list.</p>
+<p>Everything it misses, it misses in the safe direction:</p>
+<ul>
+<li><strong>Interface and abstract members</strong> have no body, so they mint nothing.
+  A positional <code>record Point(int X, int Y);</code> likewise.</li>
+<li><strong>Local functions</strong> live inside a method body and are not counted.</li>
+<li><strong>Source-generated declarations</strong> are not in the tree and are not seen.</li>
+<li><strong>Conditional compilation is not evaluated</strong>, so a member in a
+  disabled <code>#if</code> arm still counts.</li>
+</ul>
+<footer>Rendered from <code>docs/languages/csharp.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

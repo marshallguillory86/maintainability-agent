@@ -1,0 +1,30 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Help for the chat workflow · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul></ul>
+</div>
+</aside>
+<main><div class="meta">Help</div><h1>Help for the chat workflow</h1><p>The primary surface for maintainability-agent is an AI chat host driving the
+local MCP process. After configuration is answered and the user chooses to
+run, the deterministic audit measures the repository and returns a bounded
+work order; the host shows it to the coding agent without granting permission
+for unrelated refactoring. The CLI is the automation and CI surface.
+<strong>Chat, MCP, and an interactive CLI TTY are one setup: the same questions.</strong></p>
+<p>Start with the part of the conversation you need:</p>
+<ul>
+<li><a href="help-first-run.html">First run and questions</a> — setup, repository grants, history
+  consent, and when a report file may be saved.</li>
+<li><a href="help-analyzer-pool.html">What the analyzer pool runs</a> — analyzer-primary evidence,
+  built-in fallback, selection, and missing-tool remedies.</li>
+<li><a href="help-report-and-history.html">Reading the report and its history</a> — estimate,
+  range, grade, work order, recurrence, baselines, economic context, and why
+  declaration rates are withheld for an unparsed language.</li>
+<li><a href="language-support.html">Language support</a> — the fifteen parsed languages, how
+  each decides where a declaration ends, and what each one deliberately misses.</li>
+</ul>
+<p>For integration details, see <a href="ide-agent-integration.html">IDE and agent integration</a>.
+For the binding product promises, see <a href="product-intent.html">product intent</a>.</p>
+<footer>Rendered from <code>docs/help/README.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

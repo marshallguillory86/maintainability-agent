@@ -1,0 +1,249 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Retrospective audit: v0.9.1 → v1.7.0 · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#verdict">Verdict</a></li>
+<li><a href="#f1-the-calibration-corpus-contains-none-of-four-claimed-languages-high">F1 — The calibration corpus contains none of four claimed languages (High)</a></li>
+<li><a href="#f2-the-decision-register-contradicts-what-shipped-high">F2 — The decision register contradicts what shipped (High)</a></li>
+<li><a href="#f3-the-falsifier-gate-did-not-cover-the-largest-body-of-work-medium">F3 — The falsifier gate did not cover the largest body of work (Medium)</a></li>
+<li><a href="#f4-fixed-form-test-strength-is-narrower-than-it-reads-medium">F4 — Fixed-form test strength is narrower than it reads (Medium)</a></li>
+<li><a href="#f5-stale-known-debt-text-low">F5 — Stale known-debt text (Low)</a></li>
+<li><a href="#what-held-up">What held up</a></li>
+<li><a href="#recommended-order">Recommended order</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Audits and registers</div><h1>Retrospective audit: v0.9.1 → v1.7.0</h1><p><strong>Scope.</strong> 104 commits, 267 files, +30,006 / −3,475 lines, spanning v1.0.0,
+v1.0.1 and the language increments 1.1.0 (C), 1.2.0 (C++), 1.3.0 (C#),
+1.4.0 (Fortran), 1.5.0 (fortitude adapter), 1.5.1 (docs), 1.6.0 (Fortran
+measurement + fixed-form), 1.7.0 (Fortran practice detection).</p>
+<p><strong>Benchmark.</strong> <code>docs/product-intent.md</code> (governing), <code>docs/architecture.md</code>
+(layers, 12 rules, invariants, known debt), <code>docs/decisions.md</code> (canonical
+for decision status).</p>
+<p><strong>Method.</strong> Read the benchmark documents first. Ran the tool on itself with
+the analyzer pool. Verified promises P1–P8 where this window could have
+broken them. Mutation-tested five of the shipped fixes by reverting each
+and confirming its tests fail. Compared documented claims against shipped
+reality. No diff-slicing: findings are at the level of a claim, a promise
+or a mechanism, not a line.</p>
+<hr />
+<h2 id="verdict">Verdict</h2>
+<p><strong>The code is in good shape. The paperwork is not, and one measurement
+assumption is undisclosed.</strong></p>
+<p>The self-audit reports 4.1 / 5, verified grade <strong>B</strong>, <strong>evidence complete</strong>,
+and <strong>zero</strong> file failures, function failures, duplicate blocks, risk
+findings and hard gates across 402 files. Layering and acyclicity hold
+under 13 property tests after 104 commits. Coverage is 94.72%, with every
+module added in this window between 87% and 100%.</p>
+<p>Five findings follow. Two are documents that now contradict the product,
+one is a disclosure gap that affects every score issued for four of the
+seven claimed languages, and two concern the strength of verification
+rather than the correctness of code.</p>
+<hr />
+<h2 id="f1-the-calibration-corpus-contains-none-of-four-claimed-languages-high">F1 — The calibration corpus contains none of four claimed languages <em>(High)</em></h2>
+<p><strong>Evidence.</strong> <code>tools/calibration/corpus.json</code> is 40 repositories: <strong>12
+JavaScript, 15 TypeScript, 13 Python</strong>. Zero Java, C, C++, C# or Fortran.
+Every score is normalised against <code>DIMENSION_REFERENCES</code>, which are medians
+over that corpus.</p>
+<p>Measured consequence, from the two Fortran audits run this week:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>stdlib</th>
+<th>LAPACK</th>
+<th>anchored to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>declarations</td>
+<td>1.10x</td>
+<td><strong>7.18x</strong></td>
+<td>median of 40 JS/TS/Python repos</td>
+</tr>
+<tr>
+<td>duplication</td>
+<td>0.93x</td>
+<td>2.84x</td>
+<td>same</td>
+</tr>
+<tr>
+<td>file_size</td>
+<td>0.84x</td>
+<td>2.05x</td>
+<td>same</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>docs/standard.md:121</code> does disclose the corpus composition — "across
+Python, TypeScript and JavaScript" — so this is not a concealed fact. What
+is missing is the <strong>consequence at the point of use</strong>. A LAPACK maintainer
+reading "7.18x the median" and "the corpus median lands at 4.0 (B): a
+well-run real codebase earns a B" would reasonably infer the comparison set
+includes code like theirs. It does not. Long, deeply-looped numerical
+subroutines are idiomatic in dense linear algebra and absent from the
+anchor.</p>
+<p>This is not a P2 violation — the rubric is uniform, and uniformity is the
+promise. It is the shape the intent document names as this project's one
+committed failure: <em>a claim outrunning its evidence tier</em>, here by silence
+rather than by assertion.</p>
+<p><strong>Recommendation.</strong> Two changes, one now and one planned.
+1. Name the limit where the number is read: the report's reference section
+   and <code>docs/standard.md</code> should state that references derive from a
+   JS/TS/Python corpus and that Java, C, C++, C# and Fortran are scored
+   against it.
+2. Plan a corpus extension. Note the cost honestly: adding non-web
+   languages will move <code>CALIBRATION_C</code> and re-grade every repository, so it
+   is a deliberate release, not a patch.</p>
+<p><strong>Do not</strong> fix this with per-language references. That would trade a stated
+limit for a silent violation of P2.</p>
+<hr />
+<h2 id="f2-the-decision-register-contradicts-what-shipped-high">F2 — The decision register contradicts what shipped <em>(High)</em></h2>
+<p><code>docs/architecture.md</code> names <code>decisions.md</code> canonical for decision status.
+Three passages there are now false:</p>
+<ol>
+<li><strong>ADR 006 status line:</strong> <em>"Java has a built-in range fallback; </em><em>we will
+   not write more range detectors</em><em> for Go/C/C++/C#/Rust."</em> Four were
+   written: C (1.1.0), C++ (1.2.0), C# (1.3.0), Fortran (1.4.0), plus
+   fixed-form Fortran (1.6.0).</li>
+<li><strong>"v1.0's declaration languages are Python, Java, JS, TS, JSX and
+   HTML"</strong> — now seven languages.</li>
+<li><strong>"languages nothing here reads yet: Go, Rust, C, C# and Fortran, which
+   are absent from the default extensions"</strong> — C, C# and Fortran are in the
+   default extensions and are read.</li>
+</ol>
+<p>The architecture document <em>was</em> amended ("The 2026-08 wording here said
+there would be no further scanners; the C++ and C# increments amend it").
+The register was not, so the two now disagree, and the register is the one
+the architecture document points readers to.</p>
+<p><strong>Recommendation.</strong> Amend the three passages with the same explicit
+"this was the wording, here is what changed it" form already used in
+<code>architecture.md</code>. Do not silently rewrite them — the register's value is
+that it records what was decided <em>and</em> what overturned it.</p>
+<p><strong>Positive worth recording:</strong> the cadence the register promised — <em>"one
+adapter per release, not as a batch"</em> —
+was honoured exactly: 1.1.0 C, 1.2.0 C++, 1.3.0 C#, 1.4.0 Fortran.</p>
+<hr />
+<h2 id="f3-the-falsifier-gate-did-not-cover-the-largest-body-of-work-medium">F3 — The falsifier gate did not cover the largest body of work <em>(Medium)</em></h2>
+<p><code>tools/prove_falsifiers.py</code> exists precisely because "an agent is in
+control of both the code and its test". It triggers on two things: register
+entries added in the diff that cite closing tests, and newly added
+<code>tests/*_class.py</code> files.</p>
+<p>The language increments used <strong>neither</strong>. Roughly 300 tests across
+<code>test_c_declarations.py</code>, <code>test_cpp_declarations.py</code>,
+<code>test_csharp_declarations.py</code>, <code>test_fortran_declarations.py</code>,
+<code>test_fixed_form_fortran.py</code>, <code>test_fortran_metrics.py</code>,
+<code>test_fortran_practice.py</code>, <code>test_language_coverage.py</code> and
+<code>test_readme_claims.py</code> were merged without the gate ever proving one of
+them fails without its fix.</p>
+<p><strong>I ran that proof retroactively.</strong> Five mutations, each reverting one
+shipped fix while keeping its tests:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Mutation</th>
+<th>Assertion failures</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>METRICS</code> table emptied (Fortran falls back to the C-family reading)</td>
+<td><strong>5</strong></td>
+</tr>
+<tr>
+<td>fortitude / fprettify / <code>fpm.toml</code> recognition removed</td>
+<td><strong>2</strong></td>
+</tr>
+<tr>
+<td>Fixed-form masker replaced by the free-form masker</td>
+<td><strong>1</strong></td>
+</tr>
+<tr>
+<td>Fortran 77 labelled-<code>DO</code> tracking removed</td>
+<td><strong>3</strong></td>
+</tr>
+<tr>
+<td><code>fortran</code> removed from lizard's catalog languages</td>
+<td><strong>1</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>All five are genuinely falsified, with real assertion failures rather than
+import errors. The work is sound; the <em>gate</em> did not know about it.</p>
+<p><strong>Recommendation.</strong> Either add register entries for the language increments
+citing their closing tests, which is what the gate reads, or widen
+<code>prove_falsifiers.py</code> to revert-prove added test files generally. The
+second is more honest about how work now arrives.</p>
+<hr />
+<h2 id="f4-fixed-form-test-strength-is-narrower-than-it-reads-medium">F4 — Fixed-form test strength is narrower than it reads <em>(Medium)</em></h2>
+<p><code>tests/test_fixed_form_fortran.py</code> carries eight behavioural tests. Under
+the mutation that bypasses the card-column masker, <strong>one</strong> fails — the
+continuation case. Under the labelled-<code>DO</code> mutation, three fail.</p>
+<p>The remaining tests are true but not discriminating: <code>C</code> in column 1,
+sequence numbers in columns 73+, and statement labels all produce the same
+result whether or not fixed-form rules are applied, because the free-form
+recogniser does not match those shapes either. They are defensive, not
+load-bearing.</p>
+<p>That is acceptable — but the file's docstring implies stronger coverage
+than the tests deliver, and this project already has vocabulary for the
+distinction: <code>architecture.md</code> grades every invariant <strong>Property</strong> or
+<strong>Regression</strong>.</p>
+<p><strong>Recommendation.</strong> Say which they are, or add one case where column-72
+truncation is load-bearing. Not urgent; the load-bearing behaviours are
+covered.</p>
+<hr />
+<h2 id="f5-stale-known-debt-text-low">F5 — Stale known-debt text <em>(Low)</em></h2>
+<p><code>docs/architecture.md:269</code>: <em>"Declaration extraction is gated on
+<code>DECLARATION_SUFFIXES</code> (Python, JS/TS/HTML, and Java)"</em> — missing C, C++,
+C# and both Fortran forms. In the same section, "<strong>Both</strong> suffix sets" and
+"<strong>Neither</strong> invents a bounding rule" describe two languages where there
+are now six.</p>
+<p><strong>Recommendation.</strong> Mechanical correction.</p>
+<hr />
+<h2 id="what-held-up">What held up</h2>
+<p>Reported because an audit that lists only failures is not a measurement.</p>
+<ul>
+<li><strong>The architecture absorbed six languages without deforming.</strong> Adding a
+  language is a module and a row in <code>declarations.SCANNERS</code>. Layering and
+  acyclicity pass 13 property tests over the real import graph; no cycle was
+  introduced across 104 commits.</li>
+<li><strong>The shared walk stayed shared.</strong> <code>scan_bounded</code> took two new parameters
+  (<code>find_end</code>, <code>mask</code>) and every prior language's suite passed unchanged —
+  which is how the generalisations were shown to be behaviour-preserving.
+  jscpd reports <strong>0 duplicate blocks</strong> across six sibling scanner modules.</li>
+<li><strong>The guards added in this window immediately caught real regressions.</strong>
+  The README language-table guard failed the moment it existed (JS/TS named
+  no suffixes; Fortran omitted three spellings). The analyzer-coverage lint
+  failed on the stale lizard row. Both were written, then watched to fail.</li>
+<li><strong>"One setup, three transports" is intact.</strong> No diff to <code>_first_run</code>,
+  <code>_mcp_setup</code> or <code>_setup_persist</code> across the whole window; the question set
+  did not drift while seven releases shipped.</li>
+<li><strong>The tool held its own line.</strong> Four pieces of code written in this window
+  tripped its own gates — two files over the length budget, two functions
+  over cognitive complexity — and each was split rather than shaved. The
+  self-audit ends at zero failures of every kind.</li>
+<li><strong>P7 and P8 behaved on unfamiliar input.</strong> On both Fortran repositories
+  the tool declined to issue a verified grade, named the five missing
+  measurements, identified the shallow clone as the cause, and told the
+  agent not to treat its own blind spot as a code defect.</li>
+</ul>
+<hr />
+<h2 id="recommended-order">Recommended order</h2>
+<ol>
+<li><strong>F2</strong> — correct the register. Cheapest, and it is the canonical
+   document currently disagreeing with the product.</li>
+<li><strong>F5</strong> — correct the known-debt text. Same pass.</li>
+<li><strong>F1(1)</strong> — state the calibration limit where scores are read. This is a
+   claim change; it needs your call, not mine.</li>
+<li><strong>F3</strong> — decide how the falsifier gate should reach work that arrives as
+   feature increments rather than register entries.</li>
+<li><strong>F1(2)</strong> — plan the corpus extension as its own release, knowing it
+   re-grades every repository.</li>
+<li><strong>F4</strong> — label or strengthen. Lowest value of the six.</li>
+</ol>
+<p>Nothing here blocks a release. Nothing here is a code defect.</p>
+<footer>Rendered from <code>docs/audit-v091-v170.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

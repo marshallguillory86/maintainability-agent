@@ -1,0 +1,65 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Track record · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#the-road-to-10">The road to 1.0</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Audits and registers</div><h1>Track record</h1><p>Every claim this project made, tested, and kept or withdrew — kept as its own
+document because it is the argument for trusting the numbers, and that argument
+is made by what was <em>removed</em>, not by what was added.</p>
+<p>Moved out of the README in 2.0.0. It had grown to 52 lines of a 500-line budget
+on the page a first-time reader scans, and a reader deciding whether to run the
+tool needs the promises and the limits before they need the history. The history
+still matters — it is why the promises are believable — so it gets a page rather
+than a trim.</p>
+<h2 id="the-road-to-10">The road to 1.0</h2>
+<p>1.0 is not a rewrite. It is the line drawn under a long arc of <strong>subtraction</strong> —
+what remained after every claim the project could not stand behind was removed.
+The arc is the credibility:</p>
+<blockquote>
+<p><strong>0.5.0 — the scoring engine was rebuilt.</strong> The old model counted findings
+absolutely, so it graded repo <em>size</em>, not maintainability: it scored
+<strong>Django, pytest, black, tornado, httpx, lodash, svelte, fastapi all at
+0.0 / F</strong> while a 53-file toy repo scored 4.6 / A. Scores became <strong>rates</strong>,
+normalized per dimension against what real code carries and calibrated so
+the corpus median earns a B. See
+<a href="standard.html#how-the-scale-was-calibrated-050">standard.md</a>.</p>
+<p><strong>0.6.0 — a near-duplication finding that pairs the copies</strong>, naming the
+declaration to reuse (<em><code>toAtomicAmount</code> at <code>TradeTicket.tsx:862</code> already does
+this</em>), so renaming can't hide clone-instead-of-reuse. Useful on its own
+terms — and explicitly <strong>not</strong> evidence about who wrote the code.</p>
+<p><strong>Retracted: that near-duplication distinguishes AI-written code.</strong> 0.6.0 had
+called it "the first signal that separates AI-written applications from mature
+human-written OSS."
+Re-run against a control matched on age, popularity and language, the near-duplication gap is not significant (p = 0.546), and no other metric earns the claim either.
+The honest summary is <em>this design could not measure a difference</em>, not <em>there
+is no difference</em>. See <a href="studies.html#does-this-detect-ai-written-code">studies.md</a>.</p>
+<p><strong>0.7.0 — the evidence model.</strong> The score is <strong>withheld</strong> when the evidence
+cannot support one; a diff is not a repository grade. External analyzers
+became the <strong>primary</strong> evidence where they measured a full concept set, with
+the built-in detectors as the fallback and disagreement <strong>widening the range</strong>
+rather than being averaged. The grade is <em>gated</em> and <em>banded from the evidence
+floor</em>, so withholding evidence can never buy a better letter.</p>
+<p><strong>0.8–0.9 — one setup, chat-first.</strong> Chat / MCP became the primary surface,
+the CLI the automation door, and the three transports converged on a single
+question set. A run of chat-surface wiring defects — and their closing tests —
+is recorded in
+<a href="defect-register-chat-surface.html">defect-register-chat-surface.md</a>.</p>
+<p><strong>1.0.0 — acceptance and the complete work order.</strong> A real-repo acceptance
+round on a mixed Python/TypeScript codebase hardened the last edges: the
+report now carries the entire backlog with a per-item copy-paste prompt,
+charts were rebuilt for legibility, reconfigure stopped destroying hand-tuned
+config, and TypeScript semantic coverage learned to find workspace projects
+and a locally-installed compiler. See the <a href="changelog.html#100---2026-09-01">changelog</a>.</p>
+</blockquote>
+<p>The through-line: this repository runs the tool against <strong>itself</strong> in CI and
+checks the report in (<a href="self-audit.html">docs/self-audit.md</a>). An earlier
+revision of the self-audit table advertised 5.0/A+ after the codebase had
+drifted to a B; a hostile audit caught the stale claim — precisely the failure
+mode this tool exists to catch.</p>
+<footer>Rendered from <code>docs/track-record.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

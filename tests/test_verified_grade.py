@@ -318,6 +318,9 @@ def test_not_applicable_rollup_is_the_only_change_to_the_pre_stage_five_anchor(
         "corpus_languages": CORPUS_LANGUAGES,
         "unanchored_languages": shipped["reference"]["unanchored_languages"],
         "corpus_note": shipped["reference"]["corpus_note"],
+        # And when the corpus was measured (3.9.0): a disclosure, not a
+        # change of meaning.
+        "corpus_measured": shipped["reference"]["corpus_measured"],
     }
     assert shipped["categories"] == {
         **expected["categories"],

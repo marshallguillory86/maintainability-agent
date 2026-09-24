@@ -32,7 +32,7 @@ from typing import Any
 # A foundation, not the scoring layer: grammar is neither scoring nor
 # wording, and taking the number from one place is what stops four
 # sentences printing "COBOL are parsed" (D148).
-from ._grammar import agreement
+from ._grammar import agreement, listed
 
 NOT_VERIFIED = "Not verified"
 # One phrase for "no number was issued", used wherever a number would
@@ -408,7 +408,7 @@ def unanchored_caveat(
         return []
     say = agreement(len(names))
     return ["", (
-        f"*{' and '.join(names)} {say.verb} parsed but {say.verb} not in the "
+        f"*{listed(names)} {say.verb} parsed but {say.verb} not in the "
         f"reference corpus, so {say.quantity} reported for code in "
         f"{say.object_pronoun} is provisional: the findings are as good as "
         "the parser, the rate they are compared against was measured on "

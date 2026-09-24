@@ -12,6 +12,7 @@
       ".F95",
       ".FOR",
       ".FTN",
+      ".bash",
       ".c",
       ".cbl",
       ".cc",
@@ -49,9 +50,11 @@
       ".rake",
       ".rb",
       ".rs",
+      ".sh",
       ".swift",
       ".ts",
-      ".tsx"
+      ".tsx",
+      ".zsh"
     ],
     "exclude_patterns": [
       ".git/",

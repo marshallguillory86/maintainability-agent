@@ -5,6 +5,7 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a><ul>
+<li><a href="#added-shell-is-parsed">Added — Shell is parsed</a></li>
 <li><a href="#maintenance-the-ways-a-finished-tool-ages-now-open-an-issue">Maintenance — the ways a finished tool ages now open an issue</a></li>
 <li><a href="#documentation-every-document-in-one-readable-html-copy">Documentation — every document in one readable HTML copy</a></li>
 <li><a href="#documentation-ai-reviewing-ai-is-still-an-opinion">Documentation — AI reviewing AI is still an opinion</a></li>
@@ -483,6 +484,46 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h3 id="added-shell-is-parsed">Added — Shell is parsed</h3>
+<p>The sixteenth language with a scanner of its own, and the second of the five
+the roadmap schedules. <code>.sh</code>, <code>.bash</code> and <code>.zsh</code> produce a declaration
+population: functions in the POSIX <code>name()</code> form and bash's <code>function name</code>
+forms, whose body may open on the next line and may be a subshell <code>( … )</code>.</p>
+<p><strong>Parsed by default, and that changes something for most users.</strong> Shell is in
+nearly every repository, so their scripts now join the graded population, and a
+grade can move because a repository's scripts were read for the first time.
+Shell is not in the calibration corpus, so every report says the grade is
+provisional for it, beside COBOL and Kotlin. The report's list of concerns an
+independent analyzer examined also narrows for any repository with scored
+scripts, because only jscpd reads shell: that list is the intersection over
+scored languages, and it is disclosure only — the grade does not read it. Each
+language's own coverage is still reported separately.</p>
+<p>Three readings are shell's own:</p>
+<p><strong>A masker of its own.</strong> <code>#</code> starts a comment only at the start of a word, so
+<code>$#</code>, <code>${#list[@]}</code> and <code>${path#prefix}</code> are code. <code>//</code> and <code>/*</code> are not
+comments, so <code>rm -rf "$dir"/*</code> does not blank the rest of the line. Heredoc
+bodies are text, <code>&lt;&lt;-</code> terminators may be tab-indented, and a double-quoted
+string may span lines. Quote characters survive masking, so a <code>case</code> arm written
+<code>"start"|"stop")</code> is still recognisable as one.</p>
+<p><strong>A keyword counts only in command position.</strong> Shell scripts are full of
+unquoted prose, and <code>echo waiting for the server</code> has a <code>for</code> in it that is an
+argument. <code>if</code>, <code>elif</code>, <code>while</code>, <code>until</code>, <code>for</code> and <code>select</code> count at the start
+of a command; <code>case</code> counts at its arms, not its header, and <code>*)</code> is the default
+and not counted; <code>&amp;&amp;</code> and <code>||</code> each count, because <code>cmd || exit 1</code> is the guard
+clause scripts are built from.</p>
+<p><strong>Nesting is read from <code>fi</code>, <code>done</code> and <code>esac</code>.</strong> The brace reader would score a
+deeply nested script as flat. A construct written on one line opens and closes
+there and leaks no depth.</p>
+<p><strong>No second implementation reads shell complexity</strong>: lizard 1.24.0 has no shell
+reader and nothing adapted in the catalog measures it. The reader is checked
+against the grammar instead — every compound command and list operator in POSIX
+XCU 2.9.3–2.9.4 and the bash constructs in the Bash Reference Manual 3.2.5, one
+specimen each — and Shell is named beside COBOL in both the second-opinion and
+the external-complexity exemptions, each disclosed on the language-support page.
+What it misses is on <a href="languages-shell.html">its page</a>.</p>
+<p>The unanchored-language caveat now reads as a list — "COBOL, Kotlin and Shell"
+— rather than joining every name with "and", which was right only while there
+were two.</p>
 <h3 id="maintenance-the-ways-a-finished-tool-ages-now-open-an-issue">Maintenance — the ways a finished tool ages now open an issue</h3>
 <p>Three risks the roadmap named, each of which failed silently:</p>
 <ul>

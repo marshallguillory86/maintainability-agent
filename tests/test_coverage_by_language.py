@@ -217,7 +217,7 @@ def test_a_single_language_repository_is_unaffected(tmp_path: Path) -> None:
     )
 
 
-def test_one_stray_shell_script_does_not_erase_a_python_library(tmp_path: Path) -> None:
+def test_one_stray_unscored_file_does_not_erase_a_python_library(tmp_path: Path) -> None:
     """The edge case distorting the norm — caught before it shipped.
 
     The first composition rule intersected coverage across every language
@@ -226,15 +226,21 @@ def test_one_stray_shell_script_does_not_erase_a_python_library(tmp_path: Path) 
     so the intersection was empty and a healthy library reported that
     nothing had examined anything.
 
-    Coverage describes **what was scored**. Shell is not in
-    `include_extensions`, so it is not in the population any rate is
-    drawn from, and it is already reported — by name and count — under
-    unread source. Letting it also erase the coverage claim would be one
+    Coverage describes **what was scored**. A language outside
+    `include_extensions` is not in the population any rate is drawn
+    from, and it is already reported — by name and count — under unread
+    source. Letting it also erase the coverage claim would be one
     unscanned file rewriting the answer for six hundred scanned ones.
+
+    The stray file was a shell script until 3.9.0, when Shell became a
+    parsed, scored language and the intersection over it became the true
+    statement (`test_a_scored_shell_script_narrows_the_claim`). The
+    property is about any unscored file, so Elixir stands in: the
+    roadmap schedules no scanner for it.
     """
     root = _repo(tmp_path / "library", {
         **{f"pkg/mod{n}.py": PY % {"n": n} for n in range(60)},
-        "scripts/release.sh": "#!/bin/sh\necho release\n",
+        "scripts/release.ex": "defmodule Release do\n  def run, do: :ok\nend\n",
     })
 
     analysis = analyze(root, load_config(None))
@@ -246,9 +252,28 @@ def test_one_stray_shell_script_does_not_erase_a_python_library(tmp_path: Path) 
         "Python files"
     )
     assert "types" in analysis.measured_concepts()
-    # Still visible per language, because the shell script is really
-    # there — and jscpd does read Shell, so it is not an empty row.
-    assert "Shell" in analysis.coverage_by_language()
+
+
+def test_a_scored_shell_script_narrows_the_claim(tmp_path: Path) -> None:
+    """Scored since 3.9.0, so the intersection over it is the truth.
+
+    Decided when Shell shipped: parsed by default, like every language
+    with a scanner, and composed like every scored language. No tool
+    checks types in shell, so a repository with scripts in its scored
+    population cannot claim `types` for the whole of it — and
+    `coverage_by_language` still says Python had it.
+    """
+    root = _repo(tmp_path / "library", {
+        **{f"pkg/mod{n}.py": PY % {"n": n} for n in range(60)},
+        "scripts/release.sh": "#!/bin/sh\nrelease() {\n  echo release\n}\n",
+    })
+
+    analysis = analyze(root, load_config(None))
+    if not _contributed(analysis, "mypy"):
+        pytest.skip("mypy did not run")
+
+    assert "types" not in analysis.measured_concepts()
+    assert "types" in analysis.coverage_by_language()["Python"]
     assert "types" not in analysis.coverage_by_language()["Shell"]
 
 

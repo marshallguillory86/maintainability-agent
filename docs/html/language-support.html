@@ -85,6 +85,11 @@ ends, and — deliberately — where it under-reports.</p>
 <td>Bounded by depth. Methods carry their class (<code>Store#get</code>); blocks, modifier forms, heredocs and <code>=begin</code> blocks are discounted first; metaprogrammed methods are not seen — see below.</td>
 </tr>
 <tr>
+<td>Shell (<code>.sh</code>, <code>.bash</code>, <code>.zsh</code>)</td>
+<td>dedicated scanner: functions in the POSIX <code>name()</code> and bash <code>function name</code> forms, bounded by their brace group or subshell, over a masker that knows <code>#</code>, heredocs and multi-line strings</td>
+<td>Bounded. Keywords count only in command position; <code>case</code> counts its arms; nesting is read from <code>fi</code>/<code>done</code>/<code>esac</code>. No external analyzer measures shell complexity — see <a href="languages-shell.html">Shell</a>.</td>
+</tr>
+<tr>
 <td>COBOL (<code>.cbl</code>, <code>.cob</code>, <code>.cpy</code>, <code>.CBL</code>, <code>.COB</code>, <code>.CPY</code>)</td>
 <td>dedicated scanner: PROCEDURE DIVISION paragraphs, bounded by the start of whatever follows them. Fixed-form card columns are read where the layout carries them</td>
 <td>Bounded by the next header. Programs and sections are containers and are not graded; level numbers are not declarations; a section whose statements sit outside any paragraph mints nothing — see below.</td>
@@ -143,7 +148,7 @@ whose code is mostly outside those extensions has its declaration rates
 approximate population.</p>
 <p><strong>Per-language accuracy — what each scanner sees and what it misses</strong> is
 one page per language, so adding a language adds a file rather than
-growing this one: <a href="languages-java.html">Java</a>, <a href="languages-c.html">C</a>, <a href="languages-cpp.html">C++</a>, <a href="languages-csharp.html">C#</a>, <a href="languages-fortran.html">Fortran</a>, <a href="languages-rust.html">Rust</a>, <a href="languages-go.html">Go</a>, <a href="languages-php.html">PHP</a>, <a href="languages-ruby.html">Ruby</a>, <a href="languages-swift.html">Swift</a>, <a href="languages-cobol.html">COBOL</a>.</p>
+growing this one: <a href="languages-java.html">Java</a>, <a href="languages-c.html">C</a>, <a href="languages-cpp.html">C++</a>, <a href="languages-csharp.html">C#</a>, <a href="languages-fortran.html">Fortran</a>, <a href="languages-rust.html">Rust</a>, <a href="languages-go.html">Go</a>, <a href="languages-php.html">PHP</a>, <a href="languages-ruby.html">Ruby</a>, <a href="languages-swift.html">Swift</a>, <a href="languages-cobol.html">COBOL</a>, <a href="languages-shell.html">Shell</a>.</p>
 <h2 id="what-counts-as-a-decision-per-language">What counts as a decision, per language</h2>
 <p><strong>Python's branch set is derived from its own grammar. Every other
 language's is a set somebody wrote down</strong>, checked construct-by-construct
@@ -222,6 +227,11 @@ applied.</p>
 <td><code>when</code> (its arms carry it); the <code>else</code> arm, which is Kotlin's <code>default</code>; <code>do</code>, whose <code>while</code> carries the loop; <code>?.</code>, which yields null rather than deciding; <code>String?</code>, a nullable type — and no ternary exists to confuse it with</td>
 </tr>
 <tr>
+<td>Shell</td>
+<td><code>if</code>, <code>elif</code>, <code>while</code>, <code>until</code>, <code>for</code>, <code>select</code>, <code>)</code> arms of a case, <code>&amp;&amp;</code>, <code>\|\|</code> — each keyword only in command position</td>
+<td><code>case</code> (its arms carry it); the <code>*)</code> arm, which is shell's <code>default</code>; <code>else</code>; a pipe <code>\|</code>; a keyword in an argument list, as in echo waiting for it</td>
+</tr>
+<tr>
 <td>C, C++, C#, Java, JS, TS, HTML</td>
 <td><code>if</code>, <code>else if</code>, <code>for</code>, <code>while</code>, <code>case</code>, <code>catch</code>, <code>&amp;&amp;</code>, <code>\|\|</code>, <code>??</code>, ternary <code>?</code></td>
 <td><code>switch</code> (its cases carry it); <code>default</code>; a <code>?</code> in type position — <code>int?</code>, <code>List&lt;?&gt;</code>, <code>v?:</code></td>
@@ -284,7 +294,10 @@ two implementations agreeing — the same limit already noted for PHP's
 reader is the thing that can be wrong: counting fixtures is what let
 Python go unchecked while twelve other languages were added (D120). A
 reader with no second implementation available has to be named with the
-reason, and <strong>COBOL is the only one</strong>.</p>
+reason, and <strong>COBOL and Shell are the only two</strong>. lizard reads neither,
+and nothing else adapted measures either one's complexity. Shell's
+reader is checked against the POSIX and bash grammars instead, one
+specimen per construct — see <a href="languages-shell.html">Shell</a>.</p>
 <p>A disagreement does not say who is right — two implementations can share
 a misconception, and PHP's <code>match</code> above is one they share. What it does
 is make the question unavoidable and send a reader to the grammar, which

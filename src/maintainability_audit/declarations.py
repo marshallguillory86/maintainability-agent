@@ -20,6 +20,7 @@ from ._cognitive import (
     fortran_cognitive,
     kotlin_cognitive,
     python_cognitive,
+    shell_cognitive,
     swift_cognitive,
 )
 from ._finding_match import normalized_body_digest
@@ -37,6 +38,7 @@ from ._metrics_types import (
     python_branch_points,
     ruby_branch_points,
     rust_branch_points,
+    shell_branch_points,
     swift_branch_points,
 )
 from ._ranges_c import c_declaration_ranges
@@ -55,6 +57,7 @@ from ._ranges_kotlin import kotlin_declaration_ranges
 from ._ranges_php import php_declaration_ranges
 from ._ranges_ruby import ruby_declaration_ranges
 from ._ranges_rust import rust_declaration_ranges
+from ._ranges_shell import shell_declaration_ranges
 from ._ranges_swift import swift_declaration_ranges
 
 # One set per language, then one table binding each to its scanner.
@@ -95,6 +98,10 @@ RUST_SUFFIXES = {".rs"}
 PHP_SUFFIXES = {".php", ".phtml"}
 # Ruby: `.rake` and `.gemspec` are Ruby with a different job.
 RUBY_SUFFIXES = {".rb", ".rake", ".gemspec"}
+# Shell: POSIX sh, bash and zsh share the definition and control
+# syntax this scanner reads. A script known only by its `#!` line has
+# no suffix and is not opened, as with every language here.
+SHELL_SUFFIXES = {".sh", ".bash", ".zsh"}
 # COBOL, and the copybooks it includes. A `.cpy` carries DATA
 # DIVISION text and no PROCEDURE DIVISION, so it mints nothing and is
 # scanned for size like a C header full of prototypes.
@@ -142,6 +149,7 @@ SCANNERS: tuple[tuple[set[str], object], ...] = (
     (RUST_SUFFIXES, rust_declaration_ranges),
     (PHP_SUFFIXES, php_declaration_ranges),
     (RUBY_SUFFIXES, ruby_declaration_ranges),
+    (SHELL_SUFFIXES, shell_declaration_ranges),
     (COBOL_SUFFIXES, cobol_declaration_ranges),
     (FORTRAN_SUFFIXES, fortran_declaration_ranges),
     (FIXED_FORM_SUFFIXES, fixed_form_declaration_ranges),
@@ -197,6 +205,10 @@ METRICS: tuple[tuple[set[str], object, object], ...] = (
     # neither of which the C pattern looks for, and `elsif` has one `e`
     # so `elif` misses it. A guard-heavy method read as branchless.
     (RUBY_SUFFIXES, ruby_branch_points, brace_cognitive),
+    # Shell decides in words and closes in words — `fi`, `done`,
+    # `esac` — and only where a command may begin, since unquoted
+    # prose says `for`. `case` is counted at its arms.
+    (SHELL_SUFFIXES, shell_branch_points, shell_cognitive),
     # COBOL closes scopes with hyphenated `END-` words and with the
     # period that ends a sentence; neither is in the C-family reading.
     (COBOL_SUFFIXES, cobol_branch_points, cobol_cognitive),
@@ -218,7 +230,7 @@ DECLARATION_SUFFIXES = (
     PYTHON_SUFFIXES | JAVA_SUFFIXES | C_SUFFIXES | CPP_SUFFIXES
     | CSHARP_SUFFIXES | SWIFT_SUFFIXES | KOTLIN_SUFFIXES
     | GO_SUFFIXES | RUST_SUFFIXES
-    | PHP_SUFFIXES | RUBY_SUFFIXES
+    | PHP_SUFFIXES | RUBY_SUFFIXES | SHELL_SUFFIXES
     | COBOL_SUFFIXES
     | FORTRAN_SUFFIXES | FIXED_FORM_SUFFIXES
     | BRACE_SUFFIXES

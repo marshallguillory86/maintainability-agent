@@ -47,6 +47,8 @@ def test_lcov_at_the_root_is_read_too(tmp_path: Path) -> None:
 
 
 def test_a_committed_lcov_report_is_not_scored(tmp_path: Path) -> None:
+    """Covers existing behaviour: before lcov was read nothing scored it; this guards
+    the new reader's this-run-only rule, and the stale-artifact mutation fails it."""
     (tmp_path / "coverage").mkdir()
     (tmp_path / "coverage" / "lcov.info").write_text(LCOV, encoding="utf-8")
     config = _suite(tmp_path, None)
@@ -55,7 +57,11 @@ def test_a_committed_lcov_report_is_not_scored(tmp_path: Path) -> None:
 
 
 def test_an_lcov_report_with_no_lines_scores_nothing(tmp_path: Path) -> None:
-    """LF:0 everywhere is no measurement, not 0% or 100%."""
+    """LF:0 everywhere is no measurement, not 0% or 100%.
+
+    Covers existing behaviour: before lcov was read this was trivially None;
+    it guards the new reader against a division that invents a number.
+    """
     script = tmp_path / "run-suite.sh"
     script.write_text("#!/bin/sh\nmkdir -p coverage\nprintf 'SF:a.js\\nLF:0\\nLH:0\\nend_of_record\\n' "
                       "> coverage/lcov.info\nexit 0\n", encoding="utf-8")

@@ -408,18 +408,12 @@ def _under(relative: str, directory: str) -> bool:
     return relative == directory or relative.startswith(f"{directory}/")
 
 
-# `is_test_path` matches `test` and `tests` exactly, so lapack's
+# `is_test_path` matched `test` and `tests` exactly, so lapack's
 # `TESTING/` fell through and 16,719 findings scored as production code.
-# Checked as a whole path segment, never a substring: `src/attestation/`
-# is not test code.
-TEST_DIRECTORY_NAMES = frozenset({"testing", "tests", "test", "__tests__", "spec", "specs"})
-
-
+# This module then kept a second, wider list of its own, and the two
+# drifted; the list now lives beside `is_test_path` and is the only one.
 def _is_test(relative: str) -> bool:
-    if is_test_path(relative):
-        return True
-    segments = relative.lower().split("/")[:-1]
-    return any(segment in TEST_DIRECTORY_NAMES for segment in segments)
+    return is_test_path(relative)
 
 
 def _directory_provenance(

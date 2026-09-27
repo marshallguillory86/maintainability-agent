@@ -89,7 +89,24 @@ def suite_opted_in(config: dict[str, Any]) -> bool:
     return requested and bool(command)
 
 
-def opted_in_command() -> list[str]:
+def repository_key(root: Path) -> str:
+    """The repository a consent belongs to: its resolved root path.
+
+    A path rather than a remote, because a remote is shared by every
+    clone and fork of a repository while consent is given for one tree
+    on one host. A moved checkout is asked again, which is the safe
+    direction.
+    """
+    return str(Path(root).resolve())
+
+
+def _consents(answers: dict[str, Any]) -> dict[str, Any]:
+    """The person's consents, keyed by repository. Empty list = declined."""
+    recorded = (answers.get("test_execution") or {}).get("commands")
+    return recorded if isinstance(recorded, dict) else {}
+
+
+def opted_in_command(root: Path) -> list[str]:
     """The test command the person consented to — user tier only.
 
     Cited by `config._host_authority_stripped` and by `_setup_persist`
@@ -107,13 +124,19 @@ def opted_in_command() -> list[str]:
 
     Empty means the person opted in without a command reaching their
     tier, which is not permission to fall back to the repository's.
+
+    **Per repository.** The tier held one `expected_commands.test`, so
+    consent given while setting up one repository ran that program in
+    every repository audited afterwards — this project's own `pytest
+    --cov=maintainability_audit` against Scrollwork's JavaScript. The
+    command is now recorded against the repository it was consented for,
+    and read only there.
     """
-    answers = user_config_answers() or {}
-    command = (answers.get("expected_commands") or {}).get("test")
+    command = _consents(user_config_answers() or {}).get(repository_key(root))
     return list(command) if isinstance(command, list) else []
 
 
-def consented_without_command() -> bool:
+def consented_without_command(root: Path) -> bool:
     """Opted in to running the suite, with no command in the person's tier.
 
     `run_tests_pending` covers the config written before the opt-in existed:
@@ -126,10 +149,37 @@ def consented_without_command() -> bool:
     ran and named no remedy, and the MCP gate treats a present `test_execution`
     key as asked-and-answered, so it offered no discovery line either. A person
     who said yes got silence on every door.
+
+    A decline recorded for this repository is an answer, not a gap, so
+    it is not reported here and the gate does not ask again for it.
     """
     answers = user_config_answers() or {}
     requested = bool((answers.get("test_execution") or {}).get("requested"))
-    return requested and not opted_in_command()
+    return requested and repository_key(root) not in _consents(answers)
+
+
+def _no_command_detail(root: Path) -> str:
+    """Why nothing ran, naming the consent that exists and is not this one's."""
+    answers = user_config_answers() or {}
+    elsewhere = sorted(key for key, command in _consents(answers).items()
+                       if command and key != repository_key(root))
+    if elsewhere:
+        return (
+            "the test command you consented to was recorded for another repository "
+            f"({', '.join(elsewhere)}), and consent is per repository, so it is not "
+            "run here. Reconfigure this repository to consent to its own command"
+        )
+    if (answers.get("expected_commands") or {}).get("test"):
+        return (
+            "a test command consented to before consent was recorded per repository "
+            "is not run, because which repository it was given for is not known. "
+            "Reconfigure this repository to record the command you consent to here"
+        )
+    return (
+        "opted in, but no test command is recorded in the user tier; "
+        "the repository's documented command is not run on its own say-so. "
+        "Reconfigure to record the command you consent to"
+    )
 
 
 def _bounded_suite_timeout(configured: Any) -> int:
@@ -165,18 +215,13 @@ def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
     # anybody opted in. The keys are named here rather than hidden
     # behind the helper so a reader sees which population is governed.
     answers = user_config_answers() or {}
-    command = opted_in_command()
+    command = opted_in_command(root)
     if not command:
         return {
             "command": (config.get("expected_commands") or {}).get("test") or [],
             "resolved_program": None,
             "ran": False, "exit_code": None, "passed": False,
-            "detail": (
-                "opted in, but no test command is recorded in the user tier; "
-                "the repository's documented command is not run on its own say-so. "
-                "Reconfigure to record the command you consent to, or add it to "
-                "expected_commands.test in the user configuration"
-            ),
+            "detail": _no_command_detail(root),
             "coverage_percent": None,
         }
     env, argv = _parse_command(command)

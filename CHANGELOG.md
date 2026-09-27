@@ -12,6 +12,28 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.9.1 - 2026-09-27
+
+### Fixed — consent to run a test command is per repository (D214)
+
+Consent given while setting up one repository ran that repository's test
+command in every repository audited afterwards: auditing Scrollwork executed
+this project's own `pytest --cov=maintainability_audit` against a JavaScript
+tree. Consent is now recorded against the repository it was given for, and a
+repository with none of its own runs nothing and says whose consent exists.
+**If you opted in before 3.9.1, reconfigure once per repository:** an unkeyed
+consent is not run anywhere, because which repository it was given for is not
+known, and the report says so.
+
+### Fixed — behaviour suites are test code (D215)
+
+`acceptance/`, `e2e/`, `cypress/` and `playwright/` are read as test
+directories, so a repository whose behaviour tests live there no longer has
+them graded as production code and its handlers reported untested.
+`integration/` and `features/` are not, because each is also an ordinary
+production package name. The two lists that disagreed about `testing/` are
+now one.
+
 ## 3.9.0 - 2026-09-24
 
 ### Added — Shell is parsed

@@ -41,18 +41,23 @@ def test_the_report_detail_names_a_remedy(consented, tmp_path):
         f"the refusal names no remedy: {result['detail']!r}")
 
 
-def test_the_predicate_sees_consent_without_a_command(consented):
+def test_the_predicate_sees_consent_without_a_command(consented, tmp_path):
     """`run_tests_pending` cannot see this state; this is what does."""
-    assert _test_execution.consented_without_command() is True
+    assert _test_execution.consented_without_command(tmp_path) is True
 
 
-def test_a_recorded_command_is_not_reported_as_missing(monkeypatch):
-    """The predicate is about the gap, not about opting in."""
+def test_a_recorded_command_is_not_reported_as_missing(monkeypatch, tmp_path):
+    """The predicate is about the gap, not about opting in.
+
+    Recorded for this repository, since 3.9.1 consent is per repository
+    (`test_consent_is_per_repository.py`).
+    """
     monkeypatch.setattr(
         _test_execution, "user_config_answers",
-        lambda: {"test_execution": {"requested": True},
-                 "expected_commands": {"test": ["pytest", "-q"]}})
-    assert _test_execution.consented_without_command() is False
+        lambda: {"test_execution": {
+            "requested": True,
+            "commands": {_test_execution.repository_key(tmp_path): ["pytest", "-q"]}}})
+    assert _test_execution.consented_without_command(tmp_path) is False
 
 
 def test_the_mcp_gate_offers_reconfigure_for_the_gap(consented, monkeypatch, tmp_path):

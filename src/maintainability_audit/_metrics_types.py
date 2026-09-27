@@ -486,6 +486,25 @@ class Finding:
     rule: str | None = None
 
 
+#: Directory names that hold tests wherever they appear, matched as a
+#: whole path segment and never a substring — `src/attestation/` is not
+#: test code. One list for every classifier: `_discovery` read `testing/`
+#: as tests while this function did not, so provenance and pairing
+#: disagreed about lapack's `TESTING/`.
+#:
+#: `acceptance`, `e2e`, `cypress` and `playwright` joined in 3.9.1, after
+#: Scrollwork's sixty behaviour suites under `acceptance/` were graded as
+#: production: most of its duplication and oversized files, and 106
+#: production files reported unpaired while those suites covered them at
+#: 98%. `integration` and `features` are deliberately absent — each is
+#: also an ordinary production package name, and reading production as
+#: test flatters the grade.
+TEST_DIRECTORY_NAMES = frozenset({
+    "testing", "tests", "test", "__tests__", "spec", "specs",
+    "acceptance", "e2e", "cypress", "playwright",
+})
+
+
 def is_test_path(rel: str) -> bool:
     """Identify test files by conventional path/name shape.
 
@@ -504,7 +523,7 @@ def is_test_path(rel: str) -> bool:
     """
     normalized = rel.replace("\\", "/").lower()
     parts = normalized.split("/")
-    if any(segment in {"tests", "test", "__tests__", "spec", "specs"} for segment in parts[:-1]):
+    if any(segment in TEST_DIRECTORY_NAMES for segment in parts[:-1]):
         return True
     name = parts[-1]
     if name.startswith(("test_", "test.")):

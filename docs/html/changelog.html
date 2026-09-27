@@ -5,6 +5,11 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#391-2026-09-27">3.9.1 - 2026-09-27</a><ul>
+<li><a href="#fixed-consent-to-run-a-test-command-is-per-repository-d214">Fixed — consent to run a test command is per repository (D214)</a></li>
+<li><a href="#fixed-behaviour-suites-are-test-code-d215">Fixed — behaviour suites are test code (D215)</a></li>
+</ul>
+</li>
 <li><a href="#390-2026-09-24">3.9.0 - 2026-09-24</a><ul>
 <li><a href="#added-shell-is-parsed">Added — Shell is parsed</a></li>
 <li><a href="#maintenance-the-ways-a-finished-tool-ages-now-open-an-issue">Maintenance — the ways a finished tool ages now open an issue</a></li>
@@ -485,6 +490,23 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h2 id="391-2026-09-27">3.9.1 - 2026-09-27</h2>
+<h3 id="fixed-consent-to-run-a-test-command-is-per-repository-d214">Fixed — consent to run a test command is per repository (D214)</h3>
+<p>Consent given while setting up one repository ran that repository's test
+command in every repository audited afterwards: auditing Scrollwork executed
+this project's own <code>pytest --cov=maintainability_audit</code> against a JavaScript
+tree. Consent is now recorded against the repository it was given for, and a
+repository with none of its own runs nothing and says whose consent exists.
+<strong>If you opted in before 3.9.1, reconfigure once per repository:</strong> an unkeyed
+consent is not run anywhere, because which repository it was given for is not
+known, and the report says so.</p>
+<h3 id="fixed-behaviour-suites-are-test-code-d215">Fixed — behaviour suites are test code (D215)</h3>
+<p><code>acceptance/</code>, <code>e2e/</code>, <code>cypress/</code> and <code>playwright/</code> are read as test
+directories, so a repository whose behaviour tests live there no longer has
+them graded as production code and its handlers reported untested.
+<code>integration/</code> and <code>features/</code> are not, because each is also an ordinary
+production package name. The two lists that disagreed about <code>testing/</code> are
+now one.</p>
 <h2 id="390-2026-09-24">3.9.0 - 2026-09-24</h2>
 <h3 id="added-shell-is-parsed">Added — Shell is parsed</h3>
 <p>The sixteenth language with a scanner of its own, and the second of the five

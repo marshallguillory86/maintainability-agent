@@ -109,7 +109,7 @@ def _choose_next(root: Path) -> dict[str, Any]:
             "own test suite for a coverage reading (test effectiveness). "
             "Choose reconfigure to set it up."
         )
-    elif consented_without_command():
+    elif consented_without_command(root):
         # The opt-in was answered yes and the command never reached the
         # person's tier, so `run_tests_pending` reads it as asked-and-done
         # and said nothing. The suite then does not run on any audit, and

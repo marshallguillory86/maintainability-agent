@@ -1,9 +1,9 @@
 # Defects found auditing Scrollwork, 2026-09-26
 
-Version 1.2.0 · 2026-09-27 · Filed by Claude, for Marshall, from a real audit
+Version 1.3.0 · 2026-09-27 · Filed by Claude, for Marshall, from a real audit
 of `scrollworkapp` (maintainability-agent 3.9.0, secure-code-agent 0.12.9).
 1 and 2 are closed as **D214** and **D215** in `defect-register-chat-surface.md`,
-each with a failing test written first. 3 and 4 wait on product decisions.
+each with a failing test written first. 3 and 4 are decided, below, and not yet built.
 
 ---
 
@@ -146,7 +146,22 @@ JSON is read too is open.
 `acceptance`, `e2e`, `cypress`, `playwright` — rather than add `paths.test_roots`.
 `integration` and `features` stay out, as ordinary production names.
 
+**3. Decided 2026-09-27: MA writes the report to the path the person chose.**
+`audit_repository` takes an output path the person named — the skill already
+asks where to save — writes the chosen format there, and returns a short
+summary and the path rather than the report inline. A seventh local artifact,
+written only to a path the operator named.
+
+**4. Decided 2026-09-27: carry the person's answers, ask what is the
+repository's own.** On both doors, the person's answers — pool, depth,
+license, rates, presentation, history — carry to a new repository. A new
+repository is still asked what belongs to it: whether to run its test suite,
+and its test command. It is told which carried answers apply, and that
+reconfigure changes them.
+
 ## Changelog
+
+1.3.0 Decisions recorded for 3 and 4.
 
 1.2.0 Filed 3–5 from auditing MA's first run on Scrollwork.
 

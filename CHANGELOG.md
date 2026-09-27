@@ -27,12 +27,13 @@ known, and the report says so.
 
 ### Fixed — behaviour suites are test code (D215)
 
-`acceptance/`, `e2e/`, `cypress/` and `playwright/` are read as test
-directories, so a repository whose behaviour tests live there no longer has
-them graded as production code and its handlers reported untested.
-`integration/` and `features/` are not, because each is also an ordinary
-production package name. The two lists that disagreed about `testing/` are
-now one.
+`acceptance/` and `e2e/` are read as test directories, so a repository
+whose behaviour tests live there no longer has them graded as production code
+and its handlers reported untested. `cypress/`, `playwright/`, `integration/`
+and `features/` are not: each is production code somewhere, and one is a
+calibration-corpus repository. The two directory lists now share one, with
+`testing/` kept as a declared discovery-only name until the next
+recalibration.
 
 ## 3.9.0 - 2026-09-24
 

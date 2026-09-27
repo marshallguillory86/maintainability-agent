@@ -408,12 +408,20 @@ def _under(relative: str, directory: str) -> bool:
     return relative == directory or relative.startswith(f"{directory}/")
 
 
-# `is_test_path` matched `test` and `tests` exactly, so lapack's
+# `is_test_path` matches `test` and `tests` exactly, so lapack's
 # `TESTING/` fell through and 16,719 findings scored as production code.
-# This module then kept a second, wider list of its own, and the two
-# drifted; the list now lives beside `is_test_path` and is the only one.
+# Provenance reads it as test code; pairing and pressures still do not.
+# That difference is kept, and declared here, until the next
+# recalibration: lapack is in the corpus, and moving `testing` into
+# `is_test_path` would re-measure it in a patch release (2026-09-27).
+DISCOVERY_ONLY_TEST_DIRECTORIES = frozenset({"testing"})
+
+
 def _is_test(relative: str) -> bool:
-    return is_test_path(relative)
+    if is_test_path(relative):
+        return True
+    segments = relative.lower().split("/")[:-1]
+    return any(segment in DISCOVERY_ONLY_TEST_DIRECTORIES for segment in segments)
 
 
 def _directory_provenance(

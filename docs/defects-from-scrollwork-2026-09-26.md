@@ -1,6 +1,6 @@
 # Defects found auditing Scrollwork, 2026-09-26
 
-Version 1.3.0 · 2026-09-27 · Filed by Claude, for Marshall, from a real audit
+Version 1.4.0 · 2026-09-27 · Filed from a real audit
 of `scrollworkapp` (maintainability-agent 3.9.0, secure-code-agent 0.12.9).
 1 and 2 are closed as **D214** and **D215** in `defect-register-chat-surface.md`,
 each with a failing test written first. 3 and 4 are decided, below, and not yet built.
@@ -142,8 +142,12 @@ per repository — asked for every new one.
 question under *Also* is not decided: only `coverage.xml` is read, and whether lcov or V8
 JSON is read too is open.
 
-**2 → D215.** Decided 2026-09-27: widen the name list with the unambiguous names —
-`acceptance`, `e2e`, `cypress`, `playwright` — rather than add `paths.test_roots`.
+**2 → D215.** Decided 2026-09-27: widen the name list rather than add
+`paths.test_roots`, with `acceptance` and `e2e` only. `cypress` and `playwright`
+were proposed on the claim that they are unambiguous, and withdrawn when an
+audit showed they are production code in their own projects and that
+microsoft/playwright is in the calibration corpus. `testing` stays a
+discovery-only name until the next recalibration, for the same reason (lapack).
 `integration` and `features` stay out, as ordinary production names.
 
 **3. Decided 2026-09-27: MA writes the report to the path the person chose.**
@@ -160,6 +164,8 @@ and its test command. It is told which carried answers apply, and that
 reconfigure changes them.
 
 ## Changelog
+
+1.4.0 D215 narrowed to `acceptance` and `e2e`.
 
 1.3.0 Decisions recorded for 3 and 4.
 

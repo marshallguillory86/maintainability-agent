@@ -488,20 +488,21 @@ class Finding:
 
 #: Directory names that hold tests wherever they appear, matched as a
 #: whole path segment and never a substring — `src/attestation/` is not
-#: test code. One list for every classifier: `_discovery` read `testing/`
-#: as tests while this function did not, so provenance and pairing
-#: disagreed about lapack's `TESTING/`.
+#: test code. `_discovery` reads this list too, plus the one name it
+#: declares for itself (`DISCOVERY_ONLY_TEST_DIRECTORIES`).
 #:
-#: `acceptance`, `e2e`, `cypress` and `playwright` joined in 3.9.1, after
-#: Scrollwork's sixty behaviour suites under `acceptance/` were graded as
-#: production: most of its duplication and oversized files, and 106
-#: production files reported unpaired while those suites covered them at
-#: 98%. `integration` and `features` are deliberately absent — each is
-#: also an ordinary production package name, and reading production as
-#: test flatters the grade.
+#: `acceptance` and `e2e` joined in 3.9.1, after Scrollwork's sixty
+#: behaviour suites under `acceptance/` were graded as production: most
+#: of its duplication and oversized files, and 106 production files
+#: reported unpaired while those suites covered them at 98%. Only those
+#: two, decided 2026-09-27: `cypress` and `playwright` are production
+#: code in their own projects and microsoft/playwright is in the
+#: calibration corpus, and `integration` and `features` are ordinary
+#: production package names. Reading production as test flatters the
+#: grade, and re-measuring a corpus repository belongs to a
+#: recalibration, not a patch release.
 TEST_DIRECTORY_NAMES = frozenset({
-    "testing", "tests", "test", "__tests__", "spec", "specs",
-    "acceptance", "e2e", "cypress", "playwright",
+    "tests", "test", "__tests__", "spec", "specs", "acceptance", "e2e",
 })
 
 

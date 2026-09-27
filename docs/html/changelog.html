@@ -501,12 +501,13 @@ repository with none of its own runs nothing and says whose consent exists.
 consent is not run anywhere, because which repository it was given for is not
 known, and the report says so.</p>
 <h3 id="fixed-behaviour-suites-are-test-code-d215">Fixed — behaviour suites are test code (D215)</h3>
-<p><code>acceptance/</code>, <code>e2e/</code>, <code>cypress/</code> and <code>playwright/</code> are read as test
-directories, so a repository whose behaviour tests live there no longer has
-them graded as production code and its handlers reported untested.
-<code>integration/</code> and <code>features/</code> are not, because each is also an ordinary
-production package name. The two lists that disagreed about <code>testing/</code> are
-now one.</p>
+<p><code>acceptance/</code> and <code>e2e/</code> are read as test directories, so a repository
+whose behaviour tests live there no longer has them graded as production code
+and its handlers reported untested. <code>cypress/</code>, <code>playwright/</code>, <code>integration/</code>
+and <code>features/</code> are not: each is production code somewhere, and one is a
+calibration-corpus repository. The two directory lists now share one, with
+<code>testing/</code> kept as a declared discovery-only name until the next
+recalibration.</p>
 <h2 id="390-2026-09-24">3.9.0 - 2026-09-24</h2>
 <h3 id="added-shell-is-parsed">Added — Shell is parsed</h3>
 <p>The sixteenth language with a scanner of its own, and the second of the five

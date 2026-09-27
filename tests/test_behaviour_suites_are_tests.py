@@ -24,11 +24,11 @@ from pathlib import Path
 
 import pytest
 
-from maintainability_audit._discovery import _is_test
+from maintainability_audit._discovery import DISCOVERY_ONLY_TEST_DIRECTORIES, _is_test
 from maintainability_audit._metrics_types import TEST_DIRECTORY_NAMES, FileMetric, is_test_path
 from maintainability_audit._test_pairing import describe_tdd
 
-BEHAVIOUR_SUITES = ("acceptance", "e2e", "cypress", "playwright")
+BEHAVIOUR_SUITES = ("acceptance", "e2e")
 
 
 @pytest.mark.parametrize("directory", BEHAVIOUR_SUITES)
@@ -40,6 +40,11 @@ def test_a_behaviour_suite_directory_holds_tests(directory: str) -> None:
 
 
 @pytest.mark.parametrize("path", [
+    # Production code in their own projects, and microsoft/playwright is
+    # in the calibration corpus: adding either would re-measure a corpus
+    # repository in a patch release (decided 2026-09-27).
+    "packages/playwright/src/server.ts",
+    "cypress/lib/driver.js",
     "integration/stripe.py",
     "features/flags.py",
     "src/acceptance_rules.py",
@@ -52,11 +57,20 @@ def test_an_ambiguous_or_merely_similar_name_stays_production(path: str) -> None
 
 
 def test_both_classifiers_read_one_list() -> None:
-    """Provenance and pairing must agree on every directory name."""
+    """Provenance and pairing agree on every name, except one declared one.
+
+    `testing/` stays a discovery-only name until the next recalibration:
+    lapack keeps its tests there and is in the corpus, so moving it into
+    `is_test_path` would re-measure a corpus repository in a patch
+    release (decided 2026-09-27). Declared, so the difference is a
+    stated exception rather than a second list nobody knows about.
+    """
     for name in TEST_DIRECTORY_NAMES:
         path = f"{name}/thing.py"
         assert is_test_path(path) == _is_test(path) is True, name
-    assert "testing" in TEST_DIRECTORY_NAMES
+    assert "testing" not in TEST_DIRECTORY_NAMES
+    assert DISCOVERY_ONLY_TEST_DIRECTORIES == frozenset({"testing"})
+    assert _is_test("TESTING/lin/dchkaa.f") and not is_test_path("TESTING/lin/dchkaa.f")
 
 
 @pytest.mark.parametrize("name", ["fixtures", "src", "lib", "integration", "features", "tools"])

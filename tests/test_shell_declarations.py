@@ -192,7 +192,10 @@ def test_an_arithmetic_shift_is_not_a_heredoc() -> None:
 
 
 def test_a_quoted_double_paren_does_not_hide_a_heredoc() -> None:
-    """Grok: the shift guard counted `((` inside a string."""
+    """Grok: the shift guard counted `((` inside a string.
+
+    Covers existing behaviour: before the arithmetic guard existed this heredoc was read; it guards the guard (Grok, 2026-09-27).
+    """
     # The heredoc body is a lone `}`: read as code, it closes `emit` on line 3.
     source = 'emit() {\n  msg="((note"; cat <<EOF\n}\nEOF\n  echo after\n}\n'
 

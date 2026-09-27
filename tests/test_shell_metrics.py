@@ -177,6 +177,7 @@ def test_a_keyword_after_do_in_an_argument_is_not_a_branch() -> None:
 
 
 def test_keywords_after_then_do_and_else_still_count() -> None:
+    """Covers existing behaviour: kept through the command-position rewrite (D217)."""
     assert _branches("for x in a; do for y in b; do :; done; done") == 2
     assert _branches("if a; then if b; then :; fi; fi") == 2
     assert _branches("if a; then :; else if b; then :; fi; fi") == 2
@@ -184,6 +185,9 @@ def test_keywords_after_then_do_and_else_still_count() -> None:
 
 
 def test_sequential_and_asynchronous_lists_decide_nothing() -> None:
-    """XCU 2.9.3 also defines `;` and `&` lists; neither is a decision."""
+    """XCU 2.9.3 also defines `;` and `&` lists; neither is a decision.
+
+    Covers existing behaviour: the specimens the grammar list was missing, counting what they always counted.
+    """
     assert _branches("a; b; c") == 0
     assert _branches("server & client") == 0

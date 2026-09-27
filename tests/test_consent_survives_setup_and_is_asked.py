@@ -80,6 +80,7 @@ def test_a_new_repository_is_asked_only_its_own_test_command(tmp_path) -> None:
 
 
 def test_a_person_who_declined_the_suite_is_not_asked_for_a_command(tmp_path) -> None:
+    """Covers existing behaviour: a decline was never asked again; this guards the new asking rule against over-asking."""
     first, new = _repo(tmp_path, "first"), _repo(tmp_path, "new")
     apply_answers(first, {**FULL, "run_tests": "no"})
 

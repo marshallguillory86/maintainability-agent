@@ -84,6 +84,7 @@ def test_a_location_outside_every_allowed_root_is_refused(tmp_path) -> None:
 
 
 def test_chat_needs_no_location_and_writes_nothing(tmp_path) -> None:
+    """Covers existing behaviour: chat always wrote nothing; this guards it through the save change."""
     root = _repo(tmp_path)
     before = sorted(p.name for p in root.iterdir())
 

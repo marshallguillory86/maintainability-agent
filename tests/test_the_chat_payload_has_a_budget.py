@@ -68,6 +68,7 @@ def _reply(root: Path, fmt: str, tmp: Path) -> dict:
 
 
 def test_the_fixture_is_large_enough_to_break_a_budget_that_is_not_kept(large) -> None:
+    """Covers existing behaviour: it guards the fixture, so the budget tests cannot become vacuous."""
     from maintainability_audit.config import load_config
     from maintainability_audit.report import build_report
 
@@ -105,5 +106,8 @@ def test_the_complete_report_never_travels_in_the_reply(large, tmp_path, fmt) ->
 
 
 def test_json_is_the_only_format_excused_from_the_budget() -> None:
-    """If a format is added, it is budgeted unless someone argues otherwise here."""
+    """If a format is added, it is budgeted unless someone argues otherwise here.
+
+    Covers existing behaviour: it guards the budget's scope, so a new format cannot slip past it unargued.
+    """
     assert set(PRESENTATIONS) - {"json"} == {"chat", "markdown", "html"}

@@ -278,10 +278,11 @@ in either direction.</p>
 <li>Recorded: 2026-09-26</li>
 <li>Status: <strong>Accepted. Home 1 authorized to build, 2026-09-27</strong> — the
   operator: <em>"lets address both gaps in a meaningful way that improves
-  the quality of the audits"</em>. A precision bar is to be frozen, on a
-  labelled set of test-file diffs, before the detector is written; none
-  exists yet. Homes 2 and 3 are unchanged. Numbered 12 because ADR 012
-  was accepted as decision 11.</li>
+  the quality of the audits"</em>. <strong>Home 1 built in 3.11.0</strong>: <code>_oracle</code>,
+  held to the precision bar frozen first in
+  <code>tests/test_oracle_weakening_precision_bar.py</code> (zero false alarms on its
+  legitimate edits; every labelled weakening caught). Homes 2 and 3 are
+  unchanged. Numbered 12 because ADR 012 was accepted as decision 11.</li>
 </ul>
 <p>A deterministic check is only evidence when the unit under review could
 not author the record. An agent that aliases a matcher, replaces an
@@ -294,10 +295,10 @@ lets that file into the remediating diff.</p>
 <p><strong><code>--conformance</code> <code>clean</code> (this package).</strong> Oracle-weakening in the
    remediating diff is the same second verdict as a skipped test.
    Shipped: a suppression directive added to a <em>named</em> file fails
-   <code>clean</code>. Not caught: the same directive in a paired test file, which
-   is recorded but does not fail <code>clean</code>, and matcher aliasing,
-   <code>assert True</code> and a deleted assertion anywhere. Still shape, never
-   correctness. Authorized 2026-09-27, gated on the precision bar.</p>
+   <code>clean</code>. Built in 3.11.0: any test file in the diff made unable to
+   fail — skip or suppression, tautology, replaced assertion API,
+   swallowed failure, deleted assertion — fails <code>clean</code> too. Still
+   shape, never correctness.</p>
 </li>
 <li>
 <p><strong><code>tools/prove_falsifiers.py</code> (this repository).</strong> Already first-order
@@ -324,10 +325,10 @@ CLI <code>--conformance</code> names what is shipped versus recorded.</p>
 <h3 id="decision-13-the-ask-beside-the-diff">Decision 13: The ask beside the diff</h3>
 <ul>
 <li>Recorded: 2026-09-27</li>
-<li>Status: <strong>Accepted. Authorized to build, 2026-09-27</strong> — the operator,
-  on giving the auditor the ask alongside the diff: <em>"yes, lets address
-  both gaps in a meaningful way that improves the quality of the audits,
-  and MA's value proposition."</em></li>
+<li>Status: <strong>Accepted, built in 3.11.0</strong> (<code>--ask</code>) — the operator, on
+  giving the auditor the ask alongside the diff, 2026-09-27: <em>"yes, lets
+  address both gaps in a meaningful way that improves the quality of the
+  audits, and MA's value proposition."</em></li>
 </ul>
 <p>Found in the same exchange as Decision 12, from the other side. The
 frozen tests were wrong before the agent saw them; the agent rewrote

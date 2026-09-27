@@ -2,7 +2,7 @@
 
 No second implementation in the pinned pool reads shell complexity —
 lizard 1.24.0 has no shell reader, and `shellmetrics` exists upstream but
-is not adopted — so this reader is checked against the grammar instead:
+cannot be pinned (no release, tag or package) — so this reader is checked against the grammar instead:
 the list operators and compound commands POSIX defines, and the
 constructs bash adds, one specimen per construct, each with the count the
 grammar implies. The list is typed from the standard's section headings;

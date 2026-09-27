@@ -5,6 +5,12 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#3110-2026-09-27">3.11.0 - 2026-09-27</a><ul>
+<li><a href="#added-clean-sees-a-weakened-test-decision-12">Added — clean sees a weakened test (Decision 12)</a></li>
+<li><a href="#added-ask-read-a-diff-against-an-ask-this-tool-did-not-write-decision-13">Added — --ask: read a diff against an ask this tool did not write (Decision 13)</a></li>
+<li><a href="#added-coverage-from-lcov">Added — coverage from lcov</a></li>
+</ul>
+</li>
 <li><a href="#3100-2026-09-27">3.10.0 - 2026-09-27</a><ul>
 <li><a href="#fixed-a-chosen-report-is-saved-and-chat-gets-the-summary-d216">Fixed — a chosen report is saved, and chat gets the summary (D216)</a></li>
 <li><a href="#fixed-shell-reading-d217">Fixed — Shell reading (D217)</a></li>
@@ -492,6 +498,33 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h2 id="3110-2026-09-27">3.11.0 - 2026-09-27</h2>
+<h3 id="added-clean-sees-a-weakened-test-decision-12">Added — <code>clean</code> sees a weakened test (Decision 12)</h3>
+<p><code>--conformance</code> said a diff was <code>clean</code> when it stayed in scope and added no
+suppression to a file the work order named. The test file the pairing rule lets
+in beside a fix could be skipped, aliased, emptied or made tautological, and
+<code>clean</code> stayed true while the suite went green. Now any test file in the diff
+made unable to fail — a skip or suppression, an assertion that cannot fail
+(<code>assert True</code>, <code>expect(x).toBe(x)</code>), the assertion API replaced (<code>assertEqual =
+…</code>, <code>expect.extend</code> over a built-in matcher, <code>jest.mock('expect')</code>), a failing
+assertion swallowed, or assertions deleted with nothing in their place — fails
+<code>clean</code> and is listed under <code>oracle_weakened</code>. The precision bar was frozen
+before the detector was written: zero false alarms on a labelled set of
+legitimate test edits, every labelled weakening caught. Still shape: whether an
+assertion expects the right value is not something this checks.</p>
+<h3 id="added-ask-read-a-diff-against-an-ask-this-tool-did-not-write-decision-13">Added — <code>--ask</code>: read a diff against an ask this tool did not write (Decision 13)</h3>
+<p><code>--conformance main...HEAD --ask FILE</code> reads the diff against the paths and
+globs the task was asked to change instead of the work order, for work this tool
+did not order. Every change outside the ask is out of scope, with production and
+test changes counted apart — so "every frozen test passed and the diff touched
+code nobody asked for" is something the record can say. The file is read from
+your path, never from the audited tree, and <code>--ask</code> without <code>--conformance</code> is
+refused.</p>
+<h3 id="added-coverage-from-lcov">Added — coverage from lcov</h3>
+<p>A suite that writes <code>coverage/lcov.info</code> or <code>lcov.info</code> — the JavaScript
+convention (c8, nyc, jest, vitest) — now scores <code>test_effectiveness</code> as
+<code>coverage.xml</code> does, under the same rule that only an artifact this run wrote is
+read.</p>
 <h2 id="3100-2026-09-27">3.10.0 - 2026-09-27</h2>
 <h3 id="fixed-a-chosen-report-is-saved-and-chat-gets-the-summary-d216">Fixed — a chosen report is saved, and chat gets the summary (D216)</h3>
 <p>On the chat door, choosing <code>html</code> returned the whole HTML report inline — on a

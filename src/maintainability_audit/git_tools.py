@@ -297,6 +297,38 @@ def added_lines(root: Path, revspec: str) -> dict[str, list[tuple[int, str]]]:
     return _added_from_diff(output)
 
 
+def removed_lines(root: Path, revspec: str) -> dict[str, list[tuple[int, str]]]:
+    """Lines a revspec *removes*, per path, as (old line number, text).
+
+    The other half of the diff, for the one question added lines cannot
+    answer: did the change delete an assertion and put nothing in its
+    place (Decision 12). Same reader, same guards, as `added_lines`.
+    """
+    output = run_git(
+        ["diff", "--no-ext-diff", "--unified=0", validate_revspec(revspec), "--"], root
+    )
+    return _removed_from_diff(output)
+
+
+def _removed_from_diff(output: str) -> dict[str, list[tuple[int, str]]]:
+    """Parse `--unified=0` diff text into removed lines per path."""
+    removed: dict[str, list[tuple[int, str]]] = {}
+    path = ""
+    line_number = 0
+    for line in output.splitlines():
+        if line.startswith("--- "):
+            path = line[6:].strip().replace(os.sep, "/") if line.startswith("--- a/") else ""
+        elif line.startswith("@@"):
+            marker = line.split("-", 1)[1].split(" ", 1)[0]
+            start = marker.split(",", 1)[0]
+            line_number = int(start) if start.isdigit() else 0
+        elif line.startswith("-") and not line.startswith("---"):
+            if path:
+                removed.setdefault(path, []).append((line_number, line[1:]))
+            line_number += 1
+    return removed
+
+
 def _added_from_diff(output: str) -> dict[str, list[tuple[int, str]]]:
     """Parse `--unified=0` diff text into added lines per path.
 

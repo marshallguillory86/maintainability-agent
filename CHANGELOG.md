@@ -12,6 +12,40 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.11.0 - 2026-09-27
+
+### Added — `clean` sees a weakened test (Decision 12)
+
+`--conformance` said a diff was `clean` when it stayed in scope and added no
+suppression to a file the work order named. The test file the pairing rule lets
+in beside a fix could be skipped, aliased, emptied or made tautological, and
+`clean` stayed true while the suite went green. Now any test file in the diff
+made unable to fail — a skip or suppression, an assertion that cannot fail
+(`assert True`, `expect(x).toBe(x)`), the assertion API replaced (`assertEqual =
+…`, `expect.extend` over a built-in matcher, `jest.mock('expect')`), a failing
+assertion swallowed, or assertions deleted with nothing in their place — fails
+`clean` and is listed under `oracle_weakened`. The precision bar was frozen
+before the detector was written: zero false alarms on a labelled set of
+legitimate test edits, every labelled weakening caught. Still shape: whether an
+assertion expects the right value is not something this checks.
+
+### Added — `--ask`: read a diff against an ask this tool did not write (Decision 13)
+
+`--conformance main...HEAD --ask FILE` reads the diff against the paths and
+globs the task was asked to change instead of the work order, for work this tool
+did not order. Every change outside the ask is out of scope, with production and
+test changes counted apart — so "every frozen test passed and the diff touched
+code nobody asked for" is something the record can say. The file is read from
+your path, never from the audited tree, and `--ask` without `--conformance` is
+refused.
+
+### Added — coverage from lcov
+
+A suite that writes `coverage/lcov.info` or `lcov.info` — the JavaScript
+convention (c8, nyc, jest, vitest) — now scores `test_effectiveness` as
+`coverage.xml` does, under the same rule that only an artifact this run wrote is
+read.
+
 ## 3.10.0 - 2026-09-27
 
 ### Fixed — a chosen report is saved, and chat gets the summary (D216)

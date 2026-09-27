@@ -17,6 +17,11 @@ the oracle.
 
 Changing a label or the bar is a decision, recorded here with its date and
 reason, never a fix to make a detector pass.
+
+- 2026-09-27: two legitimate edits added, labels and bar unchanged — a
+  commented-out tautology and a docstring naming one. A mutation that
+  read comments as code passed the first set, because none of its comment
+  cases matched a pattern; these do, so the comment rule is now defended.
 """
 
 from __future__ import annotations
@@ -61,6 +66,8 @@ CASES: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...], bool], ...] = (
     ("comparison-not-assignment", "tests/test_pay.py", ("    assert self.assertEqual == original",), (), False),
     ("expect-extend-custom", "src/setup.test.ts", ("expect.extend({ toBeMoney });",), (), False),
     ("moved-assertion", "tests/test_pay.py", ("    assert pay(3) == 9",), ("    assert pay(3) == 9",), False),
+    ("commented-out-tautology", "src/pay.test.ts", ("  // expect(true).toBe(true);",), (), False),
+    ("docstring-names-tautology", "tests/test_pay.py", ('    """self.assertTrue(True) proves nothing."""',), (), False),
 )
 
 

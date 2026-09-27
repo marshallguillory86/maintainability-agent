@@ -304,6 +304,10 @@ def test_the_cli_stage_two_records_the_test_command(
     from maintainability_audit.config import CONFIG_FILENAME
 
     monkeypatch.setattr(_first_run, "_stdin_is_a_tty", lambda: True)
+    # The person's yes: a repository file cannot ask on their behalf.
+    from maintainability_audit._user_config import write_user_answers
+
+    write_user_answers({"test_execution": {"requested": True}})
 
     def run_stage(answer: str) -> dict:
         # A repository per answer: once one has its answer it is not asked

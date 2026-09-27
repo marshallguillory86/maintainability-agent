@@ -132,3 +132,13 @@ def test_the_terminal_asks_and_records_this_repositorys_command(
     assert opted_in_command(new) == ["make", "test"]
     assert opted_in_command(first) == ["pytest", "-q"]
     assert user_config_answers() is not None
+
+
+def test_a_repository_cannot_ask_on_the_persons_behalf(tmp_path) -> None:
+    """Grok: `requested` in the repository file forced the question after a decline."""
+    first, repo = _repo(tmp_path, "first"), _repo(tmp_path, "tree")
+    apply_answers(first, {**FULL, "run_tests": "no"})
+    (repo / "maintainability-agent.json").write_text(
+        json.dumps({"version": 1, "test_execution": {"requested": True}}), encoding="utf-8")
+
+    assert command_pending(repo) is False

@@ -8456,6 +8456,19 @@ tests before they were committed. The mutation that let the original
 defect through — a test that measures one field — is the one the budget
 test cannot express: it measures the reply.
 
+**Grok's audit before release, 2026-09-27.** The first build of this fix
+could overwrite any regular file inside an allowed root — the config, the
+history, a source file — and resolved a symlinked directory before the
+writer's route check could see it, so the audited tree could choose where
+the report landed. The server's own instructions still told hosts to "save
+the returned text". A save now replaces only a file whose first line is the
+report banner, the route is normalised and never resolved before the
+bounded writer walks it, saved Markdown carries the banner too, and the
+instructions say to pass `output_path`. Grok also found a repository file
+could force the test-command question after the person declined (D214),
+and that a quoted `((` fooled the Shell shift guard (D217). Each has a test
+that failed first and a mutation that was run and caught.
+
 ### D217 — Closed: Shell lost functions after an arithmetic shift, and counted arguments as branches (Medium)
 
 Found by the drift audit of 3.9.0, two days after Shell shipped. `<<`

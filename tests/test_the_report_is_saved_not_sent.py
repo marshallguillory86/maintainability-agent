@@ -16,6 +16,7 @@ audit runs, so the host asks rather than guessing.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 from _mcp_fixtures import _drop_generated_line
@@ -124,3 +125,78 @@ def test_the_published_tool_takes_the_location_and_says_what_it_does() -> None:
     assert "output_path: str | None = None" in signature
     assert "output_path" in doc and "saved" in doc
     assert "never written to the\ntree" not in doc and "returned as text and never written" not in doc
+
+
+@pytest.mark.parametrize("victim", ["maintainability-agent.json", "module.py", "README.md"])
+def test_the_report_never_overwrites_a_file_it_did_not_write(tmp_path, victim) -> None:
+    """Grok, 2026-09-27: `output_path` could name the config, history or source."""
+    root = _repo(tmp_path)
+    target = root / victim
+    # Still readable as what it is: the config must stay valid JSON, or the
+    # audit stops at loading it and the save is never attempted.
+    keep = '{"version": 1, "keep": "me"}\n' if victim.endswith(".json") else "keep me\n"
+    target.write_text(keep, encoding="utf-8")
+
+    with pytest.raises(InvalidAuditArgument, match="not a report"):
+        _audit(root, format="html", output_path=str(target))
+
+    assert target.read_text(encoding="utf-8") == keep
+
+
+def test_a_previous_report_is_replaced(tmp_path) -> None:
+    """A running history saves a report every run; the last one is replaced."""
+    root = _repo(tmp_path)
+    _audit(root, format="html", output_path=str(root.parent))
+    second = _audit(root, format="html", output_path=str(root.parent))
+
+    assert Path(second["report_path"]).is_file()
+
+
+def test_a_symlinked_directory_cannot_redirect_the_report(tmp_path) -> None:
+    """The route is walked as the person named it, before anything resolves it."""
+    root = _repo(tmp_path)
+    (root / "src").mkdir(exist_ok=True)
+    (root / "reports").symlink_to(root / "src", target_is_directory=True)
+
+    with pytest.raises(Exception, match="symlink"):
+        _audit(root, format="html", output_path=str(root / "reports") + "/")
+
+    assert not list((root / "src").glob("maintainability-report*"))
+
+
+def test_a_refused_location_audits_nothing(tmp_path, monkeypatch) -> None:
+    """The refusal comes before the audit, not after it: nothing is built.
+
+    Covers existing behaviour: the refusal already ran first; the test it
+    replaces could not fail (it checked a history file this fixture would
+    not write either way), which Grok found on 2026-09-27.
+    """
+    from maintainability_audit import _mcp_audit
+
+    root = _repo(tmp_path)
+    monkeypatch.setattr(_mcp_audit, "build_report",
+                        lambda *a, **k: (_ for _ in ()).throw(AssertionError("an audit ran")))
+
+    with pytest.raises(InvalidAuditArgument, match="output_path"):
+        _mcp_audit.audit_repository(str(root), roots=(root.parent.resolve(),), format="html")
+
+
+def test_a_saved_markdown_report_under_any_name_is_not_audited(tmp_path) -> None:
+    root = _repo(tmp_path)
+    before = _audit(root, format="json")["report"]["summary"]["files_scanned"]
+
+    _audit(root, format="markdown", output_path=str(root / "audit.md"))
+    after = _audit(root, format="json")["report"]["summary"]["files_scanned"]
+
+    assert after == before
+
+
+def test_the_server_never_tells_a_host_to_save_returned_text() -> None:
+    """Grok: the instructions said both "saved to output_path" and "save the returned text"."""
+    import inspect
+
+    from maintainability_audit import mcp_server
+
+    text = inspect.getsource(mcp_server).lower()
+    for stale in ("save the returned text", "never writes a report", "never writes source or a report"):
+        assert stale not in text, stale

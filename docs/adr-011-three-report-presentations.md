@@ -93,7 +93,7 @@ A pretty HTML page that invents a second score, or that cannot be reproduced fro
 
 ## Amendment, 2026-09-27 — the chat door saves the chosen file (D216)
 
-**Supersedes the rejection of option D and invariant 5, in part.** The
+**Supersedes, in part, the Context's write boundary, decision §4's "never by the MCP process", the rejection of option D, and invariant 5.** The
 operator's spec: *"MA is not supposed to try at all to dump the entire html
 report to chat. Its supposed to save it to HTML and chat only ever gets a
 summary."*
@@ -110,12 +110,15 @@ the host refused it, and no report reached anyone.
   location the person chose when the host asked where to save. A directory gets
   the report's own name. The location must be inside the repository or an
   allowed root, and the write goes through the same symlink-refusing, bounded
-  writer as every other artifact.
+  writer as every other artifact. An existing file is replaced only when it is
+  a report this tool wrote (its first line is the banner); anything else — the
+  config, the history, a source file — is refused.
 - **The reply carries the bounded view and `report_path`**, never the complete
   report. A file format without a location is refused before the audit runs, so
   the host asks.
-- **The saved HTML declares itself generated**, so the next audit measures the
-  repository and not the last run's report.
+- **A saved report declares itself generated** on its first line, HTML and
+  Markdown alike, so the next audit measures the repository and not the last
+  run's report.
 - **Invariant 5 becomes:** the MCP server never writes source. Its writes are
   the repository configuration, user configuration, user state, the scan
   history, a requested baseline, secure-code-agent's trend, and a report at the

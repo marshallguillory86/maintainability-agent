@@ -436,8 +436,13 @@ def _directory_provenance(
     }
 
 
+#: Suffixes read only to learn that a file is not ours: a generated page,
+#: or a saved report (D216), declares itself in its first line.
+_BANNER_ONLY_SUFFIXES = _MARKUP_SUFFIXES | {".md"}
+
+
 def _is_markup(suffix: str) -> bool:
-    return suffix in _MARKUP_SUFFIXES and suffix not in KNOWN_SOURCE_SUFFIXES
+    return suffix in _BANNER_ONLY_SUFFIXES and suffix not in KNOWN_SOURCE_SUFFIXES
 
 
 def _worth_classifying(suffix: str, relative: str, read: set[str],

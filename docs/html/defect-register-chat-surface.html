@@ -7320,6 +7320,18 @@ markdown format fails the budget for markdown. Both were run against these
 tests before they were committed. The mutation that let the original
 defect through — a test that measures one field — is the one the budget
 test cannot express: it measures the reply.</p>
+<p><strong>Grok's audit before release, 2026-09-27.</strong> The first build of this fix
+could overwrite any regular file inside an allowed root — the config, the
+history, a source file — and resolved a symlinked directory before the
+writer's route check could see it, so the audited tree could choose where
+the report landed. The server's own instructions still told hosts to "save
+the returned text". A save now replaces only a file whose first line is the
+report banner, the route is normalised and never resolved before the
+bounded writer walks it, saved Markdown carries the banner too, and the
+instructions say to pass <code>output_path</code>. Grok also found a repository file
+could force the test-command question after the person declined (D214),
+and that a quoted <code>((</code> fooled the Shell shift guard (D217). Each has a test
+that failed first and a mutation that was run and caught.</p>
 <h3 id="d217-closed-shell-lost-functions-after-an-arithmetic-shift-and-counted-arguments-as-branches-medium">D217 — Closed: Shell lost functions after an arithmetic shift, and counted arguments as branches (Medium)</h3>
 <p>Found by the drift audit of 3.9.0, two days after Shell shipped. <code>&lt;&lt;</code>
 inside <code>$(( … ))</code> or <code>(( … ))</code> is a left shift, and the masker read it as

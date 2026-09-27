@@ -253,8 +253,11 @@ The local process may write exactly five artifacts: repository
 `.maintainability/history.jsonl`, plus the repository baseline at
 `.maintainability/baseline.json`. Setup writes the first three; the audit's
 history rule may append the fourth, and `write_baseline` controls the fifth. It
-never writes source or a report. The stored presentation is the default for
-later calls; an explicit per-call `format` still wins.
+never writes source. A chosen markdown or html report is saved to the
+`output_path` the person chose when the host asked where to save, and the reply
+carries the bounded view and `report_path` (ADR 011, amended 2026-09-27). The
+stored presentation is the default for later calls; an explicit per-call
+`format` still wins.
 
 For Visual Studio, put this in `%USERPROFILE%\\.mcp.json` or
 `<SOLUTIONDIR>\\.mcp.json` (replace both absolute paths):

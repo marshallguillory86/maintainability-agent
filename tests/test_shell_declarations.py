@@ -189,3 +189,11 @@ def test_an_arithmetic_shift_is_not_a_heredoc() -> None:
     )
 
     assert [name for _s, _e, name, _k in _ranges(source)] == ["f", "g"]
+
+
+def test_a_quoted_double_paren_does_not_hide_a_heredoc() -> None:
+    """Grok: the shift guard counted `((` inside a string."""
+    # The heredoc body is a lone `}`: read as code, it closes `emit` on line 3.
+    source = 'emit() {\n  msg="((note"; cat <<EOF\n}\nEOF\n  echo after\n}\n'
+
+    assert _ranges(source) == [(1, 6, "emit", "function")]

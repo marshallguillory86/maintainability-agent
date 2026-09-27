@@ -373,13 +373,10 @@ def test_command_pending(root: Path) -> bool:
     from ._test_execution import _consents, repository_key
 
     answers = user_config_answers() or {}
-    discovered = discovered_config(Path(root))
-    stored = _read_config(Path(discovered)) if discovered is not None else None
-    stored = stored if isinstance(stored, dict) else {}
-    requested = any(
-        bool((tier.get("test_execution") or {}).get("requested"))
-        for tier in (answers, stored)
-    )
+    # The person's yes only. A repository file saying `requested` could
+    # force the question after the person declined (Grok, 2026-09-27) —
+    # the same authority D147 strips from it before the merge.
+    requested = bool((answers.get("test_execution") or {}).get("requested"))
     return requested and repository_key(root) not in _consents(answers)
 
 

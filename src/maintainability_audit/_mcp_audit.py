@@ -14,6 +14,7 @@ about the same history file.
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -260,6 +261,7 @@ def audit_repository(
 
 #: What a chosen location that names a directory is filled with.
 REPORT_FILENAMES = {"html": "maintainability-report.html", "markdown": "maintainability-report.md"}
+from ._html_view import REPORT_BANNER  # noqa: E402 - the one definition, in the skin that starts with it
 
 
 def report_target(root: Path, roots: tuple[Path, ...], format: str,
@@ -286,15 +288,42 @@ def report_target(root: Path, roots: tuple[Path, ...], format: str,
         chosen = root / chosen
     if chosen.is_dir() or output_path.endswith(("/", "\\")):
         chosen = chosen / REPORT_FILENAMES[format]
-    target = chosen.parent.resolve() / chosen.name
-    for base in (root, *roots):
-        base = Path(base).resolve()
-        if target.is_relative_to(base):
-            return base, target
-    raise InvalidAuditArgument(
-        f"output_path {target} is outside the repository and every allowed root; "
-        "choose a location inside one of them."
-    )
+    # Normalised, never resolved: resolving here followed a symlinked
+    # directory before the writer's route check could see it, so the
+    # audited tree chose where the report landed (Grok, 2026-09-27).
+    target = Path(os.path.normpath(chosen))
+    base = next((Path(b) for b in (root, *roots)
+                 if target.is_relative_to(Path(b)) or target.is_relative_to(Path(b).resolve())), None)
+    if base is None:
+        raise InvalidAuditArgument(
+            f"output_path {target} is outside the repository and every allowed root; "
+            "choose a location inside one of them."
+        )
+    _refuse_a_file_it_did_not_write(target)
+    return base, target
+
+
+def _refuse_a_file_it_did_not_write(target: Path) -> None:
+    """A save replaces the last report and nothing else.
+
+    `output_path` could name the repository config, the scan history or a
+    source file, and the report replaced it (Grok, 2026-09-27). A file
+    already there is replaced only when its first line is this tool's
+    banner.
+    """
+    if not target.exists() or target.is_symlink():
+        return
+    from ._operator_reads import read_operator_file
+
+    try:
+        head = read_operator_file(target).split("\n", 1)[0].strip()
+    except (OSError, ValueError):
+        head = ""  # a directory, a FIFO, unreadable: not a report this tool wrote
+    if head != REPORT_BANNER:
+        raise InvalidAuditArgument(
+            f"output_path {target} already exists and is not a report this tool wrote; "
+            "choose a new file or a directory."
+        )
 
 
 def _resolve_presentation(
@@ -584,5 +613,5 @@ def _save_report(format: str, target: tuple[Path, Path], root: Path,
             root, config.get("paths", {}).get("history"), DEFAULT_HISTORY_PATH)
         body = render_html(report, read_history(history))
     else:
-        body = render_markdown(report, complete=True)
+        body = f"{REPORT_BANNER}\n{render_markdown(report, complete=True)}"
     return write_bounded(base, path, body)

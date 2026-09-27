@@ -349,22 +349,33 @@ def _lines_from_diff(output: str, sign: str) -> dict[str, list[tuple[int, str]]]
     for line in output.splitlines():
         if line.startswith("diff --git "):
             in_header, path = True, ""
-        elif in_header and line.startswith("--- "):
-            path = _diff_path(line) if line.startswith("--- a/") else ""
-        elif in_header and line.startswith("+++ "):
-            if line.startswith("+++ b/"):
-                path = _diff_path(line)
+        elif in_header and line.startswith(("--- ", "+++ ")):
+            path = _header_path(line, path)
         elif line.startswith("@@"):
-            in_header = False
-            # @@ -old,count +new,count @@
-            side = line.split(sign, 1)[1].split(" ", 1)[0] if sign in line else ""
-            start_at = side.split(",", 1)[0]
-            line_number = int(start_at) if start_at.isdigit() else 0
+            in_header, line_number = False, _hunk_start(line, sign)
         elif not in_header and line.startswith(sign):
             if path:
                 lines.setdefault(path, []).append((line_number, line[1:]))
             line_number += 1
     return lines
+
+
+def _header_path(line: str, current: str) -> str:
+    """The path a `---`/`+++` header names, keyed by the file's new name.
+
+    `--- a/x` sets the old name, `+++ b/y` replaces it with the new one,
+    and `+++ /dev/null` — a deleted file — keeps the old one.
+    """
+    if line.startswith("--- "):
+        return _diff_path(line) if line.startswith("--- a/") else ""
+    return _diff_path(line) if line.startswith("+++ b/") else current
+
+
+def _hunk_start(line: str, sign: str) -> int:
+    """First line number of one side of `@@ -old,count +new,count @@`."""
+    side = line.split(sign, 1)[1].split(" ", 1)[0] if sign in line else ""
+    start_at = side.split(",", 1)[0]
+    return int(start_at) if start_at.isdigit() else 0
 
 
 def staged_paths(root: Path) -> set[str]:

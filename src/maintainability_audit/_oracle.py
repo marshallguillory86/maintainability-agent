@@ -124,6 +124,13 @@ _ALIASES = tuple(re.compile(p) for p in (
 #: A failing assertion caught and discarded.
 _SWALLOWED = re.compile(r"^except\s+\(?\s*AssertionError\b")
 
+#: Each line-level shape, in the order a line is tested against them.
+_SHAPES = (
+    ("assertion that cannot fail", _TAUTOLOGIES),
+    ("assertion API replaced", _ALIASES),
+    ("failing assertion swallowed", (_SWALLOWED,)),
+)
+
 #: A line that asserts, for the count of assertions a diff removed.
 _ASSERTS = re.compile(r"^(?:assert\b|self\.assert\w*\(|assert\w*\(|expect\(|\w+\.should\b)")
 #: A line that calls something: a helper the assertions moved into.
@@ -143,17 +150,11 @@ def _line_finding(path: str, number: int, text: str) -> dict[str, Any] | None:
     code = _code(text)
     if code is None:
         return None
-    label = markers_in(text)
-    kind = (
-        "skipped or suppressed test" if label else
-        "assertion that cannot fail" if any(p.search(code) for p in _TAUTOLOGIES) else
-        "assertion API replaced" if any(p.search(code) for p in _ALIASES) else
-        "failing assertion swallowed" if _SWALLOWED.search(code) else
-        None
-    )
-    if kind is None:
-        return None
-    return {"path": path, "line": number, "kind": kind, "text": code}
+    if markers_in(text):
+        return {"path": path, "line": number, "kind": "skipped or suppressed test", "text": code}
+    kind = next((name for name, patterns in _SHAPES
+                 if any(pattern.search(code) for pattern in patterns)), None)
+    return None if kind is None else {"path": path, "line": number, "kind": kind, "text": code}
 
 
 def _deleted_assertions(path: str, added: list[tuple[int, str]],

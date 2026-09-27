@@ -224,10 +224,17 @@ maintainability-agent \
   --attestation-output maintainability-attestation.md
 ```
 
-`--conformance` answers two questions separately — did the diff **stay in
-scope**, and did it **silence nothing** — because a change can obey the work
-order and still add a `# noqa` to a finding inside it. `--fail-on-out-of-scope`
-turns that into a CI failure. `--fail-on-regression` ratchets the _dimension_
+`--conformance` answers three questions separately — did the diff **stay in
+scope**, did it **silence nothing**, and did it **leave the tests able to fail**
+— because a change can obey the work order and still add a `# noqa` to a
+finding, or make its own test pass by skipping, aliasing, emptying or
+tautologising it. `--ask FILE` reads the diff against an ask this tool did not
+write — for work it did not order — so a diff that passed every frozen test
+while touching code nobody asked for is reported too. `--fail-on-out-of-scope`
+turns that into a CI failure. The condition behind the third question — a
+check is only evidence when the work under review could not write the record —
+is credited to Michael Eakins
+([Decision 12](docs/decisions.md#decision-12-writable-oracle-three-homes)). `--fail-on-regression` ratchets the _dimension_
 scores against history, with three outcomes rather than two: held, regressed,
 and **not comparable**, because two scans taken under different calibration
 cannot be differenced. `--attestation-output` composes them into one per-change

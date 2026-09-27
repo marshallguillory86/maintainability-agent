@@ -276,9 +276,12 @@ in either direction.</p>
 <h3 id="decision-12-writable-oracle-three-homes">Decision 12: Writable oracle, three homes</h3>
 <ul>
 <li>Recorded: 2026-09-26</li>
-<li>Status: <strong>Accepted. Home 1 authorized to build, 2026-09-27</strong> — the
-  operator: <em>"lets address both gaps in a meaningful way that improves
-  the quality of the audits"</em>. <strong>Home 1 built in 3.11.0</strong>: <code>_oracle</code>,
+<li>The contract-floor condition — a deterministic check is only evidence
+  when the work under review could not author the record — is credited to
+  <strong>Michael Eakins</strong>, who raised it in a public discussion of this project
+  on 2026-09-26.</li>
+<li>Status: <strong>Accepted. Home 1 authorized by the maintainer, 2026-09-27.
+  Built in 3.11.0</strong>: <code>_oracle</code>,
   held to the precision bar frozen first in
   <code>tests/test_oracle_weakening_precision_bar.py</code> (zero false alarms on its
   legitimate edits; every labelled weakening caught). Homes 2 and 3 are
@@ -325,10 +328,8 @@ CLI <code>--conformance</code> names what is shipped versus recorded.</p>
 <h3 id="decision-13-the-ask-beside-the-diff">Decision 13: The ask beside the diff</h3>
 <ul>
 <li>Recorded: 2026-09-27</li>
-<li>Status: <strong>Accepted, built in 3.11.0</strong> (<code>--ask</code>) — the operator, on
-  giving the auditor the ask alongside the diff, 2026-09-27: <em>"yes, lets
-  address both gaps in a meaningful way that improves the quality of the
-  audits, and MA's value proposition."</em></li>
+<li>Status: <strong>Accepted, authorized by the maintainer 2026-09-27, built in
+  3.11.0</strong> (<code>--ask</code>).</li>
 </ul>
 <p>Found in the same exchange as Decision 12, from the other side. The
 frozen tests were wrong before the agent saw them; the agent rewrote

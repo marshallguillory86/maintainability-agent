@@ -14,6 +14,11 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## 3.11.0 - 2026-09-27
 
+The condition behind the first addition — a deterministic check is only
+evidence when the work under review could not author the record — is credited
+to **Michael Eakins**, who raised it in a public discussion of this project.
+Thank you, Michael.
+
 ### Added — `clean` sees a weakened test (Decision 12)
 
 `--conformance` said a diff was `clean` when it stayed in scope and added no

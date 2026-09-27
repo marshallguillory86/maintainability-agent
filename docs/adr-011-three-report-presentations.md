@@ -94,9 +94,8 @@ A pretty HTML page that invents a second score, or that cannot be reproduced fro
 ## Amendment, 2026-09-27 — the chat door saves the chosen file (D216)
 
 **Supersedes, in part, the Context's write boundary, decision §4's "never by the MCP process", the rejection of option D, and invariant 5.** The
-operator's spec: *"MA is not supposed to try at all to dump the entire html
-report to chat. Its supposed to save it to HTML and chat only ever gets a
-summary."*
+maintainer's standing spec: the report is saved as a file, and chat only
+ever gets a summary.
 
 What failed was the handoff this ADR relied on: return the report as text and
 let the host save it. That worked while the HTML was small. From 2026-08-31 the

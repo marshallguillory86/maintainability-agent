@@ -205,10 +205,17 @@ whether it works:</p>
   --fail-on-regression \
   --attestation-output maintainability-attestation.md
 </code></pre>
-<p><code>--conformance</code> answers two questions separately — did the diff <strong>stay in
-scope</strong>, and did it <strong>silence nothing</strong> — because a change can obey the work
-order and still add a <code># noqa</code> to a finding inside it. <code>--fail-on-out-of-scope</code>
-turns that into a CI failure. <code>--fail-on-regression</code> ratchets the <em>dimension</em>
+<p><code>--conformance</code> answers three questions separately — did the diff <strong>stay in
+scope</strong>, did it <strong>silence nothing</strong>, and did it <strong>leave the tests able to fail</strong>
+— because a change can obey the work order and still add a <code># noqa</code> to a
+finding, or make its own test pass by skipping, aliasing, emptying or
+tautologising it. <code>--ask FILE</code> reads the diff against an ask this tool did not
+write — for work it did not order — so a diff that passed every frozen test
+while touching code nobody asked for is reported too. <code>--fail-on-out-of-scope</code>
+turns that into a CI failure. The condition behind the third question — a
+check is only evidence when the work under review could not write the record —
+is credited to Michael Eakins
+(<a href="decisions.html#decision-12-writable-oracle-three-homes">Decision 12</a>). <code>--fail-on-regression</code> ratchets the <em>dimension</em>
 scores against history, with three outcomes rather than two: held, regressed,
 and <strong>not comparable</strong>, because two scans taken under different calibration
 cannot be differenced. <code>--attestation-output</code> composes them into one per-change

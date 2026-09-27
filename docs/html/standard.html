@@ -499,7 +499,7 @@ python3 tools/calibration/measure.py --check    # exit 1 if stored constants are
 <tr>
 <td>coverage %</td>
 <td><code>test_effectiveness</code></td>
-<td><strong>measured only on opt-in.</strong> When the operator opts the tree's own test suite in (Decision 9, amended 2026-08-31), line coverage scores <code>test_effectiveness</code> as <code>coverage / 20</code>; otherwise the aspect is NotApplicable and coverage is never inferred</td>
+<td><strong>measured only on opt-in.</strong> When the operator opts the tree's own test suite in (Decision 9, amended 2026-08-31), line coverage — from a <code>coverage.xml</code>, <code>coverage/lcov.info</code> or <code>lcov.info</code> the run itself produced — scores <code>test_effectiveness</code> as <code>coverage / 20</code>; otherwise the aspect is NotApplicable and coverage is never inferred</td>
 </tr>
 <tr>
 <td><strong>bus factor</strong></td>

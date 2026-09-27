@@ -12,7 +12,7 @@ from types import SimpleNamespace
 import pytest
 
 from maintainability_audit._mcp_setup import apply_answers
-from maintainability_audit._test_execution import DEFAULT_SUITE_TIMEOUT_SECONDS, run_test_suite, suite_opted_in
+from maintainability_audit._test_execution import DEFAULT_SUITE_TIMEOUT_SECONDS, repository_key, run_test_suite, suite_opted_in
 from maintainability_audit._user_config import user_config_path, write_user_answers
 from maintainability_audit.config import acquisition_permitted, load_config
 
@@ -81,8 +81,8 @@ def test_user_opt_in_cannot_be_completed_by_repo_controlled_spawn_settings(
     assert required <= reads, f"run_test_suite no longer reads the expected population: {reads}"
 
     write_user_answers({
-        "test_execution": {"requested": True},
-        "expected_commands": {"test": ["pytest", "-q"]},
+        "test_execution": {"requested": True,
+                           "commands": {repository_key(tmp_path): ["pytest", "-q"]}},
     })
     marker = tmp_path / "repo-command-ran"
     config = tmp_path / "maintainability-agent.json"

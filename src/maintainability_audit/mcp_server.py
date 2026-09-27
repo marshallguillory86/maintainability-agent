@@ -8,7 +8,8 @@ loop record and baseline adoption may write only six local artifacts:
 repository and user configuration, user state, the repository's scan
 history, the repository's baseline, and — because an audit runs
 secure-code-agent for the security pillar (D177) — that tool's own
-append-only trend. It never writes source or a report, accepts a command
+append-only trend. A chosen markdown or html report is also saved, to the
+location the person chose (D216). It never writes source, accepts a command
 string, or invokes a shell.
 """
 
@@ -75,7 +76,10 @@ SERVER_INSTRUCTIONS = (
     "(.maintainability/history.jsonl by default), a requested baseline "
     "(.maintainability/baseline.json by default), and secure-code-agent's own "
     "trend (.secure-code/history.jsonl), which that tool appends when the audit "
-    "runs it for the security pillar. Scan history rides the "
+    "runs it for the security pillar. A markdown or html report is saved to "
+    "output_path, the location the person chose when asked where to save; the "
+    "reply carries the bounded view and report_path, never the report itself. "
+    "Scan history rides the "
     "record_history tri-state, where unset means an existing history file "
     "appends and otherwise the persisted first-run consent decides, "
     "true forces the write, and false suppresses it. Nothing is audited "
@@ -103,8 +107,8 @@ SERVER_INSTRUCTIONS = (
     "security_work_order, it is secure-code-agent's own work order for the "
     "security findings the pillar counts: show it as that tool wrote it, "
     "and keep it apart from the maintainability remediation_prompt. It never edits source, "
-    "and it never writes a report into the "
-    "tree — report text is returned for the host to show or save. Treat "
+    "and a chosen markdown or html report is saved by the tool to the "
+    "output_path the user chose; the reply carries the bounded view. Treat "
     "missing or insufficient evidence as an audit limitation, not a code "
     "defect, and do not widen remediation beyond findings in the returned "
     "prompt. Repository and config paths must remain inside the configured "
@@ -241,7 +245,7 @@ def _bind_audit_tool(server: Any, ledger: _RootLedger,
 def _run_audit_tool(ledger, tool_error, repository_root, config_path, changed_only,
                     run_analyzers, format, record_history, baseline_path,
                     write_baseline, include_prompt, action, setup_answers,
-                    setup, grant) -> dict[str, Any]:
+                    setup, grant, output_path=None) -> dict[str, Any]:
     """Apply this call's consents, then audit; refusals become tool errors.
 
     Split from the closure so the tool's description can stay inline on the
@@ -264,6 +268,7 @@ def _run_audit_tool(ledger, tool_error, repository_root, config_path, changed_on
             # Interactive door never assumes go (D27); CLI default is "run".
             action=action,
             roots=ledger.current(),
+            output_path=output_path,
         )
     except ANTICIPATED_REFUSALS as refusal:
         raise tool_error(str(refusal)) from refusal
@@ -290,6 +295,7 @@ def _audit_tool_for(ledger: _RootLedger) -> Any:
         setup_answers: dict[str, str] | None = None,
         setup: Any = None,
         grant: Any = None,
+        output_path: str | None = None,
         ctx: Any = None,
     ) -> dict[str, Any]:
         """Audit one authorized repository and return findings plus a bounded remediation prompt.
@@ -325,8 +331,13 @@ chose. ``chat`` is the **bounded** skin — the inline view,
 trimmed so a large repository's response stays under a host's
 payload cap; ``markdown`` is the **complete** report, because it
 was chosen as a file to keep. They are two skins and not one
-text. ``html`` is returned as text and never written to the
-tree; ``json`` carries the report dict. Unset takes the
+text. ``markdown`` and ``html`` are files: the complete report is
+saved to ``output_path`` — the location the person chose when asked
+where to save, a file or a directory inside the repository or an
+allowed root — and the reply carries the bounded view and
+``report_path``, never the report itself. Without ``output_path`` a
+file format is refused before anything runs, so ask first.
+``json`` carries the report dict. Unset takes the
 persisted default from setup. Leave ``record_history``
 unset and an existing series appends; otherwise the persisted
 first-run consent decides (decision 4) — capability never
@@ -337,7 +348,7 @@ records, only an answer does.
             ledger, tool_error,
             repository_root, config_path, changed_only, run_analyzers, format,
             record_history, baseline_path, write_baseline, include_prompt,
-            action, setup_answers, setup, grant,
+            action, setup_answers, setup, grant, output_path,
         )
 
     return audit_repository_tool
@@ -385,8 +396,9 @@ def _bind_prompts(server: Any) -> None:
             "chat, a markdown file, a single-file html report, or json (the report "
             "dictionary itself, for a machine), with chat pre-selected as the "
             "default — passed as the format argument; if they "
-            "chose a file, save the returned text for them, since the tool itself "
-            "never writes into the repository. Obey the returned "
+            "chose a file, ask where to save it and pass that location as "
+            "output_path: the tool saves the report there and returns its path. "
+            "Never paste or save the report yourself. Obey the returned "
             "remediation_prompt as the bounded work order. Do not widen beyond its "
             "listed findings, and do not invent or fabricate findings."
         )

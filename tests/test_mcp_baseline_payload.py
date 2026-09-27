@@ -179,8 +179,10 @@ def test_mcp_baseline_defaults_inside_root_and_rejects_escape(tmp_path: Path) ->
     [
         ("json", {"report"}),
         ("chat", {"report_markdown"}),
-        ("markdown", {"report_markdown"}),
-        ("html", {"report_html", "report_markdown"}),
+        # A file format is saved, and chat carries the bounded view and
+        # where the file went — never the report itself (D216).
+        ("markdown", {"report_markdown", "report_path"}),
+        ("html", {"report_markdown", "report_path"}),
     ],
 )
 def test_requested_format_governs_the_mcp_payload(
@@ -196,6 +198,7 @@ def test_requested_format_governs_the_mcp_payload(
         format=format_name,
         record_history=False,
         roots=(tmp_path.resolve(),),
+        output_path=str(tmp_path / "saved") + "/",
     )
 
     always = {

@@ -65,13 +65,21 @@ def _starts_comment(line: str, index: int) -> bool:
     return line[index] == "#" and (index == 0 or line[index - 1] in _WORD_START)
 
 
-def _heredoc_at(line: str, index: int, pending: list[tuple[str, bool]]) -> int | None:
+def _heredoc_at(line: str, index: int, pending: list[tuple[str, bool]],
+                before: str = "") -> int | None:
     """Record a heredoc announced at ``index``; return where its operator ends.
 
     The body begins on the next line, so all this line keeps is the
     terminator to wait for and whether `<<-` lets it be tab-indented.
     """
     if not line.startswith("<<", index) or line.startswith("<<<", index):
+        return None
+    # Inside `$(( … ))` or `(( … ))`, `<<` is a left shift. Read as a
+    # heredoc waiting for a line `n`, `$((1 << n))` blanked every function
+    # after it — a population lost, not under-reported (audit of 3.9.0).
+    # `before` is the masked prefix: a `((` inside a string is not
+    # arithmetic (Grok, 2026-09-27).
+    if before.count("((") > before.count("))"):
         return None
     heredoc = _SH_HEREDOC_RE.match(line, index)
     if heredoc is None:
@@ -98,7 +106,7 @@ def _mask_code(line: str, index: int, pending: list[tuple[str, bool]]) -> tuple[
             if open_quote is not None:
                 return out, index, open_quote
             continue
-        end = _code_step(line, index, pending)
+        end = _code_step(line, index, pending, "".join(out))
         out.append(line[index:end])
         index = end
     return out, index, None
@@ -112,9 +120,9 @@ def _mask_quoted(line: str, index: int) -> tuple[str, int, str | None]:
     return quote + masked, after, open_quote
 
 
-def _code_step(line: str, index: int, pending: list[tuple[str, bool]]) -> int:
+def _code_step(line: str, index: int, pending: list[tuple[str, bool]], before: str) -> int:
     """Where the next unit of open code ends: a heredoc operator, an escape, a character."""
-    after = _heredoc_at(line, index, pending)
+    after = _heredoc_at(line, index, pending, before)
     if after is not None:
         return after
     return index + (2 if line[index] == "\\" else 1)

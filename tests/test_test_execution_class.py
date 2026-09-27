@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from maintainability_audit._test_execution import run_test_suite, suite_opted_in
+from maintainability_audit._test_execution import repository_key, run_test_suite, suite_opted_in
 from maintainability_audit._user_config import write_user_answers
 
 
@@ -30,7 +30,7 @@ def _fake_suite(root: Path, exit_code: int, coverage_line_rate: str | None = Non
     return ["./run-suite.sh"]
 
 
-def _opted_in(command: list[str], timeout_seconds: int | None = None) -> dict:
+def _opted_in(command: list[str], root: Path, timeout_seconds: int | None = None) -> dict:
     """An opted-in config, with the command where consent actually lives.
 
     The command is written to the **user tier** as well as returned in
@@ -48,9 +48,9 @@ def _opted_in(command: list[str], timeout_seconds: int | None = None) -> dict:
     opt_in: dict = {"requested": True}
     if timeout_seconds is not None:
         opt_in["timeout_seconds"] = timeout_seconds
+    # Recorded for this repository: consent is per repository since D214.
     write_user_answers({
-        "test_execution": opt_in,
-        "expected_commands": {"test": command},
+        "test_execution": {**opt_in, "commands": {repository_key(root): command}},
     })
     return {"test_execution": dict(opt_in), "expected_commands": {"test": command}}
 
@@ -68,7 +68,7 @@ def test_the_default_config_never_spawns_the_suite(tmp_path: Path) -> None:
 
 def test_an_opted_in_passing_suite_runs_and_reads_coverage(tmp_path: Path) -> None:
     command = _fake_suite(tmp_path, 0, coverage_line_rate="0.87")
-    result = run_test_suite(tmp_path, _opted_in(command))
+    result = run_test_suite(tmp_path, _opted_in(command, tmp_path))
     assert result is not None
     assert (tmp_path / "RAN_MARKER").exists(), "the opted-in suite did not run"
     assert result["ran"] is True and result["passed"] is True
@@ -78,7 +78,7 @@ def test_an_opted_in_passing_suite_runs_and_reads_coverage(tmp_path: Path) -> No
 def test_a_failing_suite_is_data_not_an_error(tmp_path: Path) -> None:
     """Exit 1 is a suite that ran and failed — recorded, never a gate."""
     command = _fake_suite(tmp_path, 1, coverage_line_rate="0.42")
-    result = run_test_suite(tmp_path, _opted_in(command))
+    result = run_test_suite(tmp_path, _opted_in(command, tmp_path))
     assert result["ran"] is True, "a failing suite must still count as having run"
     assert result["passed"] is False
     assert result["coverage_percent"] == 42.0
@@ -87,14 +87,14 @@ def test_a_failing_suite_is_data_not_an_error(tmp_path: Path) -> None:
 def test_a_suite_that_cannot_run_is_not_counted_as_ran(tmp_path: Path) -> None:
     """Exit 3+ is the command failing to execute, not a test failure."""
     command = _fake_suite(tmp_path, 3)
-    result = run_test_suite(tmp_path, _opted_in(command))
+    result = run_test_suite(tmp_path, _opted_in(command, tmp_path))
     assert result["ran"] is False
     assert result["coverage_percent"] is None
 
 
 def test_no_coverage_artifact_leaves_coverage_unknown(tmp_path: Path) -> None:
     command = _fake_suite(tmp_path, 0)  # passes, writes no coverage.xml
-    result = run_test_suite(tmp_path, _opted_in(command))
+    result = run_test_suite(tmp_path, _opted_in(command, tmp_path))
     assert result["ran"] is True
     assert result["coverage_percent"] is None, "coverage must not be invented"
 
@@ -106,7 +106,7 @@ def test_a_committed_coverage_artifact_is_not_scored(tmp_path: Path) -> None:
     (tmp_path / "coverage.xml").write_text(
         '<coverage line-rate="0.99"/>', encoding="utf-8")
     command = _fake_suite(tmp_path, 0)  # passes, does NOT write coverage.xml
-    result = run_test_suite(tmp_path, _opted_in(command))
+    result = run_test_suite(tmp_path, _opted_in(command, tmp_path))
     assert result["ran"] is True
     assert result["coverage_percent"] is None, (
         "a pre-existing coverage.xml this run did not produce was scored"
@@ -119,7 +119,7 @@ def test_a_suite_that_refreshes_coverage_is_scored(tmp_path: Path) -> None:
     (tmp_path / "coverage.xml").write_text(
         '<coverage line-rate="0.10"/>', encoding="utf-8")
     command = _fake_suite(tmp_path, 0, coverage_line_rate="0.88")
-    result = run_test_suite(tmp_path, _opted_in(command))
+    result = run_test_suite(tmp_path, _opted_in(command, tmp_path))
     assert result["coverage_percent"] == 88.0, (
         "the suite's own fresh coverage.xml should be read"
     )
@@ -132,7 +132,7 @@ def test_a_symlinked_coverage_artifact_is_refused(tmp_path: Path) -> None:
     real.write_text('<coverage line-rate="0.95"/>', encoding="utf-8")
     command = _fake_suite(tmp_path, 0)  # writes no coverage.xml of its own
     (tmp_path / "coverage.xml").symlink_to(real)
-    result = run_test_suite(tmp_path, _opted_in(command))
+    result = run_test_suite(tmp_path, _opted_in(command, tmp_path))
     assert result["coverage_percent"] is None, "a symlinked coverage.xml was followed"
 
 
@@ -207,7 +207,7 @@ def test_an_env_prefixed_command_runs_with_that_env(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     script.chmod(script.stat().st_mode | stat.S_IEXEC)
-    result = run_test_suite(tmp_path, _opted_in(["MARK=on ./run.sh"]))
+    result = run_test_suite(tmp_path, _opted_in(["MARK=on ./run.sh"], tmp_path))
     assert result["ran"] is True, "the env-prefixed command did not execute"
     assert result["coverage_percent"] == 50.0, "the env prefix did not reach the child"
 
@@ -303,10 +303,16 @@ def test_the_cli_stage_two_records_the_test_command(
     from maintainability_audit import _first_run
     from maintainability_audit.config import CONFIG_FILENAME
 
-    root = _git_repo(tmp_path)
     monkeypatch.setattr(_first_run, "_stdin_is_a_tty", lambda: True)
+    # The person's yes: a repository file cannot ask on their behalf.
+    from maintainability_audit._user_config import write_user_answers
+
+    write_user_answers({"test_execution": {"requested": True}})
 
     def run_stage(answer: str) -> dict:
+        # A repository per answer: once one has its answer it is not asked
+        # again, which is the per-repository consent rule (D214).
+        root = _git_repo(tmp_path / answer.strip().replace(" ", "-") if answer.strip() else tmp_path / "blank")
         (root / CONFIG_FILENAME).write_text(
             json.dumps({"test_execution": {"requested": True}}), encoding="utf-8")
         monkeypatch.setattr("builtins.input", lambda *_: answer)
@@ -338,10 +344,10 @@ def test_the_opted_in_suite_uses_its_own_timeout_not_the_analyzer_cap(
 
     monkeypatch.setattr(_test_execution, "run", fake_run)
 
-    _test_execution.run_test_suite(tmp_path, _opted_in(["pytest"]))
+    _test_execution.run_test_suite(tmp_path, _opted_in(["pytest"], tmp_path))
     assert captured["timeout"] == 600, "the suite inherited the 120s analyzer cap"
 
     # The override belongs to the person, like the command: a repository
     # naming a timeout is naming how long this host waits (D152).
-    _test_execution.run_test_suite(tmp_path, _opted_in(["pytest"], timeout_seconds=900))
+    _test_execution.run_test_suite(tmp_path, _opted_in(["pytest"], tmp_path, timeout_seconds=900))
     assert captured["timeout"] == 900, "the configured suite timeout was ignored"

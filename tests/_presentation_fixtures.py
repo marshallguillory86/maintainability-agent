@@ -45,5 +45,5 @@ def audit(root: Path, persisted: str | None, requested: str | None) -> dict[str,
     return _mcp_audit.audit_repository(
         str(root), action="run", format=requested,
         run_analyzers=False, record_history=False, include_prompt=False,
-        roots=(root.resolve(),),
+        roots=(root.resolve(),), output_path=str(root / "reports") + "/",
     )

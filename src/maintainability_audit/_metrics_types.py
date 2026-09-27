@@ -142,17 +142,45 @@ def kotlin_branch_points(line: str) -> int:
     return len(KOTLIN_COMPLEXITY_RE.findall(line)) + len(arms)
 
 
-#: Where a shell command may begin, and so where `if` is a reserved word
-#: rather than an argument. Shell scripts are full of unquoted prose —
-#: `echo waiting for the server` — and a keyword pattern with only word
-#: boundaries counts that `for` as a loop. Start of line, after a
-#: separator or an opening bracket, or after `then`, `do` or `else`.
-SHELL_COMMAND_POSITION = (
-    r"(?:^|(?<=[;&|(!{`])|(?<=\bthen)|(?<=\bdo)|(?<=\belse))\s*(?:!\s+)?"
-)
-_SH_DECISION_RE = re.compile(
-    SHELL_COMMAND_POSITION + r"(if|elif|while|until|for|select)\b|&&|\|\|"
-)
+#: One shell word, or one separator character. The separators are where a
+#: new command begins: `;`, `&`, `|` (so `&&` and `||` too), an opening
+#: `(` or `{`, `!` and a backtick. `)` is deliberately not one, because
+#: `$(date) for you` would put `for` in command position.
+_SH_WORD_RE = re.compile(r"[;&|({!`]|[^\s;&|({!`]+")
+_SH_SEPARATORS = frozenset(";&|({!`")
+#: Keywords after which the next word is again a command: `then if`,
+#: `do while`, `else if`. Only when the keyword was itself in command
+#: position — `echo do for it` is an argument list, and a lookbehind on
+#: `do` counted its `for` as a loop (audit of 3.9.0).
+_SH_CONTINUES = frozenset({"then", "do", "else", "time"})
+_SH_BOOLEAN_RE = re.compile(r"&&|\|\|")
+SHELL_BRANCH_WORDS = frozenset({"if", "elif", "while", "until", "for", "select"})
+
+
+def shell_command_words(line: str) -> list[tuple[int, str]]:
+    """``(column, word)`` for every word in command position on a masked line.
+
+    Where a shell command may begin, and so where `if` is a reserved word
+    rather than an argument. Shell scripts are full of unquoted prose —
+    `echo waiting for the server` — and a keyword pattern with only word
+    boundaries counts that `for` as a loop.
+    """
+    found: list[tuple[int, str]] = []
+    at_command = True
+    for match in _SH_WORD_RE.finditer(line):
+        token = match.group()
+        if token in _SH_SEPARATORS:
+            at_command = True
+            continue
+        if at_command:
+            found.append((match.start(), token))
+        at_command = at_command and token in _SH_CONTINUES
+    return found
+
+
+def shell_booleans(line: str) -> list[int]:
+    """Columns of every `&&` and `||` on a masked line."""
+    return [match.start() for match in _SH_BOOLEAN_RE.finditer(line)]
 #: A `case` arm: one or more patterns joined by `|`, then `)`, leading
 #: the line. Quotes survive masking with their contents blanked, which
 #: is what lets `"start"|"stop")` read as an arm while `$(date)`,
@@ -173,7 +201,8 @@ def shell_branch_points(line: str) -> int:
     once — an AND-OR list is shell's primary conditional, and `cmd ||
     exit 1` is the guard clause most scripts are built from.
     """
-    decisions = len(_SH_DECISION_RE.findall(line))
+    decisions = sum(1 for _column, word in shell_command_words(line) if word in SHELL_BRANCH_WORDS)
+    decisions += len(shell_booleans(line))
     arm = _SH_ARM_RE.match(line)
     if arm is not None and set(re.split(r"\s*\|\s*", arm.group(1))) != {"*"}:
         decisions += 1
@@ -486,6 +515,26 @@ class Finding:
     rule: str | None = None
 
 
+#: Directory names that hold tests wherever they appear, matched as a
+#: whole path segment and never a substring — `src/attestation/` is not
+#: test code. `_discovery` reads this list too, plus the one name it
+#: declares for itself (`DISCOVERY_ONLY_TEST_DIRECTORIES`).
+#:
+#: `acceptance` and `e2e` joined in 3.9.1, after Scrollwork's sixty
+#: behaviour suites under `acceptance/` were graded as production: most
+#: of its duplication and oversized files, and 106 production files
+#: reported unpaired while those suites covered them at 98%. Only those
+#: two, decided 2026-09-27: `cypress` and `playwright` are production
+#: code in their own projects and microsoft/playwright is in the
+#: calibration corpus, and `integration` and `features` are ordinary
+#: production package names. Reading production as test flatters the
+#: grade, and re-measuring a corpus repository belongs to a
+#: recalibration, not a patch release.
+TEST_DIRECTORY_NAMES = frozenset({
+    "tests", "test", "__tests__", "spec", "specs", "acceptance", "e2e",
+})
+
+
 def is_test_path(rel: str) -> bool:
     """Identify test files by conventional path/name shape.
 
@@ -504,7 +553,7 @@ def is_test_path(rel: str) -> bool:
     """
     normalized = rel.replace("\\", "/").lower()
     parts = normalized.split("/")
-    if any(segment in {"tests", "test", "__tests__", "spec", "specs"} for segment in parts[:-1]):
+    if any(segment in TEST_DIRECTORY_NAMES for segment in parts[:-1]):
         return True
     name = parts[-1]
     if name.startswith(("test_", "test.")):

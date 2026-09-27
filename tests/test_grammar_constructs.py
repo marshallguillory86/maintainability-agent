@@ -298,12 +298,13 @@ NO_INDEPENDENT_IMPLEMENTATION: dict[str, str] = {
     ),
     "shell_branch_points": (
         "lizard 1.24.0 has no shell reader — its language list names "
-        "twenty-seven languages and none is sh, bash or zsh — and no other "
-        "implementation in the analyzer catalog measures shell complexity. "
-        "The reader is checked against the grammar instead: every compound "
-        "command and list operator in POSIX XCU 2.9.3–2.9.4 and the bash "
-        "constructs from the Bash Reference Manual 3.2.5, one specimen "
-        "each, in `tests/test_shell_metrics.py`."
+        "twenty-seven languages and none is sh, bash or zsh — and nothing "
+        "adapted in the analyzer catalog measures shell complexity. "
+        "`shellmetrics` computes a per-function CCN upstream and is not "
+        "adopted. The reader is checked against the grammar instead: the "
+        "POSIX XCU 2.9.3 list operators, the 2.9.4 compound commands and "
+        "the bash constructs of the Bash Reference Manual 3.2.5, one "
+        "specimen each, in `tests/test_shell_metrics.py`."
     ),
 }
 

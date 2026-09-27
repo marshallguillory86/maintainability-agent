@@ -50,3 +50,19 @@ This writes tool-native instruction files such as `AGENTS.md`,
 `CLAUDE.md`, `.cursor/rules/maintainability.mdc`,
 `.github/copilot-instructions.md`, and
 `.windsurf/rules/maintainability.md`.
+
+Check a remediating diff against the work order that produced it:
+
+```bash
+maintainability-agent \
+  --conformance main...HEAD \
+  --fail-on-out-of-scope \
+  --fail-on-regression \
+  --attestation-output maintainability-attestation.md
+```
+
+`clean` today is suppression directives the diff *added* (`# noqa`, a
+skipped test, and the rest). Matcher aliasing, `assert True`, and a
+deleted assertion are the same verdict with no detector — recorded as
+direction in [product intent](product-intent.md#the-writable-oracle),
+not shipped.

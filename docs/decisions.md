@@ -196,6 +196,85 @@ parser must name the same set.
 `test_the_parsed_languages_are_exactly_the_documented_languages` fails
 in either direction.
 
+### Decision 11 — Writable oracle: three homes
+
+- Recorded: 2026-09-26
+- Status: **Accepted. Home 1 authorized to build, 2026-09-27** — the
+  operator: *"lets address both gaps in a meaningful way that improves
+  the quality of the audits"*. The precision bar is frozen, on a labelled
+  set of test-file diffs, before the detector is written. Homes 2 and 3
+  are unchanged.
+
+A deterministic check is only evidence when the unit under review could
+not author the record. An agent that aliases a matcher, replaces an
+assertion with `assert True`, or deletes the assertion, then watches
+the suite go green, is writing the oracle. The pairing rule already
+lets that file into the remediating diff.
+
+Three homes, not one product:
+
+1. **`--conformance` `clean` (this package).** Oracle-weakening in the
+   remediating diff is the same second verdict as a skipped test.
+   Shipped today: `SUPPRESSION_MARKERS`. Missing: matcher aliasing,
+   `assert True`, deleted assertion. Still shape, never correctness.
+   Implementation is gated on a frozen precision bar; the marker list
+   is deliberately narrow. Not authorized to execute.
+
+2. **`tools/prove_falsifiers.py` (this repository).** Already first-order
+   here: keep `tests/` from this commit, restore everything else to the
+   base, those tests must fail. It stays this repository's gate. It
+   does not become a first-order step in the customer product loop.
+   Generalizing it to a stranger's suite remains the unscheduled
+   capability named under [roadmap § the test that defends nothing](roadmap.md#3-the-test-that-defends-nothing).
+   It does not license a claim that tests would catch a regression.
+
+3. **Freeze, a fresh seat, a human on the test hunk (outside this
+   package).** This auditor does not sequence remediation, freeze the
+   suite before an agent writes, or launch a review that never saw the
+   work. Those stay with the seats that split test-writing,
+   implementation, and audit, and with the operator reading the test
+   diff. This package's job at that seam is `clean` on the diff. This
+   decision does not describe a successor, rename, or execution layer.
+
+Governing text: [product intent](product-intent.md#the-writable-oracle).
+Architecture records the unshipped `clean` cases as known debt.
+CLI `--conformance` names what is shipped versus recorded.
+
+### Decision 12 — The ask beside the diff
+
+- Recorded: 2026-09-27
+- Status: **Accepted. Authorized to build.**
+
+Found in the same exchange as Decision 11, from the other side. The
+frozen tests were wrong before the agent saw them; the agent rewrote
+production code until they passed; the test file was byte for byte the
+one frozen. Nothing weakened a test, the record was one the agent could
+not write, and the diff was still the wrong diff — because nobody had
+asked for that code. What caught it was reading the diff against the
+original ask.
+
+`--conformance` already reads a diff against an ask when the ask is this
+tool's own work order: a change outside the named targets is out of
+scope. It could not do that for work this tool did not order, which is
+most work.
+
+1. **Conformance accepts an ask it did not write.** A scope manifest —
+   the paths, and optionally the declarations, a task was asked to
+   change — supplied beside the diff. Every change outside it is
+   reported out of scope, with production and test changes counted
+   apart, so "every frozen test passed and the diff touched code nobody
+   asked for" is a statement the report can make.
+2. **Still shape, never correctness.** Whether code *inside* the ask is
+   what was wanted is a judgment, and this package runs no model. A
+   wrong assertion written before the work began leaves no trace in the
+   diff and stays with the freeze, the fresh seat and the person, as
+   Decision 11's third home says.
+3. **The ask is the operator's.** A manifest the audited tree supplies
+   about itself is the writable-oracle problem again, so it is read from
+   the operator's path, never discovered in the tree.
+
+Governing text: [product intent](product-intent.md#the-writable-oracle).
+
 ## Statuses
 
 - **Proposed** — written up with options; not yet decided. May be edited freely.

@@ -278,6 +278,8 @@ This is the one place where determinism stops being an engineering preference an
 
 **What is still open here:** the checks read the diff's *shape* — which paths it touched, what it silenced, which dimensions moved. Nothing reads whether the change was correct, and nothing will; that is a claim this tool does not make and the attestation says so in its own text.
 
+**The pairing-rule door, recorded 2026-09-26, not built.** A test added for a fix stays in scope. `clean` then fails only on suppression *directives* (`SUPPRESSION_MARKERS`). Matcher aliasing, `assert True`, and a deleted assertion on that admitted file are the same verdict with no detector. The MA increment is those cases on `clean`: still shape, still `_conformance`, gated on a frozen precision bar because the marker list is deliberately narrow. This is not a new product track and it is not authorized to execute. Freeze, a fresh review seat, and a human on the test hunk sit outside this package. See [product intent](product-intent.md#the-writable-oracle) and [decision 11](decisions.md#decision-11--writable-oracle-three-homes).
+
 ### Two features that only a deterministic, unmetered checker can offer
 
 **Run-over-run comparison of generated output** — **shipped in 2.6.0**, `--transformation NAME`. Where an agent performs the same class of work repeatedly — a migration, a framework upgrade, a codemod applied repeatedly in one repository — nobody measures whether run seven produced better code than run six. The generator cannot answer it: its output is not reproducible and it has no memory across runs. This tool already had pinned references, structured finding identity and scan history, so the comparison was a join rather than new machinery. The value is highest exactly where volume is highest and review capacity is lowest.
@@ -369,6 +371,14 @@ with no equivalent on the market: generated tests assert what the code
 already does, which reads as coverage and is decoration.
 
 Arguably a larger product than ADR 014.
+
+**Decided 2026-09-26:** it stays this repository's gate. It does not
+become a first-order step in the product loop. Customer-facing
+generalization — new tests on a remediating revspec must fail on the
+left side — remains unscheduled, still needs a labelled external corpus
+and a frozen precision bar, and still must not license a claim that the
+tests would catch a regression. The shipped MA increment on this seam
+is the missing `clean` cases, not this prover. [Decision 11](decisions.md#decision-11--writable-oracle-three-homes).
 
 ### 4. The name that lies
 

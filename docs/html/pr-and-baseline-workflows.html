@@ -41,5 +41,17 @@
 <code>CLAUDE.md</code>, <code>.cursor/rules/maintainability.mdc</code>,
 <code>.github/copilot-instructions.md</code>, and
 <code>.windsurf/rules/maintainability.md</code>.</p>
+<p>Check a remediating diff against the work order that produced it:</p>
+<pre><code class="language-bash">maintainability-agent \
+  --conformance main...HEAD \
+  --fail-on-out-of-scope \
+  --fail-on-regression \
+  --attestation-output maintainability-attestation.md
+</code></pre>
+<p><code>clean</code> today is suppression directives the diff <em>added</em> (<code># noqa</code>, a
+skipped test, and the rest). Matcher aliasing, <code>assert True</code>, and a
+deleted assertion are the same verdict with no detector — recorded as
+direction in <a href="product-intent.html#the-writable-oracle">product intent</a>,
+not shipped.</p>
 <footer>Rendered from <code>docs/pr-and-baseline-workflows.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
 </main></div></body></html>

@@ -33,6 +33,17 @@ record ([how that hole was closed](roadmap.md#the-remediation-hole-closed-in-210
 The limit, stated in the same breath: those checks read the diff's **shape**,
 never its correctness — whether the change works is not a claim this tool makes.
 
+A second limit sits on the same seam. The pairing rule lets a test file into
+the remediating diff, which is the right rule for writing the failing test
+with the fix, and it is the file an agent can poison. `clean` fails on
+suppression directives a tool obeys; matcher aliasing and a vacuous assertion
+are the same verdict with no detector. That expansion stays in this package,
+still shape, gated on a precision bar, and is not built.
+`tools/prove_falsifiers.py` stays this repository's revert-proof for cited
+tests; it does not become a first-order step in the product loop. Freeze, a
+fresh review seat, and a human on the test hunk sit outside this package.
+The split is [product intent](product-intent.md#the-writable-oracle).
+
 ### AI reviewing AI is still an opinion
 
 A second model reading the first model's output does not change the

@@ -47,6 +47,24 @@ For most of this project's life the loop ended at step 4, and the honest stateme
 
 What the loop still does not do, and is not going to: **step 5 reads the diff's shape, never its correctness.** It establishes that a change went where it was told and hid nothing. Whether the change is right is a claim this tool does not make, and the attestation says so in its own text rather than leaving a reader to assume otherwise.
 
+### The writable oracle
+
+A check that reproduces is still a self-report if the work under review could author the record. This package is a separate process from the generator — it writes no source and runs no model — so an agent fixing a target cannot rewrite the rubric by editing the target. The remaining hole is the oracle that *does* live in the tree: the tests.
+
+The pairing rule lets a test file into a remediating diff even when the work order never named it. That is the right rule for writing the failing test with the fix, and it is the file an agent can poison — skip, alias a matcher, replace an assertion with `assert True`, delete the assertion. `clean` today fails on suppression *directives* a tool obeys (`SUPPRESSION_MARKERS` in `_conformance.py`). Those other weakenings are the same verdict with no detector.
+
+Three homes, decided 2026-09-26. The first was authorized to build on 2026-09-27, behind a precision bar frozen before the detector is written.
+
+1. **This package, `--conformance` `clean`.** Detect oracle-weakening in the remediating diff as the same second verdict as a skipped test. Still shape. Still not correctness. Implementation is gated on a frozen precision bar; the existing marker list is deliberately narrow because a check that cries wolf gets switched off.
+
+2. **`tools/prove_falsifiers.py` stays this repository's gate.** It already proves a newly cited test fails at the base commit. Generalizing that to a stranger's suite — every remediation, new tests must fail on the left side of the revspec — is the capability the [roadmap](roadmap.md#3-the-test-that-defends-nothing) names as "the test that defends nothing." It remains unscheduled. It does not become a first-order step in the product loop, and it does not license a claim that the tests would catch a regression.
+
+3. **Freeze, a fresh seat, and a human on the test diff sit outside this package.** This auditor does not sequence remediation, freeze the suite before an agent writes, or launch a review that never saw the work. Those are jobs for the seats that already split test-writing, implementation, and audit, and for the operator reading the test hunk. This package's job at that seam is `clean` on the diff.
+
+See the [decision register](decisions.md#decision-11--writable-oracle-three-homes).
+
+**The ask beside the diff** ([Decision 12](decisions.md#decision-12--the-ask-beside-the-diff), 2026-09-27). The other failure leaves the tests alone. Frozen tests that were wrong before the agent arrived, and production code bent until they pass: nothing weakened, the record untouched, and the diff still wrong because nobody asked for that code. `--conformance` reads a diff against an ask when the ask is this tool's own work order. Authorized, not yet built: it is to take an ask it did not write — a scope manifest from the operator — and report every change outside it, production and test apart. Whether code inside the ask is what was wanted stays a judgment this package does not make.
+
 ### Semantic judgment and economic priority
 
 The next useful boundary is not a larger generic smell catalog. It is a way to

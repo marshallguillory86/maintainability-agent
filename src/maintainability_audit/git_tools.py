@@ -310,25 +310,6 @@ def removed_lines(root: Path, revspec: str) -> dict[str, list[tuple[int, str]]]:
     return _removed_from_diff(output)
 
 
-def _removed_from_diff(output: str) -> dict[str, list[tuple[int, str]]]:
-    """Parse `--unified=0` diff text into removed lines per path."""
-    removed: dict[str, list[tuple[int, str]]] = {}
-    path = ""
-    line_number = 0
-    for line in output.splitlines():
-        if line.startswith("--- "):
-            path = line[6:].strip().replace(os.sep, "/") if line.startswith("--- a/") else ""
-        elif line.startswith("@@"):
-            marker = line.split("-", 1)[1].split(" ", 1)[0]
-            start = marker.split(",", 1)[0]
-            line_number = int(start) if start.isdigit() else 0
-        elif line.startswith("-") and not line.startswith("---"):
-            if path:
-                removed.setdefault(path, []).append((line_number, line[1:]))
-            line_number += 1
-    return removed
-
-
 def _added_from_diff(output: str) -> dict[str, list[tuple[int, str]]]:
     """Parse `--unified=0` diff text into added lines per path.
 
@@ -337,22 +318,53 @@ def _added_from_diff(output: str) -> dict[str, list[tuple[int, str]]]:
     suppression check starts reporting the wrong line numbers on one door
     only.
     """
-    added: dict[str, list[tuple[int, str]]] = {}
+    return _lines_from_diff(output, "+")
+
+
+def _removed_from_diff(output: str) -> dict[str, list[tuple[int, str]]]:
+    """Parse `--unified=0` diff text into removed lines per path."""
+    return _lines_from_diff(output, "-")
+
+
+def _diff_path(line: str) -> str:
+    """The path in a `--- a/x` or `+++ b/x` header, forward-slashed."""
+    return "/".join(line[6:].strip().split(os.sep))
+
+
+def _lines_from_diff(output: str, sign: str) -> dict[str, list[tuple[int, str]]]:
+    """Added (`+`) or removed (`-`) lines per path, as (line number, text).
+
+    Two rules keep a hunk's content from being read as structure (Grok,
+    2026-09-27). **Headers only count before a file's first `@@`**: inside
+    a hunk, `--- a/x` is a removed line reading `-- a/x`. And **every line
+    is keyed by the file's new name** — a rename moves `--- a/old` to
+    `+++ b/new`, and keying removed lines by the old name read a changed
+    assertion in a renamed test as a deleted one. A deleted file keeps its
+    old name, because it has no new one.
+    """
+    lines: dict[str, list[tuple[int, str]]] = {}
     path = ""
+    in_header = False
     line_number = 0
     for line in output.splitlines():
-        if line.startswith("+++ b/"):
-            path = line[6:].strip().replace(os.sep, "/")
+        if line.startswith("diff --git "):
+            in_header, path = True, ""
+        elif in_header and line.startswith("--- "):
+            path = _diff_path(line) if line.startswith("--- a/") else ""
+        elif in_header and line.startswith("+++ "):
+            if line.startswith("+++ b/"):
+                path = _diff_path(line)
         elif line.startswith("@@"):
+            in_header = False
             # @@ -old,count +new,count @@
-            marker = line.split("+", 1)[1].split("@@", 1)[0].strip()
-            start = marker.split(",", 1)[0]
-            line_number = int(start) if start.lstrip("-").isdigit() else 0
-        elif line.startswith("+") and not line.startswith("+++"):
+            side = line.split(sign, 1)[1].split(" ", 1)[0] if sign in line else ""
+            start_at = side.split(",", 1)[0]
+            line_number = int(start_at) if start_at.isdigit() else 0
+        elif not in_header and line.startswith(sign):
             if path:
-                added.setdefault(path, []).append((line_number, line[1:]))
+                lines.setdefault(path, []).append((line_number, line[1:]))
             line_number += 1
-    return added
+    return lines
 
 
 def staged_paths(root: Path) -> set[str]:

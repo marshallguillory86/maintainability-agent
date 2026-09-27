@@ -303,10 +303,12 @@ def test_the_cli_stage_two_records_the_test_command(
     from maintainability_audit import _first_run
     from maintainability_audit.config import CONFIG_FILENAME
 
-    root = _git_repo(tmp_path)
     monkeypatch.setattr(_first_run, "_stdin_is_a_tty", lambda: True)
 
     def run_stage(answer: str) -> dict:
+        # A repository per answer: once one has its answer it is not asked
+        # again, which is the per-repository consent rule (D214).
+        root = _git_repo(tmp_path / answer.strip().replace(" ", "-") if answer.strip() else tmp_path / "blank")
         (root / CONFIG_FILENAME).write_text(
             json.dumps({"test_execution": {"requested": True}}), encoding="utf-8")
         monkeypatch.setattr("builtins.input", lambda *_: answer)

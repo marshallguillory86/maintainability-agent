@@ -45,6 +45,9 @@ user file at <code>$XDG_CONFIG_HOME/maintainability-agent/config.json</code> (de
 the same recursive merge used for repository configuration. Documented
 environment overrides, where a setting has one, remain the highest-precedence
 one-run value; there is no generic environment-to-JSON replacement.</p>
+<p>Consent to run a repository's test suite lives only in the user file, under
+<code>test_execution.commands</code>, keyed by the repository's resolved root: the command
+you agreed to, or an empty list for a decline. A repository cannot supply it.</p>
 <p>Loading either the user or repository tier defaults <code>analyzers.run</code> to <code>true</code>.
 An explicit <code>run: false</code> survives until a later tier explicitly overrides it.
 With neither file, <code>load_config(None)</code> retains the built-in <code>run: false</code> path.</p>

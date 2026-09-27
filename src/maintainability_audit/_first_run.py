@@ -72,6 +72,13 @@ def maybe_prompt_first_run(root: Path, explicit_config: str | None) -> None:
     """
     if explicit_config or discovered_config(root) is not None:
         return
+    # The person's answers carry to a new repository on every door
+    # (first-run.md; Decision 4); what is this repository's own, its test
+    # command, is asked by `maybe_prompt_test_command`.
+    from ._user_config import user_config_answers
+
+    if user_config_answers() is not None:
+        return
     if not _stdin_is_a_tty():
         return
     if not bool(DEFAULTS.get("prompt_when_interactive")):
@@ -264,7 +271,7 @@ def maybe_prompt_test_command(root: Path, config: dict) -> None:
     the MCP one carry the same default in the same field: Enter accepts,
     editing replaces, and clearing the line cancels exactly as before.
     """
-    if not _should_ask_for_test_command(config):
+    if not _should_ask_for_test_command(root, config):
         return
 
     from ._test_commands import suggested_test_command
@@ -282,7 +289,7 @@ def maybe_prompt_test_command(root: Path, config: dict) -> None:
     _record_test_command(root, config, _input_with_default(prompt, detected).strip())
 
 
-def _should_ask_for_test_command(config: dict) -> bool:
+def _should_ask_for_test_command(root: Path, config: dict) -> bool:
     """The four conditions that all have to hold before anybody is asked.
 
     Asking is the cheap half; not asking is the half with rules. Kept
@@ -296,9 +303,13 @@ def _should_ask_for_test_command(config: dict) -> bool:
         "prompt_when_interactive", DEFAULTS["prompt_when_interactive"]
     ) is False:
         return False
-    if not (config.get("test_execution") or {}).get("requested"):
-        return False
-    return not (config.get("expected_commands") or {}).get("test")
+    # The same rule the chat door asks by, from the person's tier where
+    # consent is recorded per repository (D214). The merged config said
+    # "asked" for every repository after the first, because the person's
+    # one command merged into all of them.
+    from ._mcp_setup import test_command_pending
+
+    return test_command_pending(root)
 
 
 def _record_test_command(root: Path, config: dict, answer: str) -> None:
@@ -308,9 +319,7 @@ def _record_test_command(root: Path, config: dict, answer: str) -> None:
     ``test_execution.requested: False`` so the next run does not ask
     again and nothing runs in the meantime.
     """
-    import shlex
 
-    from ._safe_write import write_bounded
 
     target = root / CONFIG_FILENAME
     if target.is_symlink():
@@ -318,14 +327,14 @@ def _record_test_command(root: Path, config: dict, answer: str) -> None:
             f"{target} is a symlink; the audited tree cannot redirect "
             "where first-run configuration is read or written."
         )
-    existing = json.loads(read_operator_file(target)) if target.exists() else {}
-    if answer:
-        commands = dict(existing.get("expected_commands") or {})
-        commands["test"] = shlex.split(answer)
-        existing["expected_commands"] = commands
-        config["expected_commands"] = commands
-    else:
-        existing["test_execution"] = {"requested": False}  # declined cancels the opt-in
+    # One writer for both doors: the repository documents the command, and
+    # the person's tier records the consent against this repository (D214).
+    # It wrote the repository tier only, so a consent given at a terminal
+    # never reached the tier the suite runs from.
+    from ._setup_persist import _apply_command
+
+    merged = _apply_command(root, {"test_command": answer})
+    config["expected_commands"] = merged.get("expected_commands") or {}
+    if not answer:
         config["test_execution"] = {"requested": False}
-    written = write_bounded(root, target, json.dumps(existing, indent=2) + "\n")
-    print(f"Wrote {written}")
+    print(f"Wrote {target}")

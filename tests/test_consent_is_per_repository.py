@@ -111,3 +111,20 @@ def test_the_same_repository_by_another_spelling_is_the_same_repository(user_tie
     _consent(root, "pytest -q")
 
     assert _test_execution.opted_in_command(root / "." / ".." / "repo") == ["pytest", "-q"]
+
+
+def test_the_refusal_names_no_other_repository(user_tier, tmp_path) -> None:
+    """A report is about one repository and may be shared.
+
+    Naming the other repository's absolute path put an unrelated checkout —
+    possibly one belonging to another organisation — into this report.
+    """
+    first, second = tmp_path / "first-private-client", tmp_path / "second"
+    _consent(first, "pytest -q")
+    second.mkdir()
+
+    result = _test_execution.run_test_suite(second, OPTED_IN)
+
+    assert "first-private-client" not in result["detail"]
+    assert str(tmp_path) not in result["detail"]
+    assert "another repository" in result["detail"]

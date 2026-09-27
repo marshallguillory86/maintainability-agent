@@ -194,5 +194,21 @@ def _persist_answers(root: Path, payload: dict[str, Any]) -> dict[str, Any]:
         Path(root), config_path,
         json.dumps(merged, indent=2, sort_keys=True) + "\n",
     )
-    write_user_answers(payload)
+    write_user_answers(_keeping_consents(payload))
     return load_config(str(config_path))
+
+
+def _keeping_consents(payload: dict[str, Any]) -> dict[str, Any]:
+    """The setup payload, carrying every repository's recorded consent.
+
+    The payload's `test_execution` holds only `requested`, so writing it
+    as the person's tier erased the per-repository consents: setting up
+    one repository wiped every other's (D214). They are the person's
+    answers about other repositories, not this setup's to discard.
+    """
+    recorded = ((user_config_answers() or {}).get("test_execution") or {}).get("commands")
+    if not recorded:
+        return payload
+    kept = dict(payload)
+    kept["test_execution"] = {**(payload.get("test_execution") or {}), "commands": recorded}
+    return kept

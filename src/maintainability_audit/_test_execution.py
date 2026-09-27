@@ -161,13 +161,15 @@ def consented_without_command(root: Path) -> bool:
 def _no_command_detail(root: Path) -> str:
     """Why nothing ran, naming the consent that exists and is not this one's."""
     answers = user_config_answers() or {}
-    elsewhere = sorted(key for key, command in _consents(answers).items()
-                       if command and key != repository_key(root))
+    # Counted, never named: a report is about one repository and may be
+    # shared, and another checkout's path is not this report's to print.
+    elsewhere = sum(1 for key, command in _consents(answers).items()
+                    if command and key != repository_key(root))
     if elsewhere:
         return (
-            "the test command you consented to was recorded for another repository "
-            f"({', '.join(elsewhere)}), and consent is per repository, so it is not "
-            "run here. Reconfigure this repository to consent to its own command"
+            "the test command you consented to was recorded for another repository, "
+            "and consent is per repository, so it is not run here. Reconfigure this "
+            "repository to consent to its own command"
         )
     if (answers.get("expected_commands") or {}).get("test"):
         return (

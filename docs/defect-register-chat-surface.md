@@ -8334,12 +8334,27 @@ the first one's program there.
 Consent is recorded per repository now, keyed by the resolved root path,
 under `test_execution.commands` in the person's tier. A repository with no
 consent of its own runs nothing and the report says the consent that
-exists was given for another repository, naming it, with the remedy. A
+exists was given for another repository — counted, never named, because a
+report is about one repository and may be shared — with the remedy. A
 consent recorded before this — unkeyed — runs nowhere, because which
 repository it was given for is not knowable, and the report says that
 too. A blank answer records a decline for that repository alone; it no
 longer switches off the person's opt-in everywhere, and the gate does not
 ask again for it.
+
+That is Decision 9's own rule — the suite runs "only because you opted in,
+and only for this repository" — which a single unkeyed command could not
+keep. The first build of this fix was audited before release and failed
+twice: a full setup of any repository erased every recorded consent,
+because the setup payload replaced the person's `test_execution`; and the
+reconfigure the report named could not ask the command, because whether it
+is pending was read from the repository's config, which already held one.
+Both are fixed, with one rule for both doors: `test_command_pending` reads
+the person's tier, so a repository with no consent of its own is asked its
+command — on reconfigure, on a new repository whose person's answers
+carry (Decision 4, 2026-09-27), and at the terminal, which records the
+consent through the same writer as chat and no longer re-asks the full
+setup when the person's answers exist (first-run.md).
 
 A path rather than a remote, because a remote is shared by every clone
 and fork while consent is given for one tree on one host. A moved
@@ -8347,7 +8362,9 @@ checkout is asked again, which is the safe direction.
 
 *Closing test:* `test_another_repository_is_told_the_consent_was_not_its_own`
 in `tests/test_consent_is_per_repository.py`, which asserts nothing is
-spawned; the file holds the unkeyed, decline and spelling cases beside it.
+spawned; the file holds the unkeyed, decline, spelling and no-other-path
+cases beside it. `tests/test_consent_survives_setup_and_is_asked.py` holds
+the setup, migration, new-repository and terminal cases.
 
 *Mutation:* keying by the path as spelled rather than resolved — outside
 the closing test, which uses one spelling — is caught by
@@ -8355,6 +8372,10 @@ the closing test, which uses one spelling — is caught by
 decline that also switched the person's opt-in off everywhere passed the
 first draft of the decline test, which checked only the other repository's
 command; it now asserts the opt-in survives, and the mutation fails it.
+Five more, each run and each caught: setup writing the payload without the
+recorded consents, pending read from the repository tier, a new repository
+asked nothing, the terminal re-running the full setup, and the refusal
+naming the other repository.
 
 ### D215 — Closed: behaviour suites under `acceptance/` were graded as production (Medium)
 

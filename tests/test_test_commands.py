@@ -241,6 +241,10 @@ def test_both_surfaces_offer_the_same_detected_default(
         seen["prompt"], seen["default"] = prompt, default
         return default
 
+    # The person opted in: consent lives in their tier, per repository (D214).
+    from maintainability_audit._user_config import write_user_answers
+
+    write_user_answers({"test_execution": {"requested": True}})
     monkeypatch.setattr(first_run, "_input_with_default", _capture)
     monkeypatch.setattr(first_run, "_stdin_is_a_tty", lambda: True)
     config = {
@@ -275,6 +279,10 @@ def test_a_cleared_line_still_cancels_the_opt_in(tmp_path: Path, monkeypatch) ->
         "analyzers": {"prompt_when_interactive": True},
     }
 
+    # The person opted in: consent lives in their tier, per repository (D214).
+    from maintainability_audit._user_config import write_user_answers
+
+    write_user_answers({"test_execution": {"requested": True}})
     monkeypatch.setattr(first_run, "_input_with_default", lambda *_: "")
     monkeypatch.setattr(first_run, "_stdin_is_a_tty", lambda: True)
     first_run.maybe_prompt_test_command(root, config)

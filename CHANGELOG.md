@@ -31,10 +31,12 @@ Consent given while setting up one repository ran that repository's test
 command in every repository audited afterwards: auditing Scrollwork executed
 this project's own `pytest --cov=maintainability_audit` against a JavaScript
 tree. Consent is now recorded against the repository it was given for, and a
-repository with none of its own runs nothing and says whose consent exists.
-**If you opted in before 3.9.1, reconfigure once per repository:** an unkeyed
-consent is not run anywhere, because which repository it was given for is not
-known, and the report says so.
+repository with none of its own runs nothing and says so. A new repository
+keeps your other answers and is asked only its own test command, on the chat
+door and at the terminal alike, and clearing the command declines for that
+repository only. **If you opted in before 3.10.0, you will be asked your test
+command once per repository:** a consent recorded before this is not run
+anywhere, because which repository it was given for is not known.
 
 ### Fixed — behaviour suites are test code (D215)
 

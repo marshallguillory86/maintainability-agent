@@ -123,7 +123,7 @@ maintainability-agent mcp --allow-root /absolute/path/to/repository
 </tr>
 <tr>
 <td><code>--conformance</code></td>
-<td>Git revspec, e.g. <code>main...HEAD</code>. Reports how a diff relates to the work order it was given: which changed files the work order named, which are tests pairing to a named file, and which are neither — and any suppression marker (<code># noqa</code>, <code>eslint-disable</code>, a skipped test) the diff <em>added</em>, flagging those landing on a file the work order named. The bounded prompt says <em>fix exactly these and refactor nothing else</em>; without this the bound is an instruction nothing checks. Reports only — it never scores, and it does not fail a build on its own.</td>
+<td>Git revspec, e.g. <code>main...HEAD</code>. Reports how a diff relates to the work order it was given: which changed files the work order named, which are tests pairing to a named file, and which are neither — and any suppression marker (<code># noqa</code>, <code>eslint-disable</code>, a skipped test) the diff <em>added</em>, flagging those landing on a file the work order named. The bounded prompt says <em>fix exactly these and refactor nothing else</em>; without this the bound is an instruction nothing checks. Reports only — it never scores, and it does not fail a build on its own. <code>clean</code> today fails on those directives in a named file; in a paired test file they are recorded and do not fail it. Matcher aliasing, <code>assert True</code>, and a deleted assertion are the same verdict with no detector — recorded as direction in <a href="product-intent.html#the-writable-oracle">product intent</a>, not shipped.</td>
 </tr>
 <tr>
 <td><code>--fail-on-regression</code></td>

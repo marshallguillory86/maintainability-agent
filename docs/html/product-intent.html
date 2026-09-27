@@ -6,6 +6,7 @@
 <ul>
 <li><a href="#what-this-is">What this is</a></li>
 <li><a href="#the-job-it-does">The job it does</a><ul>
+<li><a href="#the-writable-oracle">The writable oracle</a></li>
 <li><a href="#semantic-judgment-and-economic-priority">Semantic judgment and economic priority</a></li>
 </ul>
 </li>
@@ -70,6 +71,23 @@ are a server boundary, not first-run setup.</p>
 <p>Step 3 is the product. Steps 1 and 2 are in service of it. Step 5 is what makes step 3 a constraint rather than a request.</p>
 <p>For most of this project's life the loop ended at step 4, and the honest statement of that limit was: <strong>the work order bounds the agent by instruction, and nothing verifies the diff came back inside it.</strong> That is no longer true. <code>--conformance</code> compares the diff against the paths the report named and answers two separate questions — stayed in scope, and silenced nothing — while <code>--fail-on-regression</code> ratchets the dimension scores across scan history. <code>--attestation-output</code> composes the three into one record. See <a href="roadmap.html#the-remediation-hole-closed-in-210-through-230">the remediation hole</a>.</p>
 <p>What the loop still does not do, and is not going to: <strong>step 5 reads the diff's shape, never its correctness.</strong> It establishes that a change went where it was told and hid nothing. Whether the change is right is a claim this tool does not make, and the attestation says so in its own text rather than leaving a reader to assume otherwise.</p>
+<h3 id="the-writable-oracle">The writable oracle</h3>
+<p>A check that reproduces is still a self-report if the work under review could author the record. This package is a separate process from the generator — it writes no source and runs no model — so an agent fixing a target cannot rewrite the rubric by editing the target. The remaining hole is the oracle that <em>does</em> live in the tree: the tests.</p>
+<p>The pairing rule lets a test file into a remediating diff even when the work order never named it. That is the right rule for writing the failing test with the fix, and it is the file an agent can poison — skip, alias a matcher, replace an assertion with <code>assert True</code>, delete the assertion. <code>clean</code> today fails on a suppression directive the diff <em>added</em> to a file the work order named (<code>SUPPRESSION_MARKERS</code> in <code>_conformance.py</code>). The same directive added to a <strong>paired test file</strong> is recorded in <code>suppressions_added</code> and does <strong>not</strong> fail <code>clean</code> — the first gap the build closes. The other weakenings are the same verdict with no detector.</p>
+<p>Three homes, decided 2026-09-26. The first was authorized to build on 2026-09-27, behind a precision bar frozen before the detector is written.</p>
+<ol>
+<li>
+<p><strong>This package, <code>--conformance</code> <code>clean</code>.</strong> Detect oracle-weakening in the remediating diff as the same second verdict as a skipped test. Still shape. Still not correctness. Implementation is gated on a frozen precision bar; the existing marker list is deliberately narrow because a check that cries wolf gets switched off.</p>
+</li>
+<li>
+<p><strong><code>tools/prove_falsifiers.py</code> stays this repository's gate.</strong> It already proves a newly cited test fails at the base commit. Generalizing that to a stranger's suite — every remediation, new tests must fail on the left side of the revspec — is the capability the <a href="roadmap.html#3-the-test-that-defends-nothing">roadmap</a> names as "the test that defends nothing." It remains unscheduled. It does not become a first-order step in the product loop, and it does not license a claim that the tests would catch a regression.</p>
+</li>
+<li>
+<p><strong>Freeze, a fresh seat, and a human on the test diff sit outside this package.</strong> This auditor does not sequence remediation, freeze the suite before an agent writes, or launch a review that never saw the work. Those are jobs for the seats that already split test-writing, implementation, and audit, and for the operator reading the test hunk. This package's job at that seam is <code>clean</code> on the diff.</p>
+</li>
+</ol>
+<p>See the <a href="decisions.html#decision-12-writable-oracle-three-homes">decision register</a>.</p>
+<p><strong>The ask beside the diff</strong> (<a href="decisions.html#decision-13-the-ask-beside-the-diff">Decision 13</a>, 2026-09-27). The other failure leaves the tests alone. Frozen tests that were wrong before the agent arrived, and production code bent until they pass: nothing weakened, the record untouched, and the diff still wrong because nobody asked for that code. <code>--conformance</code> reads a diff against an ask when the ask is this tool's own work order. Authorized, not yet built: it is to take an ask it did not write — a scope manifest from the operator — and report every change outside it, production and test apart. Whether code inside the ask is what was wanted stays a judgment this package does not make.</p>
 <h3 id="semantic-judgment-and-economic-priority">Semantic judgment and economic priority</h3>
 <p>The next useful boundary is not a larger generic smell catalog. It is a way to
 make repository knowledge explicit enough that a deterministic tool can act on

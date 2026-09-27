@@ -12,7 +12,18 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
-## 3.9.1 - 2026-09-27
+## 3.10.0 - 2026-09-27
+
+### Fixed — a chosen report is saved, and chat gets the summary (D216)
+
+On the chat door, choosing `html` returned the whole HTML report inline — on a
+real repository far over what a host accepts, so the host refused it and no
+report was delivered. The report is now **saved** to the location you choose
+when asked where to save (`output_path`), and chat gets the bounded view and
+the file's path. Choosing `markdown` or `html` without a location is refused
+before the audit runs, so your host asks. A saved HTML report is marked
+generated and is not audited as your code on the next run. The whole chat
+reply now has a size budget, tested for every format on a large repository.
 
 ### Fixed — consent to run a test command is per repository (D214)
 

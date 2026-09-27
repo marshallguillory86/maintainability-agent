@@ -5,7 +5,8 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a></li>
-<li><a href="#391-2026-09-27">3.9.1 - 2026-09-27</a><ul>
+<li><a href="#3100-2026-09-27">3.10.0 - 2026-09-27</a><ul>
+<li><a href="#fixed-a-chosen-report-is-saved-and-chat-gets-the-summary-d216">Fixed — a chosen report is saved, and chat gets the summary (D216)</a></li>
 <li><a href="#fixed-consent-to-run-a-test-command-is-per-repository-d214">Fixed — consent to run a test command is per repository (D214)</a></li>
 <li><a href="#fixed-behaviour-suites-are-test-code-d215">Fixed — behaviour suites are test code (D215)</a></li>
 </ul>
@@ -490,7 +491,16 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
-<h2 id="391-2026-09-27">3.9.1 - 2026-09-27</h2>
+<h2 id="3100-2026-09-27">3.10.0 - 2026-09-27</h2>
+<h3 id="fixed-a-chosen-report-is-saved-and-chat-gets-the-summary-d216">Fixed — a chosen report is saved, and chat gets the summary (D216)</h3>
+<p>On the chat door, choosing <code>html</code> returned the whole HTML report inline — on a
+real repository far over what a host accepts, so the host refused it and no
+report was delivered. The report is now <strong>saved</strong> to the location you choose
+when asked where to save (<code>output_path</code>), and chat gets the bounded view and
+the file's path. Choosing <code>markdown</code> or <code>html</code> without a location is refused
+before the audit runs, so your host asks. A saved HTML report is marked
+generated and is not audited as your code on the next run. The whole chat
+reply now has a size budget, tested for every format on a large repository.</p>
 <h3 id="fixed-consent-to-run-a-test-command-is-per-repository-d214">Fixed — consent to run a test command is per repository (D214)</h3>
 <p>Consent given while setting up one repository ran that repository's test
 command in every repository audited afterwards: auditing Scrollwork executed

@@ -132,7 +132,7 @@ def test_environment_work_order_reaches_every_format(
 
     result = audit_repository(
         str(root), format=format_name, record_history=False,
-        roots=(tmp_path.resolve(),),
+        roots=(tmp_path.resolve(),), output_path=str(tmp_path / "saved") + "/",
     )
 
     order = result["environment_work_order"]

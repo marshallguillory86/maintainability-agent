@@ -168,26 +168,32 @@ def test_the_tool_takes_a_format_argument_and_never_prompts(
     root = _repo(tmp_path)
     before = {p for p in root.rglob("*")}
 
-    result = audit_repository(str(root), format="markdown", roots=(tmp_path.resolve(),))
+    result = audit_repository(str(root), format="markdown", roots=(tmp_path.resolve(),),
+                              output_path=str(tmp_path / "report.md"))
 
     assert result["report_markdown"].startswith("# Maintainability CI Report")
     assert {p for p in root.rglob("*")} == before, "the MCP tool wrote the tree"
 
 
-def test_chat_returns_markdown_and_html_is_returned_not_written(
+def test_chat_returns_markdown_and_html_is_saved_where_chosen(
     tmp_path: Path,
 ) -> None:
+    """ADR 011 §4 as amended 2026-09-27 (D216): the chat door saves a chosen
+    file format to the location the person chose and returns the bounded view.
+    It used to return the HTML inline for the host to save, which stopped
+    working once the complete report outgrew a host's result limit."""
     root = _repo(tmp_path)
     before = {p for p in root.rglob("*")}
+    saved = tmp_path / "report.html"
 
-    result = audit_repository(str(root), format="html", roots=(tmp_path.resolve(),))
+    result = audit_repository(str(root), format="html", roots=(tmp_path.resolve(),),
+                              output_path=str(saved))
 
     assert "report_markdown" in result, "chat always has the Markdown to show"
-    assert "<svg" in result.get("report_html", ""), (
-        "format=html returned no HTML text"
-    )
+    assert "report_html" not in result, "the HTML travelled in the result"
+    assert "<svg" in saved.read_text(encoding="utf-8"), "no HTML report was saved"
     assert {p for p in root.rglob("*")} == before, (
-        "HTML and Markdown files are written only by the CLI (ADR 011 §4)"
+        "a location outside the tree must leave the tree untouched"
     )
 
 
@@ -243,12 +249,14 @@ def test_mcp_format_resolution_is_chat_then_persisted_then_per_call(
         encoding="utf-8",
     )
 
-    persisted = audit_repository(str(root), roots=(tmp_path.resolve(),))
+    persisted = audit_repository(str(root), roots=(tmp_path.resolve(),),
+                                 output_path=str(tmp_path / "report.html"))
     explicit = audit_repository(
         str(root), format="json", roots=(tmp_path.resolve(),),
     )
 
     assert default["format"] == "chat"
     assert "report_markdown" in default and "report_html" not in default
-    assert persisted["format"] == "html" and "report_html" in persisted
+    assert persisted["format"] == "html" and "report_path" in persisted
+    assert "report_html" not in persisted
     assert explicit["format"] == "json" and "report_html" not in explicit

@@ -90,3 +90,37 @@ A pretty HTML page that invents a second score, or that cannot be reproduced fro
 4. A set `--format` / output path suppresses the TTY question.
 5. MCP never writes source or report files. Its write boundary is exactly repository configuration, user configuration, user state, repository scan history at `.maintainability/history.jsonl` and repository baseline at `.maintainability/baseline.json`.
 6. Charts and trend sentences are computed only from fields present on stored `ScanRecord`s (schema 2). A missing series is omitted or named empty, never interpolated.
+
+## Amendment, 2026-09-27 — the chat door saves the chosen file (D216)
+
+**Supersedes the rejection of option D and invariant 5, in part.** The
+operator's spec: *"MA is not supposed to try at all to dump the entire html
+report to chat. Its supposed to save it to HTML and chat only ever gets a
+summary."*
+
+What failed was the handoff this ADR relied on: return the report as text and
+let the host save it. That worked while the HTML was small. From 2026-08-31 the
+HTML is the complete report — every work item with its prompt, and the history
+charts — and on a real repository it is far over a host's result limit. The
+size fix of that day bounded the Markdown field only and left the complete HTML
+in the same reply. On Scrollwork's first run the reply was 308,957 characters,
+the host refused it, and no report reached anyone.
+
+- **markdown and html are saved by the MCP server**, to `output_path`: the
+  location the person chose when the host asked where to save. A directory gets
+  the report's own name. The location must be inside the repository or an
+  allowed root, and the write goes through the same symlink-refusing, bounded
+  writer as every other artifact.
+- **The reply carries the bounded view and `report_path`**, never the complete
+  report. A file format without a location is refused before the audit runs, so
+  the host asks.
+- **The saved HTML declares itself generated**, so the next audit measures the
+  repository and not the last run's report.
+- **Invariant 5 becomes:** the MCP server never writes source. Its writes are
+  the repository configuration, user configuration, user state, the scan
+  history, a requested baseline, secure-code-agent's trend, and a report at the
+  location the person chose.
+- **The guard is the whole reply**, not one field:
+  `tests/test_the_chat_payload_has_a_budget.py` measures every presentation's
+  entire reply against a budget on a repository whose complete report is far
+  over it.

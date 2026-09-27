@@ -64,9 +64,10 @@ engineering changes, not as permission to refactor unrelated code.
    shaped "chat only / chat plus a saved file" silently deletes html,
    which is a presentation the product ships and the user may have
    already chosen during setup. Where to save is a second question,
-   asked only after a file format was chosen. Never write a report or
-   any file until the user has chosen a location; the tool returns text
-   and does not write reports into the tree.
+   asked only after a file format was chosen. Pass the answer as
+   `output_path`: the tool saves the complete report there and returns
+   the bounded view and `report_path`. Never paste or save the report
+   yourself, and never choose a location the user did not.
 4. Treat the returned `remediation_prompt` as the bounded task. Fix only
    the reported hard gates or highest-value findings; keep unrelated
    cleanup as follow-up notes.

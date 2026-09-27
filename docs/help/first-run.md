@@ -111,6 +111,8 @@ Written `history.record` consent wins over terminal interactivity. With no
 written answer, a CLI TTY may start a series; an existing history file remains
 a standing answer and appends. Explicit per-call true or false still wins.
 
-Chat returns report text. If the user chooses a file presentation, the host
-asks for a save location at save time. Neither the MCP process nor an agent may
-write or save a report file without that chosen location.
+Chat returns the bounded view. If the user chooses a file presentation —
+markdown or html — the host asks where to save it and passes that location as
+`output_path`; MA saves the complete report there and returns the bounded view
+and `report_path`. A file format with no location is refused before the audit
+runs. Nothing writes or saves a report file without that chosen location.

@@ -160,11 +160,13 @@ def test_setup_is_a_precondition_and_answering_it_yields_the_real_report(
     assert again["audit_ran"] is False
     assert [q["name"] for q in again["setup_needed"]["questions"]] == names
 
-    audited = audit_repository(str(root), action="run", roots=roots)
+    audited = audit_repository(str(root), action="run", roots=roots,
+                               output_path=str(root / "reports") + "/")
     assert audited["audit_ran"] is True
     assert "setup_needed" not in audited, "answered setup still asks"
     assert audited["format"] == "html", "the chosen presentation was not honoured"
-    assert audited["report_html"], "html was chosen and no html came back"
+    assert Path(audited["report_path"]).read_text(encoding="utf-8").count("<html"), (
+        "html was chosen and no html report was saved")
 
 
 def test_the_test_suite_opt_in_is_surfaced_on_a_pre_class5_config(tmp_path: Path) -> None:

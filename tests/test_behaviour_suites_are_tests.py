@@ -69,7 +69,7 @@ def test_both_classifiers_read_one_list() -> None:
         path = f"{name}/thing.py"
         assert is_test_path(path) == _is_test(path) is True, name
     assert "testing" not in TEST_DIRECTORY_NAMES
-    assert DISCOVERY_ONLY_TEST_DIRECTORIES == frozenset({"testing"})
+    assert frozenset({"testing"}) == DISCOVERY_ONLY_TEST_DIRECTORIES
     assert _is_test("TESTING/lin/dchkaa.f") and not is_test_path("TESTING/lin/dchkaa.f")
 
 

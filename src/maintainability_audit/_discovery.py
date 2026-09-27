@@ -436,6 +436,24 @@ def _directory_provenance(
     }
 
 
+def _is_markup(suffix: str) -> bool:
+    return suffix in _MARKUP_SUFFIXES and suffix not in KNOWN_SOURCE_SUFFIXES
+
+
+def _worth_classifying(suffix: str, relative: str, read: set[str],
+                       not_ours_dirs: tuple[str, ...]) -> bool:
+    """Whether provenance is asked of this file at all.
+
+    Source code always; a scanned suffix inside a tree already proved not
+    ours (D175); and markup, because a generated page — this tool's own
+    saved report among them (D216) — declares itself in its first lines,
+    and read as first-party it grows the measured population every run.
+    """
+    if suffix in KNOWN_SOURCE_SUFFIXES or _is_markup(suffix):
+        return True
+    return suffix in read and any(_under(relative, owner) for owner in not_ours_dirs)
+
+
 def _record_file(
     inventory: Inventory, relative: str, verdict: Any, evidence: Any,
     owner: str | None, suffix: str, seen: set[tuple[str, str]],
@@ -495,14 +513,14 @@ def discover(root: Path, config: dict[str, Any]) -> Inventory:
         if not path.is_file():
             continue
         relative = path.relative_to(root).as_posix()
-        if path.suffix not in KNOWN_SOURCE_SUFFIXES and not (
-            path.suffix in read and any(_under(relative, owner) for owner in not_ours_dirs)
-        ):
+        if not _worth_classifying(path.suffix, relative, read, not_ours_dirs):
             continue
         if is_excluded(relative, list(excludes)):
             continue
         verdict, evidence, owner = _classify(
             path, relative, generated_dirs, vendored_dirs, asset_dirs)
+        if _is_markup(path.suffix) and verdict is Provenance.FIRST_PARTY:
+            continue  # markup is recorded only to say it is not ours
         _record_file(inventory, relative, verdict, evidence, owner,
                      path.suffix, seen_directories)
     _record_asset_dirs(inventory, asset_dirs, seen_directories)

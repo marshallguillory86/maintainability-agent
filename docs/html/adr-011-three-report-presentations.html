@@ -9,6 +9,7 @@
 <li><a href="#decision">Decision</a></li>
 <li><a href="#consequences">Consequences</a></li>
 <li><a href="#invariants">Invariants</a></li>
+<li><a href="#amendment-2026-09-27-the-chat-door-saves-the-chosen-file-d216">Amendment, 2026-09-27 — the chat door saves the chosen file (D216)</a></li>
 </ul>
 </div>
 </aside>
@@ -102,5 +103,37 @@ Presentation now arrives through the <code>format</code> argument;
 <li>MCP never writes source or report files. Its write boundary is exactly repository configuration, user configuration, user state, repository scan history at <code>.maintainability/history.jsonl</code> and repository baseline at <code>.maintainability/baseline.json</code>.</li>
 <li>Charts and trend sentences are computed only from fields present on stored <code>ScanRecord</code>s (schema 2). A missing series is omitted or named empty, never interpolated.</li>
 </ol>
+<h2 id="amendment-2026-09-27-the-chat-door-saves-the-chosen-file-d216">Amendment, 2026-09-27 — the chat door saves the chosen file (D216)</h2>
+<p><strong>Supersedes the rejection of option D and invariant 5, in part.</strong> The
+operator's spec: <em>"MA is not supposed to try at all to dump the entire html
+report to chat. Its supposed to save it to HTML and chat only ever gets a
+summary."</em></p>
+<p>What failed was the handoff this ADR relied on: return the report as text and
+let the host save it. That worked while the HTML was small. From 2026-08-31 the
+HTML is the complete report — every work item with its prompt, and the history
+charts — and on a real repository it is far over a host's result limit. The
+size fix of that day bounded the Markdown field only and left the complete HTML
+in the same reply. On Scrollwork's first run the reply was 308,957 characters,
+the host refused it, and no report reached anyone.</p>
+<ul>
+<li><strong>markdown and html are saved by the MCP server</strong>, to <code>output_path</code>: the
+  location the person chose when the host asked where to save. A directory gets
+  the report's own name. The location must be inside the repository or an
+  allowed root, and the write goes through the same symlink-refusing, bounded
+  writer as every other artifact.</li>
+<li><strong>The reply carries the bounded view and <code>report_path</code></strong>, never the complete
+  report. A file format without a location is refused before the audit runs, so
+  the host asks.</li>
+<li><strong>The saved HTML declares itself generated</strong>, so the next audit measures the
+  repository and not the last run's report.</li>
+<li><strong>Invariant 5 becomes:</strong> the MCP server never writes source. Its writes are
+  the repository configuration, user configuration, user state, the scan
+  history, a requested baseline, secure-code-agent's trend, and a report at the
+  location the person chose.</li>
+<li><strong>The guard is the whole reply</strong>, not one field:
+  <code>tests/test_the_chat_payload_has_a_budget.py</code> measures every presentation's
+  entire reply against a budget on a repository whose complete report is far
+  over it.</li>
+</ul>
 <footer>Rendered from <code>docs/adr-011-three-report-presentations.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
 </main></div></body></html>

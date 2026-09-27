@@ -1,6 +1,6 @@
 # Defects found auditing Scrollwork, 2026-09-26
 
-Version 1.4.0 · 2026-09-27 · Filed from a real audit
+Version 1.5.0 · 2026-09-27 · Filed from a real audit
 of `scrollworkapp` (maintainability-agent 3.9.0, secure-code-agent 0.12.9).
 1 and 2 are closed as **D214** and **D215** in `defect-register-chat-surface.md`,
 each with a failing test written first. 3 and 4 are decided, below, and not yet built.
@@ -150,7 +150,7 @@ microsoft/playwright is in the calibration corpus. `testing` stays a
 discovery-only name until the next recalibration, for the same reason (lapack).
 `integration` and `features` stay out, as ordinary production names.
 
-**3. Decided 2026-09-27: MA writes the report to the path the person chose.**
+**3 → D216, closed. Decided 2026-09-27: MA writes the report to the path the person chose.**
 `audit_repository` takes an output path the person named — the skill already
 asks where to save — writes the chosen format there, and returns a short
 summary and the path rather than the report inline. A seventh local artifact,
@@ -164,6 +164,8 @@ and its test command. It is told which carried answers apply, and that
 reconfigure changes them.
 
 ## Changelog
+
+1.5.0 3 closed as D216.
 
 1.4.0 D215 narrowed to `acceptance` and `e2e`.
 

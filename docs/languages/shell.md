@@ -67,9 +67,11 @@ charged once for cognitive complexity, like Kotlin's `when`.
 No second implementation in the pinned analyzer pool reads shell
 complexity: lizard 1.24.0 has no shell reader, and nothing adapted in the
 analyzer catalog measures it. One exists upstream — `shellmetrics`, a
-single script computing a per-function CCN — and it is not adopted, as an
-analyzer or as a test oracle. That is the honest gap: not "no tool exists",
-but "none this project runs".
+single script computing a per-function CCN — and it cannot be adopted on
+this project's terms: checked 2026-09-27, it has no release and no tag, no
+package on Homebrew, pip or npm, and no change since 2023, so it could not be
+pinned the way every analyzer in the pool is. That is the honest gap: not "no
+tool exists", but "none this project can pin".
 
 So the branch reader is checked against the grammar instead: the list
 operators of POSIX XCU 2.9.3 (AND-OR, sequential and asynchronous), the

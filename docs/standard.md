@@ -327,7 +327,7 @@ Grades:
 | cyclomatic complexity | `cyclomatic_complexity` | same measurement |
 | duplication % | `duplication` | same measurement, expressed as a rate over files |
 | code churn | `churn` | same measurement, over a stated window |
-| coverage % | `test_effectiveness` | **measured only on opt-in.** When the operator opts the tree's own test suite in (Decision 9, amended 2026-08-31), line coverage scores `test_effectiveness` as `coverage / 20`; otherwise the aspect is NotApplicable and coverage is never inferred |
+| coverage % | `test_effectiveness` | **measured only on opt-in.** When the operator opts the tree's own test suite in (Decision 9, amended 2026-08-31), line coverage — from a `coverage.xml`, `coverage/lcov.info` or `lcov.info` the run itself produced — scores `test_effectiveness` as `coverage / 20`; otherwise the aspect is NotApplicable and coverage is never inferred |
 | **bus factor** | `knowledge_concentration` | **different quantity.** Bus factor counts the people whose loss would stall the project. This counts the share of settled files (3+ commits) that exactly one person has touched. A repository where one author owns 80% of files can still have a bus factor of four, so the names are not interchangeable |
 
 `test_the_ownership_aspect_does_not_claim_to_be_bus_factor` fails the build if the ownership key is renamed to the framework's term.

@@ -199,12 +199,16 @@ in either direction.
 ### Decision 12: Writable oracle, three homes
 
 - Recorded: 2026-09-26
-- Status: **Accepted. Home 1 authorized to build, 2026-09-27** — the
-  operator: *"lets address both gaps in a meaningful way that improves
-  the quality of the audits"*. A precision bar is to be frozen, on a
-  labelled set of test-file diffs, before the detector is written; none
-  exists yet. Homes 2 and 3 are unchanged. Numbered 12 because ADR 012
-  was accepted as decision 11.
+- The contract-floor condition — a deterministic check is only evidence
+  when the work under review could not author the record — is credited to
+  **Michael Eakins**, who raised it in a public discussion of this project
+  on 2026-09-26.
+- Status: **Accepted. Home 1 authorized by the maintainer, 2026-09-27.
+  Built in 3.11.0**: `_oracle`,
+  held to the precision bar frozen first in
+  `tests/test_oracle_weakening_precision_bar.py` (zero false alarms on its
+  legitimate edits; every labelled weakening caught). Homes 2 and 3 are
+  unchanged. Numbered 12 because ADR 012 was accepted as decision 11.
 
 A deterministic check is only evidence when the unit under review could
 not author the record. An agent that aliases a matcher, replaces an
@@ -217,10 +221,10 @@ Three homes, not one product:
 1. **`--conformance` `clean` (this package).** Oracle-weakening in the
    remediating diff is the same second verdict as a skipped test.
    Shipped: a suppression directive added to a *named* file fails
-   `clean`. Not caught: the same directive in a paired test file, which
-   is recorded but does not fail `clean`, and matcher aliasing,
-   `assert True` and a deleted assertion anywhere. Still shape, never
-   correctness. Authorized 2026-09-27, gated on the precision bar.
+   `clean`. Built in 3.11.0: any test file in the diff made unable to
+   fail — skip or suppression, tautology, replaced assertion API,
+   swallowed failure, deleted assertion — fails `clean` too. Still
+   shape, never correctness.
 
 2. **`tools/prove_falsifiers.py` (this repository).** Already first-order
    here: keep `tests/` from this commit, restore everything else to the
@@ -245,10 +249,8 @@ CLI `--conformance` names what is shipped versus recorded.
 ### Decision 13: The ask beside the diff
 
 - Recorded: 2026-09-27
-- Status: **Accepted. Authorized to build, 2026-09-27** — the operator,
-  on giving the auditor the ask alongside the diff: *"yes, lets address
-  both gaps in a meaningful way that improves the quality of the audits,
-  and MA's value proposition."*
+- Status: **Accepted, authorized by the maintainer 2026-09-27, built in
+  3.11.0** (`--ask`).
 
 Found in the same exchange as Decision 12, from the other side. The
 frozen tests were wrong before the agent saw them; the agent rewrote

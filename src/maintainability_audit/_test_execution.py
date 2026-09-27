@@ -278,53 +278,70 @@ def run_test_suite(root: Path, config: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
-def _coverage_fingerprint(root: Path) -> int | None:
-    """The coverage artifact's modification time in ns, or ``None``.
+#: Coverage artifacts this reads, in order, each with its parser. Cobertura
+#: XML is what Python's coverage writes; `lcov.info` is what JavaScript's
+#: tools write (c8, nyc, jest, vitest) — Scrollwork measured with V8 and
+#: left `test_effectiveness` unscored because only the first was read.
+COVERAGE_ARTIFACTS: tuple[str, ...] = ("coverage.xml", "coverage/lcov.info", "lcov.info")
 
-    ``None`` covers three cases treated identically: no artifact, a
-    symlinked artifact (refused — we do not follow a link the tree
-    planted), and an unreadable one. The nanosecond mtime is the signal
-    ``_coverage_from_this_run`` compares against to tell a fresh artifact
-    from a pre-existing one.
+
+def _coverage_fingerprint(root: Path) -> dict[str, int]:
+    """Each coverage artifact's modification time in ns, by relative path.
+
+    An artifact that is absent, symlinked (refused — we do not follow a
+    link the tree planted) or unreadable is left out, which is how
+    ``_coverage_from_this_run`` tells a fresh artifact from a
+    pre-existing one.
     """
-    report = root / "coverage.xml"
-    if report.is_symlink() or not report.is_file():
-        return None
-    try:
-        return report.stat().st_mtime_ns
-    except OSError:
-        return None
+    stamps: dict[str, int] = {}
+    for name in COVERAGE_ARTIFACTS:
+        report = root / name
+        if report.is_symlink() or not report.is_file():
+            continue
+        try:
+            stamps[name] = report.stat().st_mtime_ns
+        except OSError:
+            continue
+    return stamps
 
 
-def _coverage_from_this_run(root: Path, before: int | None) -> float | None:
+def _coverage_from_this_run(root: Path, before: dict[str, int]) -> float | None:
     """A coverage percentage from an artifact *this run* produced, else ``None``.
 
     The artifact must exist after the run and be newer than the snapshot
-    taken before it: a ``coverage.xml`` the repository committed, or one a
+    taken before it: a report the repository committed, or one a
     previous run left untouched, has the tree for its provenance rather
     than the suite we just executed, so scoring it would let a repository
-    set its own ``test_effectiveness``. ``before is None`` means there was
-    nothing (or nothing readable) beforehand, so any artifact now present
-    is this run's. Parsed through the same entity-refusing guard the
-    analyzer XML uses, because it is still output from the audited tree.
+    set its own ``test_effectiveness``. The first fresh artifact in
+    ``COVERAGE_ARTIFACTS`` order is read; XML goes through the same
+    entity-refusing guard the analyzer XML uses, because it is still
+    output from the audited tree.
     """
-    report = root / "coverage.xml"
     after = _coverage_fingerprint(root)
-    if after is None:
-        return None
-    if before is not None and after <= before:
-        return None
-    try:
-        element = parse_analyzer_xml(
-            "\n".join(read_source_file(report)), fallback="<coverage/>")
-        rate = element.get("line-rate")
+    for name in COVERAGE_ARTIFACTS:
+        if name in after and after[name] > before.get(name, -1):
+            try:
+                return _read_coverage(root / name)
+            except PathNotAllowed:
+                # Refused, not read as absent coverage (D145): a FIFO named
+                # like a report would hang the audit after the suite ran.
+                raise
+            except (AnalyzerXmlRefused, ValueError, OSError):
+                return None
+    return None
+
+
+def _read_coverage(report: Path) -> float | None:
+    """Line coverage in percent from one artifact."""
+    text = "\n".join(read_source_file(report))
+    if report.suffix == ".xml":
+        rate = parse_analyzer_xml(text, fallback="<coverage/>").get("line-rate")
         return round(float(rate) * 100, 1) if rate is not None else None
-    except PathNotAllowed:
-        # Refused, not read as absent coverage (D145). The report is
-        # written by the tree's own suite, so its path is as
-        # repository-controlled as the source is, and `read_text` on a
-        # FIFO named `coverage.xml` would hang the audit after the
-        # suite had already run.
-        raise
-    except (AnalyzerXmlRefused, ValueError, OSError):
-        return None
+    found = hit = 0
+    for line in text.splitlines():
+        if line.startswith("LF:"):
+            found += int(line[3:].strip() or 0)
+        elif line.startswith("LH:"):
+            hit += int(line[3:].strip() or 0)
+    # No instrumented lines is no measurement, not 0% and not 100%.
+    return round(hit / found * 100, 1) if found else None

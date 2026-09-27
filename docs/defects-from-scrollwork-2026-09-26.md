@@ -1,9 +1,9 @@
 # Defects found auditing Scrollwork, 2026-09-26
 
-Version 1.5.0 · 2026-09-27 · Filed from a real audit
+Version 1.6.0 · 2026-09-27 · Filed from a real audit
 of `scrollworkapp` (maintainability-agent 3.9.0, secure-code-agent 0.12.9).
 1 and 2 are closed as **D214** and **D215** in `defect-register-chat-surface.md`,
-each with a failing test written first. 3 and 4 are decided, below, and not yet built.
+each with a failing test written first. 3 closed as D216 and 4 shipped with D214, both in 3.10.0.
 
 ---
 
@@ -139,8 +139,8 @@ per repository — asked for every new one.
 ## Resolution
 
 **1 → D214.** Consent is keyed by repository (resolved root path). The coverage-format
-question under *Also* is not decided: only `coverage.xml` is read, and whether lcov or V8
-JSON is read too is open.
+question under *Also* is closed in 3.11.0: `coverage/lcov.info` and `lcov.info` are read
+beside `coverage.xml`, under the same only-this-run's-artifact rule.
 
 **2 → D215.** Decided 2026-09-27: widen the name list rather than add
 `paths.test_roots`, with `acceptance` and `e2e` only. `cypress` and `playwright`
@@ -164,6 +164,8 @@ and its test command. It is told which carried answers apply, and that
 reconfigure changes them.
 
 ## Changelog
+
+1.6.0 lcov read (3.11.0).
 
 1.5.0 3 closed as D216.
 

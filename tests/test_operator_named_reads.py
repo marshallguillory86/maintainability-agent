@@ -136,7 +136,7 @@ def test_a_well_formed_sarif_input_is_still_read(tmp_path: Path) -> None:
 #: to be added here before the suite passes, which is the structural half
 #: of D131: the class stays closed because a fourth `--something-input`
 #: cannot be added without answering this question.
-READS_AN_OPERATOR_FILE = {"--config", "--baseline", "--sarif-input",
+READS_AN_OPERATOR_FILE = {"--config", "--baseline", "--sarif-input", "--ask",
                           # The delegate's pillar document (ADR 007).
                           # `read_delegated` routes it through the same
                           # regular-file primitive (D145).

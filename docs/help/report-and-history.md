@@ -39,9 +39,9 @@ repository is not trusted on its own.
 ## When declaration rates are withheld
 
 Declaration-level findings — function size, complexity, dead code — need a
-parser for the language. Fourteen are parsed: Python, Java, C, C++, C#, Go,
-Rust, PHP, Ruby, Swift, COBOL, Fortran (free-form and fixed-form), the JS/TS
-family and HTML. Each has a scanner
+parser for the language. Sixteen are parsed: Python, Java, Kotlin, C, C++,
+C#, Go, Rust, PHP, Ruby, Swift, Shell, COBOL, Fortran (free-form and
+fixed-form), the JS/TS family and HTML. Each has a scanner
 written for it and a documented list of what it misses; see
 [language support](../language-support.md).
 

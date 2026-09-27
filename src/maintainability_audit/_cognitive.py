@@ -34,7 +34,7 @@ import ast
 import re
 
 from ._masking import mask_fortran_lines, mask_lines
-from ._metrics_types import SHELL_COMMAND_POSITION
+from ._metrics_types import shell_booleans, shell_command_words
 
 # No COBOL masker is imported here, deliberately: `cobol_cognitive` takes
 # lines that are already masked. COBOL's mask is the only file-level one —
@@ -328,10 +328,6 @@ def kotlin_cognitive(lines: list[str]) -> int:
 #: is Fortran's defect before 1.4.0 in another language. Every word is
 #: read only in command position, because shell prose says `for` and
 #: `while` in unquoted arguments.
-_SH_TOKEN_RE = re.compile(
-    SHELL_COMMAND_POSITION
-    + r"(if|while|until|for|select|case|elif|else|fi|done|esac)\b|(&&|\|\|)"
-)
 _SH_OPENERS = frozenset({"if", "while", "until", "for", "select", "case"})
 _SH_CLOSERS = frozenset({"fi", "done", "esac"})
 
@@ -352,8 +348,9 @@ def shell_cognitive(lines: list[str]) -> int:
     score = 0
     depth = 0
     for line in lines:
-        for token in _SH_TOKEN_RE.finditer(line):
-            word = token.group(1)
+        events = sorted([*shell_command_words(line),
+                         *((column, None) for column in shell_booleans(line))])
+        for _column, word in events:
             if word is None or word in ("elif", "else"):
                 score += 1
             elif word in _SH_CLOSERS:

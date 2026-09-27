@@ -25,6 +25,13 @@ before the audit runs, so your host asks. A saved HTML report is marked
 generated and is not audited as your code on the next run. The whole chat
 reply now has a size budget, tested for every format on a large repository.
 
+### Fixed — Shell reading (D217)
+
+`$((1 << n))` and `(( y = x << 2 ))` were read as heredocs, which hid every
+function after them from the audit. They are arithmetic now. A keyword after
+`do`, `then` or `else` in an argument list (`echo do for it`) no longer counts
+as a branch. The Shell page names every line shape that still over-counts.
+
 ### Fixed — consent to run a test command is per repository (D214)
 
 Consent given while setting up one repository ran that repository's test

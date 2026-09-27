@@ -7,6 +7,7 @@
 <li><a href="#unreleased">Unreleased</a></li>
 <li><a href="#3100-2026-09-27">3.10.0 - 2026-09-27</a><ul>
 <li><a href="#fixed-a-chosen-report-is-saved-and-chat-gets-the-summary-d216">Fixed — a chosen report is saved, and chat gets the summary (D216)</a></li>
+<li><a href="#fixed-shell-reading-d217">Fixed — Shell reading (D217)</a></li>
 <li><a href="#fixed-consent-to-run-a-test-command-is-per-repository-d214">Fixed — consent to run a test command is per repository (D214)</a></li>
 <li><a href="#fixed-behaviour-suites-are-test-code-d215">Fixed — behaviour suites are test code (D215)</a></li>
 </ul>
@@ -501,6 +502,11 @@ the file's path. Choosing <code>markdown</code> or <code>html</code> without a l
 before the audit runs, so your host asks. A saved HTML report is marked
 generated and is not audited as your code on the next run. The whole chat
 reply now has a size budget, tested for every format on a large repository.</p>
+<h3 id="fixed-shell-reading-d217">Fixed — Shell reading (D217)</h3>
+<p><code>$((1 &lt;&lt; n))</code> and <code>(( y = x &lt;&lt; 2 ))</code> were read as heredocs, which hid every
+function after them from the audit. They are arithmetic now. A keyword after
+<code>do</code>, <code>then</code> or <code>else</code> in an argument list (<code>echo do for it</code>) no longer counts
+as a branch. The Shell page names every line shape that still over-counts.</p>
 <h3 id="fixed-consent-to-run-a-test-command-is-per-repository-d214">Fixed — consent to run a test command is per repository (D214)</h3>
 <p>Consent given while setting up one repository ran that repository's test
 command in every repository audited afterwards: auditing Scrollwork executed

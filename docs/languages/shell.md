@@ -45,7 +45,9 @@ and `||`. Not counted: the `case` header, whose arms carry it; the `*)`
 default arm, as Go declines `default`; `else`; a pipe `|`.
 
 **A keyword counts only in command position** — at the start of a line,
-after `;`, `&`, `|`, `(`, `{` or `!`, or after `then`, `do` or `else`.
+after `;`, `&`, `|`, `(`, `{`, `!` or a backtick, or after `then`, `do` or `else`
+when that word is itself in command position — so `echo do for it` counts
+nothing.
 Shell scripts are full of unquoted prose, and `echo waiting for the
 server` has a `for` in it that is an argument, not a loop.
 
@@ -62,15 +64,21 @@ charged once for cognitive complexity, like Kotlin's `when`.
 
 ## How it is verified
 
-No second implementation reads shell complexity offline: lizard 1.24.0
-has no shell reader, and nothing adapted in the analyzer catalog
-measures it. So the branch reader is checked against the grammar itself
-— every compound command and list operator in POSIX XCU 2.9.3 and
-2.9.4, and the constructs the Bash Reference Manual adds in 3.2.5, one
-specimen each in `tests/test_shell_metrics.py`, with a test that fails
-if a construct on that list has none. `shellmetrics` computes a
-per-function CCN for shell and is the candidate second opinion; it is a
-single upstream script outside the pinned pool, and is not installed.
+No second implementation in the pinned analyzer pool reads shell
+complexity: lizard 1.24.0 has no shell reader, and nothing adapted in the
+analyzer catalog measures it. One exists upstream — `shellmetrics`, a
+single script computing a per-function CCN — and it is not adopted, as an
+analyzer or as a test oracle. That is the honest gap: not "no tool exists",
+but "none this project runs".
+
+So the branch reader is checked against the grammar instead: the list
+operators of POSIX XCU 2.9.3 (AND-OR, sequential and asynchronous), the
+compound commands of 2.9.4, and the constructs the Bash Reference Manual
+adds in 3.2.5, including the `;&` and `;;&` case terminators — one specimen
+each in `tests/test_shell_metrics.py`. The list is typed from the
+standard's section headings, and the test checks the specimens against
+that list, not against the standard itself: a construct left off the list
+would go unnoticed, which is why the list is short enough to read.
 
 For the same reason **Shell has no external complexity reading.** The
 built-in reader is the only one, and the language is named in the
@@ -98,6 +106,14 @@ Each of these under-reports rather than invents:
 - **A script with no suffix** — known only by its `#!` line — is not
   opened, as with every language here.
 
-One construct over-counts: a line in a multi-line array that ends in
-`)` (`  last)`) reads as a `case` arm. It is rare, and it is named here
-so a reader who meets it knows it was known.
+Some lines over-count, all through the `case`-arm pattern, which reads
+one line at a time and cannot see whether a `case` is open: a line in a
+multi-line array ending in `)` (`  last)` or `  "last")`), a one-word
+subshell (`(cleanup)`), and the last line of a multi-line command
+substitution (`  --bar)`). Each reads as one arm. They are named here so a
+reader who meets one knows it was known.
+
+Fixed after 3.9.0 shipped, both found by an audit: `<<` inside `$(( … ))`
+or `(( … ))` was read as a heredoc, which blanked every function after it —
+a population lost, not under-reported — and a keyword after `do` in an
+argument list (`echo do for it`) counted as a branch.

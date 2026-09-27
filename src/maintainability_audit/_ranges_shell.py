@@ -73,6 +73,12 @@ def _heredoc_at(line: str, index: int, pending: list[tuple[str, bool]]) -> int |
     """
     if not line.startswith("<<", index) or line.startswith("<<<", index):
         return None
+    # Inside `$(( … ))` or `(( … ))`, `<<` is a left shift. Read as a
+    # heredoc waiting for a line `n`, `$((1 << n))` blanked every function
+    # after it — a population lost, not under-reported (audit of 3.9.0).
+    before = line[:index]
+    if before.count("((") > before.count("))"):
+        return None
     heredoc = _SH_HEREDOC_RE.match(line, index)
     if heredoc is None:
         return None

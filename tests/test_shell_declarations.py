@@ -175,3 +175,17 @@ def test_the_default_configuration_opens_shell() -> None:
 
     listed = set(DEFAULT_CONFIG["paths"]["include_extensions"])
     assert {".sh", ".bash", ".zsh"} <= listed
+
+
+def test_an_arithmetic_shift_is_not_a_heredoc() -> None:
+    """`$((1 << n))` shifts; it opens no heredoc, and nothing after it vanishes.
+
+    Read as a heredoc waiting for a line `n`, it blanked every function
+    after it — a whole population gone, not under-reported (audit of 3.9.0).
+    """
+    source = (
+        "f() {\n  x=$((1 << n))\n  (( y = x << 2 ))\n}\n"
+        "g() {\n  echo hi\n}\n"
+    )
+
+    assert [name for _s, _e, name, _k in _ranges(source)] == ["f", "g"]

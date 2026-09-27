@@ -69,8 +69,11 @@ always did.
 
 This is the one exception to the tool never running the audited tree
 (Decision 9, amended 2026-08-31): it executes only the command you name, only
-because you opted in, and only for this repository. A blank answer cancels the
-opt-in. The command is stored in `expected_commands.test`; its line coverage,
+because you opted in, and only for this repository. A blank answer declines
+for this repository. The command is documented in the repository's
+`expected_commands.test` and your consent is recorded against this repository
+in your user configuration; a repository with no consent of its own is asked
+its command, and nothing runs until it has one. Its line coverage,
 if the run produces a `coverage.xml`, scores `test_effectiveness` as
 `coverage / 20`, and the aspect is NotApplicable on every run that does not opt
 in. Answer `no` — the default — and neither this question nor any execution
@@ -111,6 +114,8 @@ Written `history.record` consent wins over terminal interactivity. With no
 written answer, a CLI TTY may start a series; an existing history file remains
 a standing answer and appends. Explicit per-call true or false still wins.
 
-Chat returns report text. If the user chooses a file presentation, the host
-asks for a save location at save time. Neither the MCP process nor an agent may
-write or save a report file without that chosen location.
+Chat returns the bounded view. If the user chooses a file presentation —
+markdown or html — the host asks where to save it and passes that location as
+`output_path`; MA saves the complete report there and returns the bounded view
+and `report_path`. A file format with no location is refused before the audit
+runs. Nothing writes or saves a report file without that chosen location.

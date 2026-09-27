@@ -21,6 +21,7 @@
 <li><a href="#options-considered">Options considered</a></li>
 <li><a href="#consequences">Consequences</a></li>
 <li><a href="#invariants">Invariants</a></li>
+<li><a href="#amendment-2026-09-24-shell-is-scored-so-clicks-case-now-narrows-the-claim">Amendment, 2026-09-24 — Shell is scored, so click's case now narrows the claim</a></li>
 </ul>
 </div>
 </aside>
@@ -116,5 +117,17 @@
 <li>Generated and vendored files are excluded from the scored population <strong>and counted in the report</strong>.</li>
 <li>Classification reads the repository's own declarations. No rule may be a bare list of directory names.</li>
 </ol>
+<h2 id="amendment-2026-09-24-shell-is-scored-so-clicks-case-now-narrows-the-claim">Amendment, 2026-09-24 — Shell is scored, so click's case now narrows the claim</h2>
+<p>§3's motivating case was a Python library holding one shell script that <em>no
+tool reads and the scan never opened</em>. From 3.9.0 Shell is parsed and in the
+default <code>include_extensions</code>, decided by the operator when Shell shipped:
+parsed by default, like every language with a scanner, rather than only on
+request. A shell script is therefore a scored language, and the scoped
+intersection correctly narrows the repository-wide claim for it — no tool
+checks types in shell, so a repository with scored scripts cannot claim
+<code>types</code> for the whole of it, while <code>coverage_by_language</code> still says Python
+had it. The rule in §3 is unchanged; its example moved from "unscanned" to
+"scanned". The property that one <em>unscanned</em> file must not rewrite the claim
+is kept, with Elixir standing in (<code>test_one_stray_unscored_file_does_not_erase_a_python_library</code>).</p>
 <footer>Rendered from <code>docs/adr-010-repository-discovery.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
 </main></div></body></html>

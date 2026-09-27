@@ -107,3 +107,17 @@ Recorded because the sequencing is load-bearing. Widening what the tool reads wi
 3a. Coverage is claimed per language and never by a share threshold. The repository-wide claim covers only the scored languages, and is published with those languages named.
 4. Generated and vendored files are excluded from the scored population **and counted in the report**.
 5. Classification reads the repository's own declarations. No rule may be a bare list of directory names.
+
+## Amendment, 2026-09-24 — Shell is scored, so click's case now narrows the claim
+
+§3's motivating case was a Python library holding one shell script that *no
+tool reads and the scan never opened*. From 3.9.0 Shell is parsed and in the
+default `include_extensions`, decided by the operator when Shell shipped:
+parsed by default, like every language with a scanner, rather than only on
+request. A shell script is therefore a scored language, and the scoped
+intersection correctly narrows the repository-wide claim for it — no tool
+checks types in shell, so a repository with scored scripts cannot claim
+`types` for the whole of it, while `coverage_by_language` still says Python
+had it. The rule in §3 is unchanged; its example moved from "unscanned" to
+"scanned". The property that one *unscanned* file must not rewrite the claim
+is kept, with Elixir standing in (`test_one_stray_unscored_file_does_not_erase_a_python_library`).

@@ -14,6 +14,7 @@ about the same history file.
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -191,6 +192,7 @@ def audit_repository(
     *,
     action: str | None = "run",
     roots: tuple[Path, ...] | None = None,
+    output_path: str | None = None,
 ) -> dict[str, Any]:
     """Run the production audit and return its report plus bounded work order.
 
@@ -224,6 +226,11 @@ def audit_repository(
     if gated is not None:
         return gated
     config = load_config(authorize_config(config_path, root) or discovered_config(root))
+    # Resolved before the audit, so a file format with nowhere to go is
+    # refused without running anything: the host asks the person where to
+    # save and calls again (D216).
+    format, override = _resolve_presentation(format, config)
+    target = report_target(root, authorized_roots, format, output_path)
     revspec = validate_revspec(changed_only)
     only_paths = changed_paths(root, revspec) if revspec else None
     if run_analyzers is None:
@@ -245,12 +252,78 @@ def audit_repository(
                            record=_record_resolved(record_history, history_path, config),
                            want_targets=bool(include_prompt))
     baseline = _baseline_workflow(report, root, baseline_path, write_baseline)
-    format, override = _resolve_presentation(format, config)
     result = _top_level_result(report, root, status, run_analyzers,
                                baseline, include_prompt)
     if override is not None:
         result["presentation_override"] = override
-    return _finish_result(result, format, root, config, report)
+    return _finish_result(result, format, root, config, report, target)
+
+
+#: What a chosen location that names a directory is filled with.
+REPORT_FILENAMES = {"html": "maintainability-report.html", "markdown": "maintainability-report.md"}
+from ._html_view import REPORT_BANNER  # noqa: E402 - the one definition, in the skin that starts with it
+
+
+def report_target(root: Path, roots: tuple[Path, ...], format: str,
+                  output_path: str | None) -> tuple[Path, Path] | None:
+    """``(base, file)`` a chosen report is written to, or ``None`` for no file.
+
+    The report is the complete record, with the history charts; chat is
+    the bounded view (ADR 011 as amended 2026-09-27). The person chooses
+    where the file goes and the host passes it here. A relative location
+    is read against the repository, a directory gets the report's own
+    name, and the file must sit inside the repository or a root this
+    server already allows — the same boundary every other write keeps.
+    """
+    if format not in REPORT_FILENAMES:
+        return None
+    if not output_path:
+        raise InvalidAuditArgument(
+            f"format {format!r} saves the report as a file, so output_path is needed: "
+            "ask the person where to save it and call again with that location. "
+            "Chat carries the summary, never the report itself."
+        )
+    chosen = Path(output_path).expanduser()
+    if not chosen.is_absolute():
+        chosen = root / chosen
+    if chosen.is_dir() or output_path.endswith(("/", "\\")):
+        chosen = chosen / REPORT_FILENAMES[format]
+    # Normalised, never resolved: resolving here followed a symlinked
+    # directory before the writer's route check could see it, so the
+    # audited tree chose where the report landed (Grok, 2026-09-27).
+    target = Path(os.path.normpath(chosen))
+    base = next((Path(b) for b in (root, *roots)
+                 if target.is_relative_to(Path(b)) or target.is_relative_to(Path(b).resolve())), None)
+    if base is None:
+        raise InvalidAuditArgument(
+            f"output_path {target} is outside the repository and every allowed root; "
+            "choose a location inside one of them."
+        )
+    _refuse_a_file_it_did_not_write(target)
+    return base, target
+
+
+def _refuse_a_file_it_did_not_write(target: Path) -> None:
+    """A save replaces the last report and nothing else.
+
+    `output_path` could name the repository config, the scan history or a
+    source file, and the report replaced it (Grok, 2026-09-27). A file
+    already there is replaced only when its first line is this tool's
+    banner.
+    """
+    if not target.exists() or target.is_symlink():
+        return
+    from ._operator_reads import read_operator_file
+
+    try:
+        head = read_operator_file(target).split("\n", 1)[0].strip()
+    except (OSError, ValueError):
+        head = ""  # a directory, a FIFO, unreadable: not a report this tool wrote
+    if head != REPORT_BANNER:
+        raise InvalidAuditArgument(
+            f"output_path {target} already exists and is not a report this tool wrote; "
+            "choose a new file or a directory."
+        )
 
 
 def _resolve_presentation(
@@ -466,7 +539,8 @@ def attach_history_views(report: dict[str, Any], history_path: Path,
 
 
 def _finish_result(result: dict[str, Any], format: str, root: Path,
-                   config: dict[str, Any], report: dict[str, Any]) -> dict[str, Any]:
+                   config: dict[str, Any], report: dict[str, Any],
+                   target: tuple[Path, Path] | None = None) -> dict[str, Any]:
     """Presentation, the degradation payload, and the first-contact record.
 
     8.5: the host asked the user which presentation and passes the answer
@@ -502,19 +576,13 @@ def _finish_result(result: dict[str, Any], format: str, root: Path,
     if format == "json":
         result["report"] = report
     else:
-        # The Markdown payload is the complete report only when Markdown is
-        # the chosen file format. For chat it is the bounded UI view, and
-        # for html the complete content rides in `report_html` while this
-        # stays the bounded Markdown chat shows alongside (ADR 011). This is
-        # what keeps a large repo's inline response under the host's payload
-        # cap instead of being truncated with the remediation prompt in it.
-        result["report_markdown"] = render_markdown(report, complete=(format == "markdown"))
-    if format == "html":
-        from .renderers import render_html
-
-        history = repository_path(
-            root, config.get("paths", {}).get("history"), DEFAULT_HISTORY_PATH)
-        result["report_html"] = render_html(report, read_history(history))
+        # Chat always gets the bounded view, whatever was chosen. A chosen
+        # file format is the complete report and is *saved*, never sent:
+        # 3.9.0 sent html inline beside this, 309 KB on private-repo's first
+        # run, which the host refused and nobody received (D216).
+        result["report_markdown"] = render_markdown(report, complete=False)
+    if target is not None:
+        result["report_path"] = str(_save_report(format, target, root, config, report))
     result["format"] = format
     # No setup questions ride a finished audit. This used to attach them
     # whenever the repository was still pending, which was D3's
@@ -530,3 +598,20 @@ def _finish_result(result: dict[str, Any], format: str, root: Path,
     mark_repo_seen(root)
     return result
 
+
+
+def _save_report(format: str, target: tuple[Path, Path], root: Path,
+                 config: dict[str, Any], report: dict[str, Any]) -> Path:
+    """Write the complete report where the person chose; return where it went."""
+    from ._safe_write import write_bounded
+
+    base, path = target
+    if format == "html":
+        from .renderers import render_html
+
+        history = repository_path(
+            root, config.get("paths", {}).get("history"), DEFAULT_HISTORY_PATH)
+        body = render_html(report, read_history(history))
+    else:
+        body = f"{REPORT_BANNER}\n{render_markdown(report, complete=True)}"
+    return write_bounded(base, path, body)

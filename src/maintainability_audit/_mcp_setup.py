@@ -359,19 +359,25 @@ def test_command_questions(root: Path | None = None) -> list[dict[str, Any]]:
 
 
 def test_command_pending(root: Path) -> bool:
-    """True when the operator opted to run tests and no command is stored.
+    """True when the person opted in and this repository has no answer of its own.
 
     The second stage of the opt-in, mirroring `economics_bounds_pending`:
     the command is asked only of someone who said yes, and saying yes is
-    not silently discarded.
+    not silently discarded. Read from the **person's** tier, where consent
+    lives and is keyed by repository (Decision 9: "only for this
+    repository"; D214). It read the repository's config, which already
+    carried a command for anyone configured before consent was keyed, so
+    the reconfigure the report named never asked it. One rule for both
+    doors: the terminal asks the same question on the same answer.
     """
-    discovered = discovered_config(Path(root))
-    stored = _read_config(Path(discovered)) if discovered is not None else None
-    if not isinstance(stored, dict):
-        return False
-    requested = bool((stored.get("test_execution") or {}).get("requested"))
-    command = (stored.get("expected_commands") or {}).get("test")
-    return requested and not command
+    from ._test_execution import _consents, repository_key
+
+    answers = user_config_answers() or {}
+    # The person's yes only. A repository file saying `requested` could
+    # force the question after the person declined (Grok, 2026-09-27) —
+    # the same authority D147 strips from it before the merge.
+    requested = bool((answers.get("test_execution") or {}).get("requested"))
+    return requested and repository_key(root) not in _consents(answers)
 
 
 def setup_pending(root: Path) -> bool:
@@ -401,7 +407,9 @@ def setup_pending(root: Path) -> bool:
         # someone who opted to run the suite. Both are stage two of an ask
         # already begun, not a new one.
         return economics_bounds_pending(root) or test_command_pending(root)
-    return user_config_answers() is None
+    # No repository file: the person's answers carry to it (first-run.md),
+    # and it is asked only what is its own — its test command (Decision 4).
+    return user_config_answers() is None or test_command_pending(root)
 
 
 async def maybe_elicit_setup(context: Any, root: Path) -> dict[str, Any] | None:

@@ -12,11 +12,16 @@ def test_chat_is_bounded_and_markdown_is_the_complete_report(tmp_path) -> None:
     root = _repo(tmp_path)
     roots = (root.parent.resolve(),)
     chat = audit_repository(str(root), roots=roots, format="chat", record_history=False)
+    saved = root.parent / "report.md"
     markdown = audit_repository(
         str(root), roots=roots, format="markdown", record_history=False,
+        output_path=str(saved),
     )
 
-    assert chat["report_markdown"] != markdown["report_markdown"]
+    # Chat is the bounded view on every format; the complete report is the
+    # file markdown saves (D216).
+    assert chat["report_markdown"] != saved.read_text(encoding="utf-8")
+    assert markdown["report_path"] == str(saved)
     contract = inspect.getdoc(_finish_result) or ""
     assert "bounded" in contract.lower()
     assert "complete" in contract.lower()

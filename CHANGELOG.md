@@ -12,6 +12,49 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.10.0 - 2026-09-27
+
+### Fixed — a chosen report is saved, and chat gets the summary (D216)
+
+On the chat door, choosing `html` returned the whole HTML report inline — on a
+real repository far over what a host accepts, so the host refused it and no
+report was delivered. The report is now **saved** to the location you choose
+when asked where to save (`output_path`), and chat gets the bounded view and
+the file's path. Choosing `markdown` or `html` without a location is refused
+before the audit runs, so your host asks. A saved HTML report is marked
+generated and is not audited as your code on the next run. The whole chat
+reply now has a size budget, tested for every format on a large repository.
+
+### Fixed — Shell reading (D217)
+
+`$((1 << n))` and `(( y = x << 2 ))` were read as heredocs, which hid every
+function after them from the audit. They are arithmetic now. A keyword after
+`do`, `then` or `else` in an argument list (`echo do for it`) no longer counts
+as a branch. The Shell page names every line shape that still over-counts.
+
+### Fixed — consent to run a test command is per repository (D214)
+
+Consent given while setting up one repository ran that repository's test
+command in every repository audited afterwards: auditing private-repo executed
+this project's own `pytest --cov=maintainability_audit` against a JavaScript
+tree. Consent is now recorded against the repository it was given for, and a
+repository with none of its own runs nothing and says so. A new repository
+keeps your other answers and is asked only its own test command, on the chat
+door and at the terminal alike, and clearing the command declines for that
+repository only. **If you opted in before 3.10.0, you will be asked your test
+command once per repository:** a consent recorded before this is not run
+anywhere, because which repository it was given for is not known.
+
+### Fixed — behaviour suites are test code (D215)
+
+`acceptance/` and `e2e/` are read as test directories, so a repository
+whose behaviour tests live there no longer has them graded as production code
+and its handlers reported untested. `cypress/`, `playwright/`, `integration/`
+and `features/` are not: each is production code somewhere, and one is a
+calibration-corpus repository. The two directory lists now share one, with
+`testing/` kept as a declared discovery-only name until the next
+recalibration.
+
 ## 3.9.0 - 2026-09-24
 
 ### Added — Shell is parsed

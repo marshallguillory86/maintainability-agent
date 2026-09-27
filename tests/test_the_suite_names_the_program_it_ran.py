@@ -100,7 +100,7 @@ def _suite(root, command: list[str] | None):
         _test_execution.suite_opted_in,
     )
     _test_execution.user_config_answers = lambda: answers
-    _test_execution.opted_in_command = lambda: command or []
+    _test_execution.opted_in_command = lambda root: command or []
     # The opt-in gate reads the merged config; this exercises the path
     # *after* consent, which is where the program is resolved.
     _test_execution.suite_opted_in = lambda _config: True

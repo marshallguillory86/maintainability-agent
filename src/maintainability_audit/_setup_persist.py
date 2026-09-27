@@ -12,6 +12,7 @@ from typing import Any
 
 from ._safe_write import write_bounded
 from ._setup_errors import SetupRequired
+from ._test_execution import repository_key
 from ._user_config import user_config_answers, write_user_answers
 from .config import CONFIG_FILENAME, discovered_config, load_config
 from .config import _configured as _read_config
@@ -128,6 +129,15 @@ def _is_command_only(answers: dict[str, Any]) -> bool:
     return given == {"test_command"}
 
 
+def _consent_recorded(root: Path, command: list[str]) -> dict[str, Any]:
+    """The person's `test_execution`, with this repository's answer set."""
+    current = dict((user_config_answers() or {}).get("test_execution") or {})
+    commands = dict(current.get("commands") or {})
+    commands[repository_key(root)] = command
+    current["commands"] = commands
+    return current
+
+
 def _apply_command(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
     """Merge the test command into a configuration that already has its
     answers, exactly as `_apply_bounds` merges the rates. A blank command
@@ -141,25 +151,19 @@ def _apply_command(root: Path, answers: dict[str, Any]) -> dict[str, Any]:
         commands = dict(stored.get("expected_commands") or {})
         commands["test"] = shlex.split(command)
         stored["expected_commands"] = commands
-        # The user tier carries the command as well as the request,
-        # because `opted_in_command` reads both from there: a person
-        # consents to the command they were shown, and leaving the
-        # command to the repository would keep the consent and hand back
-        # the choice of what it means (D147).
-        user_tier = _user_tier_with(
-            expected_commands={
-                **(user_config_answers() or {}).get("expected_commands", {}),
-                "test": shlex.split(command),
-            },
-        )
     else:
         stored["test_execution"] = {"requested": False}
-        user_tier = _user_tier_with(
-            test_execution={
-                **(user_config_answers() or {}).get("test_execution", {}),
-                "requested": False,
-            },
-        )
+    # The user tier carries the command as well as the request, because
+    # `opted_in_command` reads both from there: a person consents to the
+    # command they were shown, and leaving the command to the repository
+    # would keep the consent and hand back the choice of what it means
+    # (D147). Recorded against this repository only: one unkeyed command
+    # was consent for every repository audited afterwards. A blank answer
+    # records a decline here, and leaves every other repository's consent
+    # — and the person's opt-in — as it was.
+    user_tier = _user_tier_with(
+        test_execution=_consent_recorded(root, shlex.split(command) if command else []),
+    )
     config_path = Path(root) / CONFIG_FILENAME
     write_bounded(
         Path(root), config_path,
@@ -190,5 +194,21 @@ def _persist_answers(root: Path, payload: dict[str, Any]) -> dict[str, Any]:
         Path(root), config_path,
         json.dumps(merged, indent=2, sort_keys=True) + "\n",
     )
-    write_user_answers(payload)
+    write_user_answers(_keeping_consents(payload))
     return load_config(str(config_path))
+
+
+def _keeping_consents(payload: dict[str, Any]) -> dict[str, Any]:
+    """The setup payload, carrying every repository's recorded consent.
+
+    The payload's `test_execution` holds only `requested`, so writing it
+    as the person's tier erased the per-repository consents: setting up
+    one repository wiped every other's (D214). They are the person's
+    answers about other repositories, not this setup's to discard.
+    """
+    recorded = ((user_config_answers() or {}).get("test_execution") or {}).get("commands")
+    if not recorded:
+        return payload
+    kept = dict(payload)
+    kept["test_execution"] = {**(payload.get("test_execution") or {}), "commands": recorded}
+    return kept

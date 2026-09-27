@@ -255,8 +255,11 @@ no score, no grade.</p>
 <code>.maintainability/history.jsonl</code>, plus the repository baseline at
 <code>.maintainability/baseline.json</code>. Setup writes the first three; the audit's
 history rule may append the fourth, and <code>write_baseline</code> controls the fifth. It
-never writes source or a report. The stored presentation is the default for
-later calls; an explicit per-call <code>format</code> still wins.</p>
+never writes source. A chosen markdown or html report is saved to the
+<code>output_path</code> the person chose when the host asked where to save, and the reply
+carries the bounded view and <code>report_path</code> (ADR 011, amended 2026-09-27). The
+stored presentation is the default for later calls; an explicit per-call
+<code>format</code> still wins.</p>
 <p>For Visual Studio, put this in <code>%USERPROFILE%\\.mcp.json</code> or
 <code>&lt;SOLUTIONDIR&gt;\\.mcp.json</code> (replace both absolute paths):</p>
 <pre><code class="language-json">{

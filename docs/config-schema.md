@@ -40,6 +40,10 @@ the same recursive merge used for repository configuration. Documented
 environment overrides, where a setting has one, remain the highest-precedence
 one-run value; there is no generic environment-to-JSON replacement.
 
+Consent to run a repository's test suite lives only in the user file, under
+`test_execution.commands`, keyed by the repository's resolved root: the command
+you agreed to, or an empty list for a decline. A repository cannot supply it.
+
 Loading either the user or repository tier defaults `analyzers.run` to `true`.
 An explicit `run: false` survives until a later tier explicitly overrides it.
 With neither file, `load_config(None)` retains the built-in `run: false` path.

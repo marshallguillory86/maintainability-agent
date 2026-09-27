@@ -61,8 +61,9 @@ maintainability-agent \
   --attestation-output maintainability-attestation.md
 ```
 
-`clean` today is suppression directives the diff *added* (`# noqa`, a
-skipped test, and the rest). Matcher aliasing, `assert True`, and a
+`clean` today fails on suppression directives the diff *added* (`# noqa`,
+a skipped test, and the rest) to a file the work order named; in a paired
+test file they are recorded and do not fail it. Matcher aliasing, `assert True`, and a
 deleted assertion are the same verdict with no detector — recorded as
 direction in [product intent](product-intent.md#the-writable-oracle),
 not shipped.

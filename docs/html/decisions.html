@@ -13,8 +13,8 @@
 <li><a href="#decision-8-flat-allowed_roots-stands">Decision 8 — Flat allowed_roots stands</a></li>
 <li><a href="#decision-9-the-line-is-executing-code">Decision 9 — The line is executing code</a></li>
 <li><a href="#decision-10-v10-ships-python-and-java">Decision 10 — v1.0 ships Python and Java</a></li>
-<li><a href="#decision-11-writable-oracle-three-homes">Decision 11 — Writable oracle: three homes</a></li>
-<li><a href="#decision-12-the-ask-beside-the-diff">Decision 12 — The ask beside the diff</a></li>
+<li><a href="#decision-12-writable-oracle-three-homes">Decision 12: Writable oracle, three homes</a></li>
+<li><a href="#decision-13-the-ask-beside-the-diff">Decision 13: The ask beside the diff</a></li>
 </ul>
 </li>
 <li><a href="#statuses">Statuses</a></li>
@@ -273,14 +273,15 @@ tool can neither parse nor hand to an adapter, and the page and the
 parser must name the same set.
 <code>test_the_parsed_languages_are_exactly_the_documented_languages</code> fails
 in either direction.</p>
-<h3 id="decision-11-writable-oracle-three-homes">Decision 11 — Writable oracle: three homes</h3>
+<h3 id="decision-12-writable-oracle-three-homes">Decision 12: Writable oracle, three homes</h3>
 <ul>
 <li>Recorded: 2026-09-26</li>
 <li>Status: <strong>Accepted. Home 1 authorized to build, 2026-09-27</strong> — the
   operator: <em>"lets address both gaps in a meaningful way that improves
-  the quality of the audits"</em>. The precision bar is frozen, on a labelled
-  set of test-file diffs, before the detector is written. Homes 2 and 3
-  are unchanged.</li>
+  the quality of the audits"</em>. A precision bar is to be frozen, on a
+  labelled set of test-file diffs, before the detector is written; none
+  exists yet. Homes 2 and 3 are unchanged. Numbered 12 because ADR 012
+  was accepted as decision 11.</li>
 </ul>
 <p>A deterministic check is only evidence when the unit under review could
 not author the record. An agent that aliases a matcher, replaces an
@@ -292,10 +293,11 @@ lets that file into the remediating diff.</p>
 <li>
 <p><strong><code>--conformance</code> <code>clean</code> (this package).</strong> Oracle-weakening in the
    remediating diff is the same second verdict as a skipped test.
-   Shipped today: <code>SUPPRESSION_MARKERS</code>. Missing: matcher aliasing,
-   <code>assert True</code>, deleted assertion. Still shape, never correctness.
-   Implementation is gated on a frozen precision bar; the marker list
-   is deliberately narrow. Not authorized to execute.</p>
+   Shipped: a suppression directive added to a <em>named</em> file fails
+   <code>clean</code>. Not caught: the same directive in a paired test file, which
+   is recorded but does not fail <code>clean</code>, and matcher aliasing,
+   <code>assert True</code> and a deleted assertion anywhere. Still shape, never
+   correctness. Authorized 2026-09-27, gated on the precision bar.</p>
 </li>
 <li>
 <p><strong><code>tools/prove_falsifiers.py</code> (this repository).</strong> Already first-order
@@ -319,12 +321,15 @@ lets that file into the remediating diff.</p>
 <p>Governing text: <a href="product-intent.html#the-writable-oracle">product intent</a>.
 Architecture records the unshipped <code>clean</code> cases as known debt.
 CLI <code>--conformance</code> names what is shipped versus recorded.</p>
-<h3 id="decision-12-the-ask-beside-the-diff">Decision 12 — The ask beside the diff</h3>
+<h3 id="decision-13-the-ask-beside-the-diff">Decision 13: The ask beside the diff</h3>
 <ul>
 <li>Recorded: 2026-09-27</li>
-<li>Status: <strong>Accepted. Authorized to build.</strong></li>
+<li>Status: <strong>Accepted. Authorized to build, 2026-09-27</strong> — the operator,
+  on giving the auditor the ask alongside the diff: <em>"yes, lets address
+  both gaps in a meaningful way that improves the quality of the audits,
+  and MA's value proposition."</em></li>
 </ul>
-<p>Found in the same exchange as Decision 11, from the other side. The
+<p>Found in the same exchange as Decision 12, from the other side. The
 frozen tests were wrong before the agent saw them; the agent rewrote
 production code until they passed; the test file was byte for byte the
 one frozen. Nothing weakened a test, the record was one the agent could
@@ -336,17 +341,16 @@ tool's own work order: a change outside the named targets is out of
 scope. It could not do that for work this tool did not order, which is
 most work.</p>
 <ol>
-<li><strong>Conformance accepts an ask it did not write.</strong> A scope manifest —
-   the paths, and optionally the declarations, a task was asked to
-   change — supplied beside the diff. Every change outside it is
-   reported out of scope, with production and test changes counted
-   apart, so "every frozen test passed and the diff touched code nobody
-   asked for" is a statement the report can make.</li>
+<li><strong>Conformance accepts an ask it did not write</strong>, supplied beside the
+   diff, and reports every change outside it as out of scope — so
+   "every frozen test passed and the diff touched code nobody asked
+   for" is a statement the report can make. The form of the ask and of
+   the report is design work for the build, not part of this decision.</li>
 <li><strong>Still shape, never correctness.</strong> Whether code <em>inside</em> the ask is
    what was wanted is a judgment, and this package runs no model. A
    wrong assertion written before the work began leaves no trace in the
    diff and stays with the freeze, the fresh seat and the person, as
-   Decision 11's third home says.</li>
+   Decision 12's third home says.</li>
 <li><strong>The ask is the operator's.</strong> A manifest the audited tree supplies
    about itself is the writable-oracle problem again, so it is read from
    the operator's path, never discovered in the tree.</li>

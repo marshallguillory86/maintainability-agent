@@ -48,8 +48,9 @@
   --fail-on-regression \
   --attestation-output maintainability-attestation.md
 </code></pre>
-<p><code>clean</code> today is suppression directives the diff <em>added</em> (<code># noqa</code>, a
-skipped test, and the rest). Matcher aliasing, <code>assert True</code>, and a
+<p><code>clean</code> today fails on suppression directives the diff <em>added</em> (<code># noqa</code>,
+a skipped test, and the rest) to a file the work order named; in a paired
+test file they are recorded and do not fail it. Matcher aliasing, <code>assert True</code>, and a
 deleted assertion are the same verdict with no detector — recorded as
 direction in <a href="product-intent.html#the-writable-oracle">product intent</a>,
 not shipped.</p>

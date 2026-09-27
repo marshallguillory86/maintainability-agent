@@ -196,14 +196,15 @@ parser must name the same set.
 `test_the_parsed_languages_are_exactly_the_documented_languages` fails
 in either direction.
 
-### Decision 11 — Writable oracle: three homes
+### Decision 12: Writable oracle, three homes
 
 - Recorded: 2026-09-26
 - Status: **Accepted. Home 1 authorized to build, 2026-09-27** — the
   operator: *"lets address both gaps in a meaningful way that improves
-  the quality of the audits"*. The precision bar is frozen, on a labelled
-  set of test-file diffs, before the detector is written. Homes 2 and 3
-  are unchanged.
+  the quality of the audits"*. A precision bar is to be frozen, on a
+  labelled set of test-file diffs, before the detector is written; none
+  exists yet. Homes 2 and 3 are unchanged. Numbered 12 because ADR 012
+  was accepted as decision 11.
 
 A deterministic check is only evidence when the unit under review could
 not author the record. An agent that aliases a matcher, replaces an
@@ -215,10 +216,11 @@ Three homes, not one product:
 
 1. **`--conformance` `clean` (this package).** Oracle-weakening in the
    remediating diff is the same second verdict as a skipped test.
-   Shipped today: `SUPPRESSION_MARKERS`. Missing: matcher aliasing,
-   `assert True`, deleted assertion. Still shape, never correctness.
-   Implementation is gated on a frozen precision bar; the marker list
-   is deliberately narrow. Not authorized to execute.
+   Shipped: a suppression directive added to a *named* file fails
+   `clean`. Not caught: the same directive in a paired test file, which
+   is recorded but does not fail `clean`, and matcher aliasing,
+   `assert True` and a deleted assertion anywhere. Still shape, never
+   correctness. Authorized 2026-09-27, gated on the precision bar.
 
 2. **`tools/prove_falsifiers.py` (this repository).** Already first-order
    here: keep `tests/` from this commit, restore everything else to the
@@ -240,12 +242,15 @@ Governing text: [product intent](product-intent.md#the-writable-oracle).
 Architecture records the unshipped `clean` cases as known debt.
 CLI `--conformance` names what is shipped versus recorded.
 
-### Decision 12 — The ask beside the diff
+### Decision 13: The ask beside the diff
 
 - Recorded: 2026-09-27
-- Status: **Accepted. Authorized to build.**
+- Status: **Accepted. Authorized to build, 2026-09-27** — the operator,
+  on giving the auditor the ask alongside the diff: *"yes, lets address
+  both gaps in a meaningful way that improves the quality of the audits,
+  and MA's value proposition."*
 
-Found in the same exchange as Decision 11, from the other side. The
+Found in the same exchange as Decision 12, from the other side. The
 frozen tests were wrong before the agent saw them; the agent rewrote
 production code until they passed; the test file was byte for byte the
 one frozen. Nothing weakened a test, the record was one the agent could
@@ -258,17 +263,16 @@ tool's own work order: a change outside the named targets is out of
 scope. It could not do that for work this tool did not order, which is
 most work.
 
-1. **Conformance accepts an ask it did not write.** A scope manifest —
-   the paths, and optionally the declarations, a task was asked to
-   change — supplied beside the diff. Every change outside it is
-   reported out of scope, with production and test changes counted
-   apart, so "every frozen test passed and the diff touched code nobody
-   asked for" is a statement the report can make.
+1. **Conformance accepts an ask it did not write**, supplied beside the
+   diff, and reports every change outside it as out of scope — so
+   "every frozen test passed and the diff touched code nobody asked
+   for" is a statement the report can make. The form of the ask and of
+   the report is design work for the build, not part of this decision.
 2. **Still shape, never correctness.** Whether code *inside* the ask is
    what was wanted is a judgment, and this package runs no model. A
    wrong assertion written before the work began leaves no trace in the
    diff and stays with the freeze, the fresh seat and the person, as
-   Decision 11's third home says.
+   Decision 12's third home says.
 3. **The ask is the operator's.** A manifest the audited tree supplies
    about itself is the writable-oracle problem again, so it is read from
    the operator's path, never discovered in the tree.

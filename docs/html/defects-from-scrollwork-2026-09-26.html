@@ -1,0 +1,135 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Defects found auditing Scrollwork, 2026-09-26 · maintainability-agent</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
+<div class="layout"><aside><p class="label">On this page</p><div class="toc">
+<ul>
+<li><a href="#1-the-consented-test-command-is-one-per-person-so-it-runs-in-every-repository">1. The consented test command is one per person, so it runs in every repository</a></li>
+<li><a href="#2-acceptance-is-not-recognised-as-a-test-directory">2. acceptance/ is not recognised as a test directory</a></li>
+<li><a href="#3-the-report-could-not-be-delivered-on-the-chat-door">3. The report could not be delivered on the chat door</a></li>
+<li><a href="#4-the-chat-door-and-the-terminal-decide-first-run-differently">4. The chat door and the terminal decide "first run" differently</a></li>
+<li><a href="#5-smaller-from-the-same-run">5. Smaller, from the same run</a></li>
+<li><a href="#resolution">Resolution</a></li>
+<li><a href="#changelog">Changelog</a></li>
+</ul>
+</div>
+</aside>
+<main><div class="meta">Reference</div><h1>Defects found auditing Scrollwork, 2026-09-26</h1><p>Version 1.2.0 · 2026-09-27 · Filed by Claude, for Marshall, from a real audit
+of <code>scrollworkapp</code> (maintainability-agent 3.9.0, secure-code-agent 0.12.9).
+1 and 2 are closed as <strong>D214</strong> and <strong>D215</strong> in <code>defect-register-chat-surface.md</code>,
+each with a failing test written first. 3 and 4 wait on product decisions.</p>
+<hr />
+<h2 id="1-the-consented-test-command-is-one-per-person-so-it-runs-in-every-repository">1. The consented test command is one per person, so it runs in every repository</h2>
+<p><strong>Seen.</strong> Scrollwork's audit ran <code>pytest -n auto --cov=maintainability_audit
+--cov-report=xml:coverage.xml -q</code> -- this repository's own suite -- against a
+JavaScript and Python tree it has nothing to do with. pytest exited 5 (no tests
+collected), coverage said "no data was collected", and <code>test_effectiveness</code>
+went unscored. The report said so in one line under <em>Test Suite</em>; nothing
+flagged the command as belonging to another repository.</p>
+<p><strong>Why.</strong> D147/D152 moved the choice of program to the person's tier, correctly:
+the tree may say how it is tested, only the person chooses what this host runs.
+But <code>~/.config/maintainability-agent/config.json</code> holds a single
+<code>expected_commands.test</code>. Consent given while setting up one repository is
+therefore consent for every repository the person later audits, and it runs a
+program chosen for somewhere else.</p>
+<p><strong>Population.</strong> Every person who opts into suite execution and audits more than
+one repository. The second repository onward runs the first one's command.</p>
+<p><strong>Expected.</strong> The consented command is keyed by repository (root path or
+remote), so a repository with no consent of its own asks, rather than
+inheriting. Or, at the least, the run reports that the command it executed was
+consented for a different repository and scores nothing from it.</p>
+<p><strong>Also.</strong> Coverage is read only from <code>coverage.xml</code>. Scrollwork measures with
+V8 (<code>node scripts/coverage.mjs</code>) and has no Cobertura output, so even a correct
+command would leave <code>test_effectiveness</code> unscored. Worth deciding whether lcov
+or V8 JSON is read too, or saying in the report that the format was the reason.</p>
+<p><strong>Closing test (suggested).</strong> Two repositories, consent given in the first; an
+audit of the second must not spawn the first's command.</p>
+<hr />
+<h2 id="2-acceptance-is-not-recognised-as-a-test-directory">2. <code>acceptance/</code> is not recognised as a test directory</h2>
+<p><strong>Seen.</strong> Scrollwork's behaviour tests live in <code>acceptance/&lt;suite&gt;/run.mjs</code>,
+more than sixty suites that import and drive the production handlers. The audit
+treats every one of them as production code:</p>
+<ul>
+<li>18 of 25 duplicate blocks, all 25 near-duplicates, and most of the oversized
+  files and declarations it reported are in <code>acceptance/</code>;</li>
+<li>106 <code>unpaired-hotspot</code> findings, and <code>test_presence</code> at 2.5, although
+  <code>functions/</code> is covered at 98% by those same suites.</li>
+</ul>
+<p>So the audit both over-reports production debt and under-reports testing, from
+one misclassification.</p>
+<p><strong>Why.</strong> <code>_discovery._is_test</code> accepts <code>is_test_path</code> plus a directory segment in
+<code>TEST_DIRECTORY_NAMES = {"testing", "tests", "test", "__tests__", "spec",
+"specs"}</code>. <code>acceptance</code> is not there, and a file named <code>run.mjs</code> does not look
+like a test either, so import-based pairing never sees these as tests.</p>
+<p><strong>Population.</strong> Any repository whose behaviour tests use a conventional name
+outside that set: <code>acceptance/</code>, <code>e2e/</code>, <code>integration/</code>, <code>features/</code>
+(Cucumber), <code>cypress/</code>, <code>playwright/</code>. Probably common.</p>
+<p><strong>Expected.</strong> Either widen the set to the common names, or let the repository
+declare its test roots in <code>maintainability-agent.json</code> (<code>paths.test_roots</code>),
+and report which roots were used. Declaring is the more honest of the two: a
+name list will always miss someone's convention, and it fails in the
+flattering-to-no-one direction here (worse debt, worse testing).</p>
+<p><strong>Closing test (suggested).</strong> A fixture tree with <code>acceptance/x/run.mjs</code>
+importing <code>src/handler.js</code>: the handler is paired, and the suite's size and
+duplication are not graded as production code.</p>
+<hr />
+<hr />
+<h2 id="3-the-report-could-not-be-delivered-on-the-chat-door">3. The report could not be delivered on the chat door</h2>
+<p><strong>Seen.</strong> First run, <code>audit_repository {action: "run", format: "html"}</code>,
+2026-09-27 00:03Z. Claude Code refused the result: <em>"result (308,957
+characters) exceeds maximum allowed tokens"</em>. The payload carried
+<code>report_html</code> inline (257,306 characters) beside <code>report_markdown</code>, the
+security work order and the remediation prompt, and no path. MA writes no
+report file, by design, so nothing was delivered: Claude extracted the HTML
+from the host's overflow file with <code>jq</code> and wrote it by hand.</p>
+<p><strong>Why.</strong> An inline report is bounded by the host's result limit, and an HTML
+report of a real repository is far past it. Asking for <code>html</code> does not drop
+the other skins, so the payload is larger than the one report asked for.</p>
+<p><strong>Population.</strong> Every chat-door user who chooses <code>html</code> on a repository of
+any size; very likely <code>markdown</code> on large ones.</p>
+<p><strong>Expected.</strong> Not decided. Writing a file is outside the six local artifacts
+the MCP server may write, so either that list gains an operator-chosen report
+path, or the payload carries only the chosen skin, bounded, with the full
+report behind a resource. A product decision before a fix.</p>
+<hr />
+<h2 id="4-the-chat-door-and-the-terminal-decide-first-run-differently">4. The chat door and the terminal decide "first run" differently</h2>
+<p><strong>Seen, from the code (no terminal transcript of the Scrollwork run exists).</strong>
+The chat door asked no setup question on Scrollwork, which had no
+<code>maintainability-agent.json</code>: <code>_mcp_setup.setup_pending</code> counts a repository
+as configured when the person's tier exists, which the help page documents.
+The terminal asks whenever the repository file is absent
+(<code>_first_run.maybe_prompt_first_run</code>), whatever the person's tier holds.</p>
+<p>The terminal also asks a subset. Six questions, not seven: the presentation
+is asked on every run and never recorded. The staged follow-ups — the three
+labor rates and the test command — read the merged configuration, so a person
+whose tier already holds them is never asked them for a new repository, even
+after answering <em>include</em> or <em>yes</em>.</p>
+<p><strong>Why it matters.</strong> <code>docs/help/first-run.md</code>: <em>"Chat, MCP, and an interactive
+CLI TTY are one setup: the same questions … A surface that asks a subset is a
+bug."</em> Two doors, two answers to "has this repository been set up".</p>
+<p><strong>Expected.</strong> Not decided: which rule is the product's — the person's answers
+carry to every new repository (the chat door today), or a new repository is
+asked (the terminal today). Either way one rule, both doors, and the
+questions that are repository-specific — the test command, which D214 made
+per repository — asked for every new one.</p>
+<hr />
+<h2 id="5-smaller-from-the-same-run">5. Smaller, from the same run</h2>
+<ul>
+<li>The markdown report is titled "Maintainability CI Report" on the chat door.</li>
+<li>Running another repository's test command left an untracked <code>.coverage</code> in
+  Scrollwork's tree, outside the six declared artifacts (a consequence of
+  D214, now closed; inferred rather than proven to be the source).</li>
+</ul>
+<h2 id="resolution">Resolution</h2>
+<p><strong>1 → D214.</strong> Consent is keyed by repository (resolved root path). The coverage-format
+question under <em>Also</em> is not decided: only <code>coverage.xml</code> is read, and whether lcov or V8
+JSON is read too is open.</p>
+<p><strong>2 → D215.</strong> Decided 2026-09-27: widen the name list with the unambiguous names —
+<code>acceptance</code>, <code>e2e</code>, <code>cypress</code>, <code>playwright</code> — rather than add <code>paths.test_roots</code>.
+<code>integration</code> and <code>features</code> stay out, as ordinary production names.</p>
+<h2 id="changelog">Changelog</h2>
+<p>1.2.0 Filed 3–5 from auditing MA's first run on Scrollwork.</p>
+<p>1.1.0 Resolved as D214 and D215; the test-roots decision recorded.</p>
+<p>1.0.0 Filed: the per-person test command, and <code>acceptance/</code> as tests.</p>
+<footer>Rendered from <code>docs/defects-from-scrollwork-2026-09-26.md</code> in the maintainability-agent repository. The markdown is the source of truth.</footer>
+</main></div></body></html>

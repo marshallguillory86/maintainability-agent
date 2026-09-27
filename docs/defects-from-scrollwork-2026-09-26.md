@@ -1,9 +1,9 @@
 # Defects found auditing Scrollwork, 2026-09-26
 
-Version 1.1.0 · 2026-09-27 · Filed by Claude, for Marshall, from a real audit
+Version 1.2.0 · 2026-09-27 · Filed by Claude, for Marshall, from a real audit
 of `scrollworkapp` (maintainability-agent 3.9.0, secure-code-agent 0.12.9).
-Both are triaged and closed: **D214** and **D215** in
-`defect-register-chat-surface.md`, each with a failing test written first.
+1 and 2 are closed as **D214** and **D215** in `defect-register-chat-surface.md`,
+each with a failing test written first. 3 and 4 wait on product decisions.
 
 ---
 
@@ -76,6 +76,66 @@ duplication are not graded as production code.
 
 ---
 
+---
+
+## 3. The report could not be delivered on the chat door
+
+**Seen.** First run, `audit_repository {action: "run", format: "html"}`,
+2026-09-27 00:03Z. Claude Code refused the result: *"result (308,957
+characters) exceeds maximum allowed tokens"*. The payload carried
+`report_html` inline (257,306 characters) beside `report_markdown`, the
+security work order and the remediation prompt, and no path. MA writes no
+report file, by design, so nothing was delivered: Claude extracted the HTML
+from the host's overflow file with `jq` and wrote it by hand.
+
+**Why.** An inline report is bounded by the host's result limit, and an HTML
+report of a real repository is far past it. Asking for `html` does not drop
+the other skins, so the payload is larger than the one report asked for.
+
+**Population.** Every chat-door user who chooses `html` on a repository of
+any size; very likely `markdown` on large ones.
+
+**Expected.** Not decided. Writing a file is outside the six local artifacts
+the MCP server may write, so either that list gains an operator-chosen report
+path, or the payload carries only the chosen skin, bounded, with the full
+report behind a resource. A product decision before a fix.
+
+---
+
+## 4. The chat door and the terminal decide "first run" differently
+
+**Seen, from the code (no terminal transcript of the Scrollwork run exists).**
+The chat door asked no setup question on Scrollwork, which had no
+`maintainability-agent.json`: `_mcp_setup.setup_pending` counts a repository
+as configured when the person's tier exists, which the help page documents.
+The terminal asks whenever the repository file is absent
+(`_first_run.maybe_prompt_first_run`), whatever the person's tier holds.
+
+The terminal also asks a subset. Six questions, not seven: the presentation
+is asked on every run and never recorded. The staged follow-ups — the three
+labor rates and the test command — read the merged configuration, so a person
+whose tier already holds them is never asked them for a new repository, even
+after answering *include* or *yes*.
+
+**Why it matters.** `docs/help/first-run.md`: *"Chat, MCP, and an interactive
+CLI TTY are one setup: the same questions … A surface that asks a subset is a
+bug."* Two doors, two answers to "has this repository been set up".
+
+**Expected.** Not decided: which rule is the product's — the person's answers
+carry to every new repository (the chat door today), or a new repository is
+asked (the terminal today). Either way one rule, both doors, and the
+questions that are repository-specific — the test command, which D214 made
+per repository — asked for every new one.
+
+---
+
+## 5. Smaller, from the same run
+
+- The markdown report is titled "Maintainability CI Report" on the chat door.
+- Running another repository's test command left an untracked `.coverage` in
+  Scrollwork's tree, outside the six declared artifacts (a consequence of
+  D214, now closed; inferred rather than proven to be the source).
+
 ## Resolution
 
 **1 → D214.** Consent is keyed by repository (resolved root path). The coverage-format
@@ -87,6 +147,8 @@ JSON is read too is open.
 `integration` and `features` stay out, as ordinary production names.
 
 ## Changelog
+
+1.2.0 Filed 3–5 from auditing MA's first run on Scrollwork.
 
 1.1.0 Resolved as D214 and D215; the test-roots decision recorded.
 

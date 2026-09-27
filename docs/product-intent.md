@@ -51,9 +51,9 @@ What the loop still does not do, and is not going to: **step 5 reads the diff's 
 
 A check that reproduces is still a self-report if the work under review could author the record. This package is a separate process from the generator — it writes no source and runs no model — so an agent fixing a target cannot rewrite the rubric by editing the target. The remaining hole is the oracle that *does* live in the tree: the tests.
 
-The pairing rule lets a test file into a remediating diff even when the work order never named it. That is the right rule for writing the failing test with the fix, and it is the file an agent can poison — skip, alias a matcher, replace an assertion with `assert True`, delete the assertion. `clean` today fails on a suppression directive the diff *added* to a file the work order named (`SUPPRESSION_MARKERS` in `_conformance.py`). The same directive added to a **paired test file** is recorded in `suppressions_added` and does **not** fail `clean` — the first gap the build closes. The other weakenings are the same verdict with no detector.
+The pairing rule lets a test file into a remediating diff even when the work order never named it. That is the right rule for writing the failing test with the fix, and it is the file an agent can poison — skip, alias a matcher, replace an assertion with `assert True`, delete the assertion. `clean` fails on a suppression directive the diff *added* to a file the work order named, and — since 3.11.0 — on any test file in the diff made unable to fail: a skip or suppression, an assertion that cannot fail, the assertion API replaced, a failing assertion swallowed, or assertions deleted with nothing in their place (`_oracle`, reported as `oracle_weakened`). Held to a precision bar frozen before the detector was written.
 
-Three homes, decided 2026-09-26. The first was authorized to build on 2026-09-27, behind a precision bar frozen before the detector is written.
+Three homes, decided 2026-09-26. The first was built in 3.11.0, behind a precision bar frozen before the detector was written.
 
 1. **This package, `--conformance` `clean`.** Detect oracle-weakening in the remediating diff as the same second verdict as a skipped test. Still shape. Still not correctness. Implementation is gated on a frozen precision bar; the existing marker list is deliberately narrow because a check that cries wolf gets switched off.
 
@@ -63,7 +63,7 @@ Three homes, decided 2026-09-26. The first was authorized to build on 2026-09-27
 
 See the [decision register](decisions.md#decision-12-writable-oracle-three-homes).
 
-**The ask beside the diff** ([Decision 13](decisions.md#decision-13-the-ask-beside-the-diff), 2026-09-27). The other failure leaves the tests alone. Frozen tests that were wrong before the agent arrived, and production code bent until they pass: nothing weakened, the record untouched, and the diff still wrong because nobody asked for that code. `--conformance` reads a diff against an ask when the ask is this tool's own work order. Authorized, not yet built: it is to take an ask it did not write — a scope manifest from the operator — and report every change outside it, production and test apart. Whether code inside the ask is what was wanted stays a judgment this package does not make.
+**The ask beside the diff** ([Decision 13](decisions.md#decision-13-the-ask-beside-the-diff), 2026-09-27). The other failure leaves the tests alone. Frozen tests that were wrong before the agent arrived, and production code bent until they pass: nothing weakened, the record untouched, and the diff still wrong because nobody asked for that code. `--conformance` reads a diff against an ask when the ask is this tool's own work order. Since 3.11.0 it also takes an ask it did not write — `--ask FILE`, paths and globs from the operator — and reports every change outside it, production and test apart. Whether code inside the ask is what was wanted stays a judgment this package does not make.
 
 ### Semantic judgment and economic priority
 

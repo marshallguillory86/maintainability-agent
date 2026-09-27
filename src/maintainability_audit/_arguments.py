@@ -66,6 +66,16 @@ def _add_gate_arguments(parser: argparse.ArgumentParser) -> None:
              "cannot be subtracted.",
     )
     parser.add_argument(
+        "--ask",
+        metavar="FILE",
+        help="With --conformance, read the diff against this ask instead of the "
+             "work order: the paths and globs a task was asked to change, one per "
+             "line, `#` for comments. For work this tool did not order — every "
+             "change outside the ask is reported out of scope, production and "
+             "tests counted apart. Read from your path, never from the audited "
+             "tree. Shape, not correctness (Decision 13).",
+    )
+    parser.add_argument(
         "--fail-on-out-of-scope", action="store_true",
         help="With --conformance, exit 1 when the diff touched files the work "
              "order did not name and that do not pair to one as its test, or "

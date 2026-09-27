@@ -61,9 +61,4 @@ maintainability-agent \
   --attestation-output maintainability-attestation.md
 ```
 
-`clean` today fails on suppression directives the diff *added* (`# noqa`,
-a skipped test, and the rest) to a file the work order named; in a paired
-test file they are recorded and do not fail it. Matcher aliasing, `assert True`, and a
-deleted assertion are the same verdict with no detector — recorded as
-direction in [product intent](product-intent.md#the-writable-oracle),
-not shipped.
+`clean` fails on a suppression directive the diff *added* to a file the work order named, and — since 3.11.0 — on any test file in the diff made unable to fail: a skip or suppression, an assertion that cannot fail, the assertion API replaced, a failing assertion swallowed, or assertions deleted with nothing in their place (`_oracle`, reported as `oracle_weakened`). Held to a precision bar frozen before the detector was written. For work this tool did not order, pass the task's ask with `--ask FILE`.

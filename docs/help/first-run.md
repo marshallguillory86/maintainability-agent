@@ -74,7 +74,7 @@ for this repository. The command is documented in the repository's
 `expected_commands.test` and your consent is recorded against this repository
 in your user configuration; a repository with no consent of its own is asked
 its command, and nothing runs until it has one. Its line coverage,
-if the run produces a `coverage.xml`, scores `test_effectiveness` as
+if the run produces a `coverage.xml`, `coverage/lcov.info` or `lcov.info`, scores `test_effectiveness` as
 `coverage / 20`, and the aspect is NotApplicable on every run that does not opt
 in. Answer `no` — the default — and neither this question nor any execution
 happens.

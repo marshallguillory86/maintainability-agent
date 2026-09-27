@@ -35,10 +35,10 @@ never its correctness — whether the change works is not a claim this tool make
 
 A second limit sits on the same seam. The pairing rule lets a test file into
 the remediating diff, which is the right rule for writing the failing test
-with the fix, and it is the file an agent can poison. `clean` fails on
-suppression directives a tool obeys; matcher aliasing and a vacuous assertion
-are the same verdict with no detector. That expansion stays in this package,
-still shape, gated on a precision bar, and is not built.
+with the fix, and it is the file an agent can poison. Since 3.11.0 `clean`
+fails on a test file made unable to fail — skipped, aliased, emptied or made
+tautological — as well as on a suppression in a flagged file. Still shape, and
+held to a precision bar frozen before the detector was written.
 `tools/prove_falsifiers.py` stays this repository's revert-proof for cited
 tests; it does not become a first-order step in the product loop. Freeze, a
 fresh review seat, and a human on the test hunk sit outside this package.

@@ -36,11 +36,44 @@ Three deliberate limits:
 
 from __future__ import annotations
 
-import re
+from fnmatch import fnmatchcase
 from typing import Any
 
 from ._metrics_types import is_test_path
+
+# The marker vocabulary lives with the oracle check that also reads it;
+# re-exported here because `_precommit` and the tests ask this module.
+from ._oracle import SUPPRESSION_MARKERS as SUPPRESSION_MARKERS
+from ._oracle import markers_in as markers_in
+from ._oracle import oracle_weakening
 from ._test_pairing import subject_stem
+
+
+def read_ask(path: str) -> set[str]:
+    """The paths and globs an operator's ask names (Decision 13).
+
+    Read through the operator-file door, so a symlink, a FIFO or a directory
+    is refused rather than followed. Always the operator's path: an ask the
+    audited tree supplied about itself would be the writable oracle again.
+    An ask that names nothing is refused, because reading it as "nothing
+    was asked" would report every change out of scope and look like a
+    finding rather than a mistake in the ask.
+    """
+    from pathlib import Path
+
+    from ._operator_reads import read_operator_file
+
+    entries = {
+        line.strip() for line in read_operator_file(Path(path)).splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    }
+    if not entries:
+        raise ValueError(f"the ask {path} names no path; list the paths or globs the task was asked to change")
+    return entries
+
+
+def _asked(path: str, ask: set[str]) -> bool:
+    return any(path == entry or fnmatchcase(path, entry) for entry in ask)
 
 
 def _named_paths(work_order: list[dict[str, Any]]) -> set[str]:
@@ -64,81 +97,6 @@ def _pairs_to_named(path: str, named: set[str]) -> bool:
     if not subject:
         return False
     return any(subject_stem(candidate) == subject for candidate in named)
-
-
-#: Markers that switch a checker off rather than satisfy it. Per language,
-#: because the vocabulary differs and a single regex over all of them
-#: matches prose: "# type: ignore" in a docstring explaining the convention
-#: is not a suppression, and neither is this comment.
-#:
-#: Deliberately narrow. A marker here has to be a real directive that a
-#: real tool obeys; guessing wider would report ordinary comments as
-#: evasion, and a check that cries wolf is a check that gets switched off —
-#: the same reasoning as the test-pairing rule above.
-SUPPRESSION_MARKERS: tuple[tuple[str, str], ...] = (
-    (r"#\s*noqa\b", "noqa"),
-    (r"#\s*type:\s*ignore\b", "type: ignore"),
-    (r"#\s*pragma:\s*no\s*cover\b", "pragma: no cover"),
-    (r"#\s*nosec\b", "nosec"),
-    (r"//\s*eslint-disable", "eslint-disable"),
-    (r"/\*\s*eslint-disable", "eslint-disable"),
-    (r"//\s*@ts-(ignore|expect-error)\b", "ts-ignore"),
-    (r"@SuppressWarnings\b", "SuppressWarnings"),
-    (r"//\s*NOSONAR\b", "NOSONAR"),
-    (r"#\s*pylint:\s*disable\b", "pylint: disable"),
-    (r"@pytest\.mark\.(skip|xfail)\b", "skipped test"),
-    (r"@unittest\.skip\b", "skipped test"),
-    (r"\bit\.skip\(|\bdescribe\.skip\(", "skipped test"),
-    (r"@Disabled\b", "disabled test"),
-    (r"@Ignore\b", "ignored test"),
-)
-
-_SUPPRESSION = tuple(
-    (re.compile(pattern, re.IGNORECASE), label) for pattern, label in SUPPRESSION_MARKERS
-)
-
-
-def _is_quoted(text: str, start: int) -> bool:
-    """Whether the marker at `start` is being *mentioned* rather than used.
-
-    A directive is never immediately preceded by a quote or a backtick,
-    and never sits inside an open backtick span. Prose about directives
-    does both constantly — this file's own comments do it, and so does
-    the docstring that says a marker in a docstring is not a suppression.
-    """
-    prefix = text[:start]
-    if prefix[-1:] in {"`", "'", '"'}:
-        return True
-    return prefix.count("`") % 2 == 1
-
-
-def markers_in(text: str) -> str | None:
-    """The suppression this line declares, or None if it only mentions one.
-
-    The one place that question is answered, because it is asked twice —
-    by the conformance record after a change, and by the pre-commit scan
-    before one — and a rule that disagrees with itself between the hook
-    and the gate blocks commits CI would pass.
-
-    D108: the marker set's own comment promised that "`# type: ignore` in
-    a docstring explaining the convention is not a suppression", and for
-    four versions nothing enforced it. The `--staged` scan found it
-    immediately, by blocking the commit of a docstring containing the
-    words `# noqa` — the first time the rule ran somewhere a false
-    positive cost something.
-
-    Still narrow, and deliberately: a marker written into ordinary prose
-    with no quoting around it is still reported. Quoting is the signal
-    that is actually reliable, and widening past it starts guessing at
-    English. This paragraph cannot give the example it would like to,
-    because writing one unquoted would report this line — which is the
-    rule demonstrating itself, and the reason the sentence stays abstract.
-    """
-    for pattern, label in _SUPPRESSION:
-        match = pattern.search(text)
-        if match and not _is_quoted(text, match.start()):
-            return label
-    return None
 
 
 def suppressions_added(
@@ -174,11 +132,32 @@ def suppressions_added(
     return found
 
 
+def _what_was_asked(work_order: list[dict[str, Any]], changed: set[str],
+                    ask: set[str] | None) -> tuple[set[str], list[str]]:
+    """``(named paths, changed paths in scope)`` from the ask or the work order.
+
+    Decision 13: with an operator's ask, the ask is what was named — for
+    work this tool did not order. Without one, the work order is the ask.
+    """
+    if ask:
+        in_scope = sorted(path for path in changed if _asked(path, ask))
+        literal = {entry for entry in ask if not any(c in entry for c in "*?[")}
+        return set(in_scope) | literal, in_scope
+    named = _named_paths(work_order)
+    return named, sorted(path for path in changed if path in named)
+
+
+def _tests_among(paths: list[str]) -> int:
+    return sum(1 for path in paths if is_test_path(path))
+
+
 def scope_conformance(
     report: dict[str, Any],
     changed: set[str],
     revspec: str,
     added: dict[str, list[tuple[int, str]]] | None = None,
+    removed: dict[str, list[tuple[int, str]]] | None = None,
+    ask: set[str] | None = None,
 ) -> dict[str, Any]:
     """How a diff relates to the work order the agent was handed.
 
@@ -188,33 +167,40 @@ def scope_conformance(
     not a failure — a bounded change may take one item at a time.
     """
     work_order = report.get("work_order") or []
-    named = _named_paths(work_order)
-
-    in_scope = sorted(path for path in changed if path in named)
+    named, in_scope = _what_was_asked(work_order, changed, ask)
     remaining = {path for path in changed if path not in named}
     paired = sorted(path for path in remaining if _pairs_to_named(path, named))
     out_of_scope = sorted(remaining - set(paired))
     suppressions = suppressions_added(added or {}, named)
     silenced = [item for item in suppressions if item["on_named_path"]]
+    weakened = oracle_weakening(added or {}, removed or {})
 
     return {
         "revspec": revspec,
+        "ask_source": "operator" if ask else "work order",
         "work_order_items": len(work_order),
-        "named_paths": sorted(named),
+        "named_paths": sorted(ask) if ask else sorted(named),
         "changed_paths": sorted(changed),
         "in_scope": in_scope,
         "paired_tests": paired,
         "out_of_scope": out_of_scope,
+        "out_of_scope_production": len(out_of_scope) - _tests_among(out_of_scope),
+        "out_of_scope_tests": _tests_among(out_of_scope),
         "unaddressed": sorted(named - set(in_scope)),
         "suppressions_added": suppressions,
         "suppressions_on_named_paths": len(silenced),
+        # Decision 12: the tests are a record the diff can write. A skip,
+        # an alias, a tautology or a deleted assertion in any test file the
+        # diff touched makes the suite unable to fail, and `clean` said
+        # nothing about it while the file was a paired test.
+        "oracle_weakened": weakened,
         # Two questions, kept apart. `conformant` answers "did it change
         # only what it was asked to"; `clean` also answers "and without
         # switching a checker off in a file that was flagged". Scope alone
         # is satisfiable by adding `# noqa` to the named file and changing
         # nothing else, which is the evasion this pairing exists to catch.
         "conformant": not out_of_scope,
-        "clean": not out_of_scope and not silenced,
+        "clean": not out_of_scope and not silenced and not weakened,
         # Stated so a reader does not infer more than was checked. The
         # record says which files the work order named, not whether the
         # edits inside them were the right ones.

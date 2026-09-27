@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 
 from .baseline import findings_not_in_baseline
-from .git_tools import added_lines, changed_paths
+from .git_tools import added_lines, changed_paths, removed_lines
 
 
 def attach_conformance(args: argparse.Namespace, report: dict) -> None:
@@ -31,13 +31,15 @@ def attach_conformance(args: argparse.Namespace, report: dict) -> None:
     """
     if not args.conformance:
         return
-    from ._conformance import scope_conformance
+    from ._conformance import read_ask, scope_conformance
 
     root = Path(report["root"])
     changed = changed_paths(root, args.conformance)
     added = added_lines(root, args.conformance)
+    removed = removed_lines(root, args.conformance)
+    ask = read_ask(args.ask) if getattr(args, "ask", None) else None
     report["scope_conformance"] = scope_conformance(
-        report, changed, args.conformance, added
+        report, changed, args.conformance, added, removed, ask=ask
     )
 
 
@@ -91,6 +93,11 @@ def _attach_post_audit_records(
 
 def _conformance_exit(args: argparse.Namespace, report: dict) -> int:
     """0 to continue; otherwise the exit code the conformance gate demands."""
+    if getattr(args, "ask", None) and not args.conformance:
+        # An ask with no diff to read it against: exiting 0 would report a
+        # conformance run that never happened.
+        print("--ask needs --conformance REVSPEC", file=sys.stderr)
+        return 2
     if not args.fail_on_out_of_scope:
         return 0
     record = report.get("scope_conformance")

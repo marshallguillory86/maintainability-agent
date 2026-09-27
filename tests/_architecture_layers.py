@@ -205,7 +205,7 @@ ASSEMBLY = {"report", "_analysis", "_documents", "_built_ins", "_work_order",
             # finished report rather than measuring a tree — and it may
             # never reach scoring: whether a diff was obedient is a fact
             # about an agent, not evidence about the code.
-            "_conformance",
+            "_conformance", "_oracle",
             # `_ratchet` compares the newest scan with the previous
             # comparable one. Assembly for the same reason as
             # `_conformance`: it composes from recorded history rather

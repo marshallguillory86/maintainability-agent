@@ -14,10 +14,10 @@
 </ul>
 </div>
 </aside>
-<main><div class="meta">Reference</div><h1>Defects found auditing private-repo, 2026-09-26</h1><p>Version 1.5.0 · 2026-09-27 · Filed from a real audit
+<main><div class="meta">Reference</div><h1>Defects found auditing private-repo, 2026-09-26</h1><p>Version 1.6.0 · 2026-09-27 · Filed from a real audit
 of <code>private-repo</code> (maintainability-agent 3.9.0, secure-code-agent 0.12.9).
 1 and 2 are closed as <strong>D214</strong> and <strong>D215</strong> in <code>defect-register-chat-surface.md</code>,
-each with a failing test written first. 3 and 4 are decided, below, and not yet built.</p>
+each with a failing test written first. 3 closed as D216 and 4 shipped with D214, both in 3.10.0.</p>
 <hr />
 <h2 id="1-the-consented-test-command-is-one-per-person-so-it-runs-in-every-repository">1. The consented test command is one per person, so it runs in every repository</h2>
 <p><strong>Seen.</strong> private-repo's audit ran <code>pytest -n auto --cov=maintainability_audit
@@ -122,8 +122,8 @@ per repository — asked for every new one.</p>
 </ul>
 <h2 id="resolution">Resolution</h2>
 <p><strong>1 → D214.</strong> Consent is keyed by repository (resolved root path). The coverage-format
-question under <em>Also</em> is not decided: only <code>coverage.xml</code> is read, and whether lcov or V8
-JSON is read too is open.</p>
+question under <em>Also</em> is closed in 3.11.0: <code>coverage/lcov.info</code> and <code>lcov.info</code> are read
+beside <code>coverage.xml</code>, under the same only-this-run's-artifact rule.</p>
 <p><strong>2 → D215.</strong> Decided 2026-09-27: widen the name list rather than add
 <code>paths.test_roots</code>, with <code>acceptance</code> and <code>e2e</code> only. <code>cypress</code> and <code>playwright</code>
 were proposed on the claim that they are unambiguous, and withdrawn when an
@@ -143,6 +143,7 @@ repository is still asked what belongs to it: whether to run its test suite,
 and its test command. It is told which carried answers apply, and that
 reconfigure changes them.</p>
 <h2 id="changelog">Changelog</h2>
+<p>1.6.0 lcov read (3.11.0).</p>
 <p>1.5.0 3 closed as D216.</p>
 <p>1.4.0 D215 narrowed to <code>acceptance</code> and <code>e2e</code>.</p>
 <p>1.3.0 Decisions recorded for 3 and 4.</p>

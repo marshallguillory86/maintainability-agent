@@ -50,8 +50,9 @@ NO_EXTERNAL_COMPLEXITY = {
     # No adapted analyzer measures shell complexity. lizard 1.24.0 has no
     # shell reader; shellcheck and bashate lint and measure nothing the
     # rubric reads; jscpd reads duplication only. `shellmetrics` computes
-    # a per-function CCN for shell, and is a single upstream script outside
-    # the pinned pool — a candidate, not something installed.
+    # a per-function CCN for shell, but has no release, tag or package and
+    # no change since 2023, so it cannot be pinned into the pool (checked
+    # 2026-09-27).
     "shell",
 }
 

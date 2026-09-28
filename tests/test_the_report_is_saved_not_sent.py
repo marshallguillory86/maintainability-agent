@@ -138,7 +138,9 @@ def test_the_report_never_overwrites_a_file_it_did_not_write(tmp_path, victim) -
     keep = '{"version": 1, "keep": "me"}\n' if victim.endswith(".json") else "keep me\n"
     target.write_text(keep, encoding="utf-8")
 
-    with pytest.raises(InvalidAuditArgument, match="not a report"):
+    # The config is refused as reserved before it is read as "not a report";
+    # either refusal keeps it (D218).
+    with pytest.raises(InvalidAuditArgument, match="not a report|reserved"):
         _audit(root, format="html", output_path=str(target))
 
     assert target.read_text(encoding="utf-8") == keep

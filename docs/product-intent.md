@@ -63,7 +63,7 @@ Three homes, decided 2026-09-26. The first was built in 3.11.0, behind a precisi
 
 See the [decision register](decisions.md#decision-12-writable-oracle-three-homes).
 
-**The ask beside the diff** ([Decision 13](decisions.md#decision-13-the-ask-beside-the-diff), 2026-09-27). The other failure leaves the tests alone. Frozen tests that were wrong before the agent arrived, and production code bent until they pass: nothing weakened, the record untouched, and the diff still wrong because nobody asked for that code. `--conformance` reads a diff against an ask when the ask is this tool's own work order. Since 3.11.0 it also takes an ask it did not write — `--ask FILE`, paths and globs from the operator — and reports every change outside it, production and test apart. Whether code inside the ask is what was wanted stays a judgment this package does not make.
+**The ask beside the diff** ([Decision 13](decisions.md#decision-13-the-ask-beside-the-diff), 2026-09-27). The other failure leaves the tests alone. Frozen tests that were wrong before the agent arrived, and production code bent until they pass: nothing weakened, the record untouched, and the diff still wrong because nobody asked for that code. `--conformance` reads a diff against an ask when the ask is this tool's own work order. Since 3.11.0 it also takes an ask it did not write — `--ask FILE`, paths and globs from the operator — and reports every change outside it — other than a test pairing to an asked file — production and test apart, with any glob that matched nothing listed. Whether code inside the ask is what was wanted stays a judgment this package does not make.
 
 ### Semantic judgment and economic priority
 

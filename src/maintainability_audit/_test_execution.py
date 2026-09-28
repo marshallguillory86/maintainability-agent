@@ -296,7 +296,10 @@ def _coverage_fingerprint(root: Path) -> dict[str, int]:
     stamps: dict[str, int] = {}
     for name in COVERAGE_ARTIFACTS:
         report = root / name
-        if report.is_symlink() or not report.is_file():
+        # Every step of the route, not only the last: a symlinked
+        # `coverage/` directory led the read out of the tree (Grok, 2026-09-28).
+        route = [root / Path(*Path(name).parts[:depth]) for depth in range(1, len(Path(name).parts) + 1)]
+        if any(step.is_symlink() for step in route) or not report.is_file():
             continue
         try:
             stamps[name] = report.stat().st_mtime_ns
@@ -326,8 +329,10 @@ def _coverage_from_this_run(root: Path, before: dict[str, int]) -> float | None:
                 # Refused, not read as absent coverage (D145): a FIFO named
                 # like a report would hang the audit after the suite ran.
                 raise
-            except (AnalyzerXmlRefused, ValueError, OSError):
-                return None
+            except (AnalyzerXmlRefused, ValueError, SyntaxError, OSError):
+                # Unreadable, including the XML parser's own `ParseError`
+                # (a `SyntaxError`), which escaped this handler before.
+                continue  # a later artifact may still be readable
     return None
 
 

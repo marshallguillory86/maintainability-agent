@@ -301,7 +301,10 @@ lets that file into the remediating diff.</p>
    <code>clean</code>. Built in 3.11.0: any test file in the diff made unable to
    fail — skip or suppression, tautology, replaced assertion API,
    swallowed failure, deleted assertion — fails <code>clean</code> too. Still
-   shape, never correctness.</p>
+   shape, never correctness. Deleting a whole test is reported as
+   <code>test deleted</code> and is not <code>clean</code> either; removing one of two
+   identical assertions is read as a deletion, a declared limit of
+   reading the diff rather than the file.</p>
 </li>
 <li>
 <p><strong><code>tools/prove_falsifiers.py</code> (this repository).</strong> Already first-order

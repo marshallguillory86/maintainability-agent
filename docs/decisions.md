@@ -224,7 +224,10 @@ Three homes, not one product:
    `clean`. Built in 3.11.0: any test file in the diff made unable to
    fail — skip or suppression, tautology, replaced assertion API,
    swallowed failure, deleted assertion — fails `clean` too. Still
-   shape, never correctness.
+   shape, never correctness. Deleting a whole test is reported as
+   `test deleted` and is not `clean` either; removing one of two
+   identical assertions is read as a deletion, a declared limit of
+   reading the diff rather than the file.
 
 2. **`tools/prove_falsifiers.py` (this repository).** Already first-order
    here: keep `tests/` from this commit, restore everything else to the

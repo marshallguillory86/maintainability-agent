@@ -70,16 +70,19 @@ def _add_gate_arguments(parser: argparse.ArgumentParser) -> None:
         metavar="FILE",
         help="With --conformance, read the diff against this ask instead of the "
              "work order: the paths and globs a task was asked to change, one per "
-             "line, `#` for comments. For work this tool did not order — every "
-             "change outside the ask is reported out of scope, production and "
-             "tests counted apart. Read from your path, never from the audited "
-             "tree. Shape, not correctness (Decision 13).",
+             "line, `#` for comments; `*` matches across directories. For work "
+             "this tool did not order: every change outside the ask, other than "
+             "a test pairing to an asked file, is reported out of scope, "
+             "production and tests counted apart, and a glob that matched "
+             "nothing is listed. Read from your path. Shape, not correctness "
+             "(Decision 13).",
     )
     parser.add_argument(
         "--fail-on-out-of-scope", action="store_true",
-        help="With --conformance, exit 1 when the diff touched files the work "
-             "order did not name and that do not pair to one as its test, or "
-             "when it added a suppression to a file the work order flagged.",
+        help="With --conformance, exit 1 when the diff is not clean: it touched "
+             "files the work order (or --ask) did not name and that do not pair "
+             "to one as its test, added a suppression to a file the work order "
+             "flagged, or made a test unable to fail (Decision 12).",
     )
 
 

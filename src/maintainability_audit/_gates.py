@@ -33,11 +33,16 @@ def attach_conformance(args: argparse.Namespace, report: dict) -> None:
         return
     from ._conformance import read_ask, scope_conformance
 
+    try:
+        ask = read_ask(args.ask) if getattr(args, "ask", None) else None
+    except (ValueError, OSError) as unusable:
+        # A usage error, stated, not a traceback after the audit ran.
+        print(f"--ask: {unusable}", file=sys.stderr)
+        raise SystemExit(2) from unusable
     root = Path(report["root"])
     changed = changed_paths(root, args.conformance)
     added = added_lines(root, args.conformance)
     removed = removed_lines(root, args.conformance)
-    ask = read_ask(args.ask) if getattr(args, "ask", None) else None
     report["scope_conformance"] = scope_conformance(
         report, changed, args.conformance, added, removed, ask=ask
     )

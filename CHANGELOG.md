@@ -12,6 +12,22 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.11.1 - 2026-09-28
+
+### Fixed — conformance and coverage edges an audit of 3.11.0 found (D218)
+
+- A test file whose path git quotes (a space, a quote, a non-ASCII name) is now
+  read by `--conformance`; it was skipped entirely, so `clean` never saw it.
+- `skipif`, `skipIf`, `pytest.skip()`, `xit(` and `test.skip(` count as skips,
+  and only a helper-shaped call excuses a deleted assertion — not `print(...)`.
+- A deleted test is reported as `test deleted`.
+- `--ask` lists globs that matched nothing, and an ask that names nothing is a
+  usage error.
+- Coverage is not read through a symlinked `coverage/` directory, and an
+  unreadable coverage file no longer stops a readable one from being scored.
+- A saved report cannot take the place of the repository's config, history or
+  baseline file.
+
 ## 3.11.0 - 2026-09-27
 
 The condition behind the first addition — a deterministic check is only

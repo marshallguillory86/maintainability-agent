@@ -5,6 +5,10 @@
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
 <li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#3111-2026-09-28">3.11.1 - 2026-09-28</a><ul>
+<li><a href="#fixed-conformance-and-coverage-edges-an-audit-of-3110-found-d218">Fixed — conformance and coverage edges an audit of 3.11.0 found (D218)</a></li>
+</ul>
+</li>
 <li><a href="#3110-2026-09-27">3.11.0 - 2026-09-27</a><ul>
 <li><a href="#added-clean-sees-a-weakened-test-decision-12">Added — clean sees a weakened test (Decision 12)</a></li>
 <li><a href="#added-ask-read-a-diff-against-an-ask-this-tool-did-not-write-decision-13">Added — --ask: read a diff against an ask this tool did not write (Decision 13)</a></li>
@@ -498,6 +502,21 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h2 id="3111-2026-09-28">3.11.1 - 2026-09-28</h2>
+<h3 id="fixed-conformance-and-coverage-edges-an-audit-of-3110-found-d218">Fixed — conformance and coverage edges an audit of 3.11.0 found (D218)</h3>
+<ul>
+<li>A test file whose path git quotes (a space, a quote, a non-ASCII name) is now
+  read by <code>--conformance</code>; it was skipped entirely, so <code>clean</code> never saw it.</li>
+<li><code>skipif</code>, <code>skipIf</code>, <code>pytest.skip()</code>, <code>xit(</code> and <code>test.skip(</code> count as skips,
+  and only a helper-shaped call excuses a deleted assertion — not <code>print(...)</code>.</li>
+<li>A deleted test is reported as <code>test deleted</code>.</li>
+<li><code>--ask</code> lists globs that matched nothing, and an ask that names nothing is a
+  usage error.</li>
+<li>Coverage is not read through a symlinked <code>coverage/</code> directory, and an
+  unreadable coverage file no longer stops a readable one from being scored.</li>
+<li>A saved report cannot take the place of the repository's config, history or
+  baseline file.</li>
+</ul>
 <h2 id="3110-2026-09-27">3.11.0 - 2026-09-27</h2>
 <p>The condition behind the first addition — a deterministic check is only
 evidence when the work under review could not author the record — is credited

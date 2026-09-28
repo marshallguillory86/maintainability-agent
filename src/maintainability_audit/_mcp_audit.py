@@ -51,6 +51,7 @@ from ._trends import trend_report
 from ._user_config import mark_repo_seen
 from .baseline import finding_fingerprints
 from .config import (
+    CONFIG_FILENAME,
     VERSION,
     analyzers_run_default,
     discovered_config,
@@ -230,7 +231,8 @@ def audit_repository(
     # refused without running anything: the host asks the person where to
     # save and calls again (D216).
     format, override = _resolve_presentation(format, config)
-    target = report_target(root, authorized_roots, format, output_path)
+    target = report_target(root, authorized_roots, format, output_path,
+                           reserved=_artifact_paths(root, config, baseline_path))
     revspec = validate_revspec(changed_only)
     only_paths = changed_paths(root, revspec) if revspec else None
     if run_analyzers is None:
@@ -264,8 +266,21 @@ REPORT_FILENAMES = {"html": "maintainability-report.html", "markdown": "maintain
 from ._html_view import REPORT_BANNER  # noqa: E402 - the one definition, in the skin that starts with it
 
 
+def _artifact_paths(root: Path, config: dict[str, Any], baseline_path: str | None) -> set[str]:
+    """Where this tool keeps its own files in the repository, as real paths.
+
+    A report saved over one of them — or creating one that does not exist
+    yet — would be read back as configuration, history or a baseline
+    (Grok, 2026-09-28).
+    """
+    history = repository_path(root, (config.get("paths") or {}).get("history"), DEFAULT_HISTORY_PATH)
+    baseline = repository_path(root, baseline_path, str(DEFAULT_BASELINE_PATH))
+    return {os.path.realpath(path) for path in (root / CONFIG_FILENAME, history, baseline)}
+
+
 def report_target(root: Path, roots: tuple[Path, ...], format: str,
-                  output_path: str | None) -> tuple[Path, Path] | None:
+                  output_path: str | None,
+                  reserved: set[str] | None = None) -> tuple[Path, Path] | None:
     """``(base, file)`` a chosen report is written to, or ``None`` for no file.
 
     The report is the complete record, with the history charts; chat is
@@ -298,6 +313,11 @@ def report_target(root: Path, roots: tuple[Path, ...], format: str,
         raise InvalidAuditArgument(
             f"output_path {target} is outside the repository and every allowed root; "
             "choose a location inside one of them."
+        )
+    if os.path.realpath(target) in (reserved or set()):
+        raise InvalidAuditArgument(
+            f"output_path {target} is reserved for this tool's own configuration, "
+            "history or baseline; choose another file or a directory."
         )
     _refuse_a_file_it_did_not_write(target)
     return base, target

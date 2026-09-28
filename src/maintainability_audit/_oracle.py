@@ -47,8 +47,8 @@ SUPPRESSION_MARKERS: tuple[tuple[str, str], ...] = (
     (r"@SuppressWarnings\b", "SuppressWarnings"),
     (r"//\s*NOSONAR\b", "NOSONAR"),
     (r"#\s*pylint:\s*disable\b", "pylint: disable"),
-    (r"@pytest\.mark\.(skip|xfail)\b", "skipped test"),
-    (r"@unittest\.skip\b", "skipped test"),
+    (r"@pytest\.mark\.(skip|skipif|xfail)\b", "skipped test"),
+    (r"@unittest\.skip(If|Unless)?\b", "skipped test"),
     (r"\bit\.skip\(|\bdescribe\.skip\(", "skipped test"),
     (r"@Disabled\b", "disabled test"),
     (r"@Ignore\b", "ignored test"),
@@ -121,11 +121,18 @@ _ALIASES = tuple(re.compile(p) for p in (
     r"\bjest\.mock\(\s*[\"'](?:expect|assert|chai|@jest/expect)[\"']",
 ))
 
+#: A skip written as a call rather than a directive. Read only here, not
+#: by the pre-commit marker scan: `pytest.skip("mypy did not run")` is an
+#: ordinary guard in a suite, and only in a remediating diff's test file is
+#: it evidence about the change.
+_SKIP_CALLS = re.compile(r"\bpytest\.skip\(|\bx(?:it|describe|test)\(|\b(?:it|describe|test)\.skip\(|\bthis\.skip\(\)")
+
 #: A failing assertion caught and discarded.
 _SWALLOWED = re.compile(r"^except\s+\(?\s*AssertionError\b")
 
 #: Each line-level shape, in the order a line is tested against them.
 _SHAPES = (
+    ("skipped or suppressed test", (_SKIP_CALLS,)),
     ("assertion that cannot fail", _TAUTOLOGIES),
     ("assertion API replaced", _ALIASES),
     ("failing assertion swallowed", (_SWALLOWED,)),
@@ -133,8 +140,12 @@ _SHAPES = (
 
 #: A line that asserts, for the count of assertions a diff removed.
 _ASSERTS = re.compile(r"^(?:assert\b|self\.assert\w*\(|assert\w*\(|expect\(|\w+\.should\b)")
-#: A line that calls something: a helper the assertions moved into.
-_CALLS = re.compile(r"^[A-Za-z_][\w.]*\(")
+#: A call to a helper the assertions could have moved into: a private
+#: name, or one that says it checks. Any call used to count, so an added
+#: `print(...)` excused a deleted assertion (Grok, 2026-09-28).
+_CALLS = re.compile(r"^(?:self\.)?(?:_\w*|\w*(?:check|verify|assert|expect|ensure)\w*)\(", re.IGNORECASE)
+#: The start of a whole test, so its deletion is named as such.
+_TEST_HEADER = re.compile(r"^(?:async\s+)?def\s+test\w*\(|^(?:it|test)\(|^@Test\b")
 _COMMENT_LEADS = ("#", "//", "/*", "*", '"""', "'''")
 
 
@@ -157,6 +168,11 @@ def _line_finding(path: str, number: int, text: str) -> dict[str, Any] | None:
     return None if kind is None else {"path": path, "line": number, "kind": kind, "text": code}
 
 
+def _codes(lines: list[tuple[int, str]]) -> list[str]:
+    """The code lines among these, comments and docstring lines left out."""
+    return [c for _n, t in lines if (c := _code(t)) is not None]
+
+
 def _deleted_assertions(path: str, added: list[tuple[int, str]],
                         removed: list[tuple[int, str]]) -> dict[str, Any] | None:
     """Assertions removed and nothing asserting or called in their place.
@@ -165,12 +181,18 @@ def _deleted_assertions(path: str, added: list[tuple[int, str]],
     expectation as one assertion for another, so neither is flagged: the
     count has to fall with nothing taking its place.
     """
-    code_added = [c for _n, t in added if (c := _code(t)) is not None]
-    gone = sum(1 for _n, t in removed if (c := _code(t)) and _ASSERTS.search(c))
+    code_added, code_removed = _codes(added), _codes(removed)
+    gone = sum(1 for c in code_removed if _ASSERTS.search(c))
     kept = sum(1 for c in code_added if _ASSERTS.search(c))
     if gone <= kept or any(_CALLS.search(c) for c in code_added):
         return None
     number = removed[0][0] if removed else 0
+    if any(_TEST_HEADER.search(c) for c in code_removed):
+        # The bluntest weakening, and sometimes an obsolete test retired:
+        # named for what it is, and still not `clean`, because in a
+        # remediating diff deleting the test is how a build goes green.
+        return {"path": path, "line": number, "kind": "test deleted",
+                "text": f"a test and {gone - kept} assertion(s) removed"}
     return {"path": path, "line": number, "kind": "assertion deleted",
             "text": f"{gone - kept} assertion(s) removed and nothing put in their place"}
 

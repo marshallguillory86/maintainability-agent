@@ -327,8 +327,25 @@ def _removed_from_diff(output: str) -> dict[str, list[tuple[int, str]]]:
 
 
 def _diff_path(line: str) -> str:
-    """The path in a `--- a/x` or `+++ b/x` header, forward-slashed."""
-    return "/".join(line[6:].strip().split(os.sep))
+    """The path in a `--- a/x` or `+++ b/x` header, forward-slashed.
+
+    Git quotes a path holding a space, a quote, a backslash or a non-ASCII
+    byte (`--- "a/my test.py"`, octal escapes for the bytes), and a reader
+    that expected the bare form dropped the file entirely, so `clean` never
+    saw it (Grok, 2026-09-28). `/dev/null` names no file.
+    """
+    raw = line[4:].strip()
+    if raw.startswith('"') and raw.endswith('"') and len(raw) >= 2:
+        raw = _unquote_c(raw[1:-1])
+    if raw[:2] not in ("a/", "b/"):
+        return ""
+    return "/".join(raw[2:].split(os.sep))
+
+
+def _unquote_c(quoted: str) -> str:
+    """Undo git's C-style quoting: `\\"`, `\\\\`, `\\t`, `\\n` and octal bytes."""
+    as_bytes = quoted.encode("latin-1", "backslashreplace").decode("unicode_escape").encode("latin-1")
+    return as_bytes.decode("utf-8", "replace")
 
 
 def _lines_from_diff(output: str, sign: str) -> dict[str, list[tuple[int, str]]]:
@@ -367,8 +384,8 @@ def _header_path(line: str, current: str) -> str:
     and `+++ /dev/null` — a deleted file — keeps the old one.
     """
     if line.startswith("--- "):
-        return _diff_path(line) if line.startswith("--- a/") else ""
-    return _diff_path(line) if line.startswith("+++ b/") else current
+        return _diff_path(line)
+    return _diff_path(line) or current
 
 
 def _hunk_start(line: str, sign: str) -> int:

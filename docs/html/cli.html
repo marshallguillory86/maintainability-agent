@@ -127,7 +127,7 @@ maintainability-agent mcp --allow-root /absolute/path/to/repository
 </tr>
 <tr>
 <td><code>--ask</code></td>
-<td>With <code>--conformance</code>, a file you name listing the paths and globs a task was asked to change, one per line (<code>#</code> for comments). The diff is read against this ask instead of the work order, for work this tool did not order: every change outside it is reported out of scope, production and tests counted apart. Read from your path, never discovered in the audited tree; shape, not correctness (<a href="decisions.html#decision-13-the-ask-beside-the-diff">Decision 13</a>). Refused without <code>--conformance</code>.</td>
+<td>With <code>--conformance</code>, a file you name listing the paths and globs a task was asked to change, one per line (<code>#</code> for comments). The diff is read against this ask instead of the work order, for work this tool did not order: every change outside it — other than a test pairing to an asked file — is reported out of scope, production and tests counted apart. <code>*</code> matches across directories, and a glob that matched nothing is listed under <code>ask_unmatched</code>. An ask that names nothing is a usage error (exit 2). Read from your path, never discovered in the audited tree; shape, not correctness (<a href="decisions.html#decision-13-the-ask-beside-the-diff">Decision 13</a>). Refused without <code>--conformance</code>.</td>
 </tr>
 <tr>
 <td><code>--fail-on-regression</code></td>

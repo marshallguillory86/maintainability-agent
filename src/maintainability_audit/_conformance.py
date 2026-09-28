@@ -147,6 +147,32 @@ def _what_was_asked(work_order: list[dict[str, Any]], changed: set[str],
     return named, sorted(path for path in changed if path in named)
 
 
+def _partition(changed: set[str], named: set[str]) -> tuple[list[str], list[str]]:
+    """``(paired tests, out of scope)`` among the changed files not named."""
+    remaining = {path for path in changed if path not in named}
+    paired = sorted(path for path in remaining if _pairs_to_named(path, named))
+    return paired, sorted(remaining - set(paired))
+
+
+def _note(ask: set[str] | None) -> str:
+    """Stated so a reader does not infer more than was checked."""
+    whose = "operator's ask" if ask else "work order"
+    return f"Paths and changed lines. A file in scope means the {whose} named it, not that the change to it was correct."
+
+
+def _source(ask: set[str] | None) -> str:
+    """Whose ask the diff was read against: the operator's, or the work order."""
+    return "operator" if ask else "work order"
+
+
+def _unmatched_globs(ask: set[str] | None, changed: set[str]) -> list[str]:
+    """Globs in the ask that matched no changed file: said, not dropped."""
+    return sorted(
+        entry for entry in (ask or ())
+        if any(c in entry for c in "*?[") and not any(fnmatchcase(path, entry) for path in changed)
+    )
+
+
 def _tests_among(paths: list[str]) -> int:
     return sum(1 for path in paths if is_test_path(path))
 
@@ -168,18 +194,18 @@ def scope_conformance(
     """
     work_order = report.get("work_order") or []
     named, in_scope = _what_was_asked(work_order, changed, ask)
-    remaining = {path for path in changed if path not in named}
-    paired = sorted(path for path in remaining if _pairs_to_named(path, named))
-    out_of_scope = sorted(remaining - set(paired))
+    paired, out_of_scope = _partition(changed, named)
     suppressions = suppressions_added(added or {}, named)
     silenced = [item for item in suppressions if item["on_named_path"]]
-    weakened = oracle_weakening(added or {}, removed or {})
+    weakened = oracle_weakening(added or {}, removed)
 
     return {
         "revspec": revspec,
-        "ask_source": "operator" if ask else "work order",
+        "ask_source": _source(ask),
+        # A glob in the ask that matched no changed file: said, not dropped.
+        "ask_unmatched": _unmatched_globs(ask, changed),
         "work_order_items": len(work_order),
-        "named_paths": sorted(ask) if ask else sorted(named),
+        "named_paths": sorted(ask or named),
         "changed_paths": sorted(changed),
         "in_scope": in_scope,
         "paired_tests": paired,
@@ -204,8 +230,5 @@ def scope_conformance(
         # Stated so a reader does not infer more than was checked. The
         # record says which files the work order named, not whether the
         # edits inside them were the right ones.
-        "note": (
-            "Paths and added lines. A file in scope means the work order "
-            "named it, not that the change to it was correct."
-        ),
+        "note": _note(ask),
     }

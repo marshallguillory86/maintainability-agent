@@ -75,6 +75,8 @@ def test_an_unrelated_call_does_not_excuse_a_deleted_assertion() -> None:
 
 
 def test_a_helper_call_still_excuses_it() -> None:
+    """Covers existing behaviour: a helper call always excused a deleted assertion;
+    this guards that the narrower rule keeps it."""
     added = {"tests/test_pay.py": [(2, "    check_pay(3, 9)")]}
     removed = {"tests/test_pay.py": [(2, "    assert pay(3) == 9")]}
 

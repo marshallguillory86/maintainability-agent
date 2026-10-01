@@ -12,6 +12,31 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.12.0 - 2026-10-01
+
+### Added — missing security scanners are named before the run
+
+- When secure-code-agent cannot find a scanner it would run, the run-or-
+  reconfigure question now says so and carries each one's install command in
+  `environment_work_order`, before an audit is spent on an `unverified`
+  security pillar. Every report carries the same entries. The commands are
+  secure-code-agent's own, read from `--preflight --json`, so the advice
+  cannot drift from the tool it describes. An unreadable preflight adds
+  nothing and never breaks a run.
+
+### Fixed
+
+- Two CI steps installed the analyzer pool without `fortitude-lint`, so the
+  weekly drift check compared the pins with a smaller pool than the one they
+  pin and reported it as drift (#284). A test now requires every step that
+  installs the pool to install all of it.
+- The analyzer pins are re-resolved on Linux (2026-10-01): complexipy 8,
+  pyflakes 4, isort 9, and newer pylint, mypy, flake8 and ruff. On this
+  repository every analyzer reports the same findings under both pin sets,
+  and complexipy 8 scores all 1176 functions as 7 did.
+- A payload test failed on any machine whose installed version differed from
+  the source tree; it no longer depends on the machine's install.
+
 ## 3.11.1 - 2026-09-28
 
 ### Fixed — conformance and coverage edges an audit of 3.11.0 found (D218)

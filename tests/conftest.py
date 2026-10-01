@@ -88,6 +88,10 @@ def _security_delegate_is_stubbed(request, monkeypatch):
     except ImportError:  # a base that predates D177
         return
 
+    from maintainability_audit import _mcp_gate
+
+    # The preflight the chat door runs before an audit is the same child.
+    monkeypatch.setattr(_mcp_gate, "scanner_gaps", lambda root, **_: [], raising=False)
     monkeypatch.setattr(
         report_module, "run_security_delegate",
         lambda root, **_: DelegateRun(None, "secure-code-agent is not run by the test suite"),

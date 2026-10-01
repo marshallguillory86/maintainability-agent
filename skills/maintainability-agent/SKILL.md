@@ -72,9 +72,11 @@ engineering changes, not as permission to refactor unrelated code.
    the reported hard gates or highest-value findings; keep unrelated
    cleanup as follow-up notes.
 5. If the result carries `environment_work_order`, surface it: each
-   entry names a selected analyzer that could not run, its install
-   command, and the concepts installing it restores. The agent never
-   installs tools itself.
+   entry names a selected analyzer that could not run, or a
+   secure-code-agent scanner that is not installed, its install
+   command, and the concepts installing it restores. It can arrive
+   with `choice_needed`, before the run, so the user can install
+   first. The agent never installs tools itself.
 6. Re-run the audit and any native tests/lints required by the repo,
    then report what ran, whether the gate passed, and any remaining
    false positives or follow-ups.

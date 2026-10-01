@@ -107,7 +107,16 @@ one over explicitly with `--security-pillar PATH`.
 
 Two of the four did not land as written, and both are recorded above with the measurement that withdrew them: deleting the per-language cyclomatic regexes would have cost the bare install half its decision points, and the per-concept merge had no analyzer-to-analyzer content to merge. COBOL is not anchored and will not be.
 
-**What is next is language support, and that is the whole list.** The
+**Paused, 2026-10-01: no new language support until the foundation is
+stronger.** The three languages left below stay listed and are not
+scheduled. The pause changes the [corpus policy](#corpus-policy-recalibrate-once-after-the-remaining-scanners-land):
+the recalibration no longer waits for them. It runs next, to anchor
+Kotlin and Shell, and it runs **after** the analyzer pool is re-pinned,
+because a reference measured on a drifted pool would anchor the drift.
+The order is: re-pin the pool, then recalibrate, then the smaller
+foundation work.
+
+**What was next is language support, and that was the whole list.** The
 audit itself is finished for the job it claims: sixteen languages
 parsed, the rubric calibrated against 180 repositories, the evidence
 model migrated, the report contract stable. Nothing on this page

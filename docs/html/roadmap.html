@@ -117,7 +117,15 @@ one over explicitly with <code>--security-pillar PATH</code>.</p>
 <p><strong>The recalibration</strong>, <em>as this entry read on 2026-09-04, before it shipped.</em> It was the only scheduled work, and everything that touched measurement queued behind it — six then-unanchored languages (Swift, COBOL, Go, Rust, PHP, Ruby), plus the two built-in changes recorded in <a href="#corpus-policy-recalibrate-once-after-the-remaining-scanners-land">corpus policy</a>: deleting the per-language cyclomatic regexes, and merging analyzer evidence per concept rather than per dimension.</p>
 <p><strong>Shipped in 3.0.0 on 2026-09-08.</strong> All four steps: the corpus re-measured, the per-language criterion scope fixed (D137), the criterion set completed from the built-in tier per concept, and the corpus extended from 112 repositories to 180 and from eight anchored languages to thirteen. <code>CALIBRATION_C</code> moved 8.7161 to 4.2565 and 33 of the 112 repositories in both corpora change grade, which is what made it a major.</p>
 <p>Two of the four did not land as written, and both are recorded above with the measurement that withdrew them: deleting the per-language cyclomatic regexes would have cost the bare install half its decision points, and the per-concept merge had no analyzer-to-analyzer content to merge. COBOL is not anchored and will not be.</p>
-<p><strong>What is next is language support, and that is the whole list.</strong> The
+<p><strong>Paused, 2026-10-01: no new language support until the foundation is
+stronger.</strong> The three languages left below stay listed and are not
+scheduled. The pause changes the <a href="#corpus-policy-recalibrate-once-after-the-remaining-scanners-land">corpus policy</a>:
+the recalibration no longer waits for them. It runs next, to anchor
+Kotlin and Shell, and it runs <strong>after</strong> the analyzer pool is re-pinned,
+because a reference measured on a drifted pool would anchor the drift.
+The order is: re-pin the pool, then recalibrate, then the smaller
+foundation work.</p>
+<p><strong>What was next is language support, and that was the whole list.</strong> The
 audit itself is finished for the job it claims: sixteen languages
 parsed, the rubric calibrated against 180 repositories, the evidence
 model migrated, the report contract stable. Nothing on this page

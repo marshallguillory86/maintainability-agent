@@ -12,6 +12,8 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 3.12.0 - 2026-10-01
+
 ### Added — missing security scanners are named before the run
 
 - When secure-code-agent cannot find a scanner it would run, the run-or-

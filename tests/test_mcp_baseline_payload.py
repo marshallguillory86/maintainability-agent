@@ -189,8 +189,19 @@ def test_requested_format_governs_the_mcp_payload(
     tmp_path: Path,
     format_name: str,
     presentation_keys: set[str],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """One request returns only its selected report skin plus the default prompt."""
+    """One request returns only its selected report skin plus the default prompt.
+
+    The installed copy is held equal to the running one. `version_drift` is a
+    legitimate optional key that appears whenever this machine's install
+    differs from the source — machine state that moved with every release
+    and made this test pass or fail by laptop rather than by code. Drift has
+    its own tests (`test_the_agent_knows_when_it_is_stale.py`).
+    """
+    from maintainability_audit import _mcp_audit
+
+    monkeypatch.setattr(_mcp_audit, "version_drift", lambda: None)
     root = _repo(tmp_path)
 
     result = audit_repository(

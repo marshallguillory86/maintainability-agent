@@ -146,6 +146,68 @@ def _install_remedy(reason: str) -> dict[str, str]:
     }
 
 
+#: Resolution only — no audit — so it is quick; bounded anyway, because
+#: advice must never hold up the run it is advising.
+PREFLIGHT_TIMEOUT_SECONDS = 60
+
+
+def scanner_gaps(root: Path, *, timeout_seconds: int = PREFLIGHT_TIMEOUT_SECONDS) -> list[dict[str, str]]:
+    """Each scanner secure-code-agent would run and cannot, as an install action.
+
+    A self-audit ran with four scanners missing and the security pillar came
+    back `unverified`: the grade was spent, and the environment work order —
+    what a reader acts on — was empty, because it covered only this tool's
+    analyzers. `--preflight --json` is the delegate's own answer, with its own
+    install hint per scanner, so the advice cannot drift from it.
+
+    Empty when there is nothing to say, when the delegate is absent or out of
+    range (its own entry already says so), or when the preflight cannot be
+    read: advice never breaks a run.
+    """
+    rows = _preflight_rows(root, timeout_seconds)
+    missing = [row for row in rows
+               if isinstance(row, dict) and not row.get("available") and row.get("remedy")]
+    missing.sort(key=lambda row: (not row.get("required"), str(row.get("scanner"))))
+    return [_gap_entry(row) for row in missing]
+
+
+def _delegate_usable() -> bool:
+    """Installed, and within the range this audit runs."""
+    if importlib.util.find_spec("secure_code_audit") is None:
+        return False
+    installed = _installed_version()
+    return installed is not None and SUPPORTED_FLOOR <= installed < SUPPORTED_CEILING
+
+
+def _preflight_rows(root: Path, timeout_seconds: int) -> list[Any]:
+    """The preflight's scanner rows, or nothing when it cannot be run or read."""
+    if not _delegate_usable():
+        return []
+    result = run("secure-code-agent", Invocation(
+        argv=(sys.executable, "-c", _ENTRY, str(root), "--preflight", "--json"),
+        findings_exit_codes=(0, 1),
+    ), timeout_seconds=timeout_seconds)
+    try:
+        payload = json.loads(getattr(result, "stdout", "") or "")
+    except ValueError:
+        return []
+    rows = payload.get("scanners") if isinstance(payload, dict) else None
+    return rows if isinstance(rows, list) else []
+
+
+def _gap_entry(row: dict[str, Any]) -> dict[str, str]:
+    name = str(row["scanner"])
+    kind = "required" if row.get("required") else "optional"
+    return {
+        "tool": name,
+        "reason": (f"secure-code-agent's {kind} scanner {name} is not installed, so the "
+                   "security pillar cannot measure what it covers"),
+        "install": str(row["remedy"]),
+        "verify": "secure-code-agent . --preflight",
+        "concepts": "security",
+    }
+
+
 def run_security_delegate(
     root: Path, *, changed_revspec: str | None = None,
     timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
@@ -160,6 +222,9 @@ def run_security_delegate(
         reason = (f"secure-code-agent {shown} is installed; this audit runs "
                   f"{REQUIREMENT.removeprefix('secure-code-agent')}")
         return DelegateRun(None, reason, [_install_remedy(reason)])
+    # Before the audit, so a reader learns what is missing with the
+    # result rather than after a grade has been spent on it.
+    gaps = scanner_gaps(root)
     with tempfile.TemporaryDirectory(prefix="ma-security-") as scratch:
         out = Path(scratch)
         pillar = out / "security-pillar.json"
@@ -184,11 +249,12 @@ def run_security_delegate(
         if document is not None:
             return DelegateRun(
                 document,
+                environment=gaps,
                 work_order=_read_text(out / "prompt.md"),
                 work_order_data=_read_work_order_data(out / "work-order.json"),
             )
         if result.outcome is Outcome.TIMED_OUT:
-            return DelegateRun(None, f"secure-code-agent did not finish within {timeout_seconds}s")
+            return DelegateRun(None, f"secure-code-agent did not finish within {timeout_seconds}s", gaps)
         detail = _last_line(result.stderr) or _last_line(result.stdout) or result.detail
         # No install remedy here: the tool is installed and ran. A rejected
         # configuration or a crash is fixed in the repository or reported
@@ -196,7 +262,7 @@ def run_security_delegate(
         # wrong place.
         reason = (f"secure-code-agent exited {result.exit_code} without a pillar document"
                   + (f": {detail}" if detail else ""))
-        return DelegateRun(None, reason)
+        return DelegateRun(None, reason, gaps)
 
 
 def _installed_version() -> tuple[int, ...] | None:

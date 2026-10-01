@@ -19,6 +19,7 @@ from typing import Any
 
 from ._mcp_setup import run_tests_pending, setup_pending, staged_questions
 from ._running_version import version_drift
+from ._security_delegate import scanner_gaps
 from ._test_execution import consented_without_command
 from ._user_config import mark_repo_seen
 from .config import VERSION
@@ -118,6 +119,16 @@ def _choose_next(root: Path) -> dict[str, Any]:
             " Note: this host is opted in to running the test suite, but no "
             "test command is recorded for it, so no suite runs. Choose "
             "reconfigure to record the command."
+        )
+    # Before the run: a missing security scanner leaves the pillar
+    # unverified, and saying so after the audit spends the grade first.
+    gaps = scanner_gaps(root)
+    if gaps:
+        result["environment_work_order"] = gaps
+        prompt += (
+            f" Before you run: secure-code-agent cannot find {len(gaps)} scanner(s) — "
+            f"{', '.join(g['tool'] for g in gaps)} — so the security pillar would be "
+            "incomplete. Their install commands are in environment_work_order."
         )
     result["choice_needed"] = {
         "name": "next_action",

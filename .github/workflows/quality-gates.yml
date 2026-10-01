@@ -216,8 +216,8 @@ jobs:
           python3 -m venv /tmp/resolve
           /tmp/resolve/bin/python -m pip install --upgrade pip
           /tmp/resolve/bin/python -m pip install \
-            cohesion complexipy flake8 interrogate lizard multimetric \
-            mypy pydocstyle pylint radon ruff vulture
+            cohesion complexipy flake8 fortitude-lint interrogate lizard \
+            multimetric mypy pydocstyle pylint radon ruff vulture
           {
             printf '# Resolved on %s with Python %s on %s.\n' \
               "$(date -u +%Y-%m-%d)" \
@@ -281,8 +281,8 @@ jobs:
           python3 -m venv /tmp/analyzer-drift
           /tmp/analyzer-drift/bin/python -m pip install --upgrade pip
           /tmp/analyzer-drift/bin/python -m pip install \
-            cohesion complexipy flake8 interrogate lizard multimetric \
-            mypy pydocstyle pylint radon ruff vulture
+            cohesion complexipy flake8 fortitude-lint interrogate lizard \
+            multimetric mypy pydocstyle pylint radon ruff vulture
       - name: Fail visibly if the analyzer resolution drifted
         # Compared like with like. The first version diffed the raw
         # constraints file, which carries eight comment lines of

@@ -7,6 +7,14 @@ work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
 Version **4.0.0**.
 
+> ## **Calibrated against 201 mature open-source repositories in fifteen languages.**
+>
+> Every grade is a measured multiple of real code, not a threshold someone
+> picked: 201 repositories, selected by a published query rather than by
+> taste, each pinned to the exact commit it was measured at, so anyone can
+> re-run the calibration and get the same numbers. The median of that corpus
+> scores a **B**. [How the corpus is chosen and measured](docs/standard.md#the-reference-corpus).
+
 **Languages parsed:** Python, Java, Kotlin, C, C++, C#, Go, Rust, PHP, Ruby,
 Swift, Shell, COBOL, Fortran (free-form *and* fixed-form), and the JS/TS/HTML family — each
 by a scanner written for it, and measured with that language's own reading of

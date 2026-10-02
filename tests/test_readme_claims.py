@@ -372,3 +372,22 @@ def test_the_roadmap_keeps_the_fleet_item_marked_unbuilt() -> None:
         "that scans from different repositories come from different "
         "instruments — so the next reader will price it as a join"
     )
+
+
+def test_the_readme_opens_with_the_corpus_size_in_bold() -> None:
+    """The calibration corpus is the headline, and its number is the corpus's.
+
+    A reader deciding whether to trust a grade should meet what it is
+    measured against before the install commands, not four hundred lines
+    down. Bound to `CORPUS_SIZE` and the language list, which are bound to
+    `corpus.json`, so the headline cannot say 180 the way the report note
+    did after the corpus had grown.
+    """
+    from maintainability_audit._calibration import CORPUS_LANGUAGES, CORPUS_SIZE
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    opening = readme.split("```", 1)[0]
+    words = {15: "fifteen", 16: "sixteen", 17: "seventeen"}
+
+    assert f"**Calibrated against {CORPUS_SIZE} mature open-source repositories" in opening
+    assert f"in {words.get(len(CORPUS_LANGUAGES), len(CORPUS_LANGUAGES))} languages" in opening

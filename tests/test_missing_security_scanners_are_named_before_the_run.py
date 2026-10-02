@@ -110,3 +110,12 @@ def test_the_chat_door_names_them_before_the_run(monkeypatch, tmp_path: Path) ->
 
     assert reply["environment_work_order"][0]["tool"] == "trivy"
     assert "trivy" in reply["choice_needed"]["prompt"]
+
+
+def test_before_consent_the_preflight_is_handed_a_neutral_config(monkeypatch, tmp_path: Path) -> None:
+    calls = _preflight_returns(monkeypatch, PREFLIGHT)
+
+    _security_delegate.scanner_gaps(tmp_path)
+
+    config = calls[0][calls[0].index("--config") + 1]
+    assert not Path(config).is_relative_to(tmp_path)

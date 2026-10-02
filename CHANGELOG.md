@@ -12,6 +12,30 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.0.1 - 2026-10-02
+
+### Security — a repository could run code on the auditing machine (D222)
+
+- **Upgrade promptly if you use the chat door.** Since 3.12.0, asking about a
+  repository — before choosing "run" — ran secure-code-agent's preflight
+  against the repository's own `secure-code-agent.json`, which could name any
+  program with any arguments. A hostile repository could execute code on your
+  machine just by being asked about. The preflight before consent now reads a
+  neutral configuration and never the repository's.
+- The run after consent had the same exposure through secure-code-agent
+  itself. It is closed there in secure-code-agent 0.12.10, and this release
+  requires it: `pip install 'secure-code-agent>=0.12.10'`.
+- Found by an adversarial audit of 4.0.0 and reproduced before it was fixed.
+
+### Fixed
+
+- The chat view lists source-named symlinks the scan skipped; only the full
+  report did.
+- A symlink to a file outside the repository is no longer counted as source
+  the score read.
+- Every documented `secure-code-agent` install line names the supported floor,
+  and a test keeps it that way; three still said `>=0.12.2`.
+
 ## 4.0.0 - 2026-10-02
 
 **Grades move: this is a recalibration.** Kotlin and Shell are anchored, so

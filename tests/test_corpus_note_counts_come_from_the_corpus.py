@@ -36,7 +36,7 @@ def _display(identifier: str) -> str:
 
 
 def test_the_corpus_size_is_the_number_of_pinned_repositories() -> None:
-    assert _calibration.CORPUS_SIZE == len(_corpus())
+    assert len(_corpus()) == _calibration.CORPUS_SIZE
 
 
 def test_the_corpus_languages_are_the_languages_pinned() -> None:

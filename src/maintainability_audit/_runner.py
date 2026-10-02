@@ -35,6 +35,7 @@ import sys
 import sysconfig
 import tempfile
 import time
+from collections.abc import Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -61,6 +62,40 @@ class Outcome(StrEnum):
     NOT_WORKING = "not-working"
     TIMED_OUT = "timed-out"
     FAILED = "failed"
+
+
+# A file list has to fit on a command line. The old fixed cap of 400 was
+# arbitrary and silent -- ~20 KB against an ARG_MAX of a megabyte -- so it
+# truncated ordinary trees for no OS reason and said nothing (e88b429 #5).
+# The budget is a quarter of the real ARG_MAX (room left for the exe, flags
+# and env). Beyond it one invocation cannot name every file, so the list is
+# split by `batches` and the tool runs once per batch; nothing is cut. The
+# cut, stated in a log line, left FFmpeg's analyzers reading 1,543 of its
+# 4,687 files in the 4.0.0 corpus run.
+_ARG_MAX = os.sysconf("SC_ARG_MAX") if hasattr(os, "sysconf") else 262144
+_ARGV_BYTE_BUDGET = max(_ARG_MAX // 4, 131072)
+
+
+def batches(files: Sequence[str], budget: int | None = None) -> list[tuple[str, ...]]:
+    """The file list in order, split so each part fits one command line.
+
+    A single name longer than the budget still gets a batch of its own:
+    refusing it would drop a file, which is the defect this replaces.
+    """
+    limit = budget if budget is not None else _ARGV_BYTE_BUDGET
+    out: list[tuple[str, ...]] = []
+    current: list[str] = []
+    used = 0
+    for name in files:
+        size = len(name.encode("utf-8")) + 1  # +1 for the argv separator
+        if current and used + size > limit:
+            out.append(tuple(current))
+            current, used = [], 0
+        current.append(name)
+        used += size
+    if current:
+        out.append(tuple(current))
+    return out
 
 
 @dataclass(frozen=True)

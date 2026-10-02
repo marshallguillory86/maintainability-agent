@@ -12,6 +12,19 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+### Fixed
+
+- Analyzers that are handed a file list — complexipy, multimetric, cohesion,
+  pydocstyle, PMD and Checkstyle — read every file of a large repository.
+  The list used to be cut to fit one command line, so FFmpeg's analyzers saw
+  1,543 of 4,687 files; it is now split across runs and merged, and a batch
+  that fails is reported as the tool's failure (D220).
+- The calibration's scanner fingerprint covers every module a measurement
+  passes through; it missed eight language scanners and most of their
+  imports, so `--reuse` could keep rows an older scanner produced (D221).
+- A corpus measurement saves each row as it goes and a restarted run picks
+  up where it stopped.
+
 ## 4.0.1 - 2026-10-02
 
 ### Security — a repository could run code on the auditing machine (D222)

@@ -37,7 +37,7 @@ from ._built_ins import BUILT_IN_SOURCES
 from ._catalog import CONCERNS, PolicyError, concepts_for, resolve_pool, settings_from
 from ._discovery import CATALOG_LANGUAGE, discover
 from ._metrics_types import KNOWN_SOURCE_SUFFIXES, Finding, Measurement
-from ._runner import Outcome, Probe, run
+from ._runner import Outcome, Probe, ToolResult, run
 from ._selection import Selected, select_runnable
 from .config import acquisition_permitted
 
@@ -446,12 +446,11 @@ def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
             ),
         )
 
-    result = run(adapter.slug, adapter.invocation(root, excludes=excludes),
-                 timeout_seconds=timeout)
+    result, parsed = _run_batches(adapter, root, excludes, timeout)
     # Filtered before the counts are taken, not after. Recording 48
     # measurements and reporting 6 describes an activity rather than a
     # result, which is the defect this project keeps finding.
-    extraction = _ours_only_extraction(adapter.parse(result), root, adapter, excludes, inventory)
+    extraction = _ours_only_extraction(parsed, root, adapter, excludes, inventory)
     # ADR 012: an artifact-read tool states its staleness on the row it
     # ran on, and its findings are labeled when the bytecode is older
     # than the source — the method existing was not the promise
@@ -474,6 +473,49 @@ def _attempt(root: Path, adapter: Any, probe: Probe, timeout: int,
         stale=None if evidence is None else bool(evidence["stale"]),
         source_mtime=None if evidence is None else evidence["source_mtime"],
         class_mtime=None if evidence is None else evidence["class_mtime"],
+    )
+
+
+def _run_batches(adapter: Any, root: Path, excludes: Sequence[str],
+                 timeout: int) -> tuple[ToolResult, Extraction]:
+    """Every run the adapter needs, each parsed as it finishes, then merged.
+
+    A tool handed explicit files runs once per batch that fits a command
+    line; each is parsed before the next, because some tools rewrite one
+    results file per run. A batch that fails stops the rest and its outcome
+    is the tool's: a partial reading must not pass for a whole one.
+    """
+    planned = getattr(adapter, "invocations", None)
+    invocations = planned(root, excludes) if planned else [adapter.invocation(root, excludes=excludes)]
+    results: list[ToolResult] = []
+    parsed: list[Extraction] = []
+    for invocation in invocations:
+        result = run(adapter.slug, invocation, timeout_seconds=timeout)
+        results.append(result)
+        parsed.append(adapter.parse(result))
+        if not result.usable:
+            break
+    if len(results) == 1:
+        return results[0], parsed[0]
+    return _merged_result(results, len(invocations)), _merged_extraction(parsed)
+
+
+def _merged_result(results: list[ToolResult], planned: int) -> ToolResult:
+    failed = next((r for r in results if not r.usable), None)
+    basis = failed or results[0]
+    detail = (f"batch {len(results)} of {planned} failed: {failed.detail}" if failed
+              else f"read in {planned} batches, one command line each")
+    return replace(basis, detail=detail,
+                   duration_seconds=sum(r.duration_seconds for r in results))
+
+
+def _merged_extraction(parsed: list[Extraction]) -> Extraction:
+    return Extraction(
+        measurements=tuple(m for e in parsed for m in e.measurements),
+        findings=tuple(f for e in parsed for f in e.findings),
+        parse_error=next((e.parse_error for e in parsed if e.parse_error), None),
+        raw="\n".join(e.raw for e in parsed if e.raw),
+        truncated=any(e.truncated for e in parsed),
     )
 
 

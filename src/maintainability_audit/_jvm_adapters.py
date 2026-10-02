@@ -78,14 +78,14 @@ class PmdAdapter(BaseAdapter):
         """
         return bool(expand_files(root, excludes, suffixes=(".java",)))
 
+    def target_files(self, root: Path, excludes: Sequence[str] = ()) -> tuple[str, ...]:
+        return expand_files(root, excludes, suffixes=(".java",))
+
     def invocation(
         self, root: Path, paths: Iterable[str] | None = None,
         excludes: Sequence[str] = (),
     ) -> Invocation:
-        targets = (
-            tuple(paths) if paths
-            else expand_files(root, excludes, suffixes=(".java",))
-        )
+        targets = tuple(paths) if paths else self.target_files(root, excludes)
         dirs: tuple[str, ...] = ()
         for target in targets:
             dirs += ("--dir", target)
@@ -173,14 +173,14 @@ class CheckstyleAdapter(BaseAdapter):
         """Whether any .java file survives the exclusions (never spawn empty)."""
         return bool(expand_files(root, excludes, suffixes=(".java",)))
 
+    def target_files(self, root: Path, excludes: Sequence[str] = ()) -> tuple[str, ...]:
+        return expand_files(root, excludes, suffixes=(".java",))
+
     def invocation(
         self, root: Path, paths: Iterable[str] | None = None,
         excludes: Sequence[str] = (),
     ) -> Invocation:
-        targets = (
-            tuple(paths) if paths
-            else expand_files(root, excludes, suffixes=(".java",))
-        )
+        targets = tuple(paths) if paths else self.target_files(root, excludes)
         return Invocation(
             argv=("checkstyle", "-c", "/google_checks.xml",
                   "-f", "xml", *targets),

@@ -35,7 +35,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from ._metrics_types import Finding, Measurement
-from ._runner import Invocation, ToolResult
+from ._runner import Invocation, ToolResult, batches
 
 
 class Exclusions(tuple):  # noqa: SLOT001 - attribute is set once in __new__
@@ -314,6 +314,22 @@ class BaseAdapter:
             findings_exit_codes=self.findings_exit_codes,
             cwd=root if self.exclude_dialect == "rel_regex" else None,
         )
+
+    def target_files(self, root: Path, excludes: Sequence[str] = ()) -> tuple[str, ...] | None:
+        """The explicit files this tool is handed, or None when it walks a directory."""
+        return None
+
+    def invocations(self, root: Path, excludes: Sequence[str] = ()) -> list[Invocation]:
+        """Every run needed to read the whole tree.
+
+        One, for a tool that walks a directory. For a tool handed explicit
+        files, one per batch that fits a command line — the list used to
+        be cut to one argv instead, so the largest trees were read in part.
+        """
+        files = self.target_files(root, excludes)
+        if not files:
+            return [self.invocation(root, excludes=excludes)]
+        return [self.invocation(root, batch, excludes=excludes) for batch in batches(files)]
 
     def parse(self, result: ToolResult) -> Extraction:
         if not result.usable:

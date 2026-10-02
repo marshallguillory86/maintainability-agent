@@ -25,6 +25,7 @@ should not cost an hour of network first.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import subprocess
 import sys
@@ -156,3 +157,63 @@ def test_a_candidate_the_scanner_refuses_is_rejected_and_named_not_fatal(tmp_pat
     assert [r["name"] for r in written["repos"]] == ["fine"]
     rejected = written["verification"]["rejected"]
     assert rejected[0]["full_name"] == "o/refused" and "not a regular file" in rejected[0]["reason"]
+
+
+def _fake_measuring(monkeypatch, tmp_path: Path, measured: list[str]) -> None:
+    def fake_measure(path: Path, repo: dict, *, with_analyzers: bool = False) -> dict:
+        measured.append(repo["name"])
+        return {"repo": repo["name"], "pinned_commit": repo["commit"],
+                "scanner_fingerprint": measure.scanner_fingerprint(),
+                "files": 1, "dimensions": {}, "analyzer_dimensions": {"x": 1.0}}
+
+    monkeypatch.setattr(measure, "clone", lambda repo, cache: tmp_path / repo["name"])
+    monkeypatch.setattr(measure, "measure", fake_measure)
+
+
+def test_a_restarted_run_resumes_from_its_checkpoint(tmp_path: Path, monkeypatch) -> None:
+    """A full corpus run is hours long and wrote nothing until the end.
+
+    One interruption cost every row measured so far, and the 4.0.0 run had
+    to be restarted to escape a two-hour limit it would have hit at row 100.
+    Each row is now appended to a checkpoint in the cache directory as it is
+    measured, and a restarted run takes back the rows that still match.
+    """
+    manifest = {"repos": [{"name": n, "commit": "c"} for n in ("a", "b", "c")]}
+    args = measure._parser().parse_args(["--with-analyzers", "--cache-dir", str(tmp_path)])
+    measured: list[str] = []
+    _fake_measuring(monkeypatch, tmp_path, measured)
+
+    # The first run is interrupted after "a" and "b".
+    calls = {"n": 0}
+    real = measure.measure
+
+    def interrupted(path, repo, **kwargs):
+        calls["n"] += 1
+        if calls["n"] == 3:
+            raise KeyboardInterrupt
+        return real(path, repo, **kwargs)
+
+    monkeypatch.setattr(measure, "measure", interrupted)
+    with contextlib.suppress(KeyboardInterrupt):
+        measure._collect(manifest, tmp_path, args)
+
+    measured.clear()
+    monkeypatch.setattr(measure, "measure", real)
+    rows, resumed = measure._collect(manifest, tmp_path, args)
+
+    assert measured == ["c"]
+    assert [r["repo"] for r in rows] == ["a", "b", "c"] and resumed == 2
+
+
+def test_a_checkpoint_from_another_scanner_is_measured_again(tmp_path: Path, monkeypatch) -> None:
+    manifest = {"repos": [{"name": "a", "commit": "c"}]}
+    args = measure._parser().parse_args(["--with-analyzers", "--cache-dir", str(tmp_path)])
+    (tmp_path / measure.CHECKPOINT).write_text(json.dumps(
+        {"repo": "a", "pinned_commit": "c", "scanner_fingerprint": "stale",
+         "analyzer_dimensions": {"x": 1.0}}) + "\n", encoding="utf-8")
+    measured: list[str] = []
+    _fake_measuring(monkeypatch, tmp_path, measured)
+
+    rows, resumed = measure._collect(manifest, tmp_path, args)
+
+    assert measured == ["a"] and resumed == 0

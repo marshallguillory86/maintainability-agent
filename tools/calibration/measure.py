@@ -272,7 +272,27 @@ MEASUREMENT_PATH = (
     "_discovery", "_practice", "_analysis", "_adapters", "_generic",
     "_metric_adapters", "_verdict_adapters", "_jvm_adapters", "_tool_adapters",
     "_selection", "_pressures", "_built_ins",
+    # Missing until 2026-10-02: eight of the fifteen language scanners and
+    # every other module the ones above import. A Kotlin scanner change
+    # left the fingerprint unchanged, so `--reuse` kept rows the old
+    # scanner produced. Now required to be the import closure of this list
+    # by `tests/test_scanner_fingerprint_covers_the_measurement_path.py`.
+    "_ranges_cobol", "_ranges_go", "_ranges_kotlin", "_ranges_php", "_ranges_ruby",
+    "_ranges_rust", "_ranges_shell", "_ranges_swift",
+    "_bands", "_banner", "_catalog", "_config_defaults", "_criteria_scope",
+    "_finding_match", "_operator_reads", "_ratio_adapters", "_runner",
+    "_stored_grants", "_user_config", "_xml", "config", "evidence", "git_tools",
 )
+
+#: Reachable from the list above and deliberately not in it, each with the
+#: reason it cannot move a stored row.
+NOT_FINGERPRINTED: dict[str, str] = {
+    "_calibration": (
+        "holds the constants fitted *from* the rows; a row stores raw "
+        "pressures, and the references only normalize them for display, so "
+        "fingerprinting it would invalidate every row the moment they are adopted"
+    ),
+}
 
 
 def scanner_fingerprint() -> str:
@@ -299,16 +319,39 @@ def _reusable(repo: dict, with_analyzers: bool) -> dict | None:
     wrong reuse is a constant fitted to a corpus that never existed.
     """
     for entry in stored_measurements():
-        if entry.get("repo") != repo["name"]:
-            continue
-        if entry.get("pinned_commit") != repo.get("commit"):
-            return None
-        if entry.get("scanner_fingerprint") != scanner_fingerprint():
-            return None
-        if with_analyzers and not entry.get("analyzer_dimensions"):
-            return None
-        return entry
+        if entry.get("repo") == repo["name"]:
+            return entry if _still_applies(entry, repo, with_analyzers) else None
     return None
+
+
+def _still_applies(entry: dict, repo: dict, with_analyzers: bool) -> bool:
+    """Same commit, same scanner, and the readings this run would take."""
+    return (
+        entry.get("pinned_commit") == repo.get("commit")
+        and entry.get("scanner_fingerprint") == scanner_fingerprint()
+        and (not with_analyzers or bool(entry.get("analyzer_dimensions")))
+    )
+
+
+#: Rows as they are measured, in the cache directory beside the clones. A
+#: full corpus run is hours long and wrote nothing until the end, so one
+#: interruption cost every row; a restarted run takes back the rows that
+#: still apply, by the rule `--reuse` uses, and measures the rest.
+CHECKPOINT = "measurements.partial.jsonl"
+
+
+def _checkpointed(cache_dir: Path) -> dict[str, dict]:
+    path = cache_dir / CHECKPOINT
+    if not path.exists():
+        return {}
+    rows = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue  # a line cut short by the interruption itself
+        rows[row.get("repo")] = row
+    return rows
 
 
 def _mixed_analyzer_versions(rows: list[dict]) -> dict[str, set[str]]:
@@ -331,9 +374,14 @@ def _collect(manifest: dict, cache_dir: Path, args: argparse.Namespace) -> tuple
     """Every repository's row, reusing what provably still applies."""
     measurements: list[dict] = []
     reused = 0
+    resumed = _checkpointed(cache_dir)
     for repo in manifest["repos"]:
         if args.reuse and (stored := _reusable(repo, args.with_analyzers)) is not None:
             measurements.append(stored)
+            reused += 1
+            continue
+        if (row := resumed.get(repo["name"])) and _still_applies(row, repo, args.with_analyzers):
+            measurements.append(row)
             reused += 1
             continue
         path = clone(repo, cache_dir)
@@ -341,6 +389,8 @@ def _collect(manifest: dict, cache_dir: Path, args: argparse.Namespace) -> tuple
             continue
         entry = measure(path, repo, with_analyzers=args.with_analyzers)
         measurements.append(entry)
+        with (cache_dir / CHECKPOINT).open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry) + "\n")
         print(f"  {entry['repo']:<12} files={entry['files']:<6} " + " ".join(
             f"{k}={v:.4f}" for k, v in entry["dimensions"].items()), flush=True)
     return measurements, reused

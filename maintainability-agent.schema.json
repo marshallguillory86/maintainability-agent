@@ -278,8 +278,20 @@
         "additionalProperties": false
       }
     },
+    "security": {
+      "description": "The delegated security pillar. `timeout_seconds` is how long secure-code-agent may run before the pillar is reported unmeasured; held to 1..3600, default 900.",
+      "type": "object",
+      "properties": {
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        }
+      },
+      "additionalProperties": false
+    },
     "test_execution": {
-      "description": "Written by first-run setup: the opt-in to run this repository's own suite. The command itself is a staged second ask and lands in `expected_commands.test` \u2014 the tree may say how it is tested, only the person may choose what the host executes.",
+      "description": "Written by first-run setup: the opt-in to run this repository's own suite. The command itself is a staged second ask and lands in `expected_commands.test` — the tree may say how it is tested, only the person may choose what the host executes.",
       "type": "object",
       "properties": {
         "requested": {

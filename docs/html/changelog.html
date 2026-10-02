@@ -534,6 +534,11 @@ stands, read the <a href="readme.html">README</a>; if you want what is coming, t
   up where it stopped, and <code>--jobs N</code> measures N repositories at once with
   the same rows in the same order. The calibration noise check takes
   <code>--jobs</code> too, with the same result for the same seed.</li>
+<li>The security run's time limit was a hard-coded 300 seconds, and a full
+  secure-code-agent run on a large repository takes longer, so the pillar
+  came back unmeasured. The default is now 900 seconds, and
+  <code>security.timeout_seconds</code> in <code>maintainability-agent.json</code> sets it, held
+  to 1–3600 like the analyzer limit.</li>
 <li>cohesion on a repository with no Python is reported not applicable rather
   than failed; it used to be spawned with no files and exit with a usage
   error (D223).</li>

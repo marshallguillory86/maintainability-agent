@@ -86,11 +86,16 @@ For the same reason **Shell has no external complexity reading.** The
 built-in reader is the only one, and the language is named in the
 analyzer-floor exemption beside COBOL rather than counted as covered.
 
-## Not anchored
+## Anchored, thinly
 
-Shell is outside the calibration corpus, so a Shell repository is graded
-against medians drawn from other languages and every report says so. It
-anchors at the next recalibration, as Kotlin does.
+Shell is **in the reference corpus since 4.0.0**, beside Kotlin, and its
+grade is no longer provisional. It entered thin: of sixteen candidates at
+the standard 3,000-star bar, ten were collections, configuration or too
+small to be codebases, and six cleared verification — ohmyzsh, pi-hole,
+powerlevel10k, acme.sh, pyenv and iTerm2-Color-Schemes. That is disclosed
+rather than padded by hand-picking. The medians are shared across
+languages, so six Shell repositories add to one reference rather than
+defining their own.
 
 ## What it misses
 

@@ -4,7 +4,9 @@
 <div class="top"><div class="top-inner"><a class="brand" href="index.html">maintainability-agent docs</a><nav><a href="index.html#project">Project</a><a href="index.html#product-and-standard">Product and standard</a><a href="index.html#help">Help</a><a href="index.html#languages">Languages</a><a href="index.html#decisions">Decisions</a><a href="index.html#audits-and-registers">Audits and registers</a><a href="index.html#plan-and-evidence">Plan and evidence</a><a href="index.html#reference">Reference</a></nav></div></div>
 <div class="layout"><aside><p class="label">On this page</p><div class="toc">
 <ul>
-<li><a href="#unreleased">Unreleased</a><ul>
+<li><a href="#unreleased">Unreleased</a></li>
+<li><a href="#400-2026-10-02">4.0.0 - 2026-10-02</a><ul>
+<li><a href="#changed-kotlin-and-shell-are-in-the-reference-corpus">Changed — Kotlin and Shell are in the reference corpus</a></li>
 <li><a href="#fixed">Fixed</a></li>
 </ul>
 </li>
@@ -510,6 +512,35 @@ track record, not an apology. If you want the short version of where the product
 stands, read the <a href="readme.html">README</a>; if you want what is coming, the
 <a href="roadmap.html">roadmap</a>. Neither requires this file.</p>
 <h2 id="unreleased">Unreleased</h2>
+<h2 id="400-2026-10-02">4.0.0 - 2026-10-02</h2>
+<p><strong>Grades move: this is a recalibration.</strong> Kotlin and Shell are anchored, so
+the reference every score is a multiple of is now drawn from 201 mature
+repositories in fifteen languages rather than 180 in thirteen. On the 180
+repositories in both corpora, 9 change grade — 8 B→C and 1 C→B — and 52
+move at the published decimal. The corpus median still scores exactly 4.0.
+If you track a grade over time, expect a step at this release; the trend
+already reports it as a break, because the calibration constant changed.</p>
+<h3 id="changed-kotlin-and-shell-are-in-the-reference-corpus">Changed — Kotlin and Shell are in the reference corpus</h3>
+<ul>
+<li>Fifteen Kotlin and six Shell repositories joined the corpus, selected by
+  the same query as every other language. A Kotlin or Shell grade is no
+  longer called provisional. COBOL remains the one unanchored language.</li>
+<li>Shell entered thin: ten of its sixteen candidates were collections,
+  configuration or too small to be codebases. That is disclosed in the corpus
+  and the standard rather than padded by hand.</li>
+<li>Every row was re-measured on the analyzer pins of 3.12.0. Separated on the
+  180 shared repositories, the new pins alone would change 4 grades; the new
+  languages account for the rest.</li>
+<li>References: file size 0.0938 → 0.0871, declarations 0.0962 → 0.0929,
+  duplication 0.3144 → 0.2973, risk 0.0341 → 0.0249; <code>CALIBRATION_C</code>
+  4.2565 → 4.3092. The full record is in <code>_calibration.py</code> and
+  <code>docs/migration-2.0.md</code>.</li>
+<li>The smallest repository the scale scores is now 20 source files, down from
+  24, because pyenv entered the corpus at 20. Repositories of 20 to 23 files
+  now get a rolled-up score.</li>
+<li>The report's corpus note took its size and language list from typed prose;
+  both now come from one constant checked against the corpus itself.</li>
+</ul>
 <h3 id="fixed">Fixed</h3>
 <ul>
 <li>A symlink with a source extension whose target does not exist — usually a

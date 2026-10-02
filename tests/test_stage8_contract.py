@@ -173,10 +173,11 @@ def test_renaming_moved_no_value(name: str, tmp_path: Path) -> None:
         # Rust, PHP and Ruby. Still a disclosure delta rather than a
         # change of meaning: the multiple this fixture prints is
         # unchanged, and what moved is the sentence saying what the
-        # multiple is drawn from.
+        # multiple is drawn from. Kotlin and Shell joined at 4.0.0, the
+        # same kind of delta.
         "corpus_languages": [
             "Python", "TypeScript", "JavaScript", "Java", "C", "C++", "C#", "Fortran",
-            "Swift", "Go", "Rust", "PHP", "Ruby",
+            "Swift", "Go", "Rust", "PHP", "Ruby", "Kotlin", "Shell",
         ],
         "unanchored_languages": score["reference"]["unanchored_languages"],
         "corpus_note": score["reference"]["corpus_note"],

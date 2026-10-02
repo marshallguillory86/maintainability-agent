@@ -116,9 +116,17 @@ because a reference measured on a drifted pool would anchor the drift.
 The order is: re-pin the pool, then recalibrate, then the smaller
 foundation work.
 
+**Both ran, and 4.0.0 shipped on 2026-10-02.** The pool was re-pinned in
+3.12.0 (#284); the recalibration re-measured all 201 repositories on it and
+anchored Kotlin and Shell — fifteen and six repositories. `CALIBRATION_C`
+moved 4.2565 to 4.3092. On the 180 shared rows the new pins alone would
+change 4 grades and adding the two languages changes 9 (8 B→C, 1 C→B), so
+it is a major, on 3.0.0's reasoning. COBOL is now the only unanchored
+language. Next is the smaller foundation work.
+
 **What was next is language support, and that was the whole list.** The
 audit itself is finished for the job it claims: sixteen languages
-parsed, the rubric calibrated against 180 repositories, the evidence
+parsed, the rubric calibrated against 201 repositories, the evidence
 model migrated, the report contract stable. Nothing on this page
 proposes making it do a different job.
 
@@ -186,7 +194,7 @@ This paragraph named Swift, Go and Rust until 2.11.0 — all three are parsed no
 **Two gaps that widen with every language added**, and should be closed alongside rather than after:
 
 - ~~**Test-command detection stops at Python.**~~ **Closed in 2.5.0.** `_test_commands` reads the tree's build manifests and offers the command as the setup question's default, on every surface: `swift test`, `fpm test`, `cargo test`, `go test ./...`, `ctest`, `mvn test`, `gradle test` (the wrapper when one is checked in), `dotnet test`, `npm test` and `pytest`. Two properties are the whole design. It **suggests, never decides** — the `require_test_command` hard gate asks whether a *human documented* a command, and a value the tool wrote unasked would satisfy that gate on evidence it invented. And `xcodebuild test`, named in the original entry, is **deliberately not shipped**: bare `xcodebuild test` needs `-scheme` and usually `-destination`, so every suggestion it could make is a command that fails, and a suggestion that always fails teaches the operator to ignore suggestions.
-- **A new language inherits whatever the corpus does not hold.** This was the sharper of the two gaps until 2.0.0: the corpus was 40 JS/TS/Python repositories and LAPACK read 7.18x the declaration median against an anchor containing no Fortran. It is now 112 repositories — across the eight languages parsed when it was measured. **The gap was open again**, and this sentence claimed it closed "for what ships today" through six releases that reopened it: Swift, COBOL, Go, Rust, PHP and Ruby all shipped parsed and unanchored, scored against an anchor holding none of them. That was the corpus policy working as decided rather than a defect, and it was the debt 3.0.0 paid: the corpus is now 180 repositories across thirteen languages and **COBOL alone is unanchored**, permanently, for the reason measured below. Extending the corpus may move `CALIBRATION_C` and re-grade every repository, so it stays a release of its own rather than a patch bundled with a scanner. Stated as a prediction, not a measurement: the sibling claim about *scanner* changes was measured on 2026-09-07 and did not hold, and this one has not been tested.
+- **A new language inherits whatever the corpus does not hold.** This was the sharper of the two gaps until 2.0.0: the corpus was 40 JS/TS/Python repositories and LAPACK read 7.18x the declaration median against an anchor containing no Fortran. It is now 112 repositories — across the eight languages parsed when it was measured. **The gap was open again**, and this sentence claimed it closed "for what ships today" through six releases that reopened it: Swift, COBOL, Go, Rust, PHP and Ruby all shipped parsed and unanchored, scored against an anchor holding none of them. That was the corpus policy working as decided rather than a defect, and it was the debt 3.0.0 paid: the corpus was 180 repositories across thirteen languages, and since 4.0.0 is 201 across fifteen, with **COBOL alone unanchored**, permanently, for the reason measured below. Extending the corpus may move `CALIBRATION_C` and re-grade every repository, so it stays a release of its own rather than a patch bundled with a scanner. Stated as a prediction, not a measurement: the sibling claim about *scanner* changes was measured on 2026-09-07 and did not hold, and this one has not been tested.
 
 ### Corpus policy: recalibrate once, after the remaining scanners land
 

@@ -82,6 +82,7 @@ pinned corpus and are reproducible from it.</p>
 <th>1.x</th>
 <th>2.0</th>
 <th>3.0</th>
+<th>4.0</th>
 </tr>
 </thead>
 <tbody>
@@ -90,27 +91,32 @@ pinned corpus and are reproducible from it.</p>
 <td>0.0858</td>
 <td>0.0952</td>
 <td>0.0938</td>
+<td>0.0871</td>
 </tr>
 <tr>
 <td><code>declarations</code></td>
 <td>0.1005</td>
 <td>0.0908</td>
 <td>0.0962</td>
+<td>0.0929</td>
 </tr>
 <tr>
 <td><code>duplication</code></td>
 <td>0.28</td>
 <td>0.3222</td>
 <td>0.3144</td>
+<td>0.2973</td>
 </tr>
 <tr>
 <td><code>risk</code></td>
 <td>0.0737</td>
 <td>0.0826</td>
 <td>0.0341</td>
+<td>0.0249</td>
 </tr>
 <tr>
 <td><code>gates</code></td>
+<td>0.05</td>
 <td>0.05</td>
 <td>0.05</td>
 <td>0.05</td>
@@ -120,9 +126,18 @@ pinned corpus and are reproducible from it.</p>
 <td><strong>5.8843</strong></td>
 <td><strong>8.7161</strong></td>
 <td><strong>4.2565</strong></td>
+<td><strong>4.3092</strong></td>
 </tr>
 </tbody>
 </table></div>
+<p><strong>4.0 anchors Kotlin and Shell</strong> (2026-10-02). The corpus grew from 180
+repositories to 201 — fifteen Kotlin, six Shell — and every row was
+re-measured on the re-pinned analyzer pool. Separated on the 180 shared
+repositories: the new pins alone would change 4 grades; adding the two
+languages changes <strong>9 of 180 — 8 B→C and 1 C→B</strong> — and moves 52 at the
+published decimal. Published grades move, so it is a major version, on the
+same reasoning as 3.0. Shell entered thin: ten of sixteen candidates were
+collections or too small to be codebases, and six cleared verification.</p>
 <p><strong>3.0 is the first of these that re-grades repositories.</strong> 33 of the 112
 repositories present in both the 2.0 and 3.0 corpora change grade — 15 B→C,
 7 C→B, 5 A→B, 4 C→D and 2 B→A. The corpus gains its first D grades. A

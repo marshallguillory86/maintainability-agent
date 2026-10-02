@@ -183,7 +183,12 @@ POPULATION_FLOORS: dict[str, int] = {
     # express at 139 declarations. A floor above the corpus minimum is
     # not a floor, it is a repository the scale cannot score while
     # claiming to be calibrated by it.
-    "files_scanned": 24,
+    #
+    # 20 since the 201-repo corpus (Kotlin and Shell, 2026-10-01): pyenv
+    # entered at 20 source files and pi-hole at 21, so repositories of 20
+    # to 23 files are now scored where they were withheld. The declaration
+    # minimum is still express's 139.
+    "files_scanned": 20,
     "declarations_scanned": 139,
     "production_declarations_scanned": 53,
 }

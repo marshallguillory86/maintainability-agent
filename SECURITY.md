@@ -6,8 +6,8 @@ Only the latest release line receives security fixes.
 
 | Version | Supported |
 |---------|-----------|
-| `3.12.x` | ✅ |
-| < `3.12` | ❌ |
+| `4.0.x` | ✅ |
+| < `4.0` | ❌ |
 
 The line above is the shipped one, and keeping it that way is a
 maintenance task nobody remembers. An audit found this table still

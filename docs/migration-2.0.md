@@ -78,14 +78,23 @@ The constants below are derived by `tools/calibration/measure.py` from the
 pinned corpus and are reproducible from it.
 
 <!-- constants:begin -->
-| Dimension | 1.x | 2.0 | 3.0 |
-|---|---|---|---|
-| `file_size` | 0.0858 | 0.0952 | 0.0938 |
-| `declarations` | 0.1005 | 0.0908 | 0.0962 |
-| `duplication` | 0.28 | 0.3222 | 0.3144 |
-| `risk` | 0.0737 | 0.0826 | 0.0341 |
-| `gates` | 0.05 | 0.05 | 0.05 |
-| **`CALIBRATION_C`** | **5.8843** | **8.7161** | **4.2565** |
+| Dimension | 1.x | 2.0 | 3.0 | 4.0 |
+|---|---|---|---|---|
+| `file_size` | 0.0858 | 0.0952 | 0.0938 | 0.0871 |
+| `declarations` | 0.1005 | 0.0908 | 0.0962 | 0.0929 |
+| `duplication` | 0.28 | 0.3222 | 0.3144 | 0.2973 |
+| `risk` | 0.0737 | 0.0826 | 0.0341 | 0.0249 |
+| `gates` | 0.05 | 0.05 | 0.05 | 0.05 |
+| **`CALIBRATION_C`** | **5.8843** | **8.7161** | **4.2565** | **4.3092** |
+
+**4.0 anchors Kotlin and Shell** (2026-10-02). The corpus grew from 180
+repositories to 201 — fifteen Kotlin, six Shell — and every row was
+re-measured on the re-pinned analyzer pool. Separated on the 180 shared
+repositories: the new pins alone would change 4 grades; adding the two
+languages changes **9 of 180 — 8 B→C and 1 C→B** — and moves 52 at the
+published decimal. Published grades move, so it is a major version, on the
+same reasoning as 3.0. Shell entered thin: ten of sixteen candidates were
+collections or too small to be codebases, and six cleared verification.
 
 **3.0 is the first of these that re-grades repositories.** 33 of the 112
 repositories present in both the 2.0 and 3.0 corpora change grade — 15 B→C,

@@ -327,6 +327,14 @@ class CohesionAdapter(BaseAdapter):
             distribution="cohesion",
         )
 
+    def has_targets(self, root: Path, excludes: Sequence[str] = ()) -> bool:
+        """Whether any .py file survives the exclusions.
+
+        With none, cohesion was spawned with an empty `--files` and exited 2,
+        so every repository without Python recorded it as failed.
+        """
+        return bool(self.target_files(root, excludes))
+
     def target_files(self, root: Path, excludes: Sequence[str] = ()) -> tuple[str, ...]:
         return expand_files(root, excludes, suffixes=(".py",))
 

@@ -531,7 +531,11 @@ stands, read the <a href="readme.html">README</a>; if you want what is coming, t
   passes through; it missed eight language scanners and most of their
   imports, so <code>--reuse</code> could keep rows an older scanner produced (D221).</li>
 <li>A corpus measurement saves each row as it goes and a restarted run picks
-  up where it stopped.</li>
+  up where it stopped, and <code>--jobs N</code> measures N repositories at once with
+  the same rows in the same order.</li>
+<li>cohesion on a repository with no Python is reported not applicable rather
+  than failed; it used to be spawned with no files and exit with a usage
+  error (D223).</li>
 </ul>
 <h2 id="401-2026-10-02">4.0.1 - 2026-10-02</h2>
 <h3 id="security-a-repository-could-run-code-on-the-auditing-machine-d222">Security — a repository could run code on the auditing machine (D222)</h3>

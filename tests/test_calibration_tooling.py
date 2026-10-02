@@ -217,3 +217,39 @@ def test_a_checkpoint_from_another_scanner_is_measured_again(tmp_path: Path, mon
     rows, resumed = measure._collect(manifest, tmp_path, args)
 
     assert measured == ["a"] and resumed == 0
+
+
+def test_measuring_in_parallel_gives_the_same_rows_in_corpus_order(tmp_path: Path, monkeypatch) -> None:
+    """A full corpus run took five hours on one core of sixteen.
+
+    The repositories are independent, so `--jobs N` measures N at once.
+    What it may not change is the result: the same rows as one at a time,
+    in the manifest's order whatever order they finish in, each saved to
+    the checkpoint as it lands.
+    """
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+
+    manifest = {"repos": [{"name": n, "commit": "c"} for n in ("slow", "b", "c", "d")]}
+    measured: list[str] = []
+    _fake_measuring(monkeypatch, tmp_path, measured)
+    real = measure.measure
+
+    def uneven(path, repo, **kwargs):
+        if repo["name"] == "slow":
+            time.sleep(0.2)  # finishes last, listed first
+        return real(path, repo, **kwargs)
+
+    monkeypatch.setattr(measure, "measure", uneven)
+    serial_args = measure._parser().parse_args(["--with-analyzers", "--cache-dir", str(tmp_path / "s")])
+    parallel_args = measure._parser().parse_args(
+        ["--with-analyzers", "--cache-dir", str(tmp_path / "p"), "--jobs", "4"])
+    (tmp_path / "s").mkdir()
+    (tmp_path / "p").mkdir()
+
+    serial, _ = measure._collect(manifest, tmp_path / "s", serial_args)
+    parallel, _ = measure._collect(manifest, tmp_path / "p", parallel_args, pool=ThreadPoolExecutor)
+
+    assert parallel == serial
+    assert [r["repo"] for r in parallel] == ["slow", "b", "c", "d"]
+    assert len(measure._checkpointed(tmp_path / "p")) == 4

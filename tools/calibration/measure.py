@@ -28,6 +28,7 @@ import json
 import subprocess
 import sys
 import tempfile
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -370,30 +371,61 @@ def _mixed_analyzer_versions(rows: list[dict]) -> dict[str, set[str]]:
     return {slug: versions for slug, versions in seen.items() if len(versions) > 1}
 
 
-def _collect(manifest: dict, cache_dir: Path, args: argparse.Namespace) -> tuple[list[dict], int]:
-    """Every repository's row, reusing what provably still applies."""
-    measurements: list[dict] = []
-    reused = 0
+def _measure_one(repo: dict, cache_dir: Path, with_analyzers: bool) -> dict | None:
+    """Clone and measure one repository; None when it could not be fetched."""
+    path = clone(repo, cache_dir)
+    return None if path is None else measure(path, repo, with_analyzers=with_analyzers)
+
+
+def _already_measured(repo: dict, resumed: dict[str, dict], args: argparse.Namespace) -> dict | None:
+    """A stored or checkpointed row that provably still applies, else None."""
+    if args.reuse and (stored := _reusable(repo, args.with_analyzers)) is not None:
+        return stored
+    row = resumed.get(repo["name"])
+    return row if row and _still_applies(row, repo, args.with_analyzers) else None
+
+
+def _results(pending: list[dict], cache_dir: Path, args: argparse.Namespace, pool):
+    """(repo, row) pairs as they finish: one at a time, or `--jobs` at once.
+
+    The repositories are independent, so measuring several together changes
+    nothing but the wall clock — five hours on one core of sixteen, for the
+    4.0.0 corpus. Workers are processes because the built-in scan is pure
+    Python; only this process writes the checkpoint.
+    """
+    jobs = max(1, getattr(args, "jobs", 1) or 1)
+    if jobs == 1:
+        for repo in pending:
+            yield repo, _measure_one(repo, cache_dir, args.with_analyzers)
+        return
+    with pool(max_workers=jobs) as executor:
+        futures = {executor.submit(_measure_one, repo, cache_dir, args.with_analyzers): repo
+                   for repo in pending}
+        for future in as_completed(futures):
+            yield futures[future], future.result()
+
+
+def _collect(manifest: dict, cache_dir: Path, args: argparse.Namespace,
+             pool=ProcessPoolExecutor) -> tuple[list[dict], int]:
+    """Every repository's row, in the manifest's order, reusing what provably still applies."""
+    rows: dict[str, dict] = {}
     resumed = _checkpointed(cache_dir)
+    pending = []
     for repo in manifest["repos"]:
-        if args.reuse and (stored := _reusable(repo, args.with_analyzers)) is not None:
-            measurements.append(stored)
-            reused += 1
+        if (kept := _already_measured(repo, resumed, args)) is not None:
+            rows[repo["name"]] = kept
+        else:
+            pending.append(repo)
+    reused = len(rows)
+    for repo, entry in _results(pending, cache_dir, args, pool):
+        if entry is None:
             continue
-        if (row := resumed.get(repo["name"])) and _still_applies(row, repo, args.with_analyzers):
-            measurements.append(row)
-            reused += 1
-            continue
-        path = clone(repo, cache_dir)
-        if path is None:
-            continue
-        entry = measure(path, repo, with_analyzers=args.with_analyzers)
-        measurements.append(entry)
+        rows[repo["name"]] = entry
         with (cache_dir / CHECKPOINT).open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(entry) + "\n")
         print(f"  {entry['repo']:<12} files={entry['files']:<6} " + " ".join(
             f"{k}={v:.4f}" for k, v in entry["dimensions"].items()), flush=True)
-    return measurements, reused
+    return [rows[r["name"]] for r in manifest["repos"] if r["name"] in rows], reused
 
 
 def _refuses_mixed_versions(measurements: list[dict], reused: int) -> bool:
@@ -425,6 +457,11 @@ def _parser() -> argparse.ArgumentParser:
              "the input the Phase 3.6 recalibration needs.",
     )
     parser.add_argument("--check", action="store_true", help="Exit 1 if stored constants differ from measured.")
+    parser.add_argument(
+        "--jobs", type=int, default=1,
+        help="Measure this many repositories at once. The rows are identical to a "
+             "one-at-a-time run and are written in the corpus order.",
+    )
     parser.add_argument(
         "--reuse", action="store_true",
         help="Reuse stored rows whose pinned commit, tool version and analyzer "

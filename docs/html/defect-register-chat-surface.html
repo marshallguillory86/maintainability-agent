@@ -7412,11 +7412,11 @@ candidate ended the run and discarded every candidate after it. A
 refusal is now a rejection with its reason.</p>
 <p><em>Closing test:</em> <code>test_the_audit_completes_and_names_the_link</code> in
 <code>tests/test_a_dangling_source_link_is_named_not_fatal.py</code>, beside the
-markdown, HTML and FIFO cases; and
+markdown and HTML cases and one that adds a FIFO to the same tree; and
 <code>test_a_candidate_the_scanner_refuses_is_rejected_and_named_not_fatal</code> in
 <code>tests/test_calibration_tooling.py</code>.</p>
 <p><em>Mutation:</em> restoring the walk's refusal for a dangling link (dropping
-<code>dangling(path)</code> from <code>iter_files</code>) fails three of the five, the audit
+<code>dangling(path)</code> from <code>iter_files</code>) fails four of the five, the audit
 ending in the traceback again; removing the HTML section fails only the
 HTML test, which is why the three skins are tested separately. Each was run.</p>
 <h2 id="disposition">Disposition</h2>

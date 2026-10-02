@@ -8559,12 +8559,12 @@ refusal is now a rejection with its reason.
 
 *Closing test:* `test_the_audit_completes_and_names_the_link` in
 `tests/test_a_dangling_source_link_is_named_not_fatal.py`, beside the
-markdown, HTML and FIFO cases; and
+markdown and HTML cases and one that adds a FIFO to the same tree; and
 `test_a_candidate_the_scanner_refuses_is_rejected_and_named_not_fatal` in
 `tests/test_calibration_tooling.py`.
 
 *Mutation:* restoring the walk's refusal for a dangling link (dropping
-`dangling(path)` from `iter_files`) fails three of the five, the audit
+`dangling(path)` from `iter_files`) fails four of the five, the audit
 ending in the traceback again; removing the HTML section fails only the
 HTML test, which is why the three skins are tested separately. Each was run.
 

@@ -118,7 +118,7 @@ The corpus median lands at **4.0 (B)**: a well-run real codebase earns a B, and 
 
 ### The reference corpus
 
-Calibration is reproducible, not a snapshot someone took once. The corpus is defined in [`tools/calibration/corpus.json`](../tools/calibration/corpus.json) — **180 mature open-source repositories pinned to exact commits**, spanning 24 to 18,789 source files and 2,749,575 declarations across thirteen languages: Python, TypeScript, JavaScript, Java, C, C++, C#, Fortran, Swift, Go, Rust, PHP and Ruby.
+Calibration is reproducible, not a snapshot someone took once. The corpus is defined in [`tools/calibration/corpus.json`](../tools/calibration/corpus.json) — **201 mature open-source repositories pinned to exact commits**, spanning 20 to 18,789 source files and 2,841,470 declarations across fifteen languages: Python, TypeScript, JavaScript, Java, C, C++, C#, Fortran, Swift, Go, Rust, PHP, Ruby, Kotlin and Shell.
 
 The forty repositories 1.x calibrated on are all still in it, at the commits they were measured at then:
 
@@ -141,11 +141,15 @@ median and fortran-lang/stdlib at **1.10x** — the first a true statement
 about LAPACK relative to mature OSS *web* code, and not a statement about
 typical Fortran, because no typical Fortran was in the comparison set.
 
-**3.0.0 extended the corpus.** It is now **180 repositories spanning
-thirteen languages**: Python, TypeScript, JavaScript, Java, C, C++, C#,
-Fortran, Swift, Go, Rust, PHP and Ruby. The 112 rows measured for 2.0.0
-are unchanged and still pinned to the commits they were measured at, so
-what moved the constants is the languages added and nothing else.
+**3.0.0 extended the corpus** to 180 repositories spanning thirteen
+languages. **4.0.0 extended it again, to 201 spanning fifteen**: Kotlin
+and Shell, whose parsers shipped ahead of the corpus in 3.8.0 and 3.9.0.
+Fifteen Kotlin repositories and six Shell; Shell entered thin, because ten
+of its sixteen candidates were collections or too small to be codebases.
+Every row was re-measured on the re-pinned analyzer pool, and the two
+causes were separated on the 180 shared rows: the new pins alone would
+change 4 grades, and adding the two languages changes 9 — 8 B→C, 1 C→B.
+The corpus median still rolls up to exactly 4.0.
 
 **One parsed language is not in it: COBOL.** It is **unanchored** — a
 scanner reads it, and the medians its rates are compared against were

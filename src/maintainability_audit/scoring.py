@@ -44,7 +44,7 @@ from ._aspects import (
     is_untested,
     not_applicable_aspects,
 )
-from ._calibration import CATEGORIES, CORPUS_MEASURED, GRADE_GATES
+from ._calibration import CATEGORIES, CORPUS_LANGUAGES, CORPUS_MEASURED, CORPUS_SIZE, GRADE_GATES
 from ._evidence_reader import normalize_report_evidence
 from ._formula import (
     CATEGORY_ASPECTS,
@@ -407,10 +407,7 @@ def _reference_block() -> dict[str, object]:
     one-rubric promise, and two repositories must stay comparable
     regardless of what they are written in.
     """
-    held = [
-        "Python", "TypeScript", "JavaScript", "Java", "C", "C++", "C#", "Fortran",
-        "Swift", "Go", "Rust", "PHP", "Ruby",
-    ]
+    held = list(CORPUS_LANGUAGES)
     # Counted, not typed (D168): the prompt carried "eight of the ten"
     # while this note said thirteen of fourteen on the same report.
     parsed = len(held) + len(UNANCHORED_LANGUAGES)
@@ -425,7 +422,7 @@ def _reference_block() -> dict[str, object]:
         "corpus_measured": CORPUS_MEASURED,
         "corpus_note": (
             f"Reference medians were measured on {CORPUS_MEASURED}, "
-            "drawn from 180 mature repositories across "
+            f"drawn from {CORPUS_SIZE} mature repositories across "
             f"{len(held)} of the {parsed} languages this scanner parses. "
             f"{unanchored_sentence()} Fortran entered at a lower "
             "star threshold than the rest, because its ecosystem has none "

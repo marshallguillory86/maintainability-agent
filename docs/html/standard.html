@@ -239,7 +239,7 @@
 </ol>
 <p>The corpus median lands at <strong>4.0 (B)</strong>: a well-run real codebase earns a B, and every grade above it must be paid for.</p>
 <h3 id="the-reference-corpus">The reference corpus</h3>
-<p>Calibration is reproducible, not a snapshot someone took once. The corpus is defined in <a href="../../tools/calibration/corpus.json"><code>tools/calibration/corpus.json</code></a> — <strong>180 mature open-source repositories pinned to exact commits</strong>, spanning 24 to 18,789 source files and 2,749,575 declarations across thirteen languages: Python, TypeScript, JavaScript, Java, C, C++, C#, Fortran, Swift, Go, Rust, PHP and Ruby.</p>
+<p>Calibration is reproducible, not a snapshot someone took once. The corpus is defined in <a href="../../tools/calibration/corpus.json"><code>tools/calibration/corpus.json</code></a> — <strong>201 mature open-source repositories pinned to exact commits</strong>, spanning 20 to 18,789 source files and 2,841,470 declarations across fifteen languages: Python, TypeScript, JavaScript, Java, C, C++, C#, Fortran, Swift, Go, Rust, PHP, Ruby, Kotlin and Shell.</p>
 <p>The forty repositories 1.x calibrated on are all still in it, at the commits they were measured at then:</p>
 <blockquote>
 <p>angular · ansible · ant-design · anime · axios · Chart.js · code-server · django · echarts · excalidraw · express · fastapi · flask · freeCodeCamp · github-readme-stats · hackingtool · hoppscotch · jquery · keras · localstack · lodash · manim · material-ui · mermaid · models · n8n · nest · playwright · reveal.js · scrapy · strapi · svelte · tabby · tailwindcss · transformers · uBlock · vite · webpack · youtube-dl · yt-dlp</p>
@@ -259,11 +259,15 @@ Audited against that anchor, LAPACK reported declarations at <strong>7.18x</stro
 median and fortran-lang/stdlib at <strong>1.10x</strong> — the first a true statement
 about LAPACK relative to mature OSS <em>web</em> code, and not a statement about
 typical Fortran, because no typical Fortran was in the comparison set.</p>
-<p><strong>3.0.0 extended the corpus.</strong> It is now <strong>180 repositories spanning
-thirteen languages</strong>: Python, TypeScript, JavaScript, Java, C, C++, C#,
-Fortran, Swift, Go, Rust, PHP and Ruby. The 112 rows measured for 2.0.0
-are unchanged and still pinned to the commits they were measured at, so
-what moved the constants is the languages added and nothing else.</p>
+<p><strong>3.0.0 extended the corpus</strong> to 180 repositories spanning thirteen
+languages. <strong>4.0.0 extended it again, to 201 spanning fifteen</strong>: Kotlin
+and Shell, whose parsers shipped ahead of the corpus in 3.8.0 and 3.9.0.
+Fifteen Kotlin repositories and six Shell; Shell entered thin, because ten
+of its sixteen candidates were collections or too small to be codebases.
+Every row was re-measured on the re-pinned analyzer pool, and the two
+causes were separated on the 180 shared rows: the new pins alone would
+change 4 grades, and adding the two languages changes 9 — 8 B→C, 1 C→B.
+The corpus median still rolls up to exactly 4.0.</p>
 <p><strong>One parsed language is not in it: COBOL.</strong> It is <strong>unanchored</strong> — a
 scanner reads it, and the medians its rates are compared against were
 measured on other languages. The cost is disclosed rather than absorbed:

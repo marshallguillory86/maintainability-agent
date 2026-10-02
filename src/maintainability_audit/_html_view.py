@@ -98,6 +98,7 @@ def render_html(report: dict[str, Any], records: list[Any]) -> str:
         *security_work_order_html(report),
         *_hard_gate_section(report),
         *_unidentified_paths_section(report),
+        *_dangling_links_section(report),
         *_semantic_section(report),
         "</body></html>",
     ]
@@ -329,6 +330,21 @@ def _hard_gate_section(report: dict[str, Any]) -> list[str]:
     )
     rows.append("</table>")
     return rows
+
+
+def _dangling_links_section(report: dict[str, Any]) -> list[str]:
+    """Source-named symlinks to nothing, which the scan skipped."""
+    links = (report.get("summary") or {}).get("dangling_source_links") or []
+    if not links:
+        return []
+    return [
+        "<h2>Links not followed</h2>",
+        "<p class='muted'>These source-named symlinks point at nothing, so the "
+        "scan skipped them. Usually a git submodule that was not fetched.</p>",
+        "<table><tr><th>Path</th></tr>",
+        *(f"<tr><td><code>{escape(str(link))}</code></td></tr>" for link in links),
+        "</table>",
+    ]
 
 
 def _unidentified_paths_section(report: dict[str, Any]) -> list[str]:

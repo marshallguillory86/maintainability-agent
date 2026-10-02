@@ -58,9 +58,11 @@ def test_a_tree_without_one_says_nothing(tmp_path: Path) -> None:
     assert "symlink" not in render_markdown(report).lower()
 
 
-def test_a_fifo_is_still_refused(tmp_path: Path) -> None:
-    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
-    os.mkfifo(tmp_path / "hang.py")
+def test_only_the_dangling_link_is_skipped_and_a_fifo_is_still_refused(tmp_path: Path) -> None:
+    """The skip is for a link to nothing, not for anything that is not a file."""
+    _tree_with_a_dangling_link(tmp_path)
+    build_report(tmp_path, load_config(None))
+    os.mkfifo(tmp_path / "src" / "hang.py")
 
     with pytest.raises(PathNotAllowed, match="not a regular file"):
         build_report(tmp_path, load_config(None))

@@ -253,3 +253,22 @@ def test_measuring_in_parallel_gives_the_same_rows_in_corpus_order(tmp_path: Pat
     assert parallel == serial
     assert [r["repo"] for r in parallel] == ["slow", "b", "c", "d"]
     assert len(measure._checkpointed(tmp_path / "p")) == 4
+
+
+def test_the_noise_check_in_parallel_fits_the_same_constants(monkeypatch) -> None:
+    """`sampling_error.py` ran 2,000 sequential fits and outlived a 30-minute limit.
+
+    The resamples are independent, so `--jobs` fits them at once. The draws
+    are taken from the seeded generator in this process, in the order the
+    one-at-a-time version took them, so a seed still means one result.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    import sampling_error
+
+    rows = json.loads((ROOT / "tools" / "calibration" / "measurements.json").read_text())["measurements"]
+
+    serial = sampling_error.bootstrap(rows, 3, seed=7)
+    parallel = sampling_error.bootstrap(rows, 3, seed=7, jobs=3, pool=ThreadPoolExecutor)
+
+    assert parallel == serial and len(serial) == 3

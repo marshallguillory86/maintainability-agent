@@ -24,7 +24,8 @@ stands, read the [README](README.md); if you want what is coming, the
   imports, so `--reuse` could keep rows an older scanner produced (D221).
 - A corpus measurement saves each row as it goes and a restarted run picks
   up where it stopped, and `--jobs N` measures N repositories at once with
-  the same rows in the same order.
+  the same rows in the same order. The calibration noise check takes
+  `--jobs` too, with the same result for the same seed.
 - cohesion on a repository with no Python is reported not applicable rather
   than failed; it used to be spawned with no files and exit with a usage
   error (D223).

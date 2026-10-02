@@ -33,6 +33,7 @@ import json
 import random
 import statistics
 import sys
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -55,7 +56,8 @@ def _fit(sample: list[dict], references: dict[str, float]) -> float:
     return derive_curve_constant(sample, references, {})
 
 
-def bootstrap(rows: list[dict], iterations: int, seed: int) -> list[float]:
+def bootstrap(rows: list[dict], iterations: int, seed: int, *, jobs: int = 1,
+              pool=ProcessPoolExecutor) -> list[float]:
     """The sampling distribution of `c` over resampled corpora.
 
     Resampled *with replacement* at the same size, which is what a
@@ -63,15 +65,35 @@ def bootstrap(rows: list[dict], iterations: int, seed: int) -> list[float]:
     alternative corpus this project could have selected under the same
     frame. References are re-derived per draw, because in a real
     reselection they would be.
+
+    The draws are taken here, from the seeded generator, in the order the
+    one-at-a-time version took them, so a seed still means one result.
+    Only the fits run in parallel: 2,000 of them one after another outlived
+    a 30-minute limit on the 201-repository corpus.
     """
     rng = random.Random(seed)
-    fitted: list[float] = []
-    for index in range(iterations):
-        draw = [rng.choice(rows) for _ in rows]
-        fitted.append(_fit(draw, derive_references(draw)))
-        if (index + 1) % 100 == 0:
-            print(f"  {index + 1}/{iterations}", end="\r", flush=True, file=sys.stderr)
+    draws = [[rng.randrange(len(rows)) for _ in rows] for _ in range(iterations)]
+    if jobs <= 1:
+        _share_rows(rows)
+        fitted = [_fit_draw(indices) for indices in draws]
+    else:
+        with pool(max_workers=jobs, initializer=_share_rows, initargs=(rows,)) as executor:
+            fitted = list(executor.map(_fit_draw, draws, chunksize=max(1, iterations // (jobs * 4))))
     return sorted(fitted)
+
+
+_ROWS: list[dict] = []
+
+
+def _share_rows(rows: list[dict]) -> None:
+    """Hand the corpus to a worker once, rather than with every draw."""
+    global _ROWS
+    _ROWS = rows
+
+
+def _fit_draw(indices: list[int]) -> float:
+    draw = [_ROWS[i] for i in indices]
+    return _fit(draw, derive_references(draw))
 
 
 def score_shift(rows: list[dict], references: dict[str, float],
@@ -89,6 +111,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--iterations", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=20260812)
+    parser.add_argument("--jobs", type=int, default=1,
+                        help="Fit this many resamples at once; the result is the same.")
     args = parser.parse_args()
 
     payload = json.loads(MEASUREMENTS.read_text(encoding="utf-8"))
@@ -101,7 +125,7 @@ def main() -> int:
     print(f"measured constant: {measured}\n")
 
     print(f"bootstrap: {args.iterations} resamples of {len(rows)} with replacement")
-    draws = bootstrap(rows, args.iterations, args.seed)
+    draws = bootstrap(rows, args.iterations, args.seed, jobs=args.jobs)
     lower = draws[int(len(draws) * 0.025)]
     upper = draws[int(len(draws) * 0.975)]
     inside = lower <= CALIBRATION_C <= upper

@@ -77,3 +77,35 @@ def test_the_html_report_names_the_link(tmp_path: Path) -> None:
     page = render_html(build_report(tmp_path, load_config(None)), [])
 
     assert "src/b.py" in page
+
+
+def test_the_bounded_chat_view_names_the_link_too(tmp_path: Path) -> None:
+    """Chat is the default presentation and renders `complete=False` (Grok, 4.0.0).
+
+    The first version named the link only in the complete report, so the
+    surface most people read showed one file scanned and no skip.
+    """
+    _tree_with_a_dangling_link(tmp_path)
+
+    bounded = render_markdown(build_report(tmp_path, load_config(None)), complete=False)
+
+    assert "src/b.py" in bounded
+
+
+def test_a_link_out_of_the_tree_is_not_counted_as_read(tmp_path: Path) -> None:
+    """The scan drops a link that leaves the tree (D36); the read share counted it (Grok, 4.0.0).
+
+    `iter_files` never opens it, and `unread_source` reported it as read
+    source, so the share of the repository the score describes was
+    overstated by every such link.
+    """
+    tree = tmp_path / "tree"
+    (tree / "src").mkdir(parents=True)
+    (tree / "src" / "a.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    outside = tmp_path / "outside.py"
+    outside.write_text("SECRET = 1\n", encoding="utf-8")
+    (tree / "src" / "leak.py").symlink_to(outside)
+
+    summary = build_report(tree, load_config(None))["summary"]
+
+    assert summary["read_source_files"] == summary["files_scanned"] == 1

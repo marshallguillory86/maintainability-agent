@@ -235,6 +235,10 @@ def _bounded_markdown(report: dict[str, Any], score: dict[str, Any],
     # property that function's docstring already claimed and did not have
     # (D199).
     lines.extend(test_suite_markdown(report))
+    # A skipped link, for the same reason: the complete report named it and
+    # this view did not, so the surface most people read showed a smaller
+    # repository and no skip (D222, Grok's audit of 4.0.0).
+    lines.extend(dangling_links_markdown(report["summary"]))
     lines.extend(security_work_order_pointer(report))
     lines.extend([
         "---", "",

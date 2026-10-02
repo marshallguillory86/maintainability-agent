@@ -76,9 +76,16 @@ from ._runner import Invocation, Outcome, run
 #: come from. An older release still produces a readable report — the
 #: Markdown is carried and preformatted exactly as before — so this floor
 #: is about what the operator was promised, not about avoiding a crash.
-SUPPORTED_FLOOR = (0, 12, 8)
+#:
+#: **Raised to 0.12.10 by D222.** Below it, a `secure-code-agent.json` inside
+#: the audited tree chooses each scanner's command — any program on PATH with
+#: any arguments — and the run executes it. 0.12.10 (its D29) ignores a
+#: command an untrusted config sets. This floor is a security boundary, not a
+#: feature level: a run this tool makes must not reach a delegate that honours
+#: one.
+SUPPORTED_FLOOR = (0, 12, 10)
 SUPPORTED_CEILING = (1,)
-REQUIREMENT = "secure-code-agent>=0.12.8,<1"
+REQUIREMENT = "secure-code-agent>=0.12.10,<1"
 
 #: How long the child may run before the pillar is reported as unmeasured.
 DEFAULT_TIMEOUT_SECONDS = 300
@@ -151,7 +158,8 @@ def _install_remedy(reason: str) -> dict[str, str]:
 PREFLIGHT_TIMEOUT_SECONDS = 60
 
 
-def scanner_gaps(root: Path, *, timeout_seconds: int = PREFLIGHT_TIMEOUT_SECONDS) -> list[dict[str, str]]:
+def scanner_gaps(root: Path, *, timeout_seconds: int = PREFLIGHT_TIMEOUT_SECONDS,
+                 tree_config: bool = False) -> list[dict[str, str]]:
     """Each scanner secure-code-agent would run and cannot, as an install action.
 
     A self-audit ran with four scanners missing and the security pillar came
@@ -163,8 +171,19 @@ def scanner_gaps(root: Path, *, timeout_seconds: int = PREFLIGHT_TIMEOUT_SECONDS
     Empty when there is nothing to say, when the delegate is absent or out of
     range (its own entry already says so), or when the preflight cannot be
     read: advice never breaks a run.
+
+    **Before consent the tree's configuration is not read** (`tree_config`
+    false, the default). The preflight probes each scanner's configured
+    command, and the tree's `secure-code-agent.json` may name any program
+    on PATH with any arguments: in 3.12.0 a tree that set one to
+    `python -c ...` ran it the moment the chat door was asked about it,
+    before anyone said "run" (D222). So the door's preflight is handed a
+    neutral config and names the default scanners that are missing. The
+    run, which has consent, passes `tree_config=True`.
     """
-    rows = _preflight_rows(root, timeout_seconds)
+    payload = _preflight_payload(root, timeout_seconds, tree_config=tree_config)
+    rows = payload.get("scanners")
+    rows = rows if isinstance(rows, list) else []
     missing = [row for row in rows
                if isinstance(row, dict) and not row.get("available") and row.get("remedy")]
     missing.sort(key=lambda row: (not row.get("required"), str(row.get("scanner"))))
@@ -179,20 +198,23 @@ def _delegate_usable() -> bool:
     return installed is not None and SUPPORTED_FLOOR <= installed < SUPPORTED_CEILING
 
 
-def _preflight_rows(root: Path, timeout_seconds: int) -> list[Any]:
-    """The preflight's scanner rows, or nothing when it cannot be run or read."""
+def _preflight_payload(root: Path, timeout_seconds: int, *, tree_config: bool) -> dict[str, Any]:
+    """The preflight's JSON, or an empty mapping when it cannot be run or read."""
     if not _delegate_usable():
-        return []
-    result = run("secure-code-agent", Invocation(
-        argv=(sys.executable, "-c", _ENTRY, str(root), "--preflight", "--json"),
-        findings_exit_codes=(0, 1),
-    ), timeout_seconds=timeout_seconds)
+        return {}
+    with tempfile.TemporaryDirectory(prefix="ma-preflight-") as scratch:
+        argv: tuple[str, ...] = (sys.executable, "-c", _ENTRY, str(root), "--preflight", "--json")
+        if not tree_config:
+            neutral = Path(scratch) / "neutral.json"
+            neutral.write_text("{}", encoding="utf-8")
+            argv += ("--config", str(neutral))
+        result = run("secure-code-agent", Invocation(argv=argv, findings_exit_codes=(0, 1)),
+                     timeout_seconds=timeout_seconds)
     try:
         payload = json.loads(getattr(result, "stdout", "") or "")
     except ValueError:
-        return []
-    rows = payload.get("scanners") if isinstance(payload, dict) else None
-    return rows if isinstance(rows, list) else []
+        return {}
+    return payload if isinstance(payload, dict) else {}
 
 
 def _gap_entry(row: dict[str, Any]) -> dict[str, str]:
@@ -224,7 +246,7 @@ def run_security_delegate(
         return DelegateRun(None, reason, [_install_remedy(reason)])
     # Before the audit, so a reader learns what is missing with the
     # result rather than after a grade has been spent on it.
-    gaps = scanner_gaps(root)
+    gaps = scanner_gaps(root, tree_config=True)
     with tempfile.TemporaryDirectory(prefix="ma-security-") as scratch:
         out = Path(scratch)
         pillar = out / "security-pillar.json"

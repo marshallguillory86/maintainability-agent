@@ -5,7 +5,7 @@
 **A deterministic, offline maintainability audit whose output is a _bounded
 work order_ for an AI coding agent** — a copy-paste prompt, per finding, that
 says *fix exactly these and refactor nothing else*. Chat-primary; CLI for CI.
-Version **4.0.0**.
+Version **4.0.1**.
 
 > ## **Calibrated against 201 mature open-source repositories in fifteen languages.**
 >
@@ -56,7 +56,7 @@ and gives this command. Its scanners decide what it can grade — see
 don't add its `[mcp]` extra to this environment (it pins `mcp<2`).
 
 ```bash
-pip install 'secure-code-agent>=0.12.2'
+pip install 'secure-code-agent>=0.12.10'
 brew install gitleaks osv-scanner semgrep checkov   # its scanners; pip install bandit
 ```
 
@@ -454,7 +454,7 @@ instead of an invokable skill:
 This repo ships `action.yml`, usable as a composite action:
 
 ```yaml
-- uses: marshallguillory86/maintainability-agent@v4.0.0
+- uses: marshallguillory86/maintainability-agent@v4.0.1
   with:
     config: maintainability-agent.json
     changed-only: main...HEAD

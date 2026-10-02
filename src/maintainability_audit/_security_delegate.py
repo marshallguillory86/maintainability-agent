@@ -76,9 +76,16 @@ from ._runner import Invocation, Outcome, run
 #: come from. An older release still produces a readable report — the
 #: Markdown is carried and preformatted exactly as before — so this floor
 #: is about what the operator was promised, not about avoiding a crash.
-SUPPORTED_FLOOR = (0, 12, 8)
+#:
+#: **Raised to 0.12.10 by D222.** Below it, a `secure-code-agent.json` inside
+#: the audited tree chooses each scanner's command — any program on PATH with
+#: any arguments — and the run executes it. 0.12.10 (its D29) ignores a
+#: command an untrusted config sets. This floor is a security boundary, not a
+#: feature level: a run this tool makes must not reach a delegate that honours
+#: one.
+SUPPORTED_FLOOR = (0, 12, 10)
 SUPPORTED_CEILING = (1,)
-REQUIREMENT = "secure-code-agent>=0.12.8,<1"
+REQUIREMENT = "secure-code-agent>=0.12.10,<1"
 
 #: How long the child may run before the pillar is reported as unmeasured.
 DEFAULT_TIMEOUT_SECONDS = 300

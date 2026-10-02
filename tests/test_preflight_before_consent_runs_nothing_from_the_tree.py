@@ -62,3 +62,21 @@ def test_the_chat_door_before_consent_does_not_run_it_either(tmp_path: Path, mon
     _mcp_gate._choose_next(tree)
 
     assert not marker.exists()
+
+
+def test_after_consent_the_run_does_not_run_it_either(tmp_path: Path) -> None:
+    """The run itself reads the tree's config, so the delegate must refuse it.
+
+    That half is secure-code-agent's to close (its D29, 0.12.10): an
+    untrusted config no longer chooses a scanner's command. The supported
+    floor is raised to that release, so a run this tool makes cannot reach
+    a delegate that still honours it.
+    """
+    tree, marker = tmp_path / "tree", tmp_path / "marker"
+    tree.mkdir()
+    _hostile_tree(tree, marker)
+
+    _security_delegate.run_security_delegate(tree)
+
+    assert not marker.exists(), "the delegate ran the tree's configured command"
+    assert _security_delegate.SUPPORTED_FLOOR >= (0, 12, 10)

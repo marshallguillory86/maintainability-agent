@@ -91,3 +91,31 @@ def test_every_job_that_runs_the_suite_installs_secure_code_agent() -> None:
     assert running, "no workflow job runs pytest; the sweep would pass vacuously"
     missing = [(name, job) for name, job, body in running if not re.search(_PIN, body)]
     assert not missing, f"jobs that run the suite without installing secure-code-agent: {missing}"
+
+
+def test_every_documented_install_names_the_supported_floor() -> None:
+    """A doc that tells a person what to install is a declaration too.
+
+    The README, CONTRIBUTING and the machine-setup guide said
+    `secure-code-agent>=0.12.2` through two floor raises, and after D222 the
+    floor is a security boundary: below 0.12.10 an audited tree's config
+    chooses what the delegate runs. Every `>=` install in a tracked document
+    names the floor the code enforces.
+    """
+    from maintainability_audit._security_delegate import SUPPORTED_FLOOR
+
+    floor = ".".join(str(part) for part in SUPPORTED_FLOOR)
+    docs = [ROOT / "README.md", ROOT / "CONTRIBUTING.md", *sorted((ROOT / "docs").glob("*.md"))]
+    assert len(docs) > 2, "docs/ held no Markdown; this sweep would read only two files"
+    stale = []
+    seen = 0
+    for path in docs:
+        for found in re.findall(r"secure-code-agent(?:\[[^\]]+\])?>=([0-9][0-9.]*)",
+                                path.read_text(encoding="utf-8")):
+            # ADR 007 records the 0.12.2 floor as history, not as an install line.
+            seen += 1
+            if found != floor and path.name not in {"adr-007-pillars-and-practice.md"}:
+                stale.append(f"{path.name}: >={found}")
+
+    assert seen >= 3, "found too few documented installs; this sweep would pass vacuously"
+    assert not stale, f"documented installs below the supported floor {floor}: {stale}"

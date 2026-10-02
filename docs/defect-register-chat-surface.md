@@ -8600,15 +8600,17 @@ view lists skipped dangling links, which only the complete report did
 source though the scan never opens it; the read share now drops it as the
 scan does.
 
-*Closing test:* `test_the_preflight_before_consent_does_not_run_the_trees_command`
-in `tests/test_preflight_before_consent_runs_nothing_from_the_tree.py`, which
-runs the real delegate against a hostile tree, beside the chat-door and
-after-consent cases.
+*Closing test:* `test_before_consent_the_preflight_is_handed_a_neutral_config`
+in `tests/test_missing_security_scanners_are_named_before_the_run.py`. The
+end-to-end guard is `tests/test_preflight_before_consent_runs_nothing_from_the_tree.py`,
+which runs the real delegate against a hostile tree before consent, through
+the chat door, and after consent.
 
-*Mutation:* dropping the neutral `--config` from the preflight fails the
-before-consent and chat-door tests, the marker file written by the tree's
-command; with secure-code-agent 0.12.9 installed the after-consent test
-fails the same way. Both were run before the fix.
+*Mutation:* the preflight without the neutral `--config` fails the closing
+test; with secure-code-agent 0.12.9 installed it also fails all three
+end-to-end cases, the marker file written by the tree's command. Both were
+run before the fix. With 0.12.10 the delegate refuses the command on its
+own, which is why the end-to-end file states that it passes at the base.
 
 ## Disposition
 

@@ -16,6 +16,13 @@ consent the tree's own configuration is read, as the run itself does.
 
 These run the real delegate, not a stub: a stubbed `run` is how the first
 version passed.
+
+Covers existing behaviour: with secure-code-agent 0.12.10 installed the
+delegate refuses an untrusted config's command on its own (its D29), so
+these pass at the base too. They guard the property end to end, against
+either tool regressing; each failed before the fix with 0.12.9 installed.
+This project's own half is proven by
+`test_before_consent_the_preflight_is_handed_a_neutral_config`.
 """
 
 from __future__ import annotations

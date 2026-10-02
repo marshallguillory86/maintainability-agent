@@ -198,13 +198,17 @@ def unread_source(root: Path, config: dict[str, Any]) -> tuple[list[dict[str, An
     excludes = config["paths"]["exclude_patterns"]
     unread: Counter[str] = Counter()
     read = 0
+    resolved_root = root.resolve()
     for path in root.rglob("*"):
         if path.is_dir():
             continue
         if path.suffix not in KNOWN_SOURCE_SUFFIXES:
             continue
         rel = str(path.relative_to(root)).replace(os.sep, "/")
-        if is_excluded(rel, excludes) or dangling(path):
+        # A link out of the tree is dropped by the scan (D36), so it is
+        # neither read nor this repository's unread source; counting it as
+        # read overstated the share the score describes (D222).
+        if is_excluded(rel, excludes) or dangling(path) or not within(resolved_root, path):
             continue
         if not path.is_file():
             # The same refusal `iter_files` makes, on the same walk and

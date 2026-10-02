@@ -110,3 +110,31 @@ def test_the_chat_door_names_them_before_the_run(monkeypatch, tmp_path: Path) ->
 
     assert reply["environment_work_order"][0]["tool"] == "trivy"
     assert "trivy" in reply["choice_needed"]["prompt"]
+
+
+def test_a_required_scanner_switched_off_is_named_once_the_tree_is_read(monkeypatch, tmp_path: Path) -> None:
+    """`required_not_selected` was never read, so the advice said nothing (Grok, 4.0.0).
+
+    A required scanner the tree's config disables makes the pillar's
+    coverage fail, and that is as much an environment fact as a missing
+    install. It can only be known from the tree's own config, so it is named
+    by the preflight the run makes after consent.
+    """
+    disabled = {**PREFLIGHT, "scanners": [PREFLIGHT["scanners"][0]],
+                "required_unresolved": [], "required_not_selected": ["semgrep"]}
+    calls = _preflight_returns(monkeypatch, disabled)
+
+    gaps = _security_delegate.scanner_gaps(tmp_path, tree_config=True)
+
+    assert "--config" not in calls[0]
+    assert [g["tool"] for g in gaps] == ["semgrep"]
+    assert "enabled" in gaps[0]["install"] and "required" in gaps[0]["reason"]
+
+
+def test_before_consent_the_preflight_is_handed_a_neutral_config(monkeypatch, tmp_path: Path) -> None:
+    calls = _preflight_returns(monkeypatch, PREFLIGHT)
+
+    _security_delegate.scanner_gaps(tmp_path)
+
+    config = calls[0][calls[0].index("--config") + 1]
+    assert not Path(config).is_relative_to(tmp_path)

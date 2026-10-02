@@ -284,6 +284,27 @@ most work.
 
 Governing text: [product intent](product-intent.md#the-writable-oracle).
 
+### Decision 14: secure-code-agent's behaviour is built there
+
+- Recorded: 2026-10-02
+- Status: **Accepted, stated by the maintainer 2026-10-02.**
+
+The security pillar is a delegate call, not a second copy of
+secure-code-agent. 4.0.1 began re-authoring the delegate inside this
+package — remedy text for a required scanner its config switches off, and a
+hand-written neutral config so preflight would not read the tree's. Two
+copies of scanner knowledge drift, which is the reason this project reads
+`--preflight --json` rather than keeping its own install table.
+
+1. **Anything that knows about scanners is built in secure-code-agent
+   first**: remedies, which config is trusted, preflight modes, what a
+   disabled required scanner means. It is released there, the supported
+   floor here is raised to it, and this package passes it through.
+2. **An urgent fix may land here first only as a call to the delegate's
+   public interface**, with the delegate-side work named as its follow-up.
+   D222's neutral `--config` is that case: it uses a flag the delegate
+   already has, and the delegate gains a mode of its own to replace it.
+
 ## Statuses
 
 - **Proposed** — written up with options; not yet decided. May be edited freely.

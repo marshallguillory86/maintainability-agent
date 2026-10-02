@@ -15,6 +15,7 @@
 <li><a href="#decision-10-v10-ships-python-and-java">Decision 10 — v1.0 ships Python and Java</a></li>
 <li><a href="#decision-12-writable-oracle-three-homes">Decision 12: Writable oracle, three homes</a></li>
 <li><a href="#decision-13-the-ask-beside-the-diff">Decision 13: The ask beside the diff</a></li>
+<li><a href="#decision-14-secure-code-agents-behaviour-is-built-there">Decision 14: secure-code-agent's behaviour is built there</a></li>
 </ul>
 </li>
 <li><a href="#statuses">Statuses</a></li>
@@ -361,6 +362,27 @@ most work.</p>
    the operator's path, never discovered in the tree.</li>
 </ol>
 <p>Governing text: <a href="product-intent.html#the-writable-oracle">product intent</a>.</p>
+<h3 id="decision-14-secure-code-agents-behaviour-is-built-there">Decision 14: secure-code-agent's behaviour is built there</h3>
+<ul>
+<li>Recorded: 2026-10-02</li>
+<li>Status: <strong>Accepted, stated by the maintainer 2026-10-02.</strong></li>
+</ul>
+<p>The security pillar is a delegate call, not a second copy of
+secure-code-agent. 4.0.1 began re-authoring the delegate inside this
+package — remedy text for a required scanner its config switches off, and a
+hand-written neutral config so preflight would not read the tree's. Two
+copies of scanner knowledge drift, which is the reason this project reads
+<code>--preflight --json</code> rather than keeping its own install table.</p>
+<ol>
+<li><strong>Anything that knows about scanners is built in secure-code-agent
+   first</strong>: remedies, which config is trusted, preflight modes, what a
+   disabled required scanner means. It is released there, the supported
+   floor here is raised to it, and this package passes it through.</li>
+<li><strong>An urgent fix may land here first only as a call to the delegate's
+   public interface</strong>, with the delegate-side work named as its follow-up.
+   D222's neutral <code>--config</code> is that case: it uses a flag the delegate
+   already has, and the delegate gains a mode of its own to replace it.</li>
+</ol>
 <h2 id="statuses">Statuses</h2>
 <ul>
 <li><strong>Proposed</strong> — written up with options; not yet decided. May be edited freely.</li>

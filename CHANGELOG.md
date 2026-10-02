@@ -29,8 +29,6 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ### Fixed
 
-- A required security scanner that the repository's config switches off is
-  named in `environment_work_order` once the run reads that config.
 - The chat view lists source-named symlinks the scan skipped; only the full
   report did.
 - A symlink to a file outside the repository is no longer counted as source

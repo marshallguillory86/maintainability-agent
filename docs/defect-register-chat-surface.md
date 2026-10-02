@@ -8592,13 +8592,13 @@ and this project's supported floor is raised to it, in the code, every CI
 pin, and every documented install line — the last now tested, because three
 documents still said `>=0.12.2`.
 
-Three Mediums from the same audit closed with it. The in-run preflight,
-which has consent, reads the tree's config and names a required scanner the
-config switches off, which the first version never read. The bounded chat
+Two Mediums from the same audit closed with it. The bounded chat
 view lists skipped dangling links, which only the complete report did
 (D219). And a symlink to a real file outside the tree was counted as read
 source though the scan never opens it; the read share now drops it as the
-scan does.
+scan does. The third — a required scanner the tree's config switches off is
+never named — is secure-code-agent's to answer in its own preflight
+(Decision 14), and is left open there rather than re-authored here.
 
 *Closing test:* `test_before_consent_the_preflight_is_handed_a_neutral_config`
 in `tests/test_missing_security_scanners_are_named_before_the_run.py`. The

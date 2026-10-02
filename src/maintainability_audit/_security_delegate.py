@@ -179,8 +179,7 @@ def scanner_gaps(root: Path, *, timeout_seconds: int = PREFLIGHT_TIMEOUT_SECONDS
     `python -c ...` ran it the moment the chat door was asked about it,
     before anyone said "run" (D222). So the door's preflight is handed a
     neutral config and names the default scanners that are missing. The
-    run, which has consent, passes `tree_config=True` and also names a
-    required scanner the tree's config switches off.
+    run, which has consent, passes `tree_config=True`.
     """
     payload = _preflight_payload(root, timeout_seconds, tree_config=tree_config)
     rows = payload.get("scanners")
@@ -188,10 +187,7 @@ def scanner_gaps(root: Path, *, timeout_seconds: int = PREFLIGHT_TIMEOUT_SECONDS
     missing = [row for row in rows
                if isinstance(row, dict) and not row.get("available") and row.get("remedy")]
     missing.sort(key=lambda row: (not row.get("required"), str(row.get("scanner"))))
-    disabled = payload.get("required_not_selected") if tree_config else None
-    return [_gap_entry(row) for row in missing] + [
-        _disabled_entry(str(name)) for name in (disabled if isinstance(disabled, list) else [])
-    ]
+    return [_gap_entry(row) for row in missing]
 
 
 def _delegate_usable() -> bool:
@@ -219,17 +215,6 @@ def _preflight_payload(root: Path, timeout_seconds: int, *, tree_config: bool) -
     except ValueError:
         return {}
     return payload if isinstance(payload, dict) else {}
-
-
-def _disabled_entry(name: str) -> dict[str, str]:
-    return {
-        "tool": name,
-        "reason": (f"secure-code-agent's required scanner {name} is switched off in this "
-                   "repository's secure-code-agent.json, so the security pillar's coverage fails"),
-        "install": f"set scanners.{name}.enabled to true in secure-code-agent.json",
-        "verify": "secure-code-agent . --preflight",
-        "concepts": "security",
-    }
 
 
 def _gap_entry(row: dict[str, Any]) -> dict[str, str]:

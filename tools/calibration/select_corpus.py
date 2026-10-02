@@ -46,7 +46,8 @@ import sys
 # it — LAPACK read 7.18x the declaration median while no Fortran was in
 # the comparison set at all.
 LANGUAGES = ["python", "typescript", "javascript", "java", "c", "cpp",
-             "csharp", "fortran", "swift", "go", "rust", "php", "ruby"]
+             "csharp", "fortran", "swift", "go", "rust", "php", "ruby",
+             "kotlin", "shell"]
 
 #: **COBOL is parsed and deliberately not selected.** Measured on
 #: 2026-09-07 against the criteria above: one repository clears 500 stars

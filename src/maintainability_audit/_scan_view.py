@@ -281,6 +281,30 @@ def undetected_declarations_markdown(summary: dict[str, Any],
     return lines
 
 
+def dangling_links_markdown(summary: dict[str, Any]) -> list[str]:
+    """Source-named symlinks with no target, which the scan skipped.
+
+    Usually links into a git submodule that was not fetched. Nothing is
+    there to read, so they cannot be measured, and naming them is what
+    keeps the skip from reading as a smaller, cleaner repository.
+    """
+    links = summary.get("dangling_source_links") or []
+    if not links:
+        return []
+    lines = [
+        "## Links Not Followed", "",
+        f"{len(links)} source-named symlink(s) point at nothing, so the scan "
+        "skipped them. Usually a git submodule that was not fetched; fetch it "
+        "and re-run to audit what they point at.",
+        "",
+    ]
+    lines.extend(f"- `{link}`" for link in links[:25])
+    if len(links) > 25:
+        lines.append(f"- … and {len(links) - 25} more")
+    lines.append("")
+    return lines
+
+
 def unread_source_markdown(summary: dict[str, Any]) -> list[str]:
     """Source the scan never opened, named where a reader will see it.
 

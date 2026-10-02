@@ -42,6 +42,7 @@ from .idioms import divergent_idioms
 from .metrics import (
     _in_asset_dir,
     collect_metrics,
+    dangling_source_links,
     hard_gate_failures,
     is_test_path,
     undetected_declarations,
@@ -221,6 +222,9 @@ def _add_full_counts(
     summary["unread_source"] = breakdown
     summary["unread_source_files"] = sum(entry["files"] for entry in breakdown)
     summary["read_source_files"] = read
+    # Skipped by the walk because there is nothing at the end of them;
+    # named here so the skip is not silent.
+    summary["dangling_source_links"] = dangling_source_links(root, config)
     # Opened, but not parseable for declarations. Between read and
     # unread, and the state that made a 40-file Java repository report
     # that it was smaller than the calibration set.

@@ -12,6 +12,14 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+### Fixed
+
+- A symlink with a source extension whose target does not exist — usually a
+  link into a git submodule that was not fetched — ended the audit with a
+  traceback. It is skipped, because there is nothing to measure, and named:
+  `summary.dangling_source_links`, and *Links not followed* in the markdown
+  and HTML reports (D219). A FIFO is still refused.
+
 ## 3.12.0 - 2026-10-01
 
 ### Added — missing security scanners are named before the run

@@ -119,6 +119,30 @@ def within(root: Path, path: Path) -> bool:
     return resolved == root or root in resolved.parents
 
 
+def dangling(path: Path) -> bool:
+    """A symlink whose target does not exist: nothing there to measure.
+
+    It fails `is_file()` exactly as a FIFO does, so D141's refusal ended
+    the audit on it. The ordinary case is a link into a git submodule that
+    was not fetched (Magisk's `cxx.h`). Skipped by the walks, and named by
+    `dangling_source_links` so the skip is never silent.
+    """
+    return path.is_symlink() and not path.exists()
+
+
+def dangling_source_links(root: Path, config: dict[str, Any]) -> list[str]:
+    """Source-suffixed symlinks to nothing, as repository-relative paths."""
+    excludes = config["paths"]["exclude_patterns"]
+    found = []
+    for path in root.rglob("*"):
+        if path.suffix not in KNOWN_SOURCE_SUFFIXES or not dangling(path):
+            continue
+        rel = str(path.relative_to(root)).replace(os.sep, "/")
+        if not is_excluded(rel, excludes):
+            found.append(rel)
+    return sorted(found)
+
+
 def iter_files(root: Path, config: dict[str, Any], only_paths: set[str] | None = None) -> list[Path]:
     include_ext = set(config["paths"]["include_extensions"])
     excludes = config["paths"]["exclude_patterns"]
@@ -134,7 +158,7 @@ def iter_files(root: Path, config: dict[str, Any], only_paths: set[str] | None =
             continue
         if only_paths is not None and rel not in only_paths:
             continue
-        if path.suffix not in include_ext:
+        if path.suffix not in include_ext or dangling(path):
             continue
         if not path.is_file():
             # Refused, not skipped (D141). The walk tested `is_file()`
@@ -180,7 +204,7 @@ def unread_source(root: Path, config: dict[str, Any]) -> tuple[list[dict[str, An
         if path.suffix not in KNOWN_SOURCE_SUFFIXES:
             continue
         rel = str(path.relative_to(root)).replace(os.sep, "/")
-        if is_excluded(rel, excludes):
+        if is_excluded(rel, excludes) or dangling(path):
             continue
         if not path.is_file():
             # The same refusal `iter_files` makes, on the same walk and

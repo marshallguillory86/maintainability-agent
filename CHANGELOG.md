@@ -12,6 +12,45 @@ stands, read the [README](README.md); if you want what is coming, the
 
 ## Unreleased
 
+## 4.0.0 - 2026-10-02
+
+**Grades move: this is a recalibration.** Kotlin and Shell are anchored, so
+the reference every score is a multiple of is now drawn from 201 mature
+repositories in fifteen languages rather than 180 in thirteen. On the 180
+repositories in both corpora, 9 change grade — 8 B→C and 1 C→B — and 52
+move at the published decimal. The corpus median still scores exactly 4.0.
+If you track a grade over time, expect a step at this release; the trend
+already reports it as a break, because the calibration constant changed.
+
+### Changed — Kotlin and Shell are in the reference corpus
+
+- Fifteen Kotlin and six Shell repositories joined the corpus, selected by
+  the same query as every other language. A Kotlin or Shell grade is no
+  longer called provisional. COBOL remains the one unanchored language.
+- Shell entered thin: ten of its sixteen candidates were collections,
+  configuration or too small to be codebases. That is disclosed in the corpus
+  and the standard rather than padded by hand.
+- Every row was re-measured on the analyzer pins of 3.12.0. Separated on the
+  180 shared repositories, the new pins alone would change 4 grades; the new
+  languages account for the rest.
+- References: file size 0.0938 → 0.0871, declarations 0.0962 → 0.0929,
+  duplication 0.3144 → 0.2973, risk 0.0341 → 0.0249; `CALIBRATION_C`
+  4.2565 → 4.3092. The full record is in `_calibration.py` and
+  `docs/migration-2.0.md`.
+- The smallest repository the scale scores is now 20 source files, down from
+  24, because pyenv entered the corpus at 20. Repositories of 20 to 23 files
+  now get a rolled-up score.
+- The report's corpus note took its size and language list from typed prose;
+  both now come from one constant checked against the corpus itself.
+
+### Fixed
+
+- A symlink with a source extension whose target does not exist — usually a
+  link into a git submodule that was not fetched — ended the audit with a
+  traceback. It is skipped, because there is nothing to measure, and named:
+  `summary.dangling_source_links`, and *Links not followed* in the markdown
+  and HTML reports (D219). A FIFO is still refused.
+
 ## 3.12.0 - 2026-10-01
 
 ### Added — missing security scanners are named before the run

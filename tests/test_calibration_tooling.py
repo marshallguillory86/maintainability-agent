@@ -124,3 +124,35 @@ def test_the_migration_note_states_the_constants_actually_shipped() -> None:
         assert str(value) in body, (
             f"the migration note does not state the shipped {name} reference ({value})"
         )
+
+
+def test_a_candidate_the_scanner_refuses_is_rejected_and_named_not_fatal(tmp_path: Path, monkeypatch) -> None:
+    """One unmeasurable candidate used to end the whole verification run.
+
+    Magisk holds an in-tree symlink into a submodule a shallow clone does
+    not fetch; the scan refuses it, and the traceback discarded every
+    candidate after it. The refusal is a verdict on that candidate.
+    """
+    from maintainability_audit._operator_reads import PathNotAllowed
+
+    candidates = tmp_path / "candidates.json"
+    candidates.write_text(json.dumps({"query": {}, "candidates": [
+        {"name": n, "full_name": f"o/{n}", "url": "u", "stars": 1, "created": "2020-01-01", "language": "kotlin"}
+        for n in ("refused", "fine")]}), encoding="utf-8")
+
+    def fake_profile(path: Path) -> tuple[int, int]:
+        if path.name == "refused":
+            raise PathNotAllowed("x.h has a source extension but is not a regular file")
+        return 50, 500
+
+    monkeypatch.setattr(verify_corpus, "clone", lambda entry, cache: tmp_path / entry["name"])
+    monkeypatch.setattr(verify_corpus, "profile", fake_profile)
+    monkeypatch.setattr(verify_corpus, "head_commit", lambda path: "abc")
+    out = tmp_path / "out.json"
+    monkeypatch.setattr(sys, "argv", ["verify", str(candidates), "--cache-dir", str(tmp_path), "--out", str(out)])
+
+    assert verify_corpus.main() == 0
+    written = json.loads(out.read_text())
+    assert [r["name"] for r in written["repos"]] == ["fine"]
+    rejected = written["verification"]["rejected"]
+    assert rejected[0]["full_name"] == "o/refused" and "not a regular file" in rejected[0]["reason"]

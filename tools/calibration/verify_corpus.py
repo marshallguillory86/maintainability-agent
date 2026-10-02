@@ -31,6 +31,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
+from maintainability_audit._operator_reads import PathNotAllowed  # noqa: E402
 from maintainability_audit.config import load_config  # noqa: E402
 from maintainability_audit.declarations import DECLARATION_SUFFIXES  # noqa: E402
 from maintainability_audit.metrics import iter_files  # noqa: E402
@@ -97,6 +98,43 @@ def _refuses_to_clobber(destination: Path, *, replace: bool) -> bool:
     return True
 
 
+def _verify(candidates: list[dict], cache: Path) -> tuple[list[dict], list[dict]]:
+    """Clone each candidate and sort it into kept or rejected, with the reason."""
+    kept: list[dict] = []
+    rejected: list[dict] = []
+    for entry in candidates:
+        path = clone(entry, cache)
+        if path is None:
+            continue
+        try:
+            files, declarations = profile(path)
+        except PathNotAllowed as refusal:
+            # A verdict on this candidate, not the end of the run: the
+            # traceback used to discard every candidate after it.
+            rejected.append({**entry, "declarations": None, "reason": str(refusal)})
+            print(f"  skip  {entry['full_name']:<38} (the scan refuses it: {refusal})", file=sys.stderr)
+            continue
+        verdict = f"{entry['full_name']:<38} {files:>5} files {declarations:>6} decls"
+        if files < MIN_SOURCE_FILES or declarations < MIN_DECLARATIONS:
+            rejected.append({**entry, "source_files": files, "declarations": declarations})
+            print(f"  skip  {verdict}  (not a codebase)", file=sys.stderr)
+            continue
+        kept.append(
+            {
+                "name": entry["name"],
+                "url": entry["url"],
+                "commit": head_commit(path),
+                "language": entry["language"],
+                "stars": entry["stars"],
+                "created": entry["created"],
+                "source_files": files,
+                "declarations": declarations,
+            }
+        )
+        print(f"  keep  {verdict}", file=sys.stderr)
+    return kept, rejected
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("candidates")
@@ -117,30 +155,7 @@ def main() -> int:
     cache = Path(args.cache_dir)
     cache.mkdir(parents=True, exist_ok=True)
 
-    kept, rejected = [], []
-    for entry in data["candidates"]:
-        path = clone(entry, cache)
-        if path is None:
-            continue
-        files, declarations = profile(path)
-        verdict = f"{entry['full_name']:<38} {files:>5} files {declarations:>6} decls"
-        if files < MIN_SOURCE_FILES or declarations < MIN_DECLARATIONS:
-            rejected.append({**entry, "source_files": files, "declarations": declarations})
-            print(f"  skip  {verdict}  (not a codebase)", file=sys.stderr)
-            continue
-        kept.append(
-            {
-                "name": entry["name"],
-                "url": entry["url"],
-                "commit": head_commit(path),
-                "language": entry["language"],
-                "stars": entry["stars"],
-                "created": entry["created"],
-                "source_files": files,
-                "declarations": declarations,
-            }
-        )
-        print(f"  keep  {verdict}", file=sys.stderr)
+    kept, rejected = _verify(data["candidates"], cache)
 
     Path(args.out).write_text(
         json.dumps(
@@ -160,7 +175,11 @@ def main() -> int:
                 "verification": {
                     "min_source_files": MIN_SOURCE_FILES,
                     "min_declarations": MIN_DECLARATIONS,
-                    "rejected": [{"full_name": r["full_name"], "declarations": r["declarations"]} for r in rejected],
+                    "rejected": [
+                        {"full_name": r["full_name"], "declarations": r["declarations"],
+                         **({"reason": r["reason"]} if "reason" in r else {})}
+                        for r in rejected
+                    ],
                 },
                 "repos": sorted(kept, key=lambda item: item["name"]),
             },

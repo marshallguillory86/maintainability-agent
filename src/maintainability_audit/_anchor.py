@@ -65,7 +65,11 @@ from __future__ import annotations
 #: `parsed - corpus` from `DECLARATION_SUFFIXES` and `corpus.json` and
 #: fails if this stops matching — including when a language is *added* to
 #: the corpus, which is the direction that went unnoticed.
-UNANCHORED_LANGUAGES: tuple[str, ...] = ("COBOL", "Kotlin", "Shell")
+#:
+#: **Kotlin and Shell were anchored on 2026-10-02 (4.0.0)**, as both entries
+#: above promised: the corpus holds fifteen Kotlin and six Shell
+#: repositories. COBOL remains, permanently.
+UNANCHORED_LANGUAGES: tuple[str, ...] = ("COBOL",)
 
 
 def unanchored_names() -> str:

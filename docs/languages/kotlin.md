@@ -108,11 +108,10 @@ duplication, both in the shipped pool, so a Kotlin repository gets
 analyzer-primary evidence rather than depending on the built-in scanner
 alone.
 
-## Not yet anchored
+## Anchored
 
-Kotlin is **parsed but absent from the reference corpus**, so every skin
-discloses that its grade is provisional — the same caveat COBOL carries,
-for a different reason and with a different expected end. The scanner
-shipped ahead of the corpus in 3.8.0; Kotlin anchors at the next
-recalibration on the corpus policy's own terms, where COBOL is excluded
-permanently.
+Kotlin is **in the reference corpus since 4.0.0**: fifteen mature Kotlin
+repositories, selected by the same query as every other language, so a
+Kotlin grade is no longer provisional. The scanner shipped ahead of the
+corpus in 3.8.0 and anchored at the next recalibration, as the corpus
+policy promised. Of the fifteen, twelve grade B and three C.

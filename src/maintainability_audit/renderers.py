@@ -26,6 +26,7 @@ from ._scan_view import (
     analyzer_coverage_markdown,
     analyzer_findings_markdown,
     analyzer_measurements_markdown,
+    dangling_links_markdown,
     environment_work_order_markdown,
     pillars_markdown,
     undetected_declarations_markdown,
@@ -127,6 +128,7 @@ def _semantic_sections(report: dict[str, Any]) -> list[str]:
         *semantic_markdown(findings, report.get("semantic_coverage")),
         *pillars_markdown(report.get("pillars"), report.get("practice")),
         *unread_source_markdown(without_semantic_suffixes(report["summary"], findings)),
+        *dangling_links_markdown(report["summary"]),
     ]
 
 

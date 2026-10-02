@@ -190,11 +190,40 @@ CATEGORIES = ["modularity", "reusability", "analyzability", "modifiability", "te
 #
 # The median still rolls up to exactly 4.0000, which is the anchor's
 # whole job and the one thing that must not move.
+#
+# **2026-10-02, Kotlin and Shell (4.0.0).** The two languages whose parsers
+# shipped ahead of the corpus (3.8.0, 3.9.0) are anchored, and the analyzer
+# pool was re-pinned first (#284) so the reference was not measured on a
+# drifted pool. All 201 rows were re-measured on the new pins, because the
+# stored 180 carried the old tool versions and a corpus measured on two
+# versions of a tool is refused.
+#
+# *The corpus grew to 201*: fifteen Kotlin repositories and six Shell. Shell
+# entered thin — ten of its sixteen candidates were collections,
+# configuration or too small to be codebases — and that is disclosed in
+# `corpus.json` rather than corrected by hand-picking. Magisk was first
+# refused by the scan itself (a symlink into an unfetched submodule, D219)
+# and entered once that was fixed.
+#
+#     file_size      0.0938 -> 0.0871
+#     declarations   0.0962 -> 0.0929
+#     duplication    0.3144 -> 0.2973
+#     risk           0.0341 -> 0.0249
+#     gates          0.05   -> 0.05
+#     CALIBRATION_C  4.2565 -> 4.3092
+#
+# **The two causes, separated on the 180 shared rows.** Instrument drift
+# alone — the same 180 repositories on the new pins, fitted on themselves —
+# would fit c = 4.1017 and change 4 grades. Adding Kotlin and Shell, the
+# constants above, changes **9 of 180 grades — 8 B->C and 1 C->B** — and
+# moves 52 at the published decimal. Published grades move, so this is a
+# major version, on the same reasoning as 3.0.0. The corpus median still
+# rolls up to exactly 4.0000.
 DIMENSION_REFERENCES: dict[str, float] = {
-    "file_size": 0.0938,
-    "declarations": 0.0962,
-    "duplication": 0.3144,
-    "risk": 0.0341,
+    "file_size": 0.0871,
+    "declarations": 0.0929,
+    "duplication": 0.2973,
+    "risk": 0.0249,
     # Fixed, not corpus-derived — see ``_derive.FIXED_REFERENCES``, which
     # is the authority for this value and carries the reasoning. Stated
     # again here rather than imported, so the two are independent claims
@@ -259,7 +288,8 @@ DIMENSION_WEIGHTS: dict[str, float] = {
 # 2026-08-31: 2.2658 -> 5.8843, re-fitted after the corpus re-measure above
 # (three of five references moved at once, `duplication` most of all).
 # 2026-09-08: 8.7161 -> 4.2565, the 3.0.0 recalibration above.
-CALIBRATION_C = 4.2565
+# 2026-10-02: 4.2565 -> 4.3092, Kotlin and Shell anchored (4.0.0) above.
+CALIBRATION_C = 4.3092
 
 #: When the reference corpus these constants were derived from was measured.
 #: A calibration describes the code of its moment, and the one number here
@@ -268,7 +298,17 @@ CALIBRATION_C = 4.2565
 #: passes its age limit (`tools/check_corpus_age.py`). Bound to the last
 #: commit that changed `tools/calibration/corpus.json`: re-measuring without
 #: re-dating fails `tests/test_maintenance_signals.py`.
-CORPUS_MEASURED = "2026-09-08"
+CORPUS_MEASURED = "2026-10-02"
+
+#: How many repositories, in which languages. Every report's corpus note
+#: states both, and both were typed into `scoring.py` until the corpus grew
+#: past them; `tests/test_corpus_note_counts_come_from_the_corpus.py`
+#: checks each against `corpus.json`.
+CORPUS_SIZE = 201
+CORPUS_LANGUAGES: tuple[str, ...] = (
+    "Python", "TypeScript", "JavaScript", "Java", "C", "C++", "C#", "Fortran",
+    "Swift", "Go", "Rust", "PHP", "Ruby", "Kotlin", "Shell",
+)
 
 # A failure is a threshold breach; a warning is an approach to one.
 WARN_WEIGHT = 0.3
